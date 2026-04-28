@@ -38,7 +38,6 @@ def run_applications(args_dict):
     associated_activities = []
     runtime_environment_snapshot = deepcopy(runtime_environment)
     model_parameter_metadata_files = []
-    application_counter = 0
 
     run_time = (
         read_runtime_environment(runtime_environment)
@@ -56,58 +55,100 @@ def run_applications(args_dict):
                     logger.info(f"Skipping application: {app}")
                     continue
 
-                application_counter += 1
-
                 app_configuration = config.get("configuration", {})
                 app_activity_id = app_configuration.get("activity_id") or gen.get_uuid()
                 app_configuration["activity_id"] = app_activity_id
                 app_configuration.setdefault("label", app)
                 app_configuration["disable_log_file"] = True
 
-                metadata_file = _get_model_parameter_metadata_file(app_configuration)
-                if metadata_file is not None:
-                    model_parameter_metadata_files.append(metadata_file)
-
                 associated_activities.append({"activity_name": app, "activity_id": app_activity_id})
 
-                logger.info(f"Running application: {app}")
-                result = job_manager.submit(
-                    app,
-                    out_file=None,
-                    err_file=None,
-                    configuration=app_configuration,
+                result = _submit_application_and_collect_metadata(
+                    app=app,
+                    app_configuration=app_configuration,
                     runtime_environment=run_time,
+                    model_parameter_metadata_files=model_parameter_metadata_files,
                 )
-
-                if metadata_file is None:
-                    metadata_file = _get_model_parameter_metadata_file(app_configuration)
-                    if metadata_file is not None:
-                        model_parameter_metadata_files.append(metadata_file)
 
                 file.write("=" * 80 + "\n")
                 file.write(
                     f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n"
                 )
         finally:
-            if model_parameter_metadata_files:
-                workflow_activity = workflow_metadata.build_workflow_activity_metadata(
-                    args_dict=args_dict,
-                    workflow_activity_id=workflow_activity_id,
-                    workflow_start=workflow_start,
-                    workflow_end=max(datetime.now(UTC), workflow_start),
-                    runtime_environment=(
-                        runtime_environment_snapshot
-                        if not args_dict["ignore_runtime_environment"]
-                        else None
-                    ),
-                    workflow_context=_get_workflow_context(configurations),
-                )
-                for metadata_file in model_parameter_metadata_files:
-                    workflow_metadata.update_model_parameter_metadata_file(
-                        metadata_file=metadata_file,
-                        workflow_activity=workflow_activity,
-                        associated_activities=associated_activities,
-                    )
+            _update_workflow_metadata_files(
+                args_dict=args_dict,
+                workflow_activity_id=workflow_activity_id,
+                workflow_start=workflow_start,
+                runtime_environment_snapshot=runtime_environment_snapshot,
+                configurations=configurations,
+                model_parameter_metadata_files=model_parameter_metadata_files,
+                associated_activities=associated_activities,
+            )
+
+
+def _append_metadata_file(model_parameter_metadata_files, metadata_file):
+    """Append metadata file to list when available."""
+    if metadata_file is not None:
+        model_parameter_metadata_files.append(metadata_file)
+
+
+def _submit_application_and_collect_metadata(
+    app,
+    app_configuration,
+    runtime_environment,
+    model_parameter_metadata_files,
+):
+    """Submit one application and collect metadata file before/after submission."""
+    metadata_file = _get_model_parameter_metadata_file(app_configuration)
+    _append_metadata_file(model_parameter_metadata_files, metadata_file)
+
+    logger.info(f"Running application: {app}")
+    result = job_manager.submit(
+        app,
+        out_file=None,
+        err_file=None,
+        configuration=app_configuration,
+        runtime_environment=runtime_environment,
+    )
+
+    if metadata_file is None:
+        _append_metadata_file(
+            model_parameter_metadata_files,
+            _get_model_parameter_metadata_file(app_configuration),
+        )
+
+    return result
+
+
+def _update_workflow_metadata_files(
+    args_dict,
+    workflow_activity_id,
+    workflow_start,
+    runtime_environment_snapshot,
+    configurations,
+    model_parameter_metadata_files,
+    associated_activities,
+):
+    """Update collected model-parameter metadata files with workflow metadata."""
+    if not model_parameter_metadata_files:
+        return
+
+    workflow_activity = workflow_metadata.build_workflow_activity_metadata(
+        args_dict=args_dict,
+        workflow_activity_id=workflow_activity_id,
+        workflow_start=workflow_start,
+        workflow_end=max(datetime.now(UTC), workflow_start),
+        runtime_environment=(
+            runtime_environment_snapshot if not args_dict["ignore_runtime_environment"] else None
+        ),
+        workflow_context=_get_workflow_context(configurations),
+    )
+    for metadata_file in model_parameter_metadata_files:
+        workflow_metadata.update_model_parameter_metadata_file(
+            metadata_file=metadata_file,
+            workflow_activity=workflow_activity,
+            associated_activities=associated_activities,
+        )
 
 
 def _read_application_configuration(configuration_file, steps, workflow_activity_id=None):
