@@ -84,8 +84,10 @@ def plot_array_layouts(args_dict, output_path, layouts, background_layout=None):
             if args_dict["coordinate_system"] not in layout["name"]
             else ""
         )
+
         plot_file_name = args_dict["figure_name"] or (
             f"array_layout_{layout['name']}{site_string}{coordinate_system_string}"
+            f"_{args_dict['model_version']}"
         )
 
         visualize.save_figure(fig_out, output_path / plot_file_name, dpi=400)
