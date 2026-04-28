@@ -78,6 +78,12 @@ def run_applications(args_dict):
                     configuration=app_configuration,
                     runtime_environment=run_time,
                 )
+
+                if metadata_file is None:
+                    metadata_file = _get_model_parameter_metadata_file(app_configuration)
+                    if metadata_file is not None:
+                        model_parameter_metadata_files.append(metadata_file)
+
                 file.write("=" * 80 + "\n")
                 file.write(
                     f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n"
