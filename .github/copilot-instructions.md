@@ -206,6 +206,20 @@ git commit -m "Description"
 git push origin feature/my-feature
 ```
 
+## Adding a New Application
+
+Every new application added to `src/simtools/applications/` requires:
+
+1. **Register the CLI entry point** in `pyproject.toml` under `[project.scripts]`.
+2. **Add a doc page** `docs/source/user-guide/applications/simtools-<app-name>.rst` following the pattern of existing files (one `.. automodule::` directive).
+3. **Add a toctree entry** to `docs/source/user-guide/applications.md` in alphabetical order.
+4. **Add an integration test config** in `tests/integration_tests/config/<app_name>_run.yml`.
+5. **Add unit tests** in `tests/unit_tests/` mirroring the `src/` structure.
+
+Every new **library module** added to `src/simtools/` (outside `applications/`) requires:
+
+6. **Add an API reference entry** to the relevant `docs/source/api-reference/*.md` file using the `automodule` directive. The CI check `Undocumented module` will fail if this is missing.
+
 ## Opening a Pull Request
 
 1. **Open a draft PR first** to get the PR number before adding the changelog fragment.
