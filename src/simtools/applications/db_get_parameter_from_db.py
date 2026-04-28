@@ -9,11 +9,11 @@ r"""
     2. Write the database entry to a JSON or YAML file using output_file.
     3. Export table-type model parameters using export_model_file.
 
-        The export_model_file mode is type-dependent:
+    The export_model_file mode is type-dependent:
 
-        - File-backed parameters are exported as model files.
-            Use output_file to override the exported file name.
-        - Dict-backed table parameters are exported as ECSV, using output_file as the base name.
+    - File-backed parameters are exported as model files.
+        Use output_file to override the exported file name.
+    - Dict-backed table parameters are exported as ECSV, using output_file as the base name.
 
     For file-backed parameters, export_model_file_as_table can be added to also write an
     ECSV representation next to the exported file.

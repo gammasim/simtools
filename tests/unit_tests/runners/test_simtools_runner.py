@@ -345,6 +345,66 @@ def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_te
     workflow_update_mock.assert_called_once()
 
 
+def test_run_applications_retries_metadata_file_detection_after_submit(
+    monkeypatch, tmp_test_directory
+):
+    """Retry metadata detection after submit when pre-submit detection returns None."""
+    mock_args_dict = {
+        "config_file": "dummy_config.yml",
+        "steps": None,
+        "ignore_runtime_environment": False,
+    }
+    mock_configurations = [
+        {
+            "application": "simtools-submit-model-parameter-from-external",
+            "run_application": True,
+            "configuration": {
+                "output_path": str(tmp_test_directory),
+                "activity_id": "cfg-id-1",
+            },
+        },
+    ]
+    log_file_path = tmp_test_directory / "simtools.log"
+
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._read_application_configuration",
+        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id")),
+    )
+    monkeypatch.setattr(
+        "simtools.dependencies.get_version_string",
+        mock.Mock(return_value="simtools version: 1.2.3\n"),
+    )
+    monkeypatch.setattr(
+        "simtools.job_execution.job_manager.submit",
+        mock.Mock(return_value=mock.Mock(stdout="ok", stderr="")),
+    )
+
+    discovered_metadata_file = Path(str(tmp_test_directory)) / "p" / "p-1.0.0.meta.yml"
+    get_metadata_mock = mock.Mock(side_effect=[None, discovered_metadata_file])
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._get_model_parameter_metadata_file",
+        get_metadata_mock,
+    )
+
+    workflow_build_mock = mock.Mock(return_value={"id": "wf-activity-id"})
+    workflow_update_mock = mock.Mock()
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner.workflow_metadata.build_workflow_activity_metadata",
+        workflow_build_mock,
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner.workflow_metadata.update_model_parameter_metadata_file",
+        workflow_update_mock,
+    )
+
+    simtools_runner.run_applications(mock_args_dict)
+
+    assert get_metadata_mock.call_count == 2
+    workflow_build_mock.assert_called_once()
+    workflow_update_mock.assert_called_once()
+    assert workflow_update_mock.call_args.kwargs["metadata_file"] == discovered_metadata_file
+
+
 def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_directory):
     mock_args_dict = {
         "config_file": "dummy_config.yml",
