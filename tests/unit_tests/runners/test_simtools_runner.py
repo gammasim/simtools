@@ -267,8 +267,12 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     assert len(submit_calls) == 2
     assert submit_calls[0]["configuration"]["activity_id"] == "cfg-id-1"
     assert submit_calls[1]["configuration"]["activity_id"] == "cfg-id-3"
-    assert submit_calls[0]["configuration"]["log_file"].name == "app1-01.log"
-    assert submit_calls[1]["configuration"]["log_file"].name == "app3-02.log"
+    assert submit_calls[0]["configuration"]["label"] == "app1"
+    assert submit_calls[1]["configuration"]["label"] == "app3"
+    assert submit_calls[0]["configuration"]["disable_log_file"] is True
+    assert submit_calls[1]["configuration"]["disable_log_file"] is True
+    assert submit_calls[0]["configuration"]["output_path"] == str(tmp_test_directory)
+    assert submit_calls[1]["configuration"]["output_path"] == str(tmp_test_directory)
 
     version_string_mock.assert_called_once_with([], include_software_versions=False)
     workflow_build_mock.assert_not_called()
