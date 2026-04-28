@@ -156,25 +156,38 @@ def _merge(input_files, table_names, file_type, output_file, add_file_id_to_tabl
     """
     merged = {name: [] for name in table_names}
     is_hdf5 = file_type == "HDF5"
+    copied_metadata = set()
 
     def update_file_id(table, idx):
         if "file_id" in table.colnames:
             table["file_id"] = idx
 
-    def process_table(table, key, idx):
+    def process_table(table, key, idx, source_file):
         table_name = f"{key}_{idx}" if add_file_id_to_table_name else key
         update_file_id(table, idx)
         if is_hdf5:
             write_table_in_hdf5(table, output_file, table_name)
-            if idx == 0:
-                copy_metadata_to_hdf5(input_files[0], output_file, table_name)
+            if key not in copied_metadata:
+                copy_metadata_to_hdf5(source_file, output_file, table_name)
+                copied_metadata.add(key)
         else:
             merged[key].append(table)
 
     for idx, file in enumerate(input_files):
-        tables = read_tables(file, table_names, file_type)
+        available_tables = read_table_list(file, table_names, include_indexed_tables=False)
+        tables_to_read = [name for name in table_names if available_tables.get(name)]
+
+        missing_tables = [name for name in table_names if name not in tables_to_read]
+        for missing_table in missing_tables:
+            _logger.warning(f"Table {missing_table} not found in {file}; skipping.")
+
+        if not tables_to_read:
+            _logger.warning(f"No requested tables found in {file}; skipping file.")
+            continue
+
+        tables = read_tables(file, tables_to_read, file_type)
         for key, table in tables.items():
-            process_table(table, key, idx)
+            process_table(table, key, idx, file)
 
     if file_type != "HDF5":
         merged = {k: vstack(v, metadata_conflicts="silent") for k, v in merged.items()}

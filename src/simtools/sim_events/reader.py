@@ -79,21 +79,43 @@ class EventDataReader:
             include_indexed_tables=True,
         )
 
+        def table_index(table_name, base_name):
+            if table_name == base_name:
+                return 0
+            prefix = f"{base_name}_"
+            if not table_name.startswith(prefix):
+                return None
+            suffix = table_name[len(prefix) :]
+            if suffix.isdigit():
+                return int(suffix)
+            return None
+
+        def build_index_map(base_name):
+            index_map = {}
+            for table_name in dataset_dict.get(base_name, []):
+                index = table_index(table_name, base_name)
+                if index is not None:
+                    index_map[index] = table_name
+            return index_map
+
+        showers = build_index_map("SHOWERS")
+        file_info = build_index_map("FILE_INFO")
+        triggers = build_index_map("TRIGGERS")
+
         data_sets = []
-        try:
-            sorted_indices = sorted(
-                range(len(dataset_dict["SHOWERS"])),
-                key=lambda i: int(dataset_dict["SHOWERS"][i].split("_")[-1]),
-            )
-        except (ValueError, AttributeError):
-            sorted_indices = [0]  # Handle the case where the key is only "SHOWERS"
-        for i in sorted_indices:
+        for index in sorted(showers):
+            file_info_name = file_info.get(index, file_info.get(0))
+            if file_info_name is None:
+                self._logger.warning(f"Missing FILE_INFO table for index {index}; skipping dataset")
+                continue
+
             entry = {
-                "SHOWERS": dataset_dict["SHOWERS"][i],
-                "FILE_INFO": dataset_dict["FILE_INFO"][i],
+                "SHOWERS": showers[index],
+                "FILE_INFO": file_info_name,
             }
-            if i < len(dataset_dict["TRIGGERS"]) and dataset_dict["TRIGGERS"][i]:
-                entry["TRIGGERS"] = dataset_dict["TRIGGERS"][i]
+            if index in triggers:
+                entry["TRIGGERS"] = triggers[index]
+
             data_sets.append(entry)
 
         return data_sets

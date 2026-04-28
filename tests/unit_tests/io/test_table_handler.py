@@ -195,6 +195,82 @@ def test_merge_hdf5(mocker, tmp_path):
     assert len(result) == 1
     assert mock_copy.call_count == 1
 
+
+def test_merge_hdf5_skips_missing_tables_per_file(mocker, tmp_path):
+    """Test merging HDF5 files when one file misses a requested table."""
+    mock_read_list = mocker.patch(f"{TABLE_HANDLER_PATH}.read_table_list")
+    mock_read = mocker.patch(f"{TABLE_HANDLER_PATH}.read_tables")
+    mock_copy = mocker.patch(f"{TABLE_HANDLER_PATH}.copy_metadata_to_hdf5")
+
+    showers_1 = Table({"col1": [1], FILE_ID: [0]})
+    triggers_1 = Table({"col1": [1], FILE_ID: [0]})
+    file_info_1 = Table({"col1": [1], FILE_ID: [0]})
+    showers_2 = Table({"col1": [2], FILE_ID: [0]})
+    file_info_2 = Table({"col1": [2], FILE_ID: [0]})
+
+    mock_read_list.side_effect = [
+        {"SHOWERS": ["SHOWERS"], "TRIGGERS": ["TRIGGERS"], "FILE_INFO": ["FILE_INFO"]},
+        {"SHOWERS": ["SHOWERS"], "TRIGGERS": [], "FILE_INFO": ["FILE_INFO"]},
+    ]
+    mock_read.side_effect = [
+        {"SHOWERS": showers_1, "TRIGGERS": triggers_1, "FILE_INFO": file_info_1},
+        {"SHOWERS": showers_2, "FILE_INFO": file_info_2},
+    ]
+
+    output_file = tmp_path / OUTPUT_HDF5
+    result = _merge(
+        [FILE1_H5, FILE2_H5],
+        ["SHOWERS", "TRIGGERS", "FILE_INFO"],
+        "HDF5",
+        output_file,
+    )
+
+    assert len(result) == 3
+    assert mock_read.call_count == 2
+    assert mock_read.call_args_list[0] == mocker.call(
+        FILE1_H5,
+        ["SHOWERS", "TRIGGERS", "FILE_INFO"],
+        "HDF5",
+    )
+    assert mock_read.call_args_list[1] == mocker.call(
+        FILE2_H5,
+        ["SHOWERS", "FILE_INFO"],
+        "HDF5",
+    )
+    assert mock_copy.call_count == 3
+
+
+def test_merge_hdf5_copies_metadata_from_first_available_table_source(mocker, tmp_path):
+    """Test metadata copy for a table that appears first in a later input file."""
+    mock_read_list = mocker.patch(f"{TABLE_HANDLER_PATH}.read_table_list")
+    mock_read = mocker.patch(f"{TABLE_HANDLER_PATH}.read_tables")
+    mock_copy = mocker.patch(f"{TABLE_HANDLER_PATH}.copy_metadata_to_hdf5")
+
+    showers_1 = Table({"col1": [1], FILE_ID: [0]})
+    file_info_1 = Table({"col1": [1], FILE_ID: [0]})
+    showers_2 = Table({"col1": [2], FILE_ID: [0]})
+    triggers_2 = Table({"col1": [2], FILE_ID: [0]})
+    file_info_2 = Table({"col1": [2], FILE_ID: [0]})
+
+    mock_read_list.side_effect = [
+        {"SHOWERS": ["SHOWERS"], "TRIGGERS": [], "FILE_INFO": ["FILE_INFO"]},
+        {"SHOWERS": ["SHOWERS"], "TRIGGERS": ["TRIGGERS"], "FILE_INFO": ["FILE_INFO"]},
+    ]
+    mock_read.side_effect = [
+        {"SHOWERS": showers_1, "FILE_INFO": file_info_1},
+        {"SHOWERS": showers_2, "TRIGGERS": triggers_2, "FILE_INFO": file_info_2},
+    ]
+
+    output_file = tmp_path / OUTPUT_HDF5
+    _merge(
+        [FILE1_H5, FILE2_H5],
+        ["SHOWERS", "TRIGGERS", "FILE_INFO"],
+        "HDF5",
+        output_file,
+    )
+
+    mock_copy.assert_any_call(FILE2_H5, output_file, "TRIGGERS_1")
+
     # Mock Table.read
     mock_read = mocker.patch(ASTROPY_TABLE_READ)
     mock_table = Table({"col1": [1, 2]})

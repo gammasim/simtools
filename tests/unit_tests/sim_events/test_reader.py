@@ -247,3 +247,38 @@ def test_read_event_data_with_missing_triggers(tmp_test_directory, mock_tables):
     assert triggered_data is None
     assert hasattr(file_info, "colnames")
     assert hasattr(shower_data, "shower_id")
+
+
+@patch("simtools.sim_events.reader.table_handler.read_table_list")
+def test_read_table_list_aligns_tables_by_index(mock_read_table_list):
+    """Test that indexed tables are aligned by suffix index, not by list position."""
+    mock_read_table_list.return_value = {
+        "SHOWERS": ["SHOWERS_0", "SHOWERS_1", "SHOWERS_2"],
+        "TRIGGERS": ["TRIGGERS_0", "TRIGGERS_2"],
+        "FILE_INFO": ["FILE_INFO_0", "FILE_INFO_1", "FILE_INFO_2"],
+    }
+
+    reader = EventDataReader("dummy.hdf5")
+
+    assert reader.data_sets == [
+        {"SHOWERS": "SHOWERS_0", "TRIGGERS": "TRIGGERS_0", "FILE_INFO": "FILE_INFO_0"},
+        {"SHOWERS": "SHOWERS_1", "FILE_INFO": "FILE_INFO_1"},
+        {"SHOWERS": "SHOWERS_2", "TRIGGERS": "TRIGGERS_2", "FILE_INFO": "FILE_INFO_2"},
+    ]
+
+
+@patch("simtools.sim_events.reader.table_handler.read_table_list")
+def test_read_table_list_falls_back_to_base_file_info(mock_read_table_list):
+    """Test fallback to FILE_INFO when only non-indexed FILE_INFO table exists."""
+    mock_read_table_list.return_value = {
+        "SHOWERS": ["SHOWERS_0", "SHOWERS_1"],
+        "TRIGGERS": ["TRIGGERS_0"],
+        "FILE_INFO": ["FILE_INFO"],
+    }
+
+    reader = EventDataReader("dummy.hdf5")
+
+    assert reader.data_sets == [
+        {"SHOWERS": "SHOWERS_0", "TRIGGERS": "TRIGGERS_0", "FILE_INFO": "FILE_INFO"},
+        {"SHOWERS": "SHOWERS_1", "FILE_INFO": "FILE_INFO"},
+    ]
