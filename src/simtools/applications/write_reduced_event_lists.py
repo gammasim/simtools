@@ -11,7 +11,7 @@ input file names by replacing the sim_telarray suffix with
 Command line arguments
 ----------------------
 input_files (list of str, required)
-    One or more sim_telarray output files (e.g., '*.simtel.zst').
+    One or more sim_telarray output files (e.g., ``*.simtel.zst``).
 output_path (str, optional)
     Directory for the output files. Defaults to './simtools-output/'.
 
