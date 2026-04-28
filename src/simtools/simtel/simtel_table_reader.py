@@ -248,6 +248,11 @@ def _data_columns_nsb_spectrum():
     )
 
 
+def _data_columns_nsb_reference_spectrum():
+    """Column description for parameter nsb_reference_spectrum."""
+    return _data_columns_nsb_spectrum()
+
+
 def read_simtel_table(parameter_name, file_path):
     """
     Read sim_telarray table file for a given parameter.
