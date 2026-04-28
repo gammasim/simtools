@@ -459,13 +459,18 @@ def test_save_reduced_event_lists_no_output_files(array_simulator, mocker, caplo
     assert "No sim_telarray output files found" in caplog.text or caplog.text == ""
 
 
-def test_write_reduced_event_lists_derives_output_files(array_simulator, mocker):
+def test_write_reduced_event_lists_derives_output_files(
+    array_simulator, mocker, tmp_test_directory
+):
     """Derive output file names from input files when output_files is not provided."""
+    tmp_base = Path(str(tmp_test_directory))
+    data_dir = tmp_base / "data"
+    output_dir = tmp_base / "reduced"
     input_files = [
-        "/tmp/data/output_file1.simtel.zst",
-        "/tmp/data/output_file2.simtel.gz",
+        str(data_dir / "output_file1.simtel.zst"),
+        str(data_dir / "output_file2.simtel.gz"),
     ]
-    output_path = "/tmp/reduced"
+    output_path = str(output_dir)
 
     mock_generator = mocker.MagicMock()
     mock_simtel_io_writer = mocker.patch(
@@ -476,25 +481,26 @@ def test_write_reduced_event_lists_derives_output_files(array_simulator, mocker)
     Simulator.write_reduced_event_lists(input_files=input_files, output_path=output_path)
 
     assert mock_simtel_io_writer.call_count == 2
-    mock_simtel_io_writer.assert_any_call(["/tmp/data/output_file1.simtel.zst"])
-    mock_simtel_io_writer.assert_any_call(["/tmp/data/output_file2.simtel.gz"])
+    mock_simtel_io_writer.assert_any_call([str(data_dir / "output_file1.simtel.zst")])
+    mock_simtel_io_writer.assert_any_call([str(data_dir / "output_file2.simtel.gz")])
 
     assert mock_table_handler.write_tables.call_count == 2
     mock_table_handler.write_tables.assert_any_call(
         tables=mock_generator.process_files.return_value,
-        output_file=Path("/tmp/reduced/output_file1.reduced_event_data.hdf5"),
+        output_file=output_dir / "output_file1.reduced_event_data.hdf5",
         overwrite_existing=True,
     )
     mock_table_handler.write_tables.assert_any_call(
         tables=mock_generator.process_files.return_value,
-        output_file=Path("/tmp/reduced/output_file2.reduced_event_data.hdf5"),
+        output_file=output_dir / "output_file2.reduced_event_data.hdf5",
         overwrite_existing=True,
     )
 
 
-def test_write_reduced_event_lists_derives_output_to_input_directory(mocker):
+def test_write_reduced_event_lists_derives_output_to_input_directory(mocker, tmp_test_directory):
     """Derive output files in input directory when output_path is not provided."""
-    input_file = "/tmp/data/output_file3.simtel"
+    data_dir = Path(str(tmp_test_directory)) / "data"
+    input_file = str(data_dir / "output_file3.simtel")
 
     mock_generator = mocker.MagicMock()
     mock_simtel_io_writer = mocker.patch(
@@ -507,7 +513,7 @@ def test_write_reduced_event_lists_derives_output_to_input_directory(mocker):
     mock_simtel_io_writer.assert_called_once_with([input_file])
     mock_table_handler.write_tables.assert_called_once_with(
         tables=mock_generator.process_files.return_value,
-        output_file=Path("/tmp/data/output_file3.reduced_event_data.hdf5"),
+        output_file=data_dir / "output_file3.reduced_event_data.hdf5",
         overwrite_existing=True,
     )
 
