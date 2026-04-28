@@ -345,12 +345,12 @@ class MetadataCollector:
         except (OSError, KeyError, AttributeError):
             return
 
-        context_from_simtel = table_meta.get("Context_from_sim_telarray")
+        context_from_simtel = table_meta.get("context_from_sim_telarray")
         if context_from_simtel in (None, "", [], {}):
             return
 
         note = {
-            "title": "Context_from_sim_telarray",
+            "title": "context_from_sim_telarray",
             "text": str(context_from_simtel),
             "creation_time": gen.now_date_time_in_isoformat(),
         }
