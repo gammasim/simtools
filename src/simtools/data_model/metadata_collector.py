@@ -342,7 +342,7 @@ class MetadataCollector:
 
         try:
             table_meta = Table.read(value_path).meta
-        except (FileNotFoundError, OSError, KeyError, AttributeError):
+        except (OSError, KeyError, AttributeError):
             return
 
         context_from_simtel = table_meta.get("Context_from_sim_telarray")
