@@ -459,6 +459,59 @@ def test_save_reduced_event_lists_no_output_files(array_simulator, mocker, caplo
     assert "No sim_telarray output files found" in caplog.text or caplog.text == ""
 
 
+def test_write_reduced_event_lists_derives_output_files(array_simulator, mocker):
+    """Derive output file names from input files when output_files is not provided."""
+    input_files = [
+        "/tmp/data/output_file1.simtel.zst",
+        "/tmp/data/output_file2.simtel.gz",
+    ]
+    output_path = "/tmp/reduced"
+
+    mock_generator = mocker.MagicMock()
+    mock_simtel_io_writer = mocker.patch(
+        "simtools.sim_events.writer.EventDataWriter", return_value=mock_generator
+    )
+    mock_table_handler = mocker.patch("simtools.simulator.table_handler")
+
+    Simulator.write_reduced_event_lists(input_files=input_files, output_path=output_path)
+
+    assert mock_simtel_io_writer.call_count == 2
+    mock_simtel_io_writer.assert_any_call(["/tmp/data/output_file1.simtel.zst"])
+    mock_simtel_io_writer.assert_any_call(["/tmp/data/output_file2.simtel.gz"])
+
+    assert mock_table_handler.write_tables.call_count == 2
+    mock_table_handler.write_tables.assert_any_call(
+        tables=mock_generator.process_files.return_value,
+        output_file=Path("/tmp/reduced/output_file1.reduced_event_data.hdf5"),
+        overwrite_existing=True,
+    )
+    mock_table_handler.write_tables.assert_any_call(
+        tables=mock_generator.process_files.return_value,
+        output_file=Path("/tmp/reduced/output_file2.reduced_event_data.hdf5"),
+        overwrite_existing=True,
+    )
+
+
+def test_write_reduced_event_lists_derives_output_to_input_directory(mocker):
+    """Derive output files in input directory when output_path is not provided."""
+    input_file = "/tmp/data/output_file3.simtel"
+
+    mock_generator = mocker.MagicMock()
+    mock_simtel_io_writer = mocker.patch(
+        "simtools.sim_events.writer.EventDataWriter", return_value=mock_generator
+    )
+    mock_table_handler = mocker.patch("simtools.simulator.table_handler")
+
+    Simulator.write_reduced_event_lists(input_files=[input_file])
+
+    mock_simtel_io_writer.assert_called_once_with([input_file])
+    mock_table_handler.write_tables.assert_called_once_with(
+        tables=mock_generator.process_files.return_value,
+        output_file=Path("/tmp/data/output_file3.reduced_event_data.hdf5"),
+        overwrite_existing=True,
+    )
+
+
 @pytest.mark.parametrize(
     ("run_mode", "expected_devices"),
     [
