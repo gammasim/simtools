@@ -263,7 +263,7 @@ def _replace_placeholders_in_configuration(
         {place_holder: setting_workflow},
     )
     if output_path:
-        configuration["output_path"] = str(output_path)
+        configuration.setdefault("output_path", str(output_path))
 
     return configuration
 
