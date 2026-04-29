@@ -8,6 +8,7 @@ import numpy as np
 from astropy import units as u
 
 from simtools import settings
+from simtools.configuration import defaults
 from simtools.corsika import corsika_output_validator
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler, table_handler
@@ -44,7 +45,7 @@ class Simulator:
         self.model_version = settings.config.args.get("model_version", None)
 
         self.simulation_software = settings.config.args.get(
-            "simulation_software", "corsika_sim_telarray"
+            "simulation_software", defaults.SIMULATION_SOFTWARE_DEFAULT
         )
         self.run_mode = settings.config.args.get("run_mode", None)
 
@@ -84,7 +85,7 @@ class Simulator:
         ValueError
 
         """
-        if simulation_software not in ["sim_telarray", "corsika", "corsika_sim_telarray"]:
+        if simulation_software not in defaults.SIMULATION_SOFTWARE_CHOICES:
             raise ValueError(f"Invalid simulation software: {simulation_software}")
         self._simulation_software = simulation_software.lower()
 
@@ -159,7 +160,8 @@ class Simulator:
 
         if runner_class is not SimulatorArray:
             runner_args["curved_atmosphere_min_zenith_angle"] = settings.config.args.get(
-                "curved_atmosphere_min_zenith_angle", 65 * u.deg
+                "curved_atmosphere_min_zenith_angle",
+                defaults.CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG * u.deg,
             )
         if runner_class is corsika_simtel_runner.CorsikaSimtelRunner:
             runner_args["sequential"] = settings.config.args.get("sequential", False)

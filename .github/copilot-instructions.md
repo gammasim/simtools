@@ -272,6 +272,9 @@ make linkcheck              # Check links
 - Changelogs should not exceed 1 line.
 - Use pull request IDs (not issue IDs) as the fragment number.
 
+**API Reference:**
+- Every new module must be added to `docs/source/api-reference/` — either as a new `.md` file (listed in `index.md`) or as a new `## section` in the relevant existing `.md` file, using `.. automodule::` with `:members:`.
+
 
 
 ## Key Dependencies

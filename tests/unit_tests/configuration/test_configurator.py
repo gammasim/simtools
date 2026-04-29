@@ -211,6 +211,7 @@ def test_convert_string_none_to_none():
 def test_get_db_parameters_from_env(configurator, args_dict):
     configurator.parser.initialize_db_config_arguments()
     configurator._fill_from_command_line(arg_list=[], require_command_line=False)
+    configurator.config["env_file"] = "this_file_does_not_exist.env"
     configurator._fill_from_environmental_variables()
 
     args_dict["db_api_user"] = "db_user"
@@ -219,6 +220,7 @@ def test_get_db_parameters_from_env(configurator, args_dict):
     args_dict["db_server"] = "abc@def.de"
     args_dict["db_simulation_model"] = "sim_model"
     args_dict["db_simulation_model_version"] = "v0.0.0"
+    args_dict["env_file"] = "this_file_does_not_exist.env"
 
     # remove user defined parameters from comparison (depends on environment)
     expected_config = {k: v for k, v in args_dict.items() if not k.startswith("user_")}
