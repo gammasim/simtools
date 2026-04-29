@@ -85,7 +85,7 @@ def main():
         },
     )
 
-    ctao_array_layouts = retrieve_ctao_array_layouts(
+    ctao_array_layouts, associated_data = retrieve_ctao_array_layouts(
         site=app_context.args["site"],
         repository_url=app_context.args["repository_url"],
         branch_name=app_context.args["repository_branch"],
@@ -106,6 +106,7 @@ def main():
     write_array_layouts(
         array_layouts=merge_array_layouts(db_array_layouts["array_layouts"], ctao_array_layouts),
         args_dict=app_context.args,
+        associated_data=associated_data,
     )
 
 

@@ -171,6 +171,13 @@ class CommandLineParser(argparse.ArgumentParser):
             type=Path,
         )
         _job_group.add_argument(
+            "--figure_format",
+            help="output figure format(s)",
+            type=str,
+            nargs="+",
+            default=["png"],
+        )
+        _job_group.add_argument(
             "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"
         )
         _job_group.add_argument(
@@ -370,13 +377,11 @@ class CommandLineParser(argparse.ArgumentParser):
                     "North is 0 degrees and the azimuth grows clockwise (East is 90 degrees)."
                 ),
                 "type": CommandLineParser.azimuth_angle,
-                "required": True,
                 "default": 0 * u.deg,
             },
             "zenith_angle": {
                 "help": "Zenith angle in degrees (between 0 and 180).",
                 "type": CommandLineParser.zenith_angle,
-                "required": True,
                 "default": 20 * u.deg,
             },
             "nshow": {
@@ -391,7 +396,6 @@ class CommandLineParser(argparse.ArgumentParser):
             "run_number": {
                 "help": "Run number to be simulated.",
                 "type": int,
-                "required": True,
                 "default": 1,
             },
             "event_number_first_shower": {

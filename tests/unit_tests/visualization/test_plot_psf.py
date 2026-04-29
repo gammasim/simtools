@@ -264,13 +264,13 @@ def test_create_monte_carlo_uncertainty_plot(tmp_path):
     )
     output_file = tmp_path / "monte_carlo"
 
-    with patch("matplotlib.pyplot.savefig") as mock_save:
+    with patch("simtools.visualization.visualize.save_figure") as mock_save:
         # Test RMSD mode
         plot_psf.create_monte_carlo_uncertainty_plot(
             mc_results_rmsd, output_file, fraction=0.8, use_ks_statistic=False
         )
         plt.close("all")
-        assert mock_save.call_count == 2  # PDF and PNG
+        assert mock_save.call_count == 1
 
         mock_save.reset_mock()
         # Test KS mode
@@ -278,7 +278,7 @@ def test_create_monte_carlo_uncertainty_plot(tmp_path):
             mc_results_ks, output_file, fraction=0.8, use_ks_statistic=True
         )
         plt.close("all")
-        assert mock_save.call_count == 2
+        assert mock_save.call_count == 1
 
 
 def test_create_psf_vs_offaxis_plot(sample_parameters, tmp_path):
