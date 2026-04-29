@@ -4,11 +4,14 @@ applications:
   configuration:
     corsika_file: tests/resources/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst
     array_layout_name: subsystem_lsts
+    corsika_he_interaction: epos
+    corsika_le_interaction: urqmd
     label: test
     log_level: DEBUG
     model_version: 6.0.2
     output_path: simtools-output
-    sim_telarray_seed: [1745, 290]
+    sim_telarray_instrument_seed: 1745
+    sim_telarray_seed: [290]
     simulation_software: sim_telarray
     site: South
   integration_tests:

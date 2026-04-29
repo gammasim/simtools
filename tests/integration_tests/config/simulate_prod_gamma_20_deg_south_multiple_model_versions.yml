@@ -6,6 +6,8 @@ applications:
     azimuth_angle: South
     core_scatter: 5 700 m
     corsika_seeds: [534, 220, 1104, 382]
+    corsika_he_interaction: epos
+    corsika_le_interaction: urqmd
     energy_range: 100 GeV 300 GeV
     label: multiple_model_versions
     log_level: DEBUG
