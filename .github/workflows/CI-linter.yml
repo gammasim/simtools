@@ -67,10 +67,10 @@ jobs:
         run: |
           pip install -e '.[tests,dev,doc]'
 
-      - name: Install and run dotenv-linter
-        run: |
-          curl -sSfL https://git.io/JLbXn | sh -s
-          ./bin/dotenv-linter check -i UnorderedKey .env*
+      - name: Dotenv linter
+        uses: dotenv-linter/action-dotenv-linter@v2
+        with:
+          dotenv_linter_flags: check -i UnorderedKey .env*
 
       - name: Restore pre-commit cache
         uses: actions/cache@v5

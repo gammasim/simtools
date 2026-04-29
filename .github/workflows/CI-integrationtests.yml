@@ -72,7 +72,12 @@ jobs:
         run: |
           REPO_URL=https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/${IT_NAME}
           export GIT_LFS_SKIP_SMUDGE=1  # disable automatic downloading of all LFS files
-          git clone --depth 1 --branch "$CORSIKA_TABLES" "$REPO_URL" "$IT_NAME"
+          for attempt in 1 2 3; do
+            git clone --depth 1 --branch "$CORSIKA_TABLES" "$REPO_URL" "$IT_NAME" && break
+            echo "Clone attempt $attempt failed. Retrying in 120 seconds..."
+            rm -rf "$IT_NAME"
+            sleep 120
+          done
           git lfs install
           (cd "$IT_NAME" && git lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III")
 
@@ -150,8 +155,6 @@ jobs:
             echo "SIMTOOLS_SIM_TELARRAY_PATH=$SIMTOOLS_SIM_TELARRAY_PATH"
             echo "SIMTOOLS_CORSIKA_PATH=$SIMTOOLS_CORSIKA_PATH"
             echo "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH=$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"
-            echo "SIMTOOLS_CORSIKA_HE_INTERACTION=$SIMTOOLS_CORSIKA_HE_INTERACTION"
-            echo "SIMTOOLS_CORSIKA_LE_INTERACTION=$SIMTOOLS_CORSIKA_LE_INTERACTION"
           } | tee .env >> "$GITHUB_ENV"
 
       - name: Download CORSIKA interaction tables
