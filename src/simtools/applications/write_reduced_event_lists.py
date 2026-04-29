@@ -45,12 +45,12 @@ def main():
     """See CLI description."""
     app_context = build_application(
         initialization_kwargs={"db_config": False},
-        startup_kwargs={"setup_io_handler": False, "resolve_sim_software_executables": False},
+        startup_kwargs={"setup_io_handler": True, "resolve_sim_software_executables": False},
     )
 
     Simulator.write_reduced_event_lists(
         input_files=app_context.args["input_files"],
-        output_path=app_context.args["output_path"],
+        output_path=app_context.io_handler.get_output_directory(),
     )
 
 

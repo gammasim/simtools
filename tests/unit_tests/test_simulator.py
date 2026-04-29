@@ -516,6 +516,21 @@ def test_write_reduced_event_lists_derives_output_to_input_directory(mocker, tmp
     )
 
 
+def test_write_reduced_event_lists_raises_for_mismatched_explicit_output_files(mocker):
+    """Raise for explicit output_files length mismatch to avoid silent truncation."""
+    input_files = ["output_file1.simtel.zst", "output_file2.simtel.zst"]
+    output_files = ["output_file1.reduced_event_data.hdf5"]
+
+    mock_simtel_io_writer = mocker.patch("simtools.sim_events.writer.EventDataWriter")
+    mock_table_handler = mocker.patch("simtools.simulator.table_handler")
+
+    with pytest.raises(ValueError, match="Length mismatch between input_files and output_files"):
+        Simulator.write_reduced_event_lists(input_files=input_files, output_files=output_files)
+
+    mock_simtel_io_writer.assert_not_called()
+    mock_table_handler.write_tables.assert_not_called()
+
+
 @pytest.mark.parametrize(
     ("run_mode", "expected_devices"),
     [
