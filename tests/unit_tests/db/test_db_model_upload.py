@@ -490,7 +490,7 @@ def test_clone_simulation_model_repository_with_branch(
 
     mock_rmtree.assert_called_once_with(target_dir)
     expected_command = f'git clone --depth=1 -b "test-branch" "{repository_url}" "{target_dir}"'
-    mock_retry_command.assert_called_once_with(expected_command)
+    mock_retry_command.assert_called_once_with(expected_command, max_attempts=3, delay=30)
     assert result == target_dir
 
 
@@ -511,7 +511,7 @@ def test_clone_simulation_model_repository_with_version_tag(
 
     mock_rmtree.assert_called_once_with(target_dir)
     expected_command = f'git clone --branch "2.0.0" --depth 1 "{repository_url}" "{target_dir}"'
-    mock_retry_command.assert_called_once_with(expected_command)
+    mock_retry_command.assert_called_once_with(expected_command, max_attempts=3, delay=30)
     assert result == target_dir
 
 
@@ -532,7 +532,7 @@ def test_clone_simulation_model_repository_directory_not_exists(
 
     mock_rmtree.assert_not_called()
     expected_command = f'git clone --branch "1.0.0" --depth 1 "{repository_url}" "{target_dir}"'
-    mock_retry_command.assert_called_once_with(expected_command)
+    mock_retry_command.assert_called_once_with(expected_command, max_attempts=3, delay=30)
     assert result == target_dir
 
 
@@ -553,8 +553,31 @@ def test_clone_simulation_model_repository_relative_path(mock_rmtree, mock_retry
     expected_command = (
         f'git clone --branch "1.0.0" --depth 1 "{repository_url}" "{expected_absolute_path}"'
     )
-    mock_retry_command.assert_called_once_with(expected_command)
+    mock_retry_command.assert_called_once_with(expected_command, max_attempts=3, delay=30)
     assert result == expected_absolute_path
+
+
+@patch("simtools.db.db_model_upload.retry_command")
+@patch("simtools.db.db_model_upload.shutil.rmtree")
+def test_clone_simulation_model_repository_with_custom_retry(
+    mock_rmtree, mock_retry_command, tmp_test_directory
+):
+    target_dir = Path(tmp_test_directory) / "repo"
+    repository_url = "https://github.com/test/repo.git"
+
+    with patch("simtools.db.db_model_upload.Path.exists", return_value=False):
+        result = db_model_upload.clone_simulation_model_repository(
+            target_dir,
+            repository_url,
+            db_simulation_model_version="1.0.0",
+            repository_branch=None,
+            retry=5,
+        )
+
+    mock_rmtree.assert_not_called()
+    expected_command = f'git clone --branch "1.0.0" --depth 1 "{repository_url}" "{target_dir}"'
+    mock_retry_command.assert_called_once_with(expected_command, max_attempts=5, delay=30)
+    assert result == target_dir
 
 
 @patch("simtools.db.db_model_upload.retry_command")
@@ -612,6 +635,7 @@ def test_add_complete_model_success(
         repository_url,
         db_simulation_model_version=db_simulation_model_version,
         repository_branch=None,
+        retry=3,
     )
     mock_add_model_parameters.assert_called_once_with(
         input_path=repository_dir / "simulation-models" / "model_parameters", db=mock_db
@@ -687,6 +711,7 @@ def test_add_complete_model_with_repository_branch(
         repository_url,
         db_simulation_model_version=db_simulation_model_version,
         repository_branch=repository_branch,
+        retry=3,
     )
 
 
