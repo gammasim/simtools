@@ -235,6 +235,7 @@ class Configurator:
                 return gen.change_dict_keys_case(_config_dict["applications"][0]["configuration"])
             return gen.change_dict_keys_case(_config_dict)
         except (TypeError, AttributeError):
+            self._logger.debug("No YAML configuration update applied to configuration dictionary.")
             return {}
         except FileNotFoundError:
             self._logger.error(f"Configuration file not found: {config_file}")
@@ -256,23 +257,6 @@ class Configurator:
         """
         _env_list = [action.dest for action in self.parser._actions]  # pylint: disable=protected-access
         return gen.load_environment_variables(env_file=env_file, env_list=_env_list)
-
-    def _fill_from_command_line(self, arg_list=None, require_command_line=True):
-        """
-        Fill configuration parameters from command line arguments.
-
-        Triggers a print of the help if no command line arguments are given and
-        require_command_line is set.
-
-        Parameters
-        ----------
-        arg_list: list
-            List of arguments.
-        require_command_line: bool
-            Require at least one command line argument.
-
-        """
-        self._fill_config(self._get_cli_arglist(arg_list, require_command_line))
 
     def _fill_from_config_dict(self, input_dict, overwrite=False):
         """
