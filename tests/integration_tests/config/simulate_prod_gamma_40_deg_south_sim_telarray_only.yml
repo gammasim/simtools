@@ -4,6 +4,8 @@ applications:
   configuration:
     corsika_file: tests/resources/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst
     array_layout_name: subsystem_lsts
+    corsika_he_interaction: epos
+    corsika_le_interaction: urqmd
     label: test
     log_level: DEBUG
     model_version: 6.0.2
