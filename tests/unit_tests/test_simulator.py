@@ -459,9 +459,7 @@ def test_save_reduced_event_lists_no_output_files(array_simulator, mocker, caplo
     assert "No sim_telarray output files found" in caplog.text or caplog.text == ""
 
 
-def test_write_reduced_event_lists_derives_output_files(
-    array_simulator, mocker, tmp_test_directory
-):
+def test_write_reduced_event_lists_derives_output_files(mocker, tmp_test_directory):
     """Derive output file names from input files when output_files is not provided."""
     tmp_base = Path(str(tmp_test_directory))
     data_dir = tmp_base / "data"
