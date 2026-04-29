@@ -439,10 +439,11 @@ def test_set_model_versions(configurator):
 
 def test_initialize(configurator):
     configurator.parser.initialize_default_arguments = MagicMock()
-    configurator._fill_from_command_line = MagicMock()
-    configurator._fill_from_config_file = MagicMock()
-    configurator._fill_from_config_dict = MagicMock()
-    configurator._fill_from_environmental_variables = MagicMock()
+    configurator._get_cli_arglist = MagicMock(return_value=[])
+    configurator._config_from_env = MagicMock(return_value={})
+    configurator._config_from_file = MagicMock(return_value={})
+    configurator._fill_config = MagicMock()
+    configurator._reset_required_arguments = MagicMock()
     configurator._initialize_model_versions = MagicMock()
     configurator._initialize_io_handler = MagicMock()
     configurator._initialize_output = MagicMock()
@@ -453,10 +454,10 @@ def test_initialize(configurator):
 
     # Assert that the methods were called
     configurator.parser.initialize_default_arguments.assert_called_once()
-    configurator._fill_from_command_line.assert_called_once_with(require_command_line=True)
-    configurator._fill_from_config_file.assert_called_once_with(None)
-    configurator._fill_from_config_dict.assert_called_once_with(None)
-    configurator._fill_from_environmental_variables.assert_called_once()
+    configurator._get_cli_arglist.assert_called_once_with(require_command_line=True)
+    configurator._config_from_env.assert_called_once()
+    configurator._config_from_file.assert_called_once()
+    configurator._fill_config.assert_called_once_with([])
     configurator._initialize_model_versions.assert_called_once()
     configurator._initialize_io_handler.assert_called_once()
     configurator._initialize_output.assert_not_called()
@@ -468,7 +469,7 @@ def test_initialize(configurator):
     assert config["label"] == configurator.label
     assert db_dict == {"db_param": "test"}
 
-    # Call initialize with custom parameters
+    # Call initialize with output=True triggers _initialize_output
     configurator.initialize(
         require_command_line=False,
         paths=False,
@@ -477,21 +478,113 @@ def test_initialize(configurator):
         simulation_configuration={"test": "test"},
         db_config=True,
     )
-
-    # Assert that the methods were called with the correct parameters
-    configurator.parser.initialize_default_arguments.assert_called()
-    configurator._fill_from_command_line.assert_called()
-    configurator._fill_from_config_file.assert_called()
-    configurator._fill_from_config_dict.assert_called()
-    configurator._fill_from_environmental_variables.assert_called()
-    configurator._initialize_model_versions.assert_called()
-    configurator._initialize_io_handler.assert_called()
     configurator._initialize_output.assert_called_once()
     configurator._get_db_parameters.assert_called_once()
 
-    # test activity_id and label
-    configurator.config["activity_id"] = "test_activity_id"
-    configurator.config["label"] = "test_label"
+    # activity_id and label passed via class_init are preserved
+    configurator.config_class_init = {"activity_id": "test_activity_id", "label": "test_label"}
+    configurator._config_from_env.return_value = {}
+    configurator._config_from_file.return_value = {}
+    configurator._fill_config.side_effect = lambda _: configurator.config.update(
+        {"activity_id": "test_activity_id", "label": "test_label"}
+    )
     configurator.initialize()
     assert configurator.config["activity_id"] == "test_activity_id"
     assert configurator.config["label"] == "test_label"
+
+
+def test_get_cli_arglist():
+    configurator = Configurator()
+    configurator.parser.initialize_default_arguments()
+
+    # empty arglist with require_command_line=False returns empty list
+    assert configurator._get_cli_arglist(arg_list=[], require_command_line=False) == []
+
+    # empty arglist with require_command_line=True adds --help
+    assert configurator._get_cli_arglist(arg_list=[], require_command_line=True) == ["--help"]
+
+    # explicit arglist is returned as-is
+    assert configurator._get_cli_arglist(
+        arg_list=["--log_level", "debug"], require_command_line=False
+    ) == ["--log_level", "debug"]
+
+    # --config in arglist resets required arguments
+    configurator.parser.add_argument("--required_arg", required=True)
+    assert all(
+        action.required for action in configurator.parser._actions if action.dest == "required_arg"
+    )
+    configurator._get_cli_arglist(
+        arg_list=["--config", "my_config.yml"], require_command_line=False
+    )
+    assert all(
+        not action.required
+        for action in configurator.parser._actions
+        if action.dest == "required_arg"
+    )
+
+
+def test_config_from_file(tmp_test_directory):
+    configurator = Configurator()
+    configurator.parser.initialize_default_arguments()
+
+    # None config file returns empty dict
+    assert configurator._config_from_file(None) == {}
+
+    # non-existing file raises FileNotFoundError
+    with pytest.raises(FileNotFoundError):
+        configurator._config_from_file("this_file_does_not_exist")
+
+    # valid config file returns dict
+    _config_dict = {"output_path": "./abc/", "test": True}
+    _config_file = tmp_test_directory / "test_config_from_file.yml"
+    with open(_config_file, "w") as f:
+        yaml.safe_dump(_config_dict, f)
+    result = configurator._config_from_file(_config_file)
+    assert result["output_path"] == "./abc/"
+    assert result["test"] is True
+
+    # workflow-style config file returns inner configuration dict
+    _workflow_dict = {"applications": [{"application": "test", "configuration": _config_dict}]}
+    _workflow_file = tmp_test_directory / "test_workflow_config_from_file.yml"
+    with open(_workflow_file, "w") as f:
+        yaml.safe_dump(_workflow_dict, f)
+    result = configurator._config_from_file(_workflow_file)
+    assert result["output_path"] == "./abc/"
+    assert result["test"] is True
+
+
+def test_config_from_env():
+    configurator = Configurator()
+    configurator.parser.initialize_default_arguments()
+    configurator.parser.initialize_db_config_arguments()
+
+    # env var not matching any config key is ignored
+    os.environ["SIMTOOLS_TEST_ENV_VARIABLE"] = "test_value"
+    result = configurator._config_from_env()
+    assert "test_env_variable" not in result
+    del os.environ["SIMTOOLS_TEST_ENV_VARIABLE"]
+
+    # env var matching a config key is returned
+    os.environ["SIMTOOLS_DB_SERVER"] = "my_server"
+    result = configurator._config_from_env()
+    assert result.get("db_server") == "my_server"
+    del os.environ["SIMTOOLS_DB_SERVER"]
+
+
+def test_command_line_precedence_over_config_file(tmp_test_directory):
+    """Test that command-line arguments take precedence over config file (issue #2123)."""
+    configurator = Configurator()
+    configurator.parser.initialize_default_arguments()
+    _config_dict = {"label": "config_label", "log_level": "debug"}
+    _config_file = tmp_test_directory / "configuration-precedence-test.yml"
+    with open(_config_file, "w") as f:
+        yaml.safe_dump(_config_dict, f)
+
+    _cli_arglist = ["--config", str(_config_file), "--label", "cli_label", "--log_level", "info"]
+    configurator._fill_config(
+        configurator._arglist_from_config(configurator._config_from_file(_config_file))
+        + _cli_arglist
+    )
+
+    assert configurator.config["label"] == "cli_label"
+    assert configurator.config["log_level"] == "info"
