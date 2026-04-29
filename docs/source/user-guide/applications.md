@@ -71,6 +71,7 @@ simtools-derive-trigger-rates <applications/simtools-derive-trigger-rates>
 simtools-docs-produce-array-element-report <applications/simtools-docs-produce-array-element-report>
 simtools-docs-produce-calibration-reports <applications/simtools-docs-produce-calibration-reports>
 simtools-docs-produce-model-parameter-reports <applications/simtools-docs-produce-model-parameter-reports>
+simtools-docs-produce-production-summary <applications/simtools-docs-produce-production-summary>
 simtools-docs-produce-simulation-configuration-report <applications/simtools-docs-produce-simulation-configuration-report>
 simtools-generate-array-config <applications/simtools-generate-array-config>
 simtools-generate-corsika-histograms <applications/simtools-generate-corsika-histograms>
