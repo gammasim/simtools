@@ -603,23 +603,15 @@ def create_monte_carlo_uncertainty_plot(
         ax4.legend()
         ax4.grid(True, alpha=0.3)
 
-    # Save plot in both PDF and PNG formats with appropriate suffix
+    # Save plot using configured figure formats with appropriate suffix
     suffix = "_ks" if use_ks_statistic else "_rmsd"
 
     # Generate base filename without extension
     base_path = output_file.with_suffix("")
     base_name = str(base_path)
 
-    # Add suffix and save in both formats
-    pdf_file = f"{base_name}{suffix}.pdf"
-    png_file = f"{base_name}{suffix}.png"
-
-    plt.savefig(pdf_file, bbox_inches="tight")
-    plt.savefig(png_file, bbox_inches="tight", dpi=150)
+    visualize.save_figure(plt, f"{base_name}{suffix}", log_title="Monte Carlo uncertainty", dpi=150)
     plt.close()
-
-    logger.info(f"Monte Carlo uncertainty plot saved to {pdf_file}")
-    logger.info(f"Monte Carlo uncertainty plot saved to {png_file}")
 
 
 def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, output_dir):
@@ -705,9 +697,7 @@ def create_psf_vs_offaxis_plot(tel_model, site_model, args_dict, best_pars, outp
         unit_suffix = "cm" if "_cm" in key else "deg"
         plot_file_name = f"{tel_model.name}_best_params_{psf_identifier}_{unit_suffix}.png"
         plot_file = output_dir.joinpath(plot_file_name)
-        visualize.save_figure(
-            plt, plot_file, figure_format=["png"], log_title=f"{psf_label_cm} vs off-axis ({key})"
-        )
+        visualize.save_figure(plt, plot_file, log_title=f"{psf_label_cm} vs off-axis ({key})")
 
     plt.close("all")
 
