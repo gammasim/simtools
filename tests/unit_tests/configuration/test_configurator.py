@@ -2,6 +2,7 @@
 
 import logging
 import os
+import sys
 from copy import copy
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -138,7 +139,7 @@ def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_direct
     assert _tmp_config == configurator.config
 
 
-def test_command_line_precedence_over_config_file(configurator, tmp_test_directory):
+def test_command_line_precedence_over_config_file(tmp_test_directory, monkeypatch):
     """Test that command-line arguments override config file settings (issue #2123)."""
     # Create a config file with label='config_label' and log_level='debug'
     _config_dict = {
@@ -150,20 +151,28 @@ def test_command_line_precedence_over_config_file(configurator, tmp_test_directo
         yaml.safe_dump(_config_dict, output, sort_keys=False)
 
     # Initialize configurator with command-line args that differ from config file
-    configurator.parser.initialize_output_arguments()
-    configurator._fill_from_command_line(
-        arg_list=["--config", str(_config_file), "--label", "cli_label", "--log_level", "info"],
-        require_command_line=False,
+    configurator = Configurator()
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "test_configurator.py",
+            "--config",
+            str(_config_file),
+            "--label",
+            "cli_label",
+            "--log_level",
+            "info",
+        ],
     )
-    configurator._fill_from_config_file(configurator.config.get("config"))
-    configurator._reapply_command_line_args()
+    config, _ = configurator.initialize(require_command_line=False, output=True)
 
     # Command-line values should take precedence
-    assert configurator.config["label"] == "cli_label"
-    assert configurator.config["log_level"] == "info"
+    assert config["label"] == "cli_label"
+    assert config["log_level"] == "info"
 
 
-def test_config_file_applies_when_no_command_line(configurator, tmp_test_directory):
+def test_config_file_applies_when_no_command_line(tmp_test_directory, monkeypatch):
     """Test that config file values apply when no command-line override is provided."""
     # Create a config file with label='config_label' and log_level='debug'
     _config_dict = {
@@ -175,17 +184,13 @@ def test_config_file_applies_when_no_command_line(configurator, tmp_test_directo
         yaml.safe_dump(_config_dict, output, sort_keys=False)
 
     # Initialize configurator with only config file (no CLI overrides for these keys)
-    configurator.parser.initialize_output_arguments()
-    configurator._fill_from_command_line(
-        arg_list=["--config", str(_config_file)],
-        require_command_line=False,
-    )
-    configurator._fill_from_config_file(configurator.config.get("config"))
-    configurator._reapply_command_line_args()
+    configurator = Configurator()
+    monkeypatch.setattr(sys, "argv", ["test_configurator.py", "--config", str(_config_file)])
+    config, _ = configurator.initialize(require_command_line=False, output=True)
 
     # Config file values should be used
-    assert configurator.config["label"] == "config_label"
-    assert configurator.config["log_level"] == "debug"
+    assert config["label"] == "config_label"
+    assert config["log_level"] == "debug"
 
 
 def test_initialize_io_handler(configurator, tmp_test_directory):
@@ -489,10 +494,11 @@ def test_set_model_versions(configurator):
 
 def test_initialize(configurator):
     configurator.parser.initialize_default_arguments = MagicMock()
-    configurator._fill_from_command_line = MagicMock()
-    configurator._fill_from_config_file = MagicMock()
-    configurator._fill_from_config_dict = MagicMock()
-    configurator._fill_from_environmental_variables = MagicMock()
+    configurator._get_cli_arglist = MagicMock(return_value=[])
+    configurator._config_from_env = MagicMock(return_value={})
+    configurator._config_from_file = MagicMock(return_value={})
+    configurator._fill_config = MagicMock()
+    configurator._reset_required_arguments = MagicMock()
     configurator._initialize_model_versions = MagicMock()
     configurator._initialize_io_handler = MagicMock()
     configurator._initialize_output = MagicMock()
@@ -503,10 +509,10 @@ def test_initialize(configurator):
 
     # Assert that the methods were called
     configurator.parser.initialize_default_arguments.assert_called_once()
-    configurator._fill_from_command_line.assert_called_once_with(require_command_line=True)
-    configurator._fill_from_config_file.assert_called_once_with(None)
-    configurator._fill_from_config_dict.assert_called_once_with(None)
-    configurator._fill_from_environmental_variables.assert_called_once()
+    configurator._get_cli_arglist.assert_called_once_with(require_command_line=True)
+    configurator._config_from_env.assert_called_once_with(".env")
+    configurator._config_from_file.assert_called_once_with(None)
+    configurator._fill_config.assert_called_once_with([])
     configurator._initialize_model_versions.assert_called_once()
     configurator._initialize_io_handler.assert_called_once()
     configurator._initialize_output.assert_not_called()
@@ -530,18 +536,20 @@ def test_initialize(configurator):
 
     # Assert that the methods were called with the correct parameters
     configurator.parser.initialize_default_arguments.assert_called()
-    configurator._fill_from_command_line.assert_called()
-    configurator._fill_from_config_file.assert_called()
-    configurator._fill_from_config_dict.assert_called()
-    configurator._fill_from_environmental_variables.assert_called()
+    configurator._get_cli_arglist.assert_called()
+    configurator._config_from_env.assert_called()
+    configurator._config_from_file.assert_called()
+    configurator._fill_config.assert_called()
     configurator._initialize_model_versions.assert_called()
     configurator._initialize_io_handler.assert_called()
     configurator._initialize_output.assert_called_once()
     configurator._get_db_parameters.assert_called_once()
 
     # test activity_id and label
-    configurator.config["activity_id"] = "test_activity_id"
-    configurator.config["label"] = "test_label"
+    configurator.config_class_init = {"activity_id": "test_activity_id", "label": "test_label"}
+    configurator._fill_config.side_effect = lambda _: configurator.config.update(
+        {"activity_id": "test_activity_id", "label": "test_label"}
+    )
     configurator.initialize()
     assert configurator.config["activity_id"] == "test_activity_id"
     assert configurator.config["label"] == "test_label"

@@ -53,7 +53,6 @@ class Configurator:
         self.config_class_init = config
         self.label = label
         self.config = {}
-        self._command_line_args = None
         self.parser = argparser.CommandLineParser(
             prog=self.label,
             usage=usage,
@@ -105,12 +104,8 @@ class Configurator:
 
         Configure from command line, configuration file, class config, or environmental variable.
 
-        Priorities in parameter settings.
-        1. command line; 2. yaml file; 3. class init; 4. env variables.
-
-        Conflicting configuration settings raise an Exception, with the exception of settings \
-        from environmental variables, which are only done when the configuration parameter \
-        is None.
+        Configuration sources applied in increasing priority order:
+        env variables < class init < yaml file < command line.
 
         Parameters
         ----------
@@ -143,11 +138,17 @@ class Configurator:
             db_config=db_config,
         )
 
-        self._fill_from_command_line(require_command_line=require_command_line)
-        self._fill_from_config_file(self.config.get("config"))
-        self._reapply_command_line_args()
-        self._fill_from_config_dict(self.config_class_init)
-        self._fill_from_environmental_variables()
+        _cli_arglist = self._get_cli_arglist(require_command_line=require_command_line)
+        _cli_config = vars(self.parser.parse_args(_cli_arglist))
+        _config_file = _cli_config.get("config") or (self.config_class_init or {}).get("config")
+        _env_file = _cli_config.get("env_file") or (self.config_class_init or {}).get("env_file")
+
+        self._reset_required_arguments()
+        self.config = vars(self.parser.parse_args([]))
+        self.config.update(self._config_from_env(_env_file))
+        self.config.update(gen.change_dict_keys_case(self.config_class_init or {}))
+        self.config.update(self._config_from_file(_config_file))
+        self._fill_config(_cli_arglist)
 
         if self.config.get("activity_id", None) is None:
             self.config["activity_id"] = gen.get_uuid()
@@ -162,6 +163,99 @@ class Configurator:
 
         self.config["application_label"] = self.config.get("application_label") or self.label
         return self.config, _db_dict
+
+    def _get_cli_arglist(self, arg_list=None, require_command_line=True):
+        """
+        Return CLI arguments as a list without modifying the configuration.
+
+        Parameters
+        ----------
+        arg_list: list
+            List of arguments.
+        require_command_line: bool
+            Require at least one command line argument.
+
+        Returns
+        -------
+        list
+            Command-line arguments.
+
+        """
+        if arg_list is None:
+            arg_list = sys.argv[1:]
+
+        if require_command_line and len(arg_list) == 0:
+            self._logger.debug("No command line arguments given, printing help.")
+            arg_list = ["--help"]
+
+        if "--config" in arg_list:
+            self._reset_required_arguments()
+
+        return arg_list
+
+    def _reset_required_arguments(self):
+        """
+        Reset required parser arguments (i.e., arguments added with "required=True").
+
+        Includes also mutually exclusive groups.
+        Access protected attributes of parser (no public method available).
+
+        """
+        for group in self.parser._mutually_exclusive_groups:  # pylint: disable=protected-access
+            group.required = False
+        for action in self.parser._actions:  # pylint: disable=protected-access
+            action.required = False
+
+    def _config_from_file(self, config_file):
+        """
+        Read configuration from yaml file and return as dictionary.
+
+        Parameters
+        ----------
+        config_file: str
+            Name of configuration file.
+
+        Returns
+        -------
+        dict
+            Configuration parameters.
+
+        Raises
+        ------
+        FileNotFoundError
+            If configuration file has not been found.
+        """
+        try:
+            self._logger.debug(f"Reading configuration from {config_file}")
+            _config_dict = (
+                ascii_handler.collect_data_from_file(file_name=config_file) if config_file else None
+            )
+            _config_dict = gen.remove_substring_recursively_from_dict(_config_dict, substring="\n")
+            if "configuration" in _config_dict.get("applications", [{}])[0]:
+                return gen.change_dict_keys_case(_config_dict["applications"][0]["configuration"])
+            return gen.change_dict_keys_case(_config_dict)
+        except (TypeError, AttributeError):
+            return {}
+        except FileNotFoundError:
+            self._logger.error(f"Configuration file not found: {config_file}")
+            raise
+
+    def _config_from_env(self, env_file=None):
+        """
+        Return configuration parameters from environment variables.
+
+        Parameters
+        ----------
+        env_file: str
+            Path to the .env file.
+
+        Returns
+        -------
+        dict
+            Configuration parameters from environment variables.
+        """
+        _env_list = [action.dest for action in self.parser._actions]  # pylint: disable=protected-access
+        return gen.load_environment_variables(env_file=env_file, env_list=_env_list)
 
     def _fill_from_command_line(self, arg_list=None, require_command_line=True):
         """
@@ -178,44 +272,7 @@ class Configurator:
             Require at least one command line argument.
 
         """
-        if arg_list is None:
-            arg_list = sys.argv[1:]
-
-        if require_command_line and len(arg_list) == 0:
-            self._logger.debug("No command line arguments given, printing help.")
-            arg_list = ["--help"]
-
-        if "--config" in arg_list:
-            self._reset_required_arguments()
-
-        self._command_line_args = arg_list
-        self._fill_config(arg_list)
-
-    def _reset_required_arguments(self):
-        """
-        Reset required parser arguments (i.e., arguments added with "required=True").
-
-        Includes also mutually exclusive groups.
-        Access protected attributes of parser (no public method available).
-
-        """
-        for group in self.parser._mutually_exclusive_groups:  # pylint: disable=protected-access
-            group.required = False
-        for action in self.parser._actions:  # pylint: disable=protected-access
-            action.required = False
-
-    def _reapply_command_line_args(self):
-        """
-        Re-apply command line arguments to ensure they take precedence over config file.
-
-        This method re-applies the original command-line arguments after the configuration
-        file has been loaded, ensuring that command-line values override any conflicting
-        values from the configuration file.
-        """
-        if self._command_line_args is None:
-            return
-
-        self._fill_config(self._command_line_args)
+        self._fill_config(self._get_cli_arglist(arg_list, require_command_line))
 
     def _fill_from_config_dict(self, input_dict, overwrite=False):
         """
@@ -273,44 +330,19 @@ class Configurator:
 
     def _fill_from_config_file(self, config_file):
         """
-        Read and fill configuration parameters from yaml file.
+        Fill configuration parameters from yaml file.
 
         Parameters
         ----------
-        config file: str
-            Name of configuration file name
+        config_file: str
+            Name of configuration file.
 
         Raises
         ------
         FileNotFoundError
-           if configuration file has not been found.
-
+            If configuration file has not been found.
         """
-        try:
-            self._logger.debug(f"Reading configuration from {config_file}")
-            _config_dict = (
-                ascii_handler.collect_data_from_file(file_name=config_file) if config_file else None
-            )
-            # yaml parser adds \n in multiline strings, remove them
-            _config_dict = gen.remove_substring_recursively_from_dict(_config_dict, substring="\n")
-            # read configuration for first application
-            if "configuration" in _config_dict.get("applications", [{}])[0]:
-                self._fill_from_config_dict(
-                    input_dict=gen.change_dict_keys_case(
-                        _config_dict["applications"][0]["configuration"],
-                    ),
-                    overwrite=True,
-                )
-            else:
-                self._fill_from_config_dict(
-                    input_dict=gen.change_dict_keys_case(_config_dict), overwrite=True
-                )
-        # TypeError is raised for config_file=None
-        except (TypeError, AttributeError):
-            pass
-        except FileNotFoundError:
-            self._logger.error(f"Configuration file not found: {config_file}")
-            raise
+        self._fill_from_config_dict(self._config_from_file(config_file), overwrite=True)
 
     def _fill_from_environmental_variables(self):
         """
