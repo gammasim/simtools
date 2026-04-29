@@ -2,6 +2,7 @@
 applications:
 - application: simtools-plot-tabular-data-for-model-parameter
   configuration:
+    figure_format: pdf
     output_path: simtools-output
     parameter: fadc_pulse_shape
     parameter_version: 1.0.0

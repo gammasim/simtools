@@ -30,7 +30,7 @@ def test_build_workflow_activity_metadata_uses_uncleaned_metadata(monkeypatch):
     assert metadata_collector_cls.call_args.args[0]["site"] == "North"
     assert metadata_collector_cls.call_args.args[0]["instrument"] == "LSTN-design"
     assert metadata_collector_cls.call_args.kwargs["clean_meta"] is False
-    assert activity == {"id": "wf-id"}
+    assert activity == {"id": "wf-id", "runtime_environment": {"image": "test-image"}}
 
 
 def test_update_model_parameter_metadata_file(tmp_test_directory):
@@ -74,3 +74,28 @@ def test_update_model_parameter_metadata_file_missing_file():
         workflow_activity={"id": "workflow-id"},
         associated_activities=[],
     )
+
+
+def test_update_model_parameter_metadata_file_fills_associated_activities_from_empty_context(
+    tmp_test_directory,
+):
+    metadata_file = tmp_test_directory / "pm.meta.yml"
+    metadata_dict = {
+        "cta": {
+            "product": {"id": "prod-id"},
+            "activity": {"id": "old-id"},
+            "context": {},
+        }
+    }
+    metadata_file.write_text(yaml.safe_dump(metadata_dict), encoding="utf-8")
+
+    workflow_metadata.update_model_parameter_metadata_file(
+        metadata_file=metadata_file,
+        workflow_activity={"id": "workflow-id"},
+        associated_activities=[{"activity_name": "app1", "activity_id": "a1"}],
+    )
+
+    updated = yaml.safe_load(metadata_file.read_text(encoding="utf-8"))
+    assert updated["cta"]["context"]["associated_activities"] == [
+        {"activity_name": "app1", "activity_id": "a1"}
+    ]

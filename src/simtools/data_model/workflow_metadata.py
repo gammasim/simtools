@@ -51,7 +51,10 @@ def build_workflow_activity_metadata(
     metadata_args["instrument"] = workflow_context.get("instrument")
 
     collector = MetadataCollector(metadata_args, clean_meta=False)
-    return collector.get_top_level_metadata().get("cta", {}).get("activity", {})
+    activity = collector.get_top_level_metadata().get("cta", {}).get("activity", {})
+    if runtime_environment is not None:
+        activity["runtime_environment"] = deepcopy(runtime_environment)
+    return activity
 
 
 def update_model_parameter_metadata_file(
@@ -89,7 +92,7 @@ def update_model_parameter_metadata_file(
     context_associated = context.get("associated_activities") or []
     context["associated_activities"] = _merge_associated_activities(
         context_associated,
-        associated_activities,
+        associated_activities or [],
     )
 
     metadata["cta"] = cta_meta
@@ -101,7 +104,7 @@ def _merge_associated_activities(existing_activities, new_activities):
     """Merge associated activities preserving order and uniqueness."""
     merged_activities = []
     seen = set()
-    for activity in [*existing_activities, *new_activities]:
+    for activity in [*(existing_activities or []), *(new_activities or [])]:
         key = (activity.get("activity_name"), activity.get("activity_id"))
         if key in seen:
             continue

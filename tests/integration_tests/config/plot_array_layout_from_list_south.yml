@@ -7,6 +7,9 @@ applications:
     - MSTS
     - SSTS
     axes_range: 1200.0
+    figure_format:
+    - pdf
+    - png
     model_version: 6.0.2
     output_path: simtools-output
   integration_tests:
