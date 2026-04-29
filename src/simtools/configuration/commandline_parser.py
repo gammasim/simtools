@@ -306,7 +306,6 @@ class CommandLineParser(argparse.ArgumentParser):
                 help="Simulation software steps.",
                 type=str,
                 choices=list(defaults.SIMULATION_SOFTWARE_CHOICES),
-                required=True,
                 default=defaults.SIMULATION_SOFTWARE_DEFAULT,
             )
         if "corsika_configuration" in simulation_configuration:
