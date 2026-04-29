@@ -309,7 +309,7 @@ make linkcheck              # Check links
 3. **Follow conventions:** pathlib, logging, f-strings, NumPy docstrings
 4. **Error messages:** no `logger.error`, put the error message into the error (e.g. `ValueError("Invalid type")`) and always do `from exc`
 5. **Mock external deps:** DB, file I/O, network must be mocked in unit tests
-6. **Use tmp_test_directory** for file I/O (NOT `tmp_path`)
+6. **Use tmp_test_directory** for file I/O (NOT `tmp_path` or `/tmp/`)
 7. **Study patterns:** Check existing code before implementing
 8. **Document:** NumPy-style docstrings, 70%+ coverage required
 9. **Make minimal changes:** Understand codebase first
