@@ -377,6 +377,12 @@ class Simulator:
         output_files : list, optional
             Explicit output files. When provided, these are used directly and
             zipped with input_files.
+
+        Raises
+        ------
+        ValueError
+            If explicit output_files are provided and their number does not
+            match the number of input_files.
         """
         if output_files is None:
             output_files = []
@@ -388,6 +394,12 @@ class Simulator:
                         break
                 output_dir = Path(output_path) if output_path else Path(input_file).parent
                 output_files.append(output_dir / f"{stem}.reduced_event_data.hdf5")
+
+        if len(output_files) != len(input_files):
+            raise ValueError(
+                "Length mismatch between input_files and output_files: "
+                f"{len(input_files)} input file(s), {len(output_files)} output file(s)."
+            )
 
         for input_file, output_file in zip(input_files, output_files):
             generator = writer.EventDataWriter([input_file])
