@@ -19,3 +19,11 @@ The reporting modules read model parameter values and descriptions from the data
 .. automodule:: reporting.docs_auto_report_generator
    :members:
 ```
+
+
+## docs_production_summary
+
+```{eval-rst}
+.. automodule:: reporting.docs_production_summary
+   :members:
+```
