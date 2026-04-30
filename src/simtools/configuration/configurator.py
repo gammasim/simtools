@@ -7,13 +7,10 @@ import sys
 import astropy.units as u
 
 import simtools.configuration.commandline_parser as argparser
+import simtools.version as simtools_version
 from simtools.db.mongo_db import jsonschema_db_dict
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
-
-
-class InvalidConfigurationParameterError(Exception):
-    """Exception for Invalid configuration parameter."""
 
 
 class Configurator:
@@ -104,12 +101,8 @@ class Configurator:
 
         Configure from command line, configuration file, class config, or environmental variable.
 
-        Priorities in parameter settings.
-        1. command line; 2. yaml file; 3. class init; 4. env variables.
-
-        Conflicting configuration settings raise an Exception, with the exception of settings \
-        from environmental variables, which are only done when the configuration parameter \
-        is None.
+        Configuration sources applied in increasing priority order:
+        env variables < class init < yaml file < command line.
 
         Parameters
         ----------
@@ -142,10 +135,17 @@ class Configurator:
             db_config=db_config,
         )
 
-        self._fill_from_command_line(require_command_line=require_command_line)
-        self._fill_from_config_file(self.config.get("config"))
-        self._fill_from_config_dict(self.config_class_init)
-        self._fill_from_environmental_variables()
+        _cli_arglist = self._get_cli_arglist(require_command_line=require_command_line)
+        _cli_config = vars(self.parser.parse_args(_cli_arglist))
+        _config_file = _cli_config.get("config") or (self.config_class_init or {}).get("config")
+        _env_file = _cli_config.get("env_file") or (self.config_class_init or {}).get("env_file")
+
+        self._reset_required_arguments()
+        self.config = vars(self.parser.parse_args([]))
+        self.config.update(self._config_from_env(_env_file))
+        self.config.update(gen.change_dict_keys_case(self.config_class_init or {}))
+        self.config.update(self._config_from_file(_config_file))
+        self._fill_config(_cli_arglist)
 
         if self.config.get("activity_id", None) is None:
             self.config["activity_id"] = gen.get_uuid()
@@ -161,12 +161,9 @@ class Configurator:
         self.config["application_label"] = self.config.get("application_label") or self.label
         return self.config, _db_dict
 
-    def _fill_from_command_line(self, arg_list=None, require_command_line=True):
+    def _get_cli_arglist(self, arg_list=None, require_command_line=True):
         """
-        Fill configuration parameters from command line arguments.
-
-        Triggers a print of the help if no command line arguments are given and
-        require_command_line is set.
+        Return CLI arguments as a list without modifying the configuration.
 
         Parameters
         ----------
@@ -174,6 +171,11 @@ class Configurator:
             List of arguments.
         require_command_line: bool
             Require at least one command line argument.
+
+        Returns
+        -------
+        list
+            Command-line arguments.
 
         """
         if arg_list is None:
@@ -186,7 +188,7 @@ class Configurator:
         if "--config" in arg_list:
             self._reset_required_arguments()
 
-        self._fill_config(arg_list)
+        return arg_list
 
     def _reset_required_arguments(self):
         """
@@ -201,120 +203,60 @@ class Configurator:
         for action in self.parser._actions:  # pylint: disable=protected-access
             action.required = False
 
-    def _fill_from_config_dict(self, input_dict, overwrite=False):
+    def _config_from_file(self, config_file):
         """
-        Fill configuration parameters from dictionary.
-
-        Enforce that configuration parameter names are lower case.
+        Read configuration from yaml file and return as dictionary.
 
         Parameters
         ----------
-        input_dict: dict
-            dictionary with configuration parameters.
-        overwrite: bool
-            overwrite existing configuration parameters.
+        config_file: str
+            Name of configuration file.
 
-        """
-        _tmp_config = {}
-        try:
-            for key, value in input_dict.items():
-                if not overwrite:
-                    self._check_parameter_configuration_status(key, value)
-                _tmp_config[key.lower()] = value
-        except AttributeError:
-            pass
-
-        self._fill_config(_tmp_config)
-
-    def _check_parameter_configuration_status(self, key, value):
-        """
-        Check if a parameter is already configured and not still set to the default value.
-
-        Allow configuration with None values.
-
-        Parameters
-        ----------
-        key, value
-           parameter key, value to be checked
-
-
-        Raises
-        ------
-        InvalidConfigurationParameterError
-           if parameter has already been defined with a different value.
-        """
-        # parameter not changed or None
-        if self.parser.get_default(key) == self.config[key] or self.config[key] is None:
-            return
-
-        # parameter already set
-        if key in self.config and self.config[key] != value:
-            self._logger.error(
-                f"Inconsistent configuration parameter ({key}) definition "
-                f"({self.config[key]} vs {value})"
-            )
-            raise InvalidConfigurationParameterError
-
-    def _fill_from_config_file(self, config_file):
-        """
-        Read and fill configuration parameters from yaml file.
-
-        Parameters
-        ----------
-        config file: str
-            Name of configuration file name
+        Returns
+        -------
+        dict
+            Configuration parameters.
 
         Raises
         ------
         FileNotFoundError
-           if configuration file has not been found.
-
+            If configuration file has not been found.
         """
         try:
             self._logger.debug(f"Reading configuration from {config_file}")
             _config_dict = (
                 ascii_handler.collect_data_from_file(file_name=config_file) if config_file else None
             )
-            # yaml parser adds \n in multiline strings, remove them
             _config_dict = gen.remove_substring_recursively_from_dict(_config_dict, substring="\n")
-            # read configuration for first application
             if "configuration" in _config_dict.get("applications", [{}])[0]:
-                self._fill_from_config_dict(
-                    input_dict=gen.change_dict_keys_case(
-                        _config_dict["applications"][0]["configuration"],
-                    ),
-                    overwrite=True,
-                )
-            else:
-                self._fill_from_config_dict(
-                    input_dict=gen.change_dict_keys_case(_config_dict), overwrite=True
-                )
-        # TypeError is raised for config_file=None
+                _config_dict = _config_dict["applications"][0]["configuration"]
+            _config_dict = simtools_version.resolve_by_version(
+                _config_dict, _config_dict.get("model_version")
+            )
+            return gen.change_dict_keys_case(_config_dict)
         except (TypeError, AttributeError):
-            pass
+            self._logger.debug("No YAML configuration update applied to configuration dictionary.")
+            return {}
         except FileNotFoundError:
             self._logger.error(f"Configuration file not found: {config_file}")
             raise
 
-    def _fill_from_environmental_variables(self):
+    def _config_from_env(self, env_file=None):
         """
-        Fill any configuration parameters from environmental variables or from file (e.g., ".env").
+        Return configuration parameters from environment variables.
 
-        Only parameters which are not already configured are changed (i.e., parameter is None).
+        Parameters
+        ----------
+        env_file: str
+            Path to the .env file.
 
+        Returns
+        -------
+        dict
+            Configuration parameters from environment variables.
         """
-        _all_env_dict = gen.load_environment_variables(
-            env_file=self.config.get("env_file", None), env_list=self.config.keys()
-        )
-
-        _env_dict = {}
-        for key, value in self.config.items():
-            if value is None:
-                env_value = _all_env_dict.get(key)
-                if env_value is not None:
-                    _env_dict[key] = env_value
-
-        self._fill_from_config_dict(_env_dict)
+        _env_list = [action.dest for action in self.parser._actions]  # pylint: disable=protected-access
+        return gen.load_environment_variables(env_file=env_file, env_list=_env_list)
 
     def _initialize_model_versions(self):
         """Initialize model versions."""

@@ -3,8 +3,13 @@ applications:
 - application: simtools-production-derive-corsika-limits
   configuration:
     array_layout_name:
-    - 1lst
-    - alpha
+      by_version:
+        "<7.0.0":
+        - 1lst
+        - alpha
+        ">=7.0.0":
+        - LSTN-01
+        - CTAO-North-Alpha
     event_data_file: tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
     loss_fraction: 0.001
     model_version: 6.0.2
