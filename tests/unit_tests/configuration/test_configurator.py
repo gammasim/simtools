@@ -1,10 +1,8 @@
 #!/usr/bin/python3
 
 import logging
-import os
 import sys
 from copy import copy
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import astropy.units as u
@@ -12,10 +10,7 @@ import pytest
 import yaml
 
 from simtools import settings
-from simtools.configuration.configurator import (
-    Configurator,
-    InvalidConfigurationParameterError,
-)
+from simtools.configuration.configurator import Configurator
 from simtools.io import io_handler
 
 logger = logging.getLogger()
@@ -31,87 +26,6 @@ def configurator(tmp_test_directory, _mock_settings_env_vars):
         )
     )
     return config
-
-
-def test_fill_from_config_dict(configurator, args_dict):
-    configurator._fill_config([])
-
-    configurator._fill_from_config_dict({})
-    assert args_dict == configurator.config
-
-    _tmp_config = copy(dict(args_dict))
-    _tmp_config["config"] = "my_file"
-    _tmp_config["test"] = True
-    configurator._fill_from_config_dict({"config": "my_file", "test": True})
-
-    assert _tmp_config == configurator.config
-
-    # No AttributeError is raised for non-dict inputs
-    configurator._fill_from_config_dict("abc")
-
-    # No error raise for None arguments
-    configurator._fill_from_config_dict(None)
-
-
-def test_fill_from_config_file_not_existing_file(configurator):
-    configurator._fill_config([])
-
-    # config_file not found raises FileNotFoundError
-    with pytest.raises(FileNotFoundError):
-        configurator._fill_from_config_file(config_file="this_file_does_not_exist")
-
-
-def test_fill_from_config_file(configurator, args_dict, tmp_test_directory):
-    _tmp_config = copy(dict(args_dict))
-    _tmp_dict = {
-        "output_path": "./abc/",
-        "test": True,
-    }
-    _config_file = tmp_test_directory / "configuration-test.yml"
-    with open(_config_file, "w") as output:
-        yaml.safe_dump(_tmp_dict, output, sort_keys=False)
-
-    configurator.config["config"] = str(_config_file)
-    _tmp_config["config"] = str(_config_file)
-    configurator.config["output_path"] = None
-    configurator._fill_from_config_file(_config_file)
-    for key, value in _tmp_dict.items():
-        # none values are explicitly not set in Configurator._arglist_from_config()
-        if value is not None:
-            if "_path" in key:
-                _tmp_config[key] = Path(value)
-            else:
-                _tmp_config[key] = value
-    assert _tmp_config == configurator.config
-
-    # test that no error is raised
-    configurator._fill_from_config_file(config_file=None)
-    with pytest.raises(FileNotFoundError):
-        configurator._fill_from_config_file(config_file="abc")
-
-
-def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_directory):
-    _tmp_config = copy(dict(args_dict))
-    _tmp_dict = {
-        "output_path": "./abc/",
-        "test": True,
-    }
-    _tmp_dict_workflow = {"applications": [{"application": "test", "configuration": _tmp_dict}]}
-    _workflow_file = tmp_test_directory / "configuration-test.yml"
-    with open(_workflow_file, "w") as output:
-        yaml.safe_dump(_tmp_dict_workflow, output, sort_keys=False)
-    configurator.config["config"] = str(_workflow_file)
-    _tmp_config["config"] = str(_workflow_file)
-    configurator.config["output_path"] = None
-    configurator._fill_from_config_file(_workflow_file)
-    for key, value in _tmp_dict.items():
-        # none values are explicitly not set in Configurator._arglist_from_config()
-        if value is not None:
-            if "_path" in key:
-                _tmp_config[key] = Path(value)
-            else:
-                _tmp_config[key] = value
-    assert _tmp_config == configurator.config
 
 
 def test_command_line_precedence_over_config_file(tmp_test_directory, monkeypatch):
@@ -179,25 +93,6 @@ def test_initialize_io_handler(configurator, tmp_test_directory):
     assert _io_handler.output_path.get("default") == tmp_test_directory
 
 
-def test_check_parameter_configuration_status(configurator, args_dict, tmp_test_directory):
-    configurator._fill_config([])
-    configurator.config["output_path"] = Path(tmp_test_directory)
-
-    # default value (no change)
-    configurator._check_parameter_configuration_status("data_path", args_dict["data_path"])
-    assert args_dict == configurator.config
-
-    # None value
-    configurator._check_parameter_configuration_status("config", None)
-    assert args_dict == configurator.config
-
-    # parameter changed; should raise Exception
-    configurator.config["config"] = "non_default_config_file"
-
-    with pytest.raises(InvalidConfigurationParameterError):
-        configurator._check_parameter_configuration_status("config", "abc")
-
-
 def test_arglist_from_config():
     _tmp_dict = {"a": 1.0, "b": None, "c": True, "d": ["d1", "d2", "d3"], "e": 5.0 * u.m}
 
@@ -242,7 +137,8 @@ def test_get_db_parameters_from_env(configurator, args_dict):
     configurator.parser.initialize_db_config_arguments()
     configurator._fill_config([])
     configurator.config["env_file"] = "this_file_does_not_exist.env"
-    configurator._fill_from_environmental_variables()
+    _env_config = configurator._config_from_env(configurator.config["env_file"])
+    configurator._fill_config(configurator._arglist_from_config(_env_config))
 
     args_dict["db_api_user"] = "db_user"
     args_dict["db_api_pw"] = "12345"
@@ -289,70 +185,6 @@ def test_initialize_output(configurator):
     configurator.config["output_file"] = "unit_test.txt"
     configurator._initialize_output()
     assert configurator.config["output_file"] == "unit_test.txt"
-
-
-def test_fill_from_environmental_variables(configurator):
-    configurator.parser.initialize_output_arguments()
-    configurator.parser.initialize_db_config_arguments()
-    configurator._fill_config([])
-
-    _config_save = copy(configurator.config)
-
-    # this is not a configuration parameter and therefore should not be set
-    os.environ["SIMTOOLS_TEST_ENV_VARIABLE"] = "test_value"
-    configurator._fill_from_environmental_variables()
-    if "SIMTOOLS_TEST_ENV_VARIABLE" in os.environ:
-        del os.environ["SIMTOOLS_TEST_ENV_VARIABLE"]
-    assert "test_env_variable" not in configurator.config
-
-    # this is a valid configuration parameter, but already configured
-    # _fill_from_environmental_variables() should not change it
-    os.environ["SIMTOOLS_LOG_LEVEL"] = "DEBUG"
-    configurator._fill_from_environmental_variables()
-    assert configurator.config["log_level"] == _config_save["log_level"] == "info"
-    if "SIMTOOLS_LOG_LEVEL" in os.environ:
-        del os.environ["SIMTOOLS_LOG_LEVEL"]
-
-    # this is a valid configuration parameter, but not yet configured
-    os.environ["SIMTOOLS_CONFIG"] = "test_config_file"
-    configurator._fill_from_environmental_variables()
-    assert configurator.config["config"] == "test_config_file"
-    if "SIMTOOLS_CONFIG" in os.environ:
-        del os.environ["SIMTOOLS_CONFIG"]
-
-    # using .dotenv files with docker: comments are not removed by docker
-    os.environ["SIMTOOLS_DB_API_PORT"] = "27017 #Port on the MongoDB server"
-    os.environ["SIMTOOLS_DB_SERVER"] = "'abc@def.de' # MongoDB server"
-    configurator.config["db_api_port"] = None
-    configurator.config["db_server"] = None
-    configurator._fill_from_environmental_variables()
-    assert configurator.config["db_api_port"] == 27017
-    assert configurator.config["db_server"] == "abc@def.de"
-    if "SIMTOOLS_DB_API_PORT" in os.environ:
-        del os.environ["SIMTOOLS_DB_API_PORT"]
-    if "SIMTOOLS_DB_SERVER" in os.environ:
-        del os.environ["SIMTOOLS_DB_SERVER"]
-
-    # no config defined, should not raise key error
-    configurator.config.pop("env_file")
-    configurator._fill_from_environmental_variables()
-
-
-def test_fill_from_environmental_variables_with_dotenv_file(configurator, tmp_test_directory):
-    configurator.parser.initialize_output_arguments()
-    configurator._fill_config([])
-
-    # write a temporary file into tmp_test_directory with the environmental variables
-    _env_file = tmp_test_directory / "test_env_file"
-    with open(_env_file, "w") as output:
-        output.write("SIMTOOLS_LABEL=test_label\n")
-        output.write("SIMTOOLS_CONFIG=test_config_file_env\n")
-
-    configurator.config["env_file"] = str(_env_file)
-    configurator._fill_from_environmental_variables()
-
-    assert configurator.config["label"] == "test_label"
-    assert configurator.config["config"] == "test_config_file_env"
 
 
 def test_default_config_with_site():
