@@ -32,13 +32,13 @@ jobs:
             install-method: pip
 
           - os: ubuntu-latest
-            python-version: "3.13"
+            python-version: "3.14"
             install-method: mamba
-            extra-args: ["sonarqube", "random-order"]
 
           - os: ubuntu-latest
             python-version: "3.13"
             install-method: pip
+            extra-args: ["sonarqube", "random-order"]
 
     defaults:
       run:
