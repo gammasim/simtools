@@ -459,6 +459,78 @@ def test_save_reduced_event_lists_no_output_files(array_simulator, mocker, caplo
     assert "No sim_telarray output files found" in caplog.text or caplog.text == ""
 
 
+def test_write_reduced_event_lists_derives_output_files(mocker, tmp_test_directory):
+    """Derive output file names from input files when output_files is not provided."""
+    tmp_base = Path(str(tmp_test_directory))
+    data_dir = tmp_base / "data"
+    output_dir = tmp_base / "reduced"
+    input_files = [
+        str(data_dir / "output_file1.simtel.zst"),
+        str(data_dir / "output_file2.simtel.gz"),
+    ]
+    output_path = str(output_dir)
+
+    mock_generator = mocker.MagicMock()
+    mock_simtel_io_writer = mocker.patch(
+        "simtools.sim_events.writer.EventDataWriter", return_value=mock_generator
+    )
+    mock_table_handler = mocker.patch("simtools.simulator.table_handler")
+
+    Simulator.write_reduced_event_lists(input_files=input_files, output_path=output_path)
+
+    assert mock_simtel_io_writer.call_count == 2
+    mock_simtel_io_writer.assert_any_call([str(data_dir / "output_file1.simtel.zst")])
+    mock_simtel_io_writer.assert_any_call([str(data_dir / "output_file2.simtel.gz")])
+
+    assert mock_table_handler.write_tables.call_count == 2
+    mock_table_handler.write_tables.assert_any_call(
+        tables=mock_generator.process_files.return_value,
+        output_file=output_dir / "output_file1.reduced_event_data.hdf5",
+        overwrite_existing=True,
+    )
+    mock_table_handler.write_tables.assert_any_call(
+        tables=mock_generator.process_files.return_value,
+        output_file=output_dir / "output_file2.reduced_event_data.hdf5",
+        overwrite_existing=True,
+    )
+
+
+def test_write_reduced_event_lists_derives_output_to_input_directory(mocker, tmp_test_directory):
+    """Derive output files in input directory when output_path is not provided."""
+    data_dir = Path(str(tmp_test_directory)) / "data"
+    input_file = str(data_dir / "output_file3.simtel")
+
+    mock_generator = mocker.MagicMock()
+    mock_simtel_io_writer = mocker.patch(
+        "simtools.sim_events.writer.EventDataWriter", return_value=mock_generator
+    )
+    mock_table_handler = mocker.patch("simtools.simulator.table_handler")
+
+    Simulator.write_reduced_event_lists(input_files=[input_file])
+
+    mock_simtel_io_writer.assert_called_once_with([input_file])
+    mock_table_handler.write_tables.assert_called_once_with(
+        tables=mock_generator.process_files.return_value,
+        output_file=data_dir / "output_file3.reduced_event_data.hdf5",
+        overwrite_existing=True,
+    )
+
+
+def test_write_reduced_event_lists_raises_for_mismatched_explicit_output_files(mocker):
+    """Raise for explicit output_files length mismatch to avoid silent truncation."""
+    input_files = ["output_file1.simtel.zst", "output_file2.simtel.zst"]
+    output_files = ["output_file1.reduced_event_data.hdf5"]
+
+    mock_simtel_io_writer = mocker.patch("simtools.sim_events.writer.EventDataWriter")
+    mock_table_handler = mocker.patch("simtools.simulator.table_handler")
+
+    with pytest.raises(ValueError, match="Length mismatch between input_files and output_files"):
+        Simulator.write_reduced_event_lists(input_files=input_files, output_files=output_files)
+
+    mock_simtel_io_writer.assert_not_called()
+    mock_table_handler.write_tables.assert_not_called()
+
+
 @pytest.mark.parametrize(
     ("run_mode", "expected_devices"),
     [

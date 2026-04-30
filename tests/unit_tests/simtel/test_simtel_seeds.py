@@ -24,6 +24,7 @@ def seeds_instance(mock_config):
     ("simulation_seed", "instruments", "expected_method", "return_value"),
     [
         ([123, 456], None, "_set_fixed_seeds", "123,456"),
+        ([123], None, "_generate_seed_pair", "100,123"),
         (None, None, "_generate_seed_pair", "100,789"),
         (300, 1, "_generate_seed_pair", "200,300"),
         (400, 10, "_generate_seeds_with_file", "file-by-run:/path/to/seeds,400"),
@@ -45,6 +46,32 @@ def test_initialize_seeds_routes_correctly(
     assert result == return_value
     if simulation_seed is None:
         assert seeds.simulation_seed == 789
+    if simulation_seed == [123]:
+        assert seeds.simulation_seed == 123
+
+
+def test_initialize_seeds_raises_for_too_many_fixed_seeds(mock_config):
+    """Test initialize_seeds raises for invalid fixed seed list length."""
+    seeds = SimtelSeeds()
+    seeds.simulation_seed = [1, 2, 3]
+
+    with pytest.raises(ValueError, match="sim_telarray_seed must contain one value"):
+        seeds.initialize_seeds("north", "1.0.0", 20.0, 180.0)
+
+
+def test_initialize_seeds_single_value_uses_configured_instrument_seed(mocker, mock_config):
+    """Test single-value simulation seed uses configured instrument seed without random generation."""
+    mock_config.args = {"sim_telarray_instrument_seed": 1745, "sim_telarray_seed": [290]}
+    random_seed_mock = mocker.patch("simtools.simtel.simtel_seeds.random.seeds", return_value=999)
+
+    seeds = SimtelSeeds()
+
+    result = seeds.seed_string
+
+    assert result == "1745,290"
+    assert seeds.instrument_seed == 1745
+    assert seeds.simulation_seed == 290
+    random_seed_mock.assert_not_called()
 
 
 def test_set_fixed_seeds(mocker, mock_config):
