@@ -315,26 +315,27 @@ def resolve_by_version(config, model_version):
     versions = model_version if isinstance(model_version, list) else [model_version]
     parsed_versions = [Version(str(version_item)) for version_item in versions]
 
+    def resolve_by_version_field(by_version_dict, parsed_versions, key):
+        """Resolve a single by_version field for all versions, enforcing consistency."""
+        matched_values = [_resolve_single_version(by_version_dict, pv) for pv in parsed_versions]
+        first_match = matched_values[0]
+        if not all(match == first_match for match in matched_values):
+            raise ValueError(
+                f"Inconsistent by_version resolution for key '{key}' and model versions "
+                f"{versions}: {matched_values}"
+            )
+        return first_match
+
+    def _resolve_single_version(by_version_dict, parsed_version):
+        for constraint, result in by_version_dict.items():
+            if matches_version_constraint(str(constraint), parsed_version):
+                return result
+        return None
+
     resolved = {}
     for key, value in config.items():
         if isinstance(value, dict) and list(value) == ["by_version"]:
-            matched_values = []
-            for parsed_version in parsed_versions:
-                matched = None
-                for constraint, result in value["by_version"].items():
-                    if matches_version_constraint(str(constraint), parsed_version):
-                        matched = result
-                        break
-                matched_values.append(matched)
-
-            first_match = matched_values[0]
-            if not all(match == first_match for match in matched_values):
-                raise ValueError(
-                    f"Inconsistent by_version resolution for key '{key}' and model versions "
-                    f"{versions}: {matched_values}"
-                )
-
-            resolved[key] = first_match
+            resolved[key] = resolve_by_version_field(value["by_version"], parsed_versions, key)
         else:
             resolved[key] = value
     return resolved
