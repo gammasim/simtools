@@ -12,10 +12,6 @@ from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
 
 
-class InvalidConfigurationParameterError(Exception):
-    """Exception for Invalid configuration parameter."""
-
-
 class Configurator:
     """
     Application configuration.
@@ -257,96 +253,6 @@ class Configurator:
         """
         _env_list = [action.dest for action in self.parser._actions]  # pylint: disable=protected-access
         return gen.load_environment_variables(env_file=env_file, env_list=_env_list)
-
-    def _fill_from_config_dict(self, input_dict, overwrite=False):
-        """
-        Fill configuration parameters from dictionary.
-
-        Enforce that configuration parameter names are lower case.
-
-        Parameters
-        ----------
-        input_dict: dict
-            dictionary with configuration parameters.
-        overwrite: bool
-            overwrite existing configuration parameters.
-
-        """
-        _tmp_config = {}
-        try:
-            for key, value in input_dict.items():
-                if not overwrite:
-                    self._check_parameter_configuration_status(key, value)
-                _tmp_config[key.lower()] = value
-        except AttributeError:
-            pass
-
-        self._fill_config(_tmp_config)
-
-    def _check_parameter_configuration_status(self, key, value):
-        """
-        Check if a parameter is already configured and not still set to the default value.
-
-        Allow configuration with None values.
-
-        Parameters
-        ----------
-        key, value
-           parameter key, value to be checked
-
-
-        Raises
-        ------
-        InvalidConfigurationParameterError
-           if parameter has already been defined with a different value.
-        """
-        # parameter not changed or None
-        if self.parser.get_default(key) == self.config[key] or self.config[key] is None:
-            return
-
-        # parameter already set
-        if key in self.config and self.config[key] != value:
-            self._logger.error(
-                f"Inconsistent configuration parameter ({key}) definition "
-                f"({self.config[key]} vs {value})"
-            )
-            raise InvalidConfigurationParameterError
-
-    def _fill_from_config_file(self, config_file):
-        """
-        Fill configuration parameters from yaml file.
-
-        Parameters
-        ----------
-        config_file: str
-            Name of configuration file.
-
-        Raises
-        ------
-        FileNotFoundError
-            If configuration file has not been found.
-        """
-        self._fill_from_config_dict(self._config_from_file(config_file), overwrite=True)
-
-    def _fill_from_environmental_variables(self):
-        """
-        Fill any configuration parameters from environmental variables or from file (e.g., ".env").
-
-        Only parameters which are not already configured are changed (i.e., parameter is None).
-
-        """
-        _all_env_dict = gen.load_environment_variables(
-            env_file=self.config.get("env_file", None), env_list=self.config.keys()
-        )
-
-        _env_dict = {}
-        for key, value in self.config.items():
-            if value is None:
-                env_value = _all_env_dict.get(key)
-                if env_value is not None:
-                    _env_dict[key] = env_value
-
-        self._fill_from_config_dict(_env_dict)
 
     def _initialize_model_versions(self):
         """Initialize model versions."""
