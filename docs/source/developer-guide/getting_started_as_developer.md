@@ -50,11 +50,11 @@ git clone https://github.com/gammasim/simtools.git
 cd simtools
 ```
 
-Create a conda/mamba virtual environment with the simtools dependencies installed:
+Create a virtual environment with the simtools dependencies installed:
 
 ```console
-mamba env create -f environment.yml
-mamba activate simtools-dev
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -e .
 ```
 
