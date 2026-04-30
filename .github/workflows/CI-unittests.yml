@@ -32,7 +32,7 @@ jobs:
             install-method: pip
 
           - os: ubuntu-latest
-            python-version: "3.14"
+            python-version: "3.13"
             install-method: mamba
 
           - os: ubuntu-latest
