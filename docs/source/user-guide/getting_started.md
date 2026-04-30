@@ -10,7 +10,7 @@ For development-related information, see [Getting Started as a Developer](../dev
 simtools can be installed using one of the following methods:
 
 - Using a [container image](container-images) with all software pre-installed (**recommended**)
-- Via [pip](pip-installation) or [conda](conda-installation). Requires manual compilation and installation of **CORSIKA** and **sim_telarray**. See the [section below](#installation-of-corsika-and-sim_telarray) for details. Note that the conda package might not always contain the latest simtools version.
+- Via [pip](pip-installation). Requires manual compilation and installation of **CORSIKA** and **sim_telarray**. See the [section below](#installation-of-corsika-and-sim_telarray) for details.
 
 ## Container Images
 
@@ -67,25 +67,11 @@ simtools is available as a Python package from [PyPI](https://pypi.org/project/g
 
 To install, prepare a Python environment, e.g.:
 
-```console
-mamba create --name simtools-prod python=3.12
-mamba activate simtools-prod
-```
-
 Install simtools and its dependencies:
 
 ```console
+
 pip install gammasimtools
-```
-
-### Conda Installation
-
-Prepare and install a conda environment with the simtools package:
-
-```console
-conda env create -n gammasimtools
-conda install gammasimtools --channel conda-forge
-conda activate gammasimtools
 ```
 
 ## Installation of CORSIKA and sim_telarray
