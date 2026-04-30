@@ -267,3 +267,56 @@ def check_version_constraint(version_string, constraint):
     if ver in spec:
         return True
     return False
+
+
+def resolve_by_version(config, model_version):
+    """
+    Resolve version-dependent values in a configuration dictionary.
+
+    Fields whose value is a dict with a single ``by_version`` key are replaced
+    by the first matching constraint value. All other fields are left unchanged.
+
+    Parameters
+    ----------
+    config : dict
+        Configuration dictionary (typically loaded from a YAML file).
+    model_version : str or list
+        Semantic version string or list of strings used to evaluate constraints
+        (e.g. "6.0.2" or ["6.0.2", "6.1.1"]).
+
+    Returns
+    -------
+    dict
+        New dictionary with all ``by_version`` fields resolved to their
+        matching value, or ``None`` when no constraint matches.
+    """
+    if not model_version:
+        return config
+
+    versions = model_version if isinstance(model_version, list) else [model_version]
+    parsed_versions = [Version(str(version_item)) for version_item in versions]
+
+    def resolve_by_version_field(by_version_dict, parsed_versions, key):
+        """Resolve a single by_version field for all versions, enforcing consistency."""
+        matched_values = [resolve_single_version(by_version_dict, pv) for pv in parsed_versions]
+        first_match = matched_values[0]
+        if not all(match == first_match for match in matched_values):
+            raise ValueError(
+                f"Inconsistent by_version resolution for key '{key}' and model versions "
+                f"{versions}: {matched_values}"
+            )
+        return first_match
+
+    def resolve_single_version(by_version_dict, parsed_version):
+        for constraint, result in by_version_dict.items():
+            if check_version_constraint(str(parsed_version), constraint):
+                return result
+        return None
+
+    resolved = {}
+    for key, value in config.items():
+        if isinstance(value, dict) and list(value) == ["by_version"]:
+            resolved[key] = resolve_by_version_field(value["by_version"], parsed_versions, key)
+        else:
+            resolved[key] = value
+    return resolved
