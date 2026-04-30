@@ -5,90 +5,12 @@ import logging
 import sys
 
 import astropy.units as u
-from packaging.version import Version
 
 import simtools.configuration.commandline_parser as argparser
+import simtools.version as simtools_version
 from simtools.db.mongo_db import jsonschema_db_dict
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
-
-
-def _matches_version_constraint(constraint, version):
-    """
-    Check whether *version* satisfies a single constraint string.
-
-    Parameters
-    ----------
-    constraint : str
-        Constraint string such as "<7.0.0", ">=6.0.0", "==5.2.1".
-    version : packaging.version.Version
-        Parsed version to test.
-
-    Returns
-    -------
-    bool
-        True if the version satisfies the constraint.
-
-    Raises
-    ------
-    ValueError
-        If the constraint string uses an unsupported operator.
-    """
-    operators = [
-        (">=", lambda a, b: a >= b),
-        ("<=", lambda a, b: a <= b),
-        (">", lambda a, b: a > b),
-        ("<", lambda a, b: a < b),
-        ("==", lambda a, b: a == b),
-    ]
-    for op_str, op_fn in operators:
-        if constraint.startswith(op_str):
-            return op_fn(version, Version(constraint[len(op_str) :].strip()))
-    raise ValueError(f"Unsupported version constraint operator in {constraint!r}")
-
-
-def resolve_by_version(config, model_version):
-    """
-    Resolve version-dependent values in a configuration dictionary.
-
-    Fields whose value is a dict with a single ``by_version`` key are replaced
-    by the first matching constraint value.  All other fields are left unchanged.
-
-    Example YAML structure that is resolved::
-
-        array_layout_name:
-          by_version:
-            "<7.0.0": alpha
-            ">=7.0.0": CTAO-North-Alpha
-
-    Parameters
-    ----------
-    config : dict
-        Configuration dictionary (typically loaded from a YAML file).
-    model_version : str
-        Semantic version string used to evaluate constraints (e.g. "6.0.2").
-
-    Returns
-    -------
-    dict
-        New dictionary with all ``by_version`` fields resolved to their
-        matching value, or ``None`` when no constraint matches.
-    """
-    if not model_version:
-        return config
-    version = Version(model_version)
-    resolved = {}
-    for key, value in config.items():
-        if isinstance(value, dict) and list(value) == ["by_version"]:
-            matched = None
-            for constraint, result in value["by_version"].items():
-                if _matches_version_constraint(str(constraint), version):
-                    matched = result
-                    break
-            resolved[key] = matched
-        else:
-            resolved[key] = value
-    return resolved
 
 
 class Configurator:
@@ -308,7 +230,9 @@ class Configurator:
             _config_dict = gen.remove_substring_recursively_from_dict(_config_dict, substring="\n")
             if "configuration" in _config_dict.get("applications", [{}])[0]:
                 _config_dict = _config_dict["applications"][0]["configuration"]
-            _config_dict = resolve_by_version(_config_dict, _config_dict.get("model_version"))
+            _config_dict = simtools_version.resolve_by_version(
+                _config_dict, _config_dict.get("model_version")
+            )
             return gen.change_dict_keys_case(_config_dict)
         except (TypeError, AttributeError):
             self._logger.debug("No YAML configuration update applied to configuration dictionary.")

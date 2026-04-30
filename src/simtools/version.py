@@ -267,3 +267,74 @@ def check_version_constraint(version_string, constraint):
     if ver in spec:
         return True
     return False
+
+
+def matches_version_constraint(constraint, parsed_version):
+    """
+    Check whether a parsed version satisfies a single constraint string.
+
+    Parameters
+    ----------
+    constraint : str
+        Constraint string such as "<7.0.0", ">=6.0.0", "==5.2.1".
+    parsed_version : packaging.version.Version
+        Parsed version to test.
+
+    Returns
+    -------
+    bool
+        True if the version satisfies the constraint.
+    """
+    return check_version_constraint(str(parsed_version), str(constraint).strip())
+
+
+def resolve_by_version(config, model_version):
+    """
+    Resolve version-dependent values in a configuration dictionary.
+
+    Fields whose value is a dict with a single ``by_version`` key are replaced
+    by the first matching constraint value. All other fields are left unchanged.
+
+    Parameters
+    ----------
+    config : dict
+        Configuration dictionary (typically loaded from a YAML file).
+    model_version : str or list
+        Semantic version string or list of strings used to evaluate constraints
+        (e.g. "6.0.2" or ["6.0.2", "6.1.1"]).
+
+    Returns
+    -------
+    dict
+        New dictionary with all ``by_version`` fields resolved to their
+        matching value, or ``None`` when no constraint matches.
+    """
+    if not model_version:
+        return config
+
+    versions = model_version if isinstance(model_version, list) else [model_version]
+    parsed_versions = [Version(str(version_item)) for version_item in versions]
+
+    resolved = {}
+    for key, value in config.items():
+        if isinstance(value, dict) and list(value) == ["by_version"]:
+            matched_values = []
+            for parsed_version in parsed_versions:
+                matched = None
+                for constraint, result in value["by_version"].items():
+                    if matches_version_constraint(str(constraint), parsed_version):
+                        matched = result
+                        break
+                matched_values.append(matched)
+
+            first_match = matched_values[0]
+            if not all(match == first_match for match in matched_values):
+                raise ValueError(
+                    f"Inconsistent by_version resolution for key '{key}' and model versions "
+                    f"{versions}: {matched_values}"
+                )
+
+            resolved[key] = first_match
+        else:
+            resolved[key] = value
+    return resolved

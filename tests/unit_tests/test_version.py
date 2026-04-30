@@ -3,6 +3,7 @@
 import sys
 
 import pytest
+from packaging.version import Version
 
 import simtools.version as version
 
@@ -226,6 +227,80 @@ def test_check_version_constraint():
     assert version.check_version_constraint("6.0.2", "<6.0.2") is False
     assert version.check_version_constraint("7.550", ">7.500")
     assert version.check_version_constraint("2025.100.0", ">=2024.365.0")
+
+
+def test_matches_version_constraint():
+    parsed_version = Version("6.0.2")
+
+    assert version.matches_version_constraint("<7.0.0", parsed_version)
+    assert version.matches_version_constraint(">=7.0.0", parsed_version) is False
+    assert version.matches_version_constraint("<=6.0.2", parsed_version)
+    assert version.matches_version_constraint(">6.0.1", parsed_version)
+    assert version.matches_version_constraint("==6.0.2", parsed_version)
+
+
+def test_resolve_by_version():
+    config = {
+        "array_layout_name": {
+            "by_version": {
+                "<7.0.0": "alpha",
+                ">=7.0.0": "CTAO-North-Alpha",
+            }
+        },
+        "site": "North",
+    }
+
+    assert version.resolve_by_version(config, "6.0.2") == {
+        "array_layout_name": "alpha",
+        "site": "North",
+    }
+    assert version.resolve_by_version(config, "7.0.0") == {
+        "array_layout_name": "CTAO-North-Alpha",
+        "site": "North",
+    }
+
+
+def test_resolve_by_version_no_match():
+    config = {
+        "array_layout_name": {
+            "by_version": {
+                "<5.0.0": "alpha",
+            }
+        }
+    }
+
+    assert version.resolve_by_version(config, "6.0.0") == {"array_layout_name": None}
+
+
+def test_resolve_by_version_list_consistent():
+    config = {
+        "array_layout_name": {
+            "by_version": {
+                "<7.0.0": "alpha",
+                ">=7.0.0": "CTAO-North-Alpha",
+            }
+        },
+        "site": "South",
+    }
+
+    assert version.resolve_by_version(config, ["6.0.2", "6.1.1"]) == {
+        "array_layout_name": "alpha",
+        "site": "South",
+    }
+
+
+def test_resolve_by_version_list_inconsistent_raises():
+    config = {
+        "array_layout_name": {
+            "by_version": {
+                "<7.0.0": "alpha",
+                ">=7.0.0": "CTAO-North-Alpha",
+            }
+        }
+    }
+
+    with pytest.raises(ValueError, match="Inconsistent by_version resolution"):
+        version.resolve_by_version(config, ["6.0.2", "7.0.0"])
 
 
 def test_is_valid_semantic_version():
