@@ -3,7 +3,10 @@ applications:
 - application: simtools-simulate-pedestals
   configuration:
     run_mode: pedestals_dark
-    array_layout_name: 1lst
+    array_layout_name:
+      by_version:
+        "<7.0.0": 1lst
+        ">=7.0.0": LSTN-01
     label: test-dark-pedestal-production-North
     log_level: DEBUG
     model_version: 6.0.2
