@@ -2,7 +2,10 @@
 applications:
 - application: simtools-db-get-array-layouts-from-db
   configuration:
-    array_layout_name: test_layout
+    array_layout_name:
+      by_version:
+        "<7.0.0": alpha
+        ">=7.0.0": CTAO-North-Alpha
     model_version: 6.0.2
     site: North
   test_name: layout_name
