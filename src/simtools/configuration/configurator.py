@@ -7,6 +7,7 @@ import sys
 import astropy.units as u
 
 import simtools.configuration.commandline_parser as argparser
+import simtools.version as simtools_version
 from simtools.db.mongo_db import jsonschema_db_dict
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
@@ -228,7 +229,10 @@ class Configurator:
             )
             _config_dict = gen.remove_substring_recursively_from_dict(_config_dict, substring="\n")
             if "configuration" in _config_dict.get("applications", [{}])[0]:
-                return gen.change_dict_keys_case(_config_dict["applications"][0]["configuration"])
+                _config_dict = _config_dict["applications"][0]["configuration"]
+            _config_dict = simtools_version.resolve_by_version(
+                _config_dict, _config_dict.get("model_version")
+            )
             return gen.change_dict_keys_case(_config_dict)
         except (TypeError, AttributeError):
             self._logger.debug("No YAML configuration update applied to configuration dictionary.")
