@@ -136,7 +136,7 @@ class SiteModel(ModelParameter):
         """
         layouts = self.get_parameter_value("array_layouts")
         for layout in layouts:
-            if layout["name"] == layout_name.lower():
+            if layout["name"].lower() == layout_name.lower():
                 return layout["elements"]
         raise ValueError(f"Array layout '{layout_name}' not found in '{self.site}' site model.")
 
