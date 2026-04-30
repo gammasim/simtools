@@ -269,25 +269,6 @@ def check_version_constraint(version_string, constraint):
     return False
 
 
-def matches_version_constraint(constraint, parsed_version):
-    """
-    Check whether a parsed version satisfies a single constraint string.
-
-    Parameters
-    ----------
-    constraint : str
-        Constraint string such as "<7.0.0", ">=6.0.0", "==5.2.1".
-    parsed_version : packaging.version.Version
-        Parsed version to test.
-
-    Returns
-    -------
-    bool
-        True if the version satisfies the constraint.
-    """
-    return check_version_constraint(str(parsed_version), str(constraint).strip())
-
-
 def resolve_by_version(config, model_version):
     """
     Resolve version-dependent values in a configuration dictionary.
@@ -317,7 +298,7 @@ def resolve_by_version(config, model_version):
 
     def resolve_by_version_field(by_version_dict, parsed_versions, key):
         """Resolve a single by_version field for all versions, enforcing consistency."""
-        matched_values = [_resolve_single_version(by_version_dict, pv) for pv in parsed_versions]
+        matched_values = [resolve_single_version(by_version_dict, pv) for pv in parsed_versions]
         first_match = matched_values[0]
         if not all(match == first_match for match in matched_values):
             raise ValueError(
@@ -326,9 +307,9 @@ def resolve_by_version(config, model_version):
             )
         return first_match
 
-    def _resolve_single_version(by_version_dict, parsed_version):
+    def resolve_single_version(by_version_dict, parsed_version):
         for constraint, result in by_version_dict.items():
-            if matches_version_constraint(str(constraint), parsed_version):
+            if check_version_constraint(str(parsed_version), constraint):
                 return result
         return None
 

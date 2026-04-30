@@ -3,7 +3,6 @@
 import sys
 
 import pytest
-from packaging.version import Version
 
 import simtools.version as version
 
@@ -229,14 +228,13 @@ def test_check_version_constraint():
     assert version.check_version_constraint("2025.100.0", ">=2024.365.0")
 
 
-def test_matches_version_constraint():
-    parsed_version = Version("6.0.2")
-
-    assert version.matches_version_constraint("<7.0.0", parsed_version)
-    assert version.matches_version_constraint(">=7.0.0", parsed_version) is False
-    assert version.matches_version_constraint("<=6.0.2", parsed_version)
-    assert version.matches_version_constraint(">6.0.1", parsed_version)
-    assert version.matches_version_constraint("==6.0.2", parsed_version)
+def test_check_version_constraint_with_version_object():
+    version_string = "6.0.2"
+    assert version.check_version_constraint(version_string, "<7.0.0")
+    assert not version.check_version_constraint(version_string, ">=7.0.0")
+    assert version.check_version_constraint(version_string, "<=6.0.2")
+    assert version.check_version_constraint(version_string, ">6.0.1")
+    assert version.check_version_constraint(version_string, "==6.0.2")
 
 
 def test_resolve_by_version():
