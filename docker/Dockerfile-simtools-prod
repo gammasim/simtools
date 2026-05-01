@@ -49,6 +49,4 @@ RUN SIMTOOLS_BRANCH="$(printf '%s' "$SIMTOOLS_BRANCH" | sed 's#refs/tags/##')" \
 
 ENV SIMTOOLS_SIM_TELARRAY_PATH="/workdir/simulation_software/sim_telarray"
 ENV SIMTOOLS_CORSIKA_PATH="/workdir/simulation_software/corsika7"
-ENV SIMTOOLS_CORSIKA_HE_INTERACTION="qgs3"
-ENV SIMTOOLS_CORSIKA_LE_INTERACTION="urqmd"
 ENV PATH="/workdir/env/bin/:$PATH"
