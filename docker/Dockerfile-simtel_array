@@ -8,6 +8,7 @@ ARG EXTRA_DEFINES="-DCTA_PROD6 -DMAXIMUM_TELESCOPES=99"
 ARG SIMTEL_VERSION="master"
 ARG HESSIO_VERSION="master"
 ARG STDTOOLS_VERSION="master"
+ARG ALMALINUX_VERSION="9.5"
 
 # hadolint global ignore=DL3033,DL3041
 # - DL3033, DL3041: ignore warnings about installing non-specific versions with microdnf or yum)
@@ -15,7 +16,7 @@ ARG STDTOOLS_VERSION="master"
 # -----------------------------------------------------------------------------
 # STAGE 1: source code preparation
 # -----------------------------------------------------------------------------
-FROM almalinux:9.5-minimal AS source_preparation
+FROM almalinux:${ALMALINUX_VERSION}-minimal AS source_preparation
 ARG SIMTEL_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray.git"
 ARG SIMTEL_VERSION
 ARG HESSIO_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio.git"
@@ -46,7 +47,7 @@ RUN --mount=type=secret,id=stdtools_token \
 # -----------------------------------------------------------------------------
 # STAGE 2: build_image
 # -----------------------------------------------------------------------------
-FROM almalinux:9.5 AS build_image
+FROM almalinux:${ALMALINUX_VERSION} AS build_image
 ARG EXTRA_DEFINES
 ARG SIMTEL_VERSION="master"
 ARG HESSIO_VERSION="master"
@@ -132,7 +133,7 @@ RUN { \
 # -----------------------------------------------------------------------------
 # STAGE 3: Runtime Image
 # -----------------------------------------------------------------------------
-FROM almalinux:9.5-minimal
+FROM almalinux:${ALMALINUX_VERSION}-minimal
 WORKDIR /workdir/simulation_software
 COPY --from=build_image /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
 COPY --from=build_image /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools

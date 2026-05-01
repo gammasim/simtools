@@ -14,6 +14,7 @@ ARG CORSIKA_VERSION="78010"
 ARG CORSIKA_OPT_PATCH_VERSION="v1.1.0"
 ARG CORSIKA_CONFIG_VERSION="v0.1.0"
 ARG AVX_FLAG="avx2"
+ARG ALMALINUX_VERSION="9.5"
 
 # hadolint global ignore=DL3013,DL3033,DL3041,DL4006,SC1091,SC2086
 # - DL3013, DL3033: ignore warnings about installing non-specific versions with microdnf or yum)
@@ -24,7 +25,7 @@ ARG AVX_FLAG="avx2"
 # -----------------------------------------------------------------------------
 # STAGE 1: source code preparation
 # -----------------------------------------------------------------------------
-FROM almalinux:9.5-minimal AS source_preparation
+FROM almalinux:${ALMALINUX_VERSION}-minimal AS source_preparation
 ARG CORSIKA_REPO="gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git"
 ARG CORSIKA_VERSION
 ARG CORSIKA_OPT_PATCH_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git"
@@ -61,7 +62,7 @@ ADD autoconf.tar.gz .
 # -----------------------------------------------------------------------------
 # STAGE 2: build_image
 # -----------------------------------------------------------------------------
-FROM almalinux:9.5 AS build_image
+FROM almalinux:${ALMALINUX_VERSION} AS build_image
 ARG AVX_FLAG
 ARG CORSIKA_VERSION
 ARG CORSIKA_OPT_PATCH_VERSION
@@ -154,7 +155,7 @@ RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
 # -----------------------------------------------------------------------------
 # STAGE 3: Runtime
 # -----------------------------------------------------------------------------
-FROM almalinux:9.5-minimal
+FROM almalinux:${ALMALINUX_VERSION}-minimal
 WORKDIR /workdir/simulation_software
 COPY --from=build_image /workdir/corsika-run /workdir/simulation_software/corsika7
 

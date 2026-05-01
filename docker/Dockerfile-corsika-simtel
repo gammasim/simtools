@@ -15,13 +15,14 @@ ARG HADRONIC_MODEL="qgs2"
 ARG AVX_FLAG="avx2"
 ARG BERNLOHR_VERSION="1.68"
 ARG AUTOCONF_VERSION="2.71"
+ARG ALMALINUX_VERSION="9.5"
 
 #
 # hadolint global ignore=DL3013,DL3033,DL3041,SC1091
 # - DL3013, DL3033: ignore warnings about installing non-specific versions with microdnf or yum)
 # - SC1091: ignore warning about not being able to source the bashrc
 
-FROM almalinux:9.5 AS patches_stage
+FROM almalinux:${ALMALINUX_VERSION} AS patches_stage
 ARG CORSIKA_VERSION
 ARG CORSIKA_OPT_PATCH_VERSION
 
@@ -35,7 +36,7 @@ RUN --mount=type=secret,id=gitlab_token \
     cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/ ./corsika-patches/ && \
     rm -rf corsika-opt-patches
 
-FROM almalinux:9.5 AS build_image
+FROM almalinux:${ALMALINUX_VERSION} AS build_image
 ARG BUILD_OPT
 ARG EXTRA_DEF
 ARG HADRONIC_MODEL
@@ -191,7 +192,7 @@ RUN echo "build_opt: $BUILD_OPT" > ./build_opts.yml && \
     echo "bernlohr_version: $BERNLOHR_VERSION" >> ./build_opts.yml
 
 # Final stage - minimal base image with CORSIKA and sim_telarray
-FROM almalinux:9.5-minimal
+FROM almalinux:${ALMALINUX_VERSION}-minimal
 COPY --from=build_image /workdir/sim_telarray/ /workdir/sim_telarray/
 WORKDIR /workdir
 
