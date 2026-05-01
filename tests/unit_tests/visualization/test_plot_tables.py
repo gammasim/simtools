@@ -235,6 +235,32 @@ def test_export_model_file_site_only(mock_db_handler_class):
     )
 
 
+@mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
+def test_export_model_file_with_db_export_path(mock_db_handler_class, tmp_test_directory):
+    table_config = {
+        "site": "test_site",
+        "telescope": "test_telescope",
+        "model_version": "test_version",
+        "parameter": "test_parameter",
+        "db_export_path": str(tmp_test_directory / "test_plot_tables"),
+    }
+    mock_db_handler = mock_db_handler_class.return_value
+    mock_db_handler.io_handler.output_path.get.return_value = "output/default"
+    mock_db_handler.export_model_file.return_value = mock.MagicMock()
+
+    config = {"tables": [table_config]}
+    table_config["label"] = "test_label"
+    table_config["column_x"] = "x"
+    table_config["column_y"] = "y"
+
+    plot_tables.read_table_data(config)
+
+    mock_db_handler.io_handler.set_paths.assert_any_call(
+        output_path=str(tmp_test_directory / "test_plot_tables")
+    )
+    mock_db_handler.io_handler.set_paths.assert_any_call(output_path="output/default")
+
+
 def test_read_table_and_normalize():
     config = {
         "tables": [
