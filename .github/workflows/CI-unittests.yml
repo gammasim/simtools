@@ -24,6 +24,7 @@ jobs:
   unit_tests:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -33,11 +34,11 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.13"
             install-method: mamba
-            extra-args: ["sonarqube", "random-order"]
 
           - os: ubuntu-latest
             python-version: "3.13"
             install-method: pip
+            extra-args: ["sonarqube", "random-order"]
 
     defaults:
       run:

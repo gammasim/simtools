@@ -6,6 +6,8 @@ applications:
     array_layout_name: test_layout
     azimuth_angle: North
     core_scatter: 10 500 m
+    corsika_he_interaction: epos
+    corsika_le_interaction: urqmd
     energy_range: 100 GeV 1 TeV
     view_cone: 0 deg 10 deg
     eslope: -2.0
