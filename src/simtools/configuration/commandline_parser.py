@@ -9,6 +9,7 @@ import astropy.units as u
 
 import simtools.version
 from simtools import constants
+from simtools.configuration import defaults
 from simtools.utils import general, names
 
 
@@ -104,6 +105,19 @@ class CommandLineParser(argparse.ArgumentParser):
         _job_group.add_argument(
             "--sim_telarray_path",
             help="path pointing to sim_telarray installation",
+            type=Path,
+        )
+        _job_group.add_argument(
+            "--corsika_path",
+            help=f"path pointing to CORSIKA installation (default: {defaults.CORSIKA_PATH})",
+            type=Path,
+        )
+        _job_group.add_argument(
+            "--corsika_interaction_table_path",
+            help=(
+                "path pointing to CORSIKA interaction tables "
+                f"(default: {defaults.CORSIKA_INTERACTION_TABLE_PATH})"
+            ),
             type=Path,
         )
 
@@ -296,8 +310,8 @@ class CommandLineParser(argparse.ArgumentParser):
                 "--simulation_software",
                 help="Simulation software steps.",
                 type=str,
-                choices=["corsika", "sim_telarray", "corsika_sim_telarray"],
-                default="corsika_sim_telarray",
+                choices=list(defaults.SIMULATION_SOFTWARE_CHOICES),
+                default=defaults.SIMULATION_SOFTWARE_DEFAULT,
             )
         if "corsika_configuration" in simulation_configuration:
             self._initialize_argument_group(
@@ -309,6 +323,11 @@ class CommandLineParser(argparse.ArgumentParser):
                 "shower parameters",
                 simulation_configuration["corsika_configuration"],
                 _SHOWER_ARGS,
+            )
+            self._initialize_argument_group(
+                "corsika configuration",
+                simulation_configuration["corsika_configuration"],
+                _CORSIKA_ARGS,
             )
         if "sim_telarray_configuration" in simulation_configuration:
             self._initialize_argument_group(
@@ -398,7 +417,7 @@ class CommandLineParser(argparse.ArgumentParser):
                     "Minimum zenith angle (deg) for using curved-atmosphere CORSIKA binaries. "
                 ),
                 "type": CommandLineParser.zenith_angle,
-                "default": 65 * u.deg,
+                "default": defaults.CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG * u.deg,
             },
         }
 
@@ -847,6 +866,25 @@ _SIMTEL_ARGS = {
         "help": argparse.SUPPRESS,
         "type": str,
         "default": "sim_telarray_instrument_seeds.txt",
+    },
+}
+
+_CORSIKA_ARGS = {
+    "corsika_he_interaction": {
+        "help": (
+            "High-energy interaction model for CORSIKA "
+            f"(default fallback: {defaults.CORSIKA_HE_INTERACTION})."
+        ),
+        "type": str,
+        "default": None,
+    },
+    "corsika_le_interaction": {
+        "help": (
+            "Low-energy interaction model for CORSIKA "
+            f"(default fallback: {defaults.CORSIKA_LE_INTERACTION})."
+        ),
+        "type": str,
+        "default": None,
     },
 }
 

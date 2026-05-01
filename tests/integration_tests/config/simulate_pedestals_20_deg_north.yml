@@ -3,7 +3,10 @@ applications:
 - application: simtools-simulate-pedestals
   configuration:
     run_mode: pedestals
-    array_layout_name: alpha
+    array_layout_name:
+      by_version:
+        "<7.0.0": alpha
+        ">=7.0.0": CTAO-North-Alpha
     label: test-pedestal-production-North
     log_level: DEBUG
     model_version: 6.0.2

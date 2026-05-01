@@ -228,6 +228,79 @@ def test_check_version_constraint():
     assert version.check_version_constraint("2025.100.0", ">=2024.365.0")
 
 
+def test_check_version_constraint_with_version_object():
+    version_string = "6.0.2"
+    assert version.check_version_constraint(version_string, "<7.0.0")
+    assert not version.check_version_constraint(version_string, ">=7.0.0")
+    assert version.check_version_constraint(version_string, "<=6.0.2")
+    assert version.check_version_constraint(version_string, ">6.0.1")
+    assert version.check_version_constraint(version_string, "==6.0.2")
+
+
+def test_resolve_by_version():
+    config = {
+        "array_layout_name": {
+            "by_version": {
+                "<7.0.0": "alpha",
+                ">=7.0.0": "CTAO-North-Alpha",
+            }
+        },
+        "site": "North",
+    }
+
+    assert version.resolve_by_version(config, "6.0.2") == {
+        "array_layout_name": "alpha",
+        "site": "North",
+    }
+    assert version.resolve_by_version(config, "7.0.0") == {
+        "array_layout_name": "CTAO-North-Alpha",
+        "site": "North",
+    }
+
+
+def test_resolve_by_version_no_match():
+    config = {
+        "array_layout_name": {
+            "by_version": {
+                "<5.0.0": "alpha",
+            }
+        }
+    }
+
+    assert version.resolve_by_version(config, "6.0.0") == {"array_layout_name": None}
+
+
+def test_resolve_by_version_list_consistent():
+    config = {
+        "array_layout_name": {
+            "by_version": {
+                "<7.0.0": "alpha",
+                ">=7.0.0": "CTAO-North-Alpha",
+            }
+        },
+        "site": "South",
+    }
+
+    assert version.resolve_by_version(config, ["6.0.2", "6.1.1"]) == {
+        "array_layout_name": "alpha",
+        "site": "South",
+    }
+
+
+def test_resolve_by_version_list_inconsistent_raises():
+    config = {
+        "array_layout_name": {
+            "by_version": {
+                "<7.0.0": "alpha",
+                ">=7.0.0": "CTAO-North-Alpha",
+            }
+        }
+    }
+
+    with pytest.raises(ValueError, match="Inconsistent by_version resolution"):
+        version.resolve_by_version(config, ["6.0.2", "7.0.0"])
+
+
 def test_is_valid_semantic_version():
     assert version.is_valid_semantic_version("1.0.0")
     assert version.is_valid_semantic_version("6.0.2")

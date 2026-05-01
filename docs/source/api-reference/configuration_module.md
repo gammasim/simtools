@@ -21,3 +21,12 @@ Reference documentation for the configuration of simtools applications.
 .. automodule:: configuration.commandline_parser
    :members:
 ```
+
+(configurationdefaults)=
+
+## defaults
+
+```{eval-rst}
+.. automodule:: configuration.defaults
+   :members:
+```
