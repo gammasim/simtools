@@ -177,11 +177,9 @@ def _export_file_backed_parameter(
         par_info=par_info,
     )
     source_file = db.io_handler.get_output_file(par_info["value"])
-    table_file = source_file
-    if output_file is not None:
-        table_file = db.io_handler.get_output_file(output_file)
-        if table_file != source_file:
-            source_file.rename(table_file)
+    table_file = db.io_handler.get_output_file(output_file) if output_file else source_file
+    if table_file != source_file:
+        source_file.rename(table_file)
     output_files = [table_file]
 
     if table and table_file.suffix != ECSV_SUFFIX:
