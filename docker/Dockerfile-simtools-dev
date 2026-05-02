@@ -15,7 +15,7 @@ ARG CORSIKA_IMAGE_VERSION="v78010"
 ARG SIMTEL_IMAGE_VERSION="latest"
 ARG AVX_FLAG="generic"
 ARG PYTHON_VERSION="3.12"
-ARG ALMALINUX_VERSION="9.5"
+ARG ALMALINUX_VERSION="10.1"
 
 FROM ghcr.io/gammasim/corsika7:${CORSIKA_IMAGE_VERSION}-${AVX_FLAG} AS corsika_img
 FROM ghcr.io/gammasim/sim_telarray:${SIMTEL_IMAGE_VERSION} AS simtel_img
@@ -28,9 +28,11 @@ COPY --from=corsika_img /workdir/simulation_software/corsika7  /workdir/simulati
 COPY --from=simtel_img /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray
 COPY --from=simtel_img /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
 COPY --from=simtel_img /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools
+COPY --from=simtel_img /usr/local/lib/libgsl.so* /usr/local/lib/
+COPY --from=simtel_img /usr/local/lib/libgslcblas.so* /usr/local/lib/
 
 RUN microdnf update -y && microdnf install -y \
-    bc bzip2 findutils gcc-c++ git gsl libgfortran procps wget zstd \
+    bc bzip2 findutils gcc-c++ git libgfortran procps wget zstd \
     python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
     microdnf clean all && \
     ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python
@@ -58,7 +60,8 @@ RUN wget --quiet https://raw.githubusercontent.com/gammasim/simtools/main/pyproj
 ENV SIMTEL_PATH="/workdir/simulation_software/sim_telarray"
 ENV LD_LIBRARY_PATH="/workdir/simulation_software/hessioxxx/lib:\
 /workdir/simulation_software/stdtools/lib:\
-/workdir/simulation_software/sim_telarray/LightEmission/lib"
+/workdir/simulation_software/sim_telarray/LightEmission/lib:\
+/usr/local/lib"
 ENV PATH="/workdir/env/bin/:$PATH"
 SHELL ["/bin/bash", "-c"]
 
