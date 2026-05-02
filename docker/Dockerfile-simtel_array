@@ -8,7 +8,7 @@ ARG EXTRA_DEFINES="-DCTA_PROD6 -DMAXIMUM_TELESCOPES=99"
 ARG SIMTEL_VERSION="master"
 ARG HESSIO_VERSION="master"
 ARG STDTOOLS_VERSION="master"
-ARG ALMALINUX_VERSION="10.1"
+ARG ALMALINUX_VERSION="9.7"
 ARG GSL_VERSION="2.8"
 
 # hadolint global ignore=DL3033,DL3041
@@ -45,6 +45,9 @@ RUN --mount=type=secret,id=stdtools_token \
     git config --global advice.detachedHead false && \
     git clone --depth 1 --branch "${STDTOOLS_VERSION}" "https://oauth2:$(cat /run/secrets/stdtools_token)@${STDTOOLS_REPO}"
 
+# GSL (tar file need to present in current directory)
+ADD gsl.tar.gz .
+
 # -----------------------------------------------------------------------------
 # STAGE 2: build_image
 # -----------------------------------------------------------------------------
@@ -63,14 +66,12 @@ ENV STDTOOLS_PATH="/workdir/simulation_software/stdtools/"
 RUN yum update -y && yum install -y \
     gcc gcc-c++ \
     automake csh diffutils patch perl \
-    make m4 wget which && \
+    make m4 which && \
     yum clean all
 
 WORKDIR /tmp
-RUN wget -q "https://ftp.gnu.org/gnu/gsl/gsl-${GSL_VERSION}.tar.gz" && \
-    tar -xzf "gsl-${GSL_VERSION}.tar.gz" && \
-    cd "gsl-${GSL_VERSION}" && \
-    ./configure --prefix=/usr/local && \
+COPY --from=source_preparation /src/gsl-${GSL_VERSION} .
+RUN ./configure --prefix=/usr/local && \
     make && \
     make install && \
     cd / && rm -rf /tmp/gsl-* && \
