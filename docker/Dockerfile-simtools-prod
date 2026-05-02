@@ -12,7 +12,7 @@ ARG SIMTEL_IMAGE_VERSION="latest"
 ARG AVX_FLAG="generic"
 ARG PYTHON_VERSION="3.12"
 ARG SIMTOOLS_BRANCH=main
-ARG ALMALINUX_VERSION="10.1"
+ARG ALMALINUX_VERSION="9.7"
 
 FROM ghcr.io/gammasim/corsika7:${CORSIKA_IMAGE_VERSION}-${AVX_FLAG} AS corsika_img
 FROM ghcr.io/gammasim/sim_telarray:${SIMTEL_IMAGE_VERSION} AS simtel_img
