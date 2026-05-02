@@ -11,7 +11,7 @@
 
 **simtools** is part of the [SimPipe](http://cta-computing.gitlab-pages.cta-observatory.org/dpps/simpipe/simpipe/latest/) pipeline of the [Cherenkov Telescope Array Observatory (CTAO)](https://www.cta-observatory.org/).
 
-**Authors**: see the [CITATION.cff](https://github.com/gammasim/simtools/blob/main/CITATION.cff) file.
+**Authors**: see the [CITATION.cff](https://github.com/gammasim/simtools/blob/main/CITATION.cff) file.  **CONTRIBUTORS**: see the [Contributors](https://github.com/gammasim/simtools/graphs/contributors) page.
 
 > **Note**
 > simtools is under active development.
@@ -45,4 +45,4 @@ Generative AI tools (including, but not limited to, Claude, ChatGPT, and Gemini)
 
 ## Acknowledgements
 
-This project is supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) - project number 460248186 (*PUNCH4NFDI [https://www.punch4nfdi.de/](https://www.punch4nfdi.de/)*).
+This project has been supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) - project number 460248186 (*PUNCH4NFDI [https://www.punch4nfdi.de/](https://www.punch4nfdi.de/)*).
