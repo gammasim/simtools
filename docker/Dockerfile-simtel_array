@@ -8,7 +8,8 @@ ARG EXTRA_DEFINES="-DCTA_PROD6 -DMAXIMUM_TELESCOPES=99"
 ARG SIMTEL_VERSION="master"
 ARG HESSIO_VERSION="master"
 ARG STDTOOLS_VERSION="master"
-ARG ALMALINUX_VERSION="9.5"
+ARG ALMALINUX_VERSION="10.1"
+ARG GSL_VERSION="2.8"
 
 # hadolint global ignore=DL3033,DL3041
 # - DL3033, DL3041: ignore warnings about installing non-specific versions with microdnf or yum)
@@ -53,16 +54,27 @@ ARG SIMTEL_VERSION="master"
 ARG HESSIO_VERSION="master"
 ARG STDTOOLS_VERSION="master"
 ARG GSL_COMPILE="-DWITH_GSL -DWITH_GSL_RNG"
+ARG GSL_VERSION
 
 ENV GCC_PATH="/usr/bin/"
 ENV HSEVENTIO="/workdir/simulation_software/hessioxxx/"
 ENV STDTOOLS_PATH="/workdir/simulation_software/stdtools/"
 
 RUN yum update -y && yum install -y \
-    gcc gcc-c++ gsl-devel \
-    automake csh patch perl \
-    make m4 which && \
+    gcc gcc-c++ \
+    automake csh diffutils patch perl \
+    make m4 wget which && \
     yum clean all
+
+WORKDIR /tmp
+RUN wget -q "https://ftp.gnu.org/gnu/gsl/gsl-${GSL_VERSION}.tar.gz" && \
+    tar -xzf "gsl-${GSL_VERSION}.tar.gz" && \
+    cd "gsl-${GSL_VERSION}" && \
+    ./configure --prefix=/usr/local && \
+    make && \
+    make install && \
+    cd / && rm -rf /tmp/gsl-* && \
+    ldconfig
 
 WORKDIR /workdir/simulation_software
 COPY --from=source_preparation /src .
@@ -138,9 +150,11 @@ WORKDIR /workdir/simulation_software
 COPY --from=build_image /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
 COPY --from=build_image /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools
 COPY --from=build_image /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray
+COPY --from=build_image /usr/local/lib/libgsl.so* /usr/local/lib/
+COPY --from=build_image /usr/local/lib/libgslcblas.so* /usr/local/lib/
 
 RUN microdnf update -y && microdnf install -y \
-    bc findutils gsl procps zstd && \
+    bc findutils procps zstd && \
     microdnf clean all
 
 WORKDIR /workdir/simulation_software/sim_telarray
