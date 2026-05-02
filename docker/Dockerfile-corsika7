@@ -14,7 +14,7 @@ ARG CORSIKA_VERSION="78010"
 ARG CORSIKA_OPT_PATCH_VERSION="v1.1.0"
 ARG CORSIKA_CONFIG_VERSION="v0.1.0"
 ARG AVX_FLAG="avx2"
-ARG ALMALINUX_VERSION="9.5"
+ARG ALMALINUX_VERSION="10.1"
 
 # hadolint global ignore=DL3013,DL3033,DL3041,DL4006,SC1091,SC2086
 # - DL3013, DL3033: ignore warnings about installing non-specific versions with microdnf or yum)
@@ -33,9 +33,7 @@ ARG CORSIKA_OPT_PATCH_VERSION
 ARG CORSIKA_CONFIG_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git"
 ARG CORSIKA_CONFIG_VERSION
 
-RUN microdnf update -y && microdnf install -y git && \
-    microdnf clean all
-
+RUN microdnf update -y && microdnf install -y git && microdnf clean all
 WORKDIR /src
 
 # Clone CORSIKA configuration files from CTAO gitlab
@@ -56,9 +54,6 @@ RUN git config --global advice.detachedHead false && \
     cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/* corsika7/ && \
     rm -rf corsika-opt-patches
 
-# autoconf 2.71 (tar files need to present in current directory)
-ADD autoconf.tar.gz .
-
 # -----------------------------------------------------------------------------
 # STAGE 2: build_image
 # -----------------------------------------------------------------------------
@@ -76,11 +71,6 @@ RUN yum update -y --setopt=tsflags=nodocs && \
 
 WORKDIR /workdir/simulation_software
 COPY --from=source_preparation /src .
-
-# Install autoconf 2.71 - needed to apply CORSIKA patches
-WORKDIR /workdir/simulation_software/autoconf-2.71
-RUN ./configure --prefix=/usr && \
-    make && make install
 
 WORKDIR /workdir/simulation_software/corsika7
 
