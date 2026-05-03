@@ -1,7 +1,6 @@
 # Simulation Productions
 
 The production of large sets of simulated events is the core functionality of the simtools framework.
-Simtools is designed to use the CTAO workload management system (WMS) and (especially for testing) the HT Condor job submission system.
 
 ## Configure and Produce Simulations
 
@@ -67,7 +66,7 @@ The *Produce* step generates the following output files:
 
 Configure and submit a local production using the <applications/simtools-simulate-prod> command.
 The submit engine is configured with the `--submit_engine local` command line option, see
-[simulate_prod_gamma_20_deg_North.yml](https://github.com/gammasim/simtools/blob/main/tests/integration_tests/config/simulate_prod_gamma_20_deg_North.yml) for an example configuration.
+[simulate_prod_gamma_40_deg_south_corsika_only.yml](https://github.com/gammasim/simtools/blob/main/tests/integration_tests/config/simulate_prod_gamma_40_deg_south_corsika_only.yml) for an example configuration.
 
 Running a local production is a simple way to test the production system, but in general too slow to simulate a large number of events.
 
@@ -85,7 +84,7 @@ The [simtools-simulate-prod-htcondor-generator](simulate_prod_htcondor_generator
 - a condor submission file to specify the apptainer, the number of jobs (equals the number of runs), the priority, and the output files.
 - a condor submission script with the [simtools-simulate-prod](simulate_prod) command to be run in the apptainer.
 
-An example for the configuration of [simtools-simulate-prod-htcondor-generator](simulate_prod_htcondor_generator) can be found in [tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_North.yml](tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_North.yml).
+An example for the configuration of [simtools-simulate-prod-htcondor-generator](simulate_prod_htcondor_generator) can be found in [tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_north.yml](tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_north.yml).
 
 Step-by-step instructions:
 
@@ -97,13 +96,13 @@ apptainer pull --force \
    docker://ghcr.io/gammasim/simtools-prod:v0.27.1-v78010-v2025-11-30-rc-avx2
 ```
 
-2. Configure your job configuration file as the test example: [simulate_prod_htcondor_generator_gamma_20_deg_North.yml](tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_North.yml). Adjust the apptainer directory to the path where you pulled the apptainer image and set the output path for the condor submission files.
+2. Configure your job configuration file as the test example: [simulate_prod_htcondor_generator_gamma_20_deg_north.yml](tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_north.yml). Adjust the apptainer directory to the path where you pulled the apptainer image and set the output path for the condor submission files.
 3. Copy your environmental variables into a file called `env.txt` (similar to the `.env` files) into the output path (in the example `htcondor_submit`)
 4. Run the [simtools-simulate-prod-htcondor-generator](simulate_prod_htcondor_generator) command to generate the condor submission files:
 
 ```bash
 simtools-simulate-prod-htcondor-generator \
-   --config tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_North.yml
+   --config tests/integration_tests/config/simulate_prod_htcondor_generator_gamma_20_deg_north.yml
 ```
 
 5. Change into the output directory and submit the jobs to HTCondor:
