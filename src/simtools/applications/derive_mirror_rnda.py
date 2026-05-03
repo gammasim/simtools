@@ -42,6 +42,8 @@ n_workers (int, optional)
     Number of parallel worker processes to use. Default: 0 (auto chooses maximum).
 number_of_mirrors_to_test (int, optional)
     Number of mirrors to optimize when --test is used. Default: 10.
+profile_serial (optional)
+    Run optimization in a single process (no process pool). Useful for profiling.
 psf_hist (str, optional)
     If activated, write a histogram comparing measured vs simulated PSF diameter distributions.
 cleanup (optional)
@@ -113,6 +115,15 @@ def _add_arguments(parser):
         type=int,
         required=False,
         default=10,
+    )
+    parser.add_argument(
+        "--profile_serial",
+        action="store_true",
+        default=False,
+        help=(
+            "Run optimization in a single process (no process pool). "
+            "Useful for cProfile on optimization internals."
+        ),
     )
     parser.add_argument(
         "--psf_hist",
