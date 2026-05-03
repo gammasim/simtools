@@ -9,6 +9,7 @@ from astropy.table import QTable
 from simtools.data_model import data_reader, schema
 from simtools.io import io_handler
 from simtools.model.calibration_model import CalibrationModel
+from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.model.model_utils import read_overwrite_model_parameter_dict
 from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
@@ -445,7 +446,9 @@ class ArrayModel:
             site_model.get_array_elements_of_type(array_element_type)
         )
 
-    def export_array_elements_as_table(self, coordinate_system="ground"):
+    def export_array_elements_as_table(
+        self, coordinate_system="ground", include_calibration_array_elements=False
+    ):
         """
         Export array elements positions to astropy table.
 
@@ -453,6 +456,8 @@ class ArrayModel:
         ----------
         coordinate_system: str
             Positions are exported in this coordinate system.
+        include_calibration_array_elements: bool
+            Include calibration array elements in output table.
 
         Returns
         -------
@@ -471,8 +476,44 @@ class ArrayModel:
             try:
                 # add tests of KeyError after positions calibration_elements are added to DB
                 tel_r.append(data.get_parameter_value_with_unit("telescope_sphere_radius"))
-            except KeyError:  # not all array elements have a sphere radius
-                tel_r.append(0.0 * u.m)
+            except (
+                KeyError,
+                InvalidModelParameterError,
+            ):  # not all array elements have a sphere radius
+                tel_r.append(float("nan") * u.m)
+
+        if include_calibration_array_elements:
+            calibration_position_parameter = f"array_element_position_{coordinate_system}"
+            for array_element_name in self.array_elements:
+                if (
+                    names.get_collection_name_from_array_element_name(array_element_name)
+                    != "calibration_devices"
+                ):
+                    continue
+
+                calibration_model = CalibrationModel(
+                    site=self.site_model.site,
+                    calibration_device_model_name=array_element_name,
+                    model_version=self.model_version,
+                    label=self.label,
+                    overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
+                )
+
+                xyz = calibration_model.get_parameter_value_with_unit(
+                    calibration_position_parameter
+                )
+                name.append(array_element_name)
+                pos_x.append(xyz[0])
+                pos_y.append(xyz[1])
+                pos_z.append(xyz[2])
+                try:
+                    tel_r.append(
+                        calibration_model.get_parameter_value_with_unit(
+                            "array_element_sphere_radius"
+                        )
+                    )
+                except (KeyError, InvalidModelParameterError):
+                    tel_r.append(float("nan") * u.m)
 
         table["telescope_name"] = name
         if coordinate_system == "ground":

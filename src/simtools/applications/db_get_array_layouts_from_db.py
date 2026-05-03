@@ -17,6 +17,8 @@ Command line arguments
 ----------------------
 list_available_layouts : bool, optional
     List available layouts in the database.
+include_calibration_array_elements : bool, optional
+    Include calibration array elements in output table (default: only telescopes).
 array_layout_name : str
     Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).
 array_element_list : list
@@ -49,6 +51,15 @@ Retrieve telescope positions from database (utm coordinate system) and write to 
       --array_element_list LSTN-01 LSTN-02 MSTN
       --coordinate_system utm
       --output_file telescope_positions-test_layout.ecsv
+
+Retrieve array-element positions including calibration elements.
+
+.. code-block:: console
+
+        simtools-db-get-array-layouts-from-db --site South --model_version "6.0.2"
+            --array_element_list LSTS ILLS
+            --include_calibration_array_elements
+            --output_file array_layout_south_ground_with_calibration.ecsv
 """
 
 import simtools.data_model.model_data_writer as writer
@@ -63,6 +74,12 @@ def _add_arguments(parser):
     input_group.add_argument(
         "--list_available_layouts",
         help="List available layouts in the database.",
+        action="store_true",
+        required=False,
+    )
+    parser.add_argument(
+        "--include_calibration_array_elements",
+        help="Include calibration array elements in output table.",
         action="store_true",
         required=False,
     )
@@ -97,7 +114,8 @@ def _layout_from_db(args_dict):
         array_elements=args_dict.get("array_element_list", None),
     )
     return array_model.export_array_elements_as_table(
-        coordinate_system=args_dict["coordinate_system"]
+        coordinate_system=args_dict["coordinate_system"],
+        include_calibration_array_elements=args_dict["include_calibration_array_elements"],
     )
 
 
