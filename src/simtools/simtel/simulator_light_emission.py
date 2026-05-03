@@ -64,10 +64,11 @@ class SimulatorLightEmission(SimtelRunner):
 
     def _initialize_light_emission_configuration(self, config):
         """Initialize light emission configuration."""
-        if self.calibration_model.get_parameter_value("flasher_type"):
-            config["light_source_type"] = self.calibration_model.get_parameter_value(
-                "flasher_type"
-            ).lower()
+        flasher_type = self.calibration_model.get_parameter_value("flasher_type")
+        if flasher_type:
+            config["light_source_type"] = flasher_type.lower()
+            if config.get("run_mode") is None:
+                config["run_mode"] = config["light_source_type"]
 
         if config.get("flasher_photons") is not None:
             photons = general.parse_typed_sequence(config["flasher_photons"], int)
