@@ -1445,7 +1445,7 @@ def test_simulate(simulator_instance, tmp_test_directory):
 def test__initialize_light_emission_configuration(simulator_instance):
     """Test _initialize_light_emission_configuration method."""
 
-    # Mock calibration model - flasher_type is called twice
+    # Mock calibration model responses
     def mock_get_parameter_value(param_name):
         if param_name == "flasher_type":
             return "LED"
@@ -1461,6 +1461,7 @@ def test__initialize_light_emission_configuration(simulator_instance):
 
     # Verify flasher_type was converted to light_source_type (lowercase)
     assert result["light_source_type"] == "led"
+    assert result["run_mode"] == "led"
     assert result["flasher_photons"] == pytest.approx(5e6)
     assert result["existing_key"] == "value"  # Existing key preserved
 
@@ -1506,6 +1507,28 @@ def test__initialize_light_emission_configuration_ignores_test_flag_for_photons(
     result = simulator_instance._initialize_light_emission_configuration({"test": True})
 
     assert result["light_source_type"] == "illuminator"
+    assert result["run_mode"] == "illuminator"
+    assert result["flasher_photons"] == pytest.approx(5e6)
+
+
+def test__initialize_light_emission_configuration_preserves_run_mode(simulator_instance):
+    """Test explicit run_mode is not overwritten by inferred value."""
+
+    def mock_get_parameter_value(param_name):
+        if param_name == "flasher_type":
+            return "illuminator"
+        if param_name == "flasher_photons":
+            return 5e6
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
+
+    result = simulator_instance._initialize_light_emission_configuration(
+        {"run_mode": "full_simulation"}
+    )
+
+    assert result["light_source_type"] == "illuminator"
+    assert result["run_mode"] == "full_simulation"
     assert result["flasher_photons"] == pytest.approx(5e6)
 
 
