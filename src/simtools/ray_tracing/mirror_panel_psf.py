@@ -137,7 +137,7 @@ class MirrorPanelPSF:
             off_axis_angle=[(0.0, 0.0)],
         )
         ray.simulate(test=self.args_dict.get("test", False), force=True, compress_photons=False)
-        ray.analyze(force=True, containment_fraction=fraction)
+        ray.analyze(force=True, containment_fraction=fraction, export=False)
 
         return float(ray.get_psf_mm())
 

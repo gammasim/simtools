@@ -178,9 +178,8 @@ class PSFImage:
 
         with file_open_function(photons_file, "rb") as f:
             for line in f:
-                words = line.split()
-
                 if b"falling on an area of" in line:
+                    words = line.split()
                     total_photons += int(words[4])
                     total_area_in_file = float(words[14])
                     if total_area is None:
@@ -194,15 +193,19 @@ class PSFImage:
                     continue
 
                 if b"Camera rotation angle" in line:
+                    words = line.split()
                     camera_rotation_angle = np.deg2rad(float(words[5]))
                     cos_camera_rotation = np.cos(camera_rotation_angle)
                     sin_camera_rotation = np.sin(camera_rotation_angle)
                     continue
 
-                if b"#" in line or len(words) == 0:
+                if b"#" in line or line in (b"", b"\n", b"\r\n"):
                     continue
 
                 # Photon positions from cols 2 and 3; apply camera rotation.
+                words = line.split()
+                if len(words) == 0:
+                    continue
                 x, y = float(words[2]), float(words[3])
                 photon_pos_x.append(x * cos_camera_rotation - y * sin_camera_rotation)
                 photon_pos_y.append(y * cos_camera_rotation + x * sin_camera_rotation)
