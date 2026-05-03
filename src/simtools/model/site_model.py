@@ -8,6 +8,7 @@ import numpy as np
 from astropy import units as u
 
 from simtools.model.model_parameter import ModelParameter
+from simtools.utils import names
 
 
 class SiteModel(ModelParameter):
@@ -154,10 +155,15 @@ class SiteModel(ModelParameter):
         dict
             Dict with array elements.
         """
+        try:
+            collection = names.get_collection_name_from_array_element_name(array_element_type)
+        except ValueError:
+            return []
+
         return self.db.get_array_elements_of_type(
             array_element_type=array_element_type,
             model_version=self.model_version,
-            collection="telescopes",
+            collection=collection,
         )
 
     def get_list_of_array_layouts(self):
