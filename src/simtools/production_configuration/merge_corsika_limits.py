@@ -11,7 +11,7 @@ from astropy.table import unique, vstack
 import simtools.utils.general as gen
 from simtools.data_model import data_reader
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io import io_handler
+from simtools.io import ascii_handler, io_handler
 
 _logger = logging.getLogger(__name__)
 
@@ -526,3 +526,80 @@ class CorsikaMergeLimits:
         }
         MetadataCollector.dump(metadata, output_file)
         return output_file
+
+
+def _read_grid_definition(grid_definition):
+    """Read grid definition from file if provided."""
+    return ascii_handler.collect_data_from_file(grid_definition) if grid_definition else None
+
+
+def resolve_input_files_and_table(args_dict, merger):
+    """Resolve input files and merged table from command line arguments."""
+    if args_dict.get("merged_table"):
+        merged_table_path = Path(args_dict["merged_table"]).expanduser()
+        merged_table = data_reader.read_table_from_file(merged_table_path)
+        return merged_table, [merged_table_path], True
+
+    if not args_dict.get("input_files") and not args_dict.get("input_files_list"):
+        raise ValueError(
+            "Either --input_files, --input_files_list, or --merged_table must be provided."
+        )
+
+    input_files = []
+    if args_dict.get("input_files"):
+        raw_paths = args_dict.get("input_files")
+        if len(raw_paths) == 1 and Path(raw_paths[0]).expanduser().is_dir():
+            input_dir = Path(raw_paths[0]).expanduser()
+            input_files.extend(input_dir.glob("*.ecsv"))
+        else:
+            input_files.extend(Path(file_name).expanduser() for file_name in raw_paths)
+
+    if args_dict.get("input_files_list"):
+        input_files.extend(merger.read_file_list(args_dict["input_files_list"]))
+
+    if not input_files:
+        raise FileNotFoundError(
+            "No input files found. Check --input_files or --input_files_list arguments."
+        )
+
+    return merger.merge_tables(input_files), input_files, False
+
+
+def run_merge_workflow(args_dict, merger=None):
+    """
+    Run table merge, completeness checks, optional plotting, and optional write-out.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Dictionary with command line arguments.
+    merger : CorsikaMergeLimits, optional
+        An instance of CorsikaMergeLimits to use for merging and plotting. If None, a
+        new instance will be created.
+    """
+    merger = merger or CorsikaMergeLimits()
+    grid_definition = _read_grid_definition(args_dict.get("grid_definition"))
+
+    merged_table, input_files, from_merged_table = resolve_input_files_and_table(args_dict, merger)
+
+    is_complete, grid_completeness = merger.check_grid_completeness(merged_table, grid_definition)
+
+    if args_dict.get("plot_grid_coverage"):
+        merger.plot_grid_coverage(merged_table, grid_definition)
+
+    if args_dict.get("plot_limits"):
+        merger.plot_limits(merged_table)
+
+    if not from_merged_table:
+        output_file = merger.output_dir / args_dict["output_file"]
+        merger.write_merged_table(
+            merged_table,
+            output_file,
+            input_files,
+            {
+                "is_complete": is_complete,
+                "expected": grid_completeness.get("expected", 0),
+                "found": grid_completeness.get("found", 0),
+                "missing": grid_completeness.get("missing", []),
+            },
+        )
