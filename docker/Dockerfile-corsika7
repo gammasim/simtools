@@ -54,7 +54,7 @@ RUN git config --global advice.detachedHead false && \
     cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/* corsika7/ && \
     rm -rf corsika-opt-patches
 
-# autoconf 2.71 (tar file need to present in current directory)
+# autoconf 2.71 (tar file needs to present in current directory)
 ADD autoconf.tar.gz .
 
 # -----------------------------------------------------------------------------
