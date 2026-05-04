@@ -16,6 +16,8 @@ branch (str, optional)
     Repository branch to clone (if not provided, uses the version tag).
 tmp_dir (str, optional)
     Temporary directory for cloning the repository (default: ./tmp_model_parameters).
+max_attempts (int, optional)
+    Maximum number of attempts to clone the repository in case of network failures (default: 3).
 
 Examples
 --------
@@ -61,6 +63,13 @@ def _add_arguments(parser):
         default="tmp_model_parameters",
         required=False,
     )
+    parser.add_argument(
+        "--max_attempts",
+        help="Maximum number of attempts to clone the repository (default: 3).",
+        type=int,
+        default=3,
+        required=False,
+    )
 
 
 def main():
@@ -94,6 +103,7 @@ def main():
         db_simulation_model_version=app_context.args.get("db_simulation_model_version"),
         repository_url=DEFAULT_SIMULATION_MODELS,
         repository_branch=app_context.args.get("branch"),
+        max_attempts=app_context.args.get("max_attempts"),
     )
 
 

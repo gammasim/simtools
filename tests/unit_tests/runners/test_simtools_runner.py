@@ -109,6 +109,20 @@ def test_replace_placeholders_in_configuration_empty_config():
     assert result["output_path"] == str(output_path)
 
 
+def test_replace_placeholders_in_configuration_keeps_existing_output_path(tmp_test_directory):
+    config = {
+        "output_path": str(tmp_test_directory / "WF"),
+        "input_file": "__SETTING_WORKFLOW__/data.txt",
+    }
+    output_path = TEST_OUTPUT_PATH
+    setting_workflow = "LSTN-01/workflow"
+    result = simtools_runner._replace_placeholders_in_configuration(
+        config.copy(), output_path, setting_workflow
+    )
+    assert result["output_path"] == str(tmp_test_directory / "WF")
+    assert result["input_file"] == "LSTN-01/workflow/data.txt"
+
+
 def test_read_application_configuration_selected_steps(
     monkeypatch,
     mock_logger,
@@ -267,8 +281,12 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     assert len(submit_calls) == 2
     assert submit_calls[0]["configuration"]["activity_id"] == "cfg-id-1"
     assert submit_calls[1]["configuration"]["activity_id"] == "cfg-id-3"
-    assert submit_calls[0]["configuration"]["log_file"].name == "app1-01.log"
-    assert submit_calls[1]["configuration"]["log_file"].name == "app3-02.log"
+    assert submit_calls[0]["configuration"]["label"] == "app1"
+    assert submit_calls[1]["configuration"]["label"] == "app3"
+    assert submit_calls[0]["configuration"]["disable_log_file"] is True
+    assert submit_calls[1]["configuration"]["disable_log_file"] is True
+    assert submit_calls[0]["configuration"]["output_path"] == str(tmp_test_directory)
+    assert submit_calls[1]["configuration"]["output_path"] == str(tmp_test_directory)
 
     version_string_mock.assert_called_once_with([], include_software_versions=False)
     workflow_build_mock.assert_not_called()
@@ -325,6 +343,66 @@ def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_te
     assert workflow_build_mock.call_args.kwargs["workflow_context"]["site"] == "North"
     assert workflow_build_mock.call_args.kwargs["workflow_context"]["instrument"] == "LSTN-design"
     workflow_update_mock.assert_called_once()
+
+
+def test_run_applications_retries_metadata_file_detection_after_submit(
+    monkeypatch, tmp_test_directory
+):
+    """Retry metadata detection after submit when pre-submit detection returns None."""
+    mock_args_dict = {
+        "config_file": "dummy_config.yml",
+        "steps": None,
+        "ignore_runtime_environment": False,
+    }
+    mock_configurations = [
+        {
+            "application": "simtools-submit-model-parameter-from-external",
+            "run_application": True,
+            "configuration": {
+                "output_path": str(tmp_test_directory),
+                "activity_id": "cfg-id-1",
+            },
+        },
+    ]
+    log_file_path = tmp_test_directory / "simtools.log"
+
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._read_application_configuration",
+        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id")),
+    )
+    monkeypatch.setattr(
+        "simtools.dependencies.get_version_string",
+        mock.Mock(return_value="simtools version: 1.2.3\n"),
+    )
+    monkeypatch.setattr(
+        "simtools.job_execution.job_manager.submit",
+        mock.Mock(return_value=mock.Mock(stdout="ok", stderr="")),
+    )
+
+    discovered_metadata_file = Path(str(tmp_test_directory)) / "p" / "p-1.0.0.meta.yml"
+    get_metadata_mock = mock.Mock(side_effect=[None, discovered_metadata_file])
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._get_model_parameter_metadata_file",
+        get_metadata_mock,
+    )
+
+    workflow_build_mock = mock.Mock(return_value={"id": "wf-activity-id"})
+    workflow_update_mock = mock.Mock()
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner.workflow_metadata.build_workflow_activity_metadata",
+        workflow_build_mock,
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner.workflow_metadata.update_model_parameter_metadata_file",
+        workflow_update_mock,
+    )
+
+    simtools_runner.run_applications(mock_args_dict)
+
+    assert get_metadata_mock.call_count == 2
+    workflow_build_mock.assert_called_once()
+    workflow_update_mock.assert_called_once()
+    assert workflow_update_mock.call_args.kwargs["metadata_file"] == discovered_metadata_file
 
 
 def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_directory):
