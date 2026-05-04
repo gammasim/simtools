@@ -58,9 +58,10 @@ def run_cumulative_psf_validation(app_context):
     """
     args_dict = app_context.args
     io_handler = app_context.io_handler
+    label = args_dict.get("label") or Path("validate_cumulative_psf").stem
 
     tel_model, site_model, _ = initialize_simulation_models(
-        label=args_dict.get("label"),
+        label=label,
         site=args_dict["site"],
         telescope_name=args_dict["telescope"],
         model_version=args_dict["model_version"],
@@ -69,7 +70,7 @@ def run_cumulative_psf_validation(app_context):
     ray = RayTracing(
         telescope_model=tel_model,
         site_model=site_model,
-        label=args_dict.get("label"),
+        label=label,
         zenith_angle=args_dict["zenith_angle"],
         source_distance=args_dict["source_distance"],
         off_axis_angle=[0.0] * u.deg,
@@ -97,7 +98,7 @@ def run_cumulative_psf_validation(app_context):
     fig = visualize.plot_1d(data_to_plot)
     fig.gca().set_ylim(0, 1.05)
 
-    plot_file_name = args_dict.get("label") + "_" + tel_model.name + "_cumulative_PSF"
+    plot_file_name = label + "_" + tel_model.name + "_cumulative_PSF"
     plot_file = io_handler.get_output_file(plot_file_name)
     visualize.save_figure(fig, plot_file)
 
@@ -107,7 +108,7 @@ def run_cumulative_psf_validation(app_context):
     fig.gca().add_artist(circle)
     fig.gca().set_aspect("equal")
 
-    plot_file_name = args_dict.get("label") + "_" + tel_model.name + "_image"
+    plot_file_name = label + "_" + tel_model.name + "_image"
     plot_file = io_handler.get_output_file(plot_file_name)
     visualize.save_figure(fig, plot_file)
 
