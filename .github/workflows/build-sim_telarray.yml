@@ -18,6 +18,9 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
+permissions:
+  contents: read
+
 jobs:
   download-auxiliary-files:
     runs-on: ubuntu-latest

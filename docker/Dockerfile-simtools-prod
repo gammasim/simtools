@@ -53,5 +53,8 @@ RUN SIMTOOLS_BRANCH="$(printf '%s' "$SIMTOOLS_BRANCH" | sed 's#refs/tags/##')" \
 
 ENV SIMTOOLS_SIM_TELARRAY_PATH="/workdir/simulation_software/sim_telarray"
 ENV SIMTOOLS_CORSIKA_PATH="/workdir/simulation_software/corsika7"
-ENV LD_LIBRARY_PATH="/workdir/simulation_software/hessioxxx/lib:/workdir/simulation_software/stdtools/lib:/workdir/simulation_software/sim_telarray/LightEmission/lib:/usr/local/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+ENV LD_LIBRARY_PATH="/workdir/simulation_software/hessioxxx/lib:\
+/workdir/simulation_software/stdtools/lib:\
+/workdir/simulation_software/sim_telarray/LightEmission/lib:\
+/usr/local/lib"
 ENV PATH="/workdir/env/bin/:$PATH"
