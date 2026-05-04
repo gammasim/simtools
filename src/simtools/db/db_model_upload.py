@@ -20,6 +20,7 @@ def add_complete_model(
     db_simulation_model_version,
     repository_url,
     repository_branch=None,
+    max_attempts=3,
 ):
     """
     Upload a complete model including model parameters and production tables to the database.
@@ -40,6 +41,8 @@ def add_complete_model(
         URL of the simulation model repository to clone.
     repository_branch : str, optional
         Branch of the repository to use. If None, the default branch is used.
+    max_attempts : int, optional
+        Maximum number of attempts to clone the repository in case of network failures (default: 3).
 
     Returns
     -------
@@ -56,6 +59,7 @@ def add_complete_model(
             repository_url,
             db_simulation_model_version=db_simulation_model_version,
             repository_branch=repository_branch,
+            max_attempts=max_attempts,
         )
 
         add_model_parameters_to_db(
@@ -318,7 +322,7 @@ def _confirm_remote_database_upload(db):
 
 
 def clone_simulation_model_repository(
-    target_dir, repository_url, db_simulation_model_version, repository_branch
+    target_dir, repository_url, db_simulation_model_version, repository_branch, max_attempts=3
 ):
     """
     Clone a git repository containing simulation model parameters and production tables.
@@ -333,6 +337,8 @@ def clone_simulation_model_repository(
         Version tag of the simulation model to checkout.
     repository_branch : str, optional
         Branch of the repository to use. If None, the version tag is used.
+    max_attempts : int, optional
+        Maximum number of attempts to clone the repository in case of network failures.
 
     Returns
     -------
@@ -361,6 +367,9 @@ def clone_simulation_model_repository(
             f'--depth 1 "{repository_url}" "{target_dir}"'
         )
 
-    retry_command(command)
+    if max_attempts > 0:
+        retry_command(command, max_attempts=max_attempts, delay=30)
+    else:
+        raise ValueError(f"Max attempts must be a positive integer, got {max_attempts}")
 
     return target_dir
