@@ -81,7 +81,7 @@ def main():
             "simulation_model": ["telescope", "model_version"],
         },
     )
-    run_camera_fov_validation(app_context.args, app_context.io_handler)
+    run_camera_fov_validation(app_context)
 
 
 if __name__ == "__main__":

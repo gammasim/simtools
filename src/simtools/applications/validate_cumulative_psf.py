@@ -86,7 +86,7 @@ def main():
             "simulation_model": ["telescope", "model_version"],
         },
     )
-    run_cumulative_psf_validation(app_context.args, app_context.io_handler)
+    run_cumulative_psf_validation(app_context)
 
 
 if __name__ == "__main__":

@@ -42,23 +42,23 @@ def load_data(datafile):
     return data
 
 
-def run_cumulative_psf_validation(args_dict, io_handler):
+def run_cumulative_psf_validation(app_context):
     """
     Simulate PSF measurements and compare cumulative PSF with measured data if provided.
 
     Parameters
     ----------
-    args_dict : dict
-        Application arguments including site, telescope, model_version,
-        zenith_angle, source_distance, data, model_path, label, test.
-    io_handler : IOHandler
-        I/O handler for output file paths.
+    app_context : object
+        Application context with ``args`` and ``io_handler`` attributes.
 
     Raises
     ------
     ValueError
         If no radius data is available to compute the cumulative PSF.
     """
+    args_dict = app_context.args
+    io_handler = app_context.io_handler
+
     tel_model, site_model, _ = initialize_simulation_models(
         label=args_dict.get("label"),
         site=args_dict["site"],
@@ -112,19 +112,18 @@ def run_cumulative_psf_validation(args_dict, io_handler):
     visualize.save_figure(fig, plot_file)
 
 
-def run_optics_validation(args_dict, io_handler):
+def run_optics_validation(app_context):
     """
     Build telescope model, run ray tracing, plot PSF/area/focal-length results.
 
     Parameters
     ----------
-    args_dict : dict
-        Application arguments including site, telescope, model_version, zenith_angle,
-        source_distance, max_offset, offset_step, offset_file, offset_directions,
-        plot_images, label, test.
-    io_handler : IOHandler
-        I/O handler for output file paths.
+    app_context : object
+        Application context with ``args`` and ``io_handler`` attributes.
     """
+    args_dict = app_context.args
+    io_handler = app_context.io_handler
+
     label = args_dict.get("label") or Path("validate_optics").stem
 
     tel_model, site_model, _ = initialize_simulation_models(

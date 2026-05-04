@@ -182,17 +182,18 @@ def print_list_of_files(args_dict):
             _logger.info(f"{file.name}: {model_dict['value']}")
 
 
-def run_conversion_workflow(args_dict, io_handler):
+def run_conversion_workflow(app_context):
     """
     Run the full model-parameter conversion workflow.
 
     Parameters
     ----------
-    args_dict: dict
-        Dictionary with command line arguments.
-    io_handler: IOHandler
-        IOHandler object
+    app_context: object
+        Application context with ``args`` and ``io_handler`` attributes.
     """
+    args_dict = app_context.args
+    io_handler = app_context.io_handler
+
     parameters_not_in_simtel, simtel_parameters = read_and_export_parameters(args_dict, io_handler)
     print_parameters_not_found(parameters_not_in_simtel, simtel_parameters, args_dict)
     print_list_of_files(args_dict)

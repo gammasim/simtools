@@ -1,6 +1,7 @@
 """Unit tests for simtools.ray_tracing.optics_validation."""
 
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import astropy.units as u
@@ -36,6 +37,7 @@ def test_run_cumulative_psf_validation_raises_without_radius_data():
         "test": True,
     }
     io_handler = MagicMock()
+    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
 
     mock_tel_model = MagicMock()
     mock_tel_model.name = "LSTN-01"
@@ -52,7 +54,7 @@ def test_run_cumulative_psf_validation_raises_without_radius_data():
         patch("simtools.ray_tracing.optics_validation.RayTracing", return_value=mock_ray),
     ):
         with pytest.raises(ValueError, match="Radius data is not available"):
-            optics_validation.run_cumulative_psf_validation(args_dict, io_handler)
+            optics_validation.run_cumulative_psf_validation(app_context)
 
 
 def test_run_cumulative_psf_validation_saves_cumulative_and_image_plots(tmp_test_directory):
@@ -70,6 +72,7 @@ def test_run_cumulative_psf_validation_saves_cumulative_and_image_plots(tmp_test
     }
     io_handler = MagicMock()
     io_handler.get_output_file.return_value = Path(str(tmp_test_directory)) / "output.png"
+    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
 
     measured = np.array(
         [(1.0, 0.2), (2.0, 1.0)],
@@ -106,7 +109,7 @@ def test_run_cumulative_psf_validation_saves_cumulative_and_image_plots(tmp_test
         patch("simtools.ray_tracing.optics_validation.plt.Circle", return_value=MagicMock()),
         patch("simtools.ray_tracing.optics_validation.visualize.save_figure") as mock_save,
     ):
-        optics_validation.run_cumulative_psf_validation(args_dict, io_handler)
+        optics_validation.run_cumulative_psf_validation(app_context)
 
     assert mock_ray.simulate.call_count == 1
     assert mock_ray.analyze.call_count == 1
@@ -131,6 +134,7 @@ def test_run_optics_validation_no_images(tmp_test_directory):
     }
     io_handler = MagicMock()
     io_handler.get_output_file.return_value = Path(str(tmp_test_directory)) / "output.png"
+    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
 
     mock_tel_model = MagicMock()
     mock_tel_model.name = "LSTN-01"
@@ -148,7 +152,7 @@ def test_run_optics_validation_no_images(tmp_test_directory):
     ):
         mock_plt.figure.return_value = MagicMock()
 
-        optics_validation.run_optics_validation(args_dict, io_handler)
+        optics_validation.run_optics_validation(app_context)
 
         mock_ray.simulate.assert_called_once_with(test=True, force=False)
         mock_ray.analyze.assert_called_once_with(force=True)
@@ -173,6 +177,7 @@ def test_run_optics_validation_with_images_and_default_label(tmp_test_directory)
     }
     io_handler = MagicMock()
     io_handler.get_output_file.return_value = Path(str(tmp_test_directory)) / "output.pdf"
+    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
 
     mock_tel_model = MagicMock()
     mock_tel_model.name = "LSTN-01"
@@ -208,7 +213,7 @@ def test_run_optics_validation_with_images_and_default_label(tmp_test_directory)
         patch("simtools.ray_tracing.optics_validation.plt.close"),
         patch("simtools.ray_tracing.optics_validation.visualize.save_figure") as mock_save,
     ):
-        optics_validation.run_optics_validation(args_dict, io_handler)
+        optics_validation.run_optics_validation(app_context)
 
     rt_kwargs = mock_rt.call_args.kwargs
     assert rt_kwargs["label"] == "validate_optics"
