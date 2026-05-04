@@ -150,8 +150,13 @@ def print_parameters_not_found(parameters_not_in_simtel, simtel_parameters, args
             if _default == _tel_value or np.isclose(_default, _tel_value):
                 _logger.info(f"    Default and telescope values for {para} are equal: {_default}")
                 continue
-        except (ValueError, TypeError):
-            pass
+        except (ValueError, TypeError) as exc:
+            _logger.debug(
+                "    Could not directly compare default and telescope values for %s (%s); "
+                "printing both values for inspection.",
+                para,
+                exc,
+            )
         if isinstance(_default, np.ndarray):
             _logger.warning(f"    Default value ({para}): {_default} (length: {_default.size})")
         else:
