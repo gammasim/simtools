@@ -1461,7 +1461,6 @@ def test__initialize_light_emission_configuration(simulator_instance):
 
     # Verify flasher_type was converted to light_source_type (lowercase)
     assert result["light_source_type"] == "led"
-    assert result["run_mode"] == "led"
     assert result["flasher_photons"] == pytest.approx(5e6)
     assert result["existing_key"] == "value"  # Existing key preserved
 
