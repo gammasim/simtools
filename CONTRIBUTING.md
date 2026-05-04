@@ -16,6 +16,6 @@ We distinguish between "Contributors" and "Authors" to ensure fair credit:
 * **Authors:** Authors are individuals who have made substantial or sustained contributions to the project. Authorship recognizes contributions and requires individuals to take responsibility for the project.
 Authors are listed in the [CITATION.cff](CITATION.cff) file and are updated for every release (e.g., on Zenodo/DOI citations).
 
-## Developer Certificate of Origin (DCO)
+## Licensing terms for contributions
 
 By contributing to this project, you agree that your contributions are your own and you grant the project the right to use them under our [LICENSE](LICENSE).
