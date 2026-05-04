@@ -4,7 +4,6 @@
 [![release](https://img.shields.io/github/v/release/gammasim/simtools)](https://github.com/gammasim/simtools/releases)
 [![DOI](https://zenodo.org/badge/195011575.svg)](https://zenodo.org/badge/latestdoi/195011575)
 [![pypyi](https://badge.fury.io/py/gammasimtools.svg)](https://badge.fury.io/py/gammasimtools)
-[![conda](https://anaconda.org/conda-forge/gammasimtools/badges/version.svg)](https://anaconda.org/conda-forge/gammasimtools)
 
 **simtools** is a modular toolkit for managing simulation model parameters, configuring, running, and validating simulation productions for arrays of imaging atmospheric Cherenkov telescopes.
 
@@ -13,6 +12,7 @@
 **simtools** is part of the [SimPipe](http://cta-computing.gitlab-pages.cta-observatory.org/dpps/simpipe/simpipe/latest/) pipeline of the [Cherenkov Telescope Array Observatory (CTAO)](https://www.cta-observatory.org/).
 
 **Authors**: see the [CITATION.cff](https://github.com/gammasim/simtools/blob/main/CITATION.cff) file.
+**Contributors**: see the [Contributors](https://github.com/gammasim/simtools/graphs/contributors) page.
 
 > **Note**
 > simtools is under active development.
@@ -46,4 +46,4 @@ Generative AI tools (including, but not limited to, Claude, ChatGPT, and Gemini)
 
 ## Acknowledgements
 
-This project is supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) - project number 460248186 (*PUNCH4NFDI [https://www.punch4nfdi.de/](https://www.punch4nfdi.de/)*).
+This project has been supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) - project number 460248186 (*PUNCH4NFDI [https://www.punch4nfdi.de/](https://www.punch4nfdi.de/)*).
