@@ -65,8 +65,7 @@ The *Produce* step generates the following output files:
 #### Local productions
 
 Configure and submit a local production using the <applications/simtools-simulate-prod> command.
-The submit engine is configured with the `--submit_engine local` command line option, see
-[simulate_prod_gamma_40_deg_south_corsika_only.yml](https://github.com/gammasim/simtools/blob/main/tests/integration_tests/config/simulate_prod_gamma_40_deg_south_corsika_only.yml) for an example configuration.
+Example configurations are available in [tests/integration_tests/config/simulate_prod](tests/integration_tests/config/simulate_prod), see the `simulate_prod_gamma*.yml` files.
 
 Running a local production is a simple way to test the production system, but in general too slow to simulate a large number of events.
 
