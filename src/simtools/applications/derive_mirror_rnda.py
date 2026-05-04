@@ -120,10 +120,7 @@ def _add_arguments(parser):
         "--profile_serial",
         action="store_true",
         default=False,
-        help=(
-            "Run optimization in a single process (no process pool). "
-            "Useful for cProfile on optimization internals."
-        ),
+        help="Run optimization in a single process (no process pool).",
     )
     parser.add_argument(
         "--psf_hist",
