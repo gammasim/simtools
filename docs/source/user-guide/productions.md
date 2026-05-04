@@ -65,7 +65,7 @@ The *Produce* step generates the following output files:
 #### Local productions
 
 Configure and submit a local production using the <applications/simtools-simulate-prod> command.
-Example configurations are available in [tests/integration_tests/config/simulate_prod](tests/integration_tests/config/simulate_prod), see the `simulate_prod_gamma*.yml` files.
+Example configurations are available in [tests/integration_tests/config](tests/integration_tests/config), see the `simulate_prod_gamma*.yml` files.
 
 Running a local production is a simple way to test the production system, but in general too slow to simulate a large number of events.
 
