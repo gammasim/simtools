@@ -608,7 +608,7 @@ def test_max_offset_zero_ok():
     p = _parser("max_offset")
     ns = p.parse_args(["--max_offset", "0"])
     assert isinstance(ns.max_offset, u.Quantity)
-    assert pytest.approx(ns.max_offset.to("deg").value) == 0.0
+    assert ns.max_offset.to("deg").value == pytest.approx(0.0)
 
 
 def test_offset_step_zero_fails():
@@ -621,4 +621,4 @@ def test_offset_step_positive_ok():
     p = _parser("offset_step")
     ns = p.parse_args(["--offset_step", "0.25"])
     assert isinstance(ns.offset_step, u.Quantity)
-    assert pytest.approx(ns.offset_step.to("deg").value) == 0.25
+    assert ns.offset_step.to("deg").value == pytest.approx(0.25)
