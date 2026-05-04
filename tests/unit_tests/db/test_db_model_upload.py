@@ -571,7 +571,7 @@ def test_clone_simulation_model_repository_with_custom_retry(
             repository_url,
             db_simulation_model_version="1.0.0",
             repository_branch=None,
-            retry=5,
+            max_attempts=5,
         )
 
     mock_rmtree.assert_not_called()
@@ -635,7 +635,7 @@ def test_add_complete_model_success(
         repository_url,
         db_simulation_model_version=db_simulation_model_version,
         repository_branch=None,
-        retry=3,
+        max_attempts=3,
     )
     mock_add_model_parameters.assert_called_once_with(
         input_path=repository_dir / "simulation-models" / "model_parameters", db=mock_db
@@ -711,7 +711,7 @@ def test_add_complete_model_with_repository_branch(
         repository_url,
         db_simulation_model_version=db_simulation_model_version,
         repository_branch=repository_branch,
-        retry=3,
+        max_attempts=3,
     )
 
 
