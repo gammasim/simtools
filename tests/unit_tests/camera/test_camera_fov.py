@@ -1,6 +1,7 @@
 """Unit tests for simtools.camera.camera_fov."""
 
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -51,6 +52,7 @@ def test_run_camera_fov_validation(tmp_test_directory):
     }
     io_handler = MagicMock()
     io_handler.get_output_directory.return_value = Path(str(tmp_test_directory))
+    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
 
     mock_camera = _mock_camera()
     mock_tel_model = MagicMock()
@@ -63,7 +65,7 @@ def test_run_camera_fov_validation(tmp_test_directory):
         patch("simtools.camera.camera_fov.plot_camera.plot_pixel_layout") as mock_plot,
         patch("simtools.camera.camera_fov.visualize.save_figure") as mock_save,
     ):
-        run_camera_fov_validation(args_dict, io_handler)
+        run_camera_fov_validation(app_context)
 
         mock_tm.assert_called_once_with(
             site="North",

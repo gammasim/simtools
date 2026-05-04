@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+from types import SimpleNamespace
 
 import numpy as np
 
@@ -174,7 +175,8 @@ def test_run_conversion_workflow(monkeypatch):
     monkeypatch.setattr(converter, "print_parameters_not_found", _print_parameters_not_found)
     monkeypatch.setattr(converter, "print_list_of_files", _print_list_of_files)
 
-    converter.run_conversion_workflow(args_dict={}, io_handler=object())
+    app_context = SimpleNamespace(args={}, io_handler=object())
+    converter.run_conversion_workflow(app_context)
 
     assert calls == ["print_parameters_not_found", "print_list_of_files"]
 

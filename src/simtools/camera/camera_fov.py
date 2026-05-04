@@ -5,8 +5,6 @@ import logging
 from simtools.model.telescope_model import TelescopeModel
 from simtools.visualization import plot_camera, visualize
 
-__all__ = ["parse_pixel_ids_to_print", "run_camera_fov_validation"]
-
 _logger = logging.getLogger(__name__)
 
 
@@ -44,18 +42,18 @@ def parse_pixel_ids_to_print(print_pixels_id_arg, camera):
     return -1 if n == 0 else n
 
 
-def run_camera_fov_validation(args_dict, io_handler):
+def run_camera_fov_validation(app_context):
     """
     Build telescope model, compute FoV, and plot the pixel layout.
 
     Parameters
     ----------
-    args_dict : dict
-        Application arguments including site, telescope, model_version,
-        camera_in_sky_coor, print_pixels_id.
-    io_handler : IOHandler
-        I/O handler for output file paths.
+    app_context : object
+        Application context with ``args`` and ``io_handler`` attributes.
     """
+    args_dict = app_context.args
+    io_handler = app_context.io_handler
+
     label = "validate_camera_fov"
 
     tel_model = TelescopeModel(

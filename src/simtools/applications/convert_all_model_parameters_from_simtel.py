@@ -93,10 +93,7 @@ def main():
         initialization_kwargs={"simulation_model": ["telescope", "parameter_version"]},
     )
 
-    sim_telarray_parameter_converter.run_conversion_workflow(
-        app_context.args,
-        app_context.io_handler,
-    )
+    sim_telarray_parameter_converter.run_conversion_workflow(app_context)
 
 
 if __name__ == "__main__":

@@ -103,7 +103,7 @@ def main():
             "simulation_model": ["telescope", "model_version"],
         },
     )
-    run_optics_validation(app_context.args, app_context.io_handler)
+    run_optics_validation(app_context)
 
 
 if __name__ == "__main__":
