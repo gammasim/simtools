@@ -134,7 +134,9 @@ def print_parameters_not_found(parameters_not_in_simtel, simtel_parameters, args
     for para in sorted(parameters_not_in_simtel):
         _logger.info(f"  {para}")
 
-    _logger.info(f"sim_telarray parameters not found in schema files ({len(simtel_parameters)}):")
+    _logger.info(
+        f"sim_telarray parameters not found in sim_telarray config ({len(simtel_parameters)}):"
+    )
     for para in sorted(simtel_parameters):
         _logger.info(f"sim_telarray parameter: {para}")
         config_reader = simtel_config_reader.SimtelConfigReader(
