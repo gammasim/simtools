@@ -10,7 +10,7 @@ For development-related information, see [Getting Started as a Developer](../dev
 simtools can be installed using one of the following methods:
 
 - Using a [container image](container-images) with all software pre-installed (**recommended**)
-- Via [pip](pip-installation) or [conda](conda-installation). Requires manual compilation and installation of **CORSIKA** and **sim_telarray**. See the [section below](#installation-of-corsika-and-sim_telarray) for details. Note that the conda package might not always contain the latest simtools version.
+- Via [pip](pip-installation). Requires manual compilation and installation of **CORSIKA** and **sim_telarray**. See the [section below](#installation-of-corsika-and-sim_telarray) for details.
 
 ## Container Images
 
@@ -65,27 +65,12 @@ podman run --rm -it \
 
 simtools is available as a Python package from [PyPI](https://pypi.org/project/gammasimtools/).
 
-To install, prepare a Python environment, e.g.:
+To install, prepare a Python environment and install simtools and its dependencies:
 
 ```console
-mamba create --name simtools-prod python=3.12
-mamba activate simtools-prod
-```
-
-Install simtools and its dependencies:
-
-```console
+python3 -m venv .venv
+source .venv/bin/activate
 pip install gammasimtools
-```
-
-### Conda Installation
-
-Prepare and install a conda environment with the simtools package:
-
-```console
-conda env create -n gammasimtools
-conda install gammasimtools --channel conda-forge
-conda activate gammasimtools
 ```
 
 ## Installation of CORSIKA and sim_telarray
@@ -107,7 +92,6 @@ The following environment variables must be set for simtools applications to fin
 - `$SIMTOOLS_SIM_TELARRAY_PATH`: Path to the sim_telarray installation (e.g., `/workdir/sim_telarray` in the container environment)
 - `$SIMTOOLS_CORSIKA_PATH`: Path to the CORSIKA installation (e.g., `/workdir/corsika` in the container environment)
 - `$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH`: Path to the CORSIKA interaction tables (e.g., `/workdir/corsika-interaction-tables` in the container environment)
-
 
 ## Model Database Access
 
