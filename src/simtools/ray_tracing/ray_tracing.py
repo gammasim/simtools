@@ -525,12 +525,9 @@ class RayTracing:
                     )
                 )
                 photons_file_gz = photons_file_lis.with_suffix(photons_file_lis.suffix + ".gz")
-                if use_rx and photons_file_gz.exists():
-                    photons_file = photons_file_gz
-                elif photons_file_lis.exists():
+                photons_file = photons_file_gz
+                if not (use_rx and photons_file_gz.exists()) and photons_file_lis.exists():
                     photons_file = photons_file_lis
-                else:
-                    photons_file = photons_file_gz
 
                 # Calculate theta and phi for transmission calculation
                 theta_offset = np.sqrt(off_x**2 + off_y**2)
