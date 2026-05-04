@@ -4,7 +4,6 @@
 [![release](https://img.shields.io/github/v/release/gammasim/simtools)](https://github.com/gammasim/simtools/releases)
 [![DOI](https://zenodo.org/badge/195011575.svg)](https://zenodo.org/badge/latestdoi/195011575)
 [![pypyi](https://badge.fury.io/py/gammasimtools.svg)](https://badge.fury.io/py/gammasimtools)
-[![conda](https://anaconda.org/conda-forge/gammasimtools/badges/version.svg)](https://anaconda.org/conda-forge/gammasimtools)
 
 **simtools** is a modular toolkit for managing simulation model parameters, configuring, running, and validating simulation productions for arrays of imaging atmospheric Cherenkov telescopes.
 
