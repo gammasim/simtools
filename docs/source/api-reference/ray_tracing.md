@@ -49,15 +49,6 @@ The ray-tracing modules handle ray tracing simulations, incident angle calculati
    :members:
 ```
 
-(cumulativepsfmodule)=
-
-## cumulative_psf
-
-```{eval-rst}
-.. automodule:: ray_tracing.cumulative_psf
-   :members:
-```
-
 (opticsvalidationmodule)=
 
 ## optics_validation
