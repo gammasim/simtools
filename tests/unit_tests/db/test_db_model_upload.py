@@ -582,6 +582,28 @@ def test_clone_simulation_model_repository_with_custom_retry(
 
 @patch("simtools.db.db_model_upload.retry_command")
 @patch("simtools.db.db_model_upload.shutil.rmtree")
+def test_clone_simulation_model_repository_invalid_max_attempts(
+    mock_rmtree, mock_retry_command, tmp_test_directory
+):
+    target_dir = Path(tmp_test_directory) / "repo"
+    repository_url = "https://github.com/test/repo.git"
+
+    with patch("simtools.db.db_model_upload.Path.exists", return_value=False):
+        with pytest.raises(ValueError, match="Max attempts must be a positive integer"):
+            db_model_upload.clone_simulation_model_repository(
+                target_dir,
+                repository_url,
+                db_simulation_model_version="1.0.0",
+                repository_branch=None,
+                max_attempts=0,
+            )
+
+    mock_rmtree.assert_not_called()
+    mock_retry_command.assert_not_called()
+
+
+@patch("simtools.db.db_model_upload.retry_command")
+@patch("simtools.db.db_model_upload.shutil.rmtree")
 def test_clone_simulation_model_repository_retry_command_fails(
     mock_rmtree, mock_retry_command, tmp_test_directory
 ):
