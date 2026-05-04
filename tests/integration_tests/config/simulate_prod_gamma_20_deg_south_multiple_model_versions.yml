@@ -2,7 +2,10 @@
 applications:
 - application: simtools-simulate-prod
   configuration:
-    array_layout_name: CTAO-South-Alpha
+    array_layout_name:
+      by_version:
+        "<7.0.0": alpha
+        ">=7.0.0": CTAO-South-Alpha
     azimuth_angle: South
     core_scatter: 5 700 m
     corsika_seeds: [534, 220, 1104, 382]
