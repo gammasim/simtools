@@ -284,7 +284,7 @@ def read_simtel_table(parameter_name, file_path):
         "Name": parameter_name,
         "File": str(file_path),
         "Description:": description,
-        "Context_from_sim_telarray": meta_from_simtel,
+        "context_from_sim_telarray": meta_from_simtel,
     }
 
     table = Table(rows=rows, names=[col["name"] for col in columns_info])
@@ -533,7 +533,7 @@ def _read_simtel_data_for_lightguide_efficiency(file_path):
             "Name": "angular_efficiency",
             "File": str(file_path),
             "Description": "Angular efficiency vs wavelength",
-            "Context_from_sim_telarray": "\n".join(meta_lines),
+            "context_from_sim_telarray": "\n".join(meta_lines),
         }
     )
 
@@ -592,7 +592,7 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
             "Name": "atmospheric_transmission",
             "File": str(file_path),
             "Description": "Atmospheric transmission",
-            "Context_from_sim_telarray": "\n".join(meta_lines),
+            "context_from_sim_telarray": "\n".join(meta_lines),
             "observatory_level": observatory_level,
         }
     )

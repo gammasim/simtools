@@ -109,24 +109,30 @@ def test_export_parameter_data_requires_export_model_file_for_table_export(db_ha
         )
 
 
-def test_export_parameter_data_rejects_output_file_for_file_parameter(db_handler_mock):
-    """Reject output_file for file-backed parameter export."""
+def test_export_parameter_data_allows_output_file_for_file_parameter(mocker, db_handler_mock):
+    """Allow overriding exported file name for file-backed parameter export."""
     db_handler_mock.get_model_parameter.return_value = {
         "mirror_reflectivity": {"type": "file", "value": "ref_LST1_2022_04_01.dat"}
     }
+    mocker.patch.object(parameter_exporter, "export_single_model_file", return_value=None)
+    source_file = mocker.MagicMock()
+    target_file = mocker.MagicMock()
+    db_handler_mock.io_handler.get_output_file.side_effect = [source_file, target_file]
 
-    with pytest.raises(ValueError, match="Do not use --output_file"):
-        parameter_exporter.export_parameter_data(
-            db=db_handler_mock,
-            parameter="mirror_reflectivity",
-            site="North",
-            array_element_name="LSTN-01",
-            parameter_version=None,
-            model_version="6.0.2",
-            output_file="mirror_reflectivity.dat",
-            export_model_file=True,
-            export_model_file_as_table=False,
-        )
+    output_files = parameter_exporter.export_parameter_data(
+        db=db_handler_mock,
+        parameter="mirror_reflectivity",
+        site="North",
+        array_element_name="LSTN-01",
+        parameter_version=None,
+        model_version="6.0.2",
+        output_file="mirror_reflectivity.dat",
+        export_model_file=True,
+        export_model_file_as_table=False,
+    )
+
+    source_file.rename.assert_called_once_with(target_file)
+    assert output_files == [target_file]
 
 
 def test_export_parameter_data_returns_file_and_table_outputs(mocker, db_handler_mock):
