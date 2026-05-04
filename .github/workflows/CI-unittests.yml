@@ -100,7 +100,7 @@ jobs:
             --cov=simtools --cov-report=xml --retries 2 --retry-delay 5
 
       # CTAO-DPPS-SonarQube
-      - uses: SonarSource/sonarqube-scan-action@v7.1.0
+      - uses: SonarSource/sonarqube-scan-action@v8.0.0
         if: contains(matrix.extra-args, 'sonarqube')
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
