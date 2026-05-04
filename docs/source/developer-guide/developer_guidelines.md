@@ -94,10 +94,7 @@ Adding an applications requires the following changes:
 ## Dependencies
 
 Dependencies on external packages should be kept to a minimum.
-Packages are listed twice:
-
-- in the mamba/conda [environment file](https://github.com/gammasim/simtools/blob/main/environment.yml)
-- in the [pyproject.toml file for pip](https://github.com/gammasim/simtools/blob/main/pyproject.toml)
+Packages are listed in the [pyproject.toml file for pip](https://github.com/gammasim/simtools/blob/main/pyproject.toml)
 
 Some of the packages installed are used for the development only and not needed for executing
 simtools application (see the ordering in sections in pyproject.toml).
