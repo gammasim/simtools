@@ -1047,9 +1047,9 @@ def test_process_offset_angles_zero_angle(telescope_model_lst_mock, site_model_n
         source_distance=10 * u.km,
     )
     result = ray._process_offset_angles([0.0] * u.deg, ["N", "S", "E", "W"])
-    # All should result in (0, 0)
-    assert len(result) == 4
-    assert all(offset == (0.0, 0.0) for offset in result)
+    # Zero angle is deduplicated into a single on-axis offset.
+    assert len(result) == 1
+    assert result[0] == (0.0, 0.0)
 
 
 def test_process_offset_angles_rounding(telescope_model_lst_mock, site_model_north):
