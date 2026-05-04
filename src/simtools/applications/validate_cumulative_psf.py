@@ -69,34 +69,13 @@
 
 """
 
-from collections import OrderedDict
-
-import astropy.units as u
-import matplotlib.pyplot as plt
-import numpy as np
-
-import simtools.utils.general as gen
 from simtools.application_control import build_application
-from simtools.model.model_utils import initialize_simulation_models
-from simtools.ray_tracing.ray_tracing import RayTracing
-from simtools.visualization import visualize
+from simtools.ray_tracing.optics_validation import run_cumulative_psf_validation
 
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
     parser.initialize_application_arguments(["source_distance", "zenith_angle", "data"])
-
-
-def load_data(datafile):
-    """Load the data file with the measured PSF vs radius [cm]."""
-    radius_cm = "Radius [cm]"
-    relative_intensity = "Relative intensity"
-
-    d_type = {"names": (radius_cm, relative_intensity), "formats": ("f8", "f8")}
-    data = np.loadtxt(datafile, dtype=d_type, usecols=(0, 2))
-    data[radius_cm] *= 0.1
-    data[relative_intensity] /= np.max(np.abs(data[relative_intensity]))
-    return data
 
 
 def main():
@@ -107,62 +86,7 @@ def main():
             "simulation_model": ["telescope", "model_version"],
         },
     )
-
-    tel_model, site_model, _ = initialize_simulation_models(
-        label=app_context.args.get("label"),
-        site=app_context.args["site"],
-        telescope_name=app_context.args["telescope"],
-        model_version=app_context.args["model_version"],
-    )
-
-    ray = RayTracing(
-        telescope_model=tel_model,
-        site_model=site_model,
-        label=app_context.args.get("label"),
-        zenith_angle=app_context.args["zenith_angle"],
-        source_distance=app_context.args["source_distance"],
-        off_axis_angle=[0.0] * u.deg,
-    )
-
-    ray.simulate(test=app_context.args["test"], force=False)
-    ray.analyze(force=False)
-
-    # Plotting cumulative PSF
-    im = ray.images()[0]
-
-    app_context.logger.info(f"d80 in cm = {im.get_psf()}")
-
-    # Plotting measured cumulative PSF
-    data_to_plot = OrderedDict()
-    radius = None
-    if app_context.args.get("data", None):
-        data_file = gen.find_file(app_context.args["data"], app_context.args["model_path"])
-        data_to_plot["measured"] = load_data(data_file)
-        radius = data_to_plot["measured"]["Radius [cm]"]
-
-    # Plotting simulated cumulative PSF
-    if radius is not None:
-        data_to_plot[r"sim$\_$telarray"] = im.get_cumulative_data(radius * u.cm)
-    else:
-        raise ValueError("Radius data is not available. Cannot compute cumulative PSF.")
-
-    fig = visualize.plot_1d(data_to_plot)
-    fig.gca().set_ylim(0, 1.05)
-
-    plot_file_name = app_context.args.get("label") + "_" + tel_model.name + "_cumulative_PSF"
-    plot_file = app_context.io_handler.get_output_file(plot_file_name)
-    visualize.save_figure(fig, plot_file)
-
-    # Plotting image
-    data_to_plot = im.get_image_data()
-    fig = visualize.plot_hist_2d(data_to_plot, bins=80)
-    circle = plt.Circle((0, 0), im.get_psf(0.8) / 2, color="k", fill=False, lw=2, ls="--")
-    fig.gca().add_artist(circle)
-    fig.gca().set_aspect("equal")
-
-    plot_file_name = app_context.args.get("label") + "_" + tel_model.name + "_image"
-    plot_file = app_context.io_handler.get_output_file(plot_file_name)
-    visualize.save_figure(fig, plot_file)
+    run_cumulative_psf_validation(app_context.args, app_context.io_handler)
 
 
 if __name__ == "__main__":

@@ -65,17 +65,8 @@ r"""
 
 """
 
-from pathlib import Path
-
-import astropy.units as u
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.backends.backend_pdf import PdfPages
-
 from simtools.application_control import build_application
-from simtools.model.model_utils import initialize_simulation_models
-from simtools.ray_tracing.ray_tracing import RayTracing
-from simtools.visualization import visualize
+from simtools.ray_tracing.optics_validation import run_optics_validation
 
 
 def _add_arguments(parser):
@@ -104,28 +95,6 @@ def _add_arguments(parser):
     )
 
 
-def _validate_offset_parameters(max_offset, offset_step):
-    """
-    Validate offset sampling parameters before calling np.linspace.
-
-    Parameters
-    ----------
-    max_offset : float
-        Maximum off-axis angle in degrees.
-    offset_step : float
-        Step size between off-axis angles in degrees.
-
-    Raises
-    ------
-    ValueError
-        If offset_step is not positive or max_offset is negative.
-    """
-    if offset_step <= 0:
-        raise ValueError(f"offset_step must be positive, got {offset_step} deg.")
-    if max_offset < 0:
-        raise ValueError(f"max_offset must be non-negative, got {max_offset} deg.")
-
-
 def main():
     """See CLI description."""
     app_context = build_application(
@@ -134,114 +103,7 @@ def main():
             "simulation_model": ["telescope", "model_version"],
         },
     )
-
-    tel_model, site_model, _ = initialize_simulation_models(
-        label=Path(__file__).stem,
-        site=app_context.args["site"],
-        telescope_name=app_context.args["telescope"],
-        model_version=app_context.args["model_version"],
-    )
-
-    app_context.logger.info(
-        f"\nValidating telescope optics with ray tracing simulations for {tel_model.name}\n"
-    )
-
-    offset_directions = None
-    if app_context.args.get("offset_directions"):
-        offset_directions = [
-            d.strip().upper() for d in app_context.args["offset_directions"].split(",")
-        ]
-
-    max_offset = app_context.args["max_offset"].to_value(u.deg)
-    offset_step = app_context.args["offset_step"].to_value(u.deg)
-
-    _validate_offset_parameters(max_offset, offset_step)
-
-    ray = RayTracing(
-        telescope_model=tel_model,
-        site_model=site_model,
-        label=app_context.args.get("label") or Path(__file__).stem,
-        zenith_angle=app_context.args["zenith_angle"],
-        source_distance=app_context.args["source_distance"],
-        off_axis_angle=np.linspace(
-            0,
-            max_offset,
-            int(max_offset / offset_step) + 1,
-        )
-        * u.deg,
-        offset_file=app_context.args.get("offset_file"),
-        offset_directions=offset_directions,
-    )
-    ray.simulate(test=app_context.args["test"], force=False)
-    ray.analyze(force=True)
-
-    # Plotting
-    for key in ["psf_deg", "psf_cm", "eff_area", "eff_flen"]:
-        plt.figure(figsize=(8, 6), tight_layout=True)
-        ray.plot(key, marker="o", linestyle="none", color="k")
-        plot_file_name = "_".join((app_context.args.get("label"), tel_model.name, key))
-        plot_file = app_context.io_handler.get_output_file(plot_file_name)
-        visualize.save_figure(plt, plot_file)
-        plt.close()
-
-    # Plotting images
-    if app_context.args["plot_images"]:
-        plot_file_name = "_".join((app_context.args.get("label"), tel_model.name, "images.pdf"))
-        plot_file = app_context.io_handler.get_output_file(plot_file_name)
-        pdf_pages = PdfPages(plot_file)
-
-        app_context.logger.info(f"Plotting images into {plot_file}")
-
-        # First pass: find the maximum extent in x and y across all images
-        images_dict = ray.psf_images
-        max_x_extent = 0.0
-        max_y_extent = 0.0
-
-        for image in images_dict.values():
-            data = image.get_image_data(centralized=True)
-            if len(data) > 0:
-                x_extent = np.max(np.abs(data["X"]))
-                y_extent = np.max(np.abs(data["Y"]))
-                max_x_extent = max(max_x_extent, x_extent)
-                max_y_extent = max(max_y_extent, y_extent)
-
-        max_extent = max(max_x_extent, max_y_extent)
-        max_extent_rounded = np.ceil(max_extent * 2) / 2  # Round up to nearest 0.5
-
-        app_context.logger.info(
-            f"Setting consistent image axes: x,y range = +-{max_extent_rounded} cm"
-        )
-
-        # Second pass: plot all images with consistent axes
-        for (off_x, off_y), image in images_dict.items():
-            fig = plt.figure(figsize=(8, 6), tight_layout=True)
-            image.plot_image(
-                image_range=[
-                    [-max_extent_rounded, max_extent_rounded],
-                    [-max_extent_rounded, max_extent_rounded],
-                ]
-            )
-
-            # Get PSF in cm
-            psf_cm = image.get_psf(fraction=0.8, unit="cm")
-
-            # Add text annotations
-            ax = plt.gca()
-            text_str = f"Offset: ({off_x:+.2f} deg, {off_y:+.2f} deg)\nPSF: {psf_cm:.2f} cm"
-            ax.text(
-                0.02,
-                0.98,
-                text_str,
-                transform=ax.transAxes,
-                verticalalignment="top",
-                bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.8},
-                fontsize=10,
-                family="monospace",
-            )
-
-            pdf_pages.savefig(fig)
-            plt.close(fig)
-        pdf_pages.close()
+    run_optics_validation(app_context.args, app_context.io_handler)
 
 
 if __name__ == "__main__":
