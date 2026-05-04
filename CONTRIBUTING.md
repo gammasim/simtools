@@ -12,7 +12,7 @@ Thank you for your interest in improving simtools!
 
 We distinguish between "Contributors" and "Authors" to ensure fair credit:
 
-* **Contributors:** Every person who contributes code, documentation, or tutorials is a contributor. You will be automatically credited in our git history, see the [Contributors](https://github.com/gammasim/simtools/graphs/contributors) page.
+* **Contributors:** Every person who contributes code or documentation is a contributor. You will be automatically credited in our git history, see the [Contributors](https://github.com/gammasim/simtools/graphs/contributors) page.
 * **Authors:** Authors are individuals who have made substantial or sustained contributions to the project. Authorship recognizes contributions and requires individuals to take responsibility for the project.
 Authors are listed in the [CITATION.cff](CITATION.cff) file and are updated for every release (e.g., on Zenodo/DOI citations).
 
