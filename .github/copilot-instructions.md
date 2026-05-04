@@ -311,6 +311,7 @@ make linkcheck              # Check links
 9. **Make minimal changes:** Understand codebase first
 10. **No premature optimization:** Clarity > speed
 11. **Golden Rule:** If code is hard to understand, refactor it
+12. **Cognitive Complexity:** Keep it below 15
 
 **Validation:** 100% statement coverage for library code.
 

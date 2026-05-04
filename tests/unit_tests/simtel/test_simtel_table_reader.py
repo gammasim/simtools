@@ -88,7 +88,7 @@ def test_read_simtel_table_to_table(spe_test_file, spe_meta_test_comment):
     assert table["response_with_ap"].unit is None
     assert table.meta["Name"] == parameter_name
     assert table.meta["File"] == spe_test_file
-    assert spe_meta_test_comment in table.meta["Context_from_sim_telarray"]
+    assert spe_meta_test_comment in table.meta["context_from_sim_telarray"]
 
     with pytest.raises(
         ValueError, match="Unsupported parameter for sim_telarray table reading: not_a_parameter"
@@ -322,7 +322,7 @@ def test_read_simtel_data_for_atmospheric_transmission(caplog):
     assert "extinction" in table.colnames
     assert table.meta["Name"] == "atmospheric_transmission"
     assert table.meta["File"] == "dummy_path"
-    assert "MODTRAN options as follows:" in table.meta["Context_from_sim_telarray"]
+    assert "MODTRAN options as follows:" in table.meta["context_from_sim_telarray"]
     assert table["wavelength"][0] == 200
     assert table["altitude"][0] == pytest.approx(2.206)
     assert table["extinction"][0] == pytest.approx(0.264958)
@@ -363,7 +363,7 @@ def test_read_simtel_data_for_lightguide_efficiency(caplog):
 
     assert table.meta["Name"] == "angular_efficiency"
     assert table.meta["File"] == "dummy_path"
-    assert "Angular efficiency table" in table.meta["Context_from_sim_telarray"]
+    assert "Angular efficiency table" in table.meta["context_from_sim_telarray"]
 
     assert table["angle"][0] == pytest.approx(0.0)
     assert table["wavelength"][0] == pytest.approx(325.0)

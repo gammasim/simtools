@@ -644,6 +644,17 @@ def test_get_log_file_no_application_label():
     assert result is None
 
 
+def test_get_log_file_disabled():
+    """Test get_log_file returns None when file logging is disabled."""
+    args_dict = {
+        "disable_log_file": True,
+        "application_label": "test_app",
+        "output_path": "output/test",
+    }
+    result = get_log_file(args_dict)
+    assert result is None
+
+
 def test_get_log_file_with_output_path(tmp_path):
     """Test get_log_file generates path and creates directory."""
     output_path = tmp_path / "new_dir" / "nested"

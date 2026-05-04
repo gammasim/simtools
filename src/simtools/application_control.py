@@ -103,6 +103,8 @@ def get_log_file(args_dict):
     Path, str or None
         Log file path, or None if no logging to file is configured.
     """
+    if args_dict.get("disable_log_file"):
+        return None
     if args_dict.get("log_file") is not None:
         return args_dict["log_file"]
     if args_dict.get("application_label") is None or args_dict.get("output_path") is None:
