@@ -84,12 +84,12 @@ The array of imaging atmospheric Cherenkov telescopes is abstracted in the simul
    :members:
 ```
 
-## simtel parameter converter
+## sim_telarray parameter converter
 
-(simtel-parameter-converter)=
+(simtelarray-parameter-converter)=
 
 ```{eval-rst}
-.. automodule:: model.simtel_parameter_converter
+.. automodule:: model.sim_telarray_parameter_converter
    :members:
 ```
 
