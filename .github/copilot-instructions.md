@@ -58,22 +58,18 @@ simtools/
 ├── pyproject.toml         # Project configuration, dependencies, tool settings
 ├── .pre-commit-config.yaml # Pre-commit hooks configuration
 ├── .env_template          # Template for environment variables
-└── environment.yml        # Conda/mamba environment definition
 ```
 
 ## Setup
 
 ```bash
 # Option 1: pip (local development)
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -e '.[dev,tests]'
 pre-commit install
 
-# Option 2: Conda/Mamba
-mamba env create -f environment.yml
-mamba activate simtools-dev
-pip install -e .
-
-# Option 3: Containers (includes CORSIKA/sim_telarray)
+# Option 2: Containers (includes CORSIKA/sim_telarray)
 podman run --rm -it -v "$(pwd)/external:/workdir/external" \
     ghcr.io/gammasim/simtools-dev:latest
 ```
@@ -304,7 +300,7 @@ make linkcheck              # Check links
 **Focus:** Code quality, architecture, testing, maintainability.
 
 **Key Rules:**
-1. **Always test:** `pytest tests/unit_tests/` after changes (≥90% coverage) in conda environment 'simtools-dev'
+1. **Always test:** `pytest tests/unit_tests/` after changes (≥90% coverage)
 2. **Always lint:** `pre-commit run --all-files` before commits
 3. **Follow conventions:** pathlib, logging, f-strings, NumPy docstrings
 4. **Error messages:** no `logger.error`, put the error message into the error (e.g. `ValueError("Invalid type")`) and always do `from exc`
@@ -348,7 +344,6 @@ make linkcheck              # Check links
 - Use simple, readable code over clever optimizations
 - Study existing patterns before implementing
 - Document assumptions and non-obvious decisions
-- Work in conda environment 'simtools-dev' for testing and documentation
 - import statements should be at the top of the file (even for unit test files)
 
 ❌ **DON'T:**
