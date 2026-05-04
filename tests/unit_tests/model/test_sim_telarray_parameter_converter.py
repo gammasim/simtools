@@ -54,7 +54,7 @@ def test_get_number_of_camera_pixel_handles_missing_data(monkeypatch):
     assert camera_pixels is None
 
 
-def test_read_and_export_parameters(monkeypatch):
+def test_read_and_export_parameters(monkeypatch, tmp_test_directory):
     args_dict = {
         "simtel_cfg_file": "dummy.cfg",
         "simtel_telescope_name": "CT1",
@@ -99,7 +99,10 @@ def test_read_and_export_parameters(monkeypatch):
     class _DummyIOHandler:
         @staticmethod
         def get_output_file(file_name, sub_dir=None):
-            return f"/tmp/{'/'.join(sub_dir)}/{file_name}"
+            output_dir = tmp_test_directory
+            for directory in sub_dir or []:
+                output_dir = output_dir.join(directory)
+            return str(output_dir.join(file_name))
 
     def _write_model_parameter(**kwargs):
         written["kwargs"] = kwargs
@@ -212,7 +215,7 @@ def test_get_number_of_camera_pixel_happy_path(monkeypatch):
     assert result == 1855
 
 
-def test_read_and_export_parameters_logs_file_name(monkeypatch):
+def test_read_and_export_parameters_logs_file_name(monkeypatch, tmp_test_directory):
     args_dict = {
         "simtel_cfg_file": "dummy.cfg",
         "simtel_telescope_name": "CT1",
@@ -238,6 +241,8 @@ def test_read_and_export_parameters_logs_file_name(monkeypatch):
         simtel_parameter_name = "file_simtel"
 
         def compare_simtel_config_with_schema(self):
+            # Stub used by this test: read_and_export_parameters calls this hook,
+            # but the assertion here only verifies file-parameter logging/export.
             pass
 
     monkeypatch.setattr(converter, "_read_simtel_config_file", lambda *a, **kw: _ConfigReader())
@@ -245,7 +250,7 @@ def test_read_and_export_parameters_logs_file_name(monkeypatch):
     class _IOHandler:
         @staticmethod
         def get_output_file(file_name, sub_dir=None):
-            return f"/tmp/{file_name}"
+            return str(tmp_test_directory.join(file_name))
 
     monkeypatch.setattr(
         converter.writer.ModelDataWriter,
