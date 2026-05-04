@@ -163,10 +163,7 @@ class PSFImage:
         """
         self._logger.info(f"Reading sim_telarray photon file {photons_file}")
         self._total_photons = 0
-        if Path(photons_file).suffix == ".gz":
-            file_open_function = gzip.open
-        else:
-            file_open_function = open
+        file_open_function = gzip.open if Path(photons_file).suffix == ".gz" else open
 
         # Local variables avoid repeated attribute lookups in the tight parsing loop.
         total_photons = 0
@@ -199,13 +196,11 @@ class PSFImage:
                     sin_camera_rotation = np.sin(camera_rotation_angle)
                     continue
 
-                if b"#" in line or line in (b"", b"\n", b"\r\n"):
+                if b"#" in line or not line.strip():
                     continue
 
                 # Photon positions from cols 2 and 3; apply camera rotation.
                 words = line.split()
-                if len(words) == 0:
-                    continue
                 x, y = float(words[2]), float(words[3])
                 photon_pos_x.append(x * cos_camera_rotation - y * sin_camera_rotation)
                 photon_pos_y.append(y * cos_camera_rotation + x * sin_camera_rotation)
