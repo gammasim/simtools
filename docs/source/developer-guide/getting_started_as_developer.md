@@ -55,7 +55,7 @@ Create a virtual environment with the simtools dependencies installed:
 ```console
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e .
+pip install -e '.[tests,dev,doc]'
 ```
 
 To install the CORSIKA/sim_telarray packages, follow the installation instructions in the relevant manuals. A good guideline is also the step-by-step instructions outlined in the [CORSIKA/sim_telarray Docker file](https://github.com/gammasim/simtools/blob/main/docker/Dockerfile-corsika-simtel).
