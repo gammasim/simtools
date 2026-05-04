@@ -80,8 +80,6 @@ This script:
 
 ### Fill the local database instance
 
-#### Option 1 (preferred): Fill local database from model parameter repository
-
 The simtools package includes the application `simtools-db-upload-model-repository` to upload the model parameters from a
 local clone of the [model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models) to a local database instance.
 The repository is cloned by the application to a temporary directory (`--tmp_dir`).
@@ -115,18 +113,7 @@ SIMTOOLS_DB_API_AUTHENTICATION_DATABASE=admin
 simtools-db-upload-model-repository --db_simulation_model_version v0.12.0
 ```
 
-For development purposes, a specific branch of the model repository can be used by providing the `--branch` argument to the upload application.
-
-#### Option 2: Fill local database from remote DB dump
-
-Access to a database dump of the production database is required. It is assumed that the dumps
-are located in the directory `database_scripts/dump`.
-
-The script `./dump_remote_db.sh` can be used to create a dump of the production database (requires access to this DB and the `mongodump` tool).
-
-Then use `upload_dump_to_local_db.sh` to upload this dump to the local database instance. Take care to use the correct environment variables for dumping and uploading.
-
-Note that database names are hardcoded in the scripts and need to be adjusted accordingly.
+For development purposes, a specific branch of the model repository can be used by providing the `--branch` argument to the upload application
 
 ### Purge the local database instance
 
