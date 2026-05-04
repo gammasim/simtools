@@ -214,8 +214,8 @@ class PSFImage:
         self._total_area = total_area
         self.cos_camera_rotation = cos_camera_rotation
         self.sin_camera_rotation = sin_camera_rotation
-        self.photon_pos_x = photon_pos_x
-        self.photon_pos_y = photon_pos_y
+        self.photon_pos_x = np.asarray(photon_pos_x)
+        self.photon_pos_y = np.asarray(photon_pos_y)
 
         if not self._is_photon_positions_ok():
             raise RuntimeError(
