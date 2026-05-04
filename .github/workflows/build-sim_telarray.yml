@@ -28,7 +28,11 @@ jobs:
     steps:
       - name: download-auxiliary-files
         run: |
-          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_GSL}}/download -O gsl.tar.gz
+          curl -L --fail \
+            --retry 5 --retry-delay 10 --retry-connrefused \
+            --connect-timeout 30 \
+           "${{ env.CLOUD_URL }}/${{ secrets.CLOUD_GSL }}/download" \
+           -o gsl.tar.gz
       - name: upload-auxiliary-files
         uses: actions/upload-artifact@v7
         with:
