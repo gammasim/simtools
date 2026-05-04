@@ -113,6 +113,9 @@ definitions:
       parameter_version:
         type: string
         description: "Parameter version to use."
+      db_export_path:
+        type: string
+        description: "Directory for DB-backed file exports used during table reading."
       label:
         type: string
         description: "Label for the plot legend."
