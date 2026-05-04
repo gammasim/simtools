@@ -60,9 +60,9 @@ def read_and_export_parameters(args_dict, io_handler):
     Returns
     -------
     list
-        List of sim_telarray parameters not found in schema files.
+        List of simtools parameters not found in sim_telarray configuration file.
     list
-        List of simtools parameter not found in sim_telarray configuration file.
+        List of sim_telarray parameters not found in schema files.
 
     """
     _parameters, _schema_files = schema.get_model_parameter_schema_files()
