@@ -373,7 +373,7 @@ class RayTracing:
 
         Generates photon lists for each off-axis angle and mirror configuration,
         simulating light propagation through telescope optics.
-        Output files are automatically compressed with gzip.
+        Output files are compressed with gzip if compress_photons is True.
 
         Parameters
         ----------
@@ -422,9 +422,9 @@ class RayTracing:
                         mirror_number=mirror_number if self.single_mirror_mode else None,
                     )
                 )
-                self._logger.debug(f"Using gzip to compress the photons file {photons_file}.")
-
                 if compress_photons:
+                    self._logger.debug(f"Using gzip to compress the photons file {photons_file}.")
+
                     with open(photons_file, "rb") as f_in:
                         with gzip.open(
                             photons_file.with_suffix(photons_file.suffix + ".gz"), "wb"
