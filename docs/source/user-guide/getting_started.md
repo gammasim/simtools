@@ -65,12 +65,11 @@ podman run --rm -it \
 
 simtools is available as a Python package from [PyPI](https://pypi.org/project/gammasimtools/).
 
-To install, prepare a Python environment, e.g.:
-
-Install simtools and its dependencies:
+To install, prepare a Python environment and install simtools and its dependencies:
 
 ```console
-
+python3 -m venv .venv
+source .venv/bin/activate
 pip install gammasimtools
 ```
 
@@ -93,7 +92,6 @@ The following environment variables must be set for simtools applications to fin
 - `$SIMTOOLS_SIM_TELARRAY_PATH`: Path to the sim_telarray installation (e.g., `/workdir/sim_telarray` in the container environment)
 - `$SIMTOOLS_CORSIKA_PATH`: Path to the CORSIKA installation (e.g., `/workdir/corsika` in the container environment)
 - `$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH`: Path to the CORSIKA interaction tables (e.g., `/workdir/corsika-interaction-tables` in the container environment)
-
 
 ## Model Database Access
 
