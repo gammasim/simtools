@@ -28,7 +28,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Check for non-ASCII characters
         run: |
@@ -68,7 +68,7 @@ jobs:
           pip install -e '.[tests,dev,doc]'
 
       - name: Dotenv linter
-        uses: dotenv-linter/action-dotenv-linter@v2
+        uses: dotenv-linter/action-dotenv-linter@v3
         with:
           dotenv_linter_flags: check -i UnorderedKey .env*
 
