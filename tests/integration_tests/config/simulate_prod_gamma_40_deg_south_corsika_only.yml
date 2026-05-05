@@ -2,10 +2,15 @@
 applications:
 - application: simtools-simulate-prod
   configuration:
-    array_layout_name: beta
+    array_layout_name:
+      by_version:
+        "<7.0.0": beta
+        ">=7.0.0": CTAO-South-Beta
     azimuth_angle: South
     core_scatter: 1 840 m
     corsika_seeds: [534, 220, 1104, 382]
+    corsika_he_interaction: epos
+    corsika_le_interaction: urqmd
     energy_range: 10 GeV 11 GeV
     label: test
     log_level: DEBUG

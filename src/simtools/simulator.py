@@ -8,6 +8,7 @@ import numpy as np
 from astropy import units as u
 
 from simtools import settings
+from simtools.configuration import defaults
 from simtools.corsika import corsika_output_validator
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler, table_handler
@@ -44,7 +45,7 @@ class Simulator:
         self.model_version = settings.config.args.get("model_version", None)
 
         self.simulation_software = settings.config.args.get(
-            "simulation_software", "corsika_sim_telarray"
+            "simulation_software", defaults.SIMULATION_SOFTWARE_DEFAULT
         )
         self.run_mode = settings.config.args.get("run_mode", None)
 
@@ -84,7 +85,7 @@ class Simulator:
         ValueError
 
         """
-        if simulation_software not in ["sim_telarray", "corsika", "corsika_sim_telarray"]:
+        if simulation_software not in defaults.SIMULATION_SOFTWARE_CHOICES:
             raise ValueError(f"Invalid simulation software: {simulation_software}")
         self._simulation_software = simulation_software.lower()
 
@@ -159,7 +160,8 @@ class Simulator:
 
         if runner_class is not SimulatorArray:
             runner_args["curved_atmosphere_min_zenith_angle"] = settings.config.args.get(
-                "curved_atmosphere_min_zenith_angle", 65 * u.deg
+                "curved_atmosphere_min_zenith_angle",
+                defaults.CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG * u.deg,
             )
         if runner_class is corsika_simtel_runner.CorsikaSimtelRunner:
             runner_args["sequential"] = settings.config.args.get("sequential", False)
@@ -346,8 +348,7 @@ class Simulator:
         """
         Save reduced event lists with event data on simulated and triggered events.
 
-        The files are saved with the same name as the sim_telarray output file
-        but with a 'hdf5' extension.
+        The files are saved using the configured simulation file list entries.
         """
         if "sim_telarray" not in self.simulation_software:
             self.logger.warning(
@@ -355,8 +356,53 @@ class Simulator:
             )
             return
 
-        input_files = self.get_files(file_type="sim_telarray_output")
-        output_files = self.get_files(file_type="sim_telarray_event_data")
+        Simulator.write_reduced_event_lists(
+            input_files=self.get_files(file_type="sim_telarray_output"),
+            output_files=self.get_files(file_type="sim_telarray_event_data"),
+        )
+
+    @staticmethod
+    def write_reduced_event_lists(input_files, output_path=None, output_files=None):
+        """
+        Write reduced event lists for given sim_telarray output files.
+
+        One output file is written per input file, named after the input file
+        with the sim_telarray suffix replaced by '.reduced_event_data.hdf5'.
+
+        Parameters
+        ----------
+        input_files : list
+            List of sim_telarray output files (e.g., ``*.simtel.zst``).
+        output_path : str or Path, optional
+            Directory for the output files. Defaults to the same directory as
+            each input file.
+        output_files : list, optional
+            Explicit output files. When provided, these are used directly and
+            zipped with input_files.
+
+        Raises
+        ------
+        ValueError
+            If explicit output_files are provided and their number does not
+            match the number of input_files.
+        """
+        if output_files is None:
+            output_files = []
+            for input_file in input_files:
+                stem = Path(input_file).name
+                for suffix in (".simtel.zst", ".simtel.gz", ".simtel"):
+                    if stem.endswith(suffix):
+                        stem = stem[: -len(suffix)]
+                        break
+                output_dir = Path(output_path) if output_path else Path(input_file).parent
+                output_files.append(output_dir / f"{stem}.reduced_event_data.hdf5")
+
+        if len(output_files) != len(input_files):
+            raise ValueError(
+                "Length mismatch between input_files and output_files: "
+                f"{len(input_files)} input file(s), {len(output_files)} output file(s)."
+            )
+
         for input_file, output_file in zip(input_files, output_files):
             generator = writer.EventDataWriter([input_file])
             table_handler.write_tables(

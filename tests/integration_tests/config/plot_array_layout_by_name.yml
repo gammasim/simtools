@@ -2,7 +2,10 @@
 applications:
 - application: simtools-plot-array-layout
   configuration:
-    array_layout_name: subsystem_lsts
+    array_layout_name:
+      by_version:
+        "<7.0.0": subsystem_lsts
+        ">=7.0.0": CTAO-North-LSTs
     figure_format:
     - pdf
     - png

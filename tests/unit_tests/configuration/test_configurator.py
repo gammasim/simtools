@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 
 import logging
-import os
+import sys
 from copy import copy
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import astropy.units as u
@@ -11,10 +10,7 @@ import pytest
 import yaml
 
 from simtools import settings
-from simtools.configuration.configurator import (
-    Configurator,
-    InvalidConfigurationParameterError,
-)
+from simtools.configuration.configurator import Configurator
 from simtools.io import io_handler
 
 logger = logging.getLogger()
@@ -32,110 +28,58 @@ def configurator(tmp_test_directory, _mock_settings_env_vars):
     return config
 
 
-def test_fill_from_command_line(configurator, args_dict):
-    assert args_dict == configurator.config
-    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
-    assert args_dict == configurator.config
-
-    with pytest.raises(SystemExit):
-        configurator._fill_from_command_line(arg_list=[], require_command_line=True)
-
-    configurator._fill_from_command_line(arg_list=["--data_path", Path("abc")])
-    _tmp_config = copy(dict(args_dict))
-    _tmp_config["data_path"] = Path("abc")
-    assert _tmp_config == configurator.config
-
-    with pytest.raises(SystemExit):
-        configurator._fill_from_command_line(arg_list=["--data_pth", Path("abc")])
-
-    with pytest.raises(SystemExit):
-        configurator._fill_from_command_line(arg_list=None)
-
-    configurator._fill_from_command_line(arg_list=["--config", Path("abc")])
-    assert configurator.config.get("config") == "abc"
-
-
-def test_fill_from_config_dict(configurator, args_dict):
-    # _fill_from_environmental_variables() is always called after _fill_from_command_line()
-    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
-
-    configurator._fill_from_config_dict({})
-    assert args_dict == configurator.config
-
-    _tmp_config = copy(dict(args_dict))
-    _tmp_config["config"] = "my_file"
-    _tmp_config["test"] = True
-    configurator._fill_from_config_dict({"config": "my_file", "test": True})
-
-    assert _tmp_config == configurator.config
-
-    # No AttributeError is raised for non-dict inputs
-    configurator._fill_from_config_dict("abc")
-
-    # No error raise for None arguments
-    configurator._fill_from_config_dict(None)
-
-
-def test_fill_from_config_file_not_existing_file(configurator):
-    # _fill_from_config_file() is always called after _fill_from_command_line()
-    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
-
-    # config_file not found raises FileNotFoundError
-    with pytest.raises(FileNotFoundError):
-        configurator._fill_from_config_file(config_file="this_file_does_not_exist")
-
-
-def test_fill_from_config_file(configurator, args_dict, tmp_test_directory):
-    _tmp_config = copy(dict(args_dict))
-    _tmp_dict = {
-        "output_path": "./abc/",
-        "test": True,
+def test_command_line_precedence_over_config_file(tmp_test_directory, monkeypatch):
+    """Test that command-line arguments override config file settings (issue #2123)."""
+    # Create a config file with label='config_label' and log_level='debug'
+    _config_dict = {
+        "label": "config_label",
+        "log_level": "debug",
     }
-    _config_file = tmp_test_directory / "configuration-test.yml"
+    _config_file = tmp_test_directory / "configuration-precedence-test.yml"
     with open(_config_file, "w") as output:
-        yaml.safe_dump(_tmp_dict, output, sort_keys=False)
+        yaml.safe_dump(_config_dict, output, sort_keys=False)
 
-    configurator.config["config"] = str(_config_file)
-    _tmp_config["config"] = str(_config_file)
-    configurator.config["output_path"] = None
-    configurator._fill_from_config_file(_config_file)
-    for key, value in _tmp_dict.items():
-        # none values are explicitly not set in Configurator._arglist_from_config()
-        if value is not None:
-            if "_path" in key:
-                _tmp_config[key] = Path(value)
-            else:
-                _tmp_config[key] = value
-    assert _tmp_config == configurator.config
+    # Initialize configurator with command-line args that differ from config file
+    configurator = Configurator()
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "test_configurator.py",
+            "--config",
+            str(_config_file),
+            "--label",
+            "cli_label",
+            "--log_level",
+            "info",
+        ],
+    )
+    config, _ = configurator.initialize(require_command_line=False, output=True)
 
-    # test that no error is raised
-    configurator._fill_from_config_file(config_file=None)
-    with pytest.raises(FileNotFoundError):
-        configurator._fill_from_config_file(config_file="abc")
+    # Command-line values should take precedence
+    assert config["label"] == "cli_label"
+    assert config["log_level"] == "info"
 
 
-def test_fill_from_workflow_config_file(configurator, args_dict, tmp_test_directory):
-    _tmp_config = copy(dict(args_dict))
-    _tmp_dict = {
-        "output_path": "./abc/",
-        "test": True,
+def test_config_file_applies_when_no_command_line(tmp_test_directory, monkeypatch):
+    """Test that config file values apply when no command-line override is provided."""
+    # Create a config file with label='config_label' and log_level='debug'
+    _config_dict = {
+        "label": "config_label",
+        "log_level": "debug",
     }
-    _tmp_dict_workflow = {"applications": [{"application": "test", "configuration": _tmp_dict}]}
-    _workflow_file = tmp_test_directory / "configuration-test.yml"
-    with open(_workflow_file, "w") as output:
-        yaml.safe_dump(_tmp_dict_workflow, output, sort_keys=False)
-    configurator.config["config"] = str(_workflow_file)
-    _tmp_config["config"] = str(_workflow_file)
-    configurator.config["output_path"] = None
-    configurator._fill_from_config_file(_workflow_file)
-    for key, value in _tmp_dict.items():
-        # none values are explicitly not set in Configurator._arglist_from_config()
-        if value is not None:
-            if "_path" in key:
-                _tmp_config[key] = Path(value)
-            else:
-                _tmp_config[key] = value
-    assert _tmp_config == configurator.config
+    _config_file = tmp_test_directory / "configuration-no-cli-test.yml"
+    with open(_config_file, "w") as output:
+        yaml.safe_dump(_config_dict, output, sort_keys=False)
+
+    # Initialize configurator with only config file (no CLI overrides for these keys)
+    configurator = Configurator()
+    monkeypatch.setattr(sys, "argv", ["test_configurator.py", "--config", str(_config_file)])
+    config, _ = configurator.initialize(require_command_line=False, output=True)
+
+    # Config file values should be used
+    assert config["label"] == "config_label"
+    assert config["log_level"] == "debug"
 
 
 def test_initialize_io_handler(configurator, tmp_test_directory):
@@ -147,25 +91,6 @@ def test_initialize_io_handler(configurator, tmp_test_directory):
     configurator._initialize_io_handler()
 
     assert _io_handler.output_path.get("default") == tmp_test_directory
-
-
-def test_check_parameter_configuration_status(configurator, args_dict, tmp_test_directory):
-    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
-    configurator.config["output_path"] = Path(tmp_test_directory)
-
-    # default value (no change)
-    configurator._check_parameter_configuration_status("data_path", args_dict["data_path"])
-    assert args_dict == configurator.config
-
-    # None value
-    configurator._check_parameter_configuration_status("config", None)
-    assert args_dict == configurator.config
-
-    # parameter changed; should raise Exception
-    configurator.config["config"] = "non_default_config_file"
-
-    with pytest.raises(InvalidConfigurationParameterError):
-        configurator._check_parameter_configuration_status("config", "abc")
 
 
 def test_arglist_from_config():
@@ -210,8 +135,10 @@ def test_convert_string_none_to_none():
 
 def test_get_db_parameters_from_env(configurator, args_dict):
     configurator.parser.initialize_db_config_arguments()
-    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
-    configurator._fill_from_environmental_variables()
+    configurator._fill_config([])
+    configurator.config["env_file"] = "this_file_does_not_exist.env"
+    _env_config = configurator._config_from_env(configurator.config["env_file"])
+    configurator._fill_config(configurator._arglist_from_config(_env_config))
 
     args_dict["db_api_user"] = "db_user"
     args_dict["db_api_pw"] = "12345"
@@ -219,6 +146,7 @@ def test_get_db_parameters_from_env(configurator, args_dict):
     args_dict["db_server"] = "abc@def.de"
     args_dict["db_simulation_model"] = "sim_model"
     args_dict["db_simulation_model_version"] = "v0.0.0"
+    args_dict["env_file"] = "this_file_does_not_exist.env"
 
     # remove user defined parameters from comparison (depends on environment)
     expected_config = {k: v for k, v in args_dict.items() if not k.startswith("user_")}
@@ -232,7 +160,7 @@ def test_get_db_parameters_from_env(configurator, args_dict):
 
 def test_initialize_output(configurator):
     configurator.parser.initialize_output_arguments()
-    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
+    configurator._fill_config([])
 
     # output file for testing
     configurator.config["test"] = True
@@ -257,70 +185,6 @@ def test_initialize_output(configurator):
     configurator.config["output_file"] = "unit_test.txt"
     configurator._initialize_output()
     assert configurator.config["output_file"] == "unit_test.txt"
-
-
-def test_fill_from_environmental_variables(configurator):
-    configurator.parser.initialize_output_arguments()
-    configurator.parser.initialize_db_config_arguments()
-    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
-
-    _config_save = copy(configurator.config)
-
-    # this is not a configuration parameter and therefore should not be set
-    os.environ["SIMTOOLS_TEST_ENV_VARIABLE"] = "test_value"
-    configurator._fill_from_environmental_variables()
-    if "SIMTOOLS_TEST_ENV_VARIABLE" in os.environ:
-        del os.environ["SIMTOOLS_TEST_ENV_VARIABLE"]
-    assert "test_env_variable" not in configurator.config
-
-    # this is a valid configuration parameter, but already configured
-    # _fill_from_environmental_variables() should not change it
-    os.environ["SIMTOOLS_LOG_LEVEL"] = "DEBUG"
-    configurator._fill_from_environmental_variables()
-    assert configurator.config["log_level"] == _config_save["log_level"] == "info"
-    if "SIMTOOLS_LOG_LEVEL" in os.environ:
-        del os.environ["SIMTOOLS_LOG_LEVEL"]
-
-    # this is a valid configuration parameter, but not yet configured
-    os.environ["SIMTOOLS_CONFIG"] = "test_config_file"
-    configurator._fill_from_environmental_variables()
-    assert configurator.config["config"] == "test_config_file"
-    if "SIMTOOLS_CONFIG" in os.environ:
-        del os.environ["SIMTOOLS_CONFIG"]
-
-    # using .dotenv files with docker: comments are not removed by docker
-    os.environ["SIMTOOLS_DB_API_PORT"] = "27017 #Port on the MongoDB server"
-    os.environ["SIMTOOLS_DB_SERVER"] = "'abc@def.de' # MongoDB server"
-    configurator.config["db_api_port"] = None
-    configurator.config["db_server"] = None
-    configurator._fill_from_environmental_variables()
-    assert configurator.config["db_api_port"] == 27017
-    assert configurator.config["db_server"] == "abc@def.de"
-    if "SIMTOOLS_DB_API_PORT" in os.environ:
-        del os.environ["SIMTOOLS_DB_API_PORT"]
-    if "SIMTOOLS_DB_SERVER" in os.environ:
-        del os.environ["SIMTOOLS_DB_SERVER"]
-
-    # no config defined, should not raise key error
-    configurator.config.pop("env_file")
-    configurator._fill_from_environmental_variables()
-
-
-def test_fill_from_environmental_variables_with_dotenv_file(configurator, tmp_test_directory):
-    configurator.parser.initialize_output_arguments()
-    configurator._fill_from_command_line(arg_list=[], require_command_line=False)
-
-    # write a temporary file into tmp_test_directory with the environmental variables
-    _env_file = tmp_test_directory / "test_env_file"
-    with open(_env_file, "w") as output:
-        output.write("SIMTOOLS_LABEL=test_label\n")
-        output.write("SIMTOOLS_CONFIG=test_config_file_env\n")
-
-    configurator.config["env_file"] = str(_env_file)
-    configurator._fill_from_environmental_variables()
-
-    assert configurator.config["label"] == "test_label"
-    assert configurator.config["config"] == "test_config_file_env"
 
 
 def test_default_config_with_site():
@@ -439,10 +303,11 @@ def test_set_model_versions(configurator):
 
 def test_initialize(configurator):
     configurator.parser.initialize_default_arguments = MagicMock()
-    configurator._fill_from_command_line = MagicMock()
-    configurator._fill_from_config_file = MagicMock()
-    configurator._fill_from_config_dict = MagicMock()
-    configurator._fill_from_environmental_variables = MagicMock()
+    configurator._get_cli_arglist = MagicMock(return_value=[])
+    configurator._config_from_env = MagicMock(return_value={})
+    configurator._config_from_file = MagicMock(return_value={})
+    configurator._fill_config = MagicMock()
+    configurator._reset_required_arguments = MagicMock()
     configurator._initialize_model_versions = MagicMock()
     configurator._initialize_io_handler = MagicMock()
     configurator._initialize_output = MagicMock()
@@ -453,10 +318,10 @@ def test_initialize(configurator):
 
     # Assert that the methods were called
     configurator.parser.initialize_default_arguments.assert_called_once()
-    configurator._fill_from_command_line.assert_called_once_with(require_command_line=True)
-    configurator._fill_from_config_file.assert_called_once_with(None)
-    configurator._fill_from_config_dict.assert_called_once_with(None)
-    configurator._fill_from_environmental_variables.assert_called_once()
+    configurator._get_cli_arglist.assert_called_once_with(require_command_line=True)
+    configurator._config_from_env.assert_called_once_with(".env")
+    configurator._config_from_file.assert_called_once_with(None)
+    configurator._fill_config.assert_called_once_with([])
     configurator._initialize_model_versions.assert_called_once()
     configurator._initialize_io_handler.assert_called_once()
     configurator._initialize_output.assert_not_called()
@@ -480,18 +345,20 @@ def test_initialize(configurator):
 
     # Assert that the methods were called with the correct parameters
     configurator.parser.initialize_default_arguments.assert_called()
-    configurator._fill_from_command_line.assert_called()
-    configurator._fill_from_config_file.assert_called()
-    configurator._fill_from_config_dict.assert_called()
-    configurator._fill_from_environmental_variables.assert_called()
+    configurator._get_cli_arglist.assert_called()
+    configurator._config_from_env.assert_called()
+    configurator._config_from_file.assert_called()
+    configurator._fill_config.assert_called()
     configurator._initialize_model_versions.assert_called()
     configurator._initialize_io_handler.assert_called()
     configurator._initialize_output.assert_called_once()
     configurator._get_db_parameters.assert_called_once()
 
     # test activity_id and label
-    configurator.config["activity_id"] = "test_activity_id"
-    configurator.config["label"] = "test_label"
+    configurator.config_class_init = {"activity_id": "test_activity_id", "label": "test_label"}
+    configurator._fill_config.side_effect = lambda _: configurator.config.update(
+        {"activity_id": "test_activity_id", "label": "test_label"}
+    )
     configurator.initialize()
     assert configurator.config["activity_id"] == "test_activity_id"
     assert configurator.config["label"] == "test_label"

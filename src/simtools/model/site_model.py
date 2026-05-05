@@ -134,10 +134,9 @@ class SiteModel(ModelParameter):
         list
             List of array elements
         """
-        normalized_layout_name = str(layout_name).lower()
         layouts = self.get_parameter_value("array_layouts")
         for layout in layouts:
-            if str(layout.get("name", "")).lower() == normalized_layout_name:
+            if layout["name"].lower() == layout_name.lower():
                 return layout["elements"]
         raise ValueError(f"Array layout '{layout_name}' not found in '{self.site}' site model.")
 
