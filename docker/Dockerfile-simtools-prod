@@ -26,7 +26,7 @@ COPY --from=corsika_img /workdir/simulation_software/corsika7  /workdir/simulati
 COPY --from=simtel_img /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray
 COPY --from=simtel_img /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
 COPY --from=simtel_img /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools
-COPY --from=simtel_img /usr/lib64/ /usr/lib64/
+COPY --from=simtel_img /usr/local/lib/ /usr/local/lib/
 
 RUN microdnf update -y && microdnf install -y \
   bc bzip2 findutils gcc-c++ git git-lfs libgfortran procps wget zstd \
