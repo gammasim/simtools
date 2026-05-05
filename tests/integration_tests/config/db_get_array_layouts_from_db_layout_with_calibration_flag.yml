@@ -7,10 +7,11 @@ applications:
     - ILLS
     include_calibration_array_elements: true
     coordinate_system: ground
-    model_version: 6.0.2
+    model_version: 7.0.0
     output_file: array_layout_south_ground_with_calibration.ecsv
     output_path: simtools-output
     site: South
+  model_version_use_current: true
   test_name: layout_with_calibration_flag
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
