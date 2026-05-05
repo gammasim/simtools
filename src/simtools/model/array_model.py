@@ -462,7 +462,7 @@ class ArrayModel:
         Returns
         -------
         astropy.table.QTable
-            Astropy table with the telescope layout information.
+            Astropy table with the array-elements layout information.
         """
         table = QTable(meta={"array_name": self.layout_name, "site": self.site_model.site})
 

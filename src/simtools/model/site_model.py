@@ -152,8 +152,8 @@ class SiteModel(ModelParameter):
 
         Returns
         -------
-        dict
-            Dict with array elements.
+        list
+            List with array elements.
         """
         try:
             collection = names.get_collection_name_from_array_element_name(array_element_type)
