@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+from simtools.configuration import defaults
 from simtools.settings import _Config
 
 
@@ -18,6 +19,7 @@ def clear_simtools_env():
         "SIMTOOLS_SIM_TELARRAY_EXECUTABLE",
         "SIMTOOLS_CORSIKA_PATH",
         "SIMTOOLS_CORSIKA_EXECUTABLE",
+        "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH",
         "SIMTOOLS_CORSIKA_HE_INTERACTION",
         "SIMTOOLS_CORSIKA_LE_INTERACTION",
     ]
@@ -97,6 +99,30 @@ def test_load_activity_name_none_when_missing(config_instance):
 def test_load_with_env_vars(config_instance):
     config_instance.load()
     assert config_instance._sim_telarray_path == "/env/simtel"
+
+
+@patch.dict(os.environ, {}, clear=True)
+def test_load_sets_default_corsika_paths(config_instance):
+    config_instance.load(args={}, resolve_sim_software_executables=False)
+    assert config_instance._corsika_path == defaults.CORSIKA_PATH
+    assert (
+        config_instance._corsika_interaction_table_path == defaults.CORSIKA_INTERACTION_TABLE_PATH
+    )
+
+
+@patch("os.access", return_value=True)
+@patch("pathlib.Path.exists", return_value=True)
+@patch("pathlib.Path.is_dir", return_value=True)
+@patch("pathlib.Path.is_file", return_value=True)
+@patch.dict(os.environ, {}, clear=True)
+def test_get_corsika_exec_uses_default_interaction_models(
+    mock_is_file, mock_is_dir, mock_exists, mock_access, config_instance
+):
+    config_instance.load(args={"corsika_path": "/path/to/corsika"})
+    assert config_instance.corsika_exe == Path(
+        "/path/to/corsika/"
+        f"corsika_{defaults.CORSIKA_HE_INTERACTION}_{defaults.CORSIKA_LE_INTERACTION}_flat"
+    )
 
 
 @patch("pathlib.Path.is_dir", return_value=False)

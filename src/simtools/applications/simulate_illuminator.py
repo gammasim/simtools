@@ -123,7 +123,7 @@ def main():
     )
 
     light_source = SimulatorLightEmission(
-        light_emission_config={**app_context.args, "run_mode": "illuminator"},
+        light_emission_config=app_context.args,
         label=app_context.args.get("label"),
     )
     light_source.simulate()

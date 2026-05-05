@@ -2,10 +2,15 @@
 applications:
 - application: simtools-simulate-prod
   configuration:
-    array_layout_name: alpha
+    array_layout_name:
+      by_version:
+        "<7.0.0": alpha
+        ">=7.0.0": CTAO-North-Alpha
     azimuth_angle: South
     core_scatter: 2 600 m
     corsika_seeds: [534, 220, 1104, 382]
+    corsika_he_interaction: epos
+    corsika_le_interaction: urqmd
     energy_range: 150 GeV 400 GeV
     label: test
     log_level: DEBUG

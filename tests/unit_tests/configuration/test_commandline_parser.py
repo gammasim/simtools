@@ -440,6 +440,24 @@ def test_simulation_configuration():
     )
 
 
+def test_simulation_configuration_uses_defaults_for_optional_arguments():
+    test_parser = parser.CommandLineParser()
+    test_parser.initialize_default_arguments(
+        simulation_configuration={
+            "software": None,
+            "corsika_configuration": ["primary", "azimuth_angle", "zenith_angle", "run_number"],
+        }
+    )
+
+    args = test_parser.parse_args(["--primary", "gamma"])
+
+    assert args.primary == "gamma"
+    assert args.simulation_software == "corsika_sim_telarray"
+    assert_quantity_allclose(args.azimuth_angle, 0 * u.deg)
+    assert_quantity_allclose(args.zenith_angle, 20 * u.deg)
+    assert args.run_number == 1
+
+
 def test_initialize_db_config_arguments_strip_string():
     parser_10 = parser.CommandLineParser()
     parser_10.initialize_db_config_arguments()
@@ -481,13 +499,13 @@ def test_get_dictionary_with_corsika_configuration(mocker):
         "Telescope pointing direction in azimuth."
     )
     assert corsika_config["azimuth_angle"]["type"] == parser.CommandLineParser.azimuth_angle
-    assert corsika_config["azimuth_angle"]["required"] is True
+    assert corsika_config["azimuth_angle"]["default"] == 0 * u.deg
 
     # Test the "zenith_angle" key
     assert "zenith_angle" in corsika_config
     assert corsika_config["zenith_angle"]["help"] == "Zenith angle in degrees (between 0 and 180)."
     assert corsika_config["zenith_angle"]["type"] == parser.CommandLineParser.zenith_angle
-    assert corsika_config["zenith_angle"]["required"] is True
+    assert corsika_config["zenith_angle"]["default"] == 20 * u.deg
 
     # Test the "nshow" key
     assert "nshow" in corsika_config
@@ -507,7 +525,6 @@ def test_get_dictionary_with_corsika_configuration(mocker):
     assert "run_number" in corsika_config
     assert corsika_config["run_number"]["help"] == "Run number to be simulated."
     assert corsika_config["run_number"]["type"] is int
-    assert corsika_config["run_number"]["required"] is True
     assert corsika_config["run_number"]["default"] == 1
 
     # Test the "event_number_first_shower" key

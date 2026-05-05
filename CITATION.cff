@@ -1,10 +1,10 @@
-# This CITATION.cff file was generated with cffinit.
-# Visit https://bit.ly/cffinit to generate yours today!
-
 cff-version: 1.2.0
 title: >-
   simtools - Simulation tools and applications for the Cherenkov Telescope Array (CTAO)
-message: Please cite this software using these metadata.
+message: >-
+  Please cite this software using these metadata.
+  A full list of code contributors is available at
+  https://github.com/gammasim/simtools/graphs/contributors
 type: software
 authors:
   - given-names: Gernot
@@ -24,19 +24,10 @@ authors:
     family-names: Joshi
     orcid: 'https://orcid.org/0000-0001-8557-1141'
     affiliation: DESY
-  - given-names: Maximilian
-    family-names: Linhoff
-    orcid: 'https://orcid.org/0000-0001-7993-8189'
-    affiliation: CTAO
-  - given-names: Victor
-    family-names: Barbosa Martins
-    orcid: 'https://orcid.org/0000-0002-5085-8828'
-    affiliation: DESY
-  - given-names: Raul
-    name-particle: R.
-    family-names: Prado
-    orcid: 'https://orcid.org/0000-0001-9152-2995'
-    affiliation: DESY
 repository-code: 'https://github.com/gammasim/simtools'
+identifiers:
+  - type: url
+    value: 'https://github.com/gammasim/simtools/graphs/contributors'
+    description: Full list of code contributors
 doi: 10.5281/zenodo.6346696
 license: BSD-3-Clause

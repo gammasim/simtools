@@ -58,22 +58,18 @@ simtools/
 ├── pyproject.toml         # Project configuration, dependencies, tool settings
 ├── .pre-commit-config.yaml # Pre-commit hooks configuration
 ├── .env_template          # Template for environment variables
-└── environment.yml        # Conda/mamba environment definition
 ```
 
 ## Setup
 
 ```bash
 # Option 1: pip (local development)
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -e '.[dev,tests]'
 pre-commit install
 
-# Option 2: Conda/Mamba
-mamba env create -f environment.yml
-mamba activate simtools-dev
-pip install -e .
-
-# Option 3: Containers (includes CORSIKA/sim_telarray)
+# Option 2: Containers (includes CORSIKA/sim_telarray)
 podman run --rm -it -v "$(pwd)/external:/workdir/external" \
     ghcr.io/gammasim/simtools-dev:latest
 ```
@@ -272,6 +268,9 @@ make linkcheck              # Check links
 - Changelogs should not exceed 1 line.
 - Use pull request IDs (not issue IDs) as the fragment number.
 
+**API Reference:**
+- Every new module must be added to `docs/source/api-reference/` — either as a new `.md` file (listed in `index.md`) or as a new `## section` in the relevant existing `.md` file, using `.. automodule::` with `:members:`.
+
 
 
 ## Key Dependencies
@@ -301,17 +300,18 @@ make linkcheck              # Check links
 **Focus:** Code quality, architecture, testing, maintainability.
 
 **Key Rules:**
-1. **Always test:** `pytest tests/unit_tests/` after changes (≥90% coverage) in conda environment 'simtools-dev'
+1. **Always test:** `pytest tests/unit_tests/` after changes (≥90% coverage)
 2. **Always lint:** `pre-commit run --all-files` before commits
 3. **Follow conventions:** pathlib, logging, f-strings, NumPy docstrings
 4. **Error messages:** no `logger.error`, put the error message into the error (e.g. `ValueError("Invalid type")`) and always do `from exc`
 5. **Mock external deps:** DB, file I/O, network must be mocked in unit tests
-6. **Use tmp_test_directory** for file I/O (NOT `tmp_path`)
+6. **Use tmp_test_directory** for file I/O (NOT `tmp_path` or `/tmp/`)
 7. **Study patterns:** Check existing code before implementing
 8. **Document:** NumPy-style docstrings, 70%+ coverage required
 9. **Make minimal changes:** Understand codebase first
 10. **No premature optimization:** Clarity > speed
 11. **Golden Rule:** If code is hard to understand, refactor it
+12. **Cognitive Complexity:** Keep it below 15
 
 **Validation:** 100% statement coverage for library code.
 
@@ -344,7 +344,6 @@ make linkcheck              # Check links
 - Use simple, readable code over clever optimizations
 - Study existing patterns before implementing
 - Document assumptions and non-obvious decisions
-- Work in conda environment 'simtools-dev' for testing and documentation
 - import statements should be at the top of the file (even for unit test files)
 
 ❌ **DON'T:**
