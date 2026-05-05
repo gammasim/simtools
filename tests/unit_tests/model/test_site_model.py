@@ -56,6 +56,9 @@ def test_get_array_elements_for_layout(model_version):
     assert isinstance(_north.get_array_elements_for_layout("test_layout"), list)
     assert len(_north.get_array_elements_for_layout("test_layout")) == 13
     assert "LSTN-01" in _north.get_array_elements_for_layout("test_layout")
+    assert _north.get_array_elements_for_layout(
+        "TEST_LAYOUT"
+    ) == _north.get_array_elements_for_layout("test_layout")
 
     with pytest.raises(
         ValueError, match=r"Array layout 'not_a_layout' not found in 'North' site model."
