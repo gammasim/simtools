@@ -85,9 +85,10 @@ def plot_array_layouts(args_dict, output_path, layouts, background_layout=None):
             else ""
         )
 
+        model_version_string = f"{args_dict['model_version']}" if args_dict["model_version"] else ""
         plot_file_name = args_dict["figure_name"] or (
             f"array_layout_{layout['name']}{site_string}{coordinate_system_string}"
-            f"_{args_dict['model_version']}"
+            f"_{model_version_string}"
         )
 
         visualize.save_figure(fig_out, output_path / plot_file_name, dpi=400)
