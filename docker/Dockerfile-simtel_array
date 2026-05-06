@@ -8,6 +8,8 @@ ARG EXTRA_DEFINES="-DCTA_PROD6 -DMAXIMUM_TELESCOPES=99"
 ARG SIMTEL_VERSION="master"
 ARG HESSIO_VERSION="master"
 ARG STDTOOLS_VERSION="master"
+ARG ALMALINUX_VERSION="9.7"
+ARG GSL_VERSION="2.8"
 
 # hadolint global ignore=DL3033,DL3041
 # - DL3033, DL3041: ignore warnings about installing non-specific versions with microdnf or yum)
@@ -15,7 +17,7 @@ ARG STDTOOLS_VERSION="master"
 # -----------------------------------------------------------------------------
 # STAGE 1: source code preparation
 # -----------------------------------------------------------------------------
-FROM almalinux:9.5-minimal AS source_preparation
+FROM almalinux:${ALMALINUX_VERSION}-minimal AS source_preparation
 ARG SIMTEL_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray.git"
 ARG SIMTEL_VERSION
 ARG HESSIO_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio.git"
@@ -43,25 +45,36 @@ RUN --mount=type=secret,id=stdtools_token \
     git config --global advice.detachedHead false && \
     git clone --depth 1 --branch "${STDTOOLS_VERSION}" "https://oauth2:$(cat /run/secrets/stdtools_token)@${STDTOOLS_REPO}"
 
+# GSL (tar file needs to present in current directory)
+ADD gsl.tar.gz .
+
 # -----------------------------------------------------------------------------
 # STAGE 2: build_image
 # -----------------------------------------------------------------------------
-FROM almalinux:9.5 AS build_image
+FROM almalinux:${ALMALINUX_VERSION} AS build_image
 ARG EXTRA_DEFINES
 ARG SIMTEL_VERSION="master"
 ARG HESSIO_VERSION="master"
 ARG STDTOOLS_VERSION="master"
 ARG GSL_COMPILE="-DWITH_GSL -DWITH_GSL_RNG"
+ARG GSL_VERSION
 
 ENV GCC_PATH="/usr/bin/"
 ENV HSEVENTIO="/workdir/simulation_software/hessioxxx/"
 ENV STDTOOLS_PATH="/workdir/simulation_software/stdtools/"
 
 RUN yum update -y && yum install -y \
-    gcc gcc-c++ gsl-devel \
-    automake csh patch perl \
+    gcc gcc-c++ \
+    automake csh diffutils patch perl \
     make m4 which && \
     yum clean all
+
+WORKDIR /tmp
+COPY --from=source_preparation /src/gsl-${GSL_VERSION} .
+RUN ./configure --prefix=/usr/local && \
+    make && \
+    make install && \
+    ldconfig
 
 WORKDIR /workdir/simulation_software
 COPY --from=source_preparation /src .
@@ -132,14 +145,20 @@ RUN { \
 # -----------------------------------------------------------------------------
 # STAGE 3: Runtime Image
 # -----------------------------------------------------------------------------
-FROM almalinux:9.5-minimal
+FROM almalinux:${ALMALINUX_VERSION}-minimal
 WORKDIR /workdir/simulation_software
 COPY --from=build_image /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
 COPY --from=build_image /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools
 COPY --from=build_image /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray
+COPY --from=build_image /usr/local/lib/libgsl.so* /usr/local/lib/
+COPY --from=build_image /usr/local/lib/libgslcblas.so* /usr/local/lib/
 
 RUN microdnf update -y && microdnf install -y \
-    bc findutils gsl procps zstd && \
-    microdnf clean all
+    bc findutils procps zstd && \
+    microdnf clean all && \
+    echo /usr/local/lib > /etc/ld.so.conf.d/local.conf && \
+    ldconfig
+
+ENV LD_LIBRARY_PATH="/usr/local/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 WORKDIR /workdir/simulation_software/sim_telarray
