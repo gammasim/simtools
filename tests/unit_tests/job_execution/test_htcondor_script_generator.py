@@ -38,12 +38,14 @@ def args_dict():
 @mock.patch("simtools.job_execution.htcondor_script_generator.Path.mkdir")
 @mock.patch("simtools.job_execution.htcondor_script_generator.open", new_callable=mock.mock_open)
 @mock.patch("simtools.job_execution.htcondor_script_generator.Path.chmod")
-def test_generate_submission_script(mock_chmod, mock_open, mock_mkdir, args_dict):
+@mock.patch("simtools.job_execution.htcondor_script_generator.Path.is_file", return_value=True)
+def test_generate_submission_script(mock_is_file, mock_chmod, mock_open, mock_mkdir, args_dict):
     generate_submission_script(args_dict)
 
     work_dir = Path(args_dict["output_path"])
     submit_file_name = "simulate_prod.submit"
 
+    mock_is_file.assert_called_once()
     mock_mkdir.assert_any_call(parents=True, exist_ok=True)
 
     # Check if files are created and written
@@ -52,6 +54,18 @@ def test_generate_submission_script(mock_chmod, mock_open, mock_mkdir, args_dict
 
     # Check if chmod is called
     mock_chmod.assert_called_once_with(0o755)
+
+
+@mock.patch("simtools.job_execution.htcondor_script_generator.Path.is_file", return_value=False)
+@mock.patch("simtools.job_execution.htcondor_script_generator.open", new_callable=mock.mock_open)
+def test_generate_submission_script_raises_for_missing_apptainer_image(
+    mock_open, mock_is_file, args_dict
+):
+    with pytest.raises(FileNotFoundError, match="Apptainer image file not found"):
+        generate_submission_script(args_dict)
+
+    mock_is_file.assert_called_once()
+    mock_open.assert_not_called()
 
 
 def test_get_submit_script(args_dict):
