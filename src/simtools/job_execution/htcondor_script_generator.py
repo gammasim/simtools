@@ -17,7 +17,13 @@ def generate_submission_script(args_dict):
     args_dict: dict
         Arguments dictionary.
     """
-    apptainer_image = Path(args_dict["apptainer_image"])
+    apptainer_image_arg = args_dict["apptainer_image"]
+    if apptainer_image_arg is None or (
+        isinstance(apptainer_image_arg, str) and not apptainer_image_arg.strip()
+    ):
+        raise ValueError("Missing required apptainer_image path.")
+
+    apptainer_image = Path(apptainer_image_arg)
     if not apptainer_image.is_file():
         raise FileNotFoundError(f"Apptainer image file not found: {apptainer_image}")
 
