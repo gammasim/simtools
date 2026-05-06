@@ -128,6 +128,7 @@ jobs:
           echo "SIMTOOLS_DB_SIMULATION_MODEL_BRANCH=$BRANCH" >> "$GITHUB_ENV"
 
       - name: Clone simulation models repository
+        if: github.event_name != 'schedule'
         run: |
           for attempt in 1 2 3; do
             git clone --depth 1 --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH" "$SIM_MODELS_REPO" "simulation-models" && break
@@ -137,6 +138,7 @@ jobs:
           done
 
       - name: Upload simulation models repository
+        if: github.event_name != 'schedule'
         uses: actions/upload-artifact@v7
         with:
           name: simulation-models-repo
