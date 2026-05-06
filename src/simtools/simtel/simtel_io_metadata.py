@@ -191,7 +191,7 @@ def _get_telescope_list_from_input_card(file):
         List of telescope names as found in CORSIKA input card.
     """
     tel_re = re.compile(
-        r"^TELESCOPE\s+"
+        r"\s*TELESCOPE\s+"
         r"[-\d.E]+\s+[-\d.E]+\s+[-\d.E]+\s+[-\d.E]+\s+"
         r"#\s*\(ID=\d+\)\s+"
         r"([A-Z0-9]+)\s+"  # MSTS / LSTS / SSTS / MST2 / LSTN / MSTN
@@ -222,8 +222,6 @@ def _legacy_merge_msts(msts):
     ----------
     msts: list
         List of MSTs
-    mst2: list
-        List of additional MSTs
 
     Returns
     -------
@@ -231,13 +229,13 @@ def _legacy_merge_msts(msts):
         List of merged telescopes.
     """
     mst2_list = [s for s in msts if re.search(r"MST2", s)]
-    if not mst2_list or len(msts) < 1:
+    if not mst2_list:
         return msts
     mst_list = [s for s in msts if not re.search(r"MST2", s)]
     mst_numbers = [int(num) for s in mst_list if "MST" in s for num in re.findall(r"\d+", s)]
     max_mst_id = max(mst_numbers) if mst_numbers else 0
     site = names.get_site_from_array_element_name(msts[0])
     site_char = "S" if site.lower() == "south" else "N"
-    mst_list += [f"MST{site_char}-{max_mst_id + i + 1}" for i, _ in enumerate(mst2_list)]
+    mst_list += [f"MST{site_char}-{max_mst_id + i + 1:02d}" for i, _ in enumerate(mst2_list)]
 
     return mst_list

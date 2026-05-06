@@ -101,6 +101,7 @@ def test_get_telescope_list_from_input_card_parses_telescopes(monkeypatch):
                 TELESCOPE   -153.29E2     168.86E2 28.70E2  9.15E2  # (ID=6)   MSTS   02   4B1\n
                 TELESCOPE   -153.29E2     168.86E2 28.70E2  9.15E2  # (ID=6)   SSTS   02   4B1\n
                 TELESCOPE   -153.29E2     168.86E2 28.70E2  9.15E2  # (ID=6)   SCTS   02   4B1\n
+                TELESCOPE   -153.29E2     168.86E2 28.70E2  9.15E2  # (ID=6)   MST2   01   4B1\n
                 """
 
     class FakeEventIOFile:
@@ -123,7 +124,8 @@ def test_get_telescope_list_from_input_card_parses_telescopes(monkeypatch):
     assert "MSTS-02" in result
     assert "SSTS-02" in result
     assert "SCTS-02" in result
-    assert len(result) == 6
+    assert "MST2-01" in result
+    assert len(result) == 7
 
 
 def test_get_telescope_list_from_input_card_no_input_card(monkeypatch):
@@ -210,3 +212,33 @@ def test_get_sim_telarray_telescope_id_to_telescope_name_mapping_value_error(mon
         "dummy4.simtel"
     )
     assert mapping == {1: "FAKE-0", 2: "FAKE-1"}
+
+
+@pytest.mark.parametrize(
+    ("msts", "expected"),
+    [
+        (
+            ["LSTS-01", "MSTS-01", "MSTS-133", "SSTS-01"],
+            ["LSTS-01", "MSTS-01", "MSTS-133", "SSTS-01"],
+        ),
+        (
+            ["LSTS-01", "MSTS-01", "MSTS-133", "MST2-05", "SSTS-01"],
+            ["LSTS-01", "MSTS-01", "MSTS-133", "SSTS-01", "MSTS-134"],
+        ),
+        ([], []),
+        (["LSTS-01", "SSTS-01"], ["LSTS-01", "SSTS-01"]),
+    ],
+)
+def test_legacy_merge_msts(msts, expected):
+    assert simtel_io_metadata._legacy_merge_msts(msts) == expected
+
+
+def test_legacy_merge_msts_with_malformed_mst2_entry(monkeypatch):
+    msts = ["LSTM-01", 'MSTN-01, "MST2-02']
+
+    monkeypatch.setattr(
+        "simtools.utils.names.get_site_from_array_element_name",
+        lambda _: "North",
+    )
+
+    assert simtel_io_metadata._legacy_merge_msts(msts) == ["LSTM-01", "MSTN-01"]
