@@ -969,3 +969,10 @@ def test_validate_repository_directory_structure_missing_required_subdir(tmp_tes
 
     with pytest.raises(FileNotFoundError, match="Expected directory not found"):
         db_model_upload._validate_repository_directory_structure(repo_dir)
+
+
+def test_validate_repository_directory_structure_nonexistent_repository_dir(tmp_test_directory):
+    repo_dir = Path(tmp_test_directory) / "models-repo-does-not-exist"
+
+    with pytest.raises(FileNotFoundError, match="Repository directory does not exist"):
+        db_model_upload._validate_repository_directory_structure(repo_dir)
