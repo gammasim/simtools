@@ -894,3 +894,78 @@ def test_add_complete_model_repository_not_exists_after_clone(
         )
 
     mock_rmtree.assert_not_called()
+
+
+@patch("simtools.db.db_model_upload.clone_simulation_model_repository")
+@patch("simtools.db.db_model_upload.add_model_parameters_to_db")
+@patch("simtools.db.db_model_upload.add_production_tables_to_db")
+@patch("simtools.db.db_model_upload._confirm_remote_database_upload")
+@patch("simtools.db.db_model_upload.shutil.rmtree")
+def test_add_complete_model_uses_repository_dir_without_clone(
+    mock_rmtree,
+    mock_confirm,
+    mock_add_production_tables,
+    mock_add_model_parameters,
+    mock_clone_repo,
+    tmp_test_directory,
+):
+    mock_db = Mock()
+    repo_dir = Path(tmp_test_directory) / "models-repo"
+    (repo_dir / "simulation-models" / "model_parameters").mkdir(parents=True, exist_ok=True)
+    (repo_dir / "simulation-models" / "productions").mkdir(parents=True, exist_ok=True)
+
+    mock_confirm.return_value = True
+
+    db_model_upload.add_complete_model(
+        tmp_dir=Path(tmp_test_directory) / "tmp",
+        db=mock_db,
+        db_simulation_model="test_model",
+        db_simulation_model_version="1.0.0",
+        repository_url=None,
+        repository_dir=str(repo_dir),
+    )
+
+    mock_clone_repo.assert_not_called()
+    mock_add_model_parameters.assert_called_once_with(
+        input_path=repo_dir / "simulation-models" / "model_parameters", db=mock_db
+    )
+    mock_add_production_tables.assert_called_once_with(
+        input_path=repo_dir / "simulation-models" / "productions", db=mock_db
+    )
+    mock_rmtree.assert_not_called()
+
+
+@patch("simtools.db.db_model_upload._confirm_remote_database_upload")
+def test_add_complete_model_requires_repository_url_or_repository_dir(
+    mock_confirm, tmp_test_directory
+):
+    mock_confirm.return_value = True
+
+    with pytest.raises(
+        RuntimeError,
+        match="Upload of simulation model failed: Either repository_url or repository_dir must be provided",
+    ):
+        db_model_upload.add_complete_model(
+            tmp_dir=Path(tmp_test_directory) / "tmp",
+            db=Mock(),
+            db_simulation_model="test_model",
+            db_simulation_model_version="1.0.0",
+            repository_url=None,
+            repository_dir=None,
+        )
+
+
+def test_validate_repository_directory_structure_success(tmp_test_directory):
+    repo_dir = Path(tmp_test_directory) / "models-repo"
+    (repo_dir / "simulation-models" / "model_parameters").mkdir(parents=True, exist_ok=True)
+    (repo_dir / "simulation-models" / "productions").mkdir(parents=True, exist_ok=True)
+
+    db_model_upload._validate_repository_directory_structure(repo_dir)
+
+
+def test_validate_repository_directory_structure_missing_required_subdir(tmp_test_directory):
+    repo_dir = Path(tmp_test_directory) / "models-repo"
+    (repo_dir / "simulation-models" / "model_parameters").mkdir(parents=True, exist_ok=True)
+
+    with pytest.raises(FileNotFoundError, match="Expected directory not found"):
+        db_model_upload._validate_repository_directory_structure(repo_dir)
