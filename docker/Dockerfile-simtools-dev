@@ -15,24 +15,28 @@ ARG CORSIKA_IMAGE_VERSION="v78010"
 ARG SIMTEL_IMAGE_VERSION="latest"
 ARG AVX_FLAG="generic"
 ARG PYTHON_VERSION="3.12"
+ARG ALMALINUX_VERSION="9.7"
 
 FROM ghcr.io/gammasim/corsika7:${CORSIKA_IMAGE_VERSION}-${AVX_FLAG} AS corsika_img
 FROM ghcr.io/gammasim/sim_telarray:${SIMTEL_IMAGE_VERSION} AS simtel_img
 
-FROM almalinux:9.5-minimal
+FROM almalinux:${ALMALINUX_VERSION}-minimal
 ARG PYTHON_VERSION
-ARG SIMTOOLS_REPO="https://github.com/gammasim/simtools.git"
 
 COPY --from=corsika_img /workdir/simulation_software/corsika7  /workdir/simulation_software/corsika7
 COPY --from=simtel_img /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray
 COPY --from=simtel_img /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
 COPY --from=simtel_img /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools
+COPY --from=simtel_img /usr/local/lib/ /usr/local/lib/
 
 RUN microdnf update -y && microdnf install -y \
-    bc bzip2 findutils gcc-c++ git gsl libgfortran procps wget zstd \
-    python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
-    microdnf clean all && \
-    ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python
+  bc bzip2 findutils gcc-c++ git libgfortran procps wget zstd \
+  python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
+  microdnf clean all && \
+  rm -rf /var/cache/dnf/* /tmp/* /var/tmp/* && \
+  ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python && \
+  echo /usr/local/lib > /etc/ld.so.conf.d/local.conf && \
+  ldconfig
 
 RUN { \
     printf '%s\n' "if [ -n \"\${GITHUB_WORKSPACE:-}\" ]; then"; \
@@ -54,10 +58,12 @@ RUN wget --quiet https://raw.githubusercontent.com/gammasim/simtools/main/pyproj
     pip uninstall -y toml-to-requirements && \
     pip install --no-cache-dir -r requirements.txt
 
-ENV SIMTEL_PATH="/workdir/simulation_software/sim_telarray"
+ENV SIMTOOLS_SIM_TELARRAY_PATH="/workdir/simulation_software/sim_telarray"
+ENV SIMTOOLS_CORSIKA_PATH="/workdir/simulation_software/corsika7"
 ENV LD_LIBRARY_PATH="/workdir/simulation_software/hessioxxx/lib:\
 /workdir/simulation_software/stdtools/lib:\
-/workdir/simulation_software/sim_telarray/LightEmission/lib"
+/workdir/simulation_software/sim_telarray/LightEmission/lib:\
+/usr/local/lib"
 ENV PATH="/workdir/env/bin/:$PATH"
 SHELL ["/bin/bash", "-c"]
 

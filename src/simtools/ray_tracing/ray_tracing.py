@@ -233,6 +233,10 @@ class RayTracing:
 
         offsets = []
         for angle in angles_deg:
+            # avoid generating multiple identical offsets at zero angle
+            if np.isclose(angle, 0.0, rtol=0.0, atol=1e-12):
+                offsets.append((0.0, 0.0))
+                continue
             for direction in offset_directions:
                 if direction not in direction_map:
                     self._logger.warning(f"Unknown direction {direction}, skipping")
@@ -363,13 +367,13 @@ class RayTracing:
                 )
         return _focal_length
 
-    def simulate(self, test=False, force=False):
+    def simulate(self, test=False, force=False, compress_photons=True):
         """
         Run ray tracing simulations using sim_telarray.
 
         Generates photon lists for each off-axis angle and mirror configuration,
         simulating light propagation through telescope optics.
-        Output files are automatically compressed with gzip.
+        Output files are compressed with gzip if compress_photons is True.
 
         Parameters
         ----------
@@ -377,6 +381,8 @@ class RayTracing:
             Test flag will make it faster by simulating much fewer photons.
         force: bool
             Force flag will remove existing files and simulate again.
+        compress_photons: bool
+            If True, compress photon list files to ``.gz`` after simulation.
         """
         for off_x, off_y in self.off_axis_angle:
             for mirror_number, mirror_data in self.mirrors.items():
@@ -416,14 +422,15 @@ class RayTracing:
                         mirror_number=mirror_number if self.single_mirror_mode else None,
                     )
                 )
-                self._logger.debug(f"Using gzip to compress the photons file {photons_file}.")
+                if compress_photons:
+                    self._logger.debug(f"Using gzip to compress the photons file {photons_file}.")
 
-                with open(photons_file, "rb") as f_in:
-                    with gzip.open(
-                        photons_file.with_suffix(photons_file.suffix + ".gz"), "wb"
-                    ) as f_out:
-                        shutil.copyfileobj(f_in, f_out)
-                photons_file.unlink()
+                    with open(photons_file, "rb") as f_in:
+                        with gzip.open(
+                            photons_file.with_suffix(photons_file.suffix + ".gz"), "wb"
+                        ) as f_out:
+                            shutil.copyfileobj(f_in, f_out)
+                    photons_file.unlink()
 
     def analyze(
         self,
@@ -508,7 +515,7 @@ class RayTracing:
             for mirror_number, mirror_data in self.mirrors.items():
                 self._logger.debug(f"Analyzing RayTracing for off_axis=({off_x:.3f}, {off_y:.3f})")
 
-                photons_file = self.output_directory.joinpath(
+                photons_file_lis = self.output_directory.joinpath(
                     self._generate_file_name(
                         "photons",
                         ".lis",
@@ -516,8 +523,11 @@ class RayTracing:
                         off_axis_y=off_y,
                         mirror_number=mirror_number,
                     )
-                    + ".gz"
                 )
+                photons_file_gz = photons_file_lis.with_suffix(photons_file_lis.suffix + ".gz")
+                photons_file = photons_file_gz
+                if not (use_rx and photons_file_gz.exists()) and photons_file_lis.exists():
+                    photons_file = photons_file_lis
 
                 # Calculate theta and phi for transmission calculation
                 theta_offset = np.sqrt(off_x**2 + off_y**2)
