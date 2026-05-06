@@ -3,7 +3,10 @@ applications:
 - application: simtools-simulate-prod-htcondor-generator
   configuration:
     apptainer_image: test.sif
-    array_layout_name: test_layout
+    array_layout_name:
+      by_version:
+        "<7.0.0": alpha
+        ">=7.0.0": CTAO-North-Alpha
     azimuth_angle: North
     core_scatter: 10 500 m
     corsika_he_interaction: epos
