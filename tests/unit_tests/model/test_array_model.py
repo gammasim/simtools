@@ -4,6 +4,7 @@ import copy
 import logging
 from unittest.mock import MagicMock, Mock, patch
 
+import numpy as np
 import pytest
 from astropy import units as u
 from astropy.table import QTable
@@ -99,6 +100,58 @@ def test_export_array_elements_as_table(array_model_north):
     assert isinstance(table_utm, QTable)
     assert "altitude" in table_utm.colnames
     assert len(table_utm) > 0
+
+
+def test_export_array_elements_as_table_with_calibration_elements_flag():
+    """Test optional inclusion of calibration array elements in exported table."""
+    array_model = Mock(spec=ArrayModel)
+    array_model.layout_name = "test_layout"
+    array_model.site_model = Mock()
+    array_model.site_model.site = "South"
+    array_model.model_version = "6.0.2"
+    array_model.label = "test"
+    array_model.overwrite_model_parameter_dict = None
+    array_model.array_elements = {"LSTS-01": None, "ILLS": None}
+
+    telescope_model = Mock()
+    telescope_model.position.return_value = [1.0 * u.m, 2.0 * u.m, 3.0 * u.m]
+    telescope_model.get_parameter_value_with_unit.return_value = 10.0 * u.m
+    array_model.telescope_models = {"LSTS-01": telescope_model}
+
+    with (
+        patch(
+            "simtools.model.array_model.names.get_collection_name_from_array_element_name"
+        ) as mock_collection,
+        patch("simtools.model.array_model.CalibrationModel") as mock_calibration_model,
+    ):
+        mock_collection.side_effect = lambda name: (
+            "calibration_devices" if name == "ILLS" else "telescopes"
+        )
+
+        calibration_model = Mock()
+
+        def _mock_calibration_parameter(parameter):
+            if parameter == "array_element_position_ground":
+                return [100.0 * u.m, 200.0 * u.m, 300.0 * u.m]
+            if parameter == "array_element_sphere_radius":
+                raise KeyError("array_element_sphere_radius")
+            raise KeyError(parameter)
+
+        calibration_model.get_parameter_value_with_unit.side_effect = _mock_calibration_parameter
+        mock_calibration_model.return_value = calibration_model
+
+        table_default = ArrayModel.export_array_elements_as_table(array_model)
+        assert "ILLS" not in table_default["telescope_name"]
+
+        table_with_calibration = ArrayModel.export_array_elements_as_table(
+            array_model, include_calibration_array_elements=True
+        )
+        assert "ILLS" in table_with_calibration["telescope_name"]
+        assert np.isnan(
+            table_with_calibration["sphere_radius"][
+                table_with_calibration["telescope_name"] == "ILLS"
+            ][0].to_value("m")
+        )
 
 
 def test_get_array_elements_from_list(array_model_north, site_model_north):
