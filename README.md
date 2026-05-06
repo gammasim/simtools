@@ -35,7 +35,7 @@ For users:
 pip install gammasimtools
 ```
 
-Copy [.env_template](https://github.com/gammasim/simtools/blob/main/.env_template) to `.env` and update the variables to set up your environment.
+Copy [.env_template](https://github.com/gammasim/simtools/blob/main/.env_template) to `.env` and update the files to set up your environment.
 
 For developers:
 
