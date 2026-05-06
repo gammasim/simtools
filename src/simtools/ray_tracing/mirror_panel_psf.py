@@ -134,9 +134,10 @@ class MirrorPanelPSF:
             label=rt_label,
             single_mirror_mode=True,
             mirror_numbers=[mirror_idx],
+            off_axis_angle=[(0.0, 0.0)],
         )
-        ray.simulate(test=self.args_dict.get("test", False), force=True)
-        ray.analyze(force=True, containment_fraction=fraction)
+        ray.simulate(test=self.args_dict.get("test", False), force=True, compress_photons=False)
+        ray.analyze(force=True, containment_fraction=fraction, export=False)
 
         return float(ray.get_psf_mm())
 
@@ -206,9 +207,27 @@ class MirrorPanelPSF:
         learning_rate = float(self.args_dict.get("learning_rate", 1e-3))
         bounds = self._rnda_bounds()
         fraction = self.fraction
+        eval_log_interval = int(self.args_dict.get("profile_log_every", 10))
+        eval_count = 0
+
+        def evaluate_with_progress(rnda_values, stage):
+            """Evaluate objective and emit periodic heartbeat logs."""
+            nonlocal eval_count
+            eval_count += 1
+            sim_value, pct_value, obj_value = self._evaluate(mirror_idx, measured_psf, rnda_values)
+            if eval_count == 1 or (eval_log_interval > 0 and eval_count % eval_log_interval == 0):
+                self._logger.info(
+                    "Mirror %d | eval %d | %s | sim %.3f mm | pct %.2f%%",
+                    mirror_idx,
+                    eval_count,
+                    stage,
+                    sim_value,
+                    pct_value,
+                )
+            return sim_value, pct_value, obj_value
 
         rnda = list(self.rnda_start)
-        sim, pct, obj = self._evaluate(mirror_idx, measured_psf, rnda)
+        sim, pct, obj = evaluate_with_progress(rnda, "initial")
         best = {"rnda": list(rnda), "sim": sim, "pct": abs(pct), "obj": obj}
 
         self._logger.info(
@@ -230,9 +249,11 @@ class MirrorPanelPSF:
                     param_value=param_value,
                     param_bounds=param_bounds,
                     learning_rate=learning_rate,
+                    evaluate_function=evaluate_with_progress,
+                    iteration=iteration + 1,
                 )
 
-            sim, pct, obj = self._evaluate(mirror_idx, measured_psf, rnda)
+            sim, pct, obj = evaluate_with_progress(rnda, f"iter{iteration + 1}_post_update")
             pct = abs(pct)
 
             old_rnda_str = "[" + ", ".join(f"{v:.4g}" for v in old_rnda) + "]"
@@ -276,6 +297,8 @@ class MirrorPanelPSF:
         param_value,
         param_bounds,
         learning_rate,
+        evaluate_function=None,
+        iteration=None,
     ):
         """
         Update a single RNDA parameter using finite-difference gradient descent.
@@ -289,6 +312,10 @@ class MirrorPanelPSF:
         param_value : float
         param_bounds : tuple of float
         learning_rate : float
+        evaluate_function : callable or None
+            Function used to evaluate objective. Falls back to self._evaluate when None.
+        iteration : int or None
+            Iteration number used for logging context.
 
         Returns
         -------
@@ -298,12 +325,18 @@ class MirrorPanelPSF:
         param_min, param_max = param_bounds
         is_log_param = param_idx != 1
         epsilon = max(1e-6, 0.05 * param_value) if is_log_param else 0.05
+        if evaluate_function is None:
+
+            def evaluate_function(rnda_values, _stage):
+                return self._evaluate(mirror_idx, measured_psf, rnda_values)
+
+        stage_prefix = f"iter{iteration}_p{param_idx}" if iteration is not None else f"p{param_idx}"
 
         rnda[param_idx] = min(param_max, param_value + epsilon)
-        _, _, f_plus = self._evaluate(mirror_idx, measured_psf, rnda)
+        _, _, f_plus = evaluate_function(rnda, f"{stage_prefix}_plus")
 
         rnda[param_idx] = max(param_min, param_value - epsilon)
-        _, _, f_minus = self._evaluate(mirror_idx, measured_psf, rnda)
+        _, _, f_minus = evaluate_function(rnda, f"{stage_prefix}_minus")
 
         rnda[param_idx] = param_value
         gradient = (f_plus - f_minus) / (2 * epsilon)
@@ -334,16 +367,30 @@ class MirrorPanelPSF:
         if self.args_dict.get("test"):
             n_mirrors = min(n_mirrors, self.args_dict.get("number_of_mirrors_to_test"))
 
-        n_workers = int(self.args_dict.get("n_workers") or os.cpu_count())
-        parent = MirrorPanelPSF(self.label, dict(self.args_dict))
-        worker_args = [(parent, i, parent.measured_data[i]) for i in range(n_mirrors)]
+        if n_mirrors > self.telescope_model.mirrors.number_of_mirrors:
+            raise ValueError(
+                f"Number of mirrors to optimize ({n_mirrors}) exceeds the number of "
+                f" mirrors in the model ({self.telescope_model.mirrors.number_of_mirrors})"
+            )
 
-        self.per_mirror_results = process_pool_map_ordered(
-            _optimize_single_mirror_worker,
-            worker_args,
-            max_workers=n_workers,
-            mp_start_method="fork",
-        )
+        if self.args_dict.get("profile_serial", False):
+            self._logger.info(
+                "Running serial optimization mode (--profile_serial) for profiler visibility"
+            )
+            self.per_mirror_results = [
+                self.optimize_single_mirror(i, self.measured_data[i]) for i in range(n_mirrors)
+            ]
+        else:
+            n_workers = int(self.args_dict.get("n_workers") or os.cpu_count())
+            parent = MirrorPanelPSF(self.label, dict(self.args_dict))
+            worker_args = [(parent, i, parent.measured_data[i]) for i in range(n_mirrors)]
+
+            self.per_mirror_results = process_pool_map_ordered(
+                _optimize_single_mirror_worker,
+                worker_args,
+                max_workers=n_workers,
+                mp_start_method="fork",
+            )
 
         self.rnda_opt = np.mean(
             [r.optimized_rnda for r in self.per_mirror_results], axis=0
