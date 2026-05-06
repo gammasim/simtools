@@ -18,6 +18,9 @@ tmp_dir (str, optional)
     Temporary directory for cloning the repository (default: ./tmp_model_parameters).
 max_attempts (int, optional)
     Maximum number of attempts to clone the repository in case of network failures (default: 3).
+repository_dir (str, optional)
+    Path to an existing simulation-models repository directory. If provided,
+    cloning is skipped and this path is used directly.
 
 Examples
 --------
@@ -70,6 +73,12 @@ def _add_arguments(parser):
         default=3,
         required=False,
     )
+    parser.add_argument(
+        "--repository_dir",
+        help="Path to existing simulation model repository directory (optional).",
+        type=str,
+        required=False,
+    )
 
 
 def main():
@@ -101,9 +110,12 @@ def main():
         db=db,
         db_simulation_model=app_context.args.get("db_simulation_model"),
         db_simulation_model_version=app_context.args.get("db_simulation_model_version"),
-        repository_url=DEFAULT_SIMULATION_MODELS,
+        repository_url=(
+            None if app_context.args.get("repository_dir") else DEFAULT_SIMULATION_MODELS
+        ),
         repository_branch=app_context.args.get("branch"),
         max_attempts=app_context.args.get("max_attempts"),
+        repository_dir=app_context.args.get("repository_dir"),
     )
 
 
