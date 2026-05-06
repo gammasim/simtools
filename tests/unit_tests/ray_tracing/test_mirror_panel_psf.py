@@ -151,6 +151,7 @@ def test_optimize_with_gradient_descent_limits_mirrors_in_test_mode(mocker):
         args_dict={"test": True, "number_of_mirrors_to_test": 2, "n_workers": 4}
     )
     inst.measured_data = [10.0, 11.0, 12.0]
+    inst.telescope_model.mirrors = SimpleNamespace(number_of_mirrors=3)
 
     parent_stub = SimpleNamespace(measured_data=list(inst.measured_data))
     mocker.patch.object(mpp, "MirrorPanelPSF", return_value=parent_stub)
