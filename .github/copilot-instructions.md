@@ -306,12 +306,13 @@ make linkcheck              # Check links
 4. **Error messages:** no `logger.error`, put the error message into the error (e.g. `ValueError("Invalid type")`) and always do `from exc`
 5. **Mock external deps:** DB, file I/O, network must be mocked in unit tests
 6. **Use tmp_test_directory** for file I/O (NOT `tmp_path` or `/tmp/`)
-7. **Study patterns:** Check existing code before implementing
-8. **Document:** NumPy-style docstrings, 70%+ coverage required
-9. **Make minimal changes:** Understand codebase first
-10. **No premature optimization:** Clarity > speed
-11. **Golden Rule:** If code is hard to understand, refactor it
-12. **Cognitive Complexity:** Keep it below 15
+7. **Do not hardcode `/tmp/` paths in tests** (including CLI argument values); always derive test paths from `tmp_test_directory`
+8. **Study patterns:** Check existing code before implementing
+9. **Document:** NumPy-style docstrings, 70%+ coverage required
+10. **Make minimal changes:** Understand codebase first
+11. **No premature optimization:** Clarity > speed
+12. **Golden Rule:** If code is hard to understand, refactor it
+13. **Cognitive Complexity:** Keep it below 15
 
 **Validation:** 100% statement coverage for library code.
 
