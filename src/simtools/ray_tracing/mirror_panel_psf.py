@@ -367,6 +367,12 @@ class MirrorPanelPSF:
         if self.args_dict.get("test"):
             n_mirrors = min(n_mirrors, self.args_dict.get("number_of_mirrors_to_test"))
 
+        if n_mirrors > self.telescope_model.mirrors.number_of_mirrors:
+            raise ValueError(
+                f"Number of mirrors to optimize ({n_mirrors}) exceeds the number of "
+                f" mirrors in the model ({self.telescope_model.mirrors.number_of_mirrors})"
+            )
+
         if self.args_dict.get("profile_serial", False):
             self._logger.info(
                 "Running serial optimization mode (--profile_serial) for profiler visibility"
