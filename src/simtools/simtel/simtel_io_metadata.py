@@ -158,7 +158,7 @@ def _guess_telescope_name_for_legacy_files(tel_counter, file):
     str, None
         Guessed telescope name or None if not found.
     """
-    telescope_list = _get_telescope_list_from_input_card(file)
+    telescope_list = _legacy_merge_msts(_get_telescope_list_from_input_card(file))
     try:
         return names.validate_array_element_name(telescope_list[tel_counter])
     except (IndexError, ValueError):
@@ -190,13 +190,54 @@ def _get_telescope_list_from_input_card(file):
     list
         List of telescope names as found in CORSIKA input card.
     """
+    tel_re = re.compile(
+        r"^TELESCOPE\s+"
+        r"[-\d.E]+\s+[-\d.E]+\s+[-\d.E]+\s+[-\d.E]+\s+"
+        r"#\s*\(ID=\d+\)\s+"
+        r"([A-Z0-9]+)\s+"  # MSTS / LSTS / SSTS / MST2 / LSTN / MSTN
+        r"(\d+)\s+"  # numeric telescope id
+        r"[A-Z0-9]+",  # internal label (ignored)
+        re.MULTILINE,
+    )
+
     with EventIOFile(file) as f:
         for o in f:
             if isinstance(o, InputCard):
-                input_card = o.parse().decode("utf-8")
-                regex = (
-                    r"TELESCOPE\s+[-\d.E]+\s+[-\d.E]+\s+[-\d.E]+\s+[-\d.E]+\s+"
-                    r"# \(ID=\d+\)\s+(LST[N|S]|MST[N|S]|S[S|C]TS)\s+([^\s]+)"
-                )
-                return [f"{m[0]}-{m[1]}" for m in re.findall(regex, input_card)]
+                text = o.parse().decode("utf-8")
+
+                return [f"{tel_type}-{tel_id}" for tel_type, tel_id in tel_re.findall(text)]
+
     return []
+
+
+def _legacy_merge_msts(msts):
+    """
+    Merge MSTS/MSTN + MST2 into a single class-specific MSTS/MSTN list.
+
+    Expect that main list first element is a MSTS/MSTN telescopes.
+    This function is very specific and intended for legacy files
+    generated for prod6, where metadata is incomplete.
+
+    Parameters
+    ----------
+    msts: list
+        List of MSTs
+    mst2: list
+        List of additional MSTs
+
+    Returns
+    -------
+    list
+        List of merged telescopes.
+    """
+    mst2_list = [s for s in msts if re.search(r"MST2", s)]
+    if not mst2_list or len(msts) < 1:
+        return msts
+    mst_list = [s for s in msts if not re.search(r"MST2", s)]
+    mst_numbers = [int(num) for s in mst_list if "MST" in s for num in re.findall(r"\d+", s)]
+    max_mst_id = max(mst_numbers) if mst_numbers else 0
+    site = names.get_site_from_array_element_name(msts[0])
+    site_char = "S" if site.lower() == "south" else "N"
+    mst_list += [f"MST{site_char}-{max_mst_id + i + 1}" for i, _ in enumerate(mst2_list)]
+
+    return mst_list
