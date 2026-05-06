@@ -60,7 +60,7 @@ def _get_submit_file(executable, apptainer_image, priority, n_jobs):
     ----------
     executable: str
         Name of the executable script.
-    apptainer_image: str
+    apptainer_image: Path
         Path to the Apptainer image.
     priority: int
         Priority of the job.

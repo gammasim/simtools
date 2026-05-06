@@ -2,7 +2,7 @@
 applications:
 - application: simtools-simulate-prod-htcondor-generator
   configuration:
-    apptainer_image: test.sif
+    apptainer_image: tests/resources/dummy_apptainer_image.sif
     array_layout_name:
       by_version:
         "<7.0.0": alpha
