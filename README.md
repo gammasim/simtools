@@ -27,6 +27,26 @@
 - Standardized interfaces and outputs independent of the simulation software (e.g., [CORSIKA](https://www.iap.kit.edu/corsika/) air shower simulations and [sim_telarray](https://www.mpi-hd.mpg.de/hfm/~bernlohr/sim_telarray/) telescope simulations)
 - I/O and reporting tools for the simulation model and production database
 
+## Quick Start
+
+For users:
+
+```console
+pip install gammasimtools
+```
+
+Copy [.env_template](https://github.com/gammasim/simtools/blob/main/.env_template) to `.env` and update the file to set up your environment.
+
+For developers:
+
+```console
+git clone https://github.com/gammasim/simtools.git
+cd simtools
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e '.[tests,dev,doc]'
+```
+
 ## Citing this Software
 
 Please cite this software if it is used for a publication, see the [Zenodo record](https://doi.org/10.5281/zenodo.6346696) and [CITATION.cff](https://github.com/gammasim/simtools/blob/main/CITATION.cff).
