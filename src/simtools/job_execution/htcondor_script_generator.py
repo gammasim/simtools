@@ -17,6 +17,10 @@ def generate_submission_script(args_dict):
     args_dict: dict
         Arguments dictionary.
     """
+    apptainer_image = Path(args_dict["apptainer_image"])
+    if not apptainer_image.is_file():
+        raise FileNotFoundError(f"Apptainer image file not found: {apptainer_image}")
+
     work_dir = Path(args_dict["output_path"])
     log_dir = work_dir / "logs"
     work_dir.mkdir(parents=True, exist_ok=True)
@@ -28,7 +32,7 @@ def generate_submission_script(args_dict):
         submit_file_handle.write(
             _get_submit_file(
                 f"{submit_file_name}.sh",
-                args_dict["apptainer_image"],
+                apptainer_image,
                 args_dict["priority"],
                 +args_dict["number_of_runs"],
             )
