@@ -77,6 +77,39 @@ def test_get_list_of_array_layouts(model_version):
     assert "test_layout" in _north.get_list_of_array_layouts()
 
 
+def test_get_array_elements_of_type_uses_correct_collection(model_version, mocker):
+    _south = SiteModel(
+        site="South",
+        label="testing-sitemodel",
+        model_version=model_version,
+    )
+
+    mock_get_array_elements = mocker.patch.object(
+        _south.db,
+        "get_array_elements_of_type",
+        return_value=["ILLS-01"],
+    )
+
+    result = _south.get_array_elements_of_type("ILLS")
+
+    assert result == ["ILLS-01"]
+    mock_get_array_elements.assert_called_once_with(
+        array_element_type="ILLS",
+        model_version=model_version,
+        collection="calibration_devices",
+    )
+
+
+def test_get_array_elements_of_type_returns_empty_for_invalid_type(model_version):
+    _south = SiteModel(
+        site="South",
+        label="testing-sitemodel",
+        model_version=model_version,
+    )
+
+    assert _south.get_array_elements_of_type("MSTE") == []
+
+
 def test_export_atmospheric_transmission_file(model_version, tmp_path, mocker):
     _south = SiteModel(
         site="South",
