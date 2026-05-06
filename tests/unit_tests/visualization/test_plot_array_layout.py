@@ -901,8 +901,16 @@ def test_plot_array_layouts(monkeypatch, tmp_path):
     assert called["save_figure"]
 
 
-def test_plot_array_layouts_default_filename_includes_model_version(monkeypatch, tmp_path):
-    """Test default output filename contains model version and site."""
+@pytest.mark.parametrize(
+    ("figure_name", "expected_filename"),
+    [
+        (None, "array_layout_alpha_North_ground_6.0.0"),
+        ("custom_name", "custom_name"),
+    ],
+    ids=["default_filename_includes_model_version", "figure_name_override"],
+)
+def test_plot_array_layouts_filename(monkeypatch, tmp_path, figure_name, expected_filename):
+    """Test output filename: default includes model version/site; explicit figure_name overrides it."""
 
     captured = {"name": None}
 
@@ -927,7 +935,7 @@ def test_plot_array_layouts_default_filename_includes_model_version(monkeypatch,
         "padding": 0.1,
         "x_lim": None,
         "y_lim": None,
-        "figure_name": None,
+        "figure_name": figure_name,
         "site": "North",
         "coordinate_system": "ground",
         "model_version": "6.0.0",
@@ -949,55 +957,4 @@ def test_plot_array_layouts_default_filename_includes_model_version(monkeypatch,
 
     pal.plot_array_layouts(args_dict, tmp_path, layouts)
 
-    assert captured["name"] == "array_layout_alpha_North_ground_6.0.0"
-
-
-def test_plot_array_layouts_uses_figure_name_override(monkeypatch, tmp_path):
-    """Test explicit --figure_name overrides default filename generation."""
-
-    captured = {"name": None}
-
-    def dummy_plot_array_layout(**kwargs):
-        return Mock()
-
-    def dummy_save_figure(fig, path, dpi):
-        del fig, dpi
-        captured["name"] = path.name
-
-    monkeypatch.setattr(pal, "plot_array_layout", dummy_plot_array_layout)
-    monkeypatch.setattr(pal.visualize, "save_figure", dummy_save_figure)
-
-    args_dict = {
-        "show_labels": False,
-        "axes_range": 100,
-        "marker_scaling": 1.0,
-        "grayed_out_array_elements": [],
-        "highlighted_array_elements": [],
-        "legend_location": "best",
-        "bounds": "exact",
-        "padding": 0.1,
-        "x_lim": None,
-        "y_lim": None,
-        "figure_name": "custom_name",
-        "site": "North",
-        "coordinate_system": "ground",
-        "model_version": "6.0.0",
-    }
-    layouts = [
-        {
-            "array_elements": QTable(
-                {
-                    "telescope_name": ["LSTN-01"],
-                    "position_x": [0] * u.m,
-                    "position_y": [0] * u.m,
-                    "sphere_radius": [12] * u.m,
-                }
-            ),
-            "name": "alpha",
-            "site": "North",
-        }
-    ]
-
-    pal.plot_array_layouts(args_dict, tmp_path, layouts)
-
-    assert captured["name"] == "custom_name"
+    assert captured["name"] == expected_filename

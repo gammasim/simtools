@@ -246,6 +246,14 @@ def test_data_simple_columns():
         assert isinstance(description, str)
 
 
+def test_data_columns_nsb_reference_spectrum():
+    columns, description = simtel_table_reader._data_columns_nsb_reference_spectrum()
+    expected_columns, expected_description = simtel_table_reader._data_columns_nsb_spectrum()
+
+    assert columns == expected_columns
+    assert description == expected_description
+
+
 def test_data_columns_mirror_reflectivity():
     columns, description = simtel_table_reader._data_columns_mirror_reflectivity(2, ["0", "20"])
     assert columns == [
