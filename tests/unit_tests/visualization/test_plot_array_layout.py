@@ -17,6 +17,7 @@ from simtools.visualization.plot_array_layout import (
     PlotBounds,
     create_patches,
     finalize_plot,
+    generate_plot_combinations,
     get_patches,
     get_positions,
     get_sphere_radius,
@@ -958,3 +959,48 @@ def test_plot_array_layouts_filename(monkeypatch, tmp_path, figure_name, expecte
     pal.plot_array_layouts(args_dict, tmp_path, layouts)
 
     assert captured["name"] == expected_filename
+
+
+def test_generate_plot_combinations_default():
+    """Test generate_plot_combinations with explicit site and model version."""
+    args = {
+        "model_version": "1.0.0",
+        "site": "North",
+        "all_model_versions": False,
+        "all_sites": False,
+    }
+
+    combinations = list(generate_plot_combinations(args))
+
+    assert combinations == [("1.0.0", "North")]
+
+
+def test_generate_plot_combinations_all_sites_and_versions(monkeypatch):
+    """Test generate_plot_combinations with all sites and model versions enabled."""
+    args = {
+        "model_version": None,
+        "site": None,
+        "all_model_versions": True,
+        "all_sites": True,
+    }
+
+    mock_db_instance = Mock()
+    mock_db_instance.get_model_versions.return_value = ["6.0.0", "7.0.0"]
+
+    monkeypatch.setattr(
+        "simtools.visualization.plot_array_layout.db_handler.DatabaseHandler",
+        Mock(return_value=mock_db_instance),
+    )
+    monkeypatch.setattr(
+        "simtools.visualization.plot_array_layout.names.site_names",
+        Mock(return_value=["North", "South"]),
+    )
+
+    combinations = list(generate_plot_combinations(args))
+
+    assert combinations == [
+        ("6.0.0", "North"),
+        ("6.0.0", "South"),
+        ("7.0.0", "North"),
+        ("7.0.0", "South"),
+    ]
