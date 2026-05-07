@@ -313,7 +313,9 @@ def get_array_layouts_from_parameter_file(
     ]
 
 
-def get_array_layouts_from_db(layout_name, site, model_version, coordinate_system="ground"):
+def get_array_layouts_from_db(
+    layout_name, site, model_version, coordinate_system="ground", ignore_software_version=False
+):
     """
     Retrieve all array layouts from the database and return as list of astropy tables.
 
@@ -327,6 +329,8 @@ def get_array_layouts_from_db(layout_name, site, model_version, coordinate_syste
         Model version to retrieve.
     coordinate_system : str
         Coordinate system to use for the array elements (default is "ground").
+    ignore_software_version : bool
+        If True, skip the software version compatibility check.
 
     Returns
     -------
@@ -337,11 +341,22 @@ def get_array_layouts_from_db(layout_name, site, model_version, coordinate_syste
     if layout_name:
         layout_names = gen.ensure_iterable(layout_name)
     else:
-        site_model = SiteModel(site=site, model_version=model_version)
+        site_model = SiteModel(
+            site=site,
+            model_version=model_version,
+            ignore_software_version=ignore_software_version,
+        )
         layout_names = site_model.get_list_of_array_layouts()
 
     layouts = [
-        _get_array_layout_dict(model_version, site, None, _layout_name, coordinate_system)
+        _get_array_layout_dict(
+            model_version,
+            site,
+            None,
+            _layout_name,
+            coordinate_system,
+            ignore_software_version,
+        )
         for _layout_name in layout_names
     ]
     if len(layouts) == 1:
@@ -350,7 +365,7 @@ def get_array_layouts_from_db(layout_name, site, model_version, coordinate_syste
 
 
 def get_array_layouts_using_telescope_lists_from_db(
-    telescope_lists, site, model_version, coordinate_system="ground"
+    telescope_lists, site, model_version, coordinate_system="ground", ignore_software_version=False
 ):
     """
     Retrieve array layouts from the database using telescope lists.
@@ -365,6 +380,8 @@ def get_array_layouts_using_telescope_lists_from_db(
         Model version to retrieve.
     coordinate_system : str
         Coordinate system to use for the array elements (default is "ground").
+    ignore_software_version : bool
+        If True, skip the software version compatibility check.
 
     Returns
     -------
@@ -385,7 +402,14 @@ def get_array_layouts_using_telescope_lists_from_db(
             _site = sites.pop()
 
         layouts.append(
-            _get_array_layout_dict(model_version, _site, telescope_list, None, coordinate_system)
+            _get_array_layout_dict(
+                model_version,
+                _site,
+                telescope_list,
+                None,
+                coordinate_system,
+                ignore_software_version,
+            )
         )
     return layouts
 
@@ -416,13 +440,21 @@ def get_array_layouts_from_file(file_path):
     ]
 
 
-def _get_array_layout_dict(model_version, site, telescope_list, layout_name, coordinate_system):
+def _get_array_layout_dict(
+    model_version,
+    site,
+    telescope_list,
+    layout_name,
+    coordinate_system,
+    ignore_software_version=False,
+):
     """Return array layout dictionary for a given telescope list."""
     array_model = ArrayModel(
         model_version=model_version,
         site=site,
         array_elements=telescope_list,
         layout_name=layout_name,
+        ignore_software_version=ignore_software_version,
     )
     return {
         "name": layout_name if layout_name else "list",
@@ -484,12 +516,14 @@ def read_layouts(args_dict):
             - list or None: Background layout or None if not provided.
     """
     background_layout = None
+    ignore_software_version = args_dict.get("ignore_software_version", False)
     if args_dict.get("array_layout_name_background"):
         background_layout = get_array_layouts_from_db(
             args_dict["array_layout_name_background"],
             args_dict["site"],
             args_dict["model_version"],
             args_dict["coordinate_system"],
+            ignore_software_version,
         )["array_elements"]
 
     if args_dict["array_layout_parameter_file"] is not None:
@@ -508,6 +542,7 @@ def read_layouts(args_dict):
             args_dict["site"],
             args_dict["model_version"],
             args_dict["coordinate_system"],
+            ignore_software_version,
         )
         if isinstance(layouts, list):
             return layouts, background_layout
@@ -523,6 +558,7 @@ def read_layouts(args_dict):
             args_dict["site"],
             args_dict["model_version"],
             args_dict["coordinate_system"],
+            ignore_software_version,
         ), background_layout
 
     return [], background_layout
