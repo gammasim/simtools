@@ -905,7 +905,7 @@ def test_plot_array_layouts(monkeypatch, tmp_path):
 @pytest.mark.parametrize(
     ("figure_name", "expected_filename"),
     [
-        (None, "array_layout_alpha_North_ground_6.0.0"),
+        (None, "array_layout_alpha_North_ground_6-0-0"),
         ("custom_name", "custom_name"),
     ],
     ids=["default_filename_includes_model_version", "figure_name_override"],

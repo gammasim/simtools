@@ -113,7 +113,7 @@ def plot_array_layouts(args_dict, output_path, layouts, background_layout=None):
         )
 
         model_version_string = (
-            f"_{args_dict['model_version']}" if args_dict["model_version"] else ""
+            f"_{args_dict['model_version'].replace('.', '-')}" if args_dict["model_version"] else ""
         )
         plot_file_name = args_dict["figure_name"] or (
             f"array_layout_{layout['name']}{site_string}{coordinate_system_string}"
