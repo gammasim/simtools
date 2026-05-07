@@ -163,13 +163,54 @@ class PSFImage:
         """
         self._logger.info(f"Reading sim_telarray photon file {photons_file}")
         self._total_photons = 0
-        if Path(photons_file).suffix == ".gz":
-            file_open_function = gzip.open
-        else:
-            file_open_function = open
+        file_open_function = gzip.open if Path(photons_file).suffix == ".gz" else open
+
+        # Local variables avoid repeated attribute lookups in the tight parsing loop.
+        total_photons = 0
+        total_area = self._total_area
+        cos_camera_rotation = self.cos_camera_rotation
+        sin_camera_rotation = self.sin_camera_rotation
+        photon_pos_x = []
+        photon_pos_y = []
+
         with file_open_function(photons_file, "rb") as f:
             for line in f:
-                self._process_simtel_line(line)
+                if b"falling on an area of" in line:
+                    words = line.split()
+                    total_photons += int(words[4])
+                    total_area_in_file = float(words[14])
+                    if total_area is None:
+                        total_area = total_area_in_file
+                    elif total_area_in_file != total_area:
+                        self._logger.warning(
+                            "Conflicting value of the total area found"
+                            f" {total_area} != {total_area_in_file}"
+                            " - Keeping the original value"
+                        )
+                    continue
+
+                if b"Camera rotation angle" in line:
+                    words = line.split()
+                    camera_rotation_angle = np.deg2rad(float(words[5]))
+                    cos_camera_rotation = np.cos(camera_rotation_angle)
+                    sin_camera_rotation = np.sin(camera_rotation_angle)
+                    continue
+
+                if b"#" in line or not line.strip():
+                    continue
+
+                # Photon positions from cols 2 and 3; apply camera rotation.
+                words = line.split()
+                x, y = float(words[2]), float(words[3])
+                photon_pos_x.append(x * cos_camera_rotation - y * sin_camera_rotation)
+                photon_pos_y.append(y * cos_camera_rotation + x * sin_camera_rotation)
+
+        self._total_photons = total_photons
+        self._total_area = total_area
+        self.cos_camera_rotation = cos_camera_rotation
+        self.sin_camera_rotation = sin_camera_rotation
+        self.photon_pos_x = np.asarray(photon_pos_x)
+        self.photon_pos_y = np.asarray(photon_pos_y)
 
         if not self._is_photon_positions_ok():
             raise RuntimeError(
