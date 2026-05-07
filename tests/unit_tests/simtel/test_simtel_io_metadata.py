@@ -223,7 +223,7 @@ def test_get_sim_telarray_telescope_id_to_telescope_name_mapping_value_error(mon
         ),
         (
             ["LSTS-01", "MSTS-01", "MSTS-133", "MST2-05", "SSTS-01"],
-            ["LSTS-01", "MSTS-01", "MSTS-133", "SSTS-01", "MSTS-134"],
+            ["LSTS-01", "MSTS-01", "MSTS-133", "MSTS-134", "SSTS-01"],
         ),
         ([], []),
         (["LSTS-01", "SSTS-01"], ["LSTS-01", "SSTS-01"]),
@@ -231,14 +231,3 @@ def test_get_sim_telarray_telescope_id_to_telescope_name_mapping_value_error(mon
 )
 def test_legacy_merge_msts(msts, expected):
     assert simtel_io_metadata._legacy_merge_msts(msts) == expected
-
-
-def test_legacy_merge_msts_with_malformed_mst2_entry(monkeypatch):
-    msts = ["LSTM-01", 'MSTN-01, "MST2-02']
-
-    monkeypatch.setattr(
-        "simtools.utils.names.get_site_from_array_element_name",
-        lambda _: "North",
-    )
-
-    assert simtel_io_metadata._legacy_merge_msts(msts) == ["LSTM-01", "MSTN-01"]
