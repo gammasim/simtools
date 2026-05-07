@@ -18,9 +18,10 @@ def add_complete_model(
     db,
     db_simulation_model,
     db_simulation_model_version,
-    repository_url,
+    repository_url=None,
     repository_branch=None,
     max_attempts=3,
+    repository_dir=None,
 ):
     """
     Upload a complete model including model parameters and production tables to the database.
@@ -37,12 +38,15 @@ def add_complete_model(
         Name of the simulation model in the database.
     db_simulation_model_version : str
         Version of the simulation model in the database.
-    repository_url : str
+    repository_url : str, optional
         URL of the simulation model repository to clone.
     repository_branch : str, optional
         Branch of the repository to use. If None, the default branch is used.
     max_attempts : int, optional
         Maximum number of attempts to clone the repository in case of network failures (default: 3).
+    repository_dir : Path or str, optional
+        Existing simulation-models repository directory. If provided, this directory is used
+        directly and no repository cloning is performed.
 
     Returns
     -------
@@ -52,22 +56,32 @@ def add_complete_model(
     if not _confirm_remote_database_upload(db):
         return
 
-    repository_dir = None
+    should_cleanup = False
+    clone_target_dir = None
     try:
-        repository_dir = clone_simulation_model_repository(
-            tmp_dir,
-            repository_url,
-            db_simulation_model_version=db_simulation_model_version,
-            repository_branch=repository_branch,
-            max_attempts=max_attempts,
-        )
+        if repository_dir:
+            clone_target_dir = Path(repository_dir).resolve()
+            _validate_repository_directory_structure(clone_target_dir)
+            logger.info(f"Uploading simulation model from directory {clone_target_dir}")
+        else:
+            if not repository_url:
+                raise ValueError("Either repository_url or repository_dir must be provided")
+            clone_target_dir = clone_simulation_model_repository(
+                tmp_dir,
+                repository_url,
+                db_simulation_model_version=db_simulation_model_version,
+                repository_branch=repository_branch,
+                max_attempts=max_attempts,
+            )
+            should_cleanup = True
+            logger.info(f"Uploading simulation model from cloned repository {clone_target_dir}")
 
         add_model_parameters_to_db(
-            input_path=repository_dir / "simulation-models" / "model_parameters", db=db
+            input_path=clone_target_dir / "simulation-models" / "model_parameters", db=db
         )
 
         add_production_tables_to_db(
-            input_path=repository_dir / "simulation-models" / "productions", db=db
+            input_path=clone_target_dir / "simulation-models" / "productions", db=db
         )
 
         db.generate_compound_indexes_for_databases(
@@ -78,8 +92,8 @@ def add_complete_model(
     except Exception as exc:
         raise RuntimeError(f"Upload of simulation model failed: {exc}") from exc
     finally:
-        if repository_dir is not None and repository_dir.exists():
-            shutil.rmtree(repository_dir)
+        if should_cleanup and clone_target_dir is not None and clone_target_dir.exists():
+            shutil.rmtree(clone_target_dir)
 
     logger.info("Upload of simulation model completed successfully")
 
@@ -319,6 +333,27 @@ def _confirm_remote_database_upload(db):
     except (EOFError, KeyboardInterrupt):
         logger.info(abort_message)
         return False
+
+
+def _validate_repository_directory_structure(repository_dir):
+    """Validate repository directory structure required for DB upload."""
+    repository_dir = Path(repository_dir)
+
+    if not repository_dir.exists():
+        raise FileNotFoundError(f"Repository directory does not exist: {repository_dir}")
+
+    required_subdirs = [
+        repository_dir / "simulation-models" / "model_parameters",
+        repository_dir / "simulation-models" / "productions",
+    ]
+
+    for required_subdir in required_subdirs:
+        if not required_subdir.exists():
+            raise FileNotFoundError(
+                f"Expected directory not found: {required_subdir}. "
+                "Expected simulation-models/model_parameters and simulation-models/productions "
+                "under repository_dir."
+            )
 
 
 def clone_simulation_model_repository(
