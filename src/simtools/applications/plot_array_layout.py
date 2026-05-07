@@ -288,23 +288,16 @@ def main():
                 {
                     "model_version": model_version,
                     "site": site,
+                    "ignore_software_version": True,
                 }
             )
-            try:
-                layouts, background_layout = layout_utils.read_layouts(run_args)
-                plot_array_layouts(
-                    run_args,
-                    app_context.io_handler.get_output_directory(),
-                    layouts,
-                    background_layout,
-                )
-            except ValueError as exc:
-                if "does not match <" in str(exc):
-                    app_context.logger.warning(
-                        f"Skipping site {site}, model version {model_version}: {exc}"
-                    )
-                    continue
-                raise
+            layouts, background_layout = layout_utils.read_layouts(run_args)
+            plot_array_layouts(
+                run_args,
+                app_context.io_handler.get_output_directory(),
+                layouts,
+                background_layout,
+            )
     else:
         layouts, background_layout = layout_utils.read_layouts(app_context.args)
         plot_array_layouts(
