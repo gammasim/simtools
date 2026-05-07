@@ -74,6 +74,7 @@ RUN yum update -y --setopt=tsflags=nodocs && \
 
 WORKDIR /workdir/simulation_software
 COPY --from=source_preparation /src .
+COPY --from=source_preparation /src/corsika7/bernlohr/iact.c /tmp/iact.c
 
 # Install autoconf 2.71 - needed to apply CORSIKA patches
 WORKDIR /workdir/simulation_software/autoconf-2.71
@@ -126,7 +127,10 @@ RUN ls ../config_*.h && for config_file in ../config_*.h; do \
 
 # Generate build_opts.yml with build information
 RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
-    IACT_ATMO_VERSION=$(grep -o '#define IACT_ATMO_VERSION "[^"]*"' bernlohr/iact.c | sed 's/#define IACT_ATMO_VERSION "\(.*\)"/\1/' || echo "unknown") && \
+    IACT_ATMO_VERSION=$(awk '/#[[:space:]]*define[[:space:]]+IACT_ATMO_VERSION[[:space:]]+"/{match($0, /"[^"]*"/); if (RSTART) {print substr($0, RSTART + 1, RLENGTH - 2); exit}}' /tmp/iact.c) && \
+    if [ -z "${IACT_ATMO_VERSION}" ]; then \
+        IACT_ATMO_VERSION="unknown"; \
+    fi && \
     { \
         echo "corsika_version: \"${CORSIKA_VERSION}\""; \
         echo "corsika_opt_patch_version: \"${CORSIKA_OPT_PATCH_VERSION}\""; \
