@@ -17,6 +17,16 @@ def generate_submission_script(args_dict):
     args_dict: dict
         Arguments dictionary.
     """
+    apptainer_image_arg = args_dict["apptainer_image"]
+    if apptainer_image_arg is None or (
+        isinstance(apptainer_image_arg, str) and not apptainer_image_arg.strip()
+    ):
+        raise ValueError("Missing required apptainer_image path.")
+
+    apptainer_image = Path(apptainer_image_arg)
+    if not apptainer_image.is_file():
+        raise FileNotFoundError(f"Apptainer image file not found: {apptainer_image}")
+
     work_dir = Path(args_dict["output_path"])
     log_dir = work_dir / "logs"
     work_dir.mkdir(parents=True, exist_ok=True)
@@ -28,7 +38,7 @@ def generate_submission_script(args_dict):
         submit_file_handle.write(
             _get_submit_file(
                 f"{submit_file_name}.sh",
-                args_dict["apptainer_image"],
+                apptainer_image,
                 args_dict["priority"],
                 +args_dict["number_of_runs"],
             )
@@ -50,7 +60,7 @@ def _get_submit_file(executable, apptainer_image, priority, n_jobs):
     ----------
     executable: str
         Name of the executable script.
-    apptainer_image: str
+    apptainer_image: Path
         Path to the Apptainer image.
     priority: int
         Priority of the job.
