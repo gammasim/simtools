@@ -148,7 +148,7 @@ def test_print_parameters_not_found_handles_scalar_and_array(monkeypatch):
     monkeypatch.setattr(converter.simtel_config_reader, "SimtelConfigReader", _reader_factory)
 
     warning_messages = []
-    monkeypatch.setattr(converter._logger, "warning", lambda msg: warning_messages.append(msg))
+    monkeypatch.setattr(converter.logger, "warning", lambda msg: warning_messages.append(msg))
 
     converter.print_parameters_not_found(
         ["missing_a"],
@@ -259,7 +259,7 @@ def test_read_and_export_parameters_logs_file_name(monkeypatch, tmp_test_directo
     )
 
     info_messages = []
-    monkeypatch.setattr(converter._logger, "info", lambda msg: info_messages.append(msg))
+    monkeypatch.setattr(converter.logger, "info", lambda msg: info_messages.append(msg))
 
     converter.read_and_export_parameters(args_dict, _IOHandler())
 
@@ -278,7 +278,7 @@ def test_print_parameters_not_found_equal_values(monkeypatch):
     )
 
     info_messages = []
-    monkeypatch.setattr(converter._logger, "info", lambda msg: info_messages.append(msg))
+    monkeypatch.setattr(converter.logger, "info", lambda msg: info_messages.append(msg))
 
     converter.print_parameters_not_found([], ["equal_param"], args_dict)
 
@@ -298,7 +298,7 @@ def test_print_list_of_files(monkeypatch, tmp_test_directory):
     )
 
     info_messages = []
-    monkeypatch.setattr(converter._logger, "info", lambda msg: info_messages.append(msg))
+    monkeypatch.setattr(converter.logger, "info", lambda msg: info_messages.append(msg))
 
     converter.print_list_of_files({"output_path": str(tmp_test_directory)})
 
