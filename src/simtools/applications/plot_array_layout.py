@@ -143,11 +143,22 @@ Plot layout with some telescopes grayed out and others highlighted:
 
 import simtools.layout.array_layout_utils as layout_utils
 from simtools.application_control import build_application
-from simtools.visualization.plot_array_layout import plot_array_layouts
+from simtools.visualization.plot_array_layout import (
+    generate_plot_combinations,
+    plot_array_layouts,
+)
 
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
+    parser.initialize_application_arguments(["all_model_versions"])
+
+    parser.add_argument(
+        "--all_sites",
+        action="store_true",
+        help="Plot layouts for all sites.",
+    )
+
     parser.add_argument(
         "--figure_name",
         help="Name of the output figure to be saved.",
@@ -256,8 +267,7 @@ def _add_arguments(parser):
 def main():
     """See CLI description."""
     app_context = build_application(
-        usage="Use '--array_layout_name plot_all' to plot all layouts for the given site "
-        "and model version.",
+        usage="Use '--plot_all_layouts' to plot all layouts for the given site and model version.",
         initialization_kwargs={
             "db_config": True,
             "simulation_model": [
@@ -271,10 +281,31 @@ def main():
         },
     )
 
-    layouts, background_layout = layout_utils.read_layouts(app_context.args)
-    plot_array_layouts(
-        app_context.args, app_context.io_handler.get_output_directory(), layouts, background_layout
-    )
+    if app_context.args.get("all_model_versions") or app_context.args.get("all_sites"):
+        for model_version, site in generate_plot_combinations(app_context.args):
+            run_args = app_context.args.copy()
+            run_args.update(
+                {
+                    "model_version": model_version,
+                    "site": site,
+                    "ignore_software_version": True,
+                }
+            )
+            layouts, background_layout = layout_utils.read_layouts(run_args)
+            plot_array_layouts(
+                run_args,
+                app_context.io_handler.get_output_directory(),
+                layouts,
+                background_layout,
+            )
+    else:
+        layouts, background_layout = layout_utils.read_layouts(app_context.args)
+        plot_array_layouts(
+            app_context.args,
+            app_context.io_handler.get_output_directory(),
+            layouts,
+            background_layout,
+        )
 
 
 if __name__ == "__main__":
