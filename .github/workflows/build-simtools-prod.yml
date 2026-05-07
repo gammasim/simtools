@@ -26,7 +26,7 @@ jobs:
       generic_tag: ${{ steps.export-tags.outputs.generic_tag }}
     strategy:
       matrix:
-        corsika: ['v78010']
+        corsika: ['v78010', 'v78050']
         sim_telarray: ['v2025-11-30-rc']
         avx_flag: ['generic', 'avx2', 'avx512f', 'sse4']
     env:
