@@ -210,40 +210,42 @@ def _get_telescope_list_from_input_card(file):
     return []
 
 
-def _legacy_merge_msts(msts):
+def _legacy_merge_msts(telescopes):
     """
-    Merge MSTS/MSTN + MST2 into a single class-specific MSTS/MSTN list.
+    Rename additional 'MST2' telescopes to 'MSTS' or 'MSTN' with incremented IDs.
 
-    Expect that main list first element is a MSTS/MSTN telescopes.
+    Expect that main list first element is a telescope with a valid side flag.
     This function is very specific and intended for legacy files
     generated for prod6, where metadata is incomplete.
 
     Parameters
     ----------
-    msts: list
-        List of MSTs
+    telescopes: list
+        List of telescopes
 
     Returns
     -------
     list
-        List of merged telescopes.
+        List of telescopes with 'MST2' renamed to 'MSTS' or 'MSTN' and incremented IDs.
     """
-    mst2_indices = [index for index, telescope in enumerate(msts) if re.search(r"MST2", telescope)]
-    if not mst2_indices:
-        return msts
+    tel2_indices = [
+        index for index, telescope in enumerate(telescopes) if re.search(r"^MST2", telescope)
+    ]
+    if not tel2_indices:
+        return telescopes
 
     mst_numbers = [
         int(num)
-        for telescope in msts
-        if "MST" in telescope and not re.search(r"MST2", telescope)
+        for telescope in telescopes
+        if "MST" in telescope and not re.search(r"^MST2", telescope)
         for num in re.findall(r"\d+", telescope)
     ]
     max_mst_id = max(mst_numbers) if mst_numbers else 0
-    site = names.get_site_from_array_element_name(msts[0])
+    site = names.get_site_from_array_element_name(telescopes[0])
     site_char = "S" if site.lower() == "south" else "N"
 
-    merged_msts = list(msts)
-    for i, index in enumerate(mst2_indices):
-        merged_msts[index] = f"MST{site_char}-{max_mst_id + i + 1:02d}"
+    merged_tels = list(telescopes)
+    for i, index in enumerate(tel2_indices):
+        merged_tels[index] = f"MST{site_char}-{max_mst_id + i + 1:02d}"
 
-    return merged_msts
+    return merged_tels
