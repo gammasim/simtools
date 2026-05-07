@@ -228,14 +228,22 @@ def _legacy_merge_msts(msts):
     list
         List of merged telescopes.
     """
-    mst2_list = [s for s in msts if re.search(r"MST2", s)]
-    if not mst2_list:
+    mst2_indices = [index for index, telescope in enumerate(msts) if re.search(r"MST2", telescope)]
+    if not mst2_indices:
         return msts
-    mst_list = [s for s in msts if not re.search(r"MST2", s)]
-    mst_numbers = [int(num) for s in mst_list if "MST" in s for num in re.findall(r"\d+", s)]
+
+    mst_numbers = [
+        int(num)
+        for telescope in msts
+        if "MST" in telescope and not re.search(r"MST2", telescope)
+        for num in re.findall(r"\d+", telescope)
+    ]
     max_mst_id = max(mst_numbers) if mst_numbers else 0
     site = names.get_site_from_array_element_name(msts[0])
     site_char = "S" if site.lower() == "south" else "N"
-    mst_list += [f"MST{site_char}-{max_mst_id + i + 1:02d}" for i, _ in enumerate(mst2_list)]
 
-    return mst_list
+    merged_msts = list(msts)
+    for i, index in enumerate(mst2_indices):
+        merged_msts[index] = f"MST{site_char}-{max_mst_id + i + 1:02d}"
+
+    return merged_msts
