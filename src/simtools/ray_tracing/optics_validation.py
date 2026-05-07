@@ -1,4 +1,4 @@
-"""Functions for validating telescope optical model parameters via ray tracing."""
+"""Validating telescope optical model parameters via ray tracing."""
 
 import logging
 from collections import OrderedDict
@@ -14,7 +14,7 @@ from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.visualization import visualize
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def load_data(datafile):
@@ -81,7 +81,7 @@ def validate_cumulative_psf(app_context):
 
     image = ray.images()[0]
 
-    _logger.info(f"d80 in cm = {image.get_psf()}")
+    logger.info(f"d80 in cm = {image.get_psf()}")
 
     data_to_plot = OrderedDict()
     radius = None
@@ -134,7 +134,7 @@ def validate_optics(app_context):
         model_version=args_dict["model_version"],
     )
 
-    _logger.info(
+    logger.info(
         f"\nValidating telescope optics with ray tracing simulations for {tel_model.name}\n"
     )
 
@@ -171,7 +171,7 @@ def validate_optics(app_context):
         plot_file = io_handler.get_output_file(plot_file_name)
         pdf_pages = PdfPages(plot_file)
 
-        _logger.info(f"Plotting images into {plot_file}")
+        logger.info(f"Plotting images into {plot_file}")
 
         images_dict = ray.psf_images
         max_x_extent = 0.0
@@ -188,7 +188,7 @@ def validate_optics(app_context):
         max_extent = max(max_x_extent, max_y_extent)
         max_extent_rounded = np.ceil(max_extent * 2) / 2
 
-        _logger.info(f"Setting consistent image axes: x,y range = +-{max_extent_rounded} cm")
+        logger.info(f"Setting consistent image axes: x,y range = +-{max_extent_rounded} cm")
 
         for (off_x, off_y), image in images_dict.items():
             fig = plt.figure(figsize=(8, 6), tight_layout=True)
