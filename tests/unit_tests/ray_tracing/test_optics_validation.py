@@ -25,7 +25,7 @@ def test_load_data_normalizes_and_converts_radius():
     np.testing.assert_allclose(data["Relative intensity"], [0.5, -1.0])
 
 
-def test_run_cumulative_psf_validation_raises_without_radius_data():
+def test_validate_cumulative_psf_raises_without_radius_data():
     """Test cumulative validation fails if no measured radius data are provided."""
     args_dict = {
         "site": "North",
@@ -54,10 +54,10 @@ def test_run_cumulative_psf_validation_raises_without_radius_data():
         patch("simtools.ray_tracing.optics_validation.RayTracing", return_value=mock_ray),
     ):
         with pytest.raises(ValueError, match="Radius data is not available"):
-            optics_validation.run_cumulative_psf_validation(app_context)
+            optics_validation.validate_cumulative_psf(app_context)
 
 
-def test_run_cumulative_psf_validation_saves_cumulative_and_image_plots(tmp_test_directory):
+def test_validate_cumulative_psf_saves_cumulative_and_image_plots(tmp_test_directory):
     """Test cumulative validation success path and produced plots."""
     args_dict = {
         "site": "North",
@@ -109,14 +109,14 @@ def test_run_cumulative_psf_validation_saves_cumulative_and_image_plots(tmp_test
         patch("simtools.ray_tracing.optics_validation.plt.Circle", return_value=MagicMock()),
         patch("simtools.ray_tracing.optics_validation.visualize.save_figure") as mock_save,
     ):
-        optics_validation.run_cumulative_psf_validation(app_context)
+        optics_validation.validate_cumulative_psf(app_context)
 
     assert mock_ray.simulate.call_count == 1
     assert mock_ray.analyze.call_count == 1
     assert mock_save.call_count == 2
 
 
-def test_run_optics_validation_no_images(tmp_test_directory):
+def test_validate_optics_no_images(tmp_test_directory):
     """Test optics validation without image PDF generation."""
     args_dict = {
         "site": "North",
@@ -152,14 +152,14 @@ def test_run_optics_validation_no_images(tmp_test_directory):
     ):
         mock_plt.figure.return_value = MagicMock()
 
-        optics_validation.run_optics_validation(app_context)
+        optics_validation.validate_optics(app_context)
 
         mock_ray.simulate.assert_called_once_with(test=True, force=False)
         mock_ray.analyze.assert_called_once_with(force=True)
         assert mock_ray.plot.call_count == 4
 
 
-def test_run_optics_validation_with_images_and_default_label(tmp_test_directory):
+def test_validate_optics_with_images_and_default_label(tmp_test_directory):
     """Test optics validation image-PDF branch and default label behavior."""
     args_dict = {
         "site": "North",
@@ -213,7 +213,7 @@ def test_run_optics_validation_with_images_and_default_label(tmp_test_directory)
         patch("simtools.ray_tracing.optics_validation.plt.close"),
         patch("simtools.ray_tracing.optics_validation.visualize.save_figure") as mock_save,
     ):
-        optics_validation.run_optics_validation(app_context)
+        optics_validation.validate_optics(app_context)
 
     rt_kwargs = mock_rt.call_args.kwargs
     assert rt_kwargs["label"] == "validate_optics"

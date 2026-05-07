@@ -565,7 +565,7 @@ def resolve_input_files_and_table(args_dict, merger):
     return merger.merge_tables(input_files), input_files, False
 
 
-def run_merge_workflow(args_dict, merger=None):
+def merge_corsika_limits(args_dict, merger=None):
     """
     Run table merge, completeness checks, optional plotting, and optional write-out.
 

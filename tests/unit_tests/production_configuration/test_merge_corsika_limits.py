@@ -327,7 +327,7 @@ def test_resolve_input_files_and_table_with_merged_table(monkeypatch):
     assert from_merged_table is True
 
 
-def test_run_merge_workflow_merging_mode(tmp_test_directory):
+def test_merge_corsika_limits_merging_mode(tmp_test_directory):
     class DummyMerger:
         def __init__(self, output_dir):
             self.output_dir = output_dir
@@ -363,7 +363,7 @@ def test_run_merge_workflow_merging_mode(tmp_test_directory):
         "output_file": "merged_output.ecsv",
     }
 
-    merge_corsika_limits.run_merge_workflow(args_dict, merger=merger)
+    merge_corsika_limits.merge_corsika_limits(args_dict, merger=merger)
 
     call_names = [call[0] for call in merger.calls]
     assert "merge_tables" in call_names
@@ -373,7 +373,7 @@ def test_run_merge_workflow_merging_mode(tmp_test_directory):
     assert "write_merged_table" in call_names
 
 
-def test_run_merge_workflow_check_only_mode(tmp_test_directory):
+def test_merge_corsika_limits_check_only_mode(tmp_test_directory):
     class DummyMerger:
         def __init__(self, output_dir):
             self.output_dir = output_dir
@@ -399,7 +399,7 @@ def test_run_merge_workflow_check_only_mode(tmp_test_directory):
         "resolve_input_files_and_table",
         return_value=(table, [Path("merged.ecsv")], True),
     ):
-        merge_corsika_limits.run_merge_workflow(
+        merge_corsika_limits.merge_corsika_limits(
             {
                 "merged_table": "merged.ecsv",
                 "grid_definition": None,

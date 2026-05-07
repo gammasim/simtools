@@ -70,7 +70,7 @@
 """
 
 from simtools.application_control import build_application
-from simtools.ray_tracing.optics_validation import run_cumulative_psf_validation
+from simtools.ray_tracing.optics_validation import validate_cumulative_psf
 
 
 def _add_arguments(parser):
@@ -86,7 +86,7 @@ def main():
             "simulation_model": ["telescope", "model_version"],
         },
     )
-    run_cumulative_psf_validation(app_context)
+    validate_cumulative_psf(app_context)
 
 
 if __name__ == "__main__":
