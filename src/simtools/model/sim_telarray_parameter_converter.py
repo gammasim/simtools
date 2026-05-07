@@ -11,7 +11,7 @@ from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.simtel import simtel_config_reader
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def _read_simtel_config_file(args_dict, schema_file, camera_pixels=None):
@@ -40,9 +40,9 @@ def _get_number_of_camera_pixel(args_dict):
         )
         _camera_pixel = config_reader.parameter_dict.get(args_dict["simtel_telescope_name"])
     except (FileNotFoundError, AttributeError):
-        _logger.warning("Unable to retrieve camera pixel parameter.")
+        logger.warning("Unable to retrieve camera pixel parameter.")
         _camera_pixel = None
-    _logger.info(f"Number of camera pixels: {_camera_pixel}")
+    logger.info(f"Number of camera pixels: {_camera_pixel}")
     return _camera_pixel
 
 
@@ -69,25 +69,25 @@ def read_and_export_parameters(args_dict, io_handler):
     simtel_parameters = simtel_config_reader.get_list_of_simtel_parameters(
         args_dict["simtel_cfg_file"]
     )
-    _logger.info(f"Found {len(simtel_parameters)} parameters in sim_telarray configuration file.")
+    logger.info(f"Found {len(simtel_parameters)} parameters in sim_telarray configuration file.")
 
     _camera_pixel = _get_number_of_camera_pixel(args_dict)
 
     parameters_not_in_simtel = []
 
     for _parameter, _schema_file in zip(_parameters, _schema_files):
-        _logger.info(f"Parameter: {_parameter} Schema file: {_schema_file}")
+        logger.info(f"Parameter: {_parameter} Schema file: {_schema_file}")
         if _parameter in args_dict["skip_parameter"]:
-            _logger.info(f"Skipping {_parameter}")
+            logger.info(f"Skipping {_parameter}")
             continue
         config_reader = _read_simtel_config_file(args_dict, _schema_file, _camera_pixel)
 
         if config_reader is None:
-            _logger.info("Parameter not found in sim_telarray configuration file.")
+            logger.info("Parameter not found in sim_telarray configuration file.")
             parameters_not_in_simtel.append(_parameter)
             continue
 
-        _logger.info(f"sim_telarray parameter: {config_reader.parameter_dict}")
+        logger.info(f"sim_telarray parameter: {config_reader.parameter_dict}")
 
         _json_dict = writer.ModelDataWriter.write_model_parameter(
             parameter_name=_parameter,
@@ -106,7 +106,7 @@ def read_and_export_parameters(args_dict, io_handler):
             simtel_parameters.remove(config_reader.simtel_parameter_name.lower())
 
         if _json_dict["file"]:
-            _logger.info(f"File name for {_parameter} is {_json_dict['value']}")
+            logger.info(f"File name for {_parameter} is {_json_dict['value']}")
 
     return parameters_not_in_simtel, simtel_parameters
 
@@ -128,17 +128,15 @@ def print_parameters_not_found(parameters_not_in_simtel, simtel_parameters, args
         Dictionary with command line arguments.
 
     """
-    _logger.info(
-        f"Parameters not found in simtools schema files ({len(parameters_not_in_simtel)}):"
-    )
+    logger.info(f"Parameters not found in simtools schema files ({len(parameters_not_in_simtel)}):")
     for para in sorted(parameters_not_in_simtel):
-        _logger.info(f"  {para}")
+        logger.info(f"  {para}")
 
-    _logger.info(
+    logger.info(
         f"sim_telarray parameters not found in sim_telarray config ({len(simtel_parameters)}):"
     )
     for para in sorted(simtel_parameters):
-        _logger.info(f"sim_telarray parameter: {para}")
+        logger.info(f"sim_telarray parameter: {para}")
         config_reader = simtel_config_reader.SimtelConfigReader(
             schema_file=None,
             simtel_config_file=args_dict["simtel_cfg_file"],
@@ -150,25 +148,25 @@ def print_parameters_not_found(parameters_not_in_simtel, simtel_parameters, args
         # simple comparison of default value and telescope values, does not work for lists
         try:
             if _default == _tel_value or np.isclose(_default, _tel_value):
-                _logger.info(f"    Default and telescope values for {para} are equal: {_default}")
+                logger.info(f"    Default and telescope values for {para} are equal: {_default}")
                 continue
         except (ValueError, TypeError) as exc:
-            _logger.debug(
+            logger.debug(
                 "    Could not directly compare default and telescope values for %s (%s); "
                 "printing both values for inspection.",
                 para,
                 exc,
             )
         if isinstance(_default, np.ndarray):
-            _logger.warning(f"    Default value ({para}): {_default} (length: {_default.size})")
+            logger.warning(f"    Default value ({para}): {_default} (length: {_default.size})")
         else:
-            _logger.warning(f"    Default value ({para}): {_default}")
+            logger.warning(f"    Default value ({para}): {_default}")
         if isinstance(_tel_value, np.ndarray):
-            _logger.warning(
+            logger.warning(
                 f"    Telescope value ({para}): {_tel_value} (length: {_tel_value.size})"
             )
         else:
-            _logger.warning(f"    Telescope value ({para}): {_tel_value}")
+            logger.warning(f"    Telescope value ({para}): {_tel_value}")
 
 
 def print_list_of_files(args_dict):
@@ -186,7 +184,7 @@ def print_list_of_files(args_dict):
     for file in model_files:
         model_dict = ascii_handler.collect_data_from_file(file_name=file)
         if model_dict.get("file"):
-            _logger.info(f"{file.name}: {model_dict['value']}")
+            logger.info(f"{file.name}: {model_dict['value']}")
 
 
 def run_conversion_workflow(app_context):
