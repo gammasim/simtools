@@ -143,9 +143,10 @@ Plot layout with some telescopes grayed out and others highlighted:
 
 import simtools.layout.array_layout_utils as layout_utils
 from simtools.application_control import build_application
-from simtools.db import db_handler
-from simtools.utils import names
-from simtools.visualization.plot_array_layout import plot_array_layouts
+from simtools.visualization.plot_array_layout import (
+    generate_plot_combinations,
+    plot_array_layouts,
+)
 
 
 def _add_arguments(parser):
@@ -263,21 +264,6 @@ def _add_arguments(parser):
     )
 
 
-def _generate_plot_combinations(args):
-    """Yield (model_version, site) combinations for plotting."""
-    model_versions = [args.get("model_version")]
-    if args.get("all_model_versions"):
-        model_versions = db_handler.DatabaseHandler().get_model_versions()
-
-    sites = [args.get("site")]
-    if args.get("all_sites"):
-        sites = names.site_names()
-
-    for model_version in model_versions:
-        for site in sites:
-            yield model_version, site
-
-
 def main():
     """See CLI description."""
     app_context = build_application(
@@ -296,7 +282,7 @@ def main():
     )
 
     if app_context.args.get("all_model_versions") or app_context.args.get("all_sites"):
-        for model_version, site in _generate_plot_combinations(app_context.args):
+        for model_version, site in generate_plot_combinations(app_context.args):
             run_args = app_context.args.copy()
             run_args.update(
                 {
