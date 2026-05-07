@@ -42,7 +42,7 @@ def load_data(datafile):
     return data
 
 
-def run_cumulative_psf_validation(app_context):
+def validate_cumulative_psf(app_context):
     """
     Simulate PSF measurements and compare cumulative PSF with measured data if provided.
 
@@ -113,7 +113,7 @@ def run_cumulative_psf_validation(app_context):
     visualize.save_figure(fig, plot_file)
 
 
-def run_optics_validation(app_context):
+def validate_optics(app_context):
     """
     Build telescope model, run ray tracing, plot PSF/area/focal-length results.
 

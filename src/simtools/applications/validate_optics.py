@@ -66,7 +66,7 @@ r"""
 """
 
 from simtools.application_control import build_application
-from simtools.ray_tracing.optics_validation import run_optics_validation
+from simtools.ray_tracing.optics_validation import validate_optics
 
 
 def _add_arguments(parser):
@@ -103,7 +103,7 @@ def main():
             "simulation_model": ["telescope", "model_version"],
         },
     )
-    run_optics_validation(app_context)
+    validate_optics(app_context)
 
 
 if __name__ == "__main__":

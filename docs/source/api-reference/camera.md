@@ -29,12 +29,3 @@ A {ref}`TelescopeModel <telescope-model>` and few more physical parameters (zeni
 .. automodule:: camera.trace_analysis
    :members:
 ```
-
-## Camera field of view
-
-### camera_fov
-
-```{eval-rst}
-.. automodule:: camera.camera_fov
-   :members:
-```

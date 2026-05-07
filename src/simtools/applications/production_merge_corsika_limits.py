@@ -78,7 +78,7 @@ Examples
 """
 
 from simtools.application_control import build_application
-from simtools.production_configuration.merge_corsika_limits import run_merge_workflow
+from simtools.production_configuration.merge_corsika_limits import merge_corsika_limits
 
 
 def _add_arguments(parser):
@@ -133,7 +133,7 @@ def main():
     app_context = build_application(
         initialization_kwargs={"output": True},
     )
-    run_merge_workflow(app_context.args)
+    merge_corsika_limits(app_context.args)
 
 
 if __name__ == "__main__":

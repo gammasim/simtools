@@ -48,7 +48,7 @@ r"""
 """
 
 from simtools.application_control import build_application
-from simtools.camera.camera_fov import run_camera_fov_validation
+from simtools.visualization.plot_camera import plot_camera_pixel_layout_from_args
 
 
 def _add_arguments(parser):
@@ -81,7 +81,7 @@ def main():
             "simulation_model": ["telescope", "model_version"],
         },
     )
-    run_camera_fov_validation(app_context)
+    plot_camera_pixel_layout_from_args(app_context)
 
 
 if __name__ == "__main__":
