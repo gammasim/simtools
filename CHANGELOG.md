@@ -7,6 +7,75 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.30.0](https://github.com/gammasim/simtools/releases/tag/v0.30.0) - 2026-05-07
+
+### Bugfixes
+
+- Disable Astropy IERS auto-download in offline/test mode to prevent network timeouts and spurious warnings causing test failures. ([#2129](https://github.com/gammasim/simtools/pull/2129))
+- Fix sim_telarray seed handling when passing a single value to sim_telarray_seed together with sim_telarray_instrument_seed, and add integration coverage for this configuration. ([#2131](https://github.com/gammasim/simtools/pull/2131))
+- Fix contradictory CLI argument behavior by making defaulted simulation options optional so help defaults are actually applied in simulate-prod. ([#2135](https://github.com/gammasim/simtools/pull/2135))
+- Fill `iact_atmo_version` field correctly in the CORSIKA7 building option file (`build_opts.yml`). ([#2169](https://github.com/gammasim/simtools/pull/2169))
+
+### Documentation
+
+- Update contributing and authorship procedures. ([#2160](https://github.com/gammasim/simtools/pull/2160))
+
+### New Features
+
+- Add option to generate the production grid along declination lines and include a module to plot the production grid in horizontal and equatorial coordinate systems. ([#2075](https://github.com/gammasim/simtools/pull/2075))
+- Added a unified parameter export flow for both file-backed and dict-backed table parameters, with stricter validation and normalization of table content including required `column_units` for `fadc_pulse_shape`.
+  Plot table generation now selects the schema document by `model_parameter_schema_version` (with fallback), and sim_telarray/model/database handling was aligned with expanded unit test coverage. ([#2088](https://github.com/gammasim/simtools/pull/2088))
+- Add additional printouts and checks for using container images (e.g., if container exists or needs to be pulled). Improve startup procedures for `simtools-run-application`. ([#2111](https://github.com/gammasim/simtools/pull/2111))
+- Add UUID7-based activity IDs for each application execution, propagate into metadata, and track associated activities in workflow metadata file. ([#2113](https://github.com/gammasim/simtools/pull/2113))
+- Add functionality to update simulation model directly from settings workflows using the model parameter version and derivation activity ID. ([#2115](https://github.com/gammasim/simtools/pull/2115))
+- Add `model_status` keywords to `SimulationModelsInfo` schema. ([#2116](https://github.com/gammasim/simtools/pull/2116))
+- Add possibility to overwrite model parameters for CORSIKA and sim_telarray configuration from command line. ([#2124](https://github.com/gammasim/simtools/pull/2124), [#2127](https://github.com/gammasim/simtools/pull/2127))
+- Add the possibility to plot a single layout from an array layout parameter JSON file. ([#2126](https://github.com/gammasim/simtools/pull/2126))
+- Allow custom list of telescopes for corsika limits derivation. ([#2128](https://github.com/gammasim/simtools/pull/2128))
+- Allow to update `configuration_sim_telarray` fields in database using the production info files. ([#2130](https://github.com/gammasim/simtools/pull/2130))
+- Command-line arguments now take higher precedence than configuration file options. ([#2132](https://github.com/gammasim/simtools/pull/2132))
+- Add command line option to select figure format(s) (e.g., png, pdf): `--figure_format`. ([#2133](https://github.com/gammasim/simtools/pull/2133))
+- Remove duplication of filling metadata when writing model parameter metadata information.
+  Improve filling of metadata for the case of reading CTAO layouts from the common identifier gitlab repository. ([#2134](https://github.com/gammasim/simtools/pull/2134))
+- Add CORSIKA CLI options for interaction models and runtime paths. ([#2137](https://github.com/gammasim/simtools/pull/2137))
+- Add `simtools-docs-produce-production-summary` application to generate a markdown table of production version descriptions from simulation-models info files. ([#2139](https://github.com/gammasim/simtools/pull/2139))
+- Allow file-based model parameter tables to be written with different file names than the one stored in the DB.
+  Improve writing of metadata when converting sim_telarray style tables. ([#2140](https://github.com/gammasim/simtools/pull/2140))
+- Add a new application `simtools-write-reduced-event-lists` to read event data from sim_telarray and write reduced event lists. ([#2141](https://github.com/gammasim/simtools/pull/2141))
+- Allow to specify model version dependent configuration parameters in configuration files. ([#2146](https://github.com/gammasim/simtools/pull/2146))
+- Add functionality to `simtools-db-get-array-layouts-from-db` to retrieve besides telescopes also calibration array elements. ([#2163](https://github.com/gammasim/simtools/pull/2163))
+- Add CORSIKA v7.850 to simtools-prod image generation pipeline. ([#2169](https://github.com/gammasim/simtools/pull/2169))
+- Add functionality to assign valid telescope numbers to additional MSTs in legacy prod6 simulations. ([#2171](https://github.com/gammasim/simtools/pull/2171))
+
+### Maintenance
+
+- Consolidate usage of command line configuration; removed duplicated items and solved name conflicts (e.g. zenith vs zenith_angle). ([#2096](https://github.com/gammasim/simtools/pull/2096))
+- Do not use compact numeric list in json for non-dict-type numerical values. ([#2114](https://github.com/gammasim/simtools/pull/2114))
+- Generalize reading from git repositories. Add CTAO git repos as default values. ([#2115](https://github.com/gammasim/simtools/pull/2115))
+- Change legend font size in tabular plotting. ([#2119](https://github.com/gammasim/simtools/pull/2119))
+- Add command line flag to set the setting-workflows git tag for `maintain_simulation_model_add_production`. ([#2120](https://github.com/gammasim/simtools/pull/2120))
+- Fix writing of dict-table style model parameter files. Improve and simplify API of ModelDataWriter. ([#2121](https://github.com/gammasim/simtools/pull/2121))
+- Improve accuracy and completeness of Copilot instructions. ([#2136](https://github.com/gammasim/simtools/pull/2136))
+- Add retry-attempts for downloading CORSIKA interaction tables in CI to increase robustness against network issues. ([#2142](https://github.com/gammasim/simtools/pull/2142))
+- Add retry-attempts for cloning of model parameter repository to increase robustness against network issues. ([#2143](https://github.com/gammasim/simtools/pull/2143))
+- Use a GitHub Action for dotenv linting instead of direct installation and execution. ([#2144](https://github.com/gammasim/simtools/pull/2144))
+- Remove fail fast for unit test for CI unit tests. ([#2145](https://github.com/gammasim/simtools/pull/2145))
+- Run sonar in pip 3.13. matrix step (was: conda 3.13 step). ([#2147](https://github.com/gammasim/simtools/pull/2147))
+- Update base images to alma linux 9.7. Install GSL from source for sim_telarray. ([#2153](https://github.com/gammasim/simtools/pull/2153))
+- Remove conda option for installation of simtools. ([#2154](https://github.com/gammasim/simtools/pull/2154))
+- Remove `run_mode` setup in simulate_illuminator to avoid user confusion. ([#2158](https://github.com/gammasim/simtools/pull/2158))
+- Remove obsolete database scripts to dump / upload dump of DB. ([#2159](https://github.com/gammasim/simtools/pull/2159))
+- Applied notable run-time optimization for `simtools-derive-mirror-rnda`. ([#2161](https://github.com/gammasim/simtools/pull/2161))
+- Introducing --all_sites and --all_model_versions tags to auto-generate plotting combinations ([#2166](https://github.com/gammasim/simtools/pull/2166))
+- Improve efficiency and robustness of CI integration tests: simulation models used for local DB are cloned once only (and not once per model version matrix item). ([#2167](https://github.com/gammasim/simtools/pull/2167))
+- Ensure that Apptainer image exists for HTCondor submission scripts. ([#2170](https://github.com/gammasim/simtools/pull/2170))
+
+### Simulation model
+
+- Update layout names for South beta layouts in production model 7.0.0. ([#2164](https://github.com/gammasim/simtools/pull/2164))
+- Change default simulation models version to v0.15.0. ([#2165](https://github.com/gammasim/simtools/pull/2165))
+
+
 ## [v0.29.0](https://github.com/gammasim/simtools/releases/tag/v0.29.0) - 2026-04-07
 
 ### Bugfixes
