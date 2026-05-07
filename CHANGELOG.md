@@ -68,7 +68,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Applied notable run-time optimization for `simtools-derive-mirror-rnda`. ([#2161](https://github.com/gammasim/simtools/pull/2161))
 - Introducing --all_sites and --all_model_versions tags to auto-generate plotting combinations ([#2166](https://github.com/gammasim/simtools/pull/2166))
 - Improve efficiency and robustness of CI integration tests: simulation models used for local DB are cloned once only (and not once per model version matrix item). ([#2167](https://github.com/gammasim/simtools/pull/2167))
-- Ensure that Apptainer image exist for HTCondor submission scripts. ([#2170](https://github.com/gammasim/simtools/pull/2170))
+- Ensure that Apptainer image exists for HTCondor submission scripts. ([#2170](https://github.com/gammasim/simtools/pull/2170))
 
 ### Simulation model
 
