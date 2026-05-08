@@ -345,7 +345,7 @@ corsika_le_interaction="${{12}}"
 corsika_he_interaction="${{13}}"
 run_number="${{14}}"
 pack_for_grid_register="${{15}}"
-energy_range_tag="erange-$7$8-$9${10}"
+energy_range_tag="erange-$7$8-$9${{10}}"
 job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
 simtools-simulate-prod \\
