@@ -5,7 +5,10 @@ import astropy.units as u
 import pytest
 
 from simtools.job_execution.htcondor_script_generator import (
+    _build_job_specs,
+    _get_submit_file,
     _get_submit_script,
+    _resolve_apptainer_images,
     generate_submission_script,
 )
 
@@ -32,6 +35,9 @@ def args_dict():
         "run_number": 1,
         "number_of_runs": 10,
         "log_level": "INFO",
+        "pack_for_grid_register": "simtools-output",
+        "corsika_le_interaction": "urqmd",
+        "corsika_he_interaction": "epos",
     }
 
 
@@ -50,6 +56,7 @@ def test_generate_submission_script(mock_is_file, mock_chmod, mock_open, mock_mk
 
     # Check if files are created and written
     mock_open.assert_any_call(work_dir / f"{submit_file_name}.condor", "w", encoding="utf-8")
+    mock_open.assert_any_call(work_dir / f"{submit_file_name}.params.txt", "w", encoding="utf-8")
     mock_open.assert_any_call(work_dir / f"{submit_file_name}.sh", "w", encoding="utf-8")
 
     # Check if chmod is called
@@ -69,9 +76,6 @@ def test_generate_submission_script_raises_for_missing_apptainer_image(
 
 
 def test_get_submit_script(args_dict):
-    # Use abbreviated argument names to avoid overly long lines
-    e_range_low = args_dict["energy_range"][0].to(u.GeV).value
-    e_range_high = args_dict["energy_range"][1].to(u.GeV).value
     core_scatter_low = args_dict["core_scatter"][0]
     core_scatter_high = args_dict["core_scatter"][1].to(u.m).value
     view_cone_low = args_dict["view_cone"][0].to(u.deg).value
@@ -83,25 +87,92 @@ def test_get_submit_script(args_dict):
 process_id="$1"
 # Load environment variables (for DB access)
 set -a; source "$2"
+apptainer_label="$3"
+primary="$4"
+model_version="$9"
+corsika_le_interaction="${{10}}"
+corsika_he_interaction="${{11}}"
+run_number="${{12}}"
+pack_for_grid_register="${{13}}"
 
 simtools-simulate-prod \\
     --simulation_software {args_dict["simulation_software"]} \\
     --label {args_dict["label"]} \\
-    --model_version {args_dict["model_version"]} \\
+    --model_version "$model_version" \\
     --site {args_dict["site"]} \\
     --array_layout_name {args_dict["array_layout_name"]} \\
-    --primary {args_dict["primary"]} \\
-    --azimuth_angle {args_dict["azimuth_angle"].to(u.deg).value} \\
-    --zenith_angle {args_dict["zenith_angle"].to(u.deg).value} \\
+    --primary "$primary" \\
+    --azimuth_angle "$5" \\
+    --zenith_angle "$6" \\
     --nshow {args_dict["nshow"]} \\
-    --energy_range "{e_range_low} GeV {e_range_high} GeV" \\
+    --energy_range "$7 GeV $8 GeV" \\
     --core_scatter "{core_scatter_low} {core_scatter_high} m" \\
     --view_cone "{view_cone_low} deg {view_cone_high} deg" \\
-    --run_number $((process_id)) \\
+    --corsika_le_interaction "$corsika_le_interaction" \\
+    --corsika_he_interaction "$corsika_he_interaction" \\
+    --run_number "$run_number" \\
     --run_number_offset {args_dict["run_number_offset"]} \\
     --output_path /tmp/simtools-output \\
     --log_level {args_dict["log_level"]} \\
-    --pack_for_grid_register simtools-output
+    --pack_for_grid_register "$pack_for_grid_register"
 """
     generated_script = _get_submit_script(args_dict)
     assert generated_script == expected_script
+
+
+def test_get_submit_file_uses_queue_from_params():
+    content = _get_submit_file(
+        executable="simulate_prod.submit.sh",
+        apptainer_image=Path("/tmp/image.sif"),
+        priority=1,
+        params_file_name="simulate_prod.submit.params.txt",
+    )
+
+    assert "queue apptainer_label,primary" in content
+    assert "from simulate_prod.submit.params.txt" in content
+    assert 'arguments = "$(process) env.txt' in content
+
+
+@mock.patch("simtools.job_execution.htcondor_script_generator.Path.is_file", return_value=True)
+def test_resolve_apptainer_images_dict(mock_is_file):
+    images = _resolve_apptainer_images({"7.0.0": "/tmp/v7.sif", "6.3.0": "/tmp/v63.sif"})
+
+    assert set(images.keys()) == {"7.0.0", "6.3.0"}
+    assert mock_is_file.call_count == 2
+
+
+def test_build_job_specs_expands_model_version_list(args_dict):
+    args_dict["model_version"] = ["6.3.0", "7.0.0"]
+
+    job_specs = _build_job_specs(args_dict, ["7.0.0"])
+    model_versions = {job_spec["model_version"] for job_spec in job_specs}
+
+    assert model_versions == {"6.3.0", "7.0.0"}
+    assert len(job_specs) == 2 * args_dict["number_of_runs"]
+
+
+def test_build_job_specs_expands_energy_range_list_of_pairs(args_dict):
+    args_dict["number_of_runs"] = 1
+    args_dict["energy_range"] = [
+        (30 * u.GeV, 30 * u.GeV),
+        (300 * u.GeV, 300 * u.GeV),
+    ]
+
+    job_specs = _build_job_specs(args_dict, ["7.0.0"])
+    energy_pairs = {(job_spec["energy_min"], job_spec["energy_max"]) for job_spec in job_specs}
+
+    assert len(job_specs) == 2
+    assert energy_pairs == {
+        (30 * u.GeV, 30 * u.GeV),
+        (300 * u.GeV, 300 * u.GeV),
+    }
+
+
+def test_build_job_specs_increments_run_number(args_dict):
+    args_dict["number_of_runs"] = 2
+    args_dict["run_number"] = 10
+
+    job_specs = _build_job_specs(args_dict, ["7.0.0"])
+    run_numbers = sorted({job_spec["run_number"] for job_spec in job_specs})
+
+    assert run_numbers == [10, 11]

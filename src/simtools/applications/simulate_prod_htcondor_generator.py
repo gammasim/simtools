@@ -59,12 +59,6 @@ def _add_arguments(parser):
         default=1,
     )
     parser.add_argument(
-        "--apptainer_image",
-        help="Apptainer image to use for the simulation (full path).",
-        type=str,
-        required=False,
-    )
-    parser.add_argument(
         "--priority",
         help="Job priority.",
         type=int,

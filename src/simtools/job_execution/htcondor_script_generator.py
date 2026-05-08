@@ -1,11 +1,177 @@
 """HT Condor script generator for simulation production."""
 
+import itertools
 import logging
 from pathlib import Path
 
 import astropy.units as u
 
 _logger = logging.getLogger(__name__)
+
+_GRID_AXES = [
+    "primary",
+    "azimuth_angle",
+    "zenith_angle",
+    "model_version",
+    "corsika_le_interaction",
+    "corsika_he_interaction",
+]
+
+
+def _normalize_to_list(value):
+    """Normalize scalar values to lists of length one."""
+    if isinstance(value, list):
+        return value
+    if isinstance(value, tuple):
+        return list(value)
+    return [value]
+
+
+def _normalize_grid_axes(args_dict):
+    """Return normalized grid axes for cartesian product expansion."""
+    normalized = {}
+    for axis in _GRID_AXES:
+        if axis in args_dict and args_dict[axis] is not None:
+            normalized[axis] = _normalize_to_list(args_dict[axis])
+        else:
+            normalized[axis] = [None]
+    return normalized
+
+
+def _normalize_energy_ranges(energy_range):
+    """Normalize energy range argument to a list of (emin, emax) pairs."""
+    if isinstance(energy_range, tuple) and len(energy_range) == 2:
+        return [energy_range]
+
+    if isinstance(energy_range, list):
+        if len(energy_range) == 2 and all(hasattr(item, "to") for item in energy_range):
+            return [(energy_range[0], energy_range[1])]
+        if all(isinstance(item, (list, tuple)) and len(item) == 2 for item in energy_range):
+            return [tuple(item) for item in energy_range]
+
+    raise ValueError("energy_range must be one pair (emin, emax) or a list of (emin, emax) pairs.")
+
+
+def _resolve_apptainer_images(apptainer_image_arg):
+    """Resolve and validate apptainer image configuration."""
+    if apptainer_image_arg is None:
+        raise ValueError("Missing required apptainer_image path.")
+
+    if isinstance(apptainer_image_arg, str):
+        if not apptainer_image_arg.strip():
+            raise ValueError("Missing required apptainer_image path.")
+        image_path = Path(apptainer_image_arg)
+        if not image_path.is_file():
+            raise FileNotFoundError(f"Apptainer image file not found: {image_path}")
+        return {"default": image_path}
+
+    if isinstance(apptainer_image_arg, dict):
+        resolved = {}
+        for label, path in apptainer_image_arg.items():
+            image_path = Path(path)
+            if not image_path.is_file():
+                raise FileNotFoundError(f"Apptainer image file not found: {image_path}")
+            resolved[str(label)] = image_path
+        if not resolved:
+            raise ValueError("At least one apptainer image label/path must be configured.")
+        return resolved
+
+    raise ValueError("apptainer_image must be either a string path or a label-to-path dictionary.")
+
+
+def _format_grid_value(value, unit):
+    """Format scalar values for params files with stable unit conversion."""
+    if value is None:
+        return ""
+    if hasattr(value, "to"):
+        return f"{value.to(unit).value}"
+    return f"{value}"
+
+
+def _sanitize_label_for_filename(label):
+    """Sanitize image labels for use in file names."""
+    label_string = str(label).strip().replace(" ", "_")
+    return "".join(ch if ch.isalnum() or ch in ["-", "_", "."] else "_" for ch in label_string)
+
+
+def _build_job_specs(args_dict, image_labels):
+    """Build backend-agnostic job specs from comparison and production grids."""
+    grid_axes = _normalize_grid_axes(args_dict)
+    energy_ranges = _normalize_energy_ranges(args_dict["energy_range"])
+    base_pack_dir = args_dict.get("pack_for_grid_register") or "simtools-output"
+
+    combinations = list(
+        itertools.product(
+            grid_axes["primary"],
+            grid_axes["azimuth_angle"],
+            grid_axes["zenith_angle"],
+            grid_axes["model_version"],
+            grid_axes["corsika_le_interaction"],
+            grid_axes["corsika_he_interaction"],
+            energy_ranges,
+        )
+    )
+
+    number_of_runs = args_dict.get("number_of_runs", 1)
+    run_number = int(args_dict.get("run_number") or 1)
+
+    job_specs = []
+    for label in image_labels:
+        for (
+            primary,
+            azimuth,
+            zenith,
+            model_version,
+            corsika_le,
+            corsika_he,
+            energy_range_pair,
+        ) in combinations:
+            for run_index in range(number_of_runs):
+                job_specs.append(
+                    {
+                        "apptainer_label": str(label),
+                        "primary": primary,
+                        "azimuth_angle": azimuth,
+                        "zenith_angle": zenith,
+                        "model_version": model_version,
+                        "corsika_le_interaction": corsika_le,
+                        "corsika_he_interaction": corsika_he,
+                        "energy_min": energy_range_pair[0],
+                        "energy_max": energy_range_pair[1],
+                        "pack_for_grid_register": f"{base_pack_dir}/{label}",
+                        "run_number": run_number + run_index,
+                    }
+                )
+    return job_specs
+
+
+def _group_job_specs_by_label(job_specs):
+    """Group job specs by apptainer image label."""
+    grouped = {}
+    for job_spec in job_specs:
+        label = job_spec["apptainer_label"]
+        grouped.setdefault(label, []).append(job_spec)
+    return grouped
+
+
+def _write_params_file(params_file_path, label_job_specs):
+    """Write params file consumed by HTCondor queue-from syntax."""
+    with open(params_file_path, "w", encoding="utf-8") as params_file_handle:
+        for job_spec in label_job_specs:
+            row = [
+                job_spec["apptainer_label"],
+                _format_grid_value(job_spec["primary"], None),
+                _format_grid_value(job_spec["azimuth_angle"], u.deg),
+                _format_grid_value(job_spec["zenith_angle"], u.deg),
+                _format_grid_value(job_spec["energy_min"], u.GeV),
+                _format_grid_value(job_spec["energy_max"], u.GeV),
+                _format_grid_value(job_spec["model_version"], None),
+                _format_grid_value(job_spec["corsika_le_interaction"], None),
+                _format_grid_value(job_spec["corsika_he_interaction"], None),
+                _format_grid_value(job_spec["run_number"], None),
+                job_spec["pack_for_grid_register"],
+            ]
+            params_file_handle.write(" ".join(row) + "\n")
 
 
 def generate_submission_script(args_dict):
@@ -17,15 +183,9 @@ def generate_submission_script(args_dict):
     args_dict: dict
         Arguments dictionary.
     """
-    apptainer_image_arg = args_dict["apptainer_image"]
-    if apptainer_image_arg is None or (
-        isinstance(apptainer_image_arg, str) and not apptainer_image_arg.strip()
-    ):
-        raise ValueError("Missing required apptainer_image path.")
-
-    apptainer_image = Path(apptainer_image_arg)
-    if not apptainer_image.is_file():
-        raise FileNotFoundError(f"Apptainer image file not found: {apptainer_image}")
+    apptainer_images = _resolve_apptainer_images(args_dict["apptainer_image"])
+    job_specs = _build_job_specs(args_dict, list(apptainer_images.keys()))
+    grouped_job_specs = _group_job_specs_by_label(job_specs)
 
     work_dir = Path(args_dict["output_path"])
     log_dir = work_dir / "logs"
@@ -34,15 +194,26 @@ def generate_submission_script(args_dict):
     submit_file_name = "simulate_prod.submit"
     _logger.info(f"Generating HT Condor submission scripts (path: {work_dir})")
 
-    with open(work_dir / f"{submit_file_name}.condor", "w", encoding="utf-8") as submit_file_handle:
-        submit_file_handle.write(
-            _get_submit_file(
-                f"{submit_file_name}.sh",
-                apptainer_image,
-                args_dict["priority"],
-                +args_dict["number_of_runs"],
-            )
+    for label, label_job_specs in grouped_job_specs.items():
+        suffix = (
+            ""
+            if len(grouped_job_specs) == 1 and label == "default"
+            else f".{_sanitize_label_for_filename(label)}"
         )
+        condor_file_name = f"{submit_file_name}{suffix}.condor"
+        params_file_name = f"{submit_file_name}{suffix}.params.txt"
+
+        _write_params_file(work_dir / params_file_name, label_job_specs)
+
+        with open(work_dir / condor_file_name, "w", encoding="utf-8") as submit_file_handle:
+            submit_file_handle.write(
+                _get_submit_file(
+                    f"{submit_file_name}.sh",
+                    apptainer_images[label],
+                    args_dict["priority"],
+                    params_file_name,
+                )
+            )
 
     with open(work_dir / f"{submit_file_name}.sh", "w", encoding="utf-8") as submit_script_handle:
         submit_script_handle.write(_get_submit_script(args_dict))
@@ -50,7 +221,7 @@ def generate_submission_script(args_dict):
     Path(work_dir / f"{submit_file_name}.sh").chmod(0o755)
 
 
-def _get_submit_file(executable, apptainer_image, priority, n_jobs):
+def _get_submit_file(executable, apptainer_image, priority, params_file_name):
     """
     Return HT Condor submit file.
 
@@ -64,14 +235,27 @@ def _get_submit_file(executable, apptainer_image, priority, n_jobs):
         Path to the Apptainer image.
     priority: int
         Priority of the job.
-    n_jobs: int
-        Number of jobs to queue.
+    params_file_name: str
+        Name of the params file for queue-from submission.
 
     Returns
     -------
     str
         HT Condor submit file content.
     """
+    arguments_string = (
+        "$(process) env.txt "
+        "$(apptainer_label) $(primary) $(azimuth_angle) $(zenith_angle) "
+        "$(energy_min) $(energy_max) $(model_version) "
+        "$(corsika_le_interaction) $(corsika_he_interaction) "
+        "$(run_number) $(pack_for_grid_register)"
+    )
+    queue_string = (
+        "apptainer_label,primary,azimuth_angle,zenith_angle,energy_min,energy_max,"
+        "model_version,corsika_le_interaction,corsika_he_interaction,"
+        "run_number,pack_for_grid_register"
+    )
+
     return f"""universe = container
 container_image = {apptainer_image}
 transfer_container = false
@@ -82,9 +266,9 @@ output     = logs/out.$(cluster)_$(process)
 log        = logs/log.$(cluster)_$(process)
 
 priority = {priority}
-arguments = "$(process) env.txt"
+arguments = "{arguments_string}"
 
-queue {n_jobs}
+queue {queue_string} from {params_file_name}
 """
 
 
@@ -102,12 +286,9 @@ def _get_submit_script(args_dict):
     str
         HT Condor submit script content.
     """
-    azimuth_angle_string = f"{args_dict['azimuth_angle'].to(u.deg).value}"
-    zenith_angle_string = f"{args_dict['zenith_angle'].to(u.deg).value}"
-    energy_range = args_dict["energy_range"]
-    energy_range_string = (
-        f'"{energy_range[0].to(u.GeV).value} GeV {energy_range[1].to(u.GeV).value} GeV"'
-    )
+    azimuth_angle_string = '"$5"'
+    zenith_angle_string = '"$6"'
+    energy_range_string = '"$7 GeV $8 GeV"'
     core_scatter = args_dict["core_scatter"]
     core_scatter_string = f'"{core_scatter[0]} {core_scatter[1].to(u.m).value} m"'
     view_cone = args_dict["view_cone"]
@@ -130,23 +311,32 @@ def _get_submit_script(args_dict):
 process_id="$1"
 # Load environment variables (for DB access)
 set -a; source "$2"
+apptainer_label="$3"
+primary="$4"
+model_version="$9"
+corsika_le_interaction="${{10}}"
+corsika_he_interaction="${{11}}"
+run_number="${{12}}"
+pack_for_grid_register="${{13}}"
 
 simtools-simulate-prod \\
     --simulation_software {args_dict["simulation_software"]} \\
     --label {label} \\
-    --model_version {args_dict["model_version"]} \\
+    --model_version "$model_version" \\
     --site {args_dict["site"]} \\
     --array_layout_name {array_layout_name} \\
-    --primary {args_dict["primary"]} \\
+    --primary "$primary" \\
     --azimuth_angle {azimuth_angle_string} \\
     --zenith_angle {zenith_angle_string} \\
     --nshow {args_dict["nshow"]} \\
     --energy_range {energy_range_string} \\
     --core_scatter {core_scatter_string} \\
     --view_cone {view_cone_string} \\
-    --run_number $((process_id)) \\
+    --corsika_le_interaction "$corsika_le_interaction" \\
+    --corsika_he_interaction "$corsika_he_interaction" \\
+    --run_number "$run_number" \\
     --run_number_offset {run_number_offset} \\
     --output_path /tmp/simtools-output \\
     --log_level {args_dict["log_level"]} \\
-    --pack_for_grid_register simtools-output
+    --pack_for_grid_register "$pack_for_grid_register"
 """
