@@ -9,6 +9,7 @@ from simtools.job_execution.htcondor_script_generator import (
     _get_submit_file,
     _get_submit_script,
     _resolve_apptainer_images,
+    _write_params_file,
     generate_submission_script,
 )
 
@@ -89,15 +90,17 @@ process_id="$1"
 set -a; source "$2"
 apptainer_label="$3"
 primary="$4"
-model_version="$9"
-corsika_le_interaction="${{10}}"
-corsika_he_interaction="${{11}}"
-run_number="${{12}}"
-pack_for_grid_register="${{13}}"
+model_version="${{11}}"
+corsika_le_interaction="${{12}}"
+corsika_he_interaction="${{13}}"
+run_number="${{14}}"
+pack_for_grid_register="${{15}}"
+energy_range_tag="erange-$7$8-$9$10"
+job_label="{args_dict["label"]}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
 simtools-simulate-prod \\
     --simulation_software {args_dict["simulation_software"]} \\
-    --label {args_dict["label"]} \\
+    --label "$job_label" \\
     --model_version "$model_version" \\
     --site {args_dict["site"]} \\
     --array_layout_name {args_dict["array_layout_name"]} \\
@@ -105,7 +108,7 @@ simtools-simulate-prod \\
     --azimuth_angle "$5" \\
     --zenith_angle "$6" \\
     --nshow {args_dict["nshow"]} \\
-    --energy_range "$7 GeV $8 GeV" \\
+    --energy_range "$7 $8 $9 $10" \
     --core_scatter "{core_scatter_low} {core_scatter_high} m" \\
     --view_cone "{view_cone_low} deg {view_cone_high} deg" \\
     --corsika_le_interaction "$corsika_le_interaction" \\
@@ -129,6 +132,7 @@ def test_get_submit_file_uses_queue_from_params():
     )
 
     assert "queue apptainer_label,primary" in content
+    assert "energy_min_value,energy_min_unit,energy_max_value,energy_max_unit" in content
     assert "from simulate_prod.submit.params.txt" in content
     assert 'arguments = "$(process) env.txt' in content
 
@@ -171,8 +175,34 @@ def test_build_job_specs_expands_energy_range_list_of_pairs(args_dict):
 def test_build_job_specs_increments_run_number(args_dict):
     args_dict["number_of_runs"] = 2
     args_dict["run_number"] = 10
+    args_dict["model_version"] = ["6.3.0", "7.0.0"]
 
     job_specs = _build_job_specs(args_dict, ["7.0.0"])
-    run_numbers = sorted({job_spec["run_number"] for job_spec in job_specs})
+    run_numbers = [job_spec["run_number"] for job_spec in job_specs]
 
-    assert run_numbers == [10, 11]
+    assert run_numbers == [10, 11, 12, 13]
+
+
+def test_write_params_file_keeps_energy_units(tmp_test_directory):
+    params_file_path = Path(tmp_test_directory) / "params.txt"
+    label_job_specs = [
+        {
+            "apptainer_label": "7.0.0",
+            "primary": "gamma",
+            "azimuth_angle": 0 * u.deg,
+            "zenith_angle": 20 * u.deg,
+            "energy_min": 30 * u.GeV,
+            "energy_max": 10 * u.TeV,
+            "model_version": "7.0.0",
+            "corsika_le_interaction": "urqmd",
+            "corsika_he_interaction": "epos",
+            "run_number": 10,
+            "pack_for_grid_register": "simtools-output/7.0.0",
+        }
+    ]
+
+    _write_params_file(params_file_path, label_job_specs)
+
+    assert params_file_path.read_text(encoding="utf-8") == (
+        "7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 7.0.0 urqmd epos 10 simtools-output/7.0.0\n"
+    )
