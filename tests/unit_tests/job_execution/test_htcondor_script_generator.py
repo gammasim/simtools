@@ -95,7 +95,7 @@ corsika_le_interaction="${{12}}"
 corsika_he_interaction="${{13}}"
 run_number="${{14}}"
 pack_for_grid_register="${{15}}"
-energy_range_tag="erange-$7$8-$9$10"
+energy_range_tag="erange-$7$8-$9${10}"
 job_label="{args_dict["label"]}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
 simtools-simulate-prod \\
@@ -108,7 +108,7 @@ simtools-simulate-prod \\
     --azimuth_angle "$5" \\
     --zenith_angle "$6" \\
     --nshow {args_dict["nshow"]} \\
-    --energy_range "$7 $8 $9 $10" \
+    --energy_range "$7 $8 $9 ${10}" \
     --core_scatter "{core_scatter_low} {core_scatter_high} m" \\
     --view_cone "{view_cone_low} deg {view_cone_high} deg" \\
     --corsika_le_interaction "$corsika_le_interaction" \\
