@@ -1,10 +1,13 @@
 """HT Condor script generator for simulation production."""
 
+import ast
 import itertools
 import logging
 from pathlib import Path
 
 import astropy.units as u
+
+import simtools.version as simtools_version
 
 _logger = logging.getLogger(__name__)
 
@@ -109,6 +112,30 @@ def _sanitize_label_for_filename(label):
     return "".join(ch if ch.isalnum() or ch in ["-", "_", "."] else "_" for ch in label_string)
 
 
+def _resolve_array_layout_name(array_layout_name, model_version):
+    """Resolve array layout configuration for a specific model version."""
+    if isinstance(array_layout_name, list) and len(array_layout_name) == 1:
+        array_layout_name = array_layout_name[0]
+
+    # Configurator/_fill_config stringifies dict values when rebuilding argparse arguments.
+    # Accept that serialized form so by_version mappings still resolve per model version.
+    if isinstance(array_layout_name, str) and array_layout_name.strip().startswith("{"):
+        try:
+            parsed_layout = ast.literal_eval(array_layout_name)
+            if isinstance(parsed_layout, dict):
+                array_layout_name = parsed_layout
+        except (SyntaxError, ValueError):
+            return array_layout_name
+
+    if not isinstance(array_layout_name, dict) or list(array_layout_name) != ["by_version"]:
+        return array_layout_name
+
+    resolved = simtools_version.resolve_by_version(
+        {"array_layout_name": array_layout_name}, model_version
+    )
+    return resolved["array_layout_name"]
+
+
 def _build_job_specs(args_dict, image_labels):
     """Build backend-agnostic job specs from comparison and production grids."""
     grid_axes = _normalize_grid_axes(args_dict)
@@ -150,6 +177,7 @@ def _build_job_specs(args_dict, image_labels):
                         "azimuth_angle": azimuth,
                         "zenith_angle": zenith,
                         "model_version": model_version,
+                        "array_layout_name": args_dict.get("array_layout_name"),
                         "corsika_le_interaction": corsika_le,
                         "corsika_he_interaction": corsika_he,
                         "energy_min": energy_range_pair[0],
@@ -175,6 +203,9 @@ def _write_params_file(params_file_path, label_job_specs):
     """Write params file consumed by HTCondor queue-from syntax."""
     with open(params_file_path, "w", encoding="utf-8") as params_file_handle:
         for job_spec in label_job_specs:
+            array_layout_name = _resolve_array_layout_name(
+                job_spec["array_layout_name"], job_spec["model_version"]
+            )
             energy_min_value, energy_min_unit = _format_quantity_value_and_unit(
                 job_spec["energy_min"], default_unit=u.GeV
             )
@@ -191,6 +222,7 @@ def _write_params_file(params_file_path, label_job_specs):
                 energy_max_value,
                 energy_max_unit,
                 _format_grid_value(job_spec["model_version"], None),
+                _format_grid_value(array_layout_name, None),
                 _format_grid_value(job_spec["corsika_le_interaction"], None),
                 _format_grid_value(job_spec["corsika_he_interaction"], None),
                 _format_grid_value(job_spec["run_number"], None),
@@ -272,14 +304,14 @@ def _get_submit_file(executable, apptainer_image, priority, params_file_name):
         "$(process) env.txt "
         "$(apptainer_label) $(primary) $(azimuth_angle) $(zenith_angle) "
         "$(energy_min_value) $(energy_min_unit) $(energy_max_value) $(energy_max_unit) "
-        "$(model_version) "
+        "$(model_version) $(array_layout_name) "
         "$(corsika_le_interaction) $(corsika_he_interaction) "
         "$(run_number) $(pack_for_grid_register)"
     )
     queue_string = (
         "apptainer_label,primary,azimuth_angle,zenith_angle,"
         "energy_min_value,energy_min_unit,energy_max_value,energy_max_unit,"
-        "model_version,corsika_le_interaction,corsika_he_interaction,"
+        "model_version,array_layout_name,corsika_le_interaction,corsika_he_interaction,"
         "run_number,pack_for_grid_register"
     )
 
@@ -323,13 +355,6 @@ def _get_submit_script(args_dict):
 
     label = args_dict["label"] if args_dict["label"] else "simulate-prod"
 
-    array_layout_name = (
-        args_dict["array_layout_name"][0]
-        if isinstance(args_dict["array_layout_name"], list)
-        and len(args_dict["array_layout_name"]) == 1
-        else args_dict["array_layout_name"]
-    )
-
     run_number_offset = args_dict["run_number_offset"] or 1
 
     return f"""#!/usr/bin/env bash
@@ -341,10 +366,11 @@ set -a; source "$2"
 apptainer_label="$3"
 primary="$4"
 model_version="${{11}}"
-corsika_le_interaction="${{12}}"
-corsika_he_interaction="${{13}}"
-run_number="${{14}}"
-pack_for_grid_register="${{15}}"
+array_layout_name="${{12}}"
+corsika_le_interaction="${{13}}"
+corsika_he_interaction="${{14}}"
+run_number="${{15}}"
+pack_for_grid_register="${{16}}"
 energy_range_tag="erange-$7$8-$9${{10}}"
 job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
@@ -353,7 +379,7 @@ simtools-simulate-prod \\
     --label "$job_label" \\
     --model_version "$model_version" \\
     --site {args_dict["site"]} \\
-    --array_layout_name {array_layout_name} \\
+    --array_layout_name "$array_layout_name" \\
     --primary "$primary" \\
     --azimuth_angle {azimuth_angle_string} \\
     --zenith_angle {zenith_angle_string} \\

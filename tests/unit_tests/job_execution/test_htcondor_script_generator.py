@@ -91,10 +91,11 @@ set -a; source "$2"
 apptainer_label="$3"
 primary="$4"
 model_version="${{11}}"
-corsika_le_interaction="${{12}}"
-corsika_he_interaction="${{13}}"
-run_number="${{14}}"
-pack_for_grid_register="${{15}}"
+array_layout_name="${{12}}"
+corsika_le_interaction="${{13}}"
+corsika_he_interaction="${{14}}"
+run_number="${{15}}"
+pack_for_grid_register="${{16}}"
 energy_range_tag="erange-$7$8-$9${{10}}"
 job_label="{args_dict["label"]}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
@@ -103,7 +104,7 @@ simtools-simulate-prod \\
     --label "$job_label" \\
     --model_version "$model_version" \\
     --site {args_dict["site"]} \\
-    --array_layout_name {args_dict["array_layout_name"]} \\
+    --array_layout_name "$array_layout_name" \\
     --primary "$primary" \\
     --azimuth_angle "$5" \\
     --zenith_angle "$6" \\
@@ -133,6 +134,7 @@ def test_get_submit_file_uses_queue_from_params():
 
     assert "queue apptainer_label,primary" in content
     assert "energy_min_value,energy_min_unit,energy_max_value,energy_max_unit" in content
+    assert "model_version,array_layout_name,corsika_le_interaction" in content
     assert "from simulate_prod.submit.params.txt" in content
     assert 'arguments = "$(process) env.txt' in content
 
@@ -183,6 +185,52 @@ def test_build_job_specs_increments_run_number(args_dict):
     assert run_numbers == [10, 11, 12, 13]
 
 
+def test_write_params_file_resolves_array_layout_name_by_model_version(
+    args_dict, tmp_test_directory
+):
+    args_dict["number_of_runs"] = 1
+    args_dict["model_version"] = ["6.3.0", "7.0.0"]
+    args_dict["array_layout_name"] = {
+        "by_version": {
+            "<7.0.0": "alpha",
+            ">=7.0.0": "CTAO-North-Alpha",
+        }
+    }
+
+    params_file_path = Path(tmp_test_directory) / "params.txt"
+    job_specs = _build_job_specs(args_dict, ["7.0.0"])
+
+    _write_params_file(params_file_path, job_specs)
+
+    params_lines = params_file_path.read_text(encoding="utf-8").splitlines()
+
+    assert "6.3.0 alpha urqmd epos 1 simtools-output/7.0.0" in params_lines[0]
+    assert "7.0.0 CTAO-North-Alpha urqmd epos 2 simtools-output/7.0.0" in params_lines[1]
+
+
+def test_write_params_file_resolves_stringified_by_version_layout(args_dict, tmp_test_directory):
+    args_dict["number_of_runs"] = 1
+    args_dict["model_version"] = ["6.3.0", "7.0.0"]
+    args_dict["array_layout_name"] = str(
+        {
+            "by_version": {
+                "<7.0.0": "alpha",
+                ">=7.0.0": "CTAO-North-Alpha",
+            }
+        }
+    )
+
+    params_file_path = Path(tmp_test_directory) / "params.txt"
+    job_specs = _build_job_specs(args_dict, ["7.0.0"])
+
+    _write_params_file(params_file_path, job_specs)
+
+    params_lines = params_file_path.read_text(encoding="utf-8").splitlines()
+
+    assert "6.3.0 alpha urqmd epos 1 simtools-output/7.0.0" in params_lines[0]
+    assert "7.0.0 CTAO-North-Alpha urqmd epos 2 simtools-output/7.0.0" in params_lines[1]
+
+
 def test_write_params_file_keeps_energy_units(tmp_test_directory):
     params_file_path = Path(tmp_test_directory) / "params.txt"
     label_job_specs = [
@@ -194,6 +242,12 @@ def test_write_params_file_keeps_energy_units(tmp_test_directory):
             "energy_min": 30 * u.GeV,
             "energy_max": 10 * u.TeV,
             "model_version": "7.0.0",
+            "array_layout_name": {
+                "by_version": {
+                    "<7.0.0": "alpha",
+                    ">=7.0.0": "CTAO-North-Alpha",
+                }
+            },
             "corsika_le_interaction": "urqmd",
             "corsika_he_interaction": "epos",
             "run_number": 10,
@@ -204,5 +258,5 @@ def test_write_params_file_keeps_energy_units(tmp_test_directory):
     _write_params_file(params_file_path, label_job_specs)
 
     assert params_file_path.read_text(encoding="utf-8") == (
-        "7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 7.0.0 urqmd epos 10 simtools-output/7.0.0\n"
+        "7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/7.0.0\n"
     )

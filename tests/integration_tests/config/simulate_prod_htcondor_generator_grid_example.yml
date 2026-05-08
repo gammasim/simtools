@@ -5,7 +5,10 @@ applications:
     apptainer_image:
       0.30.0: tests/resources/dummy_apptainer_image.sif
       0.29.0: tests/resources/dummy_apptainer_image.sif
-    array_layout_name: CTAO-North-Alpha
+    array_layout_name:
+      by_version:
+        "<7.0.0": alpha
+        ">=7.0.0": CTAO-North-Alpha
     azimuth_angle:
     - North
     - South
