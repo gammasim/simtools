@@ -10,7 +10,9 @@ applications:
     - North
     - South
     core_scatter: 10 500 m
-    corsika_he_interaction: epos
+    corsika_he_interaction:
+    - epos
+    - qgsjet
     corsika_le_interaction: urqmd
     energy_range:
     - 30 GeV 30 GeV
@@ -25,7 +27,9 @@ applications:
     nshow: 5
     number_of_runs: 2
     output_path: htcondor_submit
-    primary: gamma
+    primary:
+    - gamma
+    - proton
     priority: 5
     run_number: 10
     simulation_software: corsika_sim_telarray
