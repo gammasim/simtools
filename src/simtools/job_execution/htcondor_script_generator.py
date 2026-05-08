@@ -315,7 +315,7 @@ def _get_submit_script(args_dict):
     """
     azimuth_angle_string = '"$5"'
     zenith_angle_string = '"$6"'
-    energy_range_string = '"$7 $8 $9 $10"'
+    energy_range_string = '"$7 $8 $9 ${10}"'
     core_scatter = args_dict["core_scatter"]
     core_scatter_string = f'"{core_scatter[0]} {core_scatter[1].to(u.m).value} m"'
     view_cone = args_dict["view_cone"]
@@ -345,7 +345,7 @@ corsika_le_interaction="${{12}}"
 corsika_he_interaction="${{13}}"
 run_number="${{14}}"
 pack_for_grid_register="${{15}}"
-energy_range_tag="erange-$7$8-$9$10"
+energy_range_tag="erange-$7$8-$9${10}"
 job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
 simtools-simulate-prod \\
