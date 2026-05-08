@@ -1,4 +1,12 @@
-"""HT Condor script generator for simulation production."""
+"""
+HTCondor script generator for simulation production.
+
+Generates three files in the specified output directory:
+- '.condor': HTCondor submit file with queue-from syntax.
+- 'params.txt': Parameters file consumed by the submit file.
+- 'submit.sh': Executable script that runs the simulation command with parameters
+
+"""
 
 import ast
 import itertools
@@ -20,6 +28,23 @@ _GRID_AXES = [
     "corsika_he_interaction",
 ]
 
+_PARAMS_FIELDS = [
+    "apptainer_label",
+    "primary",
+    "azimuth_angle",
+    "zenith_angle",
+    "energy_min_value",
+    "energy_min_unit",
+    "energy_max_value",
+    "energy_max_unit",
+    "model_version",
+    "array_layout_name",
+    "corsika_le_interaction",
+    "corsika_he_interaction",
+    "run_number",
+    "pack_for_grid_register",
+]
+
 
 def _normalize_to_list(value):
     """Normalize scalar values to lists of length one."""
@@ -32,17 +57,16 @@ def _normalize_to_list(value):
 
 def _normalize_grid_axes(args_dict):
     """Return normalized grid axes for cartesian product expansion."""
-    normalized = {}
-    for axis in _GRID_AXES:
-        if axis in args_dict and args_dict[axis] is not None:
-            normalized[axis] = _normalize_to_list(args_dict[axis])
-        else:
-            normalized[axis] = [None]
-    return normalized
+    return {
+        axis: _normalize_to_list(args_dict[axis])
+        if axis in args_dict and args_dict[axis] is not None
+        else [None]
+        for axis in _GRID_AXES
+    }
 
 
 def _normalize_energy_ranges(energy_range):
-    """Normalize energy range argument to a list of (emin, emax) pairs."""
+    """Normalize energy range argument to a list of (e_min, e_max) pairs."""
     if isinstance(energy_range, tuple) and len(energy_range) == 2:
         return [energy_range]
 
@@ -52,11 +76,26 @@ def _normalize_energy_ranges(energy_range):
         if all(isinstance(item, (list, tuple)) and len(item) == 2 for item in energy_range):
             return [tuple(item) for item in energy_range]
 
-    raise ValueError("energy_range must be one pair (emin, emax) or a list of (emin, emax) pairs.")
+    raise ValueError(
+        "energy_range must be one pair (e_min, e_max) or a list of (e_min, e_max) pairs."
+    )
 
 
 def _resolve_apptainer_images(apptainer_image_arg):
-    """Resolve and validate apptainer image configuration."""
+    """
+    Resolve and validate apptainer image configuration.
+
+    Parameters
+    ----------
+    apptainer_image_arg: str or dict
+        Either a string path to a single apptainer image or a dictionary
+        mapping labels to image paths.
+
+    Returns
+    -------
+    dict
+        Dictionary mapping labels to resolved Path objects for apptainer images.
+    """
     if apptainer_image_arg is None:
         raise ValueError("Missing required apptainer_image path.")
 
@@ -82,28 +121,39 @@ def _resolve_apptainer_images(apptainer_image_arg):
     raise ValueError("apptainer_image must be either a string path or a label-to-path dictionary.")
 
 
-def _format_grid_value(value, unit):
-    """Format scalar values for params files with stable unit conversion."""
+def _format_param_value(value, field_name):
+    """
+    Format a value for params file output.
+
+    For energy fields, returns (value_str, unit_str) tuple.
+    For other fields, returns value_str.
+
+    Parameters
+    ----------
+    value : any
+        Value to format.
+    field_name : str
+        Field name to determine formatting and default units.
+
+    Returns
+    -------
+    str or tuple
+        Formatted value(s).
+    """
     if value is None:
-        return ""
-    if hasattr(value, "to"):
-        return f"{value.to(unit).value}"
+        raise ValueError(f"Missing required value for field '{field_name}'.")
+
+    if field_name in ("energy_min_value", "energy_max_value"):
+        if isinstance(value, u.Quantity):
+            return f"{value.value}", f"{value.unit}"
+        return f"{value}", str(u.GeV)
+
+    if field_name in ("azimuth_angle", "zenith_angle"):
+        if isinstance(value, u.Quantity):
+            return f"{value.to(u.deg).value}"
+        return f"{value}"
+
     return f"{value}"
-
-
-def _format_quantity_value_and_unit(value, default_unit=None):
-    """Return quantity as separate value and unit strings for params files."""
-    if value is None:
-        if default_unit is None:
-            return "", ""
-        return "", f"{default_unit}"
-
-    if hasattr(value, "unit"):
-        return f"{value.value}", f"{value.unit}"
-
-    if default_unit is None:
-        return f"{value}", ""
-    return f"{value}", f"{default_unit}"
 
 
 def _sanitize_label_for_filename(label):
@@ -118,7 +168,6 @@ def _resolve_array_layout_name(array_layout_name, model_version):
         array_layout_name = array_layout_name[0]
 
     # Configurator/_fill_config stringifies dict values when rebuilding argparse arguments.
-    # Accept that serialized form so by_version mappings still resolve per model version.
     if isinstance(array_layout_name, str) and array_layout_name.strip().startswith("{"):
         try:
             parsed_layout = ast.literal_eval(array_layout_name)
@@ -200,32 +249,34 @@ def _group_job_specs_by_label(job_specs):
 
 
 def _write_params_file(params_file_path, label_job_specs):
-    """Write params file consumed by HTCondor queue-from syntax."""
+    """Write parameter file consumed by HTCondor queue-from syntax."""
     with open(params_file_path, "w", encoding="utf-8") as params_file_handle:
         for job_spec in label_job_specs:
             array_layout_name = _resolve_array_layout_name(
                 job_spec["array_layout_name"], job_spec["model_version"]
             )
-            energy_min_value, energy_min_unit = _format_quantity_value_and_unit(
-                job_spec["energy_min"], default_unit=u.GeV
+
+            energy_min_value, energy_min_unit = _format_param_value(
+                job_spec["energy_min"], "energy_min_value"
             )
-            energy_max_value, energy_max_unit = _format_quantity_value_and_unit(
-                job_spec["energy_max"], default_unit=u.GeV
+            energy_max_value, energy_max_unit = _format_param_value(
+                job_spec["energy_max"], "energy_max_value"
             )
+
             row = [
-                job_spec["apptainer_label"],
-                _format_grid_value(job_spec["primary"], None),
-                _format_grid_value(job_spec["azimuth_angle"], u.deg),
-                _format_grid_value(job_spec["zenith_angle"], u.deg),
+                _format_param_value(job_spec["apptainer_label"], "apptainer_label"),
+                _format_param_value(job_spec["primary"], "primary"),
+                _format_param_value(job_spec["azimuth_angle"], "azimuth_angle"),
+                _format_param_value(job_spec["zenith_angle"], "zenith_angle"),
                 energy_min_value,
                 energy_min_unit,
                 energy_max_value,
                 energy_max_unit,
-                _format_grid_value(job_spec["model_version"], None),
-                _format_grid_value(array_layout_name, None),
-                _format_grid_value(job_spec["corsika_le_interaction"], None),
-                _format_grid_value(job_spec["corsika_he_interaction"], None),
-                _format_grid_value(job_spec["run_number"], None),
+                _format_param_value(job_spec["model_version"], "model_version"),
+                _format_param_value(array_layout_name, "array_layout_name"),
+                _format_param_value(job_spec["corsika_le_interaction"], "corsika_le_interaction"),
+                _format_param_value(job_spec["corsika_he_interaction"], "corsika_he_interaction"),
+                _format_param_value(job_spec["run_number"], "run_number"),
                 job_spec["pack_for_grid_register"],
             ]
             params_file_handle.write(" ".join(row) + "\n")
@@ -280,7 +331,7 @@ def generate_submission_script(args_dict):
 
 def _get_submit_file(executable, apptainer_image, priority, params_file_name):
     """
-    Return HT Condor submit file.
+    Return HTCondor submit file.
 
     Database access variables are passed through the environment file.
 
@@ -298,22 +349,10 @@ def _get_submit_file(executable, apptainer_image, priority, params_file_name):
     Returns
     -------
     str
-        HT Condor submit file content.
+        HTCondor submit file content.
     """
-    arguments_string = (
-        "$(process) env.txt "
-        "$(apptainer_label) $(primary) $(azimuth_angle) $(zenith_angle) "
-        "$(energy_min_value) $(energy_min_unit) $(energy_max_value) $(energy_max_unit) "
-        "$(model_version) $(array_layout_name) "
-        "$(corsika_le_interaction) $(corsika_he_interaction) "
-        "$(run_number) $(pack_for_grid_register)"
-    )
-    queue_string = (
-        "apptainer_label,primary,azimuth_angle,zenith_angle,"
-        "energy_min_value,energy_min_unit,energy_max_value,energy_max_unit,"
-        "model_version,array_layout_name,corsika_le_interaction,corsika_he_interaction,"
-        "run_number,pack_for_grid_register"
-    )
+    arguments_string = "$(process) env.txt " + " ".join(f"$({field})" for field in _PARAMS_FIELDS)
+    queue_string = ",".join(_PARAMS_FIELDS)
 
     return f"""universe = container
 container_image = {apptainer_image}
@@ -333,7 +372,7 @@ queue {queue_string} from {params_file_name}
 
 def _get_submit_script(args_dict):
     """
-    Return HT Condor submit script.
+    Return HTCondor submit script.
 
     Parameters
     ----------
@@ -343,19 +382,44 @@ def _get_submit_script(args_dict):
     Returns
     -------
     str
-        HT Condor submit script content.
+        HTCondor submit script content.
     """
-    azimuth_angle_string = '"$5"'
-    zenith_angle_string = '"$6"'
-    energy_range_string = '"$7 $8 $9 ${10}"'
+    # Map _PARAMS_FIELDS to bash positional indices ($3, $4, etc.)
+    # Indices 1-2 are reserved for: $1=process_id, $2=env_file
+    bash_indices = {}
+    for i, field in enumerate(_PARAMS_FIELDS):
+        idx = 3 + i
+        bash_indices[field] = f"${{{idx}}}"
+
     core_scatter = args_dict["core_scatter"]
     core_scatter_string = f'"{core_scatter[0]} {core_scatter[1].to(u.m).value} m"'
     view_cone = args_dict["view_cone"]
     view_cone_string = f'"{view_cone[0].to(u.deg)} {view_cone[1].to(u.deg)}"'
 
     label = args_dict["label"] if args_dict["label"] else "simulate-prod"
-
     run_number_offset = args_dict["run_number_offset"] or 1
+
+    azimuth_angle_idx = bash_indices["azimuth_angle"]
+    zenith_angle_idx = bash_indices["zenith_angle"]
+    energy_min_value_idx = bash_indices["energy_min_value"]
+    energy_min_unit_idx = bash_indices["energy_min_unit"]
+    energy_max_value_idx = bash_indices["energy_max_value"]
+    energy_max_unit_idx = bash_indices["energy_max_unit"]
+    model_version_idx = bash_indices["model_version"]
+    array_layout_name_idx = bash_indices["array_layout_name"]
+    corsika_le_interaction_idx = bash_indices["corsika_le_interaction"]
+    corsika_he_interaction_idx = bash_indices["corsika_he_interaction"]
+    run_number_idx = bash_indices["run_number"]
+    pack_for_grid_register_idx = bash_indices["pack_for_grid_register"]
+
+    energy_range_string = (
+        f'"{energy_min_value_idx} {energy_min_unit_idx} '
+        f'{energy_max_value_idx} {energy_max_unit_idx}"'
+    )
+    energy_range_tag = (
+        f"erange-{energy_min_value_idx}{energy_min_unit_idx}-"
+        f"{energy_max_value_idx}{energy_max_unit_idx}"
+    )
 
     return f"""#!/usr/bin/env bash
 
@@ -363,15 +427,15 @@ def _get_submit_script(args_dict):
 process_id="$1"
 # Load environment variables (for DB access)
 set -a; source "$2"
-apptainer_label="$3"
-primary="$4"
-model_version="${{11}}"
-array_layout_name="${{12}}"
-corsika_le_interaction="${{13}}"
-corsika_he_interaction="${{14}}"
-run_number="${{15}}"
-pack_for_grid_register="${{16}}"
-energy_range_tag="erange-$7$8-$9${{10}}"
+apptainer_label="{bash_indices["apptainer_label"]}"
+primary="{bash_indices["primary"]}"
+model_version="{model_version_idx}"
+array_layout_name="{array_layout_name_idx}"
+corsika_le_interaction="{corsika_le_interaction_idx}"
+corsika_he_interaction="{corsika_he_interaction_idx}"
+run_number="{run_number_idx}"
+pack_for_grid_register="{pack_for_grid_register_idx}"
+    energy_range_tag="{energy_range_tag}"
 job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
 simtools-simulate-prod \\
@@ -381,8 +445,8 @@ simtools-simulate-prod \\
     --site {args_dict["site"]} \\
     --array_layout_name "$array_layout_name" \\
     --primary "$primary" \\
-    --azimuth_angle {azimuth_angle_string} \\
-    --zenith_angle {zenith_angle_string} \\
+    --azimuth_angle "{azimuth_angle_idx}" \\
+    --zenith_angle "{zenith_angle_idx}" \\
     --nshow {args_dict["nshow"]} \\
     --energy_range {energy_range_string} \\
     --core_scatter {core_scatter_string} \\
@@ -391,6 +455,7 @@ simtools-simulate-prod \\
     --corsika_he_interaction "$corsika_he_interaction" \\
     --run_number "$run_number" \\
     --run_number_offset {run_number_offset} \\
+    --save_reduced_event_lists \\
     --output_path /tmp/simtools-output \\
     --log_level {args_dict["log_level"]} \\
     --pack_for_grid_register "$pack_for_grid_register"

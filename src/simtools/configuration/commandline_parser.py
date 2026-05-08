@@ -185,10 +185,7 @@ class CommandLineParser(argparse.ArgumentParser):
         )
         _job_group.add_argument(
             "--apptainer_image",
-            help=(
-                "Apptainer image path or a dictionary mapping labels to image paths. "
-                "This is primarily used by HTCondor submission generators."
-            ),
+            help="Apptainer image path or a dictionary mapping labels to image paths.",
             type=CommandLineParser.string_or_dict,
             default=None,
         )
