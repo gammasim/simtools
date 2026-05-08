@@ -268,6 +268,18 @@ def test_initialize_default_arguments_accepts_figure_format():
     assert args.figure_format == ["png", "pdf"]
 
 
+def test_initialize_default_arguments_accepts_apptainer_image_dict():
+    parser_with_defaults = parser.CommandLineParser()
+    parser_with_defaults.initialize_default_arguments()
+
+    args = parser_with_defaults.parse_args(
+        ["--apptainer_image", "{'7.0.0': '/tmp/v7.sif', '6.3.0': '/tmp/v63.sif'}"]
+    )
+
+    assert isinstance(args.apptainer_image, dict)
+    assert args.apptainer_image == {"7.0.0": "/tmp/v7.sif", "6.3.0": "/tmp/v63.sif"}
+
+
 def test_initialize_application_arguments():
     app_parser = parser.CommandLineParser()
     app_parser.initialize_application_arguments(
@@ -458,6 +470,99 @@ def test_simulation_configuration_uses_defaults_for_optional_arguments():
     assert args.run_number == 1
 
 
+def test_simulation_configuration_accepts_grid_list_values():
+    test_parser = parser.CommandLineParser()
+    test_parser.initialize_default_arguments(
+        simulation_configuration={
+            "software": None,
+            "corsika_configuration": [
+                "primary",
+                "azimuth_angle",
+                "zenith_angle",
+                "corsika_le_interaction",
+                "corsika_he_interaction",
+            ],
+        }
+    )
+
+    args = test_parser.parse_args(
+        [
+            "--primary",
+            "gamma",
+            "proton",
+            "--azimuth_angle",
+            "north",
+            "south",
+            "--zenith_angle",
+            "20",
+            "40",
+            "--corsika_le_interaction",
+            "urqmd",
+            "fluka",
+            "--corsika_he_interaction",
+            "epos",
+            "qgsjet",
+        ]
+    )
+
+    assert args.primary == ["gamma", "proton"]
+    assert_quantity_allclose(args.azimuth_angle[0], 0 * u.deg)
+    assert_quantity_allclose(args.azimuth_angle[1], 180 * u.deg)
+    assert_quantity_allclose(args.zenith_angle[0], 20 * u.deg)
+    assert_quantity_allclose(args.zenith_angle[1], 40 * u.deg)
+    assert args.corsika_le_interaction == ["urqmd", "fluka"]
+    assert args.corsika_he_interaction == ["epos", "qgsjet"]
+
+
+def test_simulation_configuration_accepts_energy_range_list_pair():
+    test_parser = parser.CommandLineParser()
+    test_parser.initialize_default_arguments(
+        simulation_configuration={
+            "software": None,
+            "corsika_configuration": ["primary", "energy_range"],
+        }
+    )
+
+    args = test_parser.parse_args(
+        [
+            "--primary",
+            "gamma",
+            "--energy_range",
+            "30 GeV",
+            "300 GeV",
+        ]
+    )
+
+    assert_quantity_allclose(args.energy_range[0], 30 * u.GeV)
+    assert_quantity_allclose(args.energy_range[1], 300 * u.GeV)
+
+
+def test_simulation_configuration_accepts_energy_range_list_of_pairs():
+    test_parser = parser.CommandLineParser()
+    test_parser.initialize_default_arguments(
+        simulation_configuration={
+            "software": None,
+            "corsika_configuration": ["primary", "energy_range"],
+        }
+    )
+
+    args = test_parser.parse_args(
+        [
+            "--primary",
+            "gamma",
+            "--energy_range",
+            "30 GeV 30 GeV",
+            "300 GeV 300 GeV",
+        ]
+    )
+
+    assert len(args.energy_range) == 2
+    assert_quantity_allclose(args.energy_range[0][0], 30 * u.GeV)
+    assert_quantity_allclose(args.energy_range[0][1], 30 * u.GeV)
+    assert_quantity_allclose(args.energy_range[1][0], 300 * u.GeV)
+    assert_quantity_allclose(args.energy_range[1][1], 300 * u.GeV)
+
+
 def test_initialize_db_config_arguments_strip_string():
     parser_10 = parser.CommandLineParser()
     parser_10.initialize_db_config_arguments()
@@ -484,6 +589,8 @@ def test_get_dictionary_with_corsika_configuration(mocker):
     assert "helium" in corsika_config["primary"]["help"]
     assert "iron" in corsika_config["primary"]["help"]
     assert corsika_config["primary"]["type"] is str.lower
+    assert corsika_config["primary"]["action"] is parser.OneOrManyAction
+    assert corsika_config["primary"]["nargs"] == "+"
     assert corsika_config["primary"]["required"] is True
 
     # Test the "primary_id_type" key
@@ -499,12 +606,16 @@ def test_get_dictionary_with_corsika_configuration(mocker):
         "Telescope pointing direction in azimuth."
     )
     assert corsika_config["azimuth_angle"]["type"] == parser.CommandLineParser.azimuth_angle
+    assert corsika_config["azimuth_angle"]["action"] is parser.OneOrManyAction
+    assert corsika_config["azimuth_angle"]["nargs"] == "+"
     assert corsika_config["azimuth_angle"]["default"] == 0 * u.deg
 
     # Test the "zenith_angle" key
     assert "zenith_angle" in corsika_config
     assert corsika_config["zenith_angle"]["help"] == "Zenith angle in degrees (between 0 and 180)."
     assert corsika_config["zenith_angle"]["type"] == parser.CommandLineParser.zenith_angle
+    assert corsika_config["zenith_angle"]["action"] is parser.OneOrManyAction
+    assert corsika_config["zenith_angle"]["nargs"] == "+"
     assert corsika_config["zenith_angle"]["default"] == 20 * u.deg
 
     # Test the "nshow" key
