@@ -48,13 +48,6 @@ priority (int, optional)
 from simtools.application_control import build_application
 from simtools.job_execution import htcondor_script_generator
 
-_INITIALIZATION_KWARGS = {
-    "db_config": False,
-    "preserve_by_version_keys": ["array_layout_name"],
-    "simulation_model": ["site", "layout", "telescope", "model_version"],
-    "simulation_configuration": {"software": None, "corsika_configuration": ["all"]},
-}
-
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
@@ -77,7 +70,12 @@ def _add_arguments(parser):
 def main():
     """See CLI description."""
     app_context = build_application(
-        initialization_kwargs=_INITIALIZATION_KWARGS,
+        initialization_kwargs={
+            "db_config": False,
+            "preserve_by_version_keys": ["array_layout_name"],
+            "simulation_model": ["site", "layout", "telescope", "model_version"],
+            "simulation_configuration": {"software": None, "corsika_configuration": ["all"]},
+        },
     )
 
     htcondor_script_generator.generate_submission_script(app_context.args)
