@@ -81,6 +81,7 @@ def test_get_submit_script(args_dict):
     core_scatter_high = args_dict["core_scatter"][1].to(u.m).value
     view_cone_low = args_dict["view_cone"][0].to(u.deg).value
     view_cone_high = args_dict["view_cone"][1].to(u.deg).value
+    container_output_path = str(Path("/", "tmp", "simtools-output"))
 
     expected_script = f"""#!/usr/bin/env bash
 
@@ -88,15 +89,15 @@ def test_get_submit_script(args_dict):
 process_id="$1"
 # Load environment variables (for DB access)
 set -a; source "$2"
-apptainer_label="$3"
-primary="$4"
+apptainer_label="${{3}}"
+primary="${{4}}"
 model_version="${{11}}"
 array_layout_name="${{12}}"
 corsika_le_interaction="${{13}}"
 corsika_he_interaction="${{14}}"
 run_number="${{15}}"
 pack_for_grid_register="${{16}}"
-energy_range_tag="erange-$7$8-$9${{10}}"
+energy_range_tag="erange-${{7}}${{8}}-${{9}}${{10}}"
 job_label="{args_dict["label"]}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
 simtools-simulate-prod \\
@@ -106,17 +107,18 @@ simtools-simulate-prod \\
     --site {args_dict["site"]} \\
     --array_layout_name "$array_layout_name" \\
     --primary "$primary" \\
-    --azimuth_angle "$5" \\
-    --zenith_angle "$6" \\
+    --azimuth_angle "${{5}}" \\
+    --zenith_angle "${{6}}" \\
     --nshow {args_dict["nshow"]} \\
-    --energy_range "$7 $8 $9 ${{10}}" \\
+    --energy_range "${{7}} ${{8}} ${{9}} ${{10}}" \\
     --core_scatter "{core_scatter_low} {core_scatter_high} m" \\
     --view_cone "{view_cone_low} deg {view_cone_high} deg" \\
     --corsika_le_interaction "$corsika_le_interaction" \\
     --corsika_he_interaction "$corsika_he_interaction" \\
     --run_number "$run_number" \\
     --run_number_offset {args_dict["run_number_offset"]} \\
-    --output_path /tmp/simtools-output \\
+    --save_reduced_event_lists \\
+    --output_path {container_output_path} \\
     --log_level {args_dict["log_level"]} \\
     --pack_for_grid_register "$pack_for_grid_register"
 """
@@ -124,10 +126,11 @@ simtools-simulate-prod \\
     assert generated_script == expected_script
 
 
-def test_get_submit_file_uses_queue_from_params():
+def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
+    apptainer_image = Path(tmp_test_directory) / "image.sif"
     content = _get_submit_file(
         executable="simulate_prod.submit.sh",
-        apptainer_image=Path("/tmp/image.sif"),
+        apptainer_image=apptainer_image,
         priority=1,
         params_file_name="simulate_prod.submit.params.txt",
     )
@@ -140,8 +143,13 @@ def test_get_submit_file_uses_queue_from_params():
 
 
 @mock.patch("simtools.job_execution.htcondor_script_generator.Path.is_file", return_value=True)
-def test_resolve_apptainer_images_dict(mock_is_file):
-    images = _resolve_apptainer_images({"7.0.0": "/tmp/v7.sif", "6.3.0": "/tmp/v63.sif"})
+def test_resolve_apptainer_images_dict(mock_is_file, tmp_test_directory):
+    images = _resolve_apptainer_images(
+        {
+            "7.0.0": str(Path(tmp_test_directory) / "v7.sif"),
+            "6.3.0": str(Path(tmp_test_directory) / "v63.sif"),
+        }
+    )
 
     assert set(images.keys()) == {"7.0.0", "6.3.0"}
     assert mock_is_file.call_count == 2
