@@ -15,7 +15,7 @@ applications:
     core_scatter: 10 500 m
     corsika_he_interaction:
     - epos
-    - qgsjet
+    - qgs3
     corsika_le_interaction: urqmd
     energy_range:
     - 30 GeV 30 GeV
