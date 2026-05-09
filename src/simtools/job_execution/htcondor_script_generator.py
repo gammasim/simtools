@@ -296,9 +296,17 @@ def generate_submission_script(args_dict):
     grouped_job_specs = _group_job_specs_by_label(job_specs)
 
     work_dir = Path(args_dict["output_path"])
-    log_dir = work_dir / "logs"
+    htcondor_log_path = Path(
+        args_dict["htcondor_log_path"]
+        if args_dict.get("htcondor_log_path")
+        else work_dir / "htcondor_logs"
+    )
+    log_dir = htcondor_log_path / "log"
+    error_dir = htcondor_log_path / "error"
+    output_dir = htcondor_log_path / "output"
     work_dir.mkdir(parents=True, exist_ok=True)
-    log_dir.mkdir(parents=True, exist_ok=True)
+    for subdir in (log_dir, error_dir, output_dir):
+        subdir.mkdir(parents=True, exist_ok=True)
     submit_file_name = "simulate_prod.submit"
     _logger.info(f"Generating HT Condor submission scripts (path: {work_dir})")
 
@@ -320,6 +328,9 @@ def generate_submission_script(args_dict):
                     apptainer_images[label],
                     args_dict["priority"],
                     params_file_name,
+                    log_dir=log_dir,
+                    error_dir=error_dir,
+                    output_dir=output_dir,
                 )
             )
 
@@ -329,7 +340,9 @@ def generate_submission_script(args_dict):
     Path(work_dir / f"{submit_file_name}.sh").chmod(0o755)
 
 
-def _get_submit_file(executable, apptainer_image, priority, params_file_name):
+def _get_submit_file(
+    executable, apptainer_image, priority, params_file_name, log_dir, error_dir, output_dir
+):
     """
     Return HTCondor submit file.
 
@@ -345,6 +358,12 @@ def _get_submit_file(executable, apptainer_image, priority, params_file_name):
         Priority of the job.
     params_file_name: str
         Name of the params file for queue-from submission.
+    log_dir: Path
+        Directory for HTCondor log files.
+    error_dir: Path
+        Directory for HTCondor error files.
+    output_dir: Path
+        Directory for HTCondor output files.
 
     Returns
     -------
@@ -359,9 +378,9 @@ container_image = {apptainer_image}
 transfer_container = false
 
 executable = {executable}
-error      = logs/err.$(cluster)_$(process)
-output     = logs/out.$(cluster)_$(process)
-log        = logs/log.$(cluster)_$(process)
+error      = {error_dir}/err.$(cluster)_$(process)
+output     = {output_dir}/out.$(cluster)_$(process)
+log        = {log_dir}/log.$(cluster)_$(process)
 
 priority = {priority}
 arguments = "{arguments_string}"
@@ -435,7 +454,7 @@ corsika_le_interaction="{corsika_le_interaction_idx}"
 corsika_he_interaction="{corsika_he_interaction_idx}"
 run_number="{run_number_idx}"
 pack_for_grid_register="{pack_for_grid_register_idx}"
-    energy_range_tag="{energy_range_tag}"
+energy_range_tag="{energy_range_tag}"
 job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
 simtools-simulate-prod \\

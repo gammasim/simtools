@@ -128,11 +128,17 @@ simtools-simulate-prod \\
 
 def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
     apptainer_image = Path(tmp_test_directory) / "image.sif"
+    log_dir = Path(tmp_test_directory) / "htcondor_logs" / "log"
+    error_dir = Path(tmp_test_directory) / "htcondor_logs" / "error"
+    output_dir = Path(tmp_test_directory) / "htcondor_logs" / "output"
     content = _get_submit_file(
         executable="simulate_prod.submit.sh",
         apptainer_image=apptainer_image,
         priority=1,
         params_file_name="simulate_prod.submit.params.txt",
+        log_dir=log_dir,
+        error_dir=error_dir,
+        output_dir=output_dir,
     )
 
     assert "queue apptainer_label,primary" in content
@@ -140,6 +146,9 @@ def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
     assert "model_version,array_layout_name,corsika_le_interaction" in content
     assert "from simulate_prod.submit.params.txt" in content
     assert 'arguments = "$(process) env.txt' in content
+    assert str(log_dir) in content
+    assert str(error_dir) in content
+    assert str(output_dir) in content
 
 
 @mock.patch("simtools.job_execution.htcondor_script_generator.Path.is_file", return_value=True)

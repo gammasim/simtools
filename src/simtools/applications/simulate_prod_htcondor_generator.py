@@ -65,6 +65,13 @@ def _add_arguments(parser):
         required=False,
         default=1,
     )
+    parser.add_argument(
+        "--htcondor_log_path",
+        help="Directory for HTCondor output files (default: output_path/htcondor_logs).",
+        type=str,
+        required=False,
+        default=None,
+    )
 
 
 def main():
