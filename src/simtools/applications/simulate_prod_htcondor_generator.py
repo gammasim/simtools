@@ -72,6 +72,13 @@ def _add_arguments(parser):
         required=False,
         default=None,
     )
+    parser.add_argument(
+        "--simulation_output",
+        help="Output path for simulation data (default: ./simtools-output).",
+        type=str,
+        required=False,
+        default="./simtools-output",
+    )
 
 
 def main():

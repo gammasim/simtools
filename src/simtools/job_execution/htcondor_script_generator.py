@@ -189,7 +189,7 @@ def _build_job_specs(args_dict, image_labels):
     """Build backend-agnostic job specs from comparison and production grids."""
     grid_axes = _normalize_grid_axes(args_dict)
     energy_ranges = _normalize_energy_ranges(args_dict["energy_range"])
-    base_pack_dir = args_dict.get("pack_for_grid_register") or "simtools-output"
+    base_pack_dir = args_dict.get("simulation_output") or "simtools-output"
 
     combinations = list(
         itertools.product(
