@@ -99,8 +99,9 @@ jobs:
           APPTAINER_VERSION: v1.5.0
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download "${APPTAINER_VERSION}" --repo apptainer/apptainer --pattern "apptainer_${APPTAINER_VERSION#v}_amd64.deb" --skip-existing -O /tmp/apptainer.deb
-          sudo apt-get update -yq || echo "apt-get update failed; continuing with existing package indexes"
+          rm -f /tmp/apptainer.deb
+          gh release download "${APPTAINER_VERSION}" --repo apptainer/apptainer --pattern "apptainer_${APPTAINER_VERSION#v}_amd64.deb" -O /tmp/apptainer.deb
+          sudo apt-get update -yq
           sudo apt-get install --yes --quiet /tmp/apptainer.deb
           apptainer --version
 
@@ -110,7 +111,7 @@ jobs:
           APPTAINER_DOCKER_USERNAME: ${{ github.actor }}
           APPTAINER_DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          trap 'apptainer registry logout oras://ghcr.io || true' EXIT
+          trap 'apptainer registry logout oras://ghcr.io || echo "Warning: Apptainer registry logout failed"' EXIT
           printf '%s' "${APPTAINER_DOCKER_PASSWORD}" | apptainer registry login -u "${APPTAINER_DOCKER_USERNAME}" --password-stdin oras://ghcr.io
           while IFS= read -r image_tag; do
             if [[ -z "${image_tag}" ]]; then
