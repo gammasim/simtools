@@ -96,11 +96,11 @@ jobs:
       - name: Install Apptainer
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
         env:
+          APPTAINER_VERSION: v1.5.0
           GH_TOKEN: ${{ github.token }}
         run: |
-          APPTAINER_VERSION="$(gh release view --repo apptainer/apptainer --json tagName --jq '.tagName')"
           gh release download "${APPTAINER_VERSION}" --repo apptainer/apptainer --pattern 'apptainer_*_amd64.deb' --skip-existing -O /tmp/apptainer.deb
-          sudo apt-get update -yq || echo "Could not update apt package lists; continuing with the downloaded package"
+          sudo apt-get update -yq || echo "Could not update apt package lists; continuing with the downloaded package and relying on apt to resolve any missing dependencies during the fix-broken step"
           sudo dpkg --install --force-depends /tmp/apptainer.deb
           sudo apt-get install --fix-broken --yes --quiet
           apptainer --version
@@ -118,7 +118,8 @@ jobs:
               continue
             fi
 
-            sif_file="${image_tag##*:}.sif"
+            tag_name="${image_tag##*:}"
+            sif_file="${tag_name}.sif"
             apptainer build "${sif_file}" "docker://${image_tag}"
             apptainer push -U "${sif_file}" "oras://${image_tag}.sif"
             rm -f "${sif_file}"
