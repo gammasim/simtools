@@ -206,6 +206,48 @@ def test_fill(mock_reader, hdf5_file_name, mocker):
     )
 
 
+def test_fill_reads_multiple_files_sequentially(mock_reader, mocker):
+    """Test fill iterates over multiple files without keeping a shared reader state."""
+    histograms = EventDataHistograms(["test_file_1.h5", "test_file_2.h5"])
+
+    mock_file_info = mocker.Mock()
+    mock_event_data = mocker.Mock()
+    mock_triggered_data = mocker.Mock()
+    mock_shower_data = mocker.Mock()
+
+    mock_reader.return_value.read_event_data.return_value = (
+        mock_file_info,
+        mock_shower_data,
+        mock_event_data,
+        mock_triggered_data,
+    )
+    mock_reader.return_value.get_reduced_simulation_file_info.return_value = {
+        "energy_min": 1.0 * u.TeV,
+        "core_scatter_max": 100.0 * u.m,
+        "viewcone_max": 5.0 * u.deg,
+        "solid_angle": 1.0 * u.sr,
+        "scatter_area": 1.0 * u.cm**2,
+    }
+    mock_reader.return_value.data_sets = ["test_dataset"]
+
+    mocker.patch.object(histograms, "_define_histograms", return_value={})
+    mocker.patch.object(histograms, "print_summary")
+    mocker.patch.object(histograms, "calculate_efficiency_data")
+    mocker.patch.object(histograms, "calculate_cumulative_data")
+
+    histograms.fill()
+
+    assert mock_reader.call_args_list == [
+        mocker.call("test_file_1.h5", telescope_list=None),
+        mocker.call("test_file_1.h5", telescope_list=None),
+        mocker.call("test_file_2.h5", telescope_list=None),
+    ]
+    assert mock_reader.return_value.read_event_data.call_args_list == [
+        mocker.call(mocker.ANY, table_name_map="test_dataset"),
+        mocker.call(mocker.ANY, table_name_map="test_dataset"),
+    ]
+
+
 def test_fill_accumulates_histograms_across_data_sets(mock_reader, hdf5_file_name, mocker):
     """Test fill accumulates histogram counts across all indexed datasets."""
     histograms = EventDataHistograms(hdf5_file_name)

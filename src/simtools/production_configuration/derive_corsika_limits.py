@@ -11,6 +11,7 @@ from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler, io_handler
 from simtools.layout.array_layout_utils import get_array_elements_from_db_for_layouts
 from simtools.sim_events.histograms import EventDataHistograms
+from simtools.utils.general import resolve_file_patterns
 from simtools.utils.names import normalize_array_element_identifier_container
 from simtools.visualization import plot_simtel_event_histograms
 
@@ -72,8 +73,8 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
 
     Parameters
     ----------
-    file_path : str
-        Path to the event data file.
+    file_path : str or list
+        Path or glob pattern to the event data file, or a list of files.
     array_name : str
         Name of the telescope array configuration.
     telescope_ids : list[str]
@@ -88,7 +89,12 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
     dict
         Dictionary containing the computed limits and metadata.
     """
-    histograms = EventDataHistograms(file_path, array_name=array_name, telescope_list=telescope_ids)
+    event_data_files = resolve_file_patterns(file_path)
+    histograms = EventDataHistograms(
+        event_data_files,
+        array_name=array_name,
+        telescope_list=telescope_ids,
+    )
     histograms.fill()
 
     limits = {

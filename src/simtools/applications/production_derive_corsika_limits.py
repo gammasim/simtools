@@ -46,7 +46,7 @@ directions, level of night sky background, etc.).
 Command line arguments
 ----------------------
 event_data_file (str, required)
-    Path to reduced event data file.
+    Path or glob pattern for reduced event data files.
 telescope_ids (str, optional)
     Custom array layout file containing telescope IDs.
 loss_fraction (float, required)
@@ -106,7 +106,7 @@ def _add_arguments(parser):
         "--event_data_file",
         type=str,
         required=True,
-        help="Event data file containing reduced event data.",
+        help="Event data file or glob pattern containing reduced event data.",
     )
     parser.add_argument(
         "--loss_fraction",
