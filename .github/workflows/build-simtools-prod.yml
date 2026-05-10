@@ -99,10 +99,9 @@ jobs:
           APPTAINER_VERSION: v1.5.0
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download "${APPTAINER_VERSION}" --repo apptainer/apptainer --pattern 'apptainer_*_amd64.deb' --skip-existing -O /tmp/apptainer.deb
-          sudo apt-get update -yq || echo "Could not update apt package lists; continuing with the downloaded package and relying on apt to resolve any missing dependencies during the fix-broken step"
-          sudo dpkg --install --force-depends /tmp/apptainer.deb
-          sudo apt-get install --fix-broken --yes --quiet
+          gh release download "${APPTAINER_VERSION}" --repo apptainer/apptainer --pattern "apptainer_${APPTAINER_VERSION#v}_amd64.deb" --skip-existing -O /tmp/apptainer.deb
+          sudo apt-get update -yq || echo "apt-get update failed; continuing with existing package indexes"
+          sudo apt-get install --yes --quiet /tmp/apptainer.deb
           apptainer --version
 
       - name: Generate and push Apptainer images
