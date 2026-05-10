@@ -32,12 +32,7 @@ from simtools.visualization import plot_simtel_event_histograms
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--event_data_file",
-        type=str,
-        required=True,
-        help="Event data file or glob pattern containing reduced event data.",
-    )
+    parser.initialize_application_arguments(["event_data_file"])
 
 
 def main():
