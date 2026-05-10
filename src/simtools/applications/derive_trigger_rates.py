@@ -43,13 +43,7 @@ from simtools.telescope_trigger_rates import telescope_trigger_rates
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.initialize_application_arguments(["telescope_ids"])
-    parser.add_argument(
-        "--event_data_file",
-        type=str,
-        required=True,
-        help="Event data file containing reduced event data.",
-    )
+    parser.initialize_application_arguments(["telescope_ids", "event_data_file"])
     parser.add_argument(
         "--plot_histograms",
         help="Plot histograms of the event data.",
