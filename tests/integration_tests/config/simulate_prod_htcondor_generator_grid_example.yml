@@ -35,6 +35,7 @@ applications:
     - proton
     priority: 5
     run_number: 10
+    simulation_output: ./simulation_output_path
     simulation_software: corsika_sim_telarray
     site: North
     zenith_angle:

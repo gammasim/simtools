@@ -37,6 +37,9 @@ _PARAMS_FIELDS = [
     "energy_min_unit",
     "energy_max_value",
     "energy_max_unit",
+    "core_scatter_max_value",
+    "core_scatter_max_unit",
+    "nshow",
     "model_version",
     "array_layout_name",
     "corsika_le_interaction",
@@ -96,61 +99,56 @@ def _resolve_apptainer_images(apptainer_image_arg):
     dict
         Dictionary mapping labels to resolved Path objects for apptainer images.
     """
-    if apptainer_image_arg is None:
+    if not apptainer_image_arg:
         raise ValueError("Missing required apptainer_image path.")
 
     if isinstance(apptainer_image_arg, str):
-        if not apptainer_image_arg.strip():
-            raise ValueError("Missing required apptainer_image path.")
-        image_path = Path(apptainer_image_arg)
+        apptainer_image_arg = {"default": apptainer_image_arg}
+
+    if not isinstance(apptainer_image_arg, dict):
+        raise TypeError("apptainer_image must be a string path or a label-to-path dictionary.")
+
+    resolved = {}
+    for label, path in apptainer_image_arg.items():
+        image_path = Path(path)
         if not image_path.is_file():
             raise FileNotFoundError(f"Apptainer image file not found: {image_path}")
-        return {"default": image_path}
+        resolved[str(label)] = image_path
 
-    if isinstance(apptainer_image_arg, dict):
-        resolved = {}
-        for label, path in apptainer_image_arg.items():
-            image_path = Path(path)
-            if not image_path.is_file():
-                raise FileNotFoundError(f"Apptainer image file not found: {image_path}")
-            resolved[str(label)] = image_path
-        if not resolved:
-            raise ValueError("At least one apptainer image label/path must be configured.")
-        return resolved
+    if not resolved:
+        raise ValueError("At least one apptainer image label/path must be configured.")
 
-    raise ValueError("apptainer_image must be either a string path or a label-to-path dictionary.")
+    return resolved
+
+
+def _format_quantity(value, default_unit=None, convert_to=None):
+    """Format scalar or Quantity value."""
+    if isinstance(value, u.Quantity):
+        if convert_to is not None:
+            value = value.to(convert_to)
+        return f"{value.value}", f"{value.unit}"
+
+    return f"{value}", str(default_unit) if default_unit else None
 
 
 def _format_param_value(value, field_name):
-    """
-    Format a value for params file output.
-
-    For energy fields, returns (value_str, unit_str) tuple.
-    For other fields, returns value_str.
-
-    Parameters
-    ----------
-    value : any
-        Value to format.
-    field_name : str
-        Field name to determine formatting and default units.
-
-    Returns
-    -------
-    str or tuple
-        Formatted value(s).
-    """
+    """Format a value or Quantity for params file output."""
     if value is None:
         raise ValueError(f"Missing required value for field '{field_name}'.")
 
     if field_name in ("energy_min_value", "energy_max_value"):
-        if isinstance(value, u.Quantity):
-            return f"{value.value}", f"{value.unit}"
-        return f"{value}", str(u.GeV)
+        return _format_quantity(value, default_unit=u.GeV)
+
+    if field_name == "core_scatter_max_value":
+        return _format_quantity(
+            value,
+            default_unit=u.m,
+            convert_to=u.m,
+        )
 
     if field_name in ("azimuth_angle", "zenith_angle"):
         if isinstance(value, u.Quantity):
-            return f"{value.to(u.deg).value}"
+            value = value.to(u.deg).value
         return f"{value}"
 
     return f"{value}"
@@ -185,11 +183,44 @@ def _resolve_array_layout_name(array_layout_name, model_version):
     return resolved["array_layout_name"]
 
 
+def _get_energy_range_for_zenith_angle(zenith_angle, energy_range_pair, corsika_limits):
+    """
+    Return a zenith-dependent energy range pair or None to skip the simulation step.
+
+    Dummy function - to be implemented.
+    """
+    _ = (zenith_angle, corsika_limits)
+    return energy_range_pair
+
+
+def _get_core_scatter_max_for_zenith_angle(zenith_angle, core_scatter, corsika_limits):
+    """Return zenith-dependent max core-scatter value.
+
+    Dummy function - to be implemented.
+    """
+    _ = (zenith_angle, corsika_limits)
+    return core_scatter[1]
+
+
+def _get_nshow_for_energy_range_and_zenith_angle(
+    energy_range_pair, zenith_angle, nshow, corsika_limits
+):
+    """Return nshow that may depend on energy range and zenith angle.
+
+    Dummy function - to be implemented.
+    """
+    _ = (energy_range_pair, zenith_angle, corsika_limits)
+    return nshow
+
+
 def _build_job_specs(args_dict, image_labels):
     """Build backend-agnostic job specs from comparison and production grids."""
     grid_axes = _normalize_grid_axes(args_dict)
     energy_ranges = _normalize_energy_ranges(args_dict["energy_range"])
     base_pack_dir = args_dict.get("simulation_output") or "simtools-output"
+    corsika_limits = args_dict.get("corsika_limits")
+    core_scatter = args_dict["core_scatter"]
+    nshow = args_dict["nshow"]
 
     combinations = list(
         itertools.product(
@@ -218,6 +249,23 @@ def _build_job_specs(args_dict, image_labels):
             corsika_he,
             energy_range_pair,
         ) in combinations:
+            selected_energy_range_pair = energy_range_pair
+            selected_core_scatter_max = core_scatter[1]
+            selected_nshow = nshow
+
+            if corsika_limits is not None:
+                selected_energy_range_pair = _get_energy_range_for_zenith_angle(
+                    zenith, energy_range_pair, corsika_limits
+                )
+                if selected_energy_range_pair is None:
+                    continue
+                selected_core_scatter_max = _get_core_scatter_max_for_zenith_angle(
+                    zenith, core_scatter, corsika_limits
+                )
+                selected_nshow = _get_nshow_for_energy_range_and_zenith_angle(
+                    selected_energy_range_pair, zenith, nshow, corsika_limits
+                )
+
             for _ in range(number_of_runs):
                 job_specs.append(
                     {
@@ -229,8 +277,10 @@ def _build_job_specs(args_dict, image_labels):
                         "array_layout_name": args_dict.get("array_layout_name"),
                         "corsika_le_interaction": corsika_le,
                         "corsika_he_interaction": corsika_he,
-                        "energy_min": energy_range_pair[0],
-                        "energy_max": energy_range_pair[1],
+                        "energy_min": selected_energy_range_pair[0],
+                        "energy_max": selected_energy_range_pair[1],
+                        "core_scatter_max": selected_core_scatter_max,
+                        "nshow": selected_nshow,
                         "pack_for_grid_register": f"{base_pack_dir}/{label}",
                         "run_number": run_number + row_index,
                     }
@@ -262,6 +312,9 @@ def _write_params_file(params_file_path, label_job_specs):
             energy_max_value, energy_max_unit = _format_param_value(
                 job_spec["energy_max"], "energy_max_value"
             )
+            core_scatter_max_value, core_scatter_max_unit = _format_param_value(
+                job_spec["core_scatter_max"], "core_scatter_max_value"
+            )
 
             row = [
                 _format_param_value(job_spec["apptainer_label"], "apptainer_label"),
@@ -272,6 +325,9 @@ def _write_params_file(params_file_path, label_job_specs):
                 energy_min_unit,
                 energy_max_value,
                 energy_max_unit,
+                core_scatter_max_value,
+                core_scatter_max_unit,
+                _format_param_value(job_spec["nshow"], "nshow"),
                 _format_param_value(job_spec["model_version"], "model_version"),
                 _format_param_value(array_layout_name, "array_layout_name"),
                 _format_param_value(job_spec["corsika_le_interaction"], "corsika_le_interaction"),
@@ -411,7 +467,7 @@ def _get_submit_script(args_dict):
         bash_indices[field] = f"${{{idx}}}"
 
     core_scatter = args_dict["core_scatter"]
-    core_scatter_string = f'"{core_scatter[0]} {core_scatter[1].to(u.m).value} m"'
+    n_core_scatter = core_scatter[0]
     view_cone = args_dict["view_cone"]
     view_cone_string = f'"{view_cone[0].to(u.deg)} {view_cone[1].to(u.deg)}"'
 
@@ -424,6 +480,9 @@ def _get_submit_script(args_dict):
     energy_min_unit_idx = bash_indices["energy_min_unit"]
     energy_max_value_idx = bash_indices["energy_max_value"]
     energy_max_unit_idx = bash_indices["energy_max_unit"]
+    core_scatter_max_value_idx = bash_indices["core_scatter_max_value"]
+    core_scatter_max_unit_idx = bash_indices["core_scatter_max_unit"]
+    nshow_idx = bash_indices["nshow"]
     model_version_idx = bash_indices["model_version"]
     array_layout_name_idx = bash_indices["array_layout_name"]
     corsika_le_interaction_idx = bash_indices["corsika_le_interaction"]
@@ -434,6 +493,9 @@ def _get_submit_script(args_dict):
     energy_range_string = (
         f'"{energy_min_value_idx} {energy_min_unit_idx} '
         f'{energy_max_value_idx} {energy_max_unit_idx}"'
+    )
+    core_scatter_string = (
+        f'"{n_core_scatter} {core_scatter_max_value_idx} {core_scatter_max_unit_idx}"'
     )
     energy_range_tag = (
         f"erange-{energy_min_value_idx}{energy_min_unit_idx}-"
@@ -466,7 +528,7 @@ simtools-simulate-prod \\
     --primary "$primary" \\
     --azimuth_angle "{azimuth_angle_idx}" \\
     --zenith_angle "{zenith_angle_idx}" \\
-    --nshow {args_dict["nshow"]} \\
+    --nshow "{nshow_idx}" \\
     --energy_range {energy_range_string} \\
     --core_scatter {core_scatter_string} \\
     --view_cone {view_cone_string} \\

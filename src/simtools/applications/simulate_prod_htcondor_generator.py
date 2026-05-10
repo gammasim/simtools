@@ -79,6 +79,13 @@ def _add_arguments(parser):
         required=False,
         default="./simtools-output",
     )
+    parser.add_argument(
+        "--corsika_limits",
+        help="Path to an ECSV file with CORSIKA limits.",
+        type=str,
+        required=False,
+        default=None,
+    )
 
 
 def main():
