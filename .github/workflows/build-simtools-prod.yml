@@ -93,9 +93,17 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Set up Apptainer
+      - name: Install Apptainer
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
-        uses: uw-psych/apptainer-actions/setup@363c5f3f053daccf6e94ddcdf036e6b9828962ff
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          APPTAINER_VERSION="$(gh release view --repo apptainer/apptainer --json tagName --jq '.tagName')"
+          gh release download "${APPTAINER_VERSION}" --repo apptainer/apptainer --pattern 'apptainer_*_amd64.deb' --skip-existing -O /tmp/apptainer.deb
+          sudo apt-get update -yq || echo "Could not update apt package lists; continuing with the downloaded package"
+          sudo dpkg --install --force-depends /tmp/apptainer.deb
+          sudo apt-get install --fix-broken --yes --quiet
+          apptainer --version
 
       - name: Generate and push Apptainer images
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
@@ -103,6 +111,7 @@ jobs:
           APPTAINER_DOCKER_USERNAME: ${{ github.actor }}
           APPTAINER_DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          trap 'apptainer registry logout oras://ghcr.io || true' EXIT
           printf '%s' "${APPTAINER_DOCKER_PASSWORD}" | apptainer registry login -u "${APPTAINER_DOCKER_USERNAME}" --password-stdin oras://ghcr.io
           while IFS= read -r image_tag; do
             if [[ -z "${image_tag}" ]]; then
