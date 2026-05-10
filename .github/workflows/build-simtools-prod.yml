@@ -111,7 +111,7 @@ jobs:
           APPTAINER_DOCKER_USERNAME: ${{ github.actor }}
           APPTAINER_DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          trap 'apptainer registry logout oras://ghcr.io || echo "Warning: Apptainer registry logout failed"' EXIT
+          trap 'apptainer registry logout oras://ghcr.io || echo "Warning: Apptainer registry logout failed" >&2' EXIT
           printf '%s' "${APPTAINER_DOCKER_PASSWORD}" | apptainer registry login -u "${APPTAINER_DOCKER_USERNAME}" --password-stdin oras://ghcr.io
           while IFS= read -r image_tag; do
             if [[ -z "${image_tag}" ]]; then
