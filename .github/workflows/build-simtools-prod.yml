@@ -93,6 +93,28 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Set up Apptainer
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+        uses: uw-psych/apptainer-actions/setup@363c5f3f053daccf6e94ddcdf036e6b9828962ff
+
+      - name: Generate and push Apptainer images
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+        env:
+          APPTAINER_DOCKER_USERNAME: ${{ github.actor }}
+          APPTAINER_DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | apptainer registry login -u "${{ github.actor }}" --password-stdin oras://ghcr.io
+          while IFS= read -r image_tag; do
+            if [[ -z "${image_tag}" ]]; then
+              continue
+            fi
+
+            sif_image="${image_tag##*:}.sif"
+            apptainer build "${sif_image}" "docker://${image_tag}"
+            apptainer push -U "${sif_image}" "oras://${image_tag}.sif"
+            rm -f "${sif_image}"
+          done <<< "${{ steps.meta.outputs.tags }}"
+
   test-simtools-prod:
     permissions:
       contents: read
