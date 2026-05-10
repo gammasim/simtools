@@ -108,6 +108,10 @@ def test_process_file(mocker):
     mock_histograms = mocker.MagicMock()
     mock_histogram_class = mocker.patch(SIM_EVENTS_HISTOGRAMS_PATH)
     mock_histogram_class.return_value = mock_histograms
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.resolve_file_patterns",
+        return_value=["test.fits"],
+    )
 
     # Mock the individual limit computation functions
     mock_energy_limit = 1.0 * u.TeV
@@ -138,9 +142,29 @@ def test_process_file(mocker):
     }
     assert result == expected_result
     mock_histogram_class.assert_called_once_with(
-        "test.fits", array_name="array_name", telescope_list=[1, 2]
+        ["test.fits"], array_name="array_name", telescope_list=[1, 2]
     )
     mock_histograms.fill.assert_called_once()
+
+
+def test_process_file_resolves_event_data_patterns(mocker):
+    """Test _process_file resolves glob patterns before filling histograms."""
+    mock_histograms = mocker.MagicMock()
+    mock_histogram_class = mocker.patch(SIM_EVENTS_HISTOGRAMS_PATH, return_value=mock_histograms)
+    mock_resolve = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.resolve_file_patterns",
+        return_value=["file_a.h5", "file_b.h5"],
+    )
+    mocker.patch(COMPUTE_LOWER_ENERGY_LIMIT_PATH, return_value=1.0 * u.TeV)
+    mocker.patch(COMPUTE_UPPER_RADIUS_LIMIT_PATH, return_value=100.0 * u.m)
+    mocker.patch(COMPUTE_VIEWCONE_PATH, return_value=2.0 * u.deg)
+
+    derive_corsika_limits._process_file("input/*.h5", "array_name", [1, 2], 0.2, False)
+
+    mock_resolve.assert_called_once_with("input/*.h5")
+    mock_histogram_class.assert_called_once_with(
+        ["file_a.h5", "file_b.h5"], array_name="array_name", telescope_list=[1, 2]
+    )
 
 
 def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory):
@@ -385,6 +409,10 @@ def test_process_file_with_mocked_histograms(mocker):
     """Test _process_file with mocked EventDataHistograms."""
     mock_histograms = mocker.MagicMock()
     mock_histograms.fill.return_value = None
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.resolve_file_patterns",
+        return_value=[MOCK_FILE_PATH],
+    )
 
     mock_histogram_class = mocker.patch(
         SIM_EVENTS_HISTOGRAMS_PATH,
@@ -419,7 +447,7 @@ def test_process_file_with_mocked_histograms(mocker):
     }
 
     mock_histogram_class.assert_called_once_with(
-        MOCK_FILE_PATH, array_name="MockArray", telescope_list=[1, 2]
+        [MOCK_FILE_PATH], array_name="MockArray", telescope_list=[1, 2]
     )
     mock_histograms.fill.assert_called_once()
     mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2)
@@ -431,6 +459,10 @@ def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
     """Test _process_file with plot_histograms=True using plotting module function."""
     mock_histograms = mocker.MagicMock()
     mock_histograms.fill.return_value = None
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.resolve_file_patterns",
+        return_value=[MOCK_FILE_PATH],
+    )
 
     mocker.patch(
         SIM_EVENTS_HISTOGRAMS_PATH,

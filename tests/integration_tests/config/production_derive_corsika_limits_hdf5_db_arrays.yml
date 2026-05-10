@@ -10,7 +10,7 @@ applications:
         ">=7.0.0":
         - LSTN-01
         - CTAO-North-Alpha
-    event_data_file: tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+    event_data_file: tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_*.hdf5
     loss_fraction: 0.001
     model_version: 6.0.2
     output_file: corsika_simulation_limits.ecsv
