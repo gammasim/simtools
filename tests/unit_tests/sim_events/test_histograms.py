@@ -9,6 +9,10 @@ from simtools.sim_events.histograms import EventDataHistograms
 
 @pytest.fixture
 def mock_reader(mocker):
+    mocker.patch(
+        "simtools.sim_events.histograms.resolve_file_patterns",
+        side_effect=lambda file_names: file_names if isinstance(file_names, list) else [file_names],
+    )
     mock = mocker.patch("simtools.sim_events.histograms.EventDataReader")
     mock.return_value.triggered_shower_data.simulated_energy = np.array([1, 10, 100])
     mock.return_value.shower_data.simulated_energy = np.array([1, 10, 100])
@@ -37,6 +41,21 @@ def test_init_default_telescope_list(mock_reader, hdf5_file_name):
 
     assert histograms.event_data_file == hdf5_file_name
     mock_reader.assert_called_once_with(hdf5_file_name, telescope_list=None)
+
+
+def test_init_resolves_event_data_glob_patterns(mocker):
+    """Test initialization resolves glob patterns before opening the first file."""
+    mock_resolve = mocker.patch(
+        "simtools.sim_events.histograms.resolve_file_patterns",
+        return_value=["test_file_1.h5", "test_file_2.h5"],
+    )
+    mock_reader = mocker.patch("simtools.sim_events.histograms.EventDataReader")
+
+    histograms = EventDataHistograms("test_file_*.h5")
+
+    mock_resolve.assert_called_once_with("test_file_*.h5")
+    assert histograms.event_data_files == ["test_file_1.h5", "test_file_2.h5"]
+    mock_reader.assert_called_once_with("test_file_1.h5", telescope_list=None)
 
 
 def test_energy_bins(mock_reader, hdf5_file_name):
@@ -441,6 +460,10 @@ def test_normalized_cumulative_histogram(mock_reader, hdf5_file_name):
 @pytest.fixture
 def mock_histograms(mocker):
     """Create a mocked EventDataHistograms that doesn't require a file."""
+    mocker.patch(
+        "simtools.sim_events.histograms.resolve_file_patterns",
+        side_effect=lambda file_names: file_names if isinstance(file_names, list) else [file_names],
+    )
     mocker.patch("simtools.sim_events.histograms.EventDataReader")
     return EventDataHistograms("dummy_file.h5", "test_array")
 

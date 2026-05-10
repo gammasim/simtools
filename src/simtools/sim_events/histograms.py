@@ -7,6 +7,7 @@ import astropy.units as u
 import numpy as np
 
 from simtools.sim_events.reader import EventDataReader
+from simtools.utils.general import resolve_file_patterns
 
 
 class EventDataHistograms:
@@ -42,10 +43,8 @@ class EventDataHistograms:
         self.telescope_list = telescope_list
 
     def _normalize_event_data_files(self, event_data_file):
-        """Return event-data files as a list of strings."""
-        if isinstance(event_data_file, list):
-            return [str(file_name) for file_name in event_data_file]
-        return [str(event_data_file)]
+        """Return event-data files as a list of resolved file names."""
+        return [str(file_name) for file_name in resolve_file_patterns(event_data_file)]
 
     def _reader_has_triggered_data(self, reader):
         """Check if a reader exposes triggered event tables."""
