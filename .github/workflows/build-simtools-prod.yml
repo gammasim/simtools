@@ -103,16 +103,16 @@ jobs:
           APPTAINER_DOCKER_USERNAME: ${{ github.actor }}
           APPTAINER_DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | apptainer registry login -u "${{ github.actor }}" --password-stdin oras://ghcr.io
+          printf '%s' "${APPTAINER_DOCKER_PASSWORD}" | apptainer registry login -u "${APPTAINER_DOCKER_USERNAME}" --password-stdin oras://ghcr.io
           while IFS= read -r image_tag; do
             if [[ -z "${image_tag}" ]]; then
               continue
             fi
 
-            sif_image="${image_tag##*:}.sif"
-            apptainer build "${sif_image}" "docker://${image_tag}"
-            apptainer push -U "${sif_image}" "oras://${image_tag}.sif"
-            rm -f "${sif_image}"
+            sif_file="${image_tag##*:}.sif"
+            apptainer build "${sif_file}" "docker://${image_tag}"
+            apptainer push -U "${sif_file}" "oras://${image_tag}.sif"
+            rm -f "${sif_file}"
           done <<< "${{ steps.meta.outputs.tags }}"
 
   test-simtools-prod:
