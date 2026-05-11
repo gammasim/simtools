@@ -71,9 +71,10 @@ class EventDataHistograms:
             )
             yield event_data_file, self.reader
 
-    def _read_data_set(self, reader, event_data_file, data_set):
+    def _read_data_set(self, reader, event_data_file, data_set, file_index=None, total_files=None):
         """Read one dataset and return reduced file information with event tables."""
-        self._logger.info(f"Reading event data from {event_data_file} for {data_set}")
+        progress = f" ({file_index}/{total_files})" if file_index and total_files else ""
+        self._logger.info(f"Reading event data from {event_data_file} for {data_set}{progress}")
         file_info_table, shower_data, event_data, triggered_data = reader.read_event_data(
             event_data_file, table_name_map=data_set
         )
@@ -124,10 +125,15 @@ class EventDataHistograms:
         Assume that all event data files are generated with similar configurations
         (self.file_info contains the file info of the last file).
         """
-        for event_data_file, reader in self._iter_readers():
+        total_files = len(self.event_data_files)
+        for file_index, (event_data_file, reader) in enumerate(self._iter_readers(), start=1):
             for data_set in reader.data_sets:
                 file_info_table, shower_data, event_data, triggered_data = self._read_data_set(
-                    reader, event_data_file, data_set
+                    reader,
+                    event_data_file,
+                    data_set,
+                    file_index=file_index,
+                    total_files=total_files,
                 )
                 self._update_file_info(file_info_table)
                 current_histograms = self._define_histograms(
