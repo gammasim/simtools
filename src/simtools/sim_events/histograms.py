@@ -77,10 +77,14 @@ class EventDataHistograms:
                 )
                 _file_info_table = reader.get_reduced_simulation_file_info(_file_info_table)
                 self.file_info = {
-                    "primary_particle": _file_info_table["primary_particle"],
-                    "zenith": _file_info_table["zenith"].to("deg"),
-                    "azimuth": _file_info_table["azimuth"].to("deg"),
-                    "nsb_level": _file_info_table["nsb_level"],
+                    "primary_particle": _file_info_table.get("primary_particle"),
+                    "zenith": _file_info_table["zenith"].to("deg")
+                    if "zenith" in _file_info_table
+                    else None,
+                    "azimuth": _file_info_table["azimuth"].to("deg")
+                    if "azimuth" in _file_info_table
+                    else None,
+                    "nsb_level": _file_info_table.get("nsb_level"),
                     "energy_min": _file_info_table["energy_min"].to("TeV"),
                     "core_scatter_max": _file_info_table["core_scatter_max"].to("m"),
                     "viewcone_max": _file_info_table["viewcone_max"].to("deg"),
