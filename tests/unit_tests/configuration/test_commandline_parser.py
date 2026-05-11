@@ -783,6 +783,12 @@ def test_quantity_pair_action():
     assert_quantity_allclose(args.energy_range[0], 50 * u.GeV)
     assert_quantity_allclose(args.energy_range[1], 5 * u.TeV)
 
+    # Test unquoted token stream from the shell
+    args = test_parser.parse_args(["--energy_range", "30", "GeV", "300", "GeV"])
+    assert len(args.energy_range) == 2
+    assert_quantity_allclose(args.energy_range[0], 30 * u.GeV)
+    assert_quantity_allclose(args.energy_range[1], 300 * u.GeV)
+
     # Test multiple pair strings (list of pairs)
     args = test_parser.parse_args(["--energy_range", "30 GeV 30 GeV", "300 GeV 300 GeV"])
     assert len(args.energy_range) == 2

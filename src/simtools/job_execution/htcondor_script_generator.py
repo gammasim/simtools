@@ -11,11 +11,13 @@ Generates three files in the specified output directory:
 import ast
 import itertools
 import logging
+import re
 from pathlib import Path
 
 import astropy.units as u
 
 import simtools.version as simtools_version
+from simtools.configuration import defaults
 
 _logger = logging.getLogger(__name__)
 
@@ -27,6 +29,11 @@ _GRID_AXES = [
     "corsika_le_interaction",
     "corsika_he_interaction",
 ]
+
+_GRID_AXIS_DEFAULTS = {
+    "corsika_le_interaction": defaults.CORSIKA_LE_INTERACTION,
+    "corsika_he_interaction": defaults.CORSIKA_HE_INTERACTION,
+}
 
 _PARAMS_FIELDS = [
     "apptainer_label",
@@ -61,9 +68,13 @@ def _normalize_to_list(value):
 def _normalize_grid_axes(args_dict):
     """Return normalized grid axes for cartesian product expansion."""
     return {
-        axis: _normalize_to_list(args_dict[axis])
-        if axis in args_dict and args_dict[axis] is not None
-        else [None]
+        axis: (
+            _normalize_to_list(args_dict[axis])
+            if axis in args_dict and args_dict[axis] is not None
+            else [_GRID_AXIS_DEFAULTS[axis]]
+            if axis in _GRID_AXIS_DEFAULTS
+            else [None]
+        )
         for axis in _GRID_AXES
     }
 
@@ -136,6 +147,9 @@ def _format_param_value(value, field_name):
     if value is None:
         raise ValueError(f"Missing required value for field '{field_name}'.")
 
+    if field_name in ("apptainer_label", "pack_for_grid_register"):
+        return _sanitize_label_for_params(value)
+
     if field_name in ("energy_min_value", "energy_max_value"):
         return _format_quantity(value, default_unit=u.GeV)
 
@@ -158,6 +172,11 @@ def _sanitize_label_for_filename(label):
     """Sanitize image labels for use in file names."""
     label_string = str(label).strip().replace(" ", "_")
     return "".join(ch if ch.isalnum() or ch in ["-", "_", "."] else "_" for ch in label_string)
+
+
+def _sanitize_label_for_params(label):
+    """Sanitize image labels for whitespace-separated params files."""
+    return re.sub(r"\s+", "_", str(label).strip())
 
 
 def _resolve_array_layout_name(array_layout_name, model_version):
@@ -239,6 +258,7 @@ def _build_job_specs(args_dict, image_labels):
 
     job_specs = []
     for label in image_labels:
+        params_label = _sanitize_label_for_params(label)
         row_index = 0
         for (
             primary,
@@ -281,7 +301,7 @@ def _build_job_specs(args_dict, image_labels):
                         "energy_max": selected_energy_range_pair[1],
                         "core_scatter_max": selected_core_scatter_max,
                         "nshow": selected_nshow,
-                        "pack_for_grid_register": f"{base_pack_dir}/{label}",
+                        "pack_for_grid_register": f"{base_pack_dir}/{params_label}",
                         "run_number": run_number + row_index,
                     }
                 )
