@@ -278,6 +278,7 @@ def test_initialize_application_arguments():
             "off_axis_angles",
             "all_model_versions",
             "data",
+            "event_data_file",
             "telescope_ids",
         ]
     )
@@ -296,6 +297,8 @@ def test_initialize_application_arguments():
             "--all_model_versions",
             "--data",
             "psf_data.ecsv",
+            "--event_data_file",
+            "events.h5",
             "--telescope_ids",
             "layout_ids.txt",
         ]
@@ -309,6 +312,7 @@ def test_initialize_application_arguments():
     assert_quantity_allclose(args.off_axis_angles[1], 1 * u.deg)
     assert args.all_model_versions is True
     assert args.data == "psf_data.ecsv"
+    assert args.event_data_file == "events.h5"
     assert args.telescope_ids == "layout_ids.txt"
 
     job_groups = app_parser._action_groups

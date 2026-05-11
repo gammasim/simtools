@@ -1099,7 +1099,7 @@ class ReadParameters:
                 file.write(f"| [{element}]({element}.md) |\n")
             file.write("\n")
             version = self.model_version.replace(".", "-")
-            filename = f"OBS-{self.site}_{layout_name}_{version}.png"
+            filename = f"array_layout_{layout_name}_{self.site}_ground_{version}.png"
             image_path = f"/_images/{filename}"
             file.write(f"![{layout_name} Layout]({image_path})\n\n")
             file.write("\n")

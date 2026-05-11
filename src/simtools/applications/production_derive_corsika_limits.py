@@ -46,7 +46,7 @@ directions, level of night sky background, etc.).
 Command line arguments
 ----------------------
 event_data_file (str, required)
-    Path to reduced event data file.
+    Path or glob pattern for reduced event data files.
 telescope_ids (str, optional)
     Custom array layout file containing telescope IDs.
 loss_fraction (float, required)
@@ -101,13 +101,7 @@ from simtools.production_configuration.derive_corsika_limits import (
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.initialize_application_arguments(["telescope_ids"])
-    parser.add_argument(
-        "--event_data_file",
-        type=str,
-        required=True,
-        help="Event data file containing reduced event data.",
-    )
+    parser.initialize_application_arguments(["telescope_ids", "event_data_file"])
     parser.add_argument(
         "--loss_fraction",
         type=float,
