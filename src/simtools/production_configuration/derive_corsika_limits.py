@@ -58,7 +58,7 @@ def generate_corsika_limits_grid(args_dict):
             args_dict["loss_fraction"],
             args_dict["plot_histograms"],
         )
-        result["layout"] = array_name
+        result["array_name"] = array_name
         result["telescope_ids"] = telescope_ids
         results.append(result)
 
@@ -102,6 +102,12 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
         "upper_radius_limit": compute_upper_radius_limit(histograms, loss_fraction),
         "viewcone_radius": compute_viewcone(histograms, loss_fraction),
     }
+    limits.update(
+        {
+            key: histograms.file_info.get(key)
+            for key in ("primary_particle", "zenith", "azimuth", "nsb_level")
+        }
+    )
 
     if plot_histograms:
         plot_simtel_event_histograms.plot(
