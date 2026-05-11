@@ -258,7 +258,7 @@ def read_table_from_hdf5(file, table_name, columns=None):
             else:
                 data = dset[:][columns]
 
-            table = Table(data)
+            table = Table({col: data[col] for col in columns})
             table.meta["EXTNAME"] = table_name
 
         for col in table.colnames:
