@@ -106,6 +106,7 @@ def test_process_file(mocker):
     """Test _process_file function."""
     # Mock the EventDataHistograms class
     mock_histograms = mocker.MagicMock()
+    mock_histograms.file_info = {}
     mock_histogram_class = mocker.patch(SIM_EVENTS_HISTOGRAMS_PATH)
     mock_histogram_class.return_value = mock_histograms
     mocker.patch(
@@ -136,6 +137,10 @@ def test_process_file(mocker):
     result = derive_corsika_limits._process_file("test.fits", "array_name", [1, 2], 0.2, False)
 
     expected_result = {
+        "primary_particle": None,
+        "zenith": None,
+        "azimuth": None,
+        "nsb_level": None,
         "lower_energy_limit": mock_energy_limit,
         "upper_radius_limit": mock_radius_limit,
         "viewcone_radius": mock_viewcone_limit,
@@ -409,6 +414,7 @@ def test_process_file_with_mocked_histograms(mocker):
     """Test _process_file with mocked EventDataHistograms."""
     mock_histograms = mocker.MagicMock()
     mock_histograms.fill.return_value = None
+    mock_histograms.file_info = {}
     mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.resolve_file_patterns",
         return_value=[MOCK_FILE_PATH],
@@ -441,6 +447,10 @@ def test_process_file_with_mocked_histograms(mocker):
     )
 
     assert result == {
+        "primary_particle": None,
+        "zenith": None,
+        "azimuth": None,
+        "nsb_level": None,
         "lower_energy_limit": 1.0 * u.TeV,
         "upper_radius_limit": 100.0 * u.m,
         "viewcone_radius": 2.0 * u.deg,
@@ -459,6 +469,7 @@ def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
     """Test _process_file with plot_histograms=True using plotting module function."""
     mock_histograms = mocker.MagicMock()
     mock_histograms.fill.return_value = None
+    mock_histograms.file_info = {}
     mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.resolve_file_patterns",
         return_value=[MOCK_FILE_PATH],
@@ -505,6 +516,10 @@ def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
     assert args[0] is mock_histograms.histograms
     assert kwargs["output_path"] == tmp_test_directory
     assert kwargs["limits"] == {
+        "primary_particle": None,
+        "zenith": None,
+        "azimuth": None,
+        "nsb_level": None,
         "lower_energy_limit": 1.0 * u.TeV,
         "upper_radius_limit": 100.0 * u.m,
         "viewcone_radius": 2.0 * u.deg,
