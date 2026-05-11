@@ -353,7 +353,7 @@ def _write_params_file(params_file_path, label_job_specs):
                 _format_param_value(job_spec["corsika_le_interaction"], "corsika_le_interaction"),
                 _format_param_value(job_spec["corsika_he_interaction"], "corsika_he_interaction"),
                 _format_param_value(job_spec["run_number"], "run_number"),
-                job_spec["pack_for_grid_register"],
+                _format_param_value(job_spec["pack_for_grid_register"], "pack_for_grid_register"),
             ]
             params_file_handle.write(" ".join(row) + "\n")
 
