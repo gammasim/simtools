@@ -191,11 +191,11 @@ def test_resolve_apptainer_images_empty_dict():
         _resolve_apptainer_images({})
 
 
-def test_resolve_apptainer_images_invalid_type():
+def test_resolve_apptainer_images_invalid_type(tmp_test_directory):
     with pytest.raises(
         TypeError, match="apptainer_image must be a string path or a label-to-path dictionary"
     ):
-        _resolve_apptainer_images(["/tmp/image.sif"])
+        _resolve_apptainer_images([str(Path(tmp_test_directory) / "tmp/image.sif")])
 
 
 def test_resolve_apptainer_images_raises_for_missing_file(tmp_test_directory):
@@ -254,6 +254,16 @@ def test_build_job_specs_expands_energy_range_list_of_pairs(args_dict):
         (30 * u.GeV, 30 * u.GeV),
         (300 * u.GeV, 300 * u.GeV),
     }
+
+
+def test_build_job_specs_uses_default_interaction_models_when_missing(args_dict):
+    args_dict.pop("corsika_le_interaction")
+    args_dict.pop("corsika_he_interaction")
+
+    job_specs = _build_job_specs(args_dict, ["7.0.0"])
+
+    assert {job_spec["corsika_le_interaction"] for job_spec in job_specs} == {"urqmd"}
+    assert {job_spec["corsika_he_interaction"] for job_spec in job_specs} == {"epos"}
 
 
 def test_build_job_specs_increments_run_number(args_dict):
@@ -344,6 +354,35 @@ def test_write_params_file_keeps_energy_units(tmp_test_directory):
     assert params_file_path.read_text(encoding="utf-8") == (
         "7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 200.0 m "
         "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/7.0.0\n"
+    )
+
+
+def test_write_params_file_replaces_whitespace_in_apptainer_label(tmp_test_directory):
+    params_file_path = Path(tmp_test_directory) / "params.txt"
+    label_job_specs = [
+        {
+            "apptainer_label": "grid label 7.0.0",
+            "primary": "gamma",
+            "azimuth_angle": 0 * u.deg,
+            "zenith_angle": 20 * u.deg,
+            "energy_min": 30 * u.GeV,
+            "energy_max": 10 * u.TeV,
+            "core_scatter_max": 200 * u.m,
+            "nshow": 1000,
+            "model_version": "7.0.0",
+            "array_layout_name": "CTAO-North-Alpha",
+            "corsika_le_interaction": "urqmd",
+            "corsika_he_interaction": "epos",
+            "run_number": 10,
+            "pack_for_grid_register": "simtools-output/grid label 7.0.0",
+        }
+    ]
+
+    _write_params_file(params_file_path, label_job_specs)
+
+    assert params_file_path.read_text(encoding="utf-8") == (
+        "grid_label_7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 200.0 m "
+        "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/grid_label_7.0.0\n"
     )
 
 

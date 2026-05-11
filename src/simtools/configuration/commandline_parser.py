@@ -869,6 +869,11 @@ class QuantityPairAction(argparse.Action):
                 for item in values
             ):
                 parsed = [CommandLineParser.parse_quantity_pair(item) for item in values]
+            elif len(values) > 2 and len(values) % 2 == 0:
+                parsed = tuple(
+                    u.Quantity(f"{values[index]} {values[index + 1]}")
+                    for index in range(0, len(values), 2)
+                )
             elif len(values) == 2:
                 parsed = (u.Quantity(values[0]), u.Quantity(values[1]))
             else:
