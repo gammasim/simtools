@@ -838,6 +838,34 @@ def test_read_table_from_hdf5_with_selected_columns(mocker):
     assert result["col1"].unit == u.Unit("m")
 
 
+@pytest.mark.parametrize(
+    ("dtype", "expected"),
+    [
+        ([("col1", "S3")], ["abc", "def"]),
+        ([("col1", object)], ["abc", "def"]),
+    ],
+)
+def test_read_table_from_hdf5_decodes_selected_string_columns(mocker, dtype, expected):
+    """Test selected-column reads decode bytes-backed string columns."""
+    mock_file = mocker.MagicMock()
+    mock_dataset = mocker.MagicMock()
+    mock_dataset.dtype.names = ("col1",)
+    mock_dataset.attrs = {}
+
+    selected_data = np.array([(b"abc",), (b"def",)], dtype=dtype)
+    mock_dataset.fields.return_value = selected_data
+
+    mock_file.__getitem__.return_value = mock_dataset
+    mock_context = mocker.MagicMock()
+    mock_context.__enter__.return_value = mock_file
+    mocker.patch(H5PY_FILE, return_value=mock_context)
+
+    result = read_table_from_hdf5(TEST_H5, TEST_TABLE_NAME, columns=["col1"])
+
+    assert list(result["col1"]) == expected
+    assert result["col1"].dtype.kind == "U"
+
+
 def test_read_table_from_hdf5_with_missing_selected_columns(mocker):
     """Test selected-column read with unknown column names."""
     mock_file = mocker.MagicMock()

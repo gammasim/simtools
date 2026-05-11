@@ -12,6 +12,23 @@ from astropy.table import Table, vstack
 _logger = logging.getLogger(__name__)
 
 
+def _decode_hdf5_string_column(column):
+    """Decode HDF5 byte-string columns to unicode."""
+    if column.dtype.kind == "S":
+        return column.astype(str)
+
+    if column.dtype.kind == "O" and column.size:
+        sample = column.flat[0]
+        if isinstance(sample, (bytes, np.bytes_)):
+            decoded = [
+                item.decode("utf-8") if isinstance(item, (bytes, np.bytes_)) else item
+                for item in column
+            ]
+            return np.asarray(decoded, dtype=str)
+
+    return column
+
+
 def read_table_list(input_file, table_names, include_indexed_tables=False):
     """
     Read available tables found in the input file.
@@ -258,7 +275,7 @@ def read_table_from_hdf5(file, table_name, columns=None):
             else:
                 data = dset[:][columns]
 
-            table = Table({col: data[col] for col in columns})
+            table = Table({col: _decode_hdf5_string_column(data[col]) for col in columns})
             table.meta["EXTNAME"] = table_name
 
         for col in table.colnames:
