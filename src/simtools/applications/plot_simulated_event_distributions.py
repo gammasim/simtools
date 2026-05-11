@@ -8,7 +8,7 @@ core distance distributions.
 
 Command line arguments
 ----------------------
-input_file (str, required)
+event_data_file (str, required)
     Input file path.
 output_path (str, required)
     Output directory for the generated plots.

@@ -10,6 +10,14 @@ from simtools.sim_events.reader import EventDataReader
 from simtools.utils.general import resolve_file_patterns
 
 
+def _coerce_quantity(value, unit):
+    """Return a quantity converted to the requested unit."""
+    unit = u.Unit(unit)
+    if hasattr(value, "to"):
+        return value.to(unit)
+    return u.Quantity(value, unit)
+
+
 class EventDataHistograms:
     """
     Generate and fill histograms for shower and (if available) triggered events.
@@ -82,18 +90,18 @@ class EventDataHistograms:
                 _file_info_table = reader.get_reduced_simulation_file_info(_file_info_table)
                 self.file_info = {
                     "primary_particle": _file_info_table.get("primary_particle"),
-                    "zenith": _file_info_table["zenith"].to("deg")
+                    "zenith": _coerce_quantity(_file_info_table["zenith"], "deg")
                     if "zenith" in _file_info_table
                     else None,
-                    "azimuth": _file_info_table["azimuth"].to("deg")
+                    "azimuth": _coerce_quantity(_file_info_table["azimuth"], "deg")
                     if "azimuth" in _file_info_table
                     else None,
                     "nsb_level": _file_info_table.get("nsb_level"),
-                    "energy_min": _file_info_table["energy_min"].to("TeV"),
-                    "core_scatter_max": _file_info_table["core_scatter_max"].to("m"),
-                    "viewcone_max": _file_info_table["viewcone_max"].to("deg"),
-                    "solid_angle": _file_info_table["solid_angle"].to("sr"),
-                    "scatter_area": _file_info_table["scatter_area"].to("cm2"),
+                    "energy_min": _coerce_quantity(_file_info_table["energy_min"], "TeV"),
+                    "core_scatter_max": _coerce_quantity(_file_info_table["core_scatter_max"], "m"),
+                    "viewcone_max": _coerce_quantity(_file_info_table["viewcone_max"], "deg"),
+                    "solid_angle": _coerce_quantity(_file_info_table["solid_angle"], "sr"),
+                    "scatter_area": _coerce_quantity(_file_info_table["scatter_area"], "cm2"),
                 }
 
                 current_histograms = self._define_histograms(
