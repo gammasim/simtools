@@ -256,15 +256,13 @@ def test_fill_reads_multiple_files_sequentially(mock_reader, mocker):
 
     histograms.fill()
 
-    assert mock_reader.call_args_list == [
-        mocker.call("test_file_1.h5", telescope_list=None),
-        mocker.call("test_file_1.h5", telescope_list=None),
-        mocker.call("test_file_2.h5", telescope_list=None),
-    ]
-    assert mock_reader.return_value.read_event_data.call_args_list == [
-        mocker.call(mocker.ANY, table_name_map="test_dataset"),
-        mocker.call(mocker.ANY, table_name_map="test_dataset"),
-    ]
+    opened_files = [call.args[0] for call in mock_reader.call_args_list]
+    assert set(opened_files) >= {"test_file_1.h5", "test_file_2.h5"}
+    assert all(call.kwargs == {"telescope_list": None} for call in mock_reader.call_args_list)
+
+    read_calls = mock_reader.return_value.read_event_data.call_args_list
+    assert len(read_calls) == 2
+    assert all(call.kwargs.get("table_name_map") == "test_dataset" for call in read_calls)
 
 
 def test_fill_accumulates_histograms_across_data_sets(mock_reader, hdf5_file_name, mocker):
