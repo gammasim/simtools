@@ -14,10 +14,10 @@ simtools can be installed using one of the following methods:
 
 ## Container Images
 
-OCI-compatible container images are available for simtools users and support both application and development use cases.  Any runtime such as [Docker](https://www.docker.com/products/docker-desktop), [Podman](https://podman.io/), or [Apptainer](https://apptainer.org/) can be used.
+OCI-compatible container images are available for simtools users and support both application and development use cases. Any runtime such as [Docker](https://www.docker.com/products/docker-desktop), [Podman](https://podman.io/), or [Apptainer](https://apptainer.org/) can be used.
 These images eliminate all manual installation steps and allow direct execution of simtools applications.
 
-The most important types of images are list below; for a complete overview, see the [Container Images](container-images) documentation.
+The most important types of images are listed below; for a complete overview, see the [Container Images](container-images) documentation.
 
 - **Simtools Production images** ([simtools-prod](https://github.com/gammasim/simtools/pkgs/container/simtools-sim-telarray-250903-corsika-78010-bernlohr-1.70-prod6-baseline-qgs3-no_opt)): Include CORSIKA, sim_telarray, and simtools applications. Variants are available with:
   - Different CORSIKA/sim_telarray versions
@@ -25,7 +25,7 @@ The most important types of images are list below; for a complete overview, see 
   - CPU optimizations (e.g., `avx2`, `avx512`, `generic`)
 - **Simtools Development images** ([simtools-dev](https://github.com/gammasim/simtools/pkgs/container/simtools-dev)): Include all dependencies for simtools development, as well as CORSIKA and sim_telarray, but do not contain simtools itself.
 
-Pre-built images are hosted on the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools). Authentication may be required; follow [GitHub's guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) to configure access (`docker login`).
+Pre-built images are hosted on the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools). Authentication may be required; follow [GitHub's guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) to configure access (`docker login` for Docker/Podman, `apptainer registry login` for Apptainer).
 
 
 ```{important}
@@ -60,6 +60,33 @@ podman run --rm -it \
     --export ground \
     --output_path /workdir/external/
 ```
+
+  Start an Interactive Apptainer Container:
+
+  ```bash
+  apptainer pull simtools-prod.sif \
+    oras://ghcr.io/gammasim/simtools-prod:v0.27.0-v78010-v2025-11-30-rc-generic-amd64
+
+  apptainer shell \
+    --env-file .env \
+    --bind "$(pwd):/workdir/external" \
+    simtools-prod.sif
+  ```
+
+  Run a simtools application with Apptainer:
+
+  ```bash
+  apptainer exec \
+    --env-file .env \
+    --bind "$(pwd):/workdir/external" \
+    simtools-prod.sif \
+    simtools-convert-geo-coordinates-of-array-elements \
+    --input ./simtools/tests/resources/telescope_positions-North-utm.ecsv \
+    --export ground \
+    --output_path /workdir/external/
+  ```
+
+  Use the `generic-amd64` Apptainer image on x86_64 systems, or replace the tag with `avx2`, `avx512f`, or `sse4` to match the corresponding optimized x86_64 image.
 
 ### Pip Installation
 
