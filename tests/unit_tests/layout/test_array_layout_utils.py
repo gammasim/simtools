@@ -427,12 +427,14 @@ def test_get_array_layouts_from_parameter_file_valid(mocker, mock_array_model):
             site="north",
             array_elements=None,
             layout_name="array1",
+            ignore_software_version=False,
         ),
         mocker.call(
             model_version=model_version,
             site="north",
             array_elements=None,
             layout_name="array2",
+            ignore_software_version=False,
         ),
     ]
     mock_array_model.assert_has_calls(expected_calls, any_order=True)
@@ -525,6 +527,7 @@ def test_get_array_layouts_from_db_with_layout_name(mock_array_model):
         site=site,
         array_elements=None,
         layout_name=layout_name,
+        ignore_software_version=False,
     )
     instance.export_array_elements_as_table.assert_called_once_with(coordinate_system="ground")
     assert result == expected
@@ -569,7 +572,11 @@ def test_get_array_layouts_from_db_without_layout_name(mocker, mock_array_model)
     ]
 
     # Assert that SiteModel was correctly used.
-    mock_site_model.assert_called_once_with(site=site, model_version=model_version)
+    mock_site_model.assert_called_once_with(
+        site=site,
+        model_version=model_version,
+        ignore_software_version=False,
+    )
     instance_site.get_list_of_array_layouts.assert_called_once()
 
     # Assert that ArrayModel was called for each layout returned by SiteModel.
@@ -579,12 +586,14 @@ def test_get_array_layouts_from_db_without_layout_name(mocker, mock_array_model)
             site=site,
             array_elements=None,
             layout_name="layout1",
+            ignore_software_version=False,
         ),
         mocker.call(
             model_version=model_version,
             site=site,
             array_elements=None,
             layout_name="layout2",
+            ignore_software_version=False,
         ),
     ]
     mock_array_model.assert_has_calls(calls, any_order=True)
@@ -720,6 +729,7 @@ def test_get_array_layout_dict_with_layout_name(mock_array_model):
         site=site,
         array_elements=None,
         layout_name=layout_name,
+        ignore_software_version=False,
     )
 
     # Verify export_array_elements_as_table call
@@ -753,6 +763,7 @@ def test_get_array_layout_dict_with_telescope_list(mock_array_model):
         site=site,
         array_elements=telescope_list,
         layout_name=None,
+        ignore_software_version=False,
     )
 
     # Verify export_array_elements_as_table call
@@ -847,6 +858,7 @@ def test_read_layouts_with_array_layout_name_background(minimal_args_dict):
                     args["site"],
                     args["model_version"],
                     args["coordinate_system"],
+                    False,
                 ),
             ),
             (
@@ -855,6 +867,7 @@ def test_read_layouts_with_array_layout_name_background(minimal_args_dict):
                     args["site"],
                     args["model_version"],
                     args["coordinate_system"],
+                    False,
                 ),
             ),
         ]

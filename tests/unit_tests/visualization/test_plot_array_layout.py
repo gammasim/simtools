@@ -17,6 +17,7 @@ from simtools.visualization.plot_array_layout import (
     PlotBounds,
     create_patches,
     finalize_plot,
+    generate_plot_combinations,
     get_patches,
     get_positions,
     get_sphere_radius,
@@ -855,11 +856,7 @@ def test_plot_array_layouts(monkeypatch, tmp_path):
 
     def dummy_plot_array_layout(**kwargs):
         called["plot_array_layout"] = True
-
-        class DummyFig:
-            pass
-
-        return DummyFig()
+        return Mock()
 
     def dummy_save_figure(fig, path, dpi):
         called["save_figure"] = True
@@ -883,6 +880,7 @@ def test_plot_array_layouts(monkeypatch, tmp_path):
         "figure_name": None,
         "site": None,
         "coordinate_system": "utm",
+        "model_version": "6.0.0",
     }
     # Minimal layout: one telescope
     layouts = [
@@ -902,3 +900,107 @@ def test_plot_array_layouts(monkeypatch, tmp_path):
     pal.plot_array_layouts(args_dict, tmp_path, layouts)
     assert called["plot_array_layout"]
     assert called["save_figure"]
+
+
+@pytest.mark.parametrize(
+    ("figure_name", "expected_filename"),
+    [
+        (None, "array_layout_alpha_North_ground_6-0-0"),
+        ("custom_name", "custom_name"),
+    ],
+    ids=["default_filename_includes_model_version", "figure_name_override"],
+)
+def test_plot_array_layouts_filename(monkeypatch, tmp_path, figure_name, expected_filename):
+    """Test output filename: default includes model version/site; explicit figure_name overrides it."""
+
+    captured = {"name": None}
+
+    def dummy_plot_array_layout(**kwargs):
+        return Mock()
+
+    def dummy_save_figure(fig, path, dpi):
+        del fig, dpi
+        captured["name"] = path.name
+
+    monkeypatch.setattr(pal, "plot_array_layout", dummy_plot_array_layout)
+    monkeypatch.setattr(pal.visualize, "save_figure", dummy_save_figure)
+
+    args_dict = {
+        "show_labels": False,
+        "axes_range": 100,
+        "marker_scaling": 1.0,
+        "grayed_out_array_elements": [],
+        "highlighted_array_elements": [],
+        "legend_location": "best",
+        "bounds": "exact",
+        "padding": 0.1,
+        "x_lim": None,
+        "y_lim": None,
+        "figure_name": figure_name,
+        "site": "North",
+        "coordinate_system": "ground",
+        "model_version": "6.0.0",
+    }
+    layouts = [
+        {
+            "array_elements": QTable(
+                {
+                    "telescope_name": ["LSTN-01"],
+                    "position_x": [0] * u.m,
+                    "position_y": [0] * u.m,
+                    "sphere_radius": [12] * u.m,
+                }
+            ),
+            "name": "alpha",
+            "site": "North",
+        }
+    ]
+
+    pal.plot_array_layouts(args_dict, tmp_path, layouts)
+
+    assert captured["name"] == expected_filename
+
+
+def test_generate_plot_combinations_default():
+    """Test generate_plot_combinations with explicit site and model version."""
+    args = {
+        "model_version": "1.0.0",
+        "site": "North",
+        "all_model_versions": False,
+        "all_sites": False,
+    }
+
+    combinations = list(generate_plot_combinations(args))
+
+    assert combinations == [("1.0.0", "North")]
+
+
+def test_generate_plot_combinations_all_sites_and_versions(monkeypatch):
+    """Test generate_plot_combinations with all sites and model versions enabled."""
+    args = {
+        "model_version": None,
+        "site": None,
+        "all_model_versions": True,
+        "all_sites": True,
+    }
+
+    mock_db_instance = Mock()
+    mock_db_instance.get_model_versions.return_value = ["6.0.0", "7.0.0"]
+
+    monkeypatch.setattr(
+        "simtools.visualization.plot_array_layout.db_handler.DatabaseHandler",
+        Mock(return_value=mock_db_instance),
+    )
+    monkeypatch.setattr(
+        "simtools.visualization.plot_array_layout.names.site_names",
+        Mock(return_value=["North", "South"]),
+    )
+
+    combinations = list(generate_plot_combinations(args))
+
+    assert combinations == [
+        ("6.0.0", "North"),
+        ("6.0.0", "South"),
+        ("7.0.0", "North"),
+        ("7.0.0", "South"),
+    ]

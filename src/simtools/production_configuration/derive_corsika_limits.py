@@ -57,7 +57,7 @@ def generate_corsika_limits_grid(args_dict):
             args_dict["loss_fraction"],
             args_dict["plot_histograms"],
         )
-        result["layout"] = array_name
+        result["array_name"] = array_name
         result["telescope_ids"] = telescope_ids
         results.append(result)
 
@@ -72,8 +72,8 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
 
     Parameters
     ----------
-    file_path : str
-        Path to the event data file.
+    file_path : str or list
+        Path or glob pattern to the event data file, or a list of files.
     array_name : str
         Name of the telescope array configuration.
     telescope_ids : list[str]
@@ -88,7 +88,11 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
     dict
         Dictionary containing the computed limits and metadata.
     """
-    histograms = EventDataHistograms(file_path, array_name=array_name, telescope_list=telescope_ids)
+    histograms = EventDataHistograms(
+        file_path,
+        array_name=array_name,
+        telescope_list=telescope_ids,
+    )
     histograms.fill()
 
     limits = {
@@ -96,6 +100,12 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
         "upper_radius_limit": compute_upper_radius_limit(histograms, loss_fraction),
         "viewcone_radius": compute_viewcone(histograms, loss_fraction),
     }
+    limits.update(
+        {
+            key: histograms.file_info.get(key)
+            for key in ("primary_particle", "zenith", "azimuth", "nsb_level")
+        }
+    )
 
     if plot_histograms:
         plot_simtel_event_histograms.plot(

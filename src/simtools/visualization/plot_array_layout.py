@@ -14,6 +14,7 @@ from adjustText import adjust_text
 from astropy.table import Column
 from matplotlib.collections import PatchCollection
 
+from simtools.db import db_handler
 from simtools.utils import geometry as transf
 from simtools.utils import names
 from simtools.visualization import legend_handlers as leg_h
@@ -35,6 +36,32 @@ class PlotBounds(NamedTuple):
 
     x_lim: tuple[float, float]
     y_lim: tuple[float, float]
+
+
+def generate_plot_combinations(args_dict):
+    """Yield model version and site combinations for plotting.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Dictionary with command line arguments.
+
+    Yields
+    ------
+    tuple
+        Pair of ``(model_version, site)`` values.
+    """
+    model_versions = [args_dict.get("model_version")]
+    if args_dict.get("all_model_versions"):
+        model_versions = db_handler.DatabaseHandler().get_model_versions()
+
+    sites = [args_dict.get("site")]
+    if args_dict.get("all_sites"):
+        sites = names.site_names()
+
+    for model_version in model_versions:
+        for site in sites:
+            yield model_version, site
 
 
 def plot_array_layouts(args_dict, output_path, layouts, background_layout=None):
@@ -84,8 +111,13 @@ def plot_array_layouts(args_dict, output_path, layouts, background_layout=None):
             if args_dict["coordinate_system"] not in layout["name"]
             else ""
         )
+
+        model_version_string = (
+            f"_{args_dict['model_version'].replace('.', '-')}" if args_dict["model_version"] else ""
+        )
         plot_file_name = args_dict["figure_name"] or (
             f"array_layout_{layout['name']}{site_string}{coordinate_system_string}"
+            f"{model_version_string}"
         )
 
         visualize.save_figure(fig_out, output_path / plot_file_name, dpi=400)

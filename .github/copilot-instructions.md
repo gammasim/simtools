@@ -104,7 +104,7 @@ pytest --no-cov tests/integration_tests/    # Integration tests
 - Never hardcode `/tmp` or absolute temp paths in tests; build all temp paths from `tmp_test_directory`
 - Before finalizing test changes, check that no new `/tmp/` literals were introduced
 - Mock external dependencies (DB, file I/O, network)
-- Never use `==` / `!=` for floating-point comparisons in tests
+- Never use direct `== / `!=`` checks for floats or quantities in tests
 - Use `pytest.approx()` for float comparisons
 - Use `astropy.tests.helper.assert_quantity_allclose` for units
 
@@ -148,6 +148,7 @@ pylint src/simtools/model/       # Check module
 - Validate names with `simtools.utils.names` functions
 - Use semantic versions without "v" prefix ("1.0.0", not "v1.0.0")
 - Do not use **type hints** on function signatures
+- Keep function cognitive complexity below 15 by extracting private helpers before adding more branches, loops, or mixed responsibilities
 
 **Docstrings (MANDATORY):** NumPy style with Parameters, Returns, Raises, Examples sections. 70%+ coverage required for all public functions/methods. Private functions can have single-line docstring if self-explanatory.
 

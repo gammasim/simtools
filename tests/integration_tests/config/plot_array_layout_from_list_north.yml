@@ -14,8 +14,8 @@ applications:
     show_labels: true
     log_level: DEBUG
   integration_tests:
-  - output_file: array_layout_list_North_ground.pdf
-  - output_file: array_layout_list_North_ground.png
+  - output_file: array_layout_list_North_ground_6-0-2.pdf
+  - output_file: array_layout_list_North_ground_6-0-2.png
   test_name: from_list_north
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

@@ -49,10 +49,12 @@ class ArrayModel:
         array_elements=None,
         calibration_device_types=None,
         overwrite_model_parameters=None,
+        ignore_software_version=False,
     ):
         """Initialize ArrayModel."""
         self._logger = logging.getLogger(__name__)
         self.model_version = model_version
+        self.ignore_software_version = ignore_software_version
         self.label = label
         self.layout_name = (
             layout_name[0]
@@ -103,6 +105,7 @@ class ArrayModel:
             model_version=self.model_version,
             label=self.label,
             overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
+            ignore_software_version=self.ignore_software_version,
         )
 
         # Case 1: array_elements is a file name
@@ -211,6 +214,7 @@ class ArrayModel:
                 model_version=self.model_version,
                 label=self.label,
                 overwrite_model_parameter_dict=self.overwrite_model_parameter_dict,
+                ignore_software_version=self.ignore_software_version,
             )
             calibration_models[element_name] = self._build_calibration_models(
                 telescope_models[element_name],

@@ -19,6 +19,10 @@ model_version (str, optional)
     Version of the simulation model to use.
 site (str, optional)
     Name of the site where the simulation is being run.
+cr_spectrum (str, optional)
+    Path to a YAML file defining a user-provided cosmic-ray spectrum.
+    Supported spectrum types: PowerLaw, LogParabola, PowerLawWithExponentialGaussian.
+    If not given, the spectrum is selected from the CTAO spectrum library.
 
 
 Example
@@ -35,6 +39,17 @@ Derive trigger rates for the South Alpha layout:
         --array_layout_name alpha\\
         --plot_histograms
 
+Derive trigger rates with a user-defined spectrum:
+
+.. code-block:: console
+
+    simtools-derive-trigger-rates \\
+        --site South \\
+        --model_version 6.0.0 \\
+        --event_data_file /path/to/event_data_file.h5 \\
+        --array_layout_name alpha \\
+        --cr_spectrum /path/to/spectrum.yml
+
 """
 
 from simtools.application_control import build_application
@@ -43,18 +58,22 @@ from simtools.telescope_trigger_rates import telescope_trigger_rates
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.initialize_application_arguments(["telescope_ids"])
-    parser.add_argument(
-        "--event_data_file",
-        type=str,
-        required=True,
-        help="Event data file containing reduced event data.",
-    )
+    parser.initialize_application_arguments(["telescope_ids", "event_data_file"])
     parser.add_argument(
         "--plot_histograms",
         help="Plot histograms of the event data.",
         action="store_true",
         default=False,
+    )
+    parser.add_argument(
+        "--cr_spectrum",
+        type=str,
+        default=None,
+        help=(
+            "Path to a YAML file defining the cosmic-ray spectrum. "
+            "Supported types: PowerLaw, LogParabola, PowerLawWithExponentialGaussian. "
+            "If not given, the spectrum is selected from the CTAO spectrum library."
+        ),
     )
 
 
