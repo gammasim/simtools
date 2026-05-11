@@ -93,6 +93,41 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Install Apptainer
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+        env:
+          APPTAINER_VERSION: v1.5.0
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rm -f /tmp/apptainer.deb
+          gh release download "${APPTAINER_VERSION}" --repo apptainer/apptainer --pattern "apptainer_${APPTAINER_VERSION#v}_amd64.deb" -O /tmp/apptainer.deb
+          sudo apt-get update -yq
+          sudo apt-get install --yes --quiet /tmp/apptainer.deb
+          apptainer --version
+
+      - name: Generate and push Apptainer images
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+        env:
+          APPTAINER_DOCKER_USERNAME: ${{ github.actor }}
+          APPTAINER_DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          trap 'apptainer registry logout oras://ghcr.io' EXIT
+          printf '%s' "${APPTAINER_DOCKER_PASSWORD}" | apptainer registry login -u "${APPTAINER_DOCKER_USERNAME}" --password-stdin oras://ghcr.io
+          while IFS= read -r image_tag; do
+            if [[ -z "${image_tag}" ]]; then
+              continue
+            fi
+
+            tag_name="${image_tag##*:}"
+            if [[ "${tag_name}" == *-generic ]]; then
+              tag_name="${tag_name%-generic}-generic-amd64"
+            fi
+            sif_file="${tag_name}.sif"
+            apptainer build "${sif_file}" "docker://${image_tag}" || { echo "Failed to build Apptainer image for ${image_tag}" >&2; exit 1; }
+            apptainer push -U "${sif_file}" "oras://${image_tag%:*}:${tag_name}" || { echo "Failed to push Apptainer image for ${image_tag}" >&2; exit 1; }
+            rm -f "${sif_file}"
+          done <<< "${{ steps.meta.outputs.tags }}"
+
   test-simtools-prod:
     permissions:
       contents: read

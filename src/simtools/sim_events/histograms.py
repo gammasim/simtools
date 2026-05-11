@@ -7,6 +7,15 @@ import astropy.units as u
 import numpy as np
 
 from simtools.sim_events.reader import EventDataReader
+from simtools.utils.general import resolve_file_patterns
+
+
+def _coerce_quantity(value, unit):
+    """Return a quantity converted to the requested unit."""
+    unit = u.Unit(unit)
+    if hasattr(value, "to"):
+        return value.to(unit)
+    return u.Quantity(value, unit)
 
 
 class EventDataHistograms:
@@ -18,8 +27,8 @@ class EventDataHistograms:
 
     Parameters
     ----------
-    event_data_file : str
-        Path to the event-data file.
+    event_data_file : str or list[pathlib.Path | str]
+        Path to the event-data file or a list of event-data files.
     array_name : str, optional
         Name of the telescope array configuration (default is None).
     telescope_list : list, optional
@@ -30,12 +39,80 @@ class EventDataHistograms:
         """Initialize."""
         self._logger = logging.getLogger(__name__)
         self.event_data_file = event_data_file
+        self.event_data_files = self._normalize_event_data_files(event_data_file)
         self.array_name = array_name
 
         self.histograms = {}
         self.file_info = {}
+        self._contains_triggered_data = False
 
-        self.reader = EventDataReader(event_data_file, telescope_list=telescope_list)
+        self.reader = EventDataReader(self.event_data_files[0], telescope_list=telescope_list)
+        self._contains_triggered_data = self._reader_has_triggered_data(self.reader)
+        self.telescope_list = telescope_list
+
+    def _normalize_event_data_files(self, event_data_file):
+        """Return event-data files as a list of resolved file names."""
+        return [str(file_name) for file_name in resolve_file_patterns(event_data_file)]
+
+    def _reader_has_triggered_data(self, reader):
+        """Check if a reader exposes triggered event tables."""
+        return any(isinstance(ds, dict) and "TRIGGERS" in ds for ds in reader.data_sets)
+
+    def _iter_readers(self):
+        """Yield one reader per input file to keep memory usage bounded."""
+        for index, event_data_file in enumerate(self.event_data_files):
+            if index == 0:
+                yield event_data_file, self.reader
+                continue
+
+            self.reader = EventDataReader(event_data_file, telescope_list=self.telescope_list)
+            self._contains_triggered_data = (
+                self._contains_triggered_data or self._reader_has_triggered_data(self.reader)
+            )
+            yield event_data_file, self.reader
+
+    def _read_data_set(self, reader, event_data_file, data_set):
+        """Read one dataset and return reduced file information with event tables."""
+        self._logger.info(f"Reading event data from {event_data_file} for {data_set}")
+        file_info_table, shower_data, event_data, triggered_data = reader.read_event_data(
+            event_data_file, table_name_map=data_set
+        )
+        file_info_table = reader.get_reduced_simulation_file_info(file_info_table)
+        return file_info_table, shower_data, event_data, triggered_data
+
+    def _get_file_info_value(self, file_info_table, key, unit=None):
+        """Return file-info value, converting to the requested unit when provided."""
+        value = file_info_table.get(key)
+        if value is None or unit is None:
+            return value
+        return _coerce_quantity(value, unit)
+
+    def _update_file_info(self, file_info_table):
+        """Store normalized metadata from the reduced file-info table."""
+        self.file_info = {
+            "primary_particle": self._get_file_info_value(file_info_table, "primary_particle"),
+            "zenith": self._get_file_info_value(file_info_table, "zenith", "deg"),
+            "azimuth": self._get_file_info_value(file_info_table, "azimuth", "deg"),
+            "nsb_level": self._get_file_info_value(file_info_table, "nsb_level"),
+            "energy_min": self._get_file_info_value(file_info_table, "energy_min", "TeV"),
+            "core_scatter_max": self._get_file_info_value(file_info_table, "core_scatter_max", "m"),
+            "viewcone_max": self._get_file_info_value(file_info_table, "viewcone_max", "deg"),
+            "solid_angle": self._get_file_info_value(file_info_table, "solid_angle", "sr"),
+            "scatter_area": self._get_file_info_value(file_info_table, "scatter_area", "cm2"),
+        }
+
+    def _merge_histograms(self, current_histograms):
+        """Carry over accumulated histogram counts before filling new data."""
+        for name, hist in current_histograms.items():
+            previous = self.histograms.get(name)
+            if previous is not None:
+                hist["histogram"] = previous["histogram"]
+        self.histograms = current_histograms
+
+    def _fill_current_histograms(self):
+        """Fill all currently defined histograms with their event data."""
+        for data in self.histograms.values():
+            self._fill_histogram_and_bin_edges(data)
 
     def fill(self):
         """
@@ -47,31 +124,17 @@ class EventDataHistograms:
         Assume that all event data files are generated with similar configurations
         (self.file_info contains the file info of the last file).
         """
-        for data_set in self.reader.data_sets:
-            self._logger.info(f"Reading event data from {self.event_data_file} for {data_set}")
-            _file_info_table, shower_data, event_data, triggered_data = self.reader.read_event_data(
-                self.event_data_file, table_name_map=data_set
-            )
-            _file_info_table = self.reader.get_reduced_simulation_file_info(_file_info_table)
-            self.file_info = {
-                "primary_particle": _file_info_table["primary_particle"],
-                "energy_min": _file_info_table["energy_min"].to("TeV"),
-                "core_scatter_max": _file_info_table["core_scatter_max"].to("m"),
-                "viewcone_max": _file_info_table["viewcone_max"].to("deg"),
-                "solid_angle": _file_info_table["solid_angle"].to("sr"),
-                "scatter_area": _file_info_table["scatter_area"].to("cm2"),
-            }
-
-            current_histograms = self._define_histograms(event_data, triggered_data, shower_data)
-            for name, hist in current_histograms.items():
-                previous = self.histograms.get(name)
-                if previous is not None:
-                    hist["histogram"] = previous["histogram"]
-
-            self.histograms = current_histograms
-
-            for data in self.histograms.values():
-                self._fill_histogram_and_bin_edges(data)
+        for event_data_file, reader in self._iter_readers():
+            for data_set in reader.data_sets:
+                file_info_table, shower_data, event_data, triggered_data = self._read_data_set(
+                    reader, event_data_file, data_set
+                )
+                self._update_file_info(file_info_table)
+                current_histograms = self._define_histograms(
+                    event_data, triggered_data, shower_data
+                )
+                self._merge_histograms(current_histograms)
+                self._fill_current_histograms()
 
         self.print_summary()
         self.calculate_efficiency_data()
@@ -235,7 +298,7 @@ class EventDataHistograms:
         dict
             Dictionary containing the efficiency histograms.
         """
-        if not any(isinstance(ds, dict) and "TRIGGERS" in ds for ds in self.reader.data_sets):
+        if not self._contains_triggered_data and not self._reader_has_triggered_data(self.reader):
             return None
 
         def calculate_efficiency(trig_hist, mc_hist):
@@ -324,7 +387,7 @@ class EventDataHistograms:
         dict
             Dictionary containing the cumulative histograms.
         """
-        if not any(isinstance(ds, dict) and "TRIGGERS" in ds for ds in self.reader.data_sets):
+        if not self._contains_triggered_data and not self._reader_has_triggered_data(self.reader):
             return None
 
         cumulative_data = {}
