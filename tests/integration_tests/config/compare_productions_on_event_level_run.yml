@@ -1,0 +1,17 @@
+---
+applications:
+- application: simtools-compare-productions-on-event-level
+  configuration:
+    production:
+    - baseline
+    - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+    - candidate
+    - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+    output_path: simtools-output
+  integration_tests:
+  - output_file: trigger_fraction_comparison.png
+  - output_file: trigger_multiplicity_comparison.png
+  - output_file: telescope_participation_fraction.png
+  test_name: run
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
