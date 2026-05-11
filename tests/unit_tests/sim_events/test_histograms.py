@@ -219,6 +219,9 @@ def test_fill_populates_primary_particle(mock_reader, hdf5_file_name, mocker):
     )
     mock_reader.return_value.get_reduced_simulation_file_info.return_value = {
         "primary_particle": "proton",
+        "zenith": 20.0 * u.deg,
+        "azimuth": 0.0 * u.deg,
+        "nsb_level": 1.0,
         "energy_min": 0.1 * u.TeV,
         "core_scatter_max": 100.0 * u.m,
         "viewcone_max": 2.0 * u.deg,
@@ -247,6 +250,10 @@ def test_fill_accumulates_histograms_across_data_sets(mock_reader, hdf5_file_nam
         mocker.Mock(),
     )
     mock_reader.return_value.get_reduced_simulation_file_info.return_value = {
+        "primary_particle": "proton",
+        "zenith": 20.0 * u.deg,
+        "azimuth": 0.0 * u.deg,
+        "nsb_level": 1.0,
         "energy_min": 0.1 * u.TeV,
         "core_scatter_max": 100.0 * u.m,
         "viewcone_max": 2.0 * u.deg,
