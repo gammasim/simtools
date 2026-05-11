@@ -268,16 +268,22 @@ def test_initialize_default_arguments_accepts_figure_format():
     assert args.figure_format == ["png", "pdf"]
 
 
-def test_initialize_default_arguments_accepts_apptainer_image_dict():
+def test_initialize_default_arguments_accepts_apptainer_image_dict(tmp_test_directory):
     parser_with_defaults = parser.CommandLineParser()
     parser_with_defaults.initialize_default_arguments()
 
+    image_v7 = tmp_test_directory / "v7.sif"
+    image_v63 = tmp_test_directory / "v63.sif"
+
     args = parser_with_defaults.parse_args(
-        ["--apptainer_image", "{'7.0.0': '/tmp/v7.sif', '6.3.0': '/tmp/v63.sif'}"]
+        [
+            "--apptainer_image",
+            f"{{'7.0.0': '{image_v7}', '6.3.0': '{image_v63}'}}",
+        ]
     )
 
     assert isinstance(args.apptainer_image, dict)
-    assert args.apptainer_image == {"7.0.0": "/tmp/v7.sif", "6.3.0": "/tmp/v63.sif"}
+    assert args.apptainer_image == {"7.0.0": str(image_v7), "6.3.0": str(image_v63)}
 
 
 def test_initialize_application_arguments():
