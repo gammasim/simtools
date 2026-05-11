@@ -1,0 +1,13 @@
+---
+applications:
+- application: simtools-derive-trigger-rates
+  configuration:
+    cr_spectrum: tests/resources/trigger_rates_user_spectrum_powerlaw.yml
+    event_data_file: tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+    model_version: 6.0.2
+    output_path: simtools-output
+    plot_histograms: true
+    telescope_ids: tests/resources/production_layouts_telescope_ids.yml
+  test_name: user_defined_spectrum
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

@@ -1,0 +1,7 @@
+---
+type: PowerLaw
+normalization: 8.0e-6
+normalization_unit: 1 / (cm2 s TeV sr)
+index: -2.75
+e_ref: 1.0
+e_ref_unit: TeV
