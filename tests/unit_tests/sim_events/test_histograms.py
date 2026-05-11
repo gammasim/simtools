@@ -206,6 +206,35 @@ def test_fill(mock_reader, hdf5_file_name, mocker):
     )
 
 
+def test_fill_populates_primary_particle(mock_reader, hdf5_file_name, mocker):
+    """Test that fill() stores primary_particle in file_info."""
+    histograms = EventDataHistograms(hdf5_file_name)
+
+    mock_reader.return_value.data_sets = ["test_dataset"]
+    mock_reader.return_value.read_event_data.return_value = (
+        mocker.Mock(),
+        mocker.Mock(),
+        mocker.Mock(),
+        mocker.Mock(),
+    )
+    mock_reader.return_value.get_reduced_simulation_file_info.return_value = {
+        "primary_particle": "proton",
+        "energy_min": 0.1 * u.TeV,
+        "core_scatter_max": 100.0 * u.m,
+        "viewcone_max": 2.0 * u.deg,
+        "solid_angle": 1.0 * u.sr,
+        "scatter_area": 1.0 * u.cm**2,
+    }
+    mocker.patch.object(histograms, "_define_histograms", return_value={})
+    mocker.patch.object(histograms, "print_summary")
+    mocker.patch.object(histograms, "calculate_efficiency_data")
+    mocker.patch.object(histograms, "calculate_cumulative_data")
+
+    histograms.fill()
+
+    assert histograms.file_info["primary_particle"] == "proton"
+
+
 def test_fill_accumulates_histograms_across_data_sets(mock_reader, hdf5_file_name, mocker):
     """Test fill accumulates histogram counts across all indexed datasets."""
     histograms = EventDataHistograms(hdf5_file_name)

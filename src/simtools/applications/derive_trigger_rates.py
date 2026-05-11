@@ -19,6 +19,10 @@ model_version (str, optional)
     Version of the simulation model to use.
 site (str, optional)
     Name of the site where the simulation is being run.
+cr_spectrum (str, optional)
+    Path to a YAML file defining a user-provided cosmic-ray spectrum.
+    Supported spectrum types: PowerLaw, LogParabola, PowerLawWithExponentialGaussian.
+    If not given, the spectrum is selected from the CTAO spectrum library.
 
 
 Example
@@ -34,6 +38,17 @@ Derive trigger rates for the South Alpha layout:
         --event_data_file /path/to/event_data_file.h5 \\
         --array_layout_name alpha\\
         --plot_histograms
+
+Derive trigger rates with a user-defined spectrum:
+
+.. code-block:: console
+
+    simtools-derive-trigger-rates \\
+        --site South \\
+        --model_version 6.0.0 \\
+        --event_data_file /path/to/event_data_file.h5 \\
+        --array_layout_name alpha \\
+        --cr_spectrum /path/to/spectrum.yml
 
 """
 
@@ -55,6 +70,16 @@ def _add_arguments(parser):
         help="Plot histograms of the event data.",
         action="store_true",
         default=False,
+    )
+    parser.add_argument(
+        "--cr_spectrum",
+        type=str,
+        default=None,
+        help=(
+            "Path to a YAML file defining the cosmic-ray spectrum. "
+            "Supported types: PowerLaw, LogParabola, PowerLawWithExponentialGaussian. "
+            "If not given, the spectrum is selected from the CTAO spectrum library."
+        ),
     )
 
 

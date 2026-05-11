@@ -54,6 +54,7 @@ class EventDataHistograms:
             )
             _file_info_table = self.reader.get_reduced_simulation_file_info(_file_info_table)
             self.file_info = {
+                "primary_particle": _file_info_table["primary_particle"],
                 "energy_min": _file_info_table["energy_min"].to("TeV"),
                 "core_scatter_max": _file_info_table["core_scatter_max"].to("m"),
                 "viewcone_max": _file_info_table["viewcone_max"].to("deg"),
