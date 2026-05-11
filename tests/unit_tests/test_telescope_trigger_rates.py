@@ -129,7 +129,7 @@ def test_load_spectrum_from_file_power_law(tmp_test_directory):
     spectrum = _load_spectrum_from_file(spectrum_file)
     assert isinstance(spectrum, PowerLaw)
     assert spectrum.index == pytest.approx(-2.62)
-    assert spectrum.e_ref == 1.0 * u.TeV
+    assert spectrum.e_ref.value == pytest.approx(1.0)
 
 
 def test_load_spectrum_from_file_log_parabola(tmp_test_directory):
