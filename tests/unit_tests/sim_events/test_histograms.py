@@ -3,6 +3,7 @@ import logging
 import astropy.units as u
 import numpy as np
 import pytest
+from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.sim_events.histograms import EventDataHistograms
 
@@ -350,13 +351,13 @@ def test_fill_coerces_unitless_file_info_values(mock_reader, hdf5_file_name, moc
 
     histograms.fill()
 
-    assert histograms.file_info["zenith"] == 20.0 * u.deg
-    assert histograms.file_info["azimuth"] == 180.0 * u.deg
-    assert histograms.file_info["energy_min"] == 0.1 * u.TeV
-    assert histograms.file_info["core_scatter_max"] == 100.0 * u.m
-    assert histograms.file_info["viewcone_max"] == 2.0 * u.deg
-    assert histograms.file_info["solid_angle"] == 1.0 * u.sr
-    assert histograms.file_info["scatter_area"] == 1.0 * (u.cm**2)
+    assert_quantity_allclose(histograms.file_info["zenith"], 20.0 * u.deg)
+    assert_quantity_allclose(histograms.file_info["azimuth"], 180.0 * u.deg)
+    assert_quantity_allclose(histograms.file_info["energy_min"], 0.1 * u.TeV)
+    assert_quantity_allclose(histograms.file_info["core_scatter_max"], 100.0 * u.m)
+    assert_quantity_allclose(histograms.file_info["viewcone_max"], 2.0 * u.deg)
+    assert_quantity_allclose(histograms.file_info["solid_angle"], 1.0 * u.sr)
+    assert_quantity_allclose(histograms.file_info["scatter_area"], 1.0 * (u.cm**2))
 
 
 def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):

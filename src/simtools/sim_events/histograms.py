@@ -71,6 +71,49 @@ class EventDataHistograms:
             )
             yield event_data_file, self.reader
 
+    def _read_data_set(self, reader, event_data_file, data_set):
+        """Read one dataset and return reduced file information with event tables."""
+        self._logger.info(f"Reading event data from {event_data_file} for {data_set}")
+        file_info_table, shower_data, event_data, triggered_data = reader.read_event_data(
+            event_data_file, table_name_map=data_set
+        )
+        file_info_table = reader.get_reduced_simulation_file_info(file_info_table)
+        return file_info_table, shower_data, event_data, triggered_data
+
+    def _get_file_info_value(self, file_info_table, key, unit=None):
+        """Return file-info value, converting to the requested unit when provided."""
+        value = file_info_table.get(key)
+        if value is None or unit is None:
+            return value
+        return _coerce_quantity(value, unit)
+
+    def _update_file_info(self, file_info_table):
+        """Store normalized metadata from the reduced file-info table."""
+        self.file_info = {
+            "primary_particle": self._get_file_info_value(file_info_table, "primary_particle"),
+            "zenith": self._get_file_info_value(file_info_table, "zenith", "deg"),
+            "azimuth": self._get_file_info_value(file_info_table, "azimuth", "deg"),
+            "nsb_level": self._get_file_info_value(file_info_table, "nsb_level"),
+            "energy_min": self._get_file_info_value(file_info_table, "energy_min", "TeV"),
+            "core_scatter_max": self._get_file_info_value(file_info_table, "core_scatter_max", "m"),
+            "viewcone_max": self._get_file_info_value(file_info_table, "viewcone_max", "deg"),
+            "solid_angle": self._get_file_info_value(file_info_table, "solid_angle", "sr"),
+            "scatter_area": self._get_file_info_value(file_info_table, "scatter_area", "cm2"),
+        }
+
+    def _merge_histograms(self, current_histograms):
+        """Carry over accumulated histogram counts before filling new data."""
+        for name, hist in current_histograms.items():
+            previous = self.histograms.get(name)
+            if previous is not None:
+                hist["histogram"] = previous["histogram"]
+        self.histograms = current_histograms
+
+    def _fill_current_histograms(self):
+        """Fill all currently defined histograms with their event data."""
+        for data in self.histograms.values():
+            self._fill_histogram_and_bin_edges(data)
+
     def fill(self):
         """
         Fill histograms with event data.
@@ -83,39 +126,15 @@ class EventDataHistograms:
         """
         for event_data_file, reader in self._iter_readers():
             for data_set in reader.data_sets:
-                self._logger.info(f"Reading event data from {event_data_file} for {data_set}")
-                _file_info_table, shower_data, event_data, triggered_data = reader.read_event_data(
-                    event_data_file, table_name_map=data_set
+                file_info_table, shower_data, event_data, triggered_data = self._read_data_set(
+                    reader, event_data_file, data_set
                 )
-                _file_info_table = reader.get_reduced_simulation_file_info(_file_info_table)
-                self.file_info = {
-                    "primary_particle": _file_info_table.get("primary_particle"),
-                    "zenith": _coerce_quantity(_file_info_table["zenith"], "deg")
-                    if "zenith" in _file_info_table
-                    else None,
-                    "azimuth": _coerce_quantity(_file_info_table["azimuth"], "deg")
-                    if "azimuth" in _file_info_table
-                    else None,
-                    "nsb_level": _file_info_table.get("nsb_level"),
-                    "energy_min": _coerce_quantity(_file_info_table["energy_min"], "TeV"),
-                    "core_scatter_max": _coerce_quantity(_file_info_table["core_scatter_max"], "m"),
-                    "viewcone_max": _coerce_quantity(_file_info_table["viewcone_max"], "deg"),
-                    "solid_angle": _coerce_quantity(_file_info_table["solid_angle"], "sr"),
-                    "scatter_area": _coerce_quantity(_file_info_table["scatter_area"], "cm2"),
-                }
-
+                self._update_file_info(file_info_table)
                 current_histograms = self._define_histograms(
                     event_data, triggered_data, shower_data
                 )
-                for name, hist in current_histograms.items():
-                    previous = self.histograms.get(name)
-                    if previous is not None:
-                        hist["histogram"] = previous["histogram"]
-
-                self.histograms = current_histograms
-
-                for data in self.histograms.values():
-                    self._fill_histogram_and_bin_edges(data)
+                self._merge_histograms(current_histograms)
+                self._fill_current_histograms()
 
         self.print_summary()
         self.calculate_efficiency_data()
