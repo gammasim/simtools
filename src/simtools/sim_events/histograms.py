@@ -52,7 +52,11 @@ class EventDataHistograms:
 
     def _iter_readers(self):
         """Yield one reader per input file to keep memory usage bounded."""
-        for event_data_file in self.event_data_files:
+        for index, event_data_file in enumerate(self.event_data_files):
+            if index == 0:
+                yield event_data_file, self.reader
+                continue
+
             self.reader = EventDataReader(event_data_file, telescope_list=self.telescope_list)
             self._contains_triggered_data = (
                 self._contains_triggered_data or self._reader_has_triggered_data(self.reader)
