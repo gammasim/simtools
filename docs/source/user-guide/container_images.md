@@ -19,6 +19,8 @@ All images use `almalinux:9.5` or `almalinux:9.5-minimal` with Python 3.12 as ba
 
 The generic image is compatible with ARM and x86_64 CPUs, all other images are for x86_64 CPUs only.
 
+Apptainer images are published as ORAS artifacts in the same GitHub Container Registry repositories and use the same image tags, with the generic x86_64 SIF named `generic-amd64`. See [Getting Started](getting_started.md) for `apptainer pull` and `apptainer exec` examples.
+
 ### Simtools for Developers
 
 - registry page: [simtools-dev](https://github.com/gammasim/simtools/pkgs/container/simtools-dev)
