@@ -22,6 +22,22 @@ def hdf5_file_name():
     return "test_file.h5"
 
 
+@pytest.fixture
+def reduced_file_info():
+    """Common reduced file info mock for fill() tests."""
+    return {
+        "primary_particle": "proton",
+        "zenith": 20.0 * u.deg,
+        "azimuth": 0.0 * u.deg,
+        "nsb_level": 1.0,
+        "energy_min": 0.1 * u.TeV,
+        "core_scatter_max": 100.0 * u.m,
+        "viewcone_max": 2.0 * u.deg,
+        "solid_angle": 1.0 * u.sr,
+        "scatter_area": 1.0 * u.cm**2,
+    }
+
+
 def test_init(mock_reader, hdf5_file_name):
     """Test initialization with telescope list."""
     test_telescope_list = [1, 2]
@@ -206,7 +222,7 @@ def test_fill(mock_reader, hdf5_file_name, mocker):
     )
 
 
-def test_fill_populates_primary_particle(mock_reader, hdf5_file_name, mocker):
+def test_fill_populates_primary_particle(mock_reader, hdf5_file_name, mocker, reduced_file_info):
     """Test that fill() stores primary_particle in file_info."""
     histograms = EventDataHistograms(hdf5_file_name)
 
@@ -217,17 +233,7 @@ def test_fill_populates_primary_particle(mock_reader, hdf5_file_name, mocker):
         mocker.Mock(),
         mocker.Mock(),
     )
-    mock_reader.return_value.get_reduced_simulation_file_info.return_value = {
-        "primary_particle": "proton",
-        "zenith": 20.0 * u.deg,
-        "azimuth": 0.0 * u.deg,
-        "nsb_level": 1.0,
-        "energy_min": 0.1 * u.TeV,
-        "core_scatter_max": 100.0 * u.m,
-        "viewcone_max": 2.0 * u.deg,
-        "solid_angle": 1.0 * u.sr,
-        "scatter_area": 1.0 * u.cm**2,
-    }
+    mock_reader.return_value.get_reduced_simulation_file_info.return_value = reduced_file_info
     mocker.patch.object(histograms, "_define_histograms", return_value={})
     mocker.patch.object(histograms, "print_summary")
     mocker.patch.object(histograms, "calculate_efficiency_data")
@@ -238,7 +244,9 @@ def test_fill_populates_primary_particle(mock_reader, hdf5_file_name, mocker):
     assert histograms.file_info["primary_particle"] == "proton"
 
 
-def test_fill_accumulates_histograms_across_data_sets(mock_reader, hdf5_file_name, mocker):
+def test_fill_accumulates_histograms_across_data_sets(
+    mock_reader, hdf5_file_name, mocker, reduced_file_info
+):
     """Test fill accumulates histogram counts across all indexed datasets."""
     histograms = EventDataHistograms(hdf5_file_name)
 
@@ -249,17 +257,7 @@ def test_fill_accumulates_histograms_across_data_sets(mock_reader, hdf5_file_nam
         mocker.Mock(),
         mocker.Mock(),
     )
-    mock_reader.return_value.get_reduced_simulation_file_info.return_value = {
-        "primary_particle": "proton",
-        "zenith": 20.0 * u.deg,
-        "azimuth": 0.0 * u.deg,
-        "nsb_level": 1.0,
-        "energy_min": 0.1 * u.TeV,
-        "core_scatter_max": 100.0 * u.m,
-        "viewcone_max": 2.0 * u.deg,
-        "solid_angle": 1.0 * u.sr,
-        "scatter_area": 1.0 * u.cm**2,
-    }
+    mock_reader.return_value.get_reduced_simulation_file_info.return_value = reduced_file_info
 
     dataset_0 = mocker.Mock()
     dataset_0.simulated_energy = np.array([0.2, 0.4])
