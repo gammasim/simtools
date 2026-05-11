@@ -48,6 +48,37 @@ class EventDataReader:
     """Read reduced MC data set stored in astropy tables."""
 
     _particle_name_cache = {}
+    _required_shower_columns = [
+        "shower_id",
+        "event_id",
+        "file_id",
+        "simulated_energy",
+        "x_core",
+        "y_core",
+        "shower_azimuth",
+        "shower_altitude",
+        "area_weight",
+    ]
+    _required_trigger_columns = [
+        "shower_id",
+        "event_id",
+        "file_id",
+        "array_altitude",
+        "array_azimuth",
+        "telescope_list",
+    ]
+    _required_file_info_columns = [
+        "particle_id",
+        "zenith",
+        "azimuth",
+        "nsb_level",
+        "energy_min",
+        "energy_max",
+        "viewcone_min",
+        "viewcone_max",
+        "core_scatter_min",
+        "core_scatter_max",
+    ]
 
     def __init__(self, event_data_file, telescope_list=None):
         """Initialize EventDataReader."""
@@ -272,7 +303,20 @@ class EventDataReader:
         table_names = [
             name for k in ("SHOWERS", "TRIGGERS", "FILE_INFO") if (name := get_name(k)) is not None
         ]
-        tables = table_handler.read_tables(event_data_file, table_names=table_names)
+
+        table_columns = {
+            get_name("SHOWERS"): self._required_shower_columns,
+            get_name("FILE_INFO"): self._required_file_info_columns,
+        }
+        triggers_name = get_name("TRIGGERS")
+        if triggers_name is not None:
+            table_columns[triggers_name] = self._required_trigger_columns
+
+        tables = table_handler.read_tables(
+            event_data_file,
+            table_names=table_names,
+            table_columns=table_columns,
+        )
         self.reduced_file_info = self.get_reduced_simulation_file_info(
             tables[get_name("FILE_INFO")]
         )

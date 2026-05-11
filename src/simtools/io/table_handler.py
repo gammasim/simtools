@@ -182,7 +182,7 @@ def _merge(input_files, table_names, file_type, output_file, add_file_id_to_tabl
     return merged
 
 
-def read_tables(file, table_names, file_type=None):
+def read_tables(file, table_names, file_type=None, table_columns=None):
     """
     Read tables from a file.
 
@@ -194,6 +194,8 @@ def read_tables(file, table_names, file_type=None):
         List of table names to read.
     file_type : str
         Type of the input file ('HDF5' or 'FITS').
+    table_columns : dict, optional
+        Mapping of table name to list of columns to read. Used for HDF5 only.
 
     Returns
     -------
@@ -202,13 +204,20 @@ def read_tables(file, table_names, file_type=None):
     """
     file_type = file_type or read_table_file_type([file])
     if file_type == "HDF5":
-        return {name: read_table_from_hdf5(file, name) for name in table_names}
+        return {
+            name: read_table_from_hdf5(
+                file,
+                name,
+                columns=(table_columns or {}).get(name),
+            )
+            for name in table_names
+        }
     if file_type == "FITS":
         return {name: Table.read(file, hdu=name) for name in table_names}
     raise ValueError(f"Unsupported file format: {file_type}. Supported formats are HDF5 and FITS.")
 
 
-def read_table_from_hdf5(file, table_name):
+def read_table_from_hdf5(file, table_name, columns=None):
     """
     Read a single astropy table from an HDF5 file.
 
@@ -218,15 +227,40 @@ def read_table_from_hdf5(file, table_name):
         Path to the input HDF5 file.
     table_name : str
         Name of the table to read.
+    columns : list[str], optional
+        List of columns to read from a compound HDF5 dataset. If None, all columns are read.
 
     Returns
     -------
     astropy.table.Table
         The requested astropy table.
     """
-    table = Table.read(file, path=table_name)
+    table = None
+    if columns is None:
+        table = Table.read(file, path=table_name)
+
     with h5py.File(file, "r") as f:
         dset = f[table_name]
+
+        if columns is not None:
+            if dset.dtype.names is None:
+                raise ValueError(
+                    f"Table '{table_name}' does not use a compound dtype and "
+                    "cannot be column-filtered."
+                )
+
+            missing_columns = [col for col in columns if col not in dset.dtype.names]
+            if missing_columns:
+                raise KeyError(f"Columns {missing_columns} not found in table '{table_name}'.")
+
+            if hasattr(dset, "fields"):
+                data = dset.fields(columns)[:]
+            else:
+                data = dset[:][columns]
+
+            table = Table(data)
+            table.meta["EXTNAME"] = table_name
+
         for col in table.colnames:
             unit_key = f"{col}_unit"
             if unit_key in dset.attrs:

@@ -238,6 +238,27 @@ def test_read_tables_hdf5(mocker):
     )
 
 
+def test_read_tables_hdf5_with_selected_columns(mocker):
+    """Test reading selected HDF5 table columns."""
+    mock_reader = mocker.patch(f"{TABLE_HANDLER_PATH}.read_table_from_hdf5")
+    mock_reader.return_value = Table({"col1": [1, 2]})
+
+    result = read_tables(
+        TEST_H5,
+        ["table1", "table2"],
+        file_type="HDF5",
+        table_columns={"table1": ["col1"]},
+    )
+
+    assert len(result) == 2
+    mock_reader.assert_has_calls(
+        [
+            mocker.call(TEST_H5, "table1", columns=["col1"]),
+            mocker.call(TEST_H5, "table2", columns=None),
+        ]
+    )
+
+
 def test_read_tables_unsupported_format(mocker):
     mock_file_type = mocker.patch(READ_TABLE_FILE_TYPE)
     mock_file_type.return_value = "CSV"
@@ -789,6 +810,47 @@ def test_read_table_from_hdf5_with_units(mocker):
     # Verify unit assignment
     mock_table.__getitem__.assert_called_once_with("col1")
     assert result == mock_table
+
+
+def test_read_table_from_hdf5_with_selected_columns(mocker):
+    """Test reading only selected columns from a compound HDF5 dataset."""
+    mock_file = mocker.MagicMock()
+    mock_dataset = mocker.MagicMock()
+    mock_dataset.dtype.names = ("col1", "col2")
+    mock_dataset.attrs = {"col1_unit": "m"}
+
+    selected_data = np.array([(1.0,), (2.0,)], dtype=[("col1", "f8")])
+    fields_accessor = mocker.MagicMock()
+    fields_accessor.__getitem__.return_value = selected_data
+    mock_dataset.fields.return_value = fields_accessor
+
+    mock_file.__getitem__.return_value = mock_dataset
+    mock_context = mocker.MagicMock()
+    mock_context.__enter__.return_value = mock_file
+    mocker.patch(H5PY_FILE, return_value=mock_context)
+    mock_table_read = mocker.patch(ASTROPY_TABLE_READ)
+
+    result = read_table_from_hdf5(TEST_H5, TEST_TABLE_NAME, columns=["col1"])
+
+    mock_table_read.assert_not_called()
+    mock_dataset.fields.assert_called_once_with(["col1"])
+    assert result.colnames == ["col1"]
+    assert result["col1"].unit == u.Unit("m")
+
+
+def test_read_table_from_hdf5_with_missing_selected_columns(mocker):
+    """Test selected-column read with unknown column names."""
+    mock_file = mocker.MagicMock()
+    mock_dataset = mocker.MagicMock()
+    mock_dataset.dtype.names = ("col1",)
+    mock_dataset.attrs = {}
+    mock_file.__getitem__.return_value = mock_dataset
+    mock_context = mocker.MagicMock()
+    mock_context.__enter__.return_value = mock_file
+    mocker.patch(H5PY_FILE, return_value=mock_context)
+
+    with pytest.raises(KeyError, match="not found in table"):
+        read_table_from_hdf5(TEST_H5, TEST_TABLE_NAME, columns=["col2"])
 
 
 def test_write_table_in_hdf5_with_units(mocker, mock_h5py_file):
