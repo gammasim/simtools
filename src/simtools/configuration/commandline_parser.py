@@ -930,6 +930,11 @@ _APPLICATION_ARGS = {
         "help": "Data file name.",
         "type": str,
     },
+    "event_data_file": {
+        "help": "Event data file or glob pattern containing reduced event data.",
+        "type": str,
+        "required": True,
+    },
     "telescope_ids": {
         "help": "Path to a file containing telescope configurations.",
         "type": str,
