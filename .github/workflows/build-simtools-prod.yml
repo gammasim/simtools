@@ -119,9 +119,12 @@ jobs:
             fi
 
             tag_name="${image_tag##*:}"
+            if [[ "${tag_name}" == *-generic ]]; then
+              tag_name="${tag_name%-generic}-generic-amd64"
+            fi
             sif_file="${tag_name}.sif"
             apptainer build "${sif_file}" "docker://${image_tag}" || { echo "Failed to build Apptainer image for ${image_tag}" >&2; exit 1; }
-            apptainer push -U "${sif_file}" "oras://${image_tag}.sif" || { echo "Failed to push Apptainer image for ${image_tag}" >&2; exit 1; }
+            apptainer push -U "${sif_file}" "oras://${image_tag%:*}:${tag_name}.sif" || { echo "Failed to push Apptainer image for ${image_tag}" >&2; exit 1; }
             rm -f "${sif_file}"
           done <<< "${{ steps.meta.outputs.tags }}"
 
