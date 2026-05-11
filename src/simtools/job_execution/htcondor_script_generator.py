@@ -472,7 +472,8 @@ def _get_submit_script(args_dict):
     view_cone_string = f'"{view_cone[0].to(u.deg)} {view_cone[1].to(u.deg)}"'
 
     label = args_dict["label"] if args_dict["label"] else "simulate-prod"
-    run_number_offset = args_dict["run_number_offset"] or 1
+    run_number_offset_arg = args_dict["run_number_offset"]
+    run_number_offset = 0 if run_number_offset_arg is None else run_number_offset_arg
 
     azimuth_angle_idx = bash_indices["azimuth_angle"]
     zenith_angle_idx = bash_indices["zenith_angle"]
