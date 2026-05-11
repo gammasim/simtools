@@ -189,11 +189,6 @@ def _load_spectrum_from_file(yaml_path):
     spectrum
         A spectrum object from ctao_cr_spectra.
 
-    Raises
-    ------
-    ValueError
-        If the spectrum type is not supported or required keys are missing.
-
     Examples
     --------
     Example YAML file content for a power-law spectrum:
@@ -232,8 +227,9 @@ def _integrate_energy_spectrum(spectrum, energy_min, energy_max):
     """
     Integrate a spectrum over an energy range.
 
-    Uses the analytical integration method for PowerLaw spectra and
-    numerical integration (scipy.integrate.quad) for all other types.
+    Uses the analytical integration method when the spectrum provides
+    integrate_energy, and falls back to numerical integration
+    (scipy.integrate.quad) otherwise.
 
     Parameters
     ----------
@@ -249,13 +245,14 @@ def _integrate_energy_spectrum(spectrum, energy_min, energy_max):
     astropy.units.Quantity
         Integrated spectrum value over the energy range.
     """
-    if type(spectrum) is PowerLaw:  # pylint: disable=unidiomatic-typecheck
+    if callable(getattr(spectrum, "integrate_energy", None)):
         return spectrum.integrate_energy(energy_min, energy_max)
 
-    flux_unit = spectrum(energy_min).unit * u.TeV
+    spectrum_unit = spectrum(energy_min).unit
+    flux_unit = spectrum_unit * u.TeV
 
     def integrand(e_tev):
-        return spectrum(e_tev * u.TeV).to_value(spectrum(energy_min).unit)
+        return spectrum(e_tev * u.TeV).to_value(spectrum_unit)
 
     result, _ = integrate.quad(integrand, energy_min.to_value("TeV"), energy_max.to_value("TeV"))
     return result * flux_unit
