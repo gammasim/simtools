@@ -320,6 +320,45 @@ def test_fill_accumulates_histograms_across_data_sets(mock_reader, hdf5_file_nam
     assert mock_reader.return_value.read_event_data.call_count == 2
 
 
+def test_fill_coerces_unitless_file_info_values(mock_reader, hdf5_file_name, mocker):
+    """Test fill converts unitless FILE_INFO values to expected quantities."""
+    histograms = EventDataHistograms(hdf5_file_name)
+
+    mock_reader.return_value.data_sets = ["dataset_0"]
+    mock_reader.return_value.read_event_data.return_value = (
+        mocker.Mock(),
+        mocker.Mock(),
+        mocker.Mock(),
+        mocker.Mock(),
+    )
+    mock_reader.return_value.get_reduced_simulation_file_info.return_value = {
+        "primary_particle": "gamma",
+        "zenith": 20.0,
+        "azimuth": 180.0,
+        "nsb_level": 1.0,
+        "energy_min": 0.1,
+        "core_scatter_max": 100.0,
+        "viewcone_max": 2.0,
+        "solid_angle": 1.0,
+        "scatter_area": 1.0,
+    }
+
+    mocker.patch.object(histograms, "_define_histograms", return_value={})
+    mocker.patch.object(histograms, "print_summary")
+    mocker.patch.object(histograms, "calculate_efficiency_data")
+    mocker.patch.object(histograms, "calculate_cumulative_data")
+
+    histograms.fill()
+
+    assert histograms.file_info["zenith"] == 20.0 * u.deg
+    assert histograms.file_info["azimuth"] == 180.0 * u.deg
+    assert histograms.file_info["energy_min"] == 0.1 * u.TeV
+    assert histograms.file_info["core_scatter_max"] == 100.0 * u.m
+    assert histograms.file_info["viewcone_max"] == 2.0 * u.deg
+    assert histograms.file_info["solid_angle"] == 1.0 * u.sr
+    assert histograms.file_info["scatter_area"] == 1.0 * (u.cm**2)
+
+
 def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
     """Test calculation of cumulative histogram."""
     histograms = EventDataHistograms(hdf5_file_name)
