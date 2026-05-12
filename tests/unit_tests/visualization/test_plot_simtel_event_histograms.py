@@ -93,7 +93,7 @@ def test_create_2d_histogram_plot_no_positive_data():
 @pytest.mark.parametrize(
     ("lines", "expect_lines", "expect_circles"),
     [
-        ({"x": 1, "y": 2}, True, 0),
+        ({"x": 1, "y": 2}, False, 0),
         ({"r": 3}, False, 1),
         ({"curve": {"x": [1, 2], "y": [3, 4]}}, True, 0),
         ({}, False, 0),
@@ -103,10 +103,6 @@ def test_add_lines(lines, expect_lines, expect_circles):
     fig, ax = plt.subplots()
     plot_simtel_event_histograms._add_lines(ax, lines)
     if expect_lines:
-        if "x" in lines:
-            assert any(line.get_xdata() == [lines["x"], lines["x"]] for line in ax.get_lines())
-        if "y" in lines:
-            assert any(line.get_ydata() == [lines["y"], lines["y"]] for line in ax.get_lines())
         if "curve" in lines:
             plotted = ax.get_lines()[-1]
             np.testing.assert_array_equal(plotted.get_xdata(), np.array([1, 2]))
@@ -259,8 +255,8 @@ def test_create_plot():
         np.testing.assert_array_equal(bar_args[1], data)
         np.testing.assert_array_equal(bar_kwargs["width"], np.diff(bins))
         assert bar_kwargs["color"] == plot_params["color"]
-        mock_ax.axvline.assert_called_once_with(1, color="r", linestyle="--", linewidth=0.5)
-        mock_ax.axhline.assert_called_once_with(2, color="r", linestyle="--", linewidth=0.5)
+        mock_ax.axvline.assert_not_called()
+        mock_ax.axhline.assert_not_called()
         mock_ax.set.assert_called_once_with(
             xlabel="X-axis",
             ylabel="Y-axis",
