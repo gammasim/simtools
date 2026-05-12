@@ -60,17 +60,17 @@ def hdf5_file_name(tmp_test_directory):
 
 
 def test_generate_corsika_limits_grid(mocker, mock_args_dict):
-    """Test generate_corsika_limits_grid function with single production (no parallelization)."""
+    """Test generate_corsika_limits_grid function with single production."""
     # Mock dependencies
     mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
     mock_collect.side_effect = [
         {"telescope_configs": {"LST": [1, 2], "MST": [3, 4]}},
     ]
 
-    mock_execute_job = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits._execute_production_job"
+    mock_pool = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
     )
-    mock_execute_job.side_effect = [
+    mock_pool.return_value = [
         {"primary_particle": "gamma", "array_name": "LST", "telescope_ids": [1, 2]},
         {"primary_particle": "gamma", "array_name": "MST", "telescope_ids": [3, 4]},
     ]
@@ -89,7 +89,7 @@ def test_generate_corsika_limits_grid(mocker, mock_args_dict):
 
     # Verify calls
     assert mock_collect.call_count == 1
-    assert mock_execute_job.call_count == 2  # 2 telescope configs
+    mock_pool.assert_called_once()
     assert mock_write.call_count == 1
 
 
@@ -98,10 +98,10 @@ def test_generate_corsika_limits_grid_normalizes_telescope_ids(mocker, mock_args
     mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
     mock_collect.return_value = {"telescope_configs": {"LST": [1, 2]}}
 
-    mock_process = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits._process_file"
+    mock_pool = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
     )
-    mock_process.return_value = {}
+    mock_pool.return_value = [{}]
     mocker.patch("simtools.production_configuration.derive_corsika_limits.write_results")
 
     derive_corsika_limits.generate_corsika_limits_grid(mock_args_dict)
@@ -110,8 +110,8 @@ def test_generate_corsika_limits_grid_normalizes_telescope_ids(mocker, mock_args
         get_array_element_name_from_common_identifier(1),
         get_array_element_name_from_common_identifier(2),
     ]
-    call_args = mock_process.call_args[0]
-    assert call_args[2] == expected_telescopes
+    job_specs = mock_pool.call_args[0][1]
+    assert job_specs[0]["telescope_ids"] == expected_telescopes
 
 
 def test_process_file(mocker):
@@ -244,10 +244,10 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
     )
     mock_read_layouts.return_value = {"LST": [1, 2], "MST": [3, 4]}
 
-    mock_execute_job = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits._execute_production_job"
+    mock_pool = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
     )
-    mock_execute_job.side_effect = [
+    mock_pool.return_value = [
         {"primary_particle": "gamma", "array_name": "LST", "telescope_ids": [1, 2]},
         {"primary_particle": "gamma", "array_name": "MST", "telescope_ids": [3, 4]},
     ]
@@ -266,7 +266,8 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
     mock_read_layouts.assert_called_once_with(
         args["array_layout_name"], args["site"], args["model_version"]
     )
-    assert mock_execute_job.call_count == 2  # 2 layouts
+    job_specs = mock_pool.call_args[0][1]
+    assert len(job_specs) == 2  # 2 layouts
     assert mock_write.call_count == 1
 
 
@@ -276,10 +277,10 @@ def test_generate_corsika_limits_grid_with_array_element_list(mocker, mock_args_
     args["array_element_list"] = ["LSTN-01", "LSTN-02", "MSTN-03"]
     args["telescope_ids"] = None
 
-    mock_execute_job = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits._execute_production_job"
+    mock_pool = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
     )
-    mock_execute_job.side_effect = [
+    mock_pool.return_value = [
         {"primary_particle": "gamma", "array_name": "array_element_list"},
     ]
 
@@ -294,8 +295,9 @@ def test_generate_corsika_limits_grid_with_array_element_list(mocker, mock_args_
 
     derive_corsika_limits.generate_corsika_limits_grid(args)
 
-    assert mock_execute_job.call_count == 1
-    job_spec = mock_execute_job.call_args[0][0]
+    job_specs = mock_pool.call_args[0][1]
+    assert len(job_specs) == 1
+    job_spec = job_specs[0]
     assert job_spec["array_name"] == "array_element_list"
     assert job_spec["telescope_ids"] == ["LSTN-01", "LSTN-02", "MSTN-03"]
     assert mock_write.call_count == 1
@@ -714,24 +716,34 @@ def test_generate_corsika_limits_grid_multi_production(mocker, tmp_test_director
     assert len(written_results) == 2  # Both productions merged
 
 
-def test_generate_corsika_limits_grid_single_production_no_pool(mocker, tmp_test_directory):
-    """Test generate_corsika_limits_grid with single production avoids process pool."""
+def test_generate_corsika_limits_grid_single_production_uses_pool(mocker, tmp_test_directory):
+    """Test generate_corsika_limits_grid with single production uses process pool."""
     mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
     mock_collect.return_value = {"telescope_configs": {"LST": ["LSTN-01"]}}
 
-    # Process pool should NOT be called for single production
     mock_pool = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
     )
+    mock_pool.return_value = [
+        {
+            "production_index": 0,
+            "event_data_file": "pattern_*.hdf5",
+            "array_name": "LST",
+            "telescope_ids": ["LSTN-01"],
+            "lower_energy_limit": 0.5 * u.TeV,
+            "upper_radius_limit": 400.0 * u.m,
+            "viewcone_radius": 5.0 * u.deg,
+            "primary_particle": "gamma",
+            "zenith": 20.0 * u.deg,
+            "azimuth": 180.0 * u.deg,
+            "nsb_level": 1.0,
+        }
+    ]
 
     mock_execute_job = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits._execute_production_job"
     )
-    mock_execute_job.return_value = {
-        "primary_particle": "gamma",
-        "array_name": "LST",
-        "telescope_ids": ["LSTN-01"],
-    }
+    mock_execute_job.return_value = {}
 
     mocker.patch("simtools.production_configuration.derive_corsika_limits.write_results")
 
@@ -751,10 +763,10 @@ def test_generate_corsika_limits_grid_single_production_no_pool(mocker, tmp_test
 
     derive_corsika_limits.generate_corsika_limits_grid(args_dict)
 
-    # Process pool should NOT be called for single production
-    mock_pool.assert_not_called()
-    # Direct execution should be used
-    mock_execute_job.assert_called_once()
+    mock_pool.assert_called_once()
+    call_kwargs = mock_pool.call_args[1]
+    assert call_kwargs["max_workers"] == 0
+    mock_execute_job.assert_not_called()
 
 
 def test_create_results_table_with_production_columns(mock_results):
@@ -776,13 +788,15 @@ def test_create_results_table_with_production_columns(mock_results):
 
 
 def test_create_results_table_without_production_columns(mock_results):
-    """Test _create_results_table without production columns for single-production."""
+    """Test _create_results_table with missing production metadata values."""
     # Results without production metadata (old format)
     table = derive_corsika_limits._create_results_table(mock_results, loss_fraction=0.2)
 
-    # Should NOT include production-origin columns
-    assert "production_index" not in table.colnames
-    assert "event_data_file" not in table.colnames
+    # Production-origin columns are included and filled with None if missing
+    assert "production_index" in table.colnames
+    assert "event_data_file" in table.colnames
+    assert table["production_index"][0] is None
+    assert table["event_data_file"][0] is None
 
     # Standard columns should be present
     assert "primary_particle" in table.colnames
