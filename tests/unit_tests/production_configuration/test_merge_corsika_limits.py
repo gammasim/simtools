@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 from astropy.table import Column, Table, vstack
 
+from simtools.production_configuration import merge_corsika_limits
 from simtools.production_configuration.merge_corsika_limits import CorsikaMergeLimits
 
 LIMITS_FILE_1 = "limits_1.ecsv"
@@ -294,3 +295,119 @@ def test_merge_tables_with_consistent_duplicates(mock_read_table, tmp_test_direc
     # Should merge without error
     merged_table = merger.merge_tables(input_files)
     assert len(merged_table) == 1
+
+
+def test_read_grid_definition(monkeypatch):
+    grid_definition = {"zenith": [20]}
+    monkeypatch.setattr(
+        merge_corsika_limits.ascii_handler,
+        "collect_data_from_file",
+        lambda _path: grid_definition,
+    )
+
+    assert merge_corsika_limits._read_grid_definition("grid.yml") == grid_definition
+    assert merge_corsika_limits._read_grid_definition(None) is None
+
+
+def test_resolve_input_files_and_table_with_merged_table(monkeypatch):
+    table = create_test_table(20, 0, "dark")
+    monkeypatch.setattr(
+        merge_corsika_limits.data_reader, "read_table_from_file", lambda _path: table
+    )
+
+    merged_table, input_files, from_merged_table = (
+        merge_corsika_limits.resolve_input_files_and_table(
+            {"merged_table": "~/merged.ecsv"},
+            merger=CorsikaMergeLimits(output_dir=Path()),
+        )
+    )
+
+    assert merged_table is table
+    assert len(input_files) == 1
+    assert from_merged_table is True
+
+
+def test_merge_corsika_limits_merging_mode(tmp_test_directory):
+    class DummyMerger:
+        def __init__(self, output_dir):
+            self.output_dir = output_dir
+            self.calls = []
+
+        def merge_tables(self, input_files):
+            self.calls.append(("merge_tables", input_files))
+            return create_test_table(20, 0, "dark")
+
+        def check_grid_completeness(self, merged_table, grid_definition):
+            self.calls.append(("check_grid_completeness", merged_table, grid_definition))
+            return True, {"expected": 1, "found": 1, "missing": []}
+
+        def plot_grid_coverage(self, merged_table, grid_definition):
+            self.calls.append(("plot_grid_coverage", merged_table, grid_definition))
+
+        def plot_limits(self, merged_table):
+            self.calls.append(("plot_limits", merged_table))
+
+        def write_merged_table(self, merged_table, output_file, input_files, grid_completeness):
+            self.calls.append(
+                ("write_merged_table", merged_table, output_file, input_files, grid_completeness)
+            )
+
+    merger = DummyMerger(tmp_test_directory)
+    args_dict = {
+        "input_files": ["limits_input.ecsv"],
+        "input_files_list": None,
+        "merged_table": None,
+        "grid_definition": None,
+        "plot_grid_coverage": True,
+        "plot_limits": True,
+        "output_file": "merged_output.ecsv",
+    }
+
+    merge_corsika_limits.merge_corsika_limits(args_dict, merger=merger)
+
+    call_names = [call[0] for call in merger.calls]
+    assert "merge_tables" in call_names
+    assert "check_grid_completeness" in call_names
+    assert "plot_grid_coverage" in call_names
+    assert "plot_limits" in call_names
+    assert "write_merged_table" in call_names
+
+
+def test_merge_corsika_limits_check_only_mode(tmp_test_directory):
+    class DummyMerger:
+        def __init__(self, output_dir):
+            self.output_dir = output_dir
+            self.write_called = False
+
+        def check_grid_completeness(self, _merged_table, _grid_definition):
+            return True, {}
+
+        def plot_grid_coverage(self, _merged_table, _grid_definition):
+            return None
+
+        def plot_limits(self, _merged_table):
+            return None
+
+        def write_merged_table(self, *_args, **_kwargs):
+            self.write_called = True
+
+    merger = DummyMerger(tmp_test_directory)
+    table = create_test_table(20, 0, "dark")
+
+    with patch.object(
+        merge_corsika_limits,
+        "resolve_input_files_and_table",
+        return_value=(table, [Path("merged.ecsv")], True),
+    ):
+        merge_corsika_limits.merge_corsika_limits(
+            {
+                "merged_table": "merged.ecsv",
+                "grid_definition": None,
+                "plot_grid_coverage": False,
+                "plot_limits": False,
+                "output_file": "unused.ecsv",
+            },
+            merger=merger,
+        )
+
+    assert merger.write_called is False

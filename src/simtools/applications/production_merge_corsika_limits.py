@@ -77,12 +77,8 @@ Examples
           --output_file merged_limits.ecsv
 """
 
-from pathlib import Path
-
 from simtools.application_control import build_application
-from simtools.data_model import data_reader
-from simtools.io import ascii_handler
-from simtools.production_configuration.merge_corsika_limits import CorsikaMergeLimits
+from simtools.production_configuration.merge_corsika_limits import merge_corsika_limits
 
 
 def _add_arguments(parser):
@@ -137,69 +133,7 @@ def main():
     app_context = build_application(
         initialization_kwargs={"output": True},
     )
-
-    merger = CorsikaMergeLimits()
-    grid_definition = (
-        ascii_handler.collect_data_from_file(app_context.args["grid_definition"])
-        if app_context.args.get("grid_definition")
-        else None
-    )
-
-    if app_context.args.get("merged_table"):
-        # Case 3: Check coverage on an existing merged table
-        merged_table_path = Path(app_context.args["merged_table"]).expanduser()
-        merged_table = data_reader.read_table_from_file(merged_table_path)
-        input_files = [merged_table_path]
-    elif app_context.args.get("input_files") or app_context.args.get("input_files_list"):
-        # Case 1 & 2: Merge files
-        input_files = []
-
-        # Process input_files argument
-        if app_context.args.get("input_files"):
-            raw_paths = app_context.args.get("input_files")
-            if len(raw_paths) == 1 and Path(raw_paths[0]).expanduser().is_dir():
-                input_dir = Path(raw_paths[0]).expanduser()
-                input_files.extend(input_dir.glob("*.ecsv"))
-            else:
-                input_files.extend(Path(f).expanduser() for f in raw_paths)
-
-        # Process input_files_list argument
-        if app_context.args.get("input_files_list"):
-            files_from_list = merger.read_file_list(app_context.args["input_files_list"])
-            input_files.extend(files_from_list)
-
-        if not input_files:
-            raise FileNotFoundError(
-                "No input files found. Check --input_files or --input_files_list arguments."
-            )
-        merged_table = merger.merge_tables(input_files)
-    else:
-        raise ValueError(
-            "Either --input_files, --input_files_list, or --merged_table must be provided."
-        )
-
-    is_complete, grid_completeness = merger.check_grid_completeness(merged_table, grid_definition)
-
-    if app_context.args.get("plot_grid_coverage"):
-        merger.plot_grid_coverage(merged_table, grid_definition)
-
-    if app_context.args.get("plot_limits"):
-        merger.plot_limits(merged_table)
-
-    if not app_context.args.get("merged_table"):
-        # Write output file only when merging
-        output_file = merger.output_dir / app_context.args["output_file"]
-        merger.write_merged_table(
-            merged_table,
-            output_file,
-            input_files,
-            {
-                "is_complete": is_complete,
-                "expected": grid_completeness.get("expected", 0),
-                "found": grid_completeness.get("found", 0),
-                "missing": grid_completeness.get("missing", []),
-            },
-        )
+    merge_corsika_limits(app_context.args)
 
 
 if __name__ == "__main__":
