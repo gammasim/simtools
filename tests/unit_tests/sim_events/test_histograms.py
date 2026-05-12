@@ -80,7 +80,10 @@ def test_energy_bins(mock_reader, hdf5_file_name):
     mock_reader.return_value.triggered_shower_data.simulated_energy = np.array([1, 10, 100])
     bins = histograms.energy_bins
     assert isinstance(bins, np.ndarray)
-    assert len(bins) == 100
+    assert len(bins) == 61
+    assert bins[0] == pytest.approx(1.0e-3)
+    assert bins[-1] == pytest.approx(1.0e3)
+    assert np.allclose(np.diff(np.log10(bins)), 0.1)
 
 
 def test_core_distance_bins(mock_reader, hdf5_file_name):
@@ -588,9 +591,10 @@ def test_energy_bins_default(mock_reader, hdf5_file_name):
     bins = histograms.energy_bins
 
     assert isinstance(bins, np.ndarray)
-    assert len(bins) == 100
+    assert len(bins) == 61
     assert bins[0] == pytest.approx(1.0e-3)
     assert bins[-1] == pytest.approx(1.0e3)
+    assert np.allclose(np.diff(np.log10(bins)), 0.1)
 
 
 def test_core_distance_bins_with_file_info(mock_reader, hdf5_file_name):

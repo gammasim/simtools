@@ -17,6 +17,8 @@ applications:
     output_path: simtools-output
     plot_histograms: true
     site: North
+    differential_loss_per_energy_bin: true
+    differential_loss_bins_per_decade: 5
   integration_tests:
   - output_file: corsika_simulation_limits.ecsv
   - output_file: corsika_simulation_limits.meta.yml

@@ -95,6 +95,7 @@ def test_create_2d_histogram_plot_no_positive_data():
     [
         ({"x": 1, "y": 2}, True, 0),
         ({"r": 3}, False, 1),
+        ({"curve": {"x": [1, 2], "y": [3, 4]}}, True, 0),
         ({}, False, 0),
     ],
 )
@@ -106,6 +107,10 @@ def test_add_lines(lines, expect_lines, expect_circles):
             assert any(line.get_xdata() == [lines["x"], lines["x"]] for line in ax.get_lines())
         if "y" in lines:
             assert any(line.get_ydata() == [lines["y"], lines["y"]] for line in ax.get_lines())
+        if "curve" in lines:
+            plotted = ax.get_lines()[-1]
+            np.testing.assert_array_equal(plotted.get_xdata(), np.array([1, 2]))
+            np.testing.assert_array_equal(plotted.get_ydata(), np.array([3, 4]))
     else:
         if not lines or ("x" not in lines and "y" not in lines):
             remaining = [ln for ln in ax.get_lines() if ln.get_label() == "_nolegend_"]
@@ -733,6 +738,21 @@ def test_get_limits():
     }
     result = _get_limits("angular_distance", limits)
     assert result == {"x": 5}
+
+    limits["core_vs_energy_curve"] = {"x": [10, 20], "y": [0.1, 1.0]}
+    limits["angular_distance_vs_energy_curve"] = {"x": [2.5, 3.0], "y": [0.1, 1.0]}
+
+    result = _get_limits("core_vs_energy", limits)
+    assert result["curve"] == limits["core_vs_energy_curve"]
+
+    result = _get_limits("core_vs_energy_cumulative", limits)
+    assert result["curve"] == limits["core_vs_energy_curve"]
+
+    result = _get_limits("angular_distance_vs_energy", limits)
+    assert result["curve"] == limits["angular_distance_vs_energy_curve"]
+
+    result = _get_limits("angular_distance_vs_energy_cumulative", limits)
+    assert result["curve"] == limits["angular_distance_vs_energy_curve"]
 
 
 @pytest.fixture
