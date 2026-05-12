@@ -1,5 +1,7 @@
 """Comprehensive unit tests for plot_camera module."""
 
+from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import matplotlib.pyplot as plt
@@ -13,8 +15,10 @@ from simtools.visualization.camera_plot_utils import (
 )
 from simtools.visualization.plot_camera import (
     _color_normalization,
+    _parse_pixel_ids_to_print,
     _plot_axes_def,
     _plot_one_axis_def,
+    plot_camera_pixel_layout_from_args,
     plot_pixel_layout_with_image,
 )
 
@@ -36,6 +40,7 @@ def simple_camera():
         "orientation": 0.0,
     }
     camera.calc_fov.return_value = (10.0, 5.0)
+    camera.effective_focal_length = [2923.7, 0.0, 0.0, 0.0, 0.0]
     camera.get_edge_pixels.return_value = [1]
     return camera
 
@@ -57,6 +62,7 @@ def camera_hexagon():
         "orientation": 0.0,
     }
     camera.calc_fov.return_value = (8.0, 4.0)
+    camera.effective_focal_length = [2923.7, 0.0, 0.0, 0.0, 0.0]
     camera.get_edge_pixels.return_value = [0, 3]
     return camera
 
@@ -78,6 +84,7 @@ def camera_square():
         "orientation": 0.0,
     }
     camera.calc_fov.return_value = (20.0, 10.0)
+    camera.effective_focal_length = [2923.7, 0.0, 0.0, 0.0, 0.0]
     camera.get_edge_pixels.return_value = [0]
     return camera
 
@@ -364,3 +371,75 @@ def test_plot_axes_large_rotation():
         _plot_axes_def(camera, plt_mock, np.deg2rad(120))
 
     assert plt_mock.gca.return_value.annotate.call_count >= 2
+
+
+def _mock_camera(n_pixels=1855):
+    camera = MagicMock()
+    camera.get_number_of_pixels.return_value = n_pixels
+    camera.calc_fov.return_value = (4.5, 120.0)
+    return camera
+
+
+def test_parse_pixel_ids_to_print_integer():
+    camera = _mock_camera()
+    assert _parse_pixel_ids_to_print(50, camera) == 50
+
+
+def test_parse_pixel_ids_to_print_zero_returns_minus_one():
+    camera = _mock_camera()
+    assert _parse_pixel_ids_to_print(0, camera) == -1
+
+
+def test_parse_pixel_ids_to_print_all():
+    camera = _mock_camera(n_pixels=1855)
+    assert _parse_pixel_ids_to_print("All", camera) == 1855
+
+
+def test_parse_pixel_ids_to_print_all_case_insensitive():
+    camera = _mock_camera(n_pixels=300)
+    assert _parse_pixel_ids_to_print("all", camera) == 300
+
+
+def test_parse_pixel_ids_to_print_invalid_raises():
+    camera = _mock_camera()
+    with pytest.raises(ValueError, match="must be integer or 'All'"):
+        _parse_pixel_ids_to_print("invalid", camera)
+
+
+def test_plot_camera_pixel_layout_from_args(tmp_test_directory):
+    args_dict = {
+        "site": "North",
+        "telescope": "LSTN-01",
+        "model_version": "5.0.0",
+        "camera_in_sky_coor": False,
+        "print_pixels_id": 10,
+    }
+    io_handler = MagicMock()
+    io_handler.get_output_directory.return_value = Path(str(tmp_test_directory))
+    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
+
+    mock_camera = _mock_camera()
+    mock_tel_model = MagicMock()
+    mock_tel_model.name = "LSTN-01"
+    mock_tel_model.camera = mock_camera
+    mock_tel_model.get_telescope_effective_focal_length.return_value = 2800.0
+
+    with (
+        patch(
+            "simtools.visualization.plot_camera.TelescopeModel", return_value=mock_tel_model
+        ) as mock_tm,
+        patch("simtools.visualization.plot_camera.plot_pixel_layout") as mock_plot,
+        patch("simtools.visualization.plot_camera.save_figure") as mock_save,
+    ):
+        plot_camera_pixel_layout_from_args(app_context)
+
+        mock_tm.assert_called_once_with(
+            site="North",
+            telescope_name="LSTN-01",
+            model_version="5.0.0",
+            label="plot_camera_pixel_layout",
+        )
+        mock_tel_model.export_model_files.assert_called_once()
+        mock_camera.calc_fov.assert_called_once()
+        mock_plot.assert_called_once_with(mock_camera, False, 10)
+        mock_save.assert_called_once()
