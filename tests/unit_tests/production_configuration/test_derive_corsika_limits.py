@@ -20,6 +20,31 @@ COMPUTE_VIEWCONE_PATH = "simtools.production_configuration.derive_corsika_limits
 MOCK_FILE_PATH = "mock_file.fits"
 
 
+def _pool_result(
+    production_index=0,
+    event_data_file="pattern_*.hdf5",
+    array_name="LST",
+    telescope_ids=None,
+    lower_energy_limit=0.5 * u.TeV,
+    upper_radius_limit=400.0 * u.m,
+    viewcone_radius=5.0 * u.deg,
+):
+    """Build a standard mocked pool result row for grid execution tests."""
+    return {
+        "production_index": production_index,
+        "event_data_file": event_data_file,
+        "array_name": array_name,
+        "telescope_ids": telescope_ids or ["LSTN-01"],
+        "lower_energy_limit": lower_energy_limit,
+        "upper_radius_limit": upper_radius_limit,
+        "viewcone_radius": viewcone_radius,
+        "primary_particle": "gamma",
+        "zenith": 20.0 * u.deg,
+        "azimuth": 180.0 * u.deg,
+        "nsb_level": 1.0,
+    }
+
+
 @pytest.fixture
 def mock_args_dict():
     """Create mock arguments dictionary."""
@@ -49,12 +74,6 @@ def mock_results():
             "layout": "LST",
         }
     ]
-
-
-@pytest.fixture
-def hdf5_file_name(tmp_test_directory):
-    """Create temporary HDF5 file name."""
-    return str(tmp_test_directory / "test_file.h5")
 
 
 def test_generate_corsika_limits_grid(mocker, mock_args_dict, tmp_test_directory):
@@ -110,52 +129,6 @@ def test_generate_corsika_limits_grid_normalizes_telescope_ids(mocker, mock_args
     ]
     job_specs = mock_pool.call_args[0][1]
     assert job_specs[0]["telescope_ids"] == expected_telescopes
-
-
-def test_process_file(mocker):
-    """Test _process_file function."""
-    # Mock the EventDataHistograms class
-    mock_histograms = mocker.MagicMock()
-    mock_histograms.file_info = {}
-    mock_histogram_class = mocker.patch(SIM_EVENTS_HISTOGRAMS_PATH)
-    mock_histogram_class.return_value = mock_histograms
-
-    # Mock the individual limit computation functions
-    mock_energy_limit = 1.0 * u.TeV
-    mock_radius_limit = 100.0 * u.m
-    mock_viewcone_limit = 2.0 * u.deg
-
-    mocker.patch(
-        COMPUTE_LOWER_ENERGY_LIMIT_PATH,
-        return_value=mock_energy_limit,
-    )
-    mocker.patch(
-        COMPUTE_UPPER_RADIUS_LIMIT_PATH,
-        return_value=mock_radius_limit,
-    )
-    mocker.patch(
-        COMPUTE_VIEWCONE_PATH,
-        return_value=mock_viewcone_limit,
-    )
-
-    mocker.patch("simtools.io.io_handler.IOHandler")
-
-    result = derive_corsika_limits._process_file("test.fits", "array_name", [1, 2], 0.2, False)
-
-    expected_result = {
-        "primary_particle": None,
-        "zenith": None,
-        "azimuth": None,
-        "nsb_level": None,
-        "lower_energy_limit": mock_energy_limit,
-        "upper_radius_limit": mock_radius_limit,
-        "viewcone_radius": mock_viewcone_limit,
-    }
-    assert result == expected_result
-    mock_histogram_class.assert_called_once_with(
-        "test.fits", array_name="array_name", telescope_list=[1, 2]
-    )
-    mock_histograms.fill.assert_called_once()
 
 
 def test_process_file_passes_event_data_patterns_through(mocker):
@@ -348,7 +321,7 @@ def test_compute_limits_default_type():
     assert result == 2
 
 
-def test_compute_viewcone(hdf5_file_name, mocker):
+def test_compute_viewcone(mocker):
     """Test compute_viewcone function with mocked histograms."""
     mock_hist = np.array([10, 8, 6, 4, 2])
     mock_bins = np.linspace(0, 20.0, 6)
@@ -370,7 +343,7 @@ def test_compute_viewcone(hdf5_file_name, mocker):
     assert result.value == pytest.approx(expected.value)
 
 
-def test_compute_lower_energy_limit(hdf5_file_name, mocker):
+def test_compute_lower_energy_limit(mocker):
     """Test compute_lower_energy_limit function with mocked histograms."""
     mock_hist = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
     mock_bins = np.logspace(-3, 3, 6)
@@ -393,7 +366,7 @@ def test_compute_lower_energy_limit(hdf5_file_name, mocker):
     assert result == expected
 
 
-def test_compute_upper_radius_limit(hdf5_file_name, mocker):
+def test_compute_upper_radius_limit(mocker):
     """Test compute_upper_radius_limit function with mocked histograms."""
     mock_hist = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
     mock_bins = np.linspace(0, 500, 6)
@@ -655,32 +628,14 @@ def test_generate_corsika_limits_grid_multi_production(mocker, tmp_test_director
     )
     # Mock process_pool_map_ordered to return results directly
     mock_pool.return_value = [
-        {
-            "production_index": 0,
-            "event_data_file": "pattern_1_*.hdf5",
-            "array_name": "LST",
-            "telescope_ids": ["LSTN-01"],
-            "lower_energy_limit": 0.5 * u.TeV,
-            "upper_radius_limit": 400.0 * u.m,
-            "viewcone_radius": 5.0 * u.deg,
-            "primary_particle": "gamma",
-            "zenith": 20.0 * u.deg,
-            "azimuth": 180.0 * u.deg,
-            "nsb_level": 1.0,
-        },
-        {
-            "production_index": 1,
-            "event_data_file": "pattern_2_*.hdf5",
-            "array_name": "LST",
-            "telescope_ids": ["LSTN-01"],
-            "lower_energy_limit": 0.6 * u.TeV,
-            "upper_radius_limit": 450.0 * u.m,
-            "viewcone_radius": 5.5 * u.deg,
-            "primary_particle": "gamma",
-            "zenith": 20.0 * u.deg,
-            "azimuth": 180.0 * u.deg,
-            "nsb_level": 1.0,
-        },
+        _pool_result(production_index=0, event_data_file="pattern_1_*.hdf5"),
+        _pool_result(
+            production_index=1,
+            event_data_file="pattern_2_*.hdf5",
+            lower_energy_limit=0.6 * u.TeV,
+            upper_radius_limit=450.0 * u.m,
+            viewcone_radius=5.5 * u.deg,
+        ),
     ]
 
     mock_write = mocker.patch(
@@ -724,21 +679,7 @@ def test_generate_corsika_limits_grid_single_production_uses_pool(mocker, tmp_te
     mock_pool = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
     )
-    mock_pool.return_value = [
-        {
-            "production_index": 0,
-            "event_data_file": "pattern_*.hdf5",
-            "array_name": "LST",
-            "telescope_ids": ["LSTN-01"],
-            "lower_energy_limit": 0.5 * u.TeV,
-            "upper_radius_limit": 400.0 * u.m,
-            "viewcone_radius": 5.0 * u.deg,
-            "primary_particle": "gamma",
-            "zenith": 20.0 * u.deg,
-            "azimuth": 180.0 * u.deg,
-            "nsb_level": 1.0,
-        }
-    ]
+    mock_pool.return_value = [_pool_result()]
 
     mock_execute_job = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits._execute_production_job"
