@@ -2,6 +2,8 @@
 
 import datetime
 import logging
+import re
+from pathlib import Path
 
 import astropy.units as u
 import numpy as np
@@ -9,23 +11,160 @@ from astropy.table import Column, Table
 
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler, io_handler
+from simtools.job_execution.process_pool import process_pool_map_ordered
 from simtools.layout.array_layout_utils import get_array_elements_from_db_for_layouts
 from simtools.sim_events.histograms import EventDataHistograms
+from simtools.utils.general import get_uuid
 from simtools.utils.names import normalize_array_element_identifier_container
 from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
 
 
+def _normalize_event_data_file(event_data_file):
+    """
+    Normalize event_data_file to an ordered list of production patterns.
+
+    Parameters
+    ----------
+    event_data_file : str or list
+        A single pattern string or list of pattern strings.
+
+    Returns
+    -------
+    list
+        Ordered list of event data file patterns.
+    """
+    if isinstance(event_data_file, str):
+        return [event_data_file]
+    if isinstance(event_data_file, list):
+        return list(event_data_file)
+    raise TypeError(f"event_data_file must be str or list, got {type(event_data_file)}")
+
+
+def _get_production_directory_name(production_pattern, existing_names=None):
+    """
+    Generate a readable, filesystem-safe production directory name.
+
+    The name is derived from the glob pattern and kept human-readable.
+    If a collision is detected with an existing directory name, append
+    a UUID7 suffix.
+
+    Parameters
+    ----------
+    production_pattern : str
+        The glob pattern for this production.
+    existing_names : set[str] or None
+        Existing directory names used in this run.
+
+    Returns
+    -------
+    str
+        Safe directory name (e.g., "production_prod_a_events").
+    """
+    pattern_path = Path(production_pattern)
+    parts = []
+
+    if pattern_path.parent.name and pattern_path.parent.name != ".":
+        parts.append(pattern_path.parent.name)
+    if pattern_path.stem:
+        parts.append(pattern_path.stem)
+
+    readable_name = "_".join(parts) if parts else "production"
+    readable_name = re.sub(r"[^A-Za-z0-9]+", "_", readable_name)
+    readable_name = readable_name.strip("_")
+    readable_name = re.sub(r"_+", "_", readable_name)
+
+    if not readable_name:
+        readable_name = "production"
+
+    base_name = f"production_{readable_name}"
+
+    if existing_names is None or base_name not in existing_names:
+        return base_name
+
+    return f"{base_name}_{get_uuid()}"
+
+
+def _execute_production_job(job_spec):
+    """
+    Execute a single production job (top-level picklable worker).
+
+    This function is called by process_pool_map_ordered and must be
+    picklable (top-level defined).
+
+    Parameters
+    ----------
+    job_spec : dict
+        Dictionary containing:
+        - production_index (int)
+        - production_pattern (str)
+        - array_name (str)
+        - telescope_ids (list)
+        - loss_fraction (float)
+        - plot_histograms (bool)
+        - output_subdir (Path or None)
+
+    Returns
+    -------
+    dict
+        Result dictionary with limits and production metadata.
+    """
+    production_index = job_spec["production_index"]
+    production_pattern = job_spec["production_pattern"]
+    array_name = job_spec["array_name"]
+    telescope_ids = job_spec["telescope_ids"]
+    loss_fraction = job_spec["loss_fraction"]
+    plot_histograms = job_spec["plot_histograms"]
+    output_subdir = job_spec.get("output_subdir")
+
+    _logger.info(
+        f"Processing production {production_index}: pattern={production_pattern}, "
+        f"array={array_name}"
+    )
+
+    result = _process_file(
+        production_pattern,
+        array_name,
+        telescope_ids,
+        loss_fraction,
+        plot_histograms,
+        output_subdir=output_subdir,
+    )
+
+    result["production_index"] = production_index
+    result["event_data_file"] = production_pattern
+    result["array_name"] = array_name
+    result["telescope_ids"] = telescope_ids
+
+    return result
+
+
 def generate_corsika_limits_grid(args_dict):
     """
-    Generate CORSIKA limits.
+    Generate CORSIKA limits, supporting single or multi-production execution.
+
+    Handles both single event_data_file (string) and multiple patterns (list),
+    dispatching jobs in parallel if multiple patterns are provided.
 
     Parameters
     ----------
     args_dict : dict
-        Dictionary containing command line arguments.
+        Dictionary containing command line arguments, including:
+        - event_data_file: str or list of patterns
+        - loss_fraction: float
+        - plot_histograms: bool
+        - n_workers: int (default 1 for single use)
+        - array_layout_name, array_element_list, or telescope_ids for telescope config
     """
+    # Normalize event_data_file to list
+    production_patterns = _normalize_event_data_file(args_dict["event_data_file"])
+    n_productions = len(production_patterns)
+    is_multi_production = n_productions > 1
+
+    _logger.info(f"Processing {n_productions} production(s)")
+
+    # Resolve telescope configurations (same logic as before)
     if args_dict.get("array_layout_name"):
         telescope_configs = get_array_elements_from_db_for_layouts(
             args_dict["array_layout_name"],
@@ -44,27 +183,66 @@ def generate_corsika_limits_grid(args_dict):
             "--array_element_list, or --telescope_ids."
         )
 
-    results = []
-    for array_name, telescope_ids in telescope_configs.items():
-        telescope_ids = normalize_array_element_identifier_container(telescope_ids)
-        _logger.info(
-            f"Processing file: {args_dict['event_data_file']} with telescope config: {array_name}"
-        )
-        result = _process_file(
-            args_dict["event_data_file"],
-            array_name,
-            telescope_ids,
-            args_dict["loss_fraction"],
-            args_dict["plot_histograms"],
-        )
-        result["array_name"] = array_name
-        result["telescope_ids"] = telescope_ids
-        results.append(result)
+    # Build deterministic job specs: Cartesian product of productions and telescope configs
+    job_specs = []
+    output_dir = io_handler.IOHandler().get_output_directory()
 
+    production_subdirs = {}
+    used_subdir_names = set()
+
+    for production_pattern in production_patterns:
+        subdir_name = _get_production_directory_name(production_pattern, used_subdir_names)
+        used_subdir_names.add(subdir_name)
+        production_subdirs[production_pattern] = subdir_name
+
+    for prod_idx, production_pattern in enumerate(production_patterns):
+        for array_name, telescope_ids_raw in telescope_configs.items():
+            telescope_ids = normalize_array_element_identifier_container(telescope_ids_raw)
+
+            # Create subdirectory for plots if multi-production
+            output_subdir = None
+            if is_multi_production:
+                subdir_name = production_subdirs[production_pattern]
+                output_subdir = output_dir / subdir_name
+                # Ensure directory exists (compatible with both pathlib.Path and py.path.local)
+                Path(output_subdir).mkdir(parents=True, exist_ok=True)
+
+            job_spec = {
+                "production_index": prod_idx,
+                "production_pattern": production_pattern,
+                "array_name": array_name,
+                "telescope_ids": telescope_ids,
+                "loss_fraction": args_dict["loss_fraction"],
+                "plot_histograms": args_dict["plot_histograms"],
+                "output_subdir": output_subdir,
+            }
+            job_specs.append(job_spec)
+
+    # Execute jobs (parallel if multi-production, otherwise direct)
+    if is_multi_production:
+        n_workers = int(args_dict.get("n_workers", 1))
+        _logger.info(f"Executing {len(job_specs)} jobs with {n_workers or 'auto'} workers")
+        results = process_pool_map_ordered(
+            _execute_production_job,
+            job_specs,
+            max_workers=n_workers,
+        )
+    else:
+        # Single production: execute directly without process pool overhead
+        results = [_execute_production_job(job_spec) for job_spec in job_specs]
+
+    # Write merged results
     write_results(results, args_dict)
 
 
-def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_histograms):
+def _process_file(
+    file_path,
+    array_name,
+    telescope_ids,
+    loss_fraction,
+    plot_histograms,
+    output_subdir=None,
+):
     """
     Compute limits for a given event data file and telescope configuration.
 
@@ -82,6 +260,8 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
         Fraction of events to be lost.
     plot_histograms : bool
         Whether to plot histograms.
+    output_subdir : Path or None, optional
+        Output subdirectory for plots. If None, uses default output directory.
 
     Returns
     -------
@@ -108,9 +288,11 @@ def _process_file(file_path, array_name, telescope_ids, loss_fraction, plot_hist
     )
 
     if plot_histograms:
+        # Use provided subdirectory or default output directory
+        plot_output_path = output_subdir or io_handler.IOHandler().get_output_directory()
         plot_simtel_event_histograms.plot(
             histograms.histograms,
-            output_path=io_handler.IOHandler().get_output_directory(),
+            output_path=plot_output_path,
             limits=limits,
             array_name=array_name,
         )
@@ -145,6 +327,7 @@ def _create_results_table(results, loss_fraction):
     Convert list of simulation results to an astropy Table with metadata.
 
     Round values to appropriate precision and add metadata.
+    For multi-production execution, includes production-origin columns.
 
     Parameters
     ----------
@@ -156,19 +339,29 @@ def _create_results_table(results, loss_fraction):
     Returns
     -------
     astropy.table.Table
-        Table with computed limits.
+        Table with computed limits and optional production-origin columns.
     """
-    cols = [
-        "primary_particle",
-        "array_name",
-        "telescope_ids",
-        "zenith",
-        "azimuth",
-        "nsb_level",
-        "lower_energy_limit",
-        "upper_radius_limit",
-        "viewcone_radius",
-    ]
+    # Check if this is multi-production (results have production_index field)
+    is_multi_production = any("production_index" in res for res in results)
+
+    # Build column list: production-origin first (if multi-production), then standard columns
+    cols = []
+    if is_multi_production:
+        cols.extend(["production_index", "event_data_file"])
+
+    cols.extend(
+        [
+            "primary_particle",
+            "array_name",
+            "telescope_ids",
+            "zenith",
+            "azimuth",
+            "nsb_level",
+            "lower_energy_limit",
+            "upper_radius_limit",
+            "viewcone_radius",
+        ]
+    )
 
     columns = {name: [] for name in cols}
     units = {}
