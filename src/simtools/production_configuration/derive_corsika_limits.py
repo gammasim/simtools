@@ -96,14 +96,7 @@ def _execute_production_job(job_spec):
     Parameters
     ----------
     job_spec : dict
-        Dictionary containing:
-        - production_index (int)
-        - production_pattern (str)
-        - array_name (str)
-        - telescope_ids (list)
-        - loss_fraction (float)
-        - plot_histograms (bool)
-        - output_subdir (Path or None)
+        Dictionary containing with job specifications
 
     Returns
     -------
@@ -142,29 +135,22 @@ def _execute_production_job(job_spec):
 
 def generate_corsika_limits_grid(args_dict):
     """
-    Generate CORSIKA limits, supporting single or multi-production execution.
+    Generate CORSIKA limits for one or more production patterns.
 
-    Handles both single event_data_file (string) and multiple patterns (list),
-    dispatching jobs in parallel if multiple patterns are provided.
+    Single- and multi-production runs share the same dispatch path using
+    process_pool_map_ordered.
 
     Parameters
     ----------
     args_dict : dict
-        Dictionary containing command line arguments, including:
-        - event_data_file: str or list of patterns
-        - loss_fraction: float
-        - plot_histograms: bool
-        - n_workers: int (default 1 for single use)
-        - array_layout_name, array_element_list, or telescope_ids for telescope config
+        Dictionary containing command line arguments.
     """
-    # Normalize event_data_file to list
     production_patterns = _normalize_event_data_file(args_dict["event_data_file"])
     n_productions = len(production_patterns)
     is_multi_production = n_productions > 1
 
     _logger.info(f"Processing {n_productions} production(s)")
 
-    # Resolve telescope configurations (same logic as before)
     if args_dict.get("array_layout_name"):
         telescope_configs = get_array_elements_from_db_for_layouts(
             args_dict["array_layout_name"],
@@ -199,12 +185,10 @@ def generate_corsika_limits_grid(args_dict):
         for array_name, telescope_ids_raw in telescope_configs.items():
             telescope_ids = normalize_array_element_identifier_container(telescope_ids_raw)
 
-            # Create subdirectory for plots if multi-production
             output_subdir = None
             if is_multi_production:
                 subdir_name = production_subdirs[production_pattern]
                 output_subdir = output_dir / subdir_name
-                # Ensure directory exists (compatible with both pathlib.Path and py.path.local)
                 Path(output_subdir).mkdir(parents=True, exist_ok=True)
 
             job_spec = {
@@ -218,20 +202,14 @@ def generate_corsika_limits_grid(args_dict):
             }
             job_specs.append(job_spec)
 
-    # Execute jobs (parallel if multi-production, otherwise direct)
-    if is_multi_production:
-        n_workers = int(args_dict.get("n_workers", 1))
-        _logger.info(f"Executing {len(job_specs)} jobs with {n_workers or 'auto'} workers")
-        results = process_pool_map_ordered(
-            _execute_production_job,
-            job_specs,
-            max_workers=n_workers,
-        )
-    else:
-        # Single production: execute directly without process pool overhead
-        results = [_execute_production_job(job_spec) for job_spec in job_specs]
+    n_workers = int(args_dict.get("n_workers", 1))
+    _logger.info(f"Executing {len(job_specs)} jobs with {n_workers or 'auto'} workers")
+    results = process_pool_map_ordered(
+        _execute_production_job,
+        job_specs,
+        max_workers=n_workers,
+    )
 
-    # Write merged results
     write_results(results, args_dict)
 
 
@@ -288,7 +266,6 @@ def _process_file(
     )
 
     if plot_histograms:
-        # Use provided subdirectory or default output directory
         plot_output_path = output_subdir or io_handler.IOHandler().get_output_directory()
         plot_simtel_event_histograms.plot(
             histograms.histograms,
@@ -341,27 +318,19 @@ def _create_results_table(results, loss_fraction):
     astropy.table.Table
         Table with computed limits and optional production-origin columns.
     """
-    # Check if this is multi-production (results have production_index field)
-    is_multi_production = any("production_index" in res for res in results)
-
-    # Build column list: production-origin first (if multi-production), then standard columns
-    cols = []
-    if is_multi_production:
-        cols.extend(["production_index", "event_data_file"])
-
-    cols.extend(
-        [
-            "primary_particle",
-            "array_name",
-            "telescope_ids",
-            "zenith",
-            "azimuth",
-            "nsb_level",
-            "lower_energy_limit",
-            "upper_radius_limit",
-            "viewcone_radius",
-        ]
-    )
+    cols = [
+        "production_index",
+        "event_data_file",
+        "primary_particle",
+        "array_name",
+        "telescope_ids",
+        "zenith",
+        "azimuth",
+        "nsb_level",
+        "lower_energy_limit",
+        "upper_radius_limit",
+        "viewcone_radius",
+    ]
 
     columns = {name: [] for name in cols}
     units = {}

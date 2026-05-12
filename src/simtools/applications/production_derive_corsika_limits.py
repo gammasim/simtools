@@ -64,8 +64,7 @@ plot_histograms (bool, optional)
 output_file (str, optional)
     Path to the output file for the derived limits.
 n_workers (int, optional)
-    Number of parallel worker processes to use for multi-production execution. Default is 1
-    (on parallel workers). Used only when multiple event_data_file patterns are provided.
+    Number of worker processes to use for execution. Default is 1.
 
 Example
 -------
@@ -143,7 +142,7 @@ def _add_arguments(parser):
     )
     parser.add_argument(
         "--n_workers",
-        help="Number of parallel worker processes to use for multi-production execution.",
+        help="Number of worker processes to use for execution.",
         type=int,
         required=False,
         default=1,
