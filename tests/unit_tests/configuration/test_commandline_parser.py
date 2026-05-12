@@ -594,3 +594,35 @@ def test_bounded_int():
 
     with pytest.raises(ValueError, match=r"1001 not in \[100,1000\]"):
         bounded_int_checker_large(1001)
+
+
+def _parser(*params):
+    p = parser.CommandLineParser()
+    p.initialize_application_arguments(list(params))
+    return p
+
+
+def test_max_offset_negative_fails():
+    p = _parser("max_offset")
+    with pytest.raises(SystemExit):
+        p.parse_args(["--max_offset", "-0.1"])
+
+
+def test_max_offset_zero_ok():
+    p = _parser("max_offset")
+    ns = p.parse_args(["--max_offset", "0"])
+    assert isinstance(ns.max_offset, u.Quantity)
+    assert ns.max_offset.to("deg").value == pytest.approx(0.0)
+
+
+def test_offset_step_zero_fails():
+    p = _parser("offset_step")
+    with pytest.raises(SystemExit):
+        p.parse_args(["--offset_step", "0"])
+
+
+def test_offset_step_positive_ok():
+    p = _parser("offset_step")
+    ns = p.parse_args(["--offset_step", "0.25"])
+    assert isinstance(ns.offset_step, u.Quantity)
+    assert ns.offset_step.to("deg").value == pytest.approx(0.25)
