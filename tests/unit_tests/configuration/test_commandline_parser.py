@@ -800,3 +800,35 @@ def test_quantity_pair_action():
     assert_quantity_allclose(args.energy_range[0][1], 30 * u.GeV)
     assert_quantity_allclose(args.energy_range[1][0], 300 * u.GeV)
     assert_quantity_allclose(args.energy_range[1][1], 300 * u.GeV)
+
+
+def _parser(*params):
+    p = parser.CommandLineParser()
+    p.initialize_application_arguments(list(params))
+    return p
+
+
+def test_max_offset_negative_fails():
+    p = _parser("max_offset")
+    with pytest.raises(SystemExit):
+        p.parse_args(["--max_offset", "-0.1"])
+
+
+def test_max_offset_zero_ok():
+    p = _parser("max_offset")
+    ns = p.parse_args(["--max_offset", "0"])
+    assert isinstance(ns.max_offset, u.Quantity)
+    assert ns.max_offset.to("deg").value == pytest.approx(0.0)
+
+
+def test_offset_step_zero_fails():
+    p = _parser("offset_step")
+    with pytest.raises(SystemExit):
+        p.parse_args(["--offset_step", "0"])
+
+
+def test_offset_step_positive_ok():
+    p = _parser("offset_step")
+    ns = p.parse_args(["--offset_step", "0.25"])
+    assert isinstance(ns.offset_step, u.Quantity)
+    assert ns.offset_step.to("deg").value == pytest.approx(0.25)
