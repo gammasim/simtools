@@ -349,14 +349,27 @@ class EventDataHistograms:
 
     @property
     def energy_bins(self):
-        """Return bins for the energy histogram."""
+        """
+        Return bins for the energy histogram.
+
+        Align bins to full decades of energy, with 10 bins per decade, and ensure that the
+        range covers the energy range of the events.
+        """
         if "energy_bin_edges" in self.histograms:
             return self.histograms["energy_bin_edges"]
-        return np.logspace(
-            np.log10(self.file_info.get("energy_min", 1.0e-3 * u.TeV).to("TeV").value),
-            np.log10(self.file_info.get("energy_max", 1.0e3 * u.TeV).to("TeV").value),
-            100,
-        )
+
+        energy_min = self.file_info.get("energy_min", 1.0e-3 * u.TeV).to("TeV").value
+        energy_max = self.file_info.get("energy_max", 1.0e3 * u.TeV).to("TeV").value
+        energy_min = max(energy_min, 1e-3)
+        energy_max = max(energy_max, 10 * energy_min)
+
+        lower_decade = np.floor(np.log10(energy_min))
+        upper_decade = np.ceil(np.log10(energy_max))
+        if upper_decade <= lower_decade:
+            upper_decade = lower_decade + 1
+
+        n_bins = int((upper_decade - lower_decade) * 10)
+        return np.logspace(lower_decade, upper_decade, n_bins + 1)
 
     @property
     def core_distance_bins(self):

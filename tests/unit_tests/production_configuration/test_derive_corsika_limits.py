@@ -54,6 +54,8 @@ def mock_args_dict():
         "loss_fraction": 0.2,
         "plot_histograms": False,
         "output_file": "test_output.ecsv",
+        "differential_loss_per_energy_bin": False,
+        "differential_loss_bins_per_decade": 5,
     }
 
 
@@ -129,6 +131,17 @@ def test_generate_corsika_limits_grid_normalizes_telescope_ids(mocker, mock_args
     ]
     job_specs = mock_pool.call_args[0][1]
     assert job_specs[0]["telescope_ids"] == expected_telescopes
+    assert job_specs[0]["differential_loss_per_energy_bin"] is False
+    assert job_specs[0]["differential_loss_bins_per_decade"] == 5
+
+
+def test_generate_corsika_limits_grid_raises_for_invalid_differential_bins(mock_args_dict):
+    """Ensure differential bins per decade must be positive."""
+    args = mock_args_dict.copy()
+    args["differential_loss_bins_per_decade"] = 0
+
+    with pytest.raises(ValueError, match="differential_loss_bins_per_decade must be > 0"):
+        derive_corsika_limits.generate_corsika_limits_grid(args)
 
 
 def test_process_file_passes_event_data_patterns_through(mocker):
@@ -454,6 +467,55 @@ def test_process_file_with_mocked_histograms(mocker):
     mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2)
     mock_compute_upper_radius_limit.assert_called_once_with(mock_histograms, 0.2)
     mock_compute_viewcone.assert_called_once_with(mock_histograms, 0.2)
+
+
+def test_process_file_with_differential_loss_per_energy_bin(mocker):
+    """Test _process_file in differential-loss mode."""
+    mock_histograms = mocker.MagicMock()
+    mock_histograms.fill.return_value = None
+    mock_histograms.file_info = {}
+
+    mocker.patch(
+        SIM_EVENTS_HISTOGRAMS_PATH,
+        return_value=mock_histograms,
+    )
+
+    mock_compute_lower_energy_limit = mocker.patch(
+        COMPUTE_LOWER_ENERGY_LIMIT_PATH,
+        return_value=1.0 * u.TeV,
+    )
+    mock_compute_upper_radius_limit = mocker.patch(COMPUTE_UPPER_RADIUS_LIMIT_PATH)
+    mock_compute_viewcone = mocker.patch(COMPUTE_VIEWCONE_PATH)
+    mock_differential = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._compute_differential_limits",
+        return_value={
+            "upper_radius_limit": 120.0 * u.m,
+            "viewcone_radius": 3.0 * u.deg,
+            "core_vs_energy_curve": {"x": [100.0, 120.0], "y": [0.1, 1.0]},
+            "angular_distance_vs_energy_curve": {"x": [2.5, 3.0], "y": [0.1, 1.0]},
+        },
+    )
+
+    result = derive_corsika_limits._process_file(
+        file_path=MOCK_FILE_PATH,
+        array_name="MockArray",
+        telescope_ids=[1, 2],
+        loss_fraction=0.2,
+        plot_histograms=False,
+        differential_loss_per_energy_bin=True,
+        differential_loss_bins_per_decade=6,
+    )
+
+    assert result["lower_energy_limit"] == 1.0 * u.TeV
+    assert result["upper_radius_limit"] == 120.0 * u.m
+    assert result["viewcone_radius"] == 3.0 * u.deg
+    assert result["core_vs_energy_curve"] == {"x": [100.0, 120.0], "y": [0.1, 1.0]}
+    assert result["angular_distance_vs_energy_curve"] == {"x": [2.5, 3.0], "y": [0.1, 1.0]}
+
+    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2)
+    mock_compute_upper_radius_limit.assert_not_called()
+    mock_compute_viewcone.assert_not_called()
+    mock_differential.assert_called_once_with(mock_histograms, 0.2, 6)
 
 
 def test_process_file_with_plot_histograms(mocker, tmp_test_directory):

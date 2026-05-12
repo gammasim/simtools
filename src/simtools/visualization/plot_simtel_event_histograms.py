@@ -56,10 +56,22 @@ def _get_limits(name, limits):
         "core_vs_energy": {
             "x": _safe_value(limits, "upper_radius_limit"),
             "y": _safe_value(limits, "lower_energy_limit"),
+            "curve": limits.get("core_vs_energy_curve"),
+        },
+        "core_vs_energy_cumulative": {
+            "x": _safe_value(limits, "upper_radius_limit"),
+            "y": _safe_value(limits, "lower_energy_limit"),
+            "curve": limits.get("core_vs_energy_curve"),
         },
         "angular_distance_vs_energy": {
             "x": _safe_value(limits, "viewcone_radius"),
             "y": _safe_value(limits, "lower_energy_limit"),
+            "curve": limits.get("angular_distance_vs_energy_curve"),
+        },
+        "angular_distance_vs_energy_cumulative": {
+            "x": _safe_value(limits, "viewcone_radius"),
+            "y": _safe_value(limits, "lower_energy_limit"),
+            "curve": limits.get("angular_distance_vs_energy_curve"),
         },
         "x_core_shower_vs_y_core_shower": {"r": _safe_value(limits, "upper_radius_limit")},
     }
@@ -314,6 +326,9 @@ def _add_lines(ax, lines):
         ax.add_artist(
             plt.Circle((0, 0), lines["r"], color="r", fill=False, linestyle="--", linewidth=0.5)
         )
+    curve = lines.get("curve")
+    if curve and curve.get("x") and curve.get("y"):
+        ax.plot(curve["x"], curve["y"], color="tab:orange", linestyle="-", linewidth=1.0)
 
 
 def _create_2d_histogram_plot(data, bins, plot_params):
