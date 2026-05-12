@@ -506,6 +506,118 @@ def test_process_file_with_differential_loss_per_energy_bin(mocker):
     mock_differential.assert_called_once_with(mock_histograms, 0.2, 6)
 
 
+@pytest.mark.parametrize(
+    ("file_info", "expected_core_scatter_max", "expected_viewcone_max"),
+    [
+        (
+            {"core_scatter_max": 120.0 * u.m, "viewcone_max": 3.0 * u.deg},
+            120.0 * u.m,
+            3.0 * u.deg,
+        ),
+        ({}, None, None),
+    ],
+)
+def test_compute_differential_limits(
+    mocker, file_info, expected_core_scatter_max, expected_viewcone_max
+):
+    """Test _compute_differential_limits forwards slices and preserves units."""
+    histograms = mocker.MagicMock()
+    histograms.energy_bins = np.array([1.0, 10.0])
+    histograms.core_distance_bins = np.array([0.0, 100.0])
+    histograms.view_cone_bins = np.array([0.0, 5.0])
+    histograms.histograms = {
+        "core_vs_energy": {"histogram": "core-hist"},
+        "angular_distance_vs_energy": {"histogram": "viewcone-hist"},
+    }
+    histograms.file_info = file_info
+
+    mock_diff_limits = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._differential_upper_limits",
+        side_effect=[
+            (120.0, [110.0, 120.0], [1.0, 10.0]),
+            (3.0, [2.5, 3.0], [1.0, 10.0]),
+        ],
+    )
+    mock_is_close = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._is_close",
+        side_effect=[125.0 * u.m, 3.25 * u.deg],
+    )
+
+    result = derive_corsika_limits._compute_differential_limits(histograms, 0.2, 2)
+
+    expected_diff_bins = np.logspace(0, 1, 3)
+    np.testing.assert_allclose(mock_diff_limits.call_args_list[0].args[3], expected_diff_bins)
+    np.testing.assert_allclose(mock_diff_limits.call_args_list[1].args[3], expected_diff_bins)
+    assert mock_diff_limits.call_args_list[0].args[0] == "core-hist"
+    assert mock_diff_limits.call_args_list[0].args[5:] == ("core_scatter", "m")
+    assert mock_diff_limits.call_args_list[1].args[0] == "viewcone-hist"
+    assert mock_diff_limits.call_args_list[1].args[5:] == ("viewcone", "deg")
+
+    assert mock_is_close.call_args_list[0].args[0] == 120.0 * u.m
+    assert mock_is_close.call_args_list[0].args[1] == expected_core_scatter_max
+    assert mock_is_close.call_args_list[1].args[0] == 3.0 * u.deg
+    assert mock_is_close.call_args_list[1].args[1] == expected_viewcone_max
+
+    assert result == {
+        "upper_radius_limit": 125.0 * u.m,
+        "viewcone_radius": 3.25 * u.deg,
+        "core_vs_energy_curve": {"x": [110.0, 120.0], "y": [1.0, 10.0]},
+        "angular_distance_vs_energy_curve": {"x": [2.5, 3.0], "y": [1.0, 10.0]},
+    }
+
+
+def test_differential_upper_limits(mocker):
+    """Test _differential_upper_limits slices energies and skips empty bins."""
+    mock_compute_limits = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._compute_limits",
+        side_effect=[1.5, 2.5],
+    )
+    mock_log = mocker.patch("simtools.production_configuration.derive_corsika_limits._logger.info")
+
+    max_limit, limits, energy_centers = derive_corsika_limits._differential_upper_limits(
+        histogram2d=np.array([[1.0, 10.0], [2.0, 20.0], [3.0, 30.0]]),
+        x_bins=np.array([0.0, 1.0, 2.0, 3.0]),
+        y_bins=np.array([1.0, 2.0, 4.0]),
+        diff_e_bins=np.array([1.0, 2.0, 2.5, 3.0]),
+        loss_fraction=0.2,
+        name="core_scatter",
+        unit="m",
+    )
+
+    np.testing.assert_array_equal(
+        mock_compute_limits.call_args_list[0].args[0], np.array([1.0, 2.0, 3.0])
+    )
+    np.testing.assert_array_equal(
+        mock_compute_limits.call_args_list[1].args[0], np.array([10.0, 20.0, 30.0])
+    )
+    assert max_limit == pytest.approx(2.5)
+    assert limits == [1.5, 2.5]
+    assert energy_centers == pytest.approx([np.sqrt(2.0), np.sqrt(7.5)])
+    assert mock_log.call_count == 2
+
+
+def test_differential_upper_limits_falls_back_to_last_bin_edge(mocker):
+    """Test _differential_upper_limits falls back when all slices are empty."""
+    mock_compute_limits = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._compute_limits"
+    )
+    mock_log = mocker.patch("simtools.production_configuration.derive_corsika_limits._logger.info")
+
+    result = derive_corsika_limits._differential_upper_limits(
+        histogram2d=np.zeros((3, 2)),
+        x_bins=np.array([0.0, 1.0, 2.0, 3.0]),
+        y_bins=np.array([1.0, 2.0, 4.0]),
+        diff_e_bins=np.array([1.0, 2.0, 3.0]),
+        loss_fraction=0.2,
+        name="viewcone",
+        unit="deg",
+    )
+
+    assert result == (3.0, [], [])
+    mock_compute_limits.assert_not_called()
+    mock_log.assert_not_called()
+
+
 def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
     """Test _process_file with plot_histograms=True using plotting module function."""
     mock_histograms = mocker.MagicMock()
