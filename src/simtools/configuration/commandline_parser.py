@@ -648,6 +648,32 @@ class CommandLineParser(argparse.ArgumentParser):
         return quantity_type
 
     @staticmethod
+    def nonnegative_quantity(target_unit):
+        """Return a parser that parses a quantity and enforces >= 0."""
+        base = CommandLineParser.quantity(target_unit)
+
+        def qtype(value):
+            q = base(value)
+            if q.to(target_unit).value < 0.0:
+                raise argparse.ArgumentTypeError(f"Value must be >= 0 {target_unit}")
+            return q
+
+        return qtype
+
+    @staticmethod
+    def positive_quantity(target_unit):
+        """Return a parser that parses a quantity and enforces > 0."""
+        base = CommandLineParser.quantity(target_unit)
+
+        def qtype(value):
+            q = base(value)
+            if q.to(target_unit).value <= 0.0:
+                raise argparse.ArgumentTypeError(f"Value must be > 0 {target_unit}")
+            return q
+
+        return qtype
+
+    @staticmethod
     def zenith_angle(angle):
         """
         Argument parser type to check that the zenith angle provided is in the interval [0, 180].
@@ -986,12 +1012,12 @@ _APPLICATION_ARGS = {
     },
     "max_offset": {
         "help": "Maximum offset angle in degrees (unitless values are interpreted as deg).",
-        "type": CommandLineParser.quantity("deg"),
+        "type": CommandLineParser.nonnegative_quantity("deg"),
         "default": 4 * u.deg,
     },
     "offset_step": {
         "help": "Offset angle step size in degrees (unitless values are interpreted as deg).",
-        "type": CommandLineParser.quantity("deg"),
+        "type": CommandLineParser.positive_quantity("deg"),
         "default": 0.25 * u.deg,
     },
     "all_model_versions": {
