@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools.model.model_utils import is_two_mirror_telescope
+from simtools.model.telescope_model import TelescopeModel
 from simtools.utils import names
 from simtools.visualization.camera_plot_utils import (
     add_pixel_legend,
@@ -15,6 +16,7 @@ from simtools.visualization.camera_plot_utils import (
     pixel_shape,
     setup_camera_axis_properties,
 )
+from simtools.visualization.visualize import save_figure
 
 logger = logging.getLogger(__name__)
 
@@ -377,3 +379,78 @@ def _plot_one_axis_def(plot, **kwargs):
             "ec": kwargs["ec"],
         },
     )
+
+
+def plot_camera_pixel_layout_from_args(app_context):
+    """
+    Build telescope model, compute FoV, and plot the pixel layout.
+
+    Parameters
+    ----------
+    app_context : object
+        Application context with ``args`` and ``io_handler`` attributes.
+    """
+    args_dict = app_context.args
+    io_handler = app_context.io_handler
+
+    label = "plot_camera_pixel_layout"
+
+    tel_model = TelescopeModel(
+        site=args_dict["site"],
+        telescope_name=args_dict["telescope"],
+        model_version=args_dict["model_version"],
+        label=label,
+    )
+    tel_model.export_model_files()
+
+    logger.info(f"\nPlot camera for {tel_model.name}\n")
+
+    focal_length = tel_model.get_telescope_effective_focal_length("cm")
+    camera = tel_model.camera
+
+    fov, r_edge_avg = camera.calc_fov()
+
+    logger.info(f"\nEffective focal length = {focal_length:.3f} cm")
+    logger.info(f"{tel_model.name} FoV = {fov:.3f} deg")
+    logger.info(f"Avg. edge radius = {r_edge_avg:.3f} cm\n")
+
+    pixel_ids_to_print = _parse_pixel_ids_to_print(args_dict["print_pixels_id"], camera)
+
+    fig = plot_pixel_layout(camera, args_dict["camera_in_sky_coor"], pixel_ids_to_print)
+    output_dir = io_handler.get_output_directory()
+    plot_file_prefix = output_dir.joinpath(f"{label}_{tel_model.name}_pixel_layout")
+    save_figure(fig, f"{plot_file_prefix!s}", log_title="camera")
+
+
+def _parse_pixel_ids_to_print(print_pixels_id_arg, camera):
+    """
+    Parse the print_pixels_id argument into an integer pixel count.
+
+    Parameters
+    ----------
+    print_pixels_id_arg : str or int
+        The raw argument value. Can be an integer string, 0 (suppress), or 'All'.
+    camera : Camera
+        Camera model instance used to determine total pixel count for 'All'.
+
+    Returns
+    -------
+    int
+        Number of pixel IDs to print. Returns -1 when printing should be suppressed.
+
+    Raises
+    ------
+    ValueError
+        If the argument is not an integer string or 'All'.
+    """
+    if str(print_pixels_id_arg).lower() == "all":
+        return camera.get_number_of_pixels()
+
+    try:
+        n = int(print_pixels_id_arg)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"--print_pixels_id must be integer or 'All', got: {print_pixels_id_arg}"
+        ) from exc
+
+    return -1 if n == 0 else n
