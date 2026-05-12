@@ -65,12 +65,9 @@ output_file (str, optional)
     Path to the output file for the derived limits.
 n_workers (int, optional)
     Number of worker processes to use for execution. Default is 1.
-differential_loss_per_energy_bin (bool, optional)
-    Compute limits independently in differential energy bins and
-    choose the final scalar limits as the maximum across all bins.
 differential_loss_bins_per_decade (int, optional)
-    Number of differential energy bins per decade used by
-    ``differential_loss_per_energy_bin``. Default is 5.
+    Number of differential energy bins per decade for per-bin limit computation.
+    Set to 0 (default) to use integrated limits.
 
 Example
 -------
@@ -154,20 +151,14 @@ def _add_arguments(parser):
         default=1,
     )
     parser.add_argument(
-        "--differential_loss_per_energy_bin",
-        help=(
-            "Compute core scatter and viewcone limits per energy bin and use "
-            "the maximum as final value."
-        ),
-        action="store_true",
-        default=False,
-    )
-    parser.add_argument(
         "--differential_loss_bins_per_decade",
-        help="Number of differential energy bins per decade.",
+        help=(
+            "Number of differential energy bins per decade for per-bin limit computation. "
+            "Set to 0 (default) to use integrated limits."
+        ),
         type=int,
         required=False,
-        default=5,
+        default=0,
     )
 
 
