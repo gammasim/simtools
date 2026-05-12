@@ -21,7 +21,6 @@ from simtools.visualization import plot_simtel_event_histograms
 _logger = logging.getLogger(__name__)
 
 FILE_INFO_KEYS = ("primary_particle", "zenith", "azimuth", "nsb_level")
-DIFFERENTIAL_LOSS_BINS_PER_DECADE_DEFAULT = 5
 RESULT_COLUMNS = [
     "production_index",
     "event_data_file",
@@ -126,10 +125,7 @@ def _execute_production_job(job_spec):
     loss_fraction = job_spec["loss_fraction"]
     plot_histograms = job_spec["plot_histograms"]
     output_subdir = job_spec.get("output_subdir")
-    differential_loss_per_energy_bin = job_spec.get("differential_loss_per_energy_bin", False)
-    differential_loss_bins_per_decade = job_spec.get(
-        "differential_loss_bins_per_decade", DIFFERENTIAL_LOSS_BINS_PER_DECADE_DEFAULT
-    )
+    differential_loss_bins_per_decade = job_spec.get("differential_loss_bins_per_decade", 0)
 
     _logger.info(
         f"Processing production {production_index}: pattern={production_pattern}, "
@@ -143,7 +139,6 @@ def _execute_production_job(job_spec):
         loss_fraction,
         plot_histograms,
         output_subdir=output_subdir,
-        differential_loss_per_energy_bin=differential_loss_per_energy_bin,
         differential_loss_bins_per_decade=differential_loss_bins_per_decade,
     )
 
@@ -208,18 +203,7 @@ def generate_corsika_limits_grid(args_dict):
         Dictionary containing command line arguments.
     """
     production_patterns = _normalize_event_data_file(args_dict["event_data_file"])
-    differential_loss_per_energy_bin = bool(
-        args_dict.get("differential_loss_per_energy_bin", False)
-    )
-    differential_loss_bins_per_decade = int(
-        args_dict.get(
-            "differential_loss_bins_per_decade",
-            DIFFERENTIAL_LOSS_BINS_PER_DECADE_DEFAULT,
-        )
-    )
-    if differential_loss_bins_per_decade <= 0:
-        raise ValueError("differential_loss_bins_per_decade must be > 0")
-
+    differential_loss_bins_per_decade = int(args_dict.get("differential_loss_bins_per_decade", 0))
     n_productions = len(production_patterns)
     is_multi_production = n_productions > 1
 
@@ -251,7 +235,6 @@ def generate_corsika_limits_grid(args_dict):
                 "loss_fraction": args_dict["loss_fraction"],
                 "plot_histograms": args_dict["plot_histograms"],
                 "output_subdir": output_subdir,
-                "differential_loss_per_energy_bin": differential_loss_per_energy_bin,
                 "differential_loss_bins_per_decade": differential_loss_bins_per_decade,
             }
             job_specs.append(job_spec)
@@ -274,8 +257,7 @@ def _process_file(
     loss_fraction,
     plot_histograms,
     output_subdir=None,
-    differential_loss_per_energy_bin=False,
-    differential_loss_bins_per_decade=DIFFERENTIAL_LOSS_BINS_PER_DECADE_DEFAULT,
+    differential_loss_bins_per_decade=0,
 ):
     """
     Compute limits for a given event data file and telescope configuration.
@@ -296,11 +278,9 @@ def _process_file(
         Whether to plot histograms.
     output_subdir : Path or None, optional
         Output subdirectory for plots. If None, uses default output directory.
-    differential_loss_per_energy_bin : bool, optional
-        Derive core scatter and viewcone limits per energy bin and use the
-        maximum value as final limit.
     differential_loss_bins_per_decade : int, optional
-        Number of energy bins per decade used in differential mode.
+        Number of energy bins per decade for differential per-bin limits.
+        Set to 0 (default) to use integrated limits.
 
     Returns
     -------
@@ -317,18 +297,12 @@ def _process_file(
     limits = {
         "lower_energy_limit": compute_lower_energy_limit(histograms, loss_fraction),
     }
-    if differential_loss_per_energy_bin:
-        differential_limits = _compute_differential_limits(
-            histograms,
-            loss_fraction,
-            differential_loss_bins_per_decade,
+    if differential_loss_bins_per_decade > 0:
+        limits.update(
+            _compute_differential_limits(
+                histograms, loss_fraction, differential_loss_bins_per_decade
+            )
         )
-        limits["upper_radius_limit"] = differential_limits["upper_radius_limit"]
-        limits["viewcone_radius"] = differential_limits["viewcone_radius"]
-        limits["core_vs_energy_curve"] = differential_limits["core_vs_energy_curve"]
-        limits["angular_distance_vs_energy_curve"] = differential_limits[
-            "angular_distance_vs_energy_curve"
-        ]
     else:
         limits["upper_radius_limit"] = compute_upper_radius_limit(histograms, loss_fraction)
         limits["viewcone_radius"] = compute_viewcone(histograms, loss_fraction)
@@ -349,150 +323,77 @@ def _process_file(
 
 def _compute_differential_limits(histograms, loss_fraction, bins_per_decade):
     """Compute core and viewcone limits per energy bin and return max limits."""
-    energy_bins = _build_differential_energy_bins(histograms.energy_bins, bins_per_decade)
+    low = int(np.floor(np.log10(np.min(histograms.energy_bins))))
+    high = int(np.ceil(np.log10(np.max(histograms.energy_bins))))
+    diff_e_bins = np.logspace(low, high, (high - low) * bins_per_decade + 1)
 
-    core_result = _compute_differential_upper_limit(
-        histogram2d=histograms.histograms["core_vs_energy"]["histogram"],
-        x_bins=histograms.core_distance_bins,
-        y_bins=histograms.energy_bins,
-        differential_energy_bins=energy_bins,
-        loss_fraction=loss_fraction,
+    core_max, core_x, core_y = _differential_upper_limits(
+        histograms.histograms["core_vs_energy"]["histogram"],
+        histograms.core_distance_bins,
+        histograms.energy_bins,
+        diff_e_bins,
+        loss_fraction,
+        "core_scatter",
+        "m",
     )
-    viewcone_result = _compute_differential_upper_limit(
-        histogram2d=histograms.histograms["angular_distance_vs_energy"]["histogram"],
-        x_bins=histograms.view_cone_bins,
-        y_bins=histograms.energy_bins,
-        differential_energy_bins=energy_bins,
-        loss_fraction=loss_fraction,
+    vc_max, vc_x, vc_y = _differential_upper_limits(
+        histograms.histograms["angular_distance_vs_energy"]["histogram"],
+        histograms.view_cone_bins,
+        histograms.energy_bins,
+        diff_e_bins,
+        loss_fraction,
+        "viewcone",
+        "deg",
     )
-
-    _log_differential_loss_summary("core_scatter", core_result["per_bin_rows"], "m")
-    _log_differential_loss_summary("viewcone", viewcone_result["per_bin_rows"], "deg")
 
     upper_radius_limit = _is_close(
-        core_result["max_limit"] * u.m,
+        core_max * u.m,
         histograms.file_info["core_scatter_max"].to("m")
         if "core_scatter_max" in histograms.file_info
         else None,
         "Upper radius limit is equal to the maximum core scatter distance of",
     )
     viewcone_radius = _is_close(
-        viewcone_result["max_limit"] * u.deg,
+        vc_max * u.deg,
         histograms.file_info["viewcone_max"].to("deg")
         if "viewcone_max" in histograms.file_info
         else None,
         "Upper viewcone limit is equal to the maximum viewcone distance of",
     )
-
-    _logger.info(f"Final differential upper_radius_limit (max over bins): {upper_radius_limit}")
-    _logger.info(f"Final differential viewcone_radius (max over bins): {viewcone_radius}")
-
+    _logger.info(f"Differential upper_radius_limit (max over bins): {upper_radius_limit}")
+    _logger.info(f"Differential viewcone_radius (max over bins): {viewcone_radius}")
     return {
         "upper_radius_limit": upper_radius_limit,
         "viewcone_radius": viewcone_radius,
-        "core_vs_energy_curve": {
-            "x": core_result["limits"],
-            "y": core_result["energy_centers"],
-        },
-        "angular_distance_vs_energy_curve": {
-            "x": viewcone_result["limits"],
-            "y": viewcone_result["energy_centers"],
-        },
+        "core_vs_energy_curve": {"x": core_x, "y": core_y},
+        "angular_distance_vs_energy_curve": {"x": vc_x, "y": vc_y},
     }
 
 
-def _build_differential_energy_bins(energy_bins, bins_per_decade):
-    """Build decade-aligned differential energy bins."""
-    min_energy = np.min(energy_bins)
-    max_energy = np.max(energy_bins)
-    min_decade = int(np.floor(np.log10(min_energy)))
-    max_decade = int(np.ceil(np.log10(max_energy)))
-    n_bins = (max_decade - min_decade) * bins_per_decade
-    return np.logspace(min_decade, max_decade, n_bins + 1)
-
-
-def _compute_differential_upper_limit(
-    histogram2d,
-    x_bins,
-    y_bins,
-    differential_energy_bins,
-    loss_fraction,
-):
-    """Compute upper limits in energy slices of a 2D (x, energy) histogram."""
+def _differential_upper_limits(histogram2d, x_bins, y_bins, diff_e_bins, loss_fraction, name, unit):
+    """Compute upper limits per energy slice of a 2D (x, energy) histogram."""
     y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
-
-    limits = []
-    energy_centers = []
-    per_bin_rows = []
-
-    for i in range(len(differential_energy_bins) - 1):
-        e_low = differential_energy_bins[i]
-        e_high = differential_energy_bins[i + 1]
-        if i == len(differential_energy_bins) - 2:
-            energy_mask = (y_centers >= e_low) & (y_centers <= e_high)
-        else:
-            energy_mask = (y_centers >= e_low) & (y_centers < e_high)
-
-        if not np.any(energy_mask):
+    limits, energy_centers = [], []
+    n = len(diff_e_bins) - 1
+    for i in range(n):
+        e_low, e_high = diff_e_bins[i], diff_e_bins[i + 1]
+        hi_op = np.less_equal if i == n - 1 else np.less
+        projected = np.sum(histogram2d[:, (y_centers >= e_low) & hi_op(y_centers, e_high)], axis=1)
+        total = float(np.sum(projected))
+        if total <= 0:
             continue
-
-        projected_hist = np.sum(histogram2d[:, energy_mask], axis=1)
-        total_events = np.sum(projected_hist)
-        if total_events <= 0:
-            continue
-
-        limit = _compute_limits(projected_hist, x_bins, loss_fraction, limit_type="upper")
-        achieved_loss = _compute_upper_loss_fraction(projected_hist, x_bins, limit)
-
+        limit = _compute_limits(projected, x_bins, loss_fraction, limit_type="upper")
+        keep = np.searchsorted(x_bins, limit, side="left")
+        loss = (total - float(np.sum(projected[:keep]))) / total
         limits.append(limit)
-        energy_centers.append(np.sqrt(e_low * e_high))
-        per_bin_rows.append(
-            {
-                "energy_low": e_low,
-                "energy_high": e_high,
-                "events": int(total_events),
-                "limit": limit,
-                "achieved_loss": achieved_loss,
-            }
-        )
-
-    if not limits:
-        fallback_limit = x_bins[-1]
-        return {
-            "max_limit": fallback_limit,
-            "limits": [],
-            "energy_centers": [],
-            "per_bin_rows": [],
-        }
-
-    return {
-        "max_limit": float(np.max(limits)),
-        "limits": limits,
-        "energy_centers": energy_centers,
-        "per_bin_rows": per_bin_rows,
-    }
-
-
-def _compute_upper_loss_fraction(hist, bin_edges, upper_limit):
-    """Compute effective loss fraction for an upper cut value."""
-    total_events = np.sum(hist)
-    if total_events <= 0:
-        return 0.0
-    keep_bins = np.searchsorted(bin_edges, upper_limit, side="left")
-    kept_events = np.sum(hist[:keep_bins])
-    return float((total_events - kept_events) / total_events)
-
-
-def _log_differential_loss_summary(limit_name, per_bin_rows, unit):
-    """Log per-energy-bin loss summary for differential limits."""
-    for row in per_bin_rows:
+        energy_centers.append(float(np.sqrt(e_low * e_high)))
         _logger.info(
-            f"Differential {limit_name}: "
-            f"E=[{row['energy_low']:.4g}, {row['energy_high']:.4g}] TeV, "
-            f"N={row['events']}, "
-            f"limit={row['limit']:.4g} {unit}, "
-            f"loss={row['achieved_loss']:.5f}"
+            f"Differential {name}: E=[{e_low:.4g}, {e_high:.4g}] TeV, "
+            f"N={int(total)}, limit={limit:.4g} {unit}, loss={loss:.5f}"
         )
+    return (
+        (float(np.max(limits)), limits, energy_centers) if limits else (float(x_bins[-1]), [], [])
+    )
 
 
 def write_results(results, args_dict):
