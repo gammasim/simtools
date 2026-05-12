@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import astropy.units as u
 import numpy as np
 import pytest
@@ -59,7 +57,7 @@ def hdf5_file_name(tmp_test_directory):
     return str(tmp_test_directory / "test_file.h5")
 
 
-def test_generate_corsika_limits_grid(mocker, mock_args_dict):
+def test_generate_corsika_limits_grid(mocker, mock_args_dict, tmp_test_directory):
     """Test generate_corsika_limits_grid function with single production."""
     # Mock dependencies
     mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
@@ -78,7 +76,7 @@ def test_generate_corsika_limits_grid(mocker, mock_args_dict):
     mock_io = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
     )
-    mock_io.return_value.get_output_directory.return_value = Path("/tmp/output")
+    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
 
     mock_write = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.write_results"
@@ -230,7 +228,7 @@ def test_round_value():
     assert derive_corsika_limits._round_value("unknown", "string_value") == "string_value"
 
 
-def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
+def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict, tmp_test_directory):
     """Test generate_corsika_limits_grid using get_array_elements_from_db_for_layouts."""
     # Prepare args_dict to use array_layout_name
     args = mock_args_dict.copy()
@@ -255,7 +253,7 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
     mock_io = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
     )
-    mock_io.return_value.get_output_directory.return_value = Path("/tmp/output")
+    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
 
     mock_write = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.write_results"
@@ -271,7 +269,9 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
     assert mock_write.call_count == 1
 
 
-def test_generate_corsika_limits_grid_with_array_element_list(mocker, mock_args_dict):
+def test_generate_corsika_limits_grid_with_array_element_list(
+    mocker, mock_args_dict, tmp_test_directory
+):
     """Test generate_corsika_limits_grid using inline array_element_list."""
     args = mock_args_dict.copy()
     args["array_element_list"] = ["LSTN-01", "LSTN-02", "MSTN-03"]
@@ -287,7 +287,7 @@ def test_generate_corsika_limits_grid_with_array_element_list(mocker, mock_args_
     mock_io = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
     )
-    mock_io.return_value.get_output_directory.return_value = Path("/tmp/output")
+    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
 
     mock_write = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.write_results"
