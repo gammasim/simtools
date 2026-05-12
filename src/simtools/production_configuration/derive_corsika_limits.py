@@ -20,6 +20,21 @@ from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
 
+FILE_INFO_KEYS = ("primary_particle", "zenith", "azimuth", "nsb_level")
+RESULT_COLUMNS = [
+    "production_index",
+    "event_data_file",
+    "primary_particle",
+    "array_name",
+    "telescope_ids",
+    "zenith",
+    "azimuth",
+    "nsb_level",
+    "lower_energy_limit",
+    "upper_radius_limit",
+    "viewcone_radius",
+]
+
 
 def _normalize_event_data_file(event_data_file):
     """
@@ -125,12 +140,52 @@ def _execute_production_job(job_spec):
         output_subdir=output_subdir,
     )
 
-    result["production_index"] = production_index
-    result["event_data_file"] = production_pattern
-    result["array_name"] = array_name
-    result["telescope_ids"] = telescope_ids
+    result.update(
+        {
+            "production_index": production_index,
+            "event_data_file": production_pattern,
+            "array_name": array_name,
+            "telescope_ids": telescope_ids,
+        }
+    )
 
     return result
+
+
+def _resolve_telescope_configs(args_dict):
+    """Resolve telescope configurations from one of the supported input options."""
+    if args_dict.get("array_layout_name"):
+        return get_array_elements_from_db_for_layouts(
+            args_dict["array_layout_name"],
+            args_dict.get("site"),
+            args_dict.get("model_version"),
+        )
+    if args_dict.get("array_element_list"):
+        return {"array_element_list": args_dict["array_element_list"]}
+    if args_dict.get("telescope_ids"):
+        return ascii_handler.collect_data_from_file(args_dict["telescope_ids"])["telescope_configs"]
+
+    raise ValueError(
+        "No telescope configuration provided. Use one of --array_layout_name, "
+        "--array_element_list, or --telescope_ids."
+    )
+
+
+def _build_production_subdirectories(production_patterns, output_dir, is_multi_production):
+    """Build and create per-production output subdirectories when needed."""
+    if not is_multi_production:
+        return {}
+
+    production_subdirs = {}
+    used_subdir_names = set()
+    for production_pattern in production_patterns:
+        subdir_name = _get_production_directory_name(production_pattern, used_subdir_names)
+        used_subdir_names.add(subdir_name)
+        output_subdir = output_dir / subdir_name
+        Path(output_subdir).mkdir(parents=True, exist_ok=True)
+        production_subdirs[production_pattern] = output_subdir
+
+    return production_subdirs
 
 
 def generate_corsika_limits_grid(args_dict):
@@ -151,45 +206,23 @@ def generate_corsika_limits_grid(args_dict):
 
     _logger.info(f"Processing {n_productions} production(s)")
 
-    if args_dict.get("array_layout_name"):
-        telescope_configs = get_array_elements_from_db_for_layouts(
-            args_dict["array_layout_name"],
-            args_dict.get("site"),
-            args_dict.get("model_version"),
-        )
-    elif args_dict.get("array_element_list"):
-        telescope_configs = {"array_element_list": args_dict["array_element_list"]}
-    elif args_dict.get("telescope_ids"):
-        telescope_configs = ascii_handler.collect_data_from_file(args_dict["telescope_ids"])[
-            "telescope_configs"
-        ]
-    else:
-        raise ValueError(
-            "No telescope configuration provided. Use one of --array_layout_name, "
-            "--array_element_list, or --telescope_ids."
-        )
+    telescope_configs = _resolve_telescope_configs(args_dict)
 
     # Build deterministic job specs: Cartesian product of productions and telescope configs
     job_specs = []
     output_dir = io_handler.IOHandler().get_output_directory()
 
-    production_subdirs = {}
-    used_subdir_names = set()
-
-    for production_pattern in production_patterns:
-        subdir_name = _get_production_directory_name(production_pattern, used_subdir_names)
-        used_subdir_names.add(subdir_name)
-        production_subdirs[production_pattern] = subdir_name
+    production_subdirs = _build_production_subdirectories(
+        production_patterns,
+        output_dir,
+        is_multi_production,
+    )
 
     for prod_idx, production_pattern in enumerate(production_patterns):
         for array_name, telescope_ids_raw in telescope_configs.items():
             telescope_ids = normalize_array_element_identifier_container(telescope_ids_raw)
 
-            output_subdir = None
-            if is_multi_production:
-                subdir_name = production_subdirs[production_pattern]
-                output_subdir = output_dir / subdir_name
-                Path(output_subdir).mkdir(parents=True, exist_ok=True)
+            output_subdir = production_subdirs.get(production_pattern)
 
             job_spec = {
                 "production_index": prod_idx,
@@ -258,12 +291,7 @@ def _process_file(
         "upper_radius_limit": compute_upper_radius_limit(histograms, loss_fraction),
         "viewcone_radius": compute_viewcone(histograms, loss_fraction),
     }
-    limits.update(
-        {
-            key: histograms.file_info.get(key)
-            for key in ("primary_particle", "zenith", "azimuth", "nsb_level")
-        }
-    )
+    limits.update({key: histograms.file_info.get(key) for key in FILE_INFO_KEYS})
 
     if plot_histograms:
         plot_output_path = output_subdir or io_handler.IOHandler().get_output_directory()
@@ -304,7 +332,6 @@ def _create_results_table(results, loss_fraction):
     Convert list of simulation results to an astropy Table with metadata.
 
     Round values to appropriate precision and add metadata.
-    For multi-production execution, includes production-origin columns.
 
     Parameters
     ----------
@@ -316,21 +343,9 @@ def _create_results_table(results, loss_fraction):
     Returns
     -------
     astropy.table.Table
-        Table with computed limits and optional production-origin columns.
+        Table with computed limits and production-origin columns.
     """
-    cols = [
-        "production_index",
-        "event_data_file",
-        "primary_particle",
-        "array_name",
-        "telescope_ids",
-        "zenith",
-        "azimuth",
-        "nsb_level",
-        "lower_energy_limit",
-        "upper_radius_limit",
-        "viewcone_radius",
-    ]
+    cols = list(RESULT_COLUMNS)
 
     columns = {name: [] for name in cols}
     units = {}
