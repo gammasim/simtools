@@ -47,6 +47,39 @@ class TriggeredEventData:
 class EventDataReader:
     """Read reduced MC data set stored in astropy tables."""
 
+    _particle_name_cache = {}
+    _required_shower_columns = [
+        "shower_id",
+        "event_id",
+        "file_id",
+        "simulated_energy",
+        "x_core",
+        "y_core",
+        "shower_azimuth",
+        "shower_altitude",
+        "area_weight",
+    ]
+    _required_trigger_columns = [
+        "shower_id",
+        "event_id",
+        "file_id",
+        "array_altitude",
+        "array_azimuth",
+        "telescope_list",
+    ]
+    _required_file_info_columns = [
+        "particle_id",
+        "zenith",
+        "azimuth",
+        "nsb_level",
+        "energy_min",
+        "energy_max",
+        "viewcone_min",
+        "viewcone_max",
+        "core_scatter_min",
+        "core_scatter_max",
+    ]
+
     def __init__(self, event_data_file, telescope_list=None):
         """Initialize EventDataReader."""
         self._logger = logging.getLogger(__name__)
@@ -202,23 +235,38 @@ class EventDataReader:
         """
         triggered_shower = ShowerEventData()
 
+        shower_key_to_index = {}
+        duplicate_shower_keys = set()
+        for idx, (shower_id, event_id, file_id) in enumerate(
+            zip(shower_data.shower_id, shower_data.event_id, shower_data.file_id)
+        ):
+            key = (int(shower_id), int(event_id), int(file_id))
+            if key in shower_key_to_index:
+                duplicate_shower_keys.add(key)
+                continue
+            shower_key_to_index[key] = idx
+
         matched_indices = []
         for tr_shower_id, tr_event_id, tr_file_id in zip(
             triggered_shower_id, triggered_event_id, triggered_file_id
         ):
-            mask = (
-                (shower_data.shower_id == tr_shower_id)
-                & (shower_data.event_id == tr_event_id)
-                & (shower_data.file_id == tr_file_id)
-            )
-            matched_idx = np.nonzero(mask)[0]
-            if len(matched_idx) == 1:
-                matched_indices.append(matched_idx[0])
-            else:
+            trigger_key = (int(tr_shower_id), int(tr_event_id), int(tr_file_id))
+            if trigger_key in duplicate_shower_keys:
                 self._logger.warning(
-                    f"Found {len(matched_idx)} matches for shower {tr_shower_id}"
+                    f"Found multiple matches for shower {tr_shower_id}"
                     f" event {tr_event_id} file {tr_file_id}"
                 )
+                continue
+
+            matched_idx = shower_key_to_index.get(trigger_key)
+            if matched_idx is None:
+                self._logger.warning(
+                    f"Found 0 matches for shower {tr_shower_id}"
+                    f" event {tr_event_id} file {tr_file_id}"
+                )
+                continue
+
+            matched_indices.append(matched_idx)
 
         for attr in vars(shower_data):
             if not attr.endswith("_unit"):
@@ -255,7 +303,20 @@ class EventDataReader:
         table_names = [
             name for k in ("SHOWERS", "TRIGGERS", "FILE_INFO") if (name := get_name(k)) is not None
         ]
-        tables = table_handler.read_tables(event_data_file, table_names=table_names)
+
+        table_columns = {
+            get_name("SHOWERS"): self._required_shower_columns,
+            get_name("FILE_INFO"): self._required_file_info_columns,
+        }
+        triggers_name = get_name("TRIGGERS")
+        if triggers_name is not None:
+            table_columns[triggers_name] = self._required_trigger_columns
+
+        tables = table_handler.read_tables(
+            event_data_file,
+            table_names=table_names,
+            table_columns=table_columns,
+        )
         self.reduced_file_info = self.get_reduced_simulation_file_info(
             tables[get_name("FILE_INFO")]
         )
@@ -300,19 +361,21 @@ class EventDataReader:
 
     def _filter_by_telescopes(self, triggered_data, triggered_shower):
         """Filter trigger data and triggered shower data by the specified telescope list."""
-        mask = np.array(
-            [
-                any(tel in event for tel in self.telescope_list)
-                for event in triggered_data.telescope_list
-            ]
+        telescope_set = set(self.telescope_list)
+        mask = np.fromiter(
+            (not telescope_set.isdisjoint(event) for event in triggered_data.telescope_list),
+            dtype=np.bool_,
+            count=len(triggered_data.telescope_list),
         )
+        selected_indices = np.flatnonzero(mask)
+
         filtered_triggered_data = TriggeredEventData(
             shower_id=triggered_data.shower_id[mask],
             event_id=triggered_data.event_id[mask],
             file_id=triggered_data.file_id[mask],
             array_altitude=triggered_data.array_altitude[mask],
             array_azimuth=triggered_data.array_azimuth[mask],
-            telescope_list=[triggered_data.telescope_list[i] for i in np.arange(len(mask))[mask]],
+            telescope_list=[triggered_data.telescope_list[i] for i in selected_indices],
             angular_distance=triggered_data.angular_distance[mask],
         )
         filtered_triggered_shower_data = self._get_triggered_shower_data(
@@ -378,11 +441,15 @@ class EventDataReader:
         if any(len(arr) > 1 for arr in (particle_id, *(float_arrays[key] for key in keys))):
             self._logger.warning("Simulation file info has non-unique values.")
 
-        reduced_info = {
-            "primary_particle": PrimaryParticle(
+        primary_particle_id = int(particle_id[0])
+        if primary_particle_id not in self._particle_name_cache:
+            self._particle_name_cache[primary_particle_id] = PrimaryParticle(
                 particle_id_type="corsika7_id",
-                particle_id=int(particle_id[0]),
-            ).name,
+                particle_id=primary_particle_id,
+            ).name
+
+        reduced_info = {
+            "primary_particle": self._particle_name_cache[primary_particle_id],
         }
 
         for key in keys:
