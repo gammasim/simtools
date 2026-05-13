@@ -4,17 +4,20 @@ applications:
   configuration:
     comparison_level: events
     production:
-    - baseline
-    - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
-    - candidate
-    - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+    - epos
+    - <EPOS_EVENT_DATA_GLOB_PATTERN>
+    - urqmd
+    - <URQMD_EVENT_DATA_GLOB_PATTERN>
     output_path: simtools-output
   integration_tests:
   - output_file: trigger_multiplicity.png
   - output_file: trigger_combination.png
   - output_file: single_telescope_trigger_distribution.png
   - output_file: mixed_trigger_combinations.png
+  - output_file: distribution_energy.png
+  - output_file: distribution_core_distance.png
+  - output_file: distribution_angular_distance.png
   - output_file: telescope_participation_fraction.png
-  test_name: run
+  test_name: run_epos_vs_urqmd
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
