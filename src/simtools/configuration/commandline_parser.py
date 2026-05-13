@@ -1,6 +1,7 @@
 """Command line parser for applications."""
 
 import argparse
+import ast
 import logging
 import re
 from pathlib import Path
@@ -181,6 +182,12 @@ class CommandLineParser(argparse.ArgumentParser):
             type=str,
             nargs="+",
             default=["png"],
+        )
+        _job_group.add_argument(
+            "--apptainer_image",
+            help="Apptainer image path or a dictionary mapping labels to image paths.",
+            type=CommandLineParser.string_or_dict,
+            default=None,
         )
         _job_group.add_argument(
             "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"
@@ -366,6 +373,8 @@ class CommandLineParser(argparse.ArgumentParser):
                     "use '--primary_ID_type' to use other particle ID types)."
                 ),
                 "type": str.lower,
+                "action": OneOrManyAction,
+                "nargs": "+",
                 "required": True,
             },
             "primary_id_type": {
@@ -381,11 +390,15 @@ class CommandLineParser(argparse.ArgumentParser):
                     "North is 0 degrees and the azimuth grows clockwise (East is 90 degrees)."
                 ),
                 "type": CommandLineParser.azimuth_angle,
+                "action": OneOrManyAction,
+                "nargs": "+",
                 "default": 0 * u.deg,
             },
             "zenith_angle": {
                 "help": "Zenith angle in degrees (between 0 and 180).",
                 "type": CommandLineParser.zenith_angle,
+                "action": OneOrManyAction,
+                "nargs": "+",
                 "default": 20 * u.deg,
             },
             "nshow": {
@@ -841,6 +854,60 @@ class CommandLineParser(argparse.ArgumentParser):
 
         return bounded_int_type
 
+    @staticmethod
+    def string_or_dict(value):
+        """Parse argument as plain string or dictionary literal."""
+        if not isinstance(value, str):
+            return value
+
+        stripped = value.strip()
+        if stripped.startswith("{") and stripped.endswith("}"):
+            try:
+                parsed = ast.literal_eval(stripped)
+            except (ValueError, SyntaxError):
+                return value
+            if isinstance(parsed, dict):
+                return parsed
+        return value
+
+
+class OneOrManyAction(argparse.Action):
+    """Store one value as scalar and multiple values as list."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """Store parsed values as scalar (single) or list (multiple)."""
+        if isinstance(values, list) and len(values) == 1:
+            setattr(namespace, self.dest, values[0])
+            return
+        setattr(namespace, self.dest, values)
+
+
+class QuantityPairAction(argparse.Action):
+    """Parse either one quantity-pair string or two quantity values."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """Parse quantity-pair inputs and store tuple or list of tuples."""
+        try:
+            if len(values) == 1:
+                parsed = CommandLineParser.parse_quantity_pair(values[0])
+            elif all(
+                isinstance(item, str) and len(re.findall(r"[A-Za-z]+", item)) >= 2
+                for item in values
+            ):
+                parsed = [CommandLineParser.parse_quantity_pair(item) for item in values]
+            elif len(values) > 2 and len(values) % 2 == 0:
+                parsed = tuple(
+                    u.Quantity(f"{values[index]} {values[index + 1]}")
+                    for index in range(0, len(values), 2)
+                )
+            elif len(values) == 2:
+                parsed = (u.Quantity(values[0]), u.Quantity(values[1]))
+            else:
+                raise argparse.ArgumentTypeError("Expected one pair string or exactly two values.")
+        except Exception as exc:
+            raise argparse.ArgumentError(self, f"Invalid quantity pair: {exc}") from exc
+        setattr(namespace, self.dest, parsed)
+
 
 _SHOWER_ARGS = {
     "eslope": {
@@ -850,8 +917,9 @@ _SHOWER_ARGS = {
     },
     "energy_range": {
         "help": "Energy range of the primary particle (min/max value, e'g', '10 GeV 5 TeV').",
-        "type": CommandLineParser.parse_quantity_pair,
-        "default": ["3 GeV 330 TeV"],
+        "action": QuantityPairAction,
+        "nargs": "+",
+        "default": (3 * u.GeV, 330 * u.TeV),
     },
     "view_cone": {
         "help": (
@@ -902,6 +970,8 @@ _CORSIKA_ARGS = {
             f"(default fallback: {defaults.CORSIKA_HE_INTERACTION})."
         ),
         "type": str,
+        "action": OneOrManyAction,
+        "nargs": "+",
         "default": None,
     },
     "corsika_le_interaction": {
@@ -910,6 +980,8 @@ _CORSIKA_ARGS = {
             f"(default fallback: {defaults.CORSIKA_LE_INTERACTION})."
         ),
         "type": str,
+        "action": OneOrManyAction,
+        "nargs": "+",
         "default": None,
     },
 }

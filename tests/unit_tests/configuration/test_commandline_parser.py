@@ -268,6 +268,24 @@ def test_initialize_default_arguments_accepts_figure_format():
     assert args.figure_format == ["png", "pdf"]
 
 
+def test_initialize_default_arguments_accepts_apptainer_image_dict(tmp_test_directory):
+    parser_with_defaults = parser.CommandLineParser()
+    parser_with_defaults.initialize_default_arguments()
+
+    image_v7 = tmp_test_directory / "v7.sif"
+    image_v63 = tmp_test_directory / "v63.sif"
+
+    args = parser_with_defaults.parse_args(
+        [
+            "--apptainer_image",
+            f"{{'7.0.0': '{image_v7}', '6.3.0': '{image_v63}'}}",
+        ]
+    )
+
+    assert isinstance(args.apptainer_image, dict)
+    assert args.apptainer_image == {"7.0.0": str(image_v7), "6.3.0": str(image_v63)}
+
+
 def test_initialize_application_arguments():
     app_parser = parser.CommandLineParser()
     app_parser.initialize_application_arguments(
@@ -462,6 +480,99 @@ def test_simulation_configuration_uses_defaults_for_optional_arguments():
     assert args.run_number == 1
 
 
+def test_simulation_configuration_accepts_grid_list_values():
+    test_parser = parser.CommandLineParser()
+    test_parser.initialize_default_arguments(
+        simulation_configuration={
+            "software": None,
+            "corsika_configuration": [
+                "primary",
+                "azimuth_angle",
+                "zenith_angle",
+                "corsika_le_interaction",
+                "corsika_he_interaction",
+            ],
+        }
+    )
+
+    args = test_parser.parse_args(
+        [
+            "--primary",
+            "gamma",
+            "proton",
+            "--azimuth_angle",
+            "north",
+            "south",
+            "--zenith_angle",
+            "20",
+            "40",
+            "--corsika_le_interaction",
+            "urqmd",
+            "fluka",
+            "--corsika_he_interaction",
+            "epos",
+            "qgsjet",
+        ]
+    )
+
+    assert args.primary == ["gamma", "proton"]
+    assert_quantity_allclose(args.azimuth_angle[0], 0 * u.deg)
+    assert_quantity_allclose(args.azimuth_angle[1], 180 * u.deg)
+    assert_quantity_allclose(args.zenith_angle[0], 20 * u.deg)
+    assert_quantity_allclose(args.zenith_angle[1], 40 * u.deg)
+    assert args.corsika_le_interaction == ["urqmd", "fluka"]
+    assert args.corsika_he_interaction == ["epos", "qgsjet"]
+
+
+def test_simulation_configuration_accepts_energy_range_list_pair():
+    test_parser = parser.CommandLineParser()
+    test_parser.initialize_default_arguments(
+        simulation_configuration={
+            "software": None,
+            "corsika_configuration": ["primary", "energy_range"],
+        }
+    )
+
+    args = test_parser.parse_args(
+        [
+            "--primary",
+            "gamma",
+            "--energy_range",
+            "30 GeV",
+            "300 GeV",
+        ]
+    )
+
+    assert_quantity_allclose(args.energy_range[0], 30 * u.GeV)
+    assert_quantity_allclose(args.energy_range[1], 300 * u.GeV)
+
+
+def test_simulation_configuration_accepts_energy_range_list_of_pairs():
+    test_parser = parser.CommandLineParser()
+    test_parser.initialize_default_arguments(
+        simulation_configuration={
+            "software": None,
+            "corsika_configuration": ["primary", "energy_range"],
+        }
+    )
+
+    args = test_parser.parse_args(
+        [
+            "--primary",
+            "gamma",
+            "--energy_range",
+            "30 GeV 30 GeV",
+            "300 GeV 300 GeV",
+        ]
+    )
+
+    assert len(args.energy_range) == 2
+    assert_quantity_allclose(args.energy_range[0][0], 30 * u.GeV)
+    assert_quantity_allclose(args.energy_range[0][1], 30 * u.GeV)
+    assert_quantity_allclose(args.energy_range[1][0], 300 * u.GeV)
+    assert_quantity_allclose(args.energy_range[1][1], 300 * u.GeV)
+
+
 def test_initialize_db_config_arguments_strip_string():
     parser_10 = parser.CommandLineParser()
     parser_10.initialize_db_config_arguments()
@@ -488,6 +599,8 @@ def test_get_dictionary_with_corsika_configuration(mocker):
     assert "helium" in corsika_config["primary"]["help"]
     assert "iron" in corsika_config["primary"]["help"]
     assert corsika_config["primary"]["type"] is str.lower
+    assert corsika_config["primary"]["action"] is parser.OneOrManyAction
+    assert corsika_config["primary"]["nargs"] == "+"
     assert corsika_config["primary"]["required"] is True
 
     # Test the "primary_id_type" key
@@ -503,12 +616,16 @@ def test_get_dictionary_with_corsika_configuration(mocker):
         "Telescope pointing direction in azimuth."
     )
     assert corsika_config["azimuth_angle"]["type"] == parser.CommandLineParser.azimuth_angle
+    assert corsika_config["azimuth_angle"]["action"] is parser.OneOrManyAction
+    assert corsika_config["azimuth_angle"]["nargs"] == "+"
     assert corsika_config["azimuth_angle"]["default"] == 0 * u.deg
 
     # Test the "zenith_angle" key
     assert "zenith_angle" in corsika_config
     assert corsika_config["zenith_angle"]["help"] == "Zenith angle in degrees (between 0 and 180)."
     assert corsika_config["zenith_angle"]["type"] == parser.CommandLineParser.zenith_angle
+    assert corsika_config["zenith_angle"]["action"] is parser.OneOrManyAction
+    assert corsika_config["zenith_angle"]["nargs"] == "+"
     assert corsika_config["zenith_angle"]["default"] == 20 * u.deg
 
     # Test the "nshow" key
@@ -594,6 +711,95 @@ def test_bounded_int():
 
     with pytest.raises(ValueError, match=r"1001 not in \[100,1000\]"):
         bounded_int_checker_large(1001)
+
+
+def test_string_or_dict():
+    """Test CommandLineParser.string_or_dict parsing."""
+    # Test plain string
+    assert parser.CommandLineParser.string_or_dict("plain_string") == "plain_string"
+
+    # Test string that looks like a dict but is invalid
+    assert parser.CommandLineParser.string_or_dict("{invalid}") == "{invalid}"
+
+    # Test valid dict string
+    dict_str = "{'key1': 'value1', 'key2': 'value2'}"
+    result = parser.CommandLineParser.string_or_dict(dict_str)
+    assert isinstance(result, dict)
+    assert result == {"key1": "value1", "key2": "value2"}
+
+    # Test valid dict string with numbers
+    dict_str_nums = "{'1.0': '/path/v1.sif', '2.0': '/path/v2.sif'}"
+    result = parser.CommandLineParser.string_or_dict(dict_str_nums)
+    assert isinstance(result, dict)
+    assert result == {"1.0": "/path/v1.sif", "2.0": "/path/v2.sif"}
+
+    # Test non-string input (should return as-is)
+    test_dict = {"already": "dict"}
+    assert parser.CommandLineParser.string_or_dict(test_dict) == test_dict
+
+    # Test whitespace handling
+    dict_str_spaces = "  {'a': 'b'}  "
+    result = parser.CommandLineParser.string_or_dict(dict_str_spaces)
+    assert isinstance(result, dict)
+    assert result == {"a": "b"}
+
+
+def test_one_or_many_action():
+    """Test OneOrManyAction stores single value as scalar and multiple as list."""
+    test_parser = parser.CommandLineParser()
+    test_parser.initialize_default_arguments(
+        simulation_configuration={
+            "software": None,
+            "corsika_configuration": ["primary"],
+        }
+    )
+
+    # Test single value (should be scalar, not list)
+    args = test_parser.parse_args(["--primary", "gamma"])
+    assert args.primary == "gamma"
+    assert isinstance(args.primary, str)
+
+    # Test multiple values (should be list)
+    args = test_parser.parse_args(["--primary", "gamma", "proton"])
+    assert args.primary == ["gamma", "proton"]
+    assert isinstance(args.primary, list)
+
+
+def test_quantity_pair_action():
+    """Test QuantityPairAction parses energy ranges correctly."""
+    test_parser = parser.CommandLineParser()
+    test_parser.initialize_default_arguments(
+        simulation_configuration={
+            "software": None,
+            "corsika_configuration": ["energy_range"],
+        }
+    )
+
+    # Test single pair string (two quantities with units in one string)
+    args = test_parser.parse_args(["--energy_range", "30 GeV 300 GeV"])
+    assert len(args.energy_range) == 2
+    assert_quantity_allclose(args.energy_range[0], 30 * u.GeV)
+    assert_quantity_allclose(args.energy_range[1], 300 * u.GeV)
+
+    # Test two separate quantity values
+    args = test_parser.parse_args(["--energy_range", "50 GeV", "5 TeV"])
+    assert len(args.energy_range) == 2
+    assert_quantity_allclose(args.energy_range[0], 50 * u.GeV)
+    assert_quantity_allclose(args.energy_range[1], 5 * u.TeV)
+
+    # Test unquoted token stream from the shell
+    args = test_parser.parse_args(["--energy_range", "30", "GeV", "300", "GeV"])
+    assert len(args.energy_range) == 2
+    assert_quantity_allclose(args.energy_range[0], 30 * u.GeV)
+    assert_quantity_allclose(args.energy_range[1], 300 * u.GeV)
+
+    # Test multiple pair strings (list of pairs)
+    args = test_parser.parse_args(["--energy_range", "30 GeV 30 GeV", "300 GeV 300 GeV"])
+    assert len(args.energy_range) == 2
+    assert_quantity_allclose(args.energy_range[0][0], 30 * u.GeV)
+    assert_quantity_allclose(args.energy_range[0][1], 30 * u.GeV)
+    assert_quantity_allclose(args.energy_range[1][0], 300 * u.GeV)
+    assert_quantity_allclose(args.energy_range[1][1], 300 * u.GeV)
 
 
 def _parser(*params):
