@@ -322,6 +322,13 @@ def _add_lines(ax, lines):
         ax.add_artist(
             plt.Circle((0, 0), lines["r"], color="r", fill=False, linestyle="--", linewidth=0.5)
         )
+
+    for x_value in np.atleast_1d(lines.get("x", [])):
+        ax.axvline(x_value, color="r", linestyle="--", linewidth=0.5)
+
+    for y_value in np.atleast_1d(lines.get("y", [])):
+        ax.axhline(y_value, color="r", linestyle="--", linewidth=0.5)
+
     curve = lines.get("curve")
     if curve and curve.get("x") and curve.get("y"):
         ax.plot(curve["x"], curve["y"], color="tab:orange", linestyle="-", linewidth=1.0)
