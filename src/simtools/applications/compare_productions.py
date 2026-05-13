@@ -49,42 +49,6 @@ def _add_arguments(parser):
         default="events",
         help="Comparison level to execute.",
     )
-    parser.add_argument(
-        "--telescope_ids",
-        nargs="+",
-        default=None,
-        help="Optional telescope IDs to filter triggers.",
-    )
-
-
-def _run_event_comparison(app_context):
-    """Run event-level production comparison."""
-    production_descriptors = parse_production_arguments(app_context.args["production"])
-    metrics_per_production = collect_production_metrics(
-        production_descriptors,
-        telescope_list=app_context.args["telescope_ids"],
-    )
-
-    output_directory = app_context.io_handler.get_output_directory()
-    plot_event_level_production_comparison.plot(
-        metrics_per_production,
-        output_path=output_directory,
-    )
-
-
-def _run_placeholder_comparison(comparison_level):
-    """Warn for future comparison-level implementations.
-
-    Notes
-    -----
-    Future work tracked in:
-    - signals level: issue #2183
-    - compute level: issue #2184
-    """
-    raise NotImplementedError(
-        f"Comparison level '{comparison_level}' is not implemented yet "
-        "(planned via issues #2183 and #2184)."
-    )
 
 
 def main():
@@ -93,12 +57,17 @@ def main():
         initialization_kwargs={"db_config": False, "output": True},
     )
 
+    output_directory = app_context.io_handler.get_output_directory()
+    production_descriptors = parse_production_arguments(app_context.args["production"])
+
     comparison_level = app_context.args["comparison_level"]
     if comparison_level == "events":
-        _run_event_comparison(app_context)
-        return
-
-    _run_placeholder_comparison(comparison_level)
+        plot_event_level_production_comparison.plot(
+            collect_production_metrics(production_descriptors),
+            output_path=output_directory,
+        )
+    else:
+        raise NotImplementedError(f"Comparison level '{comparison_level}' is not implemented yet.")
 
 
 if __name__ == "__main__":

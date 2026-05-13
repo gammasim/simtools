@@ -12,7 +12,6 @@ def test_main_collects_metrics_and_plots(tmp_test_directory):
         args={
             "production": [["baseline", "base_*.h5"], ["candidate", "cand_*.h5"]],
             "comparison_level": "events",
-            "telescope_ids": ["LSTN-01"],
         },
         io_handler=MagicMock(),
     )
@@ -41,5 +40,5 @@ def test_main_collects_metrics_and_plots(tmp_test_directory):
         app.main()
 
     mock_parse.assert_called_once_with(app_context.args["production"])
-    mock_collect.assert_called_once_with(parsed_productions, telescope_list=["LSTN-01"])
+    mock_collect.assert_called_once_with(parsed_productions)
     mock_plot.assert_called_once_with(collected_metrics, output_path=output_dir)
