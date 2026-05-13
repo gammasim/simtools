@@ -30,6 +30,8 @@ applications:
   - test_output_files:
     - file: simulate_prod.submit.condor
       path_descriptor: output_path
+    - file: simulate_prod.submit.params.txt
+      path_descriptor: output_path
     - file: simulate_prod.submit.sh
       path_descriptor: output_path
   test_name: htcondor-gamma_20_deg_north
