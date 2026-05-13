@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
-r"""Compare multiple simulation productions on event level.
+r"""Compare simulation productions at different comparison levels.
 
-The application accepts repeated production descriptors and creates event-level
-comparison plots using reduced event data files.
+The application accepts repeated production descriptors and dispatches to
+comparison-level specific implementations.
 
 Command line arguments
 ----------------------
@@ -11,19 +11,13 @@ production (repeated, required)
     Production descriptor in two fields:
     1) label
     2) comma-separated event data file patterns
+comparison_level (str, optional)
+    Comparison level selector. Supported values are:
+    - events
+    - signals
+    - compute
 output_path (str, required)
     Output directory for generated comparison plots.
-
-Examples
---------
-Compare two productions:
-
-.. code-block:: console
-
-    simtools-compare-productions-on-event-level \
-        --production baseline "data/baseline/*.h5" \
-        --production candidate "data/candidate/*.h5,data/candidate_extra/*.h5" \
-        --output_path simtools-output/
 """
 
 from simtools.application_control import build_application
@@ -50,10 +44,46 @@ def _add_arguments(parser):
         ),
     )
     parser.add_argument(
+        "--comparison_level",
+        choices=["events", "signals", "compute"],
+        default="events",
+        help="Comparison level to execute.",
+    )
+    parser.add_argument(
         "--telescope_ids",
         nargs="+",
         default=None,
         help="Optional telescope IDs to filter triggers.",
+    )
+
+
+def _run_event_comparison(app_context):
+    """Run event-level production comparison."""
+    production_descriptors = parse_production_arguments(app_context.args["production"])
+    metrics_per_production = collect_production_metrics(
+        production_descriptors,
+        telescope_list=app_context.args["telescope_ids"],
+    )
+
+    output_directory = app_context.io_handler.get_output_directory()
+    plot_event_level_production_comparison.plot(
+        metrics_per_production,
+        output_path=output_directory,
+    )
+
+
+def _run_placeholder_comparison(comparison_level):
+    """Warn for future comparison-level implementations.
+
+    Notes
+    -----
+    Future work tracked in:
+    - signals level: issue #2183
+    - compute level: issue #2184
+    """
+    raise NotImplementedError(
+        f"Comparison level '{comparison_level}' is not implemented yet "
+        "(planned via issues #2183 and #2184)."
     )
 
 
@@ -63,16 +93,12 @@ def main():
         initialization_kwargs={"db_config": False, "output": True},
     )
 
-    production_descriptors = parse_production_arguments(app_context.args["production"])
-    metrics_per_production = collect_production_metrics(
-        production_descriptors,
-        telescope_list=app_context.args["telescope_ids"],
-    )
+    comparison_level = app_context.args["comparison_level"]
+    if comparison_level == "events":
+        _run_event_comparison(app_context)
+        return
 
-    output_directory = app_context.io_handler.get_output_directory()
-    plot_event_level_production_comparison.plot(
-        metrics_per_production, output_path=output_directory
-    )
+    _run_placeholder_comparison(comparison_level)
 
 
 if __name__ == "__main__":

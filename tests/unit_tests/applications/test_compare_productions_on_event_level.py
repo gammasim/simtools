@@ -2,7 +2,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-import simtools.applications.compare_productions_on_event_level as app
+import simtools.applications.compare_productions as app
 
 
 def test_main_collects_metrics_and_plots(tmp_test_directory):
@@ -11,6 +11,7 @@ def test_main_collects_metrics_and_plots(tmp_test_directory):
     app_context = SimpleNamespace(
         args={
             "production": [["baseline", "base_*.h5"], ["candidate", "cand_*.h5"]],
+            "comparison_level": "events",
             "telescope_ids": ["LSTN-01"],
         },
         io_handler=MagicMock(),
@@ -22,20 +23,19 @@ def test_main_collects_metrics_and_plots(tmp_test_directory):
 
     with (
         patch(
-            "simtools.applications.compare_productions_on_event_level.build_application",
+            "simtools.applications.compare_productions.build_application",
             return_value=app_context,
         ),
         patch(
-            "simtools.applications.compare_productions_on_event_level.parse_production_arguments",
+            "simtools.applications.compare_productions.parse_production_arguments",
             return_value=parsed_productions,
         ) as mock_parse,
         patch(
-            "simtools.applications.compare_productions_on_event_level.collect_production_metrics",
+            "simtools.applications.compare_productions.collect_production_metrics",
             return_value=collected_metrics,
         ) as mock_collect,
         patch(
-            "simtools.applications.compare_productions_on_event_level."
-            "plot_event_level_production_comparison.plot"
+            "simtools.applications.compare_productions.plot_event_level_production_comparison.plot"
         ) as mock_plot,
     ):
         app.main()
