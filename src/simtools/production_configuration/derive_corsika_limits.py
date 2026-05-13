@@ -281,7 +281,7 @@ def _process_file(
     loss_fraction : float
         Fraction of events to be lost.
     loss_min_events : int
-        Minimum number of events to be kept after applying a derived limit.
+        Minimum number of events to be lost after applying a derived limit.
     plot_histograms : bool
         Whether to plot histograms.
     output_subdir : Path or None, optional
@@ -307,7 +307,7 @@ def _process_file(
         "lower_energy_limit": compute_lower_energy_limit(
             histograms,
             loss_fraction,
-            loss_min_events,
+            0,  # No minimum event loss applied for energy limit (not differential)
         ),
     }
     if differential_loss_bins_per_decade > 0:
@@ -549,7 +549,7 @@ def _create_table_columns(cols, columns, units):
 
 def _compute_limits(hist, bin_edges, loss_fraction, loss_min_events=10, limit_type="lower"):
     """
-    Compute the limits based on the loss fraction and minimal required events.
+    Compute the limits based on the loss fraction and minimal required lost events.
 
     Add or subtract one bin to be on the safe side of the limit.
 
@@ -562,7 +562,7 @@ def _compute_limits(hist, bin_edges, loss_fraction, loss_min_events=10, limit_ty
     loss_fraction : float
         Fraction of events to be lost.
     loss_min_events : int, optional
-        Minimum number of events to be kept after applying a limit.
+        Minimum number of events to be lost after applying a limit.
     limit_type : str, optional
         Type of limit ('lower' or 'upper'). Default is 'lower'.
 
@@ -572,14 +572,20 @@ def _compute_limits(hist, bin_edges, loss_fraction, loss_min_events=10, limit_ty
         Bin edge value corresponding to the threshold.
     """
     total_events = np.sum(hist)
-    threshold = max((1 - loss_fraction) * total_events, float(loss_min_events))
+    # Keep-threshold corresponding to a strictly greater-than requested absolute event loss.
+    max_kept_for_min_loss = np.nextafter(total_events - float(loss_min_events), -np.inf)
+    threshold = min(
+        (1 - loss_fraction) * total_events,
+        max_kept_for_min_loss,
+    )
+    threshold = np.clip(threshold, 0.0, total_events)
     if limit_type == "upper":
         cum = np.cumsum(hist)
         idx = np.searchsorted(cum, threshold) + 1
         return bin_edges[min(idx, len(bin_edges) - 1)]
     if limit_type == "lower":
         cum = np.cumsum(hist[::-1])
-        idx = np.searchsorted(cum, threshold) + 1
+        idx = np.searchsorted(cum, threshold)
         return bin_edges[max(len(bin_edges) - 1 - idx, 0)]
     raise ValueError("limit_type must be 'lower' or 'upper'")
 
@@ -595,7 +601,7 @@ def compute_lower_energy_limit(histograms, loss_fraction, loss_min_events=10):
     loss_fraction : float
         Fraction of events to be lost.
     loss_min_events : int, optional
-        Minimum number of events to be kept after applying a derived limit.
+        Minimum number of events to be lost after applying a derived limit.
 
     Returns
     -------
@@ -640,7 +646,7 @@ def compute_upper_radius_limit(histograms, loss_fraction, loss_min_events=10):
     loss_fraction : float
         Fraction of events to be lost.
     loss_min_events : int, optional
-        Minimum number of events to be kept after applying a derived limit.
+        Minimum number of events to be lost after applying a derived limit.
 
     Returns
     -------
@@ -681,7 +687,7 @@ def compute_viewcone(histograms, loss_fraction, loss_min_events=10):
     loss_fraction : float
         Fraction of events to be lost.
     loss_min_events : int, optional
-        Minimum number of events to be kept after applying a derived limit.
+        Minimum number of events to be lost after applying a derived limit.
 
     Returns
     -------
