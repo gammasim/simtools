@@ -143,7 +143,10 @@ def _add_arguments(parser):
     )
     parser.add_argument(
         "--n_workers",
-        help="Number of worker processes to use for execution.",
+        help=(
+            "Number of worker processes to use for execution "
+            "(default: 1; set to 0 for auto-detection of available cores)."
+        ),
         type=int,
         required=False,
         default=1,
