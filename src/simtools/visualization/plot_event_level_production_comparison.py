@@ -161,33 +161,21 @@ def _plot_trigger_combinations(metrics_per_production, output_path, top_n=12):
     selected = [name for name, _ in sorted(totals.items(), key=lambda item: item[1], reverse=True)]
     selected = selected[:top_n]
 
-    x_values = np.arange(len(selected))
-    width = 0.8 / max(1, len(metrics_per_production))
-    fig, ax = plt.subplots(figsize=(max(10, len(selected) * 1.1), 6))
-
-    for index, metrics in enumerate(metrics_per_production):
-        raw_counts = np.array([metrics.trigger_combinations.get(name, 0) for name in selected])
-        event_norm = metrics.triggered_event_count if metrics.triggered_event_count > 0 else 1
-        y_values = raw_counts / event_norm
-        y_errors = np.sqrt(raw_counts) / event_norm
-        offset = (index - (len(metrics_per_production) - 1) / 2.0) * width
-        ax.bar(
-            x_values + offset,
-            y_values,
-            width=width,
-            label=metrics.label,
-            yerr=y_errors,
-            error_kw={"elinewidth": 0.7, "capsize": 1, "capthick": 0.7},
-        )
-
-    ax.set_xticks(x_values)
-    ax.set_xticklabels(selected, rotation=45, ha="right")
-    ax.set_ylabel("Fraction of Triggered Events")
-    ax.set_title("Top Trigger Combinations")
-    ax.grid(axis="y", alpha=0.25)
-    ax.legend()
-
-    _save_figure(fig, output_path, "trigger_combination.png")
+    _plot_grouped_fraction_bars(
+        metrics_per_production,
+        categories=selected,
+        counts_getter=lambda metrics, category_labels: [
+            metrics.trigger_combinations.get(name, 0) for name in category_labels
+        ],
+        normalization_fn=_fractions_per_triggered_events,
+        output_path=output_path,
+        filename="trigger_combination.png",
+        y_label="Fraction of Triggered Events",
+        title="Top Trigger Combinations",
+        figure_width=max(10, len(selected) * 1.1),
+        x_rotation=45,
+        x_ha="right",
+    )
 
 
 def _plot_single_telescope_trigger_frequencies(metrics_per_production, output_path):
@@ -205,37 +193,22 @@ def _plot_single_telescope_trigger_frequencies(metrics_per_production, output_pa
         _logger.warning("Skipping single-telescope trigger frequency plot, no data available.")
         return
 
-    x_values = np.arange(len(telescope_names))
-    width = 0.8 / max(1, len(metrics_per_production))
-    fig, ax = plt.subplots(figsize=(max(10, len(telescope_names) * 0.45), 6))
-
-    for index, metrics in enumerate(metrics_per_production):
-        counts = np.array(
-            [
-                metrics.trigger_combinations.get(telescope_name, 0)
-                for telescope_name in telescope_names
-            ],
-            dtype=float,
-        )
-        fractions, errors = _fraction_with_poisson_errors(counts)
-        offset = (index - (len(metrics_per_production) - 1) / 2.0) * width
-        ax.bar(
-            x_values + offset,
-            fractions,
-            width=width,
-            label=metrics.label,
-            yerr=errors,
-            error_kw={"elinewidth": 0.7, "capsize": 1, "capthick": 0.7},
-        )
-
-    ax.set_xticks(x_values)
-    ax.set_xticklabels(telescope_names, rotation=90)
-    ax.set_ylabel("Fraction of Single-Telescope Triggers")
-    ax.set_title("Single-Telescope Trigger Distribution")
-    ax.grid(axis="y", alpha=0.25)
-    ax.legend()
-
-    _save_figure(fig, output_path, "single_telescope_trigger_distribution.png")
+    _plot_grouped_fraction_bars(
+        metrics_per_production,
+        categories=telescope_names,
+        counts_getter=lambda metrics, category_labels: [
+            metrics.trigger_combinations.get(telescope_name, 0)
+            for telescope_name in category_labels
+        ],
+        normalization_fn=_fraction_with_poisson_errors,
+        output_path=output_path,
+        filename="single_telescope_trigger_distribution.png",
+        y_label="Fraction of Single-Telescope Triggers",
+        title="Single-Telescope Trigger Distribution",
+        figure_width=max(10, len(telescope_names) * 0.45),
+        x_rotation=90,
+        x_ha="center",
+    )
 
 
 def _plot_mixed_trigger_combinations(metrics_per_production, output_path):
@@ -252,24 +225,56 @@ def _plot_mixed_trigger_combinations(metrics_per_production, output_path):
         _logger.warning("Skipping mixed trigger combination plot, no mixed-type combinations.")
         return
 
-    x_values = np.arange(len(mixed_labels))
+    _plot_grouped_fraction_bars(
+        metrics_per_production,
+        categories=mixed_labels,
+        counts_getter=lambda metrics, category_labels: [
+            sum(
+                count
+                for combination, count in metrics.trigger_combinations.items()
+                if _is_mixed_type_combination(combination)
+                and _format_mixed_combination_label(combination) == label
+            )
+            for label in category_labels
+        ],
+        normalization_fn=_fraction_with_poisson_errors,
+        output_path=output_path,
+        filename="mixed_trigger_combinations.png",
+        y_label="Fraction of Mixed-Type Triggers",
+        title="Mixed-Type Trigger Combinations",
+        figure_width=max(12, len(mixed_labels) * 0.8),
+        x_rotation=45,
+        x_ha="right",
+    )
+
+
+def _fractions_per_triggered_events(counts, metrics):
+    """Normalize counts by triggered-event count and return Poisson errors."""
+    event_norm = metrics.triggered_event_count if metrics.triggered_event_count > 0 else 1
+    return counts / event_norm, np.sqrt(counts) / event_norm
+
+
+def _plot_grouped_fraction_bars(
+    metrics_per_production,
+    categories,
+    counts_getter,
+    normalization_fn,
+    output_path,
+    filename,
+    y_label,
+    title,
+    figure_width,
+    x_rotation,
+    x_ha,
+):
+    """Plot grouped bars with fractions and Poisson error bars for each production."""
+    x_values = np.arange(len(categories))
     width = 0.8 / max(1, len(metrics_per_production))
-    fig, ax = plt.subplots(figsize=(max(12, len(mixed_labels) * 0.8), 6))
+    fig, ax = plt.subplots(figsize=(figure_width, 6))
 
     for index, metrics in enumerate(metrics_per_production):
-        counts = np.array(
-            [
-                sum(
-                    count
-                    for combination, count in metrics.trigger_combinations.items()
-                    if _is_mixed_type_combination(combination)
-                    and _format_mixed_combination_label(combination) == label
-                )
-                for label in mixed_labels
-            ],
-            dtype=float,
-        )
-        fractions, errors = _fraction_with_poisson_errors(counts)
+        counts = np.asarray(counts_getter(metrics, categories), dtype=float)
+        fractions, errors = normalization_fn(counts, metrics)
         offset = (index - (len(metrics_per_production) - 1) / 2.0) * width
         ax.bar(
             x_values + offset,
@@ -281,25 +286,18 @@ def _plot_mixed_trigger_combinations(metrics_per_production, output_path):
         )
 
     ax.set_xticks(x_values)
-    ax.set_xticklabels(mixed_labels, rotation=45, ha="right")
-    ax.set_ylabel("Fraction of Mixed-Type Triggers")
-    ax.set_title("Mixed-Type Trigger Combinations")
+    ax.set_xticklabels(categories, rotation=x_rotation, ha=x_ha)
+    ax.set_ylabel(y_label)
+    ax.set_title(title)
     ax.grid(axis="y", alpha=0.25)
     ax.legend()
 
-    _save_figure(fig, output_path, "mixed_trigger_combinations.png")
+    _save_figure(fig, output_path, filename)
 
 
 def _is_mixed_type_combination(combination):
     """Return True only for mixed signatures 1+1 and 1+2 (max multiplicity 3)."""
-    telescope_names = [name for name in combination.split(",") if name]
-    type_counts = {}
-    for telescope_name in telescope_names:
-        try:
-            tel_type = names.get_array_element_type_from_name(telescope_name)
-        except ValueError:
-            continue
-        type_counts[tel_type] = type_counts.get(tel_type, 0) + 1
+    type_counts, _ = _type_counts_from_combination(combination)
     if len(type_counts) < 2:
         return False
     signature = tuple(sorted(type_counts.values()))
@@ -308,6 +306,14 @@ def _is_mixed_type_combination(combination):
 
 def _format_mixed_combination_label(combination):
     """Format mixed trigger combination as '<signature> | <tel1> + <tel2> + ...'."""
+    type_counts, telescope_names = _type_counts_from_combination(combination)
+    signature = "+".join(str(count) for _, count in sorted(type_counts.items()))
+    telescopes_label = " + ".join(telescope_names)
+    return f"{signature} | {telescopes_label}"
+
+
+def _type_counts_from_combination(combination):
+    """Return per-type multiplicities and original telescope names for a combination."""
     telescope_names = [name for name in combination.split(",") if name]
     type_counts = {}
     for telescope_name in telescope_names:
@@ -316,9 +322,7 @@ def _format_mixed_combination_label(combination):
         except ValueError:
             continue
         type_counts[tel_type] = type_counts.get(tel_type, 0) + 1
-    signature = "+".join(str(count) for _, count in sorted(type_counts.items()))
-    telescopes_label = " + ".join(telescope_names)
-    return f"{signature} | {telescopes_label}"
+    return type_counts, telescope_names
 
 
 def _plot_triggered_vs_quantity(
@@ -497,36 +501,21 @@ def _plot_telescope_participation(metrics_per_production, output_path):
         _logger.warning("Skipping telescope participation plot, no triggered events available.")
         return
 
-    x_values = np.arange(len(telescopes))
-    width = 0.8 / max(1, len(metrics_per_production))
-    fig, ax = plt.subplots(figsize=(max(10, len(telescopes) * 0.4), 6))
-
-    for index, metrics in enumerate(metrics_per_production):
-        event_norm = metrics.triggered_event_count if metrics.triggered_event_count > 0 else 1
-        counts = np.array(
-            [metrics.telescope_participation.get(telescope, 0) for telescope in telescopes],
-            dtype=float,
-        )
-        fractions = counts / event_norm
-        errors = np.sqrt(counts) / event_norm
-        offset = (index - (len(metrics_per_production) - 1) / 2.0) * width
-        ax.bar(
-            x_values + offset,
-            fractions,
-            width=width,
-            label=metrics.label,
-            yerr=errors,
-            error_kw={"elinewidth": 0.7, "capsize": 1, "capthick": 0.7},
-        )
-
-    ax.set_xticks(x_values)
-    ax.set_xticklabels(telescopes, rotation=90)
-    ax.set_ylabel("Participation Fraction")
-    ax.set_title("Telescope Participation in Triggered Events")
-    ax.grid(axis="y", alpha=0.25)
-    ax.legend()
-
-    _save_figure(fig, output_path, "telescope_participation_fraction.png")
+    _plot_grouped_fraction_bars(
+        metrics_per_production,
+        categories=telescopes,
+        counts_getter=lambda metrics, category_labels: [
+            metrics.telescope_participation.get(telescope, 0) for telescope in category_labels
+        ],
+        normalization_fn=_fractions_per_triggered_events,
+        output_path=output_path,
+        filename="telescope_participation_fraction.png",
+        y_label="Participation Fraction",
+        title="Telescope Participation in Triggered Events",
+        figure_width=max(10, len(telescopes) * 0.4),
+        x_rotation=90,
+        x_ha="center",
+    )
 
 
 def _distribution_cumulative_variants(quantity_name):
@@ -596,7 +585,7 @@ def _plot_distribution_series(
         _plot_histogram_error_bars(ax, bin_edges, values, errors, color=_artist_color(artist))
 
 
-def _fraction_with_poisson_errors(counts):
+def _fraction_with_poisson_errors(counts, _metrics=None):
     """Return normalized bin fractions and Poisson errors for counts."""
     counts = np.asarray(counts, dtype=float)
     total = counts.sum()

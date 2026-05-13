@@ -91,28 +91,35 @@ def _normalize_production_arguments(production_arguments):
     if not production_arguments:
         return []
 
-    if all(isinstance(item, str) for item in production_arguments):
-        if len(production_arguments) % 2 != 0:
-            raise ValueError("Production arguments must be provided as label/file pairs.")
-        return [
-            (production_arguments[index], production_arguments[index + 1])
-            for index in range(0, len(production_arguments), 2)
-        ]
-
     normalized = []
+    if all(isinstance(item, str) for item in production_arguments):
+        return _pairwise_label_file_arguments(production_arguments)
+
     for item in production_arguments:
-        if isinstance(item, list | tuple):
-            if len(item) == 2 and all(isinstance(value, str) for value in item):
-                normalized.append((item[0], item[1]))
-                continue
-
-            if all(isinstance(value, str) for value in item):
-                normalized.extend(_normalize_production_arguments(list(item)))
-                continue
-
-        raise ValueError("Production arguments must be provided as label/file pairs.")
+        normalized.extend(_normalize_single_production_argument(item))
 
     return normalized
+
+
+def _pairwise_label_file_arguments(flat_arguments):
+    """Convert a flat list of strings into ``[(label, files), ...]`` pairs."""
+    if len(flat_arguments) % 2 != 0:
+        raise ValueError("Production arguments must be provided as label/file pairs.")
+    return [
+        (flat_arguments[index], flat_arguments[index + 1])
+        for index in range(0, len(flat_arguments), 2)
+    ]
+
+
+def _normalize_single_production_argument(argument):
+    """Normalize one nested production argument into label/file pairs."""
+    if not isinstance(argument, list | tuple):
+        raise ValueError("Production arguments must be provided as label/file pairs.")
+    if not all(isinstance(value, str) for value in argument):
+        raise ValueError("Production arguments must be provided as label/file pairs.")
+    if len(argument) == 2:
+        return [(argument[0], argument[1])]
+    return _pairwise_label_file_arguments(list(argument))
 
 
 def collect_production_metrics(production_descriptors, telescope_list=None):
@@ -307,25 +314,26 @@ def _accumulate_per_subset(telescopes, energy, core_dist, angular_dist, accumula
     accumulators : dict
         Mapping of quantity lists keyed by subset name.
     """
+    for key, count in _subset_counts_for_event(telescopes).items():
+        _accumulate_event_for_key(key, count, energy, core_dist, angular_dist, accumulators)
+
+
+def _subset_counts_for_event(telescopes):
+    """Return subset keys and multiplicities for one triggered event."""
     type_counts = Counter()
-    valid_types = set()
     for telescope in telescopes:
         try:
             tel_type = names.get_array_element_type_from_name(telescope)
-            type_counts[tel_type] += 1
-            valid_types.add(tel_type)
         except ValueError:
-            pass
-    for tel_type, count in type_counts.items():
-        _accumulate_event_for_key(tel_type, count, energy, core_dist, angular_dist, accumulators)
+            continue
+        type_counts[tel_type] += 1
+
+    subset_counts = dict(type_counts)
     if len(telescopes) == 1:
-        _accumulate_event_for_key(
-            "single_telescope", 1, energy, core_dist, angular_dist, accumulators
-        )
-    elif len(valid_types) > 1:
-        _accumulate_event_for_key(
-            "mixed_type", len(telescopes), energy, core_dist, angular_dist, accumulators
-        )
+        subset_counts["single_telescope"] = 1
+    elif len(type_counts) > 1:
+        subset_counts["mixed_type"] = len(telescopes)
+    return subset_counts
 
 
 def _accumulate_event_for_key(key, count, energy, core_dist, angular_dist, accumulators):
