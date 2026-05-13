@@ -95,6 +95,7 @@ class Configurator:
         simulation_model=None,
         simulation_configuration=None,
         db_config=False,
+        preserve_by_version_keys=None,
     ):
         """
         Initialize application configuration.
@@ -118,6 +119,9 @@ class Configurator:
             Dict of simulation software configuration parameters to add to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
+        preserve_by_version_keys: list
+            Top-level configuration keys whose ``by_version`` dictionaries should be preserved
+            during initial YAML loading.
 
         Returns
         -------
@@ -144,7 +148,15 @@ class Configurator:
         self.config = vars(self.parser.parse_args([]))
         self.config.update(self._config_from_env(_env_file))
         self.config.update(gen.change_dict_keys_case(self.config_class_init or {}))
-        self.config.update(self._config_from_file(_config_file))
+        if preserve_by_version_keys:
+            self.config.update(
+                self._config_from_file(
+                    _config_file,
+                    preserve_by_version_keys=preserve_by_version_keys,
+                )
+            )
+        else:
+            self.config.update(self._config_from_file(_config_file))
         self._fill_config(_cli_arglist)
 
         if self.config.get("activity_id", None) is None:
@@ -203,7 +215,7 @@ class Configurator:
         for action in self.parser._actions:  # pylint: disable=protected-access
             action.required = False
 
-    def _config_from_file(self, config_file):
+    def _config_from_file(self, config_file, preserve_by_version_keys=None):
         """
         Read configuration from yaml file and return as dictionary.
 
@@ -211,6 +223,8 @@ class Configurator:
         ----------
         config_file: str
             Name of configuration file.
+        preserve_by_version_keys: list
+            Top-level configuration keys whose ``by_version`` dictionaries should be preserved.
 
         Returns
         -------
@@ -230,9 +244,20 @@ class Configurator:
             _config_dict = gen.remove_substring_recursively_from_dict(_config_dict, substring="\n")
             if "configuration" in _config_dict.get("applications", [{}])[0]:
                 _config_dict = _config_dict["applications"][0]["configuration"]
+
+            preserved_by_version = {}
+            for key in preserve_by_version_keys or []:
+                value = _config_dict.get(key)
+                if isinstance(value, dict) and list(value) == ["by_version"]:
+                    preserved_by_version[key] = value
+
+            for key in preserved_by_version:
+                _config_dict.pop(key)
+
             _config_dict = simtools_version.resolve_by_version(
                 _config_dict, _config_dict.get("model_version")
             )
+            _config_dict.update(preserved_by_version)
             return gen.change_dict_keys_case(_config_dict)
         except (TypeError, AttributeError):
             self._logger.debug("No YAML configuration update applied to configuration dictionary.")
