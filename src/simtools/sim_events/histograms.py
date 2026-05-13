@@ -33,14 +33,23 @@ class EventDataHistograms:
         Name of the telescope array configuration (default is None).
     telescope_list : list, optional
         List of telescope IDs to filter the events (default is None).
+    energy_bins_per_decade : int, optional
+        Number of energy bins per decade for logarithmic energy histograms.
     """
 
-    def __init__(self, event_data_file, array_name=None, telescope_list=None):
+    def __init__(
+        self,
+        event_data_file,
+        array_name=None,
+        telescope_list=None,
+        energy_bins_per_decade=10,
+    ):
         """Initialize."""
         self._logger = logging.getLogger(__name__)
         self.event_data_file = event_data_file
         self.event_data_files = self._normalize_event_data_files(event_data_file)
         self.array_name = array_name
+        self.energy_bins_per_decade = max(int(energy_bins_per_decade), 1)
 
         self.histograms = {}
         self.file_info = {}
@@ -96,6 +105,7 @@ class EventDataHistograms:
             "azimuth": self._get_file_info_value(file_info_table, "azimuth", "deg"),
             "nsb_level": self._get_file_info_value(file_info_table, "nsb_level"),
             "energy_min": self._get_file_info_value(file_info_table, "energy_min", "TeV"),
+            "energy_max": self._get_file_info_value(file_info_table, "energy_max", "TeV"),
             "core_scatter_max": self._get_file_info_value(file_info_table, "core_scatter_max", "m"),
             "viewcone_max": self._get_file_info_value(file_info_table, "viewcone_max", "deg"),
             "solid_angle": self._get_file_info_value(file_info_table, "solid_angle", "sr"),
@@ -349,23 +359,50 @@ class EventDataHistograms:
 
     @property
     def energy_bins(self):
-        """Return bins for the energy histogram."""
+        """
+        Return bins for the energy histogram.
+
+        Align bins to full decades of energy, using the configured bins per decade,
+        and ensure that the range covers the energy range of the events.
+
+        Returns
+        -------
+        np.ndarray            Array of energy bin edges in TeV.
+        """
         if "energy_bin_edges" in self.histograms:
             return self.histograms["energy_bin_edges"]
-        return np.logspace(
-            np.log10(self.file_info.get("energy_min", 1.0e-3 * u.TeV).to("TeV").value),
-            np.log10(self.file_info.get("energy_max", 1.0e3 * u.TeV).to("TeV").value),
-            100,
-        )
+
+        energy_min = self.file_info.get("energy_min", 1.0e-3 * u.TeV).to("TeV").value
+        energy_max = self.file_info.get("energy_max", 1.0e3 * u.TeV).to("TeV").value
+        energy_min = max(energy_min, 1e-3)
+        energy_max = max(energy_max, 10 * energy_min)
+
+        lower_decade = np.floor(np.log10(energy_min))
+        upper_decade = np.ceil(np.log10(energy_max))
+        if upper_decade <= lower_decade:
+            upper_decade = lower_decade + 1
+
+        n_bins = int((upper_decade - lower_decade) * self.energy_bins_per_decade)
+        return np.logspace(lower_decade, upper_decade, n_bins + 1)
 
     @property
     def core_distance_bins(self):
-        """Return bins for the core distance histogram."""
+        """
+        Return bins for the core distance histogram.
+
+        CORSIKA CSCAT is defined in the shower plane, shower coordinates
+        are in ground coordinates. The core distance bins in ground coordinates
+        are therefore scaled with 1/cos(zenith).
+        """
+        zenith = self.file_info.get("zenith", 0.0 * u.deg).to("rad").value
+        scaling_factor = 1 / np.cos(zenith)
+
         if "core_distance_bin_edges" in self.histograms:
             return self.histograms["core_distance_bin_edges"]
+
         return np.linspace(
             self.file_info.get("core_scatter_min", 0.0 * u.m).to("m").value,
-            self.file_info.get("core_scatter_max", 1.0e5 * u.m).to("m").value,
+            self.file_info.get("core_scatter_max", 1.0e5 * u.m).to("m").value * scaling_factor,
             100,
         )
 

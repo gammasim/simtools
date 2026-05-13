@@ -56,10 +56,22 @@ def _get_limits(name, limits):
         "core_vs_energy": {
             "x": _safe_value(limits, "upper_radius_limit"),
             "y": _safe_value(limits, "lower_energy_limit"),
+            "curve": limits.get("core_vs_energy_curve"),
+        },
+        "core_vs_energy_cumulative": {
+            "x": _safe_value(limits, "upper_radius_limit"),
+            "y": _safe_value(limits, "lower_energy_limit"),
+            "curve": limits.get("core_vs_energy_curve"),
         },
         "angular_distance_vs_energy": {
             "x": _safe_value(limits, "viewcone_radius"),
             "y": _safe_value(limits, "lower_energy_limit"),
+            "curve": limits.get("angular_distance_vs_energy_curve"),
+        },
+        "angular_distance_vs_energy_cumulative": {
+            "x": _safe_value(limits, "viewcone_radius"),
+            "y": _safe_value(limits, "lower_energy_limit"),
+            "curve": limits.get("angular_distance_vs_energy_curve"),
         },
         "x_core_shower_vs_y_core_shower": {"r": _safe_value(limits, "upper_radius_limit")},
     }
@@ -306,14 +318,20 @@ def _plot_data(ax, data, bins, plot_type, plot_params, colorbar_label):
 
 def _add_lines(ax, lines):
     """Add reference lines to the plot."""
-    if lines.get("x") is not None:
-        ax.axvline(lines["x"], color="r", linestyle="--", linewidth=0.5)
-    if lines.get("y") is not None:
-        ax.axhline(lines["y"], color="r", linestyle="--", linewidth=0.5)
     if lines.get("r") is not None:
         ax.add_artist(
             plt.Circle((0, 0), lines["r"], color="r", fill=False, linestyle="--", linewidth=0.5)
         )
+
+    for x_value in np.atleast_1d(lines.get("x", [])):
+        ax.axvline(x_value, color="r", linestyle="--", linewidth=0.5)
+
+    for y_value in np.atleast_1d(lines.get("y", [])):
+        ax.axhline(y_value, color="r", linestyle="--", linewidth=0.5)
+
+    curve = lines.get("curve")
+    if curve and curve.get("x") and curve.get("y"):
+        ax.plot(curve["x"], curve["y"], color="tab:orange", linestyle="-", linewidth=1.0)
 
 
 def _create_2d_histogram_plot(data, bins, plot_params):
