@@ -9,10 +9,18 @@ from simtools.sim_events.production_comparison import (
 )
 
 
-def test_parse_production_arguments_requires_two_productions():
-    """Test parser rejects less than two productions."""
-    with pytest.raises(ValueError, match="At least two productions"):
-        parse_production_arguments([["baseline", "base.h5"]])
+def test_parse_production_arguments_accepts_single_production(mocker):
+    """Test parser accepts a single production descriptor."""
+    mocker.patch(
+        "simtools.sim_events.production_comparison.resolve_file_patterns",
+        side_effect=lambda patterns: patterns,
+    )
+
+    descriptors = parse_production_arguments([["baseline", "base.h5"]])
+
+    assert len(descriptors) == 1
+    assert descriptors[0].label == "baseline"
+    assert descriptors[0].event_data_files == ["base.h5"]
 
 
 def test_parse_production_arguments_resolves_flattened_pairs(mocker):
@@ -47,10 +55,12 @@ def test_collect_production_metrics_aggregates_event_data(mocker):
     shower_data = SimpleNamespace(
         simulated_energy=np.array([1.0, 2.0, 3.0]),
         core_distance_shower=np.array([10.0, 20.0, 30.0]),
+        angular_distance=np.array([0.5, 1.0, 1.5]),
     )
     triggered_shower_data = SimpleNamespace(
         simulated_energy=np.array([1.0, 3.0]),
         core_distance_shower=np.array([10.0, 30.0]),
+        angular_distance=np.array([0.5, 1.5]),
     )
     triggered_data = SimpleNamespace(
         telescope_list=[
@@ -82,3 +92,20 @@ def test_collect_production_metrics_aggregates_event_data(mocker):
     assert metrics[0].telescope_participation["MSTN-01"] == 2
     assert metrics[0].telescope_participation["LSTN-01"] == 1
     assert metrics[0].trigger_fraction == pytest.approx(2.0 / 3.0)
+    np.testing.assert_array_equal(metrics[0].simulated_angular_distances, np.array([0.5, 1.0, 1.5]))
+    np.testing.assert_array_equal(metrics[0].triggered_angular_distances, np.array([0.5, 1.5]))
+    assert set(metrics[0].per_type.keys()) == {"LSTN", "MSTN", "single_telescope", "mixed_type"}
+    assert metrics[0].per_type["LSTN"].triggered_event_count == 1
+    assert metrics[0].per_type["MSTN"].triggered_event_count == 2
+    np.testing.assert_array_equal(metrics[0].per_type["LSTN"].triggered_energies, [1.0])
+    np.testing.assert_array_equal(metrics[0].per_type["MSTN"].triggered_energies, [1.0, 3.0])
+    np.testing.assert_array_equal(metrics[0].per_type["LSTN"].trigger_multiplicity, [1])
+    np.testing.assert_array_equal(metrics[0].per_type["MSTN"].trigger_multiplicity, [1, 1])
+    assert metrics[0].per_type["single_telescope"].triggered_event_count == 1
+    assert metrics[0].per_type["mixed_type"].triggered_event_count == 1
+    np.testing.assert_array_equal(metrics[0].per_type["single_telescope"].triggered_energies, [3.0])
+    np.testing.assert_array_equal(metrics[0].per_type["mixed_type"].triggered_energies, [1.0])
+    np.testing.assert_array_equal(metrics[0].per_type["LSTN"].triggered_angular_distances, [0.5])
+    np.testing.assert_array_equal(
+        metrics[0].per_type["MSTN"].triggered_angular_distances, [0.5, 1.5]
+    )
