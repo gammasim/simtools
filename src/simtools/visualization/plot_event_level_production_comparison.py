@@ -78,31 +78,6 @@ def _save_figure(fig, output_path, filename):
     plt.close(fig)
 
 
-def _plot_trigger_fraction(metrics_per_production, output_path, suffix=""):
-    """Plot triggered/simulated event fractions by production."""
-    labels = [metrics.label for metrics in metrics_per_production]
-    values = [metrics.trigger_fraction for metrics in metrics_per_production]
-
-    fig, ax = plt.subplots(figsize=(9, 6))
-    bars = ax.bar(labels, values, color="tab:blue", alpha=0.85)
-    ax.set_ylabel("Trigger Fraction")
-    type_label = f" ({suffix.lstrip('_').replace('_', ' ')})" if suffix else ""
-    ax.set_title(f"Trigger Fraction {type_label}")
-    ax.set_ylim(0.0, max(1.0, max(values, default=0.0) * 1.15))
-    ax.grid(axis="y", alpha=0.25)
-    for bar_patch, value in zip(bars, values):
-        ax.text(
-            bar_patch.get_x() + bar_patch.get_width() / 2,
-            bar_patch.get_height(),
-            f"{value:.3f}",
-            ha="center",
-            va="bottom",
-            fontsize=9,
-        )
-
-    _save_figure(fig, output_path, f"trigger_fraction{suffix}.png")
-
-
 def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", bins=None):
     """Plot triggered telescope multiplicity distributions."""
     del bins

@@ -166,9 +166,6 @@ def test_plot_series_and_artist_color():
 def test_trigger_fraction_and_skip_paths(tmp_test_directory):
     """Test trigger fraction output and skip branches with empty inputs."""
     output_path = Path(tmp_test_directory)
-    metrics = [_build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)]
-    plot_event_level_production_comparison._plot_trigger_fraction(metrics, output_path)
-    assert (output_path / "trigger_fraction.png").exists()
 
     empty_metric = _build_metrics("empty", simulated_scale=1.0, triggered_scale=1.0)
     empty_metric.trigger_multiplicity = np.array([], dtype=int)
