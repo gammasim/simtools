@@ -354,6 +354,10 @@ class EventDataHistograms:
 
         Align bins to full decades of energy, with 10 bins per decade, and ensure that the
         range covers the energy range of the events.
+
+        Returns
+        -------
+        np.ndarray            Array of energy bin edges in TeV.
         """
         if "energy_bin_edges" in self.histograms:
             return self.histograms["energy_bin_edges"]

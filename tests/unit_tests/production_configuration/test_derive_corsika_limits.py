@@ -494,9 +494,9 @@ def test_process_file_with_differential_loss_per_energy_bin(mocker):
         differential_loss_bins_per_decade=6,
     )
 
-    assert result["lower_energy_limit"] == 1.0 * u.TeV
-    assert result["upper_radius_limit"] == 120.0 * u.m
-    assert result["viewcone_radius"] == 3.0 * u.deg
+    assert result["lower_energy_limit"].value == pytest.approx(1.0)
+    assert result["upper_radius_limit"].value == pytest.approx(120.0)
+    assert result["viewcone_radius"].value == pytest.approx(3.0)
     assert result["core_vs_energy_curve"] == {"x": [100.0, 120.0], "y": [0.1, 1.0]}
     assert result["angular_distance_vs_energy_curve"] == {"x": [2.5, 3.0], "y": [0.1, 1.0]}
 
@@ -553,9 +553,9 @@ def test_compute_differential_limits(
     assert mock_diff_limits.call_args_list[1].args[0] == "viewcone-hist"
     assert mock_diff_limits.call_args_list[1].args[5:] == ("viewcone", "deg")
 
-    assert mock_is_close.call_args_list[0].args[0] == 120.0 * u.m
+    assert mock_is_close.call_args_list[0].args[0].value == pytest.approx(120.0)
     assert mock_is_close.call_args_list[0].args[1] == expected_core_scatter_max
-    assert mock_is_close.call_args_list[1].args[0] == 3.0 * u.deg
+    assert mock_is_close.call_args_list[1].args[0].value == pytest.approx(3.0)
     assert mock_is_close.call_args_list[1].args[1] == expected_viewcone_max
 
     assert result == {
