@@ -101,7 +101,7 @@ def _plot_trigger_fraction(metrics_per_production, output_path, suffix=""):
     _save_figure(fig, output_path, f"trigger_fraction{suffix}.png")
 
 
-def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", bins=40):
+def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", bins=None):
     """Plot triggered telescope multiplicity distributions."""
     fig, ax = plt.subplots(figsize=(9, 6))
 
