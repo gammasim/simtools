@@ -123,6 +123,7 @@ scripts.simtools-simulate-illuminator = "simtools.applications.simulate_illumina
 scripts.simtools-simulate-pedestals = "simtools.applications.simulate_pedestals:main"
 scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"
 scripts.simtools-simulate-prod-htcondor-generator = "simtools.applications.simulate_prod_htcondor_generator:main"
+scripts.simtools-simulate-prod-htcondor-parameter-scan-generator = "simtools.applications.simulate_prod_htcondor_parameter_scan_generator:main"
 scripts.simtools-submit-array-layouts = "simtools.applications.submit_array_layouts:main"
 scripts.simtools-submit-data-from-external = "simtools.applications.submit_data_from_external:main"
 scripts.simtools-submit-model-parameter-from-external = "simtools.applications.submit_model_parameter_from_external:main"

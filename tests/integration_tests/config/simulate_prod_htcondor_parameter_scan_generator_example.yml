@@ -1,0 +1,55 @@
+---
+applications:
+- application: simtools-simulate-prod-htcondor-parameter-scan-generator
+  configuration:
+    apptainer_image: tests/resources/dummy_apptainer_image.sif
+    array_layout_name: alpha
+    azimuth_angle: 0.0
+    core_scatter: 10 500 m
+    energy_range: 20 MeV 25 MeV
+    view_cone: 0 deg 5 deg
+    label: param-scan-test
+    log_level: DEBUG
+    model_version: 6.3.0
+    nshow: 5
+    number_of_runs: 2
+    output_path: htcondor_parameter_scan_submit
+    primary: gamma
+    priority: 5
+    run_number: 10
+    run_number_offset: 1
+    save_reduced_event_lists: true
+    simulation_output: ./simulation_output_param_scan
+    simulation_software: corsika_sim_telarray
+    site: North
+    zenith_angle: 20
+    parameter_values:
+    - 10
+    - 20
+    - 30
+    parameter_path: changes.LSTN-02.asum_threshold
+    parameter_name: threshold
+    overwrite_template: tests/resources/overwrite_template.yaml
+  integration_tests:
+  - test_output_files:
+    - file: overwrite_threshold_10.yaml
+      path_descriptor: output_path
+    - file: overwrite_threshold_20.yaml
+      path_descriptor: output_path
+    - file: overwrite_threshold_30.yaml
+      path_descriptor: output_path
+    - file: simulate_prod_param-scan-test_10.submit.sh
+      path_descriptor: output_path
+    - file: simulate_prod_param-scan-test_20.submit.sh
+      path_descriptor: output_path
+    - file: simulate_prod_param-scan-test_30.submit.sh
+      path_descriptor: output_path
+    - file: simulate_prod_param-scan-test_10.submit.condor
+      path_descriptor: output_path
+    - file: simulate_prod_param-scan-test_20.submit.condor
+      path_descriptor: output_path
+    - file: simulate_prod_param-scan-test_30.submit.condor
+      path_descriptor: output_path
+  test_name: htcondor-parameter-scan-example
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
