@@ -131,6 +131,7 @@ def test_generate_corsika_limits_grid_normalizes_telescope_ids(mocker, mock_args
     job_specs = mock_pool.call_args[0][1]
     assert job_specs[0]["telescope_ids"] == expected_telescopes
     assert job_specs[0]["differential_loss_bins_per_decade"] == 0
+    assert job_specs[0]["loss_min_events"] == 10
 
 
 def test_process_file_passes_event_data_patterns_through(mocker):
@@ -141,7 +142,13 @@ def test_process_file_passes_event_data_patterns_through(mocker):
     mocker.patch(COMPUTE_UPPER_RADIUS_LIMIT_PATH, return_value=100.0 * u.m)
     mocker.patch(COMPUTE_VIEWCONE_PATH, return_value=2.0 * u.deg)
 
-    derive_corsika_limits._process_file("input/*.h5", "array_name", [1, 2], 0.2, False)
+    derive_corsika_limits._process_file(
+        "input/*.h5",
+        "array_name",
+        [1, 2],
+        0.2,
+        plot_histograms=False,
+    )
 
     mock_histogram_class.assert_called_once_with(
         "input/*.h5",
@@ -459,9 +466,9 @@ def test_process_file_with_mocked_histograms(mocker):
         energy_bins_per_decade=10,
     )
     mock_histograms.fill.assert_called_once()
-    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2)
-    mock_compute_upper_radius_limit.assert_called_once_with(mock_histograms, 0.2)
-    mock_compute_viewcone.assert_called_once_with(mock_histograms, 0.2)
+    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2, 10)
+    mock_compute_upper_radius_limit.assert_called_once_with(mock_histograms, 0.2, 10)
+    mock_compute_viewcone.assert_called_once_with(mock_histograms, 0.2, 10)
 
 
 def test_process_file_with_differential_loss_per_energy_bin(mocker):
@@ -506,10 +513,10 @@ def test_process_file_with_differential_loss_per_energy_bin(mocker):
     assert result["core_vs_energy_curve"] == {"x": [100.0, 120.0], "y": [0.1, 1.0]}
     assert result["angular_distance_vs_energy_curve"] == {"x": [2.5, 3.0], "y": [0.1, 1.0]}
 
-    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2)
+    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2, 10)
     mock_compute_upper_radius_limit.assert_not_called()
     mock_compute_viewcone.assert_not_called()
-    mock_differential.assert_called_once_with(mock_histograms, 0.2, 6)
+    mock_differential.assert_called_once_with(mock_histograms, 0.2, 10, 6)
 
 
 @pytest.mark.parametrize(
@@ -549,15 +556,15 @@ def test_compute_differential_limits(
         side_effect=[125.0 * u.m, 3.25 * u.deg],
     )
 
-    derive_corsika_limits._compute_differential_limits(histograms, 0.2, 2)
+    derive_corsika_limits._compute_differential_limits(histograms, 0.2, 10, 2)
 
     expected_diff_bins = np.logspace(0, 1, 3)
     np.testing.assert_allclose(mock_diff_limits.call_args_list[0].args[3], expected_diff_bins)
     np.testing.assert_allclose(mock_diff_limits.call_args_list[1].args[3], expected_diff_bins)
     assert mock_diff_limits.call_args_list[0].args[0] == "core-hist"
-    assert mock_diff_limits.call_args_list[0].args[5:] == ("core_scatter", "m")
+    assert mock_diff_limits.call_args_list[0].args[6:] == ("core_scatter", "m")
     assert mock_diff_limits.call_args_list[1].args[0] == "viewcone-hist"
-    assert mock_diff_limits.call_args_list[1].args[5:] == ("viewcone", "deg")
+    assert mock_diff_limits.call_args_list[1].args[6:] == ("viewcone", "deg")
 
     assert mock_is_close.call_args_list[0].args[0].value == pytest.approx(120.0)
     assert mock_is_close.call_args_list[0].args[1] == expected_core_scatter_max
@@ -615,6 +622,7 @@ def test_differential_upper_limits(mocker):
         y_bins=np.array([1.0, 2.0, 4.0]),
         diff_e_bins=np.array([1.0, 2.0, 2.5, 3.0]),
         loss_fraction=0.2,
+        loss_min_events=10,
         name="core_scatter",
         unit="m",
     )
@@ -644,6 +652,7 @@ def test_differential_upper_limits_falls_back_to_last_bin_edge(mocker):
         y_bins=np.array([1.0, 2.0, 4.0]),
         diff_e_bins=np.array([1.0, 2.0, 3.0]),
         loss_fraction=0.2,
+        loss_min_events=10,
         name="viewcone",
         unit="deg",
     )
