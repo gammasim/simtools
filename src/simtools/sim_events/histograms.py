@@ -387,12 +387,22 @@ class EventDataHistograms:
 
     @property
     def core_distance_bins(self):
-        """Return bins for the core distance histogram."""
+        """
+        Return bins for the core distance histogram.
+
+        CORSIKA CSCAT is defined in the shower plane, shower coordinates
+        are in ground coordinates. The core distance bins in ground coordinates
+        are therefore scaled with 1/cos(zenith).
+        """
+        zenith = self.file_info.get("zenith", 0.0 * u.deg).to("rad").value
+        scaling_factor = 1 / np.cos(zenith)
+
         if "core_distance_bin_edges" in self.histograms:
             return self.histograms["core_distance_bin_edges"]
+
         return np.linspace(
             self.file_info.get("core_scatter_min", 0.0 * u.m).to("m").value,
-            self.file_info.get("core_scatter_max", 1.0e5 * u.m).to("m").value,
+            self.file_info.get("core_scatter_max", 1.0e5 * u.m).to("m").value * scaling_factor,
             100,
         )
 

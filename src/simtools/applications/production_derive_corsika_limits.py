@@ -13,7 +13,7 @@ simulations. It supports the derivation of the following CORSIKA configuration p
 Broad-range simulations in this context are simulation sets generated with wide-ranging
 definitions for above parameters.
 Limits are computed based on a configurable maximum event loss fraction
-and a minimum number of events kept after cuts.
+and a minimum number of events lost after cuts.
 Results are provided as a table with the following columns:
 
 +---------------------+-----------+--------+-----------------------------------------------+
@@ -61,7 +61,7 @@ telescope_ids (str, optional)
 loss_fraction (float, required)
     Maximum event-loss fraction for limit computation.
 loss_min_events (int, optional)
-    Minimum number of events that must be kept after applying a limit.
+    Minimum number of events that must be lost after applying a limit.
     Default: 10.
 plot_histograms (bool, optional)
     Plot histograms of the event data.
@@ -150,7 +150,7 @@ def _add_arguments(parser):
         type=int,
         required=False,
         default=10,
-        help="Minimum number of events that must be kept after applying a limit.",
+        help="Minimum number of events that must be lost after applying a limit.",
     )
     parser.add_argument(
         "--plot_histograms",

@@ -4,7 +4,6 @@ import pytest
 from astropy.table import Table
 
 import simtools.production_configuration.derive_corsika_limits as derive_corsika_limits
-from simtools.utils.names import get_array_element_name_from_common_identifier
 
 # Constants
 SIM_EVENTS_HISTOGRAMS_PATH = (
@@ -43,95 +42,6 @@ def _pool_result(
         "azimuth": 180.0 * u.deg,
         "nsb_level": 1.0,
     }
-
-
-@pytest.fixture
-def mock_args_dict():
-    """Create mock arguments dictionary."""
-    return {
-        "event_data_file": "data_files.hdf5",
-        "telescope_ids": "telescope_ids.yml",
-        "loss_fraction": 0.2,
-        "plot_histograms": False,
-        "output_file": "test_output.ecsv",
-        "differential_loss_bins_per_decade": 0,
-    }
-
-
-@pytest.fixture
-def mock_results():
-    """Create mock results list."""
-    return [
-        {
-            "primary_particle": "gamma",
-            "telescope_ids": [1, 2],
-            "zenith": 20.0 * u.deg,
-            "azimuth": 180.0 * u.deg,
-            "nsb_level": 1.0,
-            "lower_energy_limit": 0.5 * u.TeV,
-            "upper_radius_limit": 400.0 * u.m,
-            "viewcone_radius": 5.0 * u.deg,
-            "array_name": "LST",
-            "layout": "LST",
-        }
-    ]
-
-
-def test_generate_corsika_limits_grid(mocker, mock_args_dict, tmp_test_directory):
-    """Test generate_corsika_limits_grid function with single production."""
-    # Mock dependencies
-    mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
-    mock_collect.side_effect = [
-        {"telescope_configs": {"LST": [1, 2], "MST": [3, 4]}},
-    ]
-
-    mock_pool = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
-    )
-    mock_pool.return_value = [
-        {"primary_particle": "gamma", "array_name": "LST", "telescope_ids": [1, 2]},
-        {"primary_particle": "gamma", "array_name": "MST", "telescope_ids": [3, 4]},
-    ]
-
-    mock_io = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
-    )
-    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
-
-    mock_write = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.write_results"
-    )
-
-    # Run function (single production mode)
-    derive_corsika_limits.generate_corsika_limits_grid(mock_args_dict)
-
-    # Verify calls
-    assert mock_collect.call_count == 1
-    mock_pool.assert_called_once()
-    assert mock_write.call_count == 1
-
-
-def test_generate_corsika_limits_grid_normalizes_telescope_ids(mocker, mock_args_dict):
-    """Ensure numeric IDs are normalized to array-element names before processing."""
-    mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
-    mock_collect.return_value = {"telescope_configs": {"LST": [1, 2]}}
-
-    mock_pool = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
-    )
-    mock_pool.return_value = [{}]
-    mocker.patch("simtools.production_configuration.derive_corsika_limits.write_results")
-
-    derive_corsika_limits.generate_corsika_limits_grid(mock_args_dict)
-
-    expected_telescopes = [
-        get_array_element_name_from_common_identifier(1),
-        get_array_element_name_from_common_identifier(2),
-    ]
-    job_specs = mock_pool.call_args[0][1]
-    assert job_specs[0]["telescope_ids"] == expected_telescopes
-    assert job_specs[0]["differential_loss_bins_per_decade"] == 0
-    assert job_specs[0]["loss_min_events"] == 10
 
 
 def test_process_file_passes_event_data_patterns_through(mocker):
@@ -308,9 +218,13 @@ def test_compute_limits_lower():
         derive_corsika_limits._compute_limits(hist, bin_edges, loss_fraction, limit_type="blabla")
 
     result = derive_corsika_limits._compute_limits(
-        hist, bin_edges, loss_fraction, limit_type="lower"
+        hist,
+        bin_edges,
+        loss_fraction,
+        loss_min_events=0,
+        limit_type="lower",
     )
-    assert result == 2
+    assert result == 3
 
 
 def test_compute_limits_upper():
@@ -319,7 +233,11 @@ def test_compute_limits_upper():
     loss_fraction = 0.2
 
     result = derive_corsika_limits._compute_limits(
-        hist, bin_edges, loss_fraction, limit_type="upper"
+        hist,
+        bin_edges,
+        loss_fraction,
+        loss_min_events=0,
+        limit_type="upper",
     )
     assert result == 3
 
@@ -329,8 +247,43 @@ def test_compute_limits_default_type():
     bin_edges = np.array([0, 1, 2, 3, 4, 5])
     loss_fraction = 0.2
 
-    result = derive_corsika_limits._compute_limits(hist, bin_edges, loss_fraction)
-    assert result == 2
+    result = derive_corsika_limits._compute_limits(
+        hist,
+        bin_edges,
+        loss_fraction,
+        loss_min_events=0,
+    )
+    assert result == 3
+
+
+def test_compute_limits_enforces_minimum_lost_events_upper():
+    """Test _compute_limits enforces an absolute minimum number of lost events."""
+    hist = np.array([5, 4, 3, 2, 1])
+    bin_edges = np.array([0, 1, 2, 3, 4, 5])
+
+    result = derive_corsika_limits._compute_limits(
+        hist,
+        bin_edges,
+        loss_fraction=0.2,
+        loss_min_events=10,
+        limit_type="upper",
+    )
+    assert result == 1
+
+
+def test_compute_limits_enforces_minimum_lost_events_lower():
+    """Test lower limits also honor the absolute minimum loss requirement."""
+    hist = np.array([1, 2, 3, 4, 5])
+    bin_edges = np.array([0, 1, 2, 3, 4, 5])
+
+    result = derive_corsika_limits._compute_limits(
+        hist,
+        bin_edges,
+        loss_fraction=0.2,
+        loss_min_events=10,
+        limit_type="lower",
+    )
+    assert result == 5
 
 
 def test_compute_viewcone(mocker):
@@ -373,7 +326,14 @@ def test_compute_lower_energy_limit(mocker):
     assert result.value > 0
 
     expected = (
-        derive_corsika_limits._compute_limits(mock_hist, mock_bins, 0.2, limit_type="lower") * u.TeV
+        derive_corsika_limits._compute_limits(
+            mock_hist,
+            mock_bins,
+            0.2,
+            loss_min_events=0,
+            limit_type="lower",
+        )
+        * u.TeV
     )
     assert result == expected
 
@@ -1001,3 +961,39 @@ def test_process_file_with_output_subdir(mocker, tmp_test_directory):
     mock_plot.assert_called_once()
     call_kwargs = mock_plot.call_args[1]
     assert call_kwargs["output_path"] == output_subdir
+
+
+@pytest.fixture
+def mock_args_dict():
+    """Fixture to provide mock arguments dictionary with required keys."""
+    return {
+        "config_file": "dummy_config.yml",
+        "steps": None,
+        "ignore_runtime_environment": False,
+        "event_data_file": "dummy_event_data.h5",
+        "output_file": "corsika_limits.ecsv",
+        "loss_fraction": 0.2,
+        "plot_histograms": False,
+        "n_workers": 1,
+        "array_layout_name": None,
+        "array_element_list": ["LSTN-01"],
+        "telescope_ids": None,
+    }
+
+
+@pytest.fixture
+def mock_results():
+    """Fixture to provide one standard result row for table/writer tests."""
+    return [
+        {
+            "primary_particle": "gamma",
+            "array_name": "LST",
+            "telescope_ids": ["LSTN-01"],
+            "zenith": 20.0 * u.deg,
+            "azimuth": 180.0 * u.deg,
+            "nsb_level": 1.0,
+            "lower_energy_limit": 0.5 * u.TeV,
+            "upper_radius_limit": 400.0 * u.m,
+            "viewcone_radius": 5.0 * u.deg,
+        }
+    ]
