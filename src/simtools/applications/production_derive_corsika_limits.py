@@ -129,6 +129,7 @@ def _add_arguments(parser):
             "multi-production processing)."
         ),
         nargs="+",
+        action="extend",
         required=True,
     )
     parser.add_argument(

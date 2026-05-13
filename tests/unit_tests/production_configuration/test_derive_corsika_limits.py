@@ -803,6 +803,9 @@ def test_generate_corsika_limits_grid_multi_production(mocker, tmp_test_director
     mock_write = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.write_results"
     )
+    mock_build_subdirs = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._build_production_subdirectories"
+    )
 
     mock_io = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
@@ -826,6 +829,11 @@ def test_generate_corsika_limits_grid_multi_production(mocker, tmp_test_director
     mock_pool.assert_called_once()
     call_kwargs = mock_pool.call_args[1]
     assert call_kwargs["max_workers"] == 2
+
+    # For non-plotting runs, no production subdirectories should be built/passed
+    mock_build_subdirs.assert_not_called()
+    job_specs = mock_pool.call_args[0][1]
+    assert all(job_spec["output_subdir"] is None for job_spec in job_specs)
 
     # Verify write_results was called with merged results
     mock_write.assert_called_once()
