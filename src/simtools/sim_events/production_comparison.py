@@ -13,7 +13,7 @@ from simtools.utils.general import resolve_file_patterns
 
 @dataclass
 class ProductionDescriptor:
-    """Descriptor for one production input provided by the user."""
+    """Descriptor for one production input provided."""
 
     label: str
     event_data_files: list[str]
@@ -64,7 +64,7 @@ def parse_production_arguments(production_arguments):
         If configuration is malformed or does not contain any production.
     """
     parsed_productions = _normalize_production_arguments(production_arguments)
-    if len(parsed_productions) == 0:
+    if not parsed_productions:
         raise ValueError("At least one production is required.")
 
     labels = [item[0] for item in parsed_productions]
@@ -80,7 +80,6 @@ def parse_production_arguments(production_arguments):
         resolved_files = [str(path) for path in resolve_file_patterns(patterns)]
         if len(resolved_files) == 0:
             raise ValueError(f"Production '{label}' does not resolve to any files.")
-
         descriptors.append(ProductionDescriptor(label=label, event_data_files=resolved_files))
 
     return descriptors
@@ -327,10 +326,7 @@ def _subset_counts_for_event(telescopes):
     """Return subset keys and multiplicities for one triggered event."""
     type_counts = Counter()
     for telescope in telescopes:
-        try:
-            tel_type = names.get_array_element_type_from_name(telescope)
-        except ValueError:
-            continue
+        tel_type = names.get_array_element_type_from_name(telescope)
         type_counts[tel_type] += 1
 
     subset_counts = dict(type_counts)
