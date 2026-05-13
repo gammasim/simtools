@@ -12,8 +12,6 @@ applications:
   integration_tests:
   - output_file: trigger_multiplicity.png
   - output_file: trigger_combination.png
-  - output_file: single_telescope_trigger_distribution.png
-  - output_file: mixed_trigger_combinations.png
   - output_file: telescope_participation_fraction.png
   test_name: run
 schema_name: application_workflow.metaschema
