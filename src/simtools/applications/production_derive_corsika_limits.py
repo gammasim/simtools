@@ -12,7 +12,8 @@ simulations. It supports the derivation of the following CORSIKA configuration p
 
 Broad-range simulations in this context are simulation sets generated with wide-ranging
 definitions for above parameters.
-Limits are computed based on a configurable maximum event loss fraction.
+Limits are computed based on a configurable maximum event loss fraction
+and a minimum number of events kept after cuts.
 Results are provided as a table with the following columns:
 
 +---------------------+-----------+--------+-----------------------------------------------+
@@ -59,6 +60,9 @@ telescope_ids (str, optional)
     Custom array layout file containing telescope IDs.
 loss_fraction (float, required)
     Maximum event-loss fraction for limit computation.
+loss_min_events (int, optional)
+    Minimum number of events that must be kept after applying a limit.
+    Default: 10.
 plot_histograms (bool, optional)
     Plot histograms of the event data.
 output_file (str, optional)
@@ -80,6 +84,7 @@ Derive limits for a single production with a list of array layouts:
         --event_data_file event_dat_file.hdf5 \\
         --array_layout_name alpha,beta \\
         --loss_fraction 1e-6 \\
+        --loss_min_events 10 \\
         --plot_histograms \\
         --output_file corsika_simulation_limits.ecsv
 
@@ -91,6 +96,7 @@ Derive limits for a single production with a given file for custom defined array
         --event_data_file event_dat_file.hdf5 \\
         --telescope_ids path/to/telescope_configs.yaml \\
         --loss_fraction 1e-6 \\
+        --loss_min_events 10 \\
         --plot_histograms \\
         --output_file corsika_simulation_limits.ecsv
 
@@ -103,6 +109,7 @@ Derive limits for multiple independent productions in parallel:
         --event_data_file pattern_2_*.hdf5 \\
         --array_layout_name alpha \\
         --loss_fraction 1e-6 \\
+        --loss_min_events 10 \\
         --plot_histograms \\
         --n_workers 4 \\
         --output_file corsika_simulation_limits.ecsv
@@ -137,6 +144,13 @@ def _add_arguments(parser):
         type=float,
         required=True,
         help="Maximum event-loss fraction for limit computation.",
+    )
+    parser.add_argument(
+        "--loss_min_events",
+        type=int,
+        required=False,
+        default=10,
+        help="Minimum number of events that must be kept after applying a limit.",
     )
     parser.add_argument(
         "--plot_histograms",

@@ -123,6 +123,7 @@ def _execute_production_job(job_spec):
     array_name = job_spec["array_name"]
     telescope_ids = job_spec["telescope_ids"]
     loss_fraction = job_spec["loss_fraction"]
+    loss_min_events = job_spec.get("loss_min_events", 10)
     plot_histograms = job_spec["plot_histograms"]
     output_subdir = job_spec.get("output_subdir")
     differential_loss_bins_per_decade = job_spec.get("differential_loss_bins_per_decade", 0)
@@ -137,6 +138,7 @@ def _execute_production_job(job_spec):
         array_name,
         telescope_ids,
         loss_fraction,
+        loss_min_events,
         plot_histograms,
         output_subdir=output_subdir,
         differential_loss_bins_per_decade=differential_loss_bins_per_decade,
@@ -235,6 +237,7 @@ def generate_corsika_limits_grid(args_dict):
                 "array_name": array_name,
                 "telescope_ids": telescope_ids,
                 "loss_fraction": args_dict["loss_fraction"],
+                "loss_min_events": int(args_dict.get("loss_min_events", 10)),
                 "plot_histograms": args_dict["plot_histograms"],
                 "output_subdir": output_subdir,
                 "differential_loss_bins_per_decade": differential_loss_bins_per_decade,
@@ -257,7 +260,8 @@ def _process_file(
     array_name,
     telescope_ids,
     loss_fraction,
-    plot_histograms,
+    loss_min_events=10,
+    plot_histograms=False,
     output_subdir=None,
     differential_loss_bins_per_decade=0,
 ):
@@ -276,6 +280,8 @@ def _process_file(
         List of telescope IDs (array-element names) to filter the events.
     loss_fraction : float
         Fraction of events to be lost.
+    loss_min_events : int
+        Minimum number of events to be kept after applying a derived limit.
     plot_histograms : bool
         Whether to plot histograms.
     output_subdir : Path or None, optional
@@ -298,17 +304,32 @@ def _process_file(
     histograms.fill()
 
     limits = {
-        "lower_energy_limit": compute_lower_energy_limit(histograms, loss_fraction),
+        "lower_energy_limit": compute_lower_energy_limit(
+            histograms,
+            loss_fraction,
+            loss_min_events,
+        ),
     }
     if differential_loss_bins_per_decade > 0:
         limits.update(
             _compute_differential_limits(
-                histograms, loss_fraction, differential_loss_bins_per_decade
+                histograms,
+                loss_fraction,
+                loss_min_events,
+                differential_loss_bins_per_decade,
             )
         )
     else:
-        limits["upper_radius_limit"] = compute_upper_radius_limit(histograms, loss_fraction)
-        limits["viewcone_radius"] = compute_viewcone(histograms, loss_fraction)
+        limits["upper_radius_limit"] = compute_upper_radius_limit(
+            histograms,
+            loss_fraction,
+            loss_min_events,
+        )
+        limits["viewcone_radius"] = compute_viewcone(
+            histograms,
+            loss_fraction,
+            loss_min_events,
+        )
 
     limits.update({key: histograms.file_info.get(key) for key in FILE_INFO_KEYS})
 
@@ -324,7 +345,7 @@ def _process_file(
     return limits
 
 
-def _compute_differential_limits(histograms, loss_fraction, bins_per_decade):
+def _compute_differential_limits(histograms, loss_fraction, loss_min_events, bins_per_decade):
     """Compute core and viewcone limits per energy bin and return max limits."""
     low = int(np.floor(np.log10(np.min(histograms.energy_bins))))
     high = int(np.ceil(np.log10(np.max(histograms.energy_bins))))
@@ -336,6 +357,7 @@ def _compute_differential_limits(histograms, loss_fraction, bins_per_decade):
         histograms.energy_bins,
         diff_e_bins,
         loss_fraction,
+        loss_min_events,
         "core_scatter",
         "m",
     )
@@ -345,6 +367,7 @@ def _compute_differential_limits(histograms, loss_fraction, bins_per_decade):
         histograms.energy_bins,
         diff_e_bins,
         loss_fraction,
+        loss_min_events,
         "viewcone",
         "deg",
     )
@@ -379,6 +402,7 @@ def _differential_upper_limits(
     y_bins,
     diff_e_bins,
     loss_fraction,
+    loss_min_events,
     name,
     unit,
 ):
@@ -393,7 +417,13 @@ def _differential_upper_limits(
         total = float(np.sum(projected))
         if total <= 0:
             continue
-        limit = _compute_limits(projected, x_bins, loss_fraction, limit_type="upper")
+        limit = _compute_limits(
+            projected,
+            x_bins,
+            loss_fraction,
+            loss_min_events,
+            limit_type="upper",
+        )
         keep = np.searchsorted(x_bins, limit, side="left")
         loss = (total - float(np.sum(projected[:keep]))) / total
         limits.append(limit)
@@ -418,7 +448,11 @@ def write_results(results, args_dict):
     args_dict : dict
         Dictionary containing command line arguments.
     """
-    table = _create_results_table(results, args_dict["loss_fraction"])
+    table = _create_results_table(
+        results,
+        args_dict["loss_fraction"],
+        args_dict.get("loss_min_events", 10),
+    )
 
     output_dir = io_handler.IOHandler().get_output_directory()
     output_file = output_dir / args_dict["output_file"]
@@ -429,7 +463,7 @@ def write_results(results, args_dict):
     MetadataCollector.dump(args_dict, output_file)
 
 
-def _create_results_table(results, loss_fraction):
+def _create_results_table(results, loss_fraction, loss_min_events=10):
     """
     Convert list of simulation results to an astropy Table with metadata.
 
@@ -441,6 +475,8 @@ def _create_results_table(results, loss_fraction):
         Computed limits per file and telescope configuration.
     loss_fraction : float
         Fraction of lost events (added to metadata).
+    loss_min_events : int, optional
+        Minimum number of events to keep after applying a limit.
 
     Returns
     -------
@@ -463,6 +499,7 @@ def _create_results_table(results, loss_fraction):
             "created": datetime.datetime.now().isoformat(),
             "description": "Lookup table for CORSIKA limits computed from simulations.",
             "loss_fraction": loss_fraction,
+            "loss_min_events": int(loss_min_events),
         }
     )
 
@@ -510,9 +547,9 @@ def _create_table_columns(cols, columns, units):
     return table_cols
 
 
-def _compute_limits(hist, bin_edges, loss_fraction, limit_type="lower"):
+def _compute_limits(hist, bin_edges, loss_fraction, loss_min_events=10, limit_type="lower"):
     """
-    Compute the limits based on the loss fraction.
+    Compute the limits based on the loss fraction and minimal required events.
 
     Add or subtract one bin to be on the safe side of the limit.
 
@@ -524,6 +561,8 @@ def _compute_limits(hist, bin_edges, loss_fraction, limit_type="lower"):
         Array of bin edges.
     loss_fraction : float
         Fraction of events to be lost.
+    loss_min_events : int, optional
+        Minimum number of events to be kept after applying a limit.
     limit_type : str, optional
         Type of limit ('lower' or 'upper'). Default is 'lower'.
 
@@ -533,7 +572,7 @@ def _compute_limits(hist, bin_edges, loss_fraction, limit_type="lower"):
         Bin edge value corresponding to the threshold.
     """
     total_events = np.sum(hist)
-    threshold = (1 - loss_fraction) * total_events
+    threshold = max((1 - loss_fraction) * total_events, float(loss_min_events))
     if limit_type == "upper":
         cum = np.cumsum(hist)
         idx = np.searchsorted(cum, threshold) + 1
@@ -545,7 +584,7 @@ def _compute_limits(hist, bin_edges, loss_fraction, limit_type="lower"):
     raise ValueError("limit_type must be 'lower' or 'upper'")
 
 
-def compute_lower_energy_limit(histograms, loss_fraction):
+def compute_lower_energy_limit(histograms, loss_fraction, loss_min_events=10):
     """
     Compute the lower energy limit in TeV based on the event loss fraction.
 
@@ -555,6 +594,8 @@ def compute_lower_energy_limit(histograms, loss_fraction):
         Histograms.
     loss_fraction : float
         Fraction of events to be lost.
+    loss_min_events : int, optional
+        Minimum number of events to be kept after applying a derived limit.
 
     Returns
     -------
@@ -566,6 +607,7 @@ def compute_lower_energy_limit(histograms, loss_fraction):
             histograms.histograms["energy"]["histogram"],
             histograms.energy_bins,
             loss_fraction,
+            loss_min_events,
             limit_type="lower",
         )
         * u.TeV
@@ -587,7 +629,7 @@ def _is_close(value, reference, warning_text):
     return value
 
 
-def compute_upper_radius_limit(histograms, loss_fraction):
+def compute_upper_radius_limit(histograms, loss_fraction, loss_min_events=10):
     """
     Compute the upper radial distance based on the event loss fraction.
 
@@ -597,6 +639,8 @@ def compute_upper_radius_limit(histograms, loss_fraction):
         Histograms.
     loss_fraction : float
         Fraction of events to be lost.
+    loss_min_events : int, optional
+        Minimum number of events to be kept after applying a derived limit.
 
     Returns
     -------
@@ -608,6 +652,7 @@ def compute_upper_radius_limit(histograms, loss_fraction):
             histograms.histograms["core_distance"]["histogram"],
             histograms.core_distance_bins,
             loss_fraction,
+            loss_min_events,
             limit_type="upper",
         )
         * u.m
@@ -621,7 +666,7 @@ def compute_upper_radius_limit(histograms, loss_fraction):
     )
 
 
-def compute_viewcone(histograms, loss_fraction):
+def compute_viewcone(histograms, loss_fraction, loss_min_events=10):
     """
     Compute the viewcone based on the event loss fraction.
 
@@ -635,6 +680,8 @@ def compute_viewcone(histograms, loss_fraction):
         Histograms.
     loss_fraction : float
         Fraction of events to be lost.
+    loss_min_events : int, optional
+        Minimum number of events to be kept after applying a derived limit.
 
     Returns
     -------
@@ -646,6 +693,7 @@ def compute_viewcone(histograms, loss_fraction):
             histograms.histograms["angular_distance"]["histogram"],
             histograms.view_cone_bins,
             loss_fraction,
+            loss_min_events,
             limit_type="upper",
         )
         * u.deg

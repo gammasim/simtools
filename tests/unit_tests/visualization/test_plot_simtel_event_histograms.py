@@ -737,15 +737,23 @@ def test_get_limits():
     limits["angular_distance_vs_energy_curve"] = {"x": [2.5, 3.0], "y": [0.1, 1.0]}
 
     result = _get_limits("core_vs_energy", limits)
+    assert result["x"] == 100
+    assert result["y"] == pytest.approx(0.1)
     assert result["curve"] == limits["core_vs_energy_curve"]
 
     result = _get_limits("core_vs_energy_cumulative", limits)
+    assert result["x"] == 100
+    assert result["y"] == pytest.approx(0.1)
     assert result["curve"] == limits["core_vs_energy_curve"]
 
     result = _get_limits("angular_distance_vs_energy", limits)
+    assert result["x"] == 5
+    assert result["y"] == pytest.approx(0.1)
     assert result["curve"] == limits["angular_distance_vs_energy_curve"]
 
     result = _get_limits("angular_distance_vs_energy_cumulative", limits)
+    assert result["x"] == 5
+    assert result["y"] == pytest.approx(0.1)
     assert result["curve"] == limits["angular_distance_vs_energy_curve"]
 
 
