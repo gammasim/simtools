@@ -330,7 +330,7 @@ def test_compute_lower_energy_limit(mocker):
             mock_hist,
             mock_bins,
             0.2,
-            loss_min_events=0,
+            loss_min_events=10,
             limit_type="lower",
         )
         * u.TeV
@@ -426,7 +426,7 @@ def test_process_file_with_mocked_histograms(mocker):
         energy_bins_per_decade=10,
     )
     mock_histograms.fill.assert_called_once()
-    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2, 10)
+    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2, 0)
     mock_compute_upper_radius_limit.assert_called_once_with(mock_histograms, 0.2, 10)
     mock_compute_viewcone.assert_called_once_with(mock_histograms, 0.2, 10)
 
@@ -473,7 +473,7 @@ def test_process_file_with_differential_loss_per_energy_bin(mocker):
     assert result["core_vs_energy_curve"] == {"x": [100.0, 120.0], "y": [0.1, 1.0]}
     assert result["angular_distance_vs_energy_curve"] == {"x": [2.5, 3.0], "y": [0.1, 1.0]}
 
-    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2, 10)
+    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2, 0)
     mock_compute_upper_radius_limit.assert_not_called()
     mock_compute_viewcone.assert_not_called()
     mock_differential.assert_called_once_with(mock_histograms, 0.2, 10, 6)
