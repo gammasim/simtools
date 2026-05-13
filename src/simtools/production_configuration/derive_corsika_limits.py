@@ -293,6 +293,7 @@ def _process_file(
         file_path,
         array_name=array_name,
         telescope_list=telescope_ids,
+        energy_bins_per_decade=differential_loss_bins_per_decade or 10,
     )
     histograms.fill()
 
