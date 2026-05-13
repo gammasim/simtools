@@ -46,7 +46,7 @@ def _add_arguments(parser):
         help=(
             "Production descriptor. "
             "Use as: --production <label> <comma-separated file patterns>. "
-            "Repeat this argument at least twice."
+            "Repeat this argument as needed for multiple productions."
         ),
     )
     parser.add_argument(

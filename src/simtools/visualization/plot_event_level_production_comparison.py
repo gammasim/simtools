@@ -1,9 +1,12 @@
 """Plot event-level comparisons across multiple simulation productions."""
 
+import functools
 import logging
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
 
@@ -20,26 +23,49 @@ def plot(metrics_per_production, output_path, bins=40):
     bins : int, optional
         Number of bins for 1D histograms.
     """
-    _plot_trigger_fraction(metrics_per_production, output_path)
     _plot_trigger_multiplicity(metrics_per_production, output_path)
     _plot_trigger_combinations(metrics_per_production, output_path)
-    _plot_triggered_vs_quantity(
-        metrics_per_production,
-        output_path,
-        quantity_name="energy",
-        x_label="Primary Energy (TeV)",
-        x_scale="log",
-        bins=bins,
-    )
-    _plot_triggered_vs_quantity(
-        metrics_per_production,
-        output_path,
-        quantity_name="core_distance",
-        x_label="Core Distance (m)",
-        x_scale="linear",
-        bins=bins,
-    )
+    _plot_single_telescope_trigger_frequencies(metrics_per_production, output_path)
+    _plot_mixed_trigger_combinations(metrics_per_production, output_path)
     _plot_telescope_participation(metrics_per_production, output_path)
+
+    for quantity_name, x_label, x_scale in _QUANTITY_CONFIGS:
+        if quantity_name in _TRIGGERED_FRACTION_QUANTITIES:
+            _plot_triggered_vs_quantity(
+                metrics_per_production,
+                output_path,
+                quantity_name=quantity_name,
+                x_label=x_label,
+                x_scale=x_scale,
+                bins=bins,
+            )
+        for cumulative in _distribution_cumulative_variants(quantity_name):
+            _plot_quantity_distribution(
+                metrics_per_production,
+                output_path,
+                quantity_name=quantity_name,
+                x_label=x_label,
+                x_scale=x_scale,
+                bins=bins,
+                cumulative=cumulative,
+            )
+
+    all_types = sorted(
+        {
+            tel_type
+            for metrics in metrics_per_production
+            for tel_type in metrics.per_type
+            if tel_type not in _SPECIAL_TRIGGER_SUBSETS
+        }
+    )
+    for tel_type in all_types:
+        type_metrics = [
+            metrics.per_type[tel_type]
+            for metrics in metrics_per_production
+            if tel_type in metrics.per_type
+        ]
+        for plot_fn in _PER_TYPE_PLOT_FNS:
+            plot_fn(type_metrics, output_path, suffix=f"_{tel_type}", bins=bins)
 
 
 def _save_figure(fig, output_path, filename):
@@ -50,7 +76,7 @@ def _save_figure(fig, output_path, filename):
     plt.close(fig)
 
 
-def _plot_trigger_fraction(metrics_per_production, output_path):
+def _plot_trigger_fraction(metrics_per_production, output_path, suffix=""):
     """Plot triggered/simulated event fractions by production."""
     labels = [metrics.label for metrics in metrics_per_production]
     values = [metrics.trigger_fraction for metrics in metrics_per_production]
@@ -58,23 +84,24 @@ def _plot_trigger_fraction(metrics_per_production, output_path):
     fig, ax = plt.subplots(figsize=(9, 6))
     bars = ax.bar(labels, values, color="tab:blue", alpha=0.85)
     ax.set_ylabel("Trigger Fraction")
-    ax.set_title("Trigger Fraction by Production")
+    type_label = f" ({suffix.lstrip('_').replace('_', ' ')})" if suffix else ""
+    ax.set_title(f"Trigger Fraction {type_label}")
     ax.set_ylim(0.0, max(1.0, max(values, default=0.0) * 1.15))
     ax.grid(axis="y", alpha=0.25)
-    for bar, value in zip(bars, values):
+    for bar_patch, value in zip(bars, values):
         ax.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height(),
+            bar_patch.get_x() + bar_patch.get_width() / 2,
+            bar_patch.get_height(),
             f"{value:.3f}",
             ha="center",
             va="bottom",
             fontsize=9,
         )
 
-    _save_figure(fig, output_path, "trigger_fraction_comparison.png")
+    _save_figure(fig, output_path, f"trigger_fraction{suffix}.png")
 
 
-def _plot_trigger_multiplicity(metrics_per_production, output_path):
+def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", bins=40):
     """Plot triggered telescope multiplicity distributions."""
     fig, ax = plt.subplots(figsize=(9, 6))
 
@@ -94,17 +121,25 @@ def _plot_trigger_multiplicity(metrics_per_production, output_path):
         if metrics.trigger_multiplicity.size == 0:
             continue
         counts, _ = np.histogram(metrics.trigger_multiplicity, bins=bins)
-        fractions = counts / counts.sum() if counts.sum() > 0 else counts
-        ax.step(bins[:-1], fractions, where="post", linewidth=2, label=metrics.label)
+        fractions, errors = _fraction_with_poisson_errors(counts)
+        stairs_artist = ax.stairs(fractions, bins, linewidth=1.5, label=metrics.label)
+        _plot_histogram_error_bars(
+            ax,
+            bins,
+            fractions,
+            errors,
+            color=_artist_color(stairs_artist),
+        )
 
     ax.set_xlabel("Triggered Telescopes per Event")
     ax.set_ylabel("Fraction of Triggered Events")
-    ax.set_title("Trigger Multiplicity Distribution")
+    type_label = f" ({suffix.lstrip('_').replace('_', ' ')})" if suffix else ""
+    ax.set_title(f"Trigger Multiplicity {type_label}")
     ax.set_xticks(bins[:-1])
     ax.grid(alpha=0.25)
     ax.legend()
 
-    _save_figure(fig, output_path, "trigger_multiplicity_comparison.png")
+    _save_figure(fig, output_path, f"trigger_multiplicity{suffix}.png")
 
 
 def _plot_trigger_combinations(metrics_per_production, output_path, top_n=12):
@@ -131,10 +166,19 @@ def _plot_trigger_combinations(metrics_per_production, output_path, top_n=12):
     fig, ax = plt.subplots(figsize=(max(10, len(selected) * 1.1), 6))
 
     for index, metrics in enumerate(metrics_per_production):
+        raw_counts = np.array([metrics.trigger_combinations.get(name, 0) for name in selected])
         event_norm = metrics.triggered_event_count if metrics.triggered_event_count > 0 else 1
-        y_values = [metrics.trigger_combinations.get(name, 0) / event_norm for name in selected]
+        y_values = raw_counts / event_norm
+        y_errors = np.sqrt(raw_counts) / event_norm
         offset = (index - (len(metrics_per_production) - 1) / 2.0) * width
-        ax.bar(x_values + offset, y_values, width=width, label=metrics.label)
+        ax.bar(
+            x_values + offset,
+            y_values,
+            width=width,
+            label=metrics.label,
+            yerr=y_errors,
+            error_kw={"elinewidth": 0.7, "capsize": 1, "capthick": 0.7},
+        )
 
     ax.set_xticks(x_values)
     ax.set_xticklabels(selected, rotation=45, ha="right")
@@ -143,7 +187,138 @@ def _plot_trigger_combinations(metrics_per_production, output_path, top_n=12):
     ax.grid(axis="y", alpha=0.25)
     ax.legend()
 
-    _save_figure(fig, output_path, "trigger_combination_comparison.png")
+    _save_figure(fig, output_path, "trigger_combination.png")
+
+
+def _plot_single_telescope_trigger_frequencies(metrics_per_production, output_path):
+    """Plot single-telescope trigger frequency distributions by telescope name."""
+    telescope_names = sorted(
+        {
+            combination
+            for metrics in metrics_per_production
+            for combination in metrics.trigger_combinations
+            if "," not in combination
+        }
+    )
+
+    if len(telescope_names) == 0:
+        _logger.warning("Skipping single-telescope trigger frequency plot, no data available.")
+        return
+
+    x_values = np.arange(len(telescope_names))
+    width = 0.8 / max(1, len(metrics_per_production))
+    fig, ax = plt.subplots(figsize=(max(10, len(telescope_names) * 0.45), 6))
+
+    for index, metrics in enumerate(metrics_per_production):
+        counts = np.array(
+            [
+                metrics.trigger_combinations.get(telescope_name, 0)
+                for telescope_name in telescope_names
+            ],
+            dtype=float,
+        )
+        fractions, errors = _fraction_with_poisson_errors(counts)
+        offset = (index - (len(metrics_per_production) - 1) / 2.0) * width
+        ax.bar(
+            x_values + offset,
+            fractions,
+            width=width,
+            label=metrics.label,
+            yerr=errors,
+            error_kw={"elinewidth": 0.7, "capsize": 1, "capthick": 0.7},
+        )
+
+    ax.set_xticks(x_values)
+    ax.set_xticklabels(telescope_names, rotation=90)
+    ax.set_ylabel("Fraction of Single-Telescope Triggers")
+    ax.set_title("Single-Telescope Trigger Distribution")
+    ax.grid(axis="y", alpha=0.25)
+    ax.legend()
+
+    _save_figure(fig, output_path, "single_telescope_trigger_distribution.png")
+
+
+def _plot_mixed_trigger_combinations(metrics_per_production, output_path):
+    """Plot mixed-type trigger combinations with multiplicity signatures and telescope names."""
+    mixed_labels = sorted(
+        {
+            _format_mixed_combination_label(combination)
+            for metrics in metrics_per_production
+            for combination in metrics.trigger_combinations
+            if _is_mixed_type_combination(combination)
+        }
+    )
+    if len(mixed_labels) == 0:
+        _logger.warning("Skipping mixed trigger combination plot, no mixed-type combinations.")
+        return
+
+    x_values = np.arange(len(mixed_labels))
+    width = 0.8 / max(1, len(metrics_per_production))
+    fig, ax = plt.subplots(figsize=(max(12, len(mixed_labels) * 0.8), 6))
+
+    for index, metrics in enumerate(metrics_per_production):
+        counts = np.array(
+            [
+                sum(
+                    count
+                    for combination, count in metrics.trigger_combinations.items()
+                    if _is_mixed_type_combination(combination)
+                    and _format_mixed_combination_label(combination) == label
+                )
+                for label in mixed_labels
+            ],
+            dtype=float,
+        )
+        fractions, errors = _fraction_with_poisson_errors(counts)
+        offset = (index - (len(metrics_per_production) - 1) / 2.0) * width
+        ax.bar(
+            x_values + offset,
+            fractions,
+            width=width,
+            label=metrics.label,
+            yerr=errors,
+            error_kw={"elinewidth": 0.7, "capsize": 1, "capthick": 0.7},
+        )
+
+    ax.set_xticks(x_values)
+    ax.set_xticklabels(mixed_labels, rotation=45, ha="right")
+    ax.set_ylabel("Fraction of Mixed-Type Triggers")
+    ax.set_title("Mixed-Type Trigger Combinations")
+    ax.grid(axis="y", alpha=0.25)
+    ax.legend()
+
+    _save_figure(fig, output_path, "mixed_trigger_combinations.png")
+
+
+def _is_mixed_type_combination(combination):
+    """Return True only for mixed signatures 1+1 and 1+2 (max multiplicity 3)."""
+    telescope_names = [name for name in combination.split(",") if name]
+    type_counts = {}
+    for telescope_name in telescope_names:
+        try:
+            tel_type = names.get_array_element_type_from_name(telescope_name)
+        except ValueError:
+            continue
+        type_counts[tel_type] = type_counts.get(tel_type, 0) + 1
+    if len(type_counts) < 2:
+        return False
+    signature = tuple(sorted(type_counts.values()))
+    return signature in {(1, 1), (1, 2)}
+
+
+def _format_mixed_combination_label(combination):
+    """Format mixed trigger combination as '<signature> | <tel1> + <tel2> + ...'."""
+    telescope_names = [name for name in combination.split(",") if name]
+    type_counts = {}
+    for telescope_name in telescope_names:
+        try:
+            tel_type = names.get_array_element_type_from_name(telescope_name)
+        except ValueError:
+            continue
+        type_counts[tel_type] = type_counts.get(tel_type, 0) + 1
+    signature = "+".join(str(count) for _, count in sorted(type_counts.items()))
+    telescopes_label = " + ".join(telescope_names)
+    return f"{signature} | {telescopes_label}"
 
 
 def _plot_triggered_vs_quantity(
@@ -153,20 +328,17 @@ def _plot_triggered_vs_quantity(
     x_label,
     x_scale,
     bins,
+    suffix="",
 ):
     """Plot simulated vs triggered distributions for one quantity."""
     fig, ax = plt.subplots(figsize=(9, 6))
 
+    plotted = False
     for metrics in metrics_per_production:
-        if quantity_name == "energy":
-            simulated = metrics.simulated_energies
-            triggered = metrics.triggered_energies
-        else:
-            simulated = metrics.simulated_core_distances
-            triggered = metrics.triggered_core_distances
-
+        simulated, triggered = _get_quantity_arrays(metrics, quantity_name)
         if simulated.size == 0:
             continue
+        plotted = True
 
         bin_edges = _get_bin_edges(simulated, x_scale=x_scale, bins=bins)
         sim_counts, _ = np.histogram(simulated, bins=bin_edges)
@@ -178,20 +350,22 @@ def _plot_triggered_vs_quantity(
                 out=np.zeros_like(trig_counts, dtype=float),
                 where=sim_counts > 0,
             )
+        _plot_series(ax, bin_edges, efficiency, metrics.label, quantity_name, linewidth=2)
 
-        x_values = 0.5 * (bin_edges[:-1] + bin_edges[1:])
-        ax.plot(x_values, efficiency, linewidth=2, label=metrics.label)
-
+    if not plotted:
+        _logger.warning(f"Skipping triggered fraction plot for {quantity_name}, no data available.")
+        plt.close(fig)
+        return
     ax.set_xlabel(x_label)
     ax.set_ylabel("Triggered / Simulated")
-    ax.set_title(f"Triggered Event Fraction vs {x_label}")
+    type_label = f" ({suffix.lstrip('_').replace('_', ' ')})" if suffix else ""
+    ax.set_title(f"Triggered Event Fraction vs {x_label}{type_label}")
     ax.set_xscale(x_scale)
     ax.set_ylim(0.0, 1.05)
     ax.grid(alpha=0.25)
     ax.legend()
 
-    filename = f"triggered_fraction_vs_{quantity_name}.png"
-    _save_figure(fig, output_path, filename)
+    _save_figure(fig, output_path, f"triggered_fraction_vs_{quantity_name}{suffix}.png")
 
 
 def _get_bin_edges(values, x_scale, bins):
@@ -208,6 +382,106 @@ def _get_bin_edges(values, x_scale, bins):
         min_value = max(min_value, np.finfo(float).tiny)
         return np.logspace(np.log10(min_value), np.log10(max_value), bins + 1)
     return np.linspace(min_value, max_value, bins + 1)
+
+
+def _get_quantity_arrays(metrics, quantity_name):
+    """Return (simulated, triggered) arrays for a named quantity.
+
+    Parameters
+    ----------
+    metrics : ProductionEventMetrics
+        Metrics for one production.
+    quantity_name : str
+        One of ``"energy"``, ``"core_distance"``, or ``"angular_distance"``.
+
+    Returns
+    -------
+    tuple[np.ndarray, np.ndarray]
+        Simulated and triggered arrays for the requested quantity.
+    """
+    if quantity_name == "energy":
+        return metrics.simulated_energies, metrics.triggered_energies
+    if quantity_name == "core_distance":
+        return metrics.simulated_core_distances, metrics.triggered_core_distances
+    return metrics.simulated_angular_distances, metrics.triggered_angular_distances
+
+
+def _plot_quantity_distribution(
+    metrics_per_production,
+    output_path,
+    quantity_name,
+    x_label,
+    x_scale,
+    bins=40,
+    suffix="",
+    cumulative=False,
+):
+    """Plot simulated and triggered distributions for one quantity.
+
+    Parameters
+    ----------
+    metrics_per_production : list[ProductionEventMetrics]
+        Aggregated metrics per production.
+    output_path : pathlib.Path
+        Output directory for generated figures.
+    quantity_name : str
+        One of ``"energy"``, ``"core_distance"``, or ``"angular_distance"``.
+    x_label : str
+        Axis label for the quantity.
+    x_scale : str
+        Axis scale (``"log"`` or ``"linear"``).
+    bins : int, optional
+        Number of histogram bins.
+    suffix : str, optional
+        Filename and title suffix for per-type variants.
+    cumulative : bool, optional
+        Whether to plot cumulative distributions.
+    """
+    fig, ax = plt.subplots(figsize=(9, 6))
+    plotted = False
+    for metrics in metrics_per_production:
+        simulated, triggered = _get_quantity_arrays(metrics, quantity_name)
+        if simulated.size == 0:
+            continue
+        plotted = True
+
+        bin_edges = _get_bin_edges(simulated, x_scale=x_scale, bins=bins)
+        sim_counts, _ = np.histogram(simulated, bins=bin_edges)
+        trig_counts, _ = np.histogram(triggered, bins=bin_edges)
+        _plot_distribution_series(
+            ax,
+            bin_edges,
+            sim_counts,
+            label=f"{metrics.label} (simulated)",
+            quantity_name=quantity_name,
+            cumulative=cumulative,
+            linewidth=1.5,
+            linestyle="--",
+        )
+        _plot_distribution_series(
+            ax,
+            bin_edges,
+            trig_counts,
+            label=f"{metrics.label} (triggered)",
+            quantity_name=quantity_name,
+            cumulative=cumulative,
+            linewidth=2,
+        )
+
+    if not plotted:
+        _logger.warning(f"Skipping distribution plot for {quantity_name}, no data available.")
+        plt.close(fig)
+        return
+    cum_label = "Cumulative " if cumulative else ""
+    type_label = f" ({suffix.lstrip('_').replace('_', ' ')})" if suffix else ""
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(f"{cum_label}Fraction of Events")
+    ax.set_title(f"{cum_label}Distribution: {x_label}{type_label}")
+    ax.set_xscale(x_scale)
+    ax.grid(alpha=0.25)
+    ax.legend(fontsize=8)
+    cum_str = "_cumulative" if cumulative else ""
+    _save_figure(fig, output_path, f"distribution_{quantity_name}{cum_str}{suffix}.png")
 
 
 def _plot_telescope_participation(metrics_per_production, output_path):
@@ -229,12 +503,21 @@ def _plot_telescope_participation(metrics_per_production, output_path):
 
     for index, metrics in enumerate(metrics_per_production):
         event_norm = metrics.triggered_event_count if metrics.triggered_event_count > 0 else 1
-        fractions = [
-            metrics.telescope_participation.get(telescope, 0) / event_norm
-            for telescope in telescopes
-        ]
+        counts = np.array(
+            [metrics.telescope_participation.get(telescope, 0) for telescope in telescopes],
+            dtype=float,
+        )
+        fractions = counts / event_norm
+        errors = np.sqrt(counts) / event_norm
         offset = (index - (len(metrics_per_production) - 1) / 2.0) * width
-        ax.bar(x_values + offset, fractions, width=width, label=metrics.label)
+        ax.bar(
+            x_values + offset,
+            fractions,
+            width=width,
+            label=metrics.label,
+            yerr=errors,
+            error_kw={"elinewidth": 0.7, "capsize": 1, "capthick": 0.7},
+        )
 
     ax.set_xticks(x_values)
     ax.set_xticklabels(telescopes, rotation=90)
@@ -244,3 +527,137 @@ def _plot_telescope_participation(metrics_per_production, output_path):
     ax.legend()
 
     _save_figure(fig, output_path, "telescope_participation_fraction.png")
+
+
+def _distribution_cumulative_variants(quantity_name):
+    """Return enabled cumulative variants for one quantity."""
+    if quantity_name == "energy":
+        return (False,)
+    return (False, True)
+
+
+def _plot_series(
+    ax,
+    bin_edges,
+    values,
+    label,
+    quantity_name,
+    linewidth=2,
+    linestyle="-",
+    force_histogram=False,
+):
+    """Plot one series either as histogram stairs or as x/y line values."""
+    if force_histogram or quantity_name in _HISTOGRAM_STYLE_QUANTITIES:
+        return ax.stairs(values, bin_edges, linewidth=linewidth, linestyle=linestyle, label=label)
+    x_values = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+    (line,) = ax.plot(x_values, values, linewidth=linewidth, linestyle=linestyle, label=label)
+    return line
+
+
+def _normalized_histogram_values(counts, cumulative=False):
+    """Return normalized bin values and Poisson errors for histogram counts."""
+    counts = np.asarray(counts, dtype=float)
+    total = counts.sum()
+    if total <= 0:
+        zeros = np.zeros_like(counts, dtype=float)
+        return zeros, zeros
+    if cumulative:
+        values = np.cumsum(counts) / total
+        errors = np.zeros_like(values, dtype=float)
+        return values, errors
+    values = counts / total
+    errors = np.sqrt(counts) / total
+    return values, errors
+
+
+def _plot_distribution_series(
+    ax,
+    bin_edges,
+    counts,
+    label,
+    quantity_name,
+    cumulative,
+    linewidth,
+    linestyle="-",
+):
+    """Plot one normalized distribution series and optional Poisson error bars."""
+    values, errors = _normalized_histogram_values(counts, cumulative=cumulative)
+    artist = _plot_series(
+        ax,
+        bin_edges,
+        values,
+        label,
+        quantity_name,
+        linewidth=linewidth,
+        linestyle=linestyle,
+        force_histogram=True,
+    )
+    if not cumulative:
+        _plot_histogram_error_bars(ax, bin_edges, values, errors, color=_artist_color(artist))
+
+
+def _fraction_with_poisson_errors(counts):
+    """Return normalized bin fractions and Poisson errors for counts."""
+    counts = np.asarray(counts, dtype=float)
+    total = counts.sum()
+    if total <= 0:
+        return np.zeros_like(counts, dtype=float), np.zeros_like(counts, dtype=float)
+    fractions = counts / total
+    errors = np.sqrt(counts) / total
+    return fractions, errors
+
+
+def _artist_color(artist):
+    """Return a representative color from a matplotlib artist."""
+    if artist is None:
+        return "black"
+    if hasattr(artist, "get_edgecolor"):
+        color = artist.get_edgecolor()
+        if isinstance(color, np.ndarray):
+            return color[0] if color.ndim > 1 else color
+        return color
+    if hasattr(artist, "get_color"):
+        return artist.get_color()
+    return "black"
+
+
+def _plot_histogram_error_bars(ax, bin_edges, values, errors, color):
+    """Overlay thin error bars on histogram-like series."""
+    centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+    ax.errorbar(
+        centers,
+        values,
+        yerr=errors,
+        fmt="none",
+        ecolor=color,
+        elinewidth=0.7,
+        capsize=0,
+        alpha=0.9,
+    )
+
+
+_QUANTITY_CONFIGS = [
+    ("energy", "Primary Energy (TeV)", "log"),
+    ("core_distance", "Core Distance (m)", "linear"),
+    ("angular_distance", "Angular Distance (deg)", "linear"),
+]
+
+_HISTOGRAM_STYLE_QUANTITIES = {"energy"}
+_TRIGGERED_FRACTION_QUANTITIES = set()
+_SPECIAL_TRIGGER_SUBSETS = {"single_telescope", "mixed_type"}
+
+_PER_TYPE_PLOT_FNS = [
+    _plot_trigger_multiplicity,
+    *[
+        functools.partial(_plot_triggered_vs_quantity, quantity_name=q, x_label=lbl, x_scale=sc)
+        for q, lbl, sc in _QUANTITY_CONFIGS
+        if q in _TRIGGERED_FRACTION_QUANTITIES
+    ],
+    *[
+        functools.partial(
+            _plot_quantity_distribution, quantity_name=q, x_label=lbl, x_scale=sc, cumulative=cum
+        )
+        for q, lbl, sc in _QUANTITY_CONFIGS
+        for cum in _distribution_cumulative_variants(q)
+    ],
+]
