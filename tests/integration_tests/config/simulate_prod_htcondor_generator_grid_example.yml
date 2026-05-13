@@ -1,0 +1,58 @@
+---
+applications:
+- application: simtools-simulate-prod-htcondor-generator
+  configuration:
+    apptainer_image:
+      0.30.0: tests/resources/dummy_apptainer_image.sif
+      0.29.0: tests/resources/dummy_apptainer_image.sif
+    array_layout_name:
+      by_version:
+        "<7.0.0": alpha
+        ">=7.0.0": CTAO-North-Alpha
+    azimuth_angle:
+    - North
+    - South
+    core_scatter: 10 500 m
+    corsika_he_interaction:
+    - epos
+    - qgs3
+    corsika_le_interaction: urqmd
+    energy_range:
+    - 30 GeV 30 GeV
+    - 300 GeV 300 GeV
+    view_cone: 0 deg 10 deg
+    eslope: -2.0
+    label: test-production-grid
+    log_level: DEBUG
+    model_version:
+    - 6.3.0
+    - 7.0.0
+    nshow: 5
+    number_of_runs: 2
+    output_path: htcondor_submit
+    primary:
+    - gamma
+    - proton
+    priority: 5
+    run_number: 10
+    simulation_output: ./simulation_output_path
+    simulation_software: corsika_sim_telarray
+    site: North
+    zenith_angle:
+    - 20
+    - 40
+  integration_tests:
+  - test_output_files:
+    - file: simulate_prod.submit.0.30.0.condor
+      path_descriptor: output_path
+    - file: simulate_prod.submit.0.30.0.params.txt
+      path_descriptor: output_path
+    - file: simulate_prod.submit.0.29.0.condor
+      path_descriptor: output_path
+    - file: simulate_prod.submit.0.29.0.params.txt
+      path_descriptor: output_path
+    - file: simulate_prod.submit.sh
+      path_descriptor: output_path
+  test_name: htcondor-grid-example
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
