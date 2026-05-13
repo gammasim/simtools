@@ -82,6 +82,42 @@ def test_config_file_applies_when_no_command_line(tmp_test_directory, monkeypatc
     assert config["log_level"] == "debug"
 
 
+def test_config_from_file_preserves_selected_by_version_keys(tmp_test_directory):
+    config_dict = {
+        "applications": [
+            {
+                "application": "simtools-simulate-prod-htcondor-generator",
+                "configuration": {
+                    "model_version": ["6.3.0", "7.0.0"],
+                    "array_layout_name": {
+                        "by_version": {
+                            "<7.0.0": "alpha",
+                            ">=7.0.0": "CTAO-North-Alpha",
+                        }
+                    },
+                },
+            }
+        ]
+    }
+    config_file = tmp_test_directory / "configuration-preserve-by-version.yml"
+    with open(config_file, "w", encoding="utf-8") as output:
+        yaml.safe_dump(config_dict, output, sort_keys=False)
+
+    config_builder = Configurator()
+    loaded_config = config_builder._config_from_file(
+        config_file,
+        preserve_by_version_keys=["array_layout_name"],
+    )
+
+    assert loaded_config["model_version"] == ["6.3.0", "7.0.0"]
+    assert loaded_config["array_layout_name"] == {
+        "by_version": {
+            "<7.0.0": "alpha",
+            ">=7.0.0": "CTAO-North-Alpha",
+        }
+    }
+
+
 def test_initialize_io_handler(configurator, tmp_test_directory):
     # io_handler is a Singleton, so configurator changes should
     # be reflected in the io_handler

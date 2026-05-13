@@ -3,41 +3,52 @@
 r"""
 Generate a run script and submit file for HT Condor job submission of a simulation production.
 
-This tool facilitates the submission of multiple simulations to the HT Condor batch system,
-enabling:
+This tool generates HTCondor submission files for one or more simulation production grids and
+supports either a single Apptainer image or a label-to-image mapping for multi-image submissions.
+For each image label, it writes a dedicated ``simulate_prod.submit.<label>.condor`` file and a
+matching ``simulate_prod.submit.<label>.params.txt`` file. When only one default image is used,
+the unsuffixed ``simulate_prod.submit.condor`` and ``simulate_prod.submit.params.txt`` names are
+kept.
 
-- Execution of simulations using the "simtools-simulate-prod" application.
-- 'number_of_runs' jobs are submitted to the HT Condor batch system.
-- Utilization of an Apptainer image containing the SimPipe simulation software and tools.
-- Packaging of data and histogram files, and writing them to a specified directory.
+HTCondor log files are written below ``htcondor_logs/`` by default, or below the directory given
+with ``--htcondor_log_path``. The generator creates the ``log``, ``error``, and ``output``
+subdirectories there and points the submit file at those locations.
 
-This tool is intended for use in an HT Condor environment. Jobs run in a container universe
-using the Apptainer image specified in the command line ('--apptainer_image'). Output is written
-to the 'output_path' directory, with 'simtools-output' and 'logs' subdirectories.
+The ``--simulation_output`` option controls the base directory that is passed to the simulation
+production as ``pack_for_grid_register``. Each image label gets its own subdirectory under that
+base path, allowing different grids or images to keep their output packages separate.
 
 Requirements for the 'simtools-simulate-prod-htcondor-generator' application:
 
-- Availability of an Apptainer image for production (obtainable from the package registry on
-  GitHub, e.g., via 'apptainer pull --force docker://ghcr.io/gammasim/simtools-<tag>:latest').
+- Availability of an Apptainer image for production, either as a single path or as a mapping from
+  labels to image paths (obtainable from the package registry on GitHub, e.g., via
+  'apptainer pull --force docker://ghcr.io/gammasim/simtools-<tag>:latest').
 - Environment parameters required to run CORSIKA and sim_telarray, as well as DB access
   credentials.  These should be listed similarly to a '.env' file and copied to
   'output_path/env.txt'.  Ensure that the path to the simulation software is correctly set to
   'SIMTOOLS_SIM_TELARRAY_PATH=/workdir/sim_telarray'.
 
-To submit jobs, change to the output directory and run:
+To submit jobs, change to the output directory and run the generated submit file:
 
 .. code-block:: console
 
-    condor_submit simulate_prod.submit
+    condor_submit simulate_prod.submit.<label>.condor
 
-Simulation data products will be stored in the output directory.
+For the single-image default case, use ``condor_submit simulate_prod.submit.condor``.
+
+Simulation data products are written to the directory controlled by ``--simulation_output``.
 
 Command line arguments
 ----------------------
 output_path (str, required)
-    Directory where the output and the simulation data files will be written.
-apptainer_image (str, optional)
-    Apptainer image to use for the simulation (full path).
+    Directory where the HTCondor submission files are written.
+apptainer_image (str or dict, required)
+    Apptainer image to use for the simulation. A single string selects one image for all jobs;
+    a dictionary maps labels to image paths and generates one submission pair per label.
+htcondor_log_path (str, optional)
+    Directory for HTCondor log files. Defaults to ``output_path/htcondor_logs``.
+simulation_output (str, optional)
+    Base directory for simulation output packages passed through as ``pack_for_grid_register``.
 priority (int, optional)
     Job priority (default: 1).
 
@@ -59,17 +70,32 @@ def _add_arguments(parser):
         default=1,
     )
     parser.add_argument(
-        "--apptainer_image",
-        help="Apptainer image to use for the simulation (full path).",
-        type=str,
-        required=False,
-    )
-    parser.add_argument(
         "--priority",
         help="Job priority.",
         type=int,
         required=False,
         default=1,
+    )
+    parser.add_argument(
+        "--htcondor_log_path",
+        help="Directory for HTCondor output files (default: output_path/htcondor_logs).",
+        type=str,
+        required=False,
+        default=None,
+    )
+    parser.add_argument(
+        "--simulation_output",
+        help="Output path for simulation data (default: ./simtools-output).",
+        type=str,
+        required=False,
+        default="./simtools-output",
+    )
+    parser.add_argument(
+        "--corsika_limits",
+        help="Path to an ECSV file with CORSIKA limits.",
+        type=str,
+        required=False,
+        default=None,
     )
 
 
@@ -78,6 +104,7 @@ def main():
     app_context = build_application(
         initialization_kwargs={
             "db_config": False,
+            "preserve_by_version_keys": ["array_layout_name"],
             "simulation_model": ["site", "layout", "telescope", "model_version"],
             "simulation_configuration": {"software": None, "corsika_configuration": ["all"]},
         },
