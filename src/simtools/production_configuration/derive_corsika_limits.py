@@ -372,7 +372,15 @@ def _compute_differential_limits(histograms, loss_fraction, bins_per_decade):
     }
 
 
-def _differential_upper_limits(histogram2d, x_bins, y_bins, diff_e_bins, loss_fraction, name, unit):
+def _differential_upper_limits(
+    histogram2d,
+    x_bins,
+    y_bins,
+    diff_e_bins,
+    loss_fraction,
+    name,
+    unit,
+):
     """Compute upper limits per energy slice of a 2D (x, energy) histogram."""
     y_centers = 0.5 * (y_bins[:-1] + y_bins[1:])
     limits, energy_centers = [], []
