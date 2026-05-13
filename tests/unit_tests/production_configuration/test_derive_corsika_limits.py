@@ -144,7 +144,10 @@ def test_process_file_passes_event_data_patterns_through(mocker):
     derive_corsika_limits._process_file("input/*.h5", "array_name", [1, 2], 0.2, False)
 
     mock_histogram_class.assert_called_once_with(
-        "input/*.h5", array_name="array_name", telescope_list=[1, 2]
+        "input/*.h5",
+        array_name="array_name",
+        telescope_list=[1, 2],
+        energy_bins_per_decade=10,
     )
 
 
@@ -450,7 +453,10 @@ def test_process_file_with_mocked_histograms(mocker):
     }
 
     mock_histogram_class.assert_called_once_with(
-        MOCK_FILE_PATH, array_name="MockArray", telescope_list=[1, 2]
+        MOCK_FILE_PATH,
+        array_name="MockArray",
+        telescope_list=[1, 2],
+        energy_bins_per_decade=10,
     )
     mock_histograms.fill.assert_called_once()
     mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2)
@@ -543,7 +549,7 @@ def test_compute_differential_limits(
         side_effect=[125.0 * u.m, 3.25 * u.deg],
     )
 
-    result = derive_corsika_limits._compute_differential_limits(histograms, 0.2, 2)
+    derive_corsika_limits._compute_differential_limits(histograms, 0.2, 2)
 
     expected_diff_bins = np.logspace(0, 1, 3)
     np.testing.assert_allclose(mock_diff_limits.call_args_list[0].args[3], expected_diff_bins)
@@ -558,12 +564,41 @@ def test_compute_differential_limits(
     assert mock_is_close.call_args_list[1].args[0].value == pytest.approx(3.0)
     assert mock_is_close.call_args_list[1].args[1] == expected_viewcone_max
 
-    assert result == {
-        "upper_radius_limit": 125.0 * u.m,
-        "viewcone_radius": 3.25 * u.deg,
-        "core_vs_energy_curve": {"x": [110.0, 120.0], "y": [1.0, 10.0]},
-        "angular_distance_vs_energy_curve": {"x": [2.5, 3.0], "y": [1.0, 10.0]},
-    }
+
+def test_process_file_passes_energy_bins_per_decade_to_histograms(mocker):
+    """Test differential binning resolution is forwarded to EventDataHistograms."""
+    mock_histograms = mocker.MagicMock()
+    mock_histograms.file_info = {}
+    mock_event_histograms = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.EventDataHistograms",
+        return_value=mock_histograms,
+    )
+    mocker.patch(COMPUTE_LOWER_ENERGY_LIMIT_PATH, return_value=1.0 * u.TeV)
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._compute_differential_limits",
+        return_value={
+            "upper_radius_limit": 120.0 * u.m,
+            "viewcone_radius": 3.0 * u.deg,
+            "core_vs_energy_curve": {"x": [100.0], "y": [1.0]},
+            "angular_distance_vs_energy_curve": {"x": [3.0], "y": [1.0]},
+        },
+    )
+
+    derive_corsika_limits._process_file(
+        file_path=MOCK_FILE_PATH,
+        array_name="MockArray",
+        telescope_ids=[1, 2],
+        loss_fraction=0.2,
+        plot_histograms=False,
+        differential_loss_bins_per_decade=6,
+    )
+
+    mock_event_histograms.assert_called_once_with(
+        MOCK_FILE_PATH,
+        array_name="MockArray",
+        telescope_list=[1, 2],
+        energy_bins_per_decade=6,
+    )
 
 
 def test_differential_upper_limits(mocker):

@@ -33,14 +33,23 @@ class EventDataHistograms:
         Name of the telescope array configuration (default is None).
     telescope_list : list, optional
         List of telescope IDs to filter the events (default is None).
+    energy_bins_per_decade : int, optional
+        Number of energy bins per decade for logarithmic energy histograms.
     """
 
-    def __init__(self, event_data_file, array_name=None, telescope_list=None):
+    def __init__(
+        self,
+        event_data_file,
+        array_name=None,
+        telescope_list=None,
+        energy_bins_per_decade=10,
+    ):
         """Initialize."""
         self._logger = logging.getLogger(__name__)
         self.event_data_file = event_data_file
         self.event_data_files = self._normalize_event_data_files(event_data_file)
         self.array_name = array_name
+        self.energy_bins_per_decade = max(int(energy_bins_per_decade), 1)
 
         self.histograms = {}
         self.file_info = {}
@@ -96,6 +105,7 @@ class EventDataHistograms:
             "azimuth": self._get_file_info_value(file_info_table, "azimuth", "deg"),
             "nsb_level": self._get_file_info_value(file_info_table, "nsb_level"),
             "energy_min": self._get_file_info_value(file_info_table, "energy_min", "TeV"),
+            "energy_max": self._get_file_info_value(file_info_table, "energy_max", "TeV"),
             "core_scatter_max": self._get_file_info_value(file_info_table, "core_scatter_max", "m"),
             "viewcone_max": self._get_file_info_value(file_info_table, "viewcone_max", "deg"),
             "solid_angle": self._get_file_info_value(file_info_table, "solid_angle", "sr"),
@@ -352,8 +362,8 @@ class EventDataHistograms:
         """
         Return bins for the energy histogram.
 
-        Align bins to full decades of energy, with 10 bins per decade, and ensure that the
-        range covers the energy range of the events.
+        Align bins to full decades of energy, using the configured bins per decade,
+        and ensure that the range covers the energy range of the events.
 
         Returns
         -------
@@ -372,7 +382,7 @@ class EventDataHistograms:
         if upper_decade <= lower_decade:
             upper_decade = lower_decade + 1
 
-        n_bins = int((upper_decade - lower_decade) * 10)
+        n_bins = int((upper_decade - lower_decade) * self.energy_bins_per_decade)
         return np.logspace(lower_decade, upper_decade, n_bins + 1)
 
     @property

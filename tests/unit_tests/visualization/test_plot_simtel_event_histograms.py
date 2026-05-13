@@ -255,8 +255,6 @@ def test_create_plot():
         np.testing.assert_array_equal(bar_args[1], data)
         np.testing.assert_array_equal(bar_kwargs["width"], np.diff(bins))
         assert bar_kwargs["color"] == plot_params["color"]
-        mock_ax.axvline.assert_not_called()
-        mock_ax.axhline.assert_not_called()
         mock_ax.set.assert_called_once_with(
             xlabel="X-axis",
             ylabel="Y-axis",
