@@ -172,7 +172,7 @@ def test_collect_production_metrics_handles_empty_and_partial_datasets(mocker):
 
     assert metrics[0].simulated_event_count == 2
     assert metrics[0].triggered_event_count == 0
-    assert metrics[0].trigger_fraction == 0.0
+    assert metrics[0].trigger_fraction == pytest.approx(0.0)
     assert metrics[0].trigger_combinations == {}
     np.testing.assert_array_equal(metrics[0].triggered_energies, np.array([]))
 
@@ -189,7 +189,7 @@ def test_collect_production_metrics_empty_input_keeps_arrays_empty(mocker):
 
     assert metrics[0].simulated_event_count == 0
     assert metrics[0].triggered_event_count == 0
-    assert metrics[0].trigger_fraction == 0.0
+    assert metrics[0].trigger_fraction == pytest.approx(0.0)
     np.testing.assert_array_equal(metrics[0].simulated_energies, np.array([]))
     np.testing.assert_array_equal(metrics[0].trigger_multiplicity, np.array([], dtype=int))
 

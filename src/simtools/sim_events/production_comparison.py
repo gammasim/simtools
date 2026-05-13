@@ -104,7 +104,7 @@ def _normalize_production_arguments(production_arguments):
 def _pairwise_label_file_arguments(flat_arguments):
     """Convert a flat list of strings into ``[(label, files), ...]`` pairs."""
     if len(flat_arguments) % 2 != 0:
-        raise ValueError("Production arguments must be provided as label/file pairs.")
+        _raise_invalid_production_arguments()
     return [
         (flat_arguments[index], flat_arguments[index + 1])
         for index in range(0, len(flat_arguments), 2)
@@ -114,12 +114,17 @@ def _pairwise_label_file_arguments(flat_arguments):
 def _normalize_single_production_argument(argument):
     """Normalize one nested production argument into label/file pairs."""
     if not isinstance(argument, list | tuple):
-        raise ValueError("Production arguments must be provided as label/file pairs.")
+        _raise_invalid_production_arguments()
     if not all(isinstance(value, str) for value in argument):
-        raise ValueError("Production arguments must be provided as label/file pairs.")
+        _raise_invalid_production_arguments()
     if len(argument) == 2:
         return [(argument[0], argument[1])]
     return _pairwise_label_file_arguments(list(argument))
+
+
+def _raise_invalid_production_arguments():
+    """Raise a standardized parser error for malformed production arguments."""
+    raise ValueError("Production arguments must be provided as label/file pairs.")
 
 
 def collect_production_metrics(production_descriptors, telescope_list=None):
