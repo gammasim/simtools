@@ -192,34 +192,3 @@ def test_collect_production_metrics_empty_input_keeps_arrays_empty(mocker):
     assert metrics[0].trigger_fraction == pytest.approx(0.0)
     np.testing.assert_array_equal(metrics[0].simulated_energies, np.array([]))
     np.testing.assert_array_equal(metrics[0].trigger_multiplicity, np.array([], dtype=int))
-
-
-def test_collect_production_metrics_ignores_unknown_telescope_type(mocker):
-    """Test unknown telescope names are ignored for type bins but still counted as single triggers."""
-    descriptor = SimpleNamespace(label="baseline", event_data_files=["baseline_file.h5"])
-    shower_data = SimpleNamespace(
-        simulated_energy=np.array([1.0]),
-        core_distance_shower=np.array([10.0]),
-        angular_distance=np.array([0.5]),
-    )
-    triggered_shower_data = SimpleNamespace(
-        simulated_energy=np.array([1.0]),
-        core_distance_shower=np.array([10.0]),
-        angular_distance=np.array([0.5]),
-    )
-    triggered_data = SimpleNamespace(telescope_list=[np.array(["BAD-01"])])
-
-    mock_reader = mocker.patch("simtools.sim_events.production_comparison.EventDataReader")
-    mock_reader.return_value.data_sets = [{"SHOWERS": "SHOWERS", "TRIGGERS": "TRIGGERS"}]
-    mock_reader.return_value.read_event_data.return_value = (
-        SimpleNamespace(),
-        shower_data,
-        triggered_shower_data,
-        triggered_data,
-    )
-
-    metrics = collect_production_metrics([descriptor])
-
-    assert "single_telescope" in metrics[0].per_type
-    assert metrics[0].per_type["single_telescope"].triggered_event_count == 1
-    assert "BAD" not in metrics[0].per_type

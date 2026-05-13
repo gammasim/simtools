@@ -105,7 +105,11 @@ def test_mixed_trigger_filter_accepts_only_allowed_signatures():
 
 @pytest.mark.parametrize(
     ("quantity_name", "expected"),
-    [("energy", (False,)), ("core_distance", (False, True)), ("angular_distance", (False, True))],
+    [
+        ("energy", (False, None)),
+        ("core_distance", (False, True)),
+        ("angular_distance", (False, True)),
+    ],
 )
 def test_distribution_cumulative_variants(quantity_name, expected):
     """Test cumulative variant selection by quantity."""

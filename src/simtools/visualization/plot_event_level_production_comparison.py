@@ -40,6 +40,8 @@ def plot(metrics_per_production, output_path, bins=40):
                 bins=bins,
             )
         for cumulative in _distribution_cumulative_variants(quantity_name):
+            if cumulative is None:
+                continue
             _plot_quantity_distribution(
                 metrics_per_production,
                 output_path,
@@ -519,9 +521,9 @@ def _plot_telescope_participation(metrics_per_production, output_path):
 
 
 def _distribution_cumulative_variants(quantity_name):
-    """Return enabled cumulative variants for one quantity."""
+    """Return two cumulative slots, using None to disable one for specific quantities."""
     if quantity_name == "energy":
-        return (False,)
+        return (False, None)
     return (False, True)
 
 
@@ -648,5 +650,6 @@ _PER_TYPE_PLOT_FNS = [
         )
         for q, lbl, sc in _QUANTITY_CONFIGS
         for cum in _distribution_cumulative_variants(q)
+        if cum is not None
     ],
 ]
