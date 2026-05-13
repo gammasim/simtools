@@ -105,6 +105,7 @@ def _plot_trigger_fraction(metrics_per_production, output_path, suffix=""):
 
 def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", bins=None):
     """Plot triggered telescope multiplicity distributions."""
+    del bins
     fig, ax = plt.subplots(figsize=(9, 6))
 
     global_max = 0
@@ -118,16 +119,16 @@ def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", b
         plt.close(fig)
         return
 
-    bins = np.arange(1, global_max + 2)
+    bin_edges = np.arange(1, global_max + 2)
     for metrics in metrics_per_production:
         if metrics.trigger_multiplicity.size == 0:
             continue
-        counts, _ = np.histogram(metrics.trigger_multiplicity, bins=bins)
+        counts, _ = np.histogram(metrics.trigger_multiplicity, bins=bin_edges)
         fractions, errors = _fraction_with_poisson_errors(counts)
-        stairs_artist = ax.stairs(fractions, bins, linewidth=1.5, label=metrics.label)
+        stairs_artist = ax.stairs(fractions, bin_edges, linewidth=1.5, label=metrics.label)
         _plot_histogram_error_bars(
             ax,
-            bins,
+            bin_edges,
             fractions,
             errors,
             color=_artist_color(stairs_artist),
@@ -137,7 +138,7 @@ def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", b
     ax.set_ylabel("Fraction of Triggered Events")
     type_label = f" ({suffix.lstrip('_').replace('_', ' ')})" if suffix else ""
     ax.set_title(f"Trigger Multiplicity {type_label}")
-    ax.set_xticks(bins[:-1])
+    ax.set_xticks(bin_edges[:-1])
     ax.grid(alpha=0.25)
     ax.legend()
 
