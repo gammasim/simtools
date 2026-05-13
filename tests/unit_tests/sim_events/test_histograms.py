@@ -834,7 +834,7 @@ def test_update_file_info_stores_energy_max(mock_reader, hdf5_file_name):
 
     histograms._update_file_info(file_info_table)
 
-    assert histograms.file_info["energy_max"] == 30.0 * u.TeV
+    assert_quantity_allclose(histograms.file_info["energy_max"], 30.0 * u.TeV)
 
 
 def test_print_summary(mock_histograms, mocker, caplog):
