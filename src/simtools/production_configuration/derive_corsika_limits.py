@@ -436,7 +436,7 @@ def _compute_differential_limits(
     )
 
     upper_radius_limit = _is_close(
-        core_max * u.m,
+        _core_distance_ground_to_shower(core_max * u.m, histograms.file_info.get("zenith")),
         histograms.file_info["core_scatter_max"].to("m")
         if "core_scatter_max" in histograms.file_info
         else None,
@@ -697,6 +697,13 @@ def _is_close(value, reference, warning_text):
     return value
 
 
+def _core_distance_ground_to_shower(core_distance, zenith):
+    """Convert core distance from ground to shower coordinates using zenith."""
+    if zenith is None:
+        return core_distance
+    return core_distance * np.cos(zenith.to("rad").value)
+
+
 def compute_upper_radius_limit(histograms, loss_fraction, loss_min_events=10):
     """
     Compute the upper radial distance based on the event loss fraction.
@@ -715,7 +722,7 @@ def compute_upper_radius_limit(histograms, loss_fraction, loss_min_events=10):
     astropy.units.Quantity
         Upper radial distance in m.
     """
-    radius_limit = (
+    radius_limit_ground = (
         _compute_limits(
             histograms.histograms["core_distance"]["histogram"],
             histograms.core_distance_bins,
@@ -724,6 +731,10 @@ def compute_upper_radius_limit(histograms, loss_fraction, loss_min_events=10):
             limit_type="upper",
         )
         * u.m
+    )
+    radius_limit = _core_distance_ground_to_shower(
+        radius_limit_ground,
+        histograms.file_info.get("zenith"),
     )
     return _is_close(
         radius_limit,
