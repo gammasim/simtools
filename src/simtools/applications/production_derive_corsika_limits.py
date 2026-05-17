@@ -12,8 +12,7 @@ simulations. It supports the derivation of the following CORSIKA configuration p
 
 Broad-range simulations in this context are simulation sets generated with wide-ranging
 definitions for above parameters.
-Limits are computed based on a configurable maximum event loss fraction
-and a minimum number of events lost after cuts.
+Limits are computed from configurable per-axis allowed-loss settings.
 Results are provided as a table with the following columns:
 
 +---------------------+-----------+--------+-----------------------------------------------+
@@ -58,11 +57,11 @@ event_data_file (str or list of str, required)
     multi-production processing.
 telescope_ids (str, optional)
     Custom array layout file containing telescope IDs.
-loss_fraction (float, required)
-    Maximum event-loss fraction for limit computation.
-loss_min_events (int, optional)
-    Minimum number of events that must be lost after applying a limit.
-    Default: 10.
+allowed_losses (str, required, repeatable)
+    Per-axis allowed-loss tuple in the form
+    ``axis,fraction,min_events``.
+    Use once per axis (energy, core_distance, angular_distance), or use ``all``
+    to set all axes and optionally override selected axes with additional entries.
 plot_histograms (bool, optional)
     Plot histograms of the event data.
 output_file (str, optional)
@@ -83,8 +82,9 @@ Derive limits for a single production with a list of array layouts:
     simtools-production-derive-corsika-limits \\
         --event_data_file event_dat_file.hdf5 \\
         --array_layout_name alpha,beta \\
-        --loss_fraction 1e-6 \\
-        --loss_min_events 10 \\
+        --allowed_losses energy,1e-6,10 \
+        --allowed_losses core_distance,1e-6,10 \
+        --allowed_losses angular_distance,1e-6,10 \
         --plot_histograms \\
         --output_file corsika_simulation_limits.ecsv
 
@@ -95,8 +95,7 @@ Derive limits for a single production with a given file for custom defined array
     simtools-production-derive-corsika-limits \\
         --event_data_file event_dat_file.hdf5 \\
         --telescope_ids path/to/telescope_configs.yaml \\
-        --loss_fraction 1e-6 \\
-        --loss_min_events 10 \\
+        --allowed_losses all,1e-6,10 \
         --plot_histograms \\
         --output_file corsika_simulation_limits.ecsv
 
@@ -108,8 +107,7 @@ Derive limits for multiple independent productions in parallel:
         --event_data_file pattern_1_*.hdf5 \\
         --event_data_file pattern_2_*.hdf5 \\
         --array_layout_name alpha \\
-        --loss_fraction 1e-6 \\
-        --loss_min_events 10 \\
+        --allowed_losses all,1e-6,10 \
         --plot_histograms \\
         --n_workers 4 \\
         --output_file corsika_simulation_limits.ecsv
@@ -140,17 +138,18 @@ def _add_arguments(parser):
         required=True,
     )
     parser.add_argument(
-        "--loss_fraction",
-        type=float,
+        "--allowed_losses",
+        type=str,
         required=True,
-        help="Maximum event-loss fraction for limit computation.",
-    )
-    parser.add_argument(
-        "--loss_min_events",
-        type=int,
-        required=False,
-        default=10,
-        help="Minimum number of events that must be lost after applying a limit.",
+        nargs="+",
+        action="extend",
+        metavar="AXIS,FRACTION,MIN_EVENTS",
+        help=(
+            "Per-axis allowed losses as axis,fraction,min_events. Repeat this argument "
+            "for each axis using canonical names energy, core_distance, angular_distance, "
+            "or use all. "
+            "Example: --allowed_losses energy,1e-6,10"
+        ),
     )
     parser.add_argument(
         "--plot_histograms",

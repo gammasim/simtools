@@ -21,6 +21,7 @@ from simtools.visualization import plot_simtel_event_histograms
 _logger = logging.getLogger(__name__)
 
 FILE_INFO_KEYS = ("primary_particle", "zenith", "azimuth", "nsb_level")
+LOSS_AXES = ("energy", "core_distance", "angular_distance")
 RESULT_COLUMNS = [
     "production_index",
     "event_data_file",
@@ -122,8 +123,7 @@ def _execute_production_job(job_spec):
     production_pattern = job_spec["production_pattern"]
     array_name = job_spec["array_name"]
     telescope_ids = job_spec["telescope_ids"]
-    loss_fraction = job_spec["loss_fraction"]
-    loss_min_events = job_spec.get("loss_min_events", 10)
+    allowed_losses = job_spec["allowed_losses"]
     plot_histograms = job_spec["plot_histograms"]
     output_subdir = job_spec.get("output_subdir")
     differential_loss_bins_per_decade = job_spec.get("differential_loss_bins_per_decade", 0)
@@ -137,8 +137,7 @@ def _execute_production_job(job_spec):
         production_pattern,
         array_name,
         telescope_ids,
-        loss_fraction,
-        loss_min_events,
+        allowed_losses,
         plot_histograms,
         output_subdir=output_subdir,
         differential_loss_bins_per_decade=differential_loss_bins_per_decade,
@@ -175,6 +174,72 @@ def _resolve_telescope_configs(args_dict):
     )
 
 
+def _parse_allowed_losses(allowed_losses_args):
+    """
+    Parse repeatable --allowed_losses values into per-axis settings.
+
+    Parameters
+    ----------
+    allowed_losses_args : list[str]
+        List of values in the form "axis,fraction,min_events".
+
+    Returns
+    -------
+    dict
+        Mapping of axis name to dict with keys "loss_fraction" and "loss_min_events".
+    """
+    if not allowed_losses_args:
+        raise ValueError(
+            "No allowed-loss configuration provided. Use --allowed_losses axis,fraction,min_events"
+        )
+
+    parsed = {}
+    for raw_value in allowed_losses_args:
+        parts = [part.strip() for part in raw_value.split(",")]
+        if len(parts) != 3:
+            raise ValueError(
+                f"Invalid --allowed_losses value '{raw_value}'. "
+                "Expected format: axis,fraction,min_events"
+            )
+
+        axis_raw, fraction_raw, min_events_raw = parts
+        try:
+            fraction = float(fraction_raw)
+            min_events = int(min_events_raw)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Invalid --allowed_losses value '{raw_value}': "
+                "fraction must be float and min_events must be int"
+            ) from exc
+
+        axis_name = axis_raw.strip().lower()
+        if axis_name == "all":
+            for axis_name in LOSS_AXES:
+                parsed[axis_name] = {
+                    "loss_fraction": fraction,
+                    "loss_min_events": min_events,
+                }
+            continue
+
+        if axis_name not in LOSS_AXES:
+            raise ValueError(
+                "Invalid axis for --allowed_losses. Allowed axes: "
+                "energy, core_distance, angular_distance, all."
+            )
+        parsed[axis_name] = {
+            "loss_fraction": fraction,
+            "loss_min_events": min_events,
+        }
+
+    missing_axes = [axis_name for axis_name in LOSS_AXES if axis_name not in parsed]
+    if missing_axes:
+        raise ValueError(
+            f"Missing --allowed_losses entries for axis/axes: {', '.join(missing_axes)}"
+        )
+
+    return parsed
+
+
 def _build_production_subdirectories(production_patterns, output_dir, is_multi_production):
     """Build and create per-production output subdirectories when needed."""
     if not is_multi_production:
@@ -205,6 +270,7 @@ def generate_corsika_limits_grid(args_dict):
         Dictionary containing command line arguments.
     """
     production_patterns = _normalize_event_data_file(args_dict["event_data_file"])
+    allowed_losses = _parse_allowed_losses(args_dict.get("allowed_losses"))
     differential_loss_bins_per_decade = int(args_dict.get("differential_loss_bins_per_decade", 0))
     n_productions = len(production_patterns)
     is_multi_production = n_productions > 1
@@ -236,8 +302,7 @@ def generate_corsika_limits_grid(args_dict):
                 "production_pattern": production_pattern,
                 "array_name": array_name,
                 "telescope_ids": telescope_ids,
-                "loss_fraction": args_dict["loss_fraction"],
-                "loss_min_events": int(args_dict.get("loss_min_events", 10)),
+                "allowed_losses": allowed_losses,
                 "plot_histograms": args_dict["plot_histograms"],
                 "output_subdir": output_subdir,
                 "differential_loss_bins_per_decade": differential_loss_bins_per_decade,
@@ -252,15 +317,14 @@ def generate_corsika_limits_grid(args_dict):
         max_workers=n_workers,
     )
 
-    write_results(results, args_dict)
+    write_results(results, args_dict, allowed_losses)
 
 
 def _process_file(
     file_path,
     array_name,
     telescope_ids,
-    loss_fraction,
-    loss_min_events=10,
+    allowed_losses,
     plot_histograms=False,
     output_subdir=None,
     differential_loss_bins_per_decade=0,
@@ -278,10 +342,8 @@ def _process_file(
         Name of the telescope array configuration.
     telescope_ids : list[str]
         List of telescope IDs (array-element names) to filter the events.
-    loss_fraction : float
-        Fraction of events to be lost.
-    loss_min_events : int
-        Minimum number of events to be lost after applying a derived limit.
+    allowed_losses : dict
+        Per-axis loss settings for energy/core_distance/angular_distance.
     plot_histograms : bool
         Whether to plot histograms.
     output_subdir : Path or None, optional
@@ -306,29 +368,28 @@ def _process_file(
     limits = {
         "lower_energy_limit": compute_lower_energy_limit(
             histograms,
-            loss_fraction,
-            0,  # No minimum event loss applied for energy limit (not differential)
+            allowed_losses["energy"]["loss_fraction"],
+            allowed_losses["energy"]["loss_min_events"],
         ),
     }
     if differential_loss_bins_per_decade > 0:
         limits.update(
             _compute_differential_limits(
                 histograms,
-                loss_fraction,
-                loss_min_events,
+                allowed_losses,
                 differential_loss_bins_per_decade,
             )
         )
     else:
         limits["upper_radius_limit"] = compute_upper_radius_limit(
             histograms,
-            loss_fraction,
-            loss_min_events,
+            allowed_losses["core_distance"]["loss_fraction"],
+            allowed_losses["core_distance"]["loss_min_events"],
         )
         limits["viewcone_radius"] = compute_viewcone(
             histograms,
-            loss_fraction,
-            loss_min_events,
+            allowed_losses["angular_distance"]["loss_fraction"],
+            allowed_losses["angular_distance"]["loss_min_events"],
         )
 
     limits.update({key: histograms.file_info.get(key) for key in FILE_INFO_KEYS})
@@ -345,7 +406,11 @@ def _process_file(
     return limits
 
 
-def _compute_differential_limits(histograms, loss_fraction, loss_min_events, bins_per_decade):
+def _compute_differential_limits(
+    histograms,
+    allowed_losses,
+    bins_per_decade,
+):
     """Compute core and viewcone limits per energy bin and return max limits."""
     low = int(np.floor(np.log10(np.min(histograms.energy_bins))))
     high = int(np.ceil(np.log10(np.max(histograms.energy_bins))))
@@ -356,8 +421,7 @@ def _compute_differential_limits(histograms, loss_fraction, loss_min_events, bin
         histograms.core_distance_bins,
         histograms.energy_bins,
         diff_e_bins,
-        loss_fraction,
-        loss_min_events,
+        allowed_losses["core_distance"],
         "core_scatter",
         "m",
     )
@@ -366,8 +430,7 @@ def _compute_differential_limits(histograms, loss_fraction, loss_min_events, bin
         histograms.view_cone_bins,
         histograms.energy_bins,
         diff_e_bins,
-        loss_fraction,
-        loss_min_events,
+        allowed_losses["angular_distance"],
         "viewcone",
         "deg",
     )
@@ -401,8 +464,7 @@ def _differential_upper_limits(
     x_bins,
     y_bins,
     diff_e_bins,
-    loss_fraction,
-    loss_min_events,
+    allowed_loss,
     name,
     unit,
 ):
@@ -420,8 +482,8 @@ def _differential_upper_limits(
         limit = _compute_limits(
             projected,
             x_bins,
-            loss_fraction,
-            loss_min_events,
+            allowed_loss["loss_fraction"],
+            allowed_loss["loss_min_events"],
             limit_type="upper",
         )
         keep = np.searchsorted(x_bins, limit, side="left")
@@ -437,7 +499,7 @@ def _differential_upper_limits(
     )
 
 
-def write_results(results, args_dict):
+def write_results(results, args_dict, allowed_losses):
     """
     Write the computed limits as astropy table to file.
 
@@ -450,8 +512,7 @@ def write_results(results, args_dict):
     """
     table = _create_results_table(
         results,
-        args_dict["loss_fraction"],
-        args_dict.get("loss_min_events", 10),
+        allowed_losses,
     )
 
     output_dir = io_handler.IOHandler().get_output_directory()
@@ -463,7 +524,7 @@ def write_results(results, args_dict):
     MetadataCollector.dump(args_dict, output_file)
 
 
-def _create_results_table(results, loss_fraction, loss_min_events=10):
+def _create_results_table(results, allowed_losses):
     """
     Convert list of simulation results to an astropy Table with metadata.
 
@@ -473,10 +534,8 @@ def _create_results_table(results, loss_fraction, loss_min_events=10):
     ----------
     results : list[dict]
         Computed limits per file and telescope configuration.
-    loss_fraction : float
-        Fraction of lost events (added to metadata).
-    loss_min_events : int, optional
-        Minimum number of events to keep after applying a limit.
+    allowed_losses : dict
+        Per-axis loss settings added to metadata.
 
     Returns
     -------
@@ -498,10 +557,13 @@ def _create_results_table(results, loss_fraction, loss_min_events=10):
         {
             "created": datetime.datetime.now().isoformat(),
             "description": "Lookup table for CORSIKA limits computed from simulations.",
-            "loss_fraction": loss_fraction,
-            "loss_min_events": int(loss_min_events),
         }
     )
+    for axis_name in LOSS_AXES:
+        table.meta[f"loss_fraction_{axis_name}"] = allowed_losses[axis_name]["loss_fraction"]
+        table.meta[f"loss_min_events_{axis_name}"] = int(
+            allowed_losses[axis_name]["loss_min_events"]
+        )
 
     return table
 
