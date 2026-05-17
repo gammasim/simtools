@@ -200,12 +200,14 @@ class EventDataHistograms:
                 "event_data": event_data,
                 "bin_edges": self.core_distance_bins,
                 "axis_titles": ["Core Distance (m)", event_count_axis_title],
+                "plot_scales": {"x": "log", "y": "log"},
             },
             "angular_distance": {
                 "event_data_column": "angular_distance",
                 "event_data": triggered_data,
                 "bin_edges": self.view_cone_bins,
                 "axis_titles": ["Angular Distance (deg)", event_count_axis_title],
+                "plot_scales": {"x": "log", "y": "log"},
             },
             "x_core_shower_vs_y_core_shower": {
                 "event_data_column": ("x_core_shower", "y_core_shower"),
@@ -274,6 +276,7 @@ class EventDataHistograms:
             "1d": is_1d,
             "bin_edges": bin_edges,
             "title": title,
+            "title_fontsize": "x-small",
             "axis_titles": axis_titles,
             "suffix": suffix,
             "plot_scales": plot_scales,
