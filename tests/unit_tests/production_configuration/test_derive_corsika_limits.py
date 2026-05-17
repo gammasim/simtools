@@ -17,6 +17,11 @@ COMPUTE_UPPER_RADIUS_LIMIT_PATH = (
 )
 COMPUTE_VIEWCONE_PATH = "simtools.production_configuration.derive_corsika_limits.compute_viewcone"
 MOCK_FILE_PATH = "mock_file.fits"
+DEFAULT_ALLOWED_LOSSES = {
+    "energy": {"loss_fraction": 0.2, "loss_min_events": 10},
+    "core_distance": {"loss_fraction": 0.2, "loss_min_events": 10},
+    "angular_distance": {"loss_fraction": 0.2, "loss_min_events": 10},
+}
 
 
 def _pool_result(
@@ -56,7 +61,7 @@ def test_process_file_passes_event_data_patterns_through(mocker):
         "input/*.h5",
         "array_name",
         [1, 2],
-        0.2,
+        DEFAULT_ALLOWED_LOSSES,
         plot_histograms=False,
     )
 
@@ -75,7 +80,7 @@ def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory)
 
     mock_dump = mocker.patch("simtools.data_model.metadata_collector.MetadataCollector.dump")
 
-    derive_corsika_limits.write_results(mock_results, mock_args_dict)
+    derive_corsika_limits.write_results(mock_results, mock_args_dict, DEFAULT_ALLOWED_LOSSES)
 
     # Verify metadata was written
     mock_dump.assert_called_once()
@@ -85,14 +90,19 @@ def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory)
 
 def test_create_results_table(mock_results):
     """Test _create_results_table function."""
-    table = derive_corsika_limits._create_results_table(mock_results, loss_fraction=0.2)
+    table = derive_corsika_limits._create_results_table(mock_results, DEFAULT_ALLOWED_LOSSES)
     table.info()
 
     assert isinstance(table, Table)
     assert len(table) == 1
     assert "zenith" in table.colnames
     assert table["zenith"].unit == u.deg
-    assert table.meta["loss_fraction"] == pytest.approx(0.2)
+    assert table.meta["loss_fraction_energy"] == pytest.approx(0.2)
+    assert table.meta["loss_min_events_energy"] == 10
+    assert table.meta["loss_fraction_core_distance"] == pytest.approx(0.2)
+    assert table.meta["loss_min_events_core_distance"] == 10
+    assert table.meta["loss_fraction_angular_distance"] == pytest.approx(0.2)
+    assert table.meta["loss_min_events_angular_distance"] == 10
     assert isinstance(table.meta["created"], str)
     assert "description" in table.meta
 
@@ -405,7 +415,7 @@ def test_process_file_with_mocked_histograms(mocker):
         file_path=MOCK_FILE_PATH,
         array_name="MockArray",
         telescope_ids=[1, 2],
-        loss_fraction=0.2,
+        allowed_losses=DEFAULT_ALLOWED_LOSSES,
         plot_histograms=False,
     )
 
@@ -426,7 +436,7 @@ def test_process_file_with_mocked_histograms(mocker):
         energy_bins_per_decade=10,
     )
     mock_histograms.fill.assert_called_once()
-    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2, 0)
+    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2, 10)
     mock_compute_upper_radius_limit.assert_called_once_with(mock_histograms, 0.2, 10)
     mock_compute_viewcone.assert_called_once_with(mock_histograms, 0.2, 10)
 
@@ -462,7 +472,7 @@ def test_process_file_with_differential_loss_per_energy_bin(mocker):
         file_path=MOCK_FILE_PATH,
         array_name="MockArray",
         telescope_ids=[1, 2],
-        loss_fraction=0.2,
+        allowed_losses=DEFAULT_ALLOWED_LOSSES,
         plot_histograms=False,
         differential_loss_bins_per_decade=6,
     )
@@ -473,10 +483,10 @@ def test_process_file_with_differential_loss_per_energy_bin(mocker):
     assert result["core_vs_energy_curve"] == {"x": [100.0, 120.0], "y": [0.1, 1.0]}
     assert result["angular_distance_vs_energy_curve"] == {"x": [2.5, 3.0], "y": [0.1, 1.0]}
 
-    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2, 0)
+    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2, 10)
     mock_compute_upper_radius_limit.assert_not_called()
     mock_compute_viewcone.assert_not_called()
-    mock_differential.assert_called_once_with(mock_histograms, 0.2, 10, 6)
+    mock_differential.assert_called_once_with(mock_histograms, DEFAULT_ALLOWED_LOSSES, 6)
 
 
 @pytest.mark.parametrize(
@@ -516,15 +526,17 @@ def test_compute_differential_limits(
         side_effect=[125.0 * u.m, 3.25 * u.deg],
     )
 
-    derive_corsika_limits._compute_differential_limits(histograms, 0.2, 10, 2)
+    derive_corsika_limits._compute_differential_limits(histograms, DEFAULT_ALLOWED_LOSSES, 2)
 
     expected_diff_bins = np.logspace(0, 1, 3)
     np.testing.assert_allclose(mock_diff_limits.call_args_list[0].args[3], expected_diff_bins)
     np.testing.assert_allclose(mock_diff_limits.call_args_list[1].args[3], expected_diff_bins)
     assert mock_diff_limits.call_args_list[0].args[0] == "core-hist"
-    assert mock_diff_limits.call_args_list[0].args[6:] == ("core_scatter", "m")
+    assert mock_diff_limits.call_args_list[0].args[5:] == ("core_scatter", "m")
     assert mock_diff_limits.call_args_list[1].args[0] == "viewcone-hist"
-    assert mock_diff_limits.call_args_list[1].args[6:] == ("viewcone", "deg")
+    assert mock_diff_limits.call_args_list[1].args[5:] == ("viewcone", "deg")
+    assert mock_diff_limits.call_args_list[0].args[4] == DEFAULT_ALLOWED_LOSSES["core_distance"]
+    assert mock_diff_limits.call_args_list[1].args[4] == DEFAULT_ALLOWED_LOSSES["angular_distance"]
 
     assert mock_is_close.call_args_list[0].args[0].value == pytest.approx(120.0)
     assert mock_is_close.call_args_list[0].args[1] == expected_core_scatter_max
@@ -555,7 +567,7 @@ def test_process_file_passes_energy_bins_per_decade_to_histograms(mocker):
         file_path=MOCK_FILE_PATH,
         array_name="MockArray",
         telescope_ids=[1, 2],
-        loss_fraction=0.2,
+        allowed_losses=DEFAULT_ALLOWED_LOSSES,
         plot_histograms=False,
         differential_loss_bins_per_decade=6,
     )
@@ -581,8 +593,7 @@ def test_differential_upper_limits(mocker):
         x_bins=np.array([0.0, 1.0, 2.0, 3.0]),
         y_bins=np.array([1.0, 2.0, 4.0]),
         diff_e_bins=np.array([1.0, 2.0, 2.5, 3.0]),
-        loss_fraction=0.2,
-        loss_min_events=10,
+        allowed_loss=DEFAULT_ALLOWED_LOSSES["core_distance"],
         name="core_scatter",
         unit="m",
     )
@@ -611,8 +622,7 @@ def test_differential_upper_limits_falls_back_to_last_bin_edge(mocker):
         x_bins=np.array([0.0, 1.0, 2.0, 3.0]),
         y_bins=np.array([1.0, 2.0, 4.0]),
         diff_e_bins=np.array([1.0, 2.0, 3.0]),
-        loss_fraction=0.2,
-        loss_min_events=10,
+        allowed_loss=DEFAULT_ALLOWED_LOSSES["angular_distance"],
         name="viewcone",
         unit="deg",
     )
@@ -659,7 +669,7 @@ def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
         file_path=MOCK_FILE_PATH,
         array_name="MockArray",
         telescope_ids=[1, 2],
-        loss_fraction=0.2,
+        allowed_losses=DEFAULT_ALLOWED_LOSSES,
         plot_histograms=True,
     )
 
@@ -738,6 +748,103 @@ def test_get_production_directory_name_appends_uuid_on_collision(mocker):
     mock_uuid.assert_called_once()
 
 
+def test_parse_allowed_losses_explicit_axes():
+    """Test _parse_allowed_losses with explicit per-axis entries."""
+    result = derive_corsika_limits._parse_allowed_losses(
+        [
+            "energy,1e-6,10",
+            "core_distance,2e-6,20",
+            "angular_distance,3e-6,30",
+        ]
+    )
+
+    assert result["energy"]["loss_fraction"] == pytest.approx(1e-6)
+    assert result["energy"]["loss_min_events"] == 10
+    assert result["core_distance"]["loss_fraction"] == pytest.approx(2e-6)
+    assert result["core_distance"]["loss_min_events"] == 20
+    assert result["angular_distance"]["loss_fraction"] == pytest.approx(3e-6)
+    assert result["angular_distance"]["loss_min_events"] == 30
+
+
+def test_parse_allowed_losses_all_and_override():
+    """Test _parse_allowed_losses supports all plus later axis override."""
+    result = derive_corsika_limits._parse_allowed_losses(
+        [
+            "all,1e-6,10",
+            "energy,5e-7,5",
+        ]
+    )
+
+    assert result["energy"]["loss_fraction"] == pytest.approx(5e-7)
+    assert result["energy"]["loss_min_events"] == 5
+    assert result["core_distance"]["loss_fraction"] == pytest.approx(1e-6)
+    assert result["core_distance"]["loss_min_events"] == 10
+    assert result["angular_distance"]["loss_fraction"] == pytest.approx(1e-6)
+    assert result["angular_distance"]["loss_min_events"] == 10
+
+
+def test_parse_allowed_losses_missing_axis_raises():
+    """Test _parse_allowed_losses raises when required axes are missing."""
+    with pytest.raises(ValueError, match="Missing --allowed_losses entries"):
+        derive_corsika_limits._parse_allowed_losses(
+            [
+                "energy,1e-6,10",
+                "core_distance,1e-6,10",
+            ]
+        )
+
+
+def test_parse_allowed_losses_invalid_axis_raises():
+    """Test _parse_allowed_losses rejects invalid axis names."""
+    with pytest.raises(ValueError, match="Invalid axis for --allowed_losses"):
+        derive_corsika_limits._parse_allowed_losses(
+            [
+                "energy,1e-6,10",
+                "core_distance,1e-6,10",
+                "viewcone,1e-6,10",
+            ]
+        )
+
+
+def test_build_production_subdirectories_non_multi_returns_empty(tmp_test_directory):
+    """Test _build_production_subdirectories returns empty dict for single production."""
+    result = derive_corsika_limits._build_production_subdirectories(
+        ["pattern_1_*.hdf5"],
+        tmp_test_directory,
+        is_multi_production=False,
+    )
+    assert result == {}
+
+
+def test_build_production_subdirectories_creates_dirs(tmp_test_directory):
+    """Test _build_production_subdirectories creates per-production directories."""
+    patterns = ["pattern_1_*.hdf5", "pattern_2_*.hdf5"]
+    result = derive_corsika_limits._build_production_subdirectories(
+        patterns,
+        tmp_test_directory,
+        is_multi_production=True,
+    )
+
+    assert set(result.keys()) == set(patterns)
+    for output_subdir in result.values():
+        assert output_subdir.exists()
+        assert output_subdir.isdir()
+
+
+def test_core_distance_ground_to_shower_converts_with_zenith():
+    """Test _core_distance_ground_to_shower scales by cos(zenith)."""
+    result = derive_corsika_limits._core_distance_ground_to_shower(100.0 * u.m, 60.0 * u.deg)
+    assert result.unit == u.m
+    assert result.value == pytest.approx(50.0)
+
+
+def test_core_distance_ground_to_shower_no_zenith_returns_input():
+    """Test _core_distance_ground_to_shower returns input unchanged without zenith."""
+    input_distance = 123.0 * u.m
+    result = derive_corsika_limits._core_distance_ground_to_shower(input_distance, None)
+    assert result == input_distance
+
+
 def test_execute_production_job_single_job(mocker):
     """Test _execute_production_job executes one job correctly."""
     mock_histograms = mocker.MagicMock()
@@ -767,7 +874,7 @@ def test_execute_production_job_single_job(mocker):
         "production_pattern": "pattern_*.hdf5",
         "array_name": "LST",
         "telescope_ids": ["LSTN-01"],
-        "loss_fraction": 0.2,
+        "allowed_losses": DEFAULT_ALLOWED_LOSSES,
         "plot_histograms": False,
         "output_subdir": None,
     }
@@ -821,7 +928,11 @@ def test_generate_corsika_limits_grid_multi_production(mocker, tmp_test_director
     args_dict = {
         "event_data_file": ["pattern_1_*.hdf5", "pattern_2_*.hdf5"],
         "telescope_ids": "telescope_ids.yml",
-        "loss_fraction": 0.2,
+        "allowed_losses": [
+            "energy,0.2,10",
+            "core_distance,0.2,10",
+            "angular_distance,0.2,10",
+        ],
         "plot_histograms": False,
         "output_file": "test_output.ecsv",
         "n_workers": 2,
@@ -870,7 +981,11 @@ def test_generate_corsika_limits_grid_single_production_uses_pool(mocker, tmp_te
     args_dict = {
         "event_data_file": "pattern_*.hdf5",  # Single string, not list
         "telescope_ids": "telescope_ids.yml",
-        "loss_fraction": 0.2,
+        "allowed_losses": [
+            "energy,0.2,10",
+            "core_distance,0.2,10",
+            "angular_distance,0.2,10",
+        ],
         "plot_histograms": False,
         "output_file": "test_output.ecsv",
         "n_workers": 0,
@@ -891,7 +1006,7 @@ def test_create_results_table_with_production_columns(mock_results):
         res["production_index"] = i
         res["event_data_file"] = f"pattern_{i}_*.hdf5"
 
-    table = derive_corsika_limits._create_results_table(mock_results, loss_fraction=0.2)
+    table = derive_corsika_limits._create_results_table(mock_results, DEFAULT_ALLOWED_LOSSES)
 
     # Should include production-origin columns
     assert "production_index" in table.colnames
@@ -905,7 +1020,7 @@ def test_create_results_table_with_production_columns(mock_results):
 def test_create_results_table_without_production_columns(mock_results):
     """Test _create_results_table with missing production metadata values."""
     # Results without production metadata (old format)
-    table = derive_corsika_limits._create_results_table(mock_results, loss_fraction=0.2)
+    table = derive_corsika_limits._create_results_table(mock_results, DEFAULT_ALLOWED_LOSSES)
 
     # Production-origin columns are included and filled with None if missing
     assert "production_index" in table.colnames
@@ -952,7 +1067,7 @@ def test_process_file_with_output_subdir(mocker, tmp_test_directory):
         file_path=MOCK_FILE_PATH,
         array_name="MockArray",
         telescope_ids=["LSTN-01"],
-        loss_fraction=0.2,
+        allowed_losses=DEFAULT_ALLOWED_LOSSES,
         plot_histograms=True,
         output_subdir=output_subdir,
     )
@@ -972,7 +1087,11 @@ def mock_args_dict():
         "ignore_runtime_environment": False,
         "event_data_file": "dummy_event_data.h5",
         "output_file": "corsika_limits.ecsv",
-        "loss_fraction": 0.2,
+        "allowed_losses": [
+            "energy,0.2,10",
+            "core_distance,0.2,10",
+            "angular_distance,0.2,10",
+        ],
         "plot_histograms": False,
         "n_workers": 1,
         "array_layout_name": None,
