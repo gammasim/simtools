@@ -5,6 +5,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 
 import numpy as np
+from scipy import stats
 
 from simtools.sim_events.reader import EventDataReader
 from simtools.utils import names
@@ -36,6 +37,7 @@ class ProductionEventMetrics:
     simulated_angular_distances: np.ndarray = field(default_factory=lambda: np.array([]))
     triggered_angular_distances: np.ndarray = field(default_factory=lambda: np.array([]))
     per_type: dict = field(default_factory=dict)
+    comparison_statistics: dict = field(default_factory=dict)
 
     @property
     def trigger_fraction(self):
@@ -367,3 +369,112 @@ def _safe_concat(arrays, dtype=float):
     if len(arrays) == 0:
         return np.array([], dtype=dtype)
     return np.concatenate(arrays)
+
+
+def compute_ks_chi2_for_samples(baseline_samples, candidate_samples, bin_edges):
+    """Compute KS and Chi2 statistics for two sample arrays.
+
+    Parameters
+    ----------
+    baseline_samples : np.ndarray
+        Baseline sample values.
+    candidate_samples : np.ndarray
+        Candidate sample values.
+    bin_edges : np.ndarray
+        Histogram bin edges used to derive Chi2 counts.
+
+    Returns
+    -------
+    dict
+        KS and Chi2 statistics including p-values and counts metadata.
+    """
+    baseline_samples = np.asarray(baseline_samples)
+    candidate_samples = np.asarray(candidate_samples)
+    result = {
+        "ks_statistic": None,
+        "ks_pvalue": None,
+        "chi2_statistic": None,
+        "chi2_pvalue": None,
+        "valid": False,
+        "reason": "insufficient_data",
+    }
+
+    if baseline_samples.size == 0 or candidate_samples.size == 0:
+        return result
+
+    ks_test = stats.ks_2samp(baseline_samples, candidate_samples)
+    result["ks_statistic"] = float(ks_test.statistic)
+    result["ks_pvalue"] = float(ks_test.pvalue)
+
+    baseline_counts, _ = np.histogram(baseline_samples, bins=bin_edges)
+    candidate_counts, _ = np.histogram(candidate_samples, bins=bin_edges)
+    chi2_result = compute_ks_chi2_for_aligned_histograms(baseline_counts, candidate_counts)
+    result["chi2_statistic"] = chi2_result["chi2_statistic"]
+    result["chi2_pvalue"] = chi2_result["chi2_pvalue"]
+    result["valid"] = chi2_result["valid"]
+    result["reason"] = chi2_result["reason"]
+    result["baseline_counts"] = baseline_counts.astype(int).tolist()
+    result["candidate_counts"] = candidate_counts.astype(int).tolist()
+    result["bin_edges"] = np.asarray(bin_edges, dtype=float).tolist()
+    return result
+
+
+def compute_ks_chi2_for_aligned_histograms(baseline_counts, candidate_counts):
+    """Compute KS and Chi2 statistics from aligned count arrays.
+
+    Parameters
+    ----------
+    baseline_counts : np.ndarray
+        Baseline histogram counts on aligned support.
+    candidate_counts : np.ndarray
+        Candidate histogram counts on aligned support.
+
+    Returns
+    -------
+    dict
+        KS and Chi2 statistics including p-values and validity metadata.
+    """
+    baseline_counts = np.asarray(baseline_counts, dtype=float)
+    candidate_counts = np.asarray(candidate_counts, dtype=float)
+
+    result = {
+        "ks_statistic": None,
+        "ks_pvalue": None,
+        "chi2_statistic": None,
+        "chi2_pvalue": None,
+        "valid": False,
+        "reason": "insufficient_data",
+    }
+
+    baseline_total = float(np.sum(baseline_counts))
+    candidate_total = float(np.sum(candidate_counts))
+    if baseline_total <= 0 or candidate_total <= 0:
+        return result
+
+    baseline_cdf = np.cumsum(baseline_counts) / baseline_total
+    candidate_cdf = np.cumsum(candidate_counts) / candidate_total
+    result["ks_statistic"] = float(np.max(np.abs(baseline_cdf - candidate_cdf)))
+
+    support_mask = baseline_counts > 0
+    if not np.any(support_mask):
+        result["reason"] = "zero_baseline_counts"
+        return result
+
+    observed = candidate_counts[support_mask]
+    observed_total = float(np.sum(observed))
+    baseline_supported_total = float(np.sum(baseline_counts[support_mask]))
+    if observed_total <= 0 or baseline_supported_total <= 0:
+        result["reason"] = "invalid_expected_counts"
+        return result
+
+    expected = baseline_counts[support_mask] * (observed_total / baseline_supported_total)
+    if np.sum(expected) <= 0:
+        result["reason"] = "invalid_expected_counts"
+        return result
+
+    chi2 = stats.chisquare(f_obs=observed, f_exp=expected)
+    result["chi2_statistic"] = float(chi2.statistic)
+    result["chi2_pvalue"] = float(chi2.pvalue)
+    result["valid"] = True
+    result["reason"] = "ok"
+    return result

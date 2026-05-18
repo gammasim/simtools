@@ -5,6 +5,8 @@ import pytest
 
 from simtools.sim_events.production_comparison import (
     collect_production_metrics,
+    compute_ks_chi2_for_aligned_histograms,
+    compute_ks_chi2_for_samples,
     parse_production_arguments,
 )
 
@@ -192,3 +194,33 @@ def test_collect_production_metrics_empty_input_keeps_arrays_empty(mocker):
     assert metrics[0].trigger_fraction == pytest.approx(0.0)
     np.testing.assert_array_equal(metrics[0].simulated_energies, np.array([]))
     np.testing.assert_array_equal(metrics[0].trigger_multiplicity, np.array([], dtype=int))
+
+
+def test_compute_ks_chi2_for_samples_returns_statistics():
+    """Test KS/Chi2 statistics for sample-based comparisons."""
+    baseline = np.array([1.0, 2.0, 3.0, 4.0])
+    candidate = np.array([1.0, 2.0, 2.5, 4.0])
+    bin_edges = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+
+    result = compute_ks_chi2_for_samples(baseline, candidate, bin_edges)
+
+    assert result["ks_statistic"] is not None
+    assert result["ks_pvalue"] is not None
+    assert result["chi2_statistic"] is not None
+    assert result["chi2_pvalue"] is not None
+    assert result["valid"]
+    assert result["reason"] == "ok"
+    assert result["bin_edges"] == [1.0, 2.0, 3.0, 4.0, 5.0]
+
+
+def test_compute_ks_chi2_for_aligned_histograms_handles_empty_counts():
+    """Test aligned histogram statistics return invalid for empty counts."""
+    baseline = np.array([0.0, 0.0, 0.0])
+    candidate = np.array([1.0, 0.0, 0.0])
+
+    result = compute_ks_chi2_for_aligned_histograms(baseline, candidate)
+
+    assert result["ks_statistic"] is None
+    assert result["chi2_statistic"] is None
+    assert result["valid"] is False
+    assert result["reason"] == "insufficient_data"
