@@ -641,7 +641,6 @@ def mock_histograms():
 def test_plot_with_output_path(mock_histograms):
     output_path = Path("/mock/output/path")
     limits = {"upper_radius_limit": MagicMock(value=100)}
-    rebin_factor = 2
     array_name = "test_array"
 
     with (
@@ -654,19 +653,17 @@ def test_plot_with_output_path(mock_histograms):
             histograms=mock_histograms,
             output_path=output_path,
             limits=limits,
-            rebin_factor=rebin_factor,
             array_name=array_name,
         )
 
         mock_generate_configs.assert_called_once_with(mock_histograms, limits)
         mock_execute_loop.assert_called_once_with(
-            {"mock_plot": "mock_config"}, output_path, rebin_factor, array_name
+            {"mock_plot": "mock_config"}, output_path, array_name
         )
 
 
 def test_plot_without_output_path(mock_histograms):
     limits = None
-    rebin_factor = 1
     array_name = None
 
     with (
@@ -679,14 +676,11 @@ def test_plot_without_output_path(mock_histograms):
             histograms=mock_histograms,
             output_path=None,
             limits=limits,
-            rebin_factor=rebin_factor,
             array_name=array_name,
         )
 
         mock_generate_configs.assert_called_once_with(mock_histograms, limits)
-        mock_execute_loop.assert_called_once_with(
-            {"mock_plot": "mock_config"}, None, rebin_factor, array_name
-        )
+        mock_execute_loop.assert_called_once_with({"mock_plot": "mock_config"}, None, array_name)
 
 
 def test_get_axis_title():
