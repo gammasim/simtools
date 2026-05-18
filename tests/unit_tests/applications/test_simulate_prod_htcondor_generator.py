@@ -29,10 +29,20 @@ def test_main_uses_standard_build_application(
     mock_generate_submission_script.assert_called_once_with({"output_path": "htcondor_submit"})
 
 
-def test_add_arguments_registers_nshow_power_index():
+def test_add_arguments_registers_nshow_scaling_arguments():
     parser = argparse.ArgumentParser()
 
     app._add_arguments(parser)
-    args = parser.parse_args(["--number_of_runs", "1", "--nshow_power_index", "-0.5"])
+    args = parser.parse_args(
+        [
+            "--number_of_runs",
+            "1",
+            "--nshow_power_index",
+            "-0.5",
+            "--nshow_reference_energy",
+            "100 GeV",
+        ]
+    )
 
     assert args.nshow_power_index == pytest.approx(-0.5)
+    assert args.nshow_reference_energy == "100 GeV"

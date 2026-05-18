@@ -53,8 +53,9 @@ priority (int, optional)
     Job priority (default: 1).
 nshow_power_index (float, optional)
     Power-law index used to scale the baseline ``nshow`` for each ``energy_range`` entry.
-    The scaling uses the geometric-mean energy of each entry and the first configured
-    ``energy_range`` entry as the reference energy.
+nshow_reference_energy (quantity, optional)
+    Reference energy used for ``nshow`` power-law scaling (e.g. ``"100 GeV"``).
+    Required when ``nshow_power_index`` is configured.
 
 (all other command line arguments are identical to those of :ref:`simulate_prod`).
 
@@ -108,6 +109,16 @@ def _add_arguments(parser):
             "of each energy_range entry."
         ),
         type=float,
+        required=False,
+        default=None,
+    )
+    parser.add_argument(
+        "--nshow_reference_energy",
+        help=(
+            "Reference energy for nshow power-law scaling (for example: '100 GeV'). "
+            "Required together with --nshow_power_index."
+        ),
+        type=str,
         required=False,
         default=None,
     )
