@@ -1,4 +1,4 @@
-"""Generic statistical comparison helpers for simtools and other applications."""
+"""Generic statistical comparison helpers."""
 
 import numpy as np
 from scipy import stats
