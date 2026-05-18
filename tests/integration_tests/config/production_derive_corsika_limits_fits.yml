@@ -3,7 +3,10 @@ applications:
 - application: simtools-production-derive-corsika-limits
   configuration:
     event_data_file: tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.fits.gz
-    loss_fraction: 0.001
+    allowed_losses:
+    - energy,0.0001,10
+    - core_distance,0.001,10
+    - angular_distance,0.001,10
     output_file: corsika_simulation_limits.ecsv
     output_path: simtools-output
     plot_histograms: true

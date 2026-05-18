@@ -30,7 +30,8 @@ def _pool_result(
     array_name="LST",
     telescope_ids=None,
     lower_energy_limit=0.5 * u.TeV,
-    upper_radius_limit=400.0 * u.m,
+    upper_radius_limit_ground=400.0 * u.m,
+    upper_radius_limit_shower=380.0 * u.m,
     viewcone_radius=5.0 * u.deg,
 ):
     """Build a standard mocked pool result row for grid execution tests."""
@@ -40,7 +41,8 @@ def _pool_result(
         "array_name": array_name,
         "telescope_ids": telescope_ids or ["LSTN-01"],
         "lower_energy_limit": lower_energy_limit,
-        "upper_radius_limit": upper_radius_limit,
+        "upper_radius_limit_ground": upper_radius_limit_ground,
+        "upper_radius_limit_shower": upper_radius_limit_shower,
         "viewcone_radius": viewcone_radius,
         "primary_particle": "gamma",
         "zenith": 20.0 * u.deg,
@@ -54,7 +56,13 @@ def test_process_file_passes_event_data_patterns_through(mocker):
     mock_histograms = mocker.MagicMock()
     mock_histogram_class = mocker.patch(SIM_EVENTS_HISTOGRAMS_PATH, return_value=mock_histograms)
     mocker.patch(COMPUTE_LOWER_ENERGY_LIMIT_PATH, return_value=1.0 * u.TeV)
-    mocker.patch(COMPUTE_UPPER_RADIUS_LIMIT_PATH, return_value=100.0 * u.m)
+    mocker.patch(
+        COMPUTE_UPPER_RADIUS_LIMIT_PATH,
+        return_value={
+            "upper_radius_limit_ground": 100.0 * u.m,
+            "upper_radius_limit_shower": 95.0 * u.m,
+        },
+    )
     mocker.patch(COMPUTE_VIEWCONE_PATH, return_value=2.0 * u.deg)
 
     derive_corsika_limits._process_file(
@@ -115,11 +123,13 @@ def test_round_value():
     assert derive_corsika_limits._round_value("lower_energy_limit", 0.9876) == pytest.approx(0.987)
     assert derive_corsika_limits._round_value("lower_energy_limit", 2.0) == pytest.approx(2.0)
 
-    # Test upper_radius_limit rounding
-    assert derive_corsika_limits._round_value("upper_radius_limit", 123.4) == 125
-    assert derive_corsika_limits._round_value("upper_radius_limit", 100.0) == 100
-    assert derive_corsika_limits._round_value("upper_radius_limit", 101.0) == 125
-    assert derive_corsika_limits._round_value("upper_radius_limit", 75.0) == 75
+    # Test upper_radius_limit_ground and upper_radius_limit_shower rounding
+    assert derive_corsika_limits._round_value("upper_radius_limit_ground", 123.4) == 125
+    assert derive_corsika_limits._round_value("upper_radius_limit_ground", 100.0) == 100
+    assert derive_corsika_limits._round_value("upper_radius_limit_ground", 101.0) == 125
+    assert derive_corsika_limits._round_value("upper_radius_limit_ground", 75.0) == 75
+    assert derive_corsika_limits._round_value("upper_radius_limit_shower", 123.4) == 125
+    assert derive_corsika_limits._round_value("upper_radius_limit_shower", 100.0) == 100
 
     # Test viewcone_radius rounding
     assert derive_corsika_limits._round_value("viewcone_radius", 1.1) == pytest.approx(1.25)
@@ -361,14 +371,18 @@ def test_compute_upper_radius_limit(mocker):
 
     result = derive_corsika_limits.compute_upper_radius_limit(mock_histograms, 0.2)
 
-    assert isinstance(result, u.Quantity)
-    assert result.unit == u.m
-    assert result.value > 0
+    assert isinstance(result, dict)
+    assert "upper_radius_limit_ground" in result
+    assert "upper_radius_limit_shower" in result
+    assert result["upper_radius_limit_ground"].unit == u.m
+    assert result["upper_radius_limit_shower"].unit == u.m
+    assert result["upper_radius_limit_ground"].value > 0
+    assert result["upper_radius_limit_shower"].value > 0
 
     expected = (
         derive_corsika_limits._compute_limits(mock_hist, mock_bins, 0.2, limit_type="upper") * u.m
     )
-    assert result == expected
+    assert result["upper_radius_limit_ground"] == expected
 
 
 def test_is_close(caplog):
@@ -404,7 +418,10 @@ def test_process_file_with_mocked_histograms(mocker):
     )
     mock_compute_upper_radius_limit = mocker.patch(
         COMPUTE_UPPER_RADIUS_LIMIT_PATH,
-        return_value=100.0 * u.m,
+        return_value={
+            "upper_radius_limit_ground": 100.0 * u.m,
+            "upper_radius_limit_shower": 95.0 * u.m,
+        },
     )
     mock_compute_viewcone = mocker.patch(
         COMPUTE_VIEWCONE_PATH,
@@ -425,7 +442,8 @@ def test_process_file_with_mocked_histograms(mocker):
         "azimuth": None,
         "nsb_level": None,
         "lower_energy_limit": 1.0 * u.TeV,
-        "upper_radius_limit": 100.0 * u.m,
+        "upper_radius_limit_ground": 100.0 * u.m,
+        "upper_radius_limit_shower": 95.0 * u.m,
         "viewcone_radius": 2.0 * u.deg,
     }
 
@@ -456,12 +474,19 @@ def test_process_file_with_differential_loss_per_energy_bin(mocker):
         COMPUTE_LOWER_ENERGY_LIMIT_PATH,
         return_value=1.0 * u.TeV,
     )
-    mock_compute_upper_radius_limit = mocker.patch(COMPUTE_UPPER_RADIUS_LIMIT_PATH)
+    mock_compute_upper_radius_limit = mocker.patch(
+        COMPUTE_UPPER_RADIUS_LIMIT_PATH,
+        return_value={
+            "upper_radius_limit_ground": 100.0 * u.m,
+            "upper_radius_limit_shower": 95.0 * u.m,
+        },
+    )
     mock_compute_viewcone = mocker.patch(COMPUTE_VIEWCONE_PATH)
     mock_differential = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits._compute_differential_limits",
         return_value={
-            "upper_radius_limit": 120.0 * u.m,
+            "upper_radius_limit_ground": 120.0 * u.m,
+            "upper_radius_limit_shower": 114.0 * u.m,
             "viewcone_radius": 3.0 * u.deg,
             "core_vs_energy_curve": {"x": [100.0, 120.0], "y": [0.1, 1.0]},
             "angular_distance_vs_energy_curve": {"x": [2.5, 3.0], "y": [0.1, 1.0]},
@@ -478,7 +503,8 @@ def test_process_file_with_differential_loss_per_energy_bin(mocker):
     )
 
     assert result["lower_energy_limit"].value == pytest.approx(1.0)
-    assert result["upper_radius_limit"].value == pytest.approx(120.0)
+    assert result["upper_radius_limit_ground"].value == pytest.approx(120.0)
+    assert result["upper_radius_limit_shower"].value == pytest.approx(114.0)
     assert result["viewcone_radius"].value == pytest.approx(3.0)
     assert result["core_vs_energy_curve"] == {"x": [100.0, 120.0], "y": [0.1, 1.0]}
     assert result["angular_distance_vs_energy_curve"] == {"x": [2.5, 3.0], "y": [0.1, 1.0]}
@@ -556,7 +582,8 @@ def test_process_file_passes_energy_bins_per_decade_to_histograms(mocker):
     mocker.patch(
         "simtools.production_configuration.derive_corsika_limits._compute_differential_limits",
         return_value={
-            "upper_radius_limit": 120.0 * u.m,
+            "upper_radius_limit_ground": 120.0 * u.m,
+            "upper_radius_limit_shower": 114.0 * u.m,
             "viewcone_radius": 3.0 * u.deg,
             "core_vs_energy_curve": {"x": [100.0], "y": [1.0]},
             "angular_distance_vs_energy_curve": {"x": [3.0], "y": [1.0]},
@@ -654,7 +681,10 @@ def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
     )
     mocker.patch(
         COMPUTE_UPPER_RADIUS_LIMIT_PATH,
-        return_value=100.0 * u.m,
+        return_value={
+            "upper_radius_limit_ground": 100.0 * u.m,
+            "upper_radius_limit_shower": 95.0 * u.m,
+        },
     )
     mocker.patch(
         COMPUTE_VIEWCONE_PATH,
@@ -684,7 +714,8 @@ def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
         "azimuth": None,
         "nsb_level": None,
         "lower_energy_limit": 1.0 * u.TeV,
-        "upper_radius_limit": 100.0 * u.m,
+        "upper_radius_limit_ground": 100.0 * u.m,
+        "upper_radius_limit_shower": 95.0 * u.m,
         "viewcone_radius": 2.0 * u.deg,
     }
     assert kwargs["array_name"] == "MockArray"
@@ -862,7 +893,10 @@ def test_execute_production_job_single_job(mocker):
     )
     mocker.patch(
         COMPUTE_UPPER_RADIUS_LIMIT_PATH,
-        return_value=100.0 * u.m,
+        return_value={
+            "upper_radius_limit_ground": 100.0 * u.m,
+            "upper_radius_limit_shower": 95.0 * u.m,
+        },
     )
     mocker.patch(
         COMPUTE_VIEWCONE_PATH,
@@ -886,7 +920,8 @@ def test_execute_production_job_single_job(mocker):
     assert result["event_data_file"] == "pattern_*.hdf5"
     assert result["array_name"] == "LST"
     assert "lower_energy_limit" in result
-    assert "upper_radius_limit" in result
+    assert "upper_radius_limit_ground" in result
+    assert "upper_radius_limit_shower" in result
     assert "viewcone_radius" in result
 
 
@@ -906,7 +941,8 @@ def test_generate_corsika_limits_grid_multi_production(mocker, tmp_test_director
             production_index=1,
             event_data_file="pattern_2_*.hdf5",
             lower_energy_limit=0.6 * u.TeV,
-            upper_radius_limit=450.0 * u.m,
+            upper_radius_limit_ground=450.0 * u.m,
+            upper_radius_limit_shower=428.0 * u.m,
             viewcone_radius=5.5 * u.deg,
         ),
     ]
@@ -1050,7 +1086,10 @@ def test_process_file_with_output_subdir(mocker, tmp_test_directory):
     )
     mocker.patch(
         COMPUTE_UPPER_RADIUS_LIMIT_PATH,
-        return_value=100.0 * u.m,
+        return_value={
+            "upper_radius_limit_ground": 100.0 * u.m,
+            "upper_radius_limit_shower": 95.0 * u.m,
+        },
     )
     mocker.patch(
         COMPUTE_VIEWCONE_PATH,
@@ -1112,7 +1151,8 @@ def mock_results():
             "azimuth": 180.0 * u.deg,
             "nsb_level": 1.0,
             "lower_energy_limit": 0.5 * u.TeV,
-            "upper_radius_limit": 400.0 * u.m,
+            "upper_radius_limit_ground": 400.0 * u.m,
+            "upper_radius_limit_shower": 380.0 * u.m,
             "viewcone_radius": 5.0 * u.deg,
         }
     ]
