@@ -27,7 +27,7 @@ applications:
     - 10
     - 20
     - 30
-    parameter_path: changes.LSTN-02.asum_threshold
+    parameter_path: changes.LSTN-design.asum_threshold
     parameter_name: threshold
     overwrite_template: tests/resources/overwrite_template.yaml
   integration_tests:

@@ -78,6 +78,7 @@ NSB scaling factor scan:
 import logging
 from pathlib import Path
 
+import astropy.units as u
 import yaml
 
 from simtools.application_control import build_application
@@ -144,6 +145,13 @@ def _add_arguments(parser):
         type=str,
         required=False,
         default="./simtools-output",
+    )
+    parser.add_argument(
+        "--save_reduced_event_lists",
+        help="Save reduced event lists.",
+        action="store_true",
+        required=False,
+        default=False,
     )
 
 
@@ -262,6 +270,88 @@ def _setup_directories(args_dict):
     return work_dir, log_dir, error_dir, output_dir
 
 
+def _create_params_row(args_dict, apptainer_images, run_idx):
+    """
+    Create a single row for the params file.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Arguments dictionary.
+    apptainer_images : dict
+        Dictionary of apptainer images.
+    run_idx : int
+        Run index for run number calculation.
+
+    Returns
+    -------
+    list
+        List of parameter values for the params file row.
+    """
+
+    def normalize_list(value):
+        """Extract first element from list."""
+        return value[0] if isinstance(value, list) else value
+
+    def normalize_angle(value):
+        """Convert angle to degrees."""
+        if isinstance(value, u.Quantity):
+            return value.to(u.deg).value
+        return value
+
+    def format_quantity(value, default_unit):
+        """Format a value or Quantity."""
+        if isinstance(value, u.Quantity):
+            return str(value.value), str(value.unit)
+        return str(value), default_unit
+
+    # Extract and normalize parameters
+    apptainer_label = next(iter(apptainer_images.keys()))
+    primary = normalize_list(args_dict["primary"])
+    azimuth_angle = normalize_angle(normalize_list(args_dict["azimuth_angle"]))
+    zenith_angle = normalize_angle(normalize_list(args_dict["zenith_angle"]))
+    model_version = normalize_list(args_dict["model_version"])
+    array_layout_name = normalize_list(args_dict.get("array_layout_name", ""))
+    corsika_le = normalize_list(args_dict.get("corsika_le_interaction", "urqmd"))
+    corsika_he = normalize_list(args_dict.get("corsika_he_interaction", "qgsjet"))
+    nshow = args_dict["nshow"]
+
+    # Parse energy range
+    # pylint: disable=protected-access
+    energy_ranges = htcondor_script_generator._normalize_energy_ranges(args_dict["energy_range"])
+    energy_min, energy_max = energy_ranges[0]
+    energy_min_val, energy_min_unit = format_quantity(energy_min, "GeV")
+    energy_max_val, energy_max_unit = format_quantity(energy_max, "GeV")
+
+    # Parse core scatter
+    core_scatter_max = args_dict["core_scatter"][1]
+    core_scatter_val, core_scatter_unit = format_quantity(core_scatter_max, "m")
+
+    # Calculate run number and pack path
+    run_number = args_dict.get("run_number", 1) + run_idx
+    pack_for_grid = args_dict.get("simulation_output", "./simtools-output")
+
+    return [
+        apptainer_label,
+        str(primary),
+        str(azimuth_angle),
+        str(zenith_angle),
+        energy_min_val,
+        energy_min_unit,
+        energy_max_val,
+        energy_max_unit,
+        core_scatter_val,
+        core_scatter_unit,
+        str(nshow),
+        str(model_version),
+        str(array_layout_name),
+        str(corsika_le),
+        str(corsika_he),
+        str(run_number),
+        str(pack_for_grid),
+    ]
+
+
 def _generate_parameter_submission_scripts(args_dict, parameter_files):
     """
     Generate HTCondor submission scripts for parameter scans.
@@ -290,27 +380,41 @@ def _generate_parameter_submission_scripts(args_dict, parameter_files):
 
     for param_value, overwrite_file in parameter_files.items():
         value_str = _format_value_for_filename(param_value)
+        params_file_name = f"simulate_prod_{label}_{value_str}.params.txt"
         executable_name = f"simulate_prod_{label}_{value_str}.submit.sh"
 
+        # Create a params file with number_of_runs identical rows
+        # All runs use the same simulation parameters, just different run numbers
+        params_file = work_dir / params_file_name
+        with open(params_file, "w", encoding="utf-8") as f:
+            for run_idx in range(number_of_runs):
+                row = _create_params_row(args_dict, apptainer_images, run_idx)
+                f.write(" ".join(row) + "\n")
+
+        # Use the standard submit script generator
         submit_sh_file = work_dir / executable_name
         submit_script = htcondor_script_generator._get_submit_script(args_dict)  # pylint: disable=protected-access
+        # Append overwrite parameter
+        submit_script = submit_script.rstrip()
+        if submit_script.endswith('"""'):
+            submit_script = submit_script[:-3].rstrip()
         submit_script += f" \\\n    --overwrite_model_parameters {overwrite_file.absolute()}\n"
 
         with open(submit_sh_file, "w", encoding="utf-8") as f:
             f.write(submit_script)
         submit_sh_file.chmod(0o755)
 
+        # Use the standard condor file generator
         condor_file = work_dir / f"simulate_prod_{label}_{value_str}.submit.condor"
         condor_content = htcondor_script_generator._get_submit_file(  # pylint: disable=protected-access
             executable_name,
             apptainer_image,
             args_dict["priority"],
-            f"dummy_params_{value_str}.txt",
+            params_file_name,
             log_dir=log_dir,
             error_dir=error_dir,
             output_dir=output_dir,
         )
-        condor_content = condor_content.rsplit("queue", 1)[0] + f"queue {number_of_runs}\n"
 
         with open(condor_file, "w", encoding="utf-8") as f:
             f.write(condor_content)

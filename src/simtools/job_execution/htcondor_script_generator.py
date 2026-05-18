@@ -489,7 +489,6 @@ def _get_submit_script(args_dict):
     core_scatter = args_dict["core_scatter"]
     n_core_scatter = core_scatter[0]
     view_cone = args_dict["view_cone"]
-    view_cone_string = f'"{view_cone[0].to(u.deg)} {view_cone[1].to(u.deg)}"'
 
     label = args_dict["label"] if args_dict["label"] else "simulate-prod"
     run_number_offset_arg = args_dict["run_number_offset"]
@@ -511,18 +510,6 @@ def _get_submit_script(args_dict):
     run_number_idx = bash_indices["run_number"]
     pack_for_grid_register_idx = bash_indices["pack_for_grid_register"]
 
-    energy_range_string = (
-        f'"{energy_min_value_idx} {energy_min_unit_idx} '
-        f'{energy_max_value_idx} {energy_max_unit_idx}"'
-    )
-    core_scatter_string = (
-        f'"{n_core_scatter} {core_scatter_max_value_idx} {core_scatter_max_unit_idx}"'
-    )
-    energy_range_tag = (
-        f"erange-{energy_min_value_idx}{energy_min_unit_idx}-"
-        f"{energy_max_value_idx}{energy_max_unit_idx}"
-    )
-
     return f"""#!/usr/bin/env bash
 
 # Process ID used to generate run number
@@ -537,28 +524,32 @@ corsika_le_interaction="{corsika_le_interaction_idx}"
 corsika_he_interaction="{corsika_he_interaction_idx}"
 run_number="{run_number_idx}"
 pack_for_grid_register="{pack_for_grid_register_idx}"
-energy_range_tag="{energy_range_tag}"
+energy_range_tag="erange-{energy_min_value_idx}{energy_min_unit_idx}-\
+{energy_max_value_idx}{energy_max_unit_idx}"
 job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
 simtools-simulate-prod \\
     --simulation_software {args_dict["simulation_software"]} \\
     --label "$job_label" \\
-    --model_version "$model_version" \\
+    --model_version $model_version \\
     --site {args_dict["site"]} \\
     --array_layout_name "$array_layout_name" \\
-    --primary "$primary" \\
-    --azimuth_angle "{azimuth_angle_idx}" \\
-    --zenith_angle "{zenith_angle_idx}" \\
-    --nshow "{nshow_idx}" \\
-    --energy_range {energy_range_string} \\
-    --core_scatter {core_scatter_string} \\
-    --view_cone {view_cone_string} \\
-    --corsika_le_interaction "$corsika_le_interaction" \\
-    --corsika_he_interaction "$corsika_he_interaction" \\
-    --run_number "$run_number" \\
+    --primary $primary \\
+    --azimuth_angle {azimuth_angle_idx} \\
+    --zenith_angle {zenith_angle_idx} \\
+    --nshow {nshow_idx} \\
+    --energy_range "{energy_min_value_idx} {energy_min_unit_idx} \
+{energy_max_value_idx} {energy_max_unit_idx}" \\
+    --core_scatter "{n_core_scatter} {core_scatter_max_value_idx} \
+{core_scatter_max_unit_idx}" \\
+    --view_cone "{view_cone[0].to(u.deg).value} deg \
+{view_cone[1].to(u.deg).value} deg" \\
+    --corsika_le_interaction $corsika_le_interaction \\
+    --corsika_he_interaction $corsika_he_interaction \\
+    --run_number $run_number \\
     --run_number_offset {run_number_offset} \\
     --save_reduced_event_lists \\
     --output_path /tmp/simtools-output \\
     --log_level {args_dict["log_level"]} \\
-    --pack_for_grid_register "$pack_for_grid_register"
+    --pack_for_grid_register $pack_for_grid_register
 """
