@@ -437,7 +437,7 @@ def test_create_2d_plot_config():
         "event_type": TRIGGERED,
     }
     limits = {
-        "upper_radius_limit": MagicMock(value=100),
+        "upper_radius_limit_ground": MagicMock(value=100),
         "lower_energy_limit": MagicMock(value=0.1),
         "viewcone_radius": MagicMock(value=5),
     }
@@ -488,7 +488,7 @@ def test_create_2d_plot_config_core_xy():
         "event_type": TRIGGERED,
     }
     limits = {
-        "upper_radius_limit": MagicMock(value=100),
+        "upper_radius_limit_ground": MagicMock(value=100),
         "lower_energy_limit": MagicMock(value=0.1),
         "viewcone_radius": MagicMock(value=5),
     }
@@ -583,7 +583,7 @@ def test_get_limits():
     # Test with limits containing all required keys
     limits = {
         "lower_energy_limit": MagicMock(value=42),
-        "upper_radius_limit": MagicMock(value=100),
+        "upper_radius_limit_ground": MagicMock(value=100),
         "viewcone_radius": MagicMock(value=5),
     }
     result = _get_limits("energy", limits)
@@ -592,7 +592,7 @@ def test_get_limits():
     # Test with partial limits (should not raise, but will return x only)
     limits = {
         "lower_energy_limit": MagicMock(value=42),
-        "upper_radius_limit": MagicMock(value=100),
+        "upper_radius_limit_ground": MagicMock(value=100),
         "viewcone_radius": MagicMock(value=5),
     }
     result = _get_limits("core_distance", limits)
@@ -600,7 +600,7 @@ def test_get_limits():
 
     # Test with all limits provided
     limits = {
-        "upper_radius_limit": MagicMock(value=100),
+        "upper_radius_limit_ground": MagicMock(value=100),
         "lower_energy_limit": MagicMock(value=0.1),
         "viewcone_radius": MagicMock(value=5),
     }
@@ -640,7 +640,7 @@ def mock_histograms():
 
 def test_plot_with_output_path(mock_histograms):
     output_path = Path("/mock/output/path")
-    limits = {"upper_radius_limit": MagicMock(value=100)}
+    limits = {"upper_radius_limit_ground": MagicMock(value=100)}
     array_name = "test_array"
 
     with (

@@ -75,9 +75,9 @@ def test_process_file_passes_event_data_patterns_through(mocker):
 
     mock_histogram_class.assert_called_once_with(
         "input/*.h5",
-        array_name="array_name",
-        telescope_list=[1, 2],
-        energy_bins_per_decade=10,
+        "array_name",
+        [1, 2],
+        10,
     )
 
 
@@ -449,9 +449,9 @@ def test_process_file_with_mocked_histograms(mocker):
 
     mock_histogram_class.assert_called_once_with(
         MOCK_FILE_PATH,
-        array_name="MockArray",
-        telescope_list=[1, 2],
-        energy_bins_per_decade=10,
+        "MockArray",
+        [1, 2],
+        10,
     )
     mock_histograms.fill.assert_called_once()
     mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2, 10)
@@ -601,9 +601,9 @@ def test_process_file_passes_energy_bins_per_decade_to_histograms(mocker):
 
     mock_event_histograms.assert_called_once_with(
         MOCK_FILE_PATH,
-        array_name="MockArray",
-        telescope_list=[1, 2],
-        energy_bins_per_decade=6,
+        "MockArray",
+        [1, 2],
+        6,
     )
 
 
