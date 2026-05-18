@@ -14,10 +14,8 @@ from pathlib import Path
 
 import astropy.units as u
 
-from simtools.production_configuration.job_spec_builder import (
-    build_job_specs,
-    resolve_array_layout_name,
-)
+from simtools.layout.array_layout_utils import resolve_array_layout_name
+from simtools.production_configuration.job_spec_builder import build_job_specs
 
 _logger = logging.getLogger(__name__)
 
