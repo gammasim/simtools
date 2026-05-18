@@ -197,11 +197,13 @@ def generate_submission_script(args_dict):
         if args_dict.get("htcondor_log_path")
         else work_dir / "htcondor_logs"
     )
-    log_dir = htcondor_log_path / "log"
-    error_dir = htcondor_log_path / "error"
-    output_dir = htcondor_log_path / "output"
+    htcondor_dirs = {
+        "log": htcondor_log_path / "log",
+        "error": htcondor_log_path / "error",
+        "output": htcondor_log_path / "output",
+    }
     work_dir.mkdir(parents=True, exist_ok=True)
-    for subdir in (log_dir, error_dir, output_dir):
+    for subdir in htcondor_dirs.values():
         subdir.mkdir(parents=True, exist_ok=True)
     submit_file_name = "simulate_prod.submit"
     _logger.info(f"Generating HT Condor submission scripts (path: {work_dir})")
@@ -224,9 +226,7 @@ def generate_submission_script(args_dict):
                     apptainer_images[label],
                     args_dict["priority"],
                     params_file_name,
-                    log_dir=log_dir,
-                    error_dir=error_dir,
-                    output_dir=output_dir,
+                    htcondor_dirs=htcondor_dirs,
                 )
             )
 
@@ -236,9 +236,7 @@ def generate_submission_script(args_dict):
     Path(work_dir / f"{submit_file_name}.sh").chmod(0o755)
 
 
-def _get_submit_file(
-    executable, apptainer_image, priority, params_file_name, log_dir, error_dir, output_dir
-):
+def _get_submit_file(executable, apptainer_image, priority, params_file_name, htcondor_dirs):
     """
     Return HTCondor submit file.
 
@@ -254,12 +252,9 @@ def _get_submit_file(
         Priority of the job.
     params_file_name: str
         Name of the params file for queue-from submission.
-    log_dir: Path
-        Directory for HTCondor log files.
-    error_dir: Path
-        Directory for HTCondor error files.
-    output_dir: Path
-        Directory for HTCondor output files.
+    htcondor_dirs: dict
+        Directory mapping with HTCondor files locations. Expected keys are
+        ``log``, ``error``, and ``output``.
 
     Returns
     -------
@@ -274,9 +269,9 @@ container_image = {apptainer_image}
 transfer_container = false
 
 executable = {executable}
-error      = {error_dir}/err.$(cluster)_$(process)
-output     = {output_dir}/out.$(cluster)_$(process)
-log        = {log_dir}/log.$(cluster)_$(process)
+error      = {htcondor_dirs["error"]}/err.$(cluster)_$(process)
+output     = {htcondor_dirs["output"]}/out.$(cluster)_$(process)
+log        = {htcondor_dirs["log"]}/log.$(cluster)_$(process)
 
 priority = {priority}
 arguments = "{arguments_string}"
