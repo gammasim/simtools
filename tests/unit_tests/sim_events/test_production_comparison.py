@@ -60,14 +60,15 @@ def test_collect_production_metrics_aggregates_event_data(mocker):
         angular_distance=np.array([0.5, 1.0, 1.5]),
     )
     triggered_shower_data = SimpleNamespace(
-        simulated_energy=np.array([1.0, 3.0]),
-        core_distance_shower=np.array([10.0, 30.0]),
-        angular_distance=np.array([0.5, 1.5]),
+        simulated_energy=np.array([1.0, 3.0, 2.0]),
+        core_distance_shower=np.array([10.0, 30.0, 20.0]),
+        angular_distance=np.array([0.5, 1.5, 1.2]),
     )
     triggered_data = SimpleNamespace(
         telescope_list=[
             np.array(["LSTN-01", "MSTN-01"]),
             np.array(["MSTN-01"]),
+            np.array(["MSTN-01", "MSTN-02"]),
         ]
     )
 
@@ -85,26 +86,28 @@ def test_collect_production_metrics_aggregates_event_data(mocker):
     assert len(metrics) == 1
     assert metrics[0].label == "baseline"
     assert metrics[0].simulated_event_count == 3
-    assert metrics[0].triggered_event_count == 2
+    assert metrics[0].triggered_event_count == 3
     np.testing.assert_array_equal(metrics[0].simulated_energies, np.array([1.0, 2.0, 3.0]))
-    np.testing.assert_array_equal(metrics[0].triggered_energies, np.array([1.0, 3.0]))
-    np.testing.assert_array_equal(metrics[0].trigger_multiplicity, np.array([2, 1]))
+    np.testing.assert_array_equal(metrics[0].triggered_energies, np.array([1.0, 3.0, 2.0]))
+    np.testing.assert_array_equal(metrics[0].trigger_multiplicity, np.array([2, 1, 2]))
     assert metrics[0].trigger_combinations["LSTN-01,MSTN-01"] == 1
     assert metrics[0].trigger_combinations["MSTN-01"] == 1
-    assert metrics[0].telescope_participation["MSTN-01"] == 2
+    assert metrics[0].trigger_combinations["MSTN-01,MSTN-02"] == 1
+    assert metrics[0].telescope_participation["MSTN-01"] == 3
+    assert metrics[0].telescope_participation["MSTN-02"] == 1
     assert metrics[0].telescope_participation["LSTN-01"] == 1
-    assert metrics[0].trigger_fraction == pytest.approx(2.0 / 3.0)
+    assert metrics[0].trigger_fraction == pytest.approx(1.0)
     np.testing.assert_array_equal(metrics[0].simulated_angular_distances, np.array([0.5, 1.0, 1.5]))
-    np.testing.assert_array_equal(metrics[0].triggered_angular_distances, np.array([0.5, 1.5]))
+    np.testing.assert_array_equal(metrics[0].triggered_angular_distances, np.array([0.5, 1.5, 1.2]))
     assert set(metrics[0].per_type.keys()) == {"MSTN", "single_telescope", "mixed_type"}
     assert metrics[0].per_type["MSTN"].triggered_event_count == 1
-    np.testing.assert_array_equal(metrics[0].per_type["MSTN"].triggered_energies, [3.0])
-    np.testing.assert_array_equal(metrics[0].per_type["MSTN"].trigger_multiplicity, [1])
+    np.testing.assert_array_equal(metrics[0].per_type["MSTN"].triggered_energies, [2.0])
+    np.testing.assert_array_equal(metrics[0].per_type["MSTN"].trigger_multiplicity, [2])
     assert metrics[0].per_type["single_telescope"].triggered_event_count == 1
     assert metrics[0].per_type["mixed_type"].triggered_event_count == 1
     np.testing.assert_array_equal(metrics[0].per_type["single_telescope"].triggered_energies, [3.0])
     np.testing.assert_array_equal(metrics[0].per_type["mixed_type"].triggered_energies, [1.0])
-    np.testing.assert_array_equal(metrics[0].per_type["MSTN"].triggered_angular_distances, [1.5])
+    np.testing.assert_array_equal(metrics[0].per_type["MSTN"].triggered_angular_distances, [1.2])
 
 
 @pytest.mark.parametrize(
