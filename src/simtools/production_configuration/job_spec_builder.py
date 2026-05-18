@@ -119,14 +119,6 @@ def calculate_log_energy_midpoint(energy_range_pair):
     return 10**mean_log_energy * u.TeV
 
 
-def get_nshow_scaling_reference_energy(energy_ranges):
-    """Return the default reference energy for nshow scaling."""
-    if len(energy_ranges) == 0:
-        raise ValueError("At least one energy range is required to derive a reference energy.")
-
-    return calculate_log_energy_midpoint(energy_ranges[0])
-
-
 def calculate_scaled_nshow(
     energy_range_pair,
     baseline_nshow,
@@ -155,22 +147,26 @@ def calculate_scaled_nshow(
     return scaled_nshow
 
 
-def get_nshow_for_energy_range_and_zenith_angle(
-    energy_range_pair,
-    zenith_angle,
-    nshow,
-    corsika_limits,
-    nshow_power_index=None,
-    reference_energy=None,
+def _select_energy_and_core_scatter_for_job(
+    zenith, energy_range_pair, core_scatter, corsika_limits
 ):
-    """Return nshow that may depend on energy range and zenith angle."""
-    _ = (zenith_angle, corsika_limits)
-    return calculate_scaled_nshow(
-        energy_range_pair,
-        nshow,
-        nshow_power_index=nshow_power_index,
-        reference_energy=reference_energy,
+    """Return selected energy range and core scatter maximum for a job spec row."""
+    selected_energy_range_pair = energy_range_pair
+    selected_core_scatter_max = core_scatter[1]
+
+    if corsika_limits is None:
+        return selected_energy_range_pair, selected_core_scatter_max
+
+    selected_energy_range_pair = get_energy_range_for_zenith_angle(
+        zenith, energy_range_pair, corsika_limits
     )
+    if selected_energy_range_pair is None:
+        return None, None
+
+    selected_core_scatter_max = get_core_scatter_max_for_zenith_angle(
+        zenith, core_scatter, corsika_limits
+    )
+    return selected_energy_range_pair, selected_core_scatter_max
 
 
 def build_job_specs(args_dict, image_labels):
@@ -182,9 +178,9 @@ def build_job_specs(args_dict, image_labels):
     core_scatter = args_dict["core_scatter"]
     nshow = args_dict["nshow"]
     nshow_power_index = args_dict.get("nshow_power_index")
-    reference_energy = (
-        get_nshow_scaling_reference_energy(energy_ranges) if nshow_power_index is not None else None
-    )
+    reference_energy = args_dict.get("nshow_reference_energy")
+    if nshow_power_index is not None and reference_energy is not None:
+        reference_energy = u.Quantity(reference_energy)
 
     combinations = list(
         itertools.product(
@@ -213,26 +209,17 @@ def build_job_specs(args_dict, image_labels):
             corsika_he,
             energy_range_pair,
         ) in combinations:
-            selected_energy_range_pair = energy_range_pair
-            selected_core_scatter_max = core_scatter[1]
-
-            if corsika_limits is not None:
-                selected_energy_range_pair = get_energy_range_for_zenith_angle(
-                    zenith, energy_range_pair, corsika_limits
-                )
-                if selected_energy_range_pair is None:
-                    continue
-                selected_core_scatter_max = get_core_scatter_max_for_zenith_angle(
-                    zenith, core_scatter, corsika_limits
-                )
-
-            selected_nshow = get_nshow_for_energy_range_and_zenith_angle(
+            (
                 selected_energy_range_pair,
-                zenith,
-                nshow,
-                corsika_limits,
-                nshow_power_index=nshow_power_index,
-                reference_energy=reference_energy,
+                selected_core_scatter_max,
+            ) = _select_energy_and_core_scatter_for_job(
+                zenith, energy_range_pair, core_scatter, corsika_limits
+            )
+            if selected_energy_range_pair is None:
+                continue
+
+            selected_nshow = calculate_scaled_nshow(
+                selected_energy_range_pair, nshow, nshow_power_index, reference_energy
             )
 
             for _ in range(number_of_runs):

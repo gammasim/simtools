@@ -7,7 +7,6 @@ from simtools.production_configuration.job_spec_builder import (
     build_job_specs,
     calculate_log_energy_midpoint,
     calculate_scaled_nshow,
-    get_nshow_scaling_reference_energy,
     normalize_energy_ranges,
     normalize_grid_axes,
     normalize_to_list,
@@ -89,19 +88,6 @@ def test_calculate_log_energy_midpoint_raises_for_non_positive_values():
         calculate_log_energy_midpoint((0 * u.GeV, 100 * u.GeV))
 
 
-def test_get_nshow_scaling_reference_energy_uses_first_range():
-    reference_energy = get_nshow_scaling_reference_energy(
-        [(10 * u.GeV, 10 * u.GeV), (100 * u.GeV, 100 * u.GeV)]
-    )
-
-    assert reference_energy.to_value(u.GeV) == pytest.approx(10.0)
-
-
-def test_get_nshow_scaling_reference_energy_raises_for_empty_input():
-    with pytest.raises(ValueError, match="At least one energy range is required"):
-        get_nshow_scaling_reference_energy([])
-
-
 def test_calculate_scaled_nshow_returns_baseline_without_power_index():
     scaled_nshow = calculate_scaled_nshow((10 * u.GeV, 100 * u.GeV), 50)
 
@@ -164,6 +150,7 @@ def test_build_job_specs_scales_nshow_by_energy_range(args_dict):
     args_dict["number_of_runs"] = 1
     args_dict["nshow"] = 100
     args_dict["nshow_power_index"] = -1.0
+    args_dict["nshow_reference_energy"] = 10 * u.GeV
     args_dict["energy_range"] = [
         (10 * u.GeV, 10 * u.GeV),
         (100 * u.GeV, 100 * u.GeV),
@@ -172,6 +159,15 @@ def test_build_job_specs_scales_nshow_by_energy_range(args_dict):
     job_specs = build_job_specs(args_dict, ["7.0.0"])
 
     assert [job_spec["nshow"] for job_spec in job_specs] == [100, 10]
+
+
+def test_build_job_specs_requires_reference_energy_for_nshow_scaling(args_dict):
+    args_dict["number_of_runs"] = 1
+    args_dict["nshow_power_index"] = -1.0
+    args_dict["nshow_reference_energy"] = None
+
+    with pytest.raises(ValueError, match="reference_energy is required"):
+        build_job_specs(args_dict, ["7.0.0"])
 
 
 def test_build_job_specs_uses_default_interaction_models_when_missing(args_dict):
@@ -210,7 +206,7 @@ def test_build_job_specs_skips_entries_when_energy_range_is_none(mock_energy_ran
 
 
 @mock.patch(
-    "simtools.production_configuration.job_spec_builder.get_nshow_for_energy_range_and_zenith_angle",
+    "simtools.production_configuration.job_spec_builder.calculate_scaled_nshow",
     return_value=777,
 )
 def test_build_job_specs_uses_dummy_nshow_when_corsika_limits_set(mock_nshow, args_dict):
