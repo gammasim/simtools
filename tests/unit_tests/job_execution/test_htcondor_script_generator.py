@@ -12,9 +12,9 @@ from simtools.job_execution.htcondor_script_generator import (
     _resolve_apptainer_images,
     _sanitize_label_for_filename,
     _write_params_file,
+    build_job_specs,
     generate_submission_script,
 )
-from simtools.production_configuration.job_spec_builder import build_job_specs
 
 
 @pytest.fixture
