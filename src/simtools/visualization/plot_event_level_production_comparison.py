@@ -37,6 +37,14 @@ def plot(metrics_per_production, output_path, bins=40):
             plot_function(metrics_per_production, output_path),
         )
 
+    _plot_quantity_comparisons(metrics_per_production, output_path, bins, comparison_statistics)
+    _plot_per_type_comparisons(metrics_per_production, output_path, bins, comparison_statistics)
+
+    _write_comparison_statistics_json(comparison_statistics, output_path)
+
+
+def _plot_quantity_comparisons(metrics_per_production, output_path, bins, comparison_statistics):
+    """Plot quantity-based comparisons and collect their statistics."""
     for quantity_name, x_label, x_scale in _QUANTITY_CONFIGS:
         if quantity_name in _TRIGGERED_FRACTION_QUANTITIES:
             _plot_triggered_vs_quantity(
@@ -65,6 +73,9 @@ def plot(metrics_per_production, output_path, bins=40):
                 ),
             )
 
+
+def _plot_per_type_comparisons(metrics_per_production, output_path, bins, comparison_statistics):
+    """Plot per-telescope-type comparisons and collect their statistics."""
     all_types = sorted(
         {
             tel_type
@@ -85,8 +96,6 @@ def plot(metrics_per_production, output_path, bins=40):
                 continue
             plot_name = _plot_name_from_statistics(statistics)
             _record_plot_statistics(comparison_statistics, plot_name, statistics)
-
-    _write_comparison_statistics_json(comparison_statistics, output_path)
 
 
 def _save_figure(fig, output_path, filename):
