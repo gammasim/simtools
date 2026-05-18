@@ -96,21 +96,15 @@ def test_collect_production_metrics_aggregates_event_data(mocker):
     assert metrics[0].trigger_fraction == pytest.approx(2.0 / 3.0)
     np.testing.assert_array_equal(metrics[0].simulated_angular_distances, np.array([0.5, 1.0, 1.5]))
     np.testing.assert_array_equal(metrics[0].triggered_angular_distances, np.array([0.5, 1.5]))
-    assert set(metrics[0].per_type.keys()) == {"LSTN", "MSTN", "single_telescope", "mixed_type"}
-    assert metrics[0].per_type["LSTN"].triggered_event_count == 1
-    assert metrics[0].per_type["MSTN"].triggered_event_count == 2
-    np.testing.assert_array_equal(metrics[0].per_type["LSTN"].triggered_energies, [1.0])
-    np.testing.assert_array_equal(metrics[0].per_type["MSTN"].triggered_energies, [1.0, 3.0])
-    np.testing.assert_array_equal(metrics[0].per_type["LSTN"].trigger_multiplicity, [1])
-    np.testing.assert_array_equal(metrics[0].per_type["MSTN"].trigger_multiplicity, [1, 1])
+    assert set(metrics[0].per_type.keys()) == {"MSTN", "single_telescope", "mixed_type"}
+    assert metrics[0].per_type["MSTN"].triggered_event_count == 1
+    np.testing.assert_array_equal(metrics[0].per_type["MSTN"].triggered_energies, [3.0])
+    np.testing.assert_array_equal(metrics[0].per_type["MSTN"].trigger_multiplicity, [1])
     assert metrics[0].per_type["single_telescope"].triggered_event_count == 1
     assert metrics[0].per_type["mixed_type"].triggered_event_count == 1
     np.testing.assert_array_equal(metrics[0].per_type["single_telescope"].triggered_energies, [3.0])
     np.testing.assert_array_equal(metrics[0].per_type["mixed_type"].triggered_energies, [1.0])
-    np.testing.assert_array_equal(metrics[0].per_type["LSTN"].triggered_angular_distances, [0.5])
-    np.testing.assert_array_equal(
-        metrics[0].per_type["MSTN"].triggered_angular_distances, [0.5, 1.5]
-    )
+    np.testing.assert_array_equal(metrics[0].per_type["MSTN"].triggered_angular_distances, [1.5])
 
 
 @pytest.mark.parametrize(
