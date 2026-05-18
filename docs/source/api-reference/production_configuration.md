@@ -52,6 +52,17 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
+
+(job-spec-builder)=
+
+## job_spec_builder
+
+```{eval-rst}
+.. automodule:: production_configuration.job_spec_builder
+   :members:
+```
+
+
 (interpolation-handler)=
 
 ## interpolation_handler

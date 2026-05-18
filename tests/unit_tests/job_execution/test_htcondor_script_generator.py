@@ -5,7 +5,6 @@ import astropy.units as u
 import pytest
 
 from simtools.job_execution.htcondor_script_generator import (
-    _build_job_specs,
     _format_quantity,
     _get_submit_file,
     _get_submit_script,
@@ -14,6 +13,7 @@ from simtools.job_execution.htcondor_script_generator import (
     _write_params_file,
     generate_submission_script,
 )
+from simtools.production_configuration.job_spec_builder import build_job_specs
 
 
 @pytest.fixture
@@ -229,54 +229,6 @@ def test_sanitize_label_for_filename():
     assert _sanitize_label_for_filename(42) == "42"
 
 
-def test_build_job_specs_expands_model_version_list(args_dict):
-    args_dict["model_version"] = ["6.3.0", "7.0.0"]
-
-    job_specs = _build_job_specs(args_dict, ["7.0.0"])
-    model_versions = {job_spec["model_version"] for job_spec in job_specs}
-
-    assert model_versions == {"6.3.0", "7.0.0"}
-    assert len(job_specs) == 2 * args_dict["number_of_runs"]
-
-
-def test_build_job_specs_expands_energy_range_list_of_pairs(args_dict):
-    args_dict["number_of_runs"] = 1
-    args_dict["energy_range"] = [
-        (30 * u.GeV, 30 * u.GeV),
-        (300 * u.GeV, 300 * u.GeV),
-    ]
-
-    job_specs = _build_job_specs(args_dict, ["7.0.0"])
-    energy_pairs = {(job_spec["energy_min"], job_spec["energy_max"]) for job_spec in job_specs}
-
-    assert len(job_specs) == 2
-    assert energy_pairs == {
-        (30 * u.GeV, 30 * u.GeV),
-        (300 * u.GeV, 300 * u.GeV),
-    }
-
-
-def test_build_job_specs_uses_default_interaction_models_when_missing(args_dict):
-    args_dict.pop("corsika_le_interaction")
-    args_dict.pop("corsika_he_interaction")
-
-    job_specs = _build_job_specs(args_dict, ["7.0.0"])
-
-    assert {job_spec["corsika_le_interaction"] for job_spec in job_specs} == {"urqmd"}
-    assert {job_spec["corsika_he_interaction"] for job_spec in job_specs} == {"epos"}
-
-
-def test_build_job_specs_increments_run_number(args_dict):
-    args_dict["number_of_runs"] = 2
-    args_dict["run_number"] = 10
-    args_dict["model_version"] = ["6.3.0", "7.0.0"]
-
-    job_specs = _build_job_specs(args_dict, ["7.0.0"])
-    run_numbers = [job_spec["run_number"] for job_spec in job_specs]
-
-    assert run_numbers == [10, 11, 12, 13]
-
-
 def test_write_params_file_resolves_array_layout_name_by_model_version(
     args_dict, tmp_test_directory
 ):
@@ -290,7 +242,7 @@ def test_write_params_file_resolves_array_layout_name_by_model_version(
     }
 
     params_file_path = Path(tmp_test_directory) / "params.txt"
-    job_specs = _build_job_specs(args_dict, ["7.0.0"])
+    job_specs = build_job_specs(args_dict, ["7.0.0"])
 
     _write_params_file(params_file_path, job_specs)
 
@@ -313,7 +265,7 @@ def test_write_params_file_resolves_stringified_by_version_layout(args_dict, tmp
     )
 
     params_file_path = Path(tmp_test_directory) / "params.txt"
-    job_specs = _build_job_specs(args_dict, ["7.0.0"])
+    job_specs = build_job_specs(args_dict, ["7.0.0"])
 
     _write_params_file(params_file_path, job_specs)
 
@@ -327,7 +279,7 @@ def test_write_params_file_keeps_energy_units(tmp_test_directory):
     params_file_path = Path(tmp_test_directory) / "params.txt"
     label_job_specs = [
         {
-            "apptainer_label": "7.0.0",
+            "image_label": "7.0.0",
             "primary": "gamma",
             "azimuth_angle": 0 * u.deg,
             "zenith_angle": 20 * u.deg,
@@ -361,7 +313,7 @@ def test_write_params_file_replaces_whitespace_in_apptainer_label(tmp_test_direc
     params_file_path = Path(tmp_test_directory) / "params.txt"
     label_job_specs = [
         {
-            "apptainer_label": "grid label 7.0.0",
+            "image_label": "grid label 7.0.0",
             "primary": "gamma",
             "azimuth_angle": 0 * u.deg,
             "zenith_angle": 20 * u.deg,
@@ -384,32 +336,3 @@ def test_write_params_file_replaces_whitespace_in_apptainer_label(tmp_test_direc
         "grid_label_7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 200.0 m "
         "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/grid_label_7.0.0\n"
     )
-
-
-@mock.patch(
-    "simtools.job_execution.htcondor_script_generator._get_energy_range_for_zenith_angle",
-    return_value=None,
-)
-def test_build_job_specs_skips_entries_when_energy_range_is_none(mock_energy_range, args_dict):
-    args_dict["corsika_limits"] = "limits.ecsv"
-    args_dict["number_of_runs"] = 1
-
-    job_specs = _build_job_specs(args_dict, ["7.0.0"])
-
-    assert job_specs == []
-    mock_energy_range.assert_called_once()
-
-
-@mock.patch(
-    "simtools.job_execution.htcondor_script_generator._get_nshow_for_energy_range_and_zenith_angle",
-    return_value=777,
-)
-def test_build_job_specs_uses_dummy_nshow_when_corsika_limits_set(mock_nshow, args_dict):
-    args_dict["corsika_limits"] = "limits.ecsv"
-    args_dict["number_of_runs"] = 1
-
-    job_specs = _build_job_specs(args_dict, ["7.0.0"])
-
-    assert len(job_specs) == 1
-    assert job_specs[0]["nshow"] == 777
-    mock_nshow.assert_called_once()

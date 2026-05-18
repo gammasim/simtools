@@ -51,6 +51,10 @@ simulation_output (str, optional)
     Base directory for simulation output packages passed through as ``pack_for_grid_register``.
 priority (int, optional)
     Job priority (default: 1).
+nshow_power_index (float, optional)
+    Power-law index used to scale the baseline ``nshow`` for each ``energy_range`` entry.
+    The scaling uses the geometric-mean energy of each entry and the first configured
+    ``energy_range`` entry as the reference energy.
 
 (all other command line arguments are identical to those of :ref:`simulate_prod`).
 
@@ -94,6 +98,16 @@ def _add_arguments(parser):
         "--corsika_limits",
         help="Path to an ECSV file with CORSIKA limits.",
         type=str,
+        required=False,
+        default=None,
+    )
+    parser.add_argument(
+        "--nshow_power_index",
+        help=(
+            "Power-law index used to scale the baseline nshow with the geometric-mean energy "
+            "of each energy_range entry."
+        ),
+        type=float,
         required=False,
         default=None,
     )
