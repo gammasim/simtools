@@ -62,8 +62,9 @@ def main():
 
     comparison_level = app_context.args["comparison_level"]
     if comparison_level == "events":
+        metrics_per_production = collect_production_metrics(production_descriptors)
         plot_event_level_production_comparison.plot(
-            collect_production_metrics(production_descriptors),
+            metrics_per_production,
             output_path=output_directory,
         )
     else:
