@@ -411,7 +411,6 @@ def _plot_triggered_vs_quantity(
     ax.legend()
 
     _save_figure(fig, output_path, f"triggered_fraction_vs_{quantity_name}{suffix}.png")
-    return
 
 
 def _get_bin_edges(values, x_scale, bins):
