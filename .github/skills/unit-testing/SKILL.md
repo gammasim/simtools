@@ -9,9 +9,15 @@ Use this skill for unit tests in `tests/unit_tests/` and for coverage work on li
 
 Follow `.github/copilot-instructions.md` for the repository rules. This file adds the unit-test workflow, with coverage guidance first.
 
-## Coverage first
+## Unit test quality
 
-Coverage is the main driver for this skill. For changed library code, aim for full coverage of the changed lines and branches.
+Each method or function should have well defined, focused, fast, and readable unit test.
+Make sure that they are short, avoiding duplication, and stick to the patterns and fixtures already in place. If you need to add new helpers, add them to `tests/unit_tests/conftest.py` and reuse them across tests.
+
+
+## Coverage
+
+Coverage is a diagnostic tool; prioritize semantic coverage of branches and edge cases.
 
 Run focused annotated coverage first:
 
@@ -23,7 +29,7 @@ pytest tests/unit_tests/path/to/test_module.py \
 If the change affects shared behavior, run broader coverage:
 
 ```bash
-pytest --cov=simtools --cov-report=annotate:cov_annotate
+pytest --cov=simtools --cov-report=term-missing
 ```
 
 Open the matching file in `cov_annotate/`. Lines starting with `!` are not covered and should drive the next tests you add.
