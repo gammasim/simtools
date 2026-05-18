@@ -1,7 +1,10 @@
 #!/usr/bin/python3
 
+import argparse
 from types import SimpleNamespace
 from unittest.mock import patch
+
+import pytest
 
 import simtools.applications.simulate_prod_htcondor_generator as app
 
@@ -24,3 +27,12 @@ def test_main_uses_standard_build_application(
         "simulation_configuration": {"software": None, "corsika_configuration": ["all"]},
     }
     mock_generate_submission_script.assert_called_once_with({"output_path": "htcondor_submit"})
+
+
+def test_add_arguments_registers_nshow_power_index():
+    parser = argparse.ArgumentParser()
+
+    app._add_arguments(parser)
+    args = parser.parse_args(["--number_of_runs", "1", "--nshow_power_index", "-0.5"])
+
+    assert args.nshow_power_index == pytest.approx(-0.5)
