@@ -80,7 +80,7 @@ def plot(metrics_per_production, output_path, bins=40):
             if tel_type in metrics.per_type
         ]
         for plot_fn in _PER_TYPE_PLOT_FNS:
-            statistics = plot_fn(type_metrics, suffix=f"_{tel_type}", bins=bins)
+            statistics = plot_fn(type_metrics, output_path, suffix=f"_{tel_type}", bins=bins)
             if statistics is None:
                 continue
             plot_name = _plot_name_from_statistics(statistics)
