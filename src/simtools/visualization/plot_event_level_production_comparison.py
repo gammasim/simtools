@@ -664,7 +664,7 @@ def _build_quantity_distribution_statistics(
 
 
 def _annotate_ks_statistics(ax, statistics):
-    """Overlay KS values for baseline-vs-candidate comparisons on a plot."""
+    """Overlay KS and Chi2 values for baseline-vs-candidate comparisons on a plot."""
     if statistics is None or not statistics.get("comparisons"):
         return
 
@@ -675,12 +675,19 @@ def _annotate_ks_statistics(ax, statistics):
         if metric_type == "quantity_distribution":
             sim_ks = comparison.get("simulated", {}).get("ks_statistic")
             trig_ks = comparison.get("triggered", {}).get("ks_statistic")
+            sim_chi2_over_n = _format_chi2_over_n(comparison.get("simulated", {}))
+            trig_chi2_over_n = _format_chi2_over_n(comparison.get("triggered", {}))
             lines.append(
-                f"{label}: KS(sim)={_format_statistic_value(sim_ks)}, "
-                f"KS(trg)={_format_statistic_value(trig_ks)}"
+                f"{label}: KS s/t={_format_statistic_value(sim_ks)}/"
+                f"{_format_statistic_value(trig_ks)}, "
+                f"Chi2/N s/t={sim_chi2_over_n}/{trig_chi2_over_n}"
             )
             continue
-        lines.append(f"{label}: KS={_format_statistic_value(comparison.get('ks_statistic'))}")
+        chi2_over_n = _format_chi2_over_n(comparison)
+        lines.append(
+            f"{label}: KS={_format_statistic_value(comparison.get('ks_statistic'))}, "
+            f"Chi2/N={chi2_over_n}"
+        )
 
     ax.text(
         0.02,
@@ -699,6 +706,19 @@ def _format_statistic_value(value):
     if value is None:
         return "n/a"
     return f"{float(value):.4f}"
+
+
+def _format_chi2_over_n(statistics):
+    """Format Chi2/N using bins that contribute to the Chi2 calculation."""
+    chi2_value = statistics.get("chi2_statistic")
+    baseline_counts = statistics.get("baseline_counts")
+    if chi2_value is None or baseline_counts is None:
+        return "n/a"
+
+    n_contributing_bins = int(np.sum(np.asarray(baseline_counts, dtype=float) > 0))
+    if n_contributing_bins <= 0:
+        return "n/a"
+    return f"{float(chi2_value) / n_contributing_bins:.4f}"
 
 
 def _initialize_comparison_statistics(metrics_per_production):
