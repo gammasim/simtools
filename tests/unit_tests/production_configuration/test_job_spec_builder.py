@@ -9,6 +9,8 @@ from simtools.production_configuration.job_spec_builder import (
     calculate_scaled_nshow,
     get_nshow_scaling_reference_energy,
     normalize_energy_ranges,
+    normalize_grid_axes,
+    normalize_to_list,
     resolve_array_layout_name,
 )
 
@@ -45,10 +47,46 @@ def test_normalize_energy_ranges_expands_list_of_pairs():
     ]
 
 
+def test_normalize_to_list_converts_tuple_values():
+    assert normalize_to_list((1, 2)) == [1, 2]
+
+
+def test_normalize_grid_axes_uses_defaults_and_none_for_missing_axes():
+    grid_axes = normalize_grid_axes({"primary": "gamma"})
+
+    assert grid_axes["primary"] == ["gamma"]
+    assert grid_axes["azimuth_angle"] == [None]
+    assert grid_axes["zenith_angle"] == [None]
+    assert grid_axes["model_version"] == [None]
+    assert grid_axes["corsika_le_interaction"] == ["urqmd"]
+    assert grid_axes["corsika_he_interaction"] == ["epos"]
+
+
+def test_normalize_energy_ranges_accepts_single_tuple_pair():
+    energy_ranges = normalize_energy_ranges((30 * u.GeV, 300 * u.GeV))
+
+    assert energy_ranges == [(30 * u.GeV, 300 * u.GeV)]
+
+
+def test_normalize_energy_ranges_raises_for_invalid_shape():
+    with pytest.raises(ValueError, match="energy_range must be one pair"):
+        normalize_energy_ranges([30 * u.GeV, 300])
+
+
 def test_calculate_log_energy_midpoint():
     midpoint_energy = calculate_log_energy_midpoint((1 * u.GeV, 100 * u.GeV))
 
     assert midpoint_energy.to_value(u.GeV) == pytest.approx(10.0)
+
+
+def test_calculate_log_energy_midpoint_raises_for_non_quantity_values():
+    with pytest.raises(TypeError, match="energy_range_pair must contain astropy Quantity values"):
+        calculate_log_energy_midpoint((1, 100 * u.GeV))
+
+
+def test_calculate_log_energy_midpoint_raises_for_non_positive_values():
+    with pytest.raises(ValueError, match="Energy range values must be strictly positive"):
+        calculate_log_energy_midpoint((0 * u.GeV, 100 * u.GeV))
 
 
 def test_get_nshow_scaling_reference_energy_uses_first_range():
@@ -57,6 +95,11 @@ def test_get_nshow_scaling_reference_energy_uses_first_range():
     )
 
     assert reference_energy.to_value(u.GeV) == pytest.approx(10.0)
+
+
+def test_get_nshow_scaling_reference_energy_raises_for_empty_input():
+    with pytest.raises(ValueError, match="At least one energy range is required"):
+        get_nshow_scaling_reference_energy([])
 
 
 def test_calculate_scaled_nshow_returns_baseline_without_power_index():
@@ -85,6 +128,26 @@ def test_calculate_scaled_nshow_uses_ceil_for_fractional_result():
     )
 
     assert scaled_nshow == 1
+
+
+def test_calculate_scaled_nshow_raises_for_invalid_baseline():
+    with pytest.raises(ValueError, match="baseline_nshow must be a positive integer"):
+        calculate_scaled_nshow((10 * u.GeV, 100 * u.GeV), 0)
+
+
+def test_calculate_scaled_nshow_requires_reference_energy_when_scaled():
+    with pytest.raises(ValueError, match="reference_energy is required"):
+        calculate_scaled_nshow((10 * u.GeV, 100 * u.GeV), 10, nshow_power_index=-1.0)
+
+
+def test_calculate_scaled_nshow_raises_when_scaled_result_drops_below_one():
+    with pytest.raises(ValueError, match="Scaled nshow must be at least 1"):
+        calculate_scaled_nshow(
+            (10 * u.GeV, 10 * u.GeV),
+            1,
+            nshow_power_index=1.0,
+            reference_energy=-100 * u.GeV,
+        )
 
 
 def test_build_job_specs_expands_model_version_list(args_dict):
@@ -172,3 +235,13 @@ def test_resolve_array_layout_name_resolves_stringified_by_version_layout():
     )
 
     assert resolve_array_layout_name(array_layout_name, "7.0.0") == "CTAO-North-Alpha"
+
+
+def test_resolve_array_layout_name_unwraps_single_item_list():
+    assert resolve_array_layout_name(["CTAO-North-Alpha"], "7.0.0") == "CTAO-North-Alpha"
+
+
+def test_resolve_array_layout_name_keeps_invalid_stringified_dict():
+    invalid_layout = "{not valid"
+
+    assert resolve_array_layout_name(invalid_layout, "7.0.0") == invalid_layout
