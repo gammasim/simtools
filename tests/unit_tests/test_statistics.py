@@ -22,6 +22,19 @@ def test_compare_samples_with_statistics_returns_statistics():
     assert result["reason"] == "ok"
     assert result["bin_edges"] == [1.0, 2.0, 3.0, 4.0, 5.0]
 
+    results_none = compare_samples_with_statistics([], [], bin_edges)
+    assert results_none["ks_statistic"] is None
+
+
+def test_ks_test_samples_handles_empty_samples():
+    """Test KS test returns None for empty samples."""
+    ks_stat, ks_pval = (
+        compare_samples_with_statistics([], [], [0.0, 1.0])["ks_statistic"],
+        compare_samples_with_statistics([], [], [0.0, 1.0])["ks_pvalue"],
+    )
+    assert ks_stat is None
+    assert ks_pval is None
+
 
 def test_chi2_test_histograms_handles_empty_counts():
     """Test aligned histogram statistics return invalid for empty counts."""
