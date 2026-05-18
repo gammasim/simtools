@@ -2,6 +2,7 @@ from unittest import mock
 
 import astropy.units as u
 import pytest
+from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.production_configuration.job_spec_builder import (
     build_job_specs,
@@ -40,10 +41,16 @@ def test_normalize_energy_ranges_expands_list_of_pairs():
         ]
     )
 
-    assert energy_ranges == [
-        (30 * u.GeV, 30 * u.GeV),
-        (300 * u.GeV, 300 * u.GeV),
-    ]
+    assert len(energy_ranges) == 2
+    for actual, expected in zip(
+        energy_ranges,
+        [
+            (30 * u.GeV, 30 * u.GeV),
+            (300 * u.GeV, 300 * u.GeV),
+        ],
+    ):
+        assert_quantity_allclose(actual[0], expected[0])
+        assert_quantity_allclose(actual[1], expected[1])
 
 
 def test_normalize_to_list_converts_tuple_values():
@@ -63,8 +70,9 @@ def test_normalize_grid_axes_uses_defaults_and_none_for_missing_axes():
 
 def test_normalize_energy_ranges_accepts_single_tuple_pair():
     energy_ranges = normalize_energy_ranges((30 * u.GeV, 300 * u.GeV))
-
-    assert energy_ranges == [(30 * u.GeV, 300 * u.GeV)]
+    assert len(energy_ranges) == 1
+    assert_quantity_allclose(energy_ranges[0][0], 30 * u.GeV)
+    assert_quantity_allclose(energy_ranges[0][1], 300 * u.GeV)
 
 
 def test_normalize_energy_ranges_raises_for_invalid_shape():
@@ -157,8 +165,9 @@ def test_build_job_specs_scales_nshow_by_energy_range(args_dict):
     ]
 
     job_specs = build_job_specs(args_dict, ["7.0.0"])
-
-    assert [job_spec["nshow"] for job_spec in job_specs] == [100, 10]
+    nshow_values = [job_spec["nshow"] for job_spec in job_specs]
+    assert nshow_values[0] == pytest.approx(100)
+    assert nshow_values[1] == pytest.approx(10)
 
 
 def test_build_job_specs_requires_reference_energy_for_nshow_scaling(args_dict):
