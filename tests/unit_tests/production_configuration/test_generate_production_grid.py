@@ -355,7 +355,7 @@ def test_generate_grid_radec_axes_mode_with_sparse_lookup_raises_clear_error(
         raise QhullError("mocked sparse triangulation failure")
 
     monkeypatch.setattr(
-        "simtools.production_configuration.generate_production_grid.LinearNDInterpolator",
+        "simtools.production_configuration.corsika_limits_lookup.LinearNDInterpolator",
         _raise_qhull,
     )
 

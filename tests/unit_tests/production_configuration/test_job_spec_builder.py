@@ -3,15 +3,17 @@ from unittest import mock
 import astropy.units as u
 import pytest
 from astropy.tests.helper import assert_quantity_allclose
+from simtools.production_configuration.production_grid import CorsikaLimitsLookup
 
 from simtools.production_configuration.job_spec_builder import (
     build_job_specs,
     calculate_log_energy_midpoint,
     calculate_scaled_nshow,
+    get_core_scatter_max_for_zenith_angle,
+    get_energy_range_for_zenith_angle,
     normalize_energy_ranges,
     normalize_grid_axes,
     normalize_to_list,
-    resolve_array_layout_name,
 )
 
 
@@ -31,6 +33,11 @@ def args_dict():
         "corsika_le_interaction": "urqmd",
         "corsika_he_interaction": "epos",
     }
+
+
+@pytest.fixture
+def corsika_limits():
+    return "tests/resources/corsika_simulation_limits/merged_corsika_limits_for_test.ecsv"
 
 
 def test_normalize_energy_ranges_expands_list_of_pairs():
@@ -218,8 +225,11 @@ def test_build_job_specs_skips_entries_when_energy_range_is_none(mock_energy_ran
     "simtools.production_configuration.job_spec_builder.calculate_scaled_nshow",
     return_value=777,
 )
-def test_build_job_specs_uses_dummy_nshow_when_corsika_limits_set(mock_nshow, args_dict):
-    args_dict["corsika_limits"] = "limits.ecsv"
+def test_build_job_specs_uses_dummy_nshow_when_corsika_limits_set(
+    mock_nshow, args_dict, corsika_limits
+):
+    args_dict["corsika_limits"] = corsika_limits
+    args_dict["telescope_ids"] = ["LSTN-01"]
     args_dict["number_of_runs"] = 1
 
     job_specs = build_job_specs(args_dict, ["7.0.0"])
@@ -229,24 +239,57 @@ def test_build_job_specs_uses_dummy_nshow_when_corsika_limits_set(mock_nshow, ar
     mock_nshow.assert_called_once()
 
 
-def test_resolve_array_layout_name_resolves_stringified_by_version_layout():
-    array_layout_name = str(
-        {
-            "by_version": {
-                "<7.0.0": "alpha",
-                ">=7.0.0": "CTAO-North-Alpha",
-            }
-        }
+def test_get_energy_range_for_zenith_angle_clips_to_lookup_threshold(corsika_limits):
+    lookup = CorsikaLimitsLookup(corsika_limits, telescope_ids=["LSTN-01"])
+
+    selected_energy_range = get_energy_range_for_zenith_angle(
+        20 * u.deg,
+        (1 * u.GeV, 10 * u.GeV),
+        lookup,
+        azimuth_angle=0 * u.deg,
     )
 
-    assert resolve_array_layout_name(array_layout_name, "7.0.0") == "CTAO-North-Alpha"
+    assert_quantity_allclose(selected_energy_range[0], 7 * u.GeV)
+    assert_quantity_allclose(selected_energy_range[1], 10 * u.GeV)
 
 
-def test_resolve_array_layout_name_unwraps_single_item_list():
-    assert resolve_array_layout_name(["CTAO-North-Alpha"], "7.0.0") == "CTAO-North-Alpha"
+def test_get_energy_range_for_zenith_angle_returns_none_if_threshold_exceeds_max(corsika_limits):
+    lookup = CorsikaLimitsLookup(corsika_limits, telescope_ids=["LSTN-01"])
+
+    selected_energy_range = get_energy_range_for_zenith_angle(
+        20 * u.deg,
+        (1 * u.GeV, 5 * u.GeV),
+        lookup,
+        azimuth_angle=0 * u.deg,
+    )
+
+    assert selected_energy_range is None
 
 
-def test_resolve_array_layout_name_keeps_invalid_stringified_dict():
-    invalid_layout = "{not valid"
+def test_get_core_scatter_max_for_zenith_angle_clips_to_lookup_radius(corsika_limits):
+    lookup = CorsikaLimitsLookup(corsika_limits, telescope_ids=["LSTN-01"])
 
-    assert resolve_array_layout_name(invalid_layout, "7.0.0") == invalid_layout
+    selected_core_scatter_max = get_core_scatter_max_for_zenith_angle(
+        20 * u.deg,
+        (10, 1000 * u.m),
+        lookup,
+        azimuth_angle=0 * u.deg,
+    )
+
+    assert_quantity_allclose(selected_core_scatter_max, 925 * u.m)
+
+
+def test_build_job_specs_reads_limits_from_corsika_limits_file(args_dict, corsika_limits):
+    args_dict["number_of_runs"] = 1
+    args_dict["azimuth_angle"] = 0 * u.deg
+    args_dict["energy_range"] = (1 * u.GeV, 10 * u.GeV)
+    args_dict["core_scatter"] = (10, 1000 * u.m)
+    args_dict["corsika_limits"] = corsika_limits
+    args_dict["telescope_ids"] = ["LSTN-01"]
+
+    job_specs = build_job_specs(args_dict, ["7.0.0"])
+
+    assert len(job_specs) == 1
+    assert_quantity_allclose(job_specs[0]["energy_min"], 7 * u.GeV)
+    assert_quantity_allclose(job_specs[0]["energy_max"], 10 * u.GeV)
+    assert_quantity_allclose(job_specs[0]["core_scatter_max"], 925 * u.m)
