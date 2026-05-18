@@ -233,6 +233,30 @@ def test_triggered_vs_quantity_outputs_and_empty_skip(tmp_test_directory):
     assert not (output_path / "triggered_fraction_vs_core_distance_empty.png").exists()
 
 
+def test_triggered_vs_quantity_uses_global_bin_edges(tmp_test_directory, mocker):
+    """Test triggered-fraction plot derives one shared binning across productions."""
+    output_path = Path(tmp_test_directory)
+    metrics = [
+        _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0),
+        _build_metrics("candidate", simulated_scale=2.0, triggered_scale=1.5),
+    ]
+    mock_global_bins = mocker.patch(
+        "simtools.visualization.plot_event_level_production_comparison._get_global_quantity_bin_edges",
+        return_value=np.linspace(10.0, 50.0, 9),
+    )
+
+    plot_event_level_production_comparison._plot_triggered_vs_quantity(
+        metrics,
+        output_path,
+        quantity_name="core_distance",
+        x_label="Core Distance (m)",
+        x_scale="linear",
+        bins=8,
+    )
+
+    mock_global_bins.assert_called_once()
+
+
 def test_single_and_mixed_trigger_skip_paths(tmp_test_directory):
     """Test skip branches when no single or mixed trigger combinations exist."""
     output_path = Path(tmp_test_directory)

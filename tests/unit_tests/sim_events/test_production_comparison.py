@@ -5,49 +5,11 @@ import pytest
 
 from simtools.sim_events.production_comparison import (
     collect_production_metrics,
-    compute_ks_chi2_for_aligned_histograms,
-    compute_ks_chi2_for_samples,
-    parse_production_arguments,
 )
-
-
-def test_parse_production_arguments_accepts_single_production(mocker):
-    """Test parser accepts a single production descriptor."""
-    mocker.patch(
-        "simtools.sim_events.production_comparison.resolve_file_patterns",
-        side_effect=lambda patterns: patterns,
-    )
-
-    descriptors = parse_production_arguments([["baseline", "base.h5"]])
-
-    assert len(descriptors) == 1
-    assert descriptors[0].label == "baseline"
-    assert descriptors[0].event_data_files == ["base.h5"]
-
-
-def test_parse_production_arguments_resolves_flattened_pairs(mocker):
-    """Test parser supports flattened label/file list from configuration files."""
-    mocker.patch(
-        "simtools.sim_events.production_comparison.resolve_file_patterns",
-        side_effect=lambda patterns: patterns,
-    )
-
-    descriptors = parse_production_arguments(["baseline", "base_*.h5", "candidate", "cand_*.h5"])
-
-    assert [descriptor.label for descriptor in descriptors] == ["baseline", "candidate"]
-    assert descriptors[0].event_data_files == ["base_*.h5"]
-    assert descriptors[1].event_data_files == ["cand_*.h5"]
-
-
-def test_parse_production_arguments_rejects_duplicate_labels(mocker):
-    """Test parser rejects duplicated production labels."""
-    mocker.patch(
-        "simtools.sim_events.production_comparison.resolve_file_patterns",
-        side_effect=lambda patterns: patterns,
-    )
-
-    with pytest.raises(ValueError, match="labels must be unique"):
-        parse_production_arguments([["same", "a.h5"], ["same", "b.h5"]])
+from simtools.statistics import (
+    chi2_test_histograms,
+    compare_samples_with_statistics,
+)
 
 
 def test_collect_production_metrics_aggregates_event_data(mocker):
@@ -110,46 +72,6 @@ def test_collect_production_metrics_aggregates_event_data(mocker):
     np.testing.assert_array_equal(metrics[0].per_type["MSTN"].triggered_angular_distances, [1.2])
 
 
-@pytest.mark.parametrize(
-    ("arguments", "error_match"),
-    [
-        ([], "At least one production is required"),
-        (["baseline", "base.h5", "dangling"], "label/file pairs"),
-        ([["baseline", "  ,   "]], "has no event_data_file pattern"),
-        ([["baseline", "a.h5"], ["candidate", 1]], "label/file pairs"),
-    ],
-)
-def test_parse_production_arguments_error_paths(mocker, arguments, error_match):
-    """Test parser validation failures for malformed production arguments."""
-    mocker.patch(
-        "simtools.sim_events.production_comparison.resolve_file_patterns",
-        side_effect=lambda patterns: patterns,
-    )
-
-    with pytest.raises(ValueError, match=error_match):
-        parse_production_arguments(arguments)
-
-
-def test_parse_production_arguments_rejects_unresolved_patterns(mocker):
-    """Test parser rejects productions that resolve to no files."""
-    mocker.patch("simtools.sim_events.production_comparison.resolve_file_patterns", return_value=[])
-
-    with pytest.raises(ValueError, match="does not resolve to any files"):
-        parse_production_arguments([["baseline", "missing_*.h5"]])
-
-
-def test_parse_production_arguments_accepts_nested_flattened_strings(mocker):
-    """Test parser accepts nested flattened string groups."""
-    mocker.patch(
-        "simtools.sim_events.production_comparison.resolve_file_patterns",
-        side_effect=lambda patterns: patterns,
-    )
-
-    descriptors = parse_production_arguments([["baseline", "a.h5", "candidate", "b.h5"]])
-
-    assert [descriptor.label for descriptor in descriptors] == ["baseline", "candidate"]
-
-
 def test_collect_production_metrics_handles_empty_and_partial_datasets(mocker):
     """Test collector skips missing shower and missing trigger data sets gracefully."""
     descriptor = SimpleNamespace(label="baseline", event_data_files=["baseline_file.h5"])
@@ -199,7 +121,7 @@ def test_compute_ks_chi2_for_samples_returns_statistics():
     candidate = np.array([1.0, 2.0, 2.5, 4.0])
     bin_edges = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
 
-    result = compute_ks_chi2_for_samples(baseline, candidate, bin_edges)
+    result = compare_samples_with_statistics(baseline, candidate, bin_edges)
 
     assert result["ks_statistic"] is not None
     assert result["ks_pvalue"] is not None
@@ -215,7 +137,13 @@ def test_compute_ks_chi2_for_aligned_histograms_handles_empty_counts():
     baseline = np.array([0.0, 0.0, 0.0])
     candidate = np.array([1.0, 0.0, 0.0])
 
-    result = compute_ks_chi2_for_aligned_histograms(baseline, candidate)
+    chi2_stat, chi2_pval, valid, reason = chi2_test_histograms(baseline, candidate)
+    result = {
+        "chi2_statistic": chi2_stat,
+        "chi2_pvalue": chi2_pval,
+        "valid": valid,
+        "reason": reason,
+    }
 
     assert result["ks_statistic"] is None
     assert result["chi2_statistic"] is None

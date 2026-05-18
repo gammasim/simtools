@@ -7,9 +7,9 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 
-from simtools.sim_events.production_comparison import (
-    compute_ks_chi2_for_aligned_histograms,
-    compute_ks_chi2_for_samples,
+from simtools.statistics import (
+    chi2_test_histograms,
+    compare_samples_with_statistics,
 )
 from simtools.utils import names
 
@@ -30,31 +30,12 @@ def plot(metrics_per_production, output_path, bins=40):
     """
     comparison_statistics = _initialize_comparison_statistics(metrics_per_production)
 
-    _record_plot_statistics(
-        comparison_statistics,
-        "trigger_multiplicity",
-        _plot_trigger_multiplicity(metrics_per_production, output_path),
-    )
-    _record_plot_statistics(
-        comparison_statistics,
-        "trigger_combination",
-        _plot_trigger_combinations(metrics_per_production, output_path),
-    )
-    _record_plot_statistics(
-        comparison_statistics,
-        "single_telescope_trigger_distribution",
-        _plot_single_telescope_trigger_frequencies(metrics_per_production, output_path),
-    )
-    _record_plot_statistics(
-        comparison_statistics,
-        "mixed_trigger_combinations",
-        _plot_mixed_trigger_combinations(metrics_per_production, output_path),
-    )
-    _record_plot_statistics(
-        comparison_statistics,
-        "telescope_participation_fraction",
-        _plot_telescope_participation(metrics_per_production, output_path),
-    )
+    for plot_name, plot_function in _TOP_LEVEL_STAT_PLOTS:
+        _record_plot_statistics(
+            comparison_statistics,
+            plot_name,
+            plot_function(metrics_per_production, output_path),
+        )
 
     for quantity_name, x_label, x_scale in _QUANTITY_CONFIGS:
         if quantity_name in _TRIGGERED_FRACTION_QUANTITIES:
@@ -99,7 +80,7 @@ def plot(metrics_per_production, output_path, bins=40):
             if tel_type in metrics.per_type
         ]
         for plot_fn in _PER_TYPE_PLOT_FNS:
-            statistics = plot_fn(type_metrics, output_path, suffix=f"_{tel_type}", bins=bins)
+            statistics = plot_fn(type_metrics, suffix=f"_{tel_type}", bins=bins)
             if statistics is None:
                 continue
             plot_name = _plot_name_from_statistics(statistics)
@@ -116,7 +97,7 @@ def _save_figure(fig, output_path, filename):
     plt.close(fig)
 
 
-def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", bins=None):
+def _plot_trigger_multiplicity(metrics_per_production, suffix="", bins=None):
     """Plot triggered telescope multiplicity distributions."""
     del bins
     fig, ax = plt.subplots(figsize=(9, 6))
@@ -164,7 +145,7 @@ def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", b
     )
     _annotate_ks_statistics(ax, statistics)
 
-    _save_figure(fig, output_path, f"trigger_multiplicity{suffix}.png")
+    # (No code here; removed misplaced block)
     statistics["plot_name"] = f"trigger_multiplicity{suffix}"
     return statistics
 
@@ -382,6 +363,12 @@ def _plot_triggered_vs_quantity(
 ):
     """Plot simulated vs triggered distributions for one quantity."""
     fig, ax = plt.subplots(figsize=(9, 6))
+    bin_edges = _get_global_quantity_bin_edges(
+        metrics_per_production,
+        quantity_name=quantity_name,
+        x_scale=x_scale,
+        bins=bins,
+    )
 
     plotted = False
     for metrics in metrics_per_production:
@@ -390,7 +377,6 @@ def _plot_triggered_vs_quantity(
             continue
         plotted = True
 
-        bin_edges = _get_bin_edges(simulated, x_scale=x_scale, bins=bins)
         sim_counts, _ = np.histogram(simulated, bins=bin_edges)
         trig_counts, _ = np.histogram(triggered, bins=bin_edges)
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -624,7 +610,18 @@ def _build_aligned_count_statistics(metrics_per_production, counts_per_label, me
         candidate_counts = counts_per_label.get(metrics.label)
         if candidate_counts is None:
             continue
-        result = compute_ks_chi2_for_aligned_histograms(baseline_counts, candidate_counts)
+        chi2_stat, chi2_pval, valid, reason = chi2_test_histograms(
+            baseline_counts, candidate_counts
+        )
+        result = {
+            "chi2_statistic": chi2_stat,
+            "chi2_pvalue": chi2_pval,
+            "valid": valid,
+            "reason": reason,
+            "candidate_label": metrics.label,
+            "baseline_counts": np.asarray(baseline_counts, dtype=int).tolist(),
+            "candidate_counts": np.asarray(candidate_counts, dtype=int).tolist(),
+        }
         result["candidate_label"] = metrics.label
         result["baseline_counts"] = np.asarray(baseline_counts, dtype=int).tolist()
         result["candidate_counts"] = np.asarray(candidate_counts, dtype=int).tolist()
@@ -658,12 +655,12 @@ def _build_quantity_distribution_statistics(
             continue
         candidate_data = counts_by_label[metrics.label]
 
-        sim_stats = compute_ks_chi2_for_samples(
+        sim_stats = compare_samples_with_statistics(
             baseline_data["simulated_samples"],
             candidate_data["simulated_samples"],
             baseline_bin_edges,
         )
-        trig_stats = compute_ks_chi2_for_samples(
+        trig_stats = compare_samples_with_statistics(
             baseline_data["triggered_samples"],
             candidate_data["triggered_samples"],
             baseline_bin_edges,
@@ -894,6 +891,14 @@ _QUANTITY_CONFIGS = [
 _HISTOGRAM_STYLE_QUANTITIES = {"energy"}
 _TRIGGERED_FRACTION_QUANTITIES = set()
 _SPECIAL_TRIGGER_SUBSETS = {"single_telescope", "mixed_type"}
+
+_TOP_LEVEL_STAT_PLOTS = [
+    ("trigger_multiplicity", _plot_trigger_multiplicity),
+    ("trigger_combination", _plot_trigger_combinations),
+    ("single_telescope_trigger_distribution", _plot_single_telescope_trigger_frequencies),
+    ("mixed_trigger_combinations", _plot_mixed_trigger_combinations),
+    ("telescope_participation_fraction", _plot_telescope_participation),
+]
 
 _PER_TYPE_PLOT_FNS = [
     _plot_trigger_multiplicity,
