@@ -15,7 +15,12 @@ from pathlib import Path
 import astropy.units as u
 
 from simtools.layout.array_layout_utils import resolve_array_layout_name
-from simtools.production_configuration.job_spec_builder import build_job_specs
+from simtools.production_configuration.production_grid_helpers import calculate_scaled_nshow
+from simtools.production_configuration.production_grid_job_rows import (
+    build_backend_agnostic_job_rows,
+    get_core_scatter_max_for_zenith_angle,
+    get_energy_range_for_zenith_angle,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -377,3 +382,26 @@ simtools-simulate-prod \\
     --log_level {args_dict["log_level"]} \\
     --pack_for_grid_register "$pack_for_grid_register"
 """
+
+
+def build_job_specs(args_dict, image_labels):
+    """Build backend-agnostic job specs from comparison and production grids."""
+    base_pack_dir = args_dict.get("simulation_output") or "simtools-output"
+    normalized_rows = build_backend_agnostic_job_rows(
+        args_dict,
+        calculate_scaled_nshow,
+        get_energy_range_for_zenith_angle_function=get_energy_range_for_zenith_angle,
+        get_core_scatter_max_for_zenith_angle_function=get_core_scatter_max_for_zenith_angle,
+    )
+
+    job_specs = []
+    for label in image_labels:
+        for row in normalized_rows:
+            job_specs.append(
+                {
+                    "image_label": str(label),
+                    **row,
+                    "pack_for_grid_register": f"{base_pack_dir}/{label!s}",
+                }
+            )
+    return job_specs
