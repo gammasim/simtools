@@ -97,7 +97,7 @@ def _save_figure(fig, output_path, filename):
     plt.close(fig)
 
 
-def _plot_trigger_multiplicity(metrics_per_production, suffix="", bins=None):
+def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", bins=None):
     """Plot triggered telescope multiplicity distributions."""
     del bins
     fig, ax = plt.subplots(figsize=(9, 6))
@@ -145,7 +145,7 @@ def _plot_trigger_multiplicity(metrics_per_production, suffix="", bins=None):
     )
     _annotate_ks_statistics(ax, statistics)
 
-    # (No code here; removed misplaced block)
+    _save_figure(fig, output_path, f"trigger_multiplicity{suffix}.png")
     statistics["plot_name"] = f"trigger_multiplicity{suffix}"
     return statistics
 
