@@ -489,8 +489,13 @@ def _plot_quantity_distribution(
         Whether to plot cumulative distributions.
     """
     fig, ax = plt.subplots(figsize=(9, 6))
+    bin_edges = _get_global_quantity_bin_edges(
+        metrics_per_production,
+        quantity_name=quantity_name,
+        x_scale=x_scale,
+        bins=bins,
+    )
     plotted = False
-    bin_edges_by_label = {}
     counts_by_label = {}
     for metrics in metrics_per_production:
         simulated, triggered = _get_quantity_arrays(metrics, quantity_name)
@@ -498,10 +503,8 @@ def _plot_quantity_distribution(
             continue
         plotted = True
 
-        bin_edges = _get_bin_edges(simulated, x_scale=x_scale, bins=bins)
         sim_counts, _ = np.histogram(simulated, bins=bin_edges)
         trig_counts, _ = np.histogram(triggered, bins=bin_edges)
-        bin_edges_by_label[metrics.label] = bin_edges
         counts_by_label[metrics.label] = {
             "simulated": sim_counts,
             "triggered": trig_counts,
@@ -545,7 +548,7 @@ def _plot_quantity_distribution(
         metrics_per_production,
         quantity_name,
         counts_by_label,
-        bin_edges_by_label,
+        baseline_bin_edges=bin_edges,
         cumulative=cumulative,
     )
     _annotate_ks_statistics(ax, statistics)
@@ -554,6 +557,20 @@ def _plot_quantity_distribution(
     _save_figure(fig, output_path, f"distribution_{quantity_name}{cum_str}{suffix}.png")
     statistics["plot_name"] = f"distribution_{quantity_name}{cum_str}{suffix}"
     return statistics
+
+
+def _get_global_quantity_bin_edges(metrics_per_production, quantity_name, x_scale, bins):
+    """Return one shared set of bin edges for a quantity across productions."""
+    all_simulated_values = []
+    for metrics in metrics_per_production:
+        simulated, _ = _get_quantity_arrays(metrics, quantity_name)
+        if simulated.size == 0:
+            continue
+        all_simulated_values.append(np.asarray(simulated))
+
+    if len(all_simulated_values) == 0:
+        return _get_bin_edges(np.array([]), x_scale=x_scale, bins=bins)
+    return _get_bin_edges(np.concatenate(all_simulated_values), x_scale=x_scale, bins=bins)
 
 
 def _plot_telescope_participation(metrics_per_production, output_path):
@@ -619,7 +636,7 @@ def _build_quantity_distribution_statistics(
     metrics_per_production,
     quantity_name,
     counts_by_label,
-    bin_edges_by_label,
+    baseline_bin_edges,
     cumulative,
 ):
     """Build comparison statistics for quantity distribution plots."""
@@ -635,7 +652,6 @@ def _build_quantity_distribution_statistics(
         return stats_summary
 
     baseline_data = counts_by_label[baseline_label]
-    baseline_edges = bin_edges_by_label[baseline_label]
 
     for metrics in metrics_per_production[1:]:
         if metrics.label not in counts_by_label:
@@ -645,19 +661,19 @@ def _build_quantity_distribution_statistics(
         sim_stats = compute_ks_chi2_for_samples(
             baseline_data["simulated_samples"],
             candidate_data["simulated_samples"],
-            baseline_edges,
+            baseline_bin_edges,
         )
         trig_stats = compute_ks_chi2_for_samples(
             baseline_data["triggered_samples"],
             candidate_data["triggered_samples"],
-            baseline_edges,
+            baseline_bin_edges,
         )
 
         comparison_record = {
             "candidate_label": metrics.label,
             "simulated": sim_stats,
             "triggered": trig_stats,
-            "baseline_bin_edges": np.asarray(baseline_edges, dtype=float).tolist(),
+            "baseline_bin_edges": np.asarray(baseline_bin_edges, dtype=float).tolist(),
         }
         stats_summary["comparisons"].append(comparison_record)
     return stats_summary

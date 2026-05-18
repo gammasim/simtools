@@ -327,18 +327,16 @@ def _accumulate_per_subset(telescopes, energy, core_dist, angular_dist, accumula
 def _subset_counts_for_event(telescopes):
     """Return subset keys and multiplicities for one triggered event.
 
-    Per-type keys (e.g. ``LSTN``, ``MSTN``) are filled only for events with
-    a single participating telescope type. Mixed-type events are tracked in
-    ``mixed_type`` only.
+    Per-type keys (e.g. ``LSTN``, ``MSTN``) are filled when at least two
+    telescopes of that type triggered, independent of whether the event is
+    single-type or mixed-type.
     """
     type_counts = Counter()
     for telescope in telescopes:
         tel_type = names.get_array_element_type_from_name(telescope)
         type_counts[tel_type] += 1
 
-    subset_counts = {}
-    if len(type_counts) == 1:
-        subset_counts = dict(type_counts)
+    subset_counts = {tel_type: count for tel_type, count in type_counts.items() if count >= 2}
     if len(telescopes) == 1:
         subset_counts["single_telescope"] = 1
     elif len(type_counts) > 1:
