@@ -77,7 +77,7 @@ from astropy.time import Time
 from simtools.application_control import build_application
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.model.site_model import SiteModel
-from simtools.production_configuration.generate_production_grid import GridGeneration
+from simtools.production_configuration.production_grid_engine import ProductionGridEngine
 
 
 def _add_arguments(parser):
@@ -190,7 +190,7 @@ def main():
     elif coordinate_system == "ra_dec":
         observing_time = Time.now()
 
-    grid_gen = GridGeneration(
+    grid_gen = ProductionGridEngine(
         axes=axes,
         coordinate_system=coordinate_system,
         observing_location=observing_location,
