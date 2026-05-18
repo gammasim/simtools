@@ -167,7 +167,7 @@ def main():
         },
     )
 
-    plots = list(gen.ensure_iterable(app_context.args.get("plots")))
+    plots = list(gen.ensure_list(app_context.args.get("plots")))
     generate_and_save_plots(plots=plots, args=app_context.args, ioh=app_context.io_handler)
 
 
