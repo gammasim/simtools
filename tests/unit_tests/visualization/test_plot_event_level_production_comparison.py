@@ -1,3 +1,4 @@
+import json
 from collections import Counter
 from pathlib import Path
 
@@ -44,6 +45,7 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
     plot_event_level_production_comparison.plot(metrics, output_path=output_path, bins=8)
 
     expected_files = [
+        "comparison_statistics.json",
         "trigger_multiplicity.png",
         "trigger_combination.png",
         "distribution_energy.png",
@@ -54,6 +56,13 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
         "telescope_participation_fraction.png",
     ]
     _assert_files_exist(output_path, expected_files)
+
+    with (output_path / "comparison_statistics.json").open(encoding="utf-8") as file_handle:
+        stats_payload = json.load(file_handle)
+    assert stats_payload["baseline"]["label"] == "baseline"
+    assert [item["label"] for item in stats_payload["comparison_sets"]] == ["candidate"]
+    assert "distribution_energy" in stats_payload["plot_statistics"]
+    assert "trigger_multiplicity" in stats_payload["plot_statistics"]
 
 
 def test_plot_writes_per_type_comparison_figures(tmp_test_directory):
