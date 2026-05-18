@@ -5,6 +5,7 @@ import astropy.units as u
 import pytest
 
 from simtools.job_execution.htcondor_script_generator import (
+    _format_param_value,
     _format_quantity,
     _get_submit_file,
     _get_submit_script,
@@ -63,6 +64,44 @@ def test_generate_submission_script(mock_is_file, mock_chmod, mock_open, mock_mk
     mock_open.assert_any_call(work_dir / f"{submit_file_name}.sh", "w", encoding="utf-8")
 
     # Check if chmod is called
+    mock_chmod.assert_called_once_with(0o755)
+
+
+@mock.patch("simtools.job_execution.htcondor_script_generator.Path.mkdir")
+@mock.patch("simtools.job_execution.htcondor_script_generator.open", new_callable=mock.mock_open)
+@mock.patch("simtools.job_execution.htcondor_script_generator.Path.chmod")
+@mock.patch("simtools.job_execution.htcondor_script_generator.Path.is_file", return_value=True)
+def test_generate_submission_script_writes_label_specific_files(
+    mock_is_file, mock_chmod, mock_open, mock_mkdir, args_dict
+):
+    args_dict["output_path"] = "/test_output"
+    args_dict["htcondor_log_path"] = "/custom_logs"
+    args_dict["number_of_runs"] = 1
+    args_dict["apptainer_image"] = {
+        "prod 7.0.0": "/path/to/prod.sif",
+        "beta": "/path/to/beta.sif",
+    }
+
+    generate_submission_script(args_dict)
+
+    work_dir = Path(args_dict["output_path"])
+
+    mock_is_file.assert_has_calls(
+        [mock.call(), mock.call()],
+        any_order=False,
+    )
+    mock_open.assert_any_call(
+        work_dir / "simulate_prod.submit.prod_7.0.0.condor", "w", encoding="utf-8"
+    )
+    mock_open.assert_any_call(
+        work_dir / "simulate_prod.submit.prod_7.0.0.params.txt", "w", encoding="utf-8"
+    )
+    mock_open.assert_any_call(work_dir / "simulate_prod.submit.beta.condor", "w", encoding="utf-8")
+    mock_open.assert_any_call(
+        work_dir / "simulate_prod.submit.beta.params.txt", "w", encoding="utf-8"
+    )
+    mock_open.assert_any_call(work_dir / "simulate_prod.submit.sh", "w", encoding="utf-8")
+    mock_mkdir.assert_any_call(parents=True, exist_ok=True)
     mock_chmod.assert_called_once_with(0o755)
 
 
@@ -191,6 +230,17 @@ def test_resolve_apptainer_images_empty_dict():
         _resolve_apptainer_images({})
 
 
+def test_resolve_apptainer_images_raises_for_truthy_empty_mapping():
+    class TruthyEmptyDict(dict):
+        def __bool__(self):
+            return True
+
+    with pytest.raises(
+        ValueError, match="At least one apptainer image label/path must be configured"
+    ):
+        _resolve_apptainer_images(TruthyEmptyDict())
+
+
 def test_resolve_apptainer_images_invalid_type(tmp_test_directory):
     with pytest.raises(
         TypeError, match="apptainer_image must be a string path or a label-to-path dictionary"
@@ -221,6 +271,11 @@ def test_format_quantity_full_coverage():
     value, unit = _format_quantity("abc")
     assert value == "abc"
     assert unit is None
+
+
+def test_format_param_value_raises_for_missing_required_value():
+    with pytest.raises(ValueError, match="Missing required value for field 'primary'"):
+        _format_param_value(None, "primary")
 
 
 def test_sanitize_label_for_filename():
