@@ -32,7 +32,8 @@ RESULT_COLUMNS = [
     "azimuth",
     "nsb_level",
     "lower_energy_limit",
-    "upper_radius_limit",
+    "upper_radius_limit_ground",
+    "upper_radius_limit_shower",
     "viewcone_radius",
 ]
 
@@ -359,9 +360,9 @@ def _process_file(
     """
     histograms = EventDataHistograms(
         file_path,
-        array_name=array_name,
-        telescope_list=telescope_ids,
-        energy_bins_per_decade=differential_loss_bins_per_decade or 10,
+        array_name,
+        telescope_ids,
+        differential_loss_bins_per_decade or 10,
     )
     histograms.fill()
 
@@ -381,11 +382,12 @@ def _process_file(
             )
         )
     else:
-        limits["upper_radius_limit"] = compute_upper_radius_limit(
+        radius_limits = compute_upper_radius_limit(
             histograms,
             allowed_losses["core_distance"]["loss_fraction"],
             allowed_losses["core_distance"]["loss_min_events"],
         )
+        limits.update(radius_limits)
         limits["viewcone_radius"] = compute_viewcone(
             histograms,
             allowed_losses["angular_distance"]["loss_fraction"],
@@ -435,8 +437,12 @@ def _compute_differential_limits(
         "deg",
     )
 
-    upper_radius_limit = _is_close(
-        _core_distance_ground_to_shower(core_max * u.m, histograms.file_info.get("zenith")),
+    upper_radius_limit_ground = core_max * u.m
+    upper_radius_limit_shower = _core_distance_ground_to_shower(
+        upper_radius_limit_ground, histograms.file_info.get("zenith")
+    )
+    upper_radius_limit_shower = _is_close(
+        upper_radius_limit_shower,
         histograms.file_info["core_scatter_max"].to("m")
         if "core_scatter_max" in histograms.file_info
         else None,
@@ -449,10 +455,16 @@ def _compute_differential_limits(
         else None,
         "Upper viewcone limit is equal to the maximum viewcone distance of",
     )
-    _logger.info(f"Differential upper_radius_limit (max over bins): {upper_radius_limit}")
+    _logger.info(
+        f"Differential upper_radius_limit_ground (max over bins): {upper_radius_limit_ground}"
+    )
+    _logger.info(
+        f"Differential upper_radius_limit_shower (max over bins): {upper_radius_limit_shower}"
+    )
     _logger.info(f"Differential viewcone_radius (max over bins): {viewcone_radius}")
     return {
-        "upper_radius_limit": upper_radius_limit,
+        "upper_radius_limit_ground": upper_radius_limit_ground,
+        "upper_radius_limit_shower": upper_radius_limit_shower,
         "viewcone_radius": viewcone_radius,
         "core_vs_energy_curve": {"x": core_x, "y": core_y},
         "angular_distance_vs_energy_curve": {"x": vc_x, "y": vc_y},
@@ -589,7 +601,7 @@ def _round_value(key, val):
     """Round value based on key type."""
     if key == "lower_energy_limit":
         return np.floor(val * 1e3) / 1e3
-    if key == "upper_radius_limit":
+    if key in ("upper_radius_limit_ground", "upper_radius_limit_shower"):
         return np.ceil(val / 25) * 25
     if key == "viewcone_radius":
         return np.ceil(val / 0.25) * 0.25
@@ -706,7 +718,7 @@ def _core_distance_ground_to_shower(core_distance, zenith):
 
 def compute_upper_radius_limit(histograms, loss_fraction, loss_min_events=10):
     """
-    Compute the upper radial distance based on the event loss fraction.
+    Compute the upper radial distance in both ground and shower coordinates.
 
     Parameters
     ----------
@@ -719,8 +731,10 @@ def compute_upper_radius_limit(histograms, loss_fraction, loss_min_events=10):
 
     Returns
     -------
-    astropy.units.Quantity
-        Upper radial distance in m.
+    dict
+        Dictionary containing:
+        - "upper_radius_limit_ground": Upper radial distance in ground coordinates (m).
+        - "upper_radius_limit_shower": Upper radial distance in shower coordinates (m).
     """
     radius_limit_ground = (
         _compute_limits(
@@ -732,17 +746,21 @@ def compute_upper_radius_limit(histograms, loss_fraction, loss_min_events=10):
         )
         * u.m
     )
-    radius_limit = _core_distance_ground_to_shower(
+    radius_limit_shower = _core_distance_ground_to_shower(
         radius_limit_ground,
         histograms.file_info.get("zenith"),
     )
-    return _is_close(
-        radius_limit,
+    radius_limit_shower = _is_close(
+        radius_limit_shower,
         histograms.file_info["core_scatter_max"].to("m")
         if "core_scatter_max" in histograms.file_info
         else None,
         "Upper radius limit is equal to the maximum core scatter distance of",
     )
+    return {
+        "upper_radius_limit_ground": radius_limit_ground,
+        "upper_radius_limit_shower": radius_limit_shower,
+    }
 
 
 def compute_viewcone(histograms, loss_fraction, loss_min_events=10):
