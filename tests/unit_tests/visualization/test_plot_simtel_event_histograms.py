@@ -11,7 +11,6 @@ from simtools.visualization.plot_simtel_event_histograms import (
     _build_plot_filename,
     _create_2d_histogram_plot,
     _create_plot,
-    _create_rebinned_plot,
     _execute_plotting_loop,
     _get_limits,
     plot,
@@ -29,8 +28,6 @@ PATCH_PCOLOR = f"{MOD}.plt.pcolormesh"
 PATCH_CONTOUR = f"{MOD}.plt.contour"
 PATCH_COLORBAR = f"{MOD}.plt.colorbar"
 PATCH_CREATE_PLOT = f"{MOD}._create_plot"
-PATCH_CREATE_REBINNED = f"{MOD}._create_rebinned_plot"
-PATCH_REBIN = f"{MOD}.EventDataHistograms.rebin_2d_histogram"
 PATCH_HAS_DATA = f"{MOD}._has_data"
 PATCH_BUILD_FILENAME = f"{MOD}._build_plot_filename"
 
@@ -356,79 +353,6 @@ def test_create_plot_early_return_when_no_data():
         mock_subplots.assert_not_called()
 
 
-@pytest.mark.parametrize("output_path_is_none", [True, False])
-def test_create_rebinned_plot(output_path_is_none, tmp_path):
-    data = np.array([[1, 2], [3, 4]])
-    bins = [np.array([0, 1, 2]), np.array([0, 1, 2])]
-    rebin_factor = 2
-    plot_args = {
-        "data": data,
-        "bins": bins,
-        "plot_type": "histogram2d",
-        "plot_params": {"norm": "linear", "cmap": "viridis"},
-        "labels": {"title": "Original Plot"},
-    }
-    filename = "test_plot.png"
-    output_path = None if output_path_is_none else tmp_path
-
-    rebinned_data = np.array([[10]])
-    rebinned_x_bins = np.array([0, 2])
-    rebinned_y_bins = np.array([0, 2])
-
-    with (
-        patch(
-            PATCH_REBIN,
-            return_value=(rebinned_data, rebinned_x_bins, rebinned_y_bins),
-        ) as mock_rebin,
-        patch(PATCH_CREATE_PLOT) as mock_create_plot,
-    ):
-        _create_rebinned_plot(plot_args, filename, output_path, rebin_factor)
-
-        mock_rebin.assert_called_once_with(data, bins[0], bins[1], rebin_factor)
-        mock_create_plot.assert_called_once()
-        rebinned_plot_args = mock_create_plot.call_args[1]
-        np.testing.assert_array_equal(rebinned_plot_args["data"], rebinned_data)
-        if output_path is None:
-            assert rebinned_plot_args["output_file"] is None
-        else:
-            assert rebinned_plot_args["output_file"].name == "test_plot_rebinned.png"
-
-
-def test_should_create_rebinned_plot():
-    plot_args = {
-        "plot_type": "histogram2d",
-        "plot_params": {"norm": "linear"},
-    }
-
-    # Test case: rebin_factor > 1, plot_type is histogram2d, ends with _cumulative, norm is linear
-    assert plot_simtel_event_histograms._should_create_rebinned_plot(
-        rebin_factor=2, plot_args=plot_args, plot_key="test_cumulative"
-    )
-
-    # Test case: rebin_factor <= 1
-    assert not plot_simtel_event_histograms._should_create_rebinned_plot(
-        rebin_factor=1, plot_args=plot_args, plot_key="test_cumulative"
-    )
-
-    # Test case: plot_type is not histogram2d
-    plot_args["plot_type"] = "histogram"
-    assert not plot_simtel_event_histograms._should_create_rebinned_plot(
-        rebin_factor=2, plot_args=plot_args, plot_key="test_cumulative"
-    )
-
-    # Test case: plot_key does not end with _cumulative
-    plot_args["plot_type"] = "histogram2d"
-    assert not plot_simtel_event_histograms._should_create_rebinned_plot(
-        rebin_factor=2, plot_args=plot_args, plot_key="test"
-    )
-
-    # Test case: norm is not linear
-    plot_args["plot_params"]["norm"] = "log"
-    assert not plot_simtel_event_histograms._should_create_rebinned_plot(
-        rebin_factor=2, plot_args=plot_args, plot_key="test_cumulative"
-    )
-
-
 def test_build_plot_filename():
     # Test without array_name
     base_filename = "test_plot"
@@ -463,17 +387,15 @@ def test_execute_plotting_loop():
         },
     }
     output_path = MagicMock()
-    rebin_factor = 2
     array_name = "test_array"
 
     with (
         patch(PATCH_CREATE_PLOT) as mock_create_plot,
-        patch(PATCH_CREATE_REBINNED) as mock_create_rebinned_plot,
         patch(PATCH_BUILD_FILENAME, side_effect=lambda base, array: f"{base}_{array}.png"),
     ):
         mock_create_plot.return_value = MagicMock()  # Simulate successful plot creation
 
-        _execute_plotting_loop(plots, output_path, rebin_factor, array_name)
+        _execute_plotting_loop(plots, output_path, array_name)
 
         # Ensure exactly one plot was created
         assert mock_create_plot.call_count == 1
@@ -494,54 +416,6 @@ def test_execute_plotting_loop():
 
     # Ensure the second plot was skipped (still only one call)
     mock_create_plot.assert_called_once()
-
-    # For histogram (not 2D cumulative), no rebinned plot expected
-    mock_create_rebinned_plot.assert_not_called()
-
-
-def test_execute_plotting_loop_rebin_and_failed_plot():
-    """Cover branches where a plot returns None and where a rebinned plot is created."""
-    plots = {
-        # Meets all conditions for rebin (2D cumulative, linear norm, rebin_factor > 1)
-        "plotA_cumulative": {
-            "data": np.array([[1, 2], [3, 4]]),
-            "bins": (np.array([0, 1, 2]), np.array([0, 1, 2])),
-            "plot_type": "histogram2d",
-            "plot_params": {"norm": "linear"},
-            "labels": {"title": "Rebin Test"},
-            "scales": {},
-            "filename": "plotA_cumulative",
-        },
-        # This plot will return None from _create_plot to exercise the early-continue branch
-        "plotB": {
-            "data": np.array([1, 2, 3]),
-            "bins": np.array([0, 1, 2, 3]),
-            "plot_type": "histogram",
-            "plot_params": {"color": "blue"},
-            "labels": {"title": "Should Skip"},
-            "scales": {},
-            "filename": "plotB",
-        },
-    }
-    output_path = MagicMock()
-    rebin_factor = 2
-    array_name = None
-
-    with (
-        patch(PATCH_CREATE_PLOT, side_effect=[MagicMock(), None]) as mock_create_plot,
-        patch(PATCH_CREATE_REBINNED) as mock_create_rebinned_plot,
-        patch(PATCH_BUILD_FILENAME, side_effect=lambda base, array: f"{base}.png"),
-    ):
-        _execute_plotting_loop(plots, output_path, rebin_factor, array_name)
-
-        # First call produced a figure, second returned None
-        assert mock_create_plot.call_count == 2
-        # Rebinned plot should be created exactly once for plotA_cumulative
-        mock_create_rebinned_plot.assert_called_once()
-        args, _ = mock_create_rebinned_plot.call_args
-        assert args[1] == "plotA_cumulative.png"
-        assert args[2] is output_path
-        assert args[3] == rebin_factor
 
 
 def test_create_2d_plot_config():

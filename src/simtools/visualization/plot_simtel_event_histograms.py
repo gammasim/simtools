@@ -6,12 +6,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LogNorm
 
-from simtools.sim_events.histograms import EventDataHistograms
-
 _logger = logging.getLogger(__name__)
 
 
-def plot(histograms, output_path=None, limits=None, rebin_factor=2, array_name=None):
+def plot(histograms, output_path=None, limits=None, array_name=None):
     """
     Plot simtel event histograms.
 
@@ -26,16 +24,13 @@ def plot(histograms, output_path=None, limits=None, rebin_factor=2, array_name=N
         - "upper_radius_limit": Upper limit for core distance
         - "lower_energy_limit": Lower limit for energy
         - "viewcone_radius": Radius for the viewcone
-    rebin_factor: int, optional
-        Factor by which to reduce the number of bins in 2D histograms for re-binned plots.
-        Default is 2 (merge every 2 bins). Set to 0 or 1 to disable re-binning.
     array_name: str, optional
         Name of the telescope array configuration.
     """
     _logger.info(f"Plotting histograms written to {output_path}")
 
     plots = _generate_plot_configurations(histograms, limits)
-    _execute_plotting_loop(plots, output_path, rebin_factor, array_name)
+    _execute_plotting_loop(plots, output_path, array_name)
 
 
 def _get_limits(name, limits):
@@ -155,7 +150,7 @@ def _create_2d_plot_config(histogram, name, plot_params, limits):
     }
 
 
-def _execute_plotting_loop(plots, output_path, rebin_factor, array_name):
+def _execute_plotting_loop(plots, output_path, array_name):
     """Execute the main plotting loop for all plot configurations."""
     for plot_key, plot_args in plots.items():
         plot_filename = plot_args.pop("filename")
@@ -169,14 +164,7 @@ def _execute_plotting_loop(plots, output_path, rebin_factor, array_name):
 
         filename = _build_plot_filename(plot_filename, array_name)
         output_file = output_path / filename if output_path else None
-        result = _create_plot(**plot_args, output_file=output_file)
-
-        # Skip re-binned plot if main plot failed
-        if result is None:
-            continue
-
-        if _should_create_rebinned_plot(rebin_factor, plot_args, plot_key):
-            _create_rebinned_plot(plot_args, filename, output_path, rebin_factor)
+        _create_plot(**plot_args, output_file=output_file)
 
 
 def _build_plot_filename(base_filename, array_name=None):
@@ -196,66 +184,6 @@ def _build_plot_filename(base_filename, array_name=None):
         Complete filename with extension
     """
     return f"{base_filename}_{array_name}.png" if array_name else f"{base_filename}.png"
-
-
-def _should_create_rebinned_plot(rebin_factor, plot_args, plot_key):
-    """
-    Check if a re-binned version of the plot should be created.
-
-    Parameters
-    ----------
-    rebin_factor : int
-        Factor by which to rebin the energy axis
-    plot_args : dict
-        Plot arguments
-    plot_key : str
-        Key identifying the plot type
-
-    Returns
-    -------
-    bool
-        True if a re-binned plot should be created, False otherwise
-    """
-    return (
-        rebin_factor > 1
-        and plot_args["plot_type"] == "histogram2d"
-        and plot_key.endswith("_cumulative")
-        and plot_args.get("plot_params", {}).get("norm") == "linear"
-    )
-
-
-def _create_rebinned_plot(plot_args, filename, output_path, rebin_factor):
-    """
-    Create a re-binned version of a 2D histogram plot.
-
-    Parameters
-    ----------
-    plot_args : dict
-        Plot arguments for the original plot
-    filename : str
-        Filename of the original plot
-    output_path : Path or None
-        Path to save the plot to, or None
-    rebin_factor : int
-        Factor by which to rebin the energy axis
-    """
-    data = plot_args["data"]
-    bins = plot_args["bins"]
-
-    rebinned_data, rebinned_x_bins, rebinned_y_bins = EventDataHistograms.rebin_2d_histogram(
-        data, bins[0], bins[1], rebin_factor
-    )
-
-    rebinned_plot_args = plot_args.copy()
-    rebinned_plot_args["data"] = rebinned_data
-    rebinned_plot_args["bins"] = [rebinned_x_bins, rebinned_y_bins]
-
-    if rebinned_plot_args.get("labels", {}).get("title"):
-        rebinned_plot_args["labels"]["title"] += f" (Energy rebinned {rebin_factor}x)"
-
-    rebinned_filename = f"{filename.replace('.png', '')}_rebinned.png"
-    rebinned_output_file = output_path / rebinned_filename if output_path else None
-    _create_plot(**rebinned_plot_args, output_file=rebinned_output_file)
 
 
 def _create_plot(
