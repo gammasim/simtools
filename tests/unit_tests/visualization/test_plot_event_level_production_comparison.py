@@ -1,3 +1,4 @@
+import json
 from collections import Counter
 from pathlib import Path
 
@@ -44,6 +45,7 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
     plot_event_level_production_comparison.plot(metrics, output_path=output_path, bins=8)
 
     expected_files = [
+        "comparison_statistics.json",
         "trigger_multiplicity.png",
         "trigger_combination.png",
         "distribution_energy.png",
@@ -54,6 +56,13 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
         "telescope_participation_fraction.png",
     ]
     _assert_files_exist(output_path, expected_files)
+
+    with (output_path / "comparison_statistics.json").open(encoding="utf-8") as file_handle:
+        stats_payload = json.load(file_handle)
+    assert stats_payload["baseline"]["label"] == "baseline"
+    assert [item["label"] for item in stats_payload["comparison_sets"]] == ["candidate"]
+    assert "distribution_energy" in stats_payload["plot_statistics"]
+    assert "trigger_multiplicity" in stats_payload["plot_statistics"]
 
 
 def test_plot_writes_per_type_comparison_figures(tmp_test_directory):
@@ -235,3 +244,28 @@ def test_single_and_mixed_trigger_skip_paths(tmp_test_directory):
     plot_event_level_production_comparison._plot_mixed_trigger_combinations([metric], output_path)
     assert not (output_path / "single_telescope_trigger_distribution.png").exists()
     assert not (output_path / "mixed_trigger_combinations.png").exists()
+
+
+def test_quantity_distribution_uses_shared_bin_edges_for_statistics(tmp_test_directory):
+    """Test shared binning keeps candidate samples in-range for statistics."""
+    output_path = Path(tmp_test_directory)
+    baseline = _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)
+    candidate = _build_metrics("candidate", simulated_scale=10.0, triggered_scale=10.0)
+
+    stats = plot_event_level_production_comparison._plot_quantity_distribution(
+        [baseline, candidate],
+        output_path,
+        quantity_name="angular_distance",
+        x_label="Angular Distance (deg)",
+        x_scale="linear",
+        bins=8,
+        cumulative=False,
+    )
+
+    comparison = stats["comparisons"][0]
+    assert sum(comparison["simulated"]["candidate_counts"]) == len(
+        candidate.simulated_angular_distances
+    )
+    assert sum(comparison["triggered"]["candidate_counts"]) == len(
+        candidate.triggered_angular_distances
+    )
