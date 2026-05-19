@@ -143,22 +143,15 @@ def get_energy_range_for_zenith_angle(
     requested direction. If the threshold exceeds the configured upper bound,
     the simulation step is skipped.
     """
-    if corsika_limits is None:
+    interpolated_limits = _interpolate_corsika_limits(
+        corsika_limits, zenith_angle, azimuth_angle, nsb_level
+    )
+    if interpolated_limits is None:
         return energy_range_pair
-
-    if not isinstance(corsika_limits, CorsikaLimitsLookup):
-        corsika_limits = CorsikaLimitsLookup(corsika_limits)
-
-    azimuth_angle = 0.0 * u.deg if azimuth_angle is None else azimuth_angle
-    interpolated_limits = corsika_limits.interpolate_point(zenith_angle, azimuth_angle, nsb_level)
-    lower_energy_threshold = interpolated_limits["lower_energy_threshold"] * u.TeV
-
-    energy_min, energy_max = energy_range_pair
-    if lower_energy_threshold > energy_max.to(lower_energy_threshold.unit):
-        return None
-    if lower_energy_threshold <= energy_min.to(lower_energy_threshold.unit):
-        return energy_range_pair
-    return lower_energy_threshold.to(energy_min.unit), energy_max
+    return _clip_energy_range_from_threshold(
+        energy_range_pair,
+        interpolated_limits["lower_energy_threshold"] * u.TeV,
+    )
 
 
 def get_core_scatter_max_for_zenith_angle(
@@ -170,34 +163,24 @@ def get_core_scatter_max_for_zenith_angle(
     The lookup-table scatter radius is treated as an upper limit and therefore
     clipped against the user-provided maximum value.
     """
-    if corsika_limits is None:
+    interpolated_limits = _interpolate_corsika_limits(
+        corsika_limits, zenith_angle, azimuth_angle, nsb_level
+    )
+    if interpolated_limits is None:
         return core_scatter[1]
-
-    if not isinstance(corsika_limits, CorsikaLimitsLookup):
-        corsika_limits = CorsikaLimitsLookup(corsika_limits)
-
-    azimuth_angle = 0.0 * u.deg if azimuth_angle is None else azimuth_angle
-    interpolated_limits = corsika_limits.interpolate_point(zenith_angle, azimuth_angle, nsb_level)
-    lookup_scatter_max = interpolated_limits["upper_scatter_radius"] * u.m
-    configured_scatter_max = core_scatter[1]
-    return min(configured_scatter_max, lookup_scatter_max.to(configured_scatter_max.unit))
+    return _clip_max_quantity(core_scatter[1], interpolated_limits["upper_scatter_radius"] * u.m)
 
 
 def get_viewcone_max_for_zenith_angle(
     zenith_angle, view_cone, corsika_limits, azimuth_angle=None, nsb_level=1.0
 ):
     """Return zenith-dependent max viewcone value."""
-    if corsika_limits is None:
+    interpolated_limits = _interpolate_corsika_limits(
+        corsika_limits, zenith_angle, azimuth_angle, nsb_level
+    )
+    if interpolated_limits is None:
         return view_cone[1]
-
-    if not isinstance(corsika_limits, CorsikaLimitsLookup):
-        corsika_limits = CorsikaLimitsLookup(corsika_limits)
-
-    azimuth_angle = 0.0 * u.deg if azimuth_angle is None else azimuth_angle
-    interpolated_limits = corsika_limits.interpolate_point(zenith_angle, azimuth_angle, nsb_level)
-    lookup_viewcone_max = interpolated_limits["viewcone_radius"] * u.deg
-    configured_viewcone_max = view_cone[1]
-    return min(configured_viewcone_max, lookup_viewcone_max.to(configured_viewcone_max.unit))
+    return _clip_max_quantity(view_cone[1], interpolated_limits["viewcone_radius"] * u.deg)
 
 
 def calculate_log_energy_midpoint(energy_range_pair):
@@ -262,6 +245,19 @@ def _clip_energy_range_from_threshold(energy_range_pair, lower_energy_threshold)
     if lower_energy_threshold <= energy_min:
         return energy_range_pair
     return lower_energy_threshold, energy_max
+
+
+def _interpolate_corsika_limits(corsika_limits, zenith_angle, azimuth_angle=None, nsb_level=1.0):
+    """Return interpolated lookup limits for one pointing, or ``None`` if disabled."""
+    if corsika_limits is None:
+        return None
+    if not isinstance(corsika_limits, CorsikaLimitsLookup):
+        corsika_limits = CorsikaLimitsLookup(corsika_limits)
+    return corsika_limits.interpolate_point(
+        zenith_angle,
+        0.0 * u.deg if azimuth_angle is None else azimuth_angle,
+        nsb_level,
+    )
 
 
 def _clip_max_quantity(configured_max, lookup_max):

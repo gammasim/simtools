@@ -316,8 +316,7 @@ def _get_submit_script(args_dict):
         bash_indices[field] = f"${{{idx}}}"
 
     label = args_dict["label"] if args_dict["label"] else "simulate-prod"
-    run_number_offset_arg = args_dict.get("run_number_offset")
-    run_number_offset = 0 if run_number_offset_arg is None else run_number_offset_arg
+    run_number_offset = args_dict.get("run_number_offset", 0)
 
     energy_range_string = (
         f'"{bash_indices["energy_min_value"]} {bash_indices["energy_min_unit"]} '
