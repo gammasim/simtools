@@ -171,14 +171,13 @@ def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
     log_dir = Path(tmp_test_directory) / "htcondor_logs" / "log"
     error_dir = Path(tmp_test_directory) / "htcondor_logs" / "error"
     output_dir = Path(tmp_test_directory) / "htcondor_logs" / "output"
+    htcondor_dirs = {"log": log_dir, "error": error_dir, "output": output_dir}
     content = _get_submit_file(
         executable="simulate_prod.submit.sh",
         apptainer_image=apptainer_image,
         priority=1,
         params_file_name="simulate_prod.submit.params.txt",
-        log_dir=log_dir,
-        error_dir=error_dir,
-        output_dir=output_dir,
+        htcondor_dirs=htcondor_dirs,
     )
 
     assert "queue apptainer_label,primary" in content
