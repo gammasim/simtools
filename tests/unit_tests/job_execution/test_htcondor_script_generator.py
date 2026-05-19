@@ -18,12 +18,12 @@ from simtools.job_execution.htcondor_script_generator import (
 
 
 @pytest.fixture
-def args_dict():
+def args_dict(tmp_test_directory):
     return {
-        "output_path": "/test_output",
+        "output_path": str(Path(tmp_test_directory) / "output"),
         "apptainer_image": "/path/to/apptainer_image.sif",
         "priority": 5,
-        "job_grid_file": "/tmp/job_grid.ecsv",
+        "job_grid_file": str(Path(tmp_test_directory) / "output" / "job_grid.ecsv"),
         "label": "test_label",
         "simulation_software": "simtools",
         "site": "test_site",
@@ -106,11 +106,12 @@ def test_generate_submission_script_writes_label_specific_files(
     mock_mkdir,
     mock_read_job_grid,
     args_dict,
+    tmp_test_directory,
     job_rows,
     job_grid_metadata,
 ):
-    args_dict["output_path"] = "/test_output"
-    args_dict["htcondor_log_path"] = "/custom_logs"
+    args_dict["output_path"] = str(Path(tmp_test_directory) / "output")
+    args_dict["htcondor_log_path"] = str(Path(tmp_test_directory) / "custom_logs")
     args_dict["apptainer_image"] = {
         "prod 7.0.0": "/path/to/prod.sif",
         "beta": "/path/to/beta.sif",
