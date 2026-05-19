@@ -24,13 +24,7 @@ observing_time (str, optional)
     sampling). Ignored in ``horizontal`` mode.
 lookup_table (str, optional)
     Path to the lookup table for simulation limits. The table should contain
-    varying azimuth and/or zenith angles.
-telescope_ids (list of str, optional)
-    List of telescope names used to filter the lookup table rows
-    (e.g. ``MSTN-15``).
-simtel_file (str, optional)
-    Path to a sim_telarray file used only when lookup-table telescope selections
-    are stored as numeric telescope IDs.
+    varying azimuth and/or zenith angles for the selected array layout.
 output_file (str, optional, default='job_grid.ecsv')
     Output file for the generated executable job grid.
 
@@ -42,11 +36,11 @@ To generate a standard zenith/azimuth grid of simulation points, execute:
 .. code-block:: console
 
         simtools-production-generate-grid --site North --model_version 6.0.2 \
+            --array_layout_name alpha \
             --axes tests/resources/production_grid_generation_axes_definition.yml \
             --coordinate_system horizontal \
             --lookup_table tests/resources/corsika_simulation_limits/
-                merged_corsika_limits_for_test.ecsv \
-            --telescope_ids MSTN-15
+                merged_corsika_limits_for_test.ecsv
 
 To generate an all-sky RA/Dec direction grid and serialize output in RA/Dec,
 execute:
@@ -54,11 +48,11 @@ execute:
 .. code-block:: console
 
         simtools-production-generate-grid --site North --model_version 6.0.2 \
+            --array_layout_name alpha \
             --axes tests/resources/production_grid_generation_axes_definition_ra_dec.yml \
             --coordinate_system ra_dec --observing_time "2017-09-16 00:00:00" \
-            --lookup_table tests/resources/corsika_simulation_limits/
-                merged_corsika_limits_for_test.ecsv \
-            --telescope_ids MSTN-15
+            --lookup_table \
+            tests/resources/corsika_simulation_limits/merged_corsika_limits_for_test.ecsv
 """
 
 from simtools.application_control import build_application
@@ -102,30 +96,11 @@ def _add_arguments(parser):
         help="Output file for the generated executable job grid.",
     )
     parser.add_argument(
-        "--telescope_ids",
-        type=str,
-        nargs="*",
-        default=None,
-        help=(
-            "List of telescope names used to get specific limits from the lookup table "
-            "(e.g. MSTN-15)."
-        ),
-    )
-    parser.add_argument(
         "--lookup_table",
         type=str,
         required=False,
         help="Path to the lookup table for simulation limits. "
         "Table required with varying azimuth and or zenith angle. ",
-    )
-    parser.add_argument(
-        "--simtel_file",
-        type=str,
-        required=False,
-        help=(
-            "Optional path to a sim_telarray file used to map sim_telarray telescope IDs "
-            "to telescope names when lookup-table selections are numeric IDs."
-        ),
     )
     parser.add_argument(
         "--number_of_runs",

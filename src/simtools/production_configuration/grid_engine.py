@@ -37,8 +37,7 @@ class ProductionGridEngine:
         observing_location=None,
         observing_time=None,
         lookup_table=None,
-        telescope_ids=None,
-        simtel_file=None,
+        array_layout_name=None,
     ):
         """
         Initialize the production-grid engine.
@@ -56,10 +55,8 @@ class ProductionGridEngine:
             The time of observation required for RA/Dec transforms.
         lookup_table : str, optional
             Path to the lookup table file (ECSV format).
-        telescope_ids : list of str, optional
-            Telescope selection used to filter lookup rows.
-        simtel_file : str, optional
-            Path to a sim_telarray file used to map numeric telescope IDs.
+        array_layout_name : str, optional
+            Array layout name used to select lookup-table rows.
         """
         self._logger = logging.getLogger(__name__)
         self.axes = axes["axes"] if "axes" in axes else axes
@@ -71,15 +68,14 @@ class ProductionGridEngine:
         )
         self.observing_time = observing_time
         self.lookup_table = lookup_table
-        self.telescope_ids = telescope_ids
-        self.simtel_file = simtel_file
+        self.array_layout_name = array_layout_name
         self.interpolated_limits = {}
-        self._limits_lookup = CorsikaLimitsLookup(
-            lookup_table=lookup_table,
-            telescope_ids=telescope_ids,
-            simtel_file=simtel_file,
-        )
-        self._simtel_id_to_name = self._limits_lookup.simtel_id_to_name
+        self._limits_lookup = None
+        if self.lookup_table:
+            self._limits_lookup = CorsikaLimitsLookup(
+                lookup_table=lookup_table,
+                array_layout_name=array_layout_name,
+            )
         self.target_values = self._generate_target_values()
 
         if self.lookup_table:
@@ -90,10 +86,10 @@ class ProductionGridEngine:
 
     def _sync_limits_lookup(self):
         """Synchronize mutable lookup settings with the shared lookup helper."""
+        if self._limits_lookup is None:
+            return
         self._limits_lookup.lookup_table = self.lookup_table
-        self._limits_lookup.telescope_ids = self.telescope_ids
-        self._limits_lookup.simtel_file = self.simtel_file
-        self._limits_lookup.simtel_id_to_name = self._simtel_id_to_name
+        self._limits_lookup.array_layout_name = self.array_layout_name
 
     def _require_observing_time(self):
         """Return observing time if available, else raise a clear error."""

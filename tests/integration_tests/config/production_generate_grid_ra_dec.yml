@@ -4,8 +4,8 @@ applications:
   configuration:
     array_layout_name:
       by_version:
-        "<7.0.0": alpha
-        ">=7.0.0": CTAO-North-Alpha
+        "<7.0.0": 1lst
+        ">=7.0.0": 1lst
     axes: tests/resources/production_grid_generation_axes_definition_ra_dec.yml
     coordinate_system: ra_dec
     core_scatter: 10 500 m
@@ -22,7 +22,6 @@ applications:
     primary: gamma
     simulation_software: corsika_sim_telarray
     site: North
-    telescope_ids: [LSTN-01]
     view_cone: 0 deg 10 deg
   integration_tests:
   - output_file: job_grid_ra_dec.ecsv
