@@ -167,11 +167,10 @@ def main():
         },
     )
 
-    output_filepath = app_context.io_handler.get_output_file(app_context.args["output_file"])
     job_rows = build_simulation_jobs(app_context.args)
     serialize_job_grid(
         job_rows=job_rows,
-        output_file=output_filepath,
+        output_file=app_context.io_handler.get_output_file(app_context.args["output_file"]),
         metadata=build_job_grid_metadata(app_context.args),
     )
 
