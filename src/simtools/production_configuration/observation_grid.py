@@ -340,17 +340,18 @@ class ProductionGridEngine:
                 for i, key in enumerate(self.target_values.keys())
             }
 
+            zenith_idx = np.searchsorted(
+                self.target_values["zenith_angle"].value, grid_point["zenith_angle"].value
+            )
+            azimuth_idx = np.searchsorted(
+                self.target_values["azimuth"].value, grid_point["azimuth"].value
+            )
+            nsb_idx = np.searchsorted(
+                self.target_values["nsb_level"].value,
+                grid_point["nsb_level"].value,
+            )
+
             if "lower_energy_threshold" in self.interpolated_limits:
-                zenith_idx = np.searchsorted(
-                    self.target_values["zenith_angle"].value, grid_point["zenith_angle"].value
-                )
-                azimuth_idx = np.searchsorted(
-                    self.target_values["azimuth"].value, grid_point["azimuth"].value
-                )
-                nsb_idx = np.searchsorted(
-                    self.target_values["nsb_level"].value,
-                    grid_point["nsb_level"].value,
-                )
                 grid_point["lower_energy_threshold"] = (
                     self.interpolated_limits["lower_energy_threshold"][
                         zenith_idx, azimuth_idx, nsb_idx
