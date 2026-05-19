@@ -15,9 +15,7 @@ from pathlib import Path
 import astropy.units as u
 
 from simtools.layout.array_layout_utils import resolve_array_layout_name
-from simtools.production_configuration.production_grid_job_rows import (
-    build_simulation_execution_rows,
-)
+from simtools.production_configuration.build_grid import build_simulation_jobs
 
 _logger = logging.getLogger(__name__)
 
@@ -379,7 +377,7 @@ simtools-simulate-prod \\
 def build_job_specs(args_dict, image_labels):
     """Build backend-agnostic job specs from comparison and production grids."""
     base_pack_dir = args_dict.get("simulation_output") or "simtools-output"
-    normalized_rows = build_simulation_execution_rows(args_dict)
+    normalized_rows = build_simulation_jobs(args_dict)
 
     job_specs = []
     for label in image_labels:

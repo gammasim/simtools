@@ -77,7 +77,7 @@ from astropy.time import Time
 from simtools.application_control import build_application
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.model.site_model import SiteModel
-from simtools.production_configuration.production_grid_engine import ProductionGridEngine
+from simtools.production_configuration.grid_engine import ProductionGridEngine
 
 
 def _add_arguments(parser):

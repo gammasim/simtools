@@ -75,10 +75,10 @@ the calculation of the number of events to be simulated given a pre-determined m
 
 (production-grid-engine)=
 
-## production_grid_engine
+## grid_engine
 
 ```{eval-rst}
-.. automodule:: production_configuration.production_grid_engine
+.. automodule:: production_configuration.grid_engine
    :members:
 ```
 
@@ -115,10 +115,10 @@ the calculation of the number of events to be simulated given a pre-determined m
 
 (production-grid-serialization)=
 
-## production_grid_serialization
+## grid_serialization
 
 ```{eval-rst}
-.. automodule:: production_configuration.production_grid_serialization
+.. automodule:: production_configuration.grid_serialization
    :members:
 ```
 
