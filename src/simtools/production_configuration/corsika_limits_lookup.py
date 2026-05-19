@@ -7,6 +7,12 @@ from scipy.spatial import QhullError  # pylint: disable=no-name-in-module
 
 from simtools.utils.value_conversion import get_value_in_unit
 
+_LOOKUP_FIELDS = (
+    "lower_energy_threshold",
+    "upper_scatter_radius",
+    "viewcone_radius",
+)
+
 
 class CorsikaLimitsLookup:
     """Read and interpolate CORSIKA limits for production grids."""
@@ -75,25 +81,11 @@ class CorsikaLimitsLookup:
             Interpolators keyed by lookup quantity.
         """
         lookup_arrays = self.load_matching_lookup_arrays()
-        points = lookup_arrays["points"]
-        azimuths = points[:, 1]
-        azimuths_wrapped = np.concatenate([azimuths + shift for shift in (0, 360, -360)])
-
-        def repeat_3(arr):
-            """Repeat an array three times."""
-            return np.tile(arr, 3)
-
-        self.lookup_points_for_interpolation = np.column_stack(
-            (
-                repeat_3(points[:, 0]),
-                azimuths_wrapped,
-                repeat_3(points[:, 2]),
-            )
+        self.lookup_points_for_interpolation = self._build_wrapped_interpolation_points(
+            lookup_arrays["points"]
         )
         self.lookup_values_for_interpolation = {
-            "lower_energy_threshold": repeat_3(lookup_arrays["lower_energy_threshold"]),
-            "upper_scatter_radius": repeat_3(lookup_arrays["upper_scatter_radius"]),
-            "viewcone_radius": repeat_3(lookup_arrays["viewcone_radius"]),
+            key: self._repeat_wrapped_lookup_values(lookup_arrays[key]) for key in _LOOKUP_FIELDS
         }
         try:
             self.lookup_interpolators_for_point = {
@@ -102,7 +94,7 @@ class CorsikaLimitsLookup:
                     self.lookup_values_for_interpolation[key],
                     fill_value=np.nan,
                 )
-                for key in ("lower_energy_threshold", "upper_scatter_radius", "viewcone_radius")
+                for key in _LOOKUP_FIELDS
             }
         except QhullError as exc:
             raise ValueError(
@@ -127,27 +119,7 @@ class CorsikaLimitsLookup:
             Interpolated lookup values on the target grid.
         """
         lookup_arrays = self.load_matching_lookup_arrays()
-        points_base = lookup_arrays["points"]
-        lower_energy_thresholds = lookup_arrays["lower_energy_threshold"]
-        upper_scatter_radii = lookup_arrays["upper_scatter_radius"]
-        viewcone_radii = lookup_arrays["viewcone_radius"]
-
-        zeniths = points_base[:, 0]
-        azimuths = points_base[:, 1]
-        nsb_values = points_base[:, 2]
-        azimuths_wrapped = np.concatenate([azimuths + shift for shift in (0, 360, -360)])
-
-        def repeat_3(arr):
-            """Repeat an array three times."""
-            return np.tile(arr, 3)
-
-        points = np.column_stack(
-            (
-                repeat_3(zeniths),
-                azimuths_wrapped,
-                repeat_3(nsb_values),
-            )
-        )
+        points = self._build_wrapped_interpolation_points(lookup_arrays["points"])
 
         target_grid = (
             np.array(
@@ -164,18 +136,18 @@ class CorsikaLimitsLookup:
 
         def interpolate(values):
             return griddata(
-                points, repeat_3(values), target_grid, method="linear", fill_value=np.nan
+                points,
+                self._repeat_wrapped_lookup_values(values),
+                target_grid,
+                method="linear",
+                fill_value=np.nan,
             ).reshape(
                 len(target_values["zenith_angle"]),
                 len(target_values["azimuth"]),
                 len(target_values["nsb_level"]),
             )
 
-        return {
-            "lower_energy_threshold": interpolate(lower_energy_thresholds),
-            "upper_scatter_radius": interpolate(upper_scatter_radii),
-            "viewcone_radius": interpolate(viewcone_radii),
-        }
+        return {key: interpolate(lookup_arrays[key]) for key in _LOOKUP_FIELDS}
 
     def interpolate_point(self, zenith, azimuth, nsb=1.0):
         """
@@ -219,3 +191,19 @@ class CorsikaLimitsLookup:
                 self.lookup_interpolators_for_point["viewcone_radius"](target)[0]
             ),
         }
+
+    @staticmethod
+    def _repeat_wrapped_lookup_values(values):
+        """Repeat lookup values for azimuth wrapping."""
+        return np.tile(values, 3)
+
+    def _build_wrapped_interpolation_points(self, points):
+        """Return lookup points extended across azimuth wrap boundaries."""
+        azimuths_wrapped = np.concatenate([points[:, 1] + shift for shift in (0, 360, -360)])
+        return np.column_stack(
+            (
+                self._repeat_wrapped_lookup_values(points[:, 0]),
+                azimuths_wrapped,
+                self._repeat_wrapped_lookup_values(points[:, 2]),
+            )
+        )
