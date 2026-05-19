@@ -98,7 +98,7 @@ class ProductionGridEngine:
         zenith_axis = self.axes.get("zenith_angle")
         if not zenith_axis or "range" not in zenith_axis or len(zenith_axis["range"]) != 2:
             raise ValueError(
-                "RA/Dec direction sampling requires 'zenith' axis with a valid "
+                "RA/Dec direction sampling requires 'zenith_angle' axis with a valid "
                 "two-element 'range' in the axes definition."
             )
         return float(zenith_axis["range"][1])
