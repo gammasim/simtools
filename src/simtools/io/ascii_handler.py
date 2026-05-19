@@ -10,7 +10,7 @@ import astropy.units as u
 import numpy as np
 import yaml
 
-from simtools.utils.general import ensure_iterable, is_url
+from simtools.utils.general import ensure_list, is_url
 
 _logger = logging.getLogger(__name__)
 
@@ -288,7 +288,7 @@ def _write_to_text_file(data, output_file, unique_lines):
     """
 
     def iter_lines(data):
-        for entry in ensure_iterable(data):
+        for entry in ensure_list(data):
             yield from entry.splitlines()
 
     lines_to_write = (
