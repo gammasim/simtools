@@ -2,7 +2,10 @@
 applications:
 - application: simtools-production-generate-grid
   configuration:
-    array_layout_name: alpha
+    array_layout_name:
+      by_version:
+        "<7.0.0": alpha
+        ">=7.0.0": CTAO-North-Alpha
     axes: tests/resources/production_grid_generation_axes_definition_ra_dec.yml
     coordinate_system: ra_dec
     core_scatter: 10 500 m
