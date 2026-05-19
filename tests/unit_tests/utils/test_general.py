@@ -830,16 +830,16 @@ def test_find_differences_in_json_objects():
     ]
 
 
-def test_ensure_iterable():
-    assert gen.ensure_iterable(None) == []
-    assert gen.ensure_iterable([1, 2, 3]) == [1, 2, 3]
-    assert gen.ensure_iterable(5) == [5]
-    assert gen.ensure_iterable((1, 2, 3)) == (1, 2, 3)
+def test_ensure_list():
+    assert gen.ensure_list(None) == []
+    assert gen.ensure_list([1, 2, 3]) == [1, 2, 3]
+    assert gen.ensure_list(5) == [5]
     # Test falsy values are correctly wrapped (not treated as None)
-    assert gen.ensure_iterable(0) == [0]
-    assert gen.ensure_iterable(0.0) == [0.0]
-    assert gen.ensure_iterable("") == [""]
-    assert gen.ensure_iterable(False) == [False]
+    assert gen.ensure_list(0) == [0]
+    assert gen.ensure_list(0.0) == [0.0]
+    assert gen.ensure_list("") == [""]
+    assert gen.ensure_list(False) == [False]
+    assert gen.ensure_list("abc") == ["abc"]
 
 
 def test_parse_typed_sequence():

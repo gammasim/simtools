@@ -168,7 +168,7 @@ def main():
         telescopes = (
             get_array_elements_for_layout(app_context.args["array_layout_name"])
             if app_context.args.get("array_layout_name") is not None
-            else general.ensure_iterable(app_context.args["telescopes"])
+            else general.ensure_list(app_context.args["telescopes"])
         )
         for telescope in telescopes:
             light_source = SimulatorLightEmission(
