@@ -39,7 +39,7 @@ def compare_samples_with_statistics(baseline_samples, candidate_samples, bin_edg
     candidate_samples : np.ndarray
         Candidate sample values.
     bin_edges : np.ndarray
-        Histogram bin edges for Chi2 calculation.
+        Histogram bin edges
 
     Returns
     -------
