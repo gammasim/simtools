@@ -24,7 +24,7 @@ def validate_corsika_output(data_files, log_files, expected_shower_events=None, 
     curved_atmo: bool, optional
         Whether the CORSIKA simulation was run with the curved atmosphere option.
     """
-    data_files = general.ensure_list(data_files) if data_files is not None else []
+    data_files = general.ensure_list(data_files)
     log_files = general.ensure_list(log_files)
 
     validate_event_numbers(data_files, expected_shower_events)
