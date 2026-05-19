@@ -458,7 +458,7 @@ class Simulator:
                 model_logs
                 + [f for f in histogram_files if model_version in str(f)]
                 + [str(self.get_files(file_type="corsika_log"))]
-                + list(general.ensure_list(model.pack_model_files()))
+                + general.ensure_list(model.pack_model_files())
             )
             # simtools log file duplicated for each model version
             if simtools_log_file and Path(simtools_log_file).exists():
