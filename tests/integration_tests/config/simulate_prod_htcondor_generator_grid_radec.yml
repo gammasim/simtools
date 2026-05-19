@@ -5,39 +5,12 @@ applications:
     apptainer_image:
       0.30.0: tests/resources/dummy_apptainer_image.sif
       0.29.0: tests/resources/dummy_apptainer_image.sif
-    array_layout_name:
-      by_version:
-        "<7.0.0": alpha
-        ">=7.0.0": CTAO-North-Alpha
-    axes: tests/resources/production_grid_generation_axes_definition_radec.yml
-    coordinate_system: ra_dec
-    core_scatter: 10 500 m
-    corsika_he_interaction:
-    - epos
-    - qgs3
-    corsika_le_interaction: urqmd
-    energy_range:
-    - 30 GeV 30 GeV
-    - 300 GeV 300 GeV
-    view_cone: 0 deg 10 deg
-    eslope: -2.0
+    job_grid_file: tests/resources/production_job_grid_radec.ecsv
     label: test-production-grid-radec
     log_level: DEBUG
-    model_version:
-    - 6.3.0
-    - 7.0.0
-    nshow: 5
-    number_of_runs: 2
-    observing_time: '2017-09-16 00:00:00'
     output_path: htcondor_submit
-    primary:
-    - gamma
-    - proton
     priority: 5
-    run_number: 10
     simulation_output: ./simulation_output_path
-    simulation_software: corsika_sim_telarray
-    site: North
   integration_tests:
   - test_output_files:
     - file: simulate_prod.submit.0.30.0.condor

@@ -10,6 +10,7 @@ from astropy.time import Time
 
 from simtools.configuration import defaults
 from simtools.io.ascii_handler import collect_data_from_file
+from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.model.site_model import SiteModel
 from simtools.production_configuration.corsika_limits_lookup import CorsikaLimitsLookup
 from simtools.production_configuration.grid_engine import ProductionGridEngine
@@ -86,6 +87,23 @@ def build_production_grid_engine(args_dict):
         telescope_ids=args_dict.get("telescope_ids"),
         simtel_file=args_dict.get("simtel_file"),
     )
+
+
+def build_job_grid_metadata(args_dict):
+    """Build metadata stored alongside serialized executable job grids."""
+    observing_time = resolve_observing_time(
+        args_dict.get("observing_time"),
+        args_dict.get("coordinate_system", "zenith_azimuth"),
+    )
+    return {
+        "site": args_dict.get("site"),
+        "simulation_software": args_dict.get("simulation_software"),
+        "coordinate_system": args_dict.get("coordinate_system", "zenith_azimuth"),
+        "observing_time_utc": observing_time.isot if observing_time else None,
+        "observing_time_scale": observing_time.scale if observing_time else None,
+        "telescope_ids": args_dict.get("telescope_ids"),
+        "lookup_table": str(args_dict["lookup_table"]) if args_dict.get("lookup_table") else None,
+    }
 
 
 def normalize_grid_axes(args_dict):
@@ -268,6 +286,8 @@ def _build_simulation_jobs_from_production_grid(
 ):
     """Build simulation jobs from a shared production-grid definition."""
     grid_points = build_production_grid_engine(args_dict).generate_simulation_grid()
+    core_scatter_number = int(args_dict["core_scatter"][0])
+    view_cone_min = args_dict["view_cone"][0]
     rows = []
 
     for (
@@ -308,14 +328,19 @@ def _build_simulation_jobs_from_production_grid(
                         {
                             "primary": primary,
                             "azimuth_angle": point["azimuth"],
-                            "zenith_angle": point["zenith"],
+                            "zenith_angle": point["zenith_angle"],
                             "model_version": model_version,
-                            "array_layout_name": args_dict.get("array_layout_name"),
+                            "array_layout_name": resolve_array_layout_name(
+                                args_dict.get("array_layout_name"),
+                                model_version,
+                            ),
                             "corsika_le_interaction": corsika_le,
                             "corsika_he_interaction": corsika_he,
                             "energy_min": selected_energy_range_pair[0],
                             "energy_max": selected_energy_range_pair[1],
+                            "core_scatter_number": core_scatter_number,
                             "core_scatter_max": selected_core_scatter_max,
+                            "view_cone_min": view_cone_min,
                             "view_cone_max": selected_viewcone_max,
                             "nshow": selected_nshow,
                             "run_number": run_number + row_index,
@@ -373,6 +398,8 @@ def build_simulation_jobs(args_dict):
 
     core_scatter = args_dict["core_scatter"]
     view_cone = args_dict["view_cone"]
+    core_scatter_number = int(core_scatter[0])
+    view_cone_min = view_cone[0]
     nshow = args_dict["nshow"]
     nshow_power_index = args_dict.get("nshow_power_index")
     reference_energy = args_dict.get("nshow_reference_energy")
@@ -437,12 +464,17 @@ def build_simulation_jobs(args_dict):
                     "azimuth_angle": azimuth,
                     "zenith_angle": zenith,
                     "model_version": model_version,
-                    "array_layout_name": args_dict.get("array_layout_name"),
+                    "array_layout_name": resolve_array_layout_name(
+                        args_dict.get("array_layout_name"),
+                        model_version,
+                    ),
                     "corsika_le_interaction": corsika_le,
                     "corsika_he_interaction": corsika_he,
                     "energy_min": selected_energy_range_pair[0],
                     "energy_max": selected_energy_range_pair[1],
+                    "core_scatter_number": core_scatter_number,
                     "core_scatter_max": selected_core_scatter_max,
+                    "view_cone_min": view_cone_min,
                     "view_cone_max": selected_viewcone_max,
                     "nshow": selected_nshow,
                     "run_number": run_number + row_index,

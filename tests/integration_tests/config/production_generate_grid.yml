@@ -2,17 +2,27 @@
 applications:
 - application: simtools-production-generate-grid
   configuration:
+    array_layout_name: alpha
     axes: tests/resources/production_grid_generation_axes_definition.yml
     coordinate_system: zenith_azimuth
+    core_scatter: 10 500 m
+    corsika_he_interaction: epos
+    corsika_le_interaction: urqmd
+    energy_range: 30 GeV 300 GeV
     lookup_table: tests/resources/corsika_simulation_limits/merged_corsika_limits_for_test.ecsv
     model_version: 6.0.2
+    nshow: 5
+    number_of_runs: 2
     observing_time: '2017-09-16 00:00:00'
-    output_file: grid_output.ecsv
+    output_file: job_grid.ecsv
     output_path: simtools-output
+    primary: gamma
+    simulation_software: corsika_sim_telarray
     site: North
     telescope_ids: [LSTN-01]
+    view_cone: 0 deg 10 deg
   integration_tests:
-  - output_file: grid_output.ecsv
+  - output_file: job_grid.ecsv
   test_name: production_generate_grid
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

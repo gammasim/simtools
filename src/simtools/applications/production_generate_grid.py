@@ -1,26 +1,18 @@
 #!/usr/bin/python3
 
 r"""
-Generate a grid of simulation points using flexible axes definitions.
+Generate executable simulation job grids.
 
-This application generates a grid of simulation points based on the provided axes
-definitions. The axes definitions (range, binning) are specified in a file.
-The viewcone, radius and energy thresholds are provided as a lookup table and
-are interpolated based on the generated grid points. The generated grid points are
-filtered based on the specified telescope IDs and the limits from the lookup table.
-The generated grid points are saved to a file.
-It can also convert the generated points to RA/Dec coordinates if the selected
-coordinate system is 'ra_dec'.
+This application expands executable simulation job rows and writes them to disk
+as ECSV files. It supports both:
 
-For ``coordinate_system='ra_dec'``, the underlying grid generation supports
-declination-line sampling with hour-angle spacing and applies zenith-angle
-filtering based on the configured zenith range in that mode.
-When explicit ``ra`` / ``dec`` axes are provided, all YAML-defined grid points are
-preserved in the serialized output.
+- explicit cartesian job-grid configuration (primary, zenith, energy range, etc.), and
+- axes-based production-grid configuration with optional ``ra_dec`` coordinate handling
+  and lookup-table interpolation.
 
 Command line arguments
 ----------------------
-axes (str, required)
+axes (str, optional)
     Path to a YAML or JSON file defining the axes of the grid.
 coordinate_system (str, optional, default='zenith_azimuth')
     The coordinate system for the grid generation ('zenith_azimuth' or 'ra_dec').
@@ -30,7 +22,7 @@ observing_time (str, optional)
     Time of the observation in UTC (format: 'YYYY-MM-DD HH:MM:SS').
     Used only in ``ra_dec`` mode (for coordinate transforms and sidereal-time
     sampling). Ignored in ``zenith_azimuth`` mode.
-lookup_table (str, required)
+lookup_table (str, optional)
     Path to the lookup table for simulation limits. The table should contain
     varying azimuth and/or zenith angles.
 telescope_ids (list of str, optional)
@@ -39,8 +31,8 @@ telescope_ids (list of str, optional)
 simtel_file (str, optional)
     Path to a sim_telarray file used only when lookup-table telescope selections
     are stored as numeric telescope IDs.
-output_file (str, optional, default='grid_output.ecsv')
-    Output file for the generated grid points (default: 'grid_output.ecsv').
+output_file (str, optional, default='job_grid.ecsv')
+    Output file for the generated executable job grid.
 
 
 Example
@@ -70,7 +62,11 @@ execute:
 """
 
 from simtools.application_control import build_application
-from simtools.production_configuration.build_grid import build_production_grid_engine
+from simtools.production_configuration.build_grid import (
+    build_job_grid_metadata,
+    build_simulation_jobs,
+)
+from simtools.production_configuration.job_grid_io import serialize_job_grid
 
 
 def _add_arguments(parser):
@@ -78,7 +74,7 @@ def _add_arguments(parser):
     parser.add_argument(
         "--axes",
         type=str,
-        required=True,
+        required=False,
         help="Path to a file defining the grid axes.",
     )
     parser.add_argument(
@@ -102,8 +98,8 @@ def _add_arguments(parser):
     parser.add_argument(
         "--output_file",
         type=str,
-        default="grid_output.ecsv",
-        help="Output file for the generated grid points (default: 'grid_output.ecsv').",
+        default="job_grid.ecsv",
+        help="Output file for the generated executable job grid.",
     )
     parser.add_argument(
         "--telescope_ids",
@@ -118,7 +114,7 @@ def _add_arguments(parser):
     parser.add_argument(
         "--lookup_table",
         type=str,
-        required=True,
+        required=False,
         help="Path to the lookup table for simulation limits. "
         "Table required with varying azimuth and or zenith angle. ",
     )
@@ -131,6 +127,33 @@ def _add_arguments(parser):
             "to telescope names when lookup-table selections are numeric IDs."
         ),
     )
+    parser.add_argument(
+        "--number_of_runs",
+        help="Number of runs to be simulated.",
+        type=int,
+        required=False,
+        default=1,
+    )
+    parser.add_argument(
+        "--nshow_power_index",
+        help=(
+            "Power-law index used to scale the baseline nshow with the geometric-mean energy "
+            "of each energy_range entry."
+        ),
+        type=float,
+        required=False,
+        default=None,
+    )
+    parser.add_argument(
+        "--nshow_reference_energy",
+        help=(
+            "Reference energy for nshow power-law scaling (for example: '100 GeV'). "
+            "Required together with --nshow_power_index."
+        ),
+        type=str,
+        required=False,
+        default=None,
+    )
 
 
 def main():
@@ -138,15 +161,19 @@ def main():
     app_context = build_application(
         initialization_kwargs={
             "db_config": True,
-            "simulation_model": ["version", "site", "model_version"],
+            "preserve_by_version_keys": ["array_layout_name"],
+            "simulation_model": ["site", "layout", "telescope", "model_version"],
+            "simulation_configuration": {"software": None, "corsika_configuration": ["all"]},
         },
     )
 
     output_filepath = app_context.io_handler.get_output_file(app_context.args["output_file"])
-    grid_gen = build_production_grid_engine(app_context.args)
-
-    grid_points = grid_gen.generate_grid()
-    grid_gen.serialize_grid_points(grid_points, output_file=output_filepath)
+    job_rows = build_simulation_jobs(app_context.args)
+    serialize_job_grid(
+        job_rows=job_rows,
+        output_file=output_filepath,
+        metadata=build_job_grid_metadata(app_context.args),
+    )
 
 
 if __name__ == "__main__":

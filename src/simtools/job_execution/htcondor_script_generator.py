@@ -14,8 +14,7 @@ from pathlib import Path
 
 import astropy.units as u
 
-from simtools.layout.array_layout_utils import resolve_array_layout_name
-from simtools.production_configuration.build_grid import build_simulation_jobs
+from simtools.production_configuration.job_grid_io import read_job_grid
 
 _logger = logging.getLogger(__name__)
 
@@ -28,8 +27,11 @@ _PARAMS_FIELDS = [
     "energy_min_unit",
     "energy_max_value",
     "energy_max_unit",
+    "core_scatter_number",
     "core_scatter_max_value",
     "core_scatter_max_unit",
+    "view_cone_min_value",
+    "view_cone_min_unit",
     "view_cone_max_value",
     "view_cone_max_unit",
     "nshow",
@@ -97,22 +99,19 @@ def _format_param_value(value, field_name):
     if field_name in ("apptainer_label", "pack_for_grid_register"):
         return _sanitize_label_for_params(value)
 
-    if field_name in ("energy_min_value", "energy_max_value"):
-        return _format_quantity(value, default_unit=u.GeV)
+    if field_name == "core_scatter_number":
+        return f"{int(value)}"
 
-    if field_name == "core_scatter_max_value":
-        return _format_quantity(
-            value,
-            default_unit=u.m,
-            convert_to=u.m,
-        )
-
-    if field_name == "view_cone_max_value":
-        return _format_quantity(
-            value,
-            default_unit=u.deg,
-            convert_to=u.deg,
-        )
+    quantity_fields = {
+        "energy_min_value": (u.GeV, None),
+        "energy_max_value": (u.GeV, None),
+        "core_scatter_max_value": (u.m, u.m),
+        "view_cone_min_value": (u.deg, u.deg),
+        "view_cone_max_value": (u.deg, u.deg),
+    }
+    if field_name in quantity_fields:
+        default_unit, convert_to = quantity_fields[field_name]
+        return _format_quantity(value, default_unit=default_unit, convert_to=convert_to)
 
     if field_name in ("azimuth_angle", "zenith_angle"):
         if isinstance(value, u.Quantity):
@@ -146,18 +145,20 @@ def _write_params_file(params_file_path, label_job_specs):
     """Write parameter file consumed by HTCondor queue-from syntax."""
     with open(params_file_path, "w", encoding="utf-8") as params_file_handle:
         for job_spec in label_job_specs:
-            array_layout_name = resolve_array_layout_name(
-                job_spec["array_layout_name"], job_spec["model_version"]
-            )
-
             energy_min_value, energy_min_unit = _format_param_value(
                 job_spec["energy_min"], "energy_min_value"
             )
             energy_max_value, energy_max_unit = _format_param_value(
                 job_spec["energy_max"], "energy_max_value"
             )
+            core_scatter_number = _format_param_value(
+                job_spec["core_scatter_number"], "core_scatter_number"
+            )
             core_scatter_max_value, core_scatter_max_unit = _format_param_value(
                 job_spec["core_scatter_max"], "core_scatter_max_value"
+            )
+            view_cone_min_value, view_cone_min_unit = _format_param_value(
+                job_spec["view_cone_min"], "view_cone_min_value"
             )
             view_cone_max_value, view_cone_max_unit = _format_param_value(
                 job_spec["view_cone_max"], "view_cone_max_value"
@@ -172,13 +173,16 @@ def _write_params_file(params_file_path, label_job_specs):
                 energy_min_unit,
                 energy_max_value,
                 energy_max_unit,
+                core_scatter_number,
                 core_scatter_max_value,
                 core_scatter_max_unit,
+                view_cone_min_value,
+                view_cone_min_unit,
                 view_cone_max_value,
                 view_cone_max_unit,
                 _format_param_value(job_spec["nshow"], "nshow"),
                 _format_param_value(job_spec["model_version"], "model_version"),
-                _format_param_value(array_layout_name, "array_layout_name"),
+                _format_param_value(job_spec["array_layout_name"], "array_layout_name"),
                 _format_param_value(job_spec["corsika_le_interaction"], "corsika_le_interaction"),
                 _format_param_value(job_spec["corsika_he_interaction"], "corsika_he_interaction"),
                 _format_param_value(job_spec["run_number"], "run_number"),
@@ -197,7 +201,7 @@ def generate_submission_script(args_dict):
         Arguments dictionary.
     """
     apptainer_images = _resolve_apptainer_images(args_dict["apptainer_image"])
-    job_specs = build_job_specs(args_dict, list(apptainer_images.keys()))
+    job_specs, job_grid_metadata = build_job_specs(args_dict, list(apptainer_images.keys()))
     grouped_job_specs = _group_job_specs_by_label(job_specs)
 
     work_dir = Path(args_dict["output_path"])
@@ -216,6 +220,7 @@ def generate_submission_script(args_dict):
         subdir.mkdir(parents=True, exist_ok=True)
     submit_file_name = "simulate_prod.submit"
     _logger.info(f"Generating HT Condor submission scripts (path: {work_dir})")
+    submit_args = {**job_grid_metadata, **args_dict}
 
     for label, label_job_specs in grouped_job_specs.items():
         suffix = (
@@ -240,7 +245,7 @@ def generate_submission_script(args_dict):
             )
 
     with open(work_dir / f"{submit_file_name}.sh", "w", encoding="utf-8") as submit_script_handle:
-        submit_script_handle.write(_get_submit_script(args_dict))
+        submit_script_handle.write(_get_submit_script(submit_args))
 
     Path(work_dir / f"{submit_file_name}.sh").chmod(0o755)
 
@@ -310,13 +315,8 @@ def _get_submit_script(args_dict):
         idx = 3 + i
         bash_indices[field] = f"${{{idx}}}"
 
-    core_scatter = args_dict["core_scatter"]
-    n_core_scatter = core_scatter[0]
-    view_cone = args_dict["view_cone"]
-    view_cone_min = view_cone[0].to(u.deg).value
-
     label = args_dict["label"] if args_dict["label"] else "simulate-prod"
-    run_number_offset_arg = args_dict["run_number_offset"]
+    run_number_offset_arg = args_dict.get("run_number_offset")
     run_number_offset = 0 if run_number_offset_arg is None else run_number_offset_arg
 
     energy_range_string = (
@@ -324,11 +324,12 @@ def _get_submit_script(args_dict):
         f'{bash_indices["energy_max_value"]} {bash_indices["energy_max_unit"]}"'
     )
     core_scatter_string = (
-        f'"{n_core_scatter} {bash_indices["core_scatter_max_value"]} '
+        f'"{bash_indices["core_scatter_number"]} {bash_indices["core_scatter_max_value"]} '
         f'{bash_indices["core_scatter_max_unit"]}"'
     )
     view_cone_string = (
-        f'"{view_cone_min} deg {bash_indices["view_cone_max_value"]} '
+        f'"{bash_indices["view_cone_min_value"]} {bash_indices["view_cone_min_unit"]} '
+        f"{bash_indices['view_cone_max_value']} "
         f'{bash_indices["view_cone_max_unit"]}"'
     )
     energy_range_tag = (
@@ -380,7 +381,7 @@ simtools-simulate-prod \\
 def build_job_specs(args_dict, image_labels):
     """Build backend-agnostic job specs from comparison and production grids."""
     base_pack_dir = args_dict.get("simulation_output") or "simtools-output"
-    normalized_rows = build_simulation_jobs(args_dict)
+    normalized_rows, job_grid_metadata = read_job_grid(args_dict["job_grid_file"])
 
     job_specs = []
     for label in image_labels:
@@ -392,4 +393,4 @@ def build_job_specs(args_dict, image_labels):
                     "pack_for_grid_register": f"{base_pack_dir}/{label!s}",
                 }
             )
-    return job_specs
+    return job_specs, job_grid_metadata
