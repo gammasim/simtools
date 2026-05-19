@@ -56,11 +56,11 @@ execute:
 """
 
 from simtools.application_control import build_application
-from simtools.production_configuration.build_grid import (
+from simtools.production_configuration.job_grid_io import serialize_job_grid
+from simtools.production_configuration.simulation_jobs import (
     build_job_grid_metadata,
     build_simulation_jobs,
 )
-from simtools.production_configuration.job_grid_io import serialize_job_grid
 
 
 def _add_arguments(parser):
