@@ -59,7 +59,7 @@ def generate_and_save_plots(plots, args, ioh):
     plotter = PlotSimtelEvent(
         file_name=args.get("simtel_file", None),
         telescope=args.get("telescope", None),
-        event_ids=gen.ensure_iterable(args.get("event_id", None)),
+        event_ids=gen.ensure_list(args.get("event_id", None)),
         max_events=args.get("max_events", None),
     )
     output_file = plotter.make_output_paths(ioh, args.get("output_file"))
@@ -244,7 +244,7 @@ class PlotSimtelEvent:
         """Generate list of plots to run based on user input."""
         if "all" in plots:
             return list(self._plot_definitions.keys())
-        return gen.ensure_iterable(plots)
+        return gen.ensure_list(plots)
 
     @property
     def _plot_definitions(self):
