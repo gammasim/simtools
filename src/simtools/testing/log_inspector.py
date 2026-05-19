@@ -127,7 +127,7 @@ def check_plain_logs(log_files, file_test):
     if wanted is None and forbidden is None:
         return True
 
-    log_files = gen.ensure_iterable(log_files)
+    log_files = gen.ensure_list(log_files)
 
     def file_open(file):
         if file.suffix == ".gz":

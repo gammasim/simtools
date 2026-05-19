@@ -586,7 +586,7 @@ class CommandLineParser(argparse.ArgumentParser):
         str or list of str
             Validated telescope name(s)
         """
-        values = general.ensure_iterable(value)
+        values = general.ensure_list(value)
         for v in values:
             names.validate_array_element_name(str(v))
         return values if len(values) > 1 else values[0]
