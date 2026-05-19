@@ -19,7 +19,7 @@ def validate_sim_events(data_files, expected_mc_events):
     expected_mc_events: int
         Expected number of simulated MC events.
     """
-    data_files = general.ensure_iterable(data_files)
+    data_files = general.ensure_list(data_files)
     validate_event_numbers(data_files, expected_mc_events)
 
 
