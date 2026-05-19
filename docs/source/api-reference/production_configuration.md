@@ -113,16 +113,6 @@ the calculation of the number of events to be simulated given a pre-determined m
 ```
 
 
-(production-grid-serialization)=
-
-## grid_serialization
-
-```{eval-rst}
-.. automodule:: production_configuration.grid_serialization
-   :members:
-```
-
-
 (interpolation-handler)=
 
 ## interpolation_handler

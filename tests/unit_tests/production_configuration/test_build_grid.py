@@ -4,6 +4,7 @@ import astropy.units as u
 import pytest
 
 from simtools.production_configuration.build_grid import (
+    build_job_grid_metadata,
     build_simulation_jobs,
     get_viewcone_max_for_zenith_angle,
     resolve_single_model_version,
@@ -19,6 +20,25 @@ def test_get_viewcone_max_for_zenith_angle_without_lookup_table():
 def test_resolve_single_model_version_uses_first_list_entry():
     assert resolve_single_model_version(["7.0.0", "7.1.0"]) == "7.0.0"
     assert resolve_single_model_version("7.0.0") == "7.0.0"
+
+
+def test_build_job_grid_metadata_includes_job_context():
+    metadata = build_job_grid_metadata(
+        {
+            "site": "North",
+            "simulation_software": "corsika_sim_telarray",
+            "coordinate_system": "ra_dec",
+            "observing_time": "2017-09-16 00:00:00",
+            "lookup_table": "limits.ecsv",
+            "telescope_ids": ["LSTN-01"],
+        }
+    )
+
+    assert metadata["site"] == "North"
+    assert metadata["simulation_software"] == "corsika_sim_telarray"
+    assert metadata["coordinate_system"] == "ra_dec"
+    assert metadata["observing_time_utc"].startswith("2017-09-16T00:00:00")
+    assert metadata["lookup_table"] == "limits.ecsv"
 
 
 @patch("simtools.production_configuration.build_grid.build_production_grid_engine")
@@ -65,7 +85,9 @@ def test_build_simulation_jobs_uses_shared_axis_defined_grid(mock_build_producti
     assert rows[0]["zenith_angle"] == 30 * u.deg
     assert rows[0]["energy_min"] == 50 * u.GeV
     assert rows[0]["energy_max"] == 100 * u.GeV
+    assert rows[0]["core_scatter_number"] == 10
     assert rows[0]["core_scatter_max"] == 250 * u.m
+    assert rows[0]["view_cone_min"] == 0 * u.deg
     assert rows[0]["view_cone_max"] == 3 * u.deg
     assert rows[0]["run_number"] == 11
     assert rows[1]["run_number"] == 12
@@ -102,4 +124,6 @@ def test_build_simulation_jobs_adds_viewcone_limit_from_lookup(
 
     rows = build_simulation_jobs(args_dict)
 
+    assert rows[0]["core_scatter_number"] == 10
+    assert rows[0]["view_cone_min"] == 0 * u.deg
     assert rows[0]["view_cone_max"].to_value(u.deg) == pytest.approx(2.5)

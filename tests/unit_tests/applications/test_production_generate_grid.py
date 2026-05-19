@@ -5,24 +5,32 @@ from unittest.mock import Mock, patch
 import simtools.applications.production_generate_grid as app
 
 
-@patch("simtools.applications.production_generate_grid.build_production_grid_engine")
+@patch("simtools.applications.production_generate_grid.serialize_job_grid")
+@patch("simtools.applications.production_generate_grid.build_job_grid_metadata")
+@patch("simtools.applications.production_generate_grid.build_simulation_jobs")
 @patch("simtools.applications.production_generate_grid.build_application")
-def test_main_uses_shared_grid_builder(mock_build_application, mock_build_production_grid_engine):
+def test_main_serializes_job_grid(
+    mock_build_application,
+    mock_build_simulation_jobs,
+    mock_build_job_grid_metadata,
+    mock_serialize_job_grid,
+):
     io_handler = Mock()
-    io_handler.get_output_file.return_value = Path("grid_output.ecsv")
+    io_handler.get_output_file.return_value = Path("job_grid.ecsv")
     args = {
         "axes": "grid.yml",
-        "output_file": "grid_output.ecsv",
+        "output_file": "job_grid.ecsv",
     }
     mock_build_application.return_value = SimpleNamespace(args=args, io_handler=io_handler)
-    mock_grid_engine = Mock()
-    mock_grid_engine.generate_grid.return_value = [{"ra": 1}]
-    mock_build_production_grid_engine.return_value = mock_grid_engine
+    mock_build_simulation_jobs.return_value = [{"primary": "gamma"}]
+    mock_build_job_grid_metadata.return_value = {"site": "North"}
 
     app.main()
 
-    mock_build_production_grid_engine.assert_called_once_with(args)
-    mock_grid_engine.serialize_grid_points.assert_called_once_with(
-        [{"ra": 1}],
-        output_file=Path("grid_output.ecsv"),
+    mock_build_simulation_jobs.assert_called_once_with(args)
+    mock_build_job_grid_metadata.assert_called_once_with(args)
+    mock_serialize_job_grid.assert_called_once_with(
+        job_rows=[{"primary": "gamma"}],
+        output_file=Path("job_grid.ecsv"),
+        metadata={"site": "North"},
     )

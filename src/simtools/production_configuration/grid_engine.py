@@ -19,7 +19,6 @@ from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.units import Quantity
 
 from simtools.production_configuration.corsika_limits_lookup import CorsikaLimitsLookup
-from simtools.production_configuration.grid_serialization import serialize_grid_points
 
 
 class ProductionGridEngine:
@@ -104,7 +103,7 @@ class ProductionGridEngine:
 
     def _get_max_zenith_for_radec_mode(self):
         """Read maximum zenith from axes for RA/Dec direction sampling."""
-        zenith_axis = self.axes.get("zenith")
+        zenith_axis = self.axes.get("zenith_angle")
         if not zenith_axis or "range" not in zenith_axis or len(zenith_axis["range"]) != 2:
             raise ValueError(
                 "RA/Dec direction sampling requires 'zenith' axis with a valid "
@@ -188,7 +187,7 @@ class ProductionGridEngine:
             for idx in np.nonzero(mask)[0]:
                 direction_points.append(
                     {
-                        "zenith": zenith_values[idx] * u.deg,
+                        "zenith_angle": zenith_values[idx] * u.deg,
                         "azimuth": altaz.az.deg[idx] * u.deg,
                     }
                 )
@@ -234,7 +233,7 @@ class ProductionGridEngine:
         """Generate grid points from explicit RA/Dec axes definitions."""
         observing_time = self._require_observing_time()
 
-        axis_keys = [key for key in self.target_values if key not in ("zenith", "azimuth")]
+        axis_keys = [key for key in self.target_values if key not in ("zenith_angle", "azimuth")]
         value_arrays = [self.target_values[key].value for key in axis_keys]
         units = [self.target_values[key].unit for key in axis_keys]
         grid = np.meshgrid(*value_arrays, indexing="ij")
@@ -258,7 +257,7 @@ class ProductionGridEngine:
             azimuth = altaz.az.to(u.deg)
 
             if include_horizontal_coordinates:
-                grid_point["zenith"] = zenith
+                grid_point["zenith_angle"] = zenith
                 grid_point["azimuth"] = azimuth
 
             self._add_lookup_limits_to_point(
@@ -279,7 +278,7 @@ class ProductionGridEngine:
 
         direction_points = self._generate_radec_grid_direction_points()
         extra_keys, extra_units, extra_combinations = self._generate_extra_axis_combinations(
-            excluded_keys=("zenith", "azimuth")
+            excluded_keys=("zenith_angle", "azimuth")
         )
 
         grid_points = []
@@ -291,7 +290,7 @@ class ProductionGridEngine:
 
                 self._add_lookup_limits_to_point(
                     point,
-                    zenith=point["zenith"].value,
+                    zenith=point["zenith_angle"].value,
                     azimuth=point["azimuth"].value,
                 )
                 grid_points.append(point)
@@ -352,7 +351,7 @@ class ProductionGridEngine:
 
             if "lower_energy_threshold" in self.interpolated_limits:
                 zenith_idx = np.searchsorted(
-                    self.target_values["zenith"].value, grid_point["zenith"].value
+                    self.target_values["zenith_angle"].value, grid_point["zenith_angle"].value
                 )
                 azimuth_idx = np.searchsorted(
                     self.target_values["azimuth"].value, grid_point["azimuth"].value
@@ -397,7 +396,7 @@ class ProductionGridEngine:
     def _strip_horizontal_coordinates(grid_points):
         """Remove horizontal coordinates from serialized RA/Dec grid points."""
         for point in grid_points:
-            point.pop("zenith", None)
+            point.pop("zenith_angle", None)
             point.pop("azimuth", None)
         return grid_points
 
@@ -459,34 +458,13 @@ class ProductionGridEngine:
         """
         if self.coordinate_system == "ra_dec":
             for point in grid_points:
-                if "zenith" in point and "azimuth" in point:
-                    alt = (90.0 * u.deg) - point["zenith"]
+                if "zenith_angle" in point and "azimuth" in point:
+                    alt = (90.0 * u.deg) - point["zenith_angle"]
                     az = point["azimuth"]
                     radec = self.convert_altaz_to_radec(alt, az)
                     if not keep_horizontal_coordinates:
-                        point.pop("zenith")
+                        point.pop("zenith_angle")
                         point.pop("azimuth")
                     point["ra"] = radec.ra.deg * u.deg
                     point["dec"] = radec.dec.deg * u.deg
         return grid_points
-
-    def serialize_grid_points(self, grid_points, output_file):
-        """
-        Serialize grid points to an ECSV table file.
-
-        Parameters
-        ----------
-        grid_points : list of dict
-            List of grid points to serialize.
-        output_file : str
-            Path to the output ECSV file.
-        """
-        serialize_grid_points(
-            grid_points=grid_points,
-            output_file=output_file,
-            coordinate_system=self.coordinate_system,
-            observing_time=self.observing_time,
-            telescope_ids=self.telescope_ids,
-            lookup_table=self.lookup_table,
-        )
-        self._logger.info(f"Simulation grid saved to {output_file}")
