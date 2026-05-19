@@ -43,72 +43,12 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
-(generate-production-grid)=
-
-## generate_production_grid
-
-```{eval-rst}
-.. automodule:: production_configuration.generate_production_grid
-   :members:
-```
-
-
-(job-spec-builder)=
-
-## job_spec_builder
-
-```{eval-rst}
-.. automodule:: production_configuration.job_spec_builder
-   :members:
-```
-
-
 (corsika-limits-lookup)=
 
 ## corsika_limits_lookup
 
 ```{eval-rst}
 .. automodule:: production_configuration.corsika_limits_lookup
-   :members:
-```
-
-
-(production-grid-engine)=
-
-## grid_engine
-
-```{eval-rst}
-.. automodule:: production_configuration.grid_engine
-   :members:
-```
-
-
-(production-grid-helpers)=
-
-## production_grid_helpers
-
-```{eval-rst}
-.. automodule:: production_configuration.production_grid_helpers
-   :members:
-```
-
-
-(production-grid-job-rows)=
-
-## production_grid_job_rows
-
-```{eval-rst}
-.. automodule:: production_configuration.production_grid_job_rows
-   :members:
-```
-
-
-(production-grid)=
-
-## production_grid
-
-```{eval-rst}
-.. automodule:: production_configuration.production_grid
    :members:
 ```
 
@@ -122,12 +62,39 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
+(job-grid-io)=
+
+## job_grid_io
+
+```{eval-rst}
+.. automodule:: production_configuration.job_grid_io
+   :members:
+```
+
+(observation-grid)=
+
+## observation_grid
+
+```{eval-rst}
+.. automodule:: production_configuration.observation_grid
+   :members:
+```
+
 (plot-production-grid)=
 
 ## plot_production_grid
 
 ```{eval-rst}
 .. automodule:: production_configuration.plot_production_grid
+   :members:
+```
+
+(simulation-jobs)=
+
+## simulation_jobs
+
+```{eval-rst}
+.. automodule:: production_configuration.simulation_jobs
    :members:
 ```
 
