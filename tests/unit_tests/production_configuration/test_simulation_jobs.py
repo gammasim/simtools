@@ -398,7 +398,7 @@ def test_resolve_nshow_params_converts_reference_energy():
     )
 
     assert nshow == 5
-    assert power_index == 1.0
+    assert power_index == pytest.approx(1.0)
     assert reference_energy == 100 * u.GeV
 
 
