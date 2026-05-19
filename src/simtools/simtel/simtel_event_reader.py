@@ -47,7 +47,7 @@ def read_events(file_name, telescope, event_ids, max_events=1, verbose=False):
         _logger.warning(f"Telescope type '{telescope}' not found in file '{file_name}'.")
         return None, None, None
 
-    event_ids = gen.ensure_list(event_ids) if event_ids is not None else []
+    event_ids = gen.ensure_list(event_ids)
     ids_with_data, events = [], []
 
     with SimTelFile(file_name, skip_calibration=False) as f:
