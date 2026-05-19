@@ -640,7 +640,7 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
 
     figure_format = figure_format or configured_formats or ["png"]
 
-    for fmt in gen.ensure_iterable(figure_format):
+    for fmt in gen.ensure_list(figure_format):
         _file = Path(output_file).with_suffix(f".{fmt}")
         fig.savefig(_file, format=fmt, bbox_inches="tight", dpi=dpi)
         logging.info(f"Saved plot {log_title} to {_file}")
