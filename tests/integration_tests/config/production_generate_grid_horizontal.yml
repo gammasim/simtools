@@ -4,7 +4,7 @@ applications:
   configuration:
     array_layout_name: alpha
     axes: tests/resources/production_grid_generation_axes_definition.yml
-    coordinate_system: zenith_azimuth
+    coordinate_system: horizontal
     core_scatter: 10 500 m
     corsika_he_interaction: epos
     corsika_le_interaction: urqmd
@@ -14,7 +14,7 @@ applications:
     nshow: 5
     number_of_runs: 2
     observing_time: '2017-09-16 00:00:00'
-    output_file: job_grid.ecsv
+    output_file: job_grid_horizontal.ecsv
     output_path: simtools-output
     primary: gamma
     simulation_software: corsika_sim_telarray
@@ -22,7 +22,7 @@ applications:
     telescope_ids: [LSTN-01]
     view_cone: 0 deg 10 deg
   integration_tests:
-  - output_file: job_grid.ecsv
-  test_name: production_generate_grid
+  - output_file: job_grid_horizontal.ecsv
+  test_name: production_generate_grid_horizontal
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

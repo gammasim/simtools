@@ -67,7 +67,7 @@ def build_observing_location(site, model_version):
 
 def build_production_grid_engine(args_dict):
     """Build a production-grid engine from application arguments."""
-    coordinate_system = args_dict.get("coordinate_system", "zenith_azimuth")
+    coordinate_system = args_dict.get("coordinate_system", "horizontal")
     observing_location = None
     if coordinate_system == "ra_dec":
         observing_location = build_observing_location(
@@ -93,12 +93,12 @@ def build_job_grid_metadata(args_dict):
     """Build metadata stored alongside serialized executable job grids."""
     observing_time = resolve_observing_time(
         args_dict.get("observing_time"),
-        args_dict.get("coordinate_system", "zenith_azimuth"),
+        args_dict.get("coordinate_system", "horizontal"),
     )
     return {
         "site": args_dict.get("site"),
         "simulation_software": args_dict.get("simulation_software"),
-        "coordinate_system": args_dict.get("coordinate_system", "zenith_azimuth"),
+        "coordinate_system": args_dict.get("coordinate_system", "horizontal"),
         "observing_time_utc": observing_time.isot if observing_time else None,
         "observing_time_scale": observing_time.scale if observing_time else None,
         "telescope_ids": args_dict.get("telescope_ids"),

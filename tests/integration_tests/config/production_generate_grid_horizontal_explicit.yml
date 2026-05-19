@@ -24,7 +24,7 @@ applications:
     - 7.0.0
     nshow: 5
     number_of_runs: 2
-    output_file: job_grid_example.ecsv
+    output_file: job_grid_horizontal_explicit.ecsv
     output_path: simtools-output
     primary:
     - gamma
@@ -37,7 +37,7 @@ applications:
     - 20
     - 40
   integration_tests:
-  - output_file: job_grid_example.ecsv
-  test_name: production_generate_grid_explicit
+  - output_file: job_grid_horizontal_explicit.ecsv
+  test_name: production_generate_grid_horizontal_explicit
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
