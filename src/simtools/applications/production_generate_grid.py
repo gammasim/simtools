@@ -69,15 +69,8 @@ execute:
             --telescope_ids MSTN-15
 """
 
-from pathlib import Path
-
-from astropy.coordinates import EarthLocation
-from astropy.time import Time
-
 from simtools.application_control import build_application
-from simtools.io.ascii_handler import collect_data_from_file
-from simtools.model.site_model import SiteModel
-from simtools.production_configuration.grid_engine import ProductionGridEngine
+from simtools.production_configuration.build_grid import build_production_grid_engine
 
 
 def _add_arguments(parser):
@@ -140,26 +133,6 @@ def _add_arguments(parser):
     )
 
 
-def load_axes(file_path: str):
-    """
-    Load axes definitions from a YAML or JSON file.
-
-    Parameters
-    ----------
-    file_path : str
-        Path to the axes YAML or JSON file.
-
-    Returns
-    -------
-    list[dict]
-        List of axes definitions with Quantity values.
-    """
-    if not Path(file_path).exists():
-        raise FileNotFoundError(f"Axes file {file_path} not found.")
-
-    return collect_data_from_file(file_path)
-
-
 def main():
     """See CLI description."""
     app_context = build_application(
@@ -170,35 +143,7 @@ def main():
     )
 
     output_filepath = app_context.io_handler.get_output_file(app_context.args["output_file"])
-
-    axes = load_axes(app_context.args["axes"])
-    site_model = SiteModel(
-        model_version=app_context.args["model_version"],
-        site=app_context.args["site"],
-    )
-
-    ref_lat = site_model.get_parameter_value_with_unit("reference_point_latitude")
-    ref_long = site_model.get_parameter_value_with_unit("reference_point_longitude")
-    altitude = site_model.get_parameter_value_with_unit("reference_point_altitude")
-
-    observing_location = EarthLocation(lat=ref_lat, lon=ref_long, height=altitude)
-
-    coordinate_system = app_context.args["coordinate_system"]
-    observing_time = None
-    if app_context.args.get("observing_time"):
-        observing_time = Time(app_context.args["observing_time"], scale="utc")
-    elif coordinate_system == "ra_dec":
-        observing_time = Time.now()
-
-    grid_gen = ProductionGridEngine(
-        axes=axes,
-        coordinate_system=coordinate_system,
-        observing_location=observing_location,
-        observing_time=observing_time,
-        lookup_table=app_context.args["lookup_table"],
-        telescope_ids=app_context.args["telescope_ids"],
-        simtel_file=app_context.args.get("simtel_file"),
-    )
+    grid_gen = build_production_grid_engine(app_context.args)
 
     grid_points = grid_gen.generate_grid()
     grid_gen.serialize_grid_points(grid_points, output_file=output_filepath)

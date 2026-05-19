@@ -37,6 +37,10 @@ To submit jobs, change to the output directory and run the generated submit file
 For the single-image default case, use ``condor_submit simulate_prod.submit.condor``.
 
 Simulation data products are written to the directory controlled by ``--simulation_output``.
+When ``--axes`` is provided, the generator reuses the shared production-grid engine from
+``simtools-production-generate-grid``. This supports both ``zenith_azimuth`` and ``ra_dec``
+grid definitions, while the HTCondor writer keeps serializing rows as submit parameters for
+``simtools-simulate-prod``.
 
 Command line arguments
 ----------------------
@@ -49,6 +53,18 @@ htcondor_log_path (str, optional)
     Directory for HTCondor log files. Defaults to ``output_path/htcondor_logs``.
 simulation_output (str, optional)
     Base directory for simulation output packages passed through as ``pack_for_grid_register``.
+axes (str, optional)
+    Path to a YAML or JSON file defining a shared production grid.
+coordinate_system (str, optional, default='zenith_azimuth')
+    Coordinate system used for axis-defined grids ('zenith_azimuth' or 'ra_dec').
+observing_time (str, optional)
+    Observation time in UTC (format: 'YYYY-MM-DD HH:MM:SS'). Used only in ``ra_dec`` mode.
+lookup_table (str, optional)
+    Lookup table used for axis-defined grids.
+telescope_ids (list of str, optional)
+    Telescope selection used to filter lookup-table rows for axis-defined grids.
+simtel_file (str, optional)
+    Optional sim_telarray file used to map numeric telescope IDs in lookup tables.
 priority (int, optional)
     Job priority (default: 1).
 nshow_power_index (float, optional)
@@ -103,6 +119,43 @@ def _add_arguments(parser):
         default=None,
     )
     parser.add_argument(
+        "--axes",
+        type=str,
+        required=False,
+        help="Path to a YAML or JSON file defining a shared production grid.",
+    )
+    parser.add_argument(
+        "--coordinate_system",
+        type=str,
+        default="zenith_azimuth",
+        help="Coordinate system ('zenith_azimuth' or 'ra_dec') for axis-defined grids.",
+    )
+    parser.add_argument(
+        "--observing_time",
+        type=str,
+        required=False,
+        help="Observation time in UTC (format: 'YYYY-MM-DD HH:MM:SS') for 'ra_dec' grids.",
+    )
+    parser.add_argument(
+        "--lookup_table",
+        type=str,
+        required=False,
+        help="Lookup table used for axis-defined production grids.",
+    )
+    parser.add_argument(
+        "--telescope_ids",
+        type=str,
+        nargs="*",
+        default=None,
+        help="Telescope names used to filter lookup-table rows for axis-defined grids.",
+    )
+    parser.add_argument(
+        "--simtel_file",
+        type=str,
+        required=False,
+        help="Optional sim_telarray file used to map numeric telescope IDs in lookup tables.",
+    )
+    parser.add_argument(
         "--nshow_power_index",
         help=(
             "Power-law index used to scale the baseline nshow with the geometric-mean energy "
@@ -128,7 +181,7 @@ def main():
     """See CLI description."""
     app_context = build_application(
         initialization_kwargs={
-            "db_config": False,
+            "db_config": True,
             "preserve_by_version_keys": ["array_layout_name"],
             "simulation_model": ["site", "layout", "telescope", "model_version"],
             "simulation_configuration": {"software": None, "corsika_configuration": ["all"]},
