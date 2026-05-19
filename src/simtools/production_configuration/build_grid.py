@@ -1,10 +1,4 @@
-"""
-Build simulation execution rows based on the production configuration and lookup tables.
-
-A job row is a configuration dictionary for a single simulation job/run, containing all
-parameters needed to launch that simulation (e.g., primary, zenith, azimuth, energy range,
-model version, etc.).
-"""
+"""Build simulation execution grid based on the production configuration and lookup tables."""
 
 import itertools
 
@@ -160,11 +154,11 @@ def calculate_scaled_nshow(
     return scaled_nshow
 
 
-def build_simulation_execution_rows(args_dict):
+def build_simulation_jobs(args_dict):
     """
-    Build simulation execution rows based on the production configuration and lookup tables.
+    Build simulation job parameters based on the production configuration and lookup tables.
 
-    Each row corresponds to a single simulation job/run and contains all parameters needed to
+    Each entry corresponds to a single simulation job/run and contains all parameters needed to
     launch that simulation (e.g., primary, zenith, azimuth, energy range, model version, etc.).
     The energy range and core-scatter radius can be adjusted based on the direction-dependent
     lookup-table limits. The number of events (``nshow``) can be scaled with energy according
@@ -178,7 +172,7 @@ def build_simulation_execution_rows(args_dict):
     Returns
     -------
     list[dict]
-        Backend-independent row dictionaries.
+        Simulation job parameter dictionaries for all combinations of configured axes.
     """
     grid_axes = normalize_grid_axes(args_dict)
     energy_ranges = normalize_energy_ranges(args_dict["energy_range"])

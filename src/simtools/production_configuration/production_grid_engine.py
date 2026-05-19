@@ -19,7 +19,7 @@ from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.units import Quantity
 
 from simtools.production_configuration.corsika_limits_lookup import CorsikaLimitsLookup
-from simtools.production_configuration.production_grid_serialization import serialize_grid_points
+from simtools.production_configuration.grid_serialization import serialize_grid_points
 
 
 class ProductionGridEngine:
