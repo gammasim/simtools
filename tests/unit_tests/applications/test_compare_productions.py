@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 import simtools.applications.compare_productions as app
+import simtools.sim_events.production_comparison as production_comparison
 
 
 def test_main_collects_metrics_and_plots(tmp_test_directory):
@@ -49,11 +50,11 @@ def test_main_collects_metrics_and_plots(tmp_test_directory):
 def test_parse_production_arguments_accepts_single_production(mocker):
     """Test parser accepts a single production descriptor."""
     mocker.patch(
-        "simtools.applications.compare_productions.resolve_file_patterns",
+        "simtools.sim_events.production_comparison.resolve_file_patterns",
         side_effect=lambda patterns: patterns,
     )
 
-    descriptors = app.parse_production_arguments([["baseline", "base.h5"]])
+    descriptors = production_comparison.parse_production_arguments([["baseline", "base.h5"]])
 
     assert len(descriptors) == 1
     assert descriptors[0].label == "baseline"
@@ -63,11 +64,11 @@ def test_parse_production_arguments_accepts_single_production(mocker):
 def test_parse_production_arguments_resolves_flattened_pairs(mocker):
     """Test parser supports flattened label/file list from configuration files."""
     mocker.patch(
-        "simtools.applications.compare_productions.resolve_file_patterns",
+        "simtools.sim_events.production_comparison.resolve_file_patterns",
         side_effect=lambda patterns: patterns,
     )
 
-    descriptors = app.parse_production_arguments(
+    descriptors = production_comparison.parse_production_arguments(
         ["baseline", "base_*.h5", "candidate", "cand_*.h5"]
     )
 
@@ -79,12 +80,12 @@ def test_parse_production_arguments_resolves_flattened_pairs(mocker):
 def test_parse_production_arguments_rejects_duplicate_labels(mocker):
     """Test parser rejects duplicated production labels."""
     mocker.patch(
-        "simtools.applications.compare_productions.resolve_file_patterns",
+        "simtools.sim_events.production_comparison.resolve_file_patterns",
         side_effect=lambda patterns: patterns,
     )
 
     with pytest.raises(ValueError, match="labels must be unique"):
-        app.parse_production_arguments([["same", "a.h5"], ["same", "b.h5"]])
+        production_comparison.parse_production_arguments([["same", "a.h5"], ["same", "b.h5"]])
 
 
 @pytest.mark.parametrize(
@@ -99,29 +100,31 @@ def test_parse_production_arguments_rejects_duplicate_labels(mocker):
 def test_parse_production_arguments_error_paths(mocker, arguments, error_match):
     """Test parser validation failures for malformed production arguments."""
     mocker.patch(
-        "simtools.applications.compare_productions.resolve_file_patterns",
+        "simtools.sim_events.production_comparison.resolve_file_patterns",
         side_effect=lambda patterns: patterns,
     )
 
     with pytest.raises(ValueError, match=error_match):
-        app.parse_production_arguments(arguments)
+        production_comparison.parse_production_arguments(arguments)
 
 
 def test_parse_production_arguments_rejects_unresolved_patterns(mocker):
     """Test parser rejects productions that resolve to no files."""
-    mocker.patch("simtools.applications.compare_productions.resolve_file_patterns", return_value=[])
+    mocker.patch("simtools.sim_events.production_comparison.resolve_file_patterns", return_value=[])
 
     with pytest.raises(ValueError, match="does not resolve to any files"):
-        app.parse_production_arguments([["baseline", "missing_*.h5"]])
+        production_comparison.parse_production_arguments([["baseline", "missing_*.h5"]])
 
 
 def test_parse_production_arguments_accepts_nested_flattened_strings(mocker):
     """Test parser accepts nested flattened string groups."""
     mocker.patch(
-        "simtools.applications.compare_productions.resolve_file_patterns",
+        "simtools.sim_events.production_comparison.resolve_file_patterns",
         side_effect=lambda patterns: patterns,
     )
 
-    descriptors = app.parse_production_arguments([["baseline", "a.h5", "candidate", "b.h5"]])
+    descriptors = production_comparison.parse_production_arguments(
+        [["baseline", "a.h5", "candidate", "b.h5"]]
+    )
 
     assert [descriptor.label for descriptor in descriptors] == ["baseline", "candidate"]

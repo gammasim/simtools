@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools.statistics import (
-    chi2_test_histograms,
     compare_samples_with_statistics,
 )
 from simtools.utils import names
@@ -618,21 +617,11 @@ def _build_aligned_count_statistics(metrics_per_production, counts_per_label, me
         candidate_counts = counts_per_label.get(metrics.label)
         if candidate_counts is None:
             continue
-        chi2_stat, chi2_pval, valid, reason = chi2_test_histograms(
-            baseline_counts, candidate_counts
-        )
         result = {
-            "chi2_statistic": chi2_stat,
-            "chi2_pvalue": chi2_pval,
-            "valid": valid,
-            "reason": reason,
             "candidate_label": metrics.label,
             "baseline_counts": np.asarray(baseline_counts, dtype=int).tolist(),
             "candidate_counts": np.asarray(candidate_counts, dtype=int).tolist(),
         }
-        result["candidate_label"] = metrics.label
-        result["baseline_counts"] = np.asarray(baseline_counts, dtype=int).tolist()
-        result["candidate_counts"] = np.asarray(candidate_counts, dtype=int).tolist()
         stats_summary["comparisons"].append(result)
     return stats_summary
 
@@ -685,7 +674,7 @@ def _build_quantity_distribution_statistics(
 
 
 def _annotate_ks_statistics(ax, statistics):
-    """Overlay KS and Chi2 values for baseline-vs-candidate comparisons on a plot."""
+    """Overlay KS values for baseline-vs-candidate comparisons on a plot."""
     if statistics is None or not statistics.get("comparisons"):
         return
 
@@ -696,19 +685,12 @@ def _annotate_ks_statistics(ax, statistics):
         if metric_type == "quantity_distribution":
             sim_ks = comparison.get("simulated", {}).get("ks_statistic")
             trig_ks = comparison.get("triggered", {}).get("ks_statistic")
-            sim_chi2_over_n = _format_chi2_over_n(comparison.get("simulated", {}))
-            trig_chi2_over_n = _format_chi2_over_n(comparison.get("triggered", {}))
             lines.append(
                 f"{label}: KS s/t={_format_statistic_value(sim_ks)}/"
-                f"{_format_statistic_value(trig_ks)}, "
-                f"Chi2/N s/t={sim_chi2_over_n}/{trig_chi2_over_n}"
+                f"{_format_statistic_value(trig_ks)}"
             )
             continue
-        chi2_over_n = _format_chi2_over_n(comparison)
-        lines.append(
-            f"{label}: KS={_format_statistic_value(comparison.get('ks_statistic'))}, "
-            f"Chi2/N={chi2_over_n}"
-        )
+        lines.append(f"{label}: KS={_format_statistic_value(comparison.get('ks_statistic'))}")
 
     ax.text(
         0.02,
@@ -727,19 +709,6 @@ def _format_statistic_value(value):
     if value is None:
         return "n/a"
     return f"{float(value):.4f}"
-
-
-def _format_chi2_over_n(statistics):
-    """Format Chi2/N using bins that contribute to the Chi2 calculation."""
-    chi2_value = statistics.get("chi2_statistic")
-    baseline_counts = statistics.get("baseline_counts")
-    if chi2_value is None or baseline_counts is None:
-        return "n/a"
-
-    n_contributing_bins = int(np.sum(np.asarray(baseline_counts, dtype=float) > 0))
-    if n_contributing_bins <= 0:
-        return "n/a"
-    return f"{float(chi2_value) / n_contributing_bins:.4f}"
 
 
 def _initialize_comparison_statistics(metrics_per_production):
