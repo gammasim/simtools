@@ -36,7 +36,7 @@ class CorsikaSimtelRunner:
         curved_atmosphere_min_zenith_angle=None,
     ):
         self._logger = logging.getLogger(__name__)
-        self.corsika_config = gen.ensure_iterable(corsika_config)
+        self.corsika_config = gen.ensure_list(corsika_config)
         # the base corsika config is the one used to define the CORSIKA specific parameters.
         # The others are used for the array configurations.
         self.base_corsika_config = self.corsika_config[0]

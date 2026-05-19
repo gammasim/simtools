@@ -339,7 +339,7 @@ def get_array_layouts_from_db(
     """
     layout_names = []
     if layout_name:
-        layout_names = gen.ensure_iterable(layout_name)
+        layout_names = gen.ensure_list(layout_name)
     else:
         site_model = SiteModel(
             site=site,
