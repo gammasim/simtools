@@ -65,7 +65,7 @@ def build_observing_location(site, model_version):
     )
 
 
-def build_production_grid_engine(args_dict):
+def build_production_grid_engine(args_dict, array_layout_name=None):
     """Build a production-grid engine from application arguments."""
     coordinate_system = args_dict.get("coordinate_system", "horizontal")
     observing_location = None
@@ -74,6 +74,10 @@ def build_production_grid_engine(args_dict):
             site=args_dict["site"],
             model_version=args_dict["model_version"],
         )
+    resolved_layout_name = array_layout_name or resolve_array_layout_name(
+        args_dict.get("array_layout_name"),
+        resolve_single_model_version(args_dict.get("model_version")),
+    )
 
     return ProductionGridEngine(
         axes=load_axes(args_dict["axes"]),
@@ -84,8 +88,7 @@ def build_production_grid_engine(args_dict):
             coordinate_system,
         ),
         lookup_table=args_dict.get("lookup_table"),
-        telescope_ids=args_dict.get("telescope_ids"),
-        simtel_file=args_dict.get("simtel_file"),
+        array_layout_name=resolved_layout_name,
     )
 
 
@@ -101,7 +104,6 @@ def build_job_grid_metadata(args_dict):
         "coordinate_system": args_dict.get("coordinate_system", "horizontal"),
         "observing_time_utc": observing_time.isot if observing_time else None,
         "observing_time_scale": observing_time.scale if observing_time else None,
-        "telescope_ids": args_dict.get("telescope_ids"),
         "lookup_table": str(args_dict["lookup_table"]) if args_dict.get("lookup_table") else None,
     }
 
@@ -285,10 +287,10 @@ def _build_simulation_jobs_from_production_grid(
     reference_energy,
 ):
     """Build simulation jobs from a shared production-grid definition."""
-    grid_points = build_production_grid_engine(args_dict).generate_simulation_grid()
     core_scatter_number = int(args_dict["core_scatter"][0])
     view_cone_min = args_dict["view_cone"][0]
     rows = []
+    grid_points_by_layout = {}
 
     for (
         primary,
@@ -301,6 +303,17 @@ def _build_simulation_jobs_from_production_grid(
         grid_axes["corsika_le_interaction"],
         grid_axes["corsika_he_interaction"],
     ):
+        resolved_layout_name = resolve_array_layout_name(
+            args_dict.get("array_layout_name"),
+            model_version,
+        )
+        if resolved_layout_name not in grid_points_by_layout:
+            grid_points_by_layout[resolved_layout_name] = build_production_grid_engine(
+                args_dict,
+                array_layout_name=resolved_layout_name,
+            ).generate_simulation_grid()
+
+        grid_points = grid_points_by_layout[resolved_layout_name]
         for point in grid_points:
             selected_core_scatter_max = _clip_max_quantity(
                 args_dict["core_scatter"][1],
@@ -330,10 +343,7 @@ def _build_simulation_jobs_from_production_grid(
                             "azimuth_angle": point["azimuth"],
                             "zenith_angle": point["zenith_angle"],
                             "model_version": model_version,
-                            "array_layout_name": resolve_array_layout_name(
-                                args_dict.get("array_layout_name"),
-                                model_version,
-                            ),
+                            "array_layout_name": resolved_layout_name,
                             "corsika_le_interaction": corsika_le,
                             "corsika_he_interaction": corsika_he,
                             "energy_min": selected_energy_range_pair[0],
@@ -388,13 +398,8 @@ def build_simulation_jobs(args_dict):
             reference_energy=reference_energy,
         )
 
-    corsika_limits = args_dict.get("corsika_limits")
-    if corsika_limits is not None:
-        corsika_limits = CorsikaLimitsLookup(
-            corsika_limits,
-            telescope_ids=args_dict.get("telescope_ids"),
-            simtel_file=args_dict.get("simtel_file"),
-        )
+    corsika_limits_path = args_dict.get("corsika_limits")
+    corsika_limits_by_layout = {}
 
     core_scatter = args_dict["core_scatter"]
     view_cone = args_dict["view_cone"]
@@ -432,6 +437,19 @@ def build_simulation_jobs(args_dict):
         corsika_he,
         energy_range_pair,
     ) in combinations:
+        resolved_layout_name = resolve_array_layout_name(
+            args_dict.get("array_layout_name"),
+            model_version,
+        )
+        corsika_limits = None
+        if corsika_limits_path is not None:
+            if resolved_layout_name not in corsika_limits_by_layout:
+                corsika_limits_by_layout[resolved_layout_name] = CorsikaLimitsLookup(
+                    corsika_limits_path,
+                    array_layout_name=resolved_layout_name,
+                )
+            corsika_limits = corsika_limits_by_layout[resolved_layout_name]
+
         selected_energy_range_pair = get_energy_range_for_zenith_angle(
             zenith,
             energy_range_pair,
@@ -464,10 +482,7 @@ def build_simulation_jobs(args_dict):
                     "azimuth_angle": azimuth,
                     "zenith_angle": zenith,
                     "model_version": model_version,
-                    "array_layout_name": resolve_array_layout_name(
-                        args_dict.get("array_layout_name"),
-                        model_version,
-                    ),
+                    "array_layout_name": resolved_layout_name,
                     "corsika_le_interaction": corsika_le,
                     "corsika_he_interaction": corsika_he,
                     "energy_min": selected_energy_range_pair[0],

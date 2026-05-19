@@ -5,17 +5,13 @@ from astropy.table import Table
 from scipy.interpolate import LinearNDInterpolator, griddata
 from scipy.spatial import QhullError  # pylint: disable=no-name-in-module
 
-from simtools.simtel.simtel_io_metadata import (
-    get_sim_telarray_telescope_id_to_telescope_name_mapping,
-)
-from simtools.utils.general import ensure_list
 from simtools.utils.value_conversion import get_value_in_unit
 
 
 class CorsikaLimitsLookup:
     """Read and interpolate CORSIKA limits for production grids."""
 
-    def __init__(self, lookup_table, telescope_ids=None, simtel_file=None):
+    def __init__(self, lookup_table, array_layout_name=None):
         """
         Initialize lookup-table access.
 
@@ -23,63 +19,18 @@ class CorsikaLimitsLookup:
         ----------
         lookup_table : str or Path
             Path to the lookup-table ECSV file.
-        telescope_ids : list or str, optional
-            Telescope selection used to filter lookup-table rows.
-        simtel_file : str, optional
-            Path to a sim_telarray file used to resolve numeric telescope IDs.
+        array_layout_name : str, optional
+            Array layout name used to select lookup-table rows.
         """
         self.lookup_table = lookup_table
-        self.telescope_ids = telescope_ids
-        self.simtel_file = simtel_file
-        self._simtel_id_to_name = (
-            get_sim_telarray_telescope_id_to_telescope_name_mapping(simtel_file)
-            if simtel_file
-            else {}
-        )
+        self.array_layout_name = array_layout_name
         self.lookup_points_for_interpolation = None
         self.lookup_values_for_interpolation = None
         self.lookup_interpolators_for_point = None
 
-    def _normalize_lookup_identifier(self, identifier):
-        """Normalize one telescope identifier and report if it is numeric."""
-        if isinstance(identifier, (int, np.integer)):
-            return self._simtel_id_to_name.get(int(identifier), str(int(identifier))), True
-
-        text = str(identifier).strip()
-        if text.lstrip("+-").isdigit():
-            return self._simtel_id_to_name.get(int(text), text), True
-        return text, False
-
-    def _normalized_identifier_set(self, identifiers):
-        """Return normalized telescope identifiers as a set."""
-        return {
-            self._normalize_lookup_identifier(identifier)[0]
-            for identifier in ensure_list(identifiers)
-        }
-
-    def _lookup_contains_numeric_telescope_ids(self, lookup_table):
-        """Return True when any lookup-table telescope identifier is numeric."""
-        return any(
-            any(
-                self._normalize_lookup_identifier(identifier)[1]
-                for identifier in ensure_list(row["telescope_ids"])
-            )
-            for row in lookup_table
-        )
-
-    @property
-    def simtel_id_to_name(self):
-        """Return the sim_telarray telescope-ID mapping."""
-        return self._simtel_id_to_name
-
-    @simtel_id_to_name.setter
-    def simtel_id_to_name(self, value):
-        """Set the sim_telarray telescope-ID mapping."""
-        self._simtel_id_to_name = value
-
     def load_matching_lookup_arrays(self):
         """
-        Load and filter lookup-table arrays for the selected telescope IDs.
+        Load and filter lookup-table arrays for the selected array layout.
 
         Returns
         -------
@@ -87,25 +38,17 @@ class CorsikaLimitsLookup:
             Lookup arrays for interpolation.
         """
         lookup_table = Table.read(self.lookup_table, format="ascii.ecsv")
-        selected_telescope_ids = self._normalized_identifier_set(self.telescope_ids)
-
-        matching_rows = [
-            row
-            for row in lookup_table
-            if selected_telescope_ids == self._normalized_identifier_set(row["telescope_ids"])
-        ]
+        if self.array_layout_name is None:
+            matching_rows = list(lookup_table)
+        else:
+            matching_rows = [
+                row for row in lookup_table if str(row["array_name"]) == str(self.array_layout_name)
+            ]
 
         if not matching_rows:
-            has_numeric_lookup_ids = self._lookup_contains_numeric_telescope_ids(lookup_table)
-
-            if has_numeric_lookup_ids and not self.simtel_file:
-                raise ValueError(
-                    "Lookup table telescope selections contain numeric IDs. "
-                    "Provide --simtel_file to map those IDs to telescope names."
-                )
-
             raise ValueError(
-                f"No matching rows in the lookup table for telescope_ids: {self.telescope_ids}"
+                "No matching rows in the lookup table for "
+                f"array_layout_name: {self.array_layout_name}"
             )
 
         def extract_array(field, transform=lambda x: x):

@@ -33,7 +33,6 @@ def _metadata():
         "site": "North",
         "simulation_software": "corsika_sim_telarray",
         "coordinate_system": "ra_dec",
-        "telescope_ids": ["LSTN-01"],
     }
 
 
@@ -44,7 +43,6 @@ def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
     rows, metadata = read_job_grid(output_file)
 
     assert metadata["site"] == "North"
-    assert metadata["telescope_ids"] == ["LSTN-01"]
     assert rows[0]["energy_min"] == 30 * u.GeV
     assert rows[0]["core_scatter_number"] == 10
     assert rows[0]["array_layout_name"] == "CTAO-North-Alpha"
