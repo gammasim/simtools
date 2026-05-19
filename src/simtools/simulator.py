@@ -108,7 +108,7 @@ class Simulator:
         list, list
             List of ArrayModel and CorsikaConfig objects.
         """
-        versions = general.ensure_iterable(self.model_version)
+        versions = general.ensure_list(self.model_version)
 
         array_model = []
         corsika_configurations = []
@@ -118,7 +118,7 @@ class Simulator:
                 label=self.label,
                 site=self.site,
                 layout_name=settings.config.args.get("array_layout_name"),
-                array_elements=general.ensure_iterable(settings.config.args.get("telescopes", [])),
+                array_elements=general.ensure_list(settings.config.args.get("telescopes", [])),
                 model_version=version,
                 calibration_device_types=self._get_calibration_device_types(self.run_mode),
                 overwrite_model_parameters=settings.config.args.get("overwrite_model_parameters"),
@@ -458,7 +458,7 @@ class Simulator:
                 model_logs
                 + [f for f in histogram_files if model_version in str(f)]
                 + [str(self.get_files(file_type="corsika_log"))]
-                + list(general.ensure_iterable(model.pack_model_files()))
+                + general.ensure_list(model.pack_model_files())
             )
             # simtools log file duplicated for each model version
             if simtools_log_file and Path(simtools_log_file).exists():
@@ -498,7 +498,7 @@ class Simulator:
         if self.run_mode != "direct_injection" or flasher_photons is None:
             return
 
-        for array_model in general.ensure_iterable(self.array_models):
+        for array_model in general.ensure_list(self.array_models):
             for calibration_models in array_model.calibration_models.values():
                 for calibration_model in calibration_models.values():
                     calibration_model.overwrite_model_parameter(
