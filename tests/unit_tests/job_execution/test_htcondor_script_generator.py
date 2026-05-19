@@ -120,7 +120,6 @@ def test_generate_submission_script_raises_for_missing_apptainer_image(
 def test_get_submit_script(args_dict):
     n_core_scatter = args_dict["core_scatter"][0]
     view_cone_low = args_dict["view_cone"][0].to(u.deg).value
-    view_cone_high = args_dict["view_cone"][1].to(u.deg).value
     container_output_path = str(Path("/", "tmp", "simtools-output"))
 
     expected_script = f"""#!/usr/bin/env bash
@@ -131,12 +130,12 @@ process_id="$1"
 set -a; source "$2"
 apptainer_label="${{3}}"
 primary="${{4}}"
-model_version="${{14}}"
-array_layout_name="${{15}}"
-corsika_le_interaction="${{16}}"
-corsika_he_interaction="${{17}}"
-run_number="${{18}}"
-pack_for_grid_register="${{19}}"
+model_version="${{16}}"
+array_layout_name="${{17}}"
+corsika_le_interaction="${{18}}"
+corsika_he_interaction="${{19}}"
+run_number="${{20}}"
+pack_for_grid_register="${{21}}"
 energy_range_tag="erange-${{7}}${{8}}-${{9}}${{10}}"
 job_label="{args_dict["label"]}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
@@ -149,10 +148,10 @@ simtools-simulate-prod \\
     --primary "$primary" \\
     --azimuth_angle "${{5}}" \\
     --zenith_angle "${{6}}" \\
-    --nshow "${{13}}" \\
+    --nshow "${{15}}" \\
     --energy_range "${{7}} ${{8}} ${{9}} ${{10}}" \\
     --core_scatter "{n_core_scatter} ${{11}} ${{12}}" \\
-    --view_cone "{view_cone_low} deg {view_cone_high} deg" \\
+    --view_cone "{view_cone_low} deg ${{13}} ${{14}}" \\
     --corsika_le_interaction "$corsika_le_interaction" \\
     --corsika_he_interaction "$corsika_he_interaction" \\
     --run_number "$run_number" \\
@@ -183,6 +182,7 @@ def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
     assert "queue apptainer_label,primary" in content
     assert "energy_min_value,energy_min_unit,energy_max_value,energy_max_unit" in content
     assert "core_scatter_max_value,core_scatter_max_unit" in content
+    assert "view_cone_max_value,view_cone_max_unit" in content
     assert "nshow,model_version,array_layout_name" in content
     assert "model_version,array_layout_name,corsika_le_interaction" in content
     assert "from simulate_prod.submit.params.txt" in content
@@ -303,7 +303,7 @@ def test_write_params_file_resolves_array_layout_name_by_model_version(
     params_lines = params_file_path.read_text(encoding="utf-8").splitlines()
 
     assert "6.3.0 alpha urqmd epos 1 simtools-output/7.0.0" in params_lines[0]
-    assert "7.0.0 CTAO-North-Alpha urqmd epos 2 simtools-output/7.0.0" in params_lines[1]
+    assert "7.0.0 CTAO-North-Alpha urqmd epos 1 simtools-output/7.0.0" in params_lines[1]
 
 
 def test_write_params_file_resolves_stringified_by_version_layout(args_dict, tmp_test_directory):
@@ -326,7 +326,7 @@ def test_write_params_file_resolves_stringified_by_version_layout(args_dict, tmp
     params_lines = params_file_path.read_text(encoding="utf-8").splitlines()
 
     assert "6.3.0 alpha urqmd epos 1 simtools-output/7.0.0" in params_lines[0]
-    assert "7.0.0 CTAO-North-Alpha urqmd epos 2 simtools-output/7.0.0" in params_lines[1]
+    assert "7.0.0 CTAO-North-Alpha urqmd epos 1 simtools-output/7.0.0" in params_lines[1]
 
 
 def test_write_params_file_keeps_energy_units(tmp_test_directory):
@@ -340,6 +340,7 @@ def test_write_params_file_keeps_energy_units(tmp_test_directory):
             "energy_min": 30 * u.GeV,
             "energy_max": 10 * u.TeV,
             "core_scatter_max": 200 * u.m,
+            "view_cone_max": 5 * u.deg,
             "nshow": 1000,
             "model_version": "7.0.0",
             "array_layout_name": {
@@ -358,7 +359,7 @@ def test_write_params_file_keeps_energy_units(tmp_test_directory):
     _write_params_file(params_file_path, label_job_specs)
 
     assert params_file_path.read_text(encoding="utf-8") == (
-        "7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 200.0 m "
+        "7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 200.0 m 5.0 deg "
         "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/7.0.0\n"
     )
 
@@ -374,6 +375,7 @@ def test_write_params_file_replaces_whitespace_in_apptainer_label(tmp_test_direc
             "energy_min": 30 * u.GeV,
             "energy_max": 10 * u.TeV,
             "core_scatter_max": 200 * u.m,
+            "view_cone_max": 5 * u.deg,
             "nshow": 1000,
             "model_version": "7.0.0",
             "array_layout_name": "CTAO-North-Alpha",
@@ -387,6 +389,6 @@ def test_write_params_file_replaces_whitespace_in_apptainer_label(tmp_test_direc
     _write_params_file(params_file_path, label_job_specs)
 
     assert params_file_path.read_text(encoding="utf-8") == (
-        "grid_label_7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 200.0 m "
+        "grid_label_7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 200.0 m 5.0 deg "
         "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/grid_label_7.0.0\n"
     )

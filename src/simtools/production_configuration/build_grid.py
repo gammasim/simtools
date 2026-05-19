@@ -1,12 +1,18 @@
 """Build simulation execution grid based on the production configuration and lookup tables."""
 
 import itertools
+from pathlib import Path
 
 import numpy as np
 from astropy import units as u
+from astropy.coordinates import EarthLocation
+from astropy.time import Time
 
 from simtools.configuration import defaults
+from simtools.io.ascii_handler import collect_data_from_file
+from simtools.model.site_model import SiteModel
 from simtools.production_configuration.corsika_limits_lookup import CorsikaLimitsLookup
+from simtools.production_configuration.grid_engine import ProductionGridEngine
 from simtools.utils.general import ensure_list
 
 _GRID_AXES = [
@@ -22,6 +28,64 @@ _GRID_AXIS_DEFAULTS = {
     "corsika_le_interaction": defaults.CORSIKA_LE_INTERACTION,
     "corsika_he_interaction": defaults.CORSIKA_HE_INTERACTION,
 }
+
+
+def load_axes(file_path):
+    """Load axes definitions from a YAML or JSON file."""
+    if not Path(file_path).exists():
+        raise FileNotFoundError(f"Axes file {file_path} not found.")
+
+    return collect_data_from_file(file_path)
+
+
+def resolve_observing_time(observing_time, coordinate_system):
+    """Resolve observing time from CLI arguments."""
+    if observing_time:
+        return Time(observing_time, scale="utc")
+    if coordinate_system == "ra_dec":
+        return Time.now()
+    return None
+
+
+def resolve_single_model_version(model_version):
+    """Resolve one model version for helpers that require a scalar version."""
+    if isinstance(model_version, list):
+        return model_version[0]
+    return model_version
+
+
+def build_observing_location(site, model_version):
+    """Build observing location from the site model."""
+    site_model = SiteModel(model_version=resolve_single_model_version(model_version), site=site)
+    return EarthLocation(
+        lat=site_model.get_parameter_value_with_unit("reference_point_latitude"),
+        lon=site_model.get_parameter_value_with_unit("reference_point_longitude"),
+        height=site_model.get_parameter_value_with_unit("reference_point_altitude"),
+    )
+
+
+def build_production_grid_engine(args_dict):
+    """Build a production-grid engine from application arguments."""
+    coordinate_system = args_dict.get("coordinate_system", "zenith_azimuth")
+    observing_location = None
+    if coordinate_system == "ra_dec":
+        observing_location = build_observing_location(
+            site=args_dict["site"],
+            model_version=args_dict["model_version"],
+        )
+
+    return ProductionGridEngine(
+        axes=load_axes(args_dict["axes"]),
+        coordinate_system=coordinate_system,
+        observing_location=observing_location,
+        observing_time=resolve_observing_time(
+            args_dict.get("observing_time"),
+            coordinate_system,
+        ),
+        lookup_table=args_dict.get("lookup_table"),
+        telescope_ids=args_dict.get("telescope_ids"),
+        simtel_file=args_dict.get("simtel_file"),
+    )
 
 
 def normalize_grid_axes(args_dict):
@@ -104,6 +168,23 @@ def get_core_scatter_max_for_zenith_angle(
     return min(configured_scatter_max, lookup_scatter_max.to(configured_scatter_max.unit))
 
 
+def get_viewcone_max_for_zenith_angle(
+    zenith_angle, view_cone, corsika_limits, azimuth_angle=None, nsb_level=1.0
+):
+    """Return zenith-dependent max viewcone value."""
+    if corsika_limits is None:
+        return view_cone[1]
+
+    if not isinstance(corsika_limits, CorsikaLimitsLookup):
+        corsika_limits = CorsikaLimitsLookup(corsika_limits)
+
+    azimuth_angle = 0.0 * u.deg if azimuth_angle is None else azimuth_angle
+    interpolated_limits = corsika_limits.interpolate_point(zenith_angle, azimuth_angle, nsb_level)
+    lookup_viewcone_max = interpolated_limits["viewcone_radius"] * u.deg
+    configured_viewcone_max = view_cone[1]
+    return min(configured_viewcone_max, lookup_viewcone_max.to(configured_viewcone_max.unit))
+
+
 def calculate_log_energy_midpoint(energy_range_pair):
     """Return the geometric-mean energy for an energy range pair."""
     energy_min, energy_max = energy_range_pair
@@ -154,6 +235,95 @@ def calculate_scaled_nshow(
     return scaled_nshow
 
 
+def _clip_energy_range_from_threshold(energy_range_pair, lower_energy_threshold):
+    """Clip the lower energy bound of a configured energy range."""
+    if lower_energy_threshold is None:
+        return energy_range_pair
+
+    energy_min, energy_max = energy_range_pair
+    lower_energy_threshold = lower_energy_threshold.to(energy_min.unit)
+    if lower_energy_threshold > energy_max.to(lower_energy_threshold.unit):
+        return None
+    if lower_energy_threshold <= energy_min:
+        return energy_range_pair
+    return lower_energy_threshold, energy_max
+
+
+def _clip_max_quantity(configured_max, lookup_max):
+    """Clip a configured maximum value against an interpolated lookup value."""
+    if lookup_max is None:
+        return configured_max
+    return min(configured_max, lookup_max.to(configured_max.unit))
+
+
+def _build_simulation_jobs_from_production_grid(
+    args_dict,
+    energy_ranges,
+    grid_axes,
+    number_of_runs,
+    run_number,
+    nshow,
+    nshow_power_index,
+    reference_energy,
+):
+    """Build simulation jobs from a shared production-grid definition."""
+    grid_points = build_production_grid_engine(args_dict).generate_simulation_grid()
+    rows = []
+
+    for (
+        primary,
+        model_version,
+        corsika_le,
+        corsika_he,
+    ) in itertools.product(
+        grid_axes["primary"],
+        grid_axes["model_version"],
+        grid_axes["corsika_le_interaction"],
+        grid_axes["corsika_he_interaction"],
+    ):
+        for point in grid_points:
+            selected_core_scatter_max = _clip_max_quantity(
+                args_dict["core_scatter"][1],
+                point.get("scatter_radius"),
+            )
+            selected_viewcone_max = _clip_max_quantity(
+                args_dict["view_cone"][1],
+                point.get("viewcone_radius"),
+            )
+
+            for energy_range_pair in energy_ranges:
+                selected_energy_range_pair = _clip_energy_range_from_threshold(
+                    energy_range_pair,
+                    point.get("lower_energy_threshold"),
+                )
+                if selected_energy_range_pair is None:
+                    continue
+
+                selected_nshow = calculate_scaled_nshow(
+                    selected_energy_range_pair, nshow, nshow_power_index, reference_energy
+                )
+
+                for row_index in range(number_of_runs):
+                    rows.append(
+                        {
+                            "primary": primary,
+                            "azimuth_angle": point["azimuth"],
+                            "zenith_angle": point["zenith"],
+                            "model_version": model_version,
+                            "array_layout_name": args_dict.get("array_layout_name"),
+                            "corsika_le_interaction": corsika_le,
+                            "corsika_he_interaction": corsika_he,
+                            "energy_min": selected_energy_range_pair[0],
+                            "energy_max": selected_energy_range_pair[1],
+                            "core_scatter_max": selected_core_scatter_max,
+                            "view_cone_max": selected_viewcone_max,
+                            "nshow": selected_nshow,
+                            "run_number": run_number + row_index,
+                        }
+                    )
+    return rows
+
+
 def build_simulation_jobs(args_dict):
     """
     Build simulation job parameters based on the production configuration and lookup tables.
@@ -176,6 +346,23 @@ def build_simulation_jobs(args_dict):
     """
     grid_axes = normalize_grid_axes(args_dict)
     energy_ranges = normalize_energy_ranges(args_dict["energy_range"])
+    if args_dict.get("axes"):
+        nshow_power_index = args_dict.get("nshow_power_index")
+        reference_energy = args_dict.get("nshow_reference_energy")
+        if nshow_power_index is not None and reference_energy is not None:
+            reference_energy = u.Quantity(reference_energy)
+
+        return _build_simulation_jobs_from_production_grid(
+            args_dict=args_dict,
+            energy_ranges=energy_ranges,
+            grid_axes=grid_axes,
+            number_of_runs=int(args_dict.get("number_of_runs", 1)),
+            run_number=int(args_dict.get("run_number") or 1),
+            nshow=args_dict["nshow"],
+            nshow_power_index=nshow_power_index,
+            reference_energy=reference_energy,
+        )
+
     corsika_limits = args_dict.get("corsika_limits")
     if corsika_limits is not None:
         corsika_limits = CorsikaLimitsLookup(
@@ -185,6 +372,7 @@ def build_simulation_jobs(args_dict):
         )
 
     core_scatter = args_dict["core_scatter"]
+    view_cone = args_dict["view_cone"]
     nshow = args_dict["nshow"]
     nshow_power_index = args_dict.get("nshow_power_index")
     reference_energy = args_dict.get("nshow_reference_energy")
@@ -232,6 +420,12 @@ def build_simulation_jobs(args_dict):
             corsika_limits,
             azimuth_angle=azimuth,
         )
+        selected_viewcone_max = get_viewcone_max_for_zenith_angle(
+            zenith,
+            view_cone,
+            corsika_limits,
+            azimuth_angle=azimuth,
+        )
         selected_nshow = calculate_scaled_nshow(
             selected_energy_range_pair, nshow, nshow_power_index, reference_energy
         )
@@ -249,6 +443,7 @@ def build_simulation_jobs(args_dict):
                     "energy_min": selected_energy_range_pair[0],
                     "energy_max": selected_energy_range_pair[1],
                     "core_scatter_max": selected_core_scatter_max,
+                    "view_cone_max": selected_viewcone_max,
                     "nshow": selected_nshow,
                     "run_number": run_number + row_index,
                 }

@@ -30,6 +30,8 @@ _PARAMS_FIELDS = [
     "energy_max_unit",
     "core_scatter_max_value",
     "core_scatter_max_unit",
+    "view_cone_max_value",
+    "view_cone_max_unit",
     "nshow",
     "model_version",
     "array_layout_name",
@@ -105,6 +107,13 @@ def _format_param_value(value, field_name):
             convert_to=u.m,
         )
 
+    if field_name == "view_cone_max_value":
+        return _format_quantity(
+            value,
+            default_unit=u.deg,
+            convert_to=u.deg,
+        )
+
     if field_name in ("azimuth_angle", "zenith_angle"):
         if isinstance(value, u.Quantity):
             value = value.to(u.deg).value
@@ -150,6 +159,9 @@ def _write_params_file(params_file_path, label_job_specs):
             core_scatter_max_value, core_scatter_max_unit = _format_param_value(
                 job_spec["core_scatter_max"], "core_scatter_max_value"
             )
+            view_cone_max_value, view_cone_max_unit = _format_param_value(
+                job_spec["view_cone_max"], "view_cone_max_value"
+            )
 
             row = [
                 _format_param_value(job_spec["image_label"], "apptainer_label"),
@@ -162,6 +174,8 @@ def _write_params_file(params_file_path, label_job_specs):
                 energy_max_unit,
                 core_scatter_max_value,
                 core_scatter_max_unit,
+                view_cone_max_value,
+                view_cone_max_unit,
                 _format_param_value(job_spec["nshow"], "nshow"),
                 _format_param_value(job_spec["model_version"], "model_version"),
                 _format_param_value(array_layout_name, "array_layout_name"),
@@ -299,38 +313,27 @@ def _get_submit_script(args_dict):
     core_scatter = args_dict["core_scatter"]
     n_core_scatter = core_scatter[0]
     view_cone = args_dict["view_cone"]
-    view_cone_string = f'"{view_cone[0].to(u.deg)} {view_cone[1].to(u.deg)}"'
+    view_cone_min = view_cone[0].to(u.deg).value
 
     label = args_dict["label"] if args_dict["label"] else "simulate-prod"
     run_number_offset_arg = args_dict["run_number_offset"]
     run_number_offset = 0 if run_number_offset_arg is None else run_number_offset_arg
 
-    azimuth_angle_idx = bash_indices["azimuth_angle"]
-    zenith_angle_idx = bash_indices["zenith_angle"]
-    energy_min_value_idx = bash_indices["energy_min_value"]
-    energy_min_unit_idx = bash_indices["energy_min_unit"]
-    energy_max_value_idx = bash_indices["energy_max_value"]
-    energy_max_unit_idx = bash_indices["energy_max_unit"]
-    core_scatter_max_value_idx = bash_indices["core_scatter_max_value"]
-    core_scatter_max_unit_idx = bash_indices["core_scatter_max_unit"]
-    nshow_idx = bash_indices["nshow"]
-    model_version_idx = bash_indices["model_version"]
-    array_layout_name_idx = bash_indices["array_layout_name"]
-    corsika_le_interaction_idx = bash_indices["corsika_le_interaction"]
-    corsika_he_interaction_idx = bash_indices["corsika_he_interaction"]
-    run_number_idx = bash_indices["run_number"]
-    pack_for_grid_register_idx = bash_indices["pack_for_grid_register"]
-
     energy_range_string = (
-        f'"{energy_min_value_idx} {energy_min_unit_idx} '
-        f'{energy_max_value_idx} {energy_max_unit_idx}"'
+        f'"{bash_indices["energy_min_value"]} {bash_indices["energy_min_unit"]} '
+        f'{bash_indices["energy_max_value"]} {bash_indices["energy_max_unit"]}"'
     )
     core_scatter_string = (
-        f'"{n_core_scatter} {core_scatter_max_value_idx} {core_scatter_max_unit_idx}"'
+        f'"{n_core_scatter} {bash_indices["core_scatter_max_value"]} '
+        f'{bash_indices["core_scatter_max_unit"]}"'
+    )
+    view_cone_string = (
+        f'"{view_cone_min} deg {bash_indices["view_cone_max_value"]} '
+        f'{bash_indices["view_cone_max_unit"]}"'
     )
     energy_range_tag = (
-        f"erange-{energy_min_value_idx}{energy_min_unit_idx}-"
-        f"{energy_max_value_idx}{energy_max_unit_idx}"
+        f"erange-{bash_indices['energy_min_value']}{bash_indices['energy_min_unit']}-"
+        f"{bash_indices['energy_max_value']}{bash_indices['energy_max_unit']}"
     )
 
     return f"""#!/usr/bin/env bash
@@ -341,12 +344,12 @@ process_id="$1"
 set -a; source "$2"
 apptainer_label="{bash_indices["apptainer_label"]}"
 primary="{bash_indices["primary"]}"
-model_version="{model_version_idx}"
-array_layout_name="{array_layout_name_idx}"
-corsika_le_interaction="{corsika_le_interaction_idx}"
-corsika_he_interaction="{corsika_he_interaction_idx}"
-run_number="{run_number_idx}"
-pack_for_grid_register="{pack_for_grid_register_idx}"
+model_version="{bash_indices["model_version"]}"
+array_layout_name="{bash_indices["array_layout_name"]}"
+corsika_le_interaction="{bash_indices["corsika_le_interaction"]}"
+corsika_he_interaction="{bash_indices["corsika_he_interaction"]}"
+run_number="{bash_indices["run_number"]}"
+pack_for_grid_register="{bash_indices["pack_for_grid_register"]}"
 energy_range_tag="{energy_range_tag}"
 job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
@@ -357,9 +360,9 @@ simtools-simulate-prod \\
     --site {args_dict["site"]} \\
     --array_layout_name "$array_layout_name" \\
     --primary "$primary" \\
-    --azimuth_angle "{azimuth_angle_idx}" \\
-    --zenith_angle "{zenith_angle_idx}" \\
-    --nshow "{nshow_idx}" \\
+    --azimuth_angle "{bash_indices["azimuth_angle"]}" \\
+    --zenith_angle "{bash_indices["zenith_angle"]}" \\
+    --nshow "{bash_indices["nshow"]}" \\
     --energy_range {energy_range_string} \\
     --core_scatter {core_scatter_string} \\
     --view_cone {view_cone_string} \\
