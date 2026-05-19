@@ -2,7 +2,7 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation
 from astropy.time import Time
 
-from simtools.production_configuration.grid_engine import ProductionGridEngine
+from simtools.production_configuration.observation_grid import ProductionGridEngine
 
 
 def test_generate_simulation_grid_keeps_horizontal_coordinates_for_radec_axes():
@@ -21,13 +21,8 @@ def test_generate_simulation_grid_keeps_horizontal_coordinates_for_radec_axes():
     )
 
     simulation_grid = engine.generate_simulation_grid()
-    serialized_grid = engine.generate_grid()
 
     assert "zenith_angle" in simulation_grid[0]
     assert "azimuth" in simulation_grid[0]
     assert "ra" in simulation_grid[0]
     assert "dec" in simulation_grid[0]
-    assert "zenith_angle" not in serialized_grid[0]
-    assert "azimuth" not in serialized_grid[0]
-    assert "ra" in serialized_grid[0]
-    assert "dec" in serialized_grid[0]

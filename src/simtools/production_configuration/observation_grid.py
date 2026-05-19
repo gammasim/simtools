@@ -1,14 +1,9 @@
 """
-Generate simulation production grids for configurable axes, coordinate systems, and lookup tables.
+Generate observation sampling grids with direction-dependent CORSIKA physics limits.
 
-This module builds simulation grids from configurable axis definitions (for example,
-azimuth, zenith angle, night-sky background, and camera offset). It supports
-multiple binning and scaling modes, applies CORSIKA limit interpolation from lookup
-tables, and handles coordinate conversions between horizontal (Alt/Az) and
-equatorial (RA/Dec) systems.
-
-The engine also provides serialization helpers used by backend adapters to export
-generated grid points and metadata.
+Samples observing positions (Alt/Az or RA/Dec) and interpolates physics limits
+(minimum energy, maximum scatter radius, maximum viewcone) from lookup tables.
+Supports linear/log/1/cos binning modes.
 """
 
 import logging
@@ -23,11 +18,11 @@ from simtools.production_configuration.corsika_limits_lookup import CorsikaLimit
 
 class ProductionGridEngine:
     """
-    Generate simulation production grids.
+    Generate observation grids with direction-dependent CORSIKA physics limits.
 
-    This engine handles axis expansion (e.g. azimuth, zenith angle, night-sky background),
-    coordinate-system specific grid generation, lookup-table interpolation, coordinate conversion,
-    and ECSV serialization helpers used by backend adapters (e.g. HTCondor).
+    Samples observing positions per configured axes, interpolates physics limits from
+    lookup tables, and optionally converts between coordinate systems (Alt/Az ↔ RA/Dec).
+    Results feed into `simulation_jobs.build_simulation_jobs()` to expand into full job matrices.
     """
 
     def __init__(
@@ -332,7 +327,7 @@ class ProductionGridEngine:
         )
 
     def _generate_horizontal_grid(self):
-        """Generate grid points for zenith/azimuth mode."""
+        """Generate grid points for horizontal (zenith/azimuth) mode."""
         value_arrays = [value.value for value in self.target_values.values()]
         units = [value.unit for value in self.target_values.values()]
         grid = np.meshgrid(*value_arrays, indexing="ij")
@@ -382,33 +377,10 @@ class ProductionGridEngine:
         return grid_points
 
     def generate_simulation_grid(self):
-        """Generate grid points while retaining horizontal coordinates for execution backends."""
+        """Generate observation grid with CORSIKA limits. Always includes Alt/Az for backends."""
         if self.coordinate_system == "ra_dec":
             return self._generate_grid_radec_mode(include_horizontal_coordinates=True)
-
         return self._generate_horizontal_grid()
-
-    @staticmethod
-    def _strip_horizontal_coordinates(grid_points):
-        """Remove horizontal coordinates from serialized RA/Dec grid points."""
-        for point in grid_points:
-            point.pop("zenith_angle", None)
-            point.pop("azimuth", None)
-        return grid_points
-
-    def generate_grid(self):
-        """
-        Generate the grid based on the required axes and include interpolated limits.
-
-        Returns
-        -------
-        list of dict
-            A list of generated grid points.
-        """
-        grid_points = self.generate_simulation_grid()
-        if self.coordinate_system == "ra_dec":
-            return self._strip_horizontal_coordinates(grid_points)
-        return grid_points
 
     def convert_altaz_to_radec(self, alt, az):
         """
