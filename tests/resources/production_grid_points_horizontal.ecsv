@@ -14,7 +14,7 @@
 # - {observing_time_utc: '2017-09-16T00:00:00.000'}
 # - {observing_time_scale: utc}
 # - telescope_ids: [LSTN-01]
-# - {lookup_table: tests/resources/corsika_simulation_limits/corsika_simulation_limits_lookup_grid_test.ecsv}
+# - {corsika_limits: tests/resources/corsika_simulation_limits/corsika_simulation_limits_lookup_grid_test.ecsv}
 # schema: astropy-2.0
 azimuth zenith_angle nsb_level offset lower_energy_threshold scatter_radius viewcone_radius
 310.0 30.0 4.0 0.0 0.004588 2047.848197 9.986606

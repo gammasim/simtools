@@ -326,6 +326,17 @@ def test_build_job_specs_reads_grid_file(args_dict, job_rows, job_grid_metadata)
     assert job_specs[0]["array_layout_name"] == "CTAO-North-Alpha"
 
 
+def test_build_job_specs_raises_for_missing_required_metadata(args_dict, job_rows):
+    with mock.patch(
+        "simtools.job_execution.htcondor_script_generator.read_job_grid",
+        return_value=(job_rows, {"coordinate_system": "horizontal"}),
+    ):
+        with pytest.raises(
+            ValueError, match=r"missing required field\(s\): site, simulation_software"
+        ):
+            build_job_specs(args_dict, ["7.0.0"])
+
+
 def test_write_params_file_keeps_energy_units(tmp_test_directory):
     params_file_path = Path(tmp_test_directory) / "params.txt"
     label_job_specs = [

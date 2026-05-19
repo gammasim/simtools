@@ -43,6 +43,8 @@ _PARAMS_FIELDS = [
     "pack_for_grid_register",
 ]
 
+_REQUIRED_JOB_GRID_METADATA = ("site", "simulation_software")
+
 
 def _resolve_apptainer_images(apptainer_image_arg):
     """
@@ -381,6 +383,19 @@ def build_job_specs(args_dict, image_labels):
     """Build backend-agnostic job specs from comparison and production grids."""
     base_pack_dir = args_dict.get("simulation_output") or "simtools-output"
     normalized_rows, job_grid_metadata = read_job_grid(args_dict["job_grid_file"])
+
+    missing_metadata = [
+        key
+        for key in _REQUIRED_JOB_GRID_METADATA
+        if key not in job_grid_metadata or job_grid_metadata.get(key) in (None, "")
+    ]
+    if missing_metadata:
+        missing_keys = ", ".join(missing_metadata)
+        raise ValueError(
+            "Job grid metadata is missing required field(s): "
+            f"{missing_keys}. Regenerate the job grid with "
+            "simtools-production-generate-grid so metadata includes these values."
+        )
 
     job_specs = []
     for label in image_labels:

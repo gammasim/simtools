@@ -22,7 +22,7 @@ observing_time (str, optional)
     Time of the observation in UTC (format: 'YYYY-MM-DD HH:MM:SS').
     Used only in ``ra_dec`` mode (for coordinate transforms and sidereal-time
     sampling). Ignored in ``horizontal`` mode.
-lookup_table (str, optional)
+corsika_limits (str, optional)
     Path to the lookup table for simulation limits. The table should contain
     varying azimuth and/or zenith angles for the selected array layout.
 output_file (str, optional, default='job_grid.ecsv')
@@ -39,7 +39,7 @@ To generate a standard zenith/azimuth grid of simulation points, execute:
             --array_layout_name alpha \
             --axes tests/resources/production_grid_generation_axes_definition.yml \
             --coordinate_system horizontal \
-            --lookup_table tests/resources/corsika_simulation_limits/
+            --corsika_limits tests/resources/corsika_simulation_limits/
                 merged_corsika_limits_for_test.ecsv
 
 To generate an all-sky RA/Dec direction grid and serialize output in RA/Dec,
@@ -51,7 +51,7 @@ execute:
             --array_layout_name alpha \
             --axes tests/resources/production_grid_generation_axes_definition_ra_dec.yml \
             --coordinate_system ra_dec --observing_time "2017-09-16 00:00:00" \
-            --lookup_table \
+            --corsika_limits \
             tests/resources/corsika_simulation_limits/merged_corsika_limits_for_test.ecsv
 """
 
@@ -96,7 +96,7 @@ def _add_arguments(parser):
         help="Output file for the generated executable job grid.",
     )
     parser.add_argument(
-        "--lookup_table",
+        "--corsika_limits",
         type=str,
         required=False,
         help="Path to the lookup table for simulation limits. "
