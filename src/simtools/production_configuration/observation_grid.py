@@ -21,8 +21,9 @@ class ProductionGridEngine:
     Generate observation grids with direction-dependent CORSIKA physics limits.
 
     Samples observing positions per configured axes, interpolates physics limits from
-    lookup tables, and optionally converts between coordinate systems (Alt/Az ↔ RA/Dec).
-    Results feed into `simulation_jobs.build_simulation_jobs()` to expand into full job matrices.
+    lookup tables, and optionally converts between coordinate systems (Alt/Az vs RA/Dec).
+    Results feed into :func:`production_configuration.simulation_jobs.build_simulation_jobs`
+    to expand into full job matrices.
     """
 
     def __init__(
