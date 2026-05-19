@@ -66,6 +66,23 @@ jobs:
           echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION" >> "$GITHUB_ENV"
           echo "Simulation model set to: $SIMTOOLS_DB_SIMULATION_MODEL version $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
 
+      - name: Check unit test files exist
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          src_root = Path("src/simtools")
+          test_root = Path("tests/unit_tests")
+          missing = []
+          for path in src_root.rglob("*.py"):
+              rel = path.relative_to(src_root)
+              if path.name == "__init__.py" or rel.parts[0] == "applications":
+                  continue
+              if not (test_root / rel.parent / f"test_{path.stem}.py").exists():
+                  missing.append(str(rel))
+          if missing:
+              raise SystemExit("Modules without unit tests:\n" + "\n".join(sorted(missing)))
+          PY
+
       - name: Unit tests
         shell: bash -l {0}
         env:
