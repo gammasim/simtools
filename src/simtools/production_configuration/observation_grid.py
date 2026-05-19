@@ -401,7 +401,7 @@ class ProductionGridEngine:
             SkyCoord object containing the RA/Dec coordinates.
         """
         if self.observing_time is None:
-            raise ValueError("Conversion to RA/dec requires observing_time to be set. ")
+            raise ValueError("Conversion to RA/Dec requires observing_time to be set.")
 
         aa = AltAz(
             alt=alt.to(u.rad),
