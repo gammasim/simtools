@@ -11,11 +11,53 @@ import itertools
 import numpy as np
 from astropy import units as u
 
+from simtools.configuration import defaults
 from simtools.production_configuration.corsika_limits_lookup import CorsikaLimitsLookup
-from simtools.production_configuration.production_grid_helpers import (
-    normalize_energy_ranges,
-    normalize_grid_axes,
-)
+from simtools.utils.general import ensure_list
+
+_GRID_AXES = [
+    "primary",
+    "azimuth_angle",
+    "zenith_angle",
+    "model_version",
+    "corsika_le_interaction",
+    "corsika_he_interaction",
+]
+
+_GRID_AXIS_DEFAULTS = {
+    "corsika_le_interaction": defaults.CORSIKA_LE_INTERACTION,
+    "corsika_he_interaction": defaults.CORSIKA_HE_INTERACTION,
+}
+
+
+def normalize_grid_axes(args_dict):
+    """Return normalized grid axes for cartesian product expansion."""
+    return {
+        axis: (
+            ensure_list(args_dict[axis])
+            if axis in args_dict and args_dict[axis] is not None
+            else [_GRID_AXIS_DEFAULTS[axis]]
+            if axis in _GRID_AXIS_DEFAULTS
+            else [None]
+        )
+        for axis in _GRID_AXES
+    }
+
+
+def normalize_energy_ranges(energy_range):
+    """Normalize energy range argument to a list of ``(e_min, e_max)`` pairs."""
+    if isinstance(energy_range, tuple) and len(energy_range) == 2:
+        return [energy_range]
+
+    if isinstance(energy_range, list):
+        if len(energy_range) == 2 and all(hasattr(item, "to") for item in energy_range):
+            return [(energy_range[0], energy_range[1])]
+        if all(isinstance(item, (list, tuple)) and len(item) == 2 for item in energy_range):
+            return [tuple(item) for item in energy_range]
+
+    raise ValueError(
+        "energy_range must be one pair (e_min, e_max) or a list of (e_min, e_max) pairs."
+    )
 
 
 def get_energy_range_for_zenith_angle(

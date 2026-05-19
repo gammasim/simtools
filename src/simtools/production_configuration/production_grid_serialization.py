@@ -6,9 +6,7 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
-from simtools.production_configuration.production_grid_helpers import (
-    DEFAULT_SERIALIZATION_ROUND_DECIMALS,
-)
+DEFAULT_SERIALIZATION_ROUND_DECIMALS = 6
 
 
 def collect_point_keys(grid_points):
