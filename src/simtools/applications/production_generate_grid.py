@@ -201,9 +201,6 @@ def main():
     )
 
     grid_points = grid_gen.generate_grid()
-
-    if coordinate_system == "ra_dec":
-        grid_points = grid_gen.convert_coordinates(grid_points)
     grid_gen.serialize_grid_points(grid_points, output_file=output_filepath)
 
 

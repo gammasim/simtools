@@ -1,7 +1,5 @@
 """Lookup-table access and interpolation for CORSIKA production limits."""
 
-import json
-
 import numpy as np
 from astropy.table import Table
 from scipy.interpolate import LinearNDInterpolator, griddata
@@ -10,22 +8,12 @@ from scipy.spatial import QhullError  # pylint: disable=no-name-in-module
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
 )
-
-
-def _value_in_unit(value, unit=None):
-    """Return a scalar value converted to the requested unit when possible."""
-    if hasattr(value, "to_value"):
-        return value.to_value(unit) if unit is not None else value.value
-    return value
+from simtools.utils.general import ensure_list
+from simtools.utils.value_conversion import get_value_in_unit
 
 
 class CorsikaLimitsLookup:
-    """
-    Read and interpolate CORSIKA limits for production grids.
-
-    The lookup table is shared by both grid serialization and backend-specific
-    job-spec generation.
-    """
+    """Read and interpolate CORSIKA limits for production grids."""
 
     def __init__(self, lookup_table, telescope_ids=None, simtel_file=None):
         """
@@ -52,23 +40,6 @@ class CorsikaLimitsLookup:
         self.lookup_values_for_interpolation = None
         self.lookup_interpolators_for_point = None
 
-    @staticmethod
-    def _coerce_identifier_container(value):
-        """Coerce identifier input into a list."""
-        if value is None:
-            return []
-        if isinstance(value, str):
-            stripped = value.strip()
-            return json.loads(stripped) if stripped.startswith("[") else [stripped]
-        if isinstance(value, (list, tuple, set)):
-            return list(value)
-        return [value]
-
-    @staticmethod
-    def coerce_identifier_container(value):
-        """Coerce identifier input into a list."""
-        return CorsikaLimitsLookup._coerce_identifier_container(value)
-
     def _normalize_lookup_identifier(self, identifier):
         """Normalize one telescope identifier and report if it is numeric."""
         if isinstance(identifier, (int, np.integer)):
@@ -79,34 +50,22 @@ class CorsikaLimitsLookup:
             return self._simtel_id_to_name.get(int(text), text), True
         return text, False
 
-    def normalize_lookup_identifier(self, identifier):
-        """Normalize one telescope identifier and report if it is numeric."""
-        return self._normalize_lookup_identifier(identifier)
-
     def _normalized_identifier_set(self, identifiers):
         """Return normalized telescope identifiers as a set."""
         return {
             self._normalize_lookup_identifier(identifier)[0]
-            for identifier in self._coerce_identifier_container(identifiers)
+            for identifier in ensure_list(identifiers)
         }
-
-    def normalized_identifier_set(self, identifiers):
-        """Return normalized telescope identifiers as a set."""
-        return self._normalized_identifier_set(identifiers)
 
     def _lookup_contains_numeric_telescope_ids(self, lookup_table):
         """Return True when any lookup-table telescope identifier is numeric."""
         return any(
             any(
                 self._normalize_lookup_identifier(identifier)[1]
-                for identifier in self._coerce_identifier_container(row["telescope_ids"])
+                for identifier in ensure_list(row["telescope_ids"])
             )
             for row in lookup_table
         )
-
-    def lookup_contains_numeric_telescope_ids(self, lookup_table):
-        """Return True when any lookup-table telescope identifier is numeric."""
-        return self._lookup_contains_numeric_telescope_ids(lookup_table)
 
     @property
     def simtel_id_to_name(self):
@@ -299,9 +258,9 @@ class CorsikaLimitsLookup:
         target = np.array(
             [
                 [
-                    _value_in_unit(zenith),
-                    _value_in_unit(azimuth) % 360.0,
-                    _value_in_unit(nsb),
+                    get_value_in_unit(zenith, "deg"),
+                    get_value_in_unit(azimuth, "deg") % 360.0,
+                    get_value_in_unit(nsb),
                 ]
             ],
             dtype=float,

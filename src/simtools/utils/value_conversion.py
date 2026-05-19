@@ -231,3 +231,25 @@ def _unit_as_string(unit):
         unit = [unit]
     unit = [str(element) if element is not None else None for element in unit]
     return unit[0] if len(set(unit)) == 1 else unit
+
+
+def get_value_in_unit(value, unit=None):
+    """
+    Return the numerical value of a Quantity in the requested unit.
+
+    Parameters
+    ----------
+    value: astropy.units.Quantity or any
+        Value to be converted.
+    unit: astropy.units.Unit or str or None
+        Unit to convert the value to.
+
+    Returns
+    -------
+    float or any
+        Numerical value of the Quantity in the requested unit,
+        or the original value if it is not a Quantity.
+    """
+    if isinstance(value, u.Quantity):
+        return value.to_value(unit) if unit is not None else value.value
+    return value

@@ -2,6 +2,7 @@
 
 import datetime
 import glob
+import json
 import logging
 import os
 import tarfile
@@ -216,8 +217,16 @@ def ensure_list(value):
         return []
     if isinstance(value, list):
         return value
-    if isinstance(value, tuple):
+    if isinstance(value, (tuple, set)):
         return list(value)
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped.startswith("["):
+            try:
+                return json.loads(stripped)
+            except json.JSONDecodeError:
+                pass
+        return [stripped]
     return [value]
 
 

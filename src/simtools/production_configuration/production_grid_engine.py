@@ -1,4 +1,15 @@
-"""Backend-independent engine for simulation production-grid generation."""
+"""
+Generate simulation production grids for configurable axes, coordinate systems, and lookup tables.
+
+This module builds simulation grids from configurable axis definitions (for example,
+azimuth, zenith angle, night-sky background, and camera offset). It supports
+multiple binning and scaling modes, applies CORSIKA limit interpolation from lookup
+tables, and handles coordinate conversions between horizontal (Alt/Az) and
+equatorial (RA/Dec) systems.
+
+The engine also provides serialization helpers used by backend adapters to export
+generated grid points and metadata.
+"""
 
 import logging
 
@@ -8,25 +19,16 @@ from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.units import Quantity
 
 from simtools.production_configuration.corsika_limits_lookup import CorsikaLimitsLookup
-from simtools.production_configuration.production_grid_helpers import (
-    DEFAULT_SERIALIZATION_ROUND_DECIMALS,
-)
-from simtools.production_configuration.production_grid_serialization import (
-    build_grid_metadata,
-    build_serialized_rows,
-    collect_point_keys,
-    serialize_grid_points,
-    serialize_grid_value,
-)
+from simtools.production_configuration.production_grid_serialization import serialize_grid_points
 
 
 class ProductionGridEngine:
     """
-    Backend-independent engine for simulation production-grid generation.
+    Generate simulation production grids.
 
-    This engine handles axis expansion, coordinate-system specific grid
-    generation, lookup-table interpolation, coordinate conversion, and ECSV
-    serialization helpers used by backend adapters.
+    This engine handles axis expansion (e.g. azimuth, zenith angle, night-sky background),
+    coordinate-system specific grid generation, lookup-table interpolation, coordinate conversion,
+    and ECSV serialization helpers used by backend adapters (e.g. HTCondor).
     """
 
     def __init__(
@@ -50,9 +52,9 @@ class ProductionGridEngine:
         coordinate_system : str, optional
             The coordinate system for the grid generation.
         observing_location : EarthLocation, optional
-            The location of the observation.
+            The location of the observation (latitude, longitude, height).
         observing_time : Time, optional
-            The observing time used for RA/Dec transforms.
+            The time of observation required for RA/Dec transforms.
         lookup_table : str, optional
             Path to the lookup table file (ECSV format).
         telescope_ids : list of str, optional
@@ -73,7 +75,6 @@ class ProductionGridEngine:
         self.telescope_ids = telescope_ids
         self.simtel_file = simtel_file
         self.interpolated_limits = {}
-        self.serialization_round_decimals = DEFAULT_SERIALIZATION_ROUND_DECIMALS
         self._limits_lookup = CorsikaLimitsLookup(
             lookup_table=lookup_table,
             telescope_ids=telescope_ids,
@@ -88,34 +89,12 @@ class ProductionGridEngine:
             else:
                 self._apply_lookup_table_limits()
 
-    @staticmethod
-    def _coerce_identifier_container(value):
-        """Coerce identifier input into a list."""
-        return CorsikaLimitsLookup.coerce_identifier_container(value)
-
-    def _normalize_lookup_identifier(self, identifier):
-        """Normalize one telescope identifier and report if it is numeric."""
-        return self._limits_lookup.normalize_lookup_identifier(identifier)
-
-    def _normalized_identifier_set(self, identifiers):
-        """Return normalized telescope identifiers as a set."""
-        return self._limits_lookup.normalized_identifier_set(identifiers)
-
-    def _lookup_contains_numeric_telescope_ids(self, lookup_table):
-        """Return True when any lookup-table telescope identifier is numeric."""
-        return self._limits_lookup.lookup_contains_numeric_telescope_ids(lookup_table)
-
     def _sync_limits_lookup(self):
         """Synchronize mutable lookup settings with the shared lookup helper."""
         self._limits_lookup.lookup_table = self.lookup_table
         self._limits_lookup.telescope_ids = self.telescope_ids
         self._limits_lookup.simtel_file = self.simtel_file
         self._limits_lookup.simtel_id_to_name = self._simtel_id_to_name
-
-    def _load_matching_lookup_arrays(self):
-        """Load and filter lookup-table arrays for selected telescope IDs."""
-        self._sync_limits_lookup()
-        return self._limits_lookup.load_matching_lookup_arrays()
 
     def _require_observing_time(self):
         """Return observing time if available, else raise a clear error."""
@@ -136,13 +115,7 @@ class ProductionGridEngine:
     def _prepare_lookup_table_limits_for_point_interpolation(self):
         """Prepare lookup arrays for per-point interpolation in RA/Dec grid mode."""
         self._sync_limits_lookup()
-        self.lookup_interpolators_for_point = self._limits_lookup.prepare_point_interpolators()
-        self.lookup_points_for_interpolation = self._limits_lookup.lookup_points_for_interpolation
-        self.lookup_values_for_interpolation = self._limits_lookup.lookup_values_for_interpolation
-
-    def _has_radec_axes(self):
-        """Return True if axes define a native RA/Dec grid."""
-        return "ra" in self.axes and "dec" in self.axes
+        self._limits_lookup.prepare_point_interpolators()
 
     def _generate_target_values(self):
         """
@@ -290,7 +263,7 @@ class ProductionGridEngine:
 
     def _generate_grid_radec_mode(self):
         """Generate grid points for RA/Dec mode."""
-        if self._has_radec_axes():
+        if "ra" in self.axes and "dec" in self.axes:
             return self._generate_grid_from_radec_axes()
 
         direction_points = self._generate_radec_grid_direction_points()
@@ -407,7 +380,7 @@ class ProductionGridEngine:
 
             grid_points.append(grid_point)
 
-        return grid_points
+        return self.convert_coordinates(grid_points)
 
     def convert_altaz_to_radec(self, alt, az):
         """
@@ -426,25 +399,20 @@ class ProductionGridEngine:
             SkyCoord object containing the RA/Dec coordinates.
         """
         if self.observing_time is None:
-            raise ValueError(
-                "Observing time is not set. "
-                "Please provide an observing_time to convert coordinates."
-            )
+            raise ValueError("Conversion to RA/dec requires observing_time to be set. ")
 
-        alt_rad = alt.to(u.rad)
-        az_rad = az.to(u.rad)
         aa = AltAz(
-            alt=alt_rad,
-            az=az_rad,
+            alt=alt.to(u.rad),
+            az=az.to(u.rad),
             location=self.observing_location,
             obstime=self.observing_time,
         )
-        skycoord = SkyCoord(aa)
-        return skycoord.icrs
+        sky_coord = SkyCoord(aa)
+        return sky_coord.icrs  # Return RA/Dec in ICRS frame
 
     def convert_coordinates(self, grid_points):
         """
-        Convert the grid points to RA/Dec coordinates if necessary.
+        Convert the grid points RA/Dec coordinates if necessary.
 
         Parameters
         ----------
@@ -467,7 +435,16 @@ class ProductionGridEngine:
         return grid_points
 
     def serialize_grid_points(self, grid_points, output_file):
-        """Serialize the grid output and save to an ECSV table file."""
+        """
+        Serialize grid points to an ECSV table file.
+
+        Parameters
+        ----------
+        grid_points : list of dict
+            List of grid points to serialize.
+        output_file : str
+            Path to the output ECSV file.
+        """
         serialize_grid_points(
             grid_points=grid_points,
             output_file=output_file,
@@ -475,49 +452,5 @@ class ProductionGridEngine:
             observing_time=self.observing_time,
             telescope_ids=self.telescope_ids,
             lookup_table=self.lookup_table,
-            serialization_round_decimals=self.serialization_round_decimals,
         )
-        self._logger.info(f"Output saved to {output_file}")
-
-    @staticmethod
-    def _collect_point_keys(grid_points):
-        """Collect all grid-point keys while preserving first-seen order."""
-        return collect_point_keys(grid_points)
-
-    def _serialize_grid_value(self, value):
-        """Serialize one grid value and return (value, unit)."""
-        return serialize_grid_value(
-            value,
-            serialization_round_decimals=self.serialization_round_decimals,
-        )
-
-    def _build_serialized_rows(self, grid_points, all_keys):
-        """Build serialized row dictionaries and collect units."""
-        return build_serialized_rows(
-            grid_points,
-            all_keys,
-            serialization_round_decimals=self.serialization_round_decimals,
-        )
-
-    def _build_grid_metadata(self):
-        """Build metadata for the output grid table."""
-        return build_grid_metadata(
-            coordinate_system=self.coordinate_system,
-            observing_time=self.observing_time,
-            telescope_ids=self.telescope_ids,
-            lookup_table=self.lookup_table,
-        )
-
-    def serialize_quantity(self, value):
-        """Serialize Quantity."""
-        if isinstance(value, u.Quantity):
-            serialized_value = float(value.value)
-            rounded_value = round(serialized_value, self.serialization_round_decimals)
-            return {"value": rounded_value, "unit": str(value.unit)}
-        if isinstance(value, float):
-            return round(value, self.serialization_round_decimals)
-        if isinstance(value, np.floating):
-            return round(float(value), self.serialization_round_decimals)
-        if isinstance(value, np.integer):
-            return int(value)
-        return value
+        self._logger.info(f"Simulation grid saved to {output_file}")
