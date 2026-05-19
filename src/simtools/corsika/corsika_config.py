@@ -143,7 +143,7 @@ class CorsikaConfig:
             config["USER_INPUT"] = self._corsika_configuration_from_user_input(args)
 
         config.update(
-            self._fill_corsika_configuration_from_db(gen.ensure_iterable(args.get("model_version")))
+            self._fill_corsika_configuration_from_db(gen.ensure_list(args.get("model_version")))
         )
         return config
 
