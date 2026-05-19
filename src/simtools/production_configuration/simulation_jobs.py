@@ -82,7 +82,7 @@ def build_production_grid_engine(args_dict, array_layout_name=None):
             args_dict.get("observing_time"),
             coordinate_system,
         ),
-        lookup_table=args_dict.get("lookup_table"),
+        lookup_table=args_dict.get("corsika_limits"),
         array_layout_name=resolved_layout_name,
     )
 
@@ -99,7 +99,9 @@ def build_job_grid_metadata(args_dict):
         "coordinate_system": args_dict.get("coordinate_system", "horizontal"),
         "observing_time_utc": observing_time.isot if observing_time else None,
         "observing_time_scale": observing_time.scale if observing_time else None,
-        "lookup_table": str(args_dict["lookup_table"]) if args_dict.get("lookup_table") else None,
+        "corsika_limits": (
+            str(args_dict["corsika_limits"]) if args_dict.get("corsika_limits") else None
+        ),
     }
 
 

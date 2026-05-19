@@ -50,7 +50,7 @@ def test_build_job_grid_metadata_includes_job_context():
             "simulation_software": "corsika_sim_telarray",
             "coordinate_system": "ra_dec",
             "observing_time": "2017-09-16 00:00:00",
-            "lookup_table": "limits.ecsv",
+            "corsika_limits": "limits.ecsv",
         }
     )
 
@@ -58,7 +58,7 @@ def test_build_job_grid_metadata_includes_job_context():
     assert metadata["simulation_software"] == "corsika_sim_telarray"
     assert metadata["coordinate_system"] == "ra_dec"
     assert metadata["observing_time_utc"].startswith("2017-09-16T00:00:00")
-    assert metadata["lookup_table"] == "limits.ecsv"
+    assert metadata["corsika_limits"] == "limits.ecsv"
 
 
 @patch("simtools.production_configuration.simulation_jobs.SiteModel")
@@ -85,7 +85,7 @@ def test_build_production_grid_engine_resolves_layout_name(
         "model_version": ["7.0.0"],
         "coordinate_system": "horizontal",
         "observing_time": None,
-        "lookup_table": "limits.ecsv",
+        "corsika_limits": "limits.ecsv",
     }
 
     build_production_grid_engine(args_dict)
@@ -120,7 +120,7 @@ def test_build_production_grid_engine_builds_observing_location_for_radec(
             "model_version": ["7.0.0"],
             "coordinate_system": "ra_dec",
             "observing_time": "2017-09-16 00:00:00",
-            "lookup_table": None,
+            "corsika_limits": None,
         }
     )
 

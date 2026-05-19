@@ -100,7 +100,7 @@ class CorsikaLimitsLookup:
             raise ValueError(
                 "Lookup table does not contain enough unique points for 3D interpolation "
                 "(zenith, azimuth, nsb_level). Provide a denser lookup table "
-                "or run without --lookup_table if limits are not required for this use case."
+                "or run without --corsika_limits if limits are not required for this use case."
             ) from exc
         return self.lookup_interpolators_for_point
 
