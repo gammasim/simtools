@@ -33,7 +33,7 @@ class ProductionGridEngine:
     def __init__(
         self,
         axes,
-        coordinate_system="zenith_azimuth",
+        coordinate_system="horizontal",
         observing_location=None,
         observing_time=None,
         lookup_table=None,
@@ -335,7 +335,7 @@ class ProductionGridEngine:
             % 360
         )
 
-    def _generate_zenith_azimuth_grid(self):
+    def _generate_horizontal_grid(self):
         """Generate grid points for zenith/azimuth mode."""
         value_arrays = [value.value for value in self.target_values.values()]
         units = [value.unit for value in self.target_values.values()]
@@ -390,7 +390,7 @@ class ProductionGridEngine:
         if self.coordinate_system == "ra_dec":
             return self._generate_grid_radec_mode(include_horizontal_coordinates=True)
 
-        return self._generate_zenith_azimuth_grid()
+        return self._generate_horizontal_grid()
 
     @staticmethod
     def _strip_horizontal_coordinates(grid_points):

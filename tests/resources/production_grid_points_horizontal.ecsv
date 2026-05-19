@@ -9,7 +9,7 @@
 # - {name: scatter_radius, unit: m, datatype: float64}
 # - {name: viewcone_radius, unit: deg, datatype: float64}
 # meta: !!omap
-# - {coordinate_system: zenith_azimuth}
+# - {coordinate_system: horizontal}
 # - {reference_frame: ICRS (J2000)}
 # - {observing_time_utc: '2017-09-16T00:00:00.000'}
 # - {observing_time_scale: utc}

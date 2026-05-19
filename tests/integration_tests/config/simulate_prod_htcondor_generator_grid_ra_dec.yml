@@ -5,8 +5,8 @@ applications:
     apptainer_image:
       0.30.0: tests/resources/dummy_apptainer_image.sif
       0.29.0: tests/resources/dummy_apptainer_image.sif
-    job_grid_file: tests/resources/production_job_grid_radec.ecsv
-    label: test-production-grid-radec
+    job_grid_file: tests/resources/production_job_grid_ra_dec.ecsv
+    label: test-production-grid-ra_dec
     log_level: DEBUG
     output_path: htcondor_submit
     priority: 5
@@ -23,6 +23,6 @@ applications:
       path_descriptor: output_path
     - file: simulate_prod.submit.sh
       path_descriptor: output_path
-  test_name: htcondor-grid-radec
+  test_name: htcondor-grid-ra_dec
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

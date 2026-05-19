@@ -14,14 +14,14 @@ Command line arguments
 ----------------------
 axes (str, optional)
     Path to a YAML or JSON file defining the axes of the grid.
-coordinate_system (str, optional, default='zenith_azimuth')
-    The coordinate system for the grid generation ('zenith_azimuth' or 'ra_dec').
+coordinate_system (str, optional, default='horizontal')
+    The coordinate system for the grid generation ('horizontal' or 'ra_dec').
     In ``ra_dec`` mode, observing location/time are used to build sky directions and
     derive corresponding zenith/azimuth values for interpolation (ICRS/J2000 frame).
 observing_time (str, optional)
     Time of the observation in UTC (format: 'YYYY-MM-DD HH:MM:SS').
     Used only in ``ra_dec`` mode (for coordinate transforms and sidereal-time
-    sampling). Ignored in ``zenith_azimuth`` mode.
+    sampling). Ignored in ``horizontal`` mode.
 lookup_table (str, optional)
     Path to the lookup table for simulation limits. The table should contain
     varying azimuth and/or zenith angles.
@@ -43,7 +43,7 @@ To generate a standard zenith/azimuth grid of simulation points, execute:
 
         simtools-production-generate-grid --site North --model_version 6.0.2 \
             --axes tests/resources/production_grid_generation_axes_definition.yml \
-            --coordinate_system zenith_azimuth \
+            --coordinate_system horizontal \
             --lookup_table tests/resources/corsika_simulation_limits/
                 merged_corsika_limits_for_test.ecsv \
             --telescope_ids MSTN-15
@@ -54,7 +54,7 @@ execute:
 .. code-block:: console
 
         simtools-production-generate-grid --site North --model_version 6.0.2 \
-            --axes tests/resources/production_grid_generation_axes_definition_radec.yml \
+            --axes tests/resources/production_grid_generation_axes_definition_ra_dec.yml \
             --coordinate_system ra_dec --observing_time "2017-09-16 00:00:00" \
             --lookup_table tests/resources/corsika_simulation_limits/
                 merged_corsika_limits_for_test.ecsv \
@@ -80,9 +80,9 @@ def _add_arguments(parser):
     parser.add_argument(
         "--coordinate_system",
         type=str,
-        default="zenith_azimuth",
+        default="horizontal",
         help=(
-            "Coordinate system ('zenith_azimuth' or 'ra_dec'). "
+            "Coordinate system ('horizontal' or 'ra_dec'). "
             "In 'ra_dec' mode, sky directions are generated using observing"
             " location/time and converted to zenith/azimuth for interpolation."
         ),
