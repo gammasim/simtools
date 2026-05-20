@@ -21,20 +21,34 @@ from simtools.visualization import plot_simtel_event_histograms
 _logger = logging.getLogger(__name__)
 
 FILE_INFO_KEYS = ("primary_particle", "zenith", "azimuth", "nsb_level")
+BROAD_RANGE_FILE_INFO_KEYS = {
+    "br_energy_min": "energy_min",
+    "br_energy_max": "energy_max",
+    "br_core_scatter_max": "core_scatter_max",
+    "br_viewcone_max": "viewcone_max",
+}
+COLUMN_DESCRIPTIONS = {
+    "br_energy_min": "Energy min from broad-range simulations.",
+    "br_energy_max": "Energy max from broad-range simulations.",
+    "br_core_scatter_max": "Core scatter max from broad-range simulations.",
+    "br_viewcone_max": "Viewcone max from broad-range simulations.",
+}
 LOSS_AXES = ("energy", "core_distance", "angular_distance")
 RESULT_COLUMNS = [
     "production_index",
     "event_data_file",
     "primary_particle",
     "array_name",
-    "telescope_ids",
     "zenith",
     "azimuth",
     "nsb_level",
     "lower_energy_limit",
-    "upper_radius_limit_ground",
-    "upper_radius_limit_shower",
+    "upper_radius_limit",
     "viewcone_radius",
+    "br_energy_min",
+    "br_energy_max",
+    "br_core_scatter_max",
+    "br_viewcone_max",
 ]
 
 
@@ -373,28 +387,20 @@ def _process_file(
             allowed_losses["energy"]["loss_min_events"],
         ),
     }
-    if differential_loss_bins_per_decade > 0:
-        limits.update(
-            _compute_differential_limits(
-                histograms,
-                allowed_losses,
-                differential_loss_bins_per_decade,
-            )
-        )
-    else:
-        radius_limits = compute_upper_radius_limit(
+    limits.update(
+        _compute_limits(
             histograms,
-            allowed_losses["core_distance"]["loss_fraction"],
-            allowed_losses["core_distance"]["loss_min_events"],
+            allowed_losses,
+            differential_loss_bins_per_decade,
         )
-        limits.update(radius_limits)
-        limits["viewcone_radius"] = compute_viewcone(
-            histograms,
-            allowed_losses["angular_distance"]["loss_fraction"],
-            allowed_losses["angular_distance"]["loss_min_events"],
-        )
-
+    )
     limits.update({key: histograms.file_info.get(key) for key in FILE_INFO_KEYS})
+    limits.update(
+        {
+            output_key: histograms.file_info.get(file_info_key)
+            for output_key, file_info_key in BROAD_RANGE_FILE_INFO_KEYS.items()
+        }
+    )
 
     if plot_histograms:
         plot_output_path = output_subdir or io_handler.IOHandler().get_output_directory()
@@ -408,41 +414,64 @@ def _process_file(
     return limits
 
 
-def _compute_differential_limits(
-    histograms,
-    allowed_losses,
-    bins_per_decade,
-):
-    """Compute core and viewcone limits per energy bin and return max limits."""
-    low = int(np.floor(np.log10(np.min(histograms.energy_bins))))
-    high = int(np.ceil(np.log10(np.max(histograms.energy_bins))))
-    diff_e_bins = np.logspace(low, high, (high - low) * bins_per_decade + 1)
+def _compute_limits(histograms, allowed_losses, bins_per_decade):
+    """
+    Compute core and viewcone limits per energy bin and return max limits.
 
-    core_max, core_x, core_y = _differential_upper_limits(
-        histograms.histograms["core_vs_energy"]["histogram"],
-        histograms.core_distance_bins,
-        histograms.energy_bins,
-        diff_e_bins,
-        allowed_losses["core_distance"],
-        "core_scatter",
-        "m",
-    )
-    vc_max, vc_x, vc_y = _differential_upper_limits(
-        histograms.histograms["angular_distance_vs_energy"]["histogram"],
-        histograms.view_cone_bins,
-        histograms.energy_bins,
-        diff_e_bins,
-        allowed_losses["angular_distance"],
-        "viewcone",
-        "deg",
-    )
+    Apply the allowed loss criteria per energy bin and return the maximum limit
+    """
+    energy_range = [float(histograms.energy_bins[0]), float(histograms.energy_bins[-1])]
+    axis_configs = {
+        "core_distance": {
+            "x_bins": histograms.core_distance_bins,
+            "name": "core_scatter",
+            "unit": "m",
+        },
+        "angular_distance": {
+            "x_bins": histograms.view_cone_bins,
+            "name": "viewcone",
+            "unit": "deg",
+        },
+    }
 
-    upper_radius_limit_ground = core_max * u.m
-    upper_radius_limit_shower = _core_distance_ground_to_shower(
-        upper_radius_limit_ground, histograms.file_info.get("zenith")
-    )
-    upper_radius_limit_shower = _is_close(
-        upper_radius_limit_shower,
+    per_axis_limits = {}
+
+    for axis_name, config in axis_configs.items():
+        if bins_per_decade > 0:
+            low = int(np.floor(np.log10(np.min(histograms.energy_bins))))
+            high = int(np.ceil(np.log10(np.max(histograms.energy_bins))))
+            axis_max, curve_x, curve_y = _differential_upper_limits(
+                histograms.histograms[f"{axis_name}_vs_energy"]["histogram"],
+                config["x_bins"],
+                histograms.energy_bins,
+                np.logspace(low, high, (high - low) * bins_per_decade + 1),
+                allowed_losses[axis_name],
+                config["name"],
+                config["unit"],
+            )
+        else:
+            axis_max = _integral_limits(
+                histograms.histograms[axis_name]["histogram"],
+                config["x_bins"],
+                allowed_losses[axis_name]["loss_fraction"],
+                allowed_losses[axis_name]["loss_min_events"],
+                limit_type="upper",
+            )
+            curve_x = [axis_max, axis_max]
+            curve_y = energy_range
+
+        per_axis_limits[axis_name] = {
+            "max": axis_max,
+            "curve": {"x": curve_x, "y": curve_y},
+            "curve_key": f"{axis_name}_vs_energy_curve",
+        }
+
+    core_max = per_axis_limits["core_distance"]["max"]
+    vc_max = per_axis_limits["angular_distance"]["max"]
+
+    upper_radius_limit = core_max * u.m
+    upper_radius_limit = _is_close(
+        upper_radius_limit,
         histograms.file_info["core_scatter_max"].to("m")
         if "core_scatter_max" in histograms.file_info
         else None,
@@ -455,19 +484,15 @@ def _compute_differential_limits(
         else None,
         "Upper viewcone limit is equal to the maximum viewcone distance of",
     )
-    _logger.info(
-        f"Differential upper_radius_limit_ground (max over bins): {upper_radius_limit_ground}"
-    )
-    _logger.info(
-        f"Differential upper_radius_limit_shower (max over bins): {upper_radius_limit_shower}"
-    )
+    _logger.info(f"Differential upper_radius_limit (max over bins): {upper_radius_limit}")
     _logger.info(f"Differential viewcone_radius (max over bins): {viewcone_radius}")
     return {
-        "upper_radius_limit_ground": upper_radius_limit_ground,
-        "upper_radius_limit_shower": upper_radius_limit_shower,
+        "upper_radius_limit": upper_radius_limit,
         "viewcone_radius": viewcone_radius,
-        "core_vs_energy_curve": {"x": core_x, "y": core_y},
-        "angular_distance_vs_energy_curve": {"x": vc_x, "y": vc_y},
+        per_axis_limits["core_distance"]["curve_key"]: per_axis_limits["core_distance"]["curve"],
+        per_axis_limits["angular_distance"]["curve_key"]: per_axis_limits["angular_distance"][
+            "curve"
+        ],
     }
 
 
@@ -491,7 +516,7 @@ def _differential_upper_limits(
         total = float(np.sum(projected))
         if total <= 0:
             continue
-        limit = _compute_limits(
+        limit = _integral_limits(
             projected,
             x_bins,
             allowed_loss["loss_fraction"],
@@ -601,7 +626,7 @@ def _round_value(key, val):
     """Round value based on key type."""
     if key == "lower_energy_limit":
         return np.floor(val * 1e3) / 1e3
-    if key in ("upper_radius_limit_ground", "upper_radius_limit_shower"):
+    if key == "upper_radius_limit":
         return np.ceil(val / 25) * 25
     if key == "viewcone_radius":
         return np.ceil(val / 0.25) * 0.25
@@ -613,17 +638,24 @@ def _create_table_columns(cols, columns, units):
     table_cols = []
     for k in cols:
         col_data = columns[k]
+        col_description = COLUMN_DESCRIPTIONS.get(k)
         if any(isinstance(v, list | tuple) for v in col_data):
-            col = Column(data=col_data, name=k, unit=units.get(k), dtype=object)
+            col = Column(
+                data=col_data,
+                name=k,
+                unit=units.get(k),
+                dtype=object,
+                description=col_description,
+            )
         else:
-            col = Column(data=col_data, name=k, unit=units.get(k))
+            col = Column(data=col_data, name=k, unit=units.get(k), description=col_description)
         table_cols.append(col)
     return table_cols
 
 
-def _compute_limits(hist, bin_edges, loss_fraction, loss_min_events=10, limit_type="lower"):
+def _integral_limits(hist, bin_edges, loss_fraction, loss_min_events=10, limit_type="lower"):
     """
-    Compute the limits based on the loss fraction and minimal required lost events.
+    Compute integral limits based on the loss fraction and minimal required lost events.
 
     Add or subtract one bin to be on the safe side of the limit.
 
@@ -683,7 +715,7 @@ def compute_lower_energy_limit(histograms, loss_fraction, loss_min_events=10):
         Lower energy limit.
     """
     energy_min = (
-        _compute_limits(
+        _integral_limits(
             histograms.histograms["energy"]["histogram"],
             histograms.energy_bins,
             loss_fraction,
@@ -709,96 +741,6 @@ def _is_close(value, reference, warning_text):
     return value
 
 
-def _core_distance_ground_to_shower(core_distance, zenith):
-    """Convert core distance from ground to shower coordinates using zenith."""
-    if zenith is None:
-        return core_distance
-    return core_distance * np.cos(zenith.to("rad").value)
-
-
-def compute_upper_radius_limit(histograms, loss_fraction, loss_min_events=10):
-    """
-    Compute the upper radial distance in both ground and shower coordinates.
-
-    Parameters
-    ----------
-    histograms : EventDataHistograms
-        Histograms.
-    loss_fraction : float
-        Fraction of events to be lost.
-    loss_min_events : int, optional
-        Minimum number of events to be lost after applying a derived limit.
-
-    Returns
-    -------
-    dict
-        Dictionary containing:
-        - "upper_radius_limit_ground": Upper radial distance in ground coordinates (m).
-        - "upper_radius_limit_shower": Upper radial distance in shower coordinates (m).
-    """
-    radius_limit_ground = (
-        _compute_limits(
-            histograms.histograms["core_distance"]["histogram"],
-            histograms.core_distance_bins,
-            loss_fraction,
-            loss_min_events,
-            limit_type="upper",
-        )
-        * u.m
-    )
-    radius_limit_shower = _core_distance_ground_to_shower(
-        radius_limit_ground,
-        histograms.file_info.get("zenith"),
-    )
-    radius_limit_shower = _is_close(
-        radius_limit_shower,
-        histograms.file_info["core_scatter_max"].to("m")
-        if "core_scatter_max" in histograms.file_info
-        else None,
-        "Upper radius limit is equal to the maximum core scatter distance of",
-    )
-    return {
-        "upper_radius_limit_ground": radius_limit_ground,
-        "upper_radius_limit_shower": radius_limit_shower,
-    }
-
-
-def compute_viewcone(histograms, loss_fraction, loss_min_events=10):
-    """
-    Compute the viewcone based on the event loss fraction.
-
-    The shower IDs of triggered events are used to create a mask for the
-    azimuth and altitude of the triggered events. A mapping is created
-    between the triggered events and the simulated events using the shower IDs.
-
-    Parameters
-    ----------
-    histograms : EventDataHistograms
-        Histograms.
-    loss_fraction : float
-        Fraction of events to be lost.
-    loss_min_events : int, optional
-        Minimum number of events to be lost after applying a derived limit.
-
-    Returns
-    -------
-    astropy.units.Quantity
-        Viewcone radius in degrees.
-    """
-    viewcone_limit = (
-        _compute_limits(
-            histograms.histograms["angular_distance"]["histogram"],
-            histograms.view_cone_bins,
-            loss_fraction,
-            loss_min_events,
-            limit_type="upper",
-        )
-        * u.deg
-    )
-    return _is_close(
-        viewcone_limit,
-        histograms.file_info["viewcone_max"].to("deg")
-        if "viewcone_max" in histograms.file_info
-        else None,
-        "Upper viewcone limit is equal to the maximum viewcone distance of",
-    )
+def _core_distance_ground_to_shower(core_distance, _zenith):
+    """Return unchanged core distance; limits are handled in shower coordinates."""
+    return core_distance

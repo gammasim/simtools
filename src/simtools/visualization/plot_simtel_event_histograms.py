@@ -21,11 +21,9 @@ def plot(histograms, output_path=None, limits=None, array_name=None):
         Directory to save plots. If None, plots will be displayed.
     limits: dict, optional
         Dictionary containing limits for plotting. Keys can include:
-        - "upper_radius_limit_ground": Upper limit for core distance (ground coordinates)
-        - "upper_radius_limit_shower": Upper limit for core distance (shower coordinates)
+        - "upper_radius_limit": Upper limit for core distance
         - "lower_energy_limit": Lower limit for energy
         - "viewcone_radius": Radius for the viewcone
-        Note: Plotting always uses ground coordinates (upper_radius_limit_ground).
     array_name: str, optional
         Name of the telescope array configuration.
     """
@@ -40,7 +38,6 @@ def _get_limits(name, limits):
     Extract limits from the provided dictionary for plotting.
 
     Fine tuned to expected histograms to be plotted.
-    Always uses ground coordinates for upper_radius_limit.
     """
 
     def _safe_value(limits, key):
@@ -49,17 +46,17 @@ def _get_limits(name, limits):
 
     mapping = {
         "energy": {"x": _safe_value(limits, "lower_energy_limit")},
-        "core_distance": {"x": _safe_value(limits, "upper_radius_limit_ground")},
+        "core_distance": {"x": _safe_value(limits, "upper_radius_limit")},
         "angular_distance": {"x": _safe_value(limits, "viewcone_radius")},
-        "core_vs_energy": {
-            "x": _safe_value(limits, "upper_radius_limit_ground"),
+        "core_distance_vs_energy": {
+            "x": _safe_value(limits, "upper_radius_limit"),
             "y": _safe_value(limits, "lower_energy_limit"),
-            "curve": limits.get("core_vs_energy_curve"),
+            "curve": limits.get("core_distance_vs_energy_curve"),
         },
-        "core_vs_energy_cumulative": {
-            "x": _safe_value(limits, "upper_radius_limit_ground"),
+        "core_distance_vs_energy_cumulative": {
+            "x": _safe_value(limits, "upper_radius_limit"),
             "y": _safe_value(limits, "lower_energy_limit"),
-            "curve": limits.get("core_vs_energy_curve"),
+            "curve": limits.get("core_distance_vs_energy_curve"),
         },
         "angular_distance_vs_energy": {
             "x": _safe_value(limits, "viewcone_radius"),
@@ -71,7 +68,7 @@ def _get_limits(name, limits):
             "y": _safe_value(limits, "lower_energy_limit"),
             "curve": limits.get("angular_distance_vs_energy_curve"),
         },
-        "x_core_shower_vs_y_core_shower": {"r": _safe_value(limits, "upper_radius_limit_ground")},
+        "x_core_shower_vs_y_core_shower": {"r": _safe_value(limits, "upper_radius_limit")},
     }
     return mapping.get(name)
 

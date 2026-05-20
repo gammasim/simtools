@@ -157,8 +157,8 @@ class EventDataReader:
                 shower_data.x_core,
                 shower_data.y_core,
                 0.0,
-                shower_data.shower_azimuth,
-                shower_data.shower_altitude,
+                np.deg2rad(shower_data.shower_azimuth),
+                np.deg2rad(shower_data.shower_altitude),
             )
         )
         shower_data.core_distance_shower = np.hypot(
