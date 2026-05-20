@@ -103,8 +103,18 @@ def test_create_results_table(mock_results):
 
     assert isinstance(table, Table)
     assert len(table) == 1
+    assert "telescope_ids" not in table.colnames
     assert "zenith" in table.colnames
     assert table["zenith"].unit == u.deg
+    assert "br_energy_min" in table.colnames
+    assert "br_energy_max" in table.colnames
+    assert "br_core_scatter_max" in table.colnames
+    assert "br_viewcone_max" in table.colnames
+    assert table["br_energy_min"].unit == u.TeV
+    assert table["br_energy_max"].unit == u.TeV
+    assert table["br_core_scatter_max"].unit == u.m
+    assert table["br_viewcone_max"].unit == u.deg
+    assert table["br_viewcone_max"].description == "Viewcone max from broad-range simulations."
     assert table.meta["loss_fraction_energy"] == pytest.approx(0.2)
     assert table.meta["loss_min_events_energy"] == 10
     assert table.meta["loss_fraction_core_distance"] == pytest.approx(0.2)
@@ -483,12 +493,12 @@ def test_process_file_with_differential_loss_per_energy_bin(mocker):
     )
     mock_compute_viewcone = mocker.patch(COMPUTE_VIEWCONE_PATH)
     mock_differential = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits._compute_differential_limits",
+        "simtools.production_configuration.derive_corsika_limits._compute_limits",
         return_value={
             "upper_radius_limit_ground": 120.0 * u.m,
             "upper_radius_limit_shower": 114.0 * u.m,
             "viewcone_radius": 3.0 * u.deg,
-            "core_vs_energy_curve": {"x": [100.0, 120.0], "y": [0.1, 1.0]},
+            "core_distance_vs_energy_curve": {"x": [100.0, 120.0], "y": [0.1, 1.0]},
             "angular_distance_vs_energy_curve": {"x": [2.5, 3.0], "y": [0.1, 1.0]},
         },
     )
@@ -506,7 +516,7 @@ def test_process_file_with_differential_loss_per_energy_bin(mocker):
     assert result["upper_radius_limit_ground"].value == pytest.approx(120.0)
     assert result["upper_radius_limit_shower"].value == pytest.approx(114.0)
     assert result["viewcone_radius"].value == pytest.approx(3.0)
-    assert result["core_vs_energy_curve"] == {"x": [100.0, 120.0], "y": [0.1, 1.0]}
+    assert result["core_distance_vs_energy_curve"] == {"x": [100.0, 120.0], "y": [0.1, 1.0]}
     assert result["angular_distance_vs_energy_curve"] == {"x": [2.5, 3.0], "y": [0.1, 1.0]}
 
     mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2, 10)
@@ -526,16 +536,14 @@ def test_process_file_with_differential_loss_per_energy_bin(mocker):
         ({}, None, None),
     ],
 )
-def test_compute_differential_limits(
-    mocker, file_info, expected_core_scatter_max, expected_viewcone_max
-):
-    """Test _compute_differential_limits forwards slices and preserves units."""
+def test_compute_limits(mocker, file_info, expected_core_scatter_max, expected_viewcone_max):
+    """Test _compute_limits forwards slices and preserves units."""
     histograms = mocker.MagicMock()
     histograms.energy_bins = np.array([1.0, 10.0])
     histograms.core_distance_bins = np.array([0.0, 100.0])
     histograms.view_cone_bins = np.array([0.0, 5.0])
     histograms.histograms = {
-        "core_vs_energy": {"histogram": "core-hist"},
+        "core_distance_vs_energy": {"histogram": "core-hist"},
         "angular_distance_vs_energy": {"histogram": "viewcone-hist"},
     }
     histograms.file_info = file_info
@@ -552,7 +560,7 @@ def test_compute_differential_limits(
         side_effect=[125.0 * u.m, 3.25 * u.deg],
     )
 
-    derive_corsika_limits._compute_differential_limits(histograms, DEFAULT_ALLOWED_LOSSES, 2)
+    derive_corsika_limits._compute_limits(histograms, DEFAULT_ALLOWED_LOSSES, 2)
 
     expected_diff_bins = np.logspace(0, 1, 3)
     np.testing.assert_allclose(mock_diff_limits.call_args_list[0].args[3], expected_diff_bins)
@@ -570,6 +578,42 @@ def test_compute_differential_limits(
     assert mock_is_close.call_args_list[1].args[1] == expected_viewcone_max
 
 
+def test_compute_limits_with_integral_fallback_curves(mocker):
+    """Test _compute_limits returns energy-independent curves for integral limits."""
+    histograms = mocker.MagicMock()
+    histograms.energy_bins = np.array([1.0, 10.0])
+    histograms.core_distance_bins = np.array([0.0, 100.0])
+    histograms.view_cone_bins = np.array([0.0, 5.0])
+    histograms.histograms = {
+        "core_distance": {"histogram": np.array([1.0, 2.0])},
+        "angular_distance": {"histogram": np.array([3.0, 4.0])},
+    }
+    histograms.file_info = {}
+
+    mock_integral_limits = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._integral_limits",
+        side_effect=[120.0, 3.0],
+    )
+    mock_diff_limits = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._differential_upper_limits"
+    )
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._is_close",
+        side_effect=lambda value, *_: value,
+    )
+
+    result = derive_corsika_limits._compute_limits(
+        histograms,
+        DEFAULT_ALLOWED_LOSSES,
+        bins_per_decade=0,
+    )
+
+    assert mock_integral_limits.call_count == 2
+    mock_diff_limits.assert_not_called()
+    assert result["core_distance_vs_energy_curve"] == {"x": [120.0, 120.0], "y": [1.0, 10.0]}
+    assert result["angular_distance_vs_energy_curve"] == {"x": [3.0, 3.0], "y": [1.0, 10.0]}
+
+
 def test_process_file_passes_energy_bins_per_decade_to_histograms(mocker):
     """Test differential binning resolution is forwarded to EventDataHistograms."""
     mock_histograms = mocker.MagicMock()
@@ -580,12 +624,12 @@ def test_process_file_passes_energy_bins_per_decade_to_histograms(mocker):
     )
     mocker.patch(COMPUTE_LOWER_ENERGY_LIMIT_PATH, return_value=1.0 * u.TeV)
     mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits._compute_differential_limits",
+        "simtools.production_configuration.derive_corsika_limits._compute_limits",
         return_value={
             "upper_radius_limit_ground": 120.0 * u.m,
             "upper_radius_limit_shower": 114.0 * u.m,
             "viewcone_radius": 3.0 * u.deg,
-            "core_vs_energy_curve": {"x": [100.0], "y": [1.0]},
+            "core_distance_vs_energy_curve": {"x": [100.0], "y": [1.0]},
             "angular_distance_vs_energy_curve": {"x": [3.0], "y": [1.0]},
         },
     )
@@ -862,11 +906,11 @@ def test_build_production_subdirectories_creates_dirs(tmp_test_directory):
         assert output_subdir.isdir()
 
 
-def test_core_distance_ground_to_shower_converts_with_zenith():
-    """Test _core_distance_ground_to_shower scales by cos(zenith)."""
+def test_core_distance_ground_to_shower_keeps_value_with_zenith():
+    """Test _core_distance_ground_to_shower keeps value unchanged."""
     result = derive_corsika_limits._core_distance_ground_to_shower(100.0 * u.m, 60.0 * u.deg)
     assert result.unit == u.m
-    assert result.value == pytest.approx(50.0)
+    assert result.value == pytest.approx(100.0)
 
 
 def test_core_distance_ground_to_shower_no_zenith_returns_input():
@@ -1146,7 +1190,6 @@ def mock_results():
         {
             "primary_particle": "gamma",
             "array_name": "LST",
-            "telescope_ids": ["LSTN-01"],
             "zenith": 20.0 * u.deg,
             "azimuth": 180.0 * u.deg,
             "nsb_level": 1.0,
@@ -1154,5 +1197,9 @@ def mock_results():
             "upper_radius_limit_ground": 400.0 * u.m,
             "upper_radius_limit_shower": 380.0 * u.m,
             "viewcone_radius": 5.0 * u.deg,
+            "br_energy_min": 0.03 * u.TeV,
+            "br_energy_max": 300.0 * u.TeV,
+            "br_core_scatter_max": 800.0 * u.m,
+            "br_viewcone_max": 10.0 * u.deg,
         }
     ]

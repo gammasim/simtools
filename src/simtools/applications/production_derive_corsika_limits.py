@@ -15,29 +15,40 @@ definitions for above parameters.
 Limits are computed from configurable per-axis allowed-loss settings.
 Results are provided as a table with the following columns:
 
-+---------------------+-----------+--------+-----------------------------------------------+
-| Field               | Data Type | Units  | Description                                   |
-+=====================+===========+========+===============================================+
-| primary_particle    | string    |        | Particle type (e.g., gamma, proton).          |
-+---------------------+-----------+--------+-----------------------------------------------+
-| array_name          | string    |        | Array name (custom or as defined in           |
-|                     |           |        | 'array_layouts').                             |
-+---------------------+-----------+--------+-----------------------------------------------+
-| telescope_ids       | string    |        | Comma-separated list of telescope IDs         |
-|                     |           |        | of this array.                                |
-+---------------------+-----------+--------+-----------------------------------------------+
-| zenith              | float64   | deg    | Direction of array pointing zenith.           |
-+---------------------+-----------+--------+-----------------------------------------------+
-| azimuth             | float64   | deg    | Direction of array pointing azimuth.          |
-+---------------------+-----------+--------+-----------------------------------------------+
-| nsb_level           | float64   |        | Night sky background level.                   |
-+---------------------+-----------+--------+-----------------------------------------------+
-| lower_energy_limit  | float64   | TeV    | Derived lower energy limit (**ERANGE**)       |
-+---------------------+-----------+--------+-----------------------------------------------+
-| upper_radius_limit  | float64   | m      | Derived upper core distance limit (**CSCAT**) |
-+---------------------+-----------+--------+-----------------------------------------------+
-| viewcone_radius     | float64   | deg    | Derived viewcone radius limit (**VIEWCONE**)  |
-+---------------------+-----------+--------+-----------------------------------------------+
++---------------------------+-----------+--------+----------------------------------------------+
+| Field                     | Data Type | Units  | Description                                  |
++===========================+===========+========+==============================================+
+| production_index          | int64     |        | Production index for multi-production runs.  |
++---------------------------+-----------+--------+----------------------------------------------+
+| event_data_file           | string    |        | Input event-data pattern for this row.       |
++---------------------------+-----------+--------+----------------------------------------------+
+| primary_particle          | string    |        | Particle type (e.g., gamma, proton).         |
++---------------------------+-----------+--------+----------------------------------------------+
+| array_name                | string    |        | Array name (custom or as defined in          |
+|                           |           |        | array_layouts).                              |
++---------------------------+-----------+--------+----------------------------------------------+
+| zenith                    | float64   | deg    | Direction of array pointing zenith.          |
++---------------------------+-----------+--------+----------------------------------------------+
+| azimuth                   | float64   | deg    | Direction of array pointing azimuth.         |
++---------------------------+-----------+--------+----------------------------------------------+
+| nsb_level                 | float64   |        | Night sky background level.                  |
++---------------------------+-----------+--------+----------------------------------------------+
+| lower_energy_limit        | float64   | TeV    | Derived lower energy limit (**ERANGE**).     |
++---------------------------+-----------+--------+----------------------------------------------+
+| upper_radius_limit        | float64   | m      | Derived upper core distance                  |
+|                           |           |        | (**CSCAT**).                                 |
++---------------------------+-----------+--------+----------------------------------------------+
+| viewcone_radius           | float64   | deg    | Derived viewcone radius (**VIEWCONE**).      |
++---------------------------+-----------+--------+----------------------------------------------+
+| br_energy_min             | float64   | TeV    | Energy min from broad-range simulations.     |
++---------------------------+-----------+--------+----------------------------------------------+
+| br_energy_max             | float64   | TeV    | Energy max from broad-range simulations.     |
++---------------------------+-----------+--------+----------------------------------------------+
+| br_core_scatter_max       | float64   | m      | Core scatter max from broad-range            |
+|                           |           |        | simulations.                                 |
++---------------------------+-----------+--------+----------------------------------------------+
+| br_viewcone_max           | float64   | deg    | Viewcone max from broad-range simulations.   |
++---------------------------+-----------+--------+----------------------------------------------+
 
 The input event data files are generated using the application simtools-generate-simtel-event-data
 and are required for each point in the observational parameter space (e.g., array pointing

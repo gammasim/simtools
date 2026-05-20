@@ -121,11 +121,13 @@ def solid_angle(angle_max, angle_min=0 * u.rad):
     return 2 * np.pi * (np.cos(angle_min.to("rad")) - np.cos(angle_max.to("rad"))) * u.sr
 
 
-def transform_ground_to_shower_coordinates(x_ground, y_ground, z_ground, azimuth, altitude):
+def transform_ground_to_shower_coordinates(
+    x_ground, y_ground, z_ground, azimuth_from_north_east, altitude
+):
     """
     Transform ground to shower coordinates.
 
-    Assume ground to be of type 'North-West-Up' (NWU) coordinates.
+    Reverts the rotation applied in sim_telarray with the same convention as in iact.c.
 
     Parameters
     ----------
@@ -145,14 +147,20 @@ def transform_ground_to_shower_coordinates(x_ground, y_ground, z_ground, azimuth
     tuple
         Transformed shower coordinates (x', y', z').
     """
-    x, y, z, az, alt = np.broadcast_arrays(x_ground, y_ground, z_ground, azimuth, altitude)
+    x, y, z, az, alt = np.broadcast_arrays(
+        x_ground, y_ground, z_ground, azimuth_from_north_east, altitude
+    )
 
-    ca, sa = np.cos(az), np.sin(az)
-    cz, sz = np.sin(alt), np.cos(alt)
+    # Convert to CORSIKA phi convention used in iact.c:
+    # 0 = moves North, 90 deg = moves West
+    phi = np.mod(np.pi - az, 2.0 * np.pi)
 
-    x_s = ca * cz * x - sa * y + ca * sz * z
-    y_s = sa * cz * x + ca * y + sa * sz * z
-    z_s = -sz * x + cz * z
+    ca, sa = np.cos(phi), np.sin(phi)
+    cos_theta = np.sin(alt)  # theta = pi/2 - altitude
+
+    x_s = (ca * ca * cos_theta + sa * sa) * x + ca * sa * (cos_theta - 1.0) * y
+    y_s = ca * sa * (cos_theta - 1.0) * x + (sa * sa * cos_theta + ca * ca) * y
+    z_s = z
 
     return x_s, y_s, z_s
 

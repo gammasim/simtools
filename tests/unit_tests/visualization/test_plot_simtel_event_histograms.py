@@ -423,11 +423,11 @@ def test_create_2d_plot_config():
         "histogram": np.array([[1, 2], [3, 4]]),
         "bin_edges": [np.array([0, 1, 2]), np.array([0, 1, 2])],
         "plot_scales": {"y": "log"},
-        "title": "Triggered events: core vs energy: core vs energy",
+        "title": "Triggered events: core distance vs energy",
         "axis_titles": [CORE_DIST_LABEL, ENERGY_LABEL, EVENT_COUNT],
     }
     config = {
-        "base_key": "core_vs_energy",
+        "base_key": "core_distance_vs_energy",
         "x_label": CORE_DIST_LABEL,
         "y_label": ENERGY_LABEL,
         "plot_params": {"norm": "log", "cmap": "viridis"},
@@ -443,7 +443,7 @@ def test_create_2d_plot_config():
     }
     result = plot_simtel_event_histograms._create_2d_plot_config(
         histograms,
-        "core_vs_energy",
+        "core_distance_vs_energy",
         config,
         limits,
     )
@@ -456,16 +456,16 @@ def test_create_2d_plot_config():
     assert result["labels"]["y"] == config["y_label"]
     assert (
         result["labels"]["title"]
-        == "Triggered events: core vs energy: core vs energy: core vs energy"
+        == "Triggered events: core distance vs energy: core distance vs energy"
     )
     # Accept lines from limits dict, not config
     assert (
         result["labels"]["title"]
-        == "Triggered events: core vs energy: core vs energy: core vs energy"
+        == "Triggered events: core distance vs energy: core distance vs energy"
     )
 
     assert result["colorbar_label"] in (config["colorbar_label"], None)
-    assert result["filename"] == "core_vs_energy"
+    assert result["filename"] == "core_distance_vs_energy"
 
 
 def test_create_2d_plot_config_core_xy():
@@ -607,18 +607,18 @@ def test_get_limits():
     result = _get_limits("angular_distance", limits)
     assert result == {"x": 5}
 
-    limits["core_vs_energy_curve"] = {"x": [10, 20], "y": [0.1, 1.0]}
+    limits["core_distance_vs_energy_curve"] = {"x": [10, 20], "y": [0.1, 1.0]}
     limits["angular_distance_vs_energy_curve"] = {"x": [2.5, 3.0], "y": [0.1, 1.0]}
 
-    result = _get_limits("core_vs_energy", limits)
+    result = _get_limits("core_distance_vs_energy", limits)
     assert result["x"] == 100
     assert result["y"] == pytest.approx(0.1)
-    assert result["curve"] == limits["core_vs_energy_curve"]
+    assert result["curve"] == limits["core_distance_vs_energy_curve"]
 
-    result = _get_limits("core_vs_energy_cumulative", limits)
+    result = _get_limits("core_distance_vs_energy_cumulative", limits)
     assert result["x"] == 100
     assert result["y"] == pytest.approx(0.1)
-    assert result["curve"] == limits["core_vs_energy_curve"]
+    assert result["curve"] == limits["core_distance_vs_energy_curve"]
 
     result = _get_limits("angular_distance_vs_energy", limits)
     assert result["x"] == 5
