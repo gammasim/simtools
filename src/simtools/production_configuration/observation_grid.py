@@ -31,7 +31,7 @@ class ProductionGridEngine:
         axes,
         coordinate_system="horizontal",
         observing_location=None,
-        observing_time=None,
+        time_of_observation=None,
         lookup_table=None,
         array_layout_name=None,
     ):
@@ -47,7 +47,7 @@ class ProductionGridEngine:
             The coordinate system for the grid generation.
         observing_location : EarthLocation, optional
             The location of the observation (latitude, longitude, height).
-        observing_time : Time, optional
+        time_of_observation : Time, optional
             The time of observation required for RA/Dec transforms.
         lookup_table : str, optional
             Path to the lookup table file (ECSV format).
@@ -62,7 +62,7 @@ class ProductionGridEngine:
             if observing_location is not None
             else EarthLocation(lat=0.0 * u.deg, lon=0.0 * u.deg, height=0 * u.m)
         )
-        self.observing_time = observing_time
+        self.time_of_observation = time_of_observation
         self.lookup_table = lookup_table
         self.array_layout_name = array_layout_name
         self.interpolated_limits = {}
@@ -87,11 +87,11 @@ class ProductionGridEngine:
         self._limits_lookup.lookup_table = self.lookup_table
         self._limits_lookup.array_layout_name = self.array_layout_name
 
-    def _require_observing_time(self):
+    def _require_time_of_observation(self):
         """Return observing time if available, else raise a clear error."""
-        if self.observing_time is None:
+        if self.time_of_observation is None:
             raise ValueError("Observing time is required for ra_dec grid generation.")
-        return self.observing_time
+        return self.time_of_observation
 
     def _get_max_zenith_for_radec_mode(self):
         """Read maximum zenith from axes for RA/Dec direction sampling."""
@@ -150,9 +150,9 @@ class ProductionGridEngine:
 
     def _generate_radec_grid_direction_points(self):
         """Generate direction points from declination lines and hour-angle spacing."""
-        observing_time = self._require_observing_time()
+        time_of_observation = self._require_time_of_observation()
         max_zenith = self._get_max_zenith_for_radec_mode()
-        lst_deg = observing_time.sidereal_time(
+        lst_deg = time_of_observation.sidereal_time(
             "apparent", longitude=self.observing_location.lon
         ).deg
 
@@ -170,7 +170,7 @@ class ProductionGridEngine:
                 frame="icrs",
             )
             altaz = skycoord.transform_to(
-                AltAz(location=self.observing_location, obstime=observing_time)
+                AltAz(location=self.observing_location, obstime=time_of_observation)
             )
 
             zenith_values = (90.0 * u.deg - altaz.alt).to(u.deg).value
@@ -223,7 +223,7 @@ class ProductionGridEngine:
 
     def _generate_grid_from_radec_axes(self, include_horizontal_coordinates=False):
         """Generate grid points from explicit RA/Dec axes definitions."""
-        observing_time = self._require_observing_time()
+        time_of_observation = self._require_time_of_observation()
 
         axis_keys = [key for key in self.target_values if key not in ("zenith_angle", "azimuth")]
         value_arrays = [self.target_values[key].value for key in axis_keys]
@@ -243,7 +243,7 @@ class ProductionGridEngine:
                 frame="icrs",
             )
             altaz = skycoord.transform_to(
-                AltAz(location=self.observing_location, obstime=observing_time)
+                AltAz(location=self.observing_location, obstime=time_of_observation)
             )
             zenith = (90.0 * u.deg - altaz.alt).to(u.deg)
             azimuth = altaz.az.to(u.deg)
@@ -400,14 +400,14 @@ class ProductionGridEngine:
         SkyCoord
             SkyCoord object containing the RA/Dec coordinates.
         """
-        if self.observing_time is None:
-            raise ValueError("Conversion to RA/Dec requires observing_time to be set.")
+        if self.time_of_observation is None:
+            raise ValueError("Conversion to RA/Dec requires time_of_observation to be set.")
 
         aa = AltAz(
             alt=alt.to(u.rad),
             az=az.to(u.rad),
             location=self.observing_location,
-            obstime=self.observing_time,
+            obstime=self.time_of_observation,
         )
         sky_coord = SkyCoord(aa)
         return sky_coord.icrs  # Return RA/Dec in ICRS frame

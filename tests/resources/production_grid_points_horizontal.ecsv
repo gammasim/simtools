@@ -11,8 +11,8 @@
 # meta: !!omap
 # - {coordinate_system: horizontal}
 # - {reference_frame: ICRS (J2000)}
-# - {observing_time_utc: '2017-09-16T00:00:00.000'}
-# - {observing_time_scale: utc}
+# - {time_of_observation_utc: '2017-09-16T00:00:00.000'}
+# - {time_of_observation_scale: utc}
 # - telescope_ids: [LSTN-01]
 # - {corsika_limits: tests/resources/corsika_simulation_limits/corsika_simulation_limits_lookup_grid_test.ecsv}
 # schema: astropy-2.0

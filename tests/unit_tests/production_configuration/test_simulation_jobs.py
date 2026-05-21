@@ -24,8 +24,8 @@ from simtools.production_configuration.simulation_jobs import (
     get_viewcone_max_for_zenith_angle,
     normalize_energy_ranges,
     normalize_grid_axes,
-    resolve_observing_time,
     resolve_single_model_version,
+    resolve_time_of_observation,
 )
 
 
@@ -34,15 +34,15 @@ def test_resolve_single_model_version_uses_first_list_entry():
     assert resolve_single_model_version("7.0.0") == "7.0.0"
 
 
-def test_resolve_observing_time_returns_none_for_horizontal_without_input():
+def test_resolve_time_of_observation_returns_none_for_horizontal_without_input():
     args_dict = {"azimuth_range": [0, 1], "zenith_range": [0, 1]}
-    assert resolve_observing_time(None, args_dict) is None
+    assert resolve_time_of_observation(None, args_dict) is None
 
 
-def test_resolve_observing_time_raises_for_radec_without_input():
+def test_resolve_time_of_observation_raises_for_radec_without_input():
     args_dict = {"ra_range": [0, 1], "dec_range": [0, 1]}
-    with pytest.raises(ValueError, match="observing_time"):
-        resolve_observing_time(None, args_dict)
+    with pytest.raises(ValueError, match="time_of_observation"):
+        resolve_time_of_observation(None, args_dict)
 
 
 def test_build_job_grid_metadata_includes_job_context():
@@ -52,7 +52,7 @@ def test_build_job_grid_metadata_includes_job_context():
             "simulation_software": "corsika_sim_telarray",
             "ra_range": [0, 1],
             "dec_range": [0, 1],
-            "observing_time": "2017-09-16 00:00:00",
+            "time_of_observation": "2017-09-16 00:00:00",
             "corsika_limits": "limits.ecsv",
         }
     )
@@ -60,7 +60,7 @@ def test_build_job_grid_metadata_includes_job_context():
     assert metadata["site"] == "North"
     assert metadata["simulation_software"] == "corsika_sim_telarray"
     assert metadata["coordinate_system"] == "ra_dec"
-    assert metadata["observing_time_utc"].startswith("2017-09-16T00:00:00")
+    assert metadata["time_of_observation_utc"].startswith("2017-09-16T00:00:00")
     assert metadata["corsika_limits"] == "limits.ecsv"
 
 
@@ -82,7 +82,7 @@ def test_build_production_grid_engine_resolves_layout_name(
     args_dict = {
         "array_layout_name": {"by_version": {"<7.0.0": "alpha", ">=7.0.0": "beta"}},
         "model_version": ["7.0.0"],
-        "observing_time": None,
+        "time_of_observation": None,
         "corsika_limits": "limits.ecsv",
         "azimuth_range": [310 * u.deg, 20 * u.deg],
         "azimuth_binning": 3,
@@ -119,7 +119,7 @@ def test_build_production_grid_engine_resolves_layout_name(
         },
         coordinate_system="horizontal",
         observing_location=None,
-        observing_time=None,
+        time_of_observation=None,
         lookup_table="limits.ecsv",
         array_layout_name="beta",
     )
@@ -139,7 +139,7 @@ def test_build_production_grid_engine_builds_observing_location_for_radec(
             "site": "North",
             "array_layout_name": "alpha",
             "model_version": ["7.0.0"],
-            "observing_time": "2017-09-16 00:00:00",
+            "time_of_observation": "2017-09-16 00:00:00",
             "corsika_limits": None,
             "ra_range": [0 * u.deg, 360 * u.deg],
             "ra_binning": 36,

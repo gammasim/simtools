@@ -21,7 +21,7 @@ def test_generate_simulation_grid_keeps_horizontal_coordinates_for_radec_axes():
         axes=axes,
         coordinate_system="ra_dec",
         observing_location=EarthLocation(lat=28.76 * u.deg, lon=-17.89 * u.deg, height=2200 * u.m),
-        observing_time=Time("2017-09-16 00:00:00", scale="utc"),
+        time_of_observation=Time("2017-09-16 00:00:00", scale="utc"),
         lookup_table=None,
     )
 
@@ -53,11 +53,11 @@ def test_sync_limits_lookup_without_lookup_object_is_noop():
     assert engine._limits_lookup is None
 
 
-def test_require_observing_time_raises_without_time():
-    engine = ProductionGridEngine(axes={"axes": {}}, observing_time=None)
+def test_require_time_of_observation_raises_without_time():
+    engine = ProductionGridEngine(axes={"axes": {}}, time_of_observation=None)
 
     with pytest.raises(ValueError, match="Observing time"):
-        engine._require_observing_time()
+        engine._require_time_of_observation()
 
 
 def test_get_max_zenith_for_radec_mode_reads_axis_range():
@@ -174,10 +174,10 @@ def test_create_circular_binning_uses_clockwise_path_when_shorter():
     assert np.allclose(binning, [350, 0, 10])
 
 
-def test_convert_altaz_to_radec_raises_without_observing_time():
-    engine = ProductionGridEngine(axes={"axes": {}}, observing_time=None)
+def test_convert_altaz_to_radec_raises_without_time_of_observation():
+    engine = ProductionGridEngine(axes={"axes": {}}, time_of_observation=None)
 
-    with pytest.raises(ValueError, match="observing_time"):
+    with pytest.raises(ValueError, match="time_of_observation"):
         engine.convert_altaz_to_radec(45 * u.deg, 180 * u.deg)
 
 
@@ -185,7 +185,7 @@ def test_convert_altaz_to_radec_returns_icrs_coordinates():
     engine = ProductionGridEngine(
         axes={"axes": {}},
         observing_location=EarthLocation(lat=28.76 * u.deg, lon=-17.89 * u.deg, height=2200 * u.m),
-        observing_time=Time("2017-09-16 00:00:00", scale="utc"),
+        time_of_observation=Time("2017-09-16 00:00:00", scale="utc"),
     )
 
     radec = engine.convert_altaz_to_radec(45 * u.deg, 180 * u.deg)
@@ -225,7 +225,7 @@ def test_init_with_radec_lookup_prepares_point_interpolation(
     ProductionGridEngine(
         axes={"axes": {"ra": {"range": [0, 0], "binning": 1, "units": "deg"}}},
         coordinate_system="ra_dec",
-        observing_time=Time("2017-09-16 00:00:00", scale="utc"),
+        time_of_observation=Time("2017-09-16 00:00:00", scale="utc"),
         lookup_table="limits.ecsv",
         array_layout_name="alpha",
     )
@@ -285,9 +285,9 @@ def test_generate_radec_grid_direction_points_filters_by_max_zenith(
     engine = ProductionGridEngine(
         axes={"axes": {"zenith_angle": {"range": [0, 20], "binning": 2, "units": "deg"}}},
         observing_location=EarthLocation(lat=28.76 * u.deg, lon=-17.89 * u.deg, height=2200 * u.m),
-        observing_time=Mock(),
+        time_of_observation=Mock(),
     )
-    engine.observing_time.sidereal_time.return_value = Mock(deg=30.0)
+    engine.time_of_observation.sidereal_time.return_value = Mock(deg=30.0)
     mock_skycoord.return_value.transform_to.return_value = Mock(
         alt=np.array([80.0, 10.0]) * u.deg,
         az=Mock(deg=np.array([100.0, 200.0])),
