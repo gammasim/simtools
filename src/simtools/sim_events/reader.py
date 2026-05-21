@@ -9,7 +9,7 @@ from astropy.coordinates import angular_separation
 
 from simtools.corsika.primary_particle import PrimaryParticle
 from simtools.io import table_handler
-from simtools.utils.geometry import solid_angle, transform_ground_to_shower_coordinates
+from simtools.utils.geometry import project_ground_to_corsika_shower_coordinates, solid_angle
 
 
 @dataclass
@@ -153,7 +153,7 @@ class EventDataReader:
                 setattr(shower_data, f"{col}_unit", table[col].unit)
 
         shower_data.x_core_shower, shower_data.y_core_shower, _ = (
-            transform_ground_to_shower_coordinates(
+            project_ground_to_corsika_shower_coordinates(
                 shower_data.x_core,
                 shower_data.y_core,
                 0.0,

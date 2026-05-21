@@ -76,8 +76,8 @@ def _get_limits(name, limits):
 def _generate_plot_configurations(histograms, limits):
     """Generate plot configurations for all histogram types."""
     hist_1d_params = {"color": "tab:green", "edgecolor": "tab:green", "lw": 1}
-    hist_2d_params = {"norm": "log", "cmap": "viridis", "show_contour": False}
-    hist_2d_normalized_params = {"norm": "linear", "cmap": "viridis", "show_contour": True}
+    hist_2d_params = {"norm": "log", "cmap": "viridis"}
+    hist_2d_normalized_params = {"norm": "linear", "cmap": "viridis"}
     plots = {}
     for name, hist in histograms.items():
         if hist["histogram"] is None:
@@ -87,7 +87,12 @@ def _generate_plot_configurations(histograms, limits):
                 hist, name=name, plot_params=hist_1d_params, limits=limits
             )
         else:
-            if "cumulative" in name or "efficiency" in name:
+            histogram_name = name.lower()
+            if (
+                "cumulative" in histogram_name
+                or "efficiency" in histogram_name
+                or histogram_name.endswith("_eff")
+            ):
                 plot_params = hist_2d_normalized_params
             else:
                 plot_params = hist_2d_params
@@ -273,50 +278,41 @@ def _create_2d_histogram_plot(data, bins, plot_params):
     bins : tuple of np.ndarray
         Bin edges for x and y axes
     plot_params : dict
-        Plot parameters including norm, cmap, and show_contour
+        Plot parameters including norm, cmap
 
     Returns
     -------
     matplotlib.collections.QuadMesh
         The created pcolormesh object for colorbar attachment
     """
+    cmap = plt.get_cmap(plot_params.get("cmap", "viridis")).copy()
+    cmap.set_bad(color="white", alpha=0.0)
+
     if plot_params.get("norm") == "linear":
+        masked_data = np.ma.masked_equal(data.T, 0)
         pcm = plt.pcolormesh(
             bins[0],
             bins[1],
-            data.T,
+            masked_data,
             vmin=0,
             vmax=1,
-            cmap=plot_params.get("cmap", "viridis"),
+            cmap=cmap,
         )
-        # Add contour line at value=1.0 for normalized histograms
-        if plot_params.get("show_contour", True):
-            x_centers = (bins[0][1:] + bins[0][:-1]) / 2
-            y_centers = (bins[1][1:] + bins[1][:-1]) / 2
-            x_mesh, y_mesh = np.meshgrid(x_centers, y_centers)
-            plt.contour(
-                x_mesh,
-                y_mesh,
-                data.T,
-                levels=[0.999999],  # very close to 1 for floating point precision
-                colors=["tab:red"],
-                linestyles=["--"],
-                linewidths=[0.5],
-            )
     else:
+        masked_data = np.ma.masked_less_equal(data.T, 0)
         # Handle empty or invalid data for logarithmic scaling
         data_max = data.max()
         if data_max <= 0:
             _logger.warning("No positive data found for logarithmic scaling, using linear scale")
             pcm = plt.pcolormesh(
-                bins[0], bins[1], data.T, vmin=0, vmax=max(1, data_max), cmap="viridis"
+                bins[0], bins[1], masked_data, vmin=0, vmax=max(1, data_max), cmap=cmap
             )
         else:
             # Ensure vmin is less than vmax for LogNorm
             vmin = max(1, data[data > 0].min()) if np.any(data > 0) else 1
             vmax = max(vmin + 1, data_max)
             pcm = plt.pcolormesh(
-                bins[0], bins[1], data.T, norm=LogNorm(vmin=vmin, vmax=vmax), cmap="viridis"
+                bins[0], bins[1], masked_data, norm=LogNorm(vmin=vmin, vmax=vmax), cmap=cmap
             )
 
     return pcm

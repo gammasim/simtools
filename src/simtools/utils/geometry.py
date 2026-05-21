@@ -121,13 +121,34 @@ def solid_angle(angle_max, angle_min=0 * u.rad):
     return 2 * np.pi * (np.cos(angle_min.to("rad")) - np.cos(angle_max.to("rad"))) * u.sr
 
 
-def transform_ground_to_shower_coordinates(
+def project_ground_to_corsika_shower_coordinates(
     x_ground, y_ground, z_ground, azimuth_from_north_east, altitude
 ):
     """
-    Transform ground to shower coordinates.
+    Transform ground to shower coordinates following the CORSIKA/sim_telarray convention.
 
-    Reverts the rotation applied in sim_telarray with the same convention as in iact.c.
+    This function applies the same horizontal coordinate transformation used
+    internally by sim_telarray for shower-oriented coordinates.
+
+    Input ground coordinates follow the CORSIKA/sim_telarray ground system:
+
+    - x_ground : points North
+    - y_ground : points West
+    - z_ground : points Up
+
+    The input azimuth is assumed to follow the standard astronomical convention:
+
+    - 0 rad   = North
+    - pi/2    = East
+
+    Internally, the azimuth is converted to the CORSIKA `phi` convention used
+    in `iact.c`:
+
+    - phi = 0       : shower propagates toward North
+    - phi = pi/2    : shower propagates toward West
+
+    The transformation corresponds to the inverse of the projection applied
+    in sim_telarray when converting shower coordinates into ground coordinates.
 
     Parameters
     ----------
@@ -156,10 +177,10 @@ def transform_ground_to_shower_coordinates(
     phi = np.mod(np.pi - az, 2.0 * np.pi)
 
     ca, sa = np.cos(phi), np.sin(phi)
-    cos_theta = np.sin(alt)  # theta = pi/2 - altitude
+    cos_zenith = np.sin(alt)  # pi/2 - altitude
 
-    x_s = (ca * ca * cos_theta + sa * sa) * x + ca * sa * (cos_theta - 1.0) * y
-    y_s = ca * sa * (cos_theta - 1.0) * x + (sa * sa * cos_theta + ca * ca) * y
+    x_s = (ca * ca * cos_zenith + sa * sa) * x + ca * sa * (cos_zenith - 1.0) * y
+    y_s = ca * sa * (cos_zenith - 1.0) * x + (sa * sa * cos_zenith + ca * ca) * y
     z_s = z
 
     return x_s, y_s, z_s
