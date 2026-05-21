@@ -57,7 +57,7 @@ CORSIKA uses the ARRANGE card to specify geomagnetic field rotation, aligning th
 
 Local frame aligned with shower propagation direction. Used for ray-tracing and event reconstruction. Transforms ground coordinates based on shower azimuth and zenith angle.
 
-**Implementation:** `simtools.utils.geometry.transform_ground_to_shower_coordinates()`
+**Implementation:** `simtools.utils.geometry.project_ground_to_corsika_shower_coordinates()`
 
 ## Camera Coordinate Systems
 
