@@ -12,16 +12,17 @@ as ECSV files. It supports both:
 
 Command line arguments
 ----------------------
-axes (str, optional)
-    Path to a YAML or JSON file defining the axes of the grid.
-coordinate_system (str, optional, default='horizontal')
-    The coordinate system for the grid generation ('horizontal' or 'ra_dec').
-    In ``ra_dec`` mode, observing location/time are used to build sky directions and
-    derive corresponding zenith/azimuth values for interpolation (ICRS/J2000 frame).
+azimuth_range, zenith_range, ra_range, dec_range, nsb_range, offset_range (2 quantities)
+    Axis ranges for grid generation, with explicit units provided on the command line.
+    Unitless angular values are interpreted as deg and unitless nsb values as MHz.
+azimuth_binning, zenith_binning, ra_binning, dec_binning, nsb_binning, offset_binning (int)
+    Number of bins per axis.
+azimuth_scaling, zenith_scaling, ra_scaling, dec_scaling, nsb_scaling, offset_scaling (str)
+    Axis scaling mode (choices: ``linear``, ``log``, ``1/cos``).
 observing_time (str, optional)
     Time of the observation in UTC (format: 'YYYY-MM-DD HH:MM:SS').
-    Used only in ``ra_dec`` mode (for coordinate transforms and sidereal-time
-    sampling). Ignored in ``horizontal`` mode.
+    Used only if RA/Dec axes are provided (for coordinate transforms and sidereal-time
+    sampling). Ignored otherwise.
 corsika_limits (str, optional)
     Path to the lookup table for simulation limits. The table should contain
     varying azimuth and/or zenith angles for the selected array layout.
@@ -37,10 +38,11 @@ To generate a standard zenith/azimuth grid of simulation points, execute:
 
         simtools-production-generate-grid --site North --model_version 6.0.2 \
             --array_layout_name alpha \
-            --axes tests/resources/production_grid_generation_axes_definition.yml \
-            --coordinate_system horizontal \
-            --corsika_limits tests/resources/corsika_simulation_limits/
-                merged_corsika_limits_for_test.ecsv
+            --azimuth_range 310 deg 20 deg --azimuth_binning 3 --azimuth_scaling linear \
+            --zenith_range 30 deg 40 deg --zenith_binning 2 --zenith_scaling linear \
+            --nsb_range 4 MHz 5 MHz --nsb_binning 2 --nsb_scaling linear \
+            --offset_range 0 deg 10 deg --offset_binning 2 --offset_scaling linear \
+            --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
 
 To generate an all-sky RA/Dec direction grid and serialize output in RA/Dec,
 execute:
@@ -49,13 +51,16 @@ execute:
 
         simtools-production-generate-grid --site North --model_version 6.0.2 \
             --array_layout_name alpha \
-            --axes tests/resources/production_grid_generation_axes_definition_ra_dec.yml \
-            --coordinate_system ra_dec --observing_time "2017-09-16 00:00:00" \
-            --corsika_limits \
-            tests/resources/corsika_simulation_limits/merged_corsika_limits_for_test.ecsv
+            --ra_range 0 deg 360 deg --ra_binning 36 --ra_scaling linear \
+            --dec_range -90 deg 90 deg --dec_binning 18 --dec_scaling linear \
+            --nsb_range 4 MHz 4 MHz --nsb_binning 1 --nsb_scaling linear \
+            --offset_range 0 deg 10 deg --offset_binning 2 --offset_scaling linear \
+            --observing_time "2017-09-16 00:00:00" \
+            --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
 """
 
 from simtools.application_control import build_application
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.production_configuration.job_grid_io import serialize_job_grid
 from simtools.production_configuration.simulation_jobs import (
     build_job_grid_metadata,
@@ -65,22 +70,36 @@ from simtools.production_configuration.simulation_jobs import (
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--axes",
-        type=str,
-        required=False,
-        help="Path to a file defining the grid axes.",
-    )
-    parser.add_argument(
-        "--coordinate_system",
-        type=str,
-        default="horizontal",
-        help=(
-            "Coordinate system ('horizontal' or 'ra_dec'). "
-            "In 'ra_dec' mode, sky directions are generated using observing"
-            " location/time and converted to zenith/azimuth for interpolation."
-        ),
-    )
+    axis_defs = [
+        ("azimuth", "deg", "Azimuth range (deg)"),
+        ("zenith", "deg", "Zenith angle range (deg)"),
+        ("ra", "deg", "Right ascension range (deg)"),
+        ("dec", "deg", "Declination range (deg)"),
+        ("nsb", "MHz", "NSB level range (MHz)"),
+        ("offset", "deg", "Offset range (deg)"),
+    ]
+    scaling_choices = ["linear", "log", "1/cos"]
+    for axis, unit, help_str in axis_defs:
+        parser.add_argument(
+            f"--{axis}_range",
+            type=CommandLineParser.quantity(unit),
+            nargs=2,
+            help=help_str,
+        )
+        parser.add_argument(
+            f"--{axis}_binning",
+            type=int,
+            required=False,
+            help=f"Number of bins for {axis}",
+        )
+        parser.add_argument(
+            f"--{axis}_scaling",
+            type=str,
+            default="linear",
+            required=False,
+            choices=scaling_choices,
+            help=f"Scaling for {axis} (choices: {', '.join(scaling_choices)})",
+        )
     parser.add_argument(
         "--observing_time",
         type=str,

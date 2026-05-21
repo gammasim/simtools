@@ -18,7 +18,6 @@ def test_main_serializes_job_grid(
     io_handler = Mock()
     io_handler.get_output_file.return_value = Path("job_grid.ecsv")
     args = {
-        "axes": "grid.yml",
         "output_file": "job_grid.ecsv",
     }
     mock_build_application.return_value = SimpleNamespace(args=args, io_handler=io_handler)

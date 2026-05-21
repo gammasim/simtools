@@ -35,12 +35,14 @@ def test_resolve_single_model_version_uses_first_list_entry():
 
 
 def test_resolve_observing_time_returns_none_for_horizontal_without_input():
-    assert resolve_observing_time(None, "horizontal") is None
+    args_dict = {"azimuth_range": [0, 1], "zenith_range": [0, 1]}
+    assert resolve_observing_time(None, args_dict) is None
 
 
 def test_resolve_observing_time_raises_for_radec_without_input():
+    args_dict = {"ra_range": [0, 1], "dec_range": [0, 1]}
     with pytest.raises(ValueError, match="observing_time"):
-        resolve_observing_time(None, "ra_dec")
+        resolve_observing_time(None, args_dict)
 
 
 def test_build_job_grid_metadata_includes_job_context():
@@ -48,7 +50,8 @@ def test_build_job_grid_metadata_includes_job_context():
         {
             "site": "North",
             "simulation_software": "corsika_sim_telarray",
-            "coordinate_system": "ra_dec",
+            "ra_range": [0, 1],
+            "dec_range": [0, 1],
             "observing_time": "2017-09-16 00:00:00",
             "corsika_limits": "limits.ecsv",
         }
@@ -73,25 +76,47 @@ def test_build_observing_location_uses_site_model(mock_site_model):
 
 
 @patch("simtools.production_configuration.simulation_jobs.ProductionGridEngine")
-@patch("simtools.production_configuration.simulation_jobs.ascii_handler.collect_data_from_file")
 def test_build_production_grid_engine_resolves_layout_name(
-    mock_collect_data_from_file,
     mock_production_grid_engine,
 ):
-    mock_collect_data_from_file.return_value = {"axes": {}}
     args_dict = {
-        "axes": "axes.yml",
         "array_layout_name": {"by_version": {"<7.0.0": "alpha", ">=7.0.0": "beta"}},
         "model_version": ["7.0.0"],
-        "coordinate_system": "horizontal",
         "observing_time": None,
         "corsika_limits": "limits.ecsv",
+        "azimuth_range": [310 * u.deg, 20 * u.deg],
+        "azimuth_binning": 3,
+        "azimuth_scaling": "linear",
+        "zenith_range": [30 * u.deg, 40 * u.deg],
+        "zenith_binning": 2,
+        "zenith_scaling": "linear",
+        "nsb_range": [4 * u.MHz, 5 * u.MHz],
+        "nsb_binning": 2,
+        "nsb_scaling": "linear",
+        "offset_range": [0 * u.deg, 10 * u.deg],
+        "offset_binning": 2,
+        "offset_scaling": "linear",
     }
 
     build_production_grid_engine(args_dict)
 
     mock_production_grid_engine.assert_called_once_with(
-        axes={"axes": {}},
+        axes={
+            "nsb_level": {"range": [4.0, 5.0], "binning": 2, "scaling": "linear", "units": "MHz"},
+            "offset": {"range": [0.0, 10.0], "binning": 2, "scaling": "linear", "units": "deg"},
+            "azimuth": {
+                "range": [310.0, 20.0],
+                "binning": 3,
+                "scaling": "linear",
+                "units": "deg",
+            },
+            "zenith_angle": {
+                "range": [30.0, 40.0],
+                "binning": 2,
+                "scaling": "linear",
+                "units": "deg",
+            },
+        },
         coordinate_system="horizontal",
         observing_location=None,
         observing_time=None,
@@ -102,25 +127,32 @@ def test_build_production_grid_engine_resolves_layout_name(
 
 @patch("simtools.production_configuration.simulation_jobs.build_observing_location")
 @patch("simtools.production_configuration.simulation_jobs.ProductionGridEngine")
-@patch("simtools.production_configuration.simulation_jobs.ascii_handler.collect_data_from_file")
 def test_build_production_grid_engine_builds_observing_location_for_radec(
-    mock_collect_data_from_file,
     mock_production_grid_engine,
     mock_build_observing_location,
 ):
     location = EarthLocation(lat=1 * u.deg, lon=2 * u.deg, height=3 * u.m)
-    mock_collect_data_from_file.return_value = {"axes": {}}
     mock_build_observing_location.return_value = location
 
     build_production_grid_engine(
         {
-            "axes": "axes.yml",
             "site": "North",
             "array_layout_name": "alpha",
             "model_version": ["7.0.0"],
-            "coordinate_system": "ra_dec",
             "observing_time": "2017-09-16 00:00:00",
             "corsika_limits": None,
+            "ra_range": [0 * u.deg, 360 * u.deg],
+            "ra_binning": 36,
+            "ra_scaling": "linear",
+            "dec_range": [-90 * u.deg, 90 * u.deg],
+            "dec_binning": 18,
+            "dec_scaling": "linear",
+            "nsb_range": [4 * u.MHz, 4 * u.MHz],
+            "nsb_binning": 1,
+            "nsb_scaling": "linear",
+            "offset_range": [0 * u.deg, 10 * u.deg],
+            "offset_binning": 2,
+            "offset_scaling": "linear",
         }
     )
 
@@ -468,7 +500,7 @@ def test_generate_observation_grids_per_layout_uses_shared_axes_and_skips_duplic
 
     observation_grids = _generate_observation_grids_per_layout(
         {
-            "axes": "axes.yml",
+            "azimuth_range": [310 * u.deg, 20 * u.deg],
             "array_layout_name": {"by_version": {"<7.0.0": "alpha", ">=7.0.0": "alpha"}},
         },
         {
