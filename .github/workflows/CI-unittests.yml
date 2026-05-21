@@ -21,7 +21,44 @@ on:
     types: [published]
 
 jobs:
+  check_unit_test_files:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Python setup
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          check-latest: true
+
+      - name: Check unit test files exist
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          src_root = Path("src/simtools")
+          test_root = Path("tests/unit_tests")
+          missing = []
+          for path in src_root.rglob("*.py"):
+              rel = path.relative_to(src_root)
+              if path.name in {"__init__.py", "_version.py"} or rel.parts[0] == "applications":
+                  continue
+              if not (test_root / rel.parent / f"test_{path.stem}.py").exists():
+                  missing.append(str(rel))
+          if missing:
+              raise SystemExit("Modules without unit tests:\n" + "\n".join(sorted(missing)))
+          PY
+
   unit_tests:
+    needs: check_unit_test_files
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
