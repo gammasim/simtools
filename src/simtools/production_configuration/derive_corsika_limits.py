@@ -33,7 +33,7 @@ COLUMN_DESCRIPTIONS = {
     "br_core_scatter_max": "Core scatter max from broad-range simulations.",
     "br_viewcone_max": "Viewcone max from broad-range simulations.",
 }
-LOSS_AXES = ("energy", "core_distance", "angular_distance")
+LOSS_AXES = ("core_distance", "angular_distance")
 RESULT_COLUMNS = [
     "production_index",
     "event_data_file",
@@ -139,6 +139,7 @@ def _execute_production_job(job_spec):
     array_name = job_spec["array_name"]
     telescope_ids = job_spec["telescope_ids"]
     allowed_losses = job_spec["allowed_losses"]
+    energy_threshold_fraction = job_spec["energy_threshold_fraction"]
     plot_histograms = job_spec["plot_histograms"]
     output_subdir = job_spec.get("output_subdir")
     differential_loss_bins_per_decade = job_spec.get("differential_loss_bins_per_decade", 0)
@@ -153,6 +154,7 @@ def _execute_production_job(job_spec):
         array_name,
         telescope_ids,
         allowed_losses,
+        energy_threshold_fraction,
         plot_histograms,
         output_subdir=output_subdir,
         differential_loss_bins_per_decade=differential_loss_bins_per_decade,
@@ -191,7 +193,7 @@ def _resolve_telescope_configs(args_dict):
 
 def _parse_allowed_losses(allowed_losses_args):
     """
-    Parse repeatable --allowed_losses values into per-axis settings.
+    Parse repeatable --allowed_losses values for core/viewcone axes.
 
     Parameters
     ----------
@@ -239,7 +241,7 @@ def _parse_allowed_losses(allowed_losses_args):
         if axis_name not in LOSS_AXES:
             raise ValueError(
                 "Invalid axis for --allowed_losses. Allowed axes: "
-                "energy, core_distance, angular_distance, all."
+                "core_distance, angular_distance, all."
             )
         parsed[axis_name] = {
             "loss_fraction": fraction,
@@ -286,6 +288,7 @@ def generate_corsika_limits_grid(args_dict):
     """
     production_patterns = _normalize_event_data_file(args_dict["event_data_file"])
     allowed_losses = _parse_allowed_losses(args_dict.get("allowed_losses"))
+    energy_threshold_fraction = float(args_dict.get("energy_threshold_fraction", 0.01))
     differential_loss_bins_per_decade = int(args_dict.get("differential_loss_bins_per_decade", 0))
     n_productions = len(production_patterns)
     is_multi_production = n_productions > 1
@@ -318,6 +321,7 @@ def generate_corsika_limits_grid(args_dict):
                 "array_name": array_name,
                 "telescope_ids": telescope_ids,
                 "allowed_losses": allowed_losses,
+                "energy_threshold_fraction": energy_threshold_fraction,
                 "plot_histograms": args_dict["plot_histograms"],
                 "output_subdir": output_subdir,
                 "differential_loss_bins_per_decade": differential_loss_bins_per_decade,
@@ -332,7 +336,7 @@ def generate_corsika_limits_grid(args_dict):
         max_workers=n_workers,
     )
 
-    write_results(results, args_dict, allowed_losses)
+    write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
 
 
 def _process_file(
@@ -340,6 +344,7 @@ def _process_file(
     array_name,
     telescope_ids,
     allowed_losses,
+    energy_threshold_fraction=0.01,
     plot_histograms=False,
     output_subdir=None,
     differential_loss_bins_per_decade=0,
@@ -358,7 +363,9 @@ def _process_file(
     telescope_ids : list[str]
         List of telescope IDs (array-element names) to filter the events.
     allowed_losses : dict
-        Per-axis loss settings for energy/core_distance/angular_distance.
+        Per-axis loss settings for core_distance/angular_distance.
+    energy_threshold_fraction : float, optional
+        Fraction of the stable energy-peak count used to derive ERANGE.
     plot_histograms : bool
         Whether to plot histograms.
     output_subdir : Path or None, optional
@@ -383,8 +390,7 @@ def _process_file(
     limits = {
         "lower_energy_limit": compute_lower_energy_limit(
             histograms,
-            allowed_losses["energy"]["loss_fraction"],
-            allowed_losses["energy"]["loss_min_events"],
+            energy_threshold_fraction,
         ),
     }
     limits.update(
@@ -536,7 +542,7 @@ def _differential_upper_limits(
     )
 
 
-def write_results(results, args_dict, allowed_losses):
+def write_results(results, args_dict, allowed_losses, energy_threshold_fraction):
     """
     Write the computed limits as astropy table to file.
 
@@ -546,10 +552,15 @@ def write_results(results, args_dict, allowed_losses):
         List of computed limits.
     args_dict : dict
         Dictionary containing command line arguments.
+    allowed_losses : dict
+        Per-axis loss settings for core_distance/angular_distance.
+    energy_threshold_fraction : float
+        Fraction used for deriving the lower energy threshold.
     """
     table = _create_results_table(
         results,
         allowed_losses,
+        energy_threshold_fraction,
     )
 
     output_dir = io_handler.IOHandler().get_output_directory()
@@ -561,7 +572,7 @@ def write_results(results, args_dict, allowed_losses):
     MetadataCollector.dump(args_dict, output_file)
 
 
-def _create_results_table(results, allowed_losses):
+def _create_results_table(results, allowed_losses, energy_threshold_fraction):
     """
     Convert list of simulation results to an astropy Table with metadata.
 
@@ -573,6 +584,8 @@ def _create_results_table(results, allowed_losses):
         Computed limits per file and telescope configuration.
     allowed_losses : dict
         Per-axis loss settings added to metadata.
+    energy_threshold_fraction : float
+        Fraction used for deriving the lower energy threshold.
 
     Returns
     -------
@@ -601,6 +614,7 @@ def _create_results_table(results, allowed_losses):
         table.meta[f"loss_min_events_{axis_name}"] = int(
             allowed_losses[axis_name]["loss_min_events"]
         )
+    table.meta["energy_threshold_fraction"] = energy_threshold_fraction
 
     return table
 
@@ -696,18 +710,64 @@ def _integral_limits(hist, bin_edges, loss_fraction, loss_min_events=10, limit_t
     raise ValueError("limit_type must be 'lower' or 'upper'")
 
 
-def compute_lower_energy_limit(histograms, loss_fraction, loss_min_events=10):
+def _find_low_energy_threshold_from_histogram(counts, bin_edges, threshold_fraction=0.1):
+    """Find low-energy threshold from a 1D histogram using a peak-relative criterion.
+
+    The threshold is defined as the first bin (walking to lower energies from the
+    histogram maximum) where the count drops below ``threshold_fraction`` times a
+    stable peak estimate. The stable peak estimate is the mean of the maximum bin
+    and its immediate neighbors (neighbors included only when available).
+
+    Parameters
+    ----------
+    counts : np.ndarray
+        Histogram bin counts.
+    bin_edges : np.ndarray
+        Histogram bin edges (length must be ``len(counts) + 1``).
+    threshold_fraction : float, optional
+        Fraction of the stable peak used as threshold.
+
+    Returns
+    -------
+    float
+        Derived energy threshold.
     """
-    Compute the lower energy limit in TeV based on the event loss fraction.
+    counts = np.asarray(counts, dtype=float)
+    bin_edges = np.asarray(bin_edges, dtype=float)
+
+    if counts.ndim != 1 or bin_edges.ndim != 1:
+        raise ValueError("counts and bin_edges must be one-dimensional arrays")
+    if counts.size == 0:
+        raise ValueError("counts must not be empty")
+    if bin_edges.size != counts.size + 1:
+        raise ValueError("bin_edges length must be len(counts) + 1")
+    if not 0.0 < threshold_fraction <= 1.0:
+        raise ValueError("threshold_fraction must be in the interval (0, 1]")
+
+    peak_idx = int(np.argmax(counts))
+
+    left = max(peak_idx - 1, 0)
+    right = min(peak_idx + 1, counts.size - 1)
+    n_peak = float(np.mean(counts[left : right + 1]))
+    threshold = threshold_fraction * n_peak
+
+    for idx in range(peak_idx, -1, -1):
+        if counts[idx] < threshold:
+            return float(bin_edges[idx])
+
+    return float(bin_edges[0])
+
+
+def compute_lower_energy_limit(histograms, threshold_fraction):
+    """
+    Compute the lower energy limit in TeV based on the threshold fraction.
 
     Parameters
     ----------
     histograms : EventDataHistograms
         Histograms.
-    loss_fraction : float
-        Fraction of events to be lost.
-    loss_min_events : int, optional
-        Minimum number of events to be lost after applying a derived limit.
+    threshold_fraction : float
+        Fraction of the stable peak used as threshold.
 
     Returns
     -------
@@ -715,12 +775,10 @@ def compute_lower_energy_limit(histograms, loss_fraction, loss_min_events=10):
         Lower energy limit.
     """
     energy_min = (
-        _integral_limits(
+        _find_low_energy_threshold_from_histogram(
             histograms.histograms["energy"]["histogram"],
             histograms.energy_bins,
-            loss_fraction,
-            loss_min_events,
-            limit_type="lower",
+            threshold_fraction=threshold_fraction,
         )
         * u.TeV
     )
