@@ -72,6 +72,21 @@ def test_create_2d_histogram_plot_log(sample_data):
     plt.close(fig)
 
 
+def test_create_2d_histogram_plot_masks_zero_bins():
+    data = np.array([[0, 2], [3, 0]])
+    bins = (np.array([0, 1, 2]), np.array([0, 1, 2]))
+    plot_params = {"norm": "linear", "cmap": "viridis", "show_contour": False}
+
+    fig, _ = plt.subplots()
+    pcm = _create_2d_histogram_plot(data, bins, plot_params)
+
+    plotted_array = pcm.get_array()
+    assert np.ma.isMaskedArray(plotted_array)
+    assert np.any(np.ma.getmaskarray(plotted_array))
+    assert pcm.cmap.get_bad()[-1] == pytest.approx(0.0)
+    plt.close(fig)
+
+
 def test_create_2d_histogram_plot_no_positive_data():
     data = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
     bins_x = np.array([0, 1, 2, 3])
@@ -718,6 +733,13 @@ def test_generate_plot_configurations():
         assert kwargs["plot_params"]["norm"] == "log"
 
     histos = {"energy_cumulative": {"histogram": "abc", "1d": False}}
+    with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
+        plot_simtel_event_histograms._generate_plot_configurations(histos, None)
+        _, kwargs = mock_create_2d.call_args
+        assert "plot_params" in kwargs
+        assert kwargs["plot_params"]["norm"] == "linear"
+
+    histos = {"core_distance_vs_energy_eff": {"histogram": "abc", "1d": False}}
     with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
         plot_simtel_event_histograms._generate_plot_configurations(histos, None)
         _, kwargs = mock_create_2d.call_args

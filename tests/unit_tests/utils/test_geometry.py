@@ -106,7 +106,7 @@ def test_solid_angle():
     )
 
 
-def test_transform_ground_to_shower_coordinates():
+def test_project_ground_to_corsika_shower_coordinates():
     """
     Test ground to shower coordinates.
 
@@ -171,7 +171,7 @@ def test_transform_ground_to_shower_coordinates():
     )
     expected = np.array([expected_x, expected_y, expected_z])
 
-    result = transf.transform_ground_to_shower_coordinates(
+    result = transf.project_ground_to_corsika_shower_coordinates(
         x_ground, y_ground, z_ground, shower_azimuth, shower_altitude
     )
 
