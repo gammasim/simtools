@@ -385,7 +385,7 @@ def _process_file(
         telescope_ids,
         differential_loss_bins_per_decade or 10,
     )
-    histograms.fill()
+    histograms.fill(fill_efficiency_histogram=False)
 
     limits = {
         "lower_energy_limit": compute_lower_energy_limit(
