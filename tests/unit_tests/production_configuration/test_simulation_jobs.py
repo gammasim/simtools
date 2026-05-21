@@ -13,6 +13,7 @@ from simtools.production_configuration.simulation_jobs import (
     _generate_observation_grids_per_layout,
     _generate_observation_points_from_axes,
     _resolve_nshow_params,
+    build_axes_dict_from_cli_args,
     build_job_grid_metadata,
     build_observing_location,
     build_production_grid_engine,
@@ -37,6 +38,32 @@ def test_resolve_single_model_version_uses_first_list_entry():
 def test_resolve_time_of_observation_returns_none_for_horizontal_without_input():
     args_dict = {"azimuth_range": [0, 1], "zenith_range": [0, 1]}
     assert resolve_time_of_observation(None, args_dict) is None
+
+
+def test_build_axes_dict_from_cli_args_ignores_none_radec_keys_for_horizontal_grid():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "azimuth_range": [310 * u.deg, 20 * u.deg],
+            "azimuth_binning": 3,
+            "azimuth_scaling": "linear",
+            "zenith_range": [30 * u.deg, 40 * u.deg],
+            "zenith_binning": 2,
+            "zenith_scaling": "linear",
+            "nsb_range": [4 * u.MHz, 5 * u.MHz],
+            "nsb_binning": 2,
+            "nsb_scaling": "linear",
+            "offset_range": [0 * u.deg, 10 * u.deg],
+            "offset_binning": 2,
+            "offset_scaling": "linear",
+            "ra_range": None,
+            "dec_range": None,
+        }
+    )
+
+    assert "azimuth" in axes
+    assert "zenith_angle" in axes
+    assert "ra" not in axes
+    assert "dec" not in axes
 
 
 def test_resolve_time_of_observation_raises_for_radec_without_input():

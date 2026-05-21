@@ -35,7 +35,7 @@ _GRID_AXIS_DEFAULTS = {
 
 def resolve_time_of_observation(time_of_observation, args_dict):
     """Generate Time object for the observing time. Required if RA/Dec axes are present."""
-    if "ra_range" in args_dict or "dec_range" in args_dict:
+    if args_dict.get("ra_range") is not None and args_dict.get("dec_range") is not None:
         if not time_of_observation:
             raise ValueError("time_of_observation is required when using RA/Dec axes.")
         return Time(time_of_observation, scale="utc")
@@ -102,7 +102,7 @@ def build_axes_dict_from_cli_args(args_dict):
             "deg",
         ),
     }
-    if "ra_range" in args_dict and "dec_range" in args_dict:
+    if args_dict.get("ra_range") is not None and args_dict.get("dec_range") is not None:
         axes["ra"] = _build_axis_config(
             args_dict,
             "ra",
@@ -119,7 +119,7 @@ def build_axes_dict_from_cli_args(args_dict):
             "dec_scaling",
             "deg",
         )
-    elif "azimuth_range" in args_dict and "zenith_range" in args_dict:
+    elif args_dict.get("azimuth_range") is not None and args_dict.get("zenith_range") is not None:
         axes["azimuth"] = _build_axis_config(
             args_dict,
             "azimuth",
@@ -143,13 +143,13 @@ def build_axes_dict_from_cli_args(args_dict):
 
 def build_production_grid_engine(args_dict, array_layout_name=None):
     """Build a production-grid engine from application arguments."""
-    if "ra_range" in args_dict and "dec_range" in args_dict:
+    if args_dict.get("ra_range") is not None and args_dict.get("dec_range") is not None:
         coordinate_system = "ra_dec"
         observing_location = build_observing_location(
             site=args_dict["site"],
             model_version=args_dict["model_version"],
         )
-    elif "azimuth_range" in args_dict and "zenith_range" in args_dict:
+    elif args_dict.get("azimuth_range") is not None and args_dict.get("zenith_range") is not None:
         coordinate_system = "horizontal"
         observing_location = None
     else:
@@ -177,9 +177,9 @@ def build_job_grid_metadata(args_dict):
         args_dict.get("time_of_observation"),
         args_dict,
     )
-    if "ra_range" in args_dict and "dec_range" in args_dict:
+    if args_dict.get("ra_range") is not None and args_dict.get("dec_range") is not None:
         coordinate_system = "ra_dec"
-    elif "azimuth_range" in args_dict and "zenith_range" in args_dict:
+    elif args_dict.get("azimuth_range") is not None and args_dict.get("zenith_range") is not None:
         coordinate_system = "horizontal"
     else:
         coordinate_system = None
