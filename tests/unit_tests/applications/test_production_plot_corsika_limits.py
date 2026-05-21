@@ -41,25 +41,9 @@ def test_main_reads_table_and_plots(tmp_test_directory):
             "simtools.applications.production_plot_corsika_limits.data_reader.read_table_from_file",
             return_value=merged_table,
         ) as mock_read_table,
-        patch(
-            "simtools.applications.production_plot_corsika_limits.plot_grid_coverage"
-        ) as mock_grid,
         patch("simtools.applications.production_plot_corsika_limits.plot_limits") as mock_limits,
     ):
         app.main()
 
     mock_read_table.assert_called_once_with("merged_limits.ecsv")
-    mock_grid.assert_called_once()
     mock_limits.assert_called_once_with(merged_table, output_dir)
-
-
-def test_build_grid_definition_from_table():
-    """Test grid definition extraction from table columns."""
-    merged_table = _create_merged_table()
-
-    grid_definition = app._build_grid_definition_from_table(merged_table)
-
-    assert grid_definition["zenith"] == [20.0, 40.0]
-    assert grid_definition["azimuth"] == [0.0, 180.0]
-    assert grid_definition["nsb_level"] == ["dark", "moon"]
-    assert grid_definition["array_name"] == ["alpha"]
