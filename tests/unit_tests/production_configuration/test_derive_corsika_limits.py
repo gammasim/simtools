@@ -863,7 +863,7 @@ def test_build_production_subdirectories_creates_dirs(tmp_test_directory):
     assert set(result.keys()) == set(patterns)
     for output_subdir in result.values():
         assert output_subdir.exists()
-        assert output_subdir.is_dir()
+        assert output_subdir.isdir()
 
 
 def test_core_distance_ground_to_shower_keeps_value_with_zenith():

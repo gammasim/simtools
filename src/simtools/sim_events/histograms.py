@@ -394,14 +394,13 @@ class EventDataHistograms:
         Return bins for the core distance histogram.
 
         CORSIKA CSCAT ('core_scatter_max') is defined in the shower plane.
-        Add 50 m for improved plotting.
         """
         if "core_distance_bin_edges" in self.histograms:
             return self.histograms["core_distance_bin_edges"]
 
         return np.linspace(
             self.file_info.get("core_scatter_min", 0.0 * u.m).to("m").value,
-            self.file_info.get("core_scatter_max", 1.0e5 * u.m).to("m").value + 50.0,
+            self.file_info.get("core_scatter_max", 1.0e5 * u.m).to("m").value,
             100,
         )
 
