@@ -25,6 +25,7 @@ reporting
 runners
 sim_events
 sim_telarray
+statistics
 simulators
 testing
 trigger
