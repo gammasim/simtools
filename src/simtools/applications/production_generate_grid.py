@@ -60,7 +60,7 @@ execute:
 """
 
 from simtools.application_control import build_application
-from simtools.configuration.commandline_parser import CommandLineParser
+from simtools.configuration.commandline_parser import QuantityPairAction
 from simtools.production_configuration.job_grid_io import serialize_job_grid
 from simtools.production_configuration.simulation_jobs import (
     build_job_grid_metadata,
@@ -71,19 +71,19 @@ from simtools.production_configuration.simulation_jobs import (
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
     axis_defs = [
-        ("azimuth", "deg", "Azimuth range (deg)"),
-        ("zenith", "deg", "Zenith angle range (deg)"),
-        ("ra", "deg", "Right ascension range (deg)"),
-        ("dec", "deg", "Declination range (deg)"),
-        ("nsb", "MHz", "NSB level range (MHz)"),
-        ("offset", "deg", "Offset range (deg)"),
+        ("azimuth", "Azimuth range (deg)"),
+        ("zenith", "Zenith angle range (deg)"),
+        ("ra", "Right ascension range (deg)"),
+        ("dec", "Declination range (deg)"),
+        ("nsb", "NSB level range (MHz)"),
+        ("offset", "Offset range (deg)"),
     ]
     scaling_choices = ["linear", "log", "1/cos"]
-    for axis, unit, help_str in axis_defs:
+    for axis, help_str in axis_defs:
         parser.add_argument(
             f"--{axis}_range",
-            type=CommandLineParser.quantity(unit),
-            nargs=2,
+            action=QuantityPairAction,
+            nargs="+",
             help=help_str,
         )
         parser.add_argument(
