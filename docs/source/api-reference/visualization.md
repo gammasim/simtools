@@ -114,3 +114,10 @@ the visualization module.
 .. automodule:: visualization.camera_plot_utils
    :members:
 ```
+
+## plot_event_level_production_comparison
+
+```{eval-rst}
+.. automodule:: visualization.plot_event_level_production_comparison
+   :members:
+```

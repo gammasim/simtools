@@ -85,6 +85,7 @@ nitpicky = True
 nitpick_ignore = [
     ("py:class", "astropy.table.table.Table"),
     ("py:class", "astropy.units.quantity.Quantity"),
+    ("py:class", "collections.Counter"),
     ("py:class", "logging.Logger"),
     ("py:class", "numpy.float64"),
     ("py:class", "numpy.ndarray"),
