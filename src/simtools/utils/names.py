@@ -675,15 +675,15 @@ def get_simulation_software_name_from_parameter_name(
     ----------
     parameter_name: str
         Model parameter name.
-    simulation_software: str
+    software_name: str
         Simulation software name.
     set_meta_parameter: bool
         If True, return values with 'set_meta_parameter' field set to True.
 
     Returns
     -------
-    str
-        Simtel parameter name.
+    str or None
+        Internal parameter name for the requested software, or ``None`` if no mapping exists.
     """
     _parameter = model_parameters().get(parameter_name)
     if not _parameter:

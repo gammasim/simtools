@@ -273,14 +273,9 @@ def startup_application(
 
     Returns
     -------
-    args_dict : dict
-        Parsed command line arguments and configuration.
-    db_config : dict
-        Database configuration dictionary.
-    logger : logging.Logger
-        Configured logger instance.
-    io_handler_instance : io_handler.IOHandler or None
-        IOHandler instance if setup_io_handler=True, None otherwise.
+    ApplicationContext
+        Container holding parsed arguments, database configuration, logger, and the optional
+        IO handler instance.
 
     Examples
     --------
