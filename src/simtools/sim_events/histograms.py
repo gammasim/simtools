@@ -200,12 +200,14 @@ class EventDataHistograms:
                 "event_data": event_data,
                 "bin_edges": self.core_distance_bins,
                 "axis_titles": ["Core Distance (m)", event_count_axis_title],
+                "plot_scales": {"y": "log"},
             },
             "angular_distance": {
                 "event_data_column": "angular_distance",
                 "event_data": triggered_data,
                 "bin_edges": self.view_cone_bins,
                 "axis_titles": ["Angular Distance (deg)", event_count_axis_title],
+                "plot_scales": {"y": "log"},
             },
             "x_core_shower_vs_y_core_shower": {
                 "event_data_column": ("x_core_shower", "y_core_shower"),
@@ -214,7 +216,7 @@ class EventDataHistograms:
                 "is_1d": False,
                 "axis_titles": ["Core X (m)", "Core Y (m)", event_count_axis_title],
             },
-            "core_vs_energy": {
+            "core_distance_vs_energy": {
                 "event_data_column": ("core_distance_shower", "simulated_energy"),
                 "event_data": (event_data, event_data),
                 "bin_edges": (self.core_distance_bins, self.energy_bins),
@@ -274,6 +276,7 @@ class EventDataHistograms:
             "1d": is_1d,
             "bin_edges": bin_edges,
             "title": title,
+            "title_fontsize": "xx-small",
             "axis_titles": axis_titles,
             "suffix": suffix,
             "plot_scales": plot_scales,
@@ -390,19 +393,15 @@ class EventDataHistograms:
         """
         Return bins for the core distance histogram.
 
-        CORSIKA CSCAT is defined in the shower plane, shower coordinates
-        are in ground coordinates. The core distance bins in ground coordinates
-        are therefore scaled with 1/cos(zenith).
+        CORSIKA CSCAT ('core_scatter_max') is defined in the shower plane.
+        Add 50 m for improved plotting.
         """
-        zenith = self.file_info.get("zenith", 0.0 * u.deg).to("rad").value
-        scaling_factor = 1 / np.cos(zenith)
-
         if "core_distance_bin_edges" in self.histograms:
             return self.histograms["core_distance_bin_edges"]
 
         return np.linspace(
             self.file_info.get("core_scatter_min", 0.0 * u.m).to("m").value,
-            self.file_info.get("core_scatter_max", 1.0e5 * u.m).to("m").value * scaling_factor,
+            self.file_info.get("core_scatter_max", 1.0e5 * u.m).to("m").value + 50.0,
             100,
         )
 
