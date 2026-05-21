@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 r"""
-Generate executable simulation job grids.
+Generate simulation job grid for production configurations.
 
-This application expands executable simulation job rows and writes them to disk
-as ECSV files. It supports both:
+This application expands simulation job rows and writes them to disk as ECSV files.
+It supports both:
 
 - explicit cartesian job-grid configuration (primary, zenith, energy range, etc.), and
 - axes-based production-grid configuration with optional ``ra_dec`` coordinate handling
@@ -19,7 +19,7 @@ azimuth_binning, zenith_binning, ra_binning, dec_binning, nsb_binning, offset_bi
     Number of bins per axis.
 azimuth_scaling, zenith_scaling, ra_scaling, dec_scaling, nsb_scaling, offset_scaling (str)
     Axis scaling mode (choices: ``linear``, ``log``, ``1/cos``).
-observing_time (str, optional)
+time_of_observation (str, optional)
     Time of the observation in UTC (format: 'YYYY-MM-DD HH:MM:SS').
     Used only if RA/Dec axes are provided (for coordinate transforms and sidereal-time
     sampling). Ignored otherwise.
@@ -55,7 +55,7 @@ execute:
             --dec_range -90 deg 90 deg --dec_binning 18 --dec_scaling linear \
             --nsb_range 4 MHz 4 MHz --nsb_binning 1 --nsb_scaling linear \
             --offset_range 0 deg 10 deg --offset_binning 2 --offset_scaling linear \
-            --observing_time "2017-09-16 00:00:00" \
+            --time_of_observation "2017-09-16 00:00:00" \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
 """
 
@@ -101,7 +101,7 @@ def _add_arguments(parser):
             help=f"Scaling for {axis} (choices: {', '.join(scaling_choices)})",
         )
     parser.add_argument(
-        "--observing_time",
+        "--time_of_observation",
         type=str,
         required=False,
         help=(

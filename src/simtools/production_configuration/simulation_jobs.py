@@ -33,12 +33,12 @@ _GRID_AXIS_DEFAULTS = {
 }
 
 
-def resolve_observing_time(observing_time, args_dict):
+def resolve_time_of_observation(time_of_observation, args_dict):
     """Generate Time object for the observing time. Required if RA/Dec axes are present."""
     if "ra_range" in args_dict or "dec_range" in args_dict:
-        if not observing_time:
-            raise ValueError("observing_time is required when using RA/Dec axes.")
-        return Time(observing_time, scale="utc")
+        if not time_of_observation:
+            raise ValueError("time_of_observation is required when using RA/Dec axes.")
+        return Time(time_of_observation, scale="utc")
     return None
 
 
@@ -162,8 +162,8 @@ def build_production_grid_engine(args_dict, array_layout_name=None):
         axes=build_axes_dict_from_cli_args(args_dict),
         coordinate_system=coordinate_system,
         observing_location=observing_location,
-        observing_time=resolve_observing_time(
-            args_dict.get("observing_time"),
+        time_of_observation=resolve_time_of_observation(
+            args_dict.get("time_of_observation"),
             args_dict,
         ),
         lookup_table=args_dict.get("corsika_limits"),
@@ -173,8 +173,8 @@ def build_production_grid_engine(args_dict, array_layout_name=None):
 
 def build_job_grid_metadata(args_dict):
     """Build metadata stored alongside serialized executable job grids."""
-    observing_time = resolve_observing_time(
-        args_dict.get("observing_time"),
+    time_of_observation = resolve_time_of_observation(
+        args_dict.get("time_of_observation"),
         args_dict,
     )
     if "ra_range" in args_dict and "dec_range" in args_dict:
@@ -187,8 +187,8 @@ def build_job_grid_metadata(args_dict):
         "site": args_dict.get("site"),
         "simulation_software": args_dict.get("simulation_software"),
         "coordinate_system": coordinate_system,
-        "observing_time_utc": observing_time.isot if observing_time else None,
-        "observing_time_scale": observing_time.scale if observing_time else None,
+        "time_of_observation_utc": time_of_observation.isot if time_of_observation else None,
+        "time_of_observation_scale": time_of_observation.scale if time_of_observation else None,
         "corsika_limits": (
             str(args_dict["corsika_limits"]) if args_dict.get("corsika_limits") else None
         ),

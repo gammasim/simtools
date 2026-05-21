@@ -40,8 +40,6 @@ _QUANTITY_FIELDS = {
     "view_cone_max": ("view_cone_max_value", "view_cone_max_unit"),
 }
 
-_INTEGER_FIELDS = ["core_scatter_number", "nshow", "run_number"]
-
 
 def _serialize_quantity(value):
     """Serialize a Quantity to value/unit columns."""
