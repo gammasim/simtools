@@ -1,6 +1,7 @@
 """Lookup-table access and interpolation for CORSIKA production limits."""
 
 import numpy as np
+from astropy import units as u
 from astropy.table import Table
 from scipy.interpolate import LinearNDInterpolator, griddata
 from scipy.spatial import QhullError  # pylint: disable=no-name-in-module
@@ -12,6 +13,24 @@ _LOOKUP_FIELDS = (
     "upper_scatter_radius",
     "viewcone_radius",
 )
+
+_LOOKUP_FIELD_UNITS = {
+    "lower_energy_threshold": "TeV",
+    "upper_scatter_radius": "m",
+    "viewcone_radius": "deg",
+}
+
+_POINT_LIMIT_KEYS = {
+    "lower_energy_threshold": "lower_energy_threshold",
+    "upper_scatter_radius": "scatter_radius",
+    "viewcone_radius": "viewcone_radius",
+}
+
+
+def attach_lookup_limits_to_point(point, limits):
+    """Attach interpolated CORSIKA limits to a grid point."""
+    for lookup_key, point_key in _POINT_LIMIT_KEYS.items():
+        point[point_key] = limits[lookup_key] * u.Unit(_LOOKUP_FIELD_UNITS[lookup_key])
 
 
 class CorsikaLimitsLookup:

@@ -33,26 +33,6 @@ def test_generate_simulation_grid_keeps_horizontal_coordinates_for_radec_axes():
     assert "dec" in simulation_grid[0]
 
 
-def test_sync_limits_lookup_updates_lookup_object():
-    engine = ProductionGridEngine(axes={"axes": {}}, lookup_table=None)
-    engine._limits_lookup = Mock()
-    engine.lookup_table = "limits.ecsv"
-    engine.array_layout_name = "alpha"
-
-    engine._sync_limits_lookup()
-
-    assert engine._limits_lookup.lookup_table == "limits.ecsv"
-    assert engine._limits_lookup.array_layout_name == "alpha"
-
-
-def test_sync_limits_lookup_without_lookup_object_is_noop():
-    engine = ProductionGridEngine(axes={"axes": {}}, lookup_table=None)
-
-    engine._sync_limits_lookup()
-
-    assert engine._limits_lookup is None
-
-
 def test_require_time_of_observation_raises_without_time():
     engine = ProductionGridEngine(axes={"axes": {}}, time_of_observation=None)
 
@@ -116,15 +96,23 @@ def test_add_lookup_limits_to_point_uses_quantity_nsb_level():
     assert_quantity_allclose(point["viewcone_radius"], 3.5 * u.deg)
 
 
-def test_prepare_lookup_table_limits_for_point_interpolation_syncs_and_prepares():
+def test_interpolate_limits_for_point_delegates_to_lookup_helper():
     engine = ProductionGridEngine(axes={"axes": {}}, lookup_table=None)
-    engine.lookup_table = "limits.ecsv"
-    engine.array_layout_name = "alpha"
+    engine._limits_lookup = Mock()
+    engine._limits_lookup.interpolate_point.return_value = {"lower_energy_threshold": 0.02}
+
+    limits = engine._interpolate_limits_for_point(20.0, 180.0, 1.0)
+
+    assert limits == {"lower_energy_threshold": 0.02}
+    engine._limits_lookup.interpolate_point.assert_called_once_with(20.0, 180.0, 1.0)
+
+
+def test_prepare_lookup_table_limits_for_point_interpolation_prepares():
+    engine = ProductionGridEngine(axes={"axes": {}}, lookup_table=None)
     engine._limits_lookup = Mock()
 
     engine._prepare_lookup_table_limits_for_point_interpolation()
 
-    assert engine._limits_lookup.lookup_table == "limits.ecsv"
     engine._limits_lookup.prepare_point_interpolators.assert_called_once_with()
 
 
@@ -322,20 +310,6 @@ def test_generate_horizontal_grid_handles_partial_interpolated_limit_arrays():
     assert "lower_energy_threshold" not in grid[0]
     assert_quantity_allclose(grid[0]["scatter_radius"], 120 * u.m)
     assert_quantity_allclose(grid[0]["viewcone_radius"], 3 * u.deg)
-
-
-def test_interpolate_limits_for_point_syncs_and_delegates():
-    engine = ProductionGridEngine(axes={"axes": {}}, lookup_table=None)
-    engine.lookup_table = "limits.ecsv"
-    engine.array_layout_name = "alpha"
-    engine._limits_lookup = Mock()
-    engine._limits_lookup.interpolate_point.return_value = {"lower_energy_threshold": 0.02}
-
-    limits = engine._interpolate_limits_for_point(20.0, 180.0, 1.0)
-
-    assert limits == {"lower_energy_threshold": 0.02}
-    assert engine._limits_lookup.lookup_table == "limits.ecsv"
-    engine._limits_lookup.interpolate_point.assert_called_once_with(20.0, 180.0, 1.0)
 
 
 def test_generate_grid_radec_mode_adds_extra_axis_quantities():

@@ -6,18 +6,11 @@ applications:
       by_version:
         "<7.0.0": 1lst
         ">=7.0.0": 1lst
-    ra_range: 0 deg 360 deg
-    ra_binning: 36
-    ra_scaling: linear
-    dec_range: -90 deg 90 deg
-    dec_binning: 18
-    dec_scaling: linear
-    nsb_range: 4 MHz 4 MHz
-    nsb_binning: 1
-    nsb_scaling: linear
-    offset_range: 0 deg 10 deg
-    offset_binning: 2
-    offset_scaling: linear
+    axis:
+    - ra 0 deg 360 deg 36 linear
+    - dec -90 deg 90 deg 18 linear
+    - nsb 4 MHz 4 MHz 1 linear
+    - offset 0 deg 10 deg 2 linear
     core_scatter: 10 500 m
     corsika_he_interaction: epos
     corsika_le_interaction: urqmd

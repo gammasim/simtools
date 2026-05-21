@@ -5,6 +5,7 @@ model versions, energy ranges, and run counts into a complete job parameter set.
 """
 
 import itertools
+import shlex
 
 import numpy as np
 from astropy import units as u
@@ -12,9 +13,13 @@ from astropy.coordinates import EarthLocation
 from astropy.time import Time
 
 from simtools.configuration import defaults
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.model.site_model import SiteModel
-from simtools.production_configuration.corsika_limits_lookup import CorsikaLimitsLookup
+from simtools.production_configuration.corsika_limits_lookup import (
+    CorsikaLimitsLookup,
+    attach_lookup_limits_to_point,
+)
 from simtools.production_configuration.observation_grid import ProductionGridEngine
 from simtools.utils.general import ensure_list
 
@@ -32,10 +37,163 @@ _GRID_AXIS_DEFAULTS = {
     "corsika_he_interaction": defaults.CORSIKA_HE_INTERACTION,
 }
 
+GRID_AXIS_ARGUMENTS = {
+    "azimuth": {
+        "engine_axis": "azimuth",
+        "unit": "deg",
+        "help": "Azimuth range (deg)",
+    },
+    "zenith": {
+        "engine_axis": "zenith_angle",
+        "unit": "deg",
+        "help": "Zenith angle range (deg)",
+    },
+    "ra": {
+        "engine_axis": "ra",
+        "unit": "deg",
+        "help": "Right ascension range (deg)",
+    },
+    "dec": {
+        "engine_axis": "dec",
+        "unit": "deg",
+        "help": "Declination range (deg)",
+    },
+    "nsb": {
+        "engine_axis": "nsb_level",
+        "unit": "MHz",
+        "help": "NSB level range (MHz)",
+    },
+    "offset": {
+        "engine_axis": "offset",
+        "unit": "deg",
+        "help": "Offset range (deg)",
+    },
+}
+
+_AXIS_SCALING_CHOICES = ("linear", "log", "1/cos")
+_HORIZONTAL_AXES = ("azimuth", "zenith")
+_RADEC_AXES = ("ra", "dec")
+_REQUIRED_AXES = ("nsb", "offset")
+
+
+def _parse_axis_range_tokens(range_tokens):
+    """Parse a quantity pair from CLI axis range tokens."""
+    if len(range_tokens) == 1:
+        return CommandLineParser.parse_quantity_pair(range_tokens[0])
+    if len(range_tokens) == 2:
+        return tuple(u.Quantity(value) for value in range_tokens)
+    if len(range_tokens) == 4:
+        return tuple(
+            u.Quantity(f"{range_tokens[index]} {range_tokens[index + 1]}")
+            for index in range(0, len(range_tokens), 2)
+        )
+    raise ValueError("Axis range must contain exactly two quantities.")
+
+
+def _normalize_axis_spec_tokens(axis_spec):
+    """Return axis specification tokens from CLI or configuration input."""
+    if isinstance(axis_spec, str):
+        return shlex.split(axis_spec)
+    if isinstance(axis_spec, (list, tuple)):
+        if len(axis_spec) == 1 and isinstance(axis_spec[0], str):
+            return shlex.split(axis_spec[0])
+        return [str(token) for token in axis_spec]
+    raise TypeError("Axis definitions must be strings or lists of CLI-style tokens.")
+
+
+def _parse_axis_spec(axis_spec):
+    """Parse one compact axis definition."""
+    tokens = _normalize_axis_spec_tokens(axis_spec)
+    if len(tokens) < 3:
+        raise ValueError(
+            "Axis definitions require at least an axis name, range, and binning value."
+        )
+
+    axis_name = tokens[0]
+    if axis_name not in GRID_AXIS_ARGUMENTS:
+        supported_axes = ", ".join(sorted(GRID_AXIS_ARGUMENTS))
+        raise ValueError(f"Unknown axis '{axis_name}'. Supported axes: {supported_axes}.")
+
+    scaling = "linear"
+    if tokens[-1] in _AXIS_SCALING_CHOICES:
+        scaling = tokens[-1]
+        binning_token = tokens[-2]
+        range_tokens = tokens[1:-2]
+    else:
+        binning_token = tokens[-1]
+        range_tokens = tokens[1:-1]
+
+    if not range_tokens:
+        raise ValueError(f"Axis '{axis_name}' is missing its range definition.")
+
+    try:
+        binning = int(binning_token)
+    except ValueError as exc:
+        raise ValueError(f"Axis '{axis_name}' binning must be an integer.") from exc
+
+    axis_range = _parse_axis_range_tokens(range_tokens)
+    axis_args = GRID_AXIS_ARGUMENTS[axis_name]
+    return axis_name, {
+        "range": [u.Quantity(value).to_value(axis_args["unit"]) for value in axis_range],
+        "binning": binning,
+        "scaling": scaling,
+        "units": axis_args["unit"],
+    }
+
+
+def _iter_compact_axis_specs(args_dict):
+    """Iterate over compact axis definitions from CLI or configuration."""
+    axis_specs = args_dict.get("axis") or []
+    if isinstance(axis_specs, str):
+        axis_specs = [axis_specs]
+
+    normalized_specs = []
+    for axis_spec in axis_specs:
+        if (
+            isinstance(axis_spec, (list, tuple))
+            and len(axis_spec) > 1
+            and all(isinstance(item, str) for item in axis_spec)
+            and str(axis_spec[0]).strip() not in GRID_AXIS_ARGUMENTS
+        ):
+            normalized_specs.extend(axis_spec)
+            continue
+        normalized_specs.append(axis_spec)
+    return normalized_specs
+
+
+def _resolve_axis_configs(args_dict):
+    """Resolve compact axis definitions into one normalized mapping."""
+    axis_configs = {}
+    for axis_spec in _iter_compact_axis_specs(args_dict):
+        axis_name, axis_config = _parse_axis_spec(axis_spec)
+        axis_configs[axis_name] = axis_config
+
+    return axis_configs
+
+
+def _resolve_coordinate_system(axis_configs):
+    """Resolve the coordinate system from axis definitions."""
+    has_horizontal_axes = all(axis_name in axis_configs for axis_name in _HORIZONTAL_AXES)
+    has_radec_axes = all(axis_name in axis_configs for axis_name in _RADEC_AXES)
+
+    if has_horizontal_axes and has_radec_axes:
+        raise ValueError("Cannot define both azimuth/zenith and ra/dec axes at the same time.")
+    if has_radec_axes:
+        return "ra_dec"
+    if has_horizontal_axes:
+        return "horizontal"
+    return None
+
+
+def _resolve_coordinate_system_from_args(args_dict):
+    """Resolve the coordinate system from raw CLI arguments."""
+    return _resolve_coordinate_system(_resolve_axis_configs(args_dict))
+
 
 def resolve_time_of_observation(time_of_observation, args_dict):
     """Generate Time object for the observing time. Required if RA/Dec axes are present."""
-    if args_dict.get("ra_range") is not None and args_dict.get("dec_range") is not None:
+    coordinate_system = _resolve_coordinate_system_from_args(args_dict)
+    if coordinate_system == "ra_dec":
         if not time_of_observation:
             raise ValueError("time_of_observation is required when using RA/Dec axes.")
         return Time(time_of_observation, scale="utc")
@@ -59,97 +217,38 @@ def build_observing_location(site, model_version):
     )
 
 
-def _build_axis_config(args_dict, axis_name, range_key, binning_key, scaling_key, unit):
-    """Build one axis configuration from CLI arguments."""
-    axis_range = args_dict.get(range_key)
-    binning = args_dict.get(binning_key)
-    scaling = args_dict.get(scaling_key, "linear")
-
-    if axis_range is None or binning is None:
-        raise ValueError(
-            f"Missing required axis configuration for '{axis_name}' "
-            f"(expected {range_key} and {binning_key})."
-        )
-    if len(axis_range) != 2:
-        raise ValueError(f"{range_key} must contain exactly two values.")
-
-    parsed_range = [u.Quantity(value).to_value(unit) for value in axis_range]
-    return {
-        "range": parsed_range,
-        "binning": int(binning),
-        "scaling": scaling,
-        "units": unit,
-    }
-
-
 def build_axes_dict_from_cli_args(args_dict):
     """Build ProductionGridEngine-compatible axes configuration from CLI arguments."""
-    axes = {
-        "nsb_level": _build_axis_config(
-            args_dict,
-            "nsb_level",
-            "nsb_range",
-            "nsb_binning",
-            "nsb_scaling",
-            "MHz",
-        ),
-        "offset": _build_axis_config(
-            args_dict,
-            "offset",
-            "offset_range",
-            "offset_binning",
-            "offset_scaling",
-            "deg",
-        ),
-    }
-    if args_dict.get("ra_range") is not None and args_dict.get("dec_range") is not None:
-        axes["ra"] = _build_axis_config(
-            args_dict,
-            "ra",
-            "ra_range",
-            "ra_binning",
-            "ra_scaling",
-            "deg",
-        )
-        axes["dec"] = _build_axis_config(
-            args_dict,
-            "dec",
-            "dec_range",
-            "dec_binning",
-            "dec_scaling",
-            "deg",
-        )
-    elif args_dict.get("azimuth_range") is not None and args_dict.get("zenith_range") is not None:
-        axes["azimuth"] = _build_axis_config(
-            args_dict,
-            "azimuth",
-            "azimuth_range",
-            "azimuth_binning",
-            "azimuth_scaling",
-            "deg",
-        )
-        axes["zenith_angle"] = _build_axis_config(
-            args_dict,
-            "zenith_angle",
-            "zenith_range",
-            "zenith_binning",
-            "zenith_scaling",
-            "deg",
-        )
-    else:
+    axis_configs = _resolve_axis_configs(args_dict)
+    coordinate_system = _resolve_coordinate_system(axis_configs)
+
+    if coordinate_system is None:
         raise ValueError("Must provide either both azimuth/zenith or both ra/dec axis definitions.")
-    return axes
+
+    missing_required_axes = [
+        axis_name for axis_name in _REQUIRED_AXES if axis_name not in axis_configs
+    ]
+    if missing_required_axes:
+        missing_axes = ", ".join(missing_required_axes)
+        raise ValueError(f"Missing required shared axis definition(s): {missing_axes}.")
+
+    direction_axes = _RADEC_AXES if coordinate_system == "ra_dec" else _HORIZONTAL_AXES
+    return {
+        GRID_AXIS_ARGUMENTS[axis_name]["engine_axis"]: axis_configs[axis_name]
+        for axis_name in (*_REQUIRED_AXES, *direction_axes)
+    }
 
 
 def build_production_grid_engine(args_dict, array_layout_name=None):
     """Build a production-grid engine from application arguments."""
-    if args_dict.get("ra_range") is not None and args_dict.get("dec_range") is not None:
-        coordinate_system = "ra_dec"
+    axes = build_axes_dict_from_cli_args(args_dict)
+    coordinate_system = _resolve_coordinate_system_from_args(args_dict)
+    if coordinate_system == "ra_dec":
         observing_location = build_observing_location(
             site=args_dict["site"],
             model_version=args_dict["model_version"],
         )
-    elif args_dict.get("azimuth_range") is not None and args_dict.get("zenith_range") is not None:
+    elif coordinate_system == "horizontal":
         coordinate_system = "horizontal"
         observing_location = None
     else:
@@ -159,7 +258,7 @@ def build_production_grid_engine(args_dict, array_layout_name=None):
         resolve_single_model_version(args_dict.get("model_version")),
     )
     return ProductionGridEngine(
-        axes=build_axes_dict_from_cli_args(args_dict),
+        axes=axes,
         coordinate_system=coordinate_system,
         observing_location=observing_location,
         time_of_observation=resolve_time_of_observation(
@@ -177,12 +276,7 @@ def build_job_grid_metadata(args_dict):
         args_dict.get("time_of_observation"),
         args_dict,
     )
-    if args_dict.get("ra_range") is not None and args_dict.get("dec_range") is not None:
-        coordinate_system = "ra_dec"
-    elif args_dict.get("azimuth_range") is not None and args_dict.get("zenith_range") is not None:
-        coordinate_system = "horizontal"
-    else:
-        coordinate_system = None
+    coordinate_system = _resolve_coordinate_system_from_args(args_dict)
     return {
         "site": args_dict.get("site"),
         "simulation_software": args_dict.get("simulation_software"),
@@ -412,10 +506,7 @@ def _generate_observation_points_from_axes(azimuth_values, zenith_values, corsik
             "zenith_angle": zenith,
         }
         if corsika_limits is not None:
-            limits = corsika_limits.interpolate_point(zenith, azimuth)
-            point["lower_energy_threshold"] = limits["lower_energy_threshold"] * u.TeV
-            point["scatter_radius"] = limits["upper_scatter_radius"] * u.m
-            point["viewcone_radius"] = limits["viewcone_radius"] * u.deg
+            attach_lookup_limits_to_point(point, corsika_limits.interpolate_point(zenith, azimuth))
         points.append(point)
     return points
 
@@ -426,18 +517,15 @@ def _generate_observation_grids_per_layout(args_dict, grid_axes):
     Uses either ProductionGridEngine or explicit azimuth/zenith axes.
     """
     observation_grids_per_layout = {}
-    use_shared_axes_definition = bool(
-        args_dict.get("azimuth_range")
-        or args_dict.get("ra_range")
-        or args_dict.get("nsb_range")
-        or args_dict.get("offset_range")
-    )
+    resolved_layout_names = {
+        model_version: resolve_array_layout_name(args_dict.get("array_layout_name"), model_version)
+        for model_version in grid_axes["model_version"]
+    }
+    use_shared_axes_definition = bool(args_dict.get("axis"))
     corsika_limits_path = args_dict.get("corsika_limits")
 
     for model_version in grid_axes["model_version"]:
-        resolved_layout_name = resolve_array_layout_name(
-            args_dict.get("array_layout_name"), model_version
-        )
+        resolved_layout_name = resolved_layout_names[model_version]
         if resolved_layout_name in observation_grids_per_layout:
             continue
 
@@ -460,7 +548,7 @@ def _generate_observation_grids_per_layout(args_dict, grid_axes):
             corsika_limits=corsika_limits,
         )
 
-    return observation_grids_per_layout
+    return observation_grids_per_layout, resolved_layout_names
 
 
 def build_simulation_jobs(args_dict):
@@ -491,7 +579,9 @@ def build_simulation_jobs(args_dict):
     view_cone = args_dict["view_cone"]
     core_scatter_number = int(core_scatter[0])
     view_cone_min = view_cone[0]
-    observation_grids_per_layout = _generate_observation_grids_per_layout(args_dict, grid_axes)
+    observation_grids_per_layout, resolved_layout_names = _generate_observation_grids_per_layout(
+        args_dict, grid_axes
+    )
     rows = []
 
     for primary, model_version, corsika_le, corsika_he in itertools.product(
@@ -500,9 +590,7 @@ def build_simulation_jobs(args_dict):
         grid_axes["corsika_le_interaction"],
         grid_axes["corsika_he_interaction"],
     ):
-        resolved_layout_name = resolve_array_layout_name(
-            args_dict.get("array_layout_name"), model_version
-        )
+        resolved_layout_name = resolved_layout_names[model_version]
         for point in observation_grids_per_layout[resolved_layout_name]:
             observation_params = {
                 "primary": primary,

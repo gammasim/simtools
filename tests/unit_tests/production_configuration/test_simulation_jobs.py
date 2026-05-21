@@ -36,27 +36,21 @@ def test_resolve_single_model_version_uses_first_list_entry():
 
 
 def test_resolve_time_of_observation_returns_none_for_horizontal_without_input():
-    args_dict = {"azimuth_range": [0, 1], "zenith_range": [0, 1]}
+    args_dict = {
+        "axis": [["azimuth", "0", "deg", "1", "deg", "2"], ["zenith", "0", "deg", "1", "deg", "2"]]
+    }
     assert resolve_time_of_observation(None, args_dict) is None
 
 
-def test_build_axes_dict_from_cli_args_ignores_none_radec_keys_for_horizontal_grid():
+def test_build_axes_dict_from_cli_args_builds_horizontal_grid():
     axes = build_axes_dict_from_cli_args(
         {
-            "azimuth_range": [310 * u.deg, 20 * u.deg],
-            "azimuth_binning": 3,
-            "azimuth_scaling": "linear",
-            "zenith_range": [30 * u.deg, 40 * u.deg],
-            "zenith_binning": 2,
-            "zenith_scaling": "linear",
-            "nsb_range": [4 * u.MHz, 5 * u.MHz],
-            "nsb_binning": 2,
-            "nsb_scaling": "linear",
-            "offset_range": [0 * u.deg, 10 * u.deg],
-            "offset_binning": 2,
-            "offset_scaling": "linear",
-            "ra_range": None,
-            "dec_range": None,
+            "axis": [
+                ["azimuth", "310", "deg", "20", "deg", "3", "linear"],
+                ["zenith", "30", "deg", "40", "deg", "2", "linear"],
+                ["nsb", "4", "MHz", "5", "MHz", "2", "linear"],
+                ["offset", "0", "deg", "10", "deg", "2", "linear"],
+            ]
         }
     )
 
@@ -66,8 +60,87 @@ def test_build_axes_dict_from_cli_args_ignores_none_radec_keys_for_horizontal_gr
     assert "dec" not in axes
 
 
+def test_build_axes_dict_from_cli_args_accepts_compact_axis_definitions():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "axis": [
+                ["azimuth", "310", "deg", "20", "deg", "3", "linear"],
+                ["zenith", "30", "deg", "40", "deg", "2"],
+                ["nsb", "4", "MHz", "5", "MHz", "2"],
+                ["offset", "0", "deg", "10", "deg", "2"],
+            ]
+        }
+    )
+
+    assert axes == {
+        "nsb_level": {"range": [4.0, 5.0], "binning": 2, "scaling": "linear", "units": "MHz"},
+        "offset": {"range": [0.0, 10.0], "binning": 2, "scaling": "linear", "units": "deg"},
+        "azimuth": {"range": [310.0, 20.0], "binning": 3, "scaling": "linear", "units": "deg"},
+        "zenith_angle": {
+            "range": [30.0, 40.0],
+            "binning": 2,
+            "scaling": "linear",
+            "units": "deg",
+        },
+    }
+
+
+def test_build_axes_dict_from_cli_args_accepts_config_wrapped_axis_strings():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "axis": [
+                ["azimuth 310 deg 20 deg 3 linear"],
+                ["zenith 30 deg 40 deg 2"],
+                ["nsb 4 MHz 5 MHz 2"],
+                ["offset 0 deg 10 deg 2"],
+            ]
+        }
+    )
+
+    assert axes["azimuth"]["range"] == [310.0, 20.0]
+    assert axes["zenith_angle"]["binning"] == 2
+    assert axes["nsb_level"]["units"] == "MHz"
+
+
+def test_build_axes_dict_from_cli_args_accepts_merged_config_axis_list():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "axis": [
+                [
+                    "azimuth 310 deg 20 deg 3 linear",
+                    "zenith 30 deg 40 deg 2",
+                    "nsb 4 MHz 5 MHz 2",
+                    "offset 0 deg 10 deg 2",
+                ]
+            ]
+        }
+    )
+
+    assert axes["azimuth"]["range"] == [310.0, 20.0]
+    assert axes["zenith_angle"]["binning"] == 2
+    assert axes["offset"]["range"] == [0.0, 10.0]
+
+
+def test_build_axes_dict_from_cli_args_rejects_multiple_direction_coordinate_systems():
+    with pytest.raises(ValueError, match="Cannot define both azimuth/zenith and ra/dec axes"):
+        build_axes_dict_from_cli_args(
+            {
+                "axis": [
+                    ["azimuth", "310", "deg", "20", "deg", "3"],
+                    ["zenith", "30", "deg", "40", "deg", "2"],
+                    ["ra", "0", "deg", "360", "deg", "36"],
+                    ["dec", "-90", "deg", "90", "deg", "18"],
+                    ["nsb", "4", "MHz", "5", "MHz", "2"],
+                    ["offset", "0", "deg", "10", "deg", "2"],
+                ]
+            }
+        )
+
+
 def test_resolve_time_of_observation_raises_for_radec_without_input():
-    args_dict = {"ra_range": [0, 1], "dec_range": [0, 1]}
+    args_dict = {
+        "axis": [["ra", "0", "deg", "1", "deg", "2"], ["dec", "0", "deg", "1", "deg", "2"]]
+    }
     with pytest.raises(ValueError, match="time_of_observation"):
         resolve_time_of_observation(None, args_dict)
 
@@ -77,8 +150,10 @@ def test_build_job_grid_metadata_includes_job_context():
         {
             "site": "North",
             "simulation_software": "corsika_sim_telarray",
-            "ra_range": [0, 1],
-            "dec_range": [0, 1],
+            "axis": [
+                ["ra", "0", "deg", "1", "deg", "2"],
+                ["dec", "0", "deg", "1", "deg", "2"],
+            ],
             "time_of_observation": "2017-09-16 00:00:00",
             "corsika_limits": "limits.ecsv",
         }
@@ -111,18 +186,12 @@ def test_build_production_grid_engine_resolves_layout_name(
         "model_version": ["7.0.0"],
         "time_of_observation": None,
         "corsika_limits": "limits.ecsv",
-        "azimuth_range": [310 * u.deg, 20 * u.deg],
-        "azimuth_binning": 3,
-        "azimuth_scaling": "linear",
-        "zenith_range": [30 * u.deg, 40 * u.deg],
-        "zenith_binning": 2,
-        "zenith_scaling": "linear",
-        "nsb_range": [4 * u.MHz, 5 * u.MHz],
-        "nsb_binning": 2,
-        "nsb_scaling": "linear",
-        "offset_range": [0 * u.deg, 10 * u.deg],
-        "offset_binning": 2,
-        "offset_scaling": "linear",
+        "axis": [
+            ["azimuth", "310", "deg", "20", "deg", "3", "linear"],
+            ["zenith", "30", "deg", "40", "deg", "2", "linear"],
+            ["nsb", "4", "MHz", "5", "MHz", "2", "linear"],
+            ["offset", "0", "deg", "10", "deg", "2", "linear"],
+        ],
     }
 
     build_production_grid_engine(args_dict)
@@ -168,18 +237,12 @@ def test_build_production_grid_engine_builds_observing_location_for_radec(
             "model_version": ["7.0.0"],
             "time_of_observation": "2017-09-16 00:00:00",
             "corsika_limits": None,
-            "ra_range": [0 * u.deg, 360 * u.deg],
-            "ra_binning": 36,
-            "ra_scaling": "linear",
-            "dec_range": [-90 * u.deg, 90 * u.deg],
-            "dec_binning": 18,
-            "dec_scaling": "linear",
-            "nsb_range": [4 * u.MHz, 4 * u.MHz],
-            "nsb_binning": 1,
-            "nsb_scaling": "linear",
-            "offset_range": [0 * u.deg, 10 * u.deg],
-            "offset_binning": 2,
-            "offset_scaling": "linear",
+            "axis": [
+                ["ra", "0", "deg", "360", "deg", "36", "linear"],
+                ["dec", "-90", "deg", "90", "deg", "18", "linear"],
+                ["nsb", "4", "MHz", "4", "MHz", "1", "linear"],
+                ["offset", "0", "deg", "10", "deg", "2", "linear"],
+            ],
         }
     )
 
@@ -510,9 +573,12 @@ def test_generate_observation_grids_per_layout_uses_layout_specific_lookup(
         "zenith_angle": [20 * u.deg],
     }
 
-    observation_grids = _generate_observation_grids_per_layout(args_dict, grid_axes)
+    observation_grids, resolved_layout_names = _generate_observation_grids_per_layout(
+        args_dict, grid_axes
+    )
 
     assert set(observation_grids) == {"alpha", "beta"}
+    assert resolved_layout_names == {"6.3.0": "alpha", "7.0.0": "beta"}
     mock_corsika_limits_lookup.assert_any_call("limits.ecsv", array_layout_name="alpha")
     mock_corsika_limits_lookup.assert_any_call("limits.ecsv", array_layout_name="beta")
 
@@ -525,9 +591,14 @@ def test_generate_observation_grids_per_layout_uses_shared_axes_and_skips_duplic
         {"azimuth": 0 * u.deg}
     ]
 
-    observation_grids = _generate_observation_grids_per_layout(
+    observation_grids, resolved_layout_names = _generate_observation_grids_per_layout(
         {
-            "azimuth_range": [310 * u.deg, 20 * u.deg],
+            "axis": [
+                ["azimuth", "310", "deg", "20", "deg", "3"],
+                ["zenith", "20", "deg", "40", "deg", "2"],
+                ["nsb", "4", "MHz", "5", "MHz", "2"],
+                ["offset", "0", "deg", "10", "deg", "2"],
+            ],
             "array_layout_name": {"by_version": {"<7.0.0": "alpha", ">=7.0.0": "alpha"}},
         },
         {
@@ -538,6 +609,7 @@ def test_generate_observation_grids_per_layout_uses_shared_axes_and_skips_duplic
     )
 
     assert observation_grids == {"alpha": [{"azimuth": 0 * u.deg}]}
+    assert resolved_layout_names == {"6.3.0": "alpha", "7.0.0": "alpha"}
     mock_build_production_grid_engine.assert_called_once()
 
 
@@ -545,17 +617,20 @@ def test_generate_observation_grids_per_layout_uses_shared_axes_and_skips_duplic
 def test_build_simulation_jobs_expands_runs_from_observation_grid(
     mock_generate_observation_grids_per_layout,
 ):
-    mock_generate_observation_grids_per_layout.return_value = {
-        "alpha": [
-            {
-                "azimuth": 180 * u.deg,
-                "zenith_angle": 20 * u.deg,
-                "lower_energy_threshold": 40 * u.GeV,
-                "scatter_radius": 100 * u.m,
-                "viewcone_radius": 2 * u.deg,
-            }
-        ]
-    }
+    mock_generate_observation_grids_per_layout.return_value = (
+        {
+            "alpha": [
+                {
+                    "azimuth": 180 * u.deg,
+                    "zenith_angle": 20 * u.deg,
+                    "lower_energy_threshold": 40 * u.GeV,
+                    "scatter_radius": 100 * u.m,
+                    "viewcone_radius": 2 * u.deg,
+                }
+            ]
+        },
+        {"6.3.0": "alpha"},
+    )
     rows = build_simulation_jobs(
         {
             "primary": ["gamma"],
