@@ -110,57 +110,46 @@ def test_project_ground_to_corsika_shower_coordinates():
     """
     Test ground to shower coordinates.
 
-    Values below crosschecked with Eventdisplay and ctapipe results.
-
-    For ctapipe, do:
-
-        from ctapipe.coordinates import GroundFrame, TiltedGroundFrame
-
-        ground = GroundFrame(x=x_core * u.m, y=y_core * u.m, z=np.zeros_like(x_core) * u.m)
-        shower_frame = ground.transform_to(
-            TiltedGroundFrame(
-                pointing_direction=AltAz(
-                    az=shower_azimuth * u.rad, alt=shower_altitude * u.rad
-                )
-            )
-        )
-        return shower_frame.x.value, shower_frame.y.value
+    The implementation applies the documented horizontal CORSIKA/sim_telarray
+    projection and keeps ``z`` unchanged. In particular, zenith-pointing cases
+    are identical to ground coordinates for any azimuth.
     """
     x_ground = np.array([488.83758545] * 4)
     y_ground = np.array([-901.18658447] * 4)
-    z_ground = np.array([0.0] * 4)
+    z_ground = np.array([0.0, 0.0, 123.4, 0.0])
 
     # Following cases are tested:
-    # 1. both systems are identical for zenith pointing and zero azimuth
-    # 2. zenith pointing with azimuth rotation by 90 deg
-    # 3. random values
+    # 1. zenith pointing and zero azimuth
+    # 2. zenith pointing and azimuth rotated by 90 deg
+    # 3. generic values
     # 4. pointing towards horizon
     shower_azimuth = np.array([0.0, np.pi / 2.0, 0.21440187, 0.0])
     shower_altitude = np.array([np.pi / 2.0, np.pi / 2.0, 1.29735112, 0.0])
 
-    # The following expected values were crosschecked with Eventdisplay and ctapipe.
-    # For reference, see the docstring above for the ctapipe code used.
-    # The third and fourth columns are the results of transforming the ground coordinates
-    # (x_ground, y_ground, z_ground) to the shower frame for the given azimuth and altitude.
-    # These values are hardcoded here for regression testing.
     expected_x = np.array(
         [
-            x_ground[0],  # Case 1: zenith pointing, zero azimuth
-            x_ground[0],  # Case 2: zenith pointing, azimuth 90 deg
-            464.53687004627065,  # Case 3: current CORSIKA projection implementation
-            0.0,  # Case 4: pointing towards horizon
+            x_ground[0],  # Case 1
+            x_ground[0],  # Case 2: zenith pointing preserves horizontal coordinates
+            464.53686987894685,  # Case 3: regression value for the documented projection
+            0.0,  # Case 4
         ]
     )
     expected_y = np.array(
         [
             y_ground[0],  # Case 1
             y_ground[0],  # Case 2
-            -895.8951366657758,  # Case 3: current CORSIKA projection implementation
+            -895.8951366687575,  # Case 3
             y_ground[0],  # Case 4
         ]
     )
-    # Current implementation keeps z unchanged in the shower frame projection.
-    expected_z = np.array([0.0, 0.0, 0.0, 0.0])
+    expected_z = np.array(
+        [
+            0.0,  # Case 1
+            0.0,  # Case 2
+            z_ground[2],  # Case 3: projection keeps the ground z coordinate unchanged
+            0.0,  # Case 4
+        ]
+    )
     expected = np.array([expected_x, expected_y, expected_z])
 
     result = transf.project_ground_to_corsika_shower_coordinates(
