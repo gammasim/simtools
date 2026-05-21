@@ -18,7 +18,6 @@ COMPUTE_UPPER_RADIUS_LIMIT_PATH = (
 COMPUTE_VIEWCONE_PATH = "simtools.production_configuration.derive_corsika_limits.compute_viewcone"
 MOCK_FILE_PATH = "mock_file.fits"
 DEFAULT_ALLOWED_LOSSES = {
-    "energy": {"loss_fraction": 0.2, "loss_min_events": 10},
     "core_distance": {"loss_fraction": 0.2, "loss_min_events": 10},
     "angular_distance": {"loss_fraction": 0.2, "loss_min_events": 10},
 }
@@ -88,7 +87,7 @@ def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory)
 
     mock_dump = mocker.patch("simtools.data_model.metadata_collector.MetadataCollector.dump")
 
-    derive_corsika_limits.write_results(mock_results, mock_args_dict, DEFAULT_ALLOWED_LOSSES)
+    derive_corsika_limits.write_results(mock_results, mock_args_dict, DEFAULT_ALLOWED_LOSSES, 0.1)
 
     # Verify metadata was written
     mock_dump.assert_called_once()
@@ -98,7 +97,7 @@ def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory)
 
 def test_create_results_table(mock_results):
     """Test _create_results_table function."""
-    table = derive_corsika_limits._create_results_table(mock_results, DEFAULT_ALLOWED_LOSSES)
+    table = derive_corsika_limits._create_results_table(mock_results, DEFAULT_ALLOWED_LOSSES, 0.1)
     table.info()
 
     assert isinstance(table, Table)
@@ -115,12 +114,11 @@ def test_create_results_table(mock_results):
     assert table["br_core_scatter_max"].unit == u.m
     assert table["br_viewcone_max"].unit == u.deg
     assert table["br_viewcone_max"].description == "Viewcone max from broad-range simulations."
-    assert table.meta["loss_fraction_energy"] == pytest.approx(0.2)
-    assert table.meta["loss_min_events_energy"] == 10
     assert table.meta["loss_fraction_core_distance"] == pytest.approx(0.2)
     assert table.meta["loss_min_events_core_distance"] == 10
     assert table.meta["loss_fraction_angular_distance"] == pytest.approx(0.2)
     assert table.meta["loss_min_events_angular_distance"] == 10
+    assert table.meta["energy_threshold_fraction"] == pytest.approx(0.1)
     assert isinstance(table.meta["created"], str)
     assert "description" in table.meta
 
@@ -340,7 +338,7 @@ def test_compute_viewcone(mocker):
 
 def test_compute_lower_energy_limit(mocker):
     """Test compute_lower_energy_limit function with mocked histograms."""
-    mock_hist = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    mock_hist = np.array([1.0, 12.0, 20.0, 12.0, 1.0])
     mock_bins = np.logspace(-3, 3, 6)
 
     # Mock the histograms object
@@ -356,16 +354,46 @@ def test_compute_lower_energy_limit(mocker):
     assert result.value > 0
 
     expected = (
-        derive_corsika_limits._compute_limits(
+        derive_corsika_limits._find_low_energy_threshold_from_histogram(
             mock_hist,
             mock_bins,
-            0.2,
-            loss_min_events=10,
-            limit_type="lower",
+            threshold_fraction=0.1,
         )
         * u.TeV
     )
     assert result == expected
+
+
+def test_find_low_energy_threshold_from_histogram_basic():
+    """Test nominal threshold finding from peak toward lower energies."""
+    counts = np.array([1.0, 12.0, 20.0, 12.0, 1.0])
+    bin_edges = np.array([0.1, 0.2, 0.4, 0.8, 1.6, 3.2])
+
+    # Peak index=2, N_peak=(12+20+12)/3=14.666..., threshold=1.466...
+    # Walking left from idx=2: 20,12,1 -> first below threshold at idx=0
+    result = derive_corsika_limits._find_low_energy_threshold_from_histogram(counts, bin_edges)
+    assert result == pytest.approx(0.1)
+
+
+def test_find_low_energy_threshold_from_histogram_peak_at_first_bin():
+    """Test edge case where absolute maximum is at the first bin."""
+    counts = np.array([10.0, 4.0, 1.0, 0.0])
+    bin_edges = np.array([0.05, 0.1, 0.2, 0.4, 0.8])
+
+    # No bins left of peak; fallback to first edge is expected.
+    result = derive_corsika_limits._find_low_energy_threshold_from_histogram(counts, bin_edges)
+    assert result == pytest.approx(0.05)
+
+
+def test_find_low_energy_threshold_from_histogram_peak_at_last_bin():
+    """Test edge case where absolute maximum is at the last bin."""
+    counts = np.array([0.0, 0.2, 0.5, 10.0])
+    bin_edges = np.array([0.1, 0.2, 0.4, 0.8, 1.6])
+
+    # Peak index=3, N_peak=(0.5+10)/2=5.25, threshold=0.525
+    # Walking left from idx=3: 10,0.5 -> first below threshold at idx=2
+    result = derive_corsika_limits._find_low_energy_threshold_from_histogram(counts, bin_edges)
+    assert result == pytest.approx(0.4)
 
 
 def test_compute_upper_radius_limit(mocker):
@@ -464,7 +492,7 @@ def test_process_file_with_mocked_histograms(mocker):
         10,
     )
     mock_histograms.fill.assert_called_once()
-    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2, 10)
+    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.1)
     mock_compute_upper_radius_limit.assert_called_once_with(mock_histograms, 0.2, 10)
     mock_compute_viewcone.assert_called_once_with(mock_histograms, 0.2, 10)
 
@@ -519,7 +547,7 @@ def test_process_file_with_differential_loss_per_energy_bin(mocker):
     assert result["core_distance_vs_energy_curve"] == {"x": [100.0, 120.0], "y": [0.1, 1.0]}
     assert result["angular_distance_vs_energy_curve"] == {"x": [2.5, 3.0], "y": [0.1, 1.0]}
 
-    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2, 10)
+    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.1)
     mock_compute_upper_radius_limit.assert_not_called()
     mock_compute_viewcone.assert_not_called()
     mock_differential.assert_called_once_with(mock_histograms, DEFAULT_ALLOWED_LOSSES, 6)
@@ -827,14 +855,11 @@ def test_parse_allowed_losses_explicit_axes():
     """Test _parse_allowed_losses with explicit per-axis entries."""
     result = derive_corsika_limits._parse_allowed_losses(
         [
-            "energy,1e-6,10",
             "core_distance,2e-6,20",
             "angular_distance,3e-6,30",
         ]
     )
 
-    assert result["energy"]["loss_fraction"] == pytest.approx(1e-6)
-    assert result["energy"]["loss_min_events"] == 10
     assert result["core_distance"]["loss_fraction"] == pytest.approx(2e-6)
     assert result["core_distance"]["loss_min_events"] == 20
     assert result["angular_distance"]["loss_fraction"] == pytest.approx(3e-6)
@@ -846,14 +871,12 @@ def test_parse_allowed_losses_all_and_override():
     result = derive_corsika_limits._parse_allowed_losses(
         [
             "all,1e-6,10",
-            "energy,5e-7,5",
+            "core_distance,5e-7,5",
         ]
     )
 
-    assert result["energy"]["loss_fraction"] == pytest.approx(5e-7)
-    assert result["energy"]["loss_min_events"] == 5
-    assert result["core_distance"]["loss_fraction"] == pytest.approx(1e-6)
-    assert result["core_distance"]["loss_min_events"] == 10
+    assert result["core_distance"]["loss_fraction"] == pytest.approx(5e-7)
+    assert result["core_distance"]["loss_min_events"] == 5
     assert result["angular_distance"]["loss_fraction"] == pytest.approx(1e-6)
     assert result["angular_distance"]["loss_min_events"] == 10
 
@@ -863,7 +886,6 @@ def test_parse_allowed_losses_missing_axis_raises():
     with pytest.raises(ValueError, match="Missing --allowed_losses entries"):
         derive_corsika_limits._parse_allowed_losses(
             [
-                "energy,1e-6,10",
                 "core_distance,1e-6,10",
             ]
         )
@@ -874,7 +896,6 @@ def test_parse_allowed_losses_invalid_axis_raises():
     with pytest.raises(ValueError, match="Invalid axis for --allowed_losses"):
         derive_corsika_limits._parse_allowed_losses(
             [
-                "energy,1e-6,10",
                 "core_distance,1e-6,10",
                 "viewcone,1e-6,10",
             ]
@@ -1009,7 +1030,6 @@ def test_generate_corsika_limits_grid_multi_production(mocker, tmp_test_director
         "event_data_file": ["pattern_1_*.hdf5", "pattern_2_*.hdf5"],
         "telescope_ids": "telescope_ids.yml",
         "allowed_losses": [
-            "energy,0.2,10",
             "core_distance,0.2,10",
             "angular_distance,0.2,10",
         ],
@@ -1062,7 +1082,6 @@ def test_generate_corsika_limits_grid_single_production_uses_pool(mocker, tmp_te
         "event_data_file": "pattern_*.hdf5",  # Single string, not list
         "telescope_ids": "telescope_ids.yml",
         "allowed_losses": [
-            "energy,0.2,10",
             "core_distance,0.2,10",
             "angular_distance,0.2,10",
         ],
@@ -1086,7 +1105,7 @@ def test_create_results_table_with_production_columns(mock_results):
         res["production_index"] = i
         res["event_data_file"] = f"pattern_{i}_*.hdf5"
 
-    table = derive_corsika_limits._create_results_table(mock_results, DEFAULT_ALLOWED_LOSSES)
+    table = derive_corsika_limits._create_results_table(mock_results, DEFAULT_ALLOWED_LOSSES, 0.1)
 
     # Should include production-origin columns
     assert "production_index" in table.colnames
@@ -1100,7 +1119,7 @@ def test_create_results_table_with_production_columns(mock_results):
 def test_create_results_table_without_production_columns(mock_results):
     """Test _create_results_table with missing production metadata values."""
     # Results without production metadata (old format)
-    table = derive_corsika_limits._create_results_table(mock_results, DEFAULT_ALLOWED_LOSSES)
+    table = derive_corsika_limits._create_results_table(mock_results, DEFAULT_ALLOWED_LOSSES, 0.1)
 
     # Production-origin columns are included and filled with None if missing
     assert "production_index" in table.colnames
@@ -1171,10 +1190,10 @@ def mock_args_dict():
         "event_data_file": "dummy_event_data.h5",
         "output_file": "corsika_limits.ecsv",
         "allowed_losses": [
-            "energy,0.2,10",
             "core_distance,0.2,10",
             "angular_distance,0.2,10",
         ],
+        "energy_threshold_fraction": 0.1,
         "plot_histograms": False,
         "n_workers": 1,
         "array_layout_name": None,
