@@ -20,7 +20,7 @@ Lower energy limit (**ERANGE**)
 
     1. Find the absolute maximum bin in the triggered-energy histogram.
     2. Compute a stable peak by averaging the maximum bin and available immediate neighbors.
-    3. Define a threshold as 10% of this stable peak.
+    3. Define a threshold as fraction of this stable peak.
     4. Walk toward lower energies from the peak to the first bin below threshold.
     5. Use that bin's lower edge as the energy limit.
 
