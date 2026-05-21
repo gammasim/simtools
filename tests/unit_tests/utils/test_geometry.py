@@ -116,7 +116,7 @@ def test_project_ground_to_corsika_shower_coordinates():
     """
     x_ground = np.array([488.83758545] * 4)
     y_ground = np.array([-901.18658447] * 4)
-    z_ground = np.array([0.0] * 4)
+    z_ground = np.array([0.0, 0.0, 123.4, 0.0])
 
     # Following cases are tested:
     # 1. zenith pointing and zero azimuth
@@ -146,7 +146,7 @@ def test_project_ground_to_corsika_shower_coordinates():
         [
             0.0,  # Case 1
             0.0,  # Case 2
-            0.0,  # Case 3
+            z_ground[2],  # Case 3: projection keeps the ground z coordinate unchanged
             0.0,  # Case 4
         ]
     )
