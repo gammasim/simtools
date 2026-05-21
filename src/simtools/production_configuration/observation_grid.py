@@ -13,7 +13,10 @@ from astropy import units as u
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.units import Quantity
 
-from simtools.production_configuration.corsika_limits_lookup import CorsikaLimitsLookup
+from simtools.production_configuration.corsika_limits_lookup import (
+    CorsikaLimitsLookup,
+    attach_lookup_limits_to_point,
+)
 
 
 class ProductionGridEngine:
@@ -80,13 +83,6 @@ class ProductionGridEngine:
             else:
                 self._apply_lookup_table_limits()
 
-    def _sync_limits_lookup(self):
-        """Synchronize mutable lookup settings with the shared lookup helper."""
-        if self._limits_lookup is None:
-            return
-        self._limits_lookup.lookup_table = self.lookup_table
-        self._limits_lookup.array_layout_name = self.array_layout_name
-
     def _require_time_of_observation(self):
         """Return observing time if available, else raise a clear error."""
         if self.time_of_observation is None:
@@ -105,7 +101,6 @@ class ProductionGridEngine:
 
     def _prepare_lookup_table_limits_for_point_interpolation(self):
         """Prepare lookup arrays for per-point interpolation in RA/Dec grid mode."""
-        self._sync_limits_lookup()
         self._limits_lookup.prepare_point_interpolators()
 
     def _generate_target_values(self):
@@ -145,7 +140,6 @@ class ProductionGridEngine:
 
     def _apply_lookup_table_limits(self):
         """Apply limits from the lookup table and interpolate values."""
-        self._sync_limits_lookup()
         self.interpolated_limits = self._limits_lookup.interpolate_grid_limits(self.target_values)
 
     def _generate_radec_grid_direction_points(self):
@@ -201,7 +195,6 @@ class ProductionGridEngine:
 
     def _interpolate_limits_for_point(self, zenith, azimuth, nsb):
         """Interpolate lookup-table limits for a single point."""
-        self._sync_limits_lookup()
         return self._limits_lookup.interpolate_point(zenith, azimuth, nsb)
 
     def _add_lookup_limits_to_point(self, point, zenith, azimuth):
@@ -217,9 +210,7 @@ class ProductionGridEngine:
             azimuth=azimuth,
             nsb=float(nsb_value),
         )
-        point["lower_energy_threshold"] = limits["lower_energy_threshold"] * u.TeV
-        point["scatter_radius"] = limits["upper_scatter_radius"] * u.m
-        point["viewcone_radius"] = limits["viewcone_radius"] * u.deg
+        attach_lookup_limits_to_point(point, limits)
 
     def _generate_grid_from_radec_axes(self, include_horizontal_coordinates=False):
         """Generate grid points from explicit RA/Dec axes definitions."""

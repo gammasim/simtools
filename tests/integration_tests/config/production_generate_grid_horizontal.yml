@@ -6,18 +6,11 @@ applications:
       by_version:
         "<7.0.0": 1lst
         ">=7.0.0": 1lst
-    azimuth_range: 310 deg 20 deg
-    azimuth_binning: 3
-    azimuth_scaling: linear
-    zenith_range: 30 deg 40 deg
-    zenith_binning: 2
-    zenith_scaling: linear
-    nsb_range: 4 MHz 5 MHz
-    nsb_binning: 2
-    nsb_scaling: linear
-    offset_range: 0 deg 10 deg
-    offset_binning: 2
-    offset_scaling: linear
+    axis:
+    - azimuth 310 deg 20 deg 3 linear
+    - zenith 30 deg 40 deg 2 linear
+    - nsb 4 MHz 5 MHz 2 linear
+    - offset 0 deg 10 deg 2 linear
     core_scatter: 10 500 m
     corsika_he_interaction: epos
     corsika_le_interaction: urqmd

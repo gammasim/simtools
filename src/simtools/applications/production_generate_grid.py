@@ -12,13 +12,10 @@ It supports both:
 
 Command line arguments
 ----------------------
-azimuth_range, zenith_range, ra_range, dec_range, nsb_range, offset_range (2 quantities)
-    Axis ranges for grid generation, with explicit units provided on the command line.
-    Unitless angular values are interpreted as deg and unitless nsb values as MHz.
-azimuth_binning, zenith_binning, ra_binning, dec_binning, nsb_binning, offset_binning (int)
-    Number of bins per axis.
-azimuth_scaling, zenith_scaling, ra_scaling, dec_scaling, nsb_scaling, offset_scaling (str)
-    Axis scaling mode (choices: ``linear``, ``log``, ``1/cos``).
+axis (repeatable)
+    Compact axis definition in the form
+    ``--axis <name> <min> <unit> <max> <unit> <binning> [scaling]``.
+    Example: ``--axis azimuth 310 deg 20 deg 3 linear``.
 time_of_observation (str, optional)
     Time of the observation in UTC (format: 'YYYY-MM-DD HH:MM:SS').
     Used only if RA/Dec axes are provided (for coordinate transforms and sidereal-time
@@ -38,10 +35,10 @@ To generate a standard zenith/azimuth grid of simulation points, execute:
 
         simtools-production-generate-grid --site North --model_version 6.0.2 \
             --array_layout_name alpha \
-            --azimuth_range 310 deg 20 deg --azimuth_binning 3 --azimuth_scaling linear \
-            --zenith_range 30 deg 40 deg --zenith_binning 2 --zenith_scaling linear \
-            --nsb_range 4 MHz 5 MHz --nsb_binning 2 --nsb_scaling linear \
-            --offset_range 0 deg 10 deg --offset_binning 2 --offset_scaling linear \
+            --axis azimuth 310 deg 20 deg 3 linear \
+            --axis zenith 30 deg 40 deg 2 linear \
+            --axis nsb 4 MHz 5 MHz 2 linear \
+            --axis offset 0 deg 10 deg 2 linear \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
 
 To generate an all-sky RA/Dec direction grid and serialize output in RA/Dec,
@@ -51,16 +48,15 @@ execute:
 
         simtools-production-generate-grid --site North --model_version 6.0.2 \
             --array_layout_name alpha \
-            --ra_range 0 deg 360 deg --ra_binning 36 --ra_scaling linear \
-            --dec_range -90 deg 90 deg --dec_binning 18 --dec_scaling linear \
-            --nsb_range 4 MHz 4 MHz --nsb_binning 1 --nsb_scaling linear \
-            --offset_range 0 deg 10 deg --offset_binning 2 --offset_scaling linear \
+            --axis ra 0 deg 360 deg 36 linear \
+            --axis dec -90 deg 90 deg 18 linear \
+            --axis nsb 4 MHz 4 MHz 1 linear \
+            --axis offset 0 deg 10 deg 2 linear \
             --time_of_observation "2017-09-16 00:00:00" \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
 """
 
 from simtools.application_control import build_application
-from simtools.configuration.commandline_parser import QuantityPairAction
 from simtools.production_configuration.job_grid_io import serialize_job_grid
 from simtools.production_configuration.simulation_jobs import (
     build_job_grid_metadata,
@@ -70,36 +66,16 @@ from simtools.production_configuration.simulation_jobs import (
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    axis_defs = [
-        ("azimuth", "Azimuth range (deg)"),
-        ("zenith", "Zenith angle range (deg)"),
-        ("ra", "Right ascension range (deg)"),
-        ("dec", "Declination range (deg)"),
-        ("nsb", "NSB level range (MHz)"),
-        ("offset", "Offset range (deg)"),
-    ]
-    scaling_choices = ["linear", "log", "1/cos"]
-    for axis, help_str in axis_defs:
-        parser.add_argument(
-            f"--{axis}_range",
-            action=QuantityPairAction,
-            nargs="+",
-            help=help_str,
-        )
-        parser.add_argument(
-            f"--{axis}_binning",
-            type=int,
-            required=False,
-            help=f"Number of bins for {axis}",
-        )
-        parser.add_argument(
-            f"--{axis}_scaling",
-            type=str,
-            default="linear",
-            required=False,
-            choices=scaling_choices,
-            help=f"Scaling for {axis} (choices: {', '.join(scaling_choices)})",
-        )
+    parser.add_argument(
+        "--axis",
+        action="append",
+        nargs="+",
+        required=False,
+        help=(
+            "Compact axis definition: --axis <name> <min> <unit> <max> <unit> <binning> "
+            "[scaling]. May be repeated."
+        ),
+    )
     parser.add_argument(
         "--time_of_observation",
         type=str,
