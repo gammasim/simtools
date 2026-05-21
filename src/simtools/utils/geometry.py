@@ -141,8 +141,8 @@ def project_ground_to_corsika_shower_coordinates(
     - 0 rad   = North
     - pi/2    = East
 
-    Internally, the azimuth is converted to the CORSIKA `phi` convention used
-    in `iact.c`:
+    Internally, the azimuth is converted to the CORSIKA 'phi' convention used
+    in 'iact.c':
 
     - phi = 0       : shower propagates toward North
     - phi = pi/2    : shower propagates toward West
