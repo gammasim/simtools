@@ -642,7 +642,7 @@ def test_core_distance_bins_with_file_info(mock_reader, hdf5_file_name):
     assert isinstance(bins, np.ndarray)
     assert len(bins) == 100
     assert bins[0] == pytest.approx(10.0)
-    assert bins[-1] == pytest.approx(500.0)
+    assert bins[-1] == pytest.approx(550.0)
 
 
 def test_core_distance_bins_with_existing_edges(mock_reader, hdf5_file_name):
@@ -703,7 +703,10 @@ def test_calculate_cumulative_data(mock_reader, hdf5_file_name):
         "energy": {"histogram": np.array([10, 20, 30, 40]), "axis_titles": ["E", ""]},
         "core_distance": {"histogram": np.array([5, 15, 25, 35]), "axis_titles": ["r", ""]},
         "angular_distance": {"histogram": np.array([2, 4, 6, 8]), "axis_titles": ["theta", ""]},
-        "core_vs_energy": {"histogram": np.array([[1, 2], [3, 4]]), "axis_titles": ["r", "E"]},
+        "core_distance_vs_energy": {
+            "histogram": np.array([[1, 2], [3, 4]]),
+            "axis_titles": ["r", "E"],
+        },
         "angular_distance_vs_energy": {
             "histogram": np.array([[2, 3], [4, 5]]),
             "axis_titles": ["theta", "E"],
@@ -715,13 +718,13 @@ def test_calculate_cumulative_data(mock_reader, hdf5_file_name):
     expected_cumulative_core_distance = np.array([5, 20, 45, 80])
     expected_cumulative_angular_distance = np.array([2, 6, 12, 20])
     # Expected normalized cumulative for 2D histograms along axis=0 (column-wise)
-    expected_norm_core_vs_energy = np.array([[1 / 4, 2 / 6], [1.0, 1.0]])
+    expected_norm_core_distance_vs_energy = np.array([[1 / 4, 2 / 6], [1.0, 1.0]])
     expected_norm_ang_vs_energy = np.array([[2 / 6, 3 / 8], [1.0, 1.0]])
     assert set(cumulative_data.keys()) == {
         "core_distance_cumulative",
         "angular_distance_cumulative",
         "angular_distance_vs_energy_cumulative",
-        "core_vs_energy_cumulative",
+        "core_distance_vs_energy_cumulative",
         "energy_cumulative",
     }
     np.testing.assert_array_equal(
@@ -735,7 +738,8 @@ def test_calculate_cumulative_data(mock_reader, hdf5_file_name):
         expected_cumulative_angular_distance,
     )
     np.testing.assert_allclose(
-        cumulative_data["core_vs_energy_cumulative"]["histogram"], expected_norm_core_vs_energy
+        cumulative_data["core_distance_vs_energy_cumulative"]["histogram"],
+        expected_norm_core_distance_vs_energy,
     )
     np.testing.assert_allclose(
         cumulative_data["angular_distance_vs_energy_cumulative"]["histogram"],
