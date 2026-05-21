@@ -125,7 +125,7 @@ class EventDataHistograms:
         for data in self.histograms.values():
             self._fill_histogram_and_bin_edges(data)
 
-    def fill(self):
+    def fill(self, fill_efficiency_histogram=True):
         """
         Fill histograms with event data.
 
@@ -134,6 +134,11 @@ class EventDataHistograms:
 
         Assume that all event data files are generated with similar configurations
         (self.file_info contains the file info of the last file).
+
+        Parameters
+        ----------
+        fill_efficiency_histogram : bool, optional
+            Whether to calculate and fill the efficiency histograms.
         """
         total_files = len(self.event_data_files)
         for file_index, (event_data_file, reader) in enumerate(self._iter_readers(), start=1):
@@ -153,7 +158,8 @@ class EventDataHistograms:
                 self._fill_current_histograms()
 
         self.print_summary()
-        self.calculate_efficiency_data()
+        if fill_efficiency_histogram:
+            self.calculate_efficiency_data()
         self.calculate_cumulative_data()
 
     def _define_histograms(self, event_data, triggered_data, shower_data):
