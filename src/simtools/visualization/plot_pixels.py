@@ -85,6 +85,8 @@ def plot_pixel_layout_from_file(dat_file_path, telescope_model_name, **kwargs):
     **kwargs
         pixels_id_to_print : int
             Number of pixel IDs to print in the plot
+        rotate_angle : float, optional
+            Rotation angle applied to telescope-specific pixel transforms.
         title : str
             Plot title
         xtitle : str

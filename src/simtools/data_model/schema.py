@@ -123,19 +123,26 @@ def validate_dict_using_schema(
 
     Parameters
     ----------
-    data
-        dictionary to be validated
-    schema_file (dict)
-        schema used for validation
-    json_schema (dict)
-        schema used for validation
-    ignore_software_version: bool
+    data : dict
+        Dictionary to be validated.
+    schema_file : str or Path, optional
+        Schema file used for validation when ``json_schema`` is not provided.
+    json_schema : dict, optional
+        Preloaded JSON schema used for validation.
+    ignore_software_version : bool, optional
         If True, ignore software version check.
+    offline : bool, optional
+        If True, skip remote ``meta_schema_url`` validation.
+
+    Returns
+    -------
+    dict or None
+        The validated data, or ``None`` if no schema was provided.
 
     Raises
     ------
     jsonschema.exceptions.ValidationError
-        if validation fails
+        If validation fails.
 
     """
     if json_schema is None and schema_file is None:
