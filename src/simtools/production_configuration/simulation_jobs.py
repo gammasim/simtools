@@ -12,7 +12,6 @@ from astropy.coordinates import EarthLocation
 from astropy.time import Time
 
 from simtools.configuration import defaults
-from simtools.io import ascii_handler
 from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.model.site_model import SiteModel
 from simtools.production_configuration.corsika_limits_lookup import CorsikaLimitsLookup
@@ -34,12 +33,12 @@ _GRID_AXIS_DEFAULTS = {
 }
 
 
-def resolve_observing_time(observing_time, coordinate_system):
-    """Generate Time object for the observing time."""
-    if observing_time:
+def resolve_observing_time(observing_time, args_dict):
+    """Generate Time object for the observing time. Required if RA/Dec axes are present."""
+    if "ra_range" in args_dict or "dec_range" in args_dict:
+        if not observing_time:
+            raise ValueError("observing_time is required when using RA/Dec axes.")
         return Time(observing_time, scale="utc")
-    if coordinate_system == "ra_dec":
-        raise ValueError("observing_time is required when coordinate_system is 'ra_dec'.")
     return None
 
 
@@ -60,27 +59,112 @@ def build_observing_location(site, model_version):
     )
 
 
+def _build_axis_config(args_dict, axis_name, range_key, binning_key, scaling_key, unit):
+    """Build one axis configuration from CLI arguments."""
+    axis_range = args_dict.get(range_key)
+    binning = args_dict.get(binning_key)
+    scaling = args_dict.get(scaling_key, "linear")
+
+    if axis_range is None or binning is None:
+        raise ValueError(
+            f"Missing required axis configuration for '{axis_name}' "
+            f"(expected {range_key} and {binning_key})."
+        )
+    if len(axis_range) != 2:
+        raise ValueError(f"{range_key} must contain exactly two values.")
+
+    parsed_range = [u.Quantity(value).to_value(unit) for value in axis_range]
+    return {
+        "range": parsed_range,
+        "binning": int(binning),
+        "scaling": scaling,
+        "units": unit,
+    }
+
+
+def build_axes_dict_from_cli_args(args_dict):
+    """Build ProductionGridEngine-compatible axes configuration from CLI arguments."""
+    axes = {
+        "nsb_level": _build_axis_config(
+            args_dict,
+            "nsb_level",
+            "nsb_range",
+            "nsb_binning",
+            "nsb_scaling",
+            "MHz",
+        ),
+        "offset": _build_axis_config(
+            args_dict,
+            "offset",
+            "offset_range",
+            "offset_binning",
+            "offset_scaling",
+            "deg",
+        ),
+    }
+    if "ra_range" in args_dict and "dec_range" in args_dict:
+        axes["ra"] = _build_axis_config(
+            args_dict,
+            "ra",
+            "ra_range",
+            "ra_binning",
+            "ra_scaling",
+            "deg",
+        )
+        axes["dec"] = _build_axis_config(
+            args_dict,
+            "dec",
+            "dec_range",
+            "dec_binning",
+            "dec_scaling",
+            "deg",
+        )
+    elif "azimuth_range" in args_dict and "zenith_range" in args_dict:
+        axes["azimuth"] = _build_axis_config(
+            args_dict,
+            "azimuth",
+            "azimuth_range",
+            "azimuth_binning",
+            "azimuth_scaling",
+            "deg",
+        )
+        axes["zenith_angle"] = _build_axis_config(
+            args_dict,
+            "zenith_angle",
+            "zenith_range",
+            "zenith_binning",
+            "zenith_scaling",
+            "deg",
+        )
+    else:
+        raise ValueError("Must provide either both azimuth/zenith or both ra/dec axis definitions.")
+    return axes
+
+
 def build_production_grid_engine(args_dict, array_layout_name=None):
     """Build a production-grid engine from application arguments."""
-    coordinate_system = args_dict.get("coordinate_system", "horizontal")
-    observing_location = None
-    if coordinate_system == "ra_dec":
+    if "ra_range" in args_dict and "dec_range" in args_dict:
+        coordinate_system = "ra_dec"
         observing_location = build_observing_location(
             site=args_dict["site"],
             model_version=args_dict["model_version"],
         )
+    elif "azimuth_range" in args_dict and "zenith_range" in args_dict:
+        coordinate_system = "horizontal"
+        observing_location = None
+    else:
+        raise ValueError("Must provide either both azimuth/zenith or both ra/dec axis definitions.")
     resolved_layout_name = array_layout_name or resolve_array_layout_name(
         args_dict.get("array_layout_name"),
         resolve_single_model_version(args_dict.get("model_version")),
     )
-
     return ProductionGridEngine(
-        axes=ascii_handler.collect_data_from_file(args_dict["axes"]),
+        axes=build_axes_dict_from_cli_args(args_dict),
         coordinate_system=coordinate_system,
         observing_location=observing_location,
         observing_time=resolve_observing_time(
             args_dict.get("observing_time"),
-            coordinate_system,
+            args_dict,
         ),
         lookup_table=args_dict.get("corsika_limits"),
         array_layout_name=resolved_layout_name,
@@ -91,12 +175,18 @@ def build_job_grid_metadata(args_dict):
     """Build metadata stored alongside serialized executable job grids."""
     observing_time = resolve_observing_time(
         args_dict.get("observing_time"),
-        args_dict.get("coordinate_system", "horizontal"),
+        args_dict,
     )
+    if "ra_range" in args_dict and "dec_range" in args_dict:
+        coordinate_system = "ra_dec"
+    elif "azimuth_range" in args_dict and "zenith_range" in args_dict:
+        coordinate_system = "horizontal"
+    else:
+        coordinate_system = None
     return {
         "site": args_dict.get("site"),
         "simulation_software": args_dict.get("simulation_software"),
-        "coordinate_system": args_dict.get("coordinate_system", "horizontal"),
+        "coordinate_system": coordinate_system,
         "observing_time_utc": observing_time.isot if observing_time else None,
         "observing_time_scale": observing_time.scale if observing_time else None,
         "corsika_limits": (
@@ -336,7 +426,12 @@ def _generate_observation_grids_per_layout(args_dict, grid_axes):
     Uses either ProductionGridEngine or explicit azimuth/zenith axes.
     """
     observation_grids_per_layout = {}
-    use_shared_axes_definition = bool(args_dict.get("axes"))
+    use_shared_axes_definition = bool(
+        args_dict.get("azimuth_range")
+        or args_dict.get("ra_range")
+        or args_dict.get("nsb_range")
+        or args_dict.get("offset_range")
+    )
     corsika_limits_path = args_dict.get("corsika_limits")
 
     for model_version in grid_axes["model_version"]:
@@ -377,8 +472,8 @@ def build_simulation_jobs(args_dict):
     limits.
     nshow optionally energy-scaled.
 
-    Activates ProductionGridEngine if 'axes' key present; otherwise uses explicit
-    azimuth * zenith axes.
+    Activates ProductionGridEngine when axis-range CLI arguments are provided;
+    otherwise uses explicit azimuth * zenith axes.
 
     Returns
     -------
