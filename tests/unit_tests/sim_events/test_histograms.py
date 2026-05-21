@@ -642,7 +642,7 @@ def test_core_distance_bins_with_file_info(mock_reader, hdf5_file_name):
     assert isinstance(bins, np.ndarray)
     assert len(bins) == 100
     assert bins[0] == pytest.approx(10.0)
-    assert bins[-1] == pytest.approx(550.0)
+    assert bins[-1] == pytest.approx(500.0)
 
 
 def test_core_distance_bins_with_existing_edges(mock_reader, hdf5_file_name):
