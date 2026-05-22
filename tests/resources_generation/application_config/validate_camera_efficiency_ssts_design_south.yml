@@ -2,9 +2,7 @@
 applications:
 - application: simtools-validate-camera-efficiency
   configuration:
-    log_level: info
     model_version: 6.0.2
-    log_file_path: ./tmp-test-resources/model_parameter
     output_path: ./tmp-test-resources/camera_efficiency
     site: South
     telescope: SSTS-design
