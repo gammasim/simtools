@@ -86,6 +86,9 @@ definitions:
         test_use_case:
           type: string
           description: "Use case ID of the test."
+        xfail_network_error:
+          type: boolean
+          description: "Mark test as xfail if application exits with a network error."
       required:
         - application
         - configuration

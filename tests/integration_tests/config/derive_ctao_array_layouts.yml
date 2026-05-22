@@ -11,5 +11,6 @@ applications:
   - output_file: array_layouts/array_layouts-1.0.99.json
   - output_file: array_layouts/array_layouts-1.0.99.meta.yml
   test_name: run
+  xfail_network_error: true
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
