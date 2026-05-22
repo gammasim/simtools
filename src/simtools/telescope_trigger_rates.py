@@ -20,7 +20,16 @@ def telescope_trigger_rates(args_dict):
 
     Main function to read event data, fill histograms, and derive trigger rates.
 
+    Parameters
+    ----------
+    args_dict : dict
+        Dictionary with configuration parameters.
 
+    Returns
+    -------
+    dict
+        Dictionary with array names as keys and trigger rates (astropy.units.Quantity) as values.
+        Example: {"array_name": 1234.5 * u.Hz}
     """
     if args_dict.get("array_layout_name"):
         telescope_configs = get_array_elements_from_db_for_layouts(
@@ -33,6 +42,7 @@ def telescope_trigger_rates(args_dict):
             "telescope_configs"
         ]
 
+    results = {}
     for array_name, telescope_ids in telescope_configs.items():
         _logger.info(
             f"Processing file: {args_dict['event_data_file']} with telescope config: {array_name}"
@@ -42,14 +52,17 @@ def telescope_trigger_rates(args_dict):
         )
         histograms.fill()
 
-        _calculate_trigger_rates(histograms, array_name)
+        _, _, trigger_rate = _calculate_trigger_rates(histograms, array_name)
+        results[array_name] = trigger_rate
 
-        if args_dict["plot_histograms"]:
+        if args_dict.get("plot_histograms"):
             plot_simtel_event_histograms.plot(
                 histograms.histograms,
                 output_path=io_handler.IOHandler().get_output_directory(),
                 array_name=array_name,
             )
+
+    return results
 
 
 def _calculate_trigger_rates(histograms, array_name):
