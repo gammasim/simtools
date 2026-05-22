@@ -77,6 +77,10 @@ def plot_grid_coverage(limits_table, grid_definition, output_dir):
     output_dir : str or Path
         Directory where the generated grid coverage plots will be saved.
 
+    Returns
+    -------
+    list of Path
+        List of file paths to the generated grid coverage plots.
     """
     if not grid_definition:
         _logger.info("No grid definition provided, skipping grid coverage plots.")
@@ -84,6 +88,7 @@ def plot_grid_coverage(limits_table, grid_definition, output_dir):
 
     _logger.info("Generating grid coverage plots")
     output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
     output_files = []
 
     found_combinations_str = set(
@@ -131,9 +136,15 @@ def plot_limits(limits_table, output_dir):
         An astropy Table containing the CORSIKA limits data.
     output_dir (str or Path)
         Directory where the generated plots will be saved.
+
+    Returns
+    -------
+    list of Path
+        List of file paths to the generated plots.
     """
     _logger.info("Generating limit plots")
     output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
     output_files = []
 
     grouped_by_layout_az = limits_table.group_by(["array_name", "azimuth"])
