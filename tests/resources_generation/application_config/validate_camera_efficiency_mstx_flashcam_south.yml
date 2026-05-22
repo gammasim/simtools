@@ -1,0 +1,27 @@
+---
+applications:
+- application: simtools-validate-camera-efficiency
+  configuration:
+    log_level: info
+    model_version: 6.0.2
+    log_file_path: ./tmp-test-resources/model_parameter
+    output_path: ./tmp-test-resources/camera_efficiency
+    site: South
+    telescope: MSTx-FlashCam
+    parameter_version: 0.0.99
+    write_reference_nsb_rate_as_parameter: true
+    zenith_angle: 0.
+collection:
+  output_path: tests/resources/camera_efficiency
+  files:
+  - camera_efficiency_summary_South_MSTx-FlashCam_za0.0deg_azm000deg.yml
+schema_name: application_workflow.metaschema
+schema_url: https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/application_workflow.metaschema.yml
+schema_version: 0.4.0
+runtime_environment:
+  image: ghcr.io/gammasim/simtools-prod:v0.28.0-v78010-v2025-11-30-rc-generic
+  network: simtools-mongo-network
+  environment_file: ./.env
+  container_engine: podman
+  options:
+  - '--arch amd64'

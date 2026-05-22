@@ -4,7 +4,7 @@ meta:
   model_version: 6.0.2
   zen: 0.0
   az: 0.0
-  nsb: tests/resources/model_parameters/Benn_LaPalma_sky_converted.lis
+  nsb: default sim_telarray spectrum
 reflectivity:
   value: 0.9333498341901661
   description: Spectrum weighted reflectivity
@@ -30,5 +30,4 @@ nsb_ref:
   description: Expected NSB pixel rate for the reference NSB
 muon_frac:
   value: 0.011889288721859825
-  description: Fraction of light (from muons) in the wavelength range 200-290 nm
-    (B-TEL-0095)
+  description: Fraction of light (from muons) in the wavelength range 200-290 nm (B-TEL-0095)

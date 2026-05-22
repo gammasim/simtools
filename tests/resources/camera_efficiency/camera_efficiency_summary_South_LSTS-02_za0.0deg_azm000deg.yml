@@ -30,5 +30,4 @@ nsb_ref:
   description: Expected NSB pixel rate for the reference NSB
 muon_frac:
   value: 0.012023215072742248
-  description: Fraction of light (from muons) in the wavelength range 200-290 nm
-   (B-TEL-0095)
+  description: Fraction of light (from muons) in the wavelength range 200-290 nm (B-TEL-0095)
