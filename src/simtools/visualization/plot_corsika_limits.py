@@ -18,6 +18,18 @@ BROAD_RANGE_COLUMN_ALIASES = {
 }
 
 
+def _get_primary_particle_label(table):
+    """Return a primary particle label derived from table content."""
+    if "primary_particle" not in table.colnames:
+        return "unknown"
+
+    unique_particles = np.unique(np.array(table["primary_particle"], dtype=str))
+    if len(unique_particles) == 1:
+        return unique_particles[0]
+
+    return "/".join(unique_particles)
+
+
 def _resolve_broad_range_columns(limits_table):
     """Resolve broad-range column names from supported aliases."""
     resolved_columns = {}
@@ -33,7 +45,9 @@ def _resolve_broad_range_columns(limits_table):
     return resolved_columns
 
 
-def _plot_single_grid_coverage(ax, zeniths, azimuths, nsb, array_name, found_combinations_str):
+def _plot_single_grid_coverage(
+    ax, zeniths, azimuths, nsb, array_name, found_combinations_str, primary_particle
+):
     """Plot grid coverage for a single NSB and array name."""
     z_grid = np.zeros((len(zeniths), len(azimuths)))
     for i, zenith in enumerate(zeniths):
@@ -55,7 +69,9 @@ def _plot_single_grid_coverage(ax, zeniths, azimuths, nsb, array_name, found_com
     cbar = plt.colorbar(im, ax=ax, ticks=[0, 1], label="Coverage", shrink=0.25, pad=0.02)
     cbar.set_ticklabels(["Missing", "Present"])
 
-    ax.set_title(f"Grid Coverage: NSB={nsb}, Array Name={array_name}")
+    ax.set_title(
+        f"Grid Coverage: NSB={nsb}, Array Name={array_name}, Primary Particle={primary_particle}"
+    )
     ax.set_xlabel("Azimuth [deg]")
     ax.set_ylabel(ZENITH_LABEL)
     ax.set_xticks(az_vals)
@@ -90,6 +106,7 @@ def plot_grid_coverage(limits_table, grid_definition, output_dir):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     output_files = []
+    primary_particle = _get_primary_particle_label(limits_table)
 
     found_combinations_str = set(
         zip(
@@ -116,6 +133,7 @@ def plot_grid_coverage(limits_table, grid_definition, output_dir):
             nsb,
             array_name,
             found_combinations_str,
+            primary_particle,
         )
         output_file = output_dir / f"grid_coverage_{nsb}_{array_name}.png"
         plt.tight_layout()
@@ -154,6 +172,7 @@ def plot_limits(limits_table, output_dir):
         array_name = group["array_name"][0]
         azimuth = group["azimuth"][0]
         azimuth_value = azimuth.value if hasattr(azimuth, "value") else azimuth
+        primary_particle = _get_primary_particle_label(group)
 
         fig, axes = plt.subplots(1, 3, figsize=(18, 6))
         legend_handles, legend_labels = [], []
@@ -225,7 +244,11 @@ def plot_limits(limits_table, output_dir):
         axes[2].grid(True)
 
         fig.legend(legend_handles, legend_labels, loc="lower center", ncol=len(legend_labels))
-        plt.suptitle(f"CORSIKA Limits: Array Name={array_name}, Azimuth={azimuth_value} deg")
+        plt.suptitle(
+            "CORSIKA Limits: "
+            f"Array Name={array_name}, Azimuth={azimuth_value} deg, "
+            f"Primary Particle={primary_particle}"
+        )
         plt.tight_layout()
         plt.subplots_adjust(bottom=0.15)
 
