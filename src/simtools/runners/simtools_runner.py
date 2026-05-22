@@ -34,6 +34,15 @@ def run_applications(args_dict):
         args_dict.get("steps"),
         args_dict.get("activity_id"),
     )
+
+    collection_config = None
+    try:
+        collection_config = ascii_handler.collect_data_from_file(args_dict["config_file"]).get(
+            "collection"
+        )
+    except (FileNotFoundError, OSError, TypeError):
+        logger.debug("Could not read collection configuration from workflow file.")
+
     workflow_start = datetime.now(UTC)
     associated_activities = []
     runtime_environment_snapshot = deepcopy(runtime_environment)
@@ -74,6 +83,8 @@ def run_applications(args_dict):
                 file.write(
                     f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n"
                 )
+
+            _copy_collection_files(configurations, collection_config)
         finally:
             _update_workflow_metadata_files(
                 args_dict=args_dict,
@@ -84,6 +95,43 @@ def run_applications(args_dict):
                 model_parameter_metadata_files=model_parameter_metadata_files,
                 associated_activities=associated_activities,
             )
+
+
+def _copy_collection_files(configurations, collection_config):
+    """Copy listed files from application output paths to collection output path."""
+    if not collection_config:
+        return
+
+    output_path = collection_config.get("output_path")
+    files = collection_config.get("files") or []
+    if output_path is None or not files:
+        return
+
+    source_directories = []
+    for config in configurations:
+        source_dir = config.get("configuration", {}).get("output_path")
+        if source_dir is not None:
+            source_directory = Path(source_dir)
+            if source_directory not in source_directories:
+                source_directories.append(source_directory)
+
+    collection_output_path = Path(output_path)
+    collection_output_path.mkdir(parents=True, exist_ok=True)
+
+    for file_name in files:
+        source_file = None
+        for source_directory in source_directories:
+            candidate = source_directory / file_name
+            if candidate.exists():
+                source_file = candidate
+                break
+
+        if source_file is None:
+            raise FileNotFoundError(
+                f"Could not find collection file '{file_name}' in {source_directories}."
+            )
+
+        shutil.copy2(source_file, collection_output_path / file_name)
 
 
 def _append_metadata_file(model_parameter_metadata_files, metadata_file):
@@ -329,9 +377,22 @@ def _set_input_output_directories(path):
     Returns
     -------
     tuple
-        The first part is the 'input' directory, the second part is the subdirectory name
+        The first part is the output directory, the second part is the subdirectory name.
     """
-    setting_workflow = gen.extract_subdirectories_from_path(path, anchor="input")
+    path = Path(path)
+    try:
+        setting_workflow = gen.extract_subdirectories_from_path(path, anchor="input")
+    except ValueError:
+        if path.parent != Path():
+            setting_workflow = str(path.parent)
+        else:
+            setting_workflow = path.stem
+
+        logger.info(
+            "Could not derive setting workflow from 'input' anchor; "
+            f"using fallback '{setting_workflow}'"
+        )
+
     output_path = Path("output") / Path(setting_workflow)
     output_path.mkdir(parents=True, exist_ok=True)
     return output_path, setting_workflow
