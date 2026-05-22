@@ -80,7 +80,7 @@ def test_make_run_command(simulator_camera_efficiency):
 def test_make_run_command_with_nsb_spectrum(simulator_camera_efficiency):
     # With mocked database, just verify make_run_command() executes without errors
     simulator_camera_efficiency.nsb_spectrum = (
-        "tests/resources/benn_ellison_spectrum_for_testing.txt"
+        "tests/resources/model_parameters/Benn_LaPalma_sky_converted.ecsv"
     )
     command, _, _ = simulator_camera_efficiency.make_run_command()
 
@@ -92,7 +92,7 @@ def test_make_run_command_with_nsb_spectrum(simulator_camera_efficiency):
     assert "-fnsb" in command
     assert "-alt" in command
     # Verify the nsb spectrum file is in the command
-    assert any("benn_ellison_spectrum_for_testing.txt" in str(cmd) for cmd in command)
+    assert any("model_parameters/Benn_LaPalma_sky_converted.ecsv" in str(cmd) for cmd in command)
 
 
 def test_make_run_command_without_altitude_correction(simulator_camera_efficiency):
@@ -215,7 +215,7 @@ def test_validate_or_fix_nsb_spectrum_file_format(simulator_camera_efficiency):
     """
     validated_nsb_spectrum_file = (
         simulator_camera_efficiency._validate_or_fix_nsb_spectrum_file_format(
-            "tests/resources/benn_ellison_spectrum_for_testing.txt"
+            "tests/resources/model_parameters/Benn_LaPalma_sky_converted.ecsv"
         )
     )
     assert validated_nsb_spectrum_file.exists()
