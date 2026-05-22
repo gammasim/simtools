@@ -7,15 +7,15 @@ import numpy as np
 from astropy.units import UnitsError
 
 
-@u.quantity_input(rotation_angle_phi=u.rad, rotation_angle_theta=u.rad)
-def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
+@u.quantity_input(rotation_around_z_axis=u.rad, rotation_around_y_axis=u.rad)
+def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0 * u.rad):
     """
     Rotate the x and y coordinates of the telescopes.
 
     The two rotations are:
 
-    - rotation_angle_around_z_axis gives the rotation on the observation plane (x, y)
-    - rotation_angle_around_y_axis allows to rotate the observation plane in space.
+    - rotation_around_z_axis gives the rotation on the observation plane (x, y)
+    - rotation_around_y_axis allows to rotate the observation plane in space.
 
     The function returns the rotated x and y values in the same unit given.
     The direction of rotation of the elements in the plane is counterclockwise, i.e.,
@@ -27,9 +27,9 @@ def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
         x positions of the entries (e.g. telescopes), usually in meters.
     y: numpy.array or list
         y positions of the entries (e.g. telescopes), usually in meters.
-    rotation_angle_around_z_axis: astropy.units.rad
+    rotation_around_z_axis: astropy.units.rad
         Angle to rotate the array in the observation plane (around z axis) in radians.
-    rotation_angle_around_y_axis: astropy.units.rad
+    rotation_around_y_axis: astropy.units.rad
         Angle to rotate the observation plane around the y axis in radians.
 
     Returns
@@ -121,11 +121,34 @@ def solid_angle(angle_max, angle_min=0 * u.rad):
     return 2 * np.pi * (np.cos(angle_min.to("rad")) - np.cos(angle_max.to("rad"))) * u.sr
 
 
-def transform_ground_to_shower_coordinates(x_ground, y_ground, z_ground, azimuth, altitude):
+def project_ground_to_corsika_shower_coordinates(
+    x_ground, y_ground, z_ground, azimuth_from_north_east, altitude
+):
     """
-    Transform ground to shower coordinates.
+    Transform ground to shower coordinates following the CORSIKA/sim_telarray convention.
 
-    Assume ground to be of type 'North-West-Up' (NWU) coordinates.
+    This function applies the same horizontal coordinate transformation used
+    internally by sim_telarray for shower-oriented coordinates.
+
+    Input ground coordinates follow the CORSIKA/sim_telarray ground system:
+
+    - x_ground : points North
+    - y_ground : points West
+    - z_ground : points Up
+
+    The input azimuth is assumed to follow the standard astronomical convention:
+
+    - 0 rad   = North
+    - pi/2    = East
+
+    Internally, the azimuth is converted to the CORSIKA 'phi' convention used
+    in 'iact.c':
+
+    - phi = 0       : shower propagates toward North
+    - phi = pi/2    : shower propagates toward West
+
+    The transformation corresponds to the inverse of the projection applied
+    in sim_telarray when converting shower coordinates into ground coordinates.
 
     Parameters
     ----------
@@ -145,14 +168,20 @@ def transform_ground_to_shower_coordinates(x_ground, y_ground, z_ground, azimuth
     tuple
         Transformed shower coordinates (x', y', z').
     """
-    x, y, z, az, alt = np.broadcast_arrays(x_ground, y_ground, z_ground, azimuth, altitude)
+    x, y, z, az, alt = np.broadcast_arrays(
+        x_ground, y_ground, z_ground, azimuth_from_north_east, altitude
+    )
 
-    ca, sa = np.cos(az), np.sin(az)
-    cz, sz = np.sin(alt), np.cos(alt)
+    # Convert to CORSIKA phi convention used in iact.c:
+    # 0 = moves North, 90 deg = moves West
+    phi = np.mod(np.pi - az, 2.0 * np.pi)
 
-    x_s = ca * cz * x - sa * y + ca * sz * z
-    y_s = sa * cz * x + ca * y + sa * sz * z
-    z_s = -sz * x + cz * z
+    ca, sa = np.cos(phi), np.sin(phi)
+    cos_zenith = np.sin(alt)  # pi/2 - altitude
+
+    x_s = (ca * ca * cos_zenith + sa * sa) * x + ca * sa * (cos_zenith - 1.0) * y
+    y_s = ca * sa * (cos_zenith - 1.0) * x + (sa * sa * cos_zenith + ca * ca) * y
+    z_s = z
 
     return x_s, y_s, z_s
 

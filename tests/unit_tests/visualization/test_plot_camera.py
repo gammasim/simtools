@@ -134,7 +134,13 @@ def test_pixel_shape_with_different_orientations(camera_hexagon):
 def test_color_normalization_none_image():
     """Test normalization with None image."""
     result = _color_normalization(None, "viridis")
-    assert result is None
+    assert result == (None, None, None)
+
+
+def test_plot_layout_with_no_image(simple_camera):
+    """Test pixel layout without image data."""
+    fig = plot_pixel_layout_with_image(simple_camera, image=None)
+    assert fig is not None
 
 
 def test_color_normalization_linear():
