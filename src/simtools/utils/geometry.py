@@ -7,15 +7,15 @@ import numpy as np
 from astropy.units import UnitsError
 
 
-@u.quantity_input(rotation_angle_phi=u.rad, rotation_angle_theta=u.rad)
-def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
+@u.quantity_input(rotation_around_z_axis=u.rad, rotation_around_y_axis=u.rad)
+def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0 * u.rad):
     """
     Rotate the x and y coordinates of the telescopes.
 
     The two rotations are:
 
-    - rotation_angle_around_z_axis gives the rotation on the observation plane (x, y)
-    - rotation_angle_around_y_axis allows to rotate the observation plane in space.
+    - rotation_around_z_axis gives the rotation on the observation plane (x, y)
+    - rotation_around_y_axis allows to rotate the observation plane in space.
 
     The function returns the rotated x and y values in the same unit given.
     The direction of rotation of the elements in the plane is counterclockwise, i.e.,
@@ -27,9 +27,9 @@ def rotate(x, y, rotation_around_z_axis, rotation_around_y_axis=0):
         x positions of the entries (e.g. telescopes), usually in meters.
     y: numpy.array or list
         y positions of the entries (e.g. telescopes), usually in meters.
-    rotation_angle_around_z_axis: astropy.units.rad
+    rotation_around_z_axis: astropy.units.rad
         Angle to rotate the array in the observation plane (around z axis) in radians.
-    rotation_angle_around_y_axis: astropy.units.rad
+    rotation_around_y_axis: astropy.units.rad
         Angle to rotate the observation plane around the y axis in radians.
 
     Returns
