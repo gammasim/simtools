@@ -7,7 +7,7 @@ applications:
     - png
     log_level: debug
     model_version: 6.0.2
-    nsb_spectrum: tests/resources/model_parameters/Benn_LaPalma_sky_converted.ecsv
+    nsb_spectrum: tests/resources/model_parameters/Benn_LaPalma_sky_converted.lis
     output_path: simtools-output
     site: South
     telescope: MSTx-FlashCam
