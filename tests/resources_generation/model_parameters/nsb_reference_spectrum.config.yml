@@ -4,6 +4,7 @@ applications:
 - application: simtools-db-get-parameter-from-db
   configuration:
     export_model_file: true
+    log_file_path: /tmp/model_parameter
     output_path: tests/resources/model_parameters
     parameter: nsb_reference_spectrum
     parameter_version: 1.0.0

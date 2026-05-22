@@ -172,6 +172,11 @@ class CommandLineParser(argparse.ArgumentParser):
             type=Path,
         )
         _job_group.add_argument(
+            "--log_file_path",
+            help="path pointing towards log directory",
+            type=Path,
+        )
+        _job_group.add_argument(
             "--disable_log_file",
             action="store_true",
             help=argparse.SUPPRESS,
