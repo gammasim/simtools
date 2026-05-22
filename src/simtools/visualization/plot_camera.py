@@ -211,7 +211,7 @@ def _color_normalization(image, color_map, norm_type="lin", vmin=None, vmax=None
 
     Returns
     -------
-    tuple[np.ndarray | None, plt.Colormap | None, mcolors.Normalize | None]
+    tuple[np.ndarray | None, mcolors.Colormap | None, mcolors.Normalize | None]
         Array of RGBA colors for each pixel.
         Colormap instance.
         Normalization instance.
