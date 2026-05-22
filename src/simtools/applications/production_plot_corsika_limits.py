@@ -3,7 +3,7 @@
 r"""
 Plot CORSIKA limits from a ECSV table.
 
-This application reads a mCORSIKA limits table and plots the limits
+This application reads a CORSIKA limits table and plots the limits
 as function of zenith angle.
 
 
