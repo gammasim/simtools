@@ -61,6 +61,20 @@ def test_plot_grid_coverage(mock_savefig, tmp_test_directory):
     assert len(output_files) == 1
     mock_savefig.assert_called_once()
 
+    _, ax = plt.subplots()
+    found_combinations_str = {("20", "0", "dark", "layout1"), ("40", "0", "dark", "layout1")}
+    plot_corsika_limits._plot_single_grid_coverage(
+        ax,
+        [20, 40],
+        [0],
+        "dark",
+        "layout1",
+        found_combinations_str,
+        "gamma",
+    )
+    assert "Primary Particle=gamma" in ax.get_title()
+    plt.close(ax.figure)
+
     mock_savefig.reset_mock()
     output_files = plot_corsika_limits.plot_grid_coverage(table, None, tmp_test_directory)
     assert not output_files
@@ -68,7 +82,8 @@ def test_plot_grid_coverage(mock_savefig, tmp_test_directory):
 
 
 @patch("simtools.visualization.plot_corsika_limits.plt.savefig")
-def test_plot_limits(mock_savefig, tmp_test_directory):
+@patch("simtools.visualization.plot_corsika_limits.plt.suptitle")
+def test_plot_limits(mock_suptitle, mock_savefig, tmp_test_directory):
     """Test generating CORSIKA limits plots."""
     table = vstack(
         [
@@ -81,6 +96,8 @@ def test_plot_limits(mock_savefig, tmp_test_directory):
     output_files = plot_corsika_limits.plot_limits(table, tmp_test_directory)
     assert len(output_files) == 1
     mock_savefig.assert_called_once()
+    suptitle_text = mock_suptitle.call_args.args[0]
+    assert "Primary Particle=gamma" in suptitle_text
 
 
 @patch("simtools.visualization.plot_corsika_limits.plt.savefig")
