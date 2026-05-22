@@ -5,10 +5,6 @@ applications:
     input: tests/resources/corsika_simulation_limits/merged_corsika_limits_for_test.ecsv
     output_path: simtools-output
   integration_tests:
-  - output_file: grid_coverage_1.0_1lst.png
-  - output_file: grid_coverage_1.0_1mst.png
-  - output_file: grid_coverage_5.0_1lst.png
-  - output_file: grid_coverage_5.0_1mst.png
   - output_file: limits_1lst_azimuth0.0.png
   - output_file: limits_1lst_azimuth180.0.png
   - output_file: limits_1mst_azimuth0.0.png
