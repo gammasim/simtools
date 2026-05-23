@@ -22,8 +22,9 @@ applications:
     model_version:
     - 6.3.0
     - 7.0.0
-    nshow: 5
-    number_of_runs: 2
+    showers_per_run: 5
+    total_showers: 50
+    total_showers_scaling: zenith_scaled
     output_file: job_grid_horizontal_explicit.ecsv
     output_path: simtools-output
     primary:

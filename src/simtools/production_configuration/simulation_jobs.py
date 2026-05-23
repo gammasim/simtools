@@ -391,7 +391,7 @@ def calculate_log_energy_midpoint(energy_range_pair):
     return 10**mean_log_energy * u.TeV
 
 
-def calculate_scaled_nshow(
+def calculate_scaled_showers_per_run(
     energy_range_pair,
     baseline_nshow,
     nshow_power_index=None,
@@ -453,24 +453,56 @@ def _clip_max_quantity(configured_max, lookup_max):
     return min(configured_max, lookup_max.to(configured_max.unit))
 
 
-def _resolve_nshow_params(args_dict):
-    """Extract and convert nshow-scaling parameters from an args dict."""
-    nshow = args_dict["nshow"]
+def _resolve_shower_params(args_dict):
+    """Extract and convert shower-statistics parameters from an args dict."""
+    showers_per_run = args_dict["showers_per_run"]
     nshow_power_index = args_dict.get("nshow_power_index")
     reference_energy = args_dict.get("nshow_reference_energy")
+    total_showers = args_dict.get("total_showers")
+    total_showers_scaling = args_dict.get("total_showers_scaling", "fixed")
+
     if nshow_power_index is not None and reference_energy is not None:
         reference_energy = u.Quantity(reference_energy)
-    return nshow, nshow_power_index, reference_energy
+
+    return (
+        showers_per_run,
+        nshow_power_index,
+        reference_energy,
+        total_showers,
+        total_showers_scaling,
+    )
+
+
+def _scale_total_showers(
+    total_showers, zenith_angle, total_showers_scaling, cos_scaling_factor=3.9781
+):
+    """
+    Return total showers adjusted for the selected scaling mode.
+
+    Scaling modes:
+
+    - "fixed": total showers is unchanged.
+    - "zenith_scaled": total showers is scaled by the cosine of the zenith angle
+    """
+    if total_showers_scaling == "fixed":
+        return int(total_showers)
+    if total_showers_scaling == "zenith_scaled":
+        cos_zenith = np.cos(zenith_angle.to(u.rad).value)
+        scaled_total_showers = total_showers * np.exp(cos_scaling_factor * (cos_zenith - 1))
+        return int(np.ceil(scaled_total_showers))
+    raise ValueError(f"Unknown total_showers_scaling mode: {total_showers_scaling}")
 
 
 def _build_rows_for_point(
     point_base,
     energy_ranges,
     lower_energy_threshold,
-    nshow,
+    showers_per_run,
     nshow_power_index,
     reference_energy,
     number_of_runs,
+    total_showers,
+    total_showers_scaling,
     run_number,
 ):
     """Build all simulation-run rows for a single grid point across all energy ranges."""
@@ -481,16 +513,37 @@ def _build_rows_for_point(
         )
         if selected_energy_range is None:
             continue
-        selected_nshow = calculate_scaled_nshow(
-            selected_energy_range, nshow, nshow_power_index, reference_energy
+        selected_showers_per_run = calculate_scaled_showers_per_run(
+            selected_energy_range,
+            showers_per_run,
+            nshow_power_index,
+            reference_energy,
         )
-        for i in range(number_of_runs):
+
+        per_point_number_of_runs = number_of_runs
+        if total_showers is not None:
+            effective_total_showers = _scale_total_showers(
+                total_showers,
+                point_base["zenith_angle"],
+                total_showers_scaling,
+            )
+            if effective_total_showers <= 0:
+                continue
+            number_of_full_runs, remainder_showers = divmod(
+                effective_total_showers, selected_showers_per_run
+            )
+            per_point_number_of_runs = number_of_full_runs + int(remainder_showers > 0)
+
+        for i in range(per_point_number_of_runs):
+            run_showers_per_run = selected_showers_per_run
+            if total_showers is not None and i >= number_of_full_runs:
+                run_showers_per_run = remainder_showers
             rows.append(
                 {
                     **point_base,
                     "energy_min": selected_energy_range[0],
                     "energy_max": selected_energy_range[1],
-                    "nshow": selected_nshow,
+                    "showers_per_run": run_showers_per_run,
                     "run_number": run_number + i,
                 }
             )
@@ -567,12 +620,23 @@ def build_simulation_jobs(args_dict):
     -------
     list[dict]
         Each job: primary, model_version, interactions, directions (Alt/Az), energy_min/max
-        (clipped), nshow, run_number, scatter/viewcone values (clipped by physics limits).
+        (clipped), showers_per_run, run_number, scatter/viewcone values
+        (clipped by physics limits).
     """
     grid_axes = normalize_grid_axes(args_dict)
     energy_ranges = normalize_energy_ranges(args_dict["energy_range"])
-    nshow, nshow_power_index, reference_energy = _resolve_nshow_params(args_dict)
-    number_of_runs = int(args_dict.get("number_of_runs", 1))
+    (
+        showers_per_run,
+        nshow_power_index,
+        reference_energy,
+        total_showers,
+        total_showers_scaling,
+    ) = _resolve_shower_params(args_dict)
+
+    if total_showers is not None and args_dict.get("number_of_runs") is not None:
+        raise ValueError("total_showers and number_of_runs cannot be configured together.")
+
+    number_of_runs = int(args_dict.get("number_of_runs") or 1)
     run_number = int(args_dict.get("run_number") or 1)
 
     core_scatter = args_dict["core_scatter"]
@@ -612,10 +676,12 @@ def build_simulation_jobs(args_dict):
                     point_base=observation_params,
                     energy_ranges=energy_ranges,
                     lower_energy_threshold=point.get("lower_energy_threshold"),
-                    nshow=nshow,
+                    showers_per_run=showers_per_run,
                     nshow_power_index=nshow_power_index,
                     reference_energy=reference_energy,
                     number_of_runs=number_of_runs,
+                    total_showers=total_showers,
+                    total_showers_scaling=total_showers_scaling,
                     run_number=run_number,
                 )
             )

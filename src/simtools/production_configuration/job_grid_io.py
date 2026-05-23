@@ -1,9 +1,12 @@
 """Read and write executable job grids for production preparation."""
 
+import logging
 from pathlib import Path
 
 from astropy import units as u
 from astropy.table import Table
+
+logger = logging.getLogger(__name__)
 
 JOB_GRID_COLUMNS = [
     "primary",
@@ -22,7 +25,7 @@ JOB_GRID_COLUMNS = [
     "view_cone_min_unit",
     "view_cone_max_value",
     "view_cone_max_unit",
-    "nshow",
+    "showers_per_run",
     "model_version",
     "array_layout_name",
     "corsika_le_interaction",
@@ -56,7 +59,7 @@ def _serialize_job_row(job_row):
     serialized_row = {
         "primary": job_row["primary"],
         "core_scatter_number": int(job_row["core_scatter_number"]),
-        "nshow": int(job_row["nshow"]),
+        "showers_per_run": int(job_row["showers_per_run"]),
         "model_version": job_row["model_version"],
         "array_layout_name": job_row["array_layout_name"],
         "corsika_le_interaction": job_row["corsika_le_interaction"],
@@ -77,7 +80,7 @@ def _deserialize_job_row(serialized_row):
     job_row = {
         "primary": serialized_row["primary"],
         "core_scatter_number": int(serialized_row["core_scatter_number"]),
-        "nshow": int(serialized_row["nshow"]),
+        "showers_per_run": int(serialized_row["showers_per_run"]),
         "model_version": serialized_row["model_version"],
         "array_layout_name": serialized_row["array_layout_name"],
         "corsika_le_interaction": serialized_row["corsika_le_interaction"],
@@ -116,6 +119,7 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
 
     output_table = Table(rows=serialized_rows, names=JOB_GRID_COLUMNS)
     output_table.meta = metadata
+    logger.info(f"Writing job grid with {len(job_rows)} rows to '{output_path}'.")
     output_table.write(output_path, format="ascii.ecsv", overwrite=True)
 
 
