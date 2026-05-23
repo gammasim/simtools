@@ -74,7 +74,7 @@ _AXIS_SCALING_CHOICES = ("linear", "log", "1/cos")
 _HORIZONTAL_AXES = ("azimuth", "zenith")
 _RADEC_AXES = ("ra", "dec")
 _REQUIRED_AXES = ("nsb", "offset")
-DEFAULT_ZENITH_ANGLE_SCALING_FACTOR = 3.9781
+DEFAULT_ZENITH_ANGLE_SCALING_FACTOR = 3.9781  #  derived by the LST team
 
 
 def _parse_axis_range_tokens(range_tokens):
