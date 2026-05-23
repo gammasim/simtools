@@ -74,6 +74,7 @@ _AXIS_SCALING_CHOICES = ("linear", "log", "1/cos")
 _HORIZONTAL_AXES = ("azimuth", "zenith")
 _RADEC_AXES = ("ra", "dec")
 _REQUIRED_AXES = ("nsb", "offset")
+DEFAULT_ZENITH_ANGLE_SCALING_FACTOR = 3.9781
 
 
 def _parse_axis_range_tokens(range_tokens):
@@ -476,7 +477,10 @@ def _resolve_shower_params(args_dict):
 
 
 def _scale_total_showers(
-    total_showers, zenith_angle, total_showers_scaling, cos_scaling_factor=3.9781
+    total_showers,
+    zenith_angle,
+    total_showers_scaling,
+    cos_scaling_factor=DEFAULT_ZENITH_ANGLE_SCALING_FACTOR,
 ):
     """
     Return total showers adjusted for the selected scaling mode.
@@ -506,6 +510,7 @@ def _build_rows_for_point(
     total_showers,
     total_showers_scaling,
     run_number,
+    zenith_angle_scaling_factor=DEFAULT_ZENITH_ANGLE_SCALING_FACTOR,
 ):
     """Build all simulation-run rows for a single grid point across all energy ranges."""
     rows = []
@@ -528,6 +533,7 @@ def _build_rows_for_point(
                 total_showers,
                 point_base["zenith_angle"],
                 total_showers_scaling,
+                cos_scaling_factor=zenith_angle_scaling_factor,
             )
             if effective_total_showers <= 0:
                 continue
@@ -633,6 +639,9 @@ def build_simulation_jobs(args_dict):
         total_showers,
         total_showers_scaling,
     ) = _resolve_shower_params(args_dict)
+    zenith_angle_scaling_factor = float(
+        args_dict.get("zenith_angle_scaling_factor", DEFAULT_ZENITH_ANGLE_SCALING_FACTOR)
+    )
 
     if total_showers is not None and args_dict.get("number_of_runs") is not None:
         raise ValueError("total_showers and number_of_runs cannot be configured together.")
@@ -684,6 +693,7 @@ def build_simulation_jobs(args_dict):
                     total_showers=total_showers,
                     total_showers_scaling=total_showers_scaling,
                     run_number=run_number,
+                    zenith_angle_scaling_factor=zenith_angle_scaling_factor,
                 )
             )
     return rows
