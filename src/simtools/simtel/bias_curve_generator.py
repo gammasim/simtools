@@ -26,28 +26,30 @@ def generate_bias_curves(args):
     ----------
     args : dict
         Configuration parameters including:
-        - root_dir: Root directory for data files
+        - nsb_dir: Directory for NSB log files
+        - proton_dir: Directory for proton simulation files
         - output: Output plot file path
+        - nsb_table_output: Optional ECSV table output for NSB rates
         - nsb_log_pattern: Pattern for NSB log files
         - proton_file_pattern: Pattern for proton HDF5 files
         - site, model_version, array_layout_name or telescope_ids: For telescope config
         - title, ymin, ymax: Plot parameters
     """
-    root_dir = Path(args["root_dir"])
-
     time_window = _calculate_time_window(args)
     _logger.info(f"Calculated time window: {time_window * 1e9:.2f} ns")
 
     _logger.info("Extracting NSB trigger rates from log files...")
-    nsb_stats = _extract_nsb_rates(args, root_dir, time_window)
+    nsb_stats = _extract_nsb_rates(args, time_window)
 
     _logger.info("Calculating proton trigger rates...")
-    proton_stats = _extract_proton_rates(args, root_dir)
+    proton_stats = _extract_proton_rates(args)
 
     _logger.info("Plotting bias curves...")
     _plot_bias_curves(nsb_stats, proton_stats, args)
 
     _logger.info(f"Bias curves written to {args['output']}")
+    if args.get("nsb_table_output"):
+        _logger.info(f"NSB table written to {args['nsb_table_output']}")
 
 
 def _calculate_time_window(args):
@@ -145,16 +147,14 @@ def _get_telescope_name_from_layout(args):
     return telescope_name
 
 
-def _extract_nsb_rates(args, root_dir, time_window):
+def _extract_nsb_rates(args, time_window):
     """
     Extract NSB trigger rates from log files.
 
     Parameters
     ----------
     args : dict
-        Arguments including nsb_log_pattern.
-    root_dir : Path
-        Root directory to search.
+        Arguments including nsb_dir, nsb_log_pattern, and optional nsb_table_output.
     time_window : float
         Time window in seconds.
 
@@ -163,10 +163,11 @@ def _extract_nsb_rates(args, root_dir, time_window):
     dict
         NSB statistics by threshold.
     """
+    nsb_dir = Path(args["nsb_dir"])
     nsb_args = {
-        "root_dir": root_dir,
+        "root_dir": nsb_dir,
         "pattern": args.get("nsb_log_pattern", "**/*.simtel.log.gz"),
-        "output": None,  # Don't write ECSV
+        "output": args.get("nsb_table_output"),  # Write ECSV if specified
         "time_window": time_window,
         "verbose": False,
     }
@@ -181,7 +182,7 @@ def _extract_nsb_rates(args, root_dir, time_window):
         return {}
 
 
-def _extract_proton_rates(args, root_dir):
+def _extract_proton_rates(args):
     """
     Extract proton trigger rates from HDF5 files organized by threshold.
 
@@ -191,20 +192,19 @@ def _extract_proton_rates(args, root_dir):
     Parameters
     ----------
     args : dict
-        Arguments including site, model_version, telescope config.
-    root_dir : Path
-        Root directory to search.
+        Arguments including proton_dir, site, model_version, telescope config.
 
     Returns
     -------
     dict
         Proton trigger rates by threshold: {threshold: rate_in_hz}
     """
+    proton_dir = Path(args["proton_dir"])
     proton_stats = {}
 
     # Find threshold directories (numeric subdirectories)
     threshold_dirs = []
-    for item in root_dir.iterdir():
+    for item in proton_dir.iterdir():
         if item.is_dir() and item.name.isdigit():
             threshold = int(item.name)
             # Check if reasonable threshold range

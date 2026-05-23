@@ -20,10 +20,17 @@ The input directory structure should contain:
 Command line arguments
 ----------------------
 
-root_dir (str, required)
+root_dir (str, optional)
     Root directory containing both NSB logs and proton simulation files.
+    Can be overridden by --nsb_dir and --proton_dir.
+nsb_dir (str, optional)
+    Directory containing NSB log files. If not specified, uses --root_dir.
+proton_dir (str, optional)
+    Directory containing proton simulation files. If not specified, uses --root_dir.
 output (str, optional)
     Output plot file path. Default: bias_curve.png
+nsb_table_output (str, optional)
+    Output ECSV table file for NSB trigger rates. If not specified, no table is written.
 nsb_log_pattern (str, optional)
     Glob pattern for NSB log files. Default: **/*.simtel.log.gz
 proton_file_pattern (str, optional)
@@ -48,15 +55,27 @@ ymax (float, optional)
 Example
 -------
 
-Generate bias curves for South site:
+Generate bias curves with data in same directory:
 
 .. code-block:: console
 
     simtools-derive-bias-curves \\
-        --root-dir /path/to/data \\
+        --root_dir /path/to/data \\
         --site South \\
         --model_version 7.0.0 \\
-        --array_layout_name alpha \\
+        --array_layout_name 1lst \\
+        --output bias_curves.png
+
+Generate bias curves with NSB and proton data in separate directories:
+
+.. code-block:: console
+
+    simtools-derive-bias-curves \\
+        --nsb_dir /path/to/nsb/data \\
+        --proton_dir /path/to/proton/data \\
+        --site South \\
+        --model_version 7.0.0 \\
+        --array_layout_name 1lst \\
         --output bias_curves.png
 
 """
@@ -73,10 +92,25 @@ _logger = logging.getLogger(__name__)
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
     parser.add_argument(
-        "--root-dir",
+        "--root_dir",
         type=Path,
-        required=True,
-        help="Root directory containing NSB logs and proton simulation files.",
+        required=False,
+        help="Root directory containing both NSB logs and proton simulation files. "
+        "Can be overridden by --nsb_dir and --proton_dir.",
+    )
+
+    parser.add_argument(
+        "--nsb_dir",
+        type=Path,
+        required=False,
+        help="Directory containing NSB log files. If not specified, uses --root_dir.",
+    )
+
+    parser.add_argument(
+        "--proton_dir",
+        type=Path,
+        required=False,
+        help="Directory containing proton simulation files. If not specified, uses --root_dir.",
     )
 
     parser.add_argument(
@@ -87,14 +121,21 @@ def _add_arguments(parser):
     )
 
     parser.add_argument(
-        "--nsb-log-pattern",
+        "--nsb_table_output",
+        type=Path,
+        required=False,
+        help="Output ECSV table file for NSB trigger rates. If not specified, no table is written.",
+    )
+
+    parser.add_argument(
+        "--nsb_log_pattern",
         type=str,
         default="**/*.simtel.log.gz",
         help="Glob pattern for NSB log files. Default: **/*.simtel.log.gz",
     )
 
     parser.add_argument(
-        "--proton-file-pattern",
+        "--proton_file_pattern",
         type=str,
         default="*.hdf5",
         help="Glob pattern for proton HDF5 files within threshold dirs. Default: *.hdf5",
@@ -137,7 +178,18 @@ def main():
         },
     )
 
-    generate_bias_curves(app_context.args)
+    # Validate directory arguments
+    args = app_context.args
+    if not args.get("root_dir") and not (args.get("nsb_dir") and args.get("proton_dir")):
+        raise ValueError("Must specify either --root_dir or both --nsb_dir and --proton_dir")
+
+    # Set defaults: use specific dirs if provided, otherwise fall back to root_dir
+    if not args.get("nsb_dir"):
+        args["nsb_dir"] = args["root_dir"]
+    if not args.get("proton_dir"):
+        args["proton_dir"] = args["root_dir"]
+
+    generate_bias_curves(args)
 
 
 if __name__ == "__main__":
