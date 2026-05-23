@@ -169,52 +169,6 @@ def test_check_grid_completeness(tmp_test_directory):
     assert not result
 
 
-@patch("matplotlib.pyplot.savefig")
-def test_plot_grid_coverage(mock_savefig, tmp_test_directory):
-    """Test generating grid coverage plots."""
-    table = vstack(
-        [
-            create_test_table(20, 0, "dark", "layout1"),
-            create_test_table(40, 0, "dark", "layout1"),
-        ]
-    )
-    grid_definition = {
-        "zenith": [20, 40],
-        "azimuth": [0],
-        "nsb_level": ["dark"],
-        "array_name": ["layout1"],
-    }
-    merger = CorsikaMergeLimits(output_dir=tmp_test_directory)
-
-    # Test plotting with grid definition
-    output_files = merger.plot_grid_coverage(table, grid_definition)
-    assert len(output_files) == 1
-    mock_savefig.assert_called_once()
-
-    # Test plotting without grid definition
-    mock_savefig.reset_mock()
-    output_files = merger.plot_grid_coverage(table, None)
-    assert not output_files
-    mock_savefig.assert_not_called()
-
-
-@patch("matplotlib.pyplot.savefig")
-def test_plot_limits(mock_savefig, tmp_test_directory):
-    """Test generating limit plots."""
-    table = vstack(
-        [
-            create_test_table(20, 0, "dark", "layout1"),
-            create_test_table(40, 0, "dark", "layout1"),
-            create_test_table(20, 0, "moon", "layout1"),
-        ]
-    )
-    merger = CorsikaMergeLimits(output_dir=tmp_test_directory)
-    output_files = merger.plot_limits(table)
-
-    assert len(output_files) == 1
-    mock_savefig.assert_called_once()
-
-
 def test_write_merged_table(tmp_test_directory):
     """Test writing the merged table to file."""
     table = create_test_table(20, 0, "dark", "layout1")
@@ -341,12 +295,6 @@ def test_merge_corsika_limits_merging_mode(tmp_test_directory):
             self.calls.append(("check_grid_completeness", merged_table, grid_definition))
             return True, {"expected": 1, "found": 1, "missing": []}
 
-        def plot_grid_coverage(self, merged_table, grid_definition):
-            self.calls.append(("plot_grid_coverage", merged_table, grid_definition))
-
-        def plot_limits(self, merged_table):
-            self.calls.append(("plot_limits", merged_table))
-
         def write_merged_table(self, merged_table, output_file, input_files, grid_completeness):
             self.calls.append(
                 ("write_merged_table", merged_table, output_file, input_files, grid_completeness)
@@ -358,8 +306,6 @@ def test_merge_corsika_limits_merging_mode(tmp_test_directory):
         "input_files_list": None,
         "merged_table": None,
         "grid_definition": None,
-        "plot_grid_coverage": True,
-        "plot_limits": True,
         "output_file": "merged_output.ecsv",
     }
 
@@ -368,8 +314,6 @@ def test_merge_corsika_limits_merging_mode(tmp_test_directory):
     call_names = [call[0] for call in merger.calls]
     assert "merge_tables" in call_names
     assert "check_grid_completeness" in call_names
-    assert "plot_grid_coverage" in call_names
-    assert "plot_limits" in call_names
     assert "write_merged_table" in call_names
 
 
@@ -381,12 +325,6 @@ def test_merge_corsika_limits_check_only_mode(tmp_test_directory):
 
         def check_grid_completeness(self, _merged_table, _grid_definition):
             return True, {}
-
-        def plot_grid_coverage(self, _merged_table, _grid_definition):
-            return None
-
-        def plot_limits(self, _merged_table):
-            return None
 
         def write_merged_table(self, *_args, **_kwargs):
             self.write_called = True
@@ -403,8 +341,6 @@ def test_merge_corsika_limits_check_only_mode(tmp_test_directory):
             {
                 "merged_table": "merged.ecsv",
                 "grid_definition": None,
-                "plot_grid_coverage": False,
-                "plot_limits": False,
                 "output_file": "unused.ecsv",
             },
             merger=merger,
