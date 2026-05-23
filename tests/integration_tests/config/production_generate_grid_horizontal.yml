@@ -5,7 +5,7 @@ applications:
     array_layout_name:
       by_version:
         "<7.0.0": 1lst
-        ">=7.0.0": 1lst
+        ">=7.0.0": LSTN-01
     axis:
     - azimuth 310 deg 20 deg 3 linear
     - zenith 30 deg 40 deg 2 linear
