@@ -80,7 +80,42 @@ def test_energy_bins(mock_reader, hdf5_file_name):
     mock_reader.return_value.triggered_shower_data.simulated_energy = np.array([1, 10, 100])
     bins = histograms.energy_bins
     assert isinstance(bins, np.ndarray)
-    assert len(bins) == 100
+    assert len(bins) == 61
+    assert bins[0] == pytest.approx(1.0e-3)
+    assert bins[-1] == pytest.approx(1.0e3)
+    assert np.allclose(np.diff(np.log10(bins)), 0.1)
+
+
+def test_energy_bins_use_file_info_energy_max(mock_reader, hdf5_file_name):
+    """Test energy_bins uses energy_max from file_info when available."""
+    histograms = EventDataHistograms(hdf5_file_name)
+    histograms.file_info = {
+        "energy_min": 0.1 * u.TeV,
+        "energy_max": 30.0 * u.TeV,
+    }
+
+    bins = histograms.energy_bins
+
+    assert bins[0] == pytest.approx(0.1)
+    assert bins[-1] == pytest.approx(100.0)
+    assert len(bins) == 31
+    assert np.allclose(np.diff(np.log10(bins)), 0.1)
+
+
+def test_energy_bins_use_configured_bins_per_decade(mock_reader, hdf5_file_name):
+    """Test energy_bins respects the configured logarithmic resolution."""
+    histograms = EventDataHistograms(hdf5_file_name, energy_bins_per_decade=5)
+    histograms.file_info = {
+        "energy_min": 0.1 * u.TeV,
+        "energy_max": 30.0 * u.TeV,
+    }
+
+    bins = histograms.energy_bins
+
+    assert bins[0] == pytest.approx(0.1)
+    assert bins[-1] == pytest.approx(100.0)
+    assert len(bins) == 16
+    assert np.allclose(np.diff(np.log10(bins)), 0.2)
 
 
 def test_core_distance_bins(mock_reader, hdf5_file_name):
@@ -588,9 +623,10 @@ def test_energy_bins_default(mock_reader, hdf5_file_name):
     bins = histograms.energy_bins
 
     assert isinstance(bins, np.ndarray)
-    assert len(bins) == 100
+    assert len(bins) == 61
     assert bins[0] == pytest.approx(1.0e-3)
     assert bins[-1] == pytest.approx(1.0e3)
+    assert np.allclose(np.diff(np.log10(bins)), 0.1)
 
 
 def test_core_distance_bins_with_file_info(mock_reader, hdf5_file_name):
@@ -667,7 +703,10 @@ def test_calculate_cumulative_data(mock_reader, hdf5_file_name):
         "energy": {"histogram": np.array([10, 20, 30, 40]), "axis_titles": ["E", ""]},
         "core_distance": {"histogram": np.array([5, 15, 25, 35]), "axis_titles": ["r", ""]},
         "angular_distance": {"histogram": np.array([2, 4, 6, 8]), "axis_titles": ["theta", ""]},
-        "core_vs_energy": {"histogram": np.array([[1, 2], [3, 4]]), "axis_titles": ["r", "E"]},
+        "core_distance_vs_energy": {
+            "histogram": np.array([[1, 2], [3, 4]]),
+            "axis_titles": ["r", "E"],
+        },
         "angular_distance_vs_energy": {
             "histogram": np.array([[2, 3], [4, 5]]),
             "axis_titles": ["theta", "E"],
@@ -679,13 +718,13 @@ def test_calculate_cumulative_data(mock_reader, hdf5_file_name):
     expected_cumulative_core_distance = np.array([5, 20, 45, 80])
     expected_cumulative_angular_distance = np.array([2, 6, 12, 20])
     # Expected normalized cumulative for 2D histograms along axis=0 (column-wise)
-    expected_norm_core_vs_energy = np.array([[1 / 4, 2 / 6], [1.0, 1.0]])
+    expected_norm_core_distance_vs_energy = np.array([[1 / 4, 2 / 6], [1.0, 1.0]])
     expected_norm_ang_vs_energy = np.array([[2 / 6, 3 / 8], [1.0, 1.0]])
     assert set(cumulative_data.keys()) == {
         "core_distance_cumulative",
         "angular_distance_cumulative",
         "angular_distance_vs_energy_cumulative",
-        "core_vs_energy_cumulative",
+        "core_distance_vs_energy_cumulative",
         "energy_cumulative",
     }
     np.testing.assert_array_equal(
@@ -699,7 +738,8 @@ def test_calculate_cumulative_data(mock_reader, hdf5_file_name):
         expected_cumulative_angular_distance,
     )
     np.testing.assert_allclose(
-        cumulative_data["core_vs_energy_cumulative"]["histogram"], expected_norm_core_vs_energy
+        cumulative_data["core_distance_vs_energy_cumulative"]["histogram"],
+        expected_norm_core_distance_vs_energy,
     )
     np.testing.assert_allclose(
         cumulative_data["angular_distance_vs_energy_cumulative"]["histogram"],
@@ -778,6 +818,27 @@ def test_energy_bins_with_histogram_edges(mock_reader, hdf5_file_name):
     histograms.histograms["energy_bin_edges"] = mock_edges
     bins = histograms.energy_bins
     assert np.array_equal(bins, mock_edges)
+
+
+def test_update_file_info_stores_energy_max(mock_reader, hdf5_file_name):
+    """Test _update_file_info keeps energy_max from reduced file info."""
+    histograms = EventDataHistograms(hdf5_file_name)
+    file_info_table = {
+        "primary_particle": "gamma",
+        "zenith": 20.0 * u.deg,
+        "azimuth": 0.0 * u.deg,
+        "nsb_level": 1.0,
+        "energy_min": 0.03 * u.TeV,
+        "energy_max": 30.0 * u.TeV,
+        "core_scatter_max": 500.0 * u.m,
+        "viewcone_max": 10.0 * u.deg,
+        "solid_angle": 1.0 * u.sr,
+        "scatter_area": 1.0 * u.cm**2,
+    }
+
+    histograms._update_file_info(file_info_table)
+
+    assert_quantity_allclose(histograms.file_info["energy_max"], 30.0 * u.TeV)
 
 
 def test_print_summary(mock_histograms, mocker, caplog):
