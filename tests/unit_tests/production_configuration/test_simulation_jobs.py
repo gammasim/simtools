@@ -12,7 +12,13 @@ from simtools.production_configuration.simulation_jobs import (
     _clip_max_quantity,
     _generate_observation_grids_per_layout,
     _generate_observation_points_from_axes,
+    _iter_compact_axis_specs,
+    _normalize_axis_spec_tokens,
+    _parse_axis_range_tokens,
+    _parse_axis_spec,
+    _resolve_coordinate_system,
     _resolve_shower_params,
+    _scale_total_showers,
     build_axes_dict_from_cli_args,
     build_job_grid_metadata,
     build_observing_location,
@@ -468,18 +474,20 @@ def test_calculate_scaled_showers_per_run_raises_for_non_positive_baseline():
 
 def test_calculate_scaled_showers_per_run_raises_for_missing_reference_energy():
     with pytest.raises(ValueError, match="reference_energy"):
-        calculate_scaled_showers_per_run((30 * u.GeV, 100 * u.GeV), 5, nshow_power_index=1.0)
+        calculate_scaled_showers_per_run(
+            (30 * u.GeV, 100 * u.GeV), 5, showers_per_run_power_index=1.0
+        )
 
 
 def test_calculate_scaled_showers_per_run_scales_from_midpoint_energy():
-    scaled_nshow = calculate_scaled_showers_per_run(
+    scaled_showers_per_run = calculate_scaled_showers_per_run(
         (10 * u.GeV, 1 * u.TeV),
         5,
-        nshow_power_index=1.0,
+        showers_per_run_power_index=1.0,
         reference_energy=10 * u.GeV,
     )
 
-    assert scaled_nshow == 50
+    assert scaled_showers_per_run == 50
 
 
 @patch("simtools.production_configuration.simulation_jobs.np.ceil", return_value=0)
@@ -488,7 +496,7 @@ def test_calculate_scaled_showers_per_run_raises_when_scaled_value_is_below_one(
         calculate_scaled_showers_per_run(
             (10 * u.GeV, 1 * u.TeV),
             5,
-            nshow_power_index=1.0,
+            showers_per_run_power_index=1.0,
             reference_energy=10 * u.GeV,
         )
     mock_ceil.assert_called_once()
@@ -519,8 +527,8 @@ def test_resolve_shower_params_converts_reference_energy():
         _resolve_shower_params(
             {
                 "showers_per_run": 5,
-                "nshow_power_index": 1.0,
-                "nshow_reference_energy": "100 GeV",
+                "showers_per_run_power_index": 1.0,
+                "showers_per_run_reference_energy": "100 GeV",
             }
         )
     )
@@ -538,7 +546,7 @@ def test_build_rows_for_point_skips_energy_ranges_below_threshold():
         energy_ranges=[(30 * u.GeV, 40 * u.GeV), (50 * u.GeV, 100 * u.GeV)],
         lower_energy_threshold=45 * u.GeV,
         showers_per_run=5,
-        nshow_power_index=None,
+        showers_per_run_power_index=None,
         reference_energy=None,
         number_of_runs=2,
         total_showers=None,
@@ -557,7 +565,7 @@ def test_build_rows_for_point_splits_total_showers_with_remainder():
         energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
         lower_energy_threshold=None,
         showers_per_run=1000,
-        nshow_power_index=None,
+        showers_per_run_power_index=None,
         reference_energy=None,
         number_of_runs=2,
         total_showers=2500,
@@ -575,7 +583,7 @@ def test_build_rows_for_point_scales_total_showers_with_zenith_scaled():
         energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
         lower_energy_threshold=None,
         showers_per_run=200,
-        nshow_power_index=None,
+        showers_per_run_power_index=None,
         reference_energy=None,
         number_of_runs=1,
         total_showers=2500,
@@ -728,3 +736,115 @@ def test_build_simulation_jobs_raises_for_total_showers_and_number_of_runs(
                 "array_layout_name": "alpha",
             }
         )
+
+
+def test_parse_axis_range_tokens_with_single_token():
+    result = _parse_axis_range_tokens(["30 deg .. 40 deg"])
+
+    assert len(result) == 2
+
+
+def test_parse_axis_range_tokens_with_two_tokens():
+    lo, hi = _parse_axis_range_tokens(["30 deg", "40 deg"])
+
+    assert_quantity_allclose(lo, 30 * u.deg)
+    assert_quantity_allclose(hi, 40 * u.deg)
+
+
+def test_parse_axis_range_tokens_raises_for_invalid_token_count():
+    with pytest.raises(ValueError, match="exactly two quantities"):
+        _parse_axis_range_tokens(["30", "deg", "40"])
+
+
+def test_normalize_axis_spec_tokens_raises_for_invalid_type():
+    with pytest.raises(TypeError, match="strings or lists"):
+        _normalize_axis_spec_tokens(42)
+
+
+def test_parse_axis_spec_raises_for_too_few_tokens():
+    with pytest.raises(ValueError, match="at least an axis name"):
+        _parse_axis_spec("zenith 2")
+
+
+def test_parse_axis_spec_raises_for_unknown_axis():
+    with pytest.raises(ValueError, match="Unknown axis"):
+        _parse_axis_spec("badaxis 0 deg 90 deg 3")
+
+
+def test_parse_axis_spec_raises_for_missing_range():
+    # Only name + binning + scaling → range_tokens is empty
+    with pytest.raises(ValueError, match="missing its range"):
+        _parse_axis_spec("zenith 3 linear")
+
+
+def test_parse_axis_spec_raises_for_non_integer_binning():
+    with pytest.raises(ValueError, match="binning must be an integer"):
+        _parse_axis_spec("zenith 0 deg 90 deg foo")
+
+
+def test_iter_compact_axis_specs_accepts_string_axis():
+    specs = list(_iter_compact_axis_specs({"axis": "azimuth 310 deg 20 deg 3 linear"}))
+
+    assert specs == ["azimuth 310 deg 20 deg 3 linear"]
+
+
+def test_resolve_coordinate_system_returns_none_without_recognised_axes():
+    assert _resolve_coordinate_system({"nsb": {}, "offset": {}}) is None
+
+
+def test_build_axes_dict_from_cli_args_raises_without_direction_axes():
+    with pytest.raises(ValueError, match="azimuth/zenith or both ra/dec"):
+        build_axes_dict_from_cli_args(
+            {
+                "axis": [
+                    ["nsb", "4", "MHz", "5", "MHz", "2"],
+                    ["offset", "0", "deg", "10", "deg", "2"],
+                ]
+            }
+        )
+
+
+def test_build_axes_dict_from_cli_args_raises_for_missing_required_axes():
+    with pytest.raises(ValueError, match="Missing required shared axis"):
+        build_axes_dict_from_cli_args(
+            {
+                "axis": [
+                    ["azimuth", "310", "deg", "20", "deg", "3"],
+                    ["zenith", "30", "deg", "40", "deg", "2"],
+                ]
+            }
+        )
+
+
+@patch("simtools.production_configuration.simulation_jobs._resolve_coordinate_system_from_args")
+@patch("simtools.production_configuration.simulation_jobs.build_axes_dict_from_cli_args")
+def test_build_production_grid_engine_raises_for_unknown_coordinate_system(
+    mock_build_axes, mock_resolve_cs
+):
+    mock_build_axes.return_value = {}
+    mock_resolve_cs.return_value = "unknown"
+
+    with pytest.raises(ValueError, match="azimuth/zenith or both ra/dec"):
+        build_production_grid_engine({})
+
+
+def test_scale_total_showers_raises_for_unknown_mode():
+    with pytest.raises(ValueError, match="Unknown total_showers_scaling mode"):
+        _scale_total_showers(1000, 20 * u.deg, "bad_mode")
+
+
+def test_build_rows_for_point_skips_when_effective_total_showers_is_zero():
+    rows = _build_rows_for_point(
+        point_base={"primary": "gamma", "zenith_angle": 20 * u.deg},
+        energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
+        lower_energy_threshold=None,
+        showers_per_run=1000,
+        showers_per_run_power_index=None,
+        reference_energy=None,
+        number_of_runs=1,
+        total_showers=0,
+        total_showers_scaling="fixed",
+        run_number=1,
+    )
+
+    assert rows == []

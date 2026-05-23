@@ -393,30 +393,32 @@ def calculate_log_energy_midpoint(energy_range_pair):
 
 def calculate_scaled_showers_per_run(
     energy_range_pair,
-    baseline_nshow,
-    nshow_power_index=None,
+    showers_per_run_reference_energy,
+    showers_per_run_power_index=None,
     reference_energy=None,
 ):
-    """Return an energy-dependent nshow value."""
-    if baseline_nshow < 1:
-        raise ValueError("baseline_nshow must be a positive integer.")
+    """Return an energy-dependent showers per run value."""
+    if showers_per_run_reference_energy < 1:
+        raise ValueError("showers_per_run_reference_energy must be a positive integer.")
 
-    if nshow_power_index is None:
-        return baseline_nshow
+    if showers_per_run_power_index is None:
+        return showers_per_run_reference_energy
 
     if reference_energy is None:
-        raise ValueError("reference_energy is required when nshow_power_index is configured.")
+        raise ValueError(
+            "reference_energy is required when showers_per_run_power_index is configured."
+        )
 
     midpoint_energy = calculate_log_energy_midpoint(energy_range_pair)
     scaling_factor = (midpoint_energy / reference_energy.to(midpoint_energy.unit)).to_value(
         u.dimensionless_unscaled
-    ) ** nshow_power_index
-    scaled_nshow = int(np.ceil(baseline_nshow * scaling_factor))
+    ) ** showers_per_run_power_index
+    scaled_showers_per_run = int(np.ceil(showers_per_run_reference_energy * scaling_factor))
 
-    if scaled_nshow < 1:
-        raise ValueError("Scaled nshow must be at least 1.")
+    if scaled_showers_per_run < 1:
+        raise ValueError("Scaled showers per run must be at least 1.")
 
-    return scaled_nshow
+    return scaled_showers_per_run
 
 
 def _clip_energy_range_from_threshold(energy_range_pair, lower_energy_threshold):
@@ -456,17 +458,17 @@ def _clip_max_quantity(configured_max, lookup_max):
 def _resolve_shower_params(args_dict):
     """Extract and convert shower-statistics parameters from an args dict."""
     showers_per_run = args_dict["showers_per_run"]
-    nshow_power_index = args_dict.get("nshow_power_index")
-    reference_energy = args_dict.get("nshow_reference_energy")
+    showers_per_run_power_index = args_dict.get("showers_per_run_power_index")
+    reference_energy = args_dict.get("showers_per_run_reference_energy")
     total_showers = args_dict.get("total_showers")
     total_showers_scaling = args_dict.get("total_showers_scaling", "fixed")
 
-    if nshow_power_index is not None and reference_energy is not None:
+    if showers_per_run_power_index is not None and reference_energy is not None:
         reference_energy = u.Quantity(reference_energy)
 
     return (
         showers_per_run,
-        nshow_power_index,
+        showers_per_run_power_index,
         reference_energy,
         total_showers,
         total_showers_scaling,
@@ -498,7 +500,7 @@ def _build_rows_for_point(
     energy_ranges,
     lower_energy_threshold,
     showers_per_run,
-    nshow_power_index,
+    showers_per_run_power_index,
     reference_energy,
     number_of_runs,
     total_showers,
@@ -516,7 +518,7 @@ def _build_rows_for_point(
         selected_showers_per_run = calculate_scaled_showers_per_run(
             selected_energy_range,
             showers_per_run,
-            nshow_power_index,
+            showers_per_run_power_index,
             reference_energy,
         )
 
@@ -611,7 +613,6 @@ def build_simulation_jobs(args_dict):
     Cartesian product: primaries * model_versions * interactions * observation_directions
     * energy_ranges * run_counts. Energy ranges clipped by direction-dependent CORSIKA
     limits.
-    nshow optionally energy-scaled.
 
     Activates ProductionGridEngine when axis-range CLI arguments are provided;
     otherwise uses explicit azimuth * zenith axes.
@@ -627,7 +628,7 @@ def build_simulation_jobs(args_dict):
     energy_ranges = normalize_energy_ranges(args_dict["energy_range"])
     (
         showers_per_run,
-        nshow_power_index,
+        showers_per_run_power_index,
         reference_energy,
         total_showers,
         total_showers_scaling,
@@ -677,7 +678,7 @@ def build_simulation_jobs(args_dict):
                     energy_ranges=energy_ranges,
                     lower_energy_threshold=point.get("lower_energy_threshold"),
                     showers_per_run=showers_per_run,
-                    nshow_power_index=nshow_power_index,
+                    showers_per_run_power_index=showers_per_run_power_index,
                     reference_energy=reference_energy,
                     number_of_runs=number_of_runs,
                     total_showers=total_showers,
