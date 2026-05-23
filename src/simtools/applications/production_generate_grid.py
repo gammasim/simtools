@@ -59,6 +59,7 @@ execute:
 from simtools.application_control import build_application
 from simtools.production_configuration.job_grid_io import serialize_job_grid
 from simtools.production_configuration.simulation_jobs import (
+    DEFAULT_ZENITH_ANGLE_SCALING_FACTOR,
     build_job_grid_metadata,
     build_simulation_jobs,
 )
@@ -118,6 +119,16 @@ def _add_arguments(parser):
         choices=["fixed", "zenith_scaled"],
         required=False,
         default="fixed",
+    )
+    parser.add_argument(
+        "--zenith_angle_scaling_factor",
+        help=(
+            "Scaling factor for zenith-dependent total_showers scaling. "
+            "Used only when --total_showers_scaling is 'zenith_scaled'."
+        ),
+        type=float,
+        required=False,
+        default=DEFAULT_ZENITH_ANGLE_SCALING_FACTOR,
     )
     parser.add_argument(
         "--showers_per_run_power_index",

@@ -595,6 +595,25 @@ def test_build_rows_for_point_scales_total_showers_with_zenith_scaled():
     assert [row["run_number"] for row in rows] == [1, 2]
 
 
+def test_build_rows_for_point_uses_custom_zenith_angle_scaling_factor():
+    rows = _build_rows_for_point(
+        point_base={"primary": "gamma", "zenith_angle": 60 * u.deg},
+        energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
+        lower_energy_threshold=None,
+        showers_per_run=1000,
+        showers_per_run_power_index=None,
+        reference_energy=None,
+        number_of_runs=1,
+        total_showers=2500,
+        total_showers_scaling="zenith_scaled",
+        run_number=1,
+        zenith_angle_scaling_factor=0.0,
+    )
+
+    assert [row["showers_per_run"] for row in rows] == [1000, 1000, 500]
+    assert [row["run_number"] for row in rows] == [1, 2, 3]
+
+
 def test_generate_observation_points_from_axes_adds_lookup_limits():
     corsika_limits = Mock()
     corsika_limits.interpolate_point.return_value = {
