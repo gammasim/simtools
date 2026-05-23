@@ -240,8 +240,7 @@ def _parse_allowed_losses(allowed_losses_args):
 
         if axis_name not in LOSS_AXES:
             raise ValueError(
-                "Invalid axis for --allowed_losses. Allowed axes: "
-                "core_distance, angular_distance, all."
+                f"Invalid axis for --allowed_losses. Allowed axes: {', '.join(LOSS_AXES)}, all."
             )
         parsed[axis_name] = {
             "loss_fraction": fraction,
@@ -441,16 +440,19 @@ def _compute_limits(histograms, allowed_losses, bins_per_decade):
     }
 
     per_axis_limits = {}
+    differential_energy_bins = None
+    if bins_per_decade > 0:
+        low = int(np.floor(np.log10(np.min(histograms.energy_bins))))
+        high = int(np.ceil(np.log10(np.max(histograms.energy_bins))))
+        differential_energy_bins = np.logspace(low, high, (high - low) * bins_per_decade + 1)
 
     for axis_name, config in axis_configs.items():
         if bins_per_decade > 0:
-            low = int(np.floor(np.log10(np.min(histograms.energy_bins))))
-            high = int(np.ceil(np.log10(np.max(histograms.energy_bins))))
             axis_max, curve_x, curve_y = _differential_upper_limits(
                 histograms.histograms[f"{axis_name}_vs_energy"]["histogram"],
                 config["x_bins"],
                 histograms.energy_bins,
-                np.logspace(low, high, (high - low) * bins_per_decade + 1),
+                differential_energy_bins,
                 allowed_losses[axis_name],
                 config["name"],
                 config["unit"],
@@ -739,6 +741,8 @@ def _find_low_energy_threshold_from_histogram(counts, bin_edges, threshold_fract
         raise ValueError("counts and bin_edges must be one-dimensional arrays")
     if counts.size == 0:
         raise ValueError("counts must not be empty")
+    if not np.any(counts > 0):
+        raise ValueError("counts must contain at least one positive entry")
     if bin_edges.size != counts.size + 1:
         raise ValueError("bin_edges length must be len(counts) + 1")
     if not 0.0 < threshold_fraction <= 1.0:
@@ -797,8 +801,3 @@ def _is_close(value, reference, warning_text):
     if reference is not None and np.isclose(value.value, reference.value, rtol=1.0e-2):
         _logger.warning(f"{warning_text} {value}.")
     return value
-
-
-def _core_distance_ground_to_shower(core_distance, _zenith):
-    """Return unchanged core distance; limits are handled in shower coordinates."""
-    return core_distance
