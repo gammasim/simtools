@@ -52,7 +52,7 @@ import logging
 
 from simtools.application_control import build_application
 from simtools.model.site_model import SiteModel
-from simtools.production_configuration.plot_production_grid import ProductionGridPlotter
+from simtools.visualization.plot_production_grid import ProductionGridPlotter
 
 logger = logging.getLogger(__name__)
 
