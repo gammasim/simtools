@@ -10,7 +10,7 @@ from astropy.table import Table
 from astropy.time import Time
 from astropy.utils import iers
 
-from simtools.production_configuration.plot_production_grid import (
+from simtools.visualization.plot_production_grid import (
     DEFAULT_OUTPUT_FILE_STEM,
     ProductionGridPlotter,
 )
