@@ -120,7 +120,7 @@ def _add_arguments(parser):
         default="fixed",
     )
     parser.add_argument(
-        "--nshow_power_index",
+        "--showers_per_run_power_index",
         help=(
             "Power-law index used to scale the baseline showers_per_run with the geometric-mean "
             "energy of each energy_range entry."
@@ -130,10 +130,10 @@ def _add_arguments(parser):
         default=None,
     )
     parser.add_argument(
-        "--nshow_reference_energy",
+        "--showers_per_run_reference_energy",
         help=(
             "Reference energy for showers_per_run power-law scaling (for example: '100 GeV'). "
-            "Required together with --nshow_power_index."
+            "Required together with --showers_per_run_power_index."
         ),
         type=str,
         required=False,
