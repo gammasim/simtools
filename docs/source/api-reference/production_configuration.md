@@ -62,6 +62,7 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
+<<<<<<< HEAD
 (job-grid-io)=
 
 ## job_grid_io
