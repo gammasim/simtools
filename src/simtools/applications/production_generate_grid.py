@@ -102,13 +102,28 @@ def _add_arguments(parser):
         help="Number of runs to be simulated.",
         type=int,
         required=False,
-        default=1,
+        default=None,
+    )
+    parser.add_argument(
+        "--total_showers",
+        help="Total number of showers to simulate.",
+        type=int,
+        required=False,
+        default=None,
+    )
+    parser.add_argument(
+        "--total_showers_scaling",
+        help="Scaling mode for total showers.",
+        type=str,
+        choices=["fixed", "zenith_scaled"],
+        required=False,
+        default="fixed",
     )
     parser.add_argument(
         "--nshow_power_index",
         help=(
-            "Power-law index used to scale the baseline nshow with the geometric-mean energy "
-            "of each energy_range entry."
+            "Power-law index used to scale the baseline showers_per_run with the geometric-mean "
+            "energy of each energy_range entry."
         ),
         type=float,
         required=False,
@@ -117,7 +132,7 @@ def _add_arguments(parser):
     parser.add_argument(
         "--nshow_reference_energy",
         help=(
-            "Reference energy for nshow power-law scaling (for example: '100 GeV'). "
+            "Reference energy for showers_per_run power-law scaling (for example: '100 GeV'). "
             "Required together with --nshow_power_index."
         ),
         type=str,

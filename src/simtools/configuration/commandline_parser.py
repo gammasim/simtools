@@ -401,7 +401,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 "nargs": "+",
                 "default": 20 * u.deg,
             },
-            "nshow": {
+            "showers_per_run": {
                 "help": "Number of showers per run to simulate.",
                 "type": int,
             },
