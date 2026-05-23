@@ -368,6 +368,15 @@ def test_find_low_energy_threshold_from_histogram_peak_at_last_bin():
     assert result == pytest.approx(0.4)
 
 
+def test_find_low_energy_threshold_from_histogram_raises_for_all_zero_counts():
+    """Reject histograms without positive entries."""
+    counts = np.array([0.0, 0.0, 0.0, 0.0])
+    bin_edges = np.array([0.1, 0.2, 0.4, 0.8, 1.6])
+
+    with pytest.raises(ValueError, match="at least one positive entry"):
+        derive_corsika_limits._find_low_energy_threshold_from_histogram(counts, bin_edges)
+
+
 def test_is_close(caplog):
     """Test _is_close function behavior."""
     test_message = "Test message"
@@ -864,20 +873,6 @@ def test_build_production_subdirectories_creates_dirs(tmp_test_directory):
     for output_subdir in result.values():
         assert output_subdir.exists()
         assert output_subdir.isdir()
-
-
-def test_core_distance_ground_to_shower_keeps_value_with_zenith():
-    """Test _core_distance_ground_to_shower keeps value unchanged."""
-    result = derive_corsika_limits._core_distance_ground_to_shower(100.0 * u.m, 60.0 * u.deg)
-    assert result.unit == u.m
-    assert result.value == pytest.approx(100.0)
-
-
-def test_core_distance_ground_to_shower_no_zenith_returns_input():
-    """Test _core_distance_ground_to_shower returns input unchanged without zenith."""
-    input_distance = 123.0 * u.m
-    result = derive_corsika_limits._core_distance_ground_to_shower(input_distance, None)
-    assert result == input_distance
 
 
 def test_execute_production_job_single_job(mocker):
