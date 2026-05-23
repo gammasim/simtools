@@ -772,7 +772,7 @@ def test_parse_axis_spec_raises_for_unknown_axis():
 
 
 def test_parse_axis_spec_raises_for_missing_range():
-    # Only name + binning + scaling → range_tokens is empty
+    # Only name + binning + scaling => range_tokens is empty
     with pytest.raises(ValueError, match="missing its range"):
         _parse_axis_spec("zenith 3 linear")
 
