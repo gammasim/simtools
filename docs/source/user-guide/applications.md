@@ -94,6 +94,7 @@ simtools-production-derive-corsika-limits <applications/simtools-production-deri
 simtools-production-derive-statistics <applications/simtools-production-derive-statistics>
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
 simtools-production-merge-corsika-limits <applications/simtools-production-merge-corsika-limits>
+simtools-production-plot-corsika-limits <applications/simtools-production-plot-corsika-limits>
 simtools-run-application <applications/simtools-run-application>
 simtools-simulate-flasher <applications/simtools-simulate-flasher>
 simtools-simulate-illuminator <applications/simtools-simulate-illuminator>

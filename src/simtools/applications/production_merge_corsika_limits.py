@@ -13,10 +13,9 @@ checks the completeness of the grid against a provided grid definition file.
 This tool supports three main use cases:
 
 1. Merge multiple CORSIKA limit tables into a single file and optionally generate
-   plots of the derived limits.
+    a merged limits table.
 2. Merge tables and also check for grid completeness against a provided grid
-   definition file. This requires the --grid_definition parameter. Coverage plots
-   can also be generated.
+    definition file. This requires the --grid_definition parameter.
 3. Check grid completeness of an already merged table file. This requires both
    the --merged_table and --grid_definition parameters.
 
@@ -36,10 +35,6 @@ grid_definition (str)
 output_file (str, optional)
     Name of the output file for the merged limits table.
     Default is "merged_corsika_limits.ecsv".
-plot_grid_coverage (bool, optional)
-    Flag to generate plots showing grid coverage. Requires --grid_definition.
-plot_limits (bool, optional)
-    Flag to generate plots showing the derived limits.
 
 Examples
 --------
@@ -49,7 +44,7 @@ Examples
 
       simtools-production-merge-corsika-limits \\
           --input_files "simtools-output/corsika_limits/" \\
-          --output_file merged_limits.ecsv --plot_limits
+          --output_file merged_limits.ecsv
 
 2. Merge tables and check grid completeness:
 
@@ -58,7 +53,7 @@ Examples
       simtools-production-merge-corsika-limits \\
           --input_files "simtools-output/corsika_limits/" \\
           --grid_definition grid_definition.yaml \\
-          --output_file merged_limits.ecsv --plot_grid_coverage
+          --output_file merged_limits.ecsv
 
 3. Check grid completeness of an existing merged table:
 
@@ -66,7 +61,7 @@ Examples
 
       simtools-production-merge-corsika-limits \\
           --merged_table merged_limits.ecsv \\
-          --grid_definition grid_definition.yaml --plot_grid_coverage
+          --grid_definition grid_definition.yaml
 
 4. Merge tables using a list of files from a text file:
 
@@ -113,18 +108,6 @@ def _add_arguments(parser):
         type=str,
         default=None,
         help="Path to YAML file defining the expected grid points.",
-    )
-    parser.add_argument(
-        "--plot_grid_coverage",
-        help="Generate plots showing grid coverage.",
-        action="store_true",
-        default=False,
-    )
-    parser.add_argument(
-        "--plot_limits",
-        help="Generate plots showing the derived limits.",
-        action="store_true",
-        default=False,
     )
 
 
