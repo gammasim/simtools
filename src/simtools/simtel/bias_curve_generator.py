@@ -173,8 +173,9 @@ def _extract_nsb_rates(args, time_window):
         nsb_stats = derive_nsb_triggers(nsb_args)
         _logger.info(f"Found NSB rates for {len(nsb_stats)} thresholds")
         return nsb_stats
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        # Catch all exceptions to allow processing to continue even if NSB extraction fails
+    except (FileNotFoundError, ValueError) as e:
+        # FileNotFoundError: no log files found
+        # ValueError: no log files could be parsed successfully
         _logger.warning(f"Could not extract NSB rates: {e}")
         return {}
 
@@ -230,14 +231,9 @@ def _extract_proton_rates(args):
         # Process each HDF5 file and average the rates
         threshold_rates = []
         for hdf5_file in hdf5_files:
-            try:
-                rate = _calculate_proton_rate_for_file(hdf5_file, args)
-                if rate is not None:
-                    threshold_rates.append(rate)
-            except Exception as e:  # pylint: disable=broad-exception-caught
-                # Catch all exceptions to continue processing remaining files
-                _logger.warning(f"Failed to process {hdf5_file}: {e}")
-                continue
+            rate = _calculate_proton_rate_for_file(hdf5_file, args)
+            if rate is not None:
+                threshold_rates.append(rate)
 
         if threshold_rates:
             # Average rates for this threshold
@@ -285,7 +281,7 @@ def _calculate_proton_rate_for_file(hdf5_file, args):
 
     try:
         # Call telescope_trigger_rates and get result
-        results = telescope_trigger_rates(trigger_args)  # pylint: disable=assignment-from-no-return
+        results = telescope_trigger_rates(trigger_args)
 
         # Extract rate (take first array if multiple)
         if results:
@@ -295,8 +291,7 @@ def _calculate_proton_rate_for_file(hdf5_file, args):
             return rate_with_units.to(u.Hz).value
         return None
 
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        # Catch all exceptions to allow batch processing to continue
+    except (OSError, KeyError, ValueError, AttributeError) as e:
         _logger.debug(f"Error calculating rate for {hdf5_file}: {e}")
         return None
 
