@@ -463,7 +463,7 @@ def test_calculate_log_energy_midpoint_raises_for_non_positive_energy():
         calculate_log_energy_midpoint((0 * u.GeV, 100 * u.GeV))
 
 
-def test_calculate_scaled_showers_per_run_returns_baseline_without_power_index():
+def test_calculate_scaled_showers_per_run_returns_baseline_without_power_law():
     assert calculate_scaled_showers_per_run((30 * u.GeV, 100 * u.GeV), 5) == 5
 
 
@@ -472,10 +472,10 @@ def test_calculate_scaled_showers_per_run_raises_for_non_positive_baseline():
         calculate_scaled_showers_per_run((30 * u.GeV, 100 * u.GeV), 0)
 
 
-def test_calculate_scaled_showers_per_run_raises_for_missing_reference_energy():
-    with pytest.raises(ValueError, match="reference_energy"):
+def test_calculate_scaled_showers_per_run_raises_for_invalid_power_law_tuple():
+    with pytest.raises(ValueError, match="exactly two values"):
         calculate_scaled_showers_per_run(
-            (30 * u.GeV, 100 * u.GeV), 5, showers_per_run_power_index=1.0
+            (30 * u.GeV, 100 * u.GeV), 5, showers_per_run_power_law=(1.0,)
         )
 
 
@@ -483,8 +483,7 @@ def test_calculate_scaled_showers_per_run_scales_from_midpoint_energy():
     scaled_showers_per_run = calculate_scaled_showers_per_run(
         (10 * u.GeV, 1 * u.TeV),
         5,
-        showers_per_run_power_index=1.0,
-        reference_energy=10 * u.GeV,
+        showers_per_run_power_law=(1.0, 10 * u.GeV),
     )
 
     assert scaled_showers_per_run == 50
@@ -496,8 +495,7 @@ def test_calculate_scaled_showers_per_run_raises_when_scaled_value_is_below_one(
         calculate_scaled_showers_per_run(
             (10 * u.GeV, 1 * u.TeV),
             5,
-            showers_per_run_power_index=1.0,
-            reference_energy=10 * u.GeV,
+            showers_per_run_power_law=(1.0, 10 * u.GeV),
         )
     mock_ceil.assert_called_once()
 
@@ -522,22 +520,44 @@ def test_clip_max_quantity_returns_configured_value_without_lookup():
     assert _clip_max_quantity(5 * u.deg, None) == 5 * u.deg
 
 
-def test_resolve_shower_params_converts_reference_energy():
-    showers_per_run, power_index, reference_energy, total_showers, total_showers_scaling = (
-        _resolve_shower_params(
-            {
-                "showers_per_run": 5,
-                "showers_per_run_power_index": 1.0,
-                "showers_per_run_reference_energy": "100 GeV",
-            }
-        )
+def test_resolve_shower_params_converts_showers_per_run_power_law():
+    showers_per_run, power_law, total_showers, total_showers_scaling = _resolve_shower_params(
+        {
+            "showers_per_run": 5,
+            "showers_per_run_power_law": ["1.0", "100", "GeV"],
+        }
     )
 
     assert showers_per_run == 5
-    assert power_index == pytest.approx(1.0)
-    assert reference_energy == 100 * u.GeV
+    assert power_law[0] == pytest.approx(1.0)
+    assert power_law[1] == 100 * u.GeV
     assert total_showers is None
     assert total_showers_scaling == "fixed"
+
+
+def test_resolve_shower_params_accepts_power_law_as_compact_string():
+    showers_per_run, power_law, total_showers, total_showers_scaling = _resolve_shower_params(
+        {
+            "showers_per_run": 5,
+            "showers_per_run_power_law": "1.0 100 GeV",
+        }
+    )
+
+    assert showers_per_run == 5
+    assert power_law[0] == pytest.approx(1.0)
+    assert power_law[1] == 100 * u.GeV
+    assert total_showers is None
+    assert total_showers_scaling == "fixed"
+
+
+def test_resolve_shower_params_raises_for_invalid_power_law_shape():
+    with pytest.raises(ValueError, match="must be provided as"):
+        _resolve_shower_params(
+            {
+                "showers_per_run": 5,
+                "showers_per_run_power_law": ["1.0", "100 GeV"],
+            }
+        )
 
 
 def test_build_rows_for_point_skips_energy_ranges_below_threshold():
@@ -546,8 +566,7 @@ def test_build_rows_for_point_skips_energy_ranges_below_threshold():
         energy_ranges=[(30 * u.GeV, 40 * u.GeV), (50 * u.GeV, 100 * u.GeV)],
         lower_energy_threshold=45 * u.GeV,
         showers_per_run=5,
-        showers_per_run_power_index=None,
-        reference_energy=None,
+        showers_per_run_power_law=None,
         number_of_runs=2,
         total_showers=None,
         total_showers_scaling="fixed",
@@ -565,8 +584,7 @@ def test_build_rows_for_point_splits_total_showers_with_remainder():
         energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
         lower_energy_threshold=None,
         showers_per_run=1000,
-        showers_per_run_power_index=None,
-        reference_energy=None,
+        showers_per_run_power_law=None,
         number_of_runs=2,
         total_showers=2500,
         total_showers_scaling="fixed",
@@ -583,8 +601,7 @@ def test_build_rows_for_point_scales_total_showers_with_zenith_scaled():
         energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
         lower_energy_threshold=None,
         showers_per_run=200,
-        showers_per_run_power_index=None,
-        reference_energy=None,
+        showers_per_run_power_law=None,
         number_of_runs=1,
         total_showers=2500,
         total_showers_scaling="zenith_scaled",
@@ -601,8 +618,7 @@ def test_build_rows_for_point_uses_custom_zenith_angle_scaling_factor():
         energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
         lower_energy_threshold=None,
         showers_per_run=1000,
-        showers_per_run_power_index=None,
-        reference_energy=None,
+        showers_per_run_power_law=None,
         number_of_runs=1,
         total_showers=2500,
         total_showers_scaling="zenith_scaled",
@@ -858,8 +874,7 @@ def test_build_rows_for_point_skips_when_effective_total_showers_is_zero():
         energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
         lower_energy_threshold=None,
         showers_per_run=1000,
-        showers_per_run_power_index=None,
-        reference_energy=None,
+        showers_per_run_power_law=None,
         number_of_runs=1,
         total_showers=0,
         total_showers_scaling="fixed",

@@ -23,6 +23,7 @@ applications:
     - 6.3.0
     - 7.0.0
     showers_per_run: 5
+    showers_per_run_power_law: 0.0 1 TeV
     total_showers: 50
     total_showers_scaling: zenith_scaled
     output_file: job_grid_horizontal_explicit.ecsv
