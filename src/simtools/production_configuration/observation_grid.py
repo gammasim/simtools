@@ -332,19 +332,19 @@ class ProductionGridEngine:
                 for i, key in enumerate(self.target_values.keys())
             }
 
-            zenith_idx = np.where(
+            zenith_idx = np.nonzero(
                 np.isclose(
                     self.target_values["zenith_angle"].value,
                     grid_point["zenith_angle"].value,
                 )
             )[0][0]
-            azimuth_idx = np.where(
+            azimuth_idx = np.nonzero(
                 np.isclose(
                     self.target_values["azimuth"].value,
                     grid_point["azimuth"].value,
                 )
             )[0][0]
-            nsb_idx = np.where(
+            nsb_idx = np.nonzero(
                 np.isclose(
                     self.target_values["nsb_level"].value,
                     grid_point["nsb_level"].value,
