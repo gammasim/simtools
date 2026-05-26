@@ -101,13 +101,21 @@ class CorsikaLimitsLookup:
             Interpolators keyed by lookup quantity.
         """
         lookup_arrays = self.load_matching_lookup_arrays()
-        self.lookup_points_for_interpolation = self._build_wrapped_interpolation_points(
-            lookup_arrays["points"]
-        )
         self.lookup_interpolation_axes = self._get_varying_axes(lookup_arrays["points"])
-        self.lookup_values_for_interpolation = {
-            key: self._repeat_wrapped_lookup_values(lookup_arrays[key]) for key in _LOOKUP_FIELDS
-        }
+
+        if 1 in self.lookup_interpolation_axes:
+            self.lookup_points_for_interpolation = self._build_wrapped_interpolation_points(
+                lookup_arrays["points"]
+            )
+            self.lookup_values_for_interpolation = {
+                key: self._repeat_wrapped_lookup_values(lookup_arrays[key])
+                for key in _LOOKUP_FIELDS
+            }
+        else:
+            self.lookup_points_for_interpolation = lookup_arrays["points"]
+            self.lookup_values_for_interpolation = {
+                key: lookup_arrays[key] for key in _LOOKUP_FIELDS
+            }
 
         if len(self.lookup_interpolation_axes) < 2:
             raise ValueError(
