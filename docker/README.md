@@ -1,10 +1,10 @@
 # Containers
 
-Container files are available for [simtools](https://github.com/gammasim/simtools) for both development and applications. Pre-built container images are available through the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
+Container files are available for [simtools](https://github.com/gammasim/simtools) for both development and runtime use. Pre-built container images are available through the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
 
 See the [simtools container documentation](https://gammasim.github.io/simtools/user-guide/docker_files.html) for further details:
 
-For convenience, the command to use a container as developer is repeated here:
+For convenience, the command to use a container as a developer is repeated here:
 
 ```bash
 podman run --rm -it -v "$(pwd)/:/workdir/external" ghcr.io/gammasim/simtools-dev:latest bash -lc "source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
@@ -16,8 +16,8 @@ In case a local database is used:
 podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash -lc "source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
 ```
 
-In some combinations of local git directory and container settings, git might report an issue with unsafe directories. In this case do:
+In some combinations of local git directory and container settings, git might report an issue with unsafe directories. In this case, run:
 
 ```bash
- podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash -lc "git config --global --add safe.directory /workdir/external/simtools-dev && source /workdir/env/bin/activate && cd /workdir/external/simtools-dev && pip install -e . && bash"
+ podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash -lc "git config --global --add safe.directory /workdir/external/simtools && source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
  ```
