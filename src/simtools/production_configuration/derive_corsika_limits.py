@@ -36,7 +36,6 @@ COLUMN_DESCRIPTIONS = {
 LOSS_AXES = ("core_distance", "angular_distance")
 RESULT_COLUMNS = [
     "production_index",
-    "event_data_file",
     "primary_particle",
     "array_name",
     "zenith",
