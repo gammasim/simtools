@@ -109,7 +109,10 @@ def test_create_results_table(mock_results):
     assert table["br_energy_max"].unit == u.TeV
     assert table["br_core_scatter_max"].unit == u.m
     assert table["br_viewcone_max"].unit == u.deg
-    assert table["br_viewcone_max"].description == "Viewcone max from broad-range simulations."
+    assert (
+        table["br_viewcone_max"].description
+        == derive_corsika_limits.COLUMN_DESCRIPTIONS["br_viewcone_max"]
+    )
     assert table.meta["loss_fraction_core_distance"] == pytest.approx(0.2)
     assert table.meta["loss_min_events_core_distance"] == 10
     assert table.meta["loss_fraction_angular_distance"] == pytest.approx(0.2)
@@ -117,6 +120,20 @@ def test_create_results_table(mock_results):
     assert table.meta["energy_threshold_fraction"] == pytest.approx(0.1)
     assert isinstance(table.meta["created"], str)
     assert "description" in table.meta
+
+
+def test_file_info_columns_are_read_from_schema():
+    """Test file-info column mappings are read from the CORSIKA limits schema."""
+    assert derive_corsika_limits.FILE_INFO_COLUMNS == {
+        "primary_particle": "primary_particle",
+        "zenith": "zenith",
+        "azimuth": "azimuth",
+        "nsb_level": "nsb_level",
+        "br_energy_min": "energy_min",
+        "br_energy_max": "energy_max",
+        "br_core_scatter_max": "core_scatter_max",
+        "br_viewcone_max": "viewcone_max",
+    }
 
 
 def test_round_value():
