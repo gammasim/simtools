@@ -1,14 +1,11 @@
 """Generate bias curves from NSB and proton trigger rates."""
 
 import logging
-from itertools import pairwise
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
-from ctao_cr_spectra.definitions import IRFDOC_PROTON_SPECTRUM
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from simtools.layout.array_layout_utils import get_array_elements_from_db_for_layouts
 from simtools.model.telescope_model import TelescopeModel
@@ -380,51 +377,9 @@ def _plot_bias_curves(nsb_stats, proton_stats, args):
     axis.grid(which="both", alpha=0.3, linestyle=":")
     axis.legend(fontsize=11, loc="best")
 
-    # Add inset with proton spectrum
-    spectrum_axis = inset_axes(axis, width="40%", height="40%", loc="upper right")
-    energy, flux = _compute_integrated_proton_spectrum()
-    spectrum_axis.loglog(energy, flux, color="tab:orange", linewidth=1.5)
-    spectrum_axis.set_title("IRFDOC Proton Spectrum", fontsize=9)
-    spectrum_axis.set_xlabel("Energy [TeV]", fontsize=8)
-    spectrum_axis.set_ylabel(r"Flux [s$^{-1}$ cm$^{-2}$ sr$^{-1}$]", fontsize=8)
-    spectrum_axis.tick_params(axis="both", which="major", labelsize=7)
-    spectrum_axis.grid(which="both", alpha=0.2, linestyle=":")
-
     # Save figure
     fig.tight_layout()
     output_path = Path(args["output"])
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
-
-
-def _compute_integrated_proton_spectrum(energy_min_tev=0.01, energy_max_tev=200.0, n_bins=30):
-    """
-    Compute integrated proton spectrum for inset plot.
-
-    Parameters
-    ----------
-    energy_min_tev : float
-        Minimum energy in TeV.
-    energy_max_tev : float
-        Maximum energy in TeV.
-    n_bins : int
-        Number of energy bins.
-
-    Returns
-    -------
-    tuple
-        (energy_centers, integrated_flux)
-    """
-    energy_edges = np.geomspace(energy_min_tev, energy_max_tev, n_bins + 1) * u.TeV
-    spectrum = IRFDOC_PROTON_SPECTRUM
-
-    integrated_flux = np.array(
-        [
-            spectrum.integrate_energy(e_low, e_high).decompose(bases=[u.s, u.cm, u.sr]).value
-            for e_low, e_high in pairwise(energy_edges)
-        ]
-    )
-
-    energy_centers = np.sqrt(energy_edges[:-1] * energy_edges[1:]).to_value(u.TeV)
-    return energy_centers, integrated_flux
