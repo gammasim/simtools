@@ -42,8 +42,6 @@ Results are provided as a table with the following columns:
 +===========================+===========+========+==============================================+
 | production_index          | int64     |        | Production index for multi-production runs.  |
 +---------------------------+-----------+--------+----------------------------------------------+
-| event_data_file           | string    |        | Input event-data pattern for this row.       |
-+---------------------------+-----------+--------+----------------------------------------------+
 | primary_particle          | string    |        | Particle type (e.g., gamma, proton).         |
 +---------------------------+-----------+--------+----------------------------------------------+
 | array_name                | string    |        | Array name (custom or as defined in          |
