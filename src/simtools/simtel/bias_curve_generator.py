@@ -27,8 +27,6 @@ def generate_bias_curves(args):
         - proton_dir: Directory for proton simulation files
         - output: Output plot file path
         - nsb_table_output: Optional ECSV table output for NSB rates
-        - nsb_log_pattern: Pattern for NSB log files
-        - proton_file_pattern: Pattern for proton HDF5 files
         - site, model_version, array_layout_name or telescope_ids: For telescope config
         - title, ymin, ymax: Plot parameters
     """
@@ -151,7 +149,7 @@ def _extract_nsb_rates(args, time_window):
     Parameters
     ----------
     args : dict
-        Arguments including nsb_dir, nsb_log_pattern, and optional nsb_table_output.
+        Arguments including nsb_dir and optional nsb_table_output.
     time_window : float
         Time window in seconds.
 
@@ -163,7 +161,7 @@ def _extract_nsb_rates(args, time_window):
     nsb_dir = Path(args["nsb_dir"])
     nsb_args = {
         "root_dir": nsb_dir,
-        "pattern": args.get("nsb_log_pattern", "**/*.simtel.log.gz"),
+        "pattern": "**/*.simtel.log.gz",
         "output": args.get("nsb_table_output"),  # Write ECSV if specified
         "time_window": time_window,
         "verbose": False,
@@ -206,7 +204,7 @@ def _extract_proton_rates(args):
         if item.is_dir() and item.name.isdigit():
             threshold = int(item.name)
             # Check if reasonable threshold range
-            if 50 <= threshold <= 10000:
+            if 20 <= threshold <= 10000:
                 threshold_dirs.append((threshold, item))
 
     if not threshold_dirs:
@@ -220,7 +218,7 @@ def _extract_proton_rates(args):
         _logger.info(f"Processing threshold {threshold} in {threshold_dir}")
 
         # Find HDF5 files in this threshold directory
-        hdf5_files = list(threshold_dir.rglob(args.get("proton_file_pattern", "*.hdf5")))
+        hdf5_files = list(threshold_dir.rglob("*.hdf5"))
 
         if not hdf5_files:
             _logger.warning(f"No HDF5 files found in {threshold_dir}")

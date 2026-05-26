@@ -31,10 +31,6 @@ output (str, optional)
     Output plot file path. Default: bias_curve.png
 nsb_table_output (str, optional)
     Output ECSV table file for NSB trigger rates. If not specified, no table is written.
-nsb_log_pattern (str, optional)
-    Glob pattern for NSB log files. Default: **/*.simtel.log.gz
-proton_file_pattern (str, optional)
-    Glob pattern for proton HDF5 files within threshold dirs. Default: *.hdf5
 site (str, required)
     Site name (North/South) for telescope configuration.
 model_version (str, required)
@@ -80,13 +76,10 @@ Generate bias curves with NSB and proton data in separate directories:
 
 """
 
-import logging
 from pathlib import Path
 
 from simtools.application_control import build_application
 from simtools.simtel.bias_curve_generator import generate_bias_curves
-
-_logger = logging.getLogger(__name__)
 
 
 def _add_arguments(parser):
@@ -125,20 +118,6 @@ def _add_arguments(parser):
         type=Path,
         required=False,
         help="Output ECSV table file for NSB trigger rates. If not specified, no table is written.",
-    )
-
-    parser.add_argument(
-        "--nsb_log_pattern",
-        type=str,
-        default="**/*.simtel.log.gz",
-        help="Glob pattern for NSB log files. Default: **/*.simtel.log.gz",
-    )
-
-    parser.add_argument(
-        "--proton_file_pattern",
-        type=str,
-        default="*.hdf5",
-        help="Glob pattern for proton HDF5 files within threshold dirs. Default: *.hdf5",
     )
 
     parser.initialize_application_arguments(["telescope_ids"])
