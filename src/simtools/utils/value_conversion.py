@@ -248,8 +248,19 @@ def get_value_in_unit(value, unit=None):
     -------
     float or any
         Numerical value of the Quantity in the requested unit,
-        or the original value if it is not a Quantity.
+        or the original value if it is not a Quantity and no target unit is requested.
+
+    Raises
+    ------
+    TypeError
+        If ``unit`` is requested but ``value`` is neither a Quantity nor a numeric scalar.
     """
     if isinstance(value, u.Quantity):
         return value.to_value(unit) if unit is not None else value.value
+
+    if unit is not None and not isinstance(value, int | float):
+        raise TypeError(
+            f"Expected Quantity or numeric scalar when unit='{unit}', got {type(value)}"
+        )
+
     return value

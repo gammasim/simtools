@@ -312,6 +312,34 @@ def test_generate_horizontal_grid_handles_partial_interpolated_limit_arrays():
     assert_quantity_allclose(grid[0]["viewcone_radius"], 3 * u.deg)
 
 
+def test_generate_horizontal_grid_with_circular_azimuth_binning_uses_correct_indices():
+    engine = ProductionGridEngine(
+        axes={
+            "axes": {
+                "zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"},
+                "azimuth": {"range": [10, 350], "binning": 3, "units": "deg"},
+                "nsb_level": {"range": [1, 1], "binning": 1, "units": "1"},
+            }
+        }
+    )
+    # Counterclockwise shortest path gives non-monotonic order: [10, 0, 350]
+    assert np.allclose(engine.target_values["azimuth"].value, np.array([10.0, 0.0, 350.0]))
+
+    engine.interpolated_limits = {
+        "lower_energy_threshold": np.array([[[0.1], [0.2], [0.3]]]),
+    }
+
+    grid = engine._generate_horizontal_grid()
+    by_azimuth = {
+        float(point["azimuth"].to_value(u.deg)): point["lower_energy_threshold"].to_value(u.TeV)
+        for point in grid
+    }
+
+    assert by_azimuth[10.0] == pytest.approx(0.1)
+    assert by_azimuth[0.0] == pytest.approx(0.2)
+    assert by_azimuth[350.0] == pytest.approx(0.3)
+
+
 def test_generate_grid_radec_mode_adds_extra_axis_quantities():
     engine = ProductionGridEngine(
         axes={"axes": {"zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"}}}
