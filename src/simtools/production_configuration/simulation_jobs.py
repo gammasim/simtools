@@ -394,16 +394,16 @@ def calculate_log_energy_midpoint(energy_range_pair):
 
 def calculate_scaled_showers_per_run(
     energy_range_pair,
-    showers_per_run_reference_energy,
+    baseline_showers_per_run,
     showers_per_run_power_index=None,
     reference_energy=None,
 ):
     """Return an energy-dependent showers per run value."""
-    if showers_per_run_reference_energy < 1:
-        raise ValueError("showers_per_run_reference_energy must be a positive integer.")
+    if baseline_showers_per_run < 1:
+        raise ValueError("baseline_showers_per_run must be a positive integer.")
 
     if showers_per_run_power_index is None:
-        return showers_per_run_reference_energy
+        return baseline_showers_per_run
 
     if reference_energy is None:
         raise ValueError(
@@ -414,7 +414,7 @@ def calculate_scaled_showers_per_run(
     scaling_factor = (midpoint_energy / reference_energy.to(midpoint_energy.unit)).to_value(
         u.dimensionless_unscaled
     ) ** showers_per_run_power_index
-    scaled_showers_per_run = int(np.ceil(showers_per_run_reference_energy * scaling_factor))
+    scaled_showers_per_run = int(np.ceil(baseline_showers_per_run * scaling_factor))
 
     if scaled_showers_per_run < 1:
         raise ValueError("Scaled showers per run must be at least 1.")
@@ -488,7 +488,7 @@ def _scale_total_showers(
     Scaling modes:
 
     - "fixed": total showers is unchanged.
-    - "zenith_scaled": total showers is scaled by the cosine of the zenith angle
+    - "zenith_scaled": total showers scaled by 'total_showers * exp(factor * (cos(ZD) - 1))'
     """
     if total_showers_scaling == "fixed":
         return int(total_showers)
