@@ -1,0 +1,78 @@
+%YAML 1.2
+---
+title: Schema for production_derive_corsika_limits output
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: production_derive_corsika_limits
+description: |-
+  Derived CORSIKA limits for energy threshold, core distance, and viewcone radius.
+data:
+  - type: data_table
+    table_columns:
+      - name: production_index
+        description: Production index for multi-production runs.
+        required: true
+        unit: dimensionless
+        type: int64
+      - name: primary_particle
+        description: Primary particle type.
+        required: true
+        unit: dimensionless
+        type: string
+      - name: array_name
+        description: Array layout or array identifier.
+        required: true
+        unit: dimensionless
+        type: string
+      - name: zenith
+        description: Direction of array pointing zenith.
+        required: true
+        unit: deg
+        type: float64
+      - name: azimuth
+        description: Direction of array pointing azimuth.
+        required: true
+        unit: deg
+        type: float64
+      - name: nsb_level
+        description: Night sky background level.
+        required: true
+        unit: dimensionless
+        type: float64
+      - name: lower_energy_limit
+        description: Derived lower energy limit.
+        required: true
+        unit: TeV
+        type: float64
+      - name: upper_radius_limit
+        description: Derived upper core distance limit.
+        required: true
+        unit: m
+        type: float64
+      - name: viewcone_radius
+        description: Derived viewcone radius limit.
+        required: true
+        unit: deg
+        type: float64
+      - name: br_energy_min
+        description: Broad-range simulation minimum energy.
+        required: false
+        unit: TeV
+        type: float64
+      - name: br_energy_max
+        description: Broad-range simulation maximum energy.
+        required: false
+        unit: TeV
+        type: float64
+      - name: br_core_scatter_max
+        description: Broad-range simulation core scatter maximum.
+        required: false
+        unit: m
+        type: float64
+      - name: br_viewcone_max
+        description: Broad-range simulation viewcone maximum.
+        required: false
+        unit: deg
+        type: float64
