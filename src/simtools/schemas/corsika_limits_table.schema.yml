@@ -21,6 +21,7 @@ data:
         required: true
         unit: dimensionless
         type: string
+        file_info_key: primary_particle
       - name: array_name
         description: Array layout or array identifier.
         required: true
@@ -31,16 +32,19 @@ data:
         required: true
         unit: deg
         type: float64
+        file_info_key: zenith
       - name: azimuth
         description: Direction of array pointing azimuth.
         required: true
         unit: deg
         type: float64
+        file_info_key: azimuth
       - name: nsb_level
         description: Night sky background level.
         required: true
         unit: dimensionless
         type: float64
+        file_info_key: nsb_level
       - name: lower_energy_limit
         description: Derived lower energy limit.
         required: true
@@ -61,18 +65,22 @@ data:
         required: false
         unit: TeV
         type: float64
+        file_info_key: energy_min
       - name: br_energy_max
         description: Broad-range simulation maximum energy.
         required: false
         unit: TeV
         type: float64
+        file_info_key: energy_max
       - name: br_core_scatter_max
         description: Broad-range simulation core scatter maximum.
         required: false
         unit: m
         type: float64
+        file_info_key: core_scatter_max
       - name: br_viewcone_max
         description: Broad-range simulation viewcone maximum.
         required: false
         unit: deg
         type: float64
+        file_info_key: viewcone_max

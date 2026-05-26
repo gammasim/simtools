@@ -9,6 +9,7 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Column, Table
 
+from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler, io_handler
 from simtools.job_execution.process_pool import process_pool_map_ordered
@@ -23,35 +24,38 @@ from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
 
-FILE_INFO_KEYS = ("primary_particle", "zenith", "azimuth", "nsb_level")
-BROAD_RANGE_FILE_INFO_KEYS = {
-    "br_energy_min": "energy_min",
-    "br_energy_max": "energy_max",
-    "br_core_scatter_max": "core_scatter_max",
-    "br_viewcone_max": "viewcone_max",
-}
-COLUMN_DESCRIPTIONS = {
-    "br_energy_min": "Energy min from broad-range simulations.",
-    "br_energy_max": "Energy max from broad-range simulations.",
-    "br_core_scatter_max": "Core scatter max from broad-range simulations.",
-    "br_viewcone_max": "Viewcone max from broad-range simulations.",
-}
+CORSIKA_LIMITS_TABLE_SCHEMA_FILE = SCHEMA_PATH / "corsika_limits_table.schema.yml"
+
+
+def _load_output_table_configuration_from_schema(schema_file):
+    """Load output table columns, descriptions, and file-info mappings from schema."""
+    schema_data = ascii_handler.collect_data_from_file(file_name=schema_file)
+    data_entries = schema_data.get("data", [])
+    if not data_entries:
+        raise KeyError(f"No 'data' entry found in schema {schema_file}")
+
+    table_columns = data_entries[0].get("table_columns", [])
+    if not table_columns:
+        raise KeyError(f"No 'table_columns' entry found in schema {schema_file}")
+
+    result_columns = [entry["name"] for entry in table_columns]
+    column_descriptions = {
+        entry["name"]: entry.get("description")
+        for entry in table_columns
+        if entry.get("description") is not None
+    }
+    file_info_columns = {
+        entry["name"]: entry["file_info_key"]
+        for entry in table_columns
+        if entry.get("file_info_key") is not None
+    }
+    return result_columns, column_descriptions, file_info_columns
+
+
+RESULT_COLUMNS, COLUMN_DESCRIPTIONS, FILE_INFO_COLUMNS = (
+    _load_output_table_configuration_from_schema(CORSIKA_LIMITS_TABLE_SCHEMA_FILE)
+)
 LOSS_AXES = ("core_distance", "angular_distance")
-RESULT_COLUMNS = [
-    "production_index",
-    "primary_particle",
-    "array_name",
-    "zenith",
-    "azimuth",
-    "nsb_level",
-    "lower_energy_limit",
-    "upper_radius_limit",
-    "viewcone_radius",
-    "br_energy_min",
-    "br_energy_max",
-    "br_core_scatter_max",
-    "br_viewcone_max",
-]
 
 
 def _normalize_event_data_file(event_data_file):
@@ -407,11 +411,10 @@ def _process_file(
             differential_loss_bins_per_decade,
         )
     )
-    limits.update({key: histograms.file_info.get(key) for key in FILE_INFO_KEYS})
     limits.update(
         {
-            output_key: histograms.file_info.get(file_info_key)
-            for output_key, file_info_key in BROAD_RANGE_FILE_INFO_KEYS.items()
+            column_name: histograms.file_info.get(file_info_key)
+            for column_name, file_info_key in FILE_INFO_COLUMNS.items()
         }
     )
 
