@@ -1080,11 +1080,10 @@ def test_create_results_table_with_production_columns(mock_results):
 
     # Should include production-origin columns
     assert "production_index" in table.colnames
-    assert "event_data_file" in table.colnames
+    assert "event_data_file" not in table.colnames
 
     # Check values
     assert table["production_index"][0] == 0
-    assert table["event_data_file"][0] == "pattern_0_*.hdf5"
 
 
 def test_create_results_table_without_production_columns(mock_results):
@@ -1092,11 +1091,10 @@ def test_create_results_table_without_production_columns(mock_results):
     # Results without production metadata (old format)
     table = derive_corsika_limits._create_results_table(mock_results, DEFAULT_ALLOWED_LOSSES, 0.1)
 
-    # Production-origin columns are included and filled with None if missing
+    # Production-origin column is included and filled with None if missing
     assert "production_index" in table.colnames
-    assert "event_data_file" in table.colnames
+    assert "event_data_file" not in table.colnames
     assert table["production_index"][0] is None
-    assert table["event_data_file"][0] is None
 
     # Standard columns should be present
     assert "primary_particle" in table.colnames
