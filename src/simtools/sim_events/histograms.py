@@ -33,14 +33,23 @@ class EventDataHistograms:
         Name of the telescope array configuration (default is None).
     telescope_list : list, optional
         List of telescope IDs to filter the events (default is None).
+    energy_bins_per_decade : int, optional
+        Number of energy bins per decade for logarithmic energy histograms.
     """
 
-    def __init__(self, event_data_file, array_name=None, telescope_list=None):
+    def __init__(
+        self,
+        event_data_file,
+        array_name=None,
+        telescope_list=None,
+        energy_bins_per_decade=10,
+    ):
         """Initialize."""
         self._logger = logging.getLogger(__name__)
         self.event_data_file = event_data_file
         self.event_data_files = self._normalize_event_data_files(event_data_file)
         self.array_name = array_name
+        self.energy_bins_per_decade = max(int(energy_bins_per_decade), 1)
 
         self.histograms = {}
         self.file_info = {}
@@ -96,6 +105,7 @@ class EventDataHistograms:
             "azimuth": self._get_file_info_value(file_info_table, "azimuth", "deg"),
             "nsb_level": self._get_file_info_value(file_info_table, "nsb_level"),
             "energy_min": self._get_file_info_value(file_info_table, "energy_min", "TeV"),
+            "energy_max": self._get_file_info_value(file_info_table, "energy_max", "TeV"),
             "core_scatter_max": self._get_file_info_value(file_info_table, "core_scatter_max", "m"),
             "viewcone_max": self._get_file_info_value(file_info_table, "viewcone_max", "deg"),
             "solid_angle": self._get_file_info_value(file_info_table, "solid_angle", "sr"),
@@ -115,7 +125,7 @@ class EventDataHistograms:
         for data in self.histograms.values():
             self._fill_histogram_and_bin_edges(data)
 
-    def fill(self):
+    def fill(self, fill_efficiency_histogram=True):
         """
         Fill histograms with event data.
 
@@ -124,6 +134,11 @@ class EventDataHistograms:
 
         Assume that all event data files are generated with similar configurations
         (self.file_info contains the file info of the last file).
+
+        Parameters
+        ----------
+        fill_efficiency_histogram : bool, optional
+            Whether to calculate and fill the efficiency histograms.
         """
         total_files = len(self.event_data_files)
         for file_index, (event_data_file, reader) in enumerate(self._iter_readers(), start=1):
@@ -143,7 +158,8 @@ class EventDataHistograms:
                 self._fill_current_histograms()
 
         self.print_summary()
-        self.calculate_efficiency_data()
+        if fill_efficiency_histogram:
+            self.calculate_efficiency_data()
         self.calculate_cumulative_data()
 
     def _define_histograms(self, event_data, triggered_data, shower_data):
@@ -190,12 +206,14 @@ class EventDataHistograms:
                 "event_data": event_data,
                 "bin_edges": self.core_distance_bins,
                 "axis_titles": ["Core Distance (m)", event_count_axis_title],
+                "plot_scales": {"y": "log"},
             },
             "angular_distance": {
                 "event_data_column": "angular_distance",
                 "event_data": triggered_data,
                 "bin_edges": self.view_cone_bins,
                 "axis_titles": ["Angular Distance (deg)", event_count_axis_title],
+                "plot_scales": {"y": "log"},
             },
             "x_core_shower_vs_y_core_shower": {
                 "event_data_column": ("x_core_shower", "y_core_shower"),
@@ -204,7 +222,7 @@ class EventDataHistograms:
                 "is_1d": False,
                 "axis_titles": ["Core X (m)", "Core Y (m)", event_count_axis_title],
             },
-            "core_vs_energy": {
+            "core_distance_vs_energy": {
                 "event_data_column": ("core_distance_shower", "simulated_energy"),
                 "event_data": (event_data, event_data),
                 "bin_edges": (self.core_distance_bins, self.energy_bins),
@@ -264,6 +282,7 @@ class EventDataHistograms:
             "1d": is_1d,
             "bin_edges": bin_edges,
             "title": title,
+            "title_fontsize": "xx-small",
             "axis_titles": axis_titles,
             "suffix": suffix,
             "plot_scales": plot_scales,
@@ -349,20 +368,42 @@ class EventDataHistograms:
 
     @property
     def energy_bins(self):
-        """Return bins for the energy histogram."""
+        """
+        Return bins for the energy histogram.
+
+        Align bins to full decades of energy, using the configured bins per decade,
+        and ensure that the range covers the energy range of the events.
+
+        Returns
+        -------
+        np.ndarray            Array of energy bin edges in TeV.
+        """
         if "energy_bin_edges" in self.histograms:
             return self.histograms["energy_bin_edges"]
-        return np.logspace(
-            np.log10(self.file_info.get("energy_min", 1.0e-3 * u.TeV).to("TeV").value),
-            np.log10(self.file_info.get("energy_max", 1.0e3 * u.TeV).to("TeV").value),
-            100,
-        )
+
+        energy_min = self.file_info.get("energy_min", 1.0e-3 * u.TeV).to("TeV").value
+        energy_max = self.file_info.get("energy_max", 1.0e3 * u.TeV).to("TeV").value
+        energy_min = max(energy_min, 1e-3)
+        energy_max = max(energy_max, 10 * energy_min)
+
+        lower_decade = np.floor(np.log10(energy_min))
+        upper_decade = np.ceil(np.log10(energy_max))
+        if upper_decade <= lower_decade:
+            upper_decade = lower_decade + 1
+
+        n_bins = int((upper_decade - lower_decade) * self.energy_bins_per_decade)
+        return np.logspace(lower_decade, upper_decade, n_bins + 1)
 
     @property
     def core_distance_bins(self):
-        """Return bins for the core distance histogram."""
+        """
+        Return bins for the core distance histogram.
+
+        CORSIKA CSCAT ('core_scatter_max') is defined in the shower plane.
+        """
         if "core_distance_bin_edges" in self.histograms:
             return self.histograms["core_distance_bin_edges"]
+
         return np.linspace(
             self.file_info.get("core_scatter_min", 0.0 * u.m).to("m").value,
             self.file_info.get("core_scatter_max", 1.0e5 * u.m).to("m").value,
