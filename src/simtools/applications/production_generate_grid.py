@@ -25,6 +25,10 @@ corsika_limits (str, optional)
     varying azimuth and/or zenith angles for the selected array layout.
 output_file (str, optional, default='job_grid.ecsv')
     Output file for the generated executable job grid.
+showers_per_run_power_law (tuple, optional)
+    Energy scaling for showers per run as
+    ``<power_index> <reference_energy_value> <reference_energy_unit>``
+    (example: ``--showers_per_run_power_law -2.0 1 TeV``).
 
 
 Example
@@ -57,9 +61,9 @@ execute:
 """
 
 from simtools.application_control import build_application
+from simtools.configuration import defaults
 from simtools.production_configuration.job_grid_io import serialize_job_grid
 from simtools.production_configuration.simulation_jobs import (
-    DEFAULT_ZENITH_ANGLE_SCALING_FACTOR,
     build_job_grid_metadata,
     build_simulation_jobs,
 )
@@ -128,25 +132,18 @@ def _add_arguments(parser):
         ),
         type=float,
         required=False,
-        default=DEFAULT_ZENITH_ANGLE_SCALING_FACTOR,
+        default=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
     )
     parser.add_argument(
-        "--showers_per_run_power_index",
+        "--showers_per_run_power_law",
         help=(
-            "Power-law index used to scale the baseline showers_per_run with the geometric-mean "
-            "energy of each energy_range entry."
+            "Power-law parameters for showers_per_run scaling given as: "
+            "<power_index> <reference_energy_value> <reference_energy_unit> "
+            "(for example: --showers_per_run_power_law -2.0 1 TeV)."
         ),
-        type=float,
-        required=False,
-        default=None,
-    )
-    parser.add_argument(
-        "--showers_per_run_reference_energy",
-        help=(
-            "Reference energy for showers_per_run power-law scaling (for example: '100 GeV'). "
-            "Required together with --showers_per_run_power_index."
-        ),
+        nargs=3,
         type=str,
+        metavar=("POWER_INDEX", "REFERENCE_ENERGY_VALUE", "REFERENCE_ENERGY_UNIT"),
         required=False,
         default=None,
     )
