@@ -154,6 +154,36 @@ def test_arglist_from_config():
     )
 
 
+def test_arglist_from_config_splits_scalar_for_fixed_nargs():
+    configurator = Configurator()
+    configurator.parser.add_argument("--showers_per_run_power_law", nargs=3, type=str)
+
+    assert [
+        "--showers_per_run_power_law",
+        "0.0",
+        "1",
+        "TeV",
+    ] == Configurator._arglist_from_config(
+        {"showers_per_run_power_law": "0.0 1 TeV"},
+        parser=configurator.parser,
+    )
+
+
+def test_arglist_from_config_keeps_explicit_list_for_fixed_nargs():
+    configurator = Configurator()
+    configurator.parser.add_argument("--showers_per_run_power_law", nargs=3, type=str)
+
+    assert [
+        "--showers_per_run_power_law",
+        "0.0",
+        "1",
+        "TeV",
+    ] == Configurator._arglist_from_config(
+        {"showers_per_run_power_law": ["0.0", "1", "TeV"]},
+        parser=configurator.parser,
+    )
+
+
 def test_convert_string_none_to_none():
     assert {} == Configurator._convert_string_none_to_none({})
 

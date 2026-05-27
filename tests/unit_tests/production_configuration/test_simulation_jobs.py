@@ -578,7 +578,9 @@ def test_build_rows_for_point_skips_energy_ranges_below_threshold():
     assert all(row["showers_per_run"] == 5 for row in rows)
 
 
-def test_build_rows_for_point_splits_total_showers_with_remainder():
+def test_build_rows_for_point_rounds_total_showers_up_with_warning(caplog):
+    caplog.set_level("WARNING")
+
     rows = _build_rows_for_point(
         point_base={"primary": "gamma", "zenith_angle": 20 * u.deg},
         energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
@@ -591,8 +593,9 @@ def test_build_rows_for_point_splits_total_showers_with_remainder():
         run_number=1,
     )
 
-    assert [row["showers_per_run"] for row in rows] == [1000, 1000, 500]
+    assert [row["showers_per_run"] for row in rows] == [1000, 1000, 1000]
     assert [row["run_number"] for row in rows] == [1, 2, 3]
+    assert "adjusting to 3000 to keep equal showers per run" in caplog.text
 
 
 def test_build_rows_for_point_scales_total_showers_with_zenith_scaled():
@@ -608,7 +611,7 @@ def test_build_rows_for_point_scales_total_showers_with_zenith_scaled():
         run_number=1,
     )
 
-    assert [row["showers_per_run"] for row in rows] == [200, 143]
+    assert [row["showers_per_run"] for row in rows] == [200, 200]
     assert [row["run_number"] for row in rows] == [1, 2]
 
 
@@ -626,7 +629,7 @@ def test_build_rows_for_point_uses_custom_zenith_angle_scaling_factor():
         zenith_angle_scaling_factor=0.0,
     )
 
-    assert [row["showers_per_run"] for row in rows] == [1000, 1000, 500]
+    assert [row["showers_per_run"] for row in rows] == [1000, 1000, 1000]
     assert [row["run_number"] for row in rows] == [1, 2, 3]
 
 
