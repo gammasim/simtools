@@ -52,7 +52,7 @@ htcondor_log_path (str, optional)
 simulation_output (str, optional)
     Base directory for simulation output packages passed through as ``pack_for_grid_register``.
 job_grid_file (str, required)
-    Path to the pre-generated executable job grid file in ECSV format.
+    Path to the pre-generated executable job grid file.
 priority (int, optional)
     Job priority (default: 1).
 

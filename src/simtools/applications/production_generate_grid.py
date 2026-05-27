@@ -3,7 +3,7 @@
 r"""
 Generate simulation job grid for production configurations.
 
-This application expands simulation job rows and writes them to disk as ECSV files.
+This application expands simulation job rows and writes them to disk.
 It supports both:
 
 - explicit cartesian job-grid configuration (primary, zenith, energy range, etc.), and
@@ -21,6 +21,7 @@ axis (repeatable)
     Compact axis definition in the form
     ``--axis <name> <min> <unit> <max> <unit> <binning> [scaling]``.
     Example: ``--axis azimuth 310 deg 20 deg 3 linear``.
+    Options for scaling are: linear, log, 1/cos.
 time_of_observation (str, optional)
     Time of the observation in UTC (format: 'YYYY-MM-DD HH:MM:SS').
     Used only if RA/Dec axes are provided (for coordinate transforms and sidereal-time
@@ -83,7 +84,8 @@ def _add_arguments(parser):
         required=False,
         help=(
             "Compact axis definition: --axis <name> <min> <unit> <max> <unit> <binning> "
-            "[scaling]. May be repeated."
+            "[scaling]. May be repeated. "
+            "Options for scaling are: linear, log, 1/cos"
         ),
     )
     parser.add_argument(
