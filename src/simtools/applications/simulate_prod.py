@@ -29,8 +29,8 @@ r"""
         so East is 90 degrees.
     zenith_angle (float, required)
         Zenith angle in degrees.
-    nshow (int, optional)
-        Number of showers to simulate.
+    showers_per_run (int, optional)
+        Number of showers to simulate per run.
         The Number of simulated events depends on the number of times a shower is reused in the
         telescope simulation. The number provided here is before any reuse factors.
     start_run (int, required)

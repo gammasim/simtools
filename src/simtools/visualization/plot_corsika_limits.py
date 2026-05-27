@@ -40,11 +40,6 @@ def _resolve_broad_range_columns(limits_table):
                 break
 
     if len(resolved_columns) != len(BROAD_RANGE_COLUMN_ALIASES):
-        _logger.warning(
-            "Not all broad-range columns found. Expected aliases: %s. Found: %s",
-            BROAD_RANGE_COLUMN_ALIASES,
-            resolved_columns,
-        )
         return None
 
     return resolved_columns
