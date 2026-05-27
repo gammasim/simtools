@@ -14,5 +14,6 @@ CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG = 65
 SIMULATION_SOFTWARE_CHOICES = ("corsika", "sim_telarray", "corsika_sim_telarray")
 SIMULATION_SOFTWARE_DEFAULT = "corsika_sim_telarray"
 
-# Default exponential factor for zenith-dependent total shower scaling (derived by the LST team).
+# Default exponential factor for zenith-dependent total shower scaling
+# Derived by the LST team for a 4-LST array, likely different for other array layouts.
 ZENITH_ANGLE_SCALING_FACTOR_DEFAULT = 3.9781

@@ -10,6 +10,11 @@ It supports both:
 - axes-based production-grid configuration with optional ``ra_dec`` coordinate handling
   and lookup-table interpolation.
 
+Allow for flexible scaling of the number of showers per run and total showers across the grid
+(either fixed or zenith-dependent scaling). The zenith-dependent scaling uses an exponential factor
+to adjust the total number of showers based on the zenith angle:
+'total_showers * np.exp(cos_scaling_factor * (cos_zenith - 1))'.
+
 Command line arguments
 ----------------------
 axis (repeatable)
