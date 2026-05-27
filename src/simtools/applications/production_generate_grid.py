@@ -35,6 +35,7 @@ showers_per_run_power_law (tuple, optional)
     Scale showers per run with energy as
     ``<power_index> <reference_energy_value> <reference_energy_unit>``
     (example: ``--showers_per_run_power_law -2.0 1 TeV``).
+    Use for fixed energy simulations only.
 
 
 Example
