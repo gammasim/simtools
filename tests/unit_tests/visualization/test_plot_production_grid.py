@@ -60,7 +60,7 @@ def _write_grid_file(tmp_test_directory, file_name, grid_points):
         table["nsb_level"].unit = "MHz"
     if "offset" in table.colnames:
         table["offset"].unit = "deg"
-    table.meta["observing_time_utc"] = "2025-01-01T00:00:00.000"
+    table.meta["time_of_observation_utc"] = "2025-01-01T00:00:00.000"
     table.write(file_path, format="ascii.ecsv", overwrite=True)
     return file_path
 
@@ -250,7 +250,7 @@ def test_load_grid_points_from_ecsv(tmp_test_directory):
     table["azimuth"].unit = "deg"
     table["zenith_angle"].unit = "deg"
     table["nsb_level"].unit = "MHz"
-    table.meta["observing_time_utc"] = "2025-01-01T00:00:00.000"
+    table.meta["time_of_observation_utc"] = "2025-01-01T00:00:00.000"
     table.write(grid_file, format="ascii.ecsv", overwrite=True)
 
     plotter = _create_plotter(

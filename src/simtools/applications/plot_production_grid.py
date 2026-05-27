@@ -17,7 +17,7 @@ model_version (str, required)
     Model version used to read the site reference coordinates.
 observation_time (str, optional)
     Observation time in UTC ISO format used for Alt/Az <-> RA/Dec transformations.
-    If omitted, the application uses ``metadata.observing_time_utc`` from the
+    If omitted, the application uses ``metadata.time_of_observation_utc`` from the
     grid file when available.
 plot_ra_dec_tracks (flag, optional)
     If provided, plot RA/Dec guide tracks on top of the sky projection. When native
