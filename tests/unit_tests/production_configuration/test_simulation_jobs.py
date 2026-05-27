@@ -1,5 +1,6 @@
 from unittest.mock import Mock, patch
 
+import numpy as np
 import pytest
 from astropy import units as u
 from astropy.coordinates import EarthLocation
@@ -506,16 +507,28 @@ def test_calculate_zenith_scaled_showers_per_run_returns_baseline_for_fixed_mode
 
 
 def test_calculate_zenith_scaled_showers_per_run_scales_with_cosine():
-    assert calculate_zenith_scaled_showers_per_run(60 * u.deg, 1000, "inverse_cosine") == 500
+    expected = int(np.ceil(1000 * np.round(np.cos(np.radians(60)), decimals=12)))
+    assert calculate_zenith_scaled_showers_per_run(60 * u.deg, 1000, "inverse_cosine") == expected
 
 
 def test_calculate_zenith_scaled_showers_per_run_keeps_baseline_at_zenith_0():
     assert calculate_zenith_scaled_showers_per_run(0 * u.deg, 1000, "inverse_cosine") == 1000
 
 
+def test_calculate_zenith_scaled_showers_per_run_raises_for_non_positive_baseline():
+    with pytest.raises(ValueError, match="positive integer"):
+        calculate_zenith_scaled_showers_per_run(20 * u.deg, 0, "inverse_cosine")
+
+
 def test_calculate_zenith_scaled_showers_per_run_raises_at_zenith_90():
     with pytest.raises(ValueError, match="at least 1"):
         calculate_zenith_scaled_showers_per_run(90 * u.deg, 1000, "inverse_cosine")
+
+
+def test_calculate_zenith_scaled_showers_per_run_raises_near_zenith_90():
+    # Rounding makes this tiny cosine effectively zero, which must trigger validation.
+    with pytest.raises(ValueError, match="at least 1"):
+        calculate_zenith_scaled_showers_per_run(89.999999999999 * u.deg, 1000, "inverse_cosine")
 
 
 def test_clip_energy_range_from_threshold_returns_none_above_max():

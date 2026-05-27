@@ -432,13 +432,35 @@ def calculate_zenith_scaled_showers_per_run(
     baseline_showers_per_run,
     showers_per_run_zenith_scaling="fixed",
 ):
-    """Return a zenith-angle-dependent showers per run value."""
+    """Return a zenith-angle-dependent showers per run value.
+
+    Parameters
+    ----------
+    zenith_angle : astropy.units.Quantity
+        Zenith angle for one simulation point.
+    baseline_showers_per_run : int
+        Showers-per-run value before zenith-angle scaling.
+    showers_per_run_zenith_scaling : str
+        Scaling mode ('fixed' or 'inverse_cosine').
+
+    Returns
+    -------
+    int
+        Zenith-scaled showers-per-run value.
+
+    Raises
+    ------
+    ValueError
+        If baseline showers per run is below 1, the selected scaling mode is unknown,
+        or the scaled showers-per-run result is below 1.
+    """
     if baseline_showers_per_run < 1:
         raise ValueError("baseline_showers_per_run must be a positive integer.")
 
     if showers_per_run_zenith_scaling == "fixed":
         return baseline_showers_per_run
     if showers_per_run_zenith_scaling == "inverse_cosine":
+        # 12 decimals suppress tiny floating artifacts and keep near-90 deg values stable.
         cos_zenith = np.round(np.cos(zenith_angle.to(u.rad).value), decimals=12)
         scaled_showers_per_run = int(np.ceil(baseline_showers_per_run * cos_zenith))
         if scaled_showers_per_run < 1:
