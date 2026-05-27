@@ -15,7 +15,7 @@ applications:
     label: test
     log_level: DEBUG
     model_version: 6.0.2
-    nshow: 5
+    showers_per_run: 5
     output_path: simtools-output
     pack_for_grid_register: simtools-grid-output
     primary: gamma

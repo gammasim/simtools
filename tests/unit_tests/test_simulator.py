@@ -37,7 +37,7 @@ def simulations_args_dict(corsika_config_data, model_version):
     args_dict["keep_seeds"] = False
     args_dict["run_number"] = 1
     args_dict["run_number_offset"] = 0
-    args_dict["nshow"] = 10
+    args_dict["showers_per_run"] = 10
     args_dict["extra_commands"] = None
     return args_dict
 

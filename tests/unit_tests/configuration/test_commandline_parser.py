@@ -628,10 +628,10 @@ def test_get_dictionary_with_corsika_configuration(mocker):
     assert corsika_config["zenith_angle"]["nargs"] == "+"
     assert corsika_config["zenith_angle"]["default"] == 20 * u.deg
 
-    # Test the "nshow" key
-    assert "nshow" in corsika_config
-    assert corsika_config["nshow"]["help"] == "Number of showers per run to simulate."
-    assert corsika_config["nshow"]["type"] is int
+    # Test the "showers_per_run" key
+    assert "showers_per_run" in corsika_config
+    assert corsika_config["showers_per_run"]["help"] == "Number of showers per run to simulate."
+    assert corsika_config["showers_per_run"]["type"] is int
 
     # Test the "run_number_offset" key
     assert "run_number_offset" in corsika_config
