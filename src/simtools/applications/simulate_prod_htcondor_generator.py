@@ -3,7 +3,7 @@
 r"""
 Generate a run script and submit file for HT Condor job submission of a simulation production.
 
-This tool generates HTCondor submission files for one or more simulation production grids and
+This tool generates HTCondor submission files from a pre-generated executable job grid and
 supports either a single Apptainer image or a label-to-image mapping for multi-image submissions.
 For each image label, it writes a dedicated ``simulate_prod.submit.<label>.condor`` file and a
 matching ``simulate_prod.submit.<label>.params.txt`` file. When only one default image is used,
@@ -37,6 +37,8 @@ To submit jobs, change to the output directory and run the generated submit file
 For the single-image default case, use ``condor_submit simulate_prod.submit.condor``.
 
 Simulation data products are written to the directory controlled by ``--simulation_output``.
+The executable job grid must be prepared first, for example using
+``simtools-production-generate-grid``.
 
 Command line arguments
 ----------------------
@@ -49,6 +51,8 @@ htcondor_log_path (str, optional)
     Directory for HTCondor log files. Defaults to ``output_path/htcondor_logs``.
 simulation_output (str, optional)
     Base directory for simulation output packages passed through as ``pack_for_grid_register``.
+job_grid_file (str, required)
+    Path to the pre-generated executable job grid file.
 priority (int, optional)
     Job priority (default: 1).
 
@@ -63,11 +67,10 @@ from simtools.job_execution import htcondor_script_generator
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
     parser.add_argument(
-        "--number_of_runs",
-        help="Number of runs to be simulated.",
-        type=int,
+        "--job_grid_file",
+        help="Path to a pre-generated executable job grid file.",
+        type=str,
         required=True,
-        default=1,
     )
     parser.add_argument(
         "--priority",
@@ -90,25 +93,11 @@ def _add_arguments(parser):
         required=False,
         default="./simtools-output",
     )
-    parser.add_argument(
-        "--corsika_limits",
-        help="Path to an ECSV file with CORSIKA limits.",
-        type=str,
-        required=False,
-        default=None,
-    )
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": False,
-            "preserve_by_version_keys": ["array_layout_name"],
-            "simulation_model": ["site", "layout", "telescope", "model_version"],
-            "simulation_configuration": {"software": None, "corsika_configuration": ["all"]},
-        },
-    )
+    app_context = build_application()
 
     htcondor_script_generator.generate_submission_script(app_context.args)
 

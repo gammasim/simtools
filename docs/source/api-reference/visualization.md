@@ -131,8 +131,6 @@ the visualization module.
    :members:
 ```
 
-(merge-corsika-limits)=
-
 
 (plot-corsika-limits)=
 
