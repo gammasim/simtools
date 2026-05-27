@@ -5,6 +5,7 @@ model versions, energy ranges, and run counts into a complete job parameter set.
 """
 
 import itertools
+import logging
 import shlex
 
 import numpy as np
@@ -22,6 +23,8 @@ from simtools.production_configuration.corsika_limits_lookup import (
 )
 from simtools.production_configuration.observation_grid import ProductionGridEngine
 from simtools.utils.general import ensure_list
+
+logger = logging.getLogger(__name__)
 
 _GRID_AXES = [
     "primary",
@@ -552,17 +555,23 @@ def _build_rows_for_point(
                 effective_total_showers, selected_showers_per_run
             )
             per_point_number_of_runs = number_of_full_runs + int(remainder_showers > 0)
+            if remainder_showers > 0:
+                adjusted_total_showers = per_point_number_of_runs * selected_showers_per_run
+                logger.warning(
+                    "total_showers=%s is not divisible by showers_per_run=%s; "
+                    "adjusting to %s to keep equal showers per run.",
+                    effective_total_showers,
+                    selected_showers_per_run,
+                    adjusted_total_showers,
+                )
 
         for i in range(per_point_number_of_runs):
-            run_showers_per_run = selected_showers_per_run
-            if total_showers is not None and i >= number_of_full_runs:
-                run_showers_per_run = remainder_showers
             rows.append(
                 {
                     **point_base,
                     "energy_min": selected_energy_range[0],
                     "energy_max": selected_energy_range[1],
-                    "showers_per_run": run_showers_per_run,
+                    "showers_per_run": selected_showers_per_run,
                     "run_number": run_number + i,
                 }
             )
