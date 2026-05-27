@@ -200,3 +200,16 @@ def test_normalize_dimensionless_unit():
         None,
         None,
     ]
+
+
+def test_get_value_in_unit_converts_quantity():
+    assert value_conversion.get_value_in_unit(180 * u.deg, "rad") == pytest.approx(np.pi)
+
+
+def test_get_value_in_unit_accepts_numeric_scalar_with_unit():
+    assert value_conversion.get_value_in_unit(5, "deg") == 5
+
+
+def test_get_value_in_unit_raises_for_non_numeric_with_unit():
+    with pytest.raises(TypeError, match="Expected Quantity or numeric scalar"):
+        value_conversion.get_value_in_unit("5", "deg")

@@ -67,7 +67,7 @@ class ProductionGridPlotter:
         self.grid_metadata = {}
         self.grid_points = self._load_grid_points()
 
-        observation_time_utc = observation_time or self.grid_metadata.get("observing_time_utc")
+        observation_time_utc = observation_time or self.grid_metadata.get("time_of_observation_utc")
         if observation_time_utc is None:
             observation_time_utc = "2025-01-01 00:00:00"
         self.time = Time(observation_time_utc, scale="utc")

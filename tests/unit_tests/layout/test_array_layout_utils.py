@@ -1008,19 +1008,6 @@ def test_create_regular_array_metadata():
     assert list(table["telescope_name"]) == sorted(table["telescope_name"])
 
 
-def test_get_array_name_valid():
-    assert array_layout_utils._get_array_name("4MST") == ("MST", 4)
-    assert array_layout_utils._get_array_name("1LST") == ("LST", 1)
-    assert array_layout_utils._get_array_name("2SST") == ("SST", 2)
-
-
-def test_get_array_name_invalid():
-    with pytest.raises(ValueError, match="Invalid array_name: 'MST'"):
-        array_layout_utils._get_array_name("MST")
-    with pytest.raises(ValueError, match="Invalid array_name: 'A4MST'"):
-        array_layout_utils._get_array_name("A4MST")
-
-
 def test_write_array_elements_from_file_to_repository_utm(tmp_test_directory):
     array_layout_utils.write_array_elements_from_file_to_repository(
         coordinate_system="utm",
@@ -1325,3 +1312,32 @@ def test_get_array_elements_from_db_for_layouts_all_with_no_layouts(mocker):
     assert result == {}
     instance.get_list_of_array_layouts.assert_called_once()
     instance.get_array_elements_for_layout.assert_not_called()
+
+
+def test_resolve_array_layout_name_resolves_stringified_by_version_layout():
+    array_layout_name = str(
+        {
+            "by_version": {
+                "<7.0.0": "alpha",
+                ">=7.0.0": "CTAO-North-Alpha",
+            }
+        }
+    )
+
+    assert (
+        array_layout_utils.resolve_array_layout_name(array_layout_name, "7.0.0")
+        == "CTAO-North-Alpha"
+    )
+
+
+def test_resolve_array_layout_name_unwraps_single_item_list():
+    assert (
+        array_layout_utils.resolve_array_layout_name(["CTAO-North-Alpha"], "7.0.0")
+        == "CTAO-North-Alpha"
+    )
+
+
+def test_resolve_array_layout_name_keeps_invalid_stringified_dict():
+    invalid_layout = "{not valid"
+
+    assert array_layout_utils.resolve_array_layout_name(invalid_layout, "7.0.0") == invalid_layout
