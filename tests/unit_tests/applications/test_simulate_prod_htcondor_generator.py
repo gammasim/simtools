@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import argparse
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -17,10 +18,19 @@ def test_main_uses_standard_build_application(
 
     app.main()
 
-    assert mock_build_application.call_args.kwargs["initialization_kwargs"] == {
-        "db_config": False,
-        "preserve_by_version_keys": ["array_layout_name"],
-        "simulation_model": ["site", "layout", "telescope", "model_version"],
-        "simulation_configuration": {"software": None, "corsika_configuration": ["all"]},
-    }
+    assert mock_build_application.call_args.kwargs == {}
     mock_generate_submission_script.assert_called_once_with({"output_path": "htcondor_submit"})
+
+
+def test_add_arguments_registers_job_grid_argument():
+    parser = argparse.ArgumentParser()
+
+    app._add_arguments(parser)
+    args = parser.parse_args(
+        [
+            "--job_grid_file",
+            "job_grid.ecsv",
+        ]
+    )
+
+    assert args.job_grid_file == "job_grid.ecsv"
