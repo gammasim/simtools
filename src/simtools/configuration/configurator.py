@@ -345,39 +345,58 @@ class Configurator:
 
         """
         if isinstance(input_var, dict):
-            _list_args = []
-            for key, value in input_var.items():
-                if isinstance(value, list):
-                    _list_args.append("--" + key)
-                    _list_args.extend(map(str, value))
-                elif isinstance(value, u.Quantity) or (
-                    not isinstance(value, bool) and value is not None and len(str(value)) > 0
-                ):
-                    _list_args.append("--" + key)
-                    expected_nargs = Configurator._get_fixed_nargs(parser, key)
-                    if (
-                        parser is not None
-                        and isinstance(value, str)
-                        and isinstance(expected_nargs, int)
-                        and expected_nargs > 1
-                    ):
-                        split_values = shlex.split(value)
-                        if len(split_values) != expected_nargs:
-                            raise ValueError(
-                                f"Configuration value for '{key}' must provide "
-                                f"{expected_nargs} entries, got {len(split_values)}: {value}"
-                            )
-                        _list_args.extend(split_values)
-                    else:
-                        _list_args.append(str(value))
-                elif value:
-                    _list_args.append("--" + key)
-            return _list_args
+            return Configurator._arglist_from_dict(input_var, parser=parser)
 
         try:
             return [str(value) for value in list(input_var) if value != "None"]
         except TypeError:
             return []
+
+    @staticmethod
+    def _arglist_from_dict(input_dict, parser=None):
+        """Convert a configuration dictionary into CLI-style argument tokens."""
+        list_args = []
+        for key, value in input_dict.items():
+            list_args.extend(Configurator._arg_tokens_for_item(key, value, parser=parser))
+        return list_args
+
+    @staticmethod
+    def _arg_tokens_for_item(key, value, parser=None):
+        """Return CLI argument tokens for a single configuration entry."""
+        option = f"--{key}"
+
+        if isinstance(value, list):
+            return [option, *map(str, value)]
+
+        if Configurator._is_scalar_config_value(value):
+            return [option, *Configurator._normalize_scalar_config_value(key, value, parser=parser)]
+
+        if value:
+            return [option]
+
+        return []
+
+    @staticmethod
+    def _is_scalar_config_value(value):
+        """Return True for scalar values that should produce an option and one or more tokens."""
+        return isinstance(value, u.Quantity) or (
+            not isinstance(value, bool) and value is not None and len(str(value)) > 0
+        )
+
+    @staticmethod
+    def _normalize_scalar_config_value(key, value, parser=None):
+        """Normalize a scalar config value to one or more argument tokens."""
+        expected_nargs = Configurator._get_fixed_nargs(parser, key)
+        if not (isinstance(value, str) and isinstance(expected_nargs, int) and expected_nargs > 1):
+            return [str(value)]
+
+        split_values = shlex.split(value)
+        if len(split_values) != expected_nargs:
+            raise ValueError(
+                f"Configuration value for '{key}' must provide "
+                f"{expected_nargs} entries, got {len(split_values)}: {value}"
+            )
+        return split_values
 
     @staticmethod
     def _get_fixed_nargs(parser, key):
