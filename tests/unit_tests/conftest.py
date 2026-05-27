@@ -623,7 +623,7 @@ def telescope_model_sst(model_version):
 def corsika_config_data(model_version):
     """Corsika configuration data (as given by CorsikaConfig)."""
     return {
-        "nshow": 100,
+        "showers_per_run": 100,
         "run_number_offset": 0,
         "run_number": 1,
         "event_number_first_shower": 1,

@@ -45,7 +45,7 @@ def job_rows():
             "core_scatter_max": 100 * u.m,
             "view_cone_min": 0 * u.deg,
             "view_cone_max": 5 * u.deg,
-            "nshow": 1000,
+            "showers_per_run": 1000,
             "model_version": "7.0.0",
             "array_layout_name": "CTAO-North-Alpha",
             "corsika_le_interaction": "urqmd",
@@ -177,7 +177,7 @@ simtools-simulate-prod \\
     --primary "$primary" \\
     --azimuth_angle "${{5}}" \\
     --zenith_angle "${{6}}" \\
-    --nshow "${{18}}" \\
+    --showers_per_run "${{18}}" \\
     --energy_range "${{7}} ${{8}} ${{9}} ${{10}}" \\
     --core_scatter "${{11}} ${{12}} ${{13}}" \\
     --view_cone "${{14}} ${{15}} ${{16}} ${{17}}" \\
@@ -213,7 +213,7 @@ def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
     assert (
         "view_cone_min_value,view_cone_min_unit,view_cone_max_value,view_cone_max_unit" in content
     )
-    assert "nshow,model_version,array_layout_name" in content
+    assert "showers_per_run,model_version,array_layout_name" in content
     assert "from simulate_prod.submit.params.txt" in content
     assert 'arguments = "$(process) env.txt' in content
     assert str(log_dir) in content
@@ -351,7 +351,7 @@ def test_write_params_file_keeps_energy_units(tmp_test_directory):
             "core_scatter_max": 200 * u.m,
             "view_cone_min": 0 * u.deg,
             "view_cone_max": 5 * u.deg,
-            "nshow": 1000,
+            "showers_per_run": 1000,
             "model_version": "7.0.0",
             "array_layout_name": "CTAO-North-Alpha",
             "corsika_le_interaction": "urqmd",
@@ -383,7 +383,7 @@ def test_write_params_file_replaces_whitespace_in_apptainer_label(tmp_test_direc
             "core_scatter_max": 200 * u.m,
             "view_cone_min": 0 * u.deg,
             "view_cone_max": 5 * u.deg,
-            "nshow": 1000,
+            "showers_per_run": 1000,
             "model_version": "7.0.0",
             "array_layout_name": "CTAO-North-Alpha",
             "corsika_le_interaction": "urqmd",
