@@ -211,7 +211,7 @@ class CorsikaLimitsLookup:
         azimuth : float or Quantity
             Azimuth angle.
         nsb : float or Quantity, optional
-            Night-sky background level.
+            Night-sky background level (relative to baseline NSB conditions).
 
         Returns
         -------
