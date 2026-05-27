@@ -10,10 +10,10 @@ It supports both:
 - axes-based production-grid configuration with optional ``ra_dec`` coordinate handling
   and lookup-table interpolation.
 
-Allow for flexible scaling of the number of showers per run and total showers across the grid
-(either fixed or zenith-dependent scaling). The zenith-dependent scaling uses an exponential factor
-to adjust the total number of showers based on the zenith angle:
-'total_showers * np.exp(cos_scaling_factor * (cos_zenith - 1))'.
+Allow for flexible scaling of showers per run and total showers across the grid.
+``showers_per_run_power_law`` scales the baseline showers per run with
+``(E_mid / E_ref) ** power_index``, using the logarithmic midpoint energy of each bin.
+``total_showers_scaling=zenith_scaled`` applies ``total_showers * exp(factor * (cos(ZD) - 1))``.
 
 Command line arguments
 ----------------------
@@ -32,7 +32,7 @@ corsika_limits (str, optional)
 output_file (str, optional, default='job_grid.ecsv')
     Output file for the generated executable job grid.
 showers_per_run_power_law (tuple, optional)
-    Energy scaling for showers per run as
+    Scale showers per run with energy as
     ``<power_index> <reference_energy_value> <reference_energy_unit>``
     (example: ``--showers_per_run_power_law -2.0 1 TeV``).
 
@@ -144,7 +144,7 @@ def _add_arguments(parser):
     parser.add_argument(
         "--showers_per_run_power_law",
         help=(
-            "Power-law parameters for showers_per_run scaling given as: "
+            "Scale showers_per_run by (E_mid / E_ref) ** power_index using the bin midpoint: "
             "<power_index> <reference_energy_value> <reference_energy_unit> "
             "(for example: --showers_per_run_power_law -2.0 1 TeV)."
         ),
