@@ -3,29 +3,11 @@ applications:
 - application: simtools-simulate-prod-htcondor-generator
   configuration:
     apptainer_image: tests/resources/dummy_apptainer_image.sif
-    array_layout_name:
-      by_version:
-        "<7.0.0": alpha
-        ">=7.0.0": CTAO-North-Alpha
-    azimuth_angle: North
-    core_scatter: 10 500 m
-    corsika_he_interaction: epos
-    corsika_le_interaction: urqmd
-    energy_range: 100 GeV 1 TeV
-    view_cone: 0 deg 10 deg
-    eslope: -2.0
+    job_grid_file: tests/resources/production_job_grid_horizontal_single.ecsv
     label: test-production-North
     log_level: DEBUG
-    model_version: 6.0.2
-    nshow: 5
-    number_of_runs: 1
     output_path: htcondor_submit
-    primary: gamma
     priority: 5
-    run_number: 10
-    simulation_software: corsika_sim_telarray
-    site: North
-    zenith_angle: 20
   integration_tests:
   - test_output_files:
     - file: simulate_prod.submit.condor

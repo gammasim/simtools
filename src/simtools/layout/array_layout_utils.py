@@ -1,5 +1,6 @@
 """Retrieve, merge, and write layout dictionaries."""
 
+import ast
 import logging
 from pathlib import Path
 
@@ -7,6 +8,7 @@ import astropy.units as u
 from astropy.table import QTable, Table
 
 import simtools.utils.general as gen
+import simtools.version as simtools_version
 from simtools.data_model import data_reader
 from simtools.data_model.model_data_writer import ModelDataWriter
 from simtools.io import ascii_handler, io_handler
@@ -564,30 +566,6 @@ def read_layouts(args_dict):
     return [], background_layout
 
 
-def _get_array_name(array_name):
-    """
-    Return telescope size and number of telescopes from regular array name.
-
-    Finetuned to array names like "4MST", "1LST", etc.
-
-    Parameters
-    ----------
-    array_name : str
-        Name of the regular array (e.g. "4MST").
-
-    Returns
-    -------
-    tel_size : str
-        Telescope size (e.g. "MST").
-    n_tel : int
-        Number of telescopes (e.g. 4).
-    """
-    if len(array_name) < 2 or not array_name[0].isdigit():
-        raise ValueError(f"Invalid array_name: '{array_name}'")
-
-    return array_name[1:], int(array_name[0])
-
-
 def _create_star_array(tel_name, pos_x, pos_y, pos_z, n_telescopes, tel_type, site, distance):
     """Create star-shaped array positions along x and y axes."""
     axis_sequence = ["x", "y", "-x", "-y"]
@@ -818,3 +796,35 @@ def write_array_elements_info_yaml(
         }
 
     ascii_handler.write_data_to_file(data, output_file)
+
+
+def resolve_array_layout_name(array_layout_name, model_version):
+    """
+    Resolve array layout configuration for a specific model version.
+
+    Parameters
+    ----------
+    array_layout_name : str or dict or list of str or list of dict
+        Array layout name(s) or configuration(s) to resolve.
+    model_version : str
+        Model version to resolve for.
+
+    """
+    if isinstance(array_layout_name, list) and len(array_layout_name) == 1:
+        array_layout_name = array_layout_name[0]
+
+    if isinstance(array_layout_name, str) and array_layout_name.strip().startswith("{"):
+        try:
+            parsed_layout = ast.literal_eval(array_layout_name)
+            if isinstance(parsed_layout, dict):
+                array_layout_name = parsed_layout
+        except (SyntaxError, ValueError):
+            return array_layout_name
+
+    if not isinstance(array_layout_name, dict) or list(array_layout_name) != ["by_version"]:
+        return array_layout_name
+
+    resolved = simtools_version.resolve_by_version(
+        {"array_layout_name": array_layout_name}, model_version
+    )
+    return resolved["array_layout_name"]
