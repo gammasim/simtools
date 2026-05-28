@@ -124,6 +124,22 @@ def test_build_axes_dict_from_cli_args_accepts_density_with_unit():
     assert axes["azimuth"]["direction_grid_density"] == pytest.approx(1.0)
 
 
+def test_build_axes_dict_from_cli_args_accepts_density_as_single_token_list():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "direction_grid_density": ["1.0"],
+            "axis": [
+                ["azimuth", "310", "deg", "20", "deg", "3", "linear"],
+                ["zenith", "30", "deg", "40", "deg", "2"],
+                ["nsb", "4", "MHz", "5", "MHz", "2"],
+                ["offset", "0", "deg", "10", "deg", "2"],
+            ],
+        }
+    )
+
+    assert axes["azimuth"]["direction_grid_density"] == pytest.approx(1.0)
+
+
 def test_build_axes_dict_from_cli_args_derives_radec_binning_from_density():
     axes = build_axes_dict_from_cli_args(
         {
@@ -317,37 +333,45 @@ def test_build_axes_dict_from_cli_args_accepts_merged_config_axis_list():
     assert axes["offset"]["range"] == [0.0, 10.0]
 
 
-def test_build_axes_dict_from_cli_args_prefers_radec_with_horizontal_constraints():
-    axes = build_axes_dict_from_cli_args(
-        {
-            "axis": [
-                ["azimuth", "310", "deg", "20", "deg", "3"],
-                ["zenith", "30", "deg", "40", "deg", "2"],
-                ["ra", "0", "deg", "360", "deg", "36"],
-                ["dec", "-90", "deg", "90", "deg", "18"],
-                ["nsb", "4", "MHz", "5", "MHz", "2"],
-                ["offset", "0", "deg", "10", "deg", "2"],
-            ]
-        }
-    )
-
-    assert "ra" in axes
-    assert "dec" in axes
-    assert "azimuth" not in axes
-    assert "zenith_angle" not in axes
-    assert axes["ra"]["local_azimuth_range"] == pytest.approx([310.0, 20.0])
-    assert axes["ra"]["local_zenith_range"] == pytest.approx([30.0, 40.0])
-
-
-def test_build_axes_dict_from_cli_args_rejects_duplicate_local_constraints():
-    with pytest.raises(ValueError, match="Cannot define both 'local_zenith_range'"):
+def test_build_axes_dict_from_cli_args_rejects_multiple_direction_coordinate_systems():
+    with pytest.raises(ValueError, match="Cannot define both azimuth/zenith and ra/dec axes"):
         build_axes_dict_from_cli_args(
             {
-                "local_zenith_range": ["0", "deg", "70", "deg"],
+                "axis": [
+                    ["azimuth", "310", "deg", "20", "deg", "3"],
+                    ["zenith", "30", "deg", "40", "deg", "2"],
+                    ["ra", "0", "deg", "360", "deg", "36"],
+                    ["dec", "-90", "deg", "90", "deg", "18"],
+                    ["nsb", "4", "MHz", "5", "MHz", "2"],
+                    ["offset", "0", "deg", "10", "deg", "2"],
+                ]
+            }
+        )
+
+
+def test_build_axes_dict_from_cli_args_rejects_invalid_density_unit():
+    with pytest.raises(ValueError, match="direction_grid_density must be a float or quantity"):
+        build_axes_dict_from_cli_args(
+            {
+                "direction_grid_density": "1.0 1/s",
                 "axis": [
                     ["ra", "0", "deg", "360", "deg", "36"],
                     ["dec", "-90", "deg", "90", "deg", "18"],
-                    ["zenith", "0", "deg", "70", "deg", "2"],
+                    ["nsb", "4", "MHz", "5", "MHz", "2"],
+                    ["offset", "0", "deg", "10", "deg", "2"],
+                ],
+            }
+        )
+
+
+def test_build_axes_dict_from_cli_args_rejects_invalid_density_type():
+    with pytest.raises(TypeError, match="direction_grid_density must be a number"):
+        build_axes_dict_from_cli_args(
+            {
+                "direction_grid_density": {"value": 1.0},
+                "axis": [
+                    ["ra", "0", "deg", "360", "deg", "36"],
+                    ["dec", "-90", "deg", "90", "deg", "18"],
                     ["nsb", "4", "MHz", "5", "MHz", "2"],
                     ["offset", "0", "deg", "10", "deg", "2"],
                 ],
