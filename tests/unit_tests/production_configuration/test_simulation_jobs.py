@@ -508,31 +508,31 @@ def test_calculate_zenith_scaled_showers_per_run_returns_baseline_for_fixed_mode
 
 def test_calculate_zenith_scaled_showers_per_run_scales_with_cosine():
     expected = int(np.ceil(1000 * np.round(np.cos(np.radians(60)), decimals=12)))
-    assert calculate_zenith_scaled_showers_per_run(60 * u.deg, 1000, "inverse_cosine") == expected
+    assert calculate_zenith_scaled_showers_per_run(60 * u.deg, 1000, "cosine_zenith") == expected
 
 
 def test_calculate_zenith_scaled_showers_per_run_keeps_baseline_at_zenith_0():
-    assert calculate_zenith_scaled_showers_per_run(0 * u.deg, 1000, "inverse_cosine") == 1000
+    assert calculate_zenith_scaled_showers_per_run(0 * u.deg, 1000, "cosine_zenith") == 1000
 
 
 def test_calculate_zenith_scaled_showers_per_run_raises_for_non_positive_baseline():
     with pytest.raises(ValueError, match="positive integer"):
-        calculate_zenith_scaled_showers_per_run(20 * u.deg, 0, "inverse_cosine")
+        calculate_zenith_scaled_showers_per_run(20 * u.deg, 0, "cosine_zenith")
 
 
 def test_calculate_zenith_scaled_showers_per_run_raises_at_zenith_90():
     with pytest.raises(ValueError, match="at least 1"):
-        calculate_zenith_scaled_showers_per_run(90 * u.deg, 1000, "inverse_cosine")
+        calculate_zenith_scaled_showers_per_run(90 * u.deg, 1000, "cosine_zenith")
 
 
 def test_calculate_zenith_scaled_showers_per_run_raises_near_zenith_90():
     # Rounding makes this tiny cosine effectively zero, which must trigger validation.
     with pytest.raises(ValueError, match="at least 1"):
-        calculate_zenith_scaled_showers_per_run(89.999999999999 * u.deg, 1000, "inverse_cosine")
+        calculate_zenith_scaled_showers_per_run(89.999999999999 * u.deg, 1000, "cosine_zenith")
 
 
 def test_calculate_zenith_scaled_showers_per_run_raises_for_invalid_mode():
-    with pytest.raises(ValueError, match="Unknown showers_per_run_zenith_scaling mode"):
+    with pytest.raises(ValueError, match="Unknown showers_per_run_scaling mode"):
         calculate_zenith_scaled_showers_per_run(20 * u.deg, 1000, "invalid_mode")
 
 
@@ -560,7 +560,7 @@ def test_resolve_shower_params_converts_showers_per_run_power_law():
     (
         showers_per_run,
         power_law,
-        showers_per_run_zenith_scaling,
+        showers_per_run_scaling,
         total_showers,
         total_showers_scaling,
     ) = _resolve_shower_params(
@@ -573,7 +573,7 @@ def test_resolve_shower_params_converts_showers_per_run_power_law():
     assert showers_per_run == 5
     assert power_law[0] == pytest.approx(1.0)
     assert power_law[1] == 100 * u.GeV
-    assert showers_per_run_zenith_scaling == "fixed"
+    assert showers_per_run_scaling == "fixed"
     assert total_showers is None
     assert total_showers_scaling == "fixed"
 
@@ -582,7 +582,7 @@ def test_resolve_shower_params_accepts_power_law_as_compact_string():
     (
         showers_per_run,
         power_law,
-        showers_per_run_zenith_scaling,
+        showers_per_run_scaling,
         total_showers,
         total_showers_scaling,
     ) = _resolve_shower_params(
@@ -595,7 +595,7 @@ def test_resolve_shower_params_accepts_power_law_as_compact_string():
     assert showers_per_run == 5
     assert power_law[0] == pytest.approx(1.0)
     assert power_law[1] == 100 * u.GeV
-    assert showers_per_run_zenith_scaling == "fixed"
+    assert showers_per_run_scaling == "fixed"
     assert total_showers is None
     assert total_showers_scaling == "fixed"
 
@@ -610,20 +610,20 @@ def test_resolve_shower_params_raises_for_invalid_power_law_shape():
         )
 
 
-def test_resolve_shower_params_accepts_showers_per_run_zenith_scaling():
+def test_resolve_shower_params_accepts_showers_per_run_scaling():
     (
         _showers_per_run,
         _power_law,
-        showers_per_run_zenith_scaling,
+        showers_per_run_scaling,
         _total_showers,
         _total_showers_scaling,
     ) = _resolve_shower_params(
         {
             "showers_per_run": 5,
-            "showers_per_run_zenith_scaling": "inverse_cosine",
+            "showers_per_run_scaling": "cosine_zenith",
         }
     )
-    assert showers_per_run_zenith_scaling == "inverse_cosine"
+    assert showers_per_run_scaling == "cosine_zenith"
 
 
 def test_build_rows_for_point_skips_energy_ranges_below_threshold():
@@ -706,7 +706,7 @@ def test_build_rows_for_point_scales_showers_per_run_with_zenith():
         lower_energy_threshold=None,
         showers_per_run=1000,
         showers_per_run_power_law=None,
-        showers_per_run_zenith_scaling="inverse_cosine",
+        showers_per_run_scaling="cosine_zenith",
         number_of_runs=2,
         total_showers=None,
         total_showers_scaling="fixed",

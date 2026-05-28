@@ -13,7 +13,7 @@ It supports both:
 Allow for flexible scaling of showers per run and total showers across the grid.
 ``showers_per_run_power_law`` scales the baseline showers per run with
 ``(E_mid / E_ref) ** power_index``, using the logarithmic midpoint energy of each bin.
-``showers_per_run_zenith_scaling=inverse_cosine`` scales showers per run with
+``showers_per_run_scaling=cosine_zenith`` scales showers per run with
 ``cos(zenith_angle)`` to control run duration at larger zenith angles.
 ``total_showers_scaling=zenith_scaled`` applies ``total_showers * exp(factor * (cos(ZD) - 1))``.
 
@@ -38,11 +38,11 @@ showers_per_run_power_law (tuple, optional)
     ``<power_index> <reference_energy_value> <reference_energy_unit>``
     (example: ``--showers_per_run_power_law -2.0 1 TeV``).
     Use for fixed energy simulations only.
-showers_per_run_zenith_scaling (str, optional)
+showers_per_run_scaling (str, optional)
     Zenith-angle showers-per-run scaling mode.
     ``fixed`` keeps showers per run unchanged.
-    ``inverse_cosine`` applies ``showers_per_run * cos(zenith_angle)``
-    (example: ``--showers_per_run_zenith_scaling inverse_cosine``).
+    ``cosine_zenith`` applies ``showers_per_run * cos(zenith_angle)``
+    (example: ``--showers_per_run_scaling cosine_zenith``).
 
 
 Example
@@ -163,14 +163,14 @@ def _add_arguments(parser):
         default=None,
     )
     parser.add_argument(
-        "--showers_per_run_zenith_scaling",
+        "--showers_per_run_scaling",
         help=(
             "Zenith-angle scaling mode for showers_per_run: "
             "'fixed' keeps the baseline value, "
-            "'inverse_cosine' applies showers_per_run * cos(zenith_angle)."
+            "'cosine_zenith' applies showers_per_run * cos(zenith_angle)."
         ),
         type=str,
-        choices=["fixed", "inverse_cosine"],
+        choices=["fixed", "cosine_zenith"],
         required=False,
         default="fixed",
     )
