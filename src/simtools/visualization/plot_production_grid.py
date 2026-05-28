@@ -299,6 +299,10 @@ class ProductionGridPlotter:
         subtitle_lines = []
         if self.grid_metadata.get("site"):
             subtitle_lines.append(f"Site: {self.grid_metadata['site']}")
+        if self.grid_metadata.get("direction_grid_density") is not None:
+            subtitle_lines.append(
+                f"Grid density: {self.grid_metadata['direction_grid_density']} nodes/deg^2"
+            )
         if self.grid_metadata.get("time_of_observation_utc"):
             subtitle_lines.append(
                 f"Observation time (UTC): {self.grid_metadata['time_of_observation_utc']}"
@@ -331,7 +335,6 @@ class ProductionGridPlotter:
         axis.set_rmax(90)
         axis.set_rticks(np.arange(10, 91, 10))
         axis.grid(True, color="gray", alpha=0.5, linestyle="--")
-        axis.text(0, 0, "Zenith", ha="center", va="center", fontsize=11, fontweight="bold")
         axis.set_title("Local Alt/Az", pad=18)
 
     def _configure_radec_axis(self, axis, plot_points):

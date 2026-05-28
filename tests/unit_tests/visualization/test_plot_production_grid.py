@@ -328,3 +328,33 @@ def test_plot_sky_projection_logs_tracks_disabled(tmp_test_directory, caplog):
         plotter.plot_sky_projection(plot_ra_dec_tracks=True)
 
     assert "RA/Dec tracks are disabled in file-driven plotting mode" in caplog.text
+
+
+def test_plot_sky_projection_writes_grid_density_subtitle(tmp_test_directory, monkeypatch):
+    """Render direction grid density in subtitle when present in metadata."""
+    grid_file = _write_grid_file(
+        tmp_test_directory,
+        "grid_with_density_meta.ecsv",
+        [{"azimuth": 100.0, "zenith_angle": 25.0, "ra": 180.0, "dec": -10.0}],
+    )
+    table = Table.read(grid_file, format="ascii.ecsv")
+    table.meta["direction_grid_density"] = 0.25
+    table.write(grid_file, format="ascii.ecsv", overwrite=True)
+
+    plotter = _create_plotter(
+        grid_file=grid_file,
+        output_path=Path(tmp_test_directory) / "output",
+    )
+
+    recorded_text = []
+    original_text = plt.Figure.text
+
+    def _record_text(self, x, y, s, **kwargs):
+        recorded_text.append(s)
+        return original_text(self, x, y, s, **kwargs)
+
+    monkeypatch.setattr(plt.Figure, "text", _record_text)
+
+    plotter.plot_sky_projection()
+
+    assert any(text == "Grid density: 0.25 nodes/deg^2" for text in recorded_text)

@@ -77,6 +77,10 @@ _AXIS_SCALING_CHOICES = ("linear", "log", "1/cos")
 _HORIZONTAL_AXES = ("azimuth", "zenith")
 _RADEC_AXES = ("ra", "dec")
 _REQUIRED_AXES = ("nsb", "offset")
+_LOCAL_CONSTRAINT_ARGUMENTS = {
+    "local_zenith_range": ("zenith", "deg"),
+    "local_azimuth_range": ("azimuth", "deg"),
+}
 
 
 def _parse_axis_range_tokens(range_tokens):
@@ -174,6 +178,16 @@ def _resolve_axis_configs(args_dict):
     return axis_configs
 
 
+def _parse_optional_range_argument(range_argument_value, default_unit):
+    """Parse optional quantity-pair CLI/config input into float values."""
+    if range_argument_value is None:
+        return None
+
+    tokens = _normalize_axis_spec_tokens(range_argument_value)
+    range_quantities = _parse_axis_range_tokens(tokens)
+    return [u.Quantity(value).to_value(default_unit) for value in range_quantities]
+
+
 def _circular_span_degrees(axis_range):
     """Return directed circular span (degrees) from start to end."""
     start, end = axis_range
@@ -240,12 +254,17 @@ def _apply_direction_grid_density(axis_configs, direction_axes, density):
 
 
 def _resolve_coordinate_system(axis_configs):
-    """Resolve the coordinate system from axis definitions."""
+    """Resolve the coordinate system from axis definitions.
+
+    Notes
+    -----
+    If RA/Dec axes are present, ``ra_dec`` mode is selected. Optional horizontal
+    axes (azimuth/zenith) may still be provided and are interpreted as local-sky
+    constraints for RA/Dec density-based generation.
+    """
     has_horizontal_axes = all(axis_name in axis_configs for axis_name in _HORIZONTAL_AXES)
     has_radec_axes = all(axis_name in axis_configs for axis_name in _RADEC_AXES)
 
-    if has_horizontal_axes and has_radec_axes:
-        raise ValueError("Cannot define both azimuth/zenith and ra/dec axes at the same time.")
     if has_radec_axes:
         return "ra_dec"
     if has_horizontal_axes:
@@ -286,7 +305,12 @@ def build_observing_location(site, model_version):
 
 
 def build_axes_dict_from_cli_args(args_dict):
-    """Build ProductionGridEngine-compatible axes configuration from CLI arguments."""
+    """Build ProductionGridEngine-compatible axes configuration from CLI arguments.
+
+    In ``ra_dec`` mode, optional ``zenith`` and ``azimuth`` axis definitions are
+    carried through as local-sky constraints. This allows reusing the same
+    directional range parameters in both horizontal and RA/Dec density workflows.
+    """
     axis_configs = _resolve_axis_configs(args_dict)
     coordinate_system = _resolve_coordinate_system(axis_configs)
 
@@ -305,14 +329,49 @@ def build_axes_dict_from_cli_args(args_dict):
         axis_configs["azimuth"]["direction_grid_density"] = float(
             args_dict["direction_grid_density"]
         )
+    if coordinate_system == "ra_dec" and args_dict.get("direction_grid_density") is not None:
+        axis_configs["ra"]["direction_grid_density"] = float(args_dict["direction_grid_density"])
     _apply_direction_grid_density(
         axis_configs,
         direction_axes,
         args_dict.get("direction_grid_density"),
     )
+
+    if coordinate_system == "ra_dec":
+        local_constraints = {}
+        for constraint_argument, (
+            legacy_axis_name,
+            default_unit,
+        ) in _LOCAL_CONSTRAINT_ARGUMENTS.items():
+            parsed_argument_range = _parse_optional_range_argument(
+                args_dict.get(constraint_argument),
+                default_unit,
+            )
+            legacy_axis = axis_configs.get(legacy_axis_name)
+            legacy_axis_range = legacy_axis.get("range") if legacy_axis else None
+
+            if parsed_argument_range is not None and legacy_axis_range is not None:
+                raise ValueError(
+                    f"Cannot define both '{constraint_argument}' and axis '{legacy_axis_name}' "
+                    "for RA/Dec local-sky constraints."
+                )
+
+            if parsed_argument_range is not None:
+                local_constraints[constraint_argument] = parsed_argument_range
+            elif legacy_axis_range is not None:
+                logger.warning(
+                    f"Using axis '{legacy_axis_name}' as RA/Dec local-sky constraint is "
+                    f"deprecated. Use '{constraint_argument}' instead."
+                )
+                local_constraints[constraint_argument] = legacy_axis_range
+
+        axis_configs["ra"].update(local_constraints)
+
+    axes_to_export = [*_REQUIRED_AXES, *direction_axes]
+
     return {
         GRID_AXIS_ARGUMENTS[axis_name]["engine_axis"]: axis_configs[axis_name]
-        for axis_name in (*_REQUIRED_AXES, *direction_axes)
+        for axis_name in axes_to_export
     }
 
 
@@ -360,6 +419,7 @@ def build_job_grid_metadata(args_dict):
         "site": args_dict.get("site"),
         "simulation_software": args_dict.get("simulation_software"),
         "coordinate_system": coordinate_system,
+        "direction_grid_density": args_dict.get("direction_grid_density"),
         "time_of_observation_utc": time_of_observation.isot if time_of_observation else None,
         "time_of_observation_scale": time_of_observation.scale if time_of_observation else None,
         "corsika_limits": (
