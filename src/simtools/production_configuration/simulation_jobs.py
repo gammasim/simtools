@@ -546,6 +546,47 @@ def calculate_scaled_showers_per_run(
     return scaled_showers_per_run
 
 
+def calculate_zenith_scaled_showers_per_run(
+    zenith_angle,
+    baseline_showers_per_run,
+    showers_per_run_scaling="fixed",
+):
+    """Return a zenith-angle-dependent showers per run value.
+
+    Parameters
+    ----------
+    zenith_angle : astropy.units.Quantity
+        Zenith angle for one simulation point.
+    baseline_showers_per_run : int
+        Showers-per-run value before zenith-angle scaling.
+    showers_per_run_scaling : str
+        Scaling mode ('fixed' or 'cosine_zenith').
+
+    Returns
+    -------
+    int
+        Zenith-scaled showers-per-run value.
+
+    Raises
+    ------
+    ValueError
+        If baseline showers per run is below 1, the selected scaling mode is unknown,
+        or the scaled showers-per-run result is below 1.
+    """
+    if baseline_showers_per_run < 1:
+        raise ValueError("baseline_showers_per_run must be a positive integer.")
+
+    if showers_per_run_scaling == "fixed":
+        return baseline_showers_per_run
+    if showers_per_run_scaling == "cosine_zenith":
+        cos_zenith = np.round(np.cos(zenith_angle.to(u.rad).value), decimals=12)
+        scaled_showers_per_run = int(np.ceil(baseline_showers_per_run * cos_zenith))
+        if scaled_showers_per_run < 1:
+            raise ValueError("Scaled showers per run must be at least 1.")
+        return scaled_showers_per_run
+    raise ValueError(f"Unknown showers_per_run_scaling mode: {showers_per_run_scaling}")
+
+
 def _clip_energy_range_from_threshold(energy_range_pair, lower_energy_threshold):
     """Clip the lower energy bound of a configured energy range."""
     if lower_energy_threshold is None:
@@ -584,6 +625,7 @@ def _resolve_shower_params(args_dict):
     """Extract and convert shower-statistics parameters from an args dict."""
     showers_per_run = args_dict["showers_per_run"]
     showers_per_run_power_law = args_dict.get("showers_per_run_power_law")
+    showers_per_run_scaling = args_dict.get("showers_per_run_scaling", "fixed")
     total_showers = args_dict.get("total_showers")
     total_showers_scaling = args_dict.get("total_showers_scaling", "fixed")
 
@@ -607,6 +649,7 @@ def _resolve_shower_params(args_dict):
     return (
         showers_per_run,
         showers_per_run_power_law,
+        showers_per_run_scaling,
         total_showers,
         total_showers_scaling,
     )
@@ -645,6 +688,7 @@ def _build_rows_for_point(
     total_showers,
     total_showers_scaling,
     run_number,
+    showers_per_run_scaling="fixed",
     zenith_angle_scaling_factor=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
 ):
     """Build all simulation-run rows for a single grid point across all energy ranges."""
@@ -659,6 +703,11 @@ def _build_rows_for_point(
             selected_energy_range,
             showers_per_run,
             showers_per_run_power_law,
+        )
+        selected_showers_per_run = calculate_zenith_scaled_showers_per_run(
+            point_base["zenith_angle"],
+            selected_showers_per_run,
+            showers_per_run_scaling,
         )
 
         per_point_number_of_runs = number_of_runs
@@ -775,6 +824,7 @@ def build_simulation_jobs(args_dict):
     (
         showers_per_run,
         showers_per_run_power_law,
+        showers_per_run_scaling,
         total_showers,
         total_showers_scaling,
     ) = _resolve_shower_params(args_dict)
@@ -832,6 +882,7 @@ def build_simulation_jobs(args_dict):
                     lower_energy_threshold=point.get("lower_energy_threshold"),
                     showers_per_run=showers_per_run,
                     showers_per_run_power_law=showers_per_run_power_law,
+                    showers_per_run_scaling=showers_per_run_scaling,
                     number_of_runs=number_of_runs,
                     total_showers=total_showers,
                     total_showers_scaling=total_showers_scaling,
