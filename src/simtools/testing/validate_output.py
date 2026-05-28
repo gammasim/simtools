@@ -13,8 +13,16 @@ from simtools.testing import assertions
 
 _logger = logging.getLogger(__name__)
 
-# Repo root for resolving relative test resource paths (src/simtools/testing/ -> repo root)
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+
+def _find_repo_root():
+    """Find the repository root by walking up until pyproject.toml is found."""
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "pyproject.toml").exists():
+            return parent
+    raise FileNotFoundError("Repository root not found (no pyproject.toml in any parent directory)")
+
+
+_REPO_ROOT = _find_repo_root()
 
 
 def _versions_match(from_command_line, from_config_file):
