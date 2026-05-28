@@ -28,7 +28,7 @@ applications:
     site: North
     view_cone: 0 deg 10 deg
   integration_tests:
-  - output_file: job_grid_horizontal_density.ecsv
+  - output_file: job_grid_horizontal_grid_density.ecsv
   model_version_use_current: true
   test_name: production_generate_grid_horizontal
 schema_name: application_workflow.metaschema
