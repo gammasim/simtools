@@ -412,7 +412,8 @@ class EventDataWriter:
         ValueError
             If no NSB level keyword is found in the file name.
         """
-        nsb_levels = {"dark": 0.24, "half": 0.835, "full": 1.2, "moon": 0.835}
+        nsb_levels = {"dark": 0.24, "half": 0.835, "full": 1.2}
+        nsb_levels["moon"] = nsb_levels["half"]  # moon uses same level as half
 
         for key, value in nsb_levels.items():
             try:
