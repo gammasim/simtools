@@ -249,53 +249,58 @@ class ProductionGridPlotter:
         segments = np.split(visible_indices, split_indices)
         return [segment for segment in segments if len(segment) >= 2]
 
-    def plot_sky_projection(self, plot_ra_dec_tracks=False, dec_values=None):
-        """
-        Create sky projection plots with Alt/Az and RA/Dec grid points.
+    @staticmethod
+    def _has_plottable_radec_points(plot_points):
+        """Return whether normalized points include plottable RA/Dec coordinates."""
+        return any(point["ra"] is not None and point["dec"] is not None for point in plot_points)
 
-        Parameters
-        ----------
-        plot_ra_dec_tracks : bool
-            Whether to plot RA/Dec coordinate tracks.
-        dec_values : list of float, optional
-            List of declination values to plot as tracks.
-        """
-        plot_points = self.normalize_grid_points()
-        has_radec_points = any(
-            point["ra"] is not None and point["dec"] is not None for point in plot_points
-        )
-        show_radec_panel = self.has_radec_columns and has_radec_points
-
+    @staticmethod
+    def _create_projection_axes(show_radec_panel):
+        """Create figure and projection axes based on available coordinate panels."""
         figure = plt.figure(figsize=(15, 7) if show_radec_panel else (8, 7))
         if show_radec_panel:
             altaz_axis = figure.add_subplot(1, 2, 1, projection="polar")
             radec_axis = figure.add_subplot(1, 2, 2)
-        else:
-            altaz_axis = figure.add_subplot(1, 1, 1, projection="polar")
-            radec_axis = None
+            return figure, altaz_axis, radec_axis
 
-        altaz_count = self._plot_altaz_points(altaz_axis, plot_points)
-        radec_count = self._plot_radec_points(radec_axis, plot_points) if radec_axis else 0
-        if plot_ra_dec_tracks:
-            if dec_values:
-                logger.info(
-                    "RA/Dec tracks are disabled in file-driven plotting mode "
-                    "(ignoring manual dec_values)"
-                )
-            else:
-                logger.info("RA/Dec tracks are disabled in file-driven plotting mode")
+        altaz_axis = figure.add_subplot(1, 1, 1, projection="polar")
+        return figure, altaz_axis, None
 
+    @staticmethod
+    def _add_axis_legend_if_present(axis, location_kwargs):
+        """Add a legend to an axis only when visible labels are present."""
+        _, labels = axis.get_legend_handles_labels()
+        if any(label and not label.startswith("_") for label in labels):
+            axis.legend(**location_kwargs)
+
+    def _add_panel_legends(self, altaz_axis, radec_axis, altaz_count, radec_count):
+        """Add legends to Alt/Az and RA/Dec panels when needed."""
         if altaz_count > 0:
-            _, altaz_labels = altaz_axis.get_legend_handles_labels()
-            if any(label and not label.startswith("_") for label in altaz_labels):
-                altaz_axis.legend(loc="upper left", bbox_to_anchor=(1.0, 1.15))
+            self._add_axis_legend_if_present(
+                altaz_axis,
+                {"loc": "upper left", "bbox_to_anchor": (1.0, 1.15)},
+            )
 
         if radec_axis and radec_count > 0:
-            _, radec_labels = radec_axis.get_legend_handles_labels()
-            if any(label and not label.startswith("_") for label in radec_labels):
-                radec_axis.legend(loc="upper right")
+            self._add_axis_legend_if_present(radec_axis, {"loc": "upper right"})
 
-        figure.suptitle("Production Grid Points", fontsize=14, y=0.98)
+    @staticmethod
+    def _log_track_request_status(plot_ra_dec_tracks, dec_values):
+        """Log status for manual RA/Dec track requests in file-driven plotting mode."""
+        if not plot_ra_dec_tracks:
+            return
+
+        if dec_values:
+            logger.info(
+                "RA/Dec tracks are disabled in file-driven plotting mode "
+                "(ignoring manual dec_values)"
+            )
+            return
+
+        logger.info("RA/Dec tracks are disabled in file-driven plotting mode")
+
+    def _build_subtitle_lines(self):
+        """Build subtitle lines from available grid metadata."""
         subtitle_lines = []
         if self.grid_metadata.get("site"):
             subtitle_lines.append(f"Site: {self.grid_metadata['site']}")
@@ -308,7 +313,11 @@ class ProductionGridPlotter:
             subtitle_lines.append(
                 f"Observation time (UTC): {self.grid_metadata['time_of_observation_utc']}"
             )
+        return subtitle_lines
 
+    @staticmethod
+    def _render_subtitle_lines(figure, subtitle_lines):
+        """Render subtitle lines below the figure title."""
         for index, subtitle_line in enumerate(subtitle_lines):
             figure.text(
                 0.5,
@@ -318,6 +327,29 @@ class ProductionGridPlotter:
                 va="top",
                 fontsize=10,
             )
+
+    def plot_sky_projection(self, plot_ra_dec_tracks=False, dec_values=None):
+        """
+        Create sky projection plots with Alt/Az and RA/Dec grid points.
+
+        Parameters
+        ----------
+        plot_ra_dec_tracks : bool
+            Whether to plot RA/Dec coordinate tracks.
+        dec_values : list of float, optional
+            List of declination values to plot as tracks.
+        """
+        plot_points = self.normalize_grid_points()
+        show_radec_panel = self.has_radec_columns and self._has_plottable_radec_points(plot_points)
+        figure, altaz_axis, radec_axis = self._create_projection_axes(show_radec_panel)
+
+        altaz_count = self._plot_altaz_points(altaz_axis, plot_points)
+        radec_count = self._plot_radec_points(radec_axis, plot_points) if radec_axis else 0
+        self._log_track_request_status(plot_ra_dec_tracks, dec_values)
+        self._add_panel_legends(altaz_axis, radec_axis, altaz_count, radec_count)
+
+        figure.suptitle("Production Grid Points", fontsize=14, y=0.98)
+        self._render_subtitle_lines(figure, self._build_subtitle_lines())
 
         figure.tight_layout(rect=(0.0, 0.0, 1.0, 0.92))
 
