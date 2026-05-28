@@ -178,35 +178,35 @@ def _generate_submit_script(sim_params):
 
     script = f"""#!/usr/bin/env bash
 
-    OVERWRITE_FILE="$1"
-    RUN_NUMBER="$2"
+OVERWRITE_FILE="$1"
+RUN_NUMBER="$2"
 
-    if [ -z "$OVERWRITE_FILE" ] || [ -z "$RUN_NUMBER" ]; then
-        echo "Error: Missing arguments"
-        echo "Usage: $0 <overwrite_file.yaml> <run_number>"
-        exit 1
-    fi
+if [ -z "$OVERWRITE_FILE" ] || [ -z "$RUN_NUMBER" ]; then
+    echo "Error: Missing arguments"
+    echo "Usage: $0 <overwrite_file.yaml> <run_number>"
+    exit 1
+fi
 
-    set -a; source env.txt; set +a
+set -a; source env.txt; set +a
 
-    simtools-simulate-prod \\
-        --simulation_software {sim_params["simulation_software"]} \\
-        --site {sim_params["site"]} \\
-        --model_version {sim_params["model_version"]} \\
-        --array_layout_name {sim_params["array_layout_name"]} \\
-        --primary {sim_params["primary"]} \\
-        --azimuth_angle {sim_params["azimuth_angle"]} \\
-        --zenith_angle {sim_params["zenith_angle"]} \\
-        --nshow {sim_params["nshow"]} \\
-        --energy_range {sim_params["energy_range"]} \\
-        --core_scatter {sim_params["core_scatter"]} \\
-        --view_cone {sim_params["view_cone"]} \\
-        --run_number "$RUN_NUMBER" \\
-        --corsika_le_interaction {sim_params["corsika_le_interaction"]} \\
-        --corsika_he_interaction {sim_params["corsika_he_interaction"]} \\
-        --label {label} \\
-        --overwrite_model_parameters "$OVERWRITE_FILE" \\
-        --output_path /tmp/simtools-output"""
+simtools-simulate-prod \\
+    --simulation_software {sim_params["simulation_software"]} \\
+    --site {sim_params["site"]} \\
+    --model_version {sim_params["model_version"]} \\
+    --array_layout_name {sim_params["array_layout_name"]} \\
+    --primary {sim_params["primary"]} \\
+    --azimuth_angle {sim_params["azimuth_angle"]} \\
+    --zenith_angle {sim_params["zenith_angle"]} \\
+    --nshow {sim_params["nshow"]} \\
+    --energy_range "{sim_params["energy_range"]}" \\
+    --core_scatter "{sim_params["core_scatter"]}" \\
+    --view_cone "{sim_params["view_cone"]}" \\
+    --run_number "$RUN_NUMBER" \\
+    --corsika_le_interaction {sim_params["corsika_le_interaction"]} \\
+    --corsika_he_interaction {sim_params["corsika_he_interaction"]} \\
+    --label {label} \\
+    --overwrite_model_parameters "$OVERWRITE_FILE" \\
+    --output_path /tmp/simtools-output"""
 
     if sim_params.get("run_number_offset"):
         script += f" \\\n    --run_number_offset {sim_params['run_number_offset']}"
@@ -246,19 +246,19 @@ def _generate_condor_submit_file(script_name, apptainer_image, priority, param_f
         (log_dir / subdir).mkdir(parents=True, exist_ok=True)
 
     return f"""universe = container
-        container_image = {apptainer_image}
-        transfer_container = false
+container_image = {apptainer_image}
+transfer_container = false
 
-        executable = {script_name}
-        arguments = $(overwrite_file) $(run_number)
-        error = htcondor_logs/error/err.$(cluster)_$(process)
-        output = htcondor_logs/output/out.$(cluster)_$(process)
-        log = htcondor_logs/log/log.$(cluster)_$(process)
+executable = {script_name}
+arguments = $(overwrite_file) $(run_number)
+error = htcondor_logs/error/err.$(cluster)_$(process)
+output = htcondor_logs/output/out.$(cluster)_$(process)
+log = htcondor_logs/log/log.$(cluster)_$(process)
 
-        priority = {priority}
+priority = {priority}
 
-        queue overwrite_file,run_number from {param_file}
-        """
+queue overwrite_file,run_number from {param_file}
+"""
 
 
 def generate_parameter_scan_htcondor(config_path):
