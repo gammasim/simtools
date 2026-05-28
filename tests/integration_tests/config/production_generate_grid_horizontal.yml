@@ -19,6 +19,7 @@ applications:
     model_version: 7.0.0
     showers_per_run: 5
     showers_per_run_power_law: 0.0 1 TeV
+    showers_per_run_scaling: cosine_zenith
     number_of_runs: 2
     output_file: job_grid_horizontal.ecsv
     output_path: simtools-output
