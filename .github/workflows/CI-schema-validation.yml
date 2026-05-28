@@ -8,6 +8,8 @@ on:
       - 'src/simtools/schemas/model_parameters/*'
       - 'tests/integration_tests/config/*'
 
+permissions: {}
+
 jobs:
 
   schema-validation:
