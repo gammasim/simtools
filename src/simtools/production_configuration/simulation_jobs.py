@@ -74,7 +74,6 @@ GRID_AXIS_ARGUMENTS = {
 }
 
 _AXIS_SCALING_CHOICES = ("linear", "log", "1/cos")
-_SHOWERS_PER_RUN_ZENITH_SCALING_CHOICES = ("fixed", "inverse_cosine")
 _HORIZONTAL_AXES = ("azimuth", "zenith")
 _RADEC_AXES = ("ra", "dec")
 _REQUIRED_AXES = ("nsb", "offset")
