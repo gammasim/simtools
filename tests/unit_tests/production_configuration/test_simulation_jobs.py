@@ -621,16 +621,6 @@ def test_resolve_shower_params_accepts_showers_per_run_zenith_scaling():
     assert showers_per_run_zenith_scaling == "inverse_cosine"
 
 
-def test_resolve_shower_params_raises_for_invalid_showers_per_run_zenith_scaling():
-    with pytest.raises(ValueError, match="showers_per_run_zenith_scaling must be one of"):
-        _resolve_shower_params(
-            {
-                "showers_per_run": 5,
-                "showers_per_run_zenith_scaling": "bad_mode",
-            }
-        )
-
-
 def test_build_rows_for_point_skips_energy_ranges_below_threshold():
     rows = _build_rows_for_point(
         point_base={"primary": "gamma", "zenith_angle": 20 * u.deg},

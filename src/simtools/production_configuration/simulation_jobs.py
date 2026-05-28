@@ -460,7 +460,6 @@ def calculate_zenith_scaled_showers_per_run(
     if showers_per_run_zenith_scaling == "fixed":
         return baseline_showers_per_run
     if showers_per_run_zenith_scaling == "inverse_cosine":
-        # 12 decimals suppress tiny floating artifacts and keep near-90 deg values stable.
         cos_zenith = np.round(np.cos(zenith_angle.to(u.rad).value), decimals=12)
         scaled_showers_per_run = int(np.ceil(baseline_showers_per_run * cos_zenith))
         if scaled_showers_per_run < 1:
@@ -512,12 +511,6 @@ def _resolve_shower_params(args_dict):
     showers_per_run_zenith_scaling = args_dict.get("showers_per_run_zenith_scaling", "fixed")
     total_showers = args_dict.get("total_showers")
     total_showers_scaling = args_dict.get("total_showers_scaling", "fixed")
-
-    if showers_per_run_zenith_scaling not in _SHOWERS_PER_RUN_ZENITH_SCALING_CHOICES:
-        raise ValueError(
-            "showers_per_run_zenith_scaling must be one of: "
-            f"{', '.join(_SHOWERS_PER_RUN_ZENITH_SCALING_CHOICES)}."
-        )
 
     if showers_per_run_power_law is not None:
         if isinstance(showers_per_run_power_law, str):
