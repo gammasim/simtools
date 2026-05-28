@@ -766,6 +766,23 @@ def test_write_table_in_hdf5_unicode_append(mock_h5py_file):
         assert original.encode("ascii") in appended_data.tobytes()
 
 
+def test_write_table_in_hdf5_object_dtype_conversion(mock_h5py_file):
+    """Test writing table with object-dtype (Python str) columns to HDF5 (issue #2208)."""
+    data = {"file_name": np.array(["file_a.hdf5", "file_b.hdf5"], dtype=object)}
+    table = Table(data)
+    table.meta["EXTNAME"] = TEST_TABLE_NAME
+
+    write_table_in_hdf5(table, TEST_H5, TEST_TABLE_NAME)
+
+    mock_h5py_file.create_dataset.assert_called_once()
+    call_args = mock_h5py_file.create_dataset.call_args[1]
+    data_array = call_args["data"]
+    assert isinstance(data_array, np.ndarray)
+    assert data_array.dtype.kind != "O"
+    for original in data["file_name"]:
+        assert original.encode("ascii") in data_array.tobytes()
+
+
 def test_read_table_from_hdf5_basic(mocker):
     """Test basic reading from HDF5 without units."""
     # Mock Table.read
