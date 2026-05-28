@@ -22,8 +22,8 @@ axis (repeatable)
     ``--axis <name> <min> <unit> <max> <unit> <binning> [scaling]``.
     Example: ``--axis azimuth 310 deg 20 deg 3 linear``.
     Options for scaling are: linear, log, 1/cos.
-direction_grid_density (float, optional)
-    Direction-grid density in points per deg^2.
+direction_grid_density (float or quantity, optional)
+    Direction-grid density in ``1/deg^2``.
     If provided, direction-axis binning (azimuth/zenith or ra/dec) is derived from
     range and density, while min/max values are kept from ``--axis`` definitions.
     In ``ra_dec`` mode, local-sky constraints can be defined with
@@ -89,7 +89,7 @@ full zenith coverage from 0 to 70 deg and a directed azimuth window), execute:
             --axis dec -40 deg 80 deg 1 linear \
             --axis nsb 4 MHz 4 MHz 1 linear \
             --axis offset 0 deg 10 deg 2 linear \
-            --direction_grid_density 0.25 \
+            --direction_grid_density 0.25 1/deg^2 \
             --local_zenith_range 0 deg 70 deg \
             --local_azimuth_range 300 deg 60 deg \
             --time_of_observation "2017-09-16 00:00:00" \
@@ -128,11 +128,11 @@ def _add_arguments(parser):
     )
     parser.add_argument(
         "--direction_grid_density",
-        type=float,
+        nargs="+",
         required=False,
         default=None,
         help=(
-            "Direction-grid density in points per deg^2. If set, direction-axis binning is "
+            "Direction-grid density in 1/deg^2. If set, direction-axis binning is "
             "derived from axis ranges and this density. In ra_dec mode, optional zenith and "
             "azimuth axes are interpreted as local-sky constraints for filtering generated "
             "points (for example zenith 0..70 deg)."

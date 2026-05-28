@@ -11,7 +11,7 @@ applications:
     - zenith 0 deg 70 deg 0 linear
     - nsb 4 MHz 5 MHz 2 linear
     - offset 0 deg 10 deg 2 linear
-    direction_grid_density: 0.25
+    direction_grid_density: 0.25 1/deg^2
     core_scatter: 10 500 m
     corsika_he_interaction: epos
     corsika_le_interaction: urqmd
