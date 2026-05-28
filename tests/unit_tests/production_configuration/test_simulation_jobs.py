@@ -123,6 +123,7 @@ def test_build_axes_dict_from_cli_args_derives_radec_binning_from_density():
 
     assert axes["ra"]["binning"] == 230
     assert axes["dec"]["binning"] == 180
+    assert axes["ra"]["direction_grid_density"] == pytest.approx(1.0)
 
 
 def test_build_axes_dict_from_cli_args_reduces_ra_binning_towards_dec_poles():
@@ -140,6 +141,46 @@ def test_build_axes_dict_from_cli_args_reduces_ra_binning_towards_dec_poles():
 
     assert axes["ra"]["binning"] == 32
     assert axes["dec"]["binning"] == 10
+    assert axes["ra"]["direction_grid_density"] == pytest.approx(1.0)
+
+
+def test_build_axes_dict_from_cli_args_sets_radec_density_metadata_for_adaptive_grid():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "direction_grid_density": 0.5,
+            "axis": [
+                ["ra", "0", "deg", "360", "deg", "36", "linear"],
+                ["dec", "-30", "deg", "30", "deg", "6", "linear"],
+                ["nsb", "4", "MHz", "4", "MHz", "1", "linear"],
+                ["offset", "0", "deg", "10", "deg", "2", "linear"],
+            ],
+        }
+    )
+
+    assert axes["ra"]["direction_grid_density"] == pytest.approx(0.5)
+
+
+def test_build_axes_dict_from_cli_args_keeps_horizontal_constraints_in_radec_mode():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "direction_grid_density": 0.25,
+            "local_zenith_range": ["0", "deg", "70", "deg"],
+            "local_azimuth_range": ["300", "deg", "60", "deg"],
+            "axis": [
+                ["ra", "0", "deg", "360", "deg", "36", "linear"],
+                ["dec", "-40", "deg", "80", "deg", "10", "linear"],
+                ["nsb", "4", "MHz", "4", "MHz", "1", "linear"],
+                ["offset", "0", "deg", "10", "deg", "2", "linear"],
+            ],
+        }
+    )
+
+    assert "ra" in axes
+    assert "dec" in axes
+    assert "zenith_angle" not in axes
+    assert "azimuth" not in axes
+    assert axes["ra"]["local_zenith_range"] == pytest.approx([0.0, 70.0])
+    assert axes["ra"]["local_azimuth_range"] == pytest.approx([300.0, 60.0])
 
 
 def test_build_axes_dict_from_cli_args_reduces_az_binning_towards_zenith_pole():
@@ -260,18 +301,40 @@ def test_build_axes_dict_from_cli_args_accepts_merged_config_axis_list():
     assert axes["offset"]["range"] == [0.0, 10.0]
 
 
-def test_build_axes_dict_from_cli_args_rejects_multiple_direction_coordinate_systems():
-    with pytest.raises(ValueError, match="Cannot define both azimuth/zenith and ra/dec axes"):
+def test_build_axes_dict_from_cli_args_prefers_radec_with_horizontal_constraints():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "axis": [
+                ["azimuth", "310", "deg", "20", "deg", "3"],
+                ["zenith", "30", "deg", "40", "deg", "2"],
+                ["ra", "0", "deg", "360", "deg", "36"],
+                ["dec", "-90", "deg", "90", "deg", "18"],
+                ["nsb", "4", "MHz", "5", "MHz", "2"],
+                ["offset", "0", "deg", "10", "deg", "2"],
+            ]
+        }
+    )
+
+    assert "ra" in axes
+    assert "dec" in axes
+    assert "azimuth" not in axes
+    assert "zenith_angle" not in axes
+    assert axes["ra"]["local_azimuth_range"] == pytest.approx([310.0, 20.0])
+    assert axes["ra"]["local_zenith_range"] == pytest.approx([30.0, 40.0])
+
+
+def test_build_axes_dict_from_cli_args_rejects_duplicate_local_constraints():
+    with pytest.raises(ValueError, match="Cannot define both 'local_zenith_range'"):
         build_axes_dict_from_cli_args(
             {
+                "local_zenith_range": ["0", "deg", "70", "deg"],
                 "axis": [
-                    ["azimuth", "310", "deg", "20", "deg", "3"],
-                    ["zenith", "30", "deg", "40", "deg", "2"],
                     ["ra", "0", "deg", "360", "deg", "36"],
                     ["dec", "-90", "deg", "90", "deg", "18"],
+                    ["zenith", "0", "deg", "70", "deg", "2"],
                     ["nsb", "4", "MHz", "5", "MHz", "2"],
                     ["offset", "0", "deg", "10", "deg", "2"],
-                ]
+                ],
             }
         )
 
@@ -289,6 +352,7 @@ def test_build_job_grid_metadata_includes_job_context():
         {
             "site": "North",
             "simulation_software": "corsika_sim_telarray",
+            "direction_grid_density": 0.25,
             "axis": [
                 ["ra", "0", "deg", "1", "deg", "2"],
                 ["dec", "0", "deg", "1", "deg", "2"],
@@ -301,6 +365,7 @@ def test_build_job_grid_metadata_includes_job_context():
     assert metadata["site"] == "North"
     assert metadata["simulation_software"] == "corsika_sim_telarray"
     assert metadata["coordinate_system"] == "ra_dec"
+    assert metadata["direction_grid_density"] == pytest.approx(0.25)
     assert metadata["time_of_observation_utc"].startswith("2017-09-16T00:00:00")
     assert metadata["corsika_limits"] == "limits.ecsv"
 

@@ -203,6 +203,123 @@ def test_generate_horizontal_grid_uses_adaptive_azimuth_bins_per_zenith_row():
     assert len(azimuth_counts_by_zenith[60.0]) > len(azimuth_counts_by_zenith[30.0])
 
 
+def test_generate_radec_grid_uses_adaptive_ra_bins_per_dec_strip():
+    engine = ProductionGridEngine(
+        axes={
+            "ra": {"range": [0, 360], "binning": 36, "units": "deg", "direction_grid_density": 1.0},
+            "dec": {"range": [-60, 60], "binning": 13, "units": "deg"},
+            "nsb_level": {"range": [4, 4], "binning": 1, "units": "MHz"},
+            "offset": {"range": [0, 0], "binning": 1, "units": "deg"},
+        },
+        coordinate_system="ra_dec",
+        time_of_observation=Time("2020-01-01 00:00:00", scale="utc"),
+    )
+
+    assert engine._is_adaptive_radec_density_enabled()
+    grid = engine._generate_adaptive_radec_grid(include_horizontal_coordinates=False)
+
+    assert len(grid) > 0
+
+    ra_counts_by_dec = {}
+    for point in grid:
+        dec_val = round(point["dec"].to_value(u.deg), 6)
+        ra_counts_by_dec.setdefault(dec_val, 0)
+        ra_counts_by_dec[dec_val] += 1
+
+    # Near equator (dec=0) should have more RA points than near the pole (dec=60 deg)
+    assert ra_counts_by_dec[0.0] > ra_counts_by_dec[60.0]
+
+
+def test_generate_radec_grid_adaptive_density_keeps_only_visible_nodes():
+    engine = ProductionGridEngine(
+        axes={
+            "ra": {
+                "range": [0, 360],
+                "binning": 36,
+                "units": "deg",
+                "direction_grid_density": 0.25,
+            },
+            "dec": {"range": [-40, 80], "binning": 10, "units": "deg"},
+            "nsb_level": {"range": [4, 4], "binning": 1, "units": "MHz"},
+            "offset": {"range": [0, 10], "binning": 2, "units": "deg"},
+        },
+        coordinate_system="ra_dec",
+        observing_location=EarthLocation(
+            lat=28.76 * u.deg,
+            lon=-17.89 * u.deg,
+            height=2200 * u.m,
+        ),
+        time_of_observation=Time("2020-01-01 00:00:00", scale="utc"),
+    )
+
+    grid = engine._generate_adaptive_radec_grid(include_horizontal_coordinates=True)
+
+    assert len(grid) > 0
+    assert all(point["zenith_angle"].to_value(u.deg) <= 90.0 for point in grid)
+
+
+def test_generate_radec_grid_adaptive_density_applies_zenith_constraint():
+    engine = ProductionGridEngine(
+        axes={
+            "ra": {
+                "range": [0, 360],
+                "binning": 36,
+                "units": "deg",
+                "direction_grid_density": 0.25,
+                "local_zenith_range": [0, 70],
+            },
+            "dec": {"range": [-40, 80], "binning": 10, "units": "deg"},
+            "nsb_level": {"range": [4, 4], "binning": 1, "units": "MHz"},
+            "offset": {"range": [0, 10], "binning": 2, "units": "deg"},
+        },
+        coordinate_system="ra_dec",
+        observing_location=EarthLocation(
+            lat=28.76 * u.deg,
+            lon=-17.89 * u.deg,
+            height=2200 * u.m,
+        ),
+        time_of_observation=Time("2020-01-01 00:00:00", scale="utc"),
+    )
+
+    grid = engine._generate_adaptive_radec_grid(include_horizontal_coordinates=True)
+
+    assert len(grid) > 0
+    assert all(point["zenith_angle"].to_value(u.deg) <= 70.0 for point in grid)
+
+
+def test_generate_radec_grid_adaptive_density_applies_azimuth_constraint():
+    engine = ProductionGridEngine(
+        axes={
+            "ra": {
+                "range": [0, 360],
+                "binning": 36,
+                "units": "deg",
+                "direction_grid_density": 0.25,
+                "local_zenith_range": [0, 70],
+                "local_azimuth_range": [300, 60],
+            },
+            "dec": {"range": [-40, 80], "binning": 10, "units": "deg"},
+            "nsb_level": {"range": [4, 4], "binning": 1, "units": "MHz"},
+            "offset": {"range": [0, 10], "binning": 2, "units": "deg"},
+        },
+        coordinate_system="ra_dec",
+        observing_location=EarthLocation(
+            lat=28.76 * u.deg,
+            lon=-17.89 * u.deg,
+            height=2200 * u.m,
+        ),
+        time_of_observation=Time("2020-01-01 00:00:00", scale="utc"),
+    )
+
+    grid = engine._generate_adaptive_radec_grid(include_horizontal_coordinates=True)
+
+    assert len(grid) > 0
+    assert all(
+        (point["azimuth"].to_value(u.deg) >= 300.0) or (point["azimuth"].to_value(u.deg) <= 60.0)
+        for point in grid
+    )
+
+
 def test_create_circular_binning_treats_full_circle_range_as_full_span():
     engine = ProductionGridEngine(axes={"axes": {}})
 
