@@ -1,12 +1,15 @@
 """Common fixtures for integration tests."""
 
 import os
+from pathlib import Path
 
 import pytest
 from dotenv import load_dotenv
 
 import simtools.io.io_handler
 from simtools import settings
+
+_REPO_ROOT = Path(__file__).parent.parent.parent
 
 
 def pytest_addoption(parser):
@@ -17,14 +20,14 @@ def pytest_addoption(parser):
 @pytest.fixture(autouse=True)
 def simtools_settings(db_config):
     """Load simtools settings for the test session."""
-    load_dotenv(".env")
+    load_dotenv(_REPO_ROOT / ".env")
     settings.config.load(db_config=db_config)
 
 
 @pytest.fixture
 def db_config():
     """DB configuration from .env file."""
-    load_dotenv(".env")
+    load_dotenv(_REPO_ROOT / ".env")
 
     _db_para = (
         "db_api_user",
