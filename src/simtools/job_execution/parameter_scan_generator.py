@@ -47,7 +47,7 @@ def _set_nested_value(data, path_parts, value):
     current[path_parts[-1]] = {"value": value}
 
 
-def _generate_overwrite_file(template_path, param_combo, combo_name, work_dir):
+def _generate_overwrite_file(template_path, param_combo, combo_name, work_dir, label):
     """
     Generate overwrite YAML file for a parameter combination.
 
@@ -61,6 +61,8 @@ def _generate_overwrite_file(template_path, param_combo, combo_name, work_dir):
         String representation for filename.
     work_dir : Path
         Output directory.
+    label : str
+        Label for the scan.
 
     Returns
     -------
@@ -87,7 +89,7 @@ def _generate_overwrite_file(template_path, param_combo, combo_name, work_dir):
 
     template_data["description"] = f"Parameter scan - {', '.join(param_descriptions)}"
 
-    overwrite_file = work_dir / f"overwrite_{combo_name}.yaml"
+    overwrite_file = work_dir / f"overwrite_{label}_{combo_name}.yaml"
     with open(overwrite_file, "w", encoding="utf-8") as f:
         yaml.dump(template_data, f, default_flow_style=False, sort_keys=False)
 
@@ -290,6 +292,7 @@ def generate_parameter_scan_htcondor(config_path):
     priority = htcondor_config.get("priority", 1)
     number_of_runs = sim_params.get("number_of_runs", 1)
     base_run_number = sim_params.get("run_number", 1)
+    label = sim_params.get("label", "param_scan")
 
     if len(param_specs) == 1:
         _logger.info(
@@ -305,24 +308,24 @@ def generate_parameter_scan_htcondor(config_path):
         _logger.info(f"Processing: {combo_spec['name']}")
 
         overwrite_file = _generate_overwrite_file(
-            template_path, combo_spec["combo"], combo_spec["name"], output_path
+            template_path, combo_spec["combo"], combo_spec["name"], output_path, label
         )
 
         for run_idx in range(number_of_runs):
             job_specs.append((overwrite_file.absolute(), base_run_number + run_idx))
 
-    params_file = output_path / "scan_parameters.txt"
+    params_file = output_path / f"scan_parameters_{label}.txt"
     with open(params_file, "w", encoding="utf-8") as f:
         for overwrite_file, run_number in job_specs:
             f.write(f"{overwrite_file}, {run_number}\n")
 
-    script_name = "simulate_prod_scan.sh"
+    script_name = f"simulate_prod_scan_{label}.sh"
     script_path = output_path / script_name
     with open(script_path, "w", encoding="utf-8") as f:
         f.write(_generate_submit_script(sim_params))
     script_path.chmod(0o755)
 
-    condor_file = output_path / "simulate_prod_scan.condor"
+    condor_file = output_path / f"simulate_prod_scan_{label}.condor"
     with open(condor_file, "w", encoding="utf-8") as f:
         f.write(
             _generate_condor_submit_file(
