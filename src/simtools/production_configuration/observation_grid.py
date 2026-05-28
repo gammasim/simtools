@@ -13,6 +13,10 @@ from astropy import units as u
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.units import Quantity
 
+from simtools.production_configuration.angle_ranges import (
+    ceil_with_tolerance,
+    directed_circular_span_degrees,
+)
 from simtools.production_configuration.corsika_limits_lookup import (
     CorsikaLimitsLookup,
     attach_lookup_limits_to_point,
@@ -322,22 +326,6 @@ class ProductionGridEngine:
         )
 
     @staticmethod
-    def _ceil_with_tolerance(value):
-        """Ceil a float while avoiding near-integer floating-point artifacts."""
-        nearest_integer = round(value)
-        if np.isclose(value, nearest_integer):
-            return int(nearest_integer)
-        return int(np.ceil(value))
-
-    @staticmethod
-    def _directed_circular_span_degrees(azimuth_range):
-        """Return directed circular span (degrees) from start to end."""
-        raw_span = abs(float(azimuth_range[1]) - float(azimuth_range[0]))
-        if raw_span > 0.0 and np.isclose(raw_span % 360.0, 0.0):
-            return 360.0
-        return float((azimuth_range[1] - azimuth_range[0]) % 360.0)
-
-    @staticmethod
     def _is_in_directed_azimuth_range(azimuth_values_deg, azimuth_range):
         """Return mask of azimuth values inside directed circular range [start -> end]."""
         start, end = azimuth_range
@@ -502,7 +490,7 @@ class ProductionGridEngine:
         """Generate horizontal grid with azimuth binning adapted per zenith row."""
         density = float(self.axes["azimuth"]["direction_grid_density"])
         azimuth_range = self.axes["azimuth"]["range"]
-        azimuth_span = self._directed_circular_span_degrees(azimuth_range)
+        azimuth_span = directed_circular_span_degrees(azimuth_range)
         zenith_values = self.target_values["zenith_angle"]
 
         zenith_step = 1.0 / np.sqrt(density)
@@ -528,9 +516,7 @@ class ProductionGridEngine:
             if azimuth_span > 0.0 and altitude_cosine > 0.0:
                 azimuth_bins = max(
                     1,
-                    self._ceil_with_tolerance(
-                        azimuth_span * density * zenith_step * altitude_cosine
-                    ),
+                    ceil_with_tolerance(azimuth_span * density * zenith_step * altitude_cosine),
                 )
 
             azimuth_values = self.create_circular_binning(azimuth_range, azimuth_bins) * u.deg

@@ -23,7 +23,7 @@ axis (repeatable)
     Example: ``--axis azimuth 310 deg 20 deg 3 linear``.
     Options for scaling are: linear, log, 1/cos.
 direction_grid_density (float or quantity, optional)
-    Direction-grid density in ``1/deg^2``.
+    Direction-grid density (typically in ``1/deg^2``).
     If provided, direction-axis binning (azimuth/zenith or ra/dec) is derived from
     range and density, while min/max values are kept from ``--axis`` definitions.
     In ``ra_dec`` mode, local-sky constraints can be defined with
