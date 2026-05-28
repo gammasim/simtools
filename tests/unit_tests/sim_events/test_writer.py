@@ -290,11 +290,19 @@ def test_get_nsb_level_from_file_name(lookup_table_generator):
         "gamma_full_moon_file.simtel.zst"
     ) == pytest.approx(1.2)
 
-    assert lookup_table_generator._get_nsb_level_from_file_name("file.simtel.zst") is None
-
     assert lookup_table_generator._get_nsb_level_from_file_name(
         "DARK_FILE.simtel.zst"
     ) == pytest.approx(0.24)
+
+    assert lookup_table_generator._get_nsb_level_from_file_name(
+        "gamma_run_moon+magic.simtel.zst"
+    ) == pytest.approx(0.835)
+
+
+def test_get_nsb_level_from_file_name_unknown(lookup_table_generator):
+    """Test that ValueError is raised when no NSB keyword is found in the file name."""
+    with pytest.raises(ValueError, match="Cannot determine NSB level"):
+        lookup_table_generator._get_nsb_level_from_file_name("file.simtel.zst")
 
 
 def test_get_nsb_level_from_file_name_invalid_input(lookup_table_generator):
