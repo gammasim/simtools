@@ -93,3 +93,12 @@ def test_add_arguments_accepts_direction_grid_density_with_unit():
     args = parser.parse_args(["--direction_grid_density", "0.25", "1/deg^2"])
 
     assert args.direction_grid_density == ["0.25", "1/deg^2"]
+
+
+def test_add_arguments_accepts_showers_per_run_scaling():
+    parser = CommandLineParser()
+    app._add_arguments(parser)
+
+    args = parser.parse_args(["--showers_per_run_scaling", "cosine_zenith"])
+
+    assert args.showers_per_run_scaling == "cosine_zenith"
