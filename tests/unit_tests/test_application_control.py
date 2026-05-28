@@ -149,9 +149,8 @@ def test_redact_filter_child_logger(redact_test_setup):
         child_logger.setLevel(logging.DEBUG)
         _reset_stream(handler)
 
-        child_logger.debug(
-            f"Environment: {{'SIMTOOLS_DB_API_PW': '{test_password}', 'USER': 'test'}}"
-        )
+        env_pw = os.environ.get("SIMTOOLS_DB_API_PW", "")
+        child_logger.debug("Environment: {'SIMTOOLS_DB_API_PW': '%s', 'USER': 'test'}", env_pw)
         output = _read_stream(handler)
 
         assert "***REDACTED***" in output
