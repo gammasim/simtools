@@ -108,6 +108,22 @@ def test_build_axes_dict_from_cli_args_derives_horizontal_binning_from_density()
     assert axes["zenith_angle"]["binning"] == 10
 
 
+def test_build_axes_dict_from_cli_args_accepts_density_with_unit():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "direction_grid_density": "1.0 1/deg^2",
+            "axis": [
+                ["azimuth", "310", "deg", "20", "deg", "3", "linear"],
+                ["zenith", "30", "deg", "40", "deg", "2"],
+                ["nsb", "4", "MHz", "5", "MHz", "2"],
+                ["offset", "0", "deg", "10", "deg", "2"],
+            ],
+        }
+    )
+
+    assert axes["azimuth"]["direction_grid_density"] == pytest.approx(1.0)
+
+
 def test_build_axes_dict_from_cli_args_derives_radec_binning_from_density():
     axes = build_axes_dict_from_cli_args(
         {
@@ -366,6 +382,7 @@ def test_build_job_grid_metadata_includes_job_context():
     assert metadata["simulation_software"] == "corsika_sim_telarray"
     assert metadata["coordinate_system"] == "ra_dec"
     assert metadata["direction_grid_density"] == pytest.approx(0.25)
+    assert metadata["direction_grid_density_unit"] == "1/deg^2"
     assert metadata["time_of_observation_utc"].startswith("2017-09-16T00:00:00")
     assert metadata["corsika_limits"] == "limits.ecsv"
 

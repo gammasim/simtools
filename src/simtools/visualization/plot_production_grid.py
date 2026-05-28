@@ -300,8 +300,9 @@ class ProductionGridPlotter:
         if self.grid_metadata.get("site"):
             subtitle_lines.append(f"Site: {self.grid_metadata['site']}")
         if self.grid_metadata.get("direction_grid_density") is not None:
+            density_unit = self.grid_metadata.get("direction_grid_density_unit") or "1/deg^2"
             subtitle_lines.append(
-                f"Grid density: {self.grid_metadata['direction_grid_density']} nodes/deg^2"
+                f"Grid density: {self.grid_metadata['direction_grid_density']} {density_unit}"
             )
         if self.grid_metadata.get("time_of_observation_utc"):
             subtitle_lines.append(

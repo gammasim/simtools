@@ -83,4 +83,13 @@ def test_add_arguments_accepts_direction_grid_density():
 
     args = parser.parse_args(["--direction_grid_density", "1.5"])
 
-    assert args.direction_grid_density == pytest.approx(1.5)
+    assert args.direction_grid_density == ["1.5"]
+
+
+def test_add_arguments_accepts_direction_grid_density_with_unit():
+    parser = CommandLineParser()
+    app._add_arguments(parser)
+
+    args = parser.parse_args(["--direction_grid_density", "0.25", "1/deg^2"])
+
+    assert args.direction_grid_density == ["0.25", "1/deg^2"]

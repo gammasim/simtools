@@ -81,6 +81,7 @@ _LOCAL_CONSTRAINT_ARGUMENTS = {
     "local_zenith_range": ("zenith", "deg"),
     "local_azimuth_range": ("azimuth", "deg"),
 }
+_DIRECTION_GRID_DENSITY_UNIT = 1 / u.deg**2
 
 
 def _parse_axis_range_tokens(range_tokens):
@@ -186,6 +187,29 @@ def _parse_optional_range_argument(range_argument_value, default_unit):
     tokens = _normalize_axis_spec_tokens(range_argument_value)
     range_quantities = _parse_axis_range_tokens(tokens)
     return [u.Quantity(value).to_value(default_unit) for value in range_quantities]
+
+
+def _parse_direction_grid_density(density_value):
+    """Parse direction-grid density and normalize it to ``1/deg^2`` units."""
+    if density_value is None:
+        return None
+
+    if isinstance(density_value, (int, float)):
+        return float(density_value)
+
+    if isinstance(density_value, (str, list, tuple)):
+        tokens = _normalize_axis_spec_tokens(density_value)
+        if len(tokens) == 1:
+            return float(tokens[0])
+        try:
+            quantity = u.Quantity(" ".join(tokens))
+            return quantity.to_value(_DIRECTION_GRID_DENSITY_UNIT)
+        except (TypeError, ValueError, u.UnitConversionError) as exc:
+            raise ValueError(
+                "direction_grid_density must be a float or quantity in 1/deg^2."
+            ) from exc
+
+    raise TypeError("direction_grid_density must be a number, string, or CLI-style token list.")
 
 
 def _circular_span_degrees(axis_range):
@@ -324,17 +348,16 @@ def build_axes_dict_from_cli_args(args_dict):
         missing_axes = ", ".join(missing_required_axes)
         raise ValueError(f"Missing required shared axis definition(s): {missing_axes}.")
 
+    direction_grid_density = _parse_direction_grid_density(args_dict.get("direction_grid_density"))
     direction_axes = _RADEC_AXES if coordinate_system == "ra_dec" else _HORIZONTAL_AXES
-    if coordinate_system == "horizontal" and args_dict.get("direction_grid_density") is not None:
-        axis_configs["azimuth"]["direction_grid_density"] = float(
-            args_dict["direction_grid_density"]
-        )
-    if coordinate_system == "ra_dec" and args_dict.get("direction_grid_density") is not None:
-        axis_configs["ra"]["direction_grid_density"] = float(args_dict["direction_grid_density"])
+    if coordinate_system == "horizontal" and direction_grid_density is not None:
+        axis_configs["azimuth"]["direction_grid_density"] = direction_grid_density
+    if coordinate_system == "ra_dec" and direction_grid_density is not None:
+        axis_configs["ra"]["direction_grid_density"] = direction_grid_density
     _apply_direction_grid_density(
         axis_configs,
         direction_axes,
-        args_dict.get("direction_grid_density"),
+        direction_grid_density,
     )
 
     if coordinate_system == "ra_dec":
@@ -413,13 +436,15 @@ def build_job_grid_metadata(args_dict):
         args_dict,
     )
     coordinate_system = _resolve_coordinate_system_from_args(args_dict)
+    direction_grid_density = _parse_direction_grid_density(args_dict.get("direction_grid_density"))
     if coordinate_system == "ra_dec" and not args_dict.get("site"):
         raise ValueError("site is required when using RA/Dec axes.")
     return {
         "site": args_dict.get("site"),
         "simulation_software": args_dict.get("simulation_software"),
         "coordinate_system": coordinate_system,
-        "direction_grid_density": args_dict.get("direction_grid_density"),
+        "direction_grid_density": direction_grid_density,
+        "direction_grid_density_unit": "1/deg^2" if direction_grid_density is not None else None,
         "time_of_observation_utc": time_of_observation.isot if time_of_observation else None,
         "time_of_observation_scale": time_of_observation.scale if time_of_observation else None,
         "corsika_limits": (

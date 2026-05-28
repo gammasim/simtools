@@ -17,7 +17,7 @@ applications:
     local_zenith_range: 0 deg 70 deg
     # Directed azimuth interval (300 -> 60) across wrap-around.
     local_azimuth_range: 300 deg 60 deg
-    direction_grid_density: 0.25
+    direction_grid_density: 0.25 1/deg^2
     core_scatter: 10 500 m
     corsika_he_interaction: epos
     corsika_le_interaction: urqmd

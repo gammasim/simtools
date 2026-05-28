@@ -339,6 +339,7 @@ def test_plot_sky_projection_writes_grid_density_subtitle(tmp_test_directory, mo
     )
     table = Table.read(grid_file, format="ascii.ecsv")
     table.meta["direction_grid_density"] = 0.25
+    table.meta["direction_grid_density_unit"] = "1/deg^2"
     table.write(grid_file, format="ascii.ecsv", overwrite=True)
 
     plotter = _create_plotter(
@@ -357,4 +358,4 @@ def test_plot_sky_projection_writes_grid_density_subtitle(tmp_test_directory, mo
 
     plotter.plot_sky_projection()
 
-    assert any(text == "Grid density: 0.25 nodes/deg^2" for text in recorded_text)
+    assert any(text == "Grid density: 0.25 1/deg^2" for text in recorded_text)
