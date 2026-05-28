@@ -16,6 +16,8 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
+permissions: {}
+
 jobs:
   build-simtools-prod:
     runs-on: ubuntu-latest
