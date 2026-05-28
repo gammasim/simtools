@@ -531,6 +531,11 @@ def test_calculate_zenith_scaled_showers_per_run_raises_near_zenith_90():
         calculate_zenith_scaled_showers_per_run(89.999999999999 * u.deg, 1000, "inverse_cosine")
 
 
+def test_calculate_zenith_scaled_showers_per_run_raises_for_invalid_mode():
+    with pytest.raises(ValueError, match="Unknown showers_per_run_zenith_scaling mode"):
+        calculate_zenith_scaled_showers_per_run(20 * u.deg, 1000, "invalid_mode")
+
+
 def test_clip_energy_range_from_threshold_returns_none_above_max():
     assert (
         _clip_energy_range_from_threshold(
