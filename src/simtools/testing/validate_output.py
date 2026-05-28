@@ -15,11 +15,16 @@ _logger = logging.getLogger(__name__)
 
 
 def _find_repo_root():
-    """Find the repository root by walking up until pyproject.toml is found."""
+    """Find the repository root by walking up until pyproject.toml is found.
+
+    Falls back to the current working directory when pyproject.toml is not found
+    (e.g. when the package is imported from an installed wheel or sdist).
+    """
     for parent in Path(__file__).resolve().parents:
         if (parent / "pyproject.toml").exists():
             return parent
-    raise FileNotFoundError("Repository root not found (no pyproject.toml in any parent directory)")
+    _logger.warning("Repository root not found; using current working directory as fallback.")
+    return Path.cwd()
 
 
 _REPO_ROOT = _find_repo_root()
