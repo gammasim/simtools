@@ -72,7 +72,7 @@ def test_read_simtel_table_data_from_file():
         ]
     }
 
-    result = plot_tables.read_table_data(config, Path("tests/resources"))
+    result = plot_tables.read_table_data(config, Path("tests/resources/model_parameters"))
 
     assert len(result["test_table"]) == 2101
     assert result["test_table"].dtype.names == ("amplitude", "response")
@@ -93,7 +93,7 @@ def test_read_simtel_table_data_from_file_without_parameter_raises():
     with pytest.raises(
         ValueError, match=r"Parameter name must be provided for sim_telarray table reading\."
     ):
-        plot_tables.read_table_data(config, Path("tests/resources"))
+        plot_tables.read_table_data(config, Path("tests/resources/model_parameters/"))
 
 
 @mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
