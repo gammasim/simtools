@@ -8,10 +8,19 @@ applications:
     parameter_version: 2.0.0
     site: North
     telescope: LSTN-01
+- application: simtools-db-get-parameter-from-db
+  configuration:
+    export_model_file: true
+    output_path: ./tmp-test-resources/model_parameters/
+    parameter: mirror_list
+    parameter_version: 2.0.0
+    site: North
+    telescope: LSTN-01
 collection:
   output_path: tests/resources/model_parameters
   files:
   - mirror_list-2.0.0.json
+  - mirror_CTA-N-LST1_v2019-03-31_rotated.dat
 schema_name: application_workflow.metaschema
 schema_url: https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/application_workflow.metaschema.yml
 schema_version: 0.4.0
