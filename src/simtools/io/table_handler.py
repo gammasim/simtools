@@ -346,7 +346,7 @@ def write_table_in_hdf5(table, output_file, table_name):
     None
     """
     for col in table.colnames:
-        if table[col].dtype.kind == "U":  # hdf5 does not support unicode
+        if table[col].dtype.kind in ("U", "O"):  # hdf5 does not support unicode or object dtypes
             table[col] = table[col].astype("S")
 
     with h5py.File(output_file, "a") as f:
