@@ -17,14 +17,14 @@ def pytest_addoption(parser):
 @pytest.fixture(autouse=True)
 def simtools_settings(db_config, pytestconfig):
     """Load simtools settings for the test session."""
-    load_dotenv(pytestconfig.rootdir / ".env")
+    load_dotenv(pytestconfig.rootpath / ".env")
     settings.config.load(db_config=db_config)
 
 
 @pytest.fixture
 def db_config(pytestconfig):
     """DB configuration from .env file."""
-    load_dotenv(pytestconfig.rootdir / ".env")
+    load_dotenv(pytestconfig.rootpath / ".env")
 
     _db_para = (
         "db_api_user",

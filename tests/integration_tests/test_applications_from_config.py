@@ -79,7 +79,7 @@ def test_applications_from_config(tmp_test_directory, config, request):
         capture_output=True,
         text=True,
         env=env,
-        cwd=request.config.rootdir,
+        cwd=request.config.rootpath,
     )
     msg = f"Command {cmd!r} failed. stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     if result.returncode != 0 and config.get("xfail_network_error"):
