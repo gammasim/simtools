@@ -6,6 +6,7 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time
+from astropy.utils import iers
 
 from simtools.production_configuration.observation_grid import ProductionGridEngine
 
@@ -15,6 +16,17 @@ DEFAULT_OBSERVING_LOCATION = EarthLocation(
     height=2200 * u.m,
 )
 DEFAULT_OBSERVATION_TIME = Time("2020-01-01 00:00:00", scale="utc")
+
+
+@pytest.fixture(autouse=True, scope="module")
+def disable_iers_auto_download():
+    """Disable IERS auto-download to keep tests deterministic and offline-safe."""
+    previous_auto_download = iers.conf.auto_download
+    iers.conf.auto_download = False
+    try:
+        yield
+    finally:
+        iers.conf.auto_download = previous_auto_download
 
 
 def _make_engine(axes=None, **kwargs):

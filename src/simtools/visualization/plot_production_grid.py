@@ -175,7 +175,7 @@ class ProductionGridPlotter:
                 "zenith": None,
                 "ra": float(ra % 360.0),
                 "dec": float(dec),
-                "visible_in_altaz": False,
+                "visible_in_altaz": None,
             }
 
         logger.warning(f"Skipping point without supported coordinates: {point}")
@@ -335,9 +335,11 @@ class ProductionGridPlotter:
         Parameters
         ----------
         plot_ra_dec_tracks : bool
-            Whether to plot RA/Dec coordinate tracks.
+            Kept for backward-compatible CLI/API usage.
+            In file-driven plotting mode, RA/Dec tracks are not rendered and this flag is ignored.
         dec_values : list of float, optional
-            List of declination values to plot as tracks.
+            Kept for backward-compatible CLI/API usage.
+            In file-driven plotting mode, this argument is ignored.
         """
         plot_points = self.normalize_grid_points()
         show_radec_panel = self.has_radec_columns and self._has_plottable_radec_points(plot_points)
@@ -499,7 +501,7 @@ class ProductionGridPlotter:
             x_transform=np.radians,
         )
 
-        hidden_points = sum(not point["visible_in_altaz"] for point in plot_points)
+        hidden_points = sum(point["visible_in_altaz"] is False for point in plot_points)
         if hidden_points > 0:
             logger.info(f"Skipping {hidden_points} RA/Dec points below the horizon in Alt/Az panel")
         return plotted_points
