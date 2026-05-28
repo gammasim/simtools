@@ -169,12 +169,12 @@ The following examples compares only rows with `best_fit==True` and only the col
 
 ```text
 integration_tests:
-  - reference_output_file: tests/resources/derive_mirror_rnda_psf_random_flen.ecsv
+  - reference_output_file: tests/resources/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv
     test_columns:
-    - cut_column_name: best_fit
-      cut_condition: ==True
-      test_column_name: mirror_reflection_random_angle_sigma1
-    tolerance: 0.3
+    - cut_column_name: Off-axis angle
+      cut_condition: ==0.0
+      test_column_name: d80_cm
+    tolerance: 0.01
 ```
 
 #### Compare with reference values from model parameter DB
