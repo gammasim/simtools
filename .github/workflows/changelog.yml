@@ -13,6 +13,9 @@ on:
 env:
   FRAGMENT_NAME_PREFIX: "docs/changes/${{ github.event.number }}"
 
+permissions:
+  contents: read
+
 jobs:
   changelog:
     runs-on: ubuntu-latest
