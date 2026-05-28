@@ -174,6 +174,71 @@ def _resolve_axis_configs(args_dict):
     return axis_configs
 
 
+def _circular_span_degrees(axis_range):
+    """Return directed circular span (degrees) from start to end."""
+    start, end = axis_range
+    raw_span = abs(float(end) - float(start))
+    if raw_span > 0.0 and np.isclose(raw_span % 360.0, 0.0):
+        return 360.0
+    return float((end - start) % 360.0)
+
+
+def _ceil_with_tolerance(value):
+    """Ceil a float while avoiding near-integer floating-point artifacts."""
+    nearest_integer = round(value)
+    if np.isclose(value, nearest_integer):
+        return int(nearest_integer)
+    return int(np.ceil(value))
+
+
+def _mean_cosine_over_dec_span(dec_range):
+    """Return mean cos(dec) over a declination interval (degrees)."""
+    dec_min, dec_max = sorted((float(dec_range[0]), float(dec_range[1])))
+    dec_span_rad = np.deg2rad(abs(dec_max - dec_min))
+    if np.isclose(dec_span_rad, 0.0):
+        return abs(np.cos(np.deg2rad(dec_min)))
+    return abs((np.sin(np.deg2rad(dec_max)) - np.sin(np.deg2rad(dec_min))) / dec_span_rad)
+
+
+def _mean_sine_over_zenith_span(zenith_range):
+    """Return mean sin(zenith) over a zenith interval (degrees)."""
+    zenith_min, zenith_max = sorted((float(zenith_range[0]), float(zenith_range[1])))
+    zenith_span_rad = np.deg2rad(abs(zenith_max - zenith_min))
+    if np.isclose(zenith_span_rad, 0.0):
+        return abs(np.sin(np.deg2rad(zenith_min)))
+    return abs((np.cos(np.deg2rad(zenith_min)) - np.cos(np.deg2rad(zenith_max))) / zenith_span_rad)
+
+
+def _apply_direction_grid_density(axis_configs, direction_axes, density):
+    """Derive direction-axis binning from density (points per deg^2)."""
+    if density is None:
+        return
+    if density <= 0:
+        raise ValueError("direction_grid_density must be strictly positive.")
+
+    density_sqrt = np.sqrt(density)
+    longitudinal_axis_scale = 1.0
+    if tuple(direction_axes) == _RADEC_AXES:
+        longitudinal_axis_scale = _mean_cosine_over_dec_span(axis_configs["dec"]["range"])
+    elif tuple(direction_axes) == _HORIZONTAL_AXES:
+        longitudinal_axis_scale = _mean_sine_over_zenith_span(axis_configs["zenith"]["range"])
+
+    for axis_name in direction_axes:
+        axis_range = axis_configs[axis_name]["range"]
+        if axis_name == "azimuth":
+            span_degrees = _circular_span_degrees(axis_range)
+        else:
+            span_degrees = abs(axis_range[1] - axis_range[0])
+
+        if axis_name in ("azimuth", "ra"):
+            span_degrees *= longitudinal_axis_scale
+
+        axis_configs[axis_name]["binning"] = max(
+            1,
+            _ceil_with_tolerance(span_degrees * density_sqrt),
+        )
+
+
 def _resolve_coordinate_system(axis_configs):
     """Resolve the coordinate system from axis definitions."""
     has_horizontal_axes = all(axis_name in axis_configs for axis_name in _HORIZONTAL_AXES)
@@ -236,6 +301,15 @@ def build_axes_dict_from_cli_args(args_dict):
         raise ValueError(f"Missing required shared axis definition(s): {missing_axes}.")
 
     direction_axes = _RADEC_AXES if coordinate_system == "ra_dec" else _HORIZONTAL_AXES
+    if coordinate_system == "horizontal" and args_dict.get("direction_grid_density") is not None:
+        axis_configs["azimuth"]["direction_grid_density"] = float(
+            args_dict["direction_grid_density"]
+        )
+    _apply_direction_grid_density(
+        axis_configs,
+        direction_axes,
+        args_dict.get("direction_grid_density"),
+    )
     return {
         GRID_AXIS_ARGUMENTS[axis_name]["engine_axis"]: axis_configs[axis_name]
         for axis_name in (*_REQUIRED_AXES, *direction_axes)
@@ -280,6 +354,8 @@ def build_job_grid_metadata(args_dict):
         args_dict,
     )
     coordinate_system = _resolve_coordinate_system_from_args(args_dict)
+    if coordinate_system == "ra_dec" and not args_dict.get("site"):
+        raise ValueError("site is required when using RA/Dec axes.")
     return {
         "site": args_dict.get("site"),
         "simulation_software": args_dict.get("simulation_software"),
@@ -692,6 +768,8 @@ def build_simulation_jobs(args_dict):
                 "primary": primary,
                 "azimuth_angle": point["azimuth"],
                 "zenith_angle": point["zenith_angle"],
+                "ra": point.get("ra"),
+                "dec": point.get("dec"),
                 "model_version": model_version,
                 "array_layout_name": resolved_layout_name,
                 "corsika_le_interaction": corsika_le,

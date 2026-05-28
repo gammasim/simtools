@@ -91,6 +91,139 @@ def test_build_axes_dict_from_cli_args_accepts_compact_axis_definitions():
     }
 
 
+def test_build_axes_dict_from_cli_args_derives_horizontal_binning_from_density():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "direction_grid_density": 1.0,
+            "axis": [
+                ["azimuth", "310", "deg", "20", "deg", "3", "linear"],
+                ["zenith", "30", "deg", "40", "deg", "2"],
+                ["nsb", "4", "MHz", "5", "MHz", "2"],
+                ["offset", "0", "deg", "10", "deg", "2"],
+            ],
+        }
+    )
+
+    assert axes["azimuth"]["binning"] == 41
+    assert axes["zenith_angle"]["binning"] == 10
+
+
+def test_build_axes_dict_from_cli_args_derives_radec_binning_from_density():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "direction_grid_density": 1.0,
+            "axis": [
+                ["ra", "0", "deg", "360", "deg", "36", "linear"],
+                ["dec", "-90", "deg", "90", "deg", "18", "linear"],
+                ["nsb", "4", "MHz", "4", "MHz", "1", "linear"],
+                ["offset", "0", "deg", "10", "deg", "2", "linear"],
+            ],
+        }
+    )
+
+    assert axes["ra"]["binning"] == 230
+    assert axes["dec"]["binning"] == 180
+
+
+def test_build_axes_dict_from_cli_args_reduces_ra_binning_towards_dec_poles():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "direction_grid_density": 1.0,
+            "axis": [
+                ["ra", "0", "deg", "360", "deg", "36", "linear"],
+                ["dec", "80", "deg", "90", "deg", "10", "linear"],
+                ["nsb", "4", "MHz", "4", "MHz", "1", "linear"],
+                ["offset", "0", "deg", "10", "deg", "2", "linear"],
+            ],
+        }
+    )
+
+    assert axes["ra"]["binning"] == 32
+    assert axes["dec"]["binning"] == 10
+
+
+def test_build_axes_dict_from_cli_args_reduces_az_binning_towards_zenith_pole():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "direction_grid_density": 1.0,
+            "axis": [
+                ["azimuth", "0", "deg", "180", "deg", "36", "linear"],
+                ["zenith", "0", "deg", "10", "deg", "10", "linear"],
+                ["nsb", "4", "MHz", "4", "MHz", "1", "linear"],
+                ["offset", "0", "deg", "10", "deg", "2", "linear"],
+            ],
+        }
+    )
+
+    assert axes["azimuth"]["binning"] == 16
+    assert axes["zenith_angle"]["binning"] == 10
+
+
+def test_build_axes_dict_from_cli_args_uses_directed_azimuth_span_for_density():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "direction_grid_density": 1.0,
+            "axis": [
+                ["azimuth", "0", "deg", "240", "deg", "36", "linear"],
+                ["zenith", "0", "deg", "70", "deg", "2", "linear"],
+                ["nsb", "4", "MHz", "4", "MHz", "1", "linear"],
+                ["offset", "0", "deg", "10", "deg", "2", "linear"],
+            ],
+        }
+    )
+
+    assert axes["azimuth"]["binning"] == 130
+    assert axes["zenith_angle"]["binning"] == 70
+
+
+def test_build_axes_dict_from_cli_args_sets_horizontal_density_metadata_for_adaptive_grid():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "direction_grid_density": 1.0,
+            "axis": [
+                ["azimuth", "0", "deg", "240", "deg", "36", "linear"],
+                ["zenith", "0", "deg", "70", "deg", "2", "linear"],
+                ["nsb", "4", "MHz", "4", "MHz", "1", "linear"],
+                ["offset", "0", "deg", "10", "deg", "2", "linear"],
+            ],
+        }
+    )
+
+    assert axes["azimuth"]["direction_grid_density"] == pytest.approx(1.0)
+
+
+def test_build_axes_dict_from_cli_args_uses_full_circle_span_for_azimuth_density():
+    axes = build_axes_dict_from_cli_args(
+        {
+            "direction_grid_density": 1.0,
+            "axis": [
+                ["azimuth", "0", "deg", "360", "deg", "36", "linear"],
+                ["zenith", "0", "deg", "70", "deg", "2", "linear"],
+                ["nsb", "4", "MHz", "4", "MHz", "1", "linear"],
+                ["offset", "0", "deg", "10", "deg", "2", "linear"],
+            ],
+        }
+    )
+
+    assert axes["azimuth"]["binning"] == 194
+    assert axes["zenith_angle"]["binning"] == 70
+
+
+def test_build_axes_dict_from_cli_args_rejects_non_positive_density():
+    with pytest.raises(ValueError, match="direction_grid_density must be strictly positive"):
+        build_axes_dict_from_cli_args(
+            {
+                "direction_grid_density": 0,
+                "axis": [
+                    ["azimuth", "310", "deg", "20", "deg", "3"],
+                    ["zenith", "30", "deg", "40", "deg", "2"],
+                    ["nsb", "4", "MHz", "5", "MHz", "2"],
+                    ["offset", "0", "deg", "10", "deg", "2"],
+                ],
+            }
+        )
+
+
 def test_build_axes_dict_from_cli_args_accepts_config_wrapped_axis_strings():
     axes = build_axes_dict_from_cli_args(
         {
@@ -170,6 +303,22 @@ def test_build_job_grid_metadata_includes_job_context():
     assert metadata["coordinate_system"] == "ra_dec"
     assert metadata["time_of_observation_utc"].startswith("2017-09-16T00:00:00")
     assert metadata["corsika_limits"] == "limits.ecsv"
+
+
+def test_build_job_grid_metadata_raises_for_radec_without_site():
+    with pytest.raises(ValueError, match="site is required"):
+        build_job_grid_metadata(
+            {
+                "site": None,
+                "simulation_software": "corsika_sim_telarray",
+                "axis": [
+                    ["ra", "0", "deg", "1", "deg", "2"],
+                    ["dec", "0", "deg", "1", "deg", "2"],
+                ],
+                "time_of_observation": "2017-09-16 00:00:00",
+                "corsika_limits": "limits.ecsv",
+            }
+        )
 
 
 @patch("simtools.production_configuration.simulation_jobs.SiteModel")
@@ -716,6 +865,8 @@ def test_build_simulation_jobs_expands_runs_from_observation_grid(
                 {
                     "azimuth": 180 * u.deg,
                     "zenith_angle": 20 * u.deg,
+                    "ra": 123 * u.deg,
+                    "dec": -45 * u.deg,
                     "lower_energy_threshold": 40 * u.GeV,
                     "scatter_radius": 100 * u.m,
                     "viewcone_radius": 2 * u.deg,
@@ -747,6 +898,8 @@ def test_build_simulation_jobs_expands_runs_from_observation_grid(
     assert rows[0]["core_scatter_max"] == 100 * u.m
     assert rows[0]["view_cone_max"] == 2 * u.deg
     assert rows[0]["showers_per_run"] == 5
+    assert rows[0]["ra"] == 123 * u.deg
+    assert rows[0]["dec"] == -45 * u.deg
 
 
 @patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")

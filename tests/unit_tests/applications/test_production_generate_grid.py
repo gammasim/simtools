@@ -75,3 +75,12 @@ def test_add_arguments_accepts_zenith_angle_scaling_factor():
     args = parser.parse_args(["--zenith_angle_scaling_factor", "2.5"])
 
     assert args.zenith_angle_scaling_factor == pytest.approx(2.5)
+
+
+def test_add_arguments_accepts_direction_grid_density():
+    parser = CommandLineParser()
+    app._add_arguments(parser)
+
+    args = parser.parse_args(["--direction_grid_density", "1.5"])
+
+    assert args.direction_grid_density == pytest.approx(1.5)
