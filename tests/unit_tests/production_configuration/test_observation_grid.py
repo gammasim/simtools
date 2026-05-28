@@ -146,12 +146,12 @@ def test_generate_extra_axis_combinations_returns_mesh_for_remaining_axes():
     assert combinations.shape == (4, 2)
 
 
-def test_create_circular_binning_uses_shorter_counterclockwise_path():
+def test_create_circular_binning_uses_directed_span_from_start_to_end():
     engine = ProductionGridEngine(axes={"axes": {}})
 
     binning = engine.create_circular_binning((10, 350), 3)
 
-    assert np.allclose(binning, [10, 0, 350])
+    assert np.allclose(binning, [10, 180, 350])
 
 
 def test_create_circular_binning_uses_clockwise_path_when_shorter():
@@ -160,6 +160,55 @@ def test_create_circular_binning_uses_clockwise_path_when_shorter():
     binning = engine.create_circular_binning((350, 10), 3)
 
     assert np.allclose(binning, [350, 0, 10])
+
+
+def test_create_circular_binning_covers_requested_range_0_to_240():
+    engine = ProductionGridEngine(axes={"axes": {}})
+
+    binning = engine.create_circular_binning((0, 240), 3)
+
+    assert np.allclose(binning, [0, 120, 240])
+
+
+def test_generate_horizontal_grid_uses_adaptive_azimuth_bins_per_zenith_row():
+    engine = ProductionGridEngine(
+        axes={
+            "axes": {
+                "zenith_angle": {"range": [0, 60], "binning": 61, "units": "deg"},
+                "azimuth": {
+                    "range": [0, 240],
+                    "binning": 10,
+                    "units": "deg",
+                    "direction_grid_density": 0.05,
+                },
+                "nsb_level": {"range": [1, 1], "binning": 1, "units": "1"},
+            }
+        },
+        coordinate_system="horizontal",
+    )
+
+    grid = engine._generate_horizontal_grid()
+
+    assert len(grid) > 0
+
+    azimuth_counts_by_zenith = {}
+    for point in grid:
+        zenith_value = round(point["zenith_angle"].to_value(u.deg), 6)
+        azimuth_counts_by_zenith.setdefault(zenith_value, set()).add(
+            round(point["azimuth"].to_value(u.deg), 6)
+        )
+
+    assert len(azimuth_counts_by_zenith[0.0]) == 1
+    assert len(azimuth_counts_by_zenith[30.0]) > len(azimuth_counts_by_zenith[0.0])
+    assert len(azimuth_counts_by_zenith[60.0]) > len(azimuth_counts_by_zenith[30.0])
+
+
+def test_create_circular_binning_treats_full_circle_range_as_full_span():
+    engine = ProductionGridEngine(axes={"axes": {}})
+
+    binning = engine.create_circular_binning((0, 360), 4)
+
+    assert np.allclose(binning, [0, 90, 180, 270])
 
 
 def test_convert_altaz_to_radec_raises_without_time_of_observation():
@@ -322,8 +371,8 @@ def test_generate_horizontal_grid_with_circular_azimuth_binning_uses_correct_ind
             }
         }
     )
-    # Counterclockwise shortest path gives non-monotonic order: [10, 0, 350]
-    assert np.allclose(engine.target_values["azimuth"].value, np.array([10.0, 0.0, 350.0]))
+    # Directed span from start to end gives [10, 180, 350]
+    assert np.allclose(engine.target_values["azimuth"].value, np.array([10.0, 180.0, 350.0]))
 
     engine.interpolated_limits = {
         "lower_energy_threshold": np.array([[[0.1], [0.2], [0.3]]]),
@@ -336,7 +385,7 @@ def test_generate_horizontal_grid_with_circular_azimuth_binning_uses_correct_ind
     }
 
     assert by_azimuth[10.0] == pytest.approx(0.1)
-    assert by_azimuth[0.0] == pytest.approx(0.2)
+    assert by_azimuth[180.0] == pytest.approx(0.2)
     assert by_azimuth[350.0] == pytest.approx(0.3)
 
 

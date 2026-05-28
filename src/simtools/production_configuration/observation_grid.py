@@ -299,27 +299,111 @@ class ProductionGridEngine:
         np.ndarray
             Array of bin centers.
         """
+        raw_span = abs(float(azimuth_range[1]) - float(azimuth_range[0]))
+        if raw_span > 0.0 and np.isclose(raw_span % 360.0, 0.0):
+            azimuth_start = float(azimuth_range[0]) % 360.0
+            return (azimuth_start + np.linspace(0.0, 360.0, num_bins, endpoint=False)) % 360.0
+
         azimuth_min, azimuth_max = azimuth_range
-        azimuth_min %= 360
-        azimuth_max %= 360
+        azimuth_start = float(azimuth_min) % 360.0
+        directed_distance = float((azimuth_max - azimuth_min) % 360.0)
 
-        clockwise_distance = (azimuth_max - azimuth_min) % 360
-        counterclockwise_distance = (azimuth_min - azimuth_max) % 360
-
-        if clockwise_distance <= counterclockwise_distance:
-            return (
-                np.linspace(azimuth_min, azimuth_min + clockwise_distance, num_bins, endpoint=True)
-                % 360
-            )
         return (
             np.linspace(
-                azimuth_min, azimuth_min - counterclockwise_distance, num_bins, endpoint=True
+                azimuth_start,
+                azimuth_start + directed_distance,
+                num_bins,
+                endpoint=True,
             )
-            % 360
+            % 360.0
         )
+
+    @staticmethod
+    def _ceil_with_tolerance(value):
+        """Ceil a float while avoiding near-integer floating-point artifacts."""
+        nearest_integer = round(value)
+        if np.isclose(value, nearest_integer):
+            return int(nearest_integer)
+        return int(np.ceil(value))
+
+    @staticmethod
+    def _directed_circular_span_degrees(azimuth_range):
+        """Return directed circular span (degrees) from start to end."""
+        raw_span = abs(float(azimuth_range[1]) - float(azimuth_range[0]))
+        if raw_span > 0.0 and np.isclose(raw_span % 360.0, 0.0):
+            return 360.0
+        return float((azimuth_range[1] - azimuth_range[0]) % 360.0)
+
+    def _is_adaptive_horizontal_density_enabled(self):
+        """Return whether horizontal grid generation should use row-wise adaptive azimuth bins."""
+        return (
+            self.coordinate_system == "horizontal"
+            and "azimuth" in self.axes
+            and "zenith_angle" in self.axes
+            and self.axes["azimuth"].get("direction_grid_density") is not None
+        )
+
+    def _generate_adaptive_horizontal_grid(self):
+        """Generate horizontal grid with azimuth binning adapted per zenith row."""
+        density = float(self.axes["azimuth"]["direction_grid_density"])
+        azimuth_range = self.axes["azimuth"]["range"]
+        azimuth_span = self._directed_circular_span_degrees(azimuth_range)
+        zenith_values = self.target_values["zenith_angle"]
+
+        zenith_step = 1.0 / np.sqrt(density)
+        if len(zenith_values) > 1:
+            zenith_step = float(np.mean(np.abs(np.diff(zenith_values.to_value(u.deg)))))
+
+        extra_axis_keys = [
+            key for key in self.target_values if key not in ("azimuth", "zenith_angle")
+        ]
+        extra_arrays = [self.target_values[key].value for key in extra_axis_keys]
+        extra_units = [self.target_values[key].unit for key in extra_axis_keys]
+
+        if extra_arrays:
+            extra_grid = np.meshgrid(*extra_arrays, indexing="ij")
+            extra_combinations = np.vstack(list(map(np.ravel, extra_grid))).T
+        else:
+            extra_combinations = [np.array([])]
+
+        grid_points = []
+        for zenith in zenith_values:
+            altitude_cosine = np.cos(np.deg2rad(90.0 - zenith.to_value(u.deg)))
+            azimuth_bins = 1
+            if azimuth_span > 0.0 and altitude_cosine > 0.0:
+                azimuth_bins = max(
+                    1,
+                    self._ceil_with_tolerance(
+                        azimuth_span * density * zenith_step * altitude_cosine
+                    ),
+                )
+
+            azimuth_values = self.create_circular_binning(azimuth_range, azimuth_bins) * u.deg
+            for extra_combination in extra_combinations:
+                point_base = {
+                    key: Quantity(extra_combination[i], extra_units[i])
+                    for i, key in enumerate(extra_axis_keys)
+                }
+                for azimuth in azimuth_values:
+                    point = {
+                        **point_base,
+                        "azimuth": azimuth,
+                        "zenith_angle": zenith,
+                    }
+                    self._add_lookup_limits_to_point(
+                        point,
+                        zenith=zenith.to_value(u.deg),
+                        azimuth=azimuth.to_value(u.deg),
+                    )
+                    grid_points.append(point)
+
+        return grid_points
 
     def _generate_horizontal_grid(self):
         """Generate grid points for horizontal (zenith/azimuth) mode."""
+        if self._is_adaptive_horizontal_density_enabled():
+            return self._generate_adaptive_horizontal_grid()
+
         value_arrays = [value.value for value in self.target_values.values()]
         units = [value.unit for value in self.target_values.values()]
         grid = np.meshgrid(*value_arrays, indexing="ij")

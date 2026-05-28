@@ -22,6 +22,10 @@ axis (repeatable)
     ``--axis <name> <min> <unit> <max> <unit> <binning> [scaling]``.
     Example: ``--axis azimuth 310 deg 20 deg 3 linear``.
     Options for scaling are: linear, log, 1/cos.
+direction_grid_density (float, optional)
+    Direction-grid density in points per deg^2.
+    If provided, direction-axis binning (azimuth/zenith or ra/dec) is derived from
+    range and density, while min/max values are kept from ``--axis`` definitions.
 time_of_observation (str, optional)
     Time of the observation in UTC (format: 'YYYY-MM-DD HH:MM:SS').
     Used only if RA/Dec axes are provided (for coordinate transforms and sidereal-time
@@ -95,6 +99,16 @@ def _add_arguments(parser):
         required=False,
         help=(
             "Observation time in UTC (format: 'YYYY-MM-DD HH:MM:SS'). Used only in 'ra_dec' mode."
+        ),
+    )
+    parser.add_argument(
+        "--direction_grid_density",
+        type=float,
+        required=False,
+        default=None,
+        help=(
+            "Direction-grid density in points per deg^2. If set, direction-axis binning is "
+            "derived from axis ranges and this density."
         ),
     )
     parser.add_argument(
