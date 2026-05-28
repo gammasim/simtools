@@ -13,6 +13,8 @@ from simtools.testing import configuration, helpers, log_inspector, validate_out
 
 logger = logging.getLogger()
 
+_REPO_ROOT = Path(__file__).parent.parent.parent
+
 config_files = sorted(Path(__file__).parent.glob("config/*.yml"))
 test_configs, test_ids = configuration.get_list_of_test_configurations(config_files)
 test_parameters = []
@@ -79,6 +81,7 @@ def test_applications_from_config(tmp_test_directory, config, request):
         capture_output=True,
         text=True,
         env=env,
+        cwd=_REPO_ROOT,
     )
     msg = f"Command {cmd!r} failed. stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     if result.returncode != 0 and config.get("xfail_network_error"):
