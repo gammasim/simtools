@@ -14,7 +14,7 @@ import simtools.simtel.simtel_table_reader as simtel_table_reader
 
 @pytest.fixture
 def spe_test_file():
-    return "tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat"
+    return "tests/resources/model_parameters/spe_LST_2022-04-27_AP2.0e-4.dat"
 
 
 @pytest.fixture
