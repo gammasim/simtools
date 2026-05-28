@@ -17,6 +17,10 @@ from simtools.configuration import defaults
 from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.model.site_model import SiteModel
+from simtools.production_configuration.angle_ranges import (
+    ceil_with_tolerance,
+    directed_circular_span_degrees,
+)
 from simtools.production_configuration.corsika_limits_lookup import (
     CorsikaLimitsLookup,
     attach_lookup_limits_to_point,
@@ -212,23 +216,6 @@ def _parse_direction_grid_density(density_value):
     raise TypeError("direction_grid_density must be a number, string, or CLI-style token list.")
 
 
-def _circular_span_degrees(axis_range):
-    """Return directed circular span (degrees) from start to end."""
-    start, end = axis_range
-    raw_span = abs(float(end) - float(start))
-    if raw_span > 0.0 and np.isclose(raw_span % 360.0, 0.0):
-        return 360.0
-    return float((end - start) % 360.0)
-
-
-def _ceil_with_tolerance(value):
-    """Ceil a float while avoiding near-integer floating-point artifacts."""
-    nearest_integer = round(value)
-    if np.isclose(value, nearest_integer):
-        return int(nearest_integer)
-    return int(np.ceil(value))
-
-
 def _mean_cosine_over_dec_span(dec_range):
     """Return mean cos(dec) over a declination interval (degrees)."""
     dec_min, dec_max = sorted((float(dec_range[0]), float(dec_range[1])))
@@ -264,7 +251,7 @@ def _apply_direction_grid_density(axis_configs, direction_axes, density):
     for axis_name in direction_axes:
         axis_range = axis_configs[axis_name]["range"]
         if axis_name == "azimuth":
-            span_degrees = _circular_span_degrees(axis_range)
+            span_degrees = directed_circular_span_degrees(axis_range)
         else:
             span_degrees = abs(axis_range[1] - axis_range[0])
 
@@ -273,7 +260,7 @@ def _apply_direction_grid_density(axis_configs, direction_axes, density):
 
         axis_configs[axis_name]["binning"] = max(
             1,
-            _ceil_with_tolerance(span_degrees * density_sqrt),
+            ceil_with_tolerance(span_degrees * density_sqrt),
         )
 
 
