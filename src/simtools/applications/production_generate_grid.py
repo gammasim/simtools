@@ -133,9 +133,8 @@ def _add_arguments(parser):
         default=None,
         help=(
             "Direction-grid density in 1/deg^2. If set, direction-axis binning is "
-            "derived from axis ranges and this density. In ra_dec mode, optional zenith and "
-            "azimuth axes are interpreted as local-sky constraints for filtering generated "
-            "points (for example zenith 0..70 deg)."
+            "derived from axis ranges and this density. In ra_dec mode, use "
+            "local_zenith_range/local_azimuth_range to filter generated points in local sky."
         ),
     )
     parser.add_argument(

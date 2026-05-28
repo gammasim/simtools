@@ -388,11 +388,6 @@ class ProductionGridEngine:
         ra_axis = self.axes.get("ra", {})
 
         zenith_range = ra_axis.get("local_zenith_range")
-        if zenith_range is None:
-            zenith_axis = self.axes.get("zenith_angle")
-            if zenith_axis and "range" in zenith_axis:
-                zenith_range = zenith_axis["range"]
-
         if zenith_range is not None:
             zenith_min, zenith_max = sorted(
                 (
@@ -404,11 +399,6 @@ class ProductionGridEngine:
             visible_mask &= (zenith_values_deg >= zenith_min) & (zenith_values_deg <= zenith_max)
 
         azimuth_range = ra_axis.get("local_azimuth_range")
-        if azimuth_range is None:
-            azimuth_axis = self.axes.get("azimuth")
-            if azimuth_axis and "range" in azimuth_axis:
-                azimuth_range = azimuth_axis["range"]
-
         if azimuth_range is not None:
             azimuth_values_deg = azimuth_values.to_value(u.deg)
             visible_mask &= self._is_in_directed_azimuth_range(
