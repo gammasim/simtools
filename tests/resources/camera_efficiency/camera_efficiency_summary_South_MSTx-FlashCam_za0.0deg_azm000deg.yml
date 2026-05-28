@@ -4,7 +4,7 @@ meta:
   model_version: 6.0.2
   zen: 0.0
   az: 0.0
-  nsb: default sim_telarray spectrum
+  nsb: tests/resources/model_parameters/Benn_LaPalma_sky_converted.lis
 reflectivity:
   value: 0.9333498341901661
   description: Spectrum weighted reflectivity
