@@ -13,7 +13,10 @@ from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler, io_handler
 from simtools.job_execution.process_pool import process_pool_map_ordered
-from simtools.layout.array_layout_utils import get_array_elements_from_db_for_layouts
+from simtools.layout.array_layout_utils import (
+    get_array_elements_from_db_for_layouts,
+    resolve_array_layout_name,
+)
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.utils.general import get_uuid
 from simtools.utils.names import normalize_array_element_identifier_container
@@ -178,8 +181,14 @@ def _execute_production_job(job_spec):
 def _resolve_telescope_configs(args_dict):
     """Resolve telescope configurations from one of the supported input options."""
     if args_dict.get("array_layout_name"):
-        return get_array_elements_from_db_for_layouts(
+        layouts = resolve_array_layout_name(
             args_dict["array_layout_name"],
+            args_dict.get("model_version"),
+        )
+        if not isinstance(layouts, list):
+            layouts = [layouts]
+        return get_array_elements_from_db_for_layouts(
+            layouts,
             args_dict.get("site"),
             args_dict.get("model_version"),
         )
