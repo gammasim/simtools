@@ -531,7 +531,7 @@ def test_create_2d_plot_config():
     )
 
     assert result["colorbar_label"] in (config["colorbar_label"], None)
-    assert result["filename"] == "core_distance_vs_energy"
+    assert result["filename"] == "core_distance_vs_energy_triggered"
 
 
 def test_create_2d_plot_config_core_xy():
