@@ -128,15 +128,34 @@ def _copy_collection_files(configurations, collection_config):
         collection_output_path = Path(output_path)
         collection_output_path.mkdir(parents=True, exist_ok=True)
         for pattern in files:
-            matched_files = _find_collection_files(pattern, source_directories)
-            for source_file in matched_files:
-                dest = collection_output_path / source_file.name
-                if dest.exists() and dest.resolve() != source_file.resolve():
-                    raise FileExistsError(
-                        f"Filename collision in collection: '{source_file.name}' would be "
-                        f"overwritten by '{source_file}'. Ensure output files have unique names."
-                    )
-                shutil.copy2(source_file, dest)
+            _copy_pattern_files(pattern, source_directories, collection_output_path)
+
+
+def _copy_pattern_files(pattern, source_directories, destination):
+    """Copy all files matching *pattern* from source directories into *destination*.
+
+    Parameters
+    ----------
+    pattern : str
+        Filename or glob pattern to search for.
+    source_directories : list[Path]
+        Directories to search.
+    destination : Path
+        Target directory (must already exist).
+
+    Raises
+    ------
+    FileExistsError
+        When a source file would overwrite a different file with the same name.
+    """
+    for source_file in _find_collection_files(pattern, source_directories):
+        dest = destination / source_file.name
+        if dest.exists() and dest.resolve() != source_file.resolve():
+            raise FileExistsError(
+                f"Filename collision in collection: '{source_file.name}' would be "
+                f"overwritten by '{source_file}'. Ensure output files have unique names."
+            )
+        shutil.copy2(source_file, dest)
 
 
 def _collect_source_directories(configurations):
