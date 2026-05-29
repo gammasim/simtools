@@ -54,6 +54,8 @@ def run_applications(args_dict):
         else []
     )
 
+    log_file = Path(log_file)
+    log_file.parent.mkdir(parents=True, exist_ok=True)
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
         file.write(dependencies.get_version_string(run_time, include_software_versions=False))
@@ -258,25 +260,36 @@ def _read_application_configuration(configuration_file, steps, workflow_activity
     workflow_activity_id = (
         gen.extract_uuid7_from_path(configuration_file) or workflow_activity_id or gen.get_uuid()
     )
-    output_path, setting_workflow = _set_input_output_directories(configuration_file)
+    derived_output_path, setting_workflow = _set_input_output_directories(configuration_file)
     configurations = job_configuration.get("applications")
-    logger.info(f"Setting workflow output path to {output_path}")
+
+    output_path_used_as_default = False
     for step_count, config in enumerate(configurations, start=1):
         config["run_application"] = step_count in steps if steps else True
         config = gen.change_dict_keys_case(config, True)
+        app_config = config.get("configuration", {})
+        if "output_path" not in app_config:
+            output_path_used_as_default = True
         config["configuration"] = _replace_placeholders_in_configuration(
-            config.get("configuration", {}),
-            output_path,
+            app_config,
+            derived_output_path,
             setting_workflow,
         )
         if config["configuration"].get("activity_id") is None:
             config["configuration"]["activity_id"] = gen.get_uuid()
         configurations[step_count - 1] = config
 
+    if output_path_used_as_default or not configurations:
+        log_path = derived_output_path
+    else:
+        first_app_output = configurations[0].get("configuration", {}).get("output_path")
+        log_path = Path(first_app_output) if first_app_output else derived_output_path
+    logger.info(f"Setting workflow output path to {log_path}")
+
     return (
         configurations,
         job_configuration.get("runtime_environment"),
-        output_path / "simtools.log",
+        log_path / "simtools.log",
         workflow_activity_id,
     )
 
@@ -417,7 +430,6 @@ def _set_input_output_directories(path):
         )
 
     output_path = Path("output") / Path(setting_workflow)
-    output_path.mkdir(parents=True, exist_ok=True)
     return output_path, setting_workflow
 
 
