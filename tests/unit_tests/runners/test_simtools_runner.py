@@ -56,9 +56,10 @@ def test_set_input_output_directories():
 
     assert setting_workflow == "LSTN-01/pm_photoelectron_spectrum/20250304T073000"
 
-    path = "output/LSTN-01/pm_photoelectron_spectrum/20250304T073000/config.yml"
-    with pytest.raises(ValueError, match=r"^Could not find subdirectory under"):
-        simtools_runner._set_input_output_directories(path)
+    path = "tests/resources_generation/application_config/config.yml"
+    output_path, setting_workflow = simtools_runner._set_input_output_directories(path)
+    assert str(output_path) == "output/tests/resources_generation/application_config"
+    assert setting_workflow == "tests/resources_generation/application_config"
 
 
 def test_replace_placeholders_in_configuration_replaces_string():
@@ -191,6 +192,72 @@ def test_read_application_configuration_empty_applications(
     assert workflow_activity_id is not None
 
 
+def test_read_application_configuration_uses_first_app_output_path_for_log(
+    monkeypatch,
+    mock_logger,
+    mock_collect_data_from_file,
+    mock_set_input_output_directories,
+    mock_change_dict_keys_case,
+):
+    """When all apps already have output_path, log goes to the first app's dir."""
+    applications = [
+        {"application": "app1", "configuration": {"key": "value", "output_path": "my-output"}},
+        {"application": "app2", "configuration": {"key": "value2", "output_path": "other-output"}},
+    ]
+    monkeypatch.setattr(
+        "simtools.io.ascii_handler.collect_data_from_file",
+        mock_collect_data_from_file(applications),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._set_input_output_directories",
+        mock_set_input_output_directories,
+    )
+    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
+        lambda config, output_path, setting_workflow: config,
+    )
+
+    _, _, log_file, _ = simtools_runner._read_application_configuration(
+        DUMMY_CONFIG_FILE, None, mock_logger
+    )
+    assert log_file == Path("my-output") / "simtools.log"
+
+
+def test_read_application_configuration_falls_back_to_derived_path_when_first_app_has_no_output(
+    monkeypatch,
+    mock_logger,
+    mock_collect_data_from_file,
+    mock_set_input_output_directories,
+    mock_change_dict_keys_case,
+):
+    """When placeholder replacement removes output_path, fall back to derived path."""
+    applications = [
+        {"application": "app1", "configuration": {"key": "value", "output_path": "my-output"}},
+    ]
+    monkeypatch.setattr(
+        "simtools.io.ascii_handler.collect_data_from_file",
+        mock_collect_data_from_file(applications),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._set_input_output_directories",
+        mock_set_input_output_directories,
+    )
+    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
+    # placeholder replacement strips output_path from the config
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
+        lambda config, output_path, setting_workflow: {
+            k: v for k, v in config.items() if k != "output_path"
+        },
+    )
+
+    _, _, log_file, _ = simtools_runner._read_application_configuration(
+        DUMMY_CONFIG_FILE, None, mock_logger
+    )
+    assert log_file == Path("output/test_workflow") / "simtools.log"
+
+
 def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     # Prepare mocks
     mock_args_dict = {
@@ -291,6 +358,72 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     version_string_mock.assert_called_once_with([], include_software_versions=False)
     workflow_build_mock.assert_not_called()
     workflow_update_mock.assert_not_called()
+
+
+def test_run_applications_copies_collection_files(monkeypatch, tmp_test_directory):
+    """Copy collection files from application output_path to collection output_path."""
+    tmp_path = Path(str(tmp_test_directory))
+    source_output = tmp_path / "app_output"
+    source_output.mkdir(parents=True, exist_ok=True)
+    source_file = source_output / "result.dat"
+    source_file.write_text("test-data", encoding="utf-8")
+
+    collection_output = tmp_path / "collection"
+
+    mock_args_dict = {
+        "config_file": "dummy_config.yml",
+        "steps": None,
+        "ignore_runtime_environment": False,
+    }
+    mock_configurations = [
+        {
+            "application": "app1",
+            "run_application": True,
+            "configuration": {
+                "activity_id": "cfg-id-1",
+                "output_path": str(source_output),
+            },
+        }
+    ]
+    log_file_path = tmp_path / "simtools.log"
+
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._read_application_configuration",
+        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id")),
+    )
+    monkeypatch.setattr(
+        "simtools.io.ascii_handler.collect_data_from_file",
+        mock.Mock(
+            return_value={
+                "collection": {
+                    "output_path": str(collection_output),
+                    "files": ["result.dat"],
+                }
+            }
+        ),
+    )
+    monkeypatch.setattr(
+        "simtools.dependencies.get_version_string",
+        mock.Mock(return_value="simtools version: 1.2.3\n"),
+    )
+    monkeypatch.setattr(
+        "simtools.job_execution.job_manager.submit",
+        mock.Mock(return_value=mock.Mock(stdout="ok", stderr="")),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner.workflow_metadata.build_workflow_activity_metadata",
+        mock.Mock(return_value={"id": "wf-activity-id"}),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner.workflow_metadata.update_model_parameter_metadata_file",
+        mock.Mock(),
+    )
+
+    simtools_runner.run_applications(mock_args_dict)
+
+    copied_file = collection_output / "result.dat"
+    assert copied_file.exists()
+    assert copied_file.read_text(encoding="utf-8") == "test-data"
 
 
 def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_test_directory):

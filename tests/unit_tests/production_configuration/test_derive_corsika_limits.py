@@ -203,6 +203,46 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict, tm
     assert mock_write.call_count == 1
 
 
+def test_generate_corsika_limits_grid_by_version_layout_resolved(
+    mocker, mock_args_dict, tmp_test_directory
+):
+    """Test that a by_version dict string for array_layout_name is resolved before DB lookup.
+
+    This covers the case where run_application serializes the by_version dict as a Python
+    dict string when passing it as a CLI argument to the subprocess.
+    """
+    args = mock_args_dict.copy()
+    args["array_layout_name"] = ["{'by_version': {'>=1.0.0': ['LST', 'MST']}}"]
+    args["site"] = "North"
+    args["model_version"] = "1.2.3"
+
+    mock_read_layouts = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits."
+        "get_array_elements_from_db_for_layouts"
+    )
+    mock_read_layouts.return_value = {"LST": [1, 2], "MST": [3, 4]}
+
+    mock_pool = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
+    )
+    mock_pool.return_value = [
+        {"primary_particle": "gamma", "array_name": "LST", "telescope_ids": [1, 2]},
+        {"primary_particle": "gamma", "array_name": "MST", "telescope_ids": [3, 4]},
+    ]
+
+    mock_io = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    )
+    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
+
+    mocker.patch("simtools.production_configuration.derive_corsika_limits.write_results")
+
+    derive_corsika_limits.generate_corsika_limits_grid(args)
+
+    # by_version must be resolved to the actual list before calling DB lookup
+    mock_read_layouts.assert_called_once_with(["LST", "MST"], "North", "1.2.3")
+
+
 def test_generate_corsika_limits_grid_with_array_element_list(
     mocker, mock_args_dict, tmp_test_directory
 ):

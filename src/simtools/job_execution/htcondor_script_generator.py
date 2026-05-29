@@ -34,7 +34,7 @@ _PARAMS_FIELDS = [
     "view_cone_min_unit",
     "view_cone_max_value",
     "view_cone_max_unit",
-    "nshow",
+    "showers_per_run",
     "model_version",
     "array_layout_name",
     "corsika_le_interaction",
@@ -182,7 +182,7 @@ def _write_params_file(params_file_path, label_job_specs):
                 view_cone_min_unit,
                 view_cone_max_value,
                 view_cone_max_unit,
-                _format_param_value(job_spec["nshow"], "nshow"),
+                _format_param_value(job_spec["showers_per_run"], "showers_per_run"),
                 _format_param_value(job_spec["model_version"], "model_version"),
                 _format_param_value(job_spec["array_layout_name"], "array_layout_name"),
                 _format_param_value(job_spec["corsika_le_interaction"], "corsika_le_interaction"),
@@ -364,7 +364,7 @@ simtools-simulate-prod \\
     --primary "$primary" \\
     --azimuth_angle "{bash_indices["azimuth_angle"]}" \\
     --zenith_angle "{bash_indices["zenith_angle"]}" \\
-    --nshow "{bash_indices["nshow"]}" \\
+    --showers_per_run "{bash_indices["showers_per_run"]}" \\
     --energy_range {energy_range_string} \\
     --core_scatter {core_scatter_string} \\
     --view_cone {view_cone_string} \\

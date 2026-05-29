@@ -392,7 +392,8 @@ class EventDataWriter:
         """
         Return NSB level from file name.
 
-        Hardwired values are used for "dark", "half", and "full" NSB levels.
+        Hardwired values are used for "dark", "half", "full", and "moon" NSB levels.
+        "moon" is treated as equivalent to "half" (0.835).
         Allows to read legacy sim_telarray files without 'nsb_integrated_flux'
         metadata field.
 
@@ -405,8 +406,14 @@ class EventDataWriter:
         -------
         float
             NSB level extracted from file name.
+
+        Raises
+        ------
+        ValueError
+            If no NSB level keyword is found in the file name.
         """
         nsb_levels = {"dark": 0.24, "half": 0.835, "full": 1.2}
+        nsb_levels["moon"] = nsb_levels["half"]  # moon uses same level as half
 
         for key, value in nsb_levels.items():
             try:
@@ -416,5 +423,7 @@ class EventDataWriter:
             except AttributeError as exc:
                 raise AttributeError("Invalid file name.") from exc
 
-        self._logger.warning(f"No NSB level found in {file}, defaulting to None")
-        return None
+        raise ValueError(
+            f"Cannot determine NSB level for '{file}': not found in metadata and "
+            f"no recognised keyword ('dark', 'half', 'full', 'moon') in file name."
+        )

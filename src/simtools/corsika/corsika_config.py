@@ -357,7 +357,7 @@ class CorsikaConfig:
         theta, phi = self._get_corsika_theta_phi(args_dict)
         return {
             "EVTNR": [args_dict["event_number_first_shower"]],
-            "NSHOW": [args_dict["nshow"]],
+            "NSHOW": [args_dict["showers_per_run"]],
             "PRMPAR": [self.primary_particle.corsika7_id],
             "ESLOPE": [args_dict["eslope"]],
             "ERANGE": [

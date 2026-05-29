@@ -353,7 +353,7 @@ def test_validate_reference_output_file(mocker, output_path, test_path):
     validate_output._validate_reference_output_file(config, integration_test)
 
     mock_compare_files.assert_called_once_with(
-        integration_test["reference_output_file"],
+        Path(integration_test["reference_output_file"]),
         Path(config["configuration"]["output_path"]).joinpath(
             config["configuration"]["output_file"]
         ),

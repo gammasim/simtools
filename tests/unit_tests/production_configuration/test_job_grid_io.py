@@ -18,7 +18,7 @@ def _job_rows():
             "core_scatter_max": 200 * u.m,
             "view_cone_min": 0 * u.deg,
             "view_cone_max": 5 * u.deg,
-            "nshow": 1000,
+            "showers_per_run": 1000,
             "model_version": "7.0.0",
             "array_layout_name": "CTAO-North-Alpha",
             "corsika_le_interaction": "urqmd",

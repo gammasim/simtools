@@ -10,6 +10,13 @@ It supports both:
 - axes-based production-grid configuration with optional ``ra_dec`` coordinate handling
   and lookup-table interpolation.
 
+Allow for flexible scaling of showers per run and total showers across the grid.
+``showers_per_run_power_law`` scales the baseline showers per run with
+``(E_mid / E_ref) ** power_index``, using the logarithmic midpoint energy of each bin.
+``showers_per_run_scaling=cosine_zenith`` scales showers per run with
+``cos(zenith_angle)`` to control run duration at larger zenith angles.
+``total_showers_scaling=zenith_scaled`` applies ``total_showers * exp(factor * (cos(ZD) - 1))``.
+
 Command line arguments
 ----------------------
 axis (repeatable)
@@ -26,6 +33,16 @@ corsika_limits (str, optional)
     varying azimuth and/or zenith angles for the selected array layout.
 output_file (str, optional, default='job_grid.ecsv')
     Output file for the generated executable job grid.
+showers_per_run_power_law (tuple, optional)
+    Scale showers per run with energy as
+    ``<power_index> <reference_energy_value> <reference_energy_unit>``
+    (example: ``--showers_per_run_power_law -2.0 1 TeV``).
+    Use for fixed energy simulations only.
+showers_per_run_scaling (str, optional)
+    Zenith-angle showers-per-run scaling mode.
+    ``fixed`` keeps showers per run unchanged.
+    ``cosine_zenith`` applies ``showers_per_run * cos(zenith_angle)``
+    (example: ``--showers_per_run_scaling cosine_zenith``).
 
 
 Example
@@ -58,6 +75,7 @@ execute:
 """
 
 from simtools.application_control import build_application
+from simtools.configuration import defaults
 from simtools.production_configuration.job_grid_io import serialize_job_grid
 from simtools.production_configuration.simulation_jobs import (
     build_job_grid_metadata,
@@ -104,27 +122,57 @@ def _add_arguments(parser):
         help="Number of runs to be simulated.",
         type=int,
         required=False,
-        default=1,
+        default=None,
     )
     parser.add_argument(
-        "--nshow_power_index",
+        "--total_showers",
+        help="Total number of showers to simulate.",
+        type=int,
+        required=False,
+        default=None,
+    )
+    parser.add_argument(
+        "--total_showers_scaling",
+        help="Scaling mode for total showers.",
+        type=str,
+        choices=["fixed", "zenith_scaled"],
+        required=False,
+        default="fixed",
+    )
+    parser.add_argument(
+        "--zenith_angle_scaling_factor",
         help=(
-            "Power-law index used to scale the baseline nshow with the geometric-mean energy "
-            "of each energy_range entry."
+            "Scaling factor for zenith-dependent total_showers scaling. "
+            "Used only when --total_showers_scaling is 'zenith_scaled'."
         ),
         type=float,
         required=False,
+        default=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
+    )
+    parser.add_argument(
+        "--showers_per_run_power_law",
+        help=(
+            "Scale showers_per_run by (E_mid / E_ref) ** power_index using the bin midpoint: "
+            "<power_index> <reference_energy_value> <reference_energy_unit> "
+            "(for example: --showers_per_run_power_law -2.0 1 TeV)."
+        ),
+        nargs=3,
+        type=str,
+        metavar=("POWER_INDEX", "REFERENCE_ENERGY_VALUE", "REFERENCE_ENERGY_UNIT"),
+        required=False,
         default=None,
     )
     parser.add_argument(
-        "--nshow_reference_energy",
+        "--showers_per_run_scaling",
         help=(
-            "Reference energy for nshow power-law scaling (for example: '100 GeV'). "
-            "Required together with --nshow_power_index."
+            "Zenith-angle scaling mode for showers_per_run: "
+            "'fixed' keeps the baseline value, "
+            "'cosine_zenith' applies showers_per_run * cos(zenith_angle)."
         ),
         type=str,
+        choices=["fixed", "cosine_zenith"],
         required=False,
-        default=None,
+        default="fixed",
     )
 
 
