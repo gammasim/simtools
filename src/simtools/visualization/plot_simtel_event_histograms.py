@@ -29,8 +29,9 @@ def plot(histograms, output_path=None, limits=None, array_name=None):
     """
     _logger.info(f"Plotting histograms written to {output_path}")
 
+    file_info = _extract_file_info_from_limits(limits)
     plots = _generate_plot_configurations(histograms, limits)
-    _execute_plotting_loop(plots, output_path, array_name)
+    _execute_plotting_loop(plots, output_path, array_name, file_info)
 
 
 def _get_limits(name, limits):
@@ -155,7 +156,7 @@ def _create_2d_plot_config(histogram, name, plot_params, limits):
     }
 
 
-def _execute_plotting_loop(plots, output_path, array_name):
+def _execute_plotting_loop(plots, output_path, array_name, file_info=None):
     """Execute the main plotting loop for all plot configurations."""
     for plot_key, plot_args in plots.items():
         plot_filename = plot_args.pop("filename")
@@ -167,28 +168,91 @@ def _execute_plotting_loop(plots, output_path, array_name):
         if array_name and plot_args.get("labels", {}).get("title"):
             plot_args["labels"]["title"] += f" ({array_name} array)"
 
-        filename = _build_plot_filename(plot_filename, array_name)
+        filename = _build_plot_filename(plot_filename, array_name, file_info)
         output_file = output_path / filename if output_path else None
         _create_plot(**plot_args, output_file=output_file)
 
 
-def _build_plot_filename(base_filename, array_name=None):
+def _build_plot_filename(base_filename, array_name=None, file_info=None):
     """
     Build the full plot filename with appropriate extensions.
 
     Parameters
     ----------
     base_filename : str
-        The base filename without extension
+        The base filename without extension.
     array_name : str, optional
-        Name of the array to append to filename
+        Name of the array to append to filename.
+    file_info : dict, optional
+        Dictionary with simulation metadata (zenith, azimuth, nsb_level) to
+        include in the filename so each production's plots can be identified.
 
     Returns
     -------
     str
-        Complete filename with extension
+        Complete filename with extension.
     """
-    return f"{base_filename}_{array_name}.png" if array_name else f"{base_filename}.png"
+    parts = [base_filename]
+    if array_name:
+        parts.append(array_name)
+    if file_info:
+        suffix = _format_file_info_suffix(file_info)
+        if suffix:
+            parts.append(suffix)
+    return "_".join(parts) + ".png"
+
+
+def _format_file_info_suffix(file_info):
+    """
+    Build a filename-safe suffix string from file-info simulation metadata.
+
+    Parameters
+    ----------
+    file_info : dict
+        Dictionary with optional keys ``zenith``, ``azimuth`` (astropy
+        quantities in degrees) and ``nsb_level`` (float).
+
+    Returns
+    -------
+    str
+        Underscore-joined suffix components, e.g. ``z20_az0_nsb0.3``.
+        Returns an empty string if no metadata is present.
+    """
+    parts = []
+    zenith = file_info.get("zenith")
+    if zenith is not None:
+        zenith_val = zenith.value if hasattr(zenith, "value") else float(zenith)
+        parts.append(f"z{round(zenith_val)}")
+    azimuth = file_info.get("azimuth")
+    if azimuth is not None:
+        azimuth_val = azimuth.value if hasattr(azimuth, "value") else float(azimuth)
+        parts.append(f"az{round(azimuth_val)}")
+    nsb = file_info.get("nsb_level")
+    if nsb is not None:
+        parts.append(f"nsb{nsb:g}")
+    return "_".join(parts)
+
+
+def _extract_file_info_from_limits(limits):
+    """
+    Extract simulation file-info metadata from the limits dictionary.
+
+    Parameters
+    ----------
+    limits : dict or None
+        Dictionary returned by the limit-computation step; may contain
+        ``zenith``, ``azimuth``, and ``nsb_level`` keys.
+
+    Returns
+    -------
+    dict
+        Subset of *limits* with only the file-info metadata keys that are
+        present and non-None.
+    """
+    if not limits:
+        return {}
+    keys = ("zenith", "azimuth", "nsb_level")
+    return {k: limits[k] for k in keys if limits.get(k) is not None}
 
 
 def _create_plot(

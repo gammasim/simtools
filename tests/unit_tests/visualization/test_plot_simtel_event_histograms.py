@@ -12,6 +12,8 @@ from simtools.visualization.plot_simtel_event_histograms import (
     _create_2d_histogram_plot,
     _create_plot,
     _execute_plotting_loop,
+    _extract_file_info_from_limits,
+    _format_file_info_suffix,
     _get_limits,
     plot,
 )
@@ -369,15 +371,61 @@ def test_create_plot_early_return_when_no_data():
 
 
 def test_build_plot_filename():
-    # Test without array_name
     base_filename = "test_plot"
-    result = _build_plot_filename(base_filename)
-    assert result == "test_plot.png"
+    assert _build_plot_filename(base_filename) == "test_plot.png"
+    assert _build_plot_filename(base_filename, "array1") == "test_plot_array1.png"
 
-    # Test with array_name
-    array_name = "array1"
-    result = _build_plot_filename(base_filename, array_name)
-    assert result == "test_plot_array1.png"
+
+def test_build_plot_filename_with_file_info():
+    import astropy.units as u
+
+    file_info = {"zenith": 20.0 * u.deg, "azimuth": 0.0 * u.deg, "nsb_level": 0.3}
+    result = _build_plot_filename("angular_distance", "MyArray", file_info)
+    assert result == "angular_distance_MyArray_z20_az0_nsb0.3.png"
+
+
+def test_build_plot_filename_with_partial_file_info():
+    import astropy.units as u
+
+    result = _build_plot_filename("plot", file_info={"zenith": 52.0 * u.deg})
+    assert result == "plot_z52.png"
+
+
+def test_format_file_info_suffix_all_fields():
+    import astropy.units as u
+
+    suffix = _format_file_info_suffix(
+        {"zenith": 20.5 * u.deg, "azimuth": 180.5 * u.deg, "nsb_level": 0.0}
+    )
+    # Python banker's rounding: round(20.5)=20, round(180.5)=180
+    assert suffix == "z20_az180_nsb0"
+
+
+def test_format_file_info_suffix_empty():
+    assert _format_file_info_suffix({}) == ""
+
+
+def test_format_file_info_suffix_none_values():
+    assert _format_file_info_suffix({"zenith": None, "nsb_level": None}) == ""
+
+
+def test_extract_file_info_from_limits():
+    import astropy.units as u
+
+    limits = {
+        "zenith": 20.0 * u.deg,
+        "azimuth": 0.0 * u.deg,
+        "nsb_level": 0.3,
+        "upper_radius_limit": 5000.0,
+        "primary_particle": "gamma",
+    }
+    info = _extract_file_info_from_limits(limits)
+    assert set(info.keys()) == {"zenith", "azimuth", "nsb_level"}
+
+
+def test_extract_file_info_from_limits_empty():
+    assert _extract_file_info_from_limits(None) == {}
+    assert _extract_file_info_from_limits({}) == {}
 
 
 def test_execute_plotting_loop():
@@ -406,7 +454,10 @@ def test_execute_plotting_loop():
 
     with (
         patch(PATCH_CREATE_PLOT) as mock_create_plot,
-        patch(PATCH_BUILD_FILENAME, side_effect=lambda base, array: f"{base}_{array}.png"),
+        patch(
+            PATCH_BUILD_FILENAME,
+            side_effect=lambda base, array=None, file_info=None: f"{base}_{array}.png",
+        ),
     ):
         mock_create_plot.return_value = MagicMock()  # Simulate successful plot creation
 
@@ -673,7 +724,7 @@ def test_plot_with_output_path(mock_histograms):
 
         mock_generate_configs.assert_called_once_with(mock_histograms, limits)
         mock_execute_loop.assert_called_once_with(
-            {"mock_plot": "mock_config"}, output_path, array_name
+            {"mock_plot": "mock_config"}, output_path, array_name, {}
         )
 
 
@@ -695,7 +746,9 @@ def test_plot_without_output_path(mock_histograms):
         )
 
         mock_generate_configs.assert_called_once_with(mock_histograms, limits)
-        mock_execute_loop.assert_called_once_with({"mock_plot": "mock_config"}, None, array_name)
+        mock_execute_loop.assert_called_once_with(
+            {"mock_plot": "mock_config"}, None, array_name, {}
+        )
 
 
 def test_get_axis_title():

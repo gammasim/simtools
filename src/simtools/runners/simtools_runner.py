@@ -111,9 +111,16 @@ def _copy_collection_files(configurations, collection_config):
     collection_output_path = Path(output_path)
     collection_output_path.mkdir(parents=True, exist_ok=True)
 
-    for file_name in files:
-        source_file = _find_collection_file(file_name, source_directories)
-        shutil.copy2(source_file, collection_output_path / file_name)
+    for pattern in files:
+        matched_files = _find_collection_files(pattern, source_directories)
+        for source_file in matched_files:
+            dest = collection_output_path / source_file.name
+            if dest.exists() and dest.resolve() != source_file.resolve():
+                raise FileExistsError(
+                    f"Filename collision in collection: '{source_file.name}' would be "
+                    f"overwritten by '{source_file}'. Ensure output files have unique names."
+                )
+            shutil.copy2(source_file, dest)
 
 
 def _collect_source_directories(configurations):
@@ -128,33 +135,55 @@ def _collect_source_directories(configurations):
     return source_directories
 
 
-def _find_collection_file(file_name, source_directories):
-    """Find a named file in the list of source directories.
+def _find_collection_files(pattern, source_directories):
+    """Find files matching a name or glob pattern in the list of source directories.
+
+    For literal filenames (no wildcard characters), the existing exact-match
+    semantics are preserved: the first directory that contains the file wins and
+    a :exc:`FileNotFoundError` is raised when no match is found.
+
+    For glob patterns (containing ``*``, ``?``, or ``[``), all source
+    directories are searched recursively and all matching regular files are
+    returned in sorted order. A :obj:`logging.WARNING` is emitted when a glob
+    pattern yields no matches (rather than raising an error, because some
+    patterns are legitimately optional).
 
     Parameters
     ----------
-    file_name : str
-        File name to locate.
-    source_directories : list
-        Directories to search in order.
+    pattern : str
+        Filename or glob pattern (e.g. ``"result.ecsv"`` or
+        ``"angular_distance_vs_energy_*.png"``).
+    source_directories : list[Path]
+        Directories to search.
 
     Returns
     -------
-    Path
-        Path to the found file.
+    list[Path]
+        Matched files. Empty list only when *pattern* is a glob and no files
+        match.
 
     Raises
     ------
     FileNotFoundError
-        If the file is not found in any source directory.
+        If *pattern* is a literal filename and is not found in any source
+        directory.
+    FileExistsError
+        (Raised by the caller, not here.) Documented here for context.
     """
+    is_glob = any(c in pattern for c in ("*", "?", "["))
+    if is_glob:
+        matched = sorted(f for d in source_directories for f in d.rglob(pattern) if f.is_file())
+        if not matched:
+            logger.warning(
+                f"No files matched collection pattern '{pattern}' in {source_directories}."
+            )
+        return matched
+
     for source_directory in source_directories:
-        candidate = source_directory / file_name
+        candidate = source_directory / pattern
         if candidate.exists():
-            return candidate
-    raise FileNotFoundError(
-        f"Could not find collection file '{file_name}' in {source_directories}."
-    )
+            return [candidate]
+    raise FileNotFoundError(f"Could not find collection file '{pattern}' in {source_directories}.")
 
 
 def _append_metadata_file(model_parameter_metadata_files, metadata_file):
