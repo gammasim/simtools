@@ -168,13 +168,17 @@ class SiteModel(ModelParameter):
         """
         try:
             validated_name = names.validate_array_element_name(layout_name)
+            if names.get_collection_name_from_array_element_name(validated_name) != "telescopes":
+                return None
+            if names.is_design_type(validated_name):
+                return None
+            if names.get_site_from_array_element_name(validated_name) != self.site:
+                return None
+            if validated_name not in self.get_array_elements_of_type(
+                names.get_array_element_type_from_name(validated_name)
+            ):
+                return None
         except ValueError:
-            return None
-        if names.get_collection_name_from_array_element_name(validated_name) != "telescopes":
-            return None
-        if names.is_design_type(validated_name):
-            return None
-        if names.get_site_from_array_element_name(validated_name) != self.site:
             return None
         return validated_name
 
