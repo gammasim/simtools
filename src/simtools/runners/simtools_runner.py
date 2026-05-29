@@ -98,29 +98,45 @@ def run_applications(args_dict):
 
 
 def _copy_collection_files(configurations, collection_config):
-    """Copy listed files from application output paths to collection output path."""
+    """Copy listed files from application output paths to one or more collection output paths.
+
+    Parameters
+    ----------
+    configurations : list[dict]
+        Application configurations from the workflow config file.
+    collection_config : dict or list[dict] or None
+        A single collection entry (``{output_path, files}``) or a list of such
+        entries. ``None`` or an empty value is silently ignored.
+
+    Raises
+    ------
+    FileExistsError
+        When two different source files would produce the same basename in an
+        output directory.
+    """
     if not collection_config:
         return
-
-    output_path = collection_config.get("output_path")
-    files = collection_config.get("files") or []
-    if output_path is None or not files:
-        return
+    if isinstance(collection_config, dict):
+        collection_config = [collection_config]
 
     source_directories = _collect_source_directories(configurations)
-    collection_output_path = Path(output_path)
-    collection_output_path.mkdir(parents=True, exist_ok=True)
-
-    for pattern in files:
-        matched_files = _find_collection_files(pattern, source_directories)
-        for source_file in matched_files:
-            dest = collection_output_path / source_file.name
-            if dest.exists() and dest.resolve() != source_file.resolve():
-                raise FileExistsError(
-                    f"Filename collision in collection: '{source_file.name}' would be "
-                    f"overwritten by '{source_file}'. Ensure output files have unique names."
-                )
-            shutil.copy2(source_file, dest)
+    for entry in collection_config:
+        output_path = entry.get("output_path")
+        files = entry.get("files") or []
+        if output_path is None or not files:
+            continue
+        collection_output_path = Path(output_path)
+        collection_output_path.mkdir(parents=True, exist_ok=True)
+        for pattern in files:
+            matched_files = _find_collection_files(pattern, source_directories)
+            for source_file in matched_files:
+                dest = collection_output_path / source_file.name
+                if dest.exists() and dest.resolve() != source_file.resolve():
+                    raise FileExistsError(
+                        f"Filename collision in collection: '{source_file.name}' would be "
+                        f"overwritten by '{source_file}'. Ensure output files have unique names."
+                    )
+                shutil.copy2(source_file, dest)
 
 
 def _collect_source_directories(configurations):
@@ -167,8 +183,6 @@ def _find_collection_files(pattern, source_directories):
     FileNotFoundError
         If *pattern* is a literal filename and is not found in any source
         directory.
-    FileExistsError
-        (Raised by the caller, not here.) Documented here for context.
     """
     is_glob = any(c in pattern for c in ("*", "?", "["))
     if is_glob:

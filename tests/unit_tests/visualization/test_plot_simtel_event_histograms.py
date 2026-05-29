@@ -1,6 +1,7 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import astropy.units as u
 import numpy as np
 import pytest
 from matplotlib import pyplot as plt
@@ -377,23 +378,17 @@ def test_build_plot_filename():
 
 
 def test_build_plot_filename_with_file_info():
-    import astropy.units as u
-
     file_info = {"zenith": 20.0 * u.deg, "azimuth": 0.0 * u.deg, "nsb_level": 0.3}
     result = _build_plot_filename("angular_distance", "MyArray", file_info)
     assert result == "angular_distance_MyArray_z20_az0_nsb0.3.png"
 
 
 def test_build_plot_filename_with_partial_file_info():
-    import astropy.units as u
-
     result = _build_plot_filename("plot", file_info={"zenith": 52.0 * u.deg})
     assert result == "plot_z52.png"
 
 
 def test_format_file_info_suffix_all_fields():
-    import astropy.units as u
-
     suffix = _format_file_info_suffix(
         {"zenith": 20.5 * u.deg, "azimuth": 180.5 * u.deg, "nsb_level": 0.0}
     )
@@ -410,8 +405,6 @@ def test_format_file_info_suffix_none_values():
 
 
 def test_extract_file_info_from_limits():
-    import astropy.units as u
-
     limits = {
         "zenith": 20.0 * u.deg,
         "azimuth": 0.0 * u.deg,
