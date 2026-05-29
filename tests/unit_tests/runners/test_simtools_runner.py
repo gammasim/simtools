@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import logging
 import shutil
 from pathlib import Path
 from unittest import mock
@@ -982,8 +983,6 @@ def test_find_collection_files_glob_recursive(tmp_test_directory):
 
 def test_find_collection_files_glob_no_match_warns(tmp_test_directory, caplog):
     """Glob pattern with no matches emits a warning rather than raising."""
-    import logging
-
     src = Path(str(tmp_test_directory)) / "src_empty"
     src.mkdir()
 
@@ -1080,3 +1079,42 @@ def test_copy_collection_files_raises_on_name_collision(tmp_test_directory):
     ]
     with pytest.raises(FileExistsError, match=r"energy_z20\.png"):
         simtools_runner._copy_collection_files(configurations, collection_config)
+
+
+def test_copy_collection_files_list_format(tmp_test_directory):
+    """List collection config writes to separate output directories."""
+    tmp_path = Path(str(tmp_test_directory))
+    src = tmp_path / "app_out"
+    src.mkdir()
+    (src / "result.ecsv").write_text("data", encoding="utf-8")
+    (src / "plot_MyArray.png").write_text("img", encoding="utf-8")
+
+    out_data = tmp_path / "data"
+    out_plots = tmp_path / "plots"
+    configurations = [{"configuration": {"output_path": str(src)}}]
+    collection_config = [
+        {"output_path": str(out_data), "files": ["result.ecsv"]},
+        {"output_path": str(out_plots), "files": ["plot_*.png"]},
+    ]
+    simtools_runner._copy_collection_files(configurations, collection_config)
+
+    assert (out_data / "result.ecsv").exists()
+    assert (out_plots / "plot_MyArray.png").exists()
+    assert not (out_data / "plot_MyArray.png").exists()
+
+
+def test_copy_collection_files_list_format_skips_empty_entry(tmp_test_directory):
+    """List entries with no output_path or files are silently skipped."""
+    tmp_path = Path(str(tmp_test_directory))
+    src = tmp_path / "app_out2"
+    src.mkdir()
+    (src / "result.ecsv").write_text("data", encoding="utf-8")
+
+    out = tmp_path / "out_skip"
+    configurations = [{"configuration": {"output_path": str(src)}}]
+    collection_config = [
+        {"output_path": None, "files": ["result.ecsv"]},
+        {"output_path": str(out), "files": []},
+    ]
+    simtools_runner._copy_collection_files(configurations, collection_config)
+    assert not out.exists()
