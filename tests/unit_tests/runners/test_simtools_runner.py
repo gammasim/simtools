@@ -231,7 +231,7 @@ def test_read_application_configuration_falls_back_to_derived_path_when_first_ap
     mock_set_input_output_directories,
     mock_change_dict_keys_case,
 ):
-    """When all apps have output_path but first config entry lacks it, fall back to derived path."""
+    """When placeholder replacement removes output_path, fall back to derived path."""
     applications = [
         {"application": "app1", "configuration": {"key": "value", "output_path": "my-output"}},
     ]
