@@ -34,6 +34,15 @@ def run_applications(args_dict):
         args_dict.get("steps"),
         args_dict.get("activity_id"),
     )
+
+    collection_config = None
+    try:
+        collection_config = ascii_handler.collect_data_from_file(args_dict["config_file"]).get(
+            "collection"
+        )
+    except (OSError, TypeError):
+        logger.debug("Could not read collection configuration from workflow file.")
+
     workflow_start = datetime.now(UTC)
     associated_activities = []
     runtime_environment_snapshot = deepcopy(runtime_environment)
@@ -45,6 +54,8 @@ def run_applications(args_dict):
         else []
     )
 
+    log_file = Path(log_file)
+    log_file.parent.mkdir(parents=True, exist_ok=True)
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
         file.write(dependencies.get_version_string(run_time, include_software_versions=False))
@@ -74,6 +85,8 @@ def run_applications(args_dict):
                 file.write(
                     f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n"
                 )
+
+            _copy_collection_files(configurations, collection_config)
         finally:
             _update_workflow_metadata_files(
                 args_dict=args_dict,
@@ -84,6 +97,66 @@ def run_applications(args_dict):
                 model_parameter_metadata_files=model_parameter_metadata_files,
                 associated_activities=associated_activities,
             )
+
+
+def _copy_collection_files(configurations, collection_config):
+    """Copy listed files from application output paths to collection output path."""
+    if not collection_config:
+        return
+
+    output_path = collection_config.get("output_path")
+    files = collection_config.get("files") or []
+    if output_path is None or not files:
+        return
+
+    source_directories = _collect_source_directories(configurations)
+    collection_output_path = Path(output_path)
+    collection_output_path.mkdir(parents=True, exist_ok=True)
+
+    for file_name in files:
+        source_file = _find_collection_file(file_name, source_directories)
+        shutil.copy2(source_file, collection_output_path / file_name)
+
+
+def _collect_source_directories(configurations):
+    """Return unique output directories from application configurations."""
+    source_directories = []
+    for config in configurations:
+        source_dir = config.get("configuration", {}).get("output_path")
+        if source_dir is not None:
+            source_directory = Path(source_dir)
+            if source_directory not in source_directories:
+                source_directories.append(source_directory)
+    return source_directories
+
+
+def _find_collection_file(file_name, source_directories):
+    """Find a named file in the list of source directories.
+
+    Parameters
+    ----------
+    file_name : str
+        File name to locate.
+    source_directories : list
+        Directories to search in order.
+
+    Returns
+    -------
+    Path
+        Path to the found file.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the file is not found in any source directory.
+    """
+    for source_directory in source_directories:
+        candidate = source_directory / file_name
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError(
+        f"Could not find collection file '{file_name}' in {source_directories}."
+    )
 
 
 def _append_metadata_file(model_parameter_metadata_files, metadata_file):
@@ -187,25 +260,36 @@ def _read_application_configuration(configuration_file, steps, workflow_activity
     workflow_activity_id = (
         gen.extract_uuid7_from_path(configuration_file) or workflow_activity_id or gen.get_uuid()
     )
-    output_path, setting_workflow = _set_input_output_directories(configuration_file)
+    derived_output_path, setting_workflow = _set_input_output_directories(configuration_file)
     configurations = job_configuration.get("applications")
-    logger.info(f"Setting workflow output path to {output_path}")
+
+    output_path_used_as_default = False
     for step_count, config in enumerate(configurations, start=1):
         config["run_application"] = step_count in steps if steps else True
         config = gen.change_dict_keys_case(config, True)
+        app_config = config.get("configuration", {})
+        if "output_path" not in app_config:
+            output_path_used_as_default = True
         config["configuration"] = _replace_placeholders_in_configuration(
-            config.get("configuration", {}),
-            output_path,
+            app_config,
+            derived_output_path,
             setting_workflow,
         )
         if config["configuration"].get("activity_id") is None:
             config["configuration"]["activity_id"] = gen.get_uuid()
         configurations[step_count - 1] = config
 
+    if output_path_used_as_default or not configurations:
+        log_path = derived_output_path
+    else:
+        first_app_output = configurations[0].get("configuration", {}).get("output_path")
+        log_path = Path(first_app_output) if first_app_output else derived_output_path
+    logger.info(f"Setting workflow output path to {log_path}")
+
     return (
         configurations,
         job_configuration.get("runtime_environment"),
-        output_path / "simtools.log",
+        log_path / "simtools.log",
         workflow_activity_id,
     )
 
@@ -329,11 +413,23 @@ def _set_input_output_directories(path):
     Returns
     -------
     tuple
-        The first part is the 'input' directory, the second part is the subdirectory name
+        The first part is the output directory, the second part is the subdirectory name.
     """
-    setting_workflow = gen.extract_subdirectories_from_path(path, anchor="input")
+    path = Path(path)
+    try:
+        setting_workflow = gen.extract_subdirectories_from_path(path, anchor="input")
+    except ValueError:
+        if path.parent != Path():
+            setting_workflow = str(path.parent)
+        else:
+            setting_workflow = path.stem
+
+        logger.info(
+            "Could not derive setting workflow from 'input' anchor; "
+            f"using fallback '{setting_workflow}'"
+        )
+
     output_path = Path("output") / Path(setting_workflow)
-    output_path.mkdir(parents=True, exist_ok=True)
     return output_path, setting_workflow
 
 
