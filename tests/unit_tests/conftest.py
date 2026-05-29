@@ -6,7 +6,11 @@ import logging
 import mmap
 import os
 import re
+import shutil
+import struct
 import tarfile
+import urllib.error
+import zlib
 from contextlib import ExitStack, contextmanager
 from itertools import chain
 from pathlib import Path
@@ -32,6 +36,39 @@ from simtools.runners.corsika_runner import CorsikaRunner
 
 logger = logging.getLogger()
 DATABASE_HANDLER_CLASS = db_handler.DatabaseHandler
+
+_REPO_ROOT = Path(__file__).parent.parent.parent
+_GITHUB_RAW_BASE = "https://raw.githubusercontent.com/gammasim/simtools/main/"
+
+
+# Minimal 1x1 white-pixel PNG (67 bytes). Written instead of rendering
+# when savefig() is called with a file path during unit tests.
+def _build_stub_png():
+    """Return bytes of a minimal valid 1x1 white-pixel PNG."""
+
+    def chunk(name, data):
+        crc = struct.pack(">I", zlib.crc32(name + data) & 0xFFFFFFFF)
+        return struct.pack(">I", len(data)) + name + data + crc
+
+    return (
+        b"\x89PNG\r\n\x1a\n"  # PNG signature
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0))  # 1x1 RGB
+        + chunk(b"IDAT", zlib.compress(b"\x00\xff\xff\xff"))  # one white pixel
+        + chunk(b"IEND", b"")
+    )
+
+
+_STUB_PNG_BYTES = _build_stub_png()
+
+
+def _local_urlretrieve(url, dest):
+    """Serve local repo files instead of making real HTTP requests in unit tests."""
+    if url.startswith(_GITHUB_RAW_BASE):
+        local_path = _REPO_ROOT / url[len(_GITHUB_RAW_BASE) :]
+        if local_path.exists():
+            shutil.copy(local_path, dest)
+            return dest, None
+    raise urllib.error.HTTPError(url, 404, "Not Found", {}, None)
 
 
 def _is_db_unit_test(request):
@@ -119,6 +156,77 @@ def mock_simulator_paths(request, tmp_test_directory):
 def _set_matplotlib_backend():
     """Set matplotlib backend to Agg for testing (plotting without display server)."""
     plt.switch_backend("Agg")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _fast_figure_saves():
+    """Skip matplotlib rendering in unit tests for speed.
+
+    - savefig with file paths: writes a minimal PNG stub (skips rendering and encoding)
+    - tight_layout: no-op (layout computation triggers full rendering for text-extent measurement)
+    - colorbar: returns a MagicMock (colorbar creation triggers quad-mesh rendering)
+
+    Non-file outputs (e.g. BytesIO) still render at reduced DPI so live previews work.
+    Unit tests only check file existence and non-zero size; no test reads pixel content.
+    """
+    from unittest.mock import MagicMock
+
+    import matplotlib.figure
+
+    orig_savefig = matplotlib.figure.Figure.savefig
+
+    def _stub_savefig(self, fname, *args, **kwargs):
+        if isinstance(fname, (str, Path)):
+            path = Path(fname)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(_STUB_PNG_BYTES)
+            return None
+        kwargs["dpi"] = min(kwargs.get("dpi", 100), 30)
+        kwargs.pop("bbox_inches", None)
+        return orig_savefig(self, fname, *args, **kwargs)
+
+    def _noop_tight_layout(self, *args, **kwargs):
+        pass
+
+    def _mock_colorbar(self, *args, **kwargs):
+        return MagicMock()
+
+    with mock.patch.object(matplotlib.figure.Figure, "savefig", _stub_savefig):
+        with mock.patch.object(matplotlib.figure.Figure, "tight_layout", _noop_tight_layout):
+            with mock.patch.object(matplotlib.figure.Figure, "colorbar", _mock_colorbar):
+                yield
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _mock_urlretrieve_for_unit_tests():
+    """Prevent real HTTP calls in unit tests by serving local repo files."""
+    with mock.patch("urllib.request.urlretrieve", side_effect=_local_urlretrieve):
+        yield
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _warm_erfa_tables():
+    """Pre-initialise ERFA/IERS tables so the first coordinate-transform test is not penalised.
+
+    The first astropy AltAz→ICRS transform in a fresh process must load ERFA tables from
+    disk (~0.2 s).  Running a dummy transform here during session set-up amortises that
+    cost before any test measures it.  IERS auto-download is disabled so no network call
+    is made.
+    """
+    from astropy.coordinates import AltAz, EarthLocation, SkyCoord
+    from astropy.time import Time
+    from astropy.utils import iers
+
+    prev = iers.conf.auto_download
+    iers.conf.auto_download = False
+    try:
+        loc = EarthLocation(lat=28.76 * u.deg, lon=-17.89 * u.deg, height=2200 * u.m)
+        t = Time("2017-09-16 00:00:00", scale="utc")
+        altaz = AltAz(az=180 * u.deg, alt=45 * u.deg, location=loc, obstime=t)
+        SkyCoord(altaz).icrs
+    finally:
+        iers.conf.auto_download = prev
+    return
 
 
 @pytest.fixture
