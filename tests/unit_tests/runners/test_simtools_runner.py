@@ -192,6 +192,72 @@ def test_read_application_configuration_empty_applications(
     assert workflow_activity_id is not None
 
 
+def test_read_application_configuration_uses_first_app_output_path_for_log(
+    monkeypatch,
+    mock_logger,
+    mock_collect_data_from_file,
+    mock_set_input_output_directories,
+    mock_change_dict_keys_case,
+):
+    """When all apps already have output_path, log goes to the first app's dir."""
+    applications = [
+        {"application": "app1", "configuration": {"key": "value", "output_path": "my-output"}},
+        {"application": "app2", "configuration": {"key": "value2", "output_path": "other-output"}},
+    ]
+    monkeypatch.setattr(
+        "simtools.io.ascii_handler.collect_data_from_file",
+        mock_collect_data_from_file(applications),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._set_input_output_directories",
+        mock_set_input_output_directories,
+    )
+    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
+        lambda config, output_path, setting_workflow: config,
+    )
+
+    _, _, log_file, _ = simtools_runner._read_application_configuration(
+        DUMMY_CONFIG_FILE, None, mock_logger
+    )
+    assert log_file == Path("my-output") / "simtools.log"
+
+
+def test_read_application_configuration_falls_back_to_derived_path_when_first_app_has_no_output(
+    monkeypatch,
+    mock_logger,
+    mock_collect_data_from_file,
+    mock_set_input_output_directories,
+    mock_change_dict_keys_case,
+):
+    """When all apps have output_path but first config entry lacks it, fall back to derived path."""
+    applications = [
+        {"application": "app1", "configuration": {"key": "value", "output_path": "my-output"}},
+    ]
+    monkeypatch.setattr(
+        "simtools.io.ascii_handler.collect_data_from_file",
+        mock_collect_data_from_file(applications),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._set_input_output_directories",
+        mock_set_input_output_directories,
+    )
+    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
+    # placeholder replacement strips output_path from the config
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
+        lambda config, output_path, setting_workflow: {
+            k: v for k, v in config.items() if k != "output_path"
+        },
+    )
+
+    _, _, log_file, _ = simtools_runner._read_application_configuration(
+        DUMMY_CONFIG_FILE, None, mock_logger
+    )
+    assert log_file == Path("output/test_workflow") / "simtools.log"
+
+
 def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     # Prepare mocks
     mock_args_dict = {
