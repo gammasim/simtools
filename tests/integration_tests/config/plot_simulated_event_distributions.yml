@@ -5,7 +5,7 @@ applications:
     event_data_file: tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
     output_path: simtools-output
   integration_tests:
-  - output_file: core_distance_vs_energy.png
+  - output_file: core_distance_vs_energy_triggered.png
   - output_file: energy_mc.png
   test_name: sim_telarray_input
 schema_name: application_workflow.metaschema
