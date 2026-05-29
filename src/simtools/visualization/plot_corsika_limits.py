@@ -244,10 +244,11 @@ def plot_limits(limits_table, output_dir):
         axes[2].set_ylabel("Viewcone Radius [deg]")
         axes[2].grid(True)
 
-        legend_handles += [
-            Line2D([0], [0], linestyle="--", color="gray"),
-        ]
-        legend_labels += ["broad-range limits"]
+        if broad_range_columns:
+            legend_handles += [
+                Line2D([0], [0], linestyle="--", color="gray"),
+            ]
+            legend_labels += ["broad-range limits"]
         fig.legend(legend_handles, legend_labels, loc="lower center", ncol=len(legend_labels))
         plt.suptitle(
             "CORSIKA Limits: "
