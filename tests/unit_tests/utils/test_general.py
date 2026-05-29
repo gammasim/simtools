@@ -220,8 +220,21 @@ def test_is_url():
     assert gen.is_url(5.0) is False
 
 
-@pytest.mark.xfail(reason="No network connection")
-def test_url_exists(caplog):
+def test_url_exists(caplog, mocker):
+    import urllib.error
+
+    def mock_urlopen(url, timeout=5):
+        if url == url_simtools_main:
+            mock_ctx = mocker.MagicMock()
+            mock_ctx.__enter__.return_value.status = 200
+            mock_ctx.__exit__.return_value = False
+            return mock_ctx
+        if url is None:
+            raise AttributeError("'NoneType' object has no attribute")
+        raise urllib.error.URLError("not found")
+
+    mocker.patch("simtools.utils.general.urllib.request.urlopen", side_effect=mock_urlopen)
+
     assert gen.url_exists(url_simtools_main)
     with caplog.at_level(logging.ERROR):
         assert not gen.url_exists(url_simtools)  # raw ULR does not exist
