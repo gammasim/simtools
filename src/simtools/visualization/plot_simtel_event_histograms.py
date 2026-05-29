@@ -8,6 +8,15 @@ from matplotlib.colors import LogNorm
 
 _logger = logging.getLogger(__name__)
 
+# Maps histogram dictionary keys to output plot filenames where the key alone
+# is ambiguous (e.g. the triggered 2-D vs-energy histograms share a prefix
+# with their _mc and _cumulative counterparts). Only the triggered variants are
+# remapped; all other names fall through unchanged.
+_PLOT_FILENAME_OVERRIDES = {
+    "core_distance_vs_energy": "core_distance_vs_energy_triggered",
+    "angular_distance_vs_energy": "angular_distance_vs_energy_triggered",
+}
+
 
 def plot(histograms, output_path=None, limits=None, array_name=None):
     """
@@ -132,7 +141,7 @@ def _create_1d_plot_config(histogram, name, plot_params, limits):
         },
         "scales": histogram["plot_scales"],
         "lines": _get_limits(name, limits) if limits else {},
-        "filename": name,
+        "filename": _PLOT_FILENAME_OVERRIDES.get(name, name),
     }
 
 
@@ -152,7 +161,7 @@ def _create_2d_plot_config(histogram, name, plot_params, limits):
         "lines": _get_limits(name, limits) if limits else {},
         "scales": histogram["plot_scales"],
         "colorbar_label": _get_axis_title(histogram.get("axis_titles"), "z"),
-        "filename": name,
+        "filename": _PLOT_FILENAME_OVERRIDES.get(name, name),
     }
 
 
