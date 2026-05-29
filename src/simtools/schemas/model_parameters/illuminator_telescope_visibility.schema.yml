@@ -1,0 +1,37 @@
+%YAML 1.2
+---
+title: Schema for illuminator_telescope_visibility model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: illuminator_telescope_visibility
+description: |-
+  Illumination status table for telescope-illuminator pairs.
+  Defines which telescopes can be illuminated by each illuminator at a site,
+  accounting for shadowing, blocking, topography, and distance constraints.
+developer_note: |-
+  Telescope columns are site-specific and defined in the ECSV file header.
+  North site has ~13 telescope columns (LSTN-01 to LSTN-04, MSTN-01 to MSTN-15).
+  South site has ~60 telescope columns (LSTS-01 to LSTS-04, MSTS-01 to MSTS-14, SSTS-01 to SSTS-42).
+  Each site must have at least 2 illuminators and their respective telescopes.
+  All telescope columns must be boolean type (true=illuminated, false=shadowed/blocked).
+  The ECSV file contains:
+    - illuminator_name column (string): Illuminator identifier
+    - Multiple telescope columns (boolean): One column per telescope, indicating illumination status
+  Column names match expected telescope naming conventions (LSTN/MSTN for North, LSTS/MSTS/SSTS for South).
+data:
+  - type: file
+    unit: dimensionless
+    default: null
+instrument:
+  class: Site
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Calibration
+simulation_software:
+  - name: simtools
