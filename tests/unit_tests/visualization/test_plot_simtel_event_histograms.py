@@ -642,7 +642,7 @@ def test_create_1d_plot_config():
     assert result["labels"]["title"] == "energy distribution: energy"
     assert result["scales"] == {"x": "log", "y": "log"}
     assert result["lines"] in (None, {"x": None})
-    assert result["filename"] == "energy"
+    assert result["filename"] == "energy_triggered"
 
 
 def test_get_limits():
