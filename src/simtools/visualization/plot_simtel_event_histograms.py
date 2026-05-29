@@ -15,6 +15,7 @@ _logger = logging.getLogger(__name__)
 _PLOT_FILENAME_OVERRIDES = {
     "core_distance_vs_energy": "core_distance_vs_energy_triggered",
     "angular_distance_vs_energy": "angular_distance_vs_energy_triggered",
+    "energy": "energy_triggered",
 }
 
 
