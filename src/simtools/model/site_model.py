@@ -125,21 +125,58 @@ class SiteModel(ModelParameter):
         """
         Return list of array elements for a given array layout.
 
+        If ``layout_name`` is not found in the database but is a valid, concrete telescope name
+        (e.g., ``MSTN-05``) belonging to this site, a single-telescope layout is returned
+        automatically.
+
         Parameters
         ----------
         layout_name: str
-            Name of the array layout
+            Name of the array layout or a single telescope name (e.g., ``MSTN-05``).
 
         Returns
         -------
         list
-            List of array elements
+            List of array elements.
         """
         layouts = self.get_parameter_value("array_layouts")
         for layout in layouts:
             if layout["name"].lower() == layout_name.lower():
                 return layout["elements"]
+        validated_name = self._validate_as_single_telescope(layout_name)
+        if validated_name is not None:
+            self._logger.debug(
+                f"Array layout '{layout_name}' not found in DB; "
+                "treating as single-telescope layout."
+            )
+            return [validated_name]
         raise ValueError(f"Array layout '{layout_name}' not found in '{self.site}' site model.")
+
+    def _validate_as_single_telescope(self, layout_name):
+        """
+        Validate that layout_name is a concrete telescope belonging to this site.
+
+        Parameters
+        ----------
+        layout_name: str
+            Candidate telescope name.
+
+        Returns
+        -------
+        str or None
+            Validated and normalized telescope name, or None if not a valid single telescope.
+        """
+        try:
+            validated_name = names.validate_array_element_name(layout_name)
+        except ValueError:
+            return None
+        if names.get_collection_name_from_array_element_name(validated_name) != "telescopes":
+            return None
+        if names.is_design_type(validated_name):
+            return None
+        if names.get_site_from_array_element_name(validated_name) != self.site:
+            return None
+        return validated_name
 
     def get_array_elements_of_type(self, array_element_type):
         """
