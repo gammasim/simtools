@@ -1019,9 +1019,15 @@ class DataValidator:
             "int" in self.data_dict.get("type", "float"),
         )
         if isinstance(self.data_dict["unit"], str):
-            self.data_dict["unit"] = gen.convert_string_to_list(
-                self.data_dict["unit"], force_comma_separation=True
+            normalized = value_conversion.normalize_dimensionless_unit(
+                self.data_dict["unit"].strip()
             )
+            if normalized is None:
+                self.data_dict["unit"] = None
+            else:
+                self.data_dict["unit"] = gen.convert_string_to_list(
+                    normalized, force_comma_separation=True
+                )
 
     def _convert_results_to_model_format(self):
         """
