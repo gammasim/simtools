@@ -3,10 +3,7 @@ applications:
 - application: simtools-simulate-pedestals
   configuration:
     run_mode: pedestals_nsb_only
-    array_layout_name:
-      by_version:
-        "<7.0.0": 1lst
-        ">=7.0.0": LSTN-01
+    array_layout_name: LSTN-01
     label: test-nsb-only-pedestal-production-North
     log_level: DEBUG
     model_version: 6.0.2
@@ -21,12 +18,12 @@ applications:
     nsb_scaling_factor: 1.
   integration_tests:
   - test_output_files:
-    - file: pedestals_nsb_only_run000010_za20deg_azm000deg_North_1lst_6.0.2_test-nsb-only-pedestal-production-North.simtel.zst
+    - file: pedestals_nsb_only_run000010_za20deg_azm000deg_North_LSTN-01_6.0.2_test-nsb-only-pedestal-production-North.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray/run000010
     - expected_sim_telarray_output:
         event_type: pedestal
-      file: pedestals_nsb_only_run000010_za20deg_azm000deg_North_1lst_6.0.2_test-nsb-only-pedestal-production-North.simtel.zst
+      file: pedestals_nsb_only_run000010_za20deg_azm000deg_North_LSTN-01_6.0.2_test-nsb-only-pedestal-production-North.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray/run000010
   test_name: pedestals_nsb_only_20_deg_north
