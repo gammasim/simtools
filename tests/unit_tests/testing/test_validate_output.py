@@ -731,15 +731,14 @@ def test_versions_match_semantics():
     assert _versions_match("8.0.0", ["7.0.0", "6.0.0"]) is False
 
 
-def test_validate_output_path_and_file_routes_by_suffix(tmp_path: Path):
-    # Create three test files with expected suffixes
-    simtel = tmp_path / "out.simtel.zst"
-    tarlog = tmp_path / "logs.log_hist.tar.gz"
-    plain = tmp_path / "logfile.log"
+def test_validate_output_path_and_file_routes_by_suffix(tmp_test_directory):
+    simtel = Path(str(tmp_test_directory)) / "out.simtel.zst"
+    tarlog = Path(str(tmp_test_directory)) / "logs.log_hist.tar.gz"
+    plain = Path(str(tmp_test_directory)) / "logfile.log"
     for f in (simtel, tarlog, plain):
         f.write_text("content", encoding="utf-8")
 
-    cfg = {"configuration": {"output_path": str(tmp_path)}}
+    cfg = {"configuration": {"output_path": str(tmp_test_directory)}}
     file_tests = [
         {"path_descriptor": "output_path", "file": simtel.name},
         {"path_descriptor": "output_path", "file": tarlog.name, "expected_log_output": {}},
@@ -756,16 +755,16 @@ def test_validate_output_path_and_file_routes_by_suffix(tmp_path: Path):
         m_simtel.assert_called_once()
 
 
-def test_validate_output_path_and_file_missing_raises(tmp_path: Path):
-    cfg = {"configuration": {"output_path": str(tmp_path)}}
+def test_validate_output_path_and_file_missing_raises(tmp_test_directory):
+    cfg = {"configuration": {"output_path": str(tmp_test_directory)}}
     missing = "does_not_exist.log"
     with pytest.raises(AssertionError, match=r"Output file .* does not exist"):
         _validate_output_path_and_file(cfg, [{"path_descriptor": "output_path", "file": missing}])
 
 
-def test_validate_application_output_gating_calls(tmp_path: Path):
+def test_validate_application_output_gating_calls(tmp_test_directory):
     cfg = {
-        "configuration": {"output_path": str(tmp_path), "output_file": "x"},
+        "configuration": {"output_path": str(tmp_test_directory), "output_file": "x"},
         "integration_tests": [{"output_file": "x"}],
     }
 
