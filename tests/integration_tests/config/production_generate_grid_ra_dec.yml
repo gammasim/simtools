@@ -2,10 +2,7 @@
 applications:
 - application: simtools-production-generate-grid
   configuration:
-    array_layout_name:
-      by_version:
-        "<7.0.0": 1lst
-        ">=7.0.0": 1lst
+    array_layout_name: LSTN-01
     axis:
     - ra 0 deg 360 deg 36 linear
     - dec -90 deg 90 deg 18 linear
