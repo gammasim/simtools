@@ -227,10 +227,8 @@ def test_logging(simple_visibility_data, caplog):
 
 
 def test_logging_valid_pairs(simple_visibility_data, caplog):
-    """Test that get_valid_pairs logs correctly."""
-    visibility = IlluminatorTelescopeVisibility(simple_visibility_data)
-
+    """Test that __init__ logs valid pair count."""
     with caplog.at_level(logging.INFO):
-        visibility.get_valid_pairs()
+        IlluminatorTelescopeVisibility(simple_visibility_data)
 
     assert "Found 4 valid illuminator-telescope pairs" in caplog.text

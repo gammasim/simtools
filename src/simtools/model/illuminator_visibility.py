@@ -43,6 +43,11 @@ class IlluminatorTelescopeVisibility:
         _logger.info("Reading illuminator visibility table")
         self._parse_visibility_data(visibility_data)
         self._validate_data()
+        self._valid_pairs = [(ill, tel) for (ill, tel), vis in self._pairs.items() if vis]
+        _logger.info(
+            f"Found {len(self._valid_pairs)} valid illuminator-telescope pairs "
+            f"({len(self._illuminators)} illuminators x {len(self._telescopes)} telescopes)"
+        )
 
     def _parse_visibility_data(self, visibility_data):
         """
@@ -147,13 +152,7 @@ class IlluminatorTelescopeVisibility:
         list of tuple
             List of (illuminator_id, telescope_id) tuples for all valid pairs.
         """
-        pairs = [(ill, tel) for (ill, tel), visible in self._pairs.items() if visible]
-
-        _logger.info(
-            f"Found {len(pairs)} valid illuminator-telescope pairs "
-            f"({len(self._illuminators)} illuminators x {len(self._telescopes)} telescopes)"
-        )
-        return pairs
+        return list(self._valid_pairs)
 
     def is_valid_pair(self, illuminator, telescope):
         """
@@ -244,4 +243,4 @@ class IlluminatorTelescopeVisibility:
     @property
     def n_valid_pairs(self):
         """Get the total number of valid illuminator-telescope pairs."""
-        return len(self.get_valid_pairs())
+        return len(self._valid_pairs)
