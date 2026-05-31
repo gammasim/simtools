@@ -254,7 +254,7 @@ def test_get_summary_success(mock_pool, simple_visibility_data, base_config):
     assert summary["total"] == 4
     assert summary["successful"] == 3
     assert summary["failed"] == 1
-    assert summary["success_rate"] == 0.75
+    assert summary["success_rate"] == pytest.approx(0.75)
 
 
 def test_get_summary_before_simulation(simple_visibility_data, base_config):
