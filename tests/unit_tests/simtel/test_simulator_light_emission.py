@@ -1689,7 +1689,11 @@ def test__write_telescope_position_file(simulator_instance, tmp_test_directory):
     mock_output_dir = Path(tmp_test_directory)
     mock_output_dir.mkdir(parents=True, exist_ok=True)
     simulator_instance.io_handler.get_output_directory.return_value = mock_output_dir
-    expected_file = mock_output_dir / "telescope_position.dat"
+    simulator_instance.light_emission_config = {
+        "telescope": "MSTS-04",
+        "light_source": "ILLS-02",
+    }
+    expected_file = mock_output_dir / "telescope_position_MSTS-04_ILLS-02.dat"
 
     # Call the method
     result = simulator_instance._write_telescope_position_file(
@@ -1732,6 +1736,10 @@ def test__write_telescope_position_file_with_quantity_array(simulator_instance, 
     mock_output_dir = Path(tmp_test_directory)
     mock_output_dir.mkdir(parents=True, exist_ok=True)
     simulator_instance.io_handler.get_output_directory.return_value = mock_output_dir
+    simulator_instance.light_emission_config = {
+        "telescope": "MSTS-04",
+        "light_source": "ILLS-02",
+    }
 
     illuminator_position = np.array([0.0, 0.0, 1000.0]) * u.m
     result = simulator_instance._write_telescope_position_file(illuminator_position)
