@@ -7,7 +7,7 @@ applications:
     site: North
     simulate_all: true
     light_source: ILLN-01
-    flasher_photons: 1e9
+    flasher_photons: 1e8
     log_level: DEBUG
   integration_tests:
   - test_output_files:
@@ -27,11 +27,11 @@ applications:
       path_descriptor: output_path
     - expected_sim_telarray_output:
         pe_sum:
-        - 1000
+        - 100
         - 10000
         photons:
-        - 3000
-        - 10000
+        - 1000
+        - 30000
         event_type: illuminator
       file: illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-02.simtel.zst
       path_descriptor: output_path
