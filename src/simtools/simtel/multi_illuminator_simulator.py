@@ -142,16 +142,12 @@ class MultiIlluminatorSimulator:
         int
             Number of workers to use.
         """
-        if max_workers is not None and max_workers > 0:
-            return max_workers
-
         cpu_count = os.cpu_count() or 1
 
-        if max_workers is not None and max_workers <= 0:
-            return cpu_count
+        if max_workers is None:
+            return max(1, int(cpu_count * 0.6))
 
-        # Use 60% of available cores by default
-        return max(1, int(cpu_count * 0.6))
+        return max_workers if max_workers > 0 else cpu_count
 
     @staticmethod
     def _load_visibility_from_site_model(config):
