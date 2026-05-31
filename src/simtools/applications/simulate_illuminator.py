@@ -84,6 +84,7 @@ light_source_pointing (float, float, float, optional)
 """
 
 import logging
+import sys
 
 from simtools.application_control import build_application
 from simtools.simtel.multi_illuminator_simulator import MultiIlluminatorSimulator
@@ -211,13 +212,13 @@ def main():
         _simulate_all_pairs(app_context)
     else:
         if not app_context.args.get("light_source"):
-            raise SystemExit(
-                "Error: --light_source is required for single-pair mode. "
+            sys.exit(
+                "error: --light_source is required for single-pair mode. "
                 "Use --simulate_all for multi-pair mode."
             )
         if not app_context.args.get("telescope"):
-            raise SystemExit(
-                "Error: --telescope is required for single-pair mode. "
+            sys.exit(
+                "error: --telescope is required for single-pair mode. "
                 "Use --simulate_all for multi-pair mode."
             )
         _simulate_single_pair(app_context)
