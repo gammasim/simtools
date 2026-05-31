@@ -48,7 +48,7 @@ def _simulate_illuminator_telescope_pair(job_spec):
     label = job_spec["label"]
 
     try:
-        _logger.info(f"Starting simulation for {illuminator} → {telescope}")
+        _logger.info(f"Starting simulation for {illuminator} -> {telescope}")
 
         simulator = SimulatorLightEmission(
             light_emission_config=config,
@@ -59,7 +59,7 @@ def _simulate_illuminator_telescope_pair(job_spec):
         simulator.simulate()
         simulator.validate_simulations()
 
-        _logger.info(f"Completed simulation for {illuminator} → {telescope}")
+        _logger.info(f"Completed simulation for {illuminator} -> {telescope}")
 
         return {
             "illuminator": illuminator,
@@ -69,7 +69,7 @@ def _simulate_illuminator_telescope_pair(job_spec):
         }
 
     except Exception as exc:  # pylint: disable=broad-except
-        _logger.warning(f"Failed simulation for {illuminator} → {telescope}: {exc}")
+        _logger.warning(f"Failed simulation for {illuminator} -> {telescope}: {exc}")
         return {
             "illuminator": illuminator,
             "telescope": telescope,
