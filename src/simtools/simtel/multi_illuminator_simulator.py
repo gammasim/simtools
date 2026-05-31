@@ -9,6 +9,8 @@ from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 
 _logger = logging.getLogger(__name__)
 
+_NO_RESULTS_MSG = "No simulations have been run yet. Call simulate() first."
+
 
 def _simulate_illuminator_telescope_pair(job_spec):
     """
@@ -115,11 +117,6 @@ class MultiIlluminatorSimulator:
             visibility_data = self._load_visibility_from_site_model(config)
 
         self.visibility = IlluminatorTelescopeVisibility(visibility_data)
-        self._logger.info(
-            f"Loaded visibility table: {self.visibility.n_illuminators} illuminators, "
-            f"{self.visibility.n_telescopes} telescopes, "
-            f"{self.visibility.n_valid_pairs} valid pairs"
-        )
 
         self.base_config = config
         self.label = label or "multi_illuminator"
@@ -255,7 +252,7 @@ class MultiIlluminatorSimulator:
             If simulations have not been run yet.
         """
         if self.results is None:
-            raise RuntimeError("No simulations have been run yet. Call simulate() first.")
+            raise RuntimeError(_NO_RESULTS_MSG)
 
         total = len(self.results)
         successful = sum(1 for r in self.results if r["success"])
@@ -283,7 +280,7 @@ class MultiIlluminatorSimulator:
             If simulations have not been run yet.
         """
         if self.results is None:
-            raise RuntimeError("No simulations have been run yet. Call simulate() first.")
+            raise RuntimeError(_NO_RESULTS_MSG)
 
         return [(r["illuminator"], r["telescope"]) for r in self.results if not r["success"]]
 
@@ -302,6 +299,6 @@ class MultiIlluminatorSimulator:
             If simulations have not been run yet.
         """
         if self.results is None:
-            raise RuntimeError("No simulations have been run yet. Call simulate() first.")
+            raise RuntimeError(_NO_RESULTS_MSG)
 
         return [r for r in self.results if not r["success"]]
