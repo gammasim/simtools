@@ -343,7 +343,7 @@ def test_simulate_illuminator_telescope_pair_success(mock_sim_class):
     # Mock SimulatorLightEmission instance
     mock_sim = MagicMock()
     mock_sim.simulate.return_value = None
-    mock_sim.validate_simulations.return_value = {"status": "success"}
+    mock_sim.validate_simulations.return_value = None
     mock_sim_class.return_value = mock_sim
 
     job_spec = {
@@ -363,7 +363,6 @@ def test_simulate_illuminator_telescope_pair_success(mock_sim_class):
     assert result["telescope"] == "MSTS-01"
     assert result["success"] is True
     assert result["error"] is None
-    assert result["validation_result"] == {"status": "success"}
 
     # Verify SimulatorLightEmission was called correctly
     mock_sim_class.assert_called_once()
@@ -400,7 +399,6 @@ def test_simulate_illuminator_telescope_pair_failure(mock_sim_class):
     assert result["telescope"] == "MSTS-01"
     assert result["success"] is False
     assert "Simulation failed" in result["error"]
-    assert result["validation_result"] is None
 
 
 @patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
