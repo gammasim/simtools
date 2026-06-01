@@ -82,7 +82,7 @@ def test_initialization_default_label(simple_visibility_data, base_config):
 
 
 def test_determine_max_workers_explicit(simple_visibility_data, base_config):
-    """Test _determine_max_workers with explicit value."""
+    """Test max_workers initialization with explicit value."""
     simulator = MultiIlluminatorSimulator(
         visibility_data=simple_visibility_data,
         config=base_config,
@@ -93,7 +93,7 @@ def test_determine_max_workers_explicit(simple_visibility_data, base_config):
 
 
 def test_determine_max_workers_default(simple_visibility_data, base_config):
-    """Test _determine_max_workers with default (60% of cores)."""
+    """Test max_workers initialization with default (60% of cores)."""
     simulator = MultiIlluminatorSimulator(
         visibility_data=simple_visibility_data,
         config=base_config,
@@ -105,7 +105,7 @@ def test_determine_max_workers_default(simple_visibility_data, base_config):
 
 
 def test_determine_max_workers_all_cores(simple_visibility_data, base_config):
-    """Test _determine_max_workers with 0 (use all cores)."""
+    """Test max_workers initialization with 0 (use all cores)."""
     simulator = MultiIlluminatorSimulator(
         visibility_data=simple_visibility_data,
         config=base_config,
