@@ -152,38 +152,37 @@ def is_design_type(array_element_name):
     )
 
 
-def matches_array_element_name_or_design_type(key_name, array_element_name):
+def matches_array_element_name_or_design_type(element_name, reference_element_name):
     """
-    Return True when key_name matches array_element_name exactly or as same-type design.
+    Check whether an array element name matches a reference exactly or by design type equivalence.
 
     Parameters
     ----------
-    key_name: str
-        Name to check (e.g., "MSTN-01" or "MSTx-FlashCam").
-    array_element_name: str
-        Array element name to compare to (e.g., "MSTN-01" or "MSTN-FlashCam").
+    element_name: str
+        Candidate element name to validate and compare (e.g., "MSTN-01" or "MSTx-FlashCam").
+    reference_element_name: str
+        Reference array element name used for comparison (e.g., "MSTN-01" or "MSTN-FlashCam").
 
     Returns
     -------
     bool
-        True if key_name matches array_element_name exactly or as same-type design.
-
+        True if both names are identical, or if they belong to the same design type.
     """
-    if key_name is None or array_element_name is None:
+    if element_name is None or reference_element_name is None:
         return False
 
     try:
-        validated_key_name = validate_array_element_name(key_name)
-        validated_array_element_name = validate_array_element_name(array_element_name)
+        validated_element_name = validate_array_element_name(element_name)
+        validated_reference_element_name = validate_array_element_name(reference_element_name)
     except ValueError:
         return False
 
-    if validated_key_name == validated_array_element_name:
+    if validated_element_name == validated_reference_element_name:
         return True
 
-    return is_design_type(validated_key_name) and (
-        get_array_element_type_from_name(validated_key_name)
-        == get_array_element_type_from_name(validated_array_element_name)
+    return is_design_type(validated_element_name) and (
+        get_array_element_type_from_name(validated_element_name)
+        == get_array_element_type_from_name(validated_reference_element_name)
     )
 
 
