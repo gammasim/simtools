@@ -108,6 +108,25 @@ def test_shower_coordinate_transformation(mock_fits_file):
     assert hasattr(triggered_shower, "core_distance_shower")
 
 
+def test_shower_coordinate_transformation_with_string_encoded_cores(mock_tables):
+    """Test string-encoded core columns are converted before projection."""
+    shower_table, _, _ = mock_tables
+    shower_table["x_core"] = np.array(["100.0", "200.0"])
+    shower_table["y_core"] = np.array(["150.0", "250.0"])
+
+    reader = EventDataReader.__new__(EventDataReader)
+    reader._logger = logging.getLogger(__name__)
+    reader.reduced_file_info = {"azimuth": 0.0 * u.deg, "zenith": 20.0 * u.deg}
+
+    shower_data = reader._table_to_shower_data(shower_table)
+
+    assert shower_data.x_core.dtype.kind == "f"
+    assert shower_data.y_core.dtype.kind == "f"
+    np.testing.assert_allclose(shower_data.x_core, [100.0, 200.0])
+    np.testing.assert_allclose(shower_data.y_core, [150.0, 250.0])
+    assert shower_data.core_distance_shower.dtype.kind == "f"
+
+
 def test_angular_separation_calculation(mock_fits_file):
     """Test calculation of angular separation."""
     reader = EventDataReader(mock_fits_file)

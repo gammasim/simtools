@@ -79,6 +79,24 @@ class EventDataReader:
         "core_scatter_min",
         "core_scatter_max",
     ]
+    _shower_column_dtypes = {
+        "shower_id": np.uint32,
+        "event_id": np.uint32,
+        "file_id": np.uint32,
+        "simulated_energy": np.float64,
+        "x_core": np.float64,
+        "y_core": np.float64,
+        "shower_azimuth": np.float64,
+        "shower_altitude": np.float64,
+        "area_weight": np.float64,
+    }
+    _trigger_column_dtypes = {
+        "shower_id": np.uint32,
+        "event_id": np.uint32,
+        "file_id": np.uint32,
+        "array_altitude": np.float64,
+        "array_azimuth": np.float64,
+    }
 
     def __init__(self, event_data_file, telescope_list=None):
         """Initialize EventDataReader."""
@@ -148,7 +166,15 @@ class EventDataReader:
         shower_data = ShowerEventData()
 
         for col in table.colnames:
-            setattr(shower_data, col, np.array(table[col].data))
+            data = np.array(table[col].data)
+            if col in self._shower_column_dtypes:
+                data = self._convert_numeric_column(
+                    data,
+                    key=col,
+                    dtype=self._shower_column_dtypes[col],
+                    table_name="SHOWERS",
+                )
+            setattr(shower_data, col, data)
             if table[col].unit:
                 setattr(shower_data, f"{col}_unit", table[col].unit)
 
@@ -203,6 +229,13 @@ class EventDataReader:
                 triggered_data.telescope_list = arrays
             else:
                 data = np.array(table[col].data)
+                if col in self._trigger_column_dtypes:
+                    data = self._convert_numeric_column(
+                        data,
+                        key=col,
+                        dtype=self._trigger_column_dtypes[col],
+                        table_name="TRIGGERS",
+                    )
                 setattr(triggered_data, col, data)
                 if table[col].unit:
                     setattr(triggered_data, f"{col}_unit", table[col].unit)
@@ -469,7 +502,7 @@ class EventDataReader:
 
         return reduced_info
 
-    def _convert_numeric_column(self, values, key, dtype):
+    def _convert_numeric_column(self, values, key, dtype, table_name="FILE_INFO"):
         """Convert table column values to a numeric numpy array."""
         array_values = np.asarray(values)
 
@@ -487,7 +520,7 @@ class EventDataReader:
             return array_values.astype(dtype)
         except (TypeError, ValueError) as exc:
             raise ValueError(
-                f"Unable to convert FILE_INFO column '{key}' to numeric values."
+                f"Unable to convert {table_name} column '{key}' to numeric values."
             ) from exc
 
     def scatter_area(self, core_scatter_min, core_scatter_max):
