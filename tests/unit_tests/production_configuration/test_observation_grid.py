@@ -6,8 +6,22 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation, SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time
+from astropy.utils import iers
 
 from simtools.production_configuration.observation_grid import ProductionGridEngine
+
+pytestmark = pytest.mark.filterwarnings("ignore::astropy.utils.iers.IERSWarning")
+
+
+@pytest.fixture(autouse=True, scope="module")
+def disable_iers_auto_download():
+    """Disable IERS auto-download during tests to avoid network dependency."""
+    previous_auto_download = iers.conf.auto_download
+    iers.conf.auto_download = False
+    try:
+        yield
+    finally:
+        iers.conf.auto_download = previous_auto_download
 
 
 def test_generate_simulation_grid_keeps_horizontal_coordinates_for_radec_axes():

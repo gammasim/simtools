@@ -123,7 +123,7 @@ def test_collect_data_dict_from_json():
     assert data["unit"] == "m"
 
 
-def test_collect_data_from_http():
+def test_collect_data_from_http() -> None:
     _file = "src/simtools/schemas/model_parameters/num_gains.schema.yml"
     url = url_simtools
 

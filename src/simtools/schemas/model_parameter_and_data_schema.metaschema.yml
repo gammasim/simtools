@@ -239,6 +239,9 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/TableColumn'
+      file_info_key:
+        type: string
+        description: "key in event-file metadata used to populate this table column"
     required:
       - description
       - name
