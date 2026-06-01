@@ -171,6 +171,142 @@ def test_load_simulation_software_parameter(telescope_model_lst, caplog):
     assert len(caplog.records) == 0
 
 
+@pytest.mark.parametrize(
+    (
+        "overwrite_model_parameter_dict",
+        "simulation_software",
+        "software_collection",
+        "expected",
+        "name_override",
+    ),
+    [
+        (
+            {},
+            "corsika",
+            "configuration_corsika",
+            {},
+            None,
+        ),
+        (
+            {
+                "LSTS-design": {
+                    "effective_focal_length": {
+                        "value": [2923.7, 0.0, 0.0, 0.0, 0.0],
+                    },
+                },
+                "MSTS-05": {
+                    "effective_focal_length": {
+                        "value": [1644.51, 0.0, 0.0, 0.0, 0.0],
+                    },
+                },
+                "SSTS-design": {
+                    "effective_focal_length": {
+                        "value": [315.191, 0.0, 0.0, 0.0, 0.0],
+                    },
+                },
+                "SSTS-22": {
+                    "effective_focal_length": {
+                        "value": [215.191, 0.0, 0.0, 0.0, 0.0],
+                    },
+                },
+                "bad_entry": "not a dict",
+                "LSTS-01": {
+                    "effective_focal_length": {
+                        "value": [2923.7, 0.0, 0.0, 2.0, 0.0],
+                    },
+                    "min_photoelectrons": {"value": 20},
+                    "unknown_parameter": {"value": 1},
+                },
+            },
+            "corsika",
+            "configuration_corsika",
+            {"effective_focal_length": {"value": [2923.7, 0.0, 0.0, 2.0, 0.0]}},
+            None,
+        ),
+        (
+            {
+                "LSTS-design": {
+                    "effective_focal_length": {
+                        "value": [2923.7, 0.0, 0.0, 0.0, 0.0],
+                    },
+                },
+                "MSTS-05": {
+                    "effective_focal_length": {
+                        "value": [1644.51, 0.0, 0.0, 0.0, 0.0],
+                    },
+                },
+                "SSTS-design": {
+                    "effective_focal_length": {
+                        "value": [315.191, 0.0, 0.0, 0.0, 0.0],
+                    },
+                },
+                "SSTS-22": {
+                    "effective_focal_length": {
+                        "value": [215.191, 0.0, 0.0, 0.0, 0.0],
+                    },
+                },
+                "bad_entry": [1, 2, 3],
+                "LSTS-01": {
+                    "effective_focal_length": {
+                        "value": [2923.7, 0.0, 0.0, 2.0, 0.0],
+                    },
+                    "min_photoelectrons": {"value": 20},
+                    "unknown_parameter": {"value": 1},
+                },
+            },
+            "sim_telarray",
+            "configuration_sim_telarray",
+            {"min_photoelectrons": {"value": 20}},
+            "LSTS-01",
+        ),
+    ],
+)
+def test_collect_flat_simulation_overwrites(
+    telescope_model_lst,
+    mocker,
+    caplog,
+    overwrite_model_parameter_dict,
+    simulation_software,
+    software_collection,
+    expected,
+    name_override,
+):
+    """Test _collect_flat_simulation_overwrites across filtering and flattening edge cases."""
+    telescope_copy = copy.deepcopy(telescope_model_lst)
+    if name_override is not None:
+        telescope_copy.name = name_override
+    telescope_copy.overwrite_model_parameter_dict = overwrite_model_parameter_dict
+
+    collection_map = {
+        "effective_focal_length": "configuration_corsika",
+        "min_photoelectrons": "configuration_sim_telarray",
+        "unknown_parameter": KeyError,
+    }
+
+    def _get_collection_name(parameter_name):
+        collection = collection_map[parameter_name]
+        if collection is KeyError:
+            raise KeyError(parameter_name)
+        return collection
+
+    mocker.patch(
+        "simtools.model.model_parameter.names.get_collection_name_from_parameter_name",
+        side_effect=_get_collection_name,
+    )
+
+    with caplog.at_level(logging.WARNING):
+        result = telescope_copy._collect_flat_simulation_overwrites(
+            simulation_software,
+            software_collection,
+        )
+
+    assert result == expected
+    if "unknown_parameter" in str(overwrite_model_parameter_dict):
+        assert "Skipping unknown overwrite parameter 'unknown_parameter'" in caplog.text
+    else:
+        assert caplog.text == ""
+
+
 def test_overwrite_model_parameter(telescope_model_lst):
     tel_model = copy.deepcopy(telescope_model_lst)
 
