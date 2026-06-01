@@ -34,6 +34,12 @@ definitions:
       - schema_name
     title: ""
   collection:
+    oneOf:
+      - "$ref": "#/definitions/collection_entry"
+      - type: array
+        items:
+          "$ref": "#/definitions/collection_entry"
+  collection_entry:
     type: object
     additionalProperties: false
     properties:
