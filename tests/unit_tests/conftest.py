@@ -186,6 +186,7 @@ def _fast_figure_saves():
         return orig_savefig(self, fname, *args, **kwargs)
 
     def _noop_tight_layout(self, *args, **kwargs):
+        # tight_layout is skipped because it triggers expensive rendering work in tests.
         pass
 
     def _mock_colorbar(self, *args, **kwargs):
@@ -208,9 +209,9 @@ def _mock_urlretrieve_for_unit_tests():
 def _warm_erfa_tables():
     """Pre-initialise ERFA/IERS tables so the first coordinate-transform test is not penalised.
 
-    The first astropy AltAz→ICRS transform in a fresh process must load ERFA tables from
+    The first astropy AltAz to ICRS transform in a fresh process must load ERFA tables from
     disk (~0.2 s).  Running a dummy transform here during session set-up amortises that
-    cost before any test measures it.  IERS auto-download is disabled so no network call
+    cost before any test measures it. IERS auto-download is disabled so no network call
     is made.
     """
     from astropy.coordinates import AltAz, EarthLocation, SkyCoord
@@ -226,7 +227,6 @@ def _warm_erfa_tables():
         SkyCoord(altaz).icrs
     finally:
         iers.conf.auto_download = prev
-    return
 
 
 @pytest.fixture
