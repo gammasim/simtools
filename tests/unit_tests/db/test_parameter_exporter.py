@@ -289,17 +289,14 @@ def test_export_parameter_data_file_parameter_ecsv_suffix_skips_table_conversion
     table.write.assert_called_once_with(output_file, format="ascii.ecsv", overwrite=True)
 
 
-class TestExportParameterDataValidationErrors:
-    """Parametrized tests for export parameter validation error conditions."""
-
-    def test_export_parameter_data_no_export_returns_empty_list(self, db_handler_mock):
-        """Test that no export flags returns empty list."""
-        result = parameter_exporter.export_parameter_data(
-            db=db_handler_mock,
-            parameter="test_param",
-            site="North",
-            array_element_name="LSTN-01",
-            export_model_file=False,
-            export_model_file_as_table=False,
-        )
-        assert result == []
+def test_export_parameter_data_no_export_returns_empty_list(db_handler_mock):
+    """No export flags returns empty list."""
+    result = parameter_exporter.export_parameter_data(
+        db=db_handler_mock,
+        parameter="test_param",
+        site="North",
+        array_element_name="LSTN-01",
+        export_model_file=False,
+        export_model_file_as_table=False,
+    )
+    assert result == []

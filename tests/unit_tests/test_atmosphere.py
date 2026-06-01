@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -5,9 +7,9 @@ import pytest
 from simtools.atmosphere import AtmosphereProfile
 
 
-def test_read_valid_file(tmp_path):
+def test_read_valid_file(tmp_test_directory):
     """Test reading a valid atmosphere profile file."""
-    atmosphere_file = tmp_path / "atmosphere.txt"
+    atmosphere_file = Path(str(tmp_test_directory)) / "atmosphere.txt"
     atmosphere_file.write_text(
         "0.0 1.225 1000.0 0.0001 288.0 101325.0 0.02\n"
         "1.0 1.112 950.0 0.00009 281.0 89876.0 0.018\n"
@@ -31,9 +33,9 @@ def test_read_valid_file(tmp_path):
     assert profile.data[2, 2] == pytest.approx(900.0)
 
 
-def test_read_with_comments_and_empty_lines(tmp_path):
+def test_read_with_comments_and_empty_lines(tmp_test_directory):
     """Test reading a file with comments and empty lines."""
-    atmosphere_file = tmp_path / "atmosphere_comments.txt"
+    atmosphere_file = Path(str(tmp_test_directory)) / "atmosphere_comments.txt"
     atmosphere_file.write_text(
         "# This is a comment\n"
         "\n"
@@ -49,9 +51,9 @@ def test_read_with_comments_and_empty_lines(tmp_path):
     assert profile.data[1, 0] == pytest.approx(1.0)
 
 
-def test_read_converts_strings_to_floats(tmp_path):
+def test_read_converts_strings_to_floats(tmp_test_directory):
     """Test that all data is converted to float values."""
-    atmosphere_file = tmp_path / "atmosphere_float.txt"
+    atmosphere_file = Path(str(tmp_test_directory)) / "atmosphere_float.txt"
     atmosphere_file.write_text("0 1 2 3 4 5 6\n")
 
     profile = AtmosphereProfile(str(atmosphere_file))
@@ -60,9 +62,9 @@ def test_read_converts_strings_to_floats(tmp_path):
     assert profile.data[0, 0] == pytest.approx(0.0)
 
 
-def test_interpolate_valid_altitude(tmp_path):
+def test_interpolate_valid_altitude(tmp_test_directory):
     """Test interpolating at a valid altitude."""
-    atmosphere_file = tmp_path / "atmosphere.txt"
+    atmosphere_file = Path(str(tmp_test_directory)) / "atmosphere.txt"
     atmosphere_file.write_text(
         "0.0 1.225 1000.0 0.0001 288.0 101325.0 0.02\n"
         "1.0 1.112 950.0 0.00009 281.0 89876.0 0.018\n"
@@ -76,9 +78,9 @@ def test_interpolate_valid_altitude(tmp_path):
     assert 950.0 < result < 1000.0
 
 
-def test_interpolate_at_exact_altitude(tmp_path):
+def test_interpolate_at_exact_altitude(tmp_test_directory):
     """Test interpolating at an altitude that exists in the data."""
-    atmosphere_file = tmp_path / "atmosphere.txt"
+    atmosphere_file = Path(str(tmp_test_directory)) / "atmosphere.txt"
     atmosphere_file.write_text(
         "0.0 1.225 1000.0 0.0001 288.0 101325.0 0.02\n"
         "1.0 1.112 950.0 0.00009 281.0 89876.0 0.018\n"
@@ -92,9 +94,9 @@ def test_interpolate_at_exact_altitude(tmp_path):
     assert result == pytest.approx(950.0)
 
 
-def test_interpolate_different_columns(tmp_path):
+def test_interpolate_different_columns(tmp_test_directory):
     """Test interpolating different columns."""
-    atmosphere_file = tmp_path / "atmosphere.txt"
+    atmosphere_file = Path(str(tmp_test_directory)) / "atmosphere.txt"
     atmosphere_file.write_text(
         "0.0 1.225 1000.0 0.0001 288.0 101325.0 0.02\n1.0 1.112 950.0 0.00009 281.0 89876.0 0.018\n"
     )
@@ -105,9 +107,9 @@ def test_interpolate_different_columns(tmp_path):
     assert profile.interpolate(0.5 * u.km, column="T") == pytest.approx(284.5)
 
 
-def test_interpolate_altitude_below_minimum(tmp_path):
+def test_interpolate_altitude_below_minimum(tmp_test_directory):
     """Test that interpolation raises ValueError for altitude below minimum."""
-    atmosphere_file = tmp_path / "atmosphere.txt"
+    atmosphere_file = Path(str(tmp_test_directory)) / "atmosphere.txt"
     atmosphere_file.write_text(
         "1.0 1.112 950.0 0.00009 281.0 89876.0 0.018\n2.0 1.007 900.0 0.00008 275.0 79501.0 0.016\n"
     )
@@ -118,9 +120,9 @@ def test_interpolate_altitude_below_minimum(tmp_path):
         profile.interpolate(0.5 * u.km, column="thick")
 
 
-def test_interpolate_altitude_above_maximum(tmp_path):
+def test_interpolate_altitude_above_maximum(tmp_test_directory):
     """Test that interpolation raises ValueError for altitude above maximum."""
-    atmosphere_file = tmp_path / "atmosphere.txt"
+    atmosphere_file = Path(str(tmp_test_directory)) / "atmosphere.txt"
     atmosphere_file.write_text(
         "0.0 1.225 1000.0 0.0001 288.0 101325.0 0.02\n1.0 1.112 950.0 0.00009 281.0 89876.0 0.018\n"
     )
@@ -131,9 +133,9 @@ def test_interpolate_altitude_above_maximum(tmp_path):
         profile.interpolate(5.0 * u.km, column="thick")
 
 
-def test_interpolate_invalid_column(tmp_path):
+def test_interpolate_invalid_column(tmp_test_directory):
     """Test that interpolation raises KeyError for unknown column."""
-    atmosphere_file = tmp_path / "atmosphere.txt"
+    atmosphere_file = Path(str(tmp_test_directory)) / "atmosphere.txt"
     atmosphere_file.write_text(
         "0.0 1.225 1000.0 0.0001 288.0 101325.0 0.02\n1.0 1.112 950.0 0.00009 281.0 89876.0 0.018\n"
     )
@@ -144,9 +146,9 @@ def test_interpolate_invalid_column(tmp_path):
         profile.interpolate(0.5 * u.km, column="unknown_col")
 
 
-def test_interpolate_with_different_units(tmp_path):
+def test_interpolate_with_different_units(tmp_test_directory):
     """Test interpolation with different altitude units."""
-    atmosphere_file = tmp_path / "atmosphere.txt"
+    atmosphere_file = Path(str(tmp_test_directory)) / "atmosphere.txt"
     atmosphere_file.write_text(
         "0.0 1.225 1000.0 0.0001 288.0 101325.0 0.02\n1.0 1.112 950.0 0.00009 281.0 89876.0 0.018\n"
     )
