@@ -171,6 +171,40 @@ def test_load_simulation_software_parameter(telescope_model_lst, caplog):
     assert len(caplog.records) == 0
 
 
+def _realistic_simulation_overwrites_with_bad_entry(bad_entry_value):
+    """Build realistic simulation overwrite changes used by overwrite-collection tests."""
+    return {
+        "LSTS-design": {
+            "effective_focal_length": {
+                "value": [2923.7, 0.0, 0.0, 0.0, 0.0],
+            },
+        },
+        "MSTS-05": {
+            "effective_focal_length": {
+                "value": [1644.51, 0.0, 0.0, 0.0, 0.0],
+            },
+        },
+        "SSTS-design": {
+            "effective_focal_length": {
+                "value": [315.191, 0.0, 0.0, 0.0, 0.0],
+            },
+        },
+        "SSTS-22": {
+            "effective_focal_length": {
+                "value": [215.191, 0.0, 0.0, 0.0, 0.0],
+            },
+        },
+        "bad_entry": bad_entry_value,
+        "LSTS-01": {
+            "effective_focal_length": {
+                "value": [2923.7, 0.0, 0.0, 2.0, 0.0],
+            },
+            "min_photoelectrons": {"value": 20},
+            "unknown_parameter": {"value": 1},
+        },
+    }
+
+
 @pytest.mark.parametrize(
     (
         "overwrite_model_parameter_dict",
@@ -188,72 +222,14 @@ def test_load_simulation_software_parameter(telescope_model_lst, caplog):
             None,
         ),
         (
-            {
-                "LSTS-design": {
-                    "effective_focal_length": {
-                        "value": [2923.7, 0.0, 0.0, 0.0, 0.0],
-                    },
-                },
-                "MSTS-05": {
-                    "effective_focal_length": {
-                        "value": [1644.51, 0.0, 0.0, 0.0, 0.0],
-                    },
-                },
-                "SSTS-design": {
-                    "effective_focal_length": {
-                        "value": [315.191, 0.0, 0.0, 0.0, 0.0],
-                    },
-                },
-                "SSTS-22": {
-                    "effective_focal_length": {
-                        "value": [215.191, 0.0, 0.0, 0.0, 0.0],
-                    },
-                },
-                "bad_entry": "not a dict",
-                "LSTS-01": {
-                    "effective_focal_length": {
-                        "value": [2923.7, 0.0, 0.0, 2.0, 0.0],
-                    },
-                    "min_photoelectrons": {"value": 20},
-                    "unknown_parameter": {"value": 1},
-                },
-            },
+            _realistic_simulation_overwrites_with_bad_entry("not a dict"),
             "corsika",
             "configuration_corsika",
             {"effective_focal_length": {"value": [2923.7, 0.0, 0.0, 2.0, 0.0]}},
             None,
         ),
         (
-            {
-                "LSTS-design": {
-                    "effective_focal_length": {
-                        "value": [2923.7, 0.0, 0.0, 0.0, 0.0],
-                    },
-                },
-                "MSTS-05": {
-                    "effective_focal_length": {
-                        "value": [1644.51, 0.0, 0.0, 0.0, 0.0],
-                    },
-                },
-                "SSTS-design": {
-                    "effective_focal_length": {
-                        "value": [315.191, 0.0, 0.0, 0.0, 0.0],
-                    },
-                },
-                "SSTS-22": {
-                    "effective_focal_length": {
-                        "value": [215.191, 0.0, 0.0, 0.0, 0.0],
-                    },
-                },
-                "bad_entry": [1, 2, 3],
-                "LSTS-01": {
-                    "effective_focal_length": {
-                        "value": [2923.7, 0.0, 0.0, 2.0, 0.0],
-                    },
-                    "min_photoelectrons": {"value": 20},
-                    "unknown_parameter": {"value": 1},
-                },
-            },
+            _realistic_simulation_overwrites_with_bad_entry([1, 2, 3]),
             "sim_telarray",
             "configuration_sim_telarray",
             {"min_photoelectrons": {"value": 20}},
