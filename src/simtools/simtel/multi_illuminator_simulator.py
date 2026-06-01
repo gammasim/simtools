@@ -1,9 +1,8 @@
 """Multi-illuminator simulation orchestration with parallel execution."""
 
 import logging
-import os
 
-from simtools.job_execution.process_pool import process_pool_map_ordered
+from simtools.job_execution.process_pool import determine_max_workers, process_pool_map_ordered
 from simtools.model.illuminator_visibility import IlluminatorTelescopeVisibility
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 
@@ -120,31 +119,10 @@ class MultiIlluminatorSimulator:
 
         self.base_config = config
         self.label = label or "multi_illuminator"
-        self.max_workers = self._determine_max_workers(max_workers)
+        self.max_workers = determine_max_workers(max_workers)
         self.results = None
 
         self._logger.info(f"Will use {self.max_workers} parallel workers")
-
-    def _determine_max_workers(self, max_workers):
-        """
-        Determine the number of worker processes to use.
-
-        Parameters
-        ----------
-        max_workers : int or None
-            User-specified number of workers.
-
-        Returns
-        -------
-        int
-            Number of workers to use.
-        """
-        cpu_count = os.cpu_count() or 1
-
-        if max_workers is None:
-            return max(1, int(cpu_count * 0.6))
-
-        return max_workers if max_workers > 0 else cpu_count
 
     @staticmethod
     def _load_visibility_from_site_model(config):
@@ -161,6 +139,7 @@ class MultiIlluminatorSimulator:
         dict
             Visibility table dictionary with "columns" and "rows" keys.
         """
+        # Import here to avoid loading SiteModel when visibility_data is provided directly
         from simtools.model.site_model import SiteModel  # pylint: disable=import-outside-toplevel
 
         site_model = SiteModel(
