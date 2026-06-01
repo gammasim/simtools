@@ -14,6 +14,22 @@ from simtools.testing import assertions
 _logger = logging.getLogger(__name__)
 
 
+def _find_repo_root():
+    """Find the repository root by walking up until pyproject.toml is found.
+
+    Falls back to the current working directory when pyproject.toml is not found
+    (e.g. when the package is imported from an installed wheel or sdist).
+    """
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "pyproject.toml").exists():
+            return parent
+    _logger.warning("Repository root not found; using current working directory as fallback.")
+    return Path.cwd()
+
+
+_REPO_ROOT = _find_repo_root()
+
+
 def _versions_match(from_command_line, from_config_file):
     """Return True if validations should run for the given versions.
 
@@ -116,11 +132,17 @@ def _test_simtel_cfg_files(config, integration_test, from_command_line, from_con
             break
 
 
+def _resolve_path(path):
+    """Resolve a path, making relative paths absolute against the repo root."""
+    p = Path(path)
+    return p if p.is_absolute() else _REPO_ROOT / p
+
+
 def _validate_reference_output_file(config, integration_test):
     """Compare with reference output file."""
     test_file = integration_test.get("test_output_file") or config["configuration"]["output_file"]
     assert compare_files(
-        integration_test["reference_output_file"],
+        _resolve_path(integration_test["reference_output_file"]),
         Path(config["configuration"]["output_path"]).joinpath(test_file),
         integration_test.get("tolerance", 1.0e-5),
         integration_test.get("test_columns", None),
@@ -436,7 +458,7 @@ def _validate_simtel_cfg_files(config, simtel_cfg_file):
     Note the finetuned naming of configuration files by simtools.
 
     """
-    reference_file = Path(simtel_cfg_file)
+    reference_file = _resolve_path(simtel_cfg_file)
     test_file = (
         Path(config["configuration"]["output_path"])
         / f"model/{config['configuration']['model_version']}"
