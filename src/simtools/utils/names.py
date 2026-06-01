@@ -152,6 +152,41 @@ def is_design_type(array_element_name):
     )
 
 
+def matches_array_element_name_or_design_type(key_name, array_element_name):
+    """
+    Return True when key_name matches array_element_name exactly or as same-type design.
+
+    Parameters
+    ----------
+    key_name: str
+        Name to check (e.g., "MSTN-01" or "MSTx-FlashCam").
+    array_element_name: str
+        Array element name to compare to (e.g., "MSTN-01" or "MSTN-FlashCam").
+
+    Returns
+    -------
+    bool
+        True if key_name matches array_element_name exactly or as same-type design.
+
+    """
+    if key_name is None or array_element_name is None:
+        return False
+
+    try:
+        validated_key_name = validate_array_element_name(key_name)
+        validated_array_element_name = validate_array_element_name(array_element_name)
+    except ValueError:
+        return False
+
+    if validated_key_name == validated_array_element_name:
+        return True
+
+    return is_design_type(validated_key_name) and (
+        get_array_element_type_from_name(validated_key_name)
+        == get_array_element_type_from_name(validated_array_element_name)
+    )
+
+
 @cache
 def _load_model_parameters():
     """
