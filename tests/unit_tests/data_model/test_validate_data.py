@@ -818,7 +818,7 @@ def test_prepare_model_parameter():
     data_validator._prepare_model_parameter()
     assert isinstance(data_validator.data_dict["value"][0], int)
 
-    # dimensionless unit as empty string (e.g. from u.Quantity("0.784")) → None
+    # dimensionless unit as empty string (e.g. from u.Quantity("0.784")):  None
     data_validator.data_dict = {"name": "mirror_degraded_reflection", "value": 0.784, "unit": ""}
     data_validator._prepare_model_parameter()
     assert data_validator.data_dict["unit"] is None
