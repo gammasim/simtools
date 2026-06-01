@@ -180,6 +180,9 @@ def matches_array_element_name_or_design_type(element_name, reference_element_na
     if validated_element_name == validated_reference_element_name:
         return True
 
+    if "-" not in validated_element_name or "-" not in validated_reference_element_name:
+        return False
+
     return is_design_type(validated_element_name) and (
         get_array_element_type_from_name(validated_element_name)
         == get_array_element_type_from_name(validated_reference_element_name)
