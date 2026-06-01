@@ -127,7 +127,7 @@ def process_pool_map_ordered(
     item_list = list(items)
     n_items = len(item_list)
 
-    # Determine workers: None → 60% of CPUs, 0 or negative → all CPUs, positive → that value
+    # Determine workers: None -> 60% of CPUs, 0 or negative -> all CPUs, positive -> that value
     max_workers = determine_max_workers(max_workers)
 
     # create a temporary list of Nones to hold results in input order
