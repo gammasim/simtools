@@ -179,7 +179,7 @@ def plot_limits(limits_table, output_dir):
         legend_handles, legend_labels = [], []
 
         grouped_by_nsb = group.group_by("nsb_level")
-        colors = plt.get_cmap("viridis")(np.linspace(0, 1, len(grouped_by_nsb.groups)))
+        colors = plt.get_cmap("Set1").colors  # don't expect more than 9 NSB levels
 
         for i, nsb_group in enumerate(grouped_by_nsb.groups):
             nsb_level = nsb_group["nsb_level"][0]
