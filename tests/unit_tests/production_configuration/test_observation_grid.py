@@ -16,11 +16,12 @@ DEFAULT_OBSERVING_LOCATION = EarthLocation(
     height=2200 * u.m,
 )
 DEFAULT_OBSERVATION_TIME = Time("2020-01-01 00:00:00", scale="utc")
+pytestmark = pytest.mark.filterwarnings("ignore::astropy.utils.iers.IERSWarning")
 
 
 @pytest.fixture(autouse=True, scope="module")
 def disable_iers_auto_download():
-    """Disable IERS auto-download to keep tests deterministic and offline-safe."""
+    """Disable IERS auto-download during tests to avoid network dependency."""
     previous_auto_download = iers.conf.auto_download
     iers.conf.auto_download = False
     try:
