@@ -189,6 +189,7 @@ def test_multiple_files(
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = [
         create_mc_run_header(),
         create_mc_shower(shower_id=1),
+        create_mc_event(shower_num=1, event_id=10000),
         create_mc_event(shower_num=1, event_id=10001),
         create_array_event(),
     ]

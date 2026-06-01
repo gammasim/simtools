@@ -354,12 +354,25 @@ class EventDataReader:
             tables[get_name("FILE_INFO")]
         )
 
-        shower_data = self._table_to_shower_data(tables[get_name("SHOWERS")])
+        showers_name = get_name("SHOWERS")
+        try:
+            shower_data = self._table_to_shower_data(tables[showers_name])
+        except ValueError as exc:
+            raise ValueError(
+                f"Failed to read SHOWERS table '{showers_name}' from event data file "
+                f"'{event_data_file}': {exc}"
+            ) from exc
         if tables.get(get_name("TRIGGERS")) is None:
             self._logger.info("No triggered event data found in the file.")
             return tables[get_name("FILE_INFO")], shower_data, None, None
 
-        triggered_data = self._table_to_triggered_data(tables[get_name("TRIGGERS")])
+        try:
+            triggered_data = self._table_to_triggered_data(tables[get_name("TRIGGERS")])
+        except ValueError as exc:
+            raise ValueError(
+                f"Failed to read TRIGGERS table '{get_name('TRIGGERS')}' from event data file "
+                f"'{event_data_file}': {exc}"
+            ) from exc
         triggered_shower = self._get_triggered_shower_data(
             shower_data,
             tables[get_name("TRIGGERS")]["file_id"],

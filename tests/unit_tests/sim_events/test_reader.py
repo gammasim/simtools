@@ -232,6 +232,28 @@ def test_convert_numeric_column_raises_on_invalid_values(mock_fits_file):
         reader._convert_numeric_column(values, key="nsb_level", dtype=np.float64)
 
 
+def test_read_event_data_reports_file_and_table_for_invalid_shower_column(mock_tables, mocker):
+    """Test invalid shower-table values report the failing file and table."""
+    shower_table, _, file_info_table = mock_tables
+    shower_table["event_id"] = np.array(["None", "2"])
+
+    reader = EventDataReader.__new__(EventDataReader)
+    reader._logger = logging.getLogger(__name__)
+    mocker.patch(
+        "simtools.sim_events.reader.table_handler.read_tables",
+        return_value={"SHOWERS": shower_table, "FILE_INFO": file_info_table},
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"Failed to read SHOWERS table 'SHOWERS' from event data file "
+            r"'bad_file.hdf5': Unable to convert SHOWERS column 'event_id'"
+        ),
+    ):
+        reader.read_event_data("bad_file.hdf5", {"SHOWERS": "SHOWERS", "FILE_INFO": "FILE_INFO"})
+
+
 def test_get_triggered_shower_data_single_match(mock_fits_file):
     """Test _get_triggered_shower_data with single matches."""
     reader = EventDataReader(mock_fits_file)
