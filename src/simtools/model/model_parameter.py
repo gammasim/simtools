@@ -336,7 +336,9 @@ class ModelParameter:
         for key, parameter_changes in self.overwrite_model_parameter_dict.items():
             if not isinstance(parameter_changes, dict):
                 continue
-            if software_collection == "configuration_sim_telarray" and key != self.name:
+            if software_collection == "configuration_sim_telarray" and not (
+                names.matches_array_element_name_or_design_type(key, self.name)
+            ):
                 continue
 
             filtered_parameter_changes = self._filter_changes_for_collection(

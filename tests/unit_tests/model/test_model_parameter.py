@@ -235,6 +235,17 @@ def _realistic_simulation_overwrites_with_bad_entry(bad_entry_value):
             {"min_photoelectrons": {"value": 20}},
             "LSTS-01",
         ),
+        (
+            {
+                "LSTS-design": {
+                    "min_photoelectrons": {"value": 17},
+                },
+            },
+            "sim_telarray",
+            "configuration_sim_telarray",
+            {"min_photoelectrons": {"value": 17}},
+            "LSTS-01",
+        ),
     ],
 )
 def test_collect_flat_simulation_overwrites(
@@ -277,7 +288,19 @@ def test_collect_flat_simulation_overwrites(
         )
 
     assert result == expected
-    if "unknown_parameter" in str(overwrite_model_parameter_dict):
+
+    if software_collection != "configuration_sim_telarray":
+        expect_unknown_warning = any(
+            isinstance(v, dict) and "unknown_parameter" in v
+            for v in overwrite_model_parameter_dict.values()
+        )
+    else:
+        expect_unknown_warning = (
+            isinstance(overwrite_model_parameter_dict.get(telescope_copy.name), dict)
+            and "unknown_parameter" in overwrite_model_parameter_dict[telescope_copy.name]
+        )
+
+    if expect_unknown_warning:
         assert "Skipping unknown overwrite parameter 'unknown_parameter'" in caplog.text
     else:
         assert caplog.text == ""
