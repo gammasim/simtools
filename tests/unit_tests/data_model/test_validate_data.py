@@ -823,7 +823,7 @@ def test_prepare_model_parameter():
     data_validator._prepare_model_parameter()
     assert data_validator.data_dict["unit"] is None
 
-    # dimensionless unit as "dimensionless" string: None
+    # dimensionless unit as "dimensionless" string -> None
     data_validator.data_dict = {"name": "some_param", "value": 1.0, "unit": "dimensionless"}
     data_validator._prepare_model_parameter()
     assert data_validator.data_dict["unit"] is None
