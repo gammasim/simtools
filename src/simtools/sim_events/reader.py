@@ -519,8 +519,21 @@ class EventDataReader:
                 return np.char.strip(array_values.astype("U")).astype(dtype)
             return array_values.astype(dtype)
         except (TypeError, ValueError) as exc:
+            invalid_entries = []
+            for index, value in enumerate(np.ravel(array_values)):
+                if len(invalid_entries) >= 5:
+                    break
+                try:
+                    dtype(str(value).strip() if isinstance(value, str | np.str_) else value)
+                except (TypeError, ValueError):
+                    invalid_entries.append(f"row {index}: {value!r}")
+            invalid_details = (
+                f" Invalid entries include: {', '.join(invalid_entries)}."
+                if invalid_entries
+                else ""
+            )
             raise ValueError(
-                f"Unable to convert {table_name} column '{key}' to numeric values."
+                f"Unable to convert {table_name} column '{key}' to numeric values.{invalid_details}"
             ) from exc
 
     def scatter_area(self, core_scatter_min, core_scatter_max):

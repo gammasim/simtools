@@ -224,7 +224,10 @@ def test_convert_numeric_column_raises_on_invalid_values(mock_fits_file):
 
     with pytest.raises(
         ValueError,
-        match=r"Unable to convert FILE_INFO column 'nsb_level' to numeric values\.",
+        match=(
+            r"Unable to convert FILE_INFO column 'nsb_level' to numeric values\. "
+            r"Invalid entries include: row 0: np.str_\('not-a-number'\)\."
+        ),
     ):
         reader._convert_numeric_column(values, key="nsb_level", dtype=np.float64)
 

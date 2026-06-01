@@ -129,11 +129,41 @@ class EventDataWriter:
         ]:
             if len(data) == 0:
                 continue
+            self._validate_rows_before_table(data, schema, name)
             table = Table(rows=data, names=schema.keys())
             table.meta["EXTNAME"] = name
             self._add_units_to_table(table, schema)
             tables.append(table)
         return tables
+
+    def _validate_rows_before_table(self, data, schema, table_name):
+        """Validate that required numeric table values were filled before writing."""
+        missing_values = []
+        numeric_columns = {
+            col for col, (dtype, _) in schema.items() if not np.issubdtype(np.dtype(dtype), np.str_)
+        }
+        for row_index, row in enumerate(data):
+            for col in numeric_columns:
+                value = row.get(col)
+                normalized_value = (
+                    value.decode("utf-8") if isinstance(value, bytes | np.bytes_) else value
+                )
+                if value is None or (
+                    isinstance(normalized_value, str | np.str_)
+                    and str(normalized_value).strip().lower() == "none"
+                ):
+                    missing_values.append(f"row {row_index}, column '{col}'")
+                    if len(missing_values) >= 5:
+                        break
+            if len(missing_values) >= 5:
+                break
+
+        if missing_values:
+            raise ValueError(
+                f"Incomplete {table_name} table: missing required numeric values in "
+                f"{', '.join(missing_values)}. This usually means MCShower entries were "
+                "not matched by the expected MCEvent entries; do not write this reduced event list."
+            )
 
     def _add_units_to_table(self, table, schema):
         """Add units to a single table's columns."""

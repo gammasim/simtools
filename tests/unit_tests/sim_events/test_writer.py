@@ -373,6 +373,29 @@ def test_process_mc_event(lookup_table_generator):
     assert updated_event["area_weight"] == pytest.approx(1.5)
 
 
+def test_create_tables_rejects_incomplete_shower_data(lookup_table_generator):
+    """Test incomplete shower rows are rejected before writing tables."""
+    lookup_table_generator.shower_data = [
+        {
+            "shower_id": 1,
+            "event_id": None,
+            "file_id": 0,
+            "simulated_energy": 1.0,
+            "x_core": None,
+            "y_core": None,
+            "shower_azimuth": 0.1,
+            "shower_altitude": 1.0,
+            "area_weight": None,
+        }
+    ]
+
+    with pytest.raises(
+        ValueError,
+        match=r"Incomplete SHOWERS table: missing required numeric values",
+    ):
+        lookup_table_generator.create_tables()
+
+
 def test_process_mc_event_inconsistent_shower(lookup_table_generator):
     """Test processing MC event with inconsistent shower ID."""
     lookup_table_generator.n_use = 2
