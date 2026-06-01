@@ -237,7 +237,7 @@ def test_url_exists(caplog, mocker):
 
     assert gen.url_exists(url_simtools_main)
     with caplog.at_level(logging.ERROR):
-        assert not gen.url_exists(url_simtools)  # raw ULR does not exist
+        assert not gen.url_exists(url_simtools)  # raw URL does not exist
     assert "does not exist" in caplog.text
     with caplog.at_level(logging.ERROR):
         assert not gen.url_exists(None)
