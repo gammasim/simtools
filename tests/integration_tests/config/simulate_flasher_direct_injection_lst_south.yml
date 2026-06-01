@@ -4,7 +4,7 @@ applications:
   configuration:
     run_mode: direct_injection
     light_source: LSFS-design
-    array_layout_name: 1lst
+    array_layout_name: LSTS-02
     label: test-flasher-direct-injection-lst-south
     log_level: DEBUG
     model_version: 7.0.0
@@ -14,11 +14,11 @@ applications:
     sim_telarray_random_instrument_instances: 100
     site: South
   integration_tests:
-  - output_file: sim_telarray/run000010/direct_injection_run000010_za20deg_azm000deg_South_1lst_7.0.0_test-flasher-direct-injection-lst-south.simtel.zst
+  - output_file: sim_telarray/run000010/direct_injection_run000010_za20deg_azm000deg_South_LSTS-02_7.0.0_test-flasher-direct-injection-lst-south.simtel.zst
   - test_output_files:
     - expected_sim_telarray_output:
         event_type: direct_injection
-      file: direct_injection_run000010_za20deg_azm000deg_South_1lst_7.0.0_test-flasher-direct-injection-lst-south.simtel.zst
+      file: direct_injection_run000010_za20deg_azm000deg_South_LSTS-02_7.0.0_test-flasher-direct-injection-lst-south.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray/run000010
   test_name: direction_injection_lsts

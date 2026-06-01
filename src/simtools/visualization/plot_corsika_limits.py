@@ -7,6 +7,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import ListedColormap
+from matplotlib.lines import Line2D
 
 _logger = logging.getLogger(__name__)
 
@@ -196,7 +197,7 @@ def plot_limits(limits_table, output_dir):
             axes[1].plot(zeniths, agg_data["upper_radius_limit"], "o-", color=colors[i])
             axes[2].plot(zeniths, agg_data["viewcone_radius"], "o-", color=colors[i])
             legend_handles.append(line)
-            legend_labels.append(f"NSB={nsb_level}")
+            legend_labels.append(f"NSB={nsb_level} GHz")
 
             if broad_range_columns:
                 broad_columns = [
@@ -243,6 +244,11 @@ def plot_limits(limits_table, output_dir):
         axes[2].set_ylabel("Viewcone Radius [deg]")
         axes[2].grid(True)
 
+        if broad_range_columns:
+            legend_handles += [
+                Line2D([0], [0], linestyle="--", color="gray"),
+            ]
+            legend_labels += ["broad-range limits"]
         fig.legend(legend_handles, legend_labels, loc="lower center", ncol=len(legend_labels))
         plt.suptitle(
             "CORSIKA Limits: "

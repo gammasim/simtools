@@ -497,6 +497,14 @@ def test_prepare_data_dict_for_writing():
         "type": "float64",
     }
 
+    # empty list unit (produced when a dimensionless float goes through the pipeline) → None
+    data_dict_7 = {"value": 0.784, "unit": [], "type": "float64"}
+    assert writer.ModelDataWriter.prepare_data_dict_for_writing(data_dict_7) == {
+        "value": 0.784,
+        "unit": None,
+        "type": "float64",
+    }
+
 
 def test_get_unit_from_schema(num_gains_schema):
     w1 = writer.ModelDataWriter()
