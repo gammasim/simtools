@@ -9,6 +9,7 @@ applications:
     telescope: LSTN-04
     output_file: event_plots
     test: true
+    dpi: 72
     output_path: simtools-output
   integration_tests:
   - output_file: event_plots_full_simulation_run000010_North_7.0.0_simulate_flasher.simtel.pdf
