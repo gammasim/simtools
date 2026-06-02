@@ -1267,7 +1267,33 @@ def test_workflow_edge_cases(
         mock_write.assert_not_called()
 
 
-def test_perturbed_params_creation():
+def test_workflow_max_iterations_passed(
+    mock_telescope_model, mock_site_model, mock_args_dict, tmp_path
+):
+    """Test that max_iterations from args_dict is forwarded to run_gradient_descent."""
+    mock_args_dict["max_iterations"] = 42
+
+    with (
+        patch("simtools.ray_tracing.psf_parameter_optimisation.load_and_process_data") as mock_load,
+        patch(
+            "simtools.ray_tracing.psf_parameter_optimisation.PSFParameterOptimizer"
+        ) as mock_opt_cls,
+    ):
+        mock_load.return_value = (None, None)
+        mock_optimizer = MagicMock()
+        mock_opt_cls.return_value = mock_optimizer
+        mock_optimizer.run_gradient_descent.return_value = (None, None, [])
+
+        psf_opt.run_psf_optimization_workflow(
+            mock_telescope_model, mock_site_model, mock_args_dict, tmp_path
+        )
+
+        mock_optimizer.run_gradient_descent.assert_called_once_with(
+            mock_args_dict["rmsd_threshold"],
+            mock_args_dict["learning_rate"],
+            max_iterations=42,
+        )
+
     """Test _create_perturbed_params with list and non-list parameters."""
     current_params = {
         "mirror_align_random_horizontal": mirror_align_random_values(),
