@@ -613,6 +613,12 @@ def test_is_design_type():
         ("MSTS-design", "LSTN-01", False),
         ("LSTN-02", "LSTN-01", False),
         ("not-a-name", "LSTN-01", False),
+        (None, "LSTN-01", False),
+        ("LSTN-01", None, False),
+        (None, None, False),
+        ("LSTN", "LSTN-01", False),
+        ("LSTN-01", "LSTN", False),
+        ("South", "LSTN-01", False),
     ],
 )
 def test_matches_array_element_name_or_design_type(key_name, array_element_name, expected):
