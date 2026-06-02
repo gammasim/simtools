@@ -26,9 +26,9 @@ definitions:
         type: boolean
         description: "This parameter is a file."
       instrument:
-        type:
-          - string
-          - "null"
+        anyOf:
+          - $ref: 'common_definitions.schema.yml#/$defs/telescope_name_pattern'
+          - type: "null"
         description: "Associated instrument."
       meta_parameter:
         type: boolean
@@ -143,9 +143,9 @@ definitions:
         type: boolean
         description: "This parameter is a file."
       instrument:
-        type:
-          - string
-          - "null"
+        anyOf:
+          - $ref: 'common_definitions.schema.yml#/$defs/telescope_name_pattern'
+          - type: "null"
         description: "Associated instrument."
       site:
         type:
@@ -235,7 +235,7 @@ definitions:
         type: boolean
         description: "This parameter is a file."
       instrument:
-        type: string
+        $ref: 'common_definitions.schema.yml#/$defs/telescope_name_pattern'
         description: "Associated instrument."
       items:
         type: string
