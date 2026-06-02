@@ -1,5 +1,6 @@
 """Tools for running applications in the simtools framework."""
 
+import glob
 import logging
 import shutil
 from copy import deepcopy
@@ -205,7 +206,7 @@ def _find_collection_files(pattern, source_directories):
         If *pattern* is a literal filename and is not found in any source
         directory.
     """
-    is_glob = any(c in pattern for c in ("*", "?", "["))
+    is_glob = glob.has_magic(pattern)
     if is_glob:
         matched = sorted(f for d in source_directories for f in d.rglob(pattern) if f.is_file())
         if not matched:
