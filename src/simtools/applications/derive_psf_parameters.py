@@ -61,6 +61,8 @@ r"""
         RMSD threshold for gradient descent convergence (default: 0.007).
     learning_rate (float, optional)
         Learning rate for gradient descent optimization (default: 0.01).
+    max_iterations (int, optional)
+        Maximum number of gradient descent iterations (default: 200).
     monte_carlo_analysis (activation mode, optional)
         Run Monte Carlo analysis to find statistical uncertainties.
 
@@ -146,6 +148,14 @@ def _add_arguments(parser):
         ),
         type=float,
         default=0.0001,
+    )
+    parser.add_argument(
+        "--max_iterations",
+        help=(
+            "Maximum number of gradient descent iterations (not used with --monte_carlo_analysis)."
+        ),
+        type=int,
+        default=200,
     )
     parser.add_argument(
         "--monte_carlo_analysis",

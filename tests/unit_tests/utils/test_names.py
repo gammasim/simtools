@@ -604,6 +604,27 @@ def test_is_design_type():
     assert not names.is_design_type("MSTS-22")
 
 
+@pytest.mark.parametrize(
+    ("key_name", "array_element_name", "expected"),
+    [
+        ("LSTN-01", "LSTN-01", True),
+        ("LSTN-design", "LSTN-01", True),
+        ("MSTS-FlashCam", "MSTS-22", True),
+        ("MSTS-design", "LSTN-01", False),
+        ("LSTN-02", "LSTN-01", False),
+        ("not-a-name", "LSTN-01", False),
+        (None, "LSTN-01", False),
+        ("LSTN-01", None, False),
+        (None, None, False),
+        ("LSTN", "LSTN-01", False),
+        ("LSTN-01", "LSTN", False),
+        ("South", "LSTN-01", False),
+    ],
+)
+def test_matches_array_element_name_or_design_type(key_name, array_element_name, expected):
+    assert names.matches_array_element_name_or_design_type(key_name, array_element_name) is expected
+
+
 def test_array_element_common_identifiers():
     id_to_name, name_to_id = names.array_element_common_identifiers()
     assert isinstance(id_to_name, dict)
