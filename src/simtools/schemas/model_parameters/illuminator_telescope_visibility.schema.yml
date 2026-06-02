@@ -26,6 +26,7 @@ data:
       additionalProperties: false
       required:
         - columns
+        - column_units
         - rows
       properties:
         columns:
@@ -34,6 +35,15 @@ data:
             - const: illuminator_id
             - const: telescope_id
             - const: visible
+          additionalItems: false
+          minItems: 3
+          maxItems: 3
+        column_units:
+          type: array
+          items:
+            - const: dimensionless
+            - const: dimensionless
+            - const: dimensionless
           additionalItems: false
           minItems: 3
           maxItems: 3
