@@ -99,27 +99,18 @@ def _get_production_directory_name(production_pattern, existing_names=None):
     str
         Safe directory name (e.g., "production_prod_a_events").
     """
+
+    def _sanitize(name):
+        name = re.sub(r"[^A-Za-z0-9]+", "_", name)
+        return re.sub(r"_+", "_", name).strip("_")
+
     pattern_path = Path(production_pattern)
-    parts = []
-
-    if pattern_path.parent.name and pattern_path.parent.name != ".":
-        parts.append(pattern_path.parent.name)
-    if pattern_path.stem:
-        parts.append(pattern_path.stem)
-
-    readable_name = "_".join(parts) if parts else "production"
-    readable_name = re.sub(r"[^A-Za-z0-9]+", "_", readable_name)
-    readable_name = readable_name.strip("_")
-    readable_name = re.sub(r"_+", "_", readable_name)
-
-    if not readable_name:
-        readable_name = "production"
-
+    parent_name = _sanitize(pattern_path.parent.name) if pattern_path.parent.name != "." else ""
+    readable_name = parent_name or _sanitize(pattern_path.stem) or "production"
     base_name = f"production_{readable_name}"
 
     if existing_names is None or base_name not in existing_names:
         return base_name
-
     return f"{base_name}_{get_uuid()}"
 
 

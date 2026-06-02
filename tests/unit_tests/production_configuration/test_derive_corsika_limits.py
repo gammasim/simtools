@@ -840,6 +840,16 @@ def test_get_production_directory_name_readable_and_deterministic():
     assert name1 == "production_pattern_1"
 
 
+def test_get_production_directory_name_uses_parent_dir_only():
+    """Parent directory name is used alone to avoid duplication with the filename stem."""
+    name = derive_corsika_limits._get_production_directory_name(
+        "/data/electron_z20_north_dark10p/electron_20deg_0deg_run00000*hdf5"
+    )
+    assert name == "production_electron_z20_north_dark10p"
+    # Must not repeat "electron" from the filename stem
+    assert name.count("electron") == 1
+
+
 def test_get_production_directory_name_appends_uuid_on_collision(mocker):
     """Test _get_production_directory_name appends UUID when names collide."""
     mock_uuid = mocker.patch(
