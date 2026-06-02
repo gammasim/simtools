@@ -686,30 +686,3 @@ def test_normalize_array_element_identifier_container():
 
     with pytest.raises(ValueError, match="Invalid JSON list string"):
         names.normalize_array_element_identifier_container("[1, 12")
-
-
-def test_validate_instrument_name():
-    """Test validation of instrument names for model parameter submission."""
-    # Valid OBS names
-    assert names.validate_instrument_name("OBS-North") == "OBS-North"
-    assert names.validate_instrument_name("OBS-South") == "OBS-South"
-
-    # Valid array element names
-    assert names.validate_instrument_name("LSTN-01") == "LSTN-01"
-    assert names.validate_instrument_name("LSTN-design") == "LSTN-design"
-    assert names.validate_instrument_name("MSTN-02") == "MSTN-02"
-    assert names.validate_instrument_name("MSTS-FlashCam") == "MSTS-FlashCam"
-
-    # Invalid: plain site names should be rejected
-    with pytest.raises(ValueError, match="Invalid instrument name 'North'"):
-        names.validate_instrument_name("North")
-
-    with pytest.raises(ValueError, match="Invalid instrument name 'South'"):
-        names.validate_instrument_name("South")
-
-    # Invalid: empty or non-existent names
-    with pytest.raises(ValueError, match="Instrument name cannot be empty"):
-        names.validate_instrument_name("")
-
-    with pytest.raises(ValueError, match="Invalid instrument name"):
-        names.validate_instrument_name("InvalidName")
