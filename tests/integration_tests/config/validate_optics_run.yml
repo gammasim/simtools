@@ -2,8 +2,8 @@
 applications:
 - application: simtools-validate-optics
   configuration:
-    max_offset: 3.0
-    offset_step: 0.25
+    max_offset: 1.5
+    offset_step: 0.5
     model_version: 6.0.2
     output_path: simtools-output
     site: North
