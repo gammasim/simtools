@@ -45,6 +45,7 @@ from pathlib import Path
 import simtools.data_model.model_data_writer as writer
 from simtools.application_control import build_application
 from simtools.simtel import simtel_table_reader
+from simtools.utils import names
 
 
 def _add_arguments(parser):
@@ -90,6 +91,9 @@ def main():
     app_context = build_application(
         initialization_kwargs={"output": True, "db_config": True},
     )
+    # Validate instrument name (reject plain site names like "North" or "South")
+    names.validate_instrument_name(app_context.args["instrument"])
+
     model_parameter_schema_version = app_context.args.get("model_parameter_schema_version")
     value = app_context.args["value"]
     data_writer = writer.ModelDataWriter()

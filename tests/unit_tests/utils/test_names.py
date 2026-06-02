@@ -241,6 +241,8 @@ def test_get_array_element_type_from_name(invalid_name):
     assert names.get_array_element_type_from_name("SCTS-27") == "SCTS"
     assert names.get_array_element_type_from_name("MAGIC-2") == "MAGIC"
     assert names.get_array_element_type_from_name("VERITAS-4") == "VERITAS"
+    assert names.get_array_element_type_from_name("OBS-North") == "North"
+    assert names.get_array_element_type_from_name("OBS-South") == "South"
     for _name in ["", "01", "Not_a_telescope", "LST", "MST"]:
         with pytest.raises(ValueError, match=rf"^{invalid_name}"):
             names.get_array_element_type_from_name(_name)
@@ -684,3 +686,30 @@ def test_normalize_array_element_identifier_container():
 
     with pytest.raises(ValueError, match="Invalid JSON list string"):
         names.normalize_array_element_identifier_container("[1, 12")
+
+
+def test_validate_instrument_name():
+    """Test validation of instrument names for model parameter submission."""
+    # Valid OBS names
+    assert names.validate_instrument_name("OBS-North") == "OBS-North"
+    assert names.validate_instrument_name("OBS-South") == "OBS-South"
+
+    # Valid array element names
+    assert names.validate_instrument_name("LSTN-01") == "LSTN-01"
+    assert names.validate_instrument_name("LSTN-design") == "LSTN-design"
+    assert names.validate_instrument_name("MSTN-02") == "MSTN-02"
+    assert names.validate_instrument_name("MSTS-FlashCam") == "MSTS-FlashCam"
+
+    # Invalid: plain site names should be rejected
+    with pytest.raises(ValueError, match="Invalid instrument name 'North'"):
+        names.validate_instrument_name("North")
+
+    with pytest.raises(ValueError, match="Invalid instrument name 'South'"):
+        names.validate_instrument_name("South")
+
+    # Invalid: empty or non-existent names
+    with pytest.raises(ValueError, match="Instrument name cannot be empty"):
+        names.validate_instrument_name("")
+
+    with pytest.raises(ValueError, match="Invalid instrument name"):
+        names.validate_instrument_name("InvalidName")

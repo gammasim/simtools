@@ -436,6 +436,8 @@ def get_array_element_type_from_name(array_element_name):
     try:  # e.g. instrument is 'North' as given for the site parameters
         return validate_site_name(array_element_name)
     except ValueError:  # any other telescope or calibration device
+        if array_element_name.startswith("OBS"):
+            return validate_site_name(array_element_name.split("-")[1])
         return _validate_name(array_element_name.split("-")[0], array_elements())
 
 
@@ -936,3 +938,55 @@ def file_name_with_version(file_name, suffix):
     if re.search(r"\d{1,8}\.\d{1,8}\.\d{1,8}\Z", file_name):
         return Path(file_name + suffix)
     return Path(file_name).with_suffix(suffix)
+
+
+def validate_instrument_name(instrument_name):
+    """
+    Validate instrument name for use in model parameter submission.
+
+    Rejects plain site names (e.g., "North", "South") and requires either:
+    - Full observatory names (e.g., "OBS-North", "OBS-South")
+    - Valid array element names (e.g., "LSTN-01", "MSTN-design")
+
+    Parameters
+    ----------
+    instrument_name: str
+        Instrument name to validate.
+
+    Returns
+    -------
+    str
+        Validated instrument name.
+
+    Raises
+    ------
+    ValueError
+        If the instrument name is invalid (e.g., a plain site name).
+    """
+    if not instrument_name:
+        raise ValueError("Instrument name cannot be empty")
+
+    # Check if it's just a plain site name
+    try:
+        # If it's a valid site name and doesn't contain "-", it's invalid as an instrument
+        if validate_site_name(instrument_name) and "-" not in instrument_name:
+            raise ValueError(
+                f"Invalid instrument name '{instrument_name}'. "
+                "Use 'OBS-North', 'OBS-South', or a valid array element name "
+                "(e.g., 'LSTN-01', 'MSTN-design')."
+            )
+    except ValueError:
+        # If it's not a valid site name, continue with other checks
+        pass
+
+    # Validate it's a proper array element name or OBS name
+    try:
+        validate_array_element_name(instrument_name)
+    except ValueError as exc:
+        raise ValueError(
+            f"Invalid instrument name '{instrument_name}'. "
+            "Use 'OBS-North', 'OBS-South', or a valid array element name "
+            "(e.g., 'LSTN-01', 'MSTN-design')."
+        ) from exc
+
+    return instrument_name
