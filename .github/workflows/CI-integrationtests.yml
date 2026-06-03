@@ -80,7 +80,7 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: ${{ env.IT_NAME }}
-          key: corsika-interaction-tables-${{ env.CORSIKA_TABLES }}-${{ github.run_id }}
+          key: corsika-interaction-tables-${{ env.CORSIKA_TABLES }}
           restore-keys: |
             corsika-interaction-tables-${{ env.CORSIKA_TABLES }}-
 
