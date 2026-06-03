@@ -1,0 +1,42 @@
+---
+applications:
+- application: simtools-simulate-illuminator
+  configuration:
+    model_version: 7.0.0
+    output_path: simtools-output
+    site: North
+    simulate_all: true
+    light_source: ILLN-01
+    flasher_photons: 1e8
+    log_level: DEBUG
+  integration_tests:
+  - test_output_files:
+    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-02.simtel.zst
+      path_descriptor: output_path
+    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-03.simtel.zst
+      path_descriptor: output_path
+    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-05.simtel.zst
+      path_descriptor: output_path
+    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-06.simtel.zst
+      path_descriptor: output_path
+    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-07.simtel.zst
+      path_descriptor: output_path
+    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-10.simtel.zst
+      path_descriptor: output_path
+    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-15.simtel.zst
+      path_descriptor: output_path
+    - expected_sim_telarray_output:
+        pe_sum:
+        - 100
+        - 10000
+        photons:
+        - 1000
+        - 30000
+        event_type: illuminator
+      file: illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-02.simtel.zst
+      path_descriptor: output_path
+      output_sub_path: sim_telarray
+  model_version_use_current: true
+  test_name: run-multi-illuminator
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
