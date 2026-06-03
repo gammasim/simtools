@@ -103,6 +103,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Determine simulation model branch
+        id: simulation_model_branch
         env:
           HEAD_REF: ${{ github.head_ref }}
           REF_NAME: ${{ github.ref_name }}
@@ -126,16 +127,54 @@ jobs:
             BRANCH="$SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
           fi
           echo "SIMTOOLS_DB_SIMULATION_MODEL_BRANCH=$BRANCH" >> "$GITHUB_ENV"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Restore cached simulation models repository
+        if: github.event_name != 'schedule'
+        id: restore_simulation_models
+        uses: actions/cache/restore@v4
+        with:
+          path: simulation-models
+          key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}-${{ github.run_id }}
+          restore-keys: |
+            simulation-models-${{ steps.simulation_model_branch.outputs.branch }}-
 
       - name: Clone simulation models repository
         if: github.event_name != 'schedule'
         run: |
+          CLONE_DIR="simulation-models-clone"
+          CACHE_DIR="simulation-models"
+          rm -rf "$CLONE_DIR"
+
           for attempt in 1 2 3; do
-            git clone --depth 1 --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH" "$SIM_MODELS_REPO" "simulation-models" && break
-            echo "Clone attempt $attempt failed. Retrying in 120 seconds..."
-            rm -rf simulation-models
-            sleep 120
+            if timeout 180 git clone --depth 1 --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH" "$SIM_MODELS_REPO" "$CLONE_DIR"; then
+              rm -rf "$CACHE_DIR"
+              mv "$CLONE_DIR" "$CACHE_DIR"
+              echo "Successfully cloned simulation models branch $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
+              exit 0
+            fi
+
+            rm -rf "$CLONE_DIR"
+            if [[ "$attempt" -lt 3 ]]; then
+              echo "Clone attempt $attempt failed. Retrying in 120 seconds..."
+              sleep 120
+            fi
           done
+
+          if [[ -d "$CACHE_DIR" ]]; then
+            echo "GitLab clone failed; using cached simulation models branch $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
+            exit 0
+          fi
+
+          echo "Failed to clone simulation models branch $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH and no cache is available."
+          exit 1
+
+      - name: Save cached simulation models repository
+        if: github.event_name != 'schedule' && steps.restore_simulation_models.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: simulation-models
+          key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}-${{ github.run_id }}
 
       - name: Upload simulation models repository
         if: github.event_name != 'schedule'
