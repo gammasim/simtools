@@ -128,6 +128,80 @@ def test_efficiency_interval():
         parser.CommandLineParser.efficiency_interval(-8.5)
 
 
+def test_wavelength_nm():
+    """Test wavelength_nm parser returns astropy Quantity with nm units."""
+    # Test valid wavelengths as integers
+    result = parser.CommandLineParser.wavelength_nm(355)
+    assert isinstance(result, u.Quantity)
+    assert result.unit == u.nm
+    assert result.value == pytest.approx(355.0)
+
+    # Test valid wavelengths as floats
+    result = parser.CommandLineParser.wavelength_nm(473.5)
+    assert result.value == pytest.approx(473.5)
+    assert result.unit == u.nm
+
+    # Test valid wavelengths as strings
+    result = parser.CommandLineParser.wavelength_nm("266")
+    assert result.value == pytest.approx(266.0)
+    assert result.unit == u.nm
+
+    result = parser.CommandLineParser.wavelength_nm("532.0")
+    assert result.value == pytest.approx(532.0)
+    assert result.unit == u.nm
+
+    # Test various common wavelengths
+    for wl in [266, 355, 473, 532, 1000]:
+        result = parser.CommandLineParser.wavelength_nm(wl)
+        assert result.value == pytest.approx(float(wl))
+        assert result.unit == u.nm
+
+    # Test invalid wavelengths (negative)
+    with pytest.raises(
+        argparse.ArgumentTypeError,
+        match=r"Invalid wavelength value: '-100'.*Expected a positive number",
+    ):
+        parser.CommandLineParser.wavelength_nm(-100)
+
+    with pytest.raises(
+        argparse.ArgumentTypeError,
+        match=r"Invalid wavelength value: '-355.5'.*Expected a positive number",
+    ):
+        parser.CommandLineParser.wavelength_nm(-355.5)
+
+    # Test invalid wavelengths (zero)
+    with pytest.raises(
+        argparse.ArgumentTypeError,
+        match=r"Invalid wavelength value: '0'.*Expected a positive number",
+    ):
+        parser.CommandLineParser.wavelength_nm(0)
+
+    with pytest.raises(
+        argparse.ArgumentTypeError,
+        match=r"Invalid wavelength value: '0.0'.*Expected a positive number",
+    ):
+        parser.CommandLineParser.wavelength_nm("0.0")
+
+    # Test invalid input (non-numeric)
+    with pytest.raises(
+        argparse.ArgumentTypeError,
+        match=r"Invalid wavelength value: 'abc'.*Expected a positive number",
+    ):
+        parser.CommandLineParser.wavelength_nm("abc")
+
+    with pytest.raises(
+        argparse.ArgumentTypeError,
+        match=r"Invalid wavelength value: 'not_a_number'.*Expected a positive number",
+    ):
+        parser.CommandLineParser.wavelength_nm("not_a_number")
+
+    with pytest.raises(
+        argparse.ArgumentTypeError,
+        match=r"Invalid wavelength value: 'None'.*Expected a positive number",
+    ):
+        parser.CommandLineParser.wavelength_nm(None)
+
+
 def test_zenith_angle(caplog):
     assert parser.CommandLineParser.zenith_angle(0).value == pytest.approx(0.0)
     assert parser.CommandLineParser.zenith_angle(45).value == pytest.approx(45.0)
