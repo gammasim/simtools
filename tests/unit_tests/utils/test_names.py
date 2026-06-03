@@ -241,6 +241,8 @@ def test_get_array_element_type_from_name(invalid_name):
     assert names.get_array_element_type_from_name("SCTS-27") == "SCTS"
     assert names.get_array_element_type_from_name("MAGIC-2") == "MAGIC"
     assert names.get_array_element_type_from_name("VERITAS-4") == "VERITAS"
+    assert names.get_array_element_type_from_name("OBS-North") == "North"
+    assert names.get_array_element_type_from_name("OBS-South") == "South"
     for _name in ["", "01", "Not_a_telescope", "LST", "MST"]:
         with pytest.raises(ValueError, match=rf"^{invalid_name}"):
             names.get_array_element_type_from_name(_name)

@@ -327,8 +327,11 @@ class SimulatorLightEmission(SimtelRunner):
         radius = self.telescope_model.get_parameter_value_with_unit("telescope_sphere_radius")
         radius = radius.to(u.cm).value  # Convert radius to cm
 
+        tel = self._sanitize_name(self.light_emission_config.get("telescope") or "telescope")
+        cal = self._sanitize_name(self.light_emission_config.get("light_source") or "calibration")
         telescope_position_file = (
-            self.io_handler.get_output_directory("light_emission") / "telescope_position.dat"
+            self.io_handler.get_output_directory("light_emission")
+            / f"telescope_position_{tel}_{cal}.dat"
         )
         telescope_position_file.write_text(f"{x_tel} {y_tel} {z_tel} {radius}\n", encoding="utf-8")
         return telescope_position_file

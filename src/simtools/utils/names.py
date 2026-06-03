@@ -436,6 +436,8 @@ def get_array_element_type_from_name(array_element_name):
     try:  # e.g. instrument is 'North' as given for the site parameters
         return validate_site_name(array_element_name)
     except ValueError:  # any other telescope or calibration device
+        if array_element_name.startswith("OBS-"):
+            return validate_site_name(array_element_name.split("-", maxsplit=1)[1])
         return _validate_name(array_element_name.split("-")[0], array_elements())
 
 
