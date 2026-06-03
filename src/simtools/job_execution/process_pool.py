@@ -56,6 +56,31 @@ T = TypeVar("T")  # type of input items
 R = TypeVar("R")  # type of return values
 
 
+def determine_max_workers(max_workers=None, default_fraction=0.6):
+    """
+    Determine the number of worker processes to use.
+
+    Parameters
+    ----------
+    max_workers : int or None
+        User-specified number of workers. If None, uses a fraction of available CPUs.
+        If positive, uses that value. If <= 0, uses all available CPUs.
+    default_fraction : float
+        Fraction of CPU cores to use when max_workers is None (default: 0.6).
+
+    Returns
+    -------
+    int
+        Number of workers to use (at least 1).
+    """
+    cpu_count = os.cpu_count() or 1
+
+    if max_workers is None:
+        return max(1, int(cpu_count * default_fraction))
+
+    return max_workers if max_workers > 0 else cpu_count
+
+
 def process_pool_map_ordered(
     func,
     items,
@@ -73,7 +98,8 @@ def process_pool_map_ordered(
     items : iterable
         Items to process.
     max_workers : int or None
-        Number of worker processes. If ``None`` or ``<= 0``, uses ``os.cpu_count()``.
+        Number of worker processes. If ``None``, uses 60% of available CPUs.
+        If ``<= 0``, uses all available CPUs. If positive, uses that many workers.
     mp_start_method : str or None
         Multiprocessing start method (e.g. ``"fork"``, ``"spawn"``). If ``None``,
         uses the default context.
@@ -101,8 +127,8 @@ def process_pool_map_ordered(
     item_list = list(items)
     n_items = len(item_list)
 
-    if max_workers is None or int(max_workers) <= 0:
-        max_workers = os.cpu_count() or 1
+    # Determine workers: None -> 60% of CPUs, 0 or negative -> all CPUs, positive -> that value
+    max_workers = determine_max_workers(max_workers)
 
     # create a temporary list of Nones to hold results in input order
     results: list[R] = [None] * n_items  # type: ignore[list-item]

@@ -597,6 +597,25 @@ class CommandLineParser(argparse.ArgumentParser):
         return values if len(values) > 1 else values[0]
 
     @staticmethod
+    def instrument(value):
+        """
+        Argument parser type to check that a valid instrument name is given.
+
+        Parameters
+        ----------
+        value: str
+            Instrument name. Plain site names are not valid; use OBS-North/OBS-South
+            for site parameters.
+
+        Returns
+        -------
+        str
+            Validated instrument name.
+        """
+        names.validate_array_element_name(str(value))
+        return str(value)
+
+    @staticmethod
     def efficiency_interval(value):
         """
         Argument parser type to check that value is an efficiency in the interval [0,1].
