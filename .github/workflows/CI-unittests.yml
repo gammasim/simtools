@@ -176,6 +176,8 @@ jobs:
           unzip -q sonar-scanner.zip -d "$SONAR_SCANNER_CACHE_DIR"
 
       - name: Run Sonar scanner
+        # Soft fail for draft PRs (unstable network connections)
+        continue-on-error: ${{ github.event.pull_request.draft == true }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |

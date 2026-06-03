@@ -3,6 +3,13 @@ name: CI-integrationtests
 
 permissions: {}
 
+env:
+  CLONE_ATTEMPTS: 2
+  GIT_HTTP_CONNECT_TIMEOUT: 20
+  GIT_HTTP_LOW_SPEED_LIMIT: 1000
+  GIT_HTTP_LOW_SPEED_TIME: 30
+  RETRY_SLEEP_SECONDS: 60
+
 on:
   workflow_dispatch:
     inputs:
@@ -85,31 +92,39 @@ jobs:
           CLONE_DIR="${IT_NAME}-clone"
           CACHE_DIR="$IT_NAME"
           rm -rf "$CLONE_DIR"
+          CLONE_SUCCESS=false
 
-          for attempt in 1 2 3; do
-            if timeout 180 git clone --depth 1 --branch "$CORSIKA_TABLES" "$REPO_URL" "$CLONE_DIR"; then
+          for attempt in $(seq 1 "$CLONE_ATTEMPTS"); do
+            if git \
+              -c "http.connectTimeout=$GIT_HTTP_CONNECT_TIMEOUT" \
+              -c "http.lowSpeedLimit=$GIT_HTTP_LOW_SPEED_LIMIT" \
+              -c "http.lowSpeedTime=$GIT_HTTP_LOW_SPEED_TIME" \
+              clone --depth 1 --branch "$CORSIKA_TABLES" "$REPO_URL" "$CLONE_DIR"
+            then
               git lfs install
               (cd "$CLONE_DIR" && git lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III")
               rm -rf "$CACHE_DIR"
               mv "$CLONE_DIR" "$CACHE_DIR"
               echo "Successfully cloned CORSIKA interaction tables $CORSIKA_TABLES."
-              exit 0
+              CLONE_SUCCESS=true
+              break
             fi
 
             rm -rf "$CLONE_DIR"
-            if [[ "$attempt" -lt 3 ]]; then
-              echo "Clone attempt $attempt failed. Retrying in 120 seconds..."
-              sleep 120
+            if [[ "$attempt" -lt "$CLONE_ATTEMPTS" ]]; then
+              echo "Clone attempt $attempt failed. Retrying in $RETRY_SLEEP_SECONDS seconds..."
+              sleep "$RETRY_SLEEP_SECONDS"
             fi
           done
 
-          if [[ -d "$CACHE_DIR" ]]; then
-            echo "GitLab clone failed; using cached CORSIKA interaction tables $CORSIKA_TABLES."
-            exit 0
+          if [ "$CLONE_SUCCESS" = false ] && [ ! -d "$CACHE_DIR" ]; then
+            echo "Failed to clone CORSIKA interaction tables $CORSIKA_TABLES and no cache is available."
+            exit 1
           fi
 
-          echo "Failed to clone CORSIKA interaction tables $CORSIKA_TABLES and no cache is available."
-          exit 1
+          if [ "$CLONE_SUCCESS" = false ]; then
+            echo "GitLab clone failed; using cached CORSIKA interaction tables $CORSIKA_TABLES."
+          fi
 
       - name: Save cached CORSIKA interaction tables
         if: steps.restore_interaction_tables.outputs.cache-hit != 'true'
@@ -184,8 +199,13 @@ jobs:
           rm -rf "$CLONE_DIR"
           CLONE_SUCCESS=false
 
-          for attempt in 1 2 3; do
-            if timeout 180 git clone --depth 1 --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH" "$SIM_MODELS_REPO" "$CLONE_DIR"; then
+          for attempt in $(seq 1 "$CLONE_ATTEMPTS"); do
+            if git \
+              -c "http.connectTimeout=$GIT_HTTP_CONNECT_TIMEOUT" \
+              -c "http.lowSpeedLimit=$GIT_HTTP_LOW_SPEED_LIMIT" \
+              -c "http.lowSpeedTime=$GIT_HTTP_LOW_SPEED_TIME" \
+              clone --depth 1 --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH" "$SIM_MODELS_REPO" "$CLONE_DIR"
+            then
               rm -rf "$CACHE_DIR"
               mv "$CLONE_DIR" "$CACHE_DIR"
               echo "Successfully cloned simulation models branch $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
@@ -194,15 +214,19 @@ jobs:
             fi
 
             rm -rf "$CLONE_DIR"
-            if [[ "$attempt" -lt 3 ]]; then
-              echo "Clone attempt $attempt failed. Retrying in 120 seconds..."
-              sleep 120
+            if [[ "$attempt" -lt "$CLONE_ATTEMPTS" ]]; then
+              echo "Clone attempt $attempt failed. Retrying in $RETRY_SLEEP_SECONDS seconds..."
+              sleep "$RETRY_SLEEP_SECONDS"
             fi
           done
 
           if [ "$CLONE_SUCCESS" = false ] && [ ! -d "$CACHE_DIR" ]; then
-            echo "GitLab clone failed; using cached simulation models branch $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
+            echo "Failed to clone simulation models branch $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH and no cache is available."
             exit 1
+          fi
+
+          if [ "$CLONE_SUCCESS" = false ]; then
+            echo "GitLab clone failed; using cached simulation models branch $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
           fi
 
 
