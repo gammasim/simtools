@@ -68,18 +68,55 @@ jobs:
       CORSIKA_TABLES: "v0.1.0"
 
     steps:
+      - name: Restore cached CORSIKA interaction tables
+        id: restore_interaction_tables
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.IT_NAME }}
+          key: corsika-interaction-tables-${{ env.CORSIKA_TABLES }}-${{ github.run_id }}
+          restore-keys: |
+            corsika-interaction-tables-${{ env.CORSIKA_TABLES }}-
+
       - name: Clone CORSIKA interaction tables (exclude QGSJet tables)
         run: |
           REPO_URL=https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/${IT_NAME}
           export GIT_LFS_SKIP_SMUDGE=1  # disable automatic downloading of all LFS files
+
+          CLONE_DIR="${IT_NAME}-clone"
+          CACHE_DIR="$IT_NAME"
+          rm -rf "$CLONE_DIR"
+
           for attempt in 1 2 3; do
-            git clone --depth 1 --branch "$CORSIKA_TABLES" "$REPO_URL" "$IT_NAME" && break
-            echo "Clone attempt $attempt failed. Retrying in 120 seconds..."
-            rm -rf "$IT_NAME"
-            sleep 120
+            if timeout 180 git clone --depth 1 --branch "$CORSIKA_TABLES" "$REPO_URL" "$CLONE_DIR"; then
+              git lfs install
+              (cd "$CLONE_DIR" && git lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III")
+              rm -rf "$CACHE_DIR"
+              mv "$CLONE_DIR" "$CACHE_DIR"
+              echo "Successfully cloned CORSIKA interaction tables $CORSIKA_TABLES."
+              exit 0
+            fi
+
+            rm -rf "$CLONE_DIR"
+            if [[ "$attempt" -lt 3 ]]; then
+              echo "Clone attempt $attempt failed. Retrying in 120 seconds..."
+              sleep 120
+            fi
           done
-          git lfs install
-          (cd "$IT_NAME" && git lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III")
+
+          if [[ -d "$CACHE_DIR" ]]; then
+            echo "GitLab clone failed; using cached CORSIKA interaction tables $CORSIKA_TABLES."
+            exit 0
+          fi
+
+          echo "Failed to clone CORSIKA interaction tables $CORSIKA_TABLES and no cache is available."
+          exit 1
+
+      - name: Save cached CORSIKA interaction tables
+        if: steps.restore_interaction_tables.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.IT_NAME }}
+          key: corsika-interaction-tables-${{ env.CORSIKA_TABLES }}-${{ github.run_id }}
 
       - name: Upload CORSIKA interaction tables
         uses: actions/upload-artifact@v7
