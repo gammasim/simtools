@@ -154,22 +154,12 @@ jobs:
           name: coverage-python-3.13
           path: .
 
-      - name: Check Sonar scanner mirror configuration
-        env:
-          SONAR_SCANNER_BINARIES_URL: ${{ vars.SONAR_SCANNER_BINARIES_URL }}
-        run: |
-          if [[ -z "${SONAR_SCANNER_BINARIES_URL}" ]]; then
-            echo "Set the SONAR_SCANNER_BINARIES_URL repository or organization variable to the mirrored sonar-scanner-cli Distribution URL."
-            exit 1
-          fi
-
       # CTAO-DPPS-SonarQube
       - uses: SonarSource/sonarqube-scan-action@v8.1.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           scannerVersion: 8.1.0.6389
-          scannerBinariesUrl: ${{ vars.SONAR_SCANNER_BINARIES_URL }}
           args: >
             -Dsonar.projectKey=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14
             -Dsonar.host.url=https://sonar-ctao.zeuthen.desy.de
