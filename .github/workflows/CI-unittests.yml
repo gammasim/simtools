@@ -1,6 +1,6 @@
 ---
 name: CI-unittests
-# Unit tests (includes CTAO-SonarQube)
+# Unit tests and CTAO-SonarQube
 
 on:
   workflow_dispatch:
@@ -72,7 +72,7 @@ jobs:
 
           - os: ubuntu-latest
             python-version: "3.13"
-            extra-args: ["sonarqube", "random-order"]
+            extra-args: ["random-order"]
 
           - os: ubuntu-latest
             python-version: "3.14"
@@ -115,20 +115,14 @@ jobs:
           pytest --durations=10 --color=yes -n 4 --dist loadscope \
             --cov=simtools --cov-report=xml --retries 2 --retry-delay 5
 
-      # CTAO-DPPS-SonarQube
-      - uses: SonarSource/sonarqube-scan-action@v8.1.0
-        if: contains(matrix.extra-args, 'sonarqube')
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Upload coverage report
+        if: matrix.python-version == '3.13'
+        uses: actions/upload-artifact@v7
         with:
-          args: >
-            -Dsonar.projectKey=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14
-            -Dsonar.host.url=https://sonar-ctao.zeuthen.desy.de
-            -Dsonar.qualitygate.wait=true
-            -Dsonar.python.coverage.reportPaths=coverage.xml
-            -Dsonar.python.version=${{ matrix.python-version }}
-            -Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py
-            -Dsonar.coverage.exclusions=**/tests/**,src/simtools/applications/**
+          name: coverage-python-3.13
+          path: coverage.xml
+          if-no-files-found: error
+          retention-days: 3
 
       - name: Random order
         if: github.event_name == 'schedule' && contains(matrix.extra-args, 'random-order')
@@ -139,3 +133,48 @@ jobs:
         run: |
           pytest --color=yes -n 4 --dist loadscope --count 5 --random-order \
            --retries 2 --retry-delay 5
+
+  sonarqube:
+    needs: unit_tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v8
+        with:
+          name: coverage-python-3.13
+          path: .
+
+      - name: Check Sonar scanner mirror configuration
+        env:
+          SONAR_SCANNER_BINARIES_URL: ${{ vars.SONAR_SCANNER_BINARIES_URL }}
+        run: |
+          if [[ -z "${SONAR_SCANNER_BINARIES_URL}" ]]; then
+            echo "Set the SONAR_SCANNER_BINARIES_URL repository or organization variable to the mirrored sonar-scanner-cli Distribution URL."
+            exit 1
+          fi
+
+      # CTAO-DPPS-SonarQube
+      - uses: SonarSource/sonarqube-scan-action@v8.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          scannerVersion: 8.1.0.6389
+          scannerBinariesUrl: ${{ vars.SONAR_SCANNER_BINARIES_URL }}
+          args: >
+            -Dsonar.projectKey=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14
+            -Dsonar.host.url=https://sonar-ctao.zeuthen.desy.de
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.python.version=3.13
+            -Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py
+            -Dsonar.coverage.exclusions=**/tests/**,src/simtools/applications/**
