@@ -176,6 +176,7 @@ jobs:
           unzip -q sonar-scanner.zip -d "$SONAR_SCANNER_CACHE_DIR"
 
       - name: Run Sonar scanner
+        id: sonar_scan
         # Soft fail for draft PRs (unstable network connections)
         continue-on-error: ${{ github.event.pull_request.draft == true }}
         env:
@@ -225,3 +226,23 @@ jobs:
 
           echo "Sonar scanner failed after 3 attempts."
           exit 1
+
+      - name: Report soft-failed Sonar scan
+        if: always() && github.event.pull_request.draft == true && steps.sonar_scan.outcome == 'failure'
+        run: |
+          echo "::warning::Sonar scan failed but was allowed to continue because this is a draft PR."
+          {
+            echo "## Sonar scan soft failure"
+            echo
+            echo "The Sonar scan failed, but the workflow continued because this is a draft PR."
+            echo "Open the \`Run Sonar scanner\` step logs for details."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload soft-failed Sonar logs
+        if: always() && github.event.pull_request.draft == true && steps.sonar_scan.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: sonar-scanner-logs
+          path: sonar-scanner-attempt-*.log
+          if-no-files-found: ignore
+          retention-days: 7
