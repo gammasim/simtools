@@ -52,7 +52,9 @@ def _add_arguments(parser):
     parser.add_argument(
         "--parameter", type=str, required=True, help="Parameter for simulation model"
     )
-    parser.add_argument("--instrument", type=str, required=True, help="Instrument name")
+    parser.add_argument(
+        "--instrument", type=parser.instrument, required=True, help="Instrument name"
+    )
     parser.add_argument("--site", type=str, required=True, help="Site location")
     parser.add_argument("--parameter_version", type=str, required=True, help="Parameter version")
     parser.add_argument(
