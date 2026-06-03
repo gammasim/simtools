@@ -137,6 +137,10 @@ jobs:
   sonarqube:
     needs: unit_tests
     runs-on: ubuntu-latest
+    env:
+      SONAR_SCANNER_VERSION: 8.1.0.6389
+      SONAR_SCANNER_PLATFORM: linux-x64
+      SONAR_SCANNER_CACHE_DIR: .sonar/sonar-scanner
 
     defaults:
       run:
@@ -155,16 +159,31 @@ jobs:
           path: .
 
       # CTAO-DPPS-SonarQube
-      - uses: SonarSource/sonarqube-scan-action@v8.1.0
+      - name: Restore Sonar scanner cache
+        id: sonar_scanner_cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.SONAR_SCANNER_CACHE_DIR }}
+          key: sonar-scanner-${{ runner.os }}-${{ runner.arch }}-${{ env.SONAR_SCANNER_VERSION }}
+
+      - name: Install Sonar scanner
+        if: steps.sonar_scanner_cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "$SONAR_SCANNER_CACHE_DIR"
+          curl --fail --location --retry 5 --retry-delay 20 --retry-all-errors \
+            "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-${SONAR_SCANNER_PLATFORM}.zip" \
+            --output sonar-scanner.zip
+          unzip -q sonar-scanner.zip -d "$SONAR_SCANNER_CACHE_DIR"
+
+      - name: Run Sonar scanner
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          scannerVersion: 8.1.0.6389
-          args: >
-            -Dsonar.projectKey=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14
-            -Dsonar.host.url=https://sonar-ctao.zeuthen.desy.de
-            -Dsonar.qualitygate.wait=true
-            -Dsonar.python.coverage.reportPaths=coverage.xml
-            -Dsonar.python.version=3.13
-            -Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py
+        run: |
+          "${SONAR_SCANNER_CACHE_DIR}/sonar-scanner-${SONAR_SCANNER_VERSION}-${SONAR_SCANNER_PLATFORM}/bin/sonar-scanner" \
+            -Dsonar.projectKey=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14 \
+            -Dsonar.host.url=https://sonar-ctao.zeuthen.desy.de \
+            -Dsonar.qualitygate.wait=true \
+            -Dsonar.python.coverage.reportPaths=coverage.xml \
+            -Dsonar.python.version=3.13 \
+            -Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py \
             -Dsonar.coverage.exclusions=**/tests/**,src/simtools/applications/**
