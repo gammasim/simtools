@@ -182,10 +182,9 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          final_status=1
+          set +e
           for attempt in 1 2 3; do
             scanner_log="sonar-scanner-attempt-${attempt}.log"
-            set +e
             "${SONAR_SCANNER_CACHE_DIR}/sonar-scanner-${SONAR_SCANNER_VERSION}-${SONAR_SCANNER_PLATFORM}/bin/sonar-scanner" \
               -Dsonar.projectKey=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14 \
               -Dsonar.host.url=https://sonar-ctao.zeuthen.desy.de \
@@ -200,26 +199,22 @@ jobs:
               -Dsonar.coverage.exclusions=**/tests/**,src/simtools/applications/** \
               2>&1 | tee "$scanner_log"
             status=${PIPESTATUS[0]}
-            set -e
 
             echo "Sonar scanner attempt $attempt exited with status $status."
 
             if [[ "$status" -eq 0 ]]; then
-              final_status=0
               echo "Sonar scanner succeeded."
-              break
+              exit 0
             fi
 
             if grep -Eqi "QUALITY GATE STATUS: FAILED|quality gate failed" "$scanner_log"; then
               echo "Sonar quality gate failed; not retrying."
-              final_status="$status"
-              break
+              exit "$status"
             fi
 
             if ! grep -Eqi "HTTP connect timed out|connect timed out|Connection refused|Connection reset|Failed to query server version|Failed to upload report|Failed to request|timeout|timed out|temporarily unavailable|502|503|504" "$scanner_log"; then
               echo "Sonar scanner failed with a non-transient error; not retrying."
-              final_status="$status"
-              break
+              exit "$status"
             fi
 
             if [[ "$attempt" -lt 3 ]]; then
@@ -229,10 +224,8 @@ jobs:
             fi
           done
 
-          if [[ "$final_status" -ne 0 ]]; then
-            echo "Sonar scanner failed with status $final_status."
-          fi
-          exit "$final_status"
+          echo "Sonar scanner failed after 3 attempts."
+          exit 1
 
       - name: Report soft-failed Sonar scan
         if: always() && github.event.pull_request.draft == true && steps.sonar_scan.outcome == 'failure'
