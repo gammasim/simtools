@@ -55,6 +55,14 @@ Example Usage
         --model_version 7.0.0 --simulate_all \
         --max_workers 8
 
+6. Simulate with a specific wavelength (e.g., 355 nm):
+
+    .. code-block:: console
+
+        simtools-simulate-illuminator --light_source ILLN-01 \
+        --telescope MSTN-04 --site North \
+        --model_version 7.0.0 --wavelength 355
+
 Command Line Arguments
 ----------------------
 light_source (str, optional)
@@ -64,6 +72,10 @@ number_of_events (int, optional)
     Number of events to simulate.
 flasher_photons (int, optional)
     Overwrite the model parameter flasher_photons.
+wavelength (float, optional)
+    Wavelength in nanometers. Must be one of the wavelengths supported by the
+    illuminator model. Will be validated against the model's allowed wavelengths
+    (typically 266, 355, 473, or 532 nm for CTAO production 7.0.0).
 telescope (str, optional)
     Telescope model name (e.g. LSTN-01, MSTN-04, ...). Required for single-pair mode.
     In multi-pair mode, used as a filter (simulate only pairs with this telescope).
@@ -152,6 +164,16 @@ def _add_arguments(parser):
             "Accepts integers including scientific notation, e.g. 1e8."
         ),
         type=parser.scientific_int,
+        required=False,
+    )
+    parser.add_argument(
+        "--wavelength",
+        help=(
+            "Wavelength in nanometers. Must be one of the wavelengths "
+            "supported by the illuminator model (typically 266, 355, 473, or 532 nm). "
+            "Will be validated against the model's allowed wavelengths."
+        ),
+        type=parser.wavelength_nm,
         required=False,
     )
 
