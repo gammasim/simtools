@@ -182,6 +182,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
+          final_status=1
           for attempt in 1 2 3; do
             scanner_log="sonar-scanner-attempt-${attempt}.log"
             set +e
@@ -204,17 +205,21 @@ jobs:
             echo "Sonar scanner attempt $attempt exited with status $status."
 
             if [[ "$status" -eq 0 ]]; then
-              exit 0
+              final_status=0
+              echo "Sonar scanner succeeded."
+              break
             fi
 
             if grep -Eqi "QUALITY GATE STATUS: FAILED|quality gate failed" "$scanner_log"; then
               echo "Sonar quality gate failed; not retrying."
-              exit "$status"
+              final_status="$status"
+              break
             fi
 
             if ! grep -Eqi "HTTP connect timed out|connect timed out|Connection refused|Connection reset|Failed to query server version|Failed to upload report|Failed to request|timeout|timed out|temporarily unavailable|502|503|504" "$scanner_log"; then
               echo "Sonar scanner failed with a non-transient error; not retrying."
-              exit "$status"
+              final_status="$status"
+              break
             fi
 
             if [[ "$attempt" -lt 3 ]]; then
@@ -224,8 +229,10 @@ jobs:
             fi
           done
 
-          echo "Sonar scanner failed after 3 attempts."
-          exit 1
+          if [[ "$final_status" -ne 0 ]]; then
+            echo "Sonar scanner failed with status $final_status."
+          fi
+          exit "$final_status"
 
       - name: Report soft-failed Sonar scan
         if: always() && github.event.pull_request.draft == true && steps.sonar_scan.outcome == 'failure'
