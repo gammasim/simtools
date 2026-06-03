@@ -102,7 +102,11 @@ jobs:
               clone --depth 1 --branch "$CORSIKA_TABLES" "$REPO_URL" "$CLONE_DIR"
             then
               git lfs install
-              (cd "$CLONE_DIR" && git lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III")
+              if ! (cd "$CLONE_DIR" && git lfs pull --exclude="interaction-tables/qgsdat-II-04,interaction-tables/qgsdat-III"); then
+                echo "git lfs pull failed; will retry and/or fall back to the cache."
+                rm -rf "$CLONE_DIR"
+                continue
+              fi
               rm -rf "$CACHE_DIR"
               mv "$CLONE_DIR" "$CACHE_DIR"
               echo "Successfully cloned CORSIKA interaction tables $CORSIKA_TABLES."
