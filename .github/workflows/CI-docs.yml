@@ -98,6 +98,9 @@ jobs:
       contents: write
 
     steps:
+      - name: checkout
+        uses: actions/checkout@v6
+
       - name: Download built docs
         uses: actions/download-artifact@v8
         with:
@@ -123,3 +126,4 @@ jobs:
           folder: docs/build/html
           target-folder: .
           clean: false
+          dry-run: true
