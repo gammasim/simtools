@@ -637,6 +637,40 @@ class CommandLineParser(argparse.ArgumentParser):
         return fvalue
 
     @staticmethod
+    def wavelength_nm(value):
+        """
+        Argument parser type for wavelength in nanometers.
+
+        Validates that the value is a positive number suitable for a wavelength.
+        Final validation against allowed wavelengths is performed during simulation
+        setup when model parameters are available.
+
+        Parameters
+        ----------
+        value: str, int, or float
+            Wavelength value in nanometers
+
+        Returns
+        -------
+        astropy.units.Quantity
+            Validated wavelength value with nm units
+
+        Raises
+        ------
+        argparse.ArgumentTypeError
+            If the value is not a positive number
+        """
+        try:
+            wl_value = float(value)
+            if wl_value <= 0:
+                raise ValueError("Wavelength must be positive")
+            return wl_value * u.nm
+        except (ValueError, TypeError) as exc:
+            raise argparse.ArgumentTypeError(
+                f"Invalid wavelength value: '{value}'. Expected a positive number in nanometers."
+            ) from exc
+
+    @staticmethod
     def quantity(target_unit):
         """
         Build an argument parser type for quantities convertible to a target unit.
