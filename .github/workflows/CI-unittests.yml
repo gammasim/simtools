@@ -161,7 +161,7 @@ jobs:
       # CTAO-DPPS-SonarQube
       - name: Restore Sonar scanner cache
         id: sonar_scanner_cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.SONAR_SCANNER_CACHE_DIR }}
           key: sonar-scanner-${{ runner.os }}-${{ runner.arch }}-${{ env.SONAR_SCANNER_VERSION }}
