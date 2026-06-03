@@ -135,7 +135,7 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: ${{ env.IT_NAME }}
-          key: corsika-interaction-tables-${{ env.CORSIKA_TABLES }}-${{ github.run_id }}
+          key: corsika-interaction-tables-${{ env.CORSIKA_TABLES }}
 
       - name: Upload CORSIKA interaction tables
         uses: actions/upload-artifact@v7
