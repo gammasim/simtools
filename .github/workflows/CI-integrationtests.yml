@@ -70,7 +70,7 @@ jobs:
     steps:
       - name: Restore cached CORSIKA interaction tables
         id: restore_interaction_tables
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.IT_NAME }}
           key: corsika-interaction-tables-${{ env.CORSIKA_TABLES }}-${{ github.run_id }}
@@ -113,7 +113,7 @@ jobs:
 
       - name: Save cached CORSIKA interaction tables
         if: steps.restore_interaction_tables.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: ${{ env.IT_NAME }}
           key: corsika-interaction-tables-${{ env.CORSIKA_TABLES }}-${{ github.run_id }}
@@ -169,7 +169,7 @@ jobs:
       - name: Restore cached simulation models repository
         if: github.event_name != 'schedule'
         id: restore_simulation_models
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: simulation-models
           key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}-${{ github.run_id }}
@@ -208,7 +208,7 @@ jobs:
 
       - name: Save cached simulation models repository
         if: github.event_name != 'schedule' && steps.restore_simulation_models.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: simulation-models
           key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}-${{ github.run_id }}
