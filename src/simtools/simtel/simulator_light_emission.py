@@ -83,6 +83,39 @@ class SimulatorLightEmission(SimtelRunner):
                 "flasher_photons"
             )
 
+        if config.get("wavelength") is not None:
+            requested_wavelength = config["wavelength"].to(u.nm)
+
+            # Get allowed wavelengths from the model
+            allowed_wavelengths_with_unit = self.calibration_model.get_parameter_value_with_unit(
+                "flasher_wavelength"
+            )
+            # Convert to nm for comparison
+            allowed_wavelengths = [wl.to(u.nm) for wl in allowed_wavelengths_with_unit]
+
+            # Validate that requested wavelength is one of the allowed wavelengths
+            # Use a small tolerance for floating point comparison
+            tolerance = 0.5 * u.nm
+            if not any(abs(requested_wavelength - wl) < tolerance for wl in allowed_wavelengths):
+                allowed_values = [wl.value for wl in allowed_wavelengths]
+                raise ValueError(
+                    f"Wavelength {requested_wavelength.value} nm is not supported by the "
+                    f"illuminator. Allowed wavelengths are: {allowed_values} nm"
+                )
+
+            # Find the closest match and use that exact value
+            closest_wavelength = min(
+                allowed_wavelengths, key=lambda wl: abs(wl - requested_wavelength)
+            )
+
+            # Override the model parameter with the selected wavelength
+            self.calibration_model.overwrite_model_parameter(
+                "flasher_wavelength", closest_wavelength
+            )
+            config["wavelength"] = closest_wavelength
+
+            self._logger.info(f"Using wavelength: {closest_wavelength.value} nm")
+
         if config.get("light_source_position") is not None:
             config["light_source_position"] = (
                 np.array(config["light_source_position"], dtype=float) * u.m

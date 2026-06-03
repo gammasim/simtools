@@ -1999,3 +1999,93 @@ def test_validate_simulations_missing_output(simulator_instance, tmp_test_direct
     ):
         with pytest.raises(ValueError, match="Validation failed"):
             simulator_instance.validate_simulations()
+
+
+def test__initialize_light_emission_configuration_with_valid_wavelength(simulator_instance):
+    """Test _initialize_light_emission_configuration with a valid wavelength."""
+
+    # Mock calibration model responses
+    def mock_get_parameter_value(param_name):
+        if param_name == "flasher_type":
+            return "illuminator"
+        if param_name == "flasher_photons":
+            return 5e6
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
+
+    # Mock the get_parameter_value_with_unit to return allowed wavelengths
+    allowed_wavelengths = [266 * u.nm, 355 * u.nm, 473 * u.nm, 532 * u.nm]
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = (
+        allowed_wavelengths
+    )
+
+    # Test with a valid wavelength (355 nm as Quantity)
+    config = {"wavelength": 355.0 * u.nm}
+    result = simulator_instance._initialize_light_emission_configuration(config)
+
+    # Verify wavelength was set and model parameter was overwritten
+    assert result["wavelength"].to(u.nm).value == pytest.approx(355.0)
+    simulator_instance.calibration_model.overwrite_model_parameter.assert_called_with(
+        "flasher_wavelength", 355.0 * u.nm
+    )
+    simulator_instance._logger.info.assert_called_with("Using wavelength: 355.0 nm")
+
+
+def test__initialize_light_emission_configuration_with_invalid_wavelength(simulator_instance):
+    """Test _initialize_light_emission_configuration with an invalid wavelength."""
+
+    # Mock calibration model responses
+    def mock_get_parameter_value(param_name):
+        if param_name == "flasher_type":
+            return "illuminator"
+        if param_name == "flasher_photons":
+            return 5e6
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
+
+    # Mock the get_parameter_value_with_unit to return allowed wavelengths
+    allowed_wavelengths = [266 * u.nm, 355 * u.nm, 473 * u.nm, 532 * u.nm]
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = (
+        allowed_wavelengths
+    )
+
+    # Test with an invalid wavelength (400 nm - not in the allowed list)
+    config = {"wavelength": 400.0 * u.nm}
+
+    with pytest.raises(
+        ValueError,
+        match=r"Wavelength 400\.0 nm is not supported.*Allowed wavelengths are.*",
+    ):
+        simulator_instance._initialize_light_emission_configuration(config)
+
+
+def test__initialize_light_emission_configuration_wavelength_close_match(simulator_instance):
+    """Test wavelength validation accepts values within tolerance of allowed wavelengths."""
+
+    # Mock calibration model responses
+    def mock_get_parameter_value(param_name):
+        if param_name == "flasher_type":
+            return "illuminator"
+        if param_name == "flasher_photons":
+            return 5e6
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
+
+    # Mock the get_parameter_value_with_unit to return allowed wavelengths
+    allowed_wavelengths = [266 * u.nm, 355 * u.nm, 473 * u.nm, 532 * u.nm]
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = (
+        allowed_wavelengths
+    )
+
+    # Test with a wavelength close to 355 (within 0.5 nm tolerance)
+    config = {"wavelength": 355.3 * u.nm}
+    result = simulator_instance._initialize_light_emission_configuration(config)
+
+    # Should snap to the closest allowed wavelength (355)
+    assert result["wavelength"].to(u.nm).value == pytest.approx(355.0)
+    simulator_instance.calibration_model.overwrite_model_parameter.assert_called_with(
+        "flasher_wavelength", 355.0 * u.nm
+    )
