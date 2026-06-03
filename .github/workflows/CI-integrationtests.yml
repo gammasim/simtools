@@ -182,13 +182,15 @@ jobs:
           CLONE_DIR="simulation-models-clone"
           CACHE_DIR="simulation-models"
           rm -rf "$CLONE_DIR"
+          CLONE_SUCCESS=false
 
           for attempt in 1 2 3; do
             if timeout 180 git clone --depth 1 --branch "$SIMTOOLS_DB_SIMULATION_MODEL_BRANCH" "$SIM_MODELS_REPO" "$CLONE_DIR"; then
               rm -rf "$CACHE_DIR"
               mv "$CLONE_DIR" "$CACHE_DIR"
               echo "Successfully cloned simulation models branch $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
-              exit 0
+              CLONE_SUCCESS=true
+              break
             fi
 
             rm -rf "$CLONE_DIR"
@@ -198,13 +200,11 @@ jobs:
             fi
           done
 
-          if [[ -d "$CACHE_DIR" ]]; then
+          if [ "$CLONE_SUCCESS" = false ] && [ ! -d "$CACHE_DIR" ]; then
             echo "GitLab clone failed; using cached simulation models branch $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH."
-            exit 0
+            exit 1
           fi
 
-          echo "Failed to clone simulation models branch $SIMTOOLS_DB_SIMULATION_MODEL_BRANCH and no cache is available."
-          exit 1
 
       - name: Save cached simulation models repository
         if: github.event_name != 'schedule' && steps.restore_simulation_models.outputs.cache-hit != 'true'
