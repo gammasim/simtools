@@ -186,7 +186,7 @@ jobs:
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
       - name: Restore cached simulation models repository
-        if: github.event_name != 'schedule'
+        # if: github.event_name != 'schedule'
         id: restore_simulation_models
         uses: actions/cache/restore@v5
         with:
@@ -196,7 +196,7 @@ jobs:
             simulation-models-${{ steps.simulation_model_branch.outputs.branch }}-
 
       - name: Clone simulation models repository
-        if: github.event_name != 'schedule'
+        # if: github.event_name != 'schedule'
         run: |
           CLONE_DIR="simulation-models-clone"
           CACHE_DIR="simulation-models"
@@ -235,14 +235,14 @@ jobs:
 
 
       - name: Save cached simulation models repository
-        if: github.event_name != 'schedule' && steps.restore_simulation_models.outputs.cache-hit != 'true'
+        # if: github.event_name != 'schedule' && steps.restore_simulation_models.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
           path: simulation-models
           key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}-${{ github.run_id }}
 
       - name: Upload simulation models repository
-        if: github.event_name != 'schedule'
+        # if: github.event_name != 'schedule'
         uses: actions/upload-artifact@v7
         with:
           name: simulation-models-repo
@@ -326,7 +326,7 @@ jobs:
           path: ${{ env.SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH }}/..
 
       - name: Download simulation models repository
-        if: github.event_name != 'schedule'
+        # if: github.event_name != 'schedule'
         uses: actions/download-artifact@v8
         with:
           name: simulation-models-repo
@@ -347,7 +347,7 @@ jobs:
           pip install --no-cache-dir -e '.[tests,dev,doc]'
 
       - name: Upload data to MongoDB
-        if: github.event_name != 'schedule'
+        # if: github.event_name != 'schedule'
         run: |
           simtools-db-upload-model-repository \
             --db_simulation_model ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }} \
