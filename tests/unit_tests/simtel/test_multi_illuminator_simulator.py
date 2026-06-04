@@ -488,7 +488,6 @@ def test_simulate_with_wavelengths_provided(
     mock_sim_class, mock_pool, simple_visibility_data, base_config
 ):
     """Test simulate() with explicit wavelengths."""
-    import astropy.units as u
 
     # Mock return value: 4 pairs x 2 wavelengths = 8 results
     mock_pool.return_value = [
@@ -549,7 +548,6 @@ def test_simulate_with_wavelengths_from_model(
     mock_get_wavelengths, mock_pool, simple_visibility_data, base_config
 ):
     """Test simulate() fetches wavelengths from model when not provided."""
-    import astropy.units as u
 
     # Mock wavelengths from model
     model_wavelengths = [266 * u.nm, 355 * u.nm, 473 * u.nm, 532 * u.nm]
@@ -601,7 +599,6 @@ def test_simulate_with_wavelengths_from_model(
 @patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
 def test_simulate_with_wavelength_in_config(mock_pool, simple_visibility_data, base_config):
     """Test simulate() uses wavelength from base_config if present."""
-    import astropy.units as u
 
     # Add wavelength to config
     config_with_wl = base_config.copy()
@@ -659,7 +656,6 @@ def test_simulate_with_list_of_wavelengths_in_config(
     mock_pool, simple_visibility_data, base_config
 ):
     """Test simulate() handles list of wavelengths in config."""
-    import astropy.units as u
 
     # Add list of wavelengths to config
     config_with_wl = base_config.copy()
@@ -706,7 +702,6 @@ def test_simulate_wavelengths_parameter_overrides_config(
     mock_get_wavelengths, mock_pool, simple_visibility_data, base_config
 ):
     """Test that explicit wavelengths parameter overrides config."""
-    import astropy.units as u
 
     # Add wavelength to config
     config_with_wl = base_config.copy()
@@ -752,7 +747,6 @@ def test_simulate_wavelength_labels_formatted_correctly(
     mock_pool, simple_visibility_data, base_config
 ):
     """Test that wavelength labels are formatted correctly (no decimal points)."""
-    import astropy.units as u
 
     mock_pool.return_value = []
 
