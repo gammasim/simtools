@@ -163,7 +163,8 @@ def test_simulate_all_pairs(mock_pool, simple_visibility_data, base_config):
 
 
 @patch(
-    "simtools.simtel.simulator_light_emission.SimulatorLightEmission.get_available_wavelengths_from_config"
+    "simtools.simtel.simulator_light_emission."
+    "SimulatorLightEmission.get_available_wavelengths_from_config"
 )
 @patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
 def test_simulate_filter_by_illuminators(
@@ -197,7 +198,8 @@ def test_simulate_filter_by_illuminators(
 
 
 @patch(
-    "simtools.simtel.simulator_light_emission.SimulatorLightEmission.get_available_wavelengths_from_config"
+    "simtools.simtel.simulator_light_emission."
+    "SimulatorLightEmission.get_available_wavelengths_from_config"
 )
 @patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
 def test_simulate_filter_by_telescopes(
@@ -540,7 +542,8 @@ def test_simulate_with_wavelengths_provided(
 
 @patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
 @patch(
-    "simtools.simtel.simulator_light_emission.SimulatorLightEmission.get_available_wavelengths_from_config"
+    "simtools.simtel.simulator_light_emission."
+    "SimulatorLightEmission.get_available_wavelengths_from_config"
 )
 def test_simulate_with_wavelengths_from_model(
     mock_get_wavelengths, mock_pool, simple_visibility_data, base_config
@@ -696,7 +699,8 @@ def test_simulate_with_list_of_wavelengths_in_config(
 
 @patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
 @patch(
-    "simtools.simtel.simulator_light_emission.SimulatorLightEmission.get_available_wavelengths_from_config"
+    "simtools.simtel.simulator_light_emission."
+    "SimulatorLightEmission.get_available_wavelengths_from_config"
 )
 def test_simulate_wavelengths_parameter_overrides_config(
     mock_get_wavelengths, mock_pool, simple_visibility_data, base_config
