@@ -235,7 +235,7 @@ jobs:
 
 
       - name: Save cached simulation models repository
-        # if: github.event_name != 'schedule' && steps.restore_simulation_models.outputs.cache-hit != 'true'
+        if: steps.restore_simulation_models.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
           path: simulation-models
