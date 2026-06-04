@@ -40,33 +40,46 @@ class SimulatorLightEmission(SimtelRunner):
         Get available wavelengths from model configuration without full initialization.
 
         This is a lightweight method that only initializes the calibration model
-        to retrieve wavelengths, without creating a full SimulatorLightEmission instance.
+        to retrieve wavelengths, without telescope/site models or file I/O.
 
         Parameters
         ----------
         config : dict
-            Configuration dictionary with site, telescope, light_source, and model_version
+            Configuration dictionary with site, light_source, and model_version
 
         Returns
         -------
         list of astropy.units.Quantity
             List of available wavelengths with units
-        """
-        _, _, calibration_model = initialize_simulation_models(
-            label="temp_wavelength_query",
-            site=config.get("site"),
-            telescope_name=config.get("telescope"),
-            calibration_device_name=config.get("light_source"),
-            calibration_device_type=config.get("light_source_type"),
-            model_version=config.get("model_version"),
-        )
 
-        if calibration_model is None:
-            raise RuntimeError(
-                f"Failed to initialize calibration model. "
-                f"Config: site={config.get('site')}, telescope={config.get('telescope')}, "
-                f"light_source={config.get('light_source')}"
+        Raises
+        ------
+        ValueError
+            If required configuration keys are missing
+        """
+        # Import here to avoid unnecessary model initialization in other contexts
+        # pylint: disable=import-outside-toplevel
+        from simtools.model.calibration_model import CalibrationModel
+        from simtools.model.model_utils import read_overwrite_model_parameter_dict
+        # pylint: enable=import-outside-toplevel
+
+        site = config.get("site")
+        model_version = config.get("model_version")
+        light_source = config.get("light_source")
+
+        if site is None or model_version is None or light_source is None:
+            raise ValueError(
+                "Missing required configuration keys for wavelength query: "
+                f"site={site}, model_version={model_version}, light_source={light_source}"
             )
+
+        calibration_model = CalibrationModel(
+            site=site,
+            calibration_device_model_name=light_source,
+            model_version=model_version,
+            label=f"temp_wavelength_query_{light_source}",
+            overwrite_model_parameter_dict=read_overwrite_model_parameter_dict(),
+        )
 
         wavelengths = calibration_model.get_parameter_value_with_unit("flasher_wavelength")
         return general.ensure_list(wavelengths)

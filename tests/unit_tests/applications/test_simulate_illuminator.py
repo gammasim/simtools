@@ -28,8 +28,9 @@ def test_main_single_pair_mode(mock_build_app, mock_simulator_class):
     }
     mock_build_app.return_value = mock_context
 
-    # Setup mock simulator
+    # Setup mock simulator with successful result
     mock_simulator = Mock()
+    mock_simulator.simulate.return_value = [{"success": True}]
     mock_simulator_class.return_value = mock_simulator
 
     # Run main
@@ -69,8 +70,9 @@ def test_main_multi_pair_mode(mock_build_app, mock_simulator_class):
     }
     mock_build_app.return_value = mock_context
 
-    # Setup mock simulator
+    # Setup mock simulator with successful result
     mock_simulator = Mock()
+    mock_simulator.simulate.return_value = [{"success": True}]
     mock_simulator_class.return_value = mock_simulator
 
     # Run main
@@ -104,8 +106,9 @@ def test_main_multi_pair_with_filters(mock_build_app, mock_simulator_class):
     }
     mock_build_app.return_value = mock_context
 
-    # Setup mock simulator
+    # Setup mock simulator with successful result
     mock_simulator = Mock()
+    mock_simulator.simulate.return_value = [{"success": True}]
     mock_simulator_class.return_value = mock_simulator
 
     # Run main
@@ -178,3 +181,32 @@ def test_main_single_pair_missing_both(mock_build_app):
     with pytest.raises(SystemExit) as exc_info:
         main()
     assert "required" in str(exc_info.value)
+
+
+@patch("simtools.applications.simulate_illuminator.MultiIlluminatorSimulator")
+@patch("simtools.applications.simulate_illuminator.build_application")
+def test_main_single_pair_no_valid_pairs(mock_build_app, mock_simulator_class):
+    """Test main function exits when no valid pairs found in single-pair mode."""
+    from simtools.applications.simulate_illuminator import main
+
+    # Setup mock application context
+    mock_context = Mock()
+    mock_context.args = {
+        "light_source": "ILLN-01",
+        "telescope": "INVALID-TEL",
+        "simulate_all": False,
+        "wavelength": [355 * u.nm],
+        "label": "test_label",
+        "max_workers": None,
+    }
+    mock_build_app.return_value = mock_context
+
+    # Setup mock simulator to return empty results (no valid pairs)
+    mock_simulator = Mock()
+    mock_simulator.simulate.return_value = []
+    mock_simulator_class.return_value = mock_simulator
+
+    # Verify sys.exit is called with appropriate message
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+    assert "no valid illuminator-telescope pairs" in str(exc_info.value)

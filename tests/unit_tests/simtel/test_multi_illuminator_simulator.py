@@ -526,14 +526,14 @@ def test_simulate_with_wavelengths_provided(
 
     # Verify wavelengths are distributed correctly
     wavelengths_in_jobs = [job["wavelength"] for job in job_specs]
-    assert wavelengths_in_jobs.count(355 * u.nm) == 4
-    assert wavelengths_in_jobs.count(473 * u.nm) == 4
+    assert sum(1 for wl in wavelengths_in_jobs if u.isclose(wl, 355 * u.nm)) == 4
+    assert sum(1 for wl in wavelengths_in_jobs if u.isclose(wl, 473 * u.nm)) == 4
 
     # Verify wavelengths are in configs
     configs = [job["config"] for job in job_specs]
     assert all("wavelength" in config for config in configs)
-    assert sum(1 for config in configs if config["wavelength"] == 355 * u.nm) == 4
-    assert sum(1 for config in configs if config["wavelength"] == 473 * u.nm) == 4
+    assert sum(1 for config in configs if u.isclose(config["wavelength"], 355 * u.nm)) == 4
+    assert sum(1 for config in configs if u.isclose(config["wavelength"], 473 * u.nm)) == 4
 
     # Verify base label is passed
     labels = [job["label"] for job in job_specs]
@@ -651,7 +651,7 @@ def test_simulate_with_wavelength_in_config(mock_pool, simple_visibility_data, b
     assert len(results) == 4
     job_specs = mock_pool.call_args[0][1]
     assert len(job_specs) == 4
-    assert all(job["wavelength"] == 355 * u.nm for job in job_specs)
+    assert all(u.isclose(job["wavelength"], 355 * u.nm) for job in job_specs)
 
 
 @patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
@@ -744,7 +744,7 @@ def test_simulate_wavelengths_parameter_overrides_config(
     # Should use the explicitly provided wavelength
     assert len(results) == 2
     job_specs = mock_pool.call_args[0][1]
-    assert all(job["wavelength"] == 473 * u.nm for job in job_specs)
+    assert all(u.isclose(job["wavelength"], 473 * u.nm) for job in job_specs)
 
 
 @patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
@@ -769,8 +769,8 @@ def test_simulate_wavelength_labels_formatted_correctly(
     # Verify wavelengths are passed in configs (label formatting happens in SimulatorLightEmission)
     configs = [job["config"] for job in job_specs]
     wavelengths_in_configs = [config["wavelength"] for config in configs]
-    assert any(wl == 355.5 * u.nm for wl in wavelengths_in_configs)
-    assert any(wl == 473 * u.nm for wl in wavelengths_in_configs)
+    assert any(u.isclose(wl, 355.5 * u.nm) for wl in wavelengths_in_configs)
+    assert any(u.isclose(wl, 473 * u.nm) for wl in wavelengths_in_configs)
 
     # Verify base label is preserved
     labels = [job["label"] for job in job_specs]
