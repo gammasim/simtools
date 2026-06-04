@@ -2207,8 +2207,7 @@ def test_get_available_wavelengths(simulator_instance):
     )
 
 
-@patch("simtools.model.calibration_model.CalibrationModel")
-def test_get_available_wavelengths_from_config(mock_calibration_class):
+def test_get_available_wavelengths_from_config():
     """Test get_available_wavelengths_from_config static method."""
     # Setup mock calibration model
     mock_calibration_model = Mock()
@@ -2218,7 +2217,6 @@ def test_get_available_wavelengths_from_config(mock_calibration_class):
         473 * u.nm,
         532 * u.nm,
     ]
-    mock_calibration_class.return_value = mock_calibration_model
 
     # Config
     config = {
@@ -2227,27 +2225,35 @@ def test_get_available_wavelengths_from_config(mock_calibration_class):
         "model_version": "7.0.0",
     }
 
-    # Call static method
-    wavelengths = SimulatorLightEmission.get_available_wavelengths_from_config(config)
+    # Patch both imports that happen inside the static method
+    with (
+        patch(
+            "simtools.simtel.simulator_light_emission.CalibrationModel",
+            return_value=mock_calibration_model,
+        ) as mock_calibration_class,
+        patch("simtools.simtel.simulator_light_emission.read_overwrite_model_parameter_dict"),
+    ):
+        # Call static method
+        wavelengths = SimulatorLightEmission.get_available_wavelengths_from_config(config)
 
-    # Verify it returns all 4 wavelengths
-    assert len(wavelengths) == 4
-    assert wavelengths[0] == 266 * u.nm
-    assert wavelengths[1] == 355 * u.nm
-    assert wavelengths[2] == 473 * u.nm
-    assert wavelengths[3] == 532 * u.nm
+        # Verify it returns all 4 wavelengths
+        assert len(wavelengths) == 4
+        assert wavelengths[0] == 266 * u.nm
+        assert wavelengths[1] == 355 * u.nm
+        assert wavelengths[2] == 473 * u.nm
+        assert wavelengths[3] == 532 * u.nm
 
-    # Verify CalibrationModel was constructed correctly (no telescope/site models)
-    mock_calibration_class.assert_called_once()
-    call_kwargs = mock_calibration_class.call_args[1]
-    assert call_kwargs["site"] == "North"
-    assert call_kwargs["calibration_device_model_name"] == "ILLN-01"
-    assert call_kwargs["model_version"] == "7.0.0"
-    assert "temp_wavelength_query" in call_kwargs["label"]
+        # Verify CalibrationModel was constructed correctly (no telescope/site models)
+        mock_calibration_class.assert_called_once()
+        call_kwargs = mock_calibration_class.call_args[1]
+        assert call_kwargs["site"] == "North"
+        assert call_kwargs["calibration_device_model_name"] == "ILLN-01"
+        assert call_kwargs["model_version"] == "7.0.0"
+        assert "temp_wavelength_query" in call_kwargs["label"]
 
-    mock_calibration_model.get_parameter_value_with_unit.assert_called_once_with(
-        "flasher_wavelength"
-    )
+        mock_calibration_model.get_parameter_value_with_unit.assert_called_once_with(
+            "flasher_wavelength"
+        )
 
 
 def test_get_available_wavelengths_from_config_missing_keys():

@@ -10,7 +10,11 @@ import numpy as np
 from simtools import settings
 from simtools.io import io_handler
 from simtools.job_execution import job_manager
-from simtools.model.model_utils import initialize_simulation_models
+from simtools.model.calibration_model import CalibrationModel
+from simtools.model.model_utils import (
+    initialize_simulation_models,
+    read_overwrite_model_parameter_dict,
+)
 from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel import simtel_output_validator, simtel_table_writer
@@ -57,12 +61,6 @@ class SimulatorLightEmission(SimtelRunner):
         ValueError
             If required configuration keys are missing
         """
-        # Import here to avoid unnecessary model initialization in other contexts
-        # pylint: disable=import-outside-toplevel
-        from simtools.model.calibration_model import CalibrationModel
-        from simtools.model.model_utils import read_overwrite_model_parameter_dict
-        # pylint: enable=import-outside-toplevel
-
         site = config.get("site")
         model_version = config.get("model_version")
         light_source = config.get("light_source")

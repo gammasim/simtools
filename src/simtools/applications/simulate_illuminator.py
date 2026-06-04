@@ -61,7 +61,7 @@ Example Usage
 
         simtools-simulate-illuminator --light_source ILLN-01 \
         --telescope MSTN-04 --site North \
-        --model_version 7.0.0 --wavelength 355
+        --model_version 7.0.0 --wavelength 355 nm
 
 7. Simulate with multiple wavelengths:
 
@@ -69,7 +69,7 @@ Example Usage
 
         simtools-simulate-illuminator --light_source ILLN-01 \
         --telescope MSTN-04 --site North \
-        --model_version 7.0.0 --wavelength 355 473
+        --model_version 7.0.0 --wavelength 355 nm 473 nm
 
 8. Simulate all pairs for all wavelengths in model (no wavelength specified):
 
@@ -106,11 +106,11 @@ number_of_events (int, optional)
 flasher_photons (int, optional)
     Overwrite the model parameter flasher_photons.
 wavelength (float or list of float, optional)
-    Wavelength(s) in nanometers. Must be one of the wavelengths supported by the
-    illuminator model. Multiple wavelengths can be specified (space-separated on
-    command line, or as a list in config file: wavelength: [355, 473]).
+    Wavelength(s) in nanometers (unitless values are interpreted as nm).
+    Must be one of the wavelengths supported by the illuminator model.
+    Multiple wavelengths can be specified (space-separated on command line,
+    or as a list in config file: wavelength: [355, 473]).
     If not specified, all model wavelengths will be simulated
-    (typically 266, 355, 473, and 532 nm for CTAO production 7.0.0).
     Each wavelength will be validated and simulated as a separate job.
 telescope (str, optional)
     Telescope model name (e.g. LSTN-01, MSTN-04, ...). Required for single-pair mode.
@@ -136,6 +136,7 @@ import sys
 
 from simtools.application_control import build_application
 from simtools.simtel.multi_illuminator_simulator import MultiIlluminatorSimulator
+from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
 
@@ -204,14 +205,15 @@ def _add_arguments(parser):
     parser.add_argument(
         "--wavelength",
         help=(
-            "Wavelength(s) in nanometers. Must be one of the wavelengths "
+            "Wavelength(s) in nanometers (unitless values are interpreted as nm). "
+            "Must be one of the wavelengths "
             "supported by the illuminator model (typically 266, 355, 473, or 532 nm). "
             "Multiple wavelengths can be specified (space-separated on command line, "
             "or as a list in config file: wavelength: [355, 473]). "
             "If not specified, all model wavelengths will be simulated. "
             "Will be validated against the model's allowed wavelengths."
         ),
-        type=parser.wavelength_nm,
+        type=parser.positive_quantity("nm"),
         nargs="+",
         required=False,
     )
@@ -243,8 +245,8 @@ def main():
                 "error: --light_source and --telescope are required for single-pair mode. "
                 "Use --simulate_all for multi-pair mode."
             )
-        illuminators = [light_source]
-        telescopes = [telescope]
+        illuminators = general.ensure_list(light_source)
+        telescopes = general.ensure_list(telescope)
 
     # Always use MultiIlluminatorSimulator (single-pair is just a special case)
     simulator = MultiIlluminatorSimulator(
