@@ -191,7 +191,7 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: simulation-models
-          key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}-${{ github.run_id }}
+          key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}
           restore-keys: |
             simulation-models-${{ steps.simulation_model_branch.outputs.branch }}-
 
@@ -235,11 +235,11 @@ jobs:
 
 
       - name: Save cached simulation models repository
-        # if: github.event_name != 'schedule' && steps.restore_simulation_models.outputs.cache-hit != 'true'
+        if: steps.restore_simulation_models.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
           path: simulation-models
-          key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}-${{ github.run_id }}
+          key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}
 
       - name: Upload simulation models repository
         # if: github.event_name != 'schedule'
