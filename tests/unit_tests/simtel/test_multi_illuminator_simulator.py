@@ -3,6 +3,7 @@
 import os
 from unittest.mock import MagicMock, patch
 
+import astropy.units as u
 import pytest
 
 from simtools.simtel.multi_illuminator_simulator import (
@@ -133,7 +134,7 @@ def test_simulate_all_pairs(mock_pool, simple_visibility_data, base_config):
         max_workers=2,
     )
 
-    results = simulator.simulate()
+    results = simulator.simulate(wavelengths=[355 * u.nm])
 
     assert len(results) == 4
     assert all(r["success"] for r in results)
@@ -156,12 +157,22 @@ def test_simulate_all_pairs(mock_pool, simple_visibility_data, base_config):
     }
     assert pairs == expected_pairs
     assert all(js["site"] == "South" for js in job_specs)
-    assert all(js["config"] == base_config for js in job_specs)
+    # Config gets modified with wavelength, so check base config keys are present
+    assert all(all(js["config"].get(k) == v for k, v in base_config.items()) for js in job_specs)
+    assert all("wavelength" in js["config"] for js in job_specs)
 
 
+@patch(
+    "simtools.simtel.simulator_light_emission.SimulatorLightEmission.get_available_wavelengths_from_config"
+)
 @patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
-def test_simulate_filter_by_illuminators(mock_pool, simple_visibility_data, base_config):
-    """Test simulate() with illuminator filtering."""
+def test_simulate_filter_by_illuminators(
+    mock_pool, mock_get_wavelengths, simple_visibility_data, base_config
+):
+    """Test simulate() with illuminator filtering and auto-fetch wavelengths."""
+    # Mock wavelengths from model
+    mock_get_wavelengths.return_value = [355 * u.nm]
+
     mock_pool.return_value = [
         {"illuminator": "ILLS-01", "telescope": "MSTS-01", "success": True, "error": None},
         {"illuminator": "ILLS-01", "telescope": "MSTS-02", "success": True, "error": None},
@@ -178,10 +189,24 @@ def test_simulate_filter_by_illuminators(mock_pool, simple_visibility_data, base
     assert len(results) == 2
     assert all(r["illuminator"] == "ILLS-01" for r in results)
 
+    # Should have fetched wavelengths with config augmented from filtered pairs
+    mock_get_wavelengths.assert_called_once()
+    called_config = mock_get_wavelengths.call_args[0][0]
+    assert called_config["telescope"] in ["MSTS-01", "MSTS-02"]  # One of the filtered pairs
+    assert called_config["light_source"] == "ILLS-01"  # The filtered illuminator
 
+
+@patch(
+    "simtools.simtel.simulator_light_emission.SimulatorLightEmission.get_available_wavelengths_from_config"
+)
 @patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
-def test_simulate_filter_by_telescopes(mock_pool, simple_visibility_data, base_config):
-    """Test simulate() with telescope filtering."""
+def test_simulate_filter_by_telescopes(
+    mock_pool, mock_get_wavelengths, simple_visibility_data, base_config
+):
+    """Test simulate() with telescope filtering and auto-fetch wavelengths."""
+    # Mock wavelengths from model
+    mock_get_wavelengths.return_value = [355 * u.nm]
+
     mock_pool.return_value = [
         {"illuminator": "ILLS-01", "telescope": "MSTS-02", "success": True, "error": None},
         {"illuminator": "ILLS-02", "telescope": "MSTS-02", "success": True, "error": None},
@@ -198,6 +223,12 @@ def test_simulate_filter_by_telescopes(mock_pool, simple_visibility_data, base_c
     assert len(results) == 2
     assert all(r["telescope"] == "MSTS-02" for r in results)
 
+    # Should have fetched wavelengths with config augmented from filtered pairs
+    mock_get_wavelengths.assert_called_once()
+    called_config = mock_get_wavelengths.call_args[0][0]
+    assert called_config["telescope"] == "MSTS-02"  # The filtered telescope
+    assert called_config["light_source"] in ["ILLS-01", "ILLS-02"]  # One of the illuminators
+
 
 @patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
 def test_simulate_filter_both(mock_pool, simple_visibility_data, base_config):
@@ -211,7 +242,9 @@ def test_simulate_filter_both(mock_pool, simple_visibility_data, base_config):
         config=base_config,
     )
 
-    results = simulator.simulate(illuminators=["ILLS-01"], telescopes=["MSTS-01"])
+    results = simulator.simulate(
+        wavelengths=[355 * u.nm], illuminators=["ILLS-01"], telescopes=["MSTS-01"]
+    )
 
     assert len(results) == 1
     assert results[0]["illuminator"] == "ILLS-01"
@@ -227,7 +260,9 @@ def test_simulate_no_valid_pairs_after_filtering(mock_pool, simple_visibility_da
     )
 
     # MSTS-03 not visible to ILLS-01
-    results = simulator.simulate(illuminators=["ILLS-01"], telescopes=["MSTS-03"])
+    results = simulator.simulate(
+        wavelengths=[355 * u.nm], illuminators=["ILLS-01"], telescopes=["MSTS-03"]
+    )
 
     assert len(results) == 0
     mock_pool.assert_not_called()
@@ -248,7 +283,7 @@ def test_get_summary_success(mock_pool, simple_visibility_data, base_config):
         config=base_config,
     )
 
-    simulator.simulate()
+    simulator.simulate(wavelengths=[355 * u.nm])
     summary = simulator.get_summary()
 
     assert summary["total"] == 4
@@ -283,7 +318,7 @@ def test_get_failed_pairs(mock_pool, simple_visibility_data, base_config):
         config=base_config,
     )
 
-    simulator.simulate()
+    simulator.simulate(wavelengths=[355 * u.nm])
     failed_pairs = simulator.get_failed_pairs()
 
     assert len(failed_pairs) == 2
@@ -317,7 +352,7 @@ def test_get_failed_results(mock_pool, simple_visibility_data, base_config):
         config=base_config,
     )
 
-    simulator.simulate()
+    simulator.simulate(wavelengths=[355 * u.nm])
     failed_results = simulator.get_failed_results()
 
     assert len(failed_results) == 2
@@ -419,7 +454,7 @@ def test_simulate_empty_visibility_table(mock_pool, base_config):
         config=base_config,
     )
 
-    results = simulator.simulate()
+    results = simulator.simulate(wavelengths=[355 * u.nm])
 
     assert len(results) == 0
     mock_pool.assert_not_called()
@@ -443,3 +478,296 @@ def test_load_visibility_from_site_model(mock_site_model_class, base_config):
     assert simulator.visibility.n_valid_pairs == 2
     mock_site_model_class.assert_called_once_with(site="South", model_version="6.0.0")
     mock_site_model.get_parameter_value.assert_called_once_with("illuminator_telescope_visibility")
+
+
+@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission")
+def test_simulate_with_wavelengths_provided(
+    mock_sim_class, mock_pool, simple_visibility_data, base_config
+):
+    """Test simulate() with explicit wavelengths."""
+    import astropy.units as u
+
+    # Mock return value: 4 pairs x 2 wavelengths = 8 results
+    mock_pool.return_value = [
+        {
+            "illuminator": ill,
+            "telescope": tel,
+            "wavelength": wl,
+            "success": True,
+            "error": None,
+        }
+        for wl in [355 * u.nm, 473 * u.nm]
+        for ill, tel in [
+            ("ILLS-01", "MSTS-01"),
+            ("ILLS-01", "MSTS-02"),
+            ("ILLS-02", "MSTS-02"),
+            ("ILLS-02", "MSTS-03"),
+        ]
+    ]
+
+    simulator = MultiIlluminatorSimulator(
+        config=base_config,
+        visibility_data=simple_visibility_data,
+        label="test",
+        max_workers=2,
+    )
+
+    wavelengths = [355 * u.nm, 473 * u.nm]
+    results = simulator.simulate(wavelengths=wavelengths)
+
+    # Should create jobs for 4 pairs x 2 wavelengths = 8 jobs
+    assert len(results) == 8
+    mock_pool.assert_called_once()
+    job_specs = mock_pool.call_args[0][1]
+    assert len(job_specs) == 8
+
+    # Verify wavelengths are distributed correctly
+    wavelengths_in_jobs = [job["wavelength"] for job in job_specs]
+    assert wavelengths_in_jobs.count(355 * u.nm) == 4
+    assert wavelengths_in_jobs.count(473 * u.nm) == 4
+
+    # Verify wavelengths are in configs
+    configs = [job["config"] for job in job_specs]
+    assert all("wavelength" in config for config in configs)
+    assert sum(1 for config in configs if config["wavelength"] == 355 * u.nm) == 4
+    assert sum(1 for config in configs if config["wavelength"] == 473 * u.nm) == 4
+
+    # Verify base label is passed
+    labels = [job["label"] for job in job_specs]
+    assert all(label == "test" for label in labels)
+
+
+@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch(
+    "simtools.simtel.simulator_light_emission.SimulatorLightEmission.get_available_wavelengths_from_config"
+)
+def test_simulate_with_wavelengths_from_model(
+    mock_get_wavelengths, mock_pool, simple_visibility_data, base_config
+):
+    """Test simulate() fetches wavelengths from model when not provided."""
+    import astropy.units as u
+
+    # Mock wavelengths from model
+    model_wavelengths = [266 * u.nm, 355 * u.nm, 473 * u.nm, 532 * u.nm]
+    mock_get_wavelengths.return_value = model_wavelengths
+
+    # Mock return value: 4 pairs x 4 wavelengths = 16 results
+    mock_pool.return_value = [
+        {
+            "illuminator": ill,
+            "telescope": tel,
+            "wavelength": wl,
+            "success": True,
+            "error": None,
+        }
+        for wl in model_wavelengths
+        for ill, tel in [
+            ("ILLS-01", "MSTS-01"),
+            ("ILLS-01", "MSTS-02"),
+            ("ILLS-02", "MSTS-02"),
+            ("ILLS-02", "MSTS-03"),
+        ]
+    ]
+
+    simulator = MultiIlluminatorSimulator(
+        config=base_config,
+        visibility_data=simple_visibility_data,
+        label="test",
+    )
+
+    # Call without wavelengths - should fetch from model
+    results = simulator.simulate(wavelengths=None)
+
+    # Should have called get_available_wavelengths_from_config with augmented config
+    mock_get_wavelengths.assert_called_once()
+    called_config = mock_get_wavelengths.call_args[0][0]
+
+    # Verify config was augmented with telescope and light_source from first pair
+    assert called_config["telescope"] == "MSTS-01"
+    assert called_config["light_source"] == "ILLS-01"
+    assert called_config["site"] == base_config["site"]
+    assert called_config["model_version"] == base_config["model_version"]
+
+    # Should create jobs for 4 pairs x 4 wavelengths = 16 jobs
+    assert len(results) == 16
+    job_specs = mock_pool.call_args[0][1]
+    assert len(job_specs) == 16
+
+
+@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+def test_simulate_with_wavelength_in_config(mock_pool, simple_visibility_data, base_config):
+    """Test simulate() uses wavelength from base_config if present."""
+    import astropy.units as u
+
+    # Add wavelength to config
+    config_with_wl = base_config.copy()
+    config_with_wl["wavelength"] = 355 * u.nm
+
+    mock_pool.return_value = [
+        {
+            "illuminator": "ILLS-01",
+            "telescope": "MSTS-01",
+            "wavelength": 355 * u.nm,
+            "success": True,
+            "error": None,
+        },
+        {
+            "illuminator": "ILLS-01",
+            "telescope": "MSTS-02",
+            "wavelength": 355 * u.nm,
+            "success": True,
+            "error": None,
+        },
+        {
+            "illuminator": "ILLS-02",
+            "telescope": "MSTS-02",
+            "wavelength": 355 * u.nm,
+            "success": True,
+            "error": None,
+        },
+        {
+            "illuminator": "ILLS-02",
+            "telescope": "MSTS-03",
+            "wavelength": 355 * u.nm,
+            "success": True,
+            "error": None,
+        },
+    ]
+
+    simulator = MultiIlluminatorSimulator(
+        config=config_with_wl,
+        visibility_data=simple_visibility_data,
+        label="test",
+    )
+
+    # Call without wavelengths - should use the one from config
+    results = simulator.simulate(wavelengths=None)
+
+    # Should use wavelength from config (4 pairs x 1 wavelength = 4 jobs)
+    assert len(results) == 4
+    job_specs = mock_pool.call_args[0][1]
+    assert len(job_specs) == 4
+    assert all(job["wavelength"] == 355 * u.nm for job in job_specs)
+
+
+@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+def test_simulate_with_list_of_wavelengths_in_config(
+    mock_pool, simple_visibility_data, base_config
+):
+    """Test simulate() handles list of wavelengths in config."""
+    import astropy.units as u
+
+    # Add list of wavelengths to config
+    config_with_wl = base_config.copy()
+    config_with_wl["wavelength"] = [355 * u.nm, 473 * u.nm]
+
+    # Mock return value: 4 pairs x 2 wavelengths = 8 results
+    mock_pool.return_value = [
+        {
+            "illuminator": ill,
+            "telescope": tel,
+            "wavelength": wl,
+            "success": True,
+            "error": None,
+        }
+        for wl in [355 * u.nm, 473 * u.nm]
+        for ill, tel in [
+            ("ILLS-01", "MSTS-01"),
+            ("ILLS-01", "MSTS-02"),
+            ("ILLS-02", "MSTS-02"),
+            ("ILLS-02", "MSTS-03"),
+        ]
+    ]
+
+    simulator = MultiIlluminatorSimulator(
+        config=config_with_wl,
+        visibility_data=simple_visibility_data,
+        label="test",
+    )
+
+    results = simulator.simulate(wavelengths=None)
+
+    # Should use both wavelengths from config (4 pairs x 2 wavelengths = 8 jobs)
+    assert len(results) == 8
+    job_specs = mock_pool.call_args[0][1]
+    assert len(job_specs) == 8
+
+
+@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch(
+    "simtools.simtel.simulator_light_emission.SimulatorLightEmission.get_available_wavelengths_from_config"
+)
+def test_simulate_wavelengths_parameter_overrides_config(
+    mock_get_wavelengths, mock_pool, simple_visibility_data, base_config
+):
+    """Test that explicit wavelengths parameter overrides config."""
+    import astropy.units as u
+
+    # Add wavelength to config
+    config_with_wl = base_config.copy()
+    config_with_wl["wavelength"] = 355 * u.nm
+
+    mock_pool.return_value = [
+        {
+            "illuminator": "ILLS-01",
+            "telescope": "MSTS-01",
+            "wavelength": 473 * u.nm,
+            "success": True,
+            "error": None,
+        },
+        {
+            "illuminator": "ILLS-01",
+            "telescope": "MSTS-02",
+            "wavelength": 473 * u.nm,
+            "success": True,
+            "error": None,
+        },
+    ]
+
+    simulator = MultiIlluminatorSimulator(
+        config=config_with_wl,
+        visibility_data=simple_visibility_data,
+        label="test",
+    )
+
+    # Explicit parameter should override config
+    results = simulator.simulate(wavelengths=[473 * u.nm])
+
+    # Should NOT call get_available_wavelengths_from_config
+    mock_get_wavelengths.assert_not_called()
+
+    # Should use the explicitly provided wavelength
+    assert len(results) == 2
+    job_specs = mock_pool.call_args[0][1]
+    assert all(job["wavelength"] == 473 * u.nm for job in job_specs)
+
+
+@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+def test_simulate_wavelength_labels_formatted_correctly(
+    mock_pool, simple_visibility_data, base_config
+):
+    """Test that wavelength labels are formatted correctly (no decimal points)."""
+    import astropy.units as u
+
+    mock_pool.return_value = []
+
+    simulator = MultiIlluminatorSimulator(
+        config=base_config,
+        visibility_data=simple_visibility_data,
+        label="mytest",
+    )
+
+    simulator.simulate(wavelengths=[355.5 * u.nm, 473 * u.nm])
+
+    job_specs = mock_pool.call_args[0][1]
+
+    # Verify wavelengths are passed in configs (label formatting happens in SimulatorLightEmission)
+    configs = [job["config"] for job in job_specs]
+    wavelengths_in_configs = [config["wavelength"] for config in configs]
+    assert any(wl == 355.5 * u.nm for wl in wavelengths_in_configs)
+    assert any(wl == 473 * u.nm for wl in wavelengths_in_configs)
+
+    # Verify base label is preserved
+    labels = [job["label"] for job in job_specs]
+    assert all(label == "mytest" for label in labels)
