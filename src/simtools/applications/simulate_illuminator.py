@@ -253,11 +253,17 @@ def main():
         max_workers=app_context.args.get("max_workers"),
     )
 
-    simulator.simulate(
+    results = simulator.simulate(
         wavelengths=app_context.args.get("wavelength"),
         illuminators=illuminators,
         telescopes=telescopes,
     )
+
+    if not results and not simulate_all:
+        sys.exit(
+            "error: no valid illuminator-telescope pairs found for the requested "
+            "--light_source/--telescope combination."
+        )
 
 
 if __name__ == "__main__":
