@@ -34,12 +34,58 @@ class SimulatorLightEmission(SimtelRunner):
         Label for the simulation
     """
 
+    @staticmethod
+    def get_available_wavelengths_from_config(config):
+        """
+        Get available wavelengths from model configuration without full initialization.
+
+        This is a lightweight method that only initializes the calibration model
+        to retrieve wavelengths, without creating a full SimulatorLightEmission instance.
+
+        Parameters
+        ----------
+        config : dict
+            Configuration dictionary with site, telescope, light_source, and model_version
+
+        Returns
+        -------
+        list of astropy.units.Quantity
+            List of available wavelengths with units
+        """
+        _, _, calibration_model = initialize_simulation_models(
+            label="temp_wavelength_query",
+            site=config.get("site"),
+            telescope_name=config.get("telescope"),
+            calibration_device_name=config.get("light_source"),
+            calibration_device_type=config.get("light_source_type"),
+            model_version=config.get("model_version"),
+        )
+
+        if calibration_model is None:
+            raise RuntimeError(
+                f"Failed to initialize calibration model. "
+                f"Config: site={config.get('site')}, telescope={config.get('telescope')}, "
+                f"light_source={config.get('light_source')}"
+            )
+
+        wavelengths = calibration_model.get_parameter_value_with_unit("flasher_wavelength")
+        return general.ensure_list(wavelengths)
+
     def __init__(self, light_emission_config, telescope=None, label=None):
         """Initialize SimulatorLightEmission."""
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
         telescope = telescope or light_emission_config.get("telescope")
         label = f"{label}_{telescope}" if label else telescope
+
+        # Add wavelength to label if present (always include for consistency)
+        if (
+            "wavelength" in light_emission_config
+            and light_emission_config["wavelength"] is not None
+        ):
+            wl = light_emission_config["wavelength"]
+            wl_str = f"{wl.to(u.nm).value:.0f}nm"
+            label = f"{label}_{wl_str}"
 
         super().__init__(label=label, config=light_emission_config)
         self.submission_files = runner_services.RunnerServices(
@@ -61,6 +107,18 @@ class SimulatorLightEmission(SimtelRunner):
         self.light_emission_config = self._initialize_light_emission_configuration(
             light_emission_config
         )
+
+    def get_available_wavelengths(self):
+        """
+        Get available wavelengths from this simulator's calibration model.
+
+        Returns
+        -------
+        list of astropy.units.Quantity
+            List of available wavelengths with units
+        """
+        wavelengths = self.calibration_model.get_parameter_value_with_unit("flasher_wavelength")
+        return general.ensure_list(wavelengths)
 
     def _initialize_light_emission_configuration(self, config):
         """Initialize light emission configuration."""
@@ -90,6 +148,8 @@ class SimulatorLightEmission(SimtelRunner):
             allowed_wavelengths_with_unit = self.calibration_model.get_parameter_value_with_unit(
                 "flasher_wavelength"
             )
+            # Ensure it's a list (could be scalar Quantity)
+            allowed_wavelengths_with_unit = general.ensure_list(allowed_wavelengths_with_unit)
             # Convert to nm for comparison
             allowed_wavelengths = [wl.to(u.nm) for wl in allowed_wavelengths_with_unit]
 

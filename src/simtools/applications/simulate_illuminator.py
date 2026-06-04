@@ -63,6 +63,39 @@ Example Usage
         --telescope MSTN-04 --site North \
         --model_version 7.0.0 --wavelength 355
 
+7. Simulate with multiple wavelengths:
+
+    .. code-block:: console
+
+        simtools-simulate-illuminator --light_source ILLN-01 \
+        --telescope MSTN-04 --site North \
+        --model_version 7.0.0 --wavelength 355 473
+
+8. Simulate all pairs for all wavelengths in model (no wavelength specified):
+
+    .. code-block:: console
+
+        simtools-simulate-illuminator --site North \
+        --model_version 7.0.0 --simulate_all
+
+9. Using a config file with specific wavelengths:
+
+    Create a config file (e.g., illuminator_config.yml):
+
+    .. code-block:: yaml
+
+        site: North
+        model_version: 7.0.0
+        light_source: ILLN-01
+        telescope: MSTN-04
+        wavelength: [355, 473]
+
+    Then run:
+
+    .. code-block:: console
+
+        simtools-simulate-illuminator --config illuminator_config.yml
+
 Command Line Arguments
 ----------------------
 light_source (str, optional)
@@ -72,10 +105,13 @@ number_of_events (int, optional)
     Number of events to simulate.
 flasher_photons (int, optional)
     Overwrite the model parameter flasher_photons.
-wavelength (float, optional)
-    Wavelength in nanometers. Must be one of the wavelengths supported by the
-    illuminator model. Will be validated against the model's allowed wavelengths
-    (typically 266, 355, 473, or 532 nm for CTAO production 7.0.0).
+wavelength (float or list of float, optional)
+    Wavelength(s) in nanometers. Must be one of the wavelengths supported by the
+    illuminator model. Multiple wavelengths can be specified (space-separated on
+    command line, or as a list in config file: wavelength: [355, 473]).
+    If not specified, all model wavelengths will be simulated
+    (typically 266, 355, 473, and 532 nm for CTAO production 7.0.0).
+    Each wavelength will be validated and simulated as a separate job.
 telescope (str, optional)
     Telescope model name (e.g. LSTN-01, MSTN-04, ...). Required for single-pair mode.
     In multi-pair mode, used as a filter (simulate only pairs with this telescope).
@@ -100,7 +136,6 @@ import sys
 
 from simtools.application_control import build_application
 from simtools.simtel.multi_illuminator_simulator import MultiIlluminatorSimulator
-from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 
 _logger = logging.getLogger(__name__)
 
@@ -169,55 +204,17 @@ def _add_arguments(parser):
     parser.add_argument(
         "--wavelength",
         help=(
-            "Wavelength in nanometers. Must be one of the wavelengths "
+            "Wavelength(s) in nanometers. Must be one of the wavelengths "
             "supported by the illuminator model (typically 266, 355, 473, or 532 nm). "
+            "Multiple wavelengths can be specified (space-separated on command line, "
+            "or as a list in config file: wavelength: [355, 473]). "
+            "If not specified, all model wavelengths will be simulated. "
             "Will be validated against the model's allowed wavelengths."
         ),
         type=parser.wavelength_nm,
+        nargs="+",
         required=False,
     )
-
-
-def _simulate_single_pair(app_context):
-    """Run a single illuminator-telescope simulation."""
-    light_source = SimulatorLightEmission(
-        light_emission_config=app_context.args,
-        label=app_context.args.get("label"),
-    )
-    light_source.simulate()
-    light_source.validate_simulations()
-
-
-def _simulate_all_pairs(app_context):
-    """Simulate all valid illuminator-telescope pairs in parallel."""
-    simulator = MultiIlluminatorSimulator(
-        config=app_context.args,
-        label=app_context.args.get("label"),
-        max_workers=app_context.args.get("max_workers"),
-    )
-
-    # Apply filters if specified
-    illuminators = None
-    telescopes = None
-    if app_context.args.get("light_source"):
-        illuminators = [app_context.args["light_source"]]
-    if app_context.args.get("telescope"):
-        telescopes = [app_context.args["telescope"]]
-
-    results = simulator.simulate(illuminators=illuminators, telescopes=telescopes)
-    summary = simulator.get_summary()
-
-    _logger.info(
-        f"Multi-illuminator simulation complete: "
-        f"{summary['successful']}/{summary['total']} successful "
-        f"(success rate: {summary['success_rate']:.1%})"
-    )
-
-    failed = simulator.get_failed_pairs()
-    if failed:
-        _logger.warning(f"Failed pairs: {failed}")
-
-    return results
 
 
 def main():
@@ -230,20 +227,37 @@ def main():
         },
     )
 
-    if app_context.args.get("simulate_all"):
-        _simulate_all_pairs(app_context)
+    # Determine illuminator and telescope filters
+    light_source = app_context.args.get("light_source")
+    telescope = app_context.args.get("telescope")
+    simulate_all = app_context.args.get("simulate_all")
+
+    if simulate_all:
+        # Multi-pair mode: filters are optional
+        illuminators = [light_source] if light_source else None
+        telescopes = [telescope] if telescope else None
     else:
-        if not app_context.args.get("light_source"):
+        # Single-pair mode: both filters are required
+        if not light_source or not telescope:
             sys.exit(
-                "error: --light_source is required for single-pair mode. "
+                "error: --light_source and --telescope are required for single-pair mode. "
                 "Use --simulate_all for multi-pair mode."
             )
-        if not app_context.args.get("telescope"):
-            sys.exit(
-                "error: --telescope is required for single-pair mode. "
-                "Use --simulate_all for multi-pair mode."
-            )
-        _simulate_single_pair(app_context)
+        illuminators = [light_source]
+        telescopes = [telescope]
+
+    # Always use MultiIlluminatorSimulator (single-pair is just a special case)
+    simulator = MultiIlluminatorSimulator(
+        config=app_context.args,
+        label=app_context.args.get("label"),
+        max_workers=app_context.args.get("max_workers"),
+    )
+
+    simulator.simulate(
+        wavelengths=app_context.args.get("wavelength"),
+        illuminators=illuminators,
+        telescopes=telescopes,
+    )
 
 
 if __name__ == "__main__":

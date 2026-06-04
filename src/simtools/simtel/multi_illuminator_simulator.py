@@ -5,6 +5,7 @@ import logging
 from simtools.job_execution.process_pool import determine_max_workers, process_pool_map_ordered
 from simtools.model.illuminator_visibility import IlluminatorTelescopeVisibility
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
+from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
 
@@ -63,6 +64,7 @@ def _simulate_illuminator_telescope_pair(job_spec):
         return {
             "illuminator": illuminator,
             "telescope": telescope,
+            "wavelength": job_spec.get("wavelength"),
             "success": True,
             "error": None,
         }
@@ -72,6 +74,7 @@ def _simulate_illuminator_telescope_pair(job_spec):
         return {
             "illuminator": illuminator,
             "telescope": telescope,
+            "wavelength": job_spec.get("wavelength"),
             "success": False,
             "error": str(exc),
         }
@@ -148,12 +151,18 @@ class MultiIlluminatorSimulator:
         )
         return site_model.get_parameter_value("illuminator_telescope_visibility")
 
-    def simulate(self, illuminators=None, telescopes=None):
+    def simulate(self, wavelengths=None, illuminators=None, telescopes=None):
         """
         Run simulations for all valid illuminator-telescope pairs in parallel.
 
+        Optionally simulate across multiple wavelengths. If wavelengths are not
+        specified and not in base_config, all model wavelengths will be used.
+
         Parameters
         ----------
+        wavelengths : list of astropy.units.Quantity, optional
+            List of wavelengths to simulate. If None, uses wavelength from base_config
+            if present, otherwise all model wavelengths.
         illuminators : list of str, optional
             Restrict simulations to specific illuminators. If None, simulate all.
         telescopes : list of str, optional
@@ -162,20 +171,20 @@ class MultiIlluminatorSimulator:
         Returns
         -------
         list of dict
-            List of simulation results, one per pair. Each dict contains:
+            List of simulation results. Each dict contains:
             - illuminator: str
             - telescope: str
+            - wavelength: astropy.units.Quantity (if wavelength simulation)
             - success: bool
             - error: str or None
         """
         # Get all valid pairs
         all_pairs = self.visibility.get_valid_pairs()
 
-        # Filter by illuminators if specified
+        # Apply filters first (before using a pair to fetch wavelengths)
         if illuminators is not None:
             all_pairs = [(ill, tel) for ill, tel in all_pairs if ill in illuminators]
 
-        # Filter by telescopes if specified
         if telescopes is not None:
             all_pairs = [(ill, tel) for ill, tel in all_pairs if tel in telescopes]
 
@@ -184,19 +193,50 @@ class MultiIlluminatorSimulator:
             self.results = []
             return self.results
 
-        self._logger.info(f"Simulating {len(all_pairs)} pairs with {self.max_workers} workers")
+        # Determine wavelengths: explicit param > config > model
+        if wavelengths is not None:
+            wavelengths = general.ensure_list(wavelengths)
+        elif "wavelength" in self.base_config and self.base_config["wavelength"] is not None:
+            wavelengths = general.ensure_list(self.base_config["wavelength"])
+        else:
+            # Fetch from model using a sample pair
+            self._logger.info("No wavelength specified, fetching from model")
 
-        # Build job specs for filtered pairs
+            sample_illuminator, sample_telescope = all_pairs[0]
+            config_for_query = self.base_config.copy()
+            config_for_query["telescope"] = sample_telescope
+            config_for_query["light_source"] = sample_illuminator
+
+            wavelengths = SimulatorLightEmission.get_available_wavelengths_from_config(
+                config_for_query
+            )
+            self._logger.info(
+                f"Using {len(wavelengths)} wavelengths from model: "
+                f"{[w.value for w in wavelengths]} nm"
+            )
+
+        # Build job specs for all wavelength-pair combinations
         job_specs = []
-        for illuminator, telescope in all_pairs:
-            job_spec = {
-                "illuminator": illuminator,
-                "telescope": telescope,
-                "site": self.base_config.get("site"),
-                "label": self.label,
-                "config": self.base_config,
-            }
-            job_specs.append(job_spec)
+        for wavelength in wavelengths:
+            for illuminator, telescope in all_pairs:
+                # Create config with wavelength
+                config_with_wl = self.base_config.copy()
+                config_with_wl["wavelength"] = wavelength
+
+                job_spec = {
+                    "illuminator": illuminator,
+                    "telescope": telescope,
+                    "wavelength": wavelength,
+                    "site": self.base_config.get("site"),
+                    "label": self.label,
+                    "config": config_with_wl,
+                }
+                job_specs.append(job_spec)
+
+        self._logger.info(
+            f"Simulating {len(all_pairs)} pair(s) x {len(wavelengths)} wavelength(s) "
+            f"= {len(job_specs)} jobs with {self.max_workers} workers"
+        )
 
         # Execute in parallel
         self.results = process_pool_map_ordered(
@@ -208,7 +248,10 @@ class MultiIlluminatorSimulator:
         # Log summary
         successful = sum(1 for r in self.results if r["success"])
         failed = len(self.results) - successful
-        self._logger.info(f"Simulation complete: {successful} successful, {failed} failed")
+        self._logger.info(
+            f"Simulation complete: {successful} successful, {failed} failed "
+            f"across {len(wavelengths)} wavelength(s)"
+        )
 
         return self.results
 
