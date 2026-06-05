@@ -1,0 +1,71 @@
+%YAML 1.2
+---
+title: Schema for illuminator_telescope_visibility model parameter
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: illuminator_telescope_visibility
+description: |-
+  Illumination status table for telescope-illuminator pairs.
+  Defines which telescopes can be illuminated by each illuminator at a site,
+  accounting for shadowing, blocking, topography, and distance constraints.
+  Each row represents one illuminator-telescope combination with a boolean
+  visibility flag.
+short_description: Illuminator-telescope visibility lookup table.
+developer_note: |-
+  Long-format table with one row per illuminator-telescope pair.
+  North site has 2 illuminators and 13 telescopes (26 pairs).
+  South site has 4 illuminators and 60 telescopes (240 pairs).
+  visible=true means the telescope can be illuminated by that illuminator.
+  visible=false means the line of sight is blocked (shadowing, topography, etc.).
+data:
+  - type: dict
+    json_schema:
+      type: object
+      additionalProperties: false
+      required:
+        - columns
+        - column_units
+        - rows
+      properties:
+        columns:
+          type: array
+          items:
+            - const: illuminator_id
+            - const: telescope_id
+            - const: visible
+          additionalItems: false
+          minItems: 3
+          maxItems: 3
+        column_units:
+          type: array
+          items:
+            - const: dimensionless
+            - const: dimensionless
+            - const: dimensionless
+          additionalItems: false
+          minItems: 3
+          maxItems: 3
+        rows:
+          type: array
+          items:
+            type: array
+            items:
+              - type: string
+              - type: string
+              - type: boolean
+            additionalItems: false
+            minItems: 3
+            maxItems: 3
+instrument:
+  class: Site
+activity:
+  setting:
+    - SetParameterFromExternal
+  validation:
+    - ValidateParameterByExpert
+source:
+  - Calibration
+simulation_software:
+  - name: simtools

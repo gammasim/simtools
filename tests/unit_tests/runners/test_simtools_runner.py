@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import logging
 import shutil
 from pathlib import Path
 from unittest import mock
@@ -9,6 +10,7 @@ import pytest
 import simtools.utils.general as gen
 from simtools.job_execution.job_manager import JobExecutionError
 from simtools.runners import simtools_runner
+from simtools.runners.simtools_runner import _find_collection_files
 
 TEST_OUTPUT_PATH = Path("output/test")
 DUMMY_CONFIG_FILE = "dummy.yml"
@@ -997,3 +999,188 @@ def test_read_application_configuration_ignores_top_level_activity_id(
     )
 
     assert workflow_activity_id == path_uuid
+
+
+def test_find_collection_files_exact_match(tmp_test_directory):
+    """Exact filename (no glob) returns the first match and preserves existing semantics."""
+    src = Path(str(tmp_test_directory)) / "src"
+    src.mkdir()
+    (src / "result.ecsv").write_text("data", encoding="utf-8")
+
+    matched = _find_collection_files("result.ecsv", [src])
+    assert len(matched) == 1
+    assert matched[0] == src / "result.ecsv"
+
+
+def test_find_collection_files_exact_not_found(tmp_test_directory):
+    """Exact filename raises FileNotFoundError when absent."""
+    src = Path(str(tmp_test_directory)) / "src_missing"
+    src.mkdir()
+
+    with pytest.raises(FileNotFoundError, match=r"result\.ecsv"):
+        _find_collection_files("result.ecsv", [src])
+
+
+def test_find_collection_files_glob_matches_multiple(tmp_test_directory):
+    """Glob pattern collects all matching files recursively."""
+    src = Path(str(tmp_test_directory)) / "src_glob"
+    src.mkdir()
+    (src / "energy_MyArray_z20_az0_nsb0.png").write_text("p1", encoding="utf-8")
+    (src / "energy_MyArray_z52_az0_nsb0.png").write_text("p2", encoding="utf-8")
+
+    matched = _find_collection_files("energy_*.png", [src])
+    assert len(matched) == 2
+    names = {f.name for f in matched}
+    assert "energy_MyArray_z20_az0_nsb0.png" in names
+    assert "energy_MyArray_z52_az0_nsb0.png" in names
+
+
+def test_find_collection_files_glob_recursive(tmp_test_directory):
+    """Glob pattern searches subdirectories recursively."""
+    src = Path(str(tmp_test_directory)) / "src_recursive"
+    subdir = src / "sub"
+    subdir.mkdir(parents=True)
+    (subdir / "energy_z20.png").write_text("p", encoding="utf-8")
+
+    matched = _find_collection_files("energy_*.png", [src])
+    assert len(matched) == 1
+    assert matched[0].name == "energy_z20.png"
+
+
+def test_find_collection_files_glob_no_match_warns(tmp_test_directory, caplog):
+    """Glob pattern with no matches emits a warning rather than raising."""
+    src = Path(str(tmp_test_directory)) / "src_empty"
+    src.mkdir()
+
+    with caplog.at_level(logging.WARNING, logger="simtools.runners.simtools_runner"):
+        matched = _find_collection_files("nonexistent_*.png", [src])
+    assert matched == []
+    assert "nonexistent_*.png" in caplog.text
+
+
+def test_run_applications_copies_collection_files_glob(monkeypatch, tmp_test_directory):
+    """Glob patterns in collection.files copy all matching files."""
+    tmp_path = Path(str(tmp_test_directory))
+    source_output = tmp_path / "app_output_glob"
+    source_output.mkdir(parents=True, exist_ok=True)
+    (source_output / "energy_MyArray_z20_az0_nsb0.png").write_text("img1", encoding="utf-8")
+    (source_output / "energy_MyArray_z52_az0_nsb0.png").write_text("img2", encoding="utf-8")
+
+    collection_output = tmp_path / "collection_glob"
+
+    mock_configurations = [
+        {
+            "application": "app1",
+            "run_application": True,
+            "configuration": {
+                "activity_id": "cfg-id-1",
+                "output_path": str(source_output),
+            },
+        }
+    ]
+    log_file_path = tmp_path / "simtools.log"
+
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._read_application_configuration",
+        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id")),
+    )
+    monkeypatch.setattr(
+        "simtools.io.ascii_handler.collect_data_from_file",
+        mock.Mock(
+            return_value={
+                "collection": {
+                    "output_path": str(collection_output),
+                    "files": ["energy_*.png"],
+                }
+            }
+        ),
+    )
+    monkeypatch.setattr(
+        "simtools.dependencies.get_version_string",
+        mock.Mock(return_value="simtools version: 1.2.3\n"),
+    )
+    monkeypatch.setattr(
+        "simtools.job_execution.job_manager.submit",
+        mock.Mock(return_value=mock.Mock(stdout="ok", stderr="")),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner.workflow_metadata.build_workflow_activity_metadata",
+        mock.Mock(return_value={"id": "wf-activity-id"}),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner.workflow_metadata.update_model_parameter_metadata_file",
+        mock.Mock(),
+    )
+
+    simtools_runner.run_applications(
+        {
+            "config_file": "dummy_config.yml",
+            "steps": None,
+            "ignore_runtime_environment": False,
+        }
+    )
+
+    assert (collection_output / "energy_MyArray_z20_az0_nsb0.png").exists()
+    assert (collection_output / "energy_MyArray_z52_az0_nsb0.png").exists()
+
+
+def test_copy_collection_files_raises_on_name_collision(tmp_test_directory):
+    """Raise FileExistsError when two different sources produce the same basename."""
+    tmp_path = Path(str(tmp_test_directory))
+    src_a = tmp_path / "src_a"
+    src_b = tmp_path / "src_b"
+    src_a.mkdir()
+    src_b.mkdir()
+    (src_a / "energy_z20.png").write_text("a", encoding="utf-8")
+    (src_b / "energy_z20.png").write_text("b", encoding="utf-8")
+
+    collection_output = tmp_path / "coll_collision"
+    collection_config = {
+        "output_path": str(collection_output),
+        "files": ["energy_*.png"],
+    }
+    configurations = [
+        {"configuration": {"output_path": str(src_a)}},
+        {"configuration": {"output_path": str(src_b)}},
+    ]
+    with pytest.raises(FileExistsError, match=r"energy_z20\.png"):
+        simtools_runner._copy_collection_files(configurations, collection_config)
+
+
+def test_copy_collection_files_list_format(tmp_test_directory):
+    """List collection config writes to separate output directories."""
+    tmp_path = Path(str(tmp_test_directory))
+    src = tmp_path / "app_out"
+    src.mkdir()
+    (src / "result.ecsv").write_text("data", encoding="utf-8")
+    (src / "plot_MyArray.png").write_text("img", encoding="utf-8")
+
+    out_data = tmp_path / "data"
+    out_plots = tmp_path / "plots"
+    configurations = [{"configuration": {"output_path": str(src)}}]
+    collection_config = [
+        {"output_path": str(out_data), "files": ["result.ecsv"]},
+        {"output_path": str(out_plots), "files": ["plot_*.png"]},
+    ]
+    simtools_runner._copy_collection_files(configurations, collection_config)
+
+    assert (out_data / "result.ecsv").exists()
+    assert (out_plots / "plot_MyArray.png").exists()
+    assert not (out_data / "plot_MyArray.png").exists()
+
+
+def test_copy_collection_files_list_format_skips_empty_entry(tmp_test_directory):
+    """List entries with no output_path or files are silently skipped."""
+    tmp_path = Path(str(tmp_test_directory))
+    src = tmp_path / "app_out2"
+    src.mkdir()
+    (src / "result.ecsv").write_text("data", encoding="utf-8")
+
+    out = tmp_path / "out_skip"
+    configurations = [{"configuration": {"output_path": str(src)}}]
+    collection_config = [
+        {"output_path": None, "files": ["result.ecsv"]},
+        {"output_path": str(out), "files": []},
+    ]
+    simtools_runner._copy_collection_files(configurations, collection_config)
+    assert not out.exists()

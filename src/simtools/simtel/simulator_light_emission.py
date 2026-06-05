@@ -10,7 +10,11 @@ import numpy as np
 from simtools import settings
 from simtools.io import io_handler
 from simtools.job_execution import job_manager
-from simtools.model.model_utils import initialize_simulation_models
+from simtools.model.calibration_model import CalibrationModel
+from simtools.model.model_utils import (
+    initialize_simulation_models,
+    read_overwrite_model_parameter_dict,
+)
 from simtools.runners import runner_services
 from simtools.runners.simtel_runner import SimtelRunner, sim_telarray_env_as_string
 from simtools.simtel import simtel_output_validator, simtel_table_writer
@@ -34,12 +38,65 @@ class SimulatorLightEmission(SimtelRunner):
         Label for the simulation
     """
 
+    @staticmethod
+    def get_available_wavelengths_from_config(config):
+        """
+        Get available wavelengths from model configuration without full initialization.
+
+        This is a lightweight method that only initializes the calibration model
+        to retrieve wavelengths, without telescope/site models or file I/O.
+
+        Parameters
+        ----------
+        config : dict
+            Configuration dictionary with site, light_source, and model_version
+
+        Returns
+        -------
+        list of astropy.units.Quantity
+            List of available wavelengths with units
+
+        Raises
+        ------
+        ValueError
+            If required configuration keys are missing
+        """
+        site = config.get("site")
+        model_version = config.get("model_version")
+        light_source = config.get("light_source")
+
+        if site is None or model_version is None or light_source is None:
+            raise ValueError(
+                "Missing required configuration keys for wavelength query: "
+                f"site={site}, model_version={model_version}, light_source={light_source}"
+            )
+
+        calibration_model = CalibrationModel(
+            site=site,
+            calibration_device_model_name=light_source,
+            model_version=model_version,
+            label=f"temp_wavelength_query_{light_source}",
+            overwrite_model_parameter_dict=read_overwrite_model_parameter_dict(),
+        )
+
+        wavelengths = calibration_model.get_parameter_value_with_unit("flasher_wavelength")
+        return general.ensure_list(wavelengths)
+
     def __init__(self, light_emission_config, telescope=None, label=None):
         """Initialize SimulatorLightEmission."""
         self._logger = logging.getLogger(__name__)
         self.io_handler = io_handler.IOHandler()
         telescope = telescope or light_emission_config.get("telescope")
         label = f"{label}_{telescope}" if label else telescope
+
+        # Add wavelength to label if present (always include for consistency)
+        if (
+            "wavelength" in light_emission_config
+            and light_emission_config["wavelength"] is not None
+        ):
+            wl = light_emission_config["wavelength"]
+            wl_str = f"{wl.to(u.nm).value:.0f}nm"
+            label = f"{label}_{wl_str}"
 
         super().__init__(label=label, config=light_emission_config)
         self.submission_files = runner_services.RunnerServices(
@@ -62,6 +119,18 @@ class SimulatorLightEmission(SimtelRunner):
             light_emission_config
         )
 
+    def get_available_wavelengths(self):
+        """
+        Get available wavelengths from this simulator's calibration model.
+
+        Returns
+        -------
+        list of astropy.units.Quantity
+            List of available wavelengths with units
+        """
+        wavelengths = self.calibration_model.get_parameter_value_with_unit("flasher_wavelength")
+        return general.ensure_list(wavelengths)
+
     def _initialize_light_emission_configuration(self, config):
         """Initialize light emission configuration."""
         flasher_type = self.calibration_model.get_parameter_value("flasher_type")
@@ -82,6 +151,41 @@ class SimulatorLightEmission(SimtelRunner):
             config["flasher_photons"] = self.calibration_model.get_parameter_value(
                 "flasher_photons"
             )
+
+        if config.get("wavelength") is not None:
+            requested_wavelength = config["wavelength"].to(u.nm)
+
+            # Get allowed wavelengths from the model
+            allowed_wavelengths_with_unit = self.calibration_model.get_parameter_value_with_unit(
+                "flasher_wavelength"
+            )
+            # Ensure it's a list (could be scalar Quantity)
+            allowed_wavelengths_with_unit = general.ensure_list(allowed_wavelengths_with_unit)
+            # Convert to nm for comparison
+            allowed_wavelengths = [wl.to(u.nm) for wl in allowed_wavelengths_with_unit]
+
+            # Validate that requested wavelength is one of the allowed wavelengths
+            # Use a small tolerance for floating point comparison
+            tolerance = 0.5 * u.nm
+            if not any(abs(requested_wavelength - wl) < tolerance for wl in allowed_wavelengths):
+                allowed_values = [wl.value for wl in allowed_wavelengths]
+                raise ValueError(
+                    f"Wavelength {requested_wavelength.value} nm is not supported by the "
+                    f"illuminator. Allowed wavelengths are: {allowed_values} nm"
+                )
+
+            # Find the closest match and use that exact value
+            closest_wavelength = min(
+                allowed_wavelengths, key=lambda wl: abs(wl - requested_wavelength)
+            )
+
+            # Override the model parameter with the selected wavelength
+            self.calibration_model.overwrite_model_parameter(
+                "flasher_wavelength", closest_wavelength
+            )
+            config["wavelength"] = closest_wavelength
+
+            self._logger.info(f"Using wavelength: {closest_wavelength.value} nm")
 
         if config.get("light_source_position") is not None:
             config["light_source_position"] = (
@@ -327,8 +431,11 @@ class SimulatorLightEmission(SimtelRunner):
         radius = self.telescope_model.get_parameter_value_with_unit("telescope_sphere_radius")
         radius = radius.to(u.cm).value  # Convert radius to cm
 
+        tel = self._sanitize_name(self.light_emission_config.get("telescope") or "telescope")
+        cal = self._sanitize_name(self.light_emission_config.get("light_source") or "calibration")
         telescope_position_file = (
-            self.io_handler.get_output_directory("light_emission") / "telescope_position.dat"
+            self.io_handler.get_output_directory("light_emission")
+            / f"telescope_position_{tel}_{cal}.dat"
         )
         telescope_position_file.write_text(f"{x_tel} {y_tel} {z_tel} {radius}\n", encoding="utf-8")
         return telescope_position_file

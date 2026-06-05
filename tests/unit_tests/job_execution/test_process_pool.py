@@ -94,13 +94,28 @@ def test_initializer_runs_in_workers_real_pool():
         assert len(set(pid_list)) >= 1
 
 
-def test_uses_cpu_count_when_max_workers_nonpositive(monkeypatch):
-    """If max_workers is None or <=0, os.cpu_count() should be used."""
+def test_uses_60_percent_when_max_workers_none(monkeypatch):
+    """If max_workers is None, should use 60% of CPUs."""
+    monkeypatch.setattr(pp.os, "cpu_count", (10).__int__)
+    monkeypatch.setattr(pp, "ProcessPoolExecutor", _FakeExecutor)
+    monkeypatch.setattr(pp, "as_completed", list)
+
+    results = pp.process_pool_map_ordered(_identity, [1, 2, 3], max_workers=None)
+    assert results == [1, 2, 3]
+    assert _FakeExecutor.last_kwargs["max_workers"] == 6
+
+
+def test_uses_all_cpus_when_max_workers_zero_or_negative(monkeypatch):
+    """If max_workers is <=0, os.cpu_count() should be used."""
     monkeypatch.setattr(pp.os, "cpu_count", (7).__int__)
     monkeypatch.setattr(pp, "ProcessPoolExecutor", _FakeExecutor)
     monkeypatch.setattr(pp, "as_completed", list)
 
     results = pp.process_pool_map_ordered(_identity, [1, 2, 3], max_workers=0)
+    assert results == [1, 2, 3]
+    assert _FakeExecutor.last_kwargs["max_workers"] == 7
+
+    results = pp.process_pool_map_ordered(_identity, [1, 2, 3], max_workers=-1)
     assert results == [1, 2, 3]
     assert _FakeExecutor.last_kwargs["max_workers"] == 7
 
@@ -127,3 +142,47 @@ def test_empty_input(monkeypatch):
     monkeypatch.setattr(pp, "as_completed", list)
     results = pp.process_pool_map_ordered(_identity, [], max_workers=2)
     assert results == []
+
+
+def test_determine_max_workers_with_explicit_value():
+    """Test determine_max_workers with explicit positive value."""
+    assert pp.determine_max_workers(max_workers=4) == 4
+    assert pp.determine_max_workers(max_workers=1) == 1
+    assert pp.determine_max_workers(max_workers=16) == 16
+
+
+def test_determine_max_workers_with_default(monkeypatch):
+    """Test determine_max_workers with None (uses 60% of CPUs by default)."""
+    monkeypatch.setattr(pp.os, "cpu_count", (10).__int__)
+    assert pp.determine_max_workers(max_workers=None) == 6
+
+    monkeypatch.setattr(pp.os, "cpu_count", (8).__int__)
+    assert pp.determine_max_workers(max_workers=None) == 4
+
+    # Should use at least 1
+    monkeypatch.setattr(pp.os, "cpu_count", (1).__int__)
+    assert pp.determine_max_workers(max_workers=None) == 1
+
+
+def test_determine_max_workers_with_zero(monkeypatch):
+    """Test determine_max_workers with 0 (use all cores)."""
+    monkeypatch.setattr(pp.os, "cpu_count", (8).__int__)
+    assert pp.determine_max_workers(max_workers=0) == 8
+
+    monkeypatch.setattr(pp.os, "cpu_count", (12).__int__)
+    assert pp.determine_max_workers(max_workers=-1) == 12
+
+
+def test_determine_max_workers_custom_fraction(monkeypatch):
+    """Test determine_max_workers with custom default fraction."""
+    monkeypatch.setattr(pp.os, "cpu_count", (10).__int__)
+    assert pp.determine_max_workers(max_workers=None, default_fraction=0.8) == 8
+    assert pp.determine_max_workers(max_workers=None, default_fraction=0.5) == 5
+    assert pp.determine_max_workers(max_workers=None, default_fraction=1.0) == 10
+
+
+def test_determine_max_workers_when_cpu_count_none(monkeypatch):
+    """Test determine_max_workers when os.cpu_count() returns None."""
+    monkeypatch.setattr(pp.os, "cpu_count", lambda: None)
+    assert pp.determine_max_workers(max_workers=None) == 1
+    assert pp.determine_max_workers(max_workers=0) == 1
