@@ -1560,7 +1560,6 @@ def test__initialize_light_emission_configuration_with_position(simulator_instan
 
 def test___init__(tmp_test_directory):
     """Test __init__ method."""
-    from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 
     # Mock the dependencies
     io_handler_path = "simtools.simtel.simulator_light_emission.io_handler.IOHandler"
@@ -1592,15 +1591,15 @@ def test___init__(tmp_test_directory):
         }
 
         # Create instance
-        instance = SimulatorLightEmission(config, label="test_label")
+        simulator_light_emission_instance = SimulatorLightEmission(config, label="test_label")
 
         # Verify initialization
-        assert hasattr(instance, "_logger")
-        assert hasattr(instance, "io_handler")
-        assert hasattr(instance, "telescope_model")
-        assert hasattr(instance, "site_model")
-        assert hasattr(instance, "calibration_model")
-        assert hasattr(instance, "light_emission_config")
+        assert hasattr(simulator_light_emission_instance, "_logger")
+        assert hasattr(simulator_light_emission_instance, "io_handler")
+        assert hasattr(simulator_light_emission_instance, "telescope_model")
+        assert hasattr(simulator_light_emission_instance, "site_model")
+        assert hasattr(simulator_light_emission_instance, "calibration_model")
+        assert hasattr(simulator_light_emission_instance, "light_emission_config")
 
         # Verify models were initialized correctly
         mock_init_models.assert_called_once_with(
@@ -1616,6 +1615,105 @@ def test___init__(tmp_test_directory):
         mock_telescope_model.write_sim_telarray_config_file.assert_called_once_with(
             additional_models=mock_site_model
         )
+
+
+def test___init___with_wavelength(tmp_test_directory):
+    """Test __init__ method with wavelength in config adds it to label."""
+
+    # Mock the dependencies
+    io_handler_path = "simtools.simtel.simulator_light_emission.io_handler.IOHandler"
+    models_path = "simtools.simtel.simulator_light_emission.initialize_simulation_models"
+
+    with patch(io_handler_path) as mock_io_handler, patch(models_path) as mock_init_models:
+        # Setup mock returns
+        mock_io_instance = Mock()
+        output_path = Path(tmp_test_directory) / "output"
+        mock_io_instance.get_output_directory.return_value = output_path
+        mock_io_handler.return_value = mock_io_instance
+
+        mock_telescope_model = Mock()
+        mock_site_model = Mock()
+        mock_calibration_model = Mock()
+        mock_calibration_model.get_parameter_value.return_value = None
+        # Mock wavelength validation to return allowed wavelengths
+        mock_calibration_model.get_parameter_value_with_unit.return_value = [
+            355 * u.nm,
+            473 * u.nm,
+        ]
+        mock_init_models.return_value = (
+            mock_telescope_model,
+            mock_site_model,
+            mock_calibration_model,
+        )
+
+        # Test configuration with wavelength
+        config = {
+            "site": "North",
+            "telescope": "LSTN-01",
+            "light_source": "calibration_device",
+            "model_version": "6.0.0",
+            "wavelength": 355 * u.nm,
+        }
+
+        # Create instance
+        _ = SimulatorLightEmission(config, label="test_label")
+
+        # Verify models were initialized with label including telescope and wavelength
+        mock_init_models.assert_called_once_with(
+            label="test_label_LSTN-01_355nm",
+            site="North",
+            telescope_name="LSTN-01",
+            calibration_device_name="calibration_device",
+            calibration_device_type=None,
+            model_version="6.0.0",
+        )
+
+
+def test___init___with_decimal_wavelength(tmp_test_directory):
+    """Test __init__ method formats decimal wavelengths as integers in label."""
+
+    # Mock the dependencies
+    io_handler_path = "simtools.simtel.simulator_light_emission.io_handler.IOHandler"
+    models_path = "simtools.simtel.simulator_light_emission.initialize_simulation_models"
+
+    with patch(io_handler_path) as mock_io_handler, patch(models_path) as mock_init_models:
+        # Setup mock returns
+        mock_io_instance = Mock()
+        output_path = Path(tmp_test_directory) / "output"
+        mock_io_instance.get_output_directory.return_value = output_path
+        mock_io_handler.return_value = mock_io_instance
+
+        mock_telescope_model = Mock()
+        mock_site_model = Mock()
+        mock_calibration_model = Mock()
+        mock_calibration_model.get_parameter_value.return_value = None
+        # Mock wavelength validation to return allowed wavelengths
+        mock_calibration_model.get_parameter_value_with_unit.return_value = [
+            355.6 * u.nm,
+            473 * u.nm,
+        ]
+        mock_init_models.return_value = (
+            mock_telescope_model,
+            mock_site_model,
+            mock_calibration_model,
+        )
+
+        # Test configuration with decimal wavelength
+        config = {
+            "site": "North",
+            "telescope": "LSTN-01",
+            "light_source": "calibration_device",
+            "model_version": "6.0.0",
+            "wavelength": 355.6 * u.nm,  # Should round to 356 nm in label
+        }
+
+        # Create instance
+        _ = SimulatorLightEmission(config, label="test_label")
+
+        # Verify wavelength is formatted as integer (rounds 355.6 to 356)
+        mock_init_models.assert_called_once()
+        call_kwargs = mock_init_models.call_args[1]
+        assert call_kwargs["label"] == "test_label_LSTN-01_356nm"
 
 
 def test__get_telescope_pointing(simulator_instance):
@@ -1999,3 +2097,189 @@ def test_validate_simulations_missing_output(simulator_instance, tmp_test_direct
     ):
         with pytest.raises(ValueError, match="Validation failed"):
             simulator_instance.validate_simulations()
+
+
+def test__initialize_light_emission_configuration_with_valid_wavelength(simulator_instance):
+    """Test _initialize_light_emission_configuration with a valid wavelength."""
+
+    # Mock calibration model responses
+    def mock_get_parameter_value(param_name):
+        if param_name == "flasher_type":
+            return "illuminator"
+        if param_name == "flasher_photons":
+            return 5e6
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
+
+    # Mock the get_parameter_value_with_unit to return allowed wavelengths
+    allowed_wavelengths = [266 * u.nm, 355 * u.nm, 473 * u.nm, 532 * u.nm]
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = (
+        allowed_wavelengths
+    )
+
+    # Test with a valid wavelength (355 nm as Quantity)
+    config = {"wavelength": 355.0 * u.nm}
+    result = simulator_instance._initialize_light_emission_configuration(config)
+
+    # Verify wavelength was set and model parameter was overwritten
+    assert result["wavelength"].to(u.nm).value == pytest.approx(355.0)
+    simulator_instance.calibration_model.overwrite_model_parameter.assert_called_with(
+        "flasher_wavelength", 355.0 * u.nm
+    )
+    simulator_instance._logger.info.assert_called_with("Using wavelength: 355.0 nm")
+
+
+def test__initialize_light_emission_configuration_with_invalid_wavelength(simulator_instance):
+    """Test _initialize_light_emission_configuration with an invalid wavelength."""
+
+    # Mock calibration model responses
+    def mock_get_parameter_value(param_name):
+        if param_name == "flasher_type":
+            return "illuminator"
+        if param_name == "flasher_photons":
+            return 5e6
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
+
+    # Mock the get_parameter_value_with_unit to return allowed wavelengths
+    allowed_wavelengths = [266 * u.nm, 355 * u.nm, 473 * u.nm, 532 * u.nm]
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = (
+        allowed_wavelengths
+    )
+
+    # Test with an invalid wavelength (400 nm - not in the allowed list)
+    config = {"wavelength": 400.0 * u.nm}
+
+    with pytest.raises(
+        ValueError,
+        match=r"Wavelength 400\.0 nm is not supported.*Allowed wavelengths are.*",
+    ):
+        simulator_instance._initialize_light_emission_configuration(config)
+
+
+def test__initialize_light_emission_configuration_wavelength_close_match(simulator_instance):
+    """Test wavelength validation accepts values within tolerance of allowed wavelengths."""
+
+    # Mock calibration model responses
+    def mock_get_parameter_value(param_name):
+        if param_name == "flasher_type":
+            return "illuminator"
+        if param_name == "flasher_photons":
+            return 5e6
+        return None
+
+    simulator_instance.calibration_model.get_parameter_value.side_effect = mock_get_parameter_value
+
+    # Mock the get_parameter_value_with_unit to return allowed wavelengths
+    allowed_wavelengths = [266 * u.nm, 355 * u.nm, 473 * u.nm, 532 * u.nm]
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = (
+        allowed_wavelengths
+    )
+
+    # Test with a wavelength close to 355 (within 0.5 nm tolerance)
+    config = {"wavelength": 355.3 * u.nm}
+    result = simulator_instance._initialize_light_emission_configuration(config)
+
+    # Should snap to the closest allowed wavelength (355)
+    assert result["wavelength"].to(u.nm).value == pytest.approx(355.0)
+    simulator_instance.calibration_model.overwrite_model_parameter.assert_called_with(
+        "flasher_wavelength", 355.0 * u.nm
+    )
+
+
+def test_get_available_wavelengths(simulator_instance):
+    """Test get_available_wavelengths instance method."""
+    # Setup mock wavelengths
+    mock_wavelengths = [266 * u.nm, 355 * u.nm, 473 * u.nm, 532 * u.nm]
+    simulator_instance.calibration_model.get_parameter_value_with_unit.return_value = (
+        mock_wavelengths
+    )
+
+    # Call method
+    wavelengths = simulator_instance.get_available_wavelengths()
+
+    # Verify it returns the wavelengths from the calibration model
+    assert wavelengths == mock_wavelengths
+    simulator_instance.calibration_model.get_parameter_value_with_unit.assert_called_once_with(
+        "flasher_wavelength"
+    )
+
+
+def test_get_available_wavelengths_from_config():
+    """Test get_available_wavelengths_from_config static method."""
+    # Setup mock calibration model
+    mock_calibration_model = Mock()
+    mock_calibration_model.get_parameter_value_with_unit.return_value = [
+        266 * u.nm,
+        355 * u.nm,
+        473 * u.nm,
+        532 * u.nm,
+    ]
+
+    # Config
+    config = {
+        "site": "North",
+        "light_source": "ILLN-01",
+        "model_version": "7.0.0",
+    }
+
+    # Patch both imports that happen inside the static method
+    with (
+        patch(
+            "simtools.simtel.simulator_light_emission.CalibrationModel",
+            return_value=mock_calibration_model,
+        ) as mock_calibration_class,
+        patch("simtools.simtel.simulator_light_emission.read_overwrite_model_parameter_dict"),
+    ):
+        # Call static method
+        wavelengths = SimulatorLightEmission.get_available_wavelengths_from_config(config)
+
+        # Verify it returns all 4 wavelengths
+        assert len(wavelengths) == 4
+        assert wavelengths[0] == 266 * u.nm
+        assert wavelengths[1] == 355 * u.nm
+        assert wavelengths[2] == 473 * u.nm
+        assert wavelengths[3] == 532 * u.nm
+
+        # Verify CalibrationModel was constructed correctly (no telescope/site models)
+        mock_calibration_class.assert_called_once()
+        call_kwargs = mock_calibration_class.call_args[1]
+        assert call_kwargs["site"] == "North"
+        assert call_kwargs["calibration_device_model_name"] == "ILLN-01"
+        assert call_kwargs["model_version"] == "7.0.0"
+        assert "temp_wavelength_query" in call_kwargs["label"]
+
+        mock_calibration_model.get_parameter_value_with_unit.assert_called_once_with(
+            "flasher_wavelength"
+        )
+
+
+def test_get_available_wavelengths_from_config_missing_keys():
+    """Test get_available_wavelengths_from_config raises ValueError for missing keys."""
+    # Config missing required keys
+    config_missing_site = {
+        "light_source": "ILLN-01",
+        "model_version": "7.0.0",
+    }
+
+    config_missing_light_source = {
+        "site": "North",
+        "model_version": "7.0.0",
+    }
+
+    config_missing_version = {
+        "site": "North",
+        "light_source": "ILLN-01",
+    }
+
+    # Should raise ValueError for each missing key
+    with pytest.raises(ValueError, match="Missing required configuration keys"):
+        SimulatorLightEmission.get_available_wavelengths_from_config(config_missing_site)
+
+    with pytest.raises(ValueError, match="Missing required configuration keys"):
+        SimulatorLightEmission.get_available_wavelengths_from_config(config_missing_light_source)
+
+    with pytest.raises(ValueError, match="Missing required configuration keys"):
+        SimulatorLightEmission.get_available_wavelengths_from_config(config_missing_version)

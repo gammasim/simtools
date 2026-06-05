@@ -6,22 +6,22 @@ applications:
     model_version: 7.0.0
     output_path: simtools-output
     site: North
-    telescope: MSTN-04
+    telescope: MSTN-02
     flasher_photons: 1e9
     log_level: DEBUG
   integration_tests:
   - test_output_files:
-    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-04.simtel.zst
+    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-02_300nm.simtel.zst
       path_descriptor: output_path
     - expected_sim_telarray_output:
         pe_sum:
         - 1000
         - 10000
         photons:
-        - 3000
-        - 10000
+        - 5000
+        - 30000
         event_type: illuminator
-      file: illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-04.simtel.zst
+      file: illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-02_300nm.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray
   model_version_use_current: true
