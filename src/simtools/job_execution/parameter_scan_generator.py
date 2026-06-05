@@ -182,14 +182,18 @@ def _generate_submit_script(sim_params):
 
 OVERWRITE_FILE="$1"
 RUN_NUMBER="$2"
+COMBO_LABEL="$3"
 
 if [ -z "$OVERWRITE_FILE" ] || [ -z "$RUN_NUMBER" ]; then
     echo "Error: Missing arguments"
-    echo "Usage: $0 <overwrite_file.yaml> <run_number>"
+    echo "Usage: $0 <overwrite_file.yaml> <run_number> <combo_label>"
     exit 1
 fi
 
 set -a; source env.txt; set +a
+
+# Construct full label with combo-specific parameters
+FULL_LABEL="{label}_$COMBO_LABEL"
 
 simtools-simulate-prod \\
     --simulation_software {sim_params["simulation_software"]} \\
@@ -206,7 +210,7 @@ simtools-simulate-prod \\
     --run_number "$RUN_NUMBER" \\
     --corsika_le_interaction {sim_params["corsika_le_interaction"]} \\
     --corsika_he_interaction {sim_params["corsika_he_interaction"]} \\
-    --label {label} \\
+    --label "$FULL_LABEL" \\
     --overwrite_model_parameters "$OVERWRITE_FILE" \\
     --output_path /tmp/simtools-output"""
 
@@ -252,14 +256,14 @@ container_image = {apptainer_image}
 transfer_container = false
 
 executable = {script_name}
-arguments = $(overwrite_file) $(run_number)
+arguments = $(overwrite_file) $(run_number) $(combo_label)
 error = htcondor_logs/error/err.$(cluster)_$(process)
 output = htcondor_logs/output/out.$(cluster)_$(process)
 log = htcondor_logs/log/log.$(cluster)_$(process)
 
 priority = {priority}
 
-queue overwrite_file,run_number from {param_file}
+queue overwrite_file,run_number,combo_label from {param_file}
 """
 
 
@@ -312,12 +316,14 @@ def generate_parameter_scan_htcondor(config_path):
         )
 
         for run_idx in range(number_of_runs):
-            job_specs.append((overwrite_file.absolute(), base_run_number + run_idx))
+            job_specs.append(
+                (overwrite_file.absolute(), base_run_number + run_idx, combo_spec["name"])
+            )
 
     params_file = output_path / f"scan_parameters_{label}.txt"
     with open(params_file, "w", encoding="utf-8") as f:
-        for overwrite_file, run_number in job_specs:
-            f.write(f"{overwrite_file}, {run_number}\n")
+        for overwrite_file, run_number, combo_label in job_specs:
+            f.write(f"{overwrite_file}, {run_number}, {combo_label}\n")
 
     script_name = f"simulate_prod_scan_{label}.sh"
     script_path = output_path / script_name
