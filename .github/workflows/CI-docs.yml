@@ -84,7 +84,7 @@ jobs:
 
       - name: Upload built docs
         if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: docs-html
           path: docs/build/html
@@ -98,8 +98,11 @@ jobs:
       contents: write
 
     steps:
+      - name: checkout
+        uses: actions/checkout@v6
+
       - name: Download built docs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: docs-html
           path: docs/build/html
@@ -123,3 +126,4 @@ jobs:
           folder: docs/build/html
           target-folder: .
           clean: false
+          dry-run: true

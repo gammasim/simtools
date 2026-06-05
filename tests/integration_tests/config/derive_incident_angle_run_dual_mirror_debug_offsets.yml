@@ -5,7 +5,7 @@ applications:
     site: South
     telescope: SSTS-01
     off_axis_angles: [1.0, 2.0]
-    number_of_photons: 10000
+    number_of_photons: 1000
     model_version: 6.0.2
     output_path: simtools-output
     debug_plots: true
