@@ -903,10 +903,12 @@ def build_simulation_jobs(args_dict):
                 "corsika_he_interaction": corsika_he,
                 "core_scatter_number": core_scatter_number,
                 "core_scatter_max": _clip_max_quantity(
-                    core_scatter[1], point.get("scatter_radius")
+                    core_scatter[1], point.get("core_scatter_max", point.get("scatter_radius"))
                 ),
                 "view_cone_min": view_cone_min,
-                "view_cone_max": _clip_max_quantity(view_cone[1], point.get("viewcone_radius")),
+                "view_cone_max": _clip_max_quantity(
+                    view_cone[1], point.get("view_cone_max", point.get("viewcone_radius"))
+                ),
             }
             rows.extend(
                 _build_rows_for_point(
