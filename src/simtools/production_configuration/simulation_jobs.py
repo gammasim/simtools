@@ -979,8 +979,8 @@ def _build_observation_params_for_point(
     configured_view_cone_max,
 ):
     """Build observation parameters and derived lookup-limited values for one grid point."""
-    lookup_core_scatter_max = point.get("core_scatter_max", point.get("scatter_radius"))
-    lookup_view_cone_max = point.get("view_cone_max", point.get("viewcone_radius"))
+    lookup_core_scatter_max = point.get("core_scatter_max")
+    lookup_view_cone_max = point.get("view_cone_max")
     selected_core_scatter_max = _clip_max_quantity(core_scatter[1], lookup_core_scatter_max)
     selected_view_cone_max = _clip_max_quantity(configured_view_cone_max, lookup_view_cone_max)
 

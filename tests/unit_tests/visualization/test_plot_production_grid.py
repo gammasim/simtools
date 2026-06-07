@@ -2,14 +2,17 @@
 
 from pathlib import Path
 
+import astropy.units as u
 import matplotlib.pyplot as plt
 import pytest
 from astropy.table import Table
 
 from simtools.visualization.plot_production_grid import (
     DEFAULT_OUTPUT_FILE_STEM,
-    PLOT_VALUE_SPECS,
+    PLOT_VALUE_KEYS,
     ProductionGridPlotter,
+    azimuth_zenith_output_file_stem,
+    zenith_profile_output_file_stem,
 )
 
 
@@ -242,21 +245,27 @@ def test_plot_altaz_projection_with_limits_creates_outputs(tmp_test_directory):
         output_path=output_path,
     )
 
-    for value_spec in PLOT_VALUE_SPECS:
+    normalized_points = plotter.normalize_grid_points()
+    assert normalized_points[0]["energy_min"] == 0.03 * u.TeV
+    assert normalized_points[0]["energy_max"] == 150.0 * u.TeV
+    assert normalized_points[0]["core_scatter_max"] == 1200.0 * u.m
+    assert normalized_points[0]["view_cone_max"] == 10.0 * u.deg
+
+    for value_key in PLOT_VALUE_KEYS:
         plotter.plot_altaz_projection_with_color_scale(
-            value_key=value_spec.key,
-            value_label=value_spec.value_label,
-            output_file_stem=value_spec.azimuth_zenith_output_file_stem,
+            value_key=value_key,
+            value_label=value_key,
+            output_file_stem=azimuth_zenith_output_file_stem(value_key),
         )
         plotter.plot_zenith_limits_for_azimuths(
-            value_key=value_spec.key,
-            value_label=value_spec.value_label,
-            output_file_stem=value_spec.zenith_profile_output_file_stem,
+            value_key=value_key,
+            value_label=value_key,
+            output_file_stem=zenith_profile_output_file_stem(value_key),
         )
 
-    for value_spec in PLOT_VALUE_SPECS:
-        assert (output_path / f"{value_spec.azimuth_zenith_output_file_stem}.png").exists()
-        assert (output_path / f"{value_spec.zenith_profile_output_file_stem}.png").exists()
+    for value_key in PLOT_VALUE_KEYS:
+        assert (output_path / f"{azimuth_zenith_output_file_stem(value_key)}.png").exists()
+        assert (output_path / f"{zenith_profile_output_file_stem(value_key)}.png").exists()
 
 
 def test_load_grid_points_file_not_found(tmp_test_directory):
@@ -299,8 +308,8 @@ def test_extract_quantity_value_dict_branches():
 
 
 def test_format_value_label_with_unit_uses_available_unit():
-    """Append units from *_unit keys when present in normalized points."""
-    plot_points = [{"energy_min_unit": "TeV"}]
+    """Append units from quantity values when present in normalized points."""
+    plot_points = [{"energy_min": 1.0 * u.TeV}]
 
     formatted_label = ProductionGridPlotter._format_value_label_with_unit(
         plot_points,

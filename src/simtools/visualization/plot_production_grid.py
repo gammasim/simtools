@@ -1,68 +1,30 @@
 """Plot production-grid points on sky coordinate projections."""
 
 import logging
-from dataclasses import dataclass
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from astropy import units as u
 from astropy.table import Table
 
 logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
-
-
-@dataclass(frozen=True)
-class PlotValueSpec:
-    """Configuration for one production-grid value shown in derived plots."""
-
-    key: str
-    aliases: tuple[str, ...]
-    label: str | None = None
-
-    @property
-    def value_label(self):
-        """Return the label used for axis and colorbar annotations."""
-        return self.label or self.key
-
-    @property
-    def unit_key(self):
-        """Return the normalized key holding this value's unit."""
-        return f"{self.key}_unit"
-
-    @property
-    def azimuth_zenith_output_file_stem(self):
-        """Return output stem for azimuth/zenith color-scale plots."""
-        return f"production_grid_altaz_{self.key}"
-
-    @property
-    def zenith_profile_output_file_stem(self):
-        """Return output stem for zenith profile plots."""
-        return f"production_grid_zenith_profile_{self.key}"
-
-
-PLOT_VALUE_SPECS = (
-    PlotValueSpec(
-        "energy_min",
-        ("energy_min", "energy_min_value"),
-    ),
-    PlotValueSpec(
-        "energy_max",
-        ("energy_max", "energy_max_value"),
-    ),
-    PlotValueSpec(
-        "core_scatter_max",
-        ("core_scatter_max", "core_scatter_max_value", "scatter_radius"),
-    ),
-    PlotValueSpec(
-        "view_cone_max",
-        ("view_cone_max", "view_cone_max_value", "viewcone_radius"),
-    ),
-)
+PLOT_VALUE_KEYS = ("energy_min", "energy_max", "core_scatter_max", "view_cone_max")
 DEFAULT_OUTPUT_FILE_EXTENSION = "png"
 DEFAULT_MARKER_SIZE = 8
 DEFAULT_GRID_LINE_WIDTH = 0.6
 GRID_GROUP_ROUND_DECIMALS = 6
+
+
+def azimuth_zenith_output_file_stem(value_key):
+    """Return output stem for azimuth/zenith color-scale plots."""
+    return f"production_grid_altaz_{value_key}"
+
+
+def zenith_profile_output_file_stem(value_key):
+    """Return output stem for zenith profile plots."""
+    return f"production_grid_zenith_profile_{value_key}"
 
 
 class ProductionGridPlotter:
@@ -132,17 +94,38 @@ class ProductionGridPlotter:
     def _convert_ecsv_table_to_grid_points(grid_table):
         """Convert an ECSV grid-point table to plain dictionaries."""
         return [
-            {
-                column_name: (
-                    row[column_name].item()
-                    if isinstance(row[column_name], np.generic)
-                    else row[column_name]
-                )
-                for column_name in grid_table.colnames
-                if not np.ma.is_masked(row[column_name])
-            }
+            ProductionGridPlotter._convert_ecsv_row_to_grid_point(row, grid_table.colnames)
             for row in grid_table
         ]
+
+    @staticmethod
+    def _plain_table_value(value):
+        """Return a plain scalar for non-masked table values."""
+        if np.ma.is_masked(value):
+            return None
+        if isinstance(value, np.generic):
+            return value.item()
+        return value
+
+    @classmethod
+    def _convert_ecsv_row_to_grid_point(cls, row, column_names):
+        """Convert one ECSV row and merge split value/unit quantity columns."""
+        point = {}
+        for column_name in column_names:
+            value = cls._plain_table_value(row[column_name])
+            if value is not None:
+                point[column_name] = value
+
+        for value_key in PLOT_VALUE_KEYS:
+            value_column = f"{value_key}_value"
+            unit_column = f"{value_key}_unit"
+            if value_column not in point or unit_column not in point:
+                continue
+            point[value_key] = float(point[value_column]) * u.Unit(point[unit_column])
+            point.pop(value_column)
+            point.pop(unit_column)
+
+        return point
 
     @staticmethod
     def _extract_quantity_value(point, key):
@@ -162,6 +145,8 @@ class ProductionGridPlotter:
             Extracted numeric value.
         """
         value = point.get(key)
+        if isinstance(value, u.Quantity):
+            return float(value.value)
         if isinstance(value, dict):
             if "value" in value:
                 return float(value["value"])
@@ -205,16 +190,7 @@ class ProductionGridPlotter:
         )
         ra = self._extract_first_available_quantity_value(point, ("ra", "ra_value"))
         dec = self._extract_first_available_quantity_value(point, ("dec", "dec_value"))
-        value_data = {
-            value_spec.key: self._extract_first_available_quantity_value(
-                point,
-                value_spec.aliases,
-            )
-            for value_spec in PLOT_VALUE_SPECS
-        }
-        value_units = {
-            value_spec.unit_key: point.get(value_spec.unit_key) for value_spec in PLOT_VALUE_SPECS
-        }
+        value_data = {value_key: point.get(value_key) for value_key in PLOT_VALUE_KEYS}
         point_ra = float(ra % 360.0) if ra is not None else None
         point_dec = float(dec) if dec is not None else None
 
@@ -226,7 +202,6 @@ class ProductionGridPlotter:
                 "ra": point_ra,
                 "dec": point_dec,
                 **value_data,
-                **value_units,
                 "visible_in_altaz": True,
             }
 
@@ -238,7 +213,6 @@ class ProductionGridPlotter:
                 "ra": float(ra % 360.0),
                 "dec": float(dec),
                 **value_data,
-                **value_units,
                 "visible_in_altaz": None,
             }
 
@@ -316,12 +290,18 @@ class ProductionGridPlotter:
     @staticmethod
     def _resolve_value_unit(plot_points, value_key):
         """Resolve a representative unit string for one plotted value key."""
-        unit_key = f"{value_key}_unit"
         for point in plot_points:
-            unit_value = point.get(unit_key)
-            if unit_value:
-                return str(unit_value)
+            value = point.get(value_key)
+            if isinstance(value, u.Quantity):
+                return str(value.unit)
         return None
+
+    @staticmethod
+    def _plot_value(value):
+        """Return a plain numeric value for plotting."""
+        if isinstance(value, u.Quantity):
+            return float(value.value)
+        return float(value)
 
     @classmethod
     def _format_value_label_with_unit(cls, plot_points, value_key, value_label):
@@ -454,7 +434,7 @@ class ProductionGridPlotter:
         axis.grid(True, color="gray", alpha=0.5, linestyle="--")
         axis.set_title("Local Azimuth / Zenith", pad=18)
         axis.set_xlabel("Azimuth [deg]")
-        axis.set_ylabel("Zenith angle [deg]")
+        axis.set_ylabel("")
 
     def _configure_radec_axis(self, axis, plot_points):
         """Configure the RA/Dec axis."""
@@ -650,7 +630,7 @@ class ProductionGridPlotter:
 
         azimuth_values = np.radians([point["azimuth"] for point in colored_points])
         zenith_values = [point["zenith"] for point in colored_points]
-        color_values = [point[value_key] for point in colored_points]
+        color_values = [self._plot_value(point[value_key]) for point in colored_points]
 
         scatter = axis.scatter(
             azimuth_values,
@@ -722,7 +702,7 @@ class ProductionGridPlotter:
 
             selected_points = sorted(selected_points, key=lambda point: point["zenith"])
             zenith_values = [point["zenith"] for point in selected_points]
-            value_values = [point[value_key] for point in selected_points]
+            value_values = [self._plot_value(point[value_key]) for point in selected_points]
             axis.plot(zenith_values, value_values, marker="o", label=f"az={azimuth_target:.0f} deg")
             plotted_series += 1
 

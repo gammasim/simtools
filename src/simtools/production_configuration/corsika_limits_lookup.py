@@ -1,5 +1,7 @@
 """Lookup-table access and interpolation for CORSIKA production limits."""
 
+import logging
+
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
@@ -7,6 +9,8 @@ from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator, gridd
 from scipy.spatial import QhullError  # pylint: disable=no-name-in-module
 
 from simtools.utils.value_conversion import get_value_in_unit
+
+logger = logging.getLogger(__name__)
 
 _LOOKUP_FIELD_SPECS = {
     "lower_energy_threshold": {
@@ -17,19 +21,9 @@ _LOOKUP_FIELD_SPECS = {
     "upper_scatter_radius": {
         "column": "upper_radius_limit",
         "unit": "m",
-        "point_key": "scatter_radius",
-    },
-    "core_scatter_max": {
-        "column": "upper_radius_limit",
-        "unit": "m",
         "point_key": "core_scatter_max",
     },
     "viewcone_radius": {
-        "column": "viewcone_radius",
-        "unit": "deg",
-        "point_key": "viewcone_radius",
-    },
-    "view_cone_max": {
         "column": "viewcone_radius",
         "unit": "deg",
         "point_key": "view_cone_max",
@@ -90,6 +84,9 @@ class CorsikaLimitsLookup:
             Lookup arrays for interpolation.
         """
         lookup_table = Table.read(self.lookup_table, format="ascii.ecsv")
+        logger.info(
+            "Loaded lookup table with %d rows and columns: %s", len(lookup_table), self.lookup_table
+        )
         if self.array_layout_name is None:
             matching_rows = list(lookup_table)
         else:
