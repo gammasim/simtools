@@ -85,7 +85,9 @@ class CorsikaLimitsLookup:
         """
         lookup_table = Table.read(self.lookup_table, format="ascii.ecsv")
         logger.info(
-            "Loaded lookup table with %d rows and columns: %s", len(lookup_table), self.lookup_table
+            "Loaded lookup table with %d rows and columns: %s",
+            len(lookup_table),
+            lookup_table.colnames,
         )
         if self.array_layout_name is None:
             matching_rows = list(lookup_table)

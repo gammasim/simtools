@@ -924,8 +924,16 @@ def test_resolve_shower_params_raises_for_invalid_power_law_shape():
         )
 
 
-def test_resolve_energy_max_scaling_parses_new_parameter():
-    scaling = _resolve_energy_max_scaling({"energy_max_scaling": ["-2.5", "300", "TeV"]})
+@pytest.mark.parametrize(
+    "energy_max_scaling",
+    [
+        ["-2.5", "300", "TeV"],
+        "-2.5 300 TeV",
+        ["-2.5 300 TeV"],
+    ],
+)
+def test_resolve_energy_max_scaling_parses_new_parameter(energy_max_scaling):
+    scaling = _resolve_energy_max_scaling({"energy_max_scaling": energy_max_scaling})
 
     assert scaling[0] == pytest.approx(-2.5)
     assert_quantity_allclose(scaling[1], 300 * u.TeV)

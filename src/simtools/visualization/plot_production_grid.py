@@ -17,12 +17,12 @@ DEFAULT_GRID_LINE_WIDTH = 0.6
 GRID_GROUP_ROUND_DECIMALS = 6
 
 
-def azimuth_zenith_output_file_stem(value_key):
+def _azimuth_zenith_output_file_stem(value_key):
     """Return output stem for azimuth/zenith color-scale plots."""
     return f"production_grid_altaz_{value_key}"
 
 
-def zenith_profile_output_file_stem(value_key):
+def _zenith_profile_output_file_stem(value_key):
     """Return output stem for zenith profile plots."""
     return f"production_grid_zenith_profile_{value_key}"
 
@@ -90,13 +90,10 @@ class ProductionGridPlotter:
         }.issubset(self.grid_columns)
         return self._convert_ecsv_table_to_grid_points(grid_table)
 
-    @staticmethod
-    def _convert_ecsv_table_to_grid_points(grid_table):
+    @classmethod
+    def _convert_ecsv_table_to_grid_points(cls, grid_table):
         """Convert an ECSV grid-point table to plain dictionaries."""
-        return [
-            ProductionGridPlotter._convert_ecsv_row_to_grid_point(row, grid_table.colnames)
-            for row in grid_table
-        ]
+        return [cls._convert_ecsv_row_to_grid_point(row, grid_table.colnames) for row in grid_table]
 
     @staticmethod
     def _plain_table_value(value):
@@ -652,13 +649,19 @@ class ProductionGridPlotter:
         logger.info(f"Saved azimuth/zenith color-scale plot to {output_file}")
         plt.close(figure)
 
-    def plot_altaz_projection_with_color_scale(self, value_key, value_label, output_file_stem):
-        """Backward-compatible wrapper for azimuth/zenith color-scale plotting."""
-        self.plot_azimuth_zenith_projection_with_color_scale(
-            value_key=value_key,
-            value_label=value_label,
-            output_file_stem=output_file_stem,
-        )
+    def plot_limit_projections(self):
+        """Plot all supported production-grid limit values."""
+        for value_key in PLOT_VALUE_KEYS:
+            self.plot_azimuth_zenith_projection_with_color_scale(
+                value_key=value_key,
+                value_label=value_key,
+                output_file_stem=_azimuth_zenith_output_file_stem(value_key),
+            )
+            self.plot_zenith_limits_for_azimuths(
+                value_key=value_key,
+                value_label=value_key,
+                output_file_stem=_zenith_profile_output_file_stem(value_key),
+            )
 
     @staticmethod
     def _circular_azimuth_difference_degrees(first_azimuth, second_azimuth):

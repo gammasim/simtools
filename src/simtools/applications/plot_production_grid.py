@@ -38,12 +38,7 @@ RA/Dec panel is added when RA/Dec columns are available in the grid file.
 """
 
 from simtools.application_control import build_application
-from simtools.visualization.plot_production_grid import (
-    PLOT_VALUE_KEYS,
-    ProductionGridPlotter,
-    azimuth_zenith_output_file_stem,
-    zenith_profile_output_file_stem,
-)
+from simtools.visualization.plot_production_grid import ProductionGridPlotter
 
 
 def _add_arguments(parser):
@@ -82,17 +77,7 @@ def main():
         plot_ra_dec_tracks=app_context.args["plot_ra_dec_tracks"],
         dec_values=app_context.args["dec_values"],
     )
-    for value_key in PLOT_VALUE_KEYS:
-        plotter.plot_azimuth_zenith_projection_with_color_scale(
-            value_key=value_key,
-            value_label=value_key,
-            output_file_stem=azimuth_zenith_output_file_stem(value_key),
-        )
-        plotter.plot_zenith_limits_for_azimuths(
-            value_key=value_key,
-            value_label=value_key,
-            output_file_stem=zenith_profile_output_file_stem(value_key),
-        )
+    plotter.plot_limit_projections()
 
 
 if __name__ == "__main__":

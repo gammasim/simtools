@@ -670,6 +670,22 @@ def _clip_max_quantity(configured_max, lookup_max):
     return min(configured_max, lookup_max.to(configured_max.unit))
 
 
+def _parse_power_index_quantity(tokens, parameter_name):
+    """Parse ``<power_index> <reference_value> <reference_unit>`` tokens."""
+    if isinstance(tokens, str):
+        tokens = shlex.split(tokens)
+    elif len(tokens) == 1 and isinstance(tokens[0], str):
+        tokens = shlex.split(tokens[0])
+
+    if len(tokens) != 3:
+        raise ValueError(
+            f"{parameter_name} must be provided as "
+            "<power_index> <reference_energy_value> <reference_energy_unit>."
+        )
+
+    return float(tokens[0]), u.Quantity(f"{tokens[1]} {tokens[2]}")
+
+
 def _resolve_shower_params(args_dict):
     """Extract and convert shower-statistics parameters from an args dict."""
     showers_per_run = args_dict["showers_per_run"]
@@ -679,20 +695,9 @@ def _resolve_shower_params(args_dict):
     total_showers_scaling = args_dict.get("total_showers_scaling", "fixed")
 
     if showers_per_run_power_law is not None:
-        if isinstance(showers_per_run_power_law, str):
-            showers_per_run_power_law = shlex.split(showers_per_run_power_law)
-        elif len(showers_per_run_power_law) == 1 and isinstance(showers_per_run_power_law[0], str):
-            showers_per_run_power_law = shlex.split(showers_per_run_power_law[0])
-
-        if len(showers_per_run_power_law) != 3:
-            raise ValueError(
-                "showers_per_run_power_law must be provided as "
-                "<power_index> <reference_energy_value> <reference_energy_unit>."
-            )
-
-        showers_per_run_power_law = (
-            float(showers_per_run_power_law[0]),
-            u.Quantity(f"{showers_per_run_power_law[1]} {showers_per_run_power_law[2]}"),
+        showers_per_run_power_law = _parse_power_index_quantity(
+            showers_per_run_power_law,
+            "showers_per_run_power_law",
         )
 
     return (
@@ -710,28 +715,13 @@ def _resolve_energy_max_scaling(args_dict):
     legacy_energy_max_scaling_index = args_dict.get("energy_max_scaling_index")
 
     if energy_max_scaling is not None:
-        scaling_tokens = energy_max_scaling
-        if isinstance(scaling_tokens, str):
-            scaling_tokens = shlex.split(scaling_tokens)
-        elif len(scaling_tokens) == 1 and isinstance(scaling_tokens[0], str):
-            scaling_tokens = shlex.split(scaling_tokens[0])
-
-        if len(scaling_tokens) != 3:
-            raise ValueError(
-                "energy_max_scaling must be provided as "
-                "<power_index> <reference_energy_value> <reference_energy_unit>."
-            )
-
         if legacy_energy_max_scaling_index is not None:
             logger.warning(
                 "Both energy_max_scaling and legacy energy_max_scaling_index were provided; "
                 "energy_max_scaling takes precedence."
             )
 
-        return (
-            float(scaling_tokens[0]),
-            u.Quantity(f"{scaling_tokens[1]} {scaling_tokens[2]}"),
-        )
+        return _parse_power_index_quantity(energy_max_scaling, "energy_max_scaling")
 
     if legacy_energy_max_scaling_index is not None:
         return (float(legacy_energy_max_scaling_index), None)
