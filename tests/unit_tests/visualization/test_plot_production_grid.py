@@ -11,8 +11,6 @@ from simtools.visualization.plot_production_grid import (
     DEFAULT_OUTPUT_FILE_STEM,
     PLOT_VALUE_KEYS,
     ProductionGridPlotter,
-    azimuth_zenith_output_file_stem,
-    zenith_profile_output_file_stem,
 )
 
 
@@ -251,21 +249,11 @@ def test_plot_altaz_projection_with_limits_creates_outputs(tmp_test_directory):
     assert normalized_points[0]["core_scatter_max"] == 1200.0 * u.m
     assert normalized_points[0]["view_cone_max"] == 10.0 * u.deg
 
-    for value_key in PLOT_VALUE_KEYS:
-        plotter.plot_altaz_projection_with_color_scale(
-            value_key=value_key,
-            value_label=value_key,
-            output_file_stem=azimuth_zenith_output_file_stem(value_key),
-        )
-        plotter.plot_zenith_limits_for_azimuths(
-            value_key=value_key,
-            value_label=value_key,
-            output_file_stem=zenith_profile_output_file_stem(value_key),
-        )
+    plotter.plot_limit_projections()
 
     for value_key in PLOT_VALUE_KEYS:
-        assert (output_path / f"{azimuth_zenith_output_file_stem(value_key)}.png").exists()
-        assert (output_path / f"{zenith_profile_output_file_stem(value_key)}.png").exists()
+        assert (output_path / f"production_grid_altaz_{value_key}.png").exists()
+        assert (output_path / f"production_grid_zenith_profile_{value_key}.png").exists()
 
 
 def test_load_grid_points_file_not_found(tmp_test_directory):
