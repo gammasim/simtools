@@ -3,56 +3,82 @@
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from scipy.interpolate import LinearNDInterpolator, griddata
+from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator, griddata
 from scipy.spatial import QhullError  # pylint: disable=no-name-in-module
 
 from simtools.utils.value_conversion import get_value_in_unit
 
-_LOOKUP_FIELDS = (
-    "lower_energy_threshold",
-    "upper_scatter_radius",
-    "viewcone_radius",
-)
-
-_LOOKUP_FIELD_UNITS = {
-    "lower_energy_threshold": "TeV",
-    "upper_scatter_radius": "m",
-    "viewcone_radius": "deg",
-}
-
-_POINT_LIMIT_KEYS = {
-    "lower_energy_threshold": "lower_energy_threshold",
-    "upper_scatter_radius": "scatter_radius",
-    "viewcone_radius": "viewcone_radius",
+_LOOKUP_FIELD_SPECS = {
+    "lower_energy_threshold": {
+        "column": "lower_energy_limit",
+        "unit": "TeV",
+        "point_key": "lower_energy_threshold",
+    },
+    "upper_scatter_radius": {
+        "column": "upper_radius_limit",
+        "unit": "m",
+        "point_key": "scatter_radius",
+    },
+    "core_scatter_max": {
+        "column": "upper_radius_limit",
+        "unit": "m",
+        "point_key": "core_scatter_max",
+    },
+    "viewcone_radius": {
+        "column": "viewcone_radius",
+        "unit": "deg",
+        "point_key": "viewcone_radius",
+    },
+    "view_cone_max": {
+        "column": "viewcone_radius",
+        "unit": "deg",
+        "point_key": "view_cone_max",
+    },
+    "energy_min": {
+        "column": "br_energy_min",
+        "unit": "TeV",
+        "point_key": "energy_min",
+    },
+    "energy_max": {
+        "column": "br_energy_max",
+        "unit": "TeV",
+        "point_key": "energy_max",
+    },
 }
 
 
 def attach_lookup_limits_to_point(point, limits):
     """Attach interpolated CORSIKA limits to a grid point."""
-    for lookup_key, point_key in _POINT_LIMIT_KEYS.items():
-        point[point_key] = limits[lookup_key] * u.Unit(_LOOKUP_FIELD_UNITS[lookup_key])
+    for lookup_key, value in limits.items():
+        if lookup_key not in _LOOKUP_FIELD_SPECS:
+            continue
+        field_spec = _LOOKUP_FIELD_SPECS[lookup_key]
+        point[field_spec["point_key"]] = value * u.Unit(field_spec["unit"])
 
 
 class CorsikaLimitsLookup:
-    """Read and interpolate CORSIKA limits for production grids."""
+    """
+    Read and interpolate CORSIKA limits for production grids.
+
+    Parameters
+    ----------
+    lookup_table : str or Path
+        Path to the lookup-table ECSV file.
+    array_layout_name : str, optional
+        Array layout name used to select lookup-table rows.
+    """
 
     def __init__(self, lookup_table, array_layout_name=None):
-        """
-        Initialize lookup-table access.
-
-        Parameters
-        ----------
-        lookup_table : str or Path
-            Path to the lookup-table ECSV file.
-        array_layout_name : str, optional
-            Array layout name used to select lookup-table rows.
-        """
+        """Initialize lookup-table access."""
         self.lookup_table = lookup_table
         self.array_layout_name = array_layout_name
         self.lookup_points_for_interpolation = None
         self.lookup_values_for_interpolation = None
         self.lookup_interpolators_for_point = None
+        self.lookup_nearest_interpolators_for_point = None
         self.lookup_interpolation_axes = None
+        self.lookup_points = None
+        self.available_lookup_fields = None
 
     def load_matching_lookup_arrays(self):
         """
@@ -84,12 +110,18 @@ class CorsikaLimitsLookup:
         azimuths = extract_array("azimuth", lambda x: x % 360)
         nsb_values = extract_array("nsb_level", float)
 
-        return {
+        self.available_lookup_fields = [
+            field_name
+            for field_name, field_spec in _LOOKUP_FIELD_SPECS.items()
+            if field_spec["column"] in lookup_table.colnames
+        ]
+
+        lookup_arrays = {
             "points": np.column_stack((zeniths, azimuths, nsb_values)),
-            "lower_energy_threshold": extract_array("lower_energy_limit"),
-            "upper_scatter_radius": extract_array("upper_radius_limit"),
-            "viewcone_radius": extract_array("viewcone_radius"),
         }
+        for field_name in self.available_lookup_fields:
+            lookup_arrays[field_name] = extract_array(_LOOKUP_FIELD_SPECS[field_name]["column"])
+        return lookup_arrays
 
     def prepare_point_interpolators(self):
         """
@@ -101,6 +133,7 @@ class CorsikaLimitsLookup:
             Interpolators keyed by lookup quantity.
         """
         lookup_arrays = self.load_matching_lookup_arrays()
+        self.lookup_points = lookup_arrays["points"]
         self.lookup_interpolation_axes = self._get_varying_axes(lookup_arrays["points"])
 
         if 1 in self.lookup_interpolation_axes:
@@ -109,12 +142,12 @@ class CorsikaLimitsLookup:
             )
             self.lookup_values_for_interpolation = {
                 key: self._repeat_wrapped_lookup_values(lookup_arrays[key])
-                for key in _LOOKUP_FIELDS
+                for key in self.available_lookup_fields
             }
         else:
             self.lookup_points_for_interpolation = lookup_arrays["points"]
             self.lookup_values_for_interpolation = {
-                key: lookup_arrays[key] for key in _LOOKUP_FIELDS
+                key: lookup_arrays[key] for key in self.available_lookup_fields
             }
 
         if len(self.lookup_interpolation_axes) < 2:
@@ -134,7 +167,14 @@ class CorsikaLimitsLookup:
                     self.lookup_values_for_interpolation[key],
                     fill_value=np.nan,
                 )
-                for key in _LOOKUP_FIELDS
+                for key in self.available_lookup_fields
+            }
+            self.lookup_nearest_interpolators_for_point = {
+                key: NearestNDInterpolator(
+                    interpolation_points,
+                    self.lookup_values_for_interpolation[key],
+                )
+                for key in self.available_lookup_fields
             }
         except QhullError as exc:
             raise ValueError(
@@ -186,19 +226,28 @@ class CorsikaLimitsLookup:
         interpolation_target = target_grid[:, interpolation_axes]
 
         def interpolate(values):
-            return griddata(
+            interpolated = griddata(
                 interpolation_points,
                 self._repeat_wrapped_lookup_values(values),
                 interpolation_target,
                 method="linear",
                 fill_value=np.nan,
-            ).reshape(
+            )
+            if np.isnan(interpolated).any():
+                nearest_values = griddata(
+                    interpolation_points,
+                    self._repeat_wrapped_lookup_values(values),
+                    interpolation_target,
+                    method="nearest",
+                )
+                interpolated = np.where(np.isnan(interpolated), nearest_values, interpolated)
+            return interpolated.reshape(
                 len(target_values["zenith_angle"]),
                 len(target_values["azimuth"]),
                 len(target_values["nsb_level"]),
             )
 
-        return {key: interpolate(lookup_arrays[key]) for key in _LOOKUP_FIELDS}
+        return {key: interpolate(lookup_arrays[key]) for key in self.available_lookup_fields}
 
     def interpolate_point(self, zenith, azimuth, nsb=1.0):
         """
@@ -211,7 +260,7 @@ class CorsikaLimitsLookup:
         azimuth : float or Quantity
             Azimuth angle.
         nsb : float or Quantity, optional
-            Night-sky background level (relative to baseline NSB conditions).
+            Night-sky background rate stored in the lookup table.
 
         Returns
         -------
@@ -232,19 +281,17 @@ class CorsikaLimitsLookup:
             dtype=float,
         )
         interpolation_target = target[:, self.lookup_interpolation_axes]
-        return {
-            "lower_energy_threshold": float(
-                self.lookup_interpolators_for_point["lower_energy_threshold"](interpolation_target)[
-                    0
-                ]
-            ),
-            "upper_scatter_radius": float(
-                self.lookup_interpolators_for_point["upper_scatter_radius"](interpolation_target)[0]
-            ),
-            "viewcone_radius": float(
-                self.lookup_interpolators_for_point["viewcone_radius"](interpolation_target)[0]
-            ),
-        }
+        interpolated_limits = {}
+        for key in self.available_lookup_fields:
+            interpolated_value = float(
+                self.lookup_interpolators_for_point[key](interpolation_target)[0]
+            )
+            if np.isnan(interpolated_value):
+                interpolated_value = float(
+                    self.lookup_nearest_interpolators_for_point[key](interpolation_target)[0]
+                )
+            interpolated_limits[key] = interpolated_value
+        return interpolated_limits
 
     @staticmethod
     def _get_varying_axes(points):

@@ -47,11 +47,15 @@ def test_prepare_point_interpolators_builds_interpolator_state():
     interpolators = lookup.prepare_point_interpolators()
 
     assert lookup.lookup_points_for_interpolation.shape[1] == 3
-    assert set(interpolators) == {
+    assert {
         "lower_energy_threshold",
         "upper_scatter_radius",
         "viewcone_radius",
-    }
+    }.issubset(set(interpolators))
+    assert {
+        "energy_min",
+        "energy_max",
+    }.issubset(set(interpolators))
 
 
 def test_interpolate_grid_limits_returns_requested_grid_shape():
@@ -83,6 +87,36 @@ def test_interpolate_point_returns_interpolated_values():
     assert interpolated["lower_energy_threshold"] == pytest.approx(0.01)
     assert interpolated["upper_scatter_radius"] == pytest.approx(1200.0)
     assert interpolated["viewcone_radius"] == pytest.approx(10.0)
+
+
+def test_interpolate_point_falls_back_to_nearest_for_out_of_domain_point(tmp_test_directory):
+    lookup_table = Table(
+        rows=[
+            ("2d-array", 20.0, 0.0, 1.0, 0.01, 800.0, 6.0),
+            ("2d-array", 20.0, 180.0, 1.0, 0.03, 1000.0, 8.0),
+            ("2d-array", 40.0, 0.0, 1.0, 0.02, 900.0, 7.0),
+            ("2d-array", 40.0, 180.0, 1.0, 0.04, 1100.0, 9.0),
+        ],
+        names=(
+            "array_name",
+            "zenith",
+            "azimuth",
+            "nsb_level",
+            "lower_energy_limit",
+            "upper_radius_limit",
+            "viewcone_radius",
+        ),
+    )
+    lookup_file = tmp_test_directory / "corsika_limits_outside_domain.ecsv"
+    lookup_table.write(lookup_file, format="ascii.ecsv", overwrite=True)
+
+    lookup = CorsikaLimitsLookup(lookup_file, array_layout_name="2d-array")
+
+    interpolated = lookup.interpolate_point(10 * u.deg, 0 * u.deg, nsb=1)
+
+    assert interpolated["lower_energy_threshold"] == pytest.approx(0.01)
+    assert interpolated["upper_scatter_radius"] == pytest.approx(800.0)
+    assert interpolated["viewcone_radius"] == pytest.approx(6.0)
 
 
 def test_prepare_point_interpolators_supports_two_varying_dimensions(tmp_test_directory):
