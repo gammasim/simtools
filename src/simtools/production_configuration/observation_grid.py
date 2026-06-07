@@ -585,7 +585,7 @@ class ProductionGridEngine:
                 )
 
             if "upper_scatter_radius" in self.interpolated_limits:
-                grid_point["scatter_radius"] = (
+                grid_point["core_scatter_max"] = (
                     self.interpolated_limits["upper_scatter_radius"][
                         zenith_idx, azimuth_idx, nsb_idx
                     ]
@@ -593,7 +593,7 @@ class ProductionGridEngine:
                 )
 
             if "viewcone_radius" in self.interpolated_limits:
-                grid_point["viewcone_radius"] = (
+                grid_point["view_cone_max"] = (
                     self.interpolated_limits["viewcone_radius"][zenith_idx, azimuth_idx, nsb_idx]
                     * u.deg
                 )

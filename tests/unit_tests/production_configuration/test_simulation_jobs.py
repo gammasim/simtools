@@ -1091,8 +1091,8 @@ def test_generate_observation_points_from_axes_adds_lookup_limits():
 
     assert len(points) == 1
     assert_quantity_allclose(points[0]["lower_energy_threshold"], 0.05 * u.TeV)
-    assert_quantity_allclose(points[0]["scatter_radius"], 150 * u.m)
-    assert_quantity_allclose(points[0]["viewcone_radius"], 3 * u.deg)
+    assert_quantity_allclose(points[0]["core_scatter_max"], 150 * u.m)
+    assert_quantity_allclose(points[0]["view_cone_max"], 3 * u.deg)
 
 
 @patch("simtools.production_configuration.simulation_jobs._generate_observation_points_from_axes")
@@ -1165,8 +1165,8 @@ def test_build_simulation_jobs_expands_runs_from_observation_grid(
                     "ra": 123 * u.deg,
                     "dec": -45 * u.deg,
                     "lower_energy_threshold": 40 * u.GeV,
-                    "scatter_radius": 100 * u.m,
-                    "viewcone_radius": 2 * u.deg,
+                    "core_scatter_max": 100 * u.m,
+                    "view_cone_max": 2 * u.deg,
                 }
             ]
         },
@@ -1211,8 +1211,8 @@ def test_build_simulation_jobs_clips_core_and_viewcone_max_by_configured_limits(
                     "azimuth": 180 * u.deg,
                     "zenith_angle": 20 * u.deg,
                     "lower_energy_threshold": 40 * u.GeV,
-                    "scatter_radius": 400 * u.m,
-                    "viewcone_radius": 10 * u.deg,
+                    "core_scatter_max": 400 * u.m,
+                    "view_cone_max": 10 * u.deg,
                 }
             ]
         },
@@ -1252,8 +1252,8 @@ def test_build_simulation_jobs_uses_interpolated_energy_min_when_threshold_key_m
                     "azimuth": 180 * u.deg,
                     "zenith_angle": 20 * u.deg,
                     "energy_min": 50 * u.GeV,
-                    "scatter_radius": 100 * u.m,
-                    "viewcone_radius": 2 * u.deg,
+                    "core_scatter_max": 100 * u.m,
+                    "view_cone_max": 2 * u.deg,
                 }
             ]
         },
@@ -1293,8 +1293,8 @@ def test_build_simulation_jobs_clips_viewcone_min_to_lookup_limited_max(
                     "azimuth": 180 * u.deg,
                     "zenith_angle": 20 * u.deg,
                     "lower_energy_threshold": 40 * u.GeV,
-                    "scatter_radius": 100 * u.m,
-                    "viewcone_radius": 2 * u.deg,
+                    "core_scatter_max": 100 * u.m,
+                    "view_cone_max": 2 * u.deg,
                 }
             ]
         },

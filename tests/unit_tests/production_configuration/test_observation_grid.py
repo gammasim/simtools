@@ -142,8 +142,8 @@ def test_add_lookup_limits_to_point_uses_quantity_nsb_level():
         zenith=20.0, azimuth=180.0, nsb=5.0
     )
     assert_quantity_allclose(point["lower_energy_threshold"], 0.02 * u.TeV)
-    assert_quantity_allclose(point["scatter_radius"], 120 * u.m)
-    assert_quantity_allclose(point["viewcone_radius"], 3.5 * u.deg)
+    assert_quantity_allclose(point["core_scatter_max"], 120 * u.m)
+    assert_quantity_allclose(point["view_cone_max"], 3.5 * u.deg)
 
 
 def test_interpolate_limits_for_point_delegates_to_lookup_helper():
@@ -447,8 +447,8 @@ def test_generate_horizontal_grid_uses_interpolated_limit_arrays():
     grid = engine._generate_horizontal_grid()
 
     assert_quantity_allclose(grid[0]["lower_energy_threshold"], 0.02 * u.TeV)
-    assert_quantity_allclose(grid[0]["scatter_radius"], 120 * u.m)
-    assert_quantity_allclose(grid[0]["viewcone_radius"], 3 * u.deg)
+    assert_quantity_allclose(grid[0]["core_scatter_max"], 120 * u.m)
+    assert_quantity_allclose(grid[0]["view_cone_max"], 3 * u.deg)
 
 
 @patch("simtools.production_configuration.observation_grid.AltAz")
@@ -487,8 +487,8 @@ def test_generate_horizontal_grid_handles_partial_interpolated_limit_arrays():
     grid = engine._generate_horizontal_grid()
 
     assert "lower_energy_threshold" not in grid[0]
-    assert_quantity_allclose(grid[0]["scatter_radius"], 120 * u.m)
-    assert_quantity_allclose(grid[0]["viewcone_radius"], 3 * u.deg)
+    assert_quantity_allclose(grid[0]["core_scatter_max"], 120 * u.m)
+    assert_quantity_allclose(grid[0]["view_cone_max"], 3 * u.deg)
 
 
 def test_generate_horizontal_grid_with_circular_azimuth_binning_uses_correct_indices():
