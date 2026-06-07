@@ -16,6 +16,7 @@ applications:
     corsika_he_interaction: epos
     corsika_le_interaction: urqmd
     energy_range: 30 GeV 300 GeV
+    energy_max_scaling_index: -2.5
     corsika_limits: tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv
     model_version: 7.0.0
     showers_per_run: 5

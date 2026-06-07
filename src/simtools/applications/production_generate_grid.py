@@ -55,6 +55,12 @@ showers_per_run_scaling (str, optional)
     ``fixed`` keeps showers per run unchanged.
     ``cosine_zenith`` applies ``showers_per_run * cos(zenith_angle)``
     (example: ``--showers_per_run_scaling cosine_zenith``).
+energy_max_scaling_index (float, optional)
+    Scale the configured max energy with zenith angle as
+    ``energy_max_zenith * cos(zenith_angle) ** energy_max_scaling_index``,
+    where ``energy_max_zenith`` is the configured max value of ``energy_range``.
+    Disabled by default (``None``).
+    Example: ``--energy_max_scaling_index -2.5``.
 
 
 Example
@@ -233,6 +239,18 @@ def _add_arguments(parser):
         choices=["fixed", "cosine_zenith"],
         required=False,
         default="fixed",
+    )
+    parser.add_argument(
+        "--energy_max_scaling_index",
+        help=(
+            "Scale max energy with zenith angle as "
+            "energy_max_zenith * cos(zenith_angle) ** energy_max_scaling_index, "
+            "using the configured energy_range max value as energy_max_zenith "
+            "(for example: --energy_max_scaling_index -2.5)."
+        ),
+        type=float,
+        required=False,
+        default=None,
     )
 
 

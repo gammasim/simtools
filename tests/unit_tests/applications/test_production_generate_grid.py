@@ -102,3 +102,12 @@ def test_add_arguments_accepts_showers_per_run_scaling():
     args = parser.parse_args(["--showers_per_run_scaling", "cosine_zenith"])
 
     assert args.showers_per_run_scaling == "cosine_zenith"
+
+
+def test_add_arguments_accepts_energy_max_scaling_index():
+    parser = CommandLineParser()
+    app._add_arguments(parser)
+
+    args = parser.parse_args(["--energy_max_scaling_index", "-2.5"])
+
+    assert args.energy_max_scaling_index == pytest.approx(-2.5)
