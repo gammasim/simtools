@@ -590,25 +590,31 @@ def calculate_zenith_scaled_showers_per_run(
 def scale_energy_max_for_zenith_angle(
     zenith_angle,
     energy_range_pair,
-    energy_max_scaling_index=None,
+    energy_max_scaling=None,
 ):
     """Scale energy_max with zenith angle and return an updated energy range pair."""
-    if energy_max_scaling_index is None:
+    if energy_max_scaling is None:
         return energy_range_pair
 
-    energy_min, energy_max_zenith = energy_range_pair
+    energy_max_scaling_index, energy_max_scaling_reference = energy_max_scaling
+    energy_min, energy_range_max = energy_range_pair
     cos_zenith = np.cos(zenith_angle.to(u.rad).value)
 
     if np.isclose(cos_zenith, 0.0) and energy_max_scaling_index < 0:
         raise ValueError(
-            "energy_max_scaling_index < 0 is not defined for zenith angles with cos(zenith)=0."
+            "energy_max_scaling with index < 0 is not defined for zenith angles with cos(zenith)=0."
         )
 
-    scaled_energy_max = energy_max_zenith * (cos_zenith**energy_max_scaling_index)
+    scaling_reference = (
+        energy_range_max
+        if energy_max_scaling_reference is None
+        else energy_max_scaling_reference.to(energy_range_max.unit)
+    )
+    scaled_energy_max = scaling_reference * (cos_zenith**energy_max_scaling_index)
     if scaled_energy_max <= energy_min.to(scaled_energy_max.unit):
         return None
 
-    return energy_min, scaled_energy_max.to(energy_max_zenith.unit)
+    return energy_min, scaled_energy_max.to(energy_range_max.unit)
 
 
 def _clip_energy_range_from_threshold(energy_range_pair, lower_energy_threshold):
@@ -623,6 +629,25 @@ def _clip_energy_range_from_threshold(energy_range_pair, lower_energy_threshold)
     if lower_energy_threshold <= energy_min:
         return energy_range_pair
     return lower_energy_threshold, energy_max
+
+
+def _clip_energy_range_to_configured_bounds(energy_range_pair, configured_energy_range_pair):
+    """Clip selected energy bounds to configured energy-range bounds."""
+    energy_min, energy_max = energy_range_pair
+    configured_energy_min, configured_energy_max = configured_energy_range_pair
+
+    selected_energy_min = max(
+        energy_min.to(configured_energy_min.unit),
+        configured_energy_min,
+    )
+    selected_energy_max = min(
+        energy_max.to(configured_energy_max.unit),
+        configured_energy_max,
+    )
+
+    if selected_energy_max <= selected_energy_min.to(selected_energy_max.unit):
+        return None
+    return selected_energy_min, selected_energy_max
 
 
 def _interpolate_corsika_limits(corsika_limits, zenith_angle, azimuth_angle=None, nsb_level=1.0):
@@ -679,6 +704,41 @@ def _resolve_shower_params(args_dict):
     )
 
 
+def _resolve_energy_max_scaling(args_dict):
+    """Resolve energy-max zenith scaling from CLI/config, including legacy options."""
+    energy_max_scaling = args_dict.get("energy_max_scaling")
+    legacy_energy_max_scaling_index = args_dict.get("energy_max_scaling_index")
+
+    if energy_max_scaling is not None:
+        scaling_tokens = energy_max_scaling
+        if isinstance(scaling_tokens, str):
+            scaling_tokens = shlex.split(scaling_tokens)
+        elif len(scaling_tokens) == 1 and isinstance(scaling_tokens[0], str):
+            scaling_tokens = shlex.split(scaling_tokens[0])
+
+        if len(scaling_tokens) != 3:
+            raise ValueError(
+                "energy_max_scaling must be provided as "
+                "<power_index> <reference_energy_value> <reference_energy_unit>."
+            )
+
+        if legacy_energy_max_scaling_index is not None:
+            logger.warning(
+                "Both energy_max_scaling and legacy energy_max_scaling_index were provided; "
+                "energy_max_scaling takes precedence."
+            )
+
+        return (
+            float(scaling_tokens[0]),
+            u.Quantity(f"{scaling_tokens[1]} {scaling_tokens[2]}"),
+        )
+
+    if legacy_energy_max_scaling_index is not None:
+        return (float(legacy_energy_max_scaling_index), None)
+
+    return None
+
+
 def _scale_total_showers(
     total_showers,
     zenith_angle,
@@ -713,7 +773,7 @@ def _build_rows_for_point(
     total_showers_scaling,
     run_number,
     showers_per_run_scaling="fixed",
-    energy_max_scaling_index=None,
+    energy_max_scaling=None,
     zenith_angle_scaling_factor=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
 ):
     """Build all simulation-run rows for a single grid point across all energy ranges."""
@@ -722,12 +782,18 @@ def _build_rows_for_point(
         selected_energy_range = scale_energy_max_for_zenith_angle(
             point_base["zenith_angle"],
             energy_range_pair,
-            energy_max_scaling_index,
+            energy_max_scaling,
         )
         if selected_energy_range is None:
             continue
         selected_energy_range = _clip_energy_range_from_threshold(
             selected_energy_range, lower_energy_threshold
+        )
+        if selected_energy_range is None:
+            continue
+        selected_energy_range = _clip_energy_range_to_configured_bounds(
+            selected_energy_range,
+            energy_range_pair,
         )
         if selected_energy_range is None:
             continue
@@ -793,6 +859,73 @@ def _generate_observation_points_from_axes(azimuth_values, zenith_values, corsik
     return points
 
 
+def _log_energy_scaling_configuration(energy_max_scaling):
+    """Log configured zenith-scaling behavior for energy maxima."""
+    if energy_max_scaling is None:
+        logger.info("Energy max zenith scaling: disabled.")
+        return
+
+    energy_max_scaling_index, energy_max_scaling_reference = energy_max_scaling
+    if energy_max_scaling_reference is None:
+        logger.info(
+            "Energy max zenith scaling: Emax = E_range_max * cos(zenith)^%.3f (legacy mode).",
+            energy_max_scaling_index,
+        )
+        return
+
+    logger.info(
+        "Energy max zenith scaling: Emax = %s * cos(zenith)^%.3f.",
+        energy_max_scaling_reference,
+        energy_max_scaling_index,
+    )
+
+
+def _format_quantity_summary(quantity_values):
+    """Format quantity min/max as a single value or range with explicit unit."""
+    quantity_min = quantity_values.min()
+    quantity_max = quantity_values.max()
+
+    summary_unit = quantity_max.unit
+    min_value = quantity_min.to_value(summary_unit)
+    max_value = quantity_max.to_value(summary_unit)
+
+    if np.isclose(min_value, max_value):
+        return f"{max_value:.6g} {summary_unit}"
+    return f"[{min_value:.6g}, {max_value:.6g}] {summary_unit}"
+
+
+def _log_generated_row_summary(rows):
+    """Log a compact summary of generated row ranges for user visibility."""
+    if not rows:
+        logger.info("Generated 0 simulation rows after applying all clipping and scaling rules.")
+        return
+
+    energy_min_values = u.Quantity([row["energy_min"] for row in rows])
+    energy_max_values = u.Quantity([row["energy_max"] for row in rows])
+    core_scatter_max_values = u.Quantity([row["core_scatter_max"] for row in rows])
+    view_cone_min_values = u.Quantity([row["view_cone_min"] for row in rows])
+    view_cone_max_values = u.Quantity([row["view_cone_max"] for row in rows])
+
+    logger.info(
+        "Generated %d simulation rows.",
+        len(rows),
+    )
+    logger.info(
+        "Energy range after clipping/scaling: Emin %s, Emax %s.",
+        _format_quantity_summary(energy_min_values),
+        _format_quantity_summary(energy_max_values),
+    )
+    logger.info(
+        "Core scatter max range: %s.",
+        _format_quantity_summary(core_scatter_max_values),
+    )
+    logger.info(
+        "View cone range: min %s, max %s.",
+        _format_quantity_summary(view_cone_min_values),
+        _format_quantity_summary(view_cone_max_values),
+    )
+
+
 def _generate_observation_grids_per_layout(args_dict, grid_axes):
     """Generate observation grids per array layout.
 
@@ -833,6 +966,41 @@ def _generate_observation_grids_per_layout(args_dict, grid_axes):
     return observation_grids_per_layout, resolved_layout_names
 
 
+def _build_observation_params_for_point(
+    point,
+    primary,
+    model_version,
+    resolved_layout_name,
+    corsika_le,
+    corsika_he,
+    core_scatter,
+    core_scatter_number,
+    view_cone_min,
+    configured_view_cone_max,
+):
+    """Build observation parameters and derived lookup-limited values for one grid point."""
+    lookup_core_scatter_max = point.get("core_scatter_max", point.get("scatter_radius"))
+    lookup_view_cone_max = point.get("view_cone_max", point.get("viewcone_radius"))
+    selected_core_scatter_max = _clip_max_quantity(core_scatter[1], lookup_core_scatter_max)
+    selected_view_cone_max = _clip_max_quantity(configured_view_cone_max, lookup_view_cone_max)
+
+    return {
+        "primary": primary,
+        "azimuth_angle": point["azimuth"],
+        "zenith_angle": point["zenith_angle"],
+        "ra": point.get("ra"),
+        "dec": point.get("dec"),
+        "model_version": model_version,
+        "array_layout_name": resolved_layout_name,
+        "corsika_le_interaction": corsika_le,
+        "corsika_he_interaction": corsika_he,
+        "core_scatter_number": core_scatter_number,
+        "core_scatter_max": selected_core_scatter_max,
+        "view_cone_min": _clip_max_quantity(view_cone_min, selected_view_cone_max),
+        "view_cone_max": selected_view_cone_max,
+    }
+
+
 def build_simulation_jobs(args_dict):
     """
     Expand production config into full simulation job matrix.
@@ -866,7 +1034,7 @@ def build_simulation_jobs(args_dict):
             defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
         )
     )
-    energy_max_scaling_index = args_dict.get("energy_max_scaling_index")
+    energy_max_scaling = _resolve_energy_max_scaling(args_dict)
 
     if total_showers is not None and args_dict.get("number_of_runs") is not None:
         raise ValueError("total_showers and number_of_runs cannot be configured together.")
@@ -878,9 +1046,16 @@ def build_simulation_jobs(args_dict):
     view_cone = args_dict["view_cone"]
     core_scatter_number = int(core_scatter[0])
     view_cone_min = view_cone[0]
+    configured_view_cone_max = view_cone[1]
     observation_grids_per_layout, resolved_layout_names = _generate_observation_grids_per_layout(
         args_dict, grid_axes
     )
+    logger.info(
+        "Applying job constraints: energy clipped to configured energy_range, "
+        "core_scatter_max clipped by configured max and lookup, and view_cone min/max "
+        "clipped by configured and lookup limits."
+    )
+    _log_energy_scaling_configuration(energy_max_scaling)
     rows = []
 
     for primary, model_version, corsika_le, corsika_he in itertools.product(
@@ -891,30 +1066,26 @@ def build_simulation_jobs(args_dict):
     ):
         resolved_layout_name = resolved_layout_names[model_version]
         for point in observation_grids_per_layout[resolved_layout_name]:
-            observation_params = {
-                "primary": primary,
-                "azimuth_angle": point["azimuth"],
-                "zenith_angle": point["zenith_angle"],
-                "ra": point.get("ra"),
-                "dec": point.get("dec"),
-                "model_version": model_version,
-                "array_layout_name": resolved_layout_name,
-                "corsika_le_interaction": corsika_le,
-                "corsika_he_interaction": corsika_he,
-                "core_scatter_number": core_scatter_number,
-                "core_scatter_max": _clip_max_quantity(
-                    core_scatter[1], point.get("core_scatter_max", point.get("scatter_radius"))
-                ),
-                "view_cone_min": view_cone_min,
-                "view_cone_max": _clip_max_quantity(
-                    view_cone[1], point.get("view_cone_max", point.get("viewcone_radius"))
-                ),
-            }
+            observation_params = _build_observation_params_for_point(
+                point=point,
+                primary=primary,
+                model_version=model_version,
+                resolved_layout_name=resolved_layout_name,
+                corsika_le=corsika_le,
+                corsika_he=corsika_he,
+                core_scatter=core_scatter,
+                core_scatter_number=core_scatter_number,
+                view_cone_min=view_cone_min,
+                configured_view_cone_max=configured_view_cone_max,
+            )
             rows.extend(
                 _build_rows_for_point(
                     point_base=observation_params,
                     energy_ranges=energy_ranges,
-                    lower_energy_threshold=point.get("lower_energy_threshold"),
+                    lower_energy_threshold=point.get(
+                        "lower_energy_threshold",
+                        point.get("energy_min"),
+                    ),
                     showers_per_run=showers_per_run,
                     showers_per_run_power_law=showers_per_run_power_law,
                     showers_per_run_scaling=showers_per_run_scaling,
@@ -922,8 +1093,9 @@ def build_simulation_jobs(args_dict):
                     total_showers=total_showers,
                     total_showers_scaling=total_showers_scaling,
                     run_number=run_number,
-                    energy_max_scaling_index=energy_max_scaling_index,
+                    energy_max_scaling=energy_max_scaling,
                     zenith_angle_scaling_factor=zenith_angle_scaling_factor,
                 )
             )
+    _log_generated_row_summary(rows)
     return rows

@@ -9,6 +9,18 @@ from astropy.table import Table
 
 logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
+DEFAULT_OUTPUT_FILE_STEM_ENERGY_MIN = "production_grid_altaz_energy_min"
+DEFAULT_OUTPUT_FILE_STEM_ENERGY_MAX = "production_grid_altaz_energy_max"
+DEFAULT_OUTPUT_FILE_STEM_CORE_SCATTER_MAX = "production_grid_altaz_core_scatter_max"
+DEFAULT_OUTPUT_FILE_STEM_VIEW_CONE_MAX = "production_grid_altaz_view_cone_max"
+DEFAULT_OUTPUT_FILE_STEM_ENERGY_MIN_ZENITH_PROFILE = "production_grid_zenith_profile_energy_min"
+DEFAULT_OUTPUT_FILE_STEM_ENERGY_MAX_ZENITH_PROFILE = "production_grid_zenith_profile_energy_max"
+DEFAULT_OUTPUT_FILE_STEM_CORE_SCATTER_MAX_ZENITH_PROFILE = (
+    "production_grid_zenith_profile_core_scatter_max"
+)
+DEFAULT_OUTPUT_FILE_STEM_VIEW_CONE_MAX_ZENITH_PROFILE = (
+    "production_grid_zenith_profile_view_cone_max"
+)
 DEFAULT_OUTPUT_FILE_EXTENSION = "png"
 DEFAULT_MARKER_SIZE = 8
 DEFAULT_GRID_LINE_WIDTH = 0.6
@@ -155,6 +167,26 @@ class ProductionGridPlotter:
         )
         ra = self._extract_first_available_quantity_value(point, ("ra", "ra_value"))
         dec = self._extract_first_available_quantity_value(point, ("dec", "dec_value"))
+        energy_min = self._extract_first_available_quantity_value(
+            point,
+            ("energy_min", "energy_min_value"),
+        )
+        energy_max = self._extract_first_available_quantity_value(
+            point,
+            ("energy_max", "energy_max_value"),
+        )
+        core_scatter_max = self._extract_first_available_quantity_value(
+            point,
+            ("core_scatter_max", "core_scatter_max_value", "scatter_radius"),
+        )
+        view_cone_max = self._extract_first_available_quantity_value(
+            point,
+            ("view_cone_max", "view_cone_max_value", "viewcone_radius"),
+        )
+        energy_min_unit = point.get("energy_min_unit")
+        energy_max_unit = point.get("energy_max_unit")
+        core_scatter_max_unit = point.get("core_scatter_max_unit")
+        view_cone_max_unit = point.get("view_cone_max_unit")
         point_ra = float(ra % 360.0) if ra is not None else None
         point_dec = float(dec) if dec is not None else None
 
@@ -165,6 +197,14 @@ class ProductionGridPlotter:
                 "zenith": zenith,
                 "ra": point_ra,
                 "dec": point_dec,
+                "energy_min": energy_min,
+                "energy_max": energy_max,
+                "core_scatter_max": core_scatter_max,
+                "view_cone_max": view_cone_max,
+                "energy_min_unit": energy_min_unit,
+                "energy_max_unit": energy_max_unit,
+                "core_scatter_max_unit": core_scatter_max_unit,
+                "view_cone_max_unit": view_cone_max_unit,
                 "visible_in_altaz": True,
             }
 
@@ -175,6 +215,14 @@ class ProductionGridPlotter:
                 "zenith": None,
                 "ra": float(ra % 360.0),
                 "dec": float(dec),
+                "energy_min": energy_min,
+                "energy_max": energy_max,
+                "core_scatter_max": core_scatter_max,
+                "view_cone_max": view_cone_max,
+                "energy_min_unit": energy_min_unit,
+                "energy_max_unit": energy_max_unit,
+                "core_scatter_max_unit": core_scatter_max_unit,
+                "view_cone_max_unit": view_cone_max_unit,
                 "visible_in_altaz": None,
             }
 
@@ -248,6 +296,24 @@ class ProductionGridPlotter:
         split_indices = np.nonzero(np.diff(visible_indices) > 1)[0] + 1
         segments = np.split(visible_indices, split_indices)
         return [segment for segment in segments if len(segment) >= 2]
+
+    @staticmethod
+    def _resolve_value_unit(plot_points, value_key):
+        """Resolve a representative unit string for one plotted value key."""
+        unit_key = f"{value_key}_unit"
+        for point in plot_points:
+            unit_value = point.get(unit_key)
+            if unit_value:
+                return str(unit_value)
+        return None
+
+    @classmethod
+    def _format_value_label_with_unit(cls, plot_points, value_key, value_label):
+        """Format a plot label with units when available in normalized points."""
+        unit_value = cls._resolve_value_unit(plot_points, value_key)
+        if unit_value:
+            return f"{value_label} [{unit_value}]"
+        return value_label
 
     @staticmethod
     def _has_plottable_radec_points(plot_points):
@@ -364,13 +430,15 @@ class ProductionGridPlotter:
         plt.close(figure)
 
     def _configure_altaz_axis(self, axis):
-        """Configure the Alt/Az polar projection axis."""
+        """Configure the azimuth/zenith polar projection axis."""
         axis.set_theta_zero_location("N")
         axis.set_theta_direction(-1)
         axis.set_rmax(90)
         axis.set_rticks(np.arange(10, 91, 10))
         axis.grid(True, color="gray", alpha=0.5, linestyle="--")
-        axis.set_title("Local Alt/Az", pad=18)
+        axis.set_title("Local Azimuth / Zenith", pad=18)
+        axis.set_xlabel("Azimuth [deg]")
+        axis.set_ylabel("Zenith angle [deg]")
 
     def _configure_radec_axis(self, axis, plot_points):
         """Configure the RA/Dec axis."""
@@ -496,14 +564,16 @@ class ProductionGridPlotter:
             secondary_color="tab:orange",
             x_key="azimuth",
             y_key="zenith",
-            panel_name="Alt/Az",
+            panel_name="Azimuth/Zenith",
             require_altaz_visibility=True,
             x_transform=np.radians,
         )
 
         hidden_points = sum(point["visible_in_altaz"] is False for point in plot_points)
         if hidden_points > 0:
-            logger.info(f"Skipping {hidden_points} RA/Dec points below the horizon in Alt/Az panel")
+            logger.info(
+                f"Skipping {hidden_points} RA/Dec points below the horizon in Azimuth/Zenith panel"
+            )
         return plotted_points
 
     def _plot_radec_points(self, axis, plot_points):
@@ -529,3 +599,122 @@ class ProductionGridPlotter:
             y_key="dec",
             panel_name="RA/Dec",
         )
+
+    def plot_altaz_projection_with_color_scale(self, value_key, value_label, output_file_stem):
+        """Plot Alt/Az points with a color scale for one value column."""
+        plot_points = self.normalize_grid_points()
+        value_label_with_unit = self._format_value_label_with_unit(
+            plot_points,
+            value_key,
+            value_label,
+        )
+        colored_points = [
+            point
+            for point in plot_points
+            if point["native_frame"] == "altaz"
+            and point["azimuth"] is not None
+            and point["zenith"] is not None
+            and point.get(value_key) is not None
+        ]
+
+        if not colored_points:
+            logger.warning(f"No Alt/Az points with '{value_key}' available for plotting")
+            return
+
+        figure = plt.figure(figsize=(8, 7))
+        axis = figure.add_subplot(1, 1, 1, projection="polar")
+        self._configure_altaz_axis(axis)
+
+        azimuth_values = np.radians([point["azimuth"] for point in colored_points])
+        zenith_values = [point["zenith"] for point in colored_points]
+        color_values = [point[value_key] for point in colored_points]
+
+        scatter = axis.scatter(
+            azimuth_values,
+            zenith_values,
+            c=color_values,
+            cmap="viridis",
+            s=DEFAULT_MARKER_SIZE * 3,
+            edgecolors="black",
+            linewidths=0.3,
+        )
+
+        colorbar = figure.colorbar(scatter, ax=axis, pad=0.12)
+        colorbar.set_label(value_label_with_unit)
+        axis.set_title(f"Local Azimuth / Zenith colored by {value_label_with_unit}", pad=18)
+
+        figure.tight_layout(rect=(0.0, 0.0, 1.0, 0.95))
+        output_file = self.output_path / f"{output_file_stem}.{DEFAULT_OUTPUT_FILE_EXTENSION}"
+        figure.savefig(output_file, bbox_inches="tight", dpi=300)
+        logger.info(f"Saved Alt/Az color-scale plot to {output_file}")
+        plt.close(figure)
+
+    @staticmethod
+    def _circular_azimuth_difference_degrees(first_azimuth, second_azimuth):
+        """Return minimal absolute difference between two azimuth angles."""
+        return abs(((first_azimuth - second_azimuth + 180.0) % 360.0) - 180.0)
+
+    def plot_zenith_limits_for_azimuths(
+        self,
+        value_key,
+        value_label,
+        output_file_stem,
+        azimuth_targets=(0.0, 180.0),
+        azimuth_tolerance_deg=1e-6,
+    ):
+        """Plot value versus zenith for selected azimuth pointings."""
+        plot_points = self.normalize_grid_points()
+        value_label_with_unit = self._format_value_label_with_unit(
+            plot_points,
+            value_key,
+            value_label,
+        )
+        altaz_points = [
+            point
+            for point in plot_points
+            if point["native_frame"] == "altaz"
+            and point["azimuth"] is not None
+            and point["zenith"] is not None
+            and point.get(value_key) is not None
+        ]
+
+        if not altaz_points:
+            logger.warning(f"No Alt/Az points with '{value_key}' available for zenith profiling")
+            return
+
+        figure, axis = plt.subplots(figsize=(8, 5))
+        plotted_series = 0
+        for azimuth_target in azimuth_targets:
+            selected_points = [
+                point
+                for point in altaz_points
+                if self._circular_azimuth_difference_degrees(point["azimuth"], azimuth_target)
+                <= azimuth_tolerance_deg
+            ]
+            if not selected_points:
+                continue
+
+            selected_points = sorted(selected_points, key=lambda point: point["zenith"])
+            zenith_values = [point["zenith"] for point in selected_points]
+            value_values = [point[value_key] for point in selected_points]
+            axis.plot(zenith_values, value_values, marker="o", label=f"az={azimuth_target:.0f} deg")
+            plotted_series += 1
+
+        if plotted_series == 0:
+            logger.warning(
+                f"No zenith profile points for '{value_key}' at azimuths {azimuth_targets}"
+            )
+            plt.close(figure)
+            return
+
+        axis.set_xlabel("Zenith angle [deg]")
+        axis.set_ylabel(value_label_with_unit)
+        axis.set_title(f"{value_label_with_unit} vs zenith angle")
+        axis.grid(True, color="gray", alpha=0.5, linestyle="--")
+        axis.legend(loc="best")
+        figure.tight_layout()
+
+        output_file = self.output_path / f"{output_file_stem}.{DEFAULT_OUTPUT_FILE_EXTENSION}"
+        figure.savefig(output_file, bbox_inches="tight", dpi=300)
+        logger.info(f"Saved zenith profile plot to {output_file}")
+        plt.close(figure)

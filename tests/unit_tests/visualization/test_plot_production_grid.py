@@ -8,6 +8,14 @@ from astropy.table import Table
 
 from simtools.visualization.plot_production_grid import (
     DEFAULT_OUTPUT_FILE_STEM,
+    DEFAULT_OUTPUT_FILE_STEM_CORE_SCATTER_MAX,
+    DEFAULT_OUTPUT_FILE_STEM_CORE_SCATTER_MAX_ZENITH_PROFILE,
+    DEFAULT_OUTPUT_FILE_STEM_ENERGY_MAX,
+    DEFAULT_OUTPUT_FILE_STEM_ENERGY_MAX_ZENITH_PROFILE,
+    DEFAULT_OUTPUT_FILE_STEM_ENERGY_MIN,
+    DEFAULT_OUTPUT_FILE_STEM_ENERGY_MIN_ZENITH_PROFILE,
+    DEFAULT_OUTPUT_FILE_STEM_VIEW_CONE_MAX,
+    DEFAULT_OUTPUT_FILE_STEM_VIEW_CONE_MAX_ZENITH_PROFILE,
     ProductionGridPlotter,
 )
 
@@ -38,6 +46,10 @@ def _write_grid_file(tmp_test_directory, file_name, grid_points):
         table["nsb_level"].unit = "MHz"
     if "offset" in table.colnames:
         table["offset"].unit = "deg"
+    if "core_scatter_max_value" in table.colnames:
+        table["core_scatter_max_value"].unit = "m"
+    if "view_cone_max_value" in table.colnames:
+        table["view_cone_max_value"].unit = "deg"
     table.write(file_path, format="ascii.ecsv", overwrite=True)
     return file_path
 
@@ -194,6 +206,102 @@ def test_plot_sky_projection_creates_output_with_radec_panel(tmp_test_directory)
     assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM}.png").exists()
 
 
+def test_plot_altaz_projection_with_limits_creates_outputs(tmp_test_directory):
+    """Write Alt/Az color-scale plots and zenith profiles for all supported limits."""
+    grid_file = _write_grid_file(
+        tmp_test_directory,
+        "grid_energy_flattened.ecsv",
+        [
+            {
+                "azimuth_angle_value": 0.0,
+                "azimuth_angle_unit": "deg",
+                "zenith_angle_value": 20.0,
+                "zenith_angle_unit": "deg",
+                "energy_min_value": 0.03,
+                "energy_min_unit": "TeV",
+                "energy_max_value": 150.0,
+                "energy_max_unit": "TeV",
+                "core_scatter_max_value": 1200.0,
+                "core_scatter_max_unit": "m",
+                "view_cone_max_value": 10.0,
+                "view_cone_max_unit": "deg",
+            },
+            {
+                "azimuth_angle_value": 180.0,
+                "azimuth_angle_unit": "deg",
+                "zenith_angle_value": 40.0,
+                "zenith_angle_unit": "deg",
+                "energy_min_value": 0.06,
+                "energy_min_unit": "TeV",
+                "energy_max_value": 200.0,
+                "energy_max_unit": "TeV",
+                "core_scatter_max_value": 1800.0,
+                "core_scatter_max_unit": "m",
+                "view_cone_max_value": 12.0,
+                "view_cone_max_unit": "deg",
+            },
+        ],
+    )
+    output_path = Path(tmp_test_directory) / "output"
+
+    plotter = _create_plotter(
+        grid_file=grid_file,
+        output_path=output_path,
+    )
+
+    plotter.plot_altaz_projection_with_color_scale(
+        value_key="energy_min",
+        value_label="energy_min",
+        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_ENERGY_MIN,
+    )
+    plotter.plot_altaz_projection_with_color_scale(
+        value_key="energy_max",
+        value_label="energy_max",
+        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_ENERGY_MAX,
+    )
+    plotter.plot_altaz_projection_with_color_scale(
+        value_key="core_scatter_max",
+        value_label="core_scatter_max",
+        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_CORE_SCATTER_MAX,
+    )
+    plotter.plot_altaz_projection_with_color_scale(
+        value_key="view_cone_max",
+        value_label="view_cone_max",
+        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_VIEW_CONE_MAX,
+    )
+    plotter.plot_zenith_limits_for_azimuths(
+        value_key="energy_min",
+        value_label="energy_min",
+        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_ENERGY_MIN_ZENITH_PROFILE,
+    )
+    plotter.plot_zenith_limits_for_azimuths(
+        value_key="energy_max",
+        value_label="energy_max",
+        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_ENERGY_MAX_ZENITH_PROFILE,
+    )
+    plotter.plot_zenith_limits_for_azimuths(
+        value_key="core_scatter_max",
+        value_label="core_scatter_max",
+        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_CORE_SCATTER_MAX_ZENITH_PROFILE,
+    )
+    plotter.plot_zenith_limits_for_azimuths(
+        value_key="view_cone_max",
+        value_label="view_cone_max",
+        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_VIEW_CONE_MAX_ZENITH_PROFILE,
+    )
+
+    assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM_ENERGY_MIN}.png").exists()
+    assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM_ENERGY_MAX}.png").exists()
+    assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM_CORE_SCATTER_MAX}.png").exists()
+    assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM_VIEW_CONE_MAX}.png").exists()
+    assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM_ENERGY_MIN_ZENITH_PROFILE}.png").exists()
+    assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM_ENERGY_MAX_ZENITH_PROFILE}.png").exists()
+    assert (
+        output_path / f"{DEFAULT_OUTPUT_FILE_STEM_CORE_SCATTER_MAX_ZENITH_PROFILE}.png"
+    ).exists()
+    assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM_VIEW_CONE_MAX_ZENITH_PROFILE}.png").exists()
+
+
 def test_load_grid_points_file_not_found(tmp_test_directory):
     """Raise when the grid points file does not exist."""
     missing_file = Path(tmp_test_directory) / "does_not_exist.ecsv"
@@ -231,6 +339,19 @@ def test_extract_quantity_value_dict_branches():
 
     point_without_value = {"x": {"unit": "deg"}}
     assert ProductionGridPlotter._extract_quantity_value(point_without_value, "x") is None
+
+
+def test_format_value_label_with_unit_uses_available_unit():
+    """Append units from *_unit keys when present in normalized points."""
+    plot_points = [{"energy_min_unit": "TeV"}]
+
+    formatted_label = ProductionGridPlotter._format_value_label_with_unit(
+        plot_points,
+        value_key="energy_min",
+        value_label="energy_min",
+    )
+
+    assert formatted_label == "energy_min [TeV]"
 
 
 def test_configure_radec_axis_expands_flat_ranges(tmp_test_directory):
@@ -285,7 +406,7 @@ def test_plot_frame_points_logs_no_valid_points(tmp_test_directory, caplog):
 
 
 def test_plot_altaz_points_logs_hidden_radec_points(tmp_test_directory, caplog):
-    """Log info when RA/Dec points are not visible in Alt/Az panel."""
+    """Log info when RA/Dec points are not visible in Azimuth/Zenith panel."""
     grid_file = _write_grid_file(tmp_test_directory, "grid_empty_altaz.ecsv", [])
     plotter = _create_plotter(
         grid_file=grid_file,
@@ -307,7 +428,7 @@ def test_plot_altaz_points_logs_hidden_radec_points(tmp_test_directory, caplog):
         ]
         with caplog.at_level("INFO"):
             plotter._plot_altaz_points(axis, plot_points)
-        assert "Skipping 1 RA/Dec points below the horizon in Alt/Az panel" in caplog.text
+        assert "Skipping 1 RA/Dec points below the horizon in Azimuth/Zenith panel" in caplog.text
     finally:
         plt.close(figure)
 

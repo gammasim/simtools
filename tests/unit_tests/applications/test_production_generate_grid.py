@@ -104,7 +104,16 @@ def test_add_arguments_accepts_showers_per_run_scaling():
     assert args.showers_per_run_scaling == "cosine_zenith"
 
 
-def test_add_arguments_accepts_energy_max_scaling_index():
+def test_add_arguments_accepts_energy_max_scaling():
+    parser = CommandLineParser()
+    app._add_arguments(parser)
+
+    args = parser.parse_args(["--energy_max_scaling", "-2.5", "300", "TeV"])
+
+    assert args.energy_max_scaling == ["-2.5", "300", "TeV"]
+
+
+def test_add_arguments_accepts_legacy_energy_max_scaling_index():
     parser = CommandLineParser()
     app._add_arguments(parser)
 
