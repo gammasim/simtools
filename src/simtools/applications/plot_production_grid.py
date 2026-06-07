@@ -39,14 +39,7 @@ RA/Dec panel is added when RA/Dec columns are available in the grid file.
 
 from simtools.application_control import build_application
 from simtools.visualization.plot_production_grid import (
-    DEFAULT_OUTPUT_FILE_STEM_CORE_SCATTER_MAX,
-    DEFAULT_OUTPUT_FILE_STEM_CORE_SCATTER_MAX_ZENITH_PROFILE,
-    DEFAULT_OUTPUT_FILE_STEM_ENERGY_MAX,
-    DEFAULT_OUTPUT_FILE_STEM_ENERGY_MAX_ZENITH_PROFILE,
-    DEFAULT_OUTPUT_FILE_STEM_ENERGY_MIN,
-    DEFAULT_OUTPUT_FILE_STEM_ENERGY_MIN_ZENITH_PROFILE,
-    DEFAULT_OUTPUT_FILE_STEM_VIEW_CONE_MAX,
-    DEFAULT_OUTPUT_FILE_STEM_VIEW_CONE_MAX_ZENITH_PROFILE,
+    PLOT_VALUE_SPECS,
     ProductionGridPlotter,
 )
 
@@ -87,47 +80,17 @@ def main():
         plot_ra_dec_tracks=app_context.args["plot_ra_dec_tracks"],
         dec_values=app_context.args["dec_values"],
     )
-    plotter.plot_altaz_projection_with_color_scale(
-        value_key="energy_min",
-        value_label="energy_min",
-        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_ENERGY_MIN,
-    )
-    plotter.plot_altaz_projection_with_color_scale(
-        value_key="energy_max",
-        value_label="energy_max",
-        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_ENERGY_MAX,
-    )
-    plotter.plot_altaz_projection_with_color_scale(
-        value_key="core_scatter_max",
-        value_label="core_scatter_max",
-        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_CORE_SCATTER_MAX,
-    )
-    plotter.plot_altaz_projection_with_color_scale(
-        value_key="view_cone_max",
-        value_label="view_cone_max",
-        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_VIEW_CONE_MAX,
-    )
-
-    plotter.plot_zenith_limits_for_azimuths(
-        value_key="energy_min",
-        value_label="energy_min",
-        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_ENERGY_MIN_ZENITH_PROFILE,
-    )
-    plotter.plot_zenith_limits_for_azimuths(
-        value_key="energy_max",
-        value_label="energy_max",
-        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_ENERGY_MAX_ZENITH_PROFILE,
-    )
-    plotter.plot_zenith_limits_for_azimuths(
-        value_key="core_scatter_max",
-        value_label="core_scatter_max",
-        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_CORE_SCATTER_MAX_ZENITH_PROFILE,
-    )
-    plotter.plot_zenith_limits_for_azimuths(
-        value_key="view_cone_max",
-        value_label="view_cone_max",
-        output_file_stem=DEFAULT_OUTPUT_FILE_STEM_VIEW_CONE_MAX_ZENITH_PROFILE,
-    )
+    for value_spec in PLOT_VALUE_SPECS:
+        plotter.plot_azimuth_zenith_projection_with_color_scale(
+            value_key=value_spec.key,
+            value_label=value_spec.value_label,
+            output_file_stem=value_spec.azimuth_zenith_output_file_stem,
+        )
+        plotter.plot_zenith_limits_for_azimuths(
+            value_key=value_spec.key,
+            value_label=value_spec.value_label,
+            output_file_stem=value_spec.zenith_profile_output_file_stem,
+        )
 
 
 if __name__ == "__main__":

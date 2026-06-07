@@ -1,6 +1,7 @@
 """Plot production-grid points on sky coordinate projections."""
 
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -9,17 +10,54 @@ from astropy.table import Table
 
 logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
-DEFAULT_OUTPUT_FILE_STEM_ENERGY_MIN = "production_grid_altaz_energy_min"
-DEFAULT_OUTPUT_FILE_STEM_ENERGY_MAX = "production_grid_altaz_energy_max"
-DEFAULT_OUTPUT_FILE_STEM_CORE_SCATTER_MAX = "production_grid_altaz_core_scatter_max"
-DEFAULT_OUTPUT_FILE_STEM_VIEW_CONE_MAX = "production_grid_altaz_view_cone_max"
-DEFAULT_OUTPUT_FILE_STEM_ENERGY_MIN_ZENITH_PROFILE = "production_grid_zenith_profile_energy_min"
-DEFAULT_OUTPUT_FILE_STEM_ENERGY_MAX_ZENITH_PROFILE = "production_grid_zenith_profile_energy_max"
-DEFAULT_OUTPUT_FILE_STEM_CORE_SCATTER_MAX_ZENITH_PROFILE = (
-    "production_grid_zenith_profile_core_scatter_max"
-)
-DEFAULT_OUTPUT_FILE_STEM_VIEW_CONE_MAX_ZENITH_PROFILE = (
-    "production_grid_zenith_profile_view_cone_max"
+
+
+@dataclass(frozen=True)
+class PlotValueSpec:
+    """Configuration for one production-grid value shown in derived plots."""
+
+    key: str
+    aliases: tuple[str, ...]
+    label: str | None = None
+
+    @property
+    def value_label(self):
+        """Return the label used for axis and colorbar annotations."""
+        return self.label or self.key
+
+    @property
+    def unit_key(self):
+        """Return the normalized key holding this value's unit."""
+        return f"{self.key}_unit"
+
+    @property
+    def azimuth_zenith_output_file_stem(self):
+        """Return output stem for azimuth/zenith color-scale plots."""
+        return f"production_grid_altaz_{self.key}"
+
+    @property
+    def zenith_profile_output_file_stem(self):
+        """Return output stem for zenith profile plots."""
+        return f"production_grid_zenith_profile_{self.key}"
+
+
+PLOT_VALUE_SPECS = (
+    PlotValueSpec(
+        "energy_min",
+        ("energy_min", "energy_min_value"),
+    ),
+    PlotValueSpec(
+        "energy_max",
+        ("energy_max", "energy_max_value"),
+    ),
+    PlotValueSpec(
+        "core_scatter_max",
+        ("core_scatter_max", "core_scatter_max_value", "scatter_radius"),
+    ),
+    PlotValueSpec(
+        "view_cone_max",
+        ("view_cone_max", "view_cone_max_value", "viewcone_radius"),
+    ),
 )
 DEFAULT_OUTPUT_FILE_EXTENSION = "png"
 DEFAULT_MARKER_SIZE = 8
@@ -167,26 +205,16 @@ class ProductionGridPlotter:
         )
         ra = self._extract_first_available_quantity_value(point, ("ra", "ra_value"))
         dec = self._extract_first_available_quantity_value(point, ("dec", "dec_value"))
-        energy_min = self._extract_first_available_quantity_value(
-            point,
-            ("energy_min", "energy_min_value"),
-        )
-        energy_max = self._extract_first_available_quantity_value(
-            point,
-            ("energy_max", "energy_max_value"),
-        )
-        core_scatter_max = self._extract_first_available_quantity_value(
-            point,
-            ("core_scatter_max", "core_scatter_max_value", "scatter_radius"),
-        )
-        view_cone_max = self._extract_first_available_quantity_value(
-            point,
-            ("view_cone_max", "view_cone_max_value", "viewcone_radius"),
-        )
-        energy_min_unit = point.get("energy_min_unit")
-        energy_max_unit = point.get("energy_max_unit")
-        core_scatter_max_unit = point.get("core_scatter_max_unit")
-        view_cone_max_unit = point.get("view_cone_max_unit")
+        value_data = {
+            value_spec.key: self._extract_first_available_quantity_value(
+                point,
+                value_spec.aliases,
+            )
+            for value_spec in PLOT_VALUE_SPECS
+        }
+        value_units = {
+            value_spec.unit_key: point.get(value_spec.unit_key) for value_spec in PLOT_VALUE_SPECS
+        }
         point_ra = float(ra % 360.0) if ra is not None else None
         point_dec = float(dec) if dec is not None else None
 
@@ -197,14 +225,8 @@ class ProductionGridPlotter:
                 "zenith": zenith,
                 "ra": point_ra,
                 "dec": point_dec,
-                "energy_min": energy_min,
-                "energy_max": energy_max,
-                "core_scatter_max": core_scatter_max,
-                "view_cone_max": view_cone_max,
-                "energy_min_unit": energy_min_unit,
-                "energy_max_unit": energy_max_unit,
-                "core_scatter_max_unit": core_scatter_max_unit,
-                "view_cone_max_unit": view_cone_max_unit,
+                **value_data,
+                **value_units,
                 "visible_in_altaz": True,
             }
 
@@ -215,14 +237,8 @@ class ProductionGridPlotter:
                 "zenith": None,
                 "ra": float(ra % 360.0),
                 "dec": float(dec),
-                "energy_min": energy_min,
-                "energy_max": energy_max,
-                "core_scatter_max": core_scatter_max,
-                "view_cone_max": view_cone_max,
-                "energy_min_unit": energy_min_unit,
-                "energy_max_unit": energy_max_unit,
-                "core_scatter_max_unit": core_scatter_max_unit,
-                "view_cone_max_unit": view_cone_max_unit,
+                **value_data,
+                **value_units,
                 "visible_in_altaz": None,
             }
 
@@ -600,15 +616,10 @@ class ProductionGridPlotter:
             panel_name="RA/Dec",
         )
 
-    def plot_altaz_projection_with_color_scale(self, value_key, value_label, output_file_stem):
-        """Plot Alt/Az points with a color scale for one value column."""
-        plot_points = self.normalize_grid_points()
-        value_label_with_unit = self._format_value_label_with_unit(
-            plot_points,
-            value_key,
-            value_label,
-        )
-        colored_points = [
+    @staticmethod
+    def _select_altaz_points_with_value(plot_points, value_key):
+        """Select native Alt/Az points that have valid coordinates and requested values."""
+        return [
             point
             for point in plot_points
             if point["native_frame"] == "altaz"
@@ -617,8 +628,20 @@ class ProductionGridPlotter:
             and point.get(value_key) is not None
         ]
 
+    def plot_azimuth_zenith_projection_with_color_scale(
+        self, value_key, value_label, output_file_stem
+    ):
+        """Plot azimuth/zenith points with a color scale for one value column."""
+        plot_points = self.normalize_grid_points()
+        value_label_with_unit = self._format_value_label_with_unit(
+            plot_points,
+            value_key,
+            value_label,
+        )
+        colored_points = self._select_altaz_points_with_value(plot_points, value_key)
+
         if not colored_points:
-            logger.warning(f"No Alt/Az points with '{value_key}' available for plotting")
+            logger.warning(f"No azimuth/zenith points with '{value_key}' available for plotting")
             return
 
         figure = plt.figure(figsize=(8, 7))
@@ -646,8 +669,16 @@ class ProductionGridPlotter:
         figure.tight_layout(rect=(0.0, 0.0, 1.0, 0.95))
         output_file = self.output_path / f"{output_file_stem}.{DEFAULT_OUTPUT_FILE_EXTENSION}"
         figure.savefig(output_file, bbox_inches="tight", dpi=300)
-        logger.info(f"Saved Alt/Az color-scale plot to {output_file}")
+        logger.info(f"Saved azimuth/zenith color-scale plot to {output_file}")
         plt.close(figure)
+
+    def plot_altaz_projection_with_color_scale(self, value_key, value_label, output_file_stem):
+        """Backward-compatible wrapper for azimuth/zenith color-scale plotting."""
+        self.plot_azimuth_zenith_projection_with_color_scale(
+            value_key=value_key,
+            value_label=value_label,
+            output_file_stem=output_file_stem,
+        )
 
     @staticmethod
     def _circular_azimuth_difference_degrees(first_azimuth, second_azimuth):
@@ -669,17 +700,12 @@ class ProductionGridPlotter:
             value_key,
             value_label,
         )
-        altaz_points = [
-            point
-            for point in plot_points
-            if point["native_frame"] == "altaz"
-            and point["azimuth"] is not None
-            and point["zenith"] is not None
-            and point.get(value_key) is not None
-        ]
+        altaz_points = self._select_altaz_points_with_value(plot_points, value_key)
 
         if not altaz_points:
-            logger.warning(f"No Alt/Az points with '{value_key}' available for zenith profiling")
+            logger.warning(
+                f"No azimuth/zenith points with '{value_key}' available for zenith profiling"
+            )
             return
 
         figure, axis = plt.subplots(figsize=(8, 5))
