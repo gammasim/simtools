@@ -587,6 +587,30 @@ def calculate_zenith_scaled_showers_per_run(
     raise ValueError(f"Unknown showers_per_run_scaling mode: {showers_per_run_scaling}")
 
 
+def scale_energy_max_for_zenith_angle(
+    zenith_angle,
+    energy_range_pair,
+    energy_max_scaling_index=None,
+):
+    """Scale energy_max with zenith angle and return an updated energy range pair."""
+    if energy_max_scaling_index is None:
+        return energy_range_pair
+
+    energy_min, energy_max_zenith = energy_range_pair
+    cos_zenith = np.cos(zenith_angle.to(u.rad).value)
+
+    if np.isclose(cos_zenith, 0.0) and energy_max_scaling_index < 0:
+        raise ValueError(
+            "energy_max_scaling_index < 0 is not defined for zenith angles with cos(zenith)=0."
+        )
+
+    scaled_energy_max = energy_max_zenith * (cos_zenith**energy_max_scaling_index)
+    if scaled_energy_max <= energy_min.to(scaled_energy_max.unit):
+        return None
+
+    return energy_min, scaled_energy_max.to(energy_max_zenith.unit)
+
+
 def _clip_energy_range_from_threshold(energy_range_pair, lower_energy_threshold):
     """Clip the lower energy bound of a configured energy range."""
     if lower_energy_threshold is None:
@@ -689,13 +713,21 @@ def _build_rows_for_point(
     total_showers_scaling,
     run_number,
     showers_per_run_scaling="fixed",
+    energy_max_scaling_index=None,
     zenith_angle_scaling_factor=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
 ):
     """Build all simulation-run rows for a single grid point across all energy ranges."""
     rows = []
     for energy_range_pair in energy_ranges:
+        selected_energy_range = scale_energy_max_for_zenith_angle(
+            point_base["zenith_angle"],
+            energy_range_pair,
+            energy_max_scaling_index,
+        )
+        if selected_energy_range is None:
+            continue
         selected_energy_range = _clip_energy_range_from_threshold(
-            energy_range_pair, lower_energy_threshold
+            selected_energy_range, lower_energy_threshold
         )
         if selected_energy_range is None:
             continue
@@ -834,6 +866,7 @@ def build_simulation_jobs(args_dict):
             defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
         )
     )
+    energy_max_scaling_index = args_dict.get("energy_max_scaling_index")
 
     if total_showers is not None and args_dict.get("number_of_runs") is not None:
         raise ValueError("total_showers and number_of_runs cannot be configured together.")
@@ -887,6 +920,7 @@ def build_simulation_jobs(args_dict):
                     total_showers=total_showers,
                     total_showers_scaling=total_showers_scaling,
                     run_number=run_number,
+                    energy_max_scaling_index=energy_max_scaling_index,
                     zenith_angle_scaling_factor=zenith_angle_scaling_factor,
                 )
             )

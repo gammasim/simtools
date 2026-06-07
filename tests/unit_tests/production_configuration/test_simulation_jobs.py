@@ -35,6 +35,7 @@ from simtools.production_configuration.simulation_jobs import (
     normalize_grid_axes,
     resolve_single_model_version,
     resolve_time_of_observation,
+    scale_energy_max_for_zenith_angle,
 )
 
 
@@ -791,6 +792,28 @@ def test_calculate_zenith_scaled_showers_per_run_raises_for_invalid_mode():
         calculate_zenith_scaled_showers_per_run(20 * u.deg, 1000, "invalid_mode")
 
 
+def test_scale_energy_max_for_zenith_angle_returns_original_without_scaling_index():
+    energy_range = (30 * u.GeV, 100 * u.GeV)
+
+    assert scale_energy_max_for_zenith_angle(60 * u.deg, energy_range, None) == energy_range
+
+
+def test_scale_energy_max_for_zenith_angle_scales_max_energy():
+    scaled = scale_energy_max_for_zenith_angle(60 * u.deg, (30 * u.GeV, 100 * u.GeV), -2.0)
+
+    assert_quantity_allclose(scaled[0], 30 * u.GeV)
+    assert_quantity_allclose(scaled[1], 400 * u.GeV)
+
+
+def test_scale_energy_max_for_zenith_angle_returns_none_if_scaled_max_below_min():
+    assert scale_energy_max_for_zenith_angle(60 * u.deg, (30 * u.GeV, 100 * u.GeV), 2.0) is None
+
+
+def test_scale_energy_max_for_zenith_angle_raises_for_negative_index_at_zenith_90():
+    with pytest.raises(ValueError, match="energy_max_scaling_index"):
+        scale_energy_max_for_zenith_angle(90 * u.deg, (30 * u.GeV, 100 * u.GeV), -2.0)
+
+
 def test_clip_energy_range_from_threshold_returns_none_above_max():
     assert (
         _clip_energy_range_from_threshold(
@@ -969,6 +992,44 @@ def test_build_rows_for_point_scales_showers_per_run_with_zenith():
     )
 
     assert [row["showers_per_run"] for row in rows] == [500, 500]
+
+
+def test_build_rows_for_point_scales_energy_max_with_zenith():
+    rows = _build_rows_for_point(
+        point_base={"primary": "gamma", "zenith_angle": 60 * u.deg},
+        energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
+        lower_energy_threshold=None,
+        showers_per_run=1000,
+        showers_per_run_power_law=None,
+        number_of_runs=1,
+        total_showers=None,
+        total_showers_scaling="fixed",
+        run_number=1,
+        energy_max_scaling_index=-2.0,
+    )
+
+    assert len(rows) == 1
+    assert_quantity_allclose(rows[0]["energy_min"], 30 * u.GeV)
+    assert_quantity_allclose(rows[0]["energy_max"], 400 * u.GeV)
+
+
+def test_build_rows_for_point_applies_energy_max_scaling_before_threshold_clipping():
+    rows = _build_rows_for_point(
+        point_base={"primary": "gamma", "zenith_angle": 60 * u.deg},
+        energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
+        lower_energy_threshold=150 * u.GeV,
+        showers_per_run=1000,
+        showers_per_run_power_law=None,
+        number_of_runs=1,
+        total_showers=None,
+        total_showers_scaling="fixed",
+        run_number=1,
+        energy_max_scaling_index=-2.0,
+    )
+
+    assert len(rows) == 1
+    assert_quantity_allclose(rows[0]["energy_min"], 150 * u.GeV)
+    assert_quantity_allclose(rows[0]["energy_max"], 400 * u.GeV)
 
 
 def test_generate_observation_points_from_axes_adds_lookup_limits():
