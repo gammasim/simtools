@@ -2,6 +2,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 from astropy.table import Table
+from astropy.tests.helper import assert_quantity_allclose
 
 import simtools.production_configuration.derive_corsika_limits as derive_corsika_limits
 
@@ -143,6 +144,11 @@ def test_round_value():
     assert derive_corsika_limits._round_value("lower_energy_limit", 1.2345) == pytest.approx(1.234)
     assert derive_corsika_limits._round_value("lower_energy_limit", 0.9876) == pytest.approx(0.987)
     assert derive_corsika_limits._round_value("lower_energy_limit", 2.0) == pytest.approx(2.0)
+    assert derive_corsika_limits._round_value(
+        "lower_energy_limit",
+        0.0142,
+        {"br_energy_min": 0.0142},
+    ) == pytest.approx(0.0142)
 
     # Test upper_radius_limit rounding
     assert derive_corsika_limits._round_value("upper_radius_limit", 123.4) == 125
@@ -391,6 +397,61 @@ def test_compute_lower_energy_limit(mocker):
         * u.TeV
     )
     assert result == expected
+
+
+def test_compute_lower_energy_limit_never_below_broad_range_min(mocker):
+    """Test compute_lower_energy_limit applies broad-range lower-energy floor."""
+    mock_hist = np.array([1.0, 12.0, 20.0, 12.0, 1.0])
+    mock_bins = np.array([0.01, 0.02, 0.04, 0.08, 0.16, 0.32])
+
+    mock_histograms = mocker.MagicMock()
+    mock_histograms.histograms = {"energy": {"histogram": mock_hist}}
+    mock_histograms.energy_bins = mock_bins
+    mock_histograms.file_info = {"energy_min": 0.014 * u.TeV}
+
+    result = derive_corsika_limits.compute_lower_energy_limit(mock_histograms, 0.2)
+
+    assert_quantity_allclose(result, 0.014 * u.TeV)
+
+
+def test_apply_broad_range_lower_energy_floor_same_bin_uses_broad_range_min():
+    """If derived and broad-range minimum share a bin, use broad-range minimum."""
+    derived = 0.01 * u.TeV
+    broad_range_min = 0.014 * u.TeV
+    energy_bins = np.array([0.01, 0.02, 0.04])
+
+    result = derive_corsika_limits._apply_broad_range_lower_energy_floor(
+        derived,
+        broad_range_min,
+        energy_bins,
+    )
+
+    assert_quantity_allclose(result, 0.014 * u.TeV)
+
+
+def test_create_results_table_rounding_keeps_lower_energy_at_or_above_broad_range_min():
+    """Rounding must not push lower_energy_limit below br_energy_min."""
+    results = [
+        {
+            "primary_particle": "proton",
+            "array_name": "LST",
+            "zenith": 20.0 * u.deg,
+            "azimuth": 180.0 * u.deg,
+            "nsb_level": 1.0,
+            "lower_energy_limit": 0.0142 * u.TeV,
+            "upper_radius_limit": 400.0 * u.m,
+            "viewcone_radius": 5.0 * u.deg,
+            "br_energy_min": 0.0142 * u.TeV,
+            "br_energy_max": 300.0 * u.TeV,
+            "br_core_scatter_max": 800.0 * u.m,
+            "br_viewcone_max": 10.0 * u.deg,
+        }
+    ]
+
+    table = derive_corsika_limits._create_results_table(results, DEFAULT_ALLOWED_LOSSES, 0.1)
+
+    assert table["lower_energy_limit"][0] >= table["br_energy_min"][0]
+    assert table["lower_energy_limit"][0] == pytest.approx(0.0142)
 
 
 def test_find_low_energy_threshold_from_histogram_basic():
