@@ -6,12 +6,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LogNorm
 
-from simtools.sim_events.histograms import EventDataHistograms
-
 _logger = logging.getLogger(__name__)
 
+# Maps histogram dictionary keys to output plot filenames where the key alone
+# is ambiguous (e.g. the triggered 2-D vs-energy histograms share a prefix
+# with their _mc and _cumulative counterparts). Only the triggered variants are
+# remapped; all other names fall through unchanged.
+_PLOT_FILENAME_OVERRIDES = {
+    "core_distance_vs_energy": "core_distance_vs_energy_triggered",
+    "angular_distance_vs_energy": "angular_distance_vs_energy_triggered",
+    "energy": "energy_triggered",
+}
 
-def plot(histograms, output_path=None, limits=None, rebin_factor=2, array_name=None):
+
+def plot(histograms, output_path=None, limits=None, array_name=None):
     """
     Plot simtel event histograms.
 
@@ -26,16 +34,14 @@ def plot(histograms, output_path=None, limits=None, rebin_factor=2, array_name=N
         - "upper_radius_limit": Upper limit for core distance
         - "lower_energy_limit": Lower limit for energy
         - "viewcone_radius": Radius for the viewcone
-    rebin_factor: int, optional
-        Factor by which to reduce the number of bins in 2D histograms for re-binned plots.
-        Default is 2 (merge every 2 bins). Set to 0 or 1 to disable re-binning.
     array_name: str, optional
         Name of the telescope array configuration.
     """
     _logger.info(f"Plotting histograms written to {output_path}")
 
+    file_info = _extract_file_info_from_limits(limits)
     plots = _generate_plot_configurations(histograms, limits)
-    _execute_plotting_loop(plots, output_path, rebin_factor, array_name)
+    _execute_plotting_loop(plots, output_path, array_name, file_info)
 
 
 def _get_limits(name, limits):
@@ -53,13 +59,25 @@ def _get_limits(name, limits):
         "energy": {"x": _safe_value(limits, "lower_energy_limit")},
         "core_distance": {"x": _safe_value(limits, "upper_radius_limit")},
         "angular_distance": {"x": _safe_value(limits, "viewcone_radius")},
-        "core_vs_energy": {
+        "core_distance_vs_energy": {
             "x": _safe_value(limits, "upper_radius_limit"),
             "y": _safe_value(limits, "lower_energy_limit"),
+            "curve": limits.get("core_distance_vs_energy_curve"),
+        },
+        "core_distance_vs_energy_cumulative": {
+            "x": _safe_value(limits, "upper_radius_limit"),
+            "y": _safe_value(limits, "lower_energy_limit"),
+            "curve": limits.get("core_distance_vs_energy_curve"),
         },
         "angular_distance_vs_energy": {
             "x": _safe_value(limits, "viewcone_radius"),
             "y": _safe_value(limits, "lower_energy_limit"),
+            "curve": limits.get("angular_distance_vs_energy_curve"),
+        },
+        "angular_distance_vs_energy_cumulative": {
+            "x": _safe_value(limits, "viewcone_radius"),
+            "y": _safe_value(limits, "lower_energy_limit"),
+            "curve": limits.get("angular_distance_vs_energy_curve"),
         },
         "x_core_shower_vs_y_core_shower": {"r": _safe_value(limits, "upper_radius_limit")},
     }
@@ -69,8 +87,8 @@ def _get_limits(name, limits):
 def _generate_plot_configurations(histograms, limits):
     """Generate plot configurations for all histogram types."""
     hist_1d_params = {"color": "tab:green", "edgecolor": "tab:green", "lw": 1}
-    hist_2d_params = {"norm": "log", "cmap": "viridis", "show_contour": False}
-    hist_2d_normalized_params = {"norm": "linear", "cmap": "viridis", "show_contour": True}
+    hist_2d_params = {"norm": "log", "cmap": "viridis"}
+    hist_2d_normalized_params = {"norm": "linear", "cmap": "viridis"}
     plots = {}
     for name, hist in histograms.items():
         if hist["histogram"] is None:
@@ -80,7 +98,12 @@ def _generate_plot_configurations(histograms, limits):
                 hist, name=name, plot_params=hist_1d_params, limits=limits
             )
         else:
-            if "cumulative" in name or "efficiency" in name:
+            histogram_name = name.lower()
+            if (
+                "cumulative" in histogram_name
+                or "efficiency" in histogram_name
+                or histogram_name.endswith("_eff")
+            ):
                 plot_params = hist_2d_normalized_params
             else:
                 plot_params = hist_2d_params
@@ -119,7 +142,7 @@ def _create_1d_plot_config(histogram, name, plot_params, limits):
         },
         "scales": histogram["plot_scales"],
         "lines": _get_limits(name, limits) if limits else {},
-        "filename": name,
+        "filename": _PLOT_FILENAME_OVERRIDES.get(name, name),
     }
 
 
@@ -139,11 +162,11 @@ def _create_2d_plot_config(histogram, name, plot_params, limits):
         "lines": _get_limits(name, limits) if limits else {},
         "scales": histogram["plot_scales"],
         "colorbar_label": _get_axis_title(histogram.get("axis_titles"), "z"),
-        "filename": name,
+        "filename": _PLOT_FILENAME_OVERRIDES.get(name, name),
     }
 
 
-def _execute_plotting_loop(plots, output_path, rebin_factor, array_name):
+def _execute_plotting_loop(plots, output_path, array_name, file_info=None):
     """Execute the main plotting loop for all plot configurations."""
     for plot_key, plot_args in plots.items():
         plot_filename = plot_args.pop("filename")
@@ -155,95 +178,91 @@ def _execute_plotting_loop(plots, output_path, rebin_factor, array_name):
         if array_name and plot_args.get("labels", {}).get("title"):
             plot_args["labels"]["title"] += f" ({array_name} array)"
 
-        filename = _build_plot_filename(plot_filename, array_name)
+        filename = _build_plot_filename(plot_filename, array_name, file_info)
         output_file = output_path / filename if output_path else None
-        result = _create_plot(**plot_args, output_file=output_file)
-
-        # Skip re-binned plot if main plot failed
-        if result is None:
-            continue
-
-        if _should_create_rebinned_plot(rebin_factor, plot_args, plot_key):
-            _create_rebinned_plot(plot_args, filename, output_path, rebin_factor)
+        _create_plot(**plot_args, output_file=output_file)
 
 
-def _build_plot_filename(base_filename, array_name=None):
+def _build_plot_filename(base_filename, array_name=None, file_info=None):
     """
     Build the full plot filename with appropriate extensions.
 
     Parameters
     ----------
     base_filename : str
-        The base filename without extension
+        The base filename without extension.
     array_name : str, optional
-        Name of the array to append to filename
+        Name of the array to append to filename.
+    file_info : dict, optional
+        Dictionary with simulation metadata (zenith, azimuth, nsb_level) to
+        include in the filename so each production's plots can be identified.
 
     Returns
     -------
     str
-        Complete filename with extension
+        Complete filename with extension.
     """
-    return f"{base_filename}_{array_name}.png" if array_name else f"{base_filename}.png"
+    parts = [base_filename]
+    if array_name:
+        parts.append(array_name)
+    if file_info:
+        suffix = _format_file_info_suffix(file_info)
+        if suffix:
+            parts.append(suffix)
+    return "_".join(parts) + ".png"
 
 
-def _should_create_rebinned_plot(rebin_factor, plot_args, plot_key):
+def _format_file_info_suffix(file_info):
     """
-    Check if a re-binned version of the plot should be created.
+    Build a filename-safe suffix string from file-info simulation metadata.
 
     Parameters
     ----------
-    rebin_factor : int
-        Factor by which to rebin the energy axis
-    plot_args : dict
-        Plot arguments
-    plot_key : str
-        Key identifying the plot type
+    file_info : dict
+        Dictionary with optional keys ``zenith``, ``azimuth`` (astropy
+        quantities in degrees) and ``nsb_level`` (float).
 
     Returns
     -------
-    bool
-        True if a re-binned plot should be created, False otherwise
+    str
+        Underscore-joined suffix components, e.g. ``z20_az0_nsb0.3``.
+        Returns an empty string if no metadata is present.
     """
-    return (
-        rebin_factor > 1
-        and plot_args["plot_type"] == "histogram2d"
-        and plot_key.endswith("_cumulative")
-        and plot_args.get("plot_params", {}).get("norm") == "linear"
-    )
+    parts = []
+    zenith = file_info.get("zenith")
+    if zenith is not None:
+        zenith_val = zenith.value if hasattr(zenith, "value") else float(zenith)
+        parts.append(f"z{round(zenith_val)}")
+    azimuth = file_info.get("azimuth")
+    if azimuth is not None:
+        azimuth_val = azimuth.value if hasattr(azimuth, "value") else float(azimuth)
+        parts.append(f"az{round(azimuth_val)}")
+    nsb = file_info.get("nsb_level")
+    if nsb is not None:
+        parts.append(f"nsb{nsb:g}")
+    return "_".join(parts)
 
 
-def _create_rebinned_plot(plot_args, filename, output_path, rebin_factor):
+def _extract_file_info_from_limits(limits):
     """
-    Create a re-binned version of a 2D histogram plot.
+    Extract simulation file-info metadata from the limits dictionary.
 
     Parameters
     ----------
-    plot_args : dict
-        Plot arguments for the original plot
-    filename : str
-        Filename of the original plot
-    output_path : Path or None
-        Path to save the plot to, or None
-    rebin_factor : int
-        Factor by which to rebin the energy axis
+    limits : dict or None
+        Dictionary returned by the limit-computation step; may contain
+        ``zenith``, ``azimuth``, and ``nsb_level`` keys.
+
+    Returns
+    -------
+    dict
+        Subset of *limits* with only the file-info metadata keys that are
+        present and non-None.
     """
-    data = plot_args["data"]
-    bins = plot_args["bins"]
-
-    rebinned_data, rebinned_x_bins, rebinned_y_bins = EventDataHistograms.rebin_2d_histogram(
-        data, bins[0], bins[1], rebin_factor
-    )
-
-    rebinned_plot_args = plot_args.copy()
-    rebinned_plot_args["data"] = rebinned_data
-    rebinned_plot_args["bins"] = [rebinned_x_bins, rebinned_y_bins]
-
-    if rebinned_plot_args.get("labels", {}).get("title"):
-        rebinned_plot_args["labels"]["title"] += f" (Energy rebinned {rebin_factor}x)"
-
-    rebinned_filename = f"{filename.replace('.png', '')}_rebinned.png"
-    rebinned_output_file = output_path / rebinned_filename if output_path else None
-    _create_plot(**rebinned_plot_args, output_file=rebinned_output_file)
+    if not limits:
+        return {}
+    keys = ("zenith", "azimuth", "nsb_level")
+    return {k: limits[k] for k in keys if limits.get(k) is not None}
 
 
 def _create_plot(
@@ -306,14 +325,20 @@ def _plot_data(ax, data, bins, plot_type, plot_params, colorbar_label):
 
 def _add_lines(ax, lines):
     """Add reference lines to the plot."""
-    if lines.get("x") is not None:
-        ax.axvline(lines["x"], color="r", linestyle="--", linewidth=0.5)
-    if lines.get("y") is not None:
-        ax.axhline(lines["y"], color="r", linestyle="--", linewidth=0.5)
     if lines.get("r") is not None:
         ax.add_artist(
             plt.Circle((0, 0), lines["r"], color="r", fill=False, linestyle="--", linewidth=0.5)
         )
+
+    for x_value in np.atleast_1d(lines.get("x", [])):
+        ax.axvline(x_value, color="r", linestyle="--", linewidth=0.5)
+
+    for y_value in np.atleast_1d(lines.get("y", [])):
+        ax.axhline(y_value, color="r", linestyle="--", linewidth=0.5)
+
+    curve = lines.get("curve")
+    if curve and curve.get("x") and curve.get("y"):
+        ax.plot(curve["x"], curve["y"], color="tab:orange", linestyle="-", linewidth=1.0)
 
 
 def _create_2d_histogram_plot(data, bins, plot_params):
@@ -327,50 +352,41 @@ def _create_2d_histogram_plot(data, bins, plot_params):
     bins : tuple of np.ndarray
         Bin edges for x and y axes
     plot_params : dict
-        Plot parameters including norm, cmap, and show_contour
+        Plot parameters including norm, cmap
 
     Returns
     -------
     matplotlib.collections.QuadMesh
         The created pcolormesh object for colorbar attachment
     """
+    cmap = plt.get_cmap(plot_params.get("cmap", "viridis")).copy()
+    cmap.set_bad(color="white", alpha=0.0)
+
     if plot_params.get("norm") == "linear":
+        masked_data = np.ma.masked_equal(data.T, 0)
         pcm = plt.pcolormesh(
             bins[0],
             bins[1],
-            data.T,
+            masked_data,
             vmin=0,
             vmax=1,
-            cmap=plot_params.get("cmap", "viridis"),
+            cmap=cmap,
         )
-        # Add contour line at value=1.0 for normalized histograms
-        if plot_params.get("show_contour", True):
-            x_centers = (bins[0][1:] + bins[0][:-1]) / 2
-            y_centers = (bins[1][1:] + bins[1][:-1]) / 2
-            x_mesh, y_mesh = np.meshgrid(x_centers, y_centers)
-            plt.contour(
-                x_mesh,
-                y_mesh,
-                data.T,
-                levels=[0.999999],  # very close to 1 for floating point precision
-                colors=["tab:red"],
-                linestyles=["--"],
-                linewidths=[0.5],
-            )
     else:
+        masked_data = np.ma.masked_less_equal(data.T, 0)
         # Handle empty or invalid data for logarithmic scaling
         data_max = data.max()
         if data_max <= 0:
             _logger.warning("No positive data found for logarithmic scaling, using linear scale")
             pcm = plt.pcolormesh(
-                bins[0], bins[1], data.T, vmin=0, vmax=max(1, data_max), cmap="viridis"
+                bins[0], bins[1], masked_data, vmin=0, vmax=max(1, data_max), cmap=cmap
             )
         else:
             # Ensure vmin is less than vmax for LogNorm
             vmin = max(1, data[data > 0].min()) if np.any(data > 0) else 1
             vmax = max(vmin + 1, data_max)
             pcm = plt.pcolormesh(
-                bins[0], bins[1], data.T, norm=LogNorm(vmin=vmin, vmax=vmax), cmap="viridis"
+                bins[0], bins[1], masked_data, norm=LogNorm(vmin=vmin, vmax=vmax), cmap=cmap
             )
 
     return pcm

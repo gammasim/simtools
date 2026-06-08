@@ -43,14 +43,25 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
-(generate-production-grid)=
+(corsika-limits-lookup)=
 
-## generate_production_grid
+## corsika_limits_lookup
 
 ```{eval-rst}
-.. automodule:: production_configuration.generate_production_grid
+.. automodule:: production_configuration.corsika_limits_lookup
    :members:
 ```
+
+
+(angle-ranges)=
+
+## angle_ranges
+
+```{eval-rst}
+.. automodule:: production_configuration.angle_ranges
+   :members:
+```
+
 
 (interpolation-handler)=
 
@@ -61,12 +72,30 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
-(plot-production-grid)=
+(job-grid-io)=
 
-## plot_production_grid
+## job_grid_io
 
 ```{eval-rst}
-.. automodule:: production_configuration.plot_production_grid
+.. automodule:: production_configuration.job_grid_io
+   :members:
+```
+
+(observation-grid)=
+
+## observation_grid
+
+```{eval-rst}
+.. automodule:: production_configuration.observation_grid
+   :members:
+```
+
+(simulation-jobs)=
+
+## simulation_jobs
+
+```{eval-rst}
+.. automodule:: production_configuration.simulation_jobs
    :members:
 ```
 

@@ -3,7 +3,7 @@ applications:
 - application: simtools-submit-model-parameter-from-external
   configuration:
     input_meta: null
-    instrument: North
+    instrument: OBS-North
     output_path: simtools-output
     parameter: reference_point_altitude
     parameter_version: 0.1.0

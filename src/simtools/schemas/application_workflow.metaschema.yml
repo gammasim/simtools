@@ -15,6 +15,8 @@ definitions:
     properties:
       applications:
         "$ref": "#/definitions/applications"
+      collection:
+        "$ref": "#/definitions/collection"
       schema_version:
         $ref: 'common_definitions.schema.yml#/$defs/schema_version_field'
       schema_url:
@@ -31,6 +33,27 @@ definitions:
       - schema_version
       - schema_name
     title: ""
+  collection:
+    oneOf:
+      - "$ref": "#/definitions/collection_entry"
+      - type: array
+        items:
+          "$ref": "#/definitions/collection_entry"
+  collection_entry:
+    type: object
+    additionalProperties: false
+    properties:
+      output_path:
+        type: string
+        description: "Path to the collection output directory."
+      files:
+        type: array
+        items:
+          type: string
+        description: "List of files to copy from application output_path to collection output_path."
+    required:
+      - output_path
+      - files
   runtime_environment:
     additionalProperties: false
     type: array
@@ -86,6 +109,9 @@ definitions:
         test_use_case:
           type: string
           description: "Use case ID of the test."
+        xfail_network_error:
+          type: boolean
+          description: "Mark test as xfail if application exits with a network error."
       required:
         - application
         - configuration

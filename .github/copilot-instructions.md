@@ -101,7 +101,10 @@ pytest --no-cov tests/integration_tests/    # Integration tests
 - Tests must be FAST (check with `--durations=10`)
 - Fixtures: shared in `tests/conftest.py`, module-specific at top of file
 - Use `tmp_test_directory` fixture for file I/O (NOT `tmp_path`)
+- Never hardcode `/tmp` or absolute temp paths in tests; build all temp paths from `tmp_test_directory`
+- Before finalizing test changes, check that no new `/tmp/` literals were introduced
 - Mock external dependencies (DB, file I/O, network)
+- Never use direct `== / `!=`` checks for floats or quantities in tests
 - Use `pytest.approx()` for float comparisons
 - Use `astropy.tests.helper.assert_quantity_allclose` for units
 
@@ -145,6 +148,7 @@ pylint src/simtools/model/       # Check module
 - Validate names with `simtools.utils.names` functions
 - Use semantic versions without "v" prefix ("1.0.0", not "v1.0.0")
 - Do not use **type hints** on function signatures
+- Keep function cognitive complexity below 15 by extracting private helpers before adding more branches, loops, or mixed responsibilities
 
 **Docstrings (MANDATORY):** NumPy style with Parameters, Returns, Raises, Examples sections. 70%+ coverage required for all public functions/methods. Private functions can have single-line docstring if self-explanatory.
 
@@ -350,6 +354,7 @@ make linkcheck              # Check links
 ❌ **DON'T:**
 - Do not add inconsistent import statements or random package imports.
 - Do not use non-ascii characters in code or docstrings (e.g., fancy quotes, degree symbols)
+- Do not perform direct equality checks with floating-point values (use tolerances such as `pytest.approx()`).
 - Skip tests or claim "obvious code doesn't need tests"
 - Hardcode file paths or credentials
 - Add trivial comments ("# add five" before `x + 5`)

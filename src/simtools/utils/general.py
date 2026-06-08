@@ -2,6 +2,7 @@
 
 import datetime
 import glob
+import json
 import logging
 import os
 import tarfile
@@ -198,27 +199,35 @@ def get_log_level_from_user(log_level):
     return possible_levels[log_level_lower]
 
 
-def ensure_iterable(value):
+def ensure_list(value):
     """
-    Return input value as iterable.
-
-    - Single values will return as a list with a single element.
-    - None values will return as empty list.
-    - Values of list or tuple type are not changed.
+    Return input value as list.
 
     Parameters
     ----------
     value: any
-        Input value to be converted to a iterable.
+        Input value to be converted to a list.
 
     Returns
     -------
-    list or tuple
-        Converted value as list or tuple.
+    list
+        Converted value as list.
     """
     if value is None:
         return []
-    return value if isinstance(value, list | tuple) else [value]
+    if isinstance(value, list):
+        return value
+    if isinstance(value, (tuple, set)):
+        return list(value)
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped.startswith("["):
+            try:
+                return json.loads(stripped)
+            except json.JSONDecodeError:
+                pass
+        return [stripped]
+    return [value]
 
 
 def parse_typed_sequence(value, cast=float):

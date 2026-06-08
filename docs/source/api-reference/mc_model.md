@@ -27,6 +27,15 @@ The array of imaging atmospheric Cherenkov telescopes is abstracted in the simul
    :members:
 ```
 
+## illuminator_visibility
+
+(illuminator-visibility)=
+
+```{eval-rst}
+.. automodule:: model.illuminator_visibility
+   :members:
+```
+
 ## camera
 
 (camera-1)=
@@ -81,6 +90,15 @@ The array of imaging atmospheric Cherenkov telescopes is abstracted in the simul
 
 ```{eval-rst}
 .. automodule:: model.model_utils
+   :members:
+```
+
+## sim_telarray parameter converter
+
+(simtelarray-parameter-converter)=
+
+```{eval-rst}
+.. automodule:: model.sim_telarray_parameter_converter
    :members:
 ```
 

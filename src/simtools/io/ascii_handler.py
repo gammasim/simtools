@@ -10,7 +10,7 @@ import astropy.units as u
 import numpy as np
 import yaml
 
-from simtools.utils.general import ensure_iterable, is_url
+from simtools.utils.general import ensure_list, is_url
 
 _logger = logging.getLogger(__name__)
 
@@ -288,7 +288,7 @@ def _write_to_text_file(data, output_file, unique_lines):
     """
 
     def iter_lines(data):
-        for entry in ensure_iterable(data):
+        for entry in ensure_list(data):
             yield from entry.splitlines()
 
     lines_to_write = (
@@ -418,13 +418,18 @@ class JsonNumpyEncoder(json.JSONEncoder):
         return _encode_compact_rows(native, indent=indent, level=0)
 
 
-def _is_numeric_list(obj):
-    """Return True if obj is a list whose elements are all int or float."""
-    return isinstance(obj, list) and obj and all(isinstance(v, (int, float)) for v in obj)
+def _is_scalar_list(obj):
+    """Return True if obj is a list whose elements are all simple scalars."""
+    return (
+        isinstance(obj, list)
+        and obj
+        and all(isinstance(v, (int, float, str, bool)) or v is None for v in obj)
+    )
 
 
 def _encode_compact_rows(obj, indent, level):
-    if _is_numeric_list(obj):
+    """Recursively encode JSON, rendering scalar lists on a single line."""
+    if _is_scalar_list(obj):
         return "[" + ", ".join(json.dumps(v) for v in obj) + "]"
 
     if isinstance(obj, (dict, list)):

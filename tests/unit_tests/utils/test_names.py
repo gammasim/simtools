@@ -241,6 +241,8 @@ def test_get_array_element_type_from_name(invalid_name):
     assert names.get_array_element_type_from_name("SCTS-27") == "SCTS"
     assert names.get_array_element_type_from_name("MAGIC-2") == "MAGIC"
     assert names.get_array_element_type_from_name("VERITAS-4") == "VERITAS"
+    assert names.get_array_element_type_from_name("OBS-North") == "North"
+    assert names.get_array_element_type_from_name("OBS-South") == "South"
     for _name in ["", "01", "Not_a_telescope", "LST", "MST"]:
         with pytest.raises(ValueError, match=rf"^{invalid_name}"):
             names.get_array_element_type_from_name(_name)
@@ -602,6 +604,27 @@ def test_is_design_type():
     assert names.is_design_type("MSTS-FlashCam")
     assert names.is_design_type("MSTS-NectarCam")
     assert not names.is_design_type("MSTS-22")
+
+
+@pytest.mark.parametrize(
+    ("key_name", "array_element_name", "expected"),
+    [
+        ("LSTN-01", "LSTN-01", True),
+        ("LSTN-design", "LSTN-01", True),
+        ("MSTS-FlashCam", "MSTS-22", True),
+        ("MSTS-design", "LSTN-01", False),
+        ("LSTN-02", "LSTN-01", False),
+        ("not-a-name", "LSTN-01", False),
+        (None, "LSTN-01", False),
+        ("LSTN-01", None, False),
+        (None, None, False),
+        ("LSTN", "LSTN-01", False),
+        ("LSTN-01", "LSTN", False),
+        ("South", "LSTN-01", False),
+    ],
+)
+def test_matches_array_element_name_or_design_type(key_name, array_element_name, expected):
+    assert names.matches_array_element_name_or_design_type(key_name, array_element_name) is expected
 
 
 def test_array_element_common_identifiers():

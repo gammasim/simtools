@@ -7,6 +7,7 @@ import pytest
 from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 
+from simtools.io.table_handler import write_tables
 from simtools.sim_events.reader import (
     EventDataReader,
 )
@@ -296,3 +297,30 @@ def test_read_event_data_with_missing_triggers(tmp_test_directory, mock_tables):
     assert triggered_data is None
     assert hasattr(file_info, "colnames")
     assert hasattr(shower_data, "shower_id")
+
+
+def test_read_event_data_hdf5_with_selected_columns_and_telescope_filter(
+    tmp_test_directory, mock_tables
+):
+    """Test HDF5 event-data reads preserve trigger parsing and telescope filtering."""
+    test_file = tmp_test_directory / "test_event_data.h5"
+    shower_table, trigger_table, file_info_table = mock_tables
+
+    write_tables(
+        [shower_table, trigger_table, file_info_table],
+        test_file,
+        file_type="HDF5",
+    )
+
+    reader = EventDataReader(str(test_file), telescope_list=["LSTN-01"])
+    file_info, shower_data, triggered_shower, triggered_data = reader.read_event_data(
+        str(test_file)
+    )
+
+    assert hasattr(file_info, "colnames")
+    assert len(shower_data.shower_id) == 2
+    assert len(triggered_shower.shower_id) == 1
+    assert len(triggered_data.telescope_list) == 1
+    assert list(triggered_data.telescope_list[0]) == ["LSTN-01", "LSTN-02", "LSTN-03"]
+    assert all(isinstance(item, str) for item in triggered_data.telescope_list[0])
+    assert triggered_shower.shower_id[0] == 1

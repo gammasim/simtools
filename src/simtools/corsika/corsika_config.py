@@ -143,7 +143,7 @@ class CorsikaConfig:
             config["USER_INPUT"] = self._corsika_configuration_from_user_input(args)
 
         config.update(
-            self._fill_corsika_configuration_from_db(gen.ensure_iterable(args.get("model_version")))
+            self._fill_corsika_configuration_from_db(gen.ensure_list(args.get("model_version")))
         )
         return config
 
@@ -357,7 +357,7 @@ class CorsikaConfig:
         theta, phi = self._get_corsika_theta_phi(args_dict)
         return {
             "EVTNR": [args_dict["event_number_first_shower"]],
-            "NSHOW": [args_dict["nshow"]],
+            "NSHOW": [args_dict["showers_per_run"]],
             "PRMPAR": [self.primary_particle.corsika7_id],
             "ESLOPE": [args_dict["eslope"]],
             "ERANGE": [

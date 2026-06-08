@@ -462,7 +462,7 @@ def test_get_file_from_db_not_found(mocker, mongo_handler):
         mongo_handler.get_file_from_db("test_db", "test_file.dat")
 
 
-def test_write_file_from_db_to_disk(mocker, tmp_path, mongo_handler):
+def test_write_file_from_db_to_disk(mocker, tmp_test_directory, mongo_handler):
     """Test write_file_from_db_to_disk."""
     mock_gridfs_bucket = mocker.patch("simtools.db.mongo_db.gridfs.GridFSBucket")
     mock_fs_output = mock_gridfs_bucket.return_value
@@ -474,9 +474,9 @@ def test_write_file_from_db_to_disk(mocker, tmp_path, mongo_handler):
 
     mock_open = mocker.patch("builtins.open", mocker.mock_open())
 
-    mongo_handler.write_file_from_db_to_disk("test_db", tmp_path, mock_file)
+    mongo_handler.write_file_from_db_to_disk("test_db", tmp_test_directory, mock_file)
 
-    mock_open.assert_called_once_with(Path(tmp_path).joinpath("test_file.dat"), "wb")
+    mock_open.assert_called_once_with(Path(tmp_test_directory).joinpath("test_file.dat"), "wb")
     mock_fs_output.download_to_stream_by_name.assert_called_once()
 
 
@@ -519,9 +519,9 @@ def test_get_ecsv_file_as_astropy_table_not_found(mocker, mongo_handler):
         mongo_handler.get_ecsv_file_as_astropy_table("test_file.ecsv", "test_db")
 
 
-def test_insert_file_to_db_new_file(mocker, tmp_path, mongo_handler):
+def test_insert_file_to_db_new_file(mocker, tmp_test_directory, mongo_handler):
     """Test insert_file_to_db with a new file."""
-    test_file = tmp_path / "test_file.dat"
+    test_file = Path(str(tmp_test_directory)) / "test_file.dat"
     test_file.write_text("test content", encoding="utf-8")
 
     mock_gridfs = mocker.patch("simtools.db.mongo_db.gridfs.GridFS")
@@ -541,9 +541,9 @@ def test_insert_file_to_db_new_file(mocker, tmp_path, mongo_handler):
     mock_fs.put.assert_called_once()
 
 
-def test_insert_file_to_db_existing_file(mocker, tmp_path, mongo_handler):
+def test_insert_file_to_db_existing_file(mocker, tmp_test_directory, mongo_handler):
     """Test insert_file_to_db with an existing file."""
-    test_file = tmp_path / "test_file.dat"
+    test_file = Path(str(tmp_test_directory)) / "test_existing_file.dat"
     test_file.write_text("test content", encoding="utf-8")
 
     mock_gridfs = mocker.patch("simtools.db.mongo_db.gridfs.GridFS")
@@ -563,9 +563,9 @@ def test_insert_file_to_db_existing_file(mocker, tmp_path, mongo_handler):
     mock_fs.put.assert_not_called()
 
 
-def test_insert_file_to_db_non_utf8(mocker, tmp_path, mongo_handler):
+def test_insert_file_to_db_non_utf8(mocker, tmp_test_directory, mongo_handler):
     """Test insert_file_to_db with non-UTF8 file."""
-    test_file = tmp_path / "test_file.dat"
+    test_file = Path(str(tmp_test_directory)) / "test_non_utf8_file.dat"
     test_file.write_text("test content", encoding="utf-8")
 
     mock_gridfs = mocker.patch("simtools.db.mongo_db.gridfs.GridFS")
