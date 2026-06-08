@@ -124,7 +124,7 @@ def test_generate_target_values_supports_log_and_inverse_cos_scaling():
     assert len(engine.target_values["zenith_angle"]) == 3
 
 
-def test_add_lookup_limits_to_point_uses_quantity_nsb_level():
+def test_add_lookup_limits_to_point_normalizes_legacy_lookup_keys():
     engine = _make_engine(lookup_table=None)
     engine.lookup_table = "limits.ecsv"
     engine._interpolate_limits_for_point = Mock(
@@ -141,19 +141,19 @@ def test_add_lookup_limits_to_point_uses_quantity_nsb_level():
     engine._interpolate_limits_for_point.assert_called_once_with(
         zenith=20.0, azimuth=180.0, nsb=5.0
     )
-    assert_quantity_allclose(point["lower_energy_threshold"], 0.02 * u.TeV)
-    assert_quantity_allclose(point["core_scatter_max"], 120 * u.m)
-    assert_quantity_allclose(point["view_cone_max"], 3.5 * u.deg)
+    assert_quantity_allclose(point["lower_energy_limit"], 0.02 * u.TeV)
+    assert_quantity_allclose(point["upper_radius_limit"], 120 * u.m)
+    assert_quantity_allclose(point["viewcone_radius"], 3.5 * u.deg)
 
 
 def test_interpolate_limits_for_point_delegates_to_lookup_helper():
     engine = _make_engine(lookup_table=None)
     engine._limits_lookup = Mock()
-    engine._limits_lookup.interpolate_point.return_value = {"lower_energy_threshold": 0.02}
+    engine._limits_lookup.interpolate_point.return_value = {"lower_energy_limit": 0.02}
 
     limits = engine._interpolate_limits_for_point(20.0, 180.0, 1.0)
 
-    assert limits == {"lower_energy_threshold": 0.02}
+    assert limits == {"lower_energy_limit": 0.02}
     engine._limits_lookup.interpolate_point.assert_called_once_with(20.0, 180.0, 1.0)
 
 
@@ -423,9 +423,7 @@ def test_init_with_radec_lookup_prepares_point_interpolation(
 @patch("simtools.production_configuration.observation_grid.CorsikaLimitsLookup")
 def test_init_with_horizontal_lookup_applies_interpolated_limits(mock_corsika_limits_lookup):
     mock_lookup = mock_corsika_limits_lookup.return_value
-    mock_lookup.interpolate_grid_limits.return_value = {
-        "lower_energy_threshold": np.array([[[0.02]]])
-    }
+    mock_lookup.interpolate_grid_limits.return_value = {"lower_energy_limit": np.array([[[0.02]]])}
 
     engine = _make_engine(
         axes={"zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"}},
@@ -433,22 +431,29 @@ def test_init_with_horizontal_lookup_applies_interpolated_limits(mock_corsika_li
         array_layout_name="alpha",
     )
 
-    assert "lower_energy_threshold" in engine.interpolated_limits
+    assert "lower_energy_limit" in engine.interpolated_limits
 
 
 def test_generate_horizontal_grid_uses_interpolated_limit_arrays():
     engine = _make_engine(axes=_single_bin_horizontal_axes())
     engine.interpolated_limits = {
-        "lower_energy_threshold": np.array([[[0.02]]]),
-        "upper_scatter_radius": np.array([[[120.0]]]),
+        "lower_energy_limit": np.array([[[0.02]]]),
+        "upper_radius_limit": np.array([[[120.0]]]),
         "viewcone_radius": np.array([[[3.0]]]),
     }
+    engine._limits_lookup = Mock(
+        lookup_field_units={
+            "lower_energy_limit": u.TeV,
+            "upper_radius_limit": u.m,
+            "viewcone_radius": u.deg,
+        }
+    )
 
     grid = engine._generate_horizontal_grid()
 
-    assert_quantity_allclose(grid[0]["lower_energy_threshold"], 0.02 * u.TeV)
-    assert_quantity_allclose(grid[0]["core_scatter_max"], 120 * u.m)
-    assert_quantity_allclose(grid[0]["view_cone_max"], 3 * u.deg)
+    assert_quantity_allclose(grid[0]["lower_energy_limit"], 0.02 * u.TeV)
+    assert_quantity_allclose(grid[0]["upper_radius_limit"], 120 * u.m)
+    assert_quantity_allclose(grid[0]["viewcone_radius"], 3 * u.deg)
 
 
 @patch("simtools.production_configuration.observation_grid.AltAz")
@@ -480,15 +485,21 @@ def test_generate_radec_grid_direction_points_filters_by_max_zenith(
 def test_generate_horizontal_grid_handles_partial_interpolated_limit_arrays():
     engine = _make_engine(axes=_single_bin_horizontal_axes())
     engine.interpolated_limits = {
-        "upper_scatter_radius": np.array([[[120.0]]]),
+        "upper_radius_limit": np.array([[[120.0]]]),
         "viewcone_radius": np.array([[[3.0]]]),
     }
+    engine._limits_lookup = Mock(
+        lookup_field_units={
+            "upper_radius_limit": u.m,
+            "viewcone_radius": u.deg,
+        }
+    )
 
     grid = engine._generate_horizontal_grid()
 
-    assert "lower_energy_threshold" not in grid[0]
-    assert_quantity_allclose(grid[0]["core_scatter_max"], 120 * u.m)
-    assert_quantity_allclose(grid[0]["view_cone_max"], 3 * u.deg)
+    assert "lower_energy_limit" not in grid[0]
+    assert_quantity_allclose(grid[0]["upper_radius_limit"], 120 * u.m)
+    assert_quantity_allclose(grid[0]["viewcone_radius"], 3 * u.deg)
 
 
 def test_generate_horizontal_grid_with_circular_azimuth_binning_uses_correct_indices():
@@ -497,12 +508,13 @@ def test_generate_horizontal_grid_with_circular_azimuth_binning_uses_correct_ind
     assert np.allclose(engine.target_values["azimuth"].value, np.array([10.0, 180.0, 350.0]))
 
     engine.interpolated_limits = {
-        "lower_energy_threshold": np.array([[[0.1], [0.2], [0.3]]]),
+        "lower_energy_limit": np.array([[[0.1], [0.2], [0.3]]]),
     }
+    engine._limits_lookup = Mock(lookup_field_units={"lower_energy_limit": u.TeV})
 
     grid = engine._generate_horizontal_grid()
     by_azimuth = {
-        float(point["azimuth"].to_value(u.deg)): point["lower_energy_threshold"].to_value(u.TeV)
+        float(point["azimuth"].to_value(u.deg)): point["lower_energy_limit"].to_value(u.TeV)
         for point in grid
     }
 

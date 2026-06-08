@@ -457,12 +457,9 @@ def get_energy_range_for_zenith_angle(
     )
     if interpolated_limits is None:
         return energy_range_pair
-    lower_energy_limit = interpolated_limits["lower_energy_limit"]
-    if not isinstance(lower_energy_limit, u.Quantity):
-        lower_energy_limit = lower_energy_limit * u.TeV
     return _clip_energy_range_from_threshold(
         energy_range_pair,
-        lower_energy_limit,
+        _as_quantity(interpolated_limits["lower_energy_limit"], u.TeV),
     )
 
 
@@ -480,10 +477,10 @@ def get_core_scatter_max_for_zenith_angle(
     )
     if interpolated_limits is None:
         return core_scatter[1]
-    upper_radius_limit = interpolated_limits["upper_radius_limit"]
-    if not isinstance(upper_radius_limit, u.Quantity):
-        upper_radius_limit = upper_radius_limit * u.m
-    return _clip_max_quantity(core_scatter[1], upper_radius_limit)
+    return _clip_max_quantity(
+        core_scatter[1],
+        _as_quantity(interpolated_limits["upper_radius_limit"], u.m),
+    )
 
 
 def get_viewcone_max_for_zenith_angle(
@@ -495,10 +492,10 @@ def get_viewcone_max_for_zenith_angle(
     )
     if interpolated_limits is None:
         return view_cone[1]
-    viewcone_radius = interpolated_limits["viewcone_radius"]
-    if not isinstance(viewcone_radius, u.Quantity):
-        viewcone_radius = viewcone_radius * u.deg
-    return _clip_max_quantity(view_cone[1], viewcone_radius)
+    return _clip_max_quantity(
+        view_cone[1],
+        _as_quantity(interpolated_limits["viewcone_radius"], u.deg),
+    )
 
 
 def calculate_log_energy_midpoint(energy_range_pair):
@@ -624,6 +621,11 @@ def scale_energy_max_for_zenith_angle(
         return None
 
     return energy_min, scaled_energy_max.to(energy_range_max.unit)
+
+
+def _as_quantity(value, unit):
+    """Return value as Quantity, using unit for plain numeric values."""
+    return value if isinstance(value, u.Quantity) else value * unit
 
 
 def _clip_energy_range_from_threshold(energy_range_pair, lower_energy_threshold):

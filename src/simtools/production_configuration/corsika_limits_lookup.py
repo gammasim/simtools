@@ -20,18 +20,27 @@ _LOOKUP_FIELDS = (
     "br_energy_max",
 )
 
+_LEGACY_LOOKUP_FIELDS = {
+    "lower_energy_threshold": ("lower_energy_limit", u.TeV),
+    "upper_scatter_radius": ("upper_radius_limit", u.m),
+    "viewcone_radius": ("viewcone_radius", u.deg),
+}
+
 
 def attach_lookup_limits_to_point(point, limits, lookup_field_units=None):
     """Attach interpolated CORSIKA limits to a grid point."""
     for lookup_key, value in limits.items():
-        if lookup_key not in _LOOKUP_FIELDS:
+        target_key, default_unit = _LEGACY_LOOKUP_FIELDS.get(lookup_key, (lookup_key, None))
+        if target_key not in _LOOKUP_FIELDS:
             continue
         if isinstance(value, u.Quantity):
-            point[lookup_key] = value
-        elif lookup_field_units is not None and lookup_key in lookup_field_units:
-            point[lookup_key] = value * lookup_field_units[lookup_key]
+            point[target_key] = value
+        elif lookup_field_units is not None and target_key in lookup_field_units:
+            point[target_key] = value * lookup_field_units[target_key]
+        elif default_unit is not None:
+            point[target_key] = value * default_unit
         else:
-            point[lookup_key] = value
+            point[target_key] = value
 
 
 class CorsikaLimitsLookup:

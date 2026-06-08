@@ -8,9 +8,15 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
+from simtools.production_configuration.job_grid_io import JOB_GRID_QUANTITY_FIELDS
+
 logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
-PLOT_VALUE_KEYS = ("energy_min", "energy_max", "core_scatter_max", "view_cone_max")
+PLOT_VALUE_KEYS = tuple(
+    key
+    for key in JOB_GRID_QUANTITY_FIELDS
+    if key not in ("azimuth_angle", "zenith_angle", "view_cone_min")
+)
 DEFAULT_OUTPUT_FILE_EXTENSION = "png"
 DEFAULT_MARKER_SIZE = 8
 DEFAULT_GRID_LINE_WIDTH = 0.6
@@ -114,8 +120,7 @@ class ProductionGridPlotter:
                 point[column_name] = value
 
         for value_key in PLOT_VALUE_KEYS:
-            value_column = f"{value_key}_value"
-            unit_column = f"{value_key}_unit"
+            value_column, unit_column = JOB_GRID_QUANTITY_FIELDS[value_key]
             if value_column not in point or unit_column not in point:
                 continue
             point[value_key] = float(point[value_column]) * u.Unit(point[unit_column])
@@ -606,10 +611,10 @@ class ProductionGridPlotter:
         ]
 
     def plot_azimuth_zenith_projection_with_color_scale(
-        self, value_key, value_label, output_file_stem
+        self, value_key, value_label, output_file_stem, plot_points=None
     ):
         """Plot azimuth/zenith points with a color scale for one value column."""
-        plot_points = self.normalize_grid_points()
+        plot_points = self.normalize_grid_points() if plot_points is None else plot_points
         value_label_with_unit = self._format_value_label_with_unit(
             plot_points,
             value_key,
@@ -649,18 +654,33 @@ class ProductionGridPlotter:
         logger.info(f"Saved azimuth/zenith color-scale plot to {output_file}")
         plt.close(figure)
 
+    @staticmethod
+    def _available_plot_value_keys(plot_points):
+        """Return value keys present in at least one normalized Alt/Az point."""
+        return [
+            value_key
+            for value_key in PLOT_VALUE_KEYS
+            if any(
+                point["native_frame"] == "altaz" and point.get(value_key) is not None
+                for point in plot_points
+            )
+        ]
+
     def plot_limit_projections(self):
         """Plot all supported production-grid limit values."""
-        for value_key in PLOT_VALUE_KEYS:
+        plot_points = self.normalize_grid_points()
+        for value_key in self._available_plot_value_keys(plot_points):
             self.plot_azimuth_zenith_projection_with_color_scale(
                 value_key=value_key,
                 value_label=value_key,
                 output_file_stem=_azimuth_zenith_output_file_stem(value_key),
+                plot_points=plot_points,
             )
             self.plot_zenith_limits_for_azimuths(
                 value_key=value_key,
                 value_label=value_key,
                 output_file_stem=_zenith_profile_output_file_stem(value_key),
+                plot_points=plot_points,
             )
 
     @staticmethod
@@ -675,9 +695,10 @@ class ProductionGridPlotter:
         output_file_stem,
         azimuth_targets=(0.0, 180.0),
         azimuth_tolerance_deg=1e-6,
+        plot_points=None,
     ):
         """Plot value versus zenith for selected azimuth pointings."""
-        plot_points = self.normalize_grid_points()
+        plot_points = self.normalize_grid_points() if plot_points is None else plot_points
         value_label_with_unit = self._format_value_label_with_unit(
             plot_points,
             value_key,

@@ -43,6 +43,7 @@ _QUANTITY_FIELDS = {
     "view_cone_min": ("view_cone_min_value", "view_cone_min_unit"),
     "view_cone_max": ("view_cone_max_value", "view_cone_max_unit"),
 }
+JOB_GRID_QUANTITY_FIELDS = dict(_QUANTITY_FIELDS)
 
 _OPTIONAL_ANGLE_FIELDS = ("ra", "dec")
 
