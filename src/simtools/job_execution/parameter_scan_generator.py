@@ -212,7 +212,7 @@ simtools-simulate-prod \\
     --corsika_he_interaction {sim_params["corsika_he_interaction"]} \\
     --label "$FULL_LABEL" \\
     --overwrite_model_parameters "$OVERWRITE_FILE" \\
-    --output_path /tmp/simtools-output"""
+    --output_path {sim_params.get("output_path", "/tmp/simtools-output")}"""
 
     if sim_params.get("run_number_offset"):
         script += f" \\\n    --run_number_offset {sim_params['run_number_offset']}"
