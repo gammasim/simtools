@@ -1043,6 +1043,18 @@ def test_find_collection_files_exact_not_found(tmp_test_directory):
         _find_collection_files("result.ecsv", [src])
 
 
+def test_find_collection_files_exact_recursive_match(tmp_test_directory):
+    """Exact filename falls back to a unique nested match."""
+    src = Path(str(tmp_test_directory)) / "src_nested"
+    nested = src / "model" / "6.0.2"
+    nested.mkdir(parents=True)
+    (nested / "CTA-alpha-North_test.cfg").write_text("cfg", encoding="utf-8")
+
+    matched = _find_collection_files("CTA-alpha-North_test.cfg", [src])
+    assert len(matched) == 1
+    assert matched[0] == nested / "CTA-alpha-North_test.cfg"
+
+
 def test_find_collection_files_glob_matches_multiple(tmp_test_directory):
     """Glob pattern collects all matching files recursively."""
     src = Path(str(tmp_test_directory)) / "src_glob"
