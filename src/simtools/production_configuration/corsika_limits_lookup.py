@@ -5,7 +5,7 @@ import logging
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator, griddata
+from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from scipy.spatial import QhullError  # pylint: disable=no-name-in-module
 
 from simtools.utils.value_conversion import get_value_in_unit
@@ -62,7 +62,6 @@ class CorsikaLimitsLookup:
         self.lookup_points_for_interpolation = None
         self.lookup_values_for_interpolation = None
         self.lookup_interpolators_for_point = None
-        self.lookup_nearest_interpolators_for_point = None
         self.lookup_interpolation_axes = None
         self.lookup_points = None
         self.available_lookup_fields = None
@@ -79,9 +78,8 @@ class CorsikaLimitsLookup:
         """
         lookup_table = Table.read(self.lookup_table, format="ascii.ecsv")
         logger.info(
-            "Loaded lookup table with %d rows and columns: %s",
-            len(lookup_table),
-            lookup_table.colnames,
+            f"Loaded lookup table with {len(lookup_table)} "
+            f"rows and columns: {lookup_table.colnames}"
         )
         if self.array_layout_name is None:
             matching_rows = list(lookup_table)
@@ -159,17 +157,16 @@ class CorsikaLimitsLookup:
         ]
         try:
             self.lookup_interpolators_for_point = {
-                key: LinearNDInterpolator(
-                    interpolation_points,
-                    self.lookup_values_for_interpolation[key],
-                    fill_value=np.nan,
-                )
-                for key in self.available_lookup_fields
-            }
-            self.lookup_nearest_interpolators_for_point = {
-                key: NearestNDInterpolator(
-                    interpolation_points,
-                    self.lookup_values_for_interpolation[key],
+                key: (
+                    LinearNDInterpolator(
+                        interpolation_points,
+                        self.lookup_values_for_interpolation[key],
+                        fill_value=np.nan,
+                    ),
+                    NearestNDInterpolator(
+                        interpolation_points,
+                        self.lookup_values_for_interpolation[key],
+                    ),
                 )
                 for key in self.available_lookup_fields
             }
@@ -223,21 +220,21 @@ class CorsikaLimitsLookup:
         interpolation_target = target_grid[:, interpolation_axes]
 
         def interpolate(values):
-            interpolated = griddata(
+            wrapped_values = self._repeat_wrapped_lookup_values(values)
+            linear_interpolator = LinearNDInterpolator(
                 interpolation_points,
-                self._repeat_wrapped_lookup_values(values),
-                interpolation_target,
-                method="linear",
+                wrapped_values,
                 fill_value=np.nan,
             )
-            if np.isnan(interpolated).any():
-                nearest_values = griddata(
-                    interpolation_points,
-                    self._repeat_wrapped_lookup_values(values),
-                    interpolation_target,
-                    method="nearest",
-                )
-                interpolated = np.where(np.isnan(interpolated), nearest_values, interpolated)
+            nearest_interpolator = NearestNDInterpolator(
+                interpolation_points,
+                wrapped_values,
+            )
+            interpolated = self._interpolate_with_nearest_fallback(
+                linear_interpolator,
+                nearest_interpolator,
+                interpolation_target,
+            )
             return interpolated.reshape(
                 len(target_values["zenith_angle"]),
                 len(target_values["azimuth"]),
@@ -280,15 +277,30 @@ class CorsikaLimitsLookup:
         interpolation_target = target[:, self.lookup_interpolation_axes]
         interpolated_limits = {}
         for key in self.available_lookup_fields:
+            linear_interpolator, nearest_interpolator = self.lookup_interpolators_for_point[key]
             interpolated_value = float(
-                self.lookup_interpolators_for_point[key](interpolation_target)[0]
+                self._interpolate_with_nearest_fallback(
+                    linear_interpolator,
+                    nearest_interpolator,
+                    interpolation_target,
+                )[0]
             )
-            if np.isnan(interpolated_value):
-                interpolated_value = float(
-                    self.lookup_nearest_interpolators_for_point[key](interpolation_target)[0]
-                )
             interpolated_limits[key] = interpolated_value * self.lookup_field_units[key]
         return interpolated_limits
+
+    @staticmethod
+    def _interpolate_with_nearest_fallback(
+        linear_interpolator,
+        nearest_interpolator,
+        interpolation_target,
+    ):
+        """Interpolate and replace out-of-hull NaNs with nearest-neighbor values."""
+        interpolated = np.asarray(linear_interpolator(interpolation_target), dtype=float)
+        nan_mask = np.isnan(interpolated)
+        if np.any(nan_mask):
+            nearest_values = np.asarray(nearest_interpolator(interpolation_target), dtype=float)
+            interpolated[nan_mask] = nearest_values[nan_mask]
+        return interpolated
 
     @staticmethod
     def _get_varying_axes(points):

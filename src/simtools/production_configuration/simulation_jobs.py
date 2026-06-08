@@ -27,6 +27,7 @@ from simtools.production_configuration.corsika_limits_lookup import (
 )
 from simtools.production_configuration.observation_grid import ProductionGridEngine
 from simtools.utils.general import ensure_list
+from simtools.utils.value_conversion import get_value_as_quantity
 
 logger = logging.getLogger(__name__)
 
@@ -459,7 +460,7 @@ def get_energy_range_for_zenith_angle(
         return energy_range_pair
     return _clip_energy_range_from_threshold(
         energy_range_pair,
-        _as_quantity(interpolated_limits["lower_energy_limit"], u.TeV),
+        get_value_as_quantity(interpolated_limits["lower_energy_limit"], u.TeV),
     )
 
 
@@ -479,7 +480,7 @@ def get_core_scatter_max_for_zenith_angle(
         return core_scatter[1]
     return _clip_max_quantity(
         core_scatter[1],
-        _as_quantity(interpolated_limits["upper_radius_limit"], u.m),
+        get_value_as_quantity(interpolated_limits["upper_radius_limit"], u.m),
     )
 
 
@@ -494,7 +495,7 @@ def get_viewcone_max_for_zenith_angle(
         return view_cone[1]
     return _clip_max_quantity(
         view_cone[1],
-        _as_quantity(interpolated_limits["viewcone_radius"], u.deg),
+        get_value_as_quantity(interpolated_limits["viewcone_radius"], u.deg),
     )
 
 
@@ -598,7 +599,28 @@ def scale_energy_max_for_zenith_angle(
     energy_range_pair,
     energy_max_scaling=None,
 ):
-    """Scale energy_max with zenith angle and return an updated energy range pair."""
+    """
+    Scale energy_max with zenith angle and return an updated energy range pair.
+
+    Parameters
+    ----------
+    zenith_angle : astropy.units.Quantity
+        Zenith angle for one simulation point.
+    energy_range_pair : tuple
+        Tuple containing the minimum and maximum energy values.
+    energy_max_scaling : tuple or None
+        Tuple containing the scaling index and reference energy, or None.
+
+    Returns
+    -------
+    tuple or None
+        Updated energy range pair, or None if the scaling results in an invalid range.
+
+    Raises
+    ------
+    ValueError
+        If the scaling is not defined for the given zenith angle.
+    """
     if energy_max_scaling is None:
         return energy_range_pair
 
@@ -627,11 +649,6 @@ def scale_energy_max_for_zenith_angle(
         return None
 
     return energy_min, scaled_energy_max.to(energy_range_max.unit)
-
-
-def _as_quantity(value, unit):
-    """Return value as Quantity, using unit for plain numeric values."""
-    return value if isinstance(value, u.Quantity) else value * unit
 
 
 def _clip_energy_range_from_threshold(energy_range_pair, lower_energy_threshold):
