@@ -19,6 +19,13 @@ This is mostly used for small productions during the validation or verification 
    :members:
 ```
 
+(parameter-scan-generator)=
+
+```{eval-rst}
+.. automodule:: job_execution.parameter_scan_generator
+   :members:
+```
+
 (process-pool)=
 
 ```{eval-rst}
