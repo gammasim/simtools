@@ -53,8 +53,8 @@ def test_prepare_point_interpolators_builds_interpolator_state():
         "viewcone_radius",
     }.issubset(set(interpolators))
     assert {
-        "energy_min",
-        "energy_max",
+        "br_energy_min",
+        "br_energy_max",
     }.issubset(set(interpolators))
 
 
