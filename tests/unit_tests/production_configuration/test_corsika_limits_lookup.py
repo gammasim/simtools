@@ -6,10 +6,12 @@ from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.production_configuration.corsika_limits_lookup import CorsikaLimitsLookup
 
+LOOKUP_TABLE = "tests/resources/corsika_simulation_limits/corsika_limits_north.ecsv"
+
 
 def test_load_matching_lookup_arrays_filters_by_array_layout_name():
     lookup = CorsikaLimitsLookup(
-        "tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv",
+        LOOKUP_TABLE,
         array_layout_name="1mst",
     )
 
@@ -21,7 +23,7 @@ def test_load_matching_lookup_arrays_filters_by_array_layout_name():
 
 def test_load_matching_lookup_arrays_raises_for_unknown_array_layout():
     lookup = CorsikaLimitsLookup(
-        "tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv",
+        LOOKUP_TABLE,
         array_layout_name="does-not-exist",
     )
 
@@ -30,9 +32,7 @@ def test_load_matching_lookup_arrays_raises_for_unknown_array_layout():
 
 
 def test_load_matching_lookup_arrays_without_layout_returns_all_rows():
-    lookup = CorsikaLimitsLookup(
-        "tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv"
-    )
+    lookup = CorsikaLimitsLookup(LOOKUP_TABLE)
 
     arrays = lookup.load_matching_lookup_arrays()
 
@@ -41,7 +41,7 @@ def test_load_matching_lookup_arrays_without_layout_returns_all_rows():
 
 def test_prepare_point_interpolators_builds_interpolator_state():
     lookup = CorsikaLimitsLookup(
-        "tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv",
+        LOOKUP_TABLE,
         array_layout_name="1mst",
     )
 
@@ -61,7 +61,7 @@ def test_prepare_point_interpolators_builds_interpolator_state():
 
 def test_interpolate_grid_limits_returns_requested_grid_shape():
     lookup = CorsikaLimitsLookup(
-        "tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv",
+        LOOKUP_TABLE,
         array_layout_name="1mst",
     )
 
@@ -79,7 +79,7 @@ def test_interpolate_grid_limits_returns_requested_grid_shape():
 
 def test_interpolate_point_returns_interpolated_values():
     lookup = CorsikaLimitsLookup(
-        "tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv",
+        LOOKUP_TABLE,
         array_layout_name="1mst",
     )
 
