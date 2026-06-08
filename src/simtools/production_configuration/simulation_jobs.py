@@ -752,6 +752,31 @@ def _scale_total_showers(
     raise ValueError(f"Unknown total_showers_scaling mode: {total_showers_scaling}")
 
 
+def _apply_clipping_chain(
+    zenith_angle,
+    energy_range_pair,
+    energy_max_scaling,
+    lower_energy_threshold,
+):
+    """Apply the full clipping chain to an energy range pair."""
+    selected_energy_range = scale_energy_max_for_zenith_angle(
+        zenith_angle,
+        energy_range_pair,
+        energy_max_scaling,
+    )
+    if selected_energy_range is None:
+        return None
+    selected_energy_range = _clip_energy_range_from_threshold(
+        selected_energy_range, lower_energy_threshold
+    )
+    if selected_energy_range is None:
+        return None
+    return _clip_energy_range_to_configured_bounds(
+        selected_energy_range,
+        energy_range_pair,
+    )
+
+
 def _compute_per_point_runs(
     total_showers,
     zenith_angle,
@@ -802,21 +827,11 @@ def _build_rows_for_point(
     rows = []
     zenith_angle = point_base["zenith_angle"]
     for energy_range_pair in energy_ranges:
-        selected_energy_range = scale_energy_max_for_zenith_angle(
+        selected_energy_range = _apply_clipping_chain(
             zenith_angle,
             energy_range_pair,
             energy_max_scaling,
-        )
-        if selected_energy_range is None:
-            continue
-        selected_energy_range = _clip_energy_range_from_threshold(
-            selected_energy_range, lower_energy_threshold
-        )
-        if selected_energy_range is None:
-            continue
-        selected_energy_range = _clip_energy_range_to_configured_bounds(
-            selected_energy_range,
-            energy_range_pair,
+            lower_energy_threshold,
         )
         if selected_energy_range is None:
             continue

@@ -28,22 +28,19 @@ def _write_grid_file(tmp_test_directory, file_name, grid_points):
         rows.append(row)
 
     table = Table(rows=rows)
-    if "azimuth" in table.colnames:
-        table["azimuth"].unit = "deg"
-    if "zenith_angle" in table.colnames:
-        table["zenith_angle"].unit = "deg"
-    if "ra" in table.colnames:
-        table["ra"].unit = "deg"
-    if "dec" in table.colnames:
-        table["dec"].unit = "deg"
-    if "nsb_level" in table.colnames:
-        table["nsb_level"].unit = "MHz"
-    if "offset" in table.colnames:
-        table["offset"].unit = "deg"
-    if "core_scatter_max_value" in table.colnames:
-        table["core_scatter_max_value"].unit = "m"
-    if "view_cone_max_value" in table.colnames:
-        table["view_cone_max_value"].unit = "deg"
+    unit_mapping = {
+        "azimuth": "deg",
+        "zenith_angle": "deg",
+        "ra": "deg",
+        "dec": "deg",
+        "nsb_level": "MHz",
+        "offset": "deg",
+        "core_scatter_max_value": "m",
+        "view_cone_max_value": "deg",
+    }
+    for col, unit_val in unit_mapping.items():
+        if col in table.colnames:
+            table[col].unit = unit_val
     table.write(file_path, format="ascii.ecsv", overwrite=True)
     return file_path
 
