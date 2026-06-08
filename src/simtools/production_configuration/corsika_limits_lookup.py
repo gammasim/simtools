@@ -12,42 +12,26 @@ from simtools.utils.value_conversion import get_value_in_unit
 
 logger = logging.getLogger(__name__)
 
-_LOOKUP_FIELD_SPECS = {
-    "lower_energy_threshold": {
-        "column": "lower_energy_limit",
-        "unit": "TeV",
-        "point_key": "lower_energy_threshold",
-    },
-    "upper_scatter_radius": {
-        "column": "upper_radius_limit",
-        "unit": "m",
-        "point_key": "core_scatter_max",
-    },
-    "viewcone_radius": {
-        "column": "viewcone_radius",
-        "unit": "deg",
-        "point_key": "view_cone_max",
-    },
-    "br_energy_min": {
-        "column": "br_energy_min",
-        "unit": "TeV",
-        "point_key": "energy_min",
-    },
-    "br_energy_max": {
-        "column": "br_energy_max",
-        "unit": "TeV",
-        "point_key": "energy_max",
-    },
-}
+_LOOKUP_FIELDS = (
+    "lower_energy_limit",
+    "upper_radius_limit",
+    "viewcone_radius",
+    "br_energy_min",
+    "br_energy_max",
+)
 
 
-def attach_lookup_limits_to_point(point, limits):
+def attach_lookup_limits_to_point(point, limits, lookup_field_units=None):
     """Attach interpolated CORSIKA limits to a grid point."""
     for lookup_key, value in limits.items():
-        if lookup_key not in _LOOKUP_FIELD_SPECS:
+        if lookup_key not in _LOOKUP_FIELDS:
             continue
-        field_spec = _LOOKUP_FIELD_SPECS[lookup_key]
-        point[field_spec["point_key"]] = value * u.Unit(field_spec["unit"])
+        if isinstance(value, u.Quantity):
+            point[lookup_key] = value
+        elif lookup_field_units is not None and lookup_key in lookup_field_units:
+            point[lookup_key] = value * lookup_field_units[lookup_key]
+        else:
+            point[lookup_key] = value
 
 
 class CorsikaLimitsLookup:
@@ -73,6 +57,7 @@ class CorsikaLimitsLookup:
         self.lookup_interpolation_axes = None
         self.lookup_points = None
         self.available_lookup_fields = None
+        self.lookup_field_units = None
 
     def load_matching_lookup_arrays(self):
         """
@@ -110,16 +95,20 @@ class CorsikaLimitsLookup:
         nsb_values = extract_array("nsb_level", float)
 
         self.available_lookup_fields = [
-            field_name
-            for field_name, field_spec in _LOOKUP_FIELD_SPECS.items()
-            if field_spec["column"] in lookup_table.colnames
+            field_name for field_name in _LOOKUP_FIELDS if field_name in lookup_table.colnames
         ]
+        self.lookup_field_units = {}
+        for field_name in self.available_lookup_fields:
+            column_unit = lookup_table[field_name].unit
+            if column_unit is None:
+                raise ValueError(f"Lookup table column '{field_name}' is missing a unit.")
+            self.lookup_field_units[field_name] = u.Unit(column_unit)
 
         lookup_arrays = {
             "points": np.column_stack((zeniths, azimuths, nsb_values)),
         }
         for field_name in self.available_lookup_fields:
-            lookup_arrays[field_name] = extract_array(_LOOKUP_FIELD_SPECS[field_name]["column"])
+            lookup_arrays[field_name] = extract_array(field_name)
         return lookup_arrays
 
     def prepare_point_interpolators(self):
@@ -289,7 +278,7 @@ class CorsikaLimitsLookup:
                 interpolated_value = float(
                     self.lookup_nearest_interpolators_for_point[key](interpolation_target)[0]
                 )
-            interpolated_limits[key] = interpolated_value
+            interpolated_limits[key] = interpolated_value * self.lookup_field_units[key]
         return interpolated_limits
 
     @staticmethod

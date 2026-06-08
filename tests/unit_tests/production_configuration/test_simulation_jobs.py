@@ -565,8 +565,8 @@ def test_get_energy_range_for_zenith_angle_without_lookup_returns_configured_pai
     CorsikaLimitsLookup,
     "interpolate_point",
     return_value={
-        "lower_energy_threshold": 0.2,
-        "upper_scatter_radius": 100.0,
+        "lower_energy_limit": 0.2,
+        "upper_radius_limit": 100.0,
         "viewcone_radius": 2.0,
     },
 )
@@ -591,8 +591,8 @@ def test_get_energy_range_for_zenith_angle_wraps_lookup_path_and_skips_step(
     CorsikaLimitsLookup,
     "interpolate_point",
     return_value={
-        "lower_energy_threshold": 0.01,
-        "upper_scatter_radius": 100.0,
+        "lower_energy_limit": 0.01,
+        "upper_radius_limit": 100.0,
         "viewcone_radius": 2.0,
     },
 )
@@ -618,8 +618,8 @@ def test_get_energy_range_for_zenith_angle_clips_threshold():
     )
     corsika_limits.interpolate_point = Mock(
         return_value={
-            "lower_energy_threshold": 0.05,
-            "upper_scatter_radius": 100.0,
+            "lower_energy_limit": 0.05,
+            "upper_radius_limit": 100.0,
             "viewcone_radius": 2.0,
         }
     )
@@ -640,8 +640,8 @@ def test_get_core_scatter_max_for_zenith_angle_clips_value():
     )
     corsika_limits.interpolate_point = Mock(
         return_value={
-            "lower_energy_threshold": 0.01,
-            "upper_scatter_radius": 100.0,
+            "lower_energy_limit": 0.01,
+            "upper_radius_limit": 100.0,
             "viewcone_radius": 2.0,
         }
     )
@@ -664,8 +664,8 @@ def test_get_core_scatter_max_for_zenith_angle_without_lookup_uses_configured_ma
     CorsikaLimitsLookup,
     "interpolate_point",
     return_value={
-        "lower_energy_threshold": 0.01,
-        "upper_scatter_radius": 100.0,
+        "lower_energy_limit": 0.01,
+        "upper_radius_limit": 100.0,
         "viewcone_radius": 2.0,
     },
 )
@@ -690,8 +690,8 @@ def test_get_viewcone_max_for_zenith_angle_without_lookup_uses_configured_max():
     CorsikaLimitsLookup,
     "interpolate_point",
     return_value={
-        "lower_energy_threshold": 0.01,
-        "upper_scatter_radius": 100.0,
+        "lower_energy_limit": 0.01,
+        "upper_radius_limit": 100.0,
         "viewcone_radius": 2.0,
     },
 )
@@ -1090,17 +1090,22 @@ def test_build_rows_for_point_skips_when_threshold_exceeds_configured_energy_max
 def test_generate_observation_points_from_axes_adds_lookup_limits():
     corsika_limits = Mock()
     corsika_limits.interpolate_point.return_value = {
-        "lower_energy_threshold": 0.05,
-        "upper_scatter_radius": 150.0,
+        "lower_energy_limit": 0.05,
+        "upper_radius_limit": 150.0,
         "viewcone_radius": 3.0,
+    }
+    corsika_limits.lookup_field_units = {
+        "lower_energy_limit": u.TeV,
+        "upper_radius_limit": u.m,
+        "viewcone_radius": u.deg,
     }
 
     points = _generate_observation_points_from_axes([180 * u.deg], [20 * u.deg], corsika_limits)
 
     assert len(points) == 1
-    assert_quantity_allclose(points[0]["lower_energy_threshold"], 0.05 * u.TeV)
-    assert_quantity_allclose(points[0]["core_scatter_max"], 150 * u.m)
-    assert_quantity_allclose(points[0]["view_cone_max"], 3 * u.deg)
+    assert_quantity_allclose(points[0]["lower_energy_limit"], 0.05 * u.TeV)
+    assert_quantity_allclose(points[0]["upper_radius_limit"], 150 * u.m)
+    assert_quantity_allclose(points[0]["viewcone_radius"], 3 * u.deg)
 
 
 @patch("simtools.production_configuration.simulation_jobs._generate_observation_points_from_axes")
@@ -1172,9 +1177,9 @@ def test_build_simulation_jobs_expands_runs_from_observation_grid(
                     "zenith_angle": 20 * u.deg,
                     "ra": 123 * u.deg,
                     "dec": -45 * u.deg,
-                    "lower_energy_threshold": 40 * u.GeV,
-                    "core_scatter_max": 100 * u.m,
-                    "view_cone_max": 2 * u.deg,
+                    "lower_energy_limit": 40 * u.GeV,
+                    "upper_radius_limit": 100 * u.m,
+                    "viewcone_radius": 2 * u.deg,
                 }
             ]
         },
@@ -1218,9 +1223,9 @@ def test_build_simulation_jobs_clips_core_and_viewcone_max_by_configured_limits(
                 {
                     "azimuth": 180 * u.deg,
                     "zenith_angle": 20 * u.deg,
-                    "lower_energy_threshold": 40 * u.GeV,
-                    "core_scatter_max": 400 * u.m,
-                    "view_cone_max": 10 * u.deg,
+                    "lower_energy_limit": 40 * u.GeV,
+                    "upper_radius_limit": 400 * u.m,
+                    "viewcone_radius": 10 * u.deg,
                 }
             ]
         },
@@ -1259,9 +1264,9 @@ def test_build_simulation_jobs_uses_interpolated_energy_min_when_threshold_key_m
                 {
                     "azimuth": 180 * u.deg,
                     "zenith_angle": 20 * u.deg,
-                    "energy_min": 50 * u.GeV,
-                    "core_scatter_max": 100 * u.m,
-                    "view_cone_max": 2 * u.deg,
+                    "br_energy_min": 50 * u.GeV,
+                    "upper_radius_limit": 100 * u.m,
+                    "viewcone_radius": 2 * u.deg,
                 }
             ]
         },
@@ -1300,9 +1305,9 @@ def test_build_simulation_jobs_clips_viewcone_min_to_lookup_limited_max(
                 {
                     "azimuth": 180 * u.deg,
                     "zenith_angle": 20 * u.deg,
-                    "lower_energy_threshold": 40 * u.GeV,
-                    "core_scatter_max": 100 * u.m,
-                    "view_cone_max": 2 * u.deg,
+                    "lower_energy_limit": 40 * u.GeV,
+                    "upper_radius_limit": 100 * u.m,
+                    "viewcone_radius": 2 * u.deg,
                 }
             ]
         },
