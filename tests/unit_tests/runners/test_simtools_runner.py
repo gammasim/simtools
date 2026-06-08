@@ -126,6 +126,28 @@ def test_replace_placeholders_in_configuration_keeps_existing_output_path(tmp_te
     assert result["input_file"] == "LSTN-01/workflow/data.txt"
 
 
+def test_prepare_application_configuration_resolves_by_version(tmp_test_directory):
+    config = {
+        "model_version": "6.0.2",
+        "array_layout_name": {
+            "by_version": {
+                "<7.0.0": "alpha",
+                ">=7.0.0": "CTAO-North-Alpha",
+            }
+        },
+        "output_path": "existing-output",
+    }
+
+    result = simtools_runner._prepare_application_configuration(
+        config.copy(),
+        tmp_test_directory / "workflow",
+        "tests/resources_generation/application_config",
+    )
+
+    assert result["array_layout_name"] == "alpha"
+    assert result["output_path"] == "existing-output"
+
+
 def test_read_application_configuration_selected_steps(
     monkeypatch,
     mock_logger,
