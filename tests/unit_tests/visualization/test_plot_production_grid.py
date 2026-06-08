@@ -243,11 +243,13 @@ def test_plot_altaz_projection_with_limits_creates_outputs(tmp_test_directory):
         output_path=output_path,
     )
 
+    from astropy.tests.helper import assert_quantity_allclose
+
     normalized_points = plotter.normalize_grid_points()
-    assert normalized_points[0]["energy_min"] == 0.03 * u.TeV
-    assert normalized_points[0]["energy_max"] == 150.0 * u.TeV
-    assert normalized_points[0]["core_scatter_max"] == 1200.0 * u.m
-    assert normalized_points[0]["view_cone_max"] == 10.0 * u.deg
+    assert_quantity_allclose(normalized_points[0]["energy_min"], 0.03 * u.TeV)
+    assert_quantity_allclose(normalized_points[0]["energy_max"], 150.0 * u.TeV)
+    assert_quantity_allclose(normalized_points[0]["core_scatter_max"], 1200.0 * u.m)
+    assert_quantity_allclose(normalized_points[0]["view_cone_max"], 10.0 * u.deg)
 
     plotter.plot_limit_projections()
 

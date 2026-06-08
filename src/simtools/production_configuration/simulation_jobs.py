@@ -752,6 +752,38 @@ def _scale_total_showers(
     raise ValueError(f"Unknown total_showers_scaling mode: {total_showers_scaling}")
 
 
+def _compute_per_point_runs(
+    total_showers,
+    zenith_angle,
+    total_showers_scaling,
+    selected_showers_per_run,
+    zenith_angle_scaling_factor,
+):
+    """Compute the number of runs per point considering total-showers constraints."""
+    effective_total_showers = _scale_total_showers(
+        total_showers,
+        zenith_angle,
+        total_showers_scaling,
+        cos_scaling_factor=zenith_angle_scaling_factor,
+    )
+    if effective_total_showers <= 0:
+        return 0
+    number_of_full_runs, remainder_showers = divmod(
+        effective_total_showers, selected_showers_per_run
+    )
+    per_point_number_of_runs = number_of_full_runs + int(remainder_showers > 0)
+    if remainder_showers > 0:
+        adjusted_total_showers = per_point_number_of_runs * selected_showers_per_run
+        logger.warning(
+            "total_showers=%s is not divisible by showers_per_run=%s; "
+            "adjusting to %s to keep equal showers per run.",
+            effective_total_showers,
+            selected_showers_per_run,
+            adjusted_total_showers,
+        )
+    return per_point_number_of_runs
+
+
 def _build_rows_for_point(
     point_base,
     energy_ranges,
@@ -768,9 +800,10 @@ def _build_rows_for_point(
 ):
     """Build all simulation-run rows for a single grid point across all energy ranges."""
     rows = []
+    zenith_angle = point_base["zenith_angle"]
     for energy_range_pair in energy_ranges:
         selected_energy_range = scale_energy_max_for_zenith_angle(
-            point_base["zenith_angle"],
+            zenith_angle,
             energy_range_pair,
             energy_max_scaling,
         )
@@ -793,34 +826,20 @@ def _build_rows_for_point(
             showers_per_run_power_law,
         )
         selected_showers_per_run = calculate_zenith_scaled_showers_per_run(
-            point_base["zenith_angle"],
+            zenith_angle,
             selected_showers_per_run,
             showers_per_run_scaling,
         )
 
         per_point_number_of_runs = number_of_runs
         if total_showers is not None:
-            effective_total_showers = _scale_total_showers(
+            per_point_number_of_runs = _compute_per_point_runs(
                 total_showers,
-                point_base["zenith_angle"],
+                zenith_angle,
                 total_showers_scaling,
-                cos_scaling_factor=zenith_angle_scaling_factor,
+                selected_showers_per_run,
+                zenith_angle_scaling_factor,
             )
-            if effective_total_showers <= 0:
-                continue
-            number_of_full_runs, remainder_showers = divmod(
-                effective_total_showers, selected_showers_per_run
-            )
-            per_point_number_of_runs = number_of_full_runs + int(remainder_showers > 0)
-            if remainder_showers > 0:
-                adjusted_total_showers = per_point_number_of_runs * selected_showers_per_run
-                logger.warning(
-                    "total_showers=%s is not divisible by showers_per_run=%s; "
-                    "adjusting to %s to keep equal showers per run.",
-                    effective_total_showers,
-                    selected_showers_per_run,
-                    adjusted_total_showers,
-                )
 
         for i in range(per_point_number_of_runs):
             rows.append(
