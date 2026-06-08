@@ -102,11 +102,10 @@ def test_inspect_ignore_patterns(mock_logger):
 
 
 def test_check_plain_logs_skip_non_log_files(tmp_test_directory, safe_tar_open):
-    tmp_path = Path(tmp_test_directory)
-    tar_path = tmp_path / "test_logs.tar.gz"
+    tar_path = Path(str(tmp_test_directory)) / "test_logs.tar.gz"
 
     with safe_tar_open(tar_path, "w:gz") as tar:
-        not_log = tmp_path / "readme.txt"
+        not_log = Path(str(tmp_test_directory)) / "readme.txt"
         not_log.write_text("This is not a log file", encoding="utf-8")
         tar.add(not_log, arcname="readme.txt")
 
@@ -115,12 +114,11 @@ def test_check_plain_logs_skip_non_log_files(tmp_test_directory, safe_tar_open):
 
 
 def test_read_log(tmp_test_directory, safe_tar_open):
-    tmp_path = Path(tmp_test_directory)
-    tar_path = tmp_path / "test.tar.gz"
+    tar_path = Path(str(tmp_test_directory)) / "test.tar.gz"
     log_content = b"Test log content\nSecond line\n"
 
     with safe_tar_open(tar_path, "w:gz") as tar:
-        log_gz = tmp_path / "test.log.gz"
+        log_gz = Path(str(tmp_test_directory)) / "test.log.gz"
         with gzip.open(log_gz, "wb") as gz:
             gz.write(log_content)
         tar.add(log_gz, arcname="test.log.gz")
@@ -218,27 +216,27 @@ def test_check_tar_logs(tar_with_log, log_content, expected_log_output, should_p
         ("Success: all good\n", {"expected_log_output": {"pattern": ["success"]}}, True),
     ],
 )
-def test_check_plain_logs(tmp_path: Path, content, file_test, should_pass):
-    log_file = tmp_path / "run.log"
+def test_check_plain_logs(tmp_test_directory, content, file_test, should_pass):
+    log_file = Path(str(tmp_test_directory)) / "run.log"
     log_file.write_text(content, encoding="utf-8")
     assert log_inspector.check_plain_logs(log_file, file_test) is should_pass
 
 
-def test_check_plain_logs_missing_file_returns_false(tmp_path: Path):
-    log_file = tmp_path / "missing.log"
+def test_check_plain_logs_missing_file_returns_false(tmp_test_directory):
+    log_file = Path(str(tmp_test_directory)) / "missing.log"
     file_test = {"expected_log_output": {"pattern": ["hello"], "forbidden_pattern": []}}
     assert log_inspector.check_plain_logs(log_file, file_test) is False
 
 
-def test_check_plain_logs_top_level_keys_fallback(tmp_path: Path):
-    log_file = tmp_path / "run.log"
+def test_check_plain_logs_top_level_keys_fallback(tmp_test_directory):
+    log_file = Path(str(tmp_test_directory)) / "run.log"
     log_file.write_text("pipeline finished successfully\n", encoding="utf-8")
     file_test = {"expected_log_output": None, "pattern": ["finished"], "forbidden_pattern": []}
     assert log_inspector.check_plain_logs(log_file, file_test) is True
 
 
-def test_check_plain_logs_no_patterns_returns_true(tmp_path: Path, caplog):
-    log_file = tmp_path / "run.log"
+def test_check_plain_logs_no_patterns_returns_true(tmp_test_directory, caplog):
+    log_file = Path(str(tmp_test_directory)) / "run.log"
     log_file.write_text("some content\n", encoding="utf-8")
     file_test = {"expected_log_output": {}}
     with caplog.at_level(logging.DEBUG):
@@ -246,8 +244,8 @@ def test_check_plain_logs_no_patterns_returns_true(tmp_path: Path, caplog):
         assert "No expected log output provided" in caplog.text
 
 
-def test_check_plain_logs_missing_expected_patterns(tmp_path: Path, caplog):
-    log_file = tmp_path / "run.log"
+def test_check_plain_logs_missing_expected_patterns(tmp_test_directory, caplog):
+    log_file = Path(str(tmp_test_directory)) / "run.log"
     log_file.write_text("only info lines here\n", encoding="utf-8")
     file_test = {"expected_log_output": {"pattern": ["NEEDED"], "forbidden_pattern": []}}
     with caplog.at_level(logging.ERROR):
@@ -255,8 +253,8 @@ def test_check_plain_logs_missing_expected_patterns(tmp_path: Path, caplog):
         assert "Missing expected patterns" in caplog.text
 
 
-def test_check_tar_logs_invalid_tar_raises(tmp_path: Path):
-    not_tar = tmp_path / "not_a_tar.txt"
+def test_check_tar_logs_invalid_tar_raises(tmp_test_directory):
+    not_tar = Path(str(tmp_test_directory)) / "not_a_tar.txt"
     not_tar.write_text("This is not a tar file", encoding="utf-8")
     file_test = {"expected_log_output": {"pattern": ["test"]}}
     with pytest.raises(ValueError, match="is not a tar file"):
@@ -313,17 +311,17 @@ def test_validate_patterns_all_found(caplog):
         assert "All expected patterns found" in caplog.text
 
 
-def test_check_plain_logs_multiple_files(tmp_path: Path):
-    log1 = tmp_path / "run1.log"
-    log2 = tmp_path / "run2.log"
+def test_check_plain_logs_multiple_files(tmp_test_directory):
+    log1 = Path(str(tmp_test_directory)) / "run1.log"
+    log2 = Path(str(tmp_test_directory)) / "run2.log"
     log1.write_text("First log with success\n", encoding="utf-8")
     log2.write_text("Second log with done\n", encoding="utf-8")
     file_test = {"expected_log_output": {"pattern": ["success", "done"], "forbidden_pattern": []}}
     assert log_inspector.check_plain_logs([log1, log2], file_test) is True
 
 
-def test_check_plain_logs_gzipped_file(tmp_path: Path):
-    log_gz = tmp_path / "run.log.gz"
+def test_check_plain_logs_gzipped_file(tmp_test_directory):
+    log_gz = Path(str(tmp_test_directory)) / "run.log.gz"
     with gzip.open(log_gz, "wt", encoding="utf-8") as gz:
         gz.write("Compressed log with pattern\n")
     file_test = {"expected_log_output": {"pattern": ["pattern"], "forbidden_pattern": []}}

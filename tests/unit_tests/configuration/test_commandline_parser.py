@@ -96,6 +96,23 @@ def test_telescope():
         parser.CommandLineParser.telescope("LST")
 
 
+def test_instrument():
+    assert parser.CommandLineParser.instrument("OBS-North") == "OBS-North"
+    assert parser.CommandLineParser.instrument("OBS-South") == "OBS-South"
+    assert parser.CommandLineParser.instrument("LSTN-01") == "LSTN-01"
+    assert parser.CommandLineParser.instrument("LSTN-design") == "LSTN-design"
+    assert parser.CommandLineParser.instrument("MSTS-FlashCam") == "MSTS-FlashCam"
+
+    with pytest.raises(ValueError, match=r"Invalid name North"):
+        parser.CommandLineParser.instrument("North")
+
+    with pytest.raises(ValueError, match=r"Invalid name South"):
+        parser.CommandLineParser.instrument("South")
+
+    with pytest.raises(ValueError, match=r"Invalid name InvalidName"):
+        parser.CommandLineParser.instrument("InvalidName")
+
+
 def test_efficiency_interval():
     assert parser.CommandLineParser.efficiency_interval(0.5) == pytest.approx(0.5)
     assert parser.CommandLineParser.efficiency_interval(0.0) == pytest.approx(0.0)
@@ -628,10 +645,10 @@ def test_get_dictionary_with_corsika_configuration(mocker):
     assert corsika_config["zenith_angle"]["nargs"] == "+"
     assert corsika_config["zenith_angle"]["default"] == 20 * u.deg
 
-    # Test the "nshow" key
-    assert "nshow" in corsika_config
-    assert corsika_config["nshow"]["help"] == "Number of showers per run to simulate."
-    assert corsika_config["nshow"]["type"] is int
+    # Test the "showers_per_run" key
+    assert "showers_per_run" in corsika_config
+    assert corsika_config["showers_per_run"]["help"] == "Number of showers per run to simulate."
+    assert corsika_config["showers_per_run"]["type"] is int
 
     # Test the "run_number_offset" key
     assert "run_number_offset" in corsika_config

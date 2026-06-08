@@ -1,5 +1,6 @@
 """Tools for running applications in the simtools framework."""
 
+import glob
 import logging
 import shutil
 from copy import deepcopy
@@ -34,6 +35,15 @@ def run_applications(args_dict):
         args_dict.get("steps"),
         args_dict.get("activity_id"),
     )
+
+    collection_config = None
+    try:
+        collection_config = ascii_handler.collect_data_from_file(args_dict["config_file"]).get(
+            "collection"
+        )
+    except (OSError, TypeError):
+        logger.debug("Could not read collection configuration from workflow file.")
+
     workflow_start = datetime.now(UTC)
     associated_activities = []
     runtime_environment_snapshot = deepcopy(runtime_environment)
@@ -45,6 +55,8 @@ def run_applications(args_dict):
         else []
     )
 
+    log_file = Path(log_file)
+    log_file.parent.mkdir(parents=True, exist_ok=True)
     with log_file.open("w", encoding="utf-8") as file:
         file.write("Running simtools applications\n")
         file.write(dependencies.get_version_string(run_time, include_software_versions=False))
@@ -74,6 +86,8 @@ def run_applications(args_dict):
                 file.write(
                     f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n"
                 )
+
+            _copy_collection_files(configurations, collection_config)
         finally:
             _update_workflow_metadata_files(
                 args_dict=args_dict,
@@ -84,6 +98,128 @@ def run_applications(args_dict):
                 model_parameter_metadata_files=model_parameter_metadata_files,
                 associated_activities=associated_activities,
             )
+
+
+def _copy_collection_files(configurations, collection_config):
+    """Copy listed files from application output paths to one or more collection output paths.
+
+    Parameters
+    ----------
+    configurations : list[dict]
+        Application configurations from the workflow config file.
+    collection_config : dict or list[dict] or None
+        A single collection entry (``{output_path, files}``) or a list of such
+        entries. ``None`` or an empty value is silently ignored.
+
+    Raises
+    ------
+    FileExistsError
+        When two different source files would produce the same basename in an
+        output directory.
+    """
+    if not collection_config:
+        return
+    if isinstance(collection_config, dict):
+        collection_config = [collection_config]
+
+    source_directories = _collect_source_directories(configurations)
+    for entry in collection_config:
+        output_path = entry.get("output_path")
+        files = entry.get("files") or []
+        if output_path is None or not files:
+            continue
+        collection_output_path = Path(output_path)
+        collection_output_path.mkdir(parents=True, exist_ok=True)
+        for pattern in files:
+            _copy_pattern_files(pattern, source_directories, collection_output_path)
+
+
+def _copy_pattern_files(pattern, source_directories, destination):
+    """Copy all files matching *pattern* from source directories into *destination*.
+
+    Parameters
+    ----------
+    pattern : str
+        Filename or glob pattern to search for.
+    source_directories : list[Path]
+        Directories to search.
+    destination : Path
+        Target directory (must already exist).
+
+    Raises
+    ------
+    FileExistsError
+        When a source file would overwrite a different file with the same name.
+    """
+    for source_file in _find_collection_files(pattern, source_directories):
+        dest = destination / source_file.name
+        if dest.exists() and dest.resolve() != source_file.resolve():
+            raise FileExistsError(
+                f"Filename collision in collection: '{source_file.name}' would be "
+                f"overwritten by '{source_file}'. Ensure output files have unique names."
+            )
+        shutil.copy2(source_file, dest)
+
+
+def _collect_source_directories(configurations):
+    """Return unique output directories from application configurations."""
+    source_directories = []
+    for config in configurations:
+        source_dir = config.get("configuration", {}).get("output_path")
+        if source_dir is not None:
+            source_directory = Path(source_dir)
+            if source_directory not in source_directories:
+                source_directories.append(source_directory)
+    return source_directories
+
+
+def _find_collection_files(pattern, source_directories):
+    """Find files matching a name or glob pattern in the list of source directories.
+
+    For literal filenames (no wildcard characters), the existing exact-match
+    semantics are preserved: the first directory that contains the file wins and
+    a :exc:`FileNotFoundError` is raised when no match is found.
+
+    For glob patterns (containing ``*``, ``?``, or ``[``), all source
+    directories are searched recursively and all matching regular files are
+    returned in sorted order. A :obj:`logging.WARNING` is emitted when a glob
+    pattern yields no matches (rather than raising an error, because some
+    patterns are legitimately optional).
+
+    Parameters
+    ----------
+    pattern : str
+        Filename or glob pattern (e.g. ``"result.ecsv"`` or
+        ``"angular_distance_vs_energy_*.png"``).
+    source_directories : list[Path]
+        Directories to search.
+
+    Returns
+    -------
+    list[Path]
+        Matched files. Empty list only when *pattern* is a glob and no files
+        match.
+
+    Raises
+    ------
+    FileNotFoundError
+        If *pattern* is a literal filename and is not found in any source
+        directory.
+    """
+    is_glob = glob.has_magic(pattern)
+    if is_glob:
+        matched = sorted(f for d in source_directories for f in d.rglob(pattern) if f.is_file())
+        if not matched:
+            logger.warning(
+                f"No files matched collection pattern '{pattern}' in {source_directories}."
+            )
+        return matched
+
+    for source_directory in source_directories:
+        candidate = source_directory / pattern
+        if candidate.exists():
+            return [candidate]
+    raise FileNotFoundError(f"Could not find collection file '{pattern}' in {source_directories}.")
 
 
 def _append_metadata_file(model_parameter_metadata_files, metadata_file):
@@ -187,25 +323,36 @@ def _read_application_configuration(configuration_file, steps, workflow_activity
     workflow_activity_id = (
         gen.extract_uuid7_from_path(configuration_file) or workflow_activity_id or gen.get_uuid()
     )
-    output_path, setting_workflow = _set_input_output_directories(configuration_file)
+    derived_output_path, setting_workflow = _set_input_output_directories(configuration_file)
     configurations = job_configuration.get("applications")
-    logger.info(f"Setting workflow output path to {output_path}")
+
+    output_path_used_as_default = False
     for step_count, config in enumerate(configurations, start=1):
         config["run_application"] = step_count in steps if steps else True
         config = gen.change_dict_keys_case(config, True)
+        app_config = config.get("configuration", {})
+        if "output_path" not in app_config:
+            output_path_used_as_default = True
         config["configuration"] = _replace_placeholders_in_configuration(
-            config.get("configuration", {}),
-            output_path,
+            app_config,
+            derived_output_path,
             setting_workflow,
         )
         if config["configuration"].get("activity_id") is None:
             config["configuration"]["activity_id"] = gen.get_uuid()
         configurations[step_count - 1] = config
 
+    if output_path_used_as_default or not configurations:
+        log_path = derived_output_path
+    else:
+        first_app_output = configurations[0].get("configuration", {}).get("output_path")
+        log_path = Path(first_app_output) if first_app_output else derived_output_path
+    logger.info(f"Setting workflow output path to {log_path}")
+
     return (
         configurations,
         job_configuration.get("runtime_environment"),
-        output_path / "simtools.log",
+        log_path / "simtools.log",
         workflow_activity_id,
     )
 
@@ -329,11 +476,23 @@ def _set_input_output_directories(path):
     Returns
     -------
     tuple
-        The first part is the 'input' directory, the second part is the subdirectory name
+        The first part is the output directory, the second part is the subdirectory name.
     """
-    setting_workflow = gen.extract_subdirectories_from_path(path, anchor="input")
+    path = Path(path)
+    try:
+        setting_workflow = gen.extract_subdirectories_from_path(path, anchor="input")
+    except ValueError:
+        if path.parent != Path():
+            setting_workflow = str(path.parent)
+        else:
+            setting_workflow = path.stem
+
+        logger.info(
+            "Could not derive setting workflow from 'input' anchor; "
+            f"using fallback '{setting_workflow}'"
+        )
+
     output_path = Path("output") / Path(setting_workflow)
-    output_path.mkdir(parents=True, exist_ok=True)
     return output_path, setting_workflow
 
 

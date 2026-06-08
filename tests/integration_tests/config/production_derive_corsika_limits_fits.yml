@@ -9,7 +9,7 @@ applications:
     energy_threshold_fraction: 0.0001
     output_file: corsika_simulation_limits.ecsv
     output_path: simtools-output
-    plot_histograms: true
+    plot_histograms: false
     telescope_ids: tests/resources/production_layouts_telescope_ids.yml
   integration_tests:
   - output_file: corsika_simulation_limits.ecsv

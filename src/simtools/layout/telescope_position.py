@@ -1,10 +1,17 @@
 """Telescope positions and coordinate transformations."""
 
+import functools
 import logging
 
 import astropy.units as u
 import numpy as np
 import pyproj
+
+
+@functools.cache
+def _cached_transformer(crs_from, crs_to):
+    """Return a cached pyproj Transformer for the given CRS pair."""
+    return pyproj.Transformer.from_crs(crs_from, crs_to)
 
 
 class InvalidCoordSystemErrorError(Exception):
@@ -316,7 +323,7 @@ class TelescopePosition:
 
         """
         try:
-            transformer = pyproj.Transformer.from_crs(crs_from, crs_to)
+            transformer = _cached_transformer(crs_from, crs_to)
         except pyproj.exceptions.CRSError:
             self._logger.error("Invalid coordinate system")
             raise

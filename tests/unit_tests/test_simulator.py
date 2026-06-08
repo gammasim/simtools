@@ -37,7 +37,7 @@ def simulations_args_dict(corsika_config_data, model_version):
     args_dict["keep_seeds"] = False
     args_dict["run_number"] = 1
     args_dict["run_number_offset"] = 0
-    args_dict["nshow"] = 10
+    args_dict["showers_per_run"] = 10
     args_dict["extra_commands"] = None
     return args_dict
 
@@ -973,11 +973,11 @@ def test_simulate(array_simulator, mocker):
     )
 
 
-def test_save_file_lists(array_simulator, mocker, tmp_path, caplog):
+def test_save_file_lists(array_simulator, mocker, tmp_test_directory, caplog):
     """Test the save_file_lists method for saving various file types to text files."""
     mock_io_handler = mocker.Mock()
     array_simulator.io_handler = mock_io_handler
-    output_dir = tmp_path / "output"
+    output_dir = Path(str(tmp_test_directory)) / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
     mock_io_handler.get_output_directory.return_value = output_dir
 

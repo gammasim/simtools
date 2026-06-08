@@ -20,6 +20,8 @@ env:
   SIMTEL_IMAGE_VERSION: "v2025-11-30-rc"
   AVX_FLAG: "generic"
 
+permissions: {}
+
 jobs:
   build-simtools-dev:
     runs-on: ubuntu-latest
