@@ -16,15 +16,6 @@ from simtools.job_execution.htcondor_script_generator import _resolve_apptainer_
 _logger = logging.getLogger(__name__)
 
 
-def _format_value_for_filename(value):
-    """Format a parameter value for use in filenames."""
-    if isinstance(value, float):
-        if value.is_integer():
-            return str(int(value))
-        return f"{value:.3f}".rstrip("0").rstrip(".")
-    return str(value)
-
-
 def _set_nested_value(data, path_parts, value):
     """
     Set a value in a nested dictionary using a path.
@@ -85,7 +76,7 @@ def _generate_overwrite_file(template_path, param_combo, combo_name, work_dir, l
             value = param_value
 
         _set_nested_value(template_data, path_parts, value)
-        param_descriptions.append(f"{param_name}={_format_value_for_filename(param_value)}")
+        param_descriptions.append(f"{param_name}={param_value}")
 
     template_data["description"] = f"Parameter scan - {', '.join(param_descriptions)}"
 
@@ -150,7 +141,7 @@ def _generate_parameter_combinations(param_specs):
         combo_name_parts = []
         for name, path, value in zip(param_names, param_paths, value_combo):
             combo[name] = (path, value)
-            combo_name_parts.append(f"{name}_{_format_value_for_filename(value)}")
+            combo_name_parts.append(f"{name}_{value}")
 
         combinations.append(
             {
