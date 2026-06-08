@@ -214,7 +214,11 @@ class ProductionGridEngine:
             azimuth=azimuth,
             nsb=float(nsb_value),
         )
-        attach_lookup_limits_to_point(point, limits)
+        attach_lookup_limits_to_point(
+            point,
+            limits,
+            getattr(self._limits_lookup, "lookup_field_units", None),
+        )
 
     def _generate_grid_from_radec_axes(self, include_horizontal_coordinates=False):
         """Generate grid points from explicit RA/Dec axes definitions."""

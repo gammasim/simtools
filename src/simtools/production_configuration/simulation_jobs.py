@@ -457,9 +457,12 @@ def get_energy_range_for_zenith_angle(
     )
     if interpolated_limits is None:
         return energy_range_pair
+    lower_energy_limit = interpolated_limits["lower_energy_limit"]
+    if not isinstance(lower_energy_limit, u.Quantity):
+        lower_energy_limit = lower_energy_limit * u.TeV
     return _clip_energy_range_from_threshold(
         energy_range_pair,
-        interpolated_limits["lower_energy_threshold"] * u.TeV,
+        lower_energy_limit,
     )
 
 
@@ -477,7 +480,10 @@ def get_core_scatter_max_for_zenith_angle(
     )
     if interpolated_limits is None:
         return core_scatter[1]
-    return _clip_max_quantity(core_scatter[1], interpolated_limits["upper_scatter_radius"] * u.m)
+    upper_radius_limit = interpolated_limits["upper_radius_limit"]
+    if not isinstance(upper_radius_limit, u.Quantity):
+        upper_radius_limit = upper_radius_limit * u.m
+    return _clip_max_quantity(core_scatter[1], upper_radius_limit)
 
 
 def get_viewcone_max_for_zenith_angle(
@@ -489,7 +495,10 @@ def get_viewcone_max_for_zenith_angle(
     )
     if interpolated_limits is None:
         return view_cone[1]
-    return _clip_max_quantity(view_cone[1], interpolated_limits["viewcone_radius"] * u.deg)
+    viewcone_radius = interpolated_limits["viewcone_radius"]
+    if not isinstance(viewcone_radius, u.Quantity):
+        viewcone_radius = viewcone_radius * u.deg
+    return _clip_max_quantity(view_cone[1], viewcone_radius)
 
 
 def calculate_log_energy_midpoint(energy_range_pair):
@@ -878,7 +887,11 @@ def _generate_observation_points_from_axes(azimuth_values, zenith_values, corsik
             "zenith_angle": zenith,
         }
         if corsika_limits is not None:
-            attach_lookup_limits_to_point(point, corsika_limits.interpolate_point(zenith, azimuth))
+            attach_lookup_limits_to_point(
+                point,
+                corsika_limits.interpolate_point(zenith, azimuth),
+                getattr(corsika_limits, "lookup_field_units", None),
+            )
         points.append(point)
     return points
 
@@ -1003,8 +1016,8 @@ def _build_observation_params_for_point(
     configured_view_cone_max,
 ):
     """Build observation parameters and derived lookup-limited values for one grid point."""
-    lookup_core_scatter_max = point.get("core_scatter_max")
-    lookup_view_cone_max = point.get("view_cone_max")
+    lookup_core_scatter_max = point.get("upper_radius_limit")
+    lookup_view_cone_max = point.get("viewcone_radius")
     selected_core_scatter_max = _clip_max_quantity(core_scatter[1], lookup_core_scatter_max)
     selected_view_cone_max = _clip_max_quantity(configured_view_cone_max, lookup_view_cone_max)
 
@@ -1107,8 +1120,8 @@ def build_simulation_jobs(args_dict):
                     point_base=observation_params,
                     energy_ranges=energy_ranges,
                     lower_energy_threshold=point.get(
-                        "lower_energy_threshold",
-                        point.get("energy_min"),
+                        "lower_energy_limit",
+                        point.get("br_energy_min"),
                     ),
                     showers_per_run=showers_per_run,
                     showers_per_run_power_law=showers_per_run_power_law,

@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.table import Table
+from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.production_configuration.corsika_limits_lookup import CorsikaLimitsLookup
 
@@ -15,7 +16,7 @@ def test_load_matching_lookup_arrays_filters_by_array_layout_name():
     arrays = lookup.load_matching_lookup_arrays()
 
     assert len(arrays["points"]) == 8
-    assert arrays["lower_energy_threshold"][0] == pytest.approx(0.01)
+    assert arrays["lower_energy_limit"][0] == pytest.approx(0.01)
 
 
 def test_load_matching_lookup_arrays_raises_for_unknown_array_layout():
@@ -48,8 +49,8 @@ def test_prepare_point_interpolators_builds_interpolator_state():
 
     assert lookup.lookup_points_for_interpolation.shape[1] == 3
     assert {
-        "lower_energy_threshold",
-        "upper_scatter_radius",
+        "lower_energy_limit",
+        "upper_radius_limit",
         "viewcone_radius",
     }.issubset(set(interpolators))
     assert {
@@ -72,8 +73,8 @@ def test_interpolate_grid_limits_returns_requested_grid_shape():
         }
     )
 
-    assert interpolated["lower_energy_threshold"].shape == (2, 2, 2)
-    assert np.isfinite(interpolated["upper_scatter_radius"][0, 0, 0])
+    assert interpolated["lower_energy_limit"].shape == (2, 2, 2)
+    assert np.isfinite(interpolated["upper_radius_limit"][0, 0, 0])
 
 
 def test_interpolate_point_returns_interpolated_values():
@@ -84,9 +85,9 @@ def test_interpolate_point_returns_interpolated_values():
 
     interpolated = lookup.interpolate_point(20 * u.deg, 0 * u.deg, nsb=1)
 
-    assert interpolated["lower_energy_threshold"] == pytest.approx(0.01)
-    assert interpolated["upper_scatter_radius"] == pytest.approx(1200.0)
-    assert interpolated["viewcone_radius"] == pytest.approx(10.0)
+    assert_quantity_allclose(interpolated["lower_energy_limit"], 0.01 * u.TeV)
+    assert_quantity_allclose(interpolated["upper_radius_limit"], 1200.0 * u.m)
+    assert_quantity_allclose(interpolated["viewcone_radius"], 10.0 * u.deg)
 
 
 def test_interpolate_point_falls_back_to_nearest_for_out_of_domain_point(tmp_test_directory):
@@ -107,6 +108,9 @@ def test_interpolate_point_falls_back_to_nearest_for_out_of_domain_point(tmp_tes
             "viewcone_radius",
         ),
     )
+    lookup_table["lower_energy_limit"].unit = "TeV"
+    lookup_table["upper_radius_limit"].unit = "m"
+    lookup_table["viewcone_radius"].unit = "deg"
     lookup_file = tmp_test_directory / "corsika_limits_outside_domain.ecsv"
     lookup_table.write(lookup_file, format="ascii.ecsv", overwrite=True)
 
@@ -114,9 +118,9 @@ def test_interpolate_point_falls_back_to_nearest_for_out_of_domain_point(tmp_tes
 
     interpolated = lookup.interpolate_point(10 * u.deg, 0 * u.deg, nsb=1)
 
-    assert interpolated["lower_energy_threshold"] == pytest.approx(0.01)
-    assert interpolated["upper_scatter_radius"] == pytest.approx(800.0)
-    assert interpolated["viewcone_radius"] == pytest.approx(6.0)
+    assert_quantity_allclose(interpolated["lower_energy_limit"], 0.01 * u.TeV)
+    assert_quantity_allclose(interpolated["upper_radius_limit"], 800.0 * u.m)
+    assert_quantity_allclose(interpolated["viewcone_radius"], 6.0 * u.deg)
 
 
 def test_prepare_point_interpolators_supports_two_varying_dimensions(tmp_test_directory):
@@ -137,6 +141,9 @@ def test_prepare_point_interpolators_supports_two_varying_dimensions(tmp_test_di
             "viewcone_radius",
         ),
     )
+    lookup_table["lower_energy_limit"].unit = "TeV"
+    lookup_table["upper_radius_limit"].unit = "m"
+    lookup_table["viewcone_radius"].unit = "deg"
     lookup_file = tmp_test_directory / "corsika_limits_2d.ecsv"
     lookup_table.write(lookup_file, format="ascii.ecsv", overwrite=True)
 
@@ -147,6 +154,6 @@ def test_prepare_point_interpolators_supports_two_varying_dimensions(tmp_test_di
 
     interpolated = lookup.interpolate_point(30 * u.deg, 90 * u.deg, nsb=1)
 
-    assert interpolated["lower_energy_threshold"] == pytest.approx(0.025)
-    assert interpolated["upper_scatter_radius"] == pytest.approx(950.0)
-    assert interpolated["viewcone_radius"] == pytest.approx(7.5)
+    assert_quantity_allclose(interpolated["lower_energy_limit"], 0.025 * u.TeV)
+    assert_quantity_allclose(interpolated["upper_radius_limit"], 950.0 * u.m)
+    assert_quantity_allclose(interpolated["viewcone_radius"], 7.5 * u.deg)
