@@ -249,6 +249,7 @@ def _add_arguments(parser):
             "energy_max_scaling_reference * cos(zenith_angle) ** power_index. "
             "Provide: <power_index> <reference_energy_value> <reference_energy_unit> "
             "(for example: --energy_max_scaling -2.5 300 TeV)."
+            "Max energy limited by value given through '--energy_range'."
         ),
         nargs=3,
         type=str,
