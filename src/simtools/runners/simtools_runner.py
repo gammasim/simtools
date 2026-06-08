@@ -9,6 +9,7 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools import dependencies
+from simtools import version as simtools_version
 from simtools.data_model import workflow_metadata
 from simtools.io import ascii_handler
 from simtools.job_execution import job_manager
@@ -333,7 +334,7 @@ def _read_application_configuration(configuration_file, steps, workflow_activity
         app_config = config.get("configuration", {})
         if "output_path" not in app_config:
             output_path_used_as_default = True
-        config["configuration"] = _replace_placeholders_in_configuration(
+        config["configuration"] = _prepare_application_configuration(
             app_config,
             derived_output_path,
             setting_workflow,
@@ -459,6 +460,19 @@ def _replace_placeholders_in_configuration(
     if output_path:
         configuration.setdefault("output_path", str(output_path))
 
+    return configuration
+
+
+def _prepare_application_configuration(configuration, output_path, setting_workflow):
+    """Resolve placeholders and version-dependent values in a workflow configuration."""
+    configuration = _replace_placeholders_in_configuration(
+        configuration,
+        output_path,
+        setting_workflow,
+    )
+    model_version = configuration.get("model_version")
+    if model_version is not None:
+        configuration = simtools_version.resolve_by_version(configuration, model_version)
     return configuration
 
 
