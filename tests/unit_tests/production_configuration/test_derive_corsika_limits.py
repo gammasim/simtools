@@ -603,7 +603,10 @@ def test_enforce_minimum_value_handles_quantity_and_scalar_mixed_types():
 
 def test_enforce_minimum_value_returns_candidate_when_minimum_is_none():
     """Return candidate unchanged when no minimum is configured."""
-    assert derive_corsika_limits._enforce_minimum_value(1.0 * u.TeV, None) == 1.0 * u.TeV
+    assert_quantity_allclose(
+        derive_corsika_limits._enforce_minimum_value(1.0 * u.TeV, None),
+        1.0 * u.TeV,
+    )
 
 
 def test_create_table_columns_uses_object_dtype_for_curve_columns():
