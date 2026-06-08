@@ -109,9 +109,9 @@ Validation keys:
 - `output_file`: file under `configuration.output_path`.
 - `test_output_files`: list or single mapping with `file`, `path_descriptor`,
   optional `output_sub_path`, and optional sim_telarray/log expectations.
-- `file_type`: checks JSON/YAML parsing; other types check suffix only.
-- `reference_output_file`: compare ECSV, JSON, YAML, or YML; optional
-  `test_output_file`, `tolerance`, and ECSV `test_columns`.
+- `file_type`: checks JSON/YAML parsing of `configuration.output_file`; other types check suffix only.
+- `reference_output_file`: compare ECSV, JSON, YAML, or YML; uses `test_output_file` or
+  falls back to `configuration.output_file`; optional `tolerance` and ECSV `test_columns`.
 - `model_parameter_validation`: compare generated parameter JSON to MongoDB.
 - `test_simtel_cfg_files`: compare generated sim_telarray cfg for matching
   model version.
