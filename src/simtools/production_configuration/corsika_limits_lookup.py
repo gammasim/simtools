@@ -28,12 +28,12 @@ _LOOKUP_FIELD_SPECS = {
         "unit": "deg",
         "point_key": "view_cone_max",
     },
-    "energy_min": {
+    "br_energy_min": {
         "column": "br_energy_min",
         "unit": "TeV",
         "point_key": "energy_min",
     },
-    "energy_max": {
+    "br_energy_max": {
         "column": "br_energy_max",
         "unit": "TeV",
         "point_key": "energy_max",
