@@ -609,7 +609,6 @@ class ProductionGridPlotter:
             and point.get("zenith") is not None
             and point.get(value_key) is not None
         ]
-        ]
 
     def plot_azimuth_zenith_projection_with_color_scale(
         self, value_key, value_label, output_file_stem, plot_points=None
