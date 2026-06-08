@@ -2,7 +2,7 @@
 applications:
 - application: simtools-plot-corsika-limits
   configuration:
-    input: tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv
+    input: tests/resources/corsika_simulation_limits/corsika_limits_north.ecsv
     output_path: simtools-output
   integration_tests:
   - output_file: limits_LSTN-01_azimuth0.0.png

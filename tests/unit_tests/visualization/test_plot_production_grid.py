@@ -2,12 +2,14 @@
 
 from pathlib import Path
 
+import astropy.units as u
 import matplotlib.pyplot as plt
 import pytest
 from astropy.table import Table
 
 from simtools.visualization.plot_production_grid import (
     DEFAULT_OUTPUT_FILE_STEM,
+    PLOT_VALUE_KEYS,
     ProductionGridPlotter,
 )
 
@@ -26,18 +28,19 @@ def _write_grid_file(tmp_test_directory, file_name, grid_points):
         rows.append(row)
 
     table = Table(rows=rows)
-    if "azimuth" in table.colnames:
-        table["azimuth"].unit = "deg"
-    if "zenith_angle" in table.colnames:
-        table["zenith_angle"].unit = "deg"
-    if "ra" in table.colnames:
-        table["ra"].unit = "deg"
-    if "dec" in table.colnames:
-        table["dec"].unit = "deg"
-    if "nsb_level" in table.colnames:
-        table["nsb_level"].unit = "MHz"
-    if "offset" in table.colnames:
-        table["offset"].unit = "deg"
+    unit_mapping = {
+        "azimuth": "deg",
+        "zenith_angle": "deg",
+        "ra": "deg",
+        "dec": "deg",
+        "nsb_level": "MHz",
+        "offset": "deg",
+        "core_scatter_max_value": "m",
+        "view_cone_max_value": "deg",
+    }
+    for col, unit_val in unit_mapping.items():
+        if col in table.colnames:
+            table[col].unit = unit_val
     table.write(file_path, format="ascii.ecsv", overwrite=True)
     return file_path
 
@@ -194,6 +197,64 @@ def test_plot_sky_projection_creates_output_with_radec_panel(tmp_test_directory)
     assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM}.png").exists()
 
 
+def test_plot_altaz_projection_with_limits_creates_outputs(tmp_test_directory):
+    """Write Alt/Az color-scale plots and zenith profiles for all supported limits."""
+    grid_file = _write_grid_file(
+        tmp_test_directory,
+        "grid_energy_flattened.ecsv",
+        [
+            {
+                "azimuth_angle_value": 0.0,
+                "azimuth_angle_unit": "deg",
+                "zenith_angle_value": 20.0,
+                "zenith_angle_unit": "deg",
+                "energy_min_value": 0.03,
+                "energy_min_unit": "TeV",
+                "energy_max_value": 150.0,
+                "energy_max_unit": "TeV",
+                "core_scatter_max_value": 1200.0,
+                "core_scatter_max_unit": "m",
+                "view_cone_max_value": 10.0,
+                "view_cone_max_unit": "deg",
+            },
+            {
+                "azimuth_angle_value": 180.0,
+                "azimuth_angle_unit": "deg",
+                "zenith_angle_value": 40.0,
+                "zenith_angle_unit": "deg",
+                "energy_min_value": 0.06,
+                "energy_min_unit": "TeV",
+                "energy_max_value": 200.0,
+                "energy_max_unit": "TeV",
+                "core_scatter_max_value": 1800.0,
+                "core_scatter_max_unit": "m",
+                "view_cone_max_value": 12.0,
+                "view_cone_max_unit": "deg",
+            },
+        ],
+    )
+    output_path = Path(tmp_test_directory) / "output"
+
+    plotter = _create_plotter(
+        grid_file=grid_file,
+        output_path=output_path,
+    )
+
+    from astropy.tests.helper import assert_quantity_allclose
+
+    normalized_points = plotter.normalize_grid_points()
+    assert_quantity_allclose(normalized_points[0]["energy_min"], 0.03 * u.TeV)
+    assert_quantity_allclose(normalized_points[0]["energy_max"], 150.0 * u.TeV)
+    assert_quantity_allclose(normalized_points[0]["core_scatter_max"], 1200.0 * u.m)
+    assert_quantity_allclose(normalized_points[0]["view_cone_max"], 10.0 * u.deg)
+
+    plotter.plot_limit_projections()
+
+    for value_key in PLOT_VALUE_KEYS:
+        assert (output_path / f"production_grid_altaz_{value_key}.png").exists()
+        assert (output_path / f"production_grid_zenith_profile_{value_key}.png").exists()
+
+
 def test_load_grid_points_file_not_found(tmp_test_directory):
     """Raise when the grid points file does not exist."""
     missing_file = Path(tmp_test_directory) / "does_not_exist.ecsv"
@@ -231,6 +292,19 @@ def test_extract_quantity_value_dict_branches():
 
     point_without_value = {"x": {"unit": "deg"}}
     assert ProductionGridPlotter._extract_quantity_value(point_without_value, "x") is None
+
+
+def test_format_value_label_with_unit_uses_available_unit():
+    """Append units from quantity values when present in normalized points."""
+    plot_points = [{"energy_min": 1.0 * u.TeV}]
+
+    formatted_label = ProductionGridPlotter._format_value_label_with_unit(
+        plot_points,
+        value_key="energy_min",
+        value_label="energy_min",
+    )
+
+    assert formatted_label == "energy_min [TeV]"
 
 
 def test_configure_radec_axis_expands_flat_ranges(tmp_test_directory):
@@ -285,7 +359,7 @@ def test_plot_frame_points_logs_no_valid_points(tmp_test_directory, caplog):
 
 
 def test_plot_altaz_points_logs_hidden_radec_points(tmp_test_directory, caplog):
-    """Log info when RA/Dec points are not visible in Alt/Az panel."""
+    """Log info when RA/Dec points are not visible in Azimuth/Zenith panel."""
     grid_file = _write_grid_file(tmp_test_directory, "grid_empty_altaz.ecsv", [])
     plotter = _create_plotter(
         grid_file=grid_file,
@@ -307,7 +381,7 @@ def test_plot_altaz_points_logs_hidden_radec_points(tmp_test_directory, caplog):
         ]
         with caplog.at_level("INFO"):
             plotter._plot_altaz_points(axis, plot_points)
-        assert "Skipping 1 RA/Dec points below the horizon in Alt/Az panel" in caplog.text
+        assert "Skipping 1 RA/Dec points below the horizon in Azimuth/Zenith panel" in caplog.text
     finally:
         plt.close(figure)
 
