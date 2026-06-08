@@ -178,8 +178,9 @@ def _find_collection_files(pattern, source_directories):
     """Find files matching a name or glob pattern in the list of source directories.
 
     For literal filenames (no wildcard characters), the existing exact-match
-    semantics are preserved: the first directory that contains the file wins and
-    a :exc:`FileNotFoundError` is raised when no match is found.
+    semantics are preserved when the file exists directly under a source
+    directory. If not, a unique recursive match anywhere below a source
+    directory is accepted so collection files can live in nested output trees.
 
     For glob patterns (containing ``*``, ``?``, or ``[``), all source
     directories are searched recursively and all matching regular files are
@@ -216,10 +217,23 @@ def _find_collection_files(pattern, source_directories):
             )
         return matched
 
+    recursive_matches = []
     for source_directory in source_directories:
         candidate = source_directory / pattern
         if candidate.exists():
             return [candidate]
+        recursive_matches.extend(
+            file_path for file_path in source_directory.rglob(pattern) if file_path.is_file()
+        )
+
+    if len(recursive_matches) == 1:
+        return recursive_matches
+    if len(recursive_matches) > 1:
+        raise FileExistsError(
+            f"Collection file '{pattern}' matched multiple nested files in {source_directories}: "
+            f"{recursive_matches}. Use a more specific path or glob pattern."
+        )
+
     raise FileNotFoundError(f"Could not find collection file '{pattern}' in {source_directories}.")
 
 
