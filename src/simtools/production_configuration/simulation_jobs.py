@@ -608,7 +608,8 @@ def scale_energy_max_for_zenith_angle(
 
     if cos_zenith < 0:
         raise ValueError(
-            "energy_max_scaling is only defined for zenith angles with cos(zenith) >= 0 (zenith <= 90 deg)."
+            "energy_max_scaling is only defined for zenith angles with cos(zenith) "
+            ">= 0 (zenith <= 90 deg)."
         )
 
     if np.isclose(cos_zenith, 0.0) and energy_max_scaling_index < 0:
