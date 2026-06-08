@@ -7,10 +7,7 @@ applications:
     model_version: 7.0.0
     output_path: simtools-output
     site: North
-    array_layout_name:
-      by_version:
-        "<7.0.0": alpha
-        ">=7.0.0": CTAO-North-Alpha
+    array_layout_name: CTAO-North-4-LSTs-1-MSTs
     run_number: 10
     flasher_photons: 1e6
     log_level: DEBUG
@@ -19,8 +16,7 @@ applications:
   - output_file: sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher_LSTN-02.simtel.zst
   - output_file: sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher_LSTN-03.simtel.zst
   - output_file: sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher_LSTN-04.simtel.zst
-  - output_file: sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher_MSTN-01.simtel.zst
-  - output_file: sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher_MSTN-15.simtel.zst
+  - output_file: sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher_MSTN-03.simtel.zst
   - test_output_files:
     - expected_sim_telarray_output:
         pe_sum:

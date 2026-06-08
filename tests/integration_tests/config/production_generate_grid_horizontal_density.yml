@@ -1,0 +1,35 @@
+---
+applications:
+- application: simtools-production-generate-grid
+  configuration:
+    array_layout_name:
+      by_version:
+        "<7.0.0": 1lst
+        ">=7.0.0": LSTN-01
+    axis:
+    - azimuth 0 deg 360 deg 0 linear
+    - zenith 0 deg 70 deg 0 linear
+    - nsb 4 MHz 5 MHz 2 linear
+    - offset 0 deg 10 deg 2 linear
+    direction_grid_density: 0.25 1/deg^2
+    core_scatter: 10 500 m
+    corsika_he_interaction: epos
+    corsika_le_interaction: urqmd
+    energy_range: 30 GeV 300 GeV
+    corsika_limits: tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv
+    model_version: 7.0.0
+    showers_per_run: 5
+    showers_per_run_power_law: 0.0 1 TeV
+    number_of_runs: 2
+    output_file: job_grid_horizontal_grid_density.ecsv
+    output_path: simtools-output
+    primary: gamma
+    simulation_software: corsika_sim_telarray
+    site: North
+    view_cone: 0 deg 10 deg
+  integration_tests:
+  - output_file: job_grid_horizontal_grid_density.ecsv
+  model_version_use_current: true
+  test_name: production_generate_grid_horizontal
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

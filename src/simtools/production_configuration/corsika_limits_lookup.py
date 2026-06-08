@@ -52,6 +52,7 @@ class CorsikaLimitsLookup:
         self.lookup_points_for_interpolation = None
         self.lookup_values_for_interpolation = None
         self.lookup_interpolators_for_point = None
+        self.lookup_interpolation_axes = None
 
     def load_matching_lookup_arrays(self):
         """
@@ -100,16 +101,36 @@ class CorsikaLimitsLookup:
             Interpolators keyed by lookup quantity.
         """
         lookup_arrays = self.load_matching_lookup_arrays()
-        self.lookup_points_for_interpolation = self._build_wrapped_interpolation_points(
-            lookup_arrays["points"]
-        )
-        self.lookup_values_for_interpolation = {
-            key: self._repeat_wrapped_lookup_values(lookup_arrays[key]) for key in _LOOKUP_FIELDS
-        }
+        self.lookup_interpolation_axes = self._get_varying_axes(lookup_arrays["points"])
+
+        if 1 in self.lookup_interpolation_axes:
+            self.lookup_points_for_interpolation = self._build_wrapped_interpolation_points(
+                lookup_arrays["points"]
+            )
+            self.lookup_values_for_interpolation = {
+                key: self._repeat_wrapped_lookup_values(lookup_arrays[key])
+                for key in _LOOKUP_FIELDS
+            }
+        else:
+            self.lookup_points_for_interpolation = lookup_arrays["points"]
+            self.lookup_values_for_interpolation = {
+                key: lookup_arrays[key] for key in _LOOKUP_FIELDS
+            }
+
+        if len(self.lookup_interpolation_axes) < 2:
+            raise ValueError(
+                "Lookup table does not contain enough unique points for interpolation. "
+                "At least two varying dimensions are required among "
+                "(zenith, azimuth, nsb_level)."
+            )
+
+        interpolation_points = self.lookup_points_for_interpolation[
+            :, self.lookup_interpolation_axes
+        ]
         try:
             self.lookup_interpolators_for_point = {
                 key: LinearNDInterpolator(
-                    self.lookup_points_for_interpolation,
+                    interpolation_points,
                     self.lookup_values_for_interpolation[key],
                     fill_value=np.nan,
                 )
@@ -117,8 +138,9 @@ class CorsikaLimitsLookup:
             }
         except QhullError as exc:
             raise ValueError(
-                "Lookup table does not contain enough unique points for 3D interpolation "
-                "(zenith, azimuth, nsb_level). Provide a denser lookup table "
+                "Lookup table does not contain enough unique points for interpolation in "
+                f"{len(self.lookup_interpolation_axes)}D among (zenith, azimuth, nsb_level). "
+                "Provide a denser lookup table "
                 "or run without --corsika_limits if limits are not required for this use case."
             ) from exc
         return self.lookup_interpolators_for_point
@@ -139,6 +161,14 @@ class CorsikaLimitsLookup:
         """
         lookup_arrays = self.load_matching_lookup_arrays()
         points = self._build_wrapped_interpolation_points(lookup_arrays["points"])
+        interpolation_axes = self._get_varying_axes(lookup_arrays["points"])
+
+        if len(interpolation_axes) < 2:
+            raise ValueError(
+                "Lookup table does not contain enough unique points for interpolation. "
+                "At least two varying dimensions are required among "
+                "(zenith, azimuth, nsb_level)."
+            )
 
         target_grid = (
             np.array(
@@ -152,12 +182,14 @@ class CorsikaLimitsLookup:
             .reshape(3, -1)
             .T
         )
+        interpolation_points = points[:, interpolation_axes]
+        interpolation_target = target_grid[:, interpolation_axes]
 
         def interpolate(values):
             return griddata(
-                points,
+                interpolation_points,
                 self._repeat_wrapped_lookup_values(values),
-                target_grid,
+                interpolation_target,
                 method="linear",
                 fill_value=np.nan,
             ).reshape(
@@ -179,7 +211,7 @@ class CorsikaLimitsLookup:
         azimuth : float or Quantity
             Azimuth angle.
         nsb : float or Quantity, optional
-            Night-sky background level.
+            Night-sky background level (relative to baseline NSB conditions).
 
         Returns
         -------
@@ -199,17 +231,25 @@ class CorsikaLimitsLookup:
             ],
             dtype=float,
         )
+        interpolation_target = target[:, self.lookup_interpolation_axes]
         return {
             "lower_energy_threshold": float(
-                self.lookup_interpolators_for_point["lower_energy_threshold"](target)[0]
+                self.lookup_interpolators_for_point["lower_energy_threshold"](interpolation_target)[
+                    0
+                ]
             ),
             "upper_scatter_radius": float(
-                self.lookup_interpolators_for_point["upper_scatter_radius"](target)[0]
+                self.lookup_interpolators_for_point["upper_scatter_radius"](interpolation_target)[0]
             ),
             "viewcone_radius": float(
-                self.lookup_interpolators_for_point["viewcone_radius"](target)[0]
+                self.lookup_interpolators_for_point["viewcone_radius"](interpolation_target)[0]
             ),
         }
+
+    @staticmethod
+    def _get_varying_axes(points):
+        """Return coordinate-axis indices with more than one unique value."""
+        return [axis for axis in range(points.shape[1]) if np.unique(points[:, axis]).size > 1]
 
     @staticmethod
     def _repeat_wrapped_lookup_values(values):

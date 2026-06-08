@@ -123,7 +123,7 @@ def test_collect_data_dict_from_json():
     assert data["unit"] == "m"
 
 
-def test_collect_data_from_http():
+def test_collect_data_from_http() -> None:
     _file = "src/simtools/schemas/model_parameters/num_gains.schema.yml"
     url = url_simtools
 
@@ -344,6 +344,56 @@ def test_write_to_json_compact_numeric_lists_toggle(tmp_test_directory):
     )
     compact_text = compact_file.read_text(encoding="utf-8")
     assert "[1, 2, 3]" in compact_text
+
+
+def test_json_numpy_encoder_compact_mixed_scalar_lists():
+    """Test that compact mode also works for lists with strings and booleans."""
+    encoder = ascii_handler.JsonNumpyEncoder(compact_numeric_lists=True)
+    encoded = encoder.encode(
+        {"rows": [["ILLN-01", "LSTN-01", False], ["ILLN-02", "MSTN-02", True]]}
+    )
+    assert '["ILLN-01", "LSTN-01", false]' in encoded
+    assert '["ILLN-02", "MSTN-02", true]' in encoded
+
+
+def test_write_to_json_compact_mixed_scalar_lists(tmp_test_directory):
+    """Test compact JSON output for visibility-style mixed-type rows."""
+    data = {
+        "value": {
+            "columns": ["illuminator_id", "telescope_id", "visible"],
+            "rows": [
+                ["ILLS-01", "MSTS-01", True],
+                ["ILLS-01", "MSTS-02", False],
+            ],
+        }
+    }
+
+    compact_file = tmp_test_directory / "test_compact_mixed.json"
+    ascii_handler._write_to_json(
+        data,
+        compact_file,
+        sort_keys=False,
+        numpy_types=True,
+        compact_numeric_lists=True,
+    )
+    compact_text = compact_file.read_text(encoding="utf-8")
+    assert '["ILLS-01", "MSTS-01", true]' in compact_text
+    assert '["ILLS-01", "MSTS-02", false]' in compact_text
+    assert '["illuminator_id", "telescope_id", "visible"]' in compact_text
+
+
+def test_is_scalar_list():
+    """Test _is_scalar_list helper function."""
+    assert ascii_handler._is_scalar_list([1, 2, 3]) is True
+    assert ascii_handler._is_scalar_list([1.0, 2.5]) is True
+    assert ascii_handler._is_scalar_list(["a", "b"]) is True
+    assert ascii_handler._is_scalar_list([True, False]) is True
+    assert ascii_handler._is_scalar_list(["ILLN-01", "LSTN-01", False]) is True
+    assert ascii_handler._is_scalar_list([1, "mixed", True, None]) is True
+    assert not ascii_handler._is_scalar_list([])
+    assert not ascii_handler._is_scalar_list([[1, 2]])
+    assert not ascii_handler._is_scalar_list([{"key": "val"}])
+    assert not ascii_handler._is_scalar_list("not a list")
 
 
 def test_write_data_to_file_json(tmp_test_directory):

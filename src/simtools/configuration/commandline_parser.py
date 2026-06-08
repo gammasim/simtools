@@ -401,7 +401,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 "nargs": "+",
                 "default": 20 * u.deg,
             },
-            "nshow": {
+            "showers_per_run": {
                 "help": "Number of showers per run to simulate.",
                 "type": int,
             },
@@ -590,6 +590,25 @@ class CommandLineParser(argparse.ArgumentParser):
         for v in values:
             names.validate_array_element_name(str(v))
         return values if len(values) > 1 else values[0]
+
+    @staticmethod
+    def instrument(value):
+        """
+        Argument parser type to check that a valid instrument name is given.
+
+        Parameters
+        ----------
+        value: str
+            Instrument name. Plain site names are not valid; use OBS-North/OBS-South
+            for site parameters.
+
+        Returns
+        -------
+        str
+            Validated instrument name.
+        """
+        names.validate_array_element_name(str(value))
+        return str(value)
 
     @staticmethod
     def efficiency_interval(value):
