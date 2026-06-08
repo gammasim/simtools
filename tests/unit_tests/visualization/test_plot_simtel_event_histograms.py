@@ -1,6 +1,7 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import astropy.units as u
 import numpy as np
 import pytest
 from matplotlib import pyplot as plt
@@ -11,8 +12,9 @@ from simtools.visualization.plot_simtel_event_histograms import (
     _build_plot_filename,
     _create_2d_histogram_plot,
     _create_plot,
-    _create_rebinned_plot,
     _execute_plotting_loop,
+    _extract_file_info_from_limits,
+    _format_file_info_suffix,
     _get_limits,
     plot,
 )
@@ -29,8 +31,6 @@ PATCH_PCOLOR = f"{MOD}.plt.pcolormesh"
 PATCH_CONTOUR = f"{MOD}.plt.contour"
 PATCH_COLORBAR = f"{MOD}.plt.colorbar"
 PATCH_CREATE_PLOT = f"{MOD}._create_plot"
-PATCH_CREATE_REBINNED = f"{MOD}._create_rebinned_plot"
-PATCH_REBIN = f"{MOD}.EventDataHistograms.rebin_2d_histogram"
 PATCH_HAS_DATA = f"{MOD}._has_data"
 PATCH_BUILD_FILENAME = f"{MOD}._build_plot_filename"
 
@@ -75,6 +75,21 @@ def test_create_2d_histogram_plot_log(sample_data):
     plt.close(fig)
 
 
+def test_create_2d_histogram_plot_masks_zero_bins():
+    data = np.array([[0, 2], [3, 0]])
+    bins = (np.array([0, 1, 2]), np.array([0, 1, 2]))
+    plot_params = {"norm": "linear", "cmap": "viridis", "show_contour": False}
+
+    fig, _ = plt.subplots()
+    pcm = _create_2d_histogram_plot(data, bins, plot_params)
+
+    plotted_array = pcm.get_array()
+    assert np.ma.isMaskedArray(plotted_array)
+    assert np.any(np.ma.getmaskarray(plotted_array))
+    assert pcm.cmap.get_bad()[-1] == pytest.approx(0.0)
+    plt.close(fig)
+
+
 def test_create_2d_histogram_plot_no_positive_data():
     data = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
     bins_x = np.array([0, 1, 2, 3])
@@ -93,8 +108,9 @@ def test_create_2d_histogram_plot_no_positive_data():
 @pytest.mark.parametrize(
     ("lines", "expect_lines", "expect_circles"),
     [
-        ({"x": 1, "y": 2}, True, 0),
+        ({"x": 1, "y": 2}, False, 0),
         ({"r": 3}, False, 1),
+        ({"curve": {"x": [1, 2], "y": [3, 4]}}, True, 0),
         ({}, False, 0),
     ],
 )
@@ -102,10 +118,10 @@ def test_add_lines(lines, expect_lines, expect_circles):
     fig, ax = plt.subplots()
     plot_simtel_event_histograms._add_lines(ax, lines)
     if expect_lines:
-        if "x" in lines:
-            assert any(line.get_xdata() == [lines["x"], lines["x"]] for line in ax.get_lines())
-        if "y" in lines:
-            assert any(line.get_ydata() == [lines["y"], lines["y"]] for line in ax.get_lines())
+        if "curve" in lines:
+            plotted = ax.get_lines()[-1]
+            np.testing.assert_array_equal(plotted.get_xdata(), np.array([1, 2]))
+            np.testing.assert_array_equal(plotted.get_ydata(), np.array([3, 4]))
     else:
         if not lines or ("x" not in lines and "y" not in lines):
             remaining = [ln for ln in ax.get_lines() if ln.get_label() == "_nolegend_"]
@@ -254,8 +270,6 @@ def test_create_plot():
         np.testing.assert_array_equal(bar_args[1], data)
         np.testing.assert_array_equal(bar_kwargs["width"], np.diff(bins))
         assert bar_kwargs["color"] == plot_params["color"]
-        mock_ax.axvline.assert_called_once_with(1, color="r", linestyle="--", linewidth=0.5)
-        mock_ax.axhline.assert_called_once_with(2, color="r", linestyle="--", linewidth=0.5)
         mock_ax.set.assert_called_once_with(
             xlabel="X-axis",
             ylabel="Y-axis",
@@ -337,7 +351,7 @@ def test_create_plot_histogram2d_colorbar():
     assert result is mock_fig
     # Ensure internal 2d creation helpers used
     mock_pcolor.assert_called_once()
-    mock_contour.assert_called_once()
+    mock_contour.assert_not_called()
     mock_colorbar.assert_called_once()
     mock_show.assert_called_once()
     mock_fig.savefig.assert_not_called()
@@ -357,89 +371,54 @@ def test_create_plot_early_return_when_no_data():
         mock_subplots.assert_not_called()
 
 
-@pytest.mark.parametrize("output_path_is_none", [True, False])
-def test_create_rebinned_plot(output_path_is_none, tmp_path):
-    data = np.array([[1, 2], [3, 4]])
-    bins = [np.array([0, 1, 2]), np.array([0, 1, 2])]
-    rebin_factor = 2
-    plot_args = {
-        "data": data,
-        "bins": bins,
-        "plot_type": "histogram2d",
-        "plot_params": {"norm": "linear", "cmap": "viridis"},
-        "labels": {"title": "Original Plot"},
-    }
-    filename = "test_plot.png"
-    output_path = None if output_path_is_none else tmp_path
-
-    rebinned_data = np.array([[10]])
-    rebinned_x_bins = np.array([0, 2])
-    rebinned_y_bins = np.array([0, 2])
-
-    with (
-        patch(
-            PATCH_REBIN,
-            return_value=(rebinned_data, rebinned_x_bins, rebinned_y_bins),
-        ) as mock_rebin,
-        patch(PATCH_CREATE_PLOT) as mock_create_plot,
-    ):
-        _create_rebinned_plot(plot_args, filename, output_path, rebin_factor)
-
-        mock_rebin.assert_called_once_with(data, bins[0], bins[1], rebin_factor)
-        mock_create_plot.assert_called_once()
-        rebinned_plot_args = mock_create_plot.call_args[1]
-        np.testing.assert_array_equal(rebinned_plot_args["data"], rebinned_data)
-        if output_path is None:
-            assert rebinned_plot_args["output_file"] is None
-        else:
-            assert rebinned_plot_args["output_file"].name == "test_plot_rebinned.png"
-
-
-def test_should_create_rebinned_plot():
-    plot_args = {
-        "plot_type": "histogram2d",
-        "plot_params": {"norm": "linear"},
-    }
-
-    # Test case: rebin_factor > 1, plot_type is histogram2d, ends with _cumulative, norm is linear
-    assert plot_simtel_event_histograms._should_create_rebinned_plot(
-        rebin_factor=2, plot_args=plot_args, plot_key="test_cumulative"
-    )
-
-    # Test case: rebin_factor <= 1
-    assert not plot_simtel_event_histograms._should_create_rebinned_plot(
-        rebin_factor=1, plot_args=plot_args, plot_key="test_cumulative"
-    )
-
-    # Test case: plot_type is not histogram2d
-    plot_args["plot_type"] = "histogram"
-    assert not plot_simtel_event_histograms._should_create_rebinned_plot(
-        rebin_factor=2, plot_args=plot_args, plot_key="test_cumulative"
-    )
-
-    # Test case: plot_key does not end with _cumulative
-    plot_args["plot_type"] = "histogram2d"
-    assert not plot_simtel_event_histograms._should_create_rebinned_plot(
-        rebin_factor=2, plot_args=plot_args, plot_key="test"
-    )
-
-    # Test case: norm is not linear
-    plot_args["plot_params"]["norm"] = "log"
-    assert not plot_simtel_event_histograms._should_create_rebinned_plot(
-        rebin_factor=2, plot_args=plot_args, plot_key="test_cumulative"
-    )
-
-
 def test_build_plot_filename():
-    # Test without array_name
     base_filename = "test_plot"
-    result = _build_plot_filename(base_filename)
-    assert result == "test_plot.png"
+    assert _build_plot_filename(base_filename) == "test_plot.png"
+    assert _build_plot_filename(base_filename, "array1") == "test_plot_array1.png"
 
-    # Test with array_name
-    array_name = "array1"
-    result = _build_plot_filename(base_filename, array_name)
-    assert result == "test_plot_array1.png"
+
+def test_build_plot_filename_with_file_info():
+    file_info = {"zenith": 20.0 * u.deg, "azimuth": 0.0 * u.deg, "nsb_level": 0.3}
+    result = _build_plot_filename("angular_distance", "MyArray", file_info)
+    assert result == "angular_distance_MyArray_z20_az0_nsb0.3.png"
+
+
+def test_build_plot_filename_with_partial_file_info():
+    result = _build_plot_filename("plot", file_info={"zenith": 52.0 * u.deg})
+    assert result == "plot_z52.png"
+
+
+def test_format_file_info_suffix_all_fields():
+    suffix = _format_file_info_suffix(
+        {"zenith": 20.5 * u.deg, "azimuth": 180.5 * u.deg, "nsb_level": 0.0}
+    )
+    # Python banker's rounding: round(20.5)=20, round(180.5)=180
+    assert suffix == "z20_az180_nsb0"
+
+
+def test_format_file_info_suffix_empty():
+    assert _format_file_info_suffix({}) == ""
+
+
+def test_format_file_info_suffix_none_values():
+    assert _format_file_info_suffix({"zenith": None, "nsb_level": None}) == ""
+
+
+def test_extract_file_info_from_limits():
+    limits = {
+        "zenith": 20.0 * u.deg,
+        "azimuth": 0.0 * u.deg,
+        "nsb_level": 0.3,
+        "upper_radius_limit": 5000.0,
+        "primary_particle": "gamma",
+    }
+    info = _extract_file_info_from_limits(limits)
+    assert set(info.keys()) == {"zenith", "azimuth", "nsb_level"}
+
+
+def test_extract_file_info_from_limits_empty():
+    assert _extract_file_info_from_limits(None) == {}
+    assert _extract_file_info_from_limits({}) == {}
 
 
 def test_execute_plotting_loop():
@@ -464,17 +443,18 @@ def test_execute_plotting_loop():
         },
     }
     output_path = MagicMock()
-    rebin_factor = 2
     array_name = "test_array"
 
     with (
         patch(PATCH_CREATE_PLOT) as mock_create_plot,
-        patch(PATCH_CREATE_REBINNED) as mock_create_rebinned_plot,
-        patch(PATCH_BUILD_FILENAME, side_effect=lambda base, array: f"{base}_{array}.png"),
+        patch(
+            PATCH_BUILD_FILENAME,
+            side_effect=lambda base, array=None, file_info=None: f"{base}_{array}.png",
+        ),
     ):
         mock_create_plot.return_value = MagicMock()  # Simulate successful plot creation
 
-        _execute_plotting_loop(plots, output_path, rebin_factor, array_name)
+        _execute_plotting_loop(plots, output_path, array_name)
 
         # Ensure exactly one plot was created
         assert mock_create_plot.call_count == 1
@@ -496,65 +476,17 @@ def test_execute_plotting_loop():
     # Ensure the second plot was skipped (still only one call)
     mock_create_plot.assert_called_once()
 
-    # For histogram (not 2D cumulative), no rebinned plot expected
-    mock_create_rebinned_plot.assert_not_called()
-
-
-def test_execute_plotting_loop_rebin_and_failed_plot():
-    """Cover branches where a plot returns None and where a rebinned plot is created."""
-    plots = {
-        # Meets all conditions for rebin (2D cumulative, linear norm, rebin_factor > 1)
-        "plotA_cumulative": {
-            "data": np.array([[1, 2], [3, 4]]),
-            "bins": (np.array([0, 1, 2]), np.array([0, 1, 2])),
-            "plot_type": "histogram2d",
-            "plot_params": {"norm": "linear"},
-            "labels": {"title": "Rebin Test"},
-            "scales": {},
-            "filename": "plotA_cumulative",
-        },
-        # This plot will return None from _create_plot to exercise the early-continue branch
-        "plotB": {
-            "data": np.array([1, 2, 3]),
-            "bins": np.array([0, 1, 2, 3]),
-            "plot_type": "histogram",
-            "plot_params": {"color": "blue"},
-            "labels": {"title": "Should Skip"},
-            "scales": {},
-            "filename": "plotB",
-        },
-    }
-    output_path = MagicMock()
-    rebin_factor = 2
-    array_name = None
-
-    with (
-        patch(PATCH_CREATE_PLOT, side_effect=[MagicMock(), None]) as mock_create_plot,
-        patch(PATCH_CREATE_REBINNED) as mock_create_rebinned_plot,
-        patch(PATCH_BUILD_FILENAME, side_effect=lambda base, array: f"{base}.png"),
-    ):
-        _execute_plotting_loop(plots, output_path, rebin_factor, array_name)
-
-        # First call produced a figure, second returned None
-        assert mock_create_plot.call_count == 2
-        # Rebinned plot should be created exactly once for plotA_cumulative
-        mock_create_rebinned_plot.assert_called_once()
-        args, _ = mock_create_rebinned_plot.call_args
-        assert args[1] == "plotA_cumulative.png"
-        assert args[2] is output_path
-        assert args[3] == rebin_factor
-
 
 def test_create_2d_plot_config():
     histograms = {
         "histogram": np.array([[1, 2], [3, 4]]),
         "bin_edges": [np.array([0, 1, 2]), np.array([0, 1, 2])],
         "plot_scales": {"y": "log"},
-        "title": "Triggered events: core vs energy: core vs energy",
+        "title": "Triggered events: core distance vs energy",
         "axis_titles": [CORE_DIST_LABEL, ENERGY_LABEL, EVENT_COUNT],
     }
     config = {
-        "base_key": "core_vs_energy",
+        "base_key": "core_distance_vs_energy",
         "x_label": CORE_DIST_LABEL,
         "y_label": ENERGY_LABEL,
         "plot_params": {"norm": "log", "cmap": "viridis"},
@@ -570,7 +502,7 @@ def test_create_2d_plot_config():
     }
     result = plot_simtel_event_histograms._create_2d_plot_config(
         histograms,
-        "core_vs_energy",
+        "core_distance_vs_energy",
         config,
         limits,
     )
@@ -583,16 +515,16 @@ def test_create_2d_plot_config():
     assert result["labels"]["y"] == config["y_label"]
     assert (
         result["labels"]["title"]
-        == "Triggered events: core vs energy: core vs energy: core vs energy"
+        == "Triggered events: core distance vs energy: core distance vs energy"
     )
     # Accept lines from limits dict, not config
     assert (
         result["labels"]["title"]
-        == "Triggered events: core vs energy: core vs energy: core vs energy"
+        == "Triggered events: core distance vs energy: core distance vs energy"
     )
 
     assert result["colorbar_label"] in (config["colorbar_label"], None)
-    assert result["filename"] == "core_vs_energy"
+    assert result["filename"] == "core_distance_vs_energy_triggered"
 
 
 def test_create_2d_plot_config_core_xy():
@@ -703,7 +635,7 @@ def test_create_1d_plot_config():
     assert result["labels"]["title"] == "energy distribution: energy"
     assert result["scales"] == {"x": "log", "y": "log"}
     assert result["lines"] in (None, {"x": None})
-    assert result["filename"] == "energy"
+    assert result["filename"] == "energy_triggered"
 
 
 def test_get_limits():
@@ -734,6 +666,29 @@ def test_get_limits():
     result = _get_limits("angular_distance", limits)
     assert result == {"x": 5}
 
+    limits["core_distance_vs_energy_curve"] = {"x": [10, 20], "y": [0.1, 1.0]}
+    limits["angular_distance_vs_energy_curve"] = {"x": [2.5, 3.0], "y": [0.1, 1.0]}
+
+    result = _get_limits("core_distance_vs_energy", limits)
+    assert result["x"] == 100
+    assert result["y"] == pytest.approx(0.1)
+    assert result["curve"] == limits["core_distance_vs_energy_curve"]
+
+    result = _get_limits("core_distance_vs_energy_cumulative", limits)
+    assert result["x"] == 100
+    assert result["y"] == pytest.approx(0.1)
+    assert result["curve"] == limits["core_distance_vs_energy_curve"]
+
+    result = _get_limits("angular_distance_vs_energy", limits)
+    assert result["x"] == 5
+    assert result["y"] == pytest.approx(0.1)
+    assert result["curve"] == limits["angular_distance_vs_energy_curve"]
+
+    result = _get_limits("angular_distance_vs_energy_cumulative", limits)
+    assert result["x"] == 5
+    assert result["y"] == pytest.approx(0.1)
+    assert result["curve"] == limits["angular_distance_vs_energy_curve"]
+
 
 @pytest.fixture
 def mock_histograms():
@@ -745,7 +700,6 @@ def mock_histograms():
 def test_plot_with_output_path(mock_histograms):
     output_path = Path("/mock/output/path")
     limits = {"upper_radius_limit": MagicMock(value=100)}
-    rebin_factor = 2
     array_name = "test_array"
 
     with (
@@ -758,19 +712,17 @@ def test_plot_with_output_path(mock_histograms):
             histograms=mock_histograms,
             output_path=output_path,
             limits=limits,
-            rebin_factor=rebin_factor,
             array_name=array_name,
         )
 
         mock_generate_configs.assert_called_once_with(mock_histograms, limits)
         mock_execute_loop.assert_called_once_with(
-            {"mock_plot": "mock_config"}, output_path, rebin_factor, array_name
+            {"mock_plot": "mock_config"}, output_path, array_name, {}
         )
 
 
 def test_plot_without_output_path(mock_histograms):
     limits = None
-    rebin_factor = 1
     array_name = None
 
     with (
@@ -783,13 +735,12 @@ def test_plot_without_output_path(mock_histograms):
             histograms=mock_histograms,
             output_path=None,
             limits=limits,
-            rebin_factor=rebin_factor,
             array_name=array_name,
         )
 
         mock_generate_configs.assert_called_once_with(mock_histograms, limits)
         mock_execute_loop.assert_called_once_with(
-            {"mock_plot": "mock_config"}, None, rebin_factor, array_name
+            {"mock_plot": "mock_config"}, None, array_name, {}
         )
 
 
@@ -828,6 +779,13 @@ def test_generate_plot_configurations():
         assert kwargs["plot_params"]["norm"] == "log"
 
     histos = {"energy_cumulative": {"histogram": "abc", "1d": False}}
+    with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
+        plot_simtel_event_histograms._generate_plot_configurations(histos, None)
+        _, kwargs = mock_create_2d.call_args
+        assert "plot_params" in kwargs
+        assert kwargs["plot_params"]["norm"] == "linear"
+
+    histos = {"core_distance_vs_energy_eff": {"histogram": "abc", "1d": False}}
     with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
         plot_simtel_event_histograms._generate_plot_configurations(histos, None)
         _, kwargs = mock_create_2d.call_args

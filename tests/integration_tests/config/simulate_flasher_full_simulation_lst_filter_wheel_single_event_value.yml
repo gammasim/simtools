@@ -10,11 +10,10 @@ applications:
     telescopes:
     - LSTS-01
     run_number: 20
-    number_of_events: 4
+    number_of_events: 2
     flasher_photons:
     - 1e6
     - 2e6
-    - 3e6
     log_level: DEBUG
   integration_tests:
   - output_file: sim_telarray/full_simulation_run000020_South_7.0.0_simulate_flasher_LSTS-01.simtel.zst

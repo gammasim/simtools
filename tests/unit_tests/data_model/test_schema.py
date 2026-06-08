@@ -131,8 +131,7 @@ def test_validate_dict_using_schema(tmp_test_directory, caplog):
         schema.validate_dict_using_schema(invalid_data, schema_file)
 
 
-@pytest.mark.xfail(reason="No network connection")
-def test_validate_dict_using_schema_remote(tmp_test_directory):
+def test_validate_dict_using_schema_remote(tmp_test_directory, mocker):
     sample_schema = {
         "type": "object",
         "properties": {"name": {"type": "string"}, "age": {"type": "number"}},
@@ -147,13 +146,19 @@ def test_validate_dict_using_schema_remote(tmp_test_directory):
     # sample data dictionary to be validated
     data = {"name": "John", "age": 30}
 
+    mock_url_exists = mocker.patch("simtools.data_model.schema.gen.url_exists")
+
     # with valid meta_schema_url
+    mock_url_exists.return_value = True
     data["meta_schema_url"] = "https://github.com/gammasim/simtools"
     schema.validate_dict_using_schema(data, schema_file)
+    mock_url_exists.assert_called_with("https://github.com/gammasim/simtools")
 
+    mock_url_exists.return_value = False
     data["meta_schema_url"] = "https://invalid_url"
     with pytest.raises(FileNotFoundError, match=r"^Meta schema URL does not exist:"):
         schema.validate_dict_using_schema(data, schema_file)
+    mock_url_exists.assert_called_with("https://invalid_url")
 
 
 def test_validate_schema_astropy_units(caplog):

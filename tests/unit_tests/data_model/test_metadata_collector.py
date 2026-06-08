@@ -5,7 +5,6 @@ import getpass
 import json
 import logging
 import re
-import time
 import uuid
 from pathlib import Path
 
@@ -73,7 +72,16 @@ def test_get_data_model_schema_dict(args_dict_site):
     assert metadata.get_data_model_schema_dict() == {}
 
 
-def test_get_top_level_metadata(args_dict_site):
+def test_get_top_level_metadata(args_dict_site, mocker):
+    mocker.patch(
+        "simtools.data_model.metadata_collector.gen.now_date_time_in_isoformat",
+        side_effect=[
+            "2020-01-01T00:00:00+00:00",
+            "2020-01-01T00:00:00+00:00",
+            "2020-01-01T00:00:00+00:00",
+            "2099-01-01T00:00:00+00:00",
+        ],
+    )
     collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     assert (
         collector.top_level_meta["cta"]["activity"]["end"]
@@ -85,7 +93,6 @@ def test_get_top_level_metadata(args_dict_site):
     top_level_meta = collector.get_top_level_metadata()
     assert top_level_meta["cta"]["activity"]["end"] == top_level_meta["cta"]["activity"]["start"]
 
-    time.sleep(1)
     collector.observatory = "cta"  # back to default
     top_level_meta = collector.get_top_level_metadata()
     assert top_level_meta["cta"]["activity"]["end"] > top_level_meta["cta"]["activity"]["start"]

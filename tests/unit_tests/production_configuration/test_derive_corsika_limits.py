@@ -4,7 +4,6 @@ import pytest
 from astropy.table import Table
 
 import simtools.production_configuration.derive_corsika_limits as derive_corsika_limits
-from simtools.utils.names import get_array_element_name_from_common_identifier
 
 # Constants
 SIM_EVENTS_HISTOGRAMS_PATH = (
@@ -13,134 +12,68 @@ SIM_EVENTS_HISTOGRAMS_PATH = (
 COMPUTE_LOWER_ENERGY_LIMIT_PATH = (
     "simtools.production_configuration.derive_corsika_limits.compute_lower_energy_limit"
 )
-COMPUTE_UPPER_RADIUS_LIMIT_PATH = (
-    "simtools.production_configuration.derive_corsika_limits.compute_upper_radius_limit"
-)
-COMPUTE_VIEWCONE_PATH = "simtools.production_configuration.derive_corsika_limits.compute_viewcone"
+COMPUTE_LIMITS_PATH = "simtools.production_configuration.derive_corsika_limits._compute_limits"
 MOCK_FILE_PATH = "mock_file.fits"
+DEFAULT_ALLOWED_LOSSES = {
+    "core_distance": {"loss_fraction": 0.2, "loss_min_events": 10},
+    "angular_distance": {"loss_fraction": 0.2, "loss_min_events": 10},
+}
 
 
-@pytest.fixture
-def mock_args_dict():
-    """Create mock arguments dictionary."""
+def _pool_result(
+    production_index=0,
+    event_data_file="pattern_*.hdf5",
+    array_name="LST",
+    telescope_ids=None,
+    lower_energy_limit=0.5 * u.TeV,
+    upper_radius_limit=400.0 * u.m,
+    viewcone_radius=5.0 * u.deg,
+):
+    """Build a standard mocked pool result row for grid execution tests."""
     return {
-        "event_data_file": "data_files.hdf5",
-        "telescope_ids": "telescope_ids.yml",
-        "loss_fraction": 0.2,
-        "plot_histograms": False,
-        "output_file": "test_output.ecsv",
+        "production_index": production_index,
+        "event_data_file": event_data_file,
+        "array_name": array_name,
+        "telescope_ids": telescope_ids or ["LSTN-01"],
+        "lower_energy_limit": lower_energy_limit,
+        "upper_radius_limit": upper_radius_limit,
+        "viewcone_radius": viewcone_radius,
+        "primary_particle": "gamma",
+        "zenith": 20.0 * u.deg,
+        "azimuth": 180.0 * u.deg,
+        "nsb_level": 1.0,
     }
 
 
-@pytest.fixture
-def mock_results():
-    """Create mock results list."""
-    return [
-        {
-            "primary_particle": "gamma",
-            "telescope_ids": [1, 2],
-            "zenith": 20.0 * u.deg,
-            "azimuth": 180.0 * u.deg,
-            "nsb_level": 1.0,
-            "lower_energy_limit": 0.5 * u.TeV,
-            "upper_radius_limit": 400.0 * u.m,
-            "viewcone_radius": 5.0 * u.deg,
-            "array_name": "LST",
-            "layout": "LST",
-        }
-    ]
-
-
-@pytest.fixture
-def hdf5_file_name(tmp_test_directory):
-    """Create temporary HDF5 file name."""
-    return str(tmp_test_directory / "test_file.h5")
-
-
-def test_generate_corsika_limits_grid(mocker, mock_args_dict):
-    """Test generate_corsika_limits_grid function."""
-    # Mock dependencies
-    mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
-    mock_collect.side_effect = [
-        {"telescope_configs": {"LST": [1, 2], "MST": [3, 4]}},
-    ]
-
-    mock_process = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits._process_file"
-    )
-    mock_write = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.write_results"
-    )
-
-    # Run function
-    derive_corsika_limits.generate_corsika_limits_grid(mock_args_dict)
-
-    # Verify calls
-    assert mock_collect.call_count == 1
-    assert mock_process.call_count == 2  # 2 configs
-    assert mock_write.call_count == 1
-
-
-def test_generate_corsika_limits_grid_normalizes_telescope_ids(mocker, mock_args_dict):
-    """Ensure numeric IDs are normalized to array-element names before processing."""
-    mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
-    mock_collect.return_value = {"telescope_configs": {"LST": [1, 2]}}
-
-    mock_process = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits._process_file"
-    )
-    mock_process.return_value = {}
-    mocker.patch("simtools.production_configuration.derive_corsika_limits.write_results")
-
-    derive_corsika_limits.generate_corsika_limits_grid(mock_args_dict)
-
-    expected_telescopes = [
-        get_array_element_name_from_common_identifier(1),
-        get_array_element_name_from_common_identifier(2),
-    ]
-    call_args = mock_process.call_args[0]
-    assert call_args[2] == expected_telescopes
-
-
-def test_process_file(mocker):
-    """Test _process_file function."""
-    # Mock the EventDataHistograms class
+def test_process_file_passes_event_data_patterns_through(mocker):
+    """Test _process_file passes glob patterns through to histogram resolution."""
     mock_histograms = mocker.MagicMock()
-    mock_histogram_class = mocker.patch(SIM_EVENTS_HISTOGRAMS_PATH)
-    mock_histogram_class.return_value = mock_histograms
-
-    # Mock the individual limit computation functions
-    mock_energy_limit = 1.0 * u.TeV
-    mock_radius_limit = 100.0 * u.m
-    mock_viewcone_limit = 2.0 * u.deg
-
+    mock_histogram_class = mocker.patch(SIM_EVENTS_HISTOGRAMS_PATH, return_value=mock_histograms)
+    mocker.patch(COMPUTE_LOWER_ENERGY_LIMIT_PATH, return_value=1.0 * u.TeV)
     mocker.patch(
-        COMPUTE_LOWER_ENERGY_LIMIT_PATH,
-        return_value=mock_energy_limit,
-    )
-    mocker.patch(
-        COMPUTE_UPPER_RADIUS_LIMIT_PATH,
-        return_value=mock_radius_limit,
-    )
-    mocker.patch(
-        COMPUTE_VIEWCONE_PATH,
-        return_value=mock_viewcone_limit,
+        COMPUTE_LIMITS_PATH,
+        return_value={
+            "upper_radius_limit": 100.0 * u.m,
+            "viewcone_radius": 2.0 * u.deg,
+            "core_distance_vs_energy_curve": {"x": [100.0, 100.0], "y": [0.1, 1.0]},
+            "angular_distance_vs_energy_curve": {"x": [2.0, 2.0], "y": [0.1, 1.0]},
+        },
     )
 
-    mocker.patch("simtools.io.io_handler.IOHandler")
+    derive_corsika_limits._process_file(
+        "input/*.h5",
+        "array_name",
+        [1, 2],
+        DEFAULT_ALLOWED_LOSSES,
+        plot_histograms=False,
+    )
 
-    result = derive_corsika_limits._process_file("test.fits", "array_name", [1, 2], 0.2, False)
-
-    expected_result = {
-        "lower_energy_limit": mock_energy_limit,
-        "upper_radius_limit": mock_radius_limit,
-        "viewcone_radius": mock_viewcone_limit,
-    }
-    assert result == expected_result
     mock_histogram_class.assert_called_once_with(
-        "test.fits", array_name="array_name", telescope_list=[1, 2]
+        "input/*.h5",
+        "array_name",
+        [1, 2],
+        10,
     )
-    mock_histograms.fill.assert_called_once()
 
 
 def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory):
@@ -150,7 +83,7 @@ def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory)
 
     mock_dump = mocker.patch("simtools.data_model.metadata_collector.MetadataCollector.dump")
 
-    derive_corsika_limits.write_results(mock_results, mock_args_dict)
+    derive_corsika_limits.write_results(mock_results, mock_args_dict, DEFAULT_ALLOWED_LOSSES, 0.1)
 
     # Verify metadata was written
     mock_dump.assert_called_once()
@@ -160,16 +93,47 @@ def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory)
 
 def test_create_results_table(mock_results):
     """Test _create_results_table function."""
-    table = derive_corsika_limits._create_results_table(mock_results, loss_fraction=0.2)
+    table = derive_corsika_limits._create_results_table(mock_results, DEFAULT_ALLOWED_LOSSES, 0.1)
     table.info()
 
     assert isinstance(table, Table)
     assert len(table) == 1
+    assert "telescope_ids" not in table.colnames
     assert "zenith" in table.colnames
     assert table["zenith"].unit == u.deg
-    assert table.meta["loss_fraction"] == pytest.approx(0.2)
+    assert "br_energy_min" in table.colnames
+    assert "br_energy_max" in table.colnames
+    assert "br_core_scatter_max" in table.colnames
+    assert "br_viewcone_max" in table.colnames
+    assert table["br_energy_min"].unit == u.TeV
+    assert table["br_energy_max"].unit == u.TeV
+    assert table["br_core_scatter_max"].unit == u.m
+    assert table["br_viewcone_max"].unit == u.deg
+    assert (
+        table["br_viewcone_max"].description
+        == derive_corsika_limits.COLUMN_DESCRIPTIONS["br_viewcone_max"]
+    )
+    assert table.meta["loss_fraction_core_distance"] == pytest.approx(0.2)
+    assert table.meta["loss_min_events_core_distance"] == 10
+    assert table.meta["loss_fraction_angular_distance"] == pytest.approx(0.2)
+    assert table.meta["loss_min_events_angular_distance"] == 10
+    assert table.meta["energy_threshold_fraction"] == pytest.approx(0.1)
     assert isinstance(table.meta["created"], str)
     assert "description" in table.meta
+
+
+def test_file_info_columns_are_read_from_schema():
+    """Test file-info column mappings are read from the CORSIKA limits schema."""
+    assert derive_corsika_limits.FILE_INFO_COLUMNS == {
+        "primary_particle": "primary_particle",
+        "zenith": "zenith",
+        "azimuth": "azimuth",
+        "nsb_level": "nsb_level",
+        "br_energy_min": "energy_min",
+        "br_energy_max": "energy_max",
+        "br_core_scatter_max": "core_scatter_max",
+        "br_viewcone_max": "viewcone_max",
+    }
 
 
 def test_round_value():
@@ -198,7 +162,7 @@ def test_round_value():
     assert derive_corsika_limits._round_value("unknown", "string_value") == "string_value"
 
 
-def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
+def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict, tmp_test_directory):
     """Test generate_corsika_limits_grid using get_array_elements_from_db_for_layouts."""
     # Prepare args_dict to use array_layout_name
     args = mock_args_dict.copy()
@@ -212,9 +176,19 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
     )
     mock_read_layouts.return_value = {"LST": [1, 2], "MST": [3, 4]}
 
-    mock_process = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits._process_file"
+    mock_pool = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
     )
+    mock_pool.return_value = [
+        {"primary_particle": "gamma", "array_name": "LST", "telescope_ids": [1, 2]},
+        {"primary_particle": "gamma", "array_name": "MST", "telescope_ids": [3, 4]},
+    ]
+
+    mock_io = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    )
+    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
+
     mock_write = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.write_results"
     )
@@ -224,31 +198,82 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict):
     mock_read_layouts.assert_called_once_with(
         args["array_layout_name"], args["site"], args["model_version"]
     )
-    assert mock_process.call_count == 2  # 2 layouts
+    job_specs = mock_pool.call_args[0][1]
+    assert len(job_specs) == 2  # 2 layouts
     assert mock_write.call_count == 1
 
 
-def test_generate_corsika_limits_grid_with_array_element_list(mocker, mock_args_dict):
+def test_generate_corsika_limits_grid_by_version_layout_resolved(
+    mocker, mock_args_dict, tmp_test_directory
+):
+    """Test that a by_version dict string for array_layout_name is resolved before DB lookup.
+
+    This covers the case where run_application serializes the by_version dict as a Python
+    dict string when passing it as a CLI argument to the subprocess.
+    """
+    args = mock_args_dict.copy()
+    args["array_layout_name"] = ["{'by_version': {'>=1.0.0': ['LST', 'MST']}}"]
+    args["site"] = "North"
+    args["model_version"] = "1.2.3"
+
+    mock_read_layouts = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits."
+        "get_array_elements_from_db_for_layouts"
+    )
+    mock_read_layouts.return_value = {"LST": [1, 2], "MST": [3, 4]}
+
+    mock_pool = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
+    )
+    mock_pool.return_value = [
+        {"primary_particle": "gamma", "array_name": "LST", "telescope_ids": [1, 2]},
+        {"primary_particle": "gamma", "array_name": "MST", "telescope_ids": [3, 4]},
+    ]
+
+    mock_io = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    )
+    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
+
+    mocker.patch("simtools.production_configuration.derive_corsika_limits.write_results")
+
+    derive_corsika_limits.generate_corsika_limits_grid(args)
+
+    # by_version must be resolved to the actual list before calling DB lookup
+    mock_read_layouts.assert_called_once_with(["LST", "MST"], "North", "1.2.3")
+
+
+def test_generate_corsika_limits_grid_with_array_element_list(
+    mocker, mock_args_dict, tmp_test_directory
+):
     """Test generate_corsika_limits_grid using inline array_element_list."""
     args = mock_args_dict.copy()
     args["array_element_list"] = ["LSTN-01", "LSTN-02", "MSTN-03"]
     args["telescope_ids"] = None
 
-    mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
-    mock_process = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits._process_file"
+    mock_pool = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
     )
+    mock_pool.return_value = [
+        {"primary_particle": "gamma", "array_name": "array_element_list"},
+    ]
+
+    mock_io = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    )
+    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
+
     mock_write = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.write_results"
     )
 
     derive_corsika_limits.generate_corsika_limits_grid(args)
 
-    mock_collect.assert_not_called()
-    mock_process.assert_called_once()
-    call_args = mock_process.call_args[0]
-    assert call_args[1] == "array_element_list"
-    assert call_args[2] == ["LSTN-01", "LSTN-02", "MSTN-03"]
+    job_specs = mock_pool.call_args[0][1]
+    assert len(job_specs) == 1
+    job_spec = job_specs[0]
+    assert job_spec["array_name"] == "array_element_list"
+    assert job_spec["telescope_ids"] == ["LSTN-01", "LSTN-02", "MSTN-03"]
     assert mock_write.call_count == 1
 
 
@@ -269,12 +294,16 @@ def test_compute_limits_lower():
     loss_fraction = 0.2
 
     with pytest.raises(ValueError, match="limit_type must be 'lower' or 'upper'"):
-        derive_corsika_limits._compute_limits(hist, bin_edges, loss_fraction, limit_type="blabla")
+        derive_corsika_limits._integral_limits(hist, bin_edges, loss_fraction, limit_type="blabla")
 
-    result = derive_corsika_limits._compute_limits(
-        hist, bin_edges, loss_fraction, limit_type="lower"
+    result = derive_corsika_limits._integral_limits(
+        hist,
+        bin_edges,
+        loss_fraction,
+        loss_min_events=0,
+        limit_type="lower",
     )
-    assert result == 2
+    assert result == 3
 
 
 def test_compute_limits_upper():
@@ -282,8 +311,12 @@ def test_compute_limits_upper():
     bin_edges = np.array([0, 1, 2, 3, 4, 5])
     loss_fraction = 0.2
 
-    result = derive_corsika_limits._compute_limits(
-        hist, bin_edges, loss_fraction, limit_type="upper"
+    result = derive_corsika_limits._integral_limits(
+        hist,
+        bin_edges,
+        loss_fraction,
+        loss_min_events=0,
+        limit_type="upper",
     )
     assert result == 3
 
@@ -293,35 +326,48 @@ def test_compute_limits_default_type():
     bin_edges = np.array([0, 1, 2, 3, 4, 5])
     loss_fraction = 0.2
 
-    result = derive_corsika_limits._compute_limits(hist, bin_edges, loss_fraction)
-    assert result == 2
-
-
-def test_compute_viewcone(hdf5_file_name, mocker):
-    """Test compute_viewcone function with mocked histograms."""
-    mock_hist = np.array([10, 8, 6, 4, 2])
-    mock_bins = np.linspace(0, 20.0, 6)
-
-    # Mock the histograms object
-    mock_histograms = mocker.MagicMock()
-    mock_histograms.histograms = {"angular_distance": {"histogram": mock_hist}}
-    mock_histograms.view_cone_bins = mock_bins
-
-    result = derive_corsika_limits.compute_viewcone(mock_histograms, 0.2)
-
-    assert isinstance(result, u.Quantity)
-    assert result.unit == u.deg
-    assert result.value > 0
-
-    expected = (
-        derive_corsika_limits._compute_limits(mock_hist, mock_bins, 0.2, limit_type="upper") * u.deg
+    result = derive_corsika_limits._integral_limits(
+        hist,
+        bin_edges,
+        loss_fraction,
+        loss_min_events=0,
     )
-    assert result.value == pytest.approx(expected.value)
+    assert result == 3
 
 
-def test_compute_lower_energy_limit(hdf5_file_name, mocker):
+def test_compute_limits_enforces_minimum_lost_events_upper():
+    """Test _compute_limits enforces an absolute minimum number of lost events."""
+    hist = np.array([5, 4, 3, 2, 1])
+    bin_edges = np.array([0, 1, 2, 3, 4, 5])
+
+    result = derive_corsika_limits._integral_limits(
+        hist,
+        bin_edges,
+        loss_fraction=0.2,
+        loss_min_events=10,
+        limit_type="upper",
+    )
+    assert result == 1
+
+
+def test_compute_limits_enforces_minimum_lost_events_lower():
+    """Test lower limits also honor the absolute minimum loss requirement."""
+    hist = np.array([1, 2, 3, 4, 5])
+    bin_edges = np.array([0, 1, 2, 3, 4, 5])
+
+    result = derive_corsika_limits._integral_limits(
+        hist,
+        bin_edges,
+        loss_fraction=0.2,
+        loss_min_events=10,
+        limit_type="lower",
+    )
+    assert result == 5
+
+
+def test_compute_lower_energy_limit(mocker):
     """Test compute_lower_energy_limit function with mocked histograms."""
-    mock_hist = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    mock_hist = np.array([1.0, 12.0, 20.0, 12.0, 1.0])
     mock_bins = np.logspace(-3, 3, 6)
 
     # Mock the histograms object
@@ -337,32 +383,55 @@ def test_compute_lower_energy_limit(hdf5_file_name, mocker):
     assert result.value > 0
 
     expected = (
-        derive_corsika_limits._compute_limits(mock_hist, mock_bins, 0.2, limit_type="lower") * u.TeV
+        derive_corsika_limits._find_low_energy_threshold_from_histogram(
+            mock_hist,
+            mock_bins,
+            threshold_fraction=0.2,
+        )
+        * u.TeV
     )
     assert result == expected
 
 
-def test_compute_upper_radius_limit(hdf5_file_name, mocker):
-    """Test compute_upper_radius_limit function with mocked histograms."""
-    mock_hist = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
-    mock_bins = np.linspace(0, 500, 6)
+def test_find_low_energy_threshold_from_histogram_basic():
+    """Test nominal threshold finding from peak toward lower energies."""
+    counts = np.array([1.0, 12.0, 20.0, 12.0, 1.0])
+    bin_edges = np.array([0.1, 0.2, 0.4, 0.8, 1.6, 3.2])
 
-    # Mock the histograms object
-    mock_histograms = mocker.MagicMock()
-    mock_histograms.histograms = {"core_distance": {"histogram": mock_hist}}
-    mock_histograms.core_distance_bins = mock_bins
-    mock_histograms.file_info = {}
+    # Peak index=2, N_peak=(12+20+12)/3=14.666..., threshold=1.466...
+    # Walking left from idx=2: 20,12,1 -> first below threshold at idx=0
+    result = derive_corsika_limits._find_low_energy_threshold_from_histogram(counts, bin_edges)
+    assert result == pytest.approx(0.1)
 
-    result = derive_corsika_limits.compute_upper_radius_limit(mock_histograms, 0.2)
 
-    assert isinstance(result, u.Quantity)
-    assert result.unit == u.m
-    assert result.value > 0
+def test_find_low_energy_threshold_from_histogram_peak_at_first_bin():
+    """Test edge case where absolute maximum is at the first bin."""
+    counts = np.array([10.0, 4.0, 1.0, 0.0])
+    bin_edges = np.array([0.05, 0.1, 0.2, 0.4, 0.8])
 
-    expected = (
-        derive_corsika_limits._compute_limits(mock_hist, mock_bins, 0.2, limit_type="upper") * u.m
-    )
-    assert result == expected
+    # No bins left of peak; fallback to first edge is expected.
+    result = derive_corsika_limits._find_low_energy_threshold_from_histogram(counts, bin_edges)
+    assert result == pytest.approx(0.05)
+
+
+def test_find_low_energy_threshold_from_histogram_peak_at_last_bin():
+    """Test edge case where absolute maximum is at the last bin."""
+    counts = np.array([0.0, 0.2, 0.5, 10.0])
+    bin_edges = np.array([0.1, 0.2, 0.4, 0.8, 1.6])
+
+    # Peak index=3, N_peak=(0.5+10)/2=5.25, threshold=0.525
+    # Walking left from idx=3: 10,0.5 -> first below threshold at idx=2
+    result = derive_corsika_limits._find_low_energy_threshold_from_histogram(counts, bin_edges)
+    assert result == pytest.approx(0.4)
+
+
+def test_find_low_energy_threshold_from_histogram_raises_for_all_zero_counts():
+    """Reject histograms without positive entries."""
+    counts = np.array([0.0, 0.0, 0.0, 0.0])
+    bin_edges = np.array([0.1, 0.2, 0.4, 0.8, 1.6])
+
+    with pytest.raises(ValueError, match="at least one positive entry"):
+        derive_corsika_limits._find_low_energy_threshold_from_histogram(counts, bin_edges)
 
 
 def test_is_close(caplog):
@@ -385,6 +454,7 @@ def test_process_file_with_mocked_histograms(mocker):
     """Test _process_file with mocked EventDataHistograms."""
     mock_histograms = mocker.MagicMock()
     mock_histograms.fill.return_value = None
+    mock_histograms.file_info = {}
 
     mock_histogram_class = mocker.patch(
         SIM_EVENTS_HISTOGRAMS_PATH,
@@ -395,42 +465,279 @@ def test_process_file_with_mocked_histograms(mocker):
         COMPUTE_LOWER_ENERGY_LIMIT_PATH,
         return_value=1.0 * u.TeV,
     )
-    mock_compute_upper_radius_limit = mocker.patch(
-        COMPUTE_UPPER_RADIUS_LIMIT_PATH,
-        return_value=100.0 * u.m,
-    )
-    mock_compute_viewcone = mocker.patch(
-        COMPUTE_VIEWCONE_PATH,
-        return_value=2.0 * u.deg,
+    mock_compute_limits = mocker.patch(
+        COMPUTE_LIMITS_PATH,
+        return_value={
+            "upper_radius_limit": 100.0 * u.m,
+            "viewcone_radius": 2.0 * u.deg,
+            "core_distance_vs_energy_curve": {"x": [100.0, 100.0], "y": [0.1, 1.0]},
+            "angular_distance_vs_energy_curve": {"x": [2.0, 2.0], "y": [0.1, 1.0]},
+        },
     )
 
     result = derive_corsika_limits._process_file(
         file_path=MOCK_FILE_PATH,
         array_name="MockArray",
         telescope_ids=[1, 2],
-        loss_fraction=0.2,
+        allowed_losses=DEFAULT_ALLOWED_LOSSES,
         plot_histograms=False,
     )
 
     assert result == {
+        "primary_particle": None,
+        "zenith": None,
+        "azimuth": None,
+        "nsb_level": None,
+        "br_energy_min": None,
+        "br_energy_max": None,
+        "br_core_scatter_max": None,
+        "br_viewcone_max": None,
         "lower_energy_limit": 1.0 * u.TeV,
         "upper_radius_limit": 100.0 * u.m,
         "viewcone_radius": 2.0 * u.deg,
+        "core_distance_vs_energy_curve": {"x": [100.0, 100.0], "y": [0.1, 1.0]},
+        "angular_distance_vs_energy_curve": {"x": [2.0, 2.0], "y": [0.1, 1.0]},
     }
 
     mock_histogram_class.assert_called_once_with(
-        MOCK_FILE_PATH, array_name="MockArray", telescope_list=[1, 2]
+        MOCK_FILE_PATH,
+        "MockArray",
+        [1, 2],
+        10,
     )
     mock_histograms.fill.assert_called_once()
-    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.2)
-    mock_compute_upper_radius_limit.assert_called_once_with(mock_histograms, 0.2)
-    mock_compute_viewcone.assert_called_once_with(mock_histograms, 0.2)
+    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.01)
+    mock_compute_limits.assert_called_once_with(mock_histograms, DEFAULT_ALLOWED_LOSSES, 0)
+
+
+def test_process_file_with_differential_loss_per_energy_bin(mocker):
+    """Test _process_file in differential-loss mode."""
+    mock_histograms = mocker.MagicMock()
+    mock_histograms.fill.return_value = None
+    mock_histograms.file_info = {}
+
+    mocker.patch(
+        SIM_EVENTS_HISTOGRAMS_PATH,
+        return_value=mock_histograms,
+    )
+
+    mock_compute_lower_energy_limit = mocker.patch(
+        COMPUTE_LOWER_ENERGY_LIMIT_PATH,
+        return_value=1.0 * u.TeV,
+    )
+    mock_compute_limits = mocker.patch(COMPUTE_LIMITS_PATH)
+    mock_differential = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._compute_limits",
+        return_value={
+            "upper_radius_limit": 120.0 * u.m,
+            "viewcone_radius": 3.0 * u.deg,
+            "core_distance_vs_energy_curve": {"x": [100.0, 120.0], "y": [0.1, 1.0]},
+            "angular_distance_vs_energy_curve": {"x": [2.5, 3.0], "y": [0.1, 1.0]},
+        },
+    )
+
+    result = derive_corsika_limits._process_file(
+        file_path=MOCK_FILE_PATH,
+        array_name="MockArray",
+        telescope_ids=[1, 2],
+        allowed_losses=DEFAULT_ALLOWED_LOSSES,
+        plot_histograms=False,
+        differential_loss_bins_per_decade=6,
+    )
+
+    assert result["lower_energy_limit"].value == pytest.approx(1.0)
+    assert result["upper_radius_limit"].value == pytest.approx(120.0)
+    assert result["viewcone_radius"].value == pytest.approx(3.0)
+    assert result["core_distance_vs_energy_curve"] == {"x": [100.0, 120.0], "y": [0.1, 1.0]}
+    assert result["angular_distance_vs_energy_curve"] == {"x": [2.5, 3.0], "y": [0.1, 1.0]}
+
+    mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.01)
+    mock_compute_limits.assert_not_called()
+    mock_differential.assert_called_once_with(mock_histograms, DEFAULT_ALLOWED_LOSSES, 6)
+
+
+@pytest.mark.parametrize(
+    ("file_info", "expected_core_scatter_max", "expected_viewcone_max"),
+    [
+        (
+            {"core_scatter_max": 120.0 * u.m, "viewcone_max": 3.0 * u.deg},
+            120.0 * u.m,
+            3.0 * u.deg,
+        ),
+        ({}, None, None),
+    ],
+)
+def test_compute_limits(mocker, file_info, expected_core_scatter_max, expected_viewcone_max):
+    """Test _compute_limits forwards slices and preserves units."""
+    histograms = mocker.MagicMock()
+    histograms.energy_bins = np.array([1.0, 10.0])
+    histograms.core_distance_bins = np.array([0.0, 100.0])
+    histograms.view_cone_bins = np.array([0.0, 5.0])
+    histograms.histograms = {
+        "core_distance_vs_energy": {"histogram": "core-hist"},
+        "angular_distance_vs_energy": {"histogram": "viewcone-hist"},
+    }
+    histograms.file_info = file_info
+
+    mock_diff_limits = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._differential_upper_limits",
+        side_effect=[
+            (120.0, [110.0, 120.0], [1.0, 10.0]),
+            (3.0, [2.5, 3.0], [1.0, 10.0]),
+        ],
+    )
+    mock_is_close = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._is_close",
+        side_effect=[125.0 * u.m, 3.25 * u.deg],
+    )
+
+    derive_corsika_limits._compute_limits(histograms, DEFAULT_ALLOWED_LOSSES, 2)
+
+    expected_diff_bins = np.logspace(0, 1, 3)
+    np.testing.assert_allclose(mock_diff_limits.call_args_list[0].args[3], expected_diff_bins)
+    np.testing.assert_allclose(mock_diff_limits.call_args_list[1].args[3], expected_diff_bins)
+    assert mock_diff_limits.call_args_list[0].args[0] == "core-hist"
+    assert mock_diff_limits.call_args_list[0].args[5:] == ("core_scatter", "m")
+    assert mock_diff_limits.call_args_list[1].args[0] == "viewcone-hist"
+    assert mock_diff_limits.call_args_list[1].args[5:] == ("viewcone", "deg")
+    assert mock_diff_limits.call_args_list[0].args[4] == DEFAULT_ALLOWED_LOSSES["core_distance"]
+    assert mock_diff_limits.call_args_list[1].args[4] == DEFAULT_ALLOWED_LOSSES["angular_distance"]
+
+    assert mock_is_close.call_args_list[0].args[0].value == pytest.approx(120.0)
+    assert mock_is_close.call_args_list[0].args[1] == expected_core_scatter_max
+    assert mock_is_close.call_args_list[1].args[0].value == pytest.approx(3.0)
+    assert mock_is_close.call_args_list[1].args[1] == expected_viewcone_max
+
+
+def test_compute_limits_with_integral_fallback_curves(mocker):
+    """Test _compute_limits returns energy-independent curves for integral limits."""
+    histograms = mocker.MagicMock()
+    histograms.energy_bins = np.array([1.0, 10.0])
+    histograms.core_distance_bins = np.array([0.0, 100.0])
+    histograms.view_cone_bins = np.array([0.0, 5.0])
+    histograms.histograms = {
+        "core_distance": {"histogram": np.array([1.0, 2.0])},
+        "angular_distance": {"histogram": np.array([3.0, 4.0])},
+    }
+    histograms.file_info = {}
+
+    mock_integral_limits = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._integral_limits",
+        side_effect=[120.0, 3.0],
+    )
+    mock_diff_limits = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._differential_upper_limits"
+    )
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._is_close",
+        side_effect=lambda value, *_: value,
+    )
+
+    result = derive_corsika_limits._compute_limits(
+        histograms,
+        DEFAULT_ALLOWED_LOSSES,
+        bins_per_decade=0,
+    )
+
+    assert mock_integral_limits.call_count == 2
+    mock_diff_limits.assert_not_called()
+    assert result["core_distance_vs_energy_curve"] == {"x": [120.0, 120.0], "y": [1.0, 10.0]}
+    assert result["angular_distance_vs_energy_curve"] == {"x": [3.0, 3.0], "y": [1.0, 10.0]}
+
+
+def test_process_file_passes_energy_bins_per_decade_to_histograms(mocker):
+    """Test differential binning resolution is forwarded to EventDataHistograms."""
+    mock_histograms = mocker.MagicMock()
+    mock_histograms.file_info = {}
+    mock_event_histograms = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.EventDataHistograms",
+        return_value=mock_histograms,
+    )
+    mocker.patch(COMPUTE_LOWER_ENERGY_LIMIT_PATH, return_value=1.0 * u.TeV)
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._compute_limits",
+        return_value={
+            "upper_radius_limit": 120.0 * u.m,
+            "viewcone_radius": 3.0 * u.deg,
+            "core_distance_vs_energy_curve": {"x": [100.0], "y": [1.0]},
+            "angular_distance_vs_energy_curve": {"x": [3.0], "y": [1.0]},
+        },
+    )
+
+    derive_corsika_limits._process_file(
+        file_path=MOCK_FILE_PATH,
+        array_name="MockArray",
+        telescope_ids=[1, 2],
+        allowed_losses=DEFAULT_ALLOWED_LOSSES,
+        plot_histograms=False,
+        differential_loss_bins_per_decade=6,
+    )
+
+    mock_event_histograms.assert_called_once_with(
+        MOCK_FILE_PATH,
+        "MockArray",
+        [1, 2],
+        6,
+    )
+
+
+def test_differential_upper_limits(mocker):
+    """Test _differential_upper_limits slices energies and skips empty bins."""
+    mock_integral_limits = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._integral_limits",
+        side_effect=[1.5, 2.5],
+    )
+    mock_log = mocker.patch("simtools.production_configuration.derive_corsika_limits._logger.info")
+
+    max_limit, limits, energy_centers = derive_corsika_limits._differential_upper_limits(
+        histogram2d=np.array([[1.0, 10.0], [2.0, 20.0], [3.0, 30.0]]),
+        x_bins=np.array([0.0, 1.0, 2.0, 3.0]),
+        y_bins=np.array([1.0, 2.0, 4.0]),
+        diff_e_bins=np.array([1.0, 2.0, 2.5, 3.0]),
+        allowed_loss=DEFAULT_ALLOWED_LOSSES["core_distance"],
+        name="core_scatter",
+        unit="m",
+    )
+
+    np.testing.assert_array_equal(
+        mock_integral_limits.call_args_list[0].args[0], np.array([1.0, 2.0, 3.0])
+    )
+    np.testing.assert_array_equal(
+        mock_integral_limits.call_args_list[1].args[0], np.array([10.0, 20.0, 30.0])
+    )
+    assert max_limit == pytest.approx(2.5)
+    assert limits == [1.5, 2.5]
+    assert energy_centers == pytest.approx([np.sqrt(2.0), np.sqrt(7.5)])
+    assert mock_log.call_count == 2
+
+
+def test_differential_upper_limits_falls_back_to_last_bin_edge(mocker):
+    """Test _differential_upper_limits falls back when all slices are empty."""
+    mock_integral_limits = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._integral_limits"
+    )
+    mock_log = mocker.patch("simtools.production_configuration.derive_corsika_limits._logger.info")
+
+    result = derive_corsika_limits._differential_upper_limits(
+        histogram2d=np.zeros((3, 2)),
+        x_bins=np.array([0.0, 1.0, 2.0, 3.0]),
+        y_bins=np.array([1.0, 2.0, 4.0]),
+        diff_e_bins=np.array([1.0, 2.0, 3.0]),
+        allowed_loss=DEFAULT_ALLOWED_LOSSES["angular_distance"],
+        name="viewcone",
+        unit="deg",
+    )
+
+    assert result == (3.0, [], [])
+    mock_integral_limits.assert_not_called()
+    mock_log.assert_not_called()
 
 
 def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
     """Test _process_file with plot_histograms=True using plotting module function."""
     mock_histograms = mocker.MagicMock()
     mock_histograms.fill.return_value = None
+    mock_histograms.file_info = {}
 
     mocker.patch(
         SIM_EVENTS_HISTOGRAMS_PATH,
@@ -447,12 +754,13 @@ def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
         return_value=1.0 * u.TeV,
     )
     mocker.patch(
-        COMPUTE_UPPER_RADIUS_LIMIT_PATH,
-        return_value=100.0 * u.m,
-    )
-    mocker.patch(
-        COMPUTE_VIEWCONE_PATH,
-        return_value=2.0 * u.deg,
+        COMPUTE_LIMITS_PATH,
+        return_value={
+            "upper_radius_limit": 100.0 * u.m,
+            "viewcone_radius": 2.0 * u.deg,
+            "core_distance_vs_energy_curve": {"x": [100.0, 100.0], "y": [0.1, 1.0]},
+            "angular_distance_vs_energy_curve": {"x": [2.0, 2.0], "y": [0.1, 1.0]},
+        },
     )
 
     mock_plot = mocker.patch(
@@ -463,7 +771,7 @@ def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
         file_path=MOCK_FILE_PATH,
         array_name="MockArray",
         telescope_ids=[1, 2],
-        loss_fraction=0.2,
+        allowed_losses=DEFAULT_ALLOWED_LOSSES,
         plot_histograms=True,
     )
 
@@ -473,8 +781,437 @@ def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
     assert args[0] is mock_histograms.histograms
     assert kwargs["output_path"] == tmp_test_directory
     assert kwargs["limits"] == {
+        "primary_particle": None,
+        "zenith": None,
+        "azimuth": None,
+        "nsb_level": None,
+        "br_energy_min": None,
+        "br_energy_max": None,
+        "br_core_scatter_max": None,
+        "br_viewcone_max": None,
         "lower_energy_limit": 1.0 * u.TeV,
         "upper_radius_limit": 100.0 * u.m,
         "viewcone_radius": 2.0 * u.deg,
+        "core_distance_vs_energy_curve": {"x": [100.0, 100.0], "y": [0.1, 1.0]},
+        "angular_distance_vs_energy_curve": {"x": [2.0, 2.0], "y": [0.1, 1.0]},
     }
     assert kwargs["array_name"] == "MockArray"
+
+
+# Tests for multi-production and parallel execution support
+
+
+def test_normalize_event_data_file_single_string():
+    """Test _normalize_event_data_file with single string input."""
+    result = derive_corsika_limits._normalize_event_data_file("pattern_*.hdf5")
+    assert result == ["pattern_*.hdf5"]
+    assert isinstance(result, list)
+
+
+def test_normalize_event_data_file_list():
+    """Test _normalize_event_data_file with list input."""
+    patterns = ["pattern_1_*.hdf5", "pattern_2_*.hdf5"]
+    result = derive_corsika_limits._normalize_event_data_file(patterns)
+    assert result == patterns
+    # Should preserve order
+    assert result[0] == "pattern_1_*.hdf5"
+    assert result[1] == "pattern_2_*.hdf5"
+
+
+def test_normalize_event_data_file_invalid_type():
+    """Test _normalize_event_data_file raises on invalid type."""
+    with pytest.raises(TypeError):
+        derive_corsika_limits._normalize_event_data_file(123)
+
+
+def test_get_production_directory_name_readable_and_deterministic():
+    """Test _get_production_directory_name generates readable deterministic names."""
+    # Same inputs should produce same output when no collision exists
+    name1 = derive_corsika_limits._get_production_directory_name("pattern_1_*.hdf5")
+    name2 = derive_corsika_limits._get_production_directory_name("pattern_1_*.hdf5")
+    assert name1 == name2
+
+    # Different patterns should produce different readable names
+    name3 = derive_corsika_limits._get_production_directory_name("pattern_2_*.hdf5")
+    assert name1 != name3
+
+    # Names should be filesystem-safe (no special chars)
+    assert all(c.isalnum() or c == "_" for c in name1)
+    assert name1 == "production_pattern_1"
+
+
+def test_get_production_directory_name_uses_parent_dir_only():
+    """Parent directory name is used alone to avoid duplication with the filename stem."""
+    name = derive_corsika_limits._get_production_directory_name(
+        "/data/electron_z20_north_dark10p/electron_20deg_0deg_run00000*hdf5"
+    )
+    assert name == "production_electron_z20_north_dark10p"
+    # Must not repeat "electron" from the filename stem
+    assert name.count("electron") == 1
+
+
+def test_get_production_directory_name_appends_uuid_on_collision(mocker):
+    """Test _get_production_directory_name appends UUID when names collide."""
+    mock_uuid = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.get_uuid",
+        return_value="019d776b-e24c-741d-bc05-e3f6f7ec77c7",
+    )
+
+    name = derive_corsika_limits._get_production_directory_name(
+        "pattern_1_*.hdf5",
+        existing_names={"production_pattern_1"},
+    )
+
+    assert name == "production_pattern_1_019d776b-e24c-741d-bc05-e3f6f7ec77c7"
+    mock_uuid.assert_called_once()
+
+
+def test_parse_allowed_losses_explicit_axes():
+    """Test _parse_allowed_losses with explicit per-axis entries."""
+    result = derive_corsika_limits._parse_allowed_losses(
+        [
+            "core_distance,2e-6,20",
+            "angular_distance,3e-6,30",
+        ]
+    )
+
+    assert result["core_distance"]["loss_fraction"] == pytest.approx(2e-6)
+    assert result["core_distance"]["loss_min_events"] == 20
+    assert result["angular_distance"]["loss_fraction"] == pytest.approx(3e-6)
+    assert result["angular_distance"]["loss_min_events"] == 30
+
+
+def test_parse_allowed_losses_all_and_override():
+    """Test _parse_allowed_losses supports all plus later axis override."""
+    result = derive_corsika_limits._parse_allowed_losses(
+        [
+            "all,1e-6,10",
+            "core_distance,5e-7,5",
+        ]
+    )
+
+    assert result["core_distance"]["loss_fraction"] == pytest.approx(5e-7)
+    assert result["core_distance"]["loss_min_events"] == 5
+    assert result["angular_distance"]["loss_fraction"] == pytest.approx(1e-6)
+    assert result["angular_distance"]["loss_min_events"] == 10
+
+
+def test_parse_allowed_losses_missing_axis_raises():
+    """Test _parse_allowed_losses raises when required axes are missing."""
+    with pytest.raises(ValueError, match="Missing --allowed_losses entries"):
+        derive_corsika_limits._parse_allowed_losses(
+            [
+                "core_distance,1e-6,10",
+            ]
+        )
+
+
+def test_parse_allowed_losses_invalid_axis_raises():
+    """Test _parse_allowed_losses rejects invalid axis names."""
+    with pytest.raises(ValueError, match="Invalid axis for --allowed_losses"):
+        derive_corsika_limits._parse_allowed_losses(
+            [
+                "core_distance,1e-6,10",
+                "viewcone,1e-6,10",
+            ]
+        )
+
+
+def test_build_production_subdirectories_non_multi_returns_empty(tmp_test_directory):
+    """Test _build_production_subdirectories returns empty dict for single production."""
+    result = derive_corsika_limits._build_production_subdirectories(
+        ["pattern_1_*.hdf5"],
+        tmp_test_directory,
+        is_multi_production=False,
+    )
+    assert result == {}
+
+
+def test_build_production_subdirectories_creates_dirs(tmp_test_directory):
+    """Test _build_production_subdirectories creates per-production directories."""
+    patterns = ["pattern_1_*.hdf5", "pattern_2_*.hdf5"]
+    result = derive_corsika_limits._build_production_subdirectories(
+        patterns,
+        tmp_test_directory,
+        is_multi_production=True,
+    )
+
+    assert set(result.keys()) == set(patterns)
+    for output_subdir in result.values():
+        assert output_subdir.exists()
+        assert output_subdir.isdir()
+
+
+def test_execute_production_job_single_job(mocker):
+    """Test _execute_production_job executes one job correctly."""
+    mock_histograms = mocker.MagicMock()
+    mock_histograms.fill.return_value = None
+    mock_histograms.file_info = {}
+
+    mocker.patch(
+        SIM_EVENTS_HISTOGRAMS_PATH,
+        return_value=mock_histograms,
+    )
+
+    mocker.patch(
+        COMPUTE_LOWER_ENERGY_LIMIT_PATH,
+        return_value=1.0 * u.TeV,
+    )
+    mocker.patch(
+        COMPUTE_LIMITS_PATH,
+        return_value={
+            "upper_radius_limit": 100.0 * u.m,
+            "viewcone_radius": 2.0 * u.deg,
+            "core_distance_vs_energy_curve": {"x": [100.0, 100.0], "y": [0.1, 1.0]},
+            "angular_distance_vs_energy_curve": {"x": [2.0, 2.0], "y": [0.1, 1.0]},
+        },
+    )
+
+    job_spec = {
+        "production_index": 0,
+        "production_pattern": "pattern_*.hdf5",
+        "array_name": "LST",
+        "telescope_ids": ["LSTN-01"],
+        "allowed_losses": DEFAULT_ALLOWED_LOSSES,
+        "energy_threshold_fraction": 0.1,
+        "plot_histograms": False,
+        "output_subdir": None,
+    }
+
+    result = derive_corsika_limits._execute_production_job(job_spec)
+
+    # Result should include production metadata
+    assert result["production_index"] == 0
+    assert result["event_data_file"] == "pattern_*.hdf5"
+    assert result["array_name"] == "LST"
+    assert "lower_energy_limit" in result
+    assert "upper_radius_limit" in result
+    assert "viewcone_radius" in result
+
+
+def test_generate_corsika_limits_grid_multi_production(mocker, tmp_test_directory):
+    """Test generate_corsika_limits_grid with multiple event_data_file patterns."""
+    # Mock dependencies
+    mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
+    mock_collect.return_value = {"telescope_configs": {"LST": ["LSTN-01"]}}
+
+    mock_pool = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
+    )
+    # Mock process_pool_map_ordered to return results directly
+    mock_pool.return_value = [
+        _pool_result(production_index=0, event_data_file="pattern_1_*.hdf5"),
+        _pool_result(
+            production_index=1,
+            event_data_file="pattern_2_*.hdf5",
+            lower_energy_limit=0.6 * u.TeV,
+            upper_radius_limit=450.0 * u.m,
+            viewcone_radius=5.5 * u.deg,
+        ),
+    ]
+
+    mock_write = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.write_results"
+    )
+    mock_build_subdirs = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._build_production_subdirectories"
+    )
+
+    mock_io = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    )
+    # Use actual tmp_test_directory to allow directory creation
+    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
+
+    # Multi-production args
+    args_dict = {
+        "event_data_file": ["pattern_1_*.hdf5", "pattern_2_*.hdf5"],
+        "telescope_ids": "telescope_ids.yml",
+        "allowed_losses": [
+            "core_distance,0.2,10",
+            "angular_distance,0.2,10",
+        ],
+        "plot_histograms": False,
+        "output_file": "test_output.ecsv",
+        "n_workers": 2,
+    }
+
+    derive_corsika_limits.generate_corsika_limits_grid(args_dict)
+
+    # Verify process_pool_map_ordered was called with correct n_workers
+    mock_pool.assert_called_once()
+    call_kwargs = mock_pool.call_args[1]
+    assert call_kwargs["max_workers"] == 2
+
+    # For non-plotting runs, no production subdirectories should be built/passed
+    mock_build_subdirs.assert_not_called()
+    job_specs = mock_pool.call_args[0][1]
+    assert all(job_spec["output_subdir"] is None for job_spec in job_specs)
+
+    # Verify write_results was called with merged results
+    mock_write.assert_called_once()
+    written_results = mock_write.call_args[0][0]
+    assert len(written_results) == 2  # Both productions merged
+
+
+def test_generate_corsika_limits_grid_single_production_uses_pool(mocker, tmp_test_directory):
+    """Test generate_corsika_limits_grid with single production uses process pool."""
+    mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
+    mock_collect.return_value = {"telescope_configs": {"LST": ["LSTN-01"]}}
+
+    mock_pool = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
+    )
+    mock_pool.return_value = [_pool_result()]
+
+    mock_execute_job = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._execute_production_job"
+    )
+    mock_execute_job.return_value = {}
+
+    mocker.patch("simtools.production_configuration.derive_corsika_limits.write_results")
+
+    mock_io = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    )
+    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
+
+    args_dict = {
+        "event_data_file": "pattern_*.hdf5",  # Single string, not list
+        "telescope_ids": "telescope_ids.yml",
+        "allowed_losses": [
+            "core_distance,0.2,10",
+            "angular_distance,0.2,10",
+        ],
+        "plot_histograms": False,
+        "output_file": "test_output.ecsv",
+        "n_workers": 0,
+    }
+
+    derive_corsika_limits.generate_corsika_limits_grid(args_dict)
+
+    mock_pool.assert_called_once()
+    call_kwargs = mock_pool.call_args[1]
+    assert call_kwargs["max_workers"] == 0
+    mock_execute_job.assert_not_called()
+
+
+def test_create_results_table_with_production_columns(mock_results):
+    """Test _create_results_table includes production-origin columns for multi-production."""
+    # Add production metadata to mock results
+    for i, res in enumerate(mock_results):
+        res["production_index"] = i
+        res["event_data_file"] = f"pattern_{i}_*.hdf5"
+
+    table = derive_corsika_limits._create_results_table(mock_results, DEFAULT_ALLOWED_LOSSES, 0.1)
+
+    # Should include production-origin columns
+    assert "production_index" in table.colnames
+    assert "event_data_file" not in table.colnames
+
+    # Check values
+    assert table["production_index"][0] == 0
+
+
+def test_create_results_table_without_production_columns(mock_results):
+    """Test _create_results_table with missing production metadata values."""
+    # Results without production metadata (old format)
+    table = derive_corsika_limits._create_results_table(mock_results, DEFAULT_ALLOWED_LOSSES, 0.1)
+
+    # Production-origin column is included and filled with None if missing
+    assert "production_index" in table.colnames
+    assert "event_data_file" not in table.colnames
+    assert table["production_index"][0] is None
+
+    # Standard columns should be present
+    assert "primary_particle" in table.colnames
+    assert "array_name" in table.colnames
+
+
+def test_process_file_with_output_subdir(mocker, tmp_test_directory):
+    """Test _process_file routes plots to specified output subdirectory."""
+    mock_histograms = mocker.MagicMock()
+    mock_histograms.fill.return_value = None
+    mock_histograms.file_info = {}
+
+    mocker.patch(
+        SIM_EVENTS_HISTOGRAMS_PATH,
+        return_value=mock_histograms,
+    )
+
+    mocker.patch(
+        COMPUTE_LOWER_ENERGY_LIMIT_PATH,
+        return_value=1.0 * u.TeV,
+    )
+    mocker.patch(
+        COMPUTE_LIMITS_PATH,
+        return_value={
+            "upper_radius_limit": 100.0 * u.m,
+            "viewcone_radius": 2.0 * u.deg,
+            "core_distance_vs_energy_curve": {"x": [100.0, 100.0], "y": [0.1, 1.0]},
+            "angular_distance_vs_energy_curve": {"x": [2.0, 2.0], "y": [0.1, 1.0]},
+        },
+    )
+
+    mock_plot = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.plot_simtel_event_histograms.plot"
+    )
+
+    output_subdir = tmp_test_directory / "production_pattern_1"
+
+    derive_corsika_limits._process_file(
+        file_path=MOCK_FILE_PATH,
+        array_name="MockArray",
+        telescope_ids=["LSTN-01"],
+        allowed_losses=DEFAULT_ALLOWED_LOSSES,
+        plot_histograms=True,
+        output_subdir=output_subdir,
+    )
+
+    # Verify plot was called with the specified subdirectory
+    mock_plot.assert_called_once()
+    call_kwargs = mock_plot.call_args[1]
+    assert call_kwargs["output_path"] == output_subdir
+
+
+@pytest.fixture
+def mock_args_dict():
+    """Fixture to provide mock arguments dictionary with required keys."""
+    return {
+        "config_file": "dummy_config.yml",
+        "steps": None,
+        "ignore_runtime_environment": False,
+        "event_data_file": "dummy_event_data.h5",
+        "output_file": "corsika_limits.ecsv",
+        "allowed_losses": [
+            "core_distance,0.2,10",
+            "angular_distance,0.2,10",
+        ],
+        "energy_threshold_fraction": 0.1,
+        "plot_histograms": False,
+        "n_workers": 1,
+        "array_layout_name": None,
+        "array_element_list": ["LSTN-01"],
+        "telescope_ids": None,
+    }
+
+
+@pytest.fixture
+def mock_results():
+    """Fixture to provide one standard result row for table/writer tests."""
+    return [
+        {
+            "primary_particle": "gamma",
+            "array_name": "LST",
+            "zenith": 20.0 * u.deg,
+            "azimuth": 180.0 * u.deg,
+            "nsb_level": 1.0,
+            "lower_energy_limit": 0.5 * u.TeV,
+            "upper_radius_limit": 400.0 * u.m,
+            "viewcone_radius": 5.0 * u.deg,
+            "br_energy_min": 0.03 * u.TeV,
+            "br_energy_max": 300.0 * u.TeV,
+            "br_core_scatter_max": 800.0 * u.m,
+            "br_viewcone_max": 10.0 * u.deg,
+        }
+    ]

@@ -48,8 +48,7 @@ r"""
 """
 
 from simtools.application_control import build_application
-from simtools.model.telescope_model import TelescopeModel
-from simtools.visualization import plot_camera, visualize
+from simtools.visualization.plot_camera import plot_camera_pixel_layout_from_args
 
 
 def _add_arguments(parser):
@@ -82,47 +81,7 @@ def main():
             "simulation_model": ["telescope", "model_version"],
         },
     )
-
-    label = "validate_camera_fov"
-
-    tel_model = TelescopeModel(
-        site=app_context.args["site"],
-        telescope_name=app_context.args["telescope"],
-        model_version=app_context.args["model_version"],
-        label=label,
-    )
-    tel_model.export_model_files()
-
-    app_context.logger.info(f"\nValidating the camera FoV of {tel_model.name}\n")
-
-    focal_length = tel_model.get_telescope_effective_focal_length("cm")
-    camera = tel_model.camera
-
-    fov, r_edge_avg = camera.calc_fov()
-
-    app_context.logger.info(f"\nEffective focal length = {focal_length:.3f} cm")
-    app_context.logger.info(f"{tel_model.name} FoV = {fov:.3f} deg")
-    app_context.logger.info(f"Avg. edge radius = {r_edge_avg:.3f} cm\n")
-
-    # Now plot the camera as well
-    try:
-        pixel_ids_to_print = int(app_context.args["print_pixels_id"])
-        if pixel_ids_to_print == 0:
-            pixel_ids_to_print = -1  # so not print the zero pixel
-    except ValueError as exc:
-        if app_context.args["print_pixels_id"].lower() == "all":
-            pixel_ids_to_print = camera.get_number_of_pixels()
-        else:
-            raise ValueError(
-                f"The value provided to --print_pixels_id ({app_context.args['print_pixels_id']}) "
-                "should be an integer or All"
-            ) from exc
-    fig = plot_camera.plot_pixel_layout(
-        camera, app_context.args["camera_in_sky_coor"], pixel_ids_to_print
-    )
-    output_dir = app_context.io_handler.get_output_directory()
-    plot_file_prefix = output_dir.joinpath(f"{label}_{tel_model.name}_pixel_layout")
-    visualize.save_figure(fig, f"{plot_file_prefix!s}", log_title="camera")
+    plot_camera_pixel_layout_from_args(app_context)
 
 
 if __name__ == "__main__":

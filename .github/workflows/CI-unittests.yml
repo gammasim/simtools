@@ -1,6 +1,6 @@
 ---
 name: CI-unittests
-# Unit tests (includes CTAO-SonarQube)
+# Unit tests and CTAO-SonarQube
 
 on:
   workflow_dispatch:
@@ -20,8 +20,48 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: read
+
 jobs:
+  check_unit_test_files:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Python setup
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          check-latest: true
+
+      - name: Check unit test files exist
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          src_root = Path("src/simtools")
+          test_root = Path("tests/unit_tests")
+          missing = []
+          for path in src_root.rglob("*.py"):
+              rel = path.relative_to(src_root)
+              if path.name in {"__init__.py", "_version.py"} or rel.parts[0] == "applications":
+                  continue
+              if not (test_root / rel.parent / f"test_{path.stem}.py").exists():
+                  missing.append(str(rel))
+          if missing:
+              raise SystemExit("Modules without unit tests:\n" + "\n".join(sorted(missing)))
+          PY
+
   unit_tests:
+    needs: check_unit_test_files
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -32,7 +72,7 @@ jobs:
 
           - os: ubuntu-latest
             python-version: "3.13"
-            extra-args: ["sonarqube", "random-order"]
+            extra-args: ["random-order"]
 
           - os: ubuntu-latest
             python-version: "3.14"
@@ -75,20 +115,14 @@ jobs:
           pytest --durations=10 --color=yes -n 4 --dist loadscope \
             --cov=simtools --cov-report=xml --retries 2 --retry-delay 5
 
-      # CTAO-DPPS-SonarQube
-      - uses: SonarSource/sonarqube-scan-action@v8.0.0
-        if: contains(matrix.extra-args, 'sonarqube')
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Upload coverage report
+        if: matrix.python-version == '3.13'
+        uses: actions/upload-artifact@v7
         with:
-          args: >
-            -Dsonar.projectKey=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14
-            -Dsonar.host.url=https://sonar-ctao.zeuthen.desy.de
-            -Dsonar.qualitygate.wait=true
-            -Dsonar.python.coverage.reportPaths=coverage.xml
-            -Dsonar.python.version=${{ matrix.python-version }}
-            -Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py
-            -Dsonar.coverage.exclusions=**/tests/**,src/simtools/applications/**
+          name: coverage-python-3.13
+          path: coverage.xml
+          if-no-files-found: error
+          retention-days: 3
 
       - name: Random order
         if: github.event_name == 'schedule' && contains(matrix.extra-args, 'random-order')
@@ -99,3 +133,116 @@ jobs:
         run: |
           pytest --color=yes -n 4 --dist loadscope --count 5 --random-order \
            --retries 2 --retry-delay 5
+
+  sonarqube:
+    needs: unit_tests
+    runs-on: ubuntu-latest
+    env:
+      SONAR_SCANNER_VERSION: 8.1.0.6389
+      SONAR_SCANNER_PLATFORM: linux-x64
+      SONAR_SCANNER_CACHE_DIR: .sonar/sonar-scanner
+
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v8
+        with:
+          name: coverage-python-3.13
+          path: .
+
+      # CTAO-DPPS-SonarQube
+      - name: Restore Sonar scanner cache
+        id: sonar_scanner_cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.SONAR_SCANNER_CACHE_DIR }}
+          key: sonar-scanner-${{ runner.os }}-${{ runner.arch }}-${{ env.SONAR_SCANNER_VERSION }}
+
+      - name: Install Sonar scanner
+        if: steps.sonar_scanner_cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "$SONAR_SCANNER_CACHE_DIR"
+          curl --fail --location --retry 5 --retry-delay 20 --retry-all-errors \
+            "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-${SONAR_SCANNER_PLATFORM}.zip" \
+            --output sonar-scanner.zip
+          unzip -q sonar-scanner.zip -d "$SONAR_SCANNER_CACHE_DIR"
+
+      - name: Run Sonar scanner
+        id: sonar_scan
+        # Soft fail for draft PRs (unstable network connections)
+        continue-on-error: ${{ github.event.pull_request.draft == true }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          set +e
+          for attempt in 1 2 3; do
+            scanner_log="sonar-scanner-attempt-${attempt}.log"
+            "${SONAR_SCANNER_CACHE_DIR}/sonar-scanner-${SONAR_SCANNER_VERSION}-${SONAR_SCANNER_PLATFORM}/bin/sonar-scanner" \
+              -Dsonar.projectKey=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14 \
+              -Dsonar.host.url=https://sonar-ctao.zeuthen.desy.de \
+              -Dsonar.qualitygate.wait=true \
+              -Dsonar.scanner.connectTimeout=60 \
+              -Dsonar.scanner.socketTimeout=120 \
+              -Dsonar.scanner.responseTimeout=120 \
+              -Dsonar.plugins.download.timeout=600 \
+              -Dsonar.python.coverage.reportPaths=coverage.xml \
+              -Dsonar.python.version=3.13 \
+              -Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py \
+              -Dsonar.coverage.exclusions=**/tests/**,src/simtools/applications/** \
+              2>&1 | tee "$scanner_log"
+            status=${PIPESTATUS[0]}
+
+            echo "Sonar scanner attempt $attempt exited with status $status."
+
+            if [[ "$status" -eq 0 ]]; then
+              echo "Sonar scanner succeeded."
+              exit 0
+            fi
+
+            if grep -Eqi "QUALITY GATE STATUS: FAILED|quality gate failed" "$scanner_log"; then
+              echo "Sonar quality gate failed; not retrying."
+              exit "$status"
+            fi
+
+            if ! grep -Eqi "HTTP connect timed out|connect timed out|Connection refused|Connection reset|Failed to query server version|Failed to upload report|Failed to request|timeout|timed out|temporarily unavailable|502|503|504" "$scanner_log"; then
+              echo "Sonar scanner failed with a non-transient error; not retrying."
+              exit "$status"
+            fi
+
+            if [[ "$attempt" -lt 3 ]]; then
+              delay=$((attempt * 60))
+              echo "Sonar scanner attempt $attempt failed. Retrying in $delay seconds..."
+              sleep "$delay"
+            fi
+          done
+
+          echo "Sonar scanner failed after 3 attempts."
+          exit 1
+
+      - name: Report soft-failed Sonar scan
+        if: always() && github.event.pull_request.draft == true && steps.sonar_scan.outcome == 'failure'
+        run: |
+          echo "::warning::Sonar scan failed but was allowed to continue because this is a draft PR."
+          {
+            echo "## Sonar scan soft failure"
+            echo
+            echo "The Sonar scan failed, but the workflow continued because this is a draft PR."
+            echo "Open the \`Run Sonar scanner\` step logs for details."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload soft-failed Sonar logs
+        if: always() && github.event.pull_request.draft == true && steps.sonar_scan.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: sonar-scanner-logs
+          path: sonar-scanner-attempt-*.log
+          if-no-files-found: ignore
+          retention-days: 7

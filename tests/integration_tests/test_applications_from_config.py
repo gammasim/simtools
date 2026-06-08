@@ -79,8 +79,20 @@ def test_applications_from_config(tmp_test_directory, config, request):
         capture_output=True,
         text=True,
         env=env,
+        cwd=request.config.rootpath,
     )
     msg = f"Command {cmd!r} failed. stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+    if result.returncode != 0 and config.get("xfail_network_error"):
+        combined_output = result.stdout + result.stderr
+        network_error_patterns = (
+            "URLError",
+            "Network is unreachable",
+            "ConnectionError",
+            "TimeoutError",
+            "gaierror",
+        )
+        if any(pattern in combined_output for pattern in network_error_patterns):
+            pytest.xfail(f"Network error: {msg}")
     assert result.returncode == 0, msg
 
     assert log_inspector.inspect([result.stdout, result.stderr])

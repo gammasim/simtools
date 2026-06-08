@@ -8,7 +8,7 @@ core distance distributions.
 
 Command line arguments
 ----------------------
-input_file (str, required)
+event_data_file (str, required)
     Input file path.
 output_path (str, required)
     Output directory for the generated plots.
@@ -19,7 +19,7 @@ Generate plots from a given input file:
 
 .. code-block:: console
 
-    simtools-plot-simulated-event-distributions --input_file path/to/simtel_file.hdf5 \
+    simtools-plot-simulated-event-distributions --event_data_file path/to/simtel_file.hdf5 \
                                                 --output_path simtools_output/
 
 
@@ -32,7 +32,7 @@ from simtools.visualization import plot_simtel_event_histograms
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.add_argument("--input_file", type=str, required=True, help="Input file path")
+    parser.initialize_application_arguments(["event_data_file"])
 
 
 def main():
@@ -40,9 +40,9 @@ def main():
     app_context = build_application(
         initialization_kwargs={"db_config": False, "output": True},
     )
-    app_context.logger.info(f"Loading input file from: {app_context.args['input_file']}")
+    app_context.logger.info(f"Loading event data file from: {app_context.args['event_data_file']}")
 
-    histograms = EventDataHistograms(app_context.args["input_file"])
+    histograms = EventDataHistograms(app_context.args["event_data_file"])
     histograms.fill()
     plot_simtel_event_histograms.plot(
         histograms.histograms, output_path=app_context.io_handler.get_output_directory()

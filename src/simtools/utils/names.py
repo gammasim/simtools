@@ -152,6 +152,43 @@ def is_design_type(array_element_name):
     )
 
 
+def matches_array_element_name_or_design_type(element_name, reference_element_name):
+    """
+    Check whether an array element name matches a reference exactly or by design type equivalence.
+
+    Parameters
+    ----------
+    element_name: str
+        Candidate element name to validate and compare (e.g., "MSTN-01" or "MSTx-FlashCam").
+    reference_element_name: str
+        Reference array element name used for comparison (e.g., "MSTN-01" or "MSTN-FlashCam").
+
+    Returns
+    -------
+    bool
+        True if both names are identical, or if they belong to the same design type.
+    """
+    if element_name is None or reference_element_name is None:
+        return False
+
+    try:
+        validated_element_name = validate_array_element_name(element_name)
+        validated_reference_element_name = validate_array_element_name(reference_element_name)
+    except ValueError:
+        return False
+
+    if validated_element_name == validated_reference_element_name:
+        return True
+
+    if "-" not in validated_element_name or "-" not in validated_reference_element_name:
+        return False
+
+    return is_design_type(validated_element_name) and (
+        get_array_element_type_from_name(validated_element_name)
+        == get_array_element_type_from_name(validated_reference_element_name)
+    )
+
+
 @cache
 def _load_model_parameters():
     """
@@ -399,6 +436,8 @@ def get_array_element_type_from_name(array_element_name):
     try:  # e.g. instrument is 'North' as given for the site parameters
         return validate_site_name(array_element_name)
     except ValueError:  # any other telescope or calibration device
+        if array_element_name.startswith("OBS-"):
+            return validate_site_name(array_element_name.split("-", maxsplit=1)[1])
         return _validate_name(array_element_name.split("-")[0], array_elements())
 
 
@@ -675,15 +714,15 @@ def get_simulation_software_name_from_parameter_name(
     ----------
     parameter_name: str
         Model parameter name.
-    simulation_software: str
+    software_name: str
         Simulation software name.
     set_meta_parameter: bool
         If True, return values with 'set_meta_parameter' field set to True.
 
     Returns
     -------
-    str
-        Simtel parameter name.
+    str or None
+        Internal parameter name for the requested software, or ``None`` if no mapping exists.
     """
     _parameter = model_parameters().get(parameter_name)
     if not _parameter:

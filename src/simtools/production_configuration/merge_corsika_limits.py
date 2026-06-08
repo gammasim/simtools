@@ -4,18 +4,15 @@ import logging
 from itertools import product
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import unique, vstack
 
 import simtools.utils.general as gen
 from simtools.data_model import data_reader
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io import io_handler
+from simtools.io import ascii_handler, io_handler
 
 _logger = logging.getLogger(__name__)
-
-ZENITH_LABEL = "Zenith [deg]"
 
 
 class CorsikaMergeLimits:
@@ -310,179 +307,6 @@ class CorsikaMergeLimits:
             "expected_str": expected_combinations_str,
         }
 
-    def _plot_single_grid_coverage(
-        self, ax, zeniths, azimuths, nsb, array_name, found_combinations_str
-    ):
-        """Plot grid coverage for a single NSB and array_name."""
-        z_grid = np.zeros((len(zeniths), len(azimuths)))
-        for i, zenith in enumerate(zeniths):
-            for j, azimuth in enumerate(azimuths):
-                point_str = (str(zenith), str(azimuth), str(nsb), str(array_name))
-                if point_str in found_combinations_str:
-                    z_grid[i, j] = 1
-
-        az_vals = azimuths.value if hasattr(azimuths, "value") else azimuths
-        zen_vals = zeniths.value if hasattr(zeniths, "value") else zeniths
-        extent = [
-            min(az_vals) - 0.5,
-            max(az_vals) + 0.5,
-            max(zen_vals) + 0.5,
-            min(zen_vals) - 0.5,
-        ]
-        colors = ["red", "green"]
-        cmap = plt.matplotlib.colors.ListedColormap(colors)
-        im = ax.imshow(z_grid, cmap=cmap, vmin=0, vmax=1, extent=extent)
-
-        cbar = plt.colorbar(
-            im,
-            ax=ax,
-            ticks=[0, 1],
-            label="Coverage",
-            shrink=0.25,
-            pad=0.02,
-        )
-        cbar.set_ticklabels(["Missing", "Present"])
-        ax.set_title(f"Grid Coverage: NSB={nsb}, Array Name={array_name}")
-        ax.set_xlabel("Azimuth [deg]")
-        ax.set_ylabel(ZENITH_LABEL)
-        ax.set_xticks(az_vals)
-        ax.set_yticks(zen_vals)
-        ax.grid(which="major", linestyle="-", linewidth="0.5", color="black", alpha=0.3)
-
-    def plot_grid_coverage(self, merged_table, grid_definition):
-        """Generate plots showing grid coverage for each combination of NSB level and array name.
-
-        Creates a series of heatmap plots showing which grid points (combinations of zenith and
-        azimuth angles) are present or missing in the merged table, for each combination of
-        NSB level and array name.
-
-        Parameters
-        ----------
-        merged_table : astropy.table.Table
-            The merged table containing CORSIKA limit data.
-        grid_definition : dict
-            Dictionary defining the grid dimensions with keys:
-            'zenith': list of zenith angles,
-            'azimuth': list of azimuth angles,
-            'nsb_level': list of NSB levels,
-            'array_name': list of array names
-
-        Returns
-        -------
-        list
-            List of Path objects pointing to the saved plot files.
-        """
-        if not grid_definition:
-            _logger.info("No grid definition provided, skipping grid coverage plots.")
-            return []
-
-        _logger.info("Generating grid coverage plots")
-        output_files = []
-
-        _, completeness_info = self.check_grid_completeness(merged_table, grid_definition)
-        found_combinations_str = completeness_info.get("found_str", set())
-
-        unique_values = {
-            "zeniths": np.array(grid_definition.get("zenith", [])),
-            "azimuths": np.array(grid_definition.get("azimuth", [])),
-            "nsb_levels": np.array(grid_definition.get("nsb_level", [])),
-            "array_names": np.array(grid_definition.get("array_name", [])),
-        }
-
-        for nsb, array_name in product(unique_values["nsb_levels"], unique_values["array_names"]):
-            _, ax = plt.subplots(figsize=(10, 8))
-            self._plot_single_grid_coverage(
-                ax,
-                unique_values["zeniths"],
-                unique_values["azimuths"],
-                nsb,
-                array_name,
-                found_combinations_str,
-            )
-            output_file = self.output_dir / f"grid_coverage_{nsb}_{array_name}.png"
-            plt.tight_layout()
-            plt.savefig(output_file, bbox_inches="tight")
-            plt.close()
-            output_files.append(output_file)
-        return output_files
-
-    def plot_limits(self, merged_table):
-        """Create plots showing the derived limits for each combination of array_name and azimuth.
-
-        Creates plots showing the lower energy limit, upper radius limit, and viewcone radius
-        versus zenith angle for each combination of array_name and azimuth angle. Each plot has
-        lines for different NSB levels.
-
-        Parameters
-        ----------
-        merged_table : astropy.table.Table
-            The merged table containing CORSIKA limit data.
-
-        Returns
-        -------
-        list
-            List of Path objects pointing to the saved plot files.
-        """
-        _logger.info("Generating limit plots")
-        output_files = []
-
-        grouped_by_layout_az = merged_table.group_by(["array_name", "azimuth"])
-
-        for group in grouped_by_layout_az.groups:
-            array_name = group["array_name"][0]
-            azimuth = group["azimuth"][0]
-            azimuth_value = azimuth.value if hasattr(azimuth, "value") else azimuth
-
-            fig, axes = plt.subplots(1, 3, figsize=(18, 6))
-            legend_handles, legend_labels = [], []
-
-            grouped_by_nsb = group.group_by("nsb_level")
-            colors = plt.get_cmap("viridis")(np.linspace(0, 1, len(grouped_by_nsb.groups)))
-
-            for i, nsb_group in enumerate(grouped_by_nsb.groups):
-                nsb_level = nsb_group["nsb_level"][0]
-                plot_columns = [
-                    "zenith",
-                    "lower_energy_limit",
-                    "upper_radius_limit",
-                    "viewcone_radius",
-                ]
-                agg_data = nsb_group[plot_columns].group_by("zenith").groups.aggregate(np.mean)
-                agg_data.sort("zenith")
-                zeniths = agg_data["zenith"].value
-
-                (line,) = axes[0].plot(
-                    zeniths, agg_data["lower_energy_limit"], "o-", color=colors[i]
-                )
-                axes[1].plot(zeniths, agg_data["upper_radius_limit"], "o-", color=colors[i])
-                axes[2].plot(zeniths, agg_data["viewcone_radius"], "o-", color=colors[i])
-                legend_handles.append(line)
-                legend_labels.append(f"NSB={nsb_level}")
-
-            axes[0].set_title("Lower Energy Limit vs Zenith")
-            axes[0].set_xlabel(ZENITH_LABEL)
-            axes[0].set_ylabel("Lower Energy Limit [TeV]")
-            axes[0].grid(True)
-            axes[1].set_title("Upper Radius Limit vs Zenith")
-            axes[1].set_xlabel(ZENITH_LABEL)
-            axes[1].set_ylabel("Upper Radius Limit [m]")
-            axes[1].grid(True)
-            axes[2].set_title("Viewcone Radius vs Zenith")
-            axes[2].set_xlabel(ZENITH_LABEL)
-            axes[2].set_ylabel("Viewcone Radius [deg]")
-            axes[2].grid(True)
-
-            fig.legend(legend_handles, legend_labels, loc="lower center", ncol=len(legend_labels))
-            plt.suptitle(f"CORSIKA Limits: Array Name={array_name}, Azimuth={azimuth_value} deg")
-            plt.tight_layout()
-            plt.subplots_adjust(bottom=0.15)
-
-            output_file = self.output_dir / f"limits_{array_name}_azimuth{azimuth_value}.png"
-            plt.savefig(output_file)
-            plt.close(fig)
-            output_files.append(output_file)
-        return output_files
-
     def write_merged_table(self, merged_table, output_file, input_files, grid_completeness):
         """Write the merged table to file and save metadata.
 
@@ -526,3 +350,74 @@ class CorsikaMergeLimits:
         }
         MetadataCollector.dump(metadata, output_file)
         return output_file
+
+
+def _read_grid_definition(grid_definition):
+    """Read grid definition from file if provided."""
+    return ascii_handler.collect_data_from_file(grid_definition) if grid_definition else None
+
+
+def resolve_input_files_and_table(args_dict, merger):
+    """Resolve input files and merged table from command line arguments."""
+    if args_dict.get("merged_table"):
+        merged_table_path = Path(args_dict["merged_table"]).expanduser()
+        merged_table = data_reader.read_table_from_file(merged_table_path)
+        return merged_table, [merged_table_path], True
+
+    if not args_dict.get("input_files") and not args_dict.get("input_files_list"):
+        raise ValueError(
+            "Either --input_files, --input_files_list, or --merged_table must be provided."
+        )
+
+    input_files = []
+    if args_dict.get("input_files"):
+        raw_paths = args_dict.get("input_files")
+        if len(raw_paths) == 1 and Path(raw_paths[0]).expanduser().is_dir():
+            input_dir = Path(raw_paths[0]).expanduser()
+            input_files.extend(input_dir.glob("*.ecsv"))
+        else:
+            input_files.extend(Path(file_name).expanduser() for file_name in raw_paths)
+
+    if args_dict.get("input_files_list"):
+        input_files.extend(merger.read_file_list(args_dict["input_files_list"]))
+
+    if not input_files:
+        raise FileNotFoundError(
+            "No input files found. Check --input_files or --input_files_list arguments."
+        )
+
+    return merger.merge_tables(input_files), input_files, False
+
+
+def merge_corsika_limits(args_dict, merger=None):
+    """
+    Run table merge, completeness checks, and optional write-out.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Dictionary with command line arguments.
+    merger : CorsikaMergeLimits, optional
+        An instance of CorsikaMergeLimits to use for merging and plotting. If None, a
+        new instance will be created.
+    """
+    merger = merger or CorsikaMergeLimits()
+    grid_definition = _read_grid_definition(args_dict.get("grid_definition"))
+
+    merged_table, input_files, from_merged_table = resolve_input_files_and_table(args_dict, merger)
+
+    is_complete, grid_completeness = merger.check_grid_completeness(merged_table, grid_definition)
+
+    if not from_merged_table:
+        output_file = merger.output_dir / args_dict["output_file"]
+        merger.write_merged_table(
+            merged_table,
+            output_file,
+            input_files,
+            {
+                "is_complete": is_complete,
+                "expected": grid_completeness.get("expected", 0),
+                "found": grid_completeness.get("found", 0),
+                "missing": grid_completeness.get("missing", []),
+            },
+        )

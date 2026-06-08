@@ -220,11 +220,24 @@ def test_is_url():
     assert gen.is_url(5.0) is False
 
 
-@pytest.mark.xfail(reason="No network connection")
-def test_url_exists(caplog):
+def test_url_exists(caplog, mocker):
+    import urllib.error
+
+    def mock_urlopen(url, timeout=5):
+        if url == url_simtools_main:
+            mock_ctx = mocker.MagicMock()
+            mock_ctx.__enter__.return_value.status = 200
+            mock_ctx.__exit__.return_value = False
+            return mock_ctx
+        if url is None:
+            raise AttributeError("'NoneType' object has no attribute")
+        raise urllib.error.URLError("not found")
+
+    mocker.patch("simtools.utils.general.urllib.request.urlopen", side_effect=mock_urlopen)
+
     assert gen.url_exists(url_simtools_main)
     with caplog.at_level(logging.ERROR):
-        assert not gen.url_exists(url_simtools)  # raw ULR does not exist
+        assert not gen.url_exists(url_simtools)  # raw URL does not exist
     assert "does not exist" in caplog.text
     with caplog.at_level(logging.ERROR):
         assert not gen.url_exists(None)
@@ -394,7 +407,7 @@ def test_convert_list_to_string():
 def test_convert_string_to_list():
     t_1 = gen.convert_string_to_list("1 2 3 4")
     assert len(t_1) == 4
-    assert pytest.approx(t_1[1]) == pytest.approx(2.0)
+    assert t_1[1] == pytest.approx(2.0)
     assert isinstance(t_1[1], float)
 
     t_int = gen.convert_string_to_list("1 2 3 4", False)
@@ -404,10 +417,10 @@ def test_convert_string_to_list():
 
     t_2 = gen.convert_string_to_list("0.1 0.2 0.3 0.4")
     assert len(t_2) == 4
-    assert pytest.approx(t_2[1]) == pytest.approx(0.2)
+    assert t_2[1] == pytest.approx(0.2)
 
     t_3 = gen.convert_string_to_list("0.1")
-    assert pytest.approx(t_3[0]) == pytest.approx(0.1)
+    assert t_3[0] == pytest.approx(0.1)
 
     bla_bla = "bla bla"
     assert gen.convert_string_to_list("bla_bla") == "bla_bla"
@@ -830,16 +843,16 @@ def test_find_differences_in_json_objects():
     ]
 
 
-def test_ensure_iterable():
-    assert gen.ensure_iterable(None) == []
-    assert gen.ensure_iterable([1, 2, 3]) == [1, 2, 3]
-    assert gen.ensure_iterable(5) == [5]
-    assert gen.ensure_iterable((1, 2, 3)) == (1, 2, 3)
+def test_ensure_list():
+    assert gen.ensure_list(None) == []
+    assert gen.ensure_list([1, 2, 3]) == [1, 2, 3]
+    assert gen.ensure_list(5) == [5]
     # Test falsy values are correctly wrapped (not treated as None)
-    assert gen.ensure_iterable(0) == [0]
-    assert gen.ensure_iterable(0.0) == [0.0]
-    assert gen.ensure_iterable("") == [""]
-    assert gen.ensure_iterable(False) == [False]
+    assert gen.ensure_list(0) == [0]
+    assert gen.ensure_list(0.0) == [0.0]
+    assert gen.ensure_list("") == [""]
+    assert gen.ensure_list(False) == [False]
+    assert gen.ensure_list("abc") == ["abc"]
 
 
 def test_parse_typed_sequence():

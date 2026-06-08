@@ -13,10 +13,9 @@ checks the completeness of the grid against a provided grid definition file.
 This tool supports three main use cases:
 
 1. Merge multiple CORSIKA limit tables into a single file and optionally generate
-   plots of the derived limits.
+    a merged limits table.
 2. Merge tables and also check for grid completeness against a provided grid
-   definition file. This requires the --grid_definition parameter. Coverage plots
-   can also be generated.
+    definition file. This requires the --grid_definition parameter.
 3. Check grid completeness of an already merged table file. This requires both
    the --merged_table and --grid_definition parameters.
 
@@ -36,10 +35,6 @@ grid_definition (str)
 output_file (str, optional)
     Name of the output file for the merged limits table.
     Default is "merged_corsika_limits.ecsv".
-plot_grid_coverage (bool, optional)
-    Flag to generate plots showing grid coverage. Requires --grid_definition.
-plot_limits (bool, optional)
-    Flag to generate plots showing the derived limits.
 
 Examples
 --------
@@ -49,7 +44,7 @@ Examples
 
       simtools-production-merge-corsika-limits \\
           --input_files "simtools-output/corsika_limits/" \\
-          --output_file merged_limits.ecsv --plot_limits
+          --output_file merged_limits.ecsv
 
 2. Merge tables and check grid completeness:
 
@@ -58,7 +53,7 @@ Examples
       simtools-production-merge-corsika-limits \\
           --input_files "simtools-output/corsika_limits/" \\
           --grid_definition grid_definition.yaml \\
-          --output_file merged_limits.ecsv --plot_grid_coverage
+          --output_file merged_limits.ecsv
 
 3. Check grid completeness of an existing merged table:
 
@@ -66,7 +61,7 @@ Examples
 
       simtools-production-merge-corsika-limits \\
           --merged_table merged_limits.ecsv \\
-          --grid_definition grid_definition.yaml --plot_grid_coverage
+          --grid_definition grid_definition.yaml
 
 4. Merge tables using a list of files from a text file:
 
@@ -77,12 +72,8 @@ Examples
           --output_file merged_limits.ecsv
 """
 
-from pathlib import Path
-
 from simtools.application_control import build_application
-from simtools.data_model import data_reader
-from simtools.io import ascii_handler
-from simtools.production_configuration.merge_corsika_limits import CorsikaMergeLimits
+from simtools.production_configuration.merge_corsika_limits import merge_corsika_limits
 
 
 def _add_arguments(parser):
@@ -118,18 +109,6 @@ def _add_arguments(parser):
         default=None,
         help="Path to YAML file defining the expected grid points.",
     )
-    parser.add_argument(
-        "--plot_grid_coverage",
-        help="Generate plots showing grid coverage.",
-        action="store_true",
-        default=False,
-    )
-    parser.add_argument(
-        "--plot_limits",
-        help="Generate plots showing the derived limits.",
-        action="store_true",
-        default=False,
-    )
 
 
 def main():
@@ -137,69 +116,7 @@ def main():
     app_context = build_application(
         initialization_kwargs={"output": True},
     )
-
-    merger = CorsikaMergeLimits()
-    grid_definition = (
-        ascii_handler.collect_data_from_file(app_context.args["grid_definition"])
-        if app_context.args.get("grid_definition")
-        else None
-    )
-
-    if app_context.args.get("merged_table"):
-        # Case 3: Check coverage on an existing merged table
-        merged_table_path = Path(app_context.args["merged_table"]).expanduser()
-        merged_table = data_reader.read_table_from_file(merged_table_path)
-        input_files = [merged_table_path]
-    elif app_context.args.get("input_files") or app_context.args.get("input_files_list"):
-        # Case 1 & 2: Merge files
-        input_files = []
-
-        # Process input_files argument
-        if app_context.args.get("input_files"):
-            raw_paths = app_context.args.get("input_files")
-            if len(raw_paths) == 1 and Path(raw_paths[0]).expanduser().is_dir():
-                input_dir = Path(raw_paths[0]).expanduser()
-                input_files.extend(input_dir.glob("*.ecsv"))
-            else:
-                input_files.extend(Path(f).expanduser() for f in raw_paths)
-
-        # Process input_files_list argument
-        if app_context.args.get("input_files_list"):
-            files_from_list = merger.read_file_list(app_context.args["input_files_list"])
-            input_files.extend(files_from_list)
-
-        if not input_files:
-            raise FileNotFoundError(
-                "No input files found. Check --input_files or --input_files_list arguments."
-            )
-        merged_table = merger.merge_tables(input_files)
-    else:
-        raise ValueError(
-            "Either --input_files, --input_files_list, or --merged_table must be provided."
-        )
-
-    is_complete, grid_completeness = merger.check_grid_completeness(merged_table, grid_definition)
-
-    if app_context.args.get("plot_grid_coverage"):
-        merger.plot_grid_coverage(merged_table, grid_definition)
-
-    if app_context.args.get("plot_limits"):
-        merger.plot_limits(merged_table)
-
-    if not app_context.args.get("merged_table"):
-        # Write output file only when merging
-        output_file = merger.output_dir / app_context.args["output_file"]
-        merger.write_merged_table(
-            merged_table,
-            output_file,
-            input_files,
-            {
-                "is_complete": is_complete,
-                "expected": grid_completeness.get("expected", 0),
-                "found": grid_completeness.get("found", 0),
-                "missing": grid_completeness.get("missing", []),
-            },
-        )
+    merge_corsika_limits(app_context.args)
 
 
 if __name__ == "__main__":

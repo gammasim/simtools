@@ -1,0 +1,32 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: primary, datatype: string}
+# - {name: azimuth_angle_value, datatype: float64}
+# - {name: azimuth_angle_unit, datatype: string}
+# - {name: zenith_angle_value, datatype: float64}
+# - {name: zenith_angle_unit, datatype: string}
+# - {name: energy_min_value, datatype: float64}
+# - {name: energy_min_unit, datatype: string}
+# - {name: energy_max_value, datatype: float64}
+# - {name: energy_max_unit, datatype: string}
+# - {name: core_scatter_number, datatype: int64}
+# - {name: core_scatter_max_value, datatype: float64}
+# - {name: core_scatter_max_unit, datatype: string}
+# - {name: view_cone_min_value, datatype: float64}
+# - {name: view_cone_min_unit, datatype: string}
+# - {name: view_cone_max_value, datatype: float64}
+# - {name: view_cone_max_unit, datatype: string}
+# - {name: showers_per_run, datatype: int64}
+# - {name: model_version, datatype: string}
+# - {name: array_layout_name, datatype: string}
+# - {name: corsika_le_interaction, datatype: string}
+# - {name: corsika_he_interaction, datatype: string}
+# - {name: run_number, datatype: int64}
+# meta: !!omap
+# - {site: North}
+# - {simulation_software: corsika_sim_telarray}
+# - {coordinate_system: horizontal}
+# schema: astropy-2.0
+primary azimuth_angle_value azimuth_angle_unit zenith_angle_value zenith_angle_unit energy_min_value energy_min_unit energy_max_value energy_max_unit core_scatter_number core_scatter_max_value core_scatter_max_unit view_cone_min_value view_cone_min_unit view_cone_max_value view_cone_max_unit showers_per_run model_version array_layout_name corsika_le_interaction corsika_he_interaction run_number
+gamma 0.0 deg 20.0 deg 100.0 GeV 1.0 TeV 10 500.0 m 0.0 deg 10.0 deg 5 6.0.2 alpha urqmd epos 10

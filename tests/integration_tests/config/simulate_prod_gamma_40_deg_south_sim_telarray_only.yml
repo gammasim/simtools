@@ -16,6 +16,8 @@ applications:
     site: South
   integration_tests:
   - output_file: sim_telarray/run000007/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.simtel.zst
+  - test_simtel_cfg_files:
+      "6.0.2": tests/resources/sim_telarray_configurations/6.0.2/CTA-South-LSTS-01_test.cfg
   - test_output_files:
     - expected_sim_telarray_output:
         pe_sum:

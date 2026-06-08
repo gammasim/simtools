@@ -1423,7 +1423,7 @@ def run_psf_optimization_workflow(tel_model, site_model, args_dict, output_dir):
     learning_rate = args_dict.get("learning_rate")
 
     best_pars, best_psf_diameter, gd_results = optimizer.run_gradient_descent(
-        threshold, learning_rate
+        threshold, learning_rate, max_iterations=args_dict.get("max_iterations", 200)
     )
 
     # Check if optimization was successful

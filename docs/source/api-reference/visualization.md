@@ -114,3 +114,29 @@ the visualization module.
 .. automodule:: visualization.camera_plot_utils
    :members:
 ```
+
+## plot_event_level_production_comparison
+
+```{eval-rst}
+.. automodule:: visualization.plot_event_level_production_comparison
+   :members:
+```
+
+(plot-production-grid)=
+
+## plot_production_grid
+
+```{eval-rst}
+.. automodule:: visualization.plot_production_grid
+   :members:
+```
+
+
+(plot-corsika-limits)=
+
+## plot_corsika_limits
+
+```{eval-rst}
+.. automodule:: visualization.plot_corsika_limits
+   :members:
+```

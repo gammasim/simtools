@@ -1,0 +1,28 @@
+---
+applications:
+- application: simtools-simulate-prod-htcondor-generator
+  configuration:
+    apptainer_image:
+      0.30.0: tests/resources/dummy_apptainer_image.sif
+      0.29.0: tests/resources/dummy_apptainer_image.sif
+    job_grid_file: tests/resources/production_job_grid_horizontal.ecsv
+    label: test-production-grid
+    log_level: DEBUG
+    output_path: htcondor_submit
+    priority: 5
+    simulation_output: ./simulation_output_path
+  integration_tests:
+  - test_output_files:
+    - file: simulate_prod.submit.0.30.0.condor
+      path_descriptor: output_path
+    - file: simulate_prod.submit.0.30.0.params.txt
+      path_descriptor: output_path
+    - file: simulate_prod.submit.0.29.0.condor
+      path_descriptor: output_path
+    - file: simulate_prod.submit.0.29.0.params.txt
+      path_descriptor: output_path
+    - file: simulate_prod.submit.sh
+      path_descriptor: output_path
+  test_name: htcondor-grid-horizontal
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

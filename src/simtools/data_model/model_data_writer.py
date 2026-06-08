@@ -599,7 +599,9 @@ class ModelDataWriter:
                     unit.replace("None", "null") if isinstance(unit, str) else unit
                     for unit in data_dict["unit"]
                 ]
-                if all(u == data_dict["unit"][0] for u in data_dict["unit"]):
+                if not data_dict["unit"]:
+                    data_dict["unit"] = None
+                elif all(u == data_dict["unit"][0] for u in data_dict["unit"]):
                     data_dict["unit"] = data_dict["unit"][0]
         except KeyError:
             pass
