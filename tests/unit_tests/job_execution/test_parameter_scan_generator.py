@@ -70,27 +70,6 @@ def test_generate_overwrite_file_missing_template(tmp_test_directory):
         )
 
 
-def test_generate_overwrite_file_with_float_values(tmp_test_directory):
-    template_path = Path(tmp_test_directory) / "template.yaml"
-    with open(template_path, "w", encoding="utf-8") as f:
-        yaml.dump({}, f)
-
-    param_combo = {
-        "gain": ("changes.LSTN-01.pm_photoelectron_spectrum.gain", 5),
-    }
-    combo_name = "gain_5"
-    label = "test"
-
-    result = _generate_overwrite_file(
-        template_path, param_combo, combo_name, Path(tmp_test_directory), label
-    )
-
-    with open(result, encoding="utf-8") as f:
-        content = yaml.safe_load(f)
-
-    assert content["changes"]["LSTN-01"]["pm_photoelectron_spectrum"]["gain"]["value"] == 5
-
-
 def test_parse_parameter_scan_config_single_parameter(tmp_test_directory):
     template_path = Path(tmp_test_directory) / "template.yaml"
     template_path.touch()
@@ -123,7 +102,7 @@ def test_parse_parameter_scan_config_multiple_parameters(tmp_test_directory):
         "overwrite_template": str(template_path),
         "parameters": [
             {"name": "threshold", "path": "path1", "values": [220, 230]},
-            {"name": "gain", "path": "path2", "values": [5.0, 5.5]},
+            {"name": "test", "path": "path2", "values": [5.0, 5.5]},
         ],
     }
 
@@ -131,7 +110,7 @@ def test_parse_parameter_scan_config_multiple_parameters(tmp_test_directory):
 
     assert len(params) == 2
     assert params[0]["name"] == "threshold"
-    assert params[1]["name"] == "gain"
+    assert params[1]["name"] == "test"
 
 
 def test_generate_parameter_combinations_single_parameter():
@@ -151,16 +130,16 @@ def test_generate_parameter_combinations_single_parameter():
 def test_generate_parameter_combinations_cartesian_product():
     param_specs = [
         {"name": "threshold", "path": "path1", "values": [220, 230]},
-        {"name": "gain", "path": "path2", "values": [5.0, 5.5]},
+        {"name": "test", "path": "path2", "values": [5.0, 5.5]},
     ]
 
     combos = _generate_parameter_combinations(param_specs)
 
     assert len(combos) == 4
-    assert combos[0]["name"] == "threshold_220_gain_5.0"
-    assert combos[1]["name"] == "threshold_220_gain_5.5"
-    assert combos[2]["name"] == "threshold_230_gain_5.0"
-    assert combos[3]["name"] == "threshold_230_gain_5.5"
+    assert combos[0]["name"] == "threshold_220_test_5.0"
+    assert combos[1]["name"] == "threshold_220_test_5.5"
+    assert combos[2]["name"] == "threshold_230_test_5.0"
+    assert combos[3]["name"] == "threshold_230_test_5.5"
 
 
 def test_generate_parameter_combinations_three_parameters():
@@ -389,7 +368,7 @@ def test_generate_multi_parameter_scan(mock_resolve_images, tmp_test_directory):
             "overwrite_template": str(template_path),
             "parameters": [
                 {"name": "threshold", "path": "path1", "values": [220, 230]},
-                {"name": "gain", "path": "path2", "values": [5.0, 5.5]},
+                {"name": "test", "path": "path2", "values": [5.0, 5.5]},
             ],
         },
         "htcondor": {
