@@ -604,10 +604,11 @@ class ProductionGridPlotter:
         return [
             point
             for point in plot_points
-            if point["native_frame"] == "altaz"
-            and point["azimuth"] is not None
-            and point["zenith"] is not None
+            if point.get("native_frame") == "altaz"
+            and point.get("azimuth") is not None
+            and point.get("zenith") is not None
             and point.get(value_key) is not None
+        ]
         ]
 
     def plot_azimuth_zenith_projection_with_color_scale(
