@@ -7,6 +7,56 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.31.0](https://github.com/gammasim/simtools/releases/tag/v0.31.0) - 2026-06-03
+
+### API Changes
+
+- Rename `general.ensure_iterable` to `general.ensure_list` to clarify function intent (API change). ([#2191](https://github.com/gammasim/simtools/pull/2191))
+
+### Bugfixes
+
+- Fixed bug in ground-to-shower coordinate transformation of passing angles in degrees where radians are expected. Fixed coordinate system orientation for transformation. ([#2194](https://github.com/gammasim/simtools/pull/2194))
+- Add 'moon' NSB level to legacy simtel writer. Fix TypeError when writing HDF5 tables with object-dtype string columns (e.g. `file_name` in `FILE_INFO`). ([#2210](https://github.com/gammasim/simtools/pull/2210))
+- Fix model parameter validation for dimensionless floats. ([#2222](https://github.com/gammasim/simtools/pull/2222))
+- Fix bug in overwrite-model parameter mechanism for configuration_sim_telarray parameters: parameters were set for all telescopes, rather than only for the specified ones. ([#2228](https://github.com/gammasim/simtools/pull/2228))
+- Fix `instrument` field in model parameter schema and restrict it to allowed names defined in `common_definitions.schema.yml`. ([#2232](https://github.com/gammasim/simtools/pull/2232))
+
+### New Features
+
+- Add functionality for generating job configurations for a parameter grid to `simulate_prod_htcondor_generator`. ([#2174](https://github.com/gammasim/simtools/pull/2174))
+- Add Apptainer generation step to `simtools-prod` container production step. ([#2175](https://github.com/gammasim/simtools/pull/2175))
+- Add functionality to `production_derive_corsika_limits` and `plot_simulated_event_distributions` to read in several event data files using glob patterns. ([#2176](https://github.com/gammasim/simtools/pull/2176))
+- Add feature to allow for user-defined cosmic-ray spectra on the trigger rate application. ([#2177](https://github.com/gammasim/simtools/pull/2177))
+- Add an event-level production comparison application with multi-production trigger-distribution plots. ([#2181](https://github.com/gammasim/simtools/pull/2181))
+- Add the possibility to run the derivation of CORSIKA limits in parallel - e.g. for several zenith angles. ([#2182](https://github.com/gammasim/simtools/pull/2182))
+- Improve derivation of CORSIKA limits and allow to define a loss fraction per energy bin ('differential loss'). ([#2185](https://github.com/gammasim/simtools/pull/2185))
+- Major improvements to simulation production configuration preparation with clear separation introduced between observation grid generation and backend submission code.
+  Allow NSHOW to follow a pre-defined power law for simulation production grid definition. ([#2190](https://github.com/gammasim/simtools/pull/2190))
+- Add application to plot CORSIKA limits. Rearrange limits plotting for `production_merge_corsika_limits.py`. ([#2196](https://github.com/gammasim/simtools/pull/2196))
+- Add schema for CORSIKA limits tables. ([#2203](https://github.com/gammasim/simtools/pull/2203))
+- Add zenith-angle scaling mode for `showers_per_run` in production grid generation ([#2207](https://github.com/gammasim/simtools/pull/2207))
+- Add a file collection step to simtools-run-application. ([#2215](https://github.com/gammasim/simtools/pull/2215))
+- Allow integration tests to be run from any directory, not only the simtools base directory. ([#2216](https://github.com/gammasim/simtools/pull/2216))
+- Add glob-pattern collection, multi-output-path support, and zenith/azimuth/NSB-encoded plot filenames to `simtools-production-derive-corsika-limits`. ([#2219](https://github.com/gammasim/simtools/pull/2219))
+- Add illuminator_telescope_visibility model parameter schema ([#2220](https://github.com/gammasim/simtools/pull/2220))
+- Allow a single telescope name (e.g., `MSTN-05`) as `array_layout_name`, automatically creating a single-telescope layout without requiring a database entry. ([#2221](https://github.com/gammasim/simtools/pull/2221))
+- Add illuminator-telescope visibility model parameter and parallel multi-pair simulation support. A new `illuminator_telescope_visibility` schema defines which telescopes each illuminator can reach. The `simulate_illuminator` application gains `--simulate_all` and `--max_workers` options to run all valid pairs in parallel via the new `MultiIlluminatorSimulator` class. ([#2224](https://github.com/gammasim/simtools/pull/2224))
+
+### Maintenance
+
+- Move code from application scripts into modules to improve unit test coverage and maintainability. ([#2162](https://github.com/gammasim/simtools/pull/2162))
+- Improve event data list reading performance. ([#2180](https://github.com/gammasim/simtools/pull/2180))
+- Add unit-test skill to support Copilot. ([#2187](https://github.com/gammasim/simtools/pull/2187))
+- Add CI tests to ensure that every simtools Python module has a corresponding unit test module. ([#2193](https://github.com/gammasim/simtools/pull/2193))
+- Minor fixes to API calls, docstrings, and parameter usage. ([#2197](https://github.com/gammasim/simtools/pull/2197))
+- Allow integration tests configured with `xfail_network_error: true` to xfail on network errors. ([#2199](https://github.com/gammasim/simtools/pull/2199))
+- Address security issues reported by GitHub scanner (https://github.com/gammasim/simtools/security/code-scanning). ([#2209](https://github.com/gammasim/simtools/pull/2209))
+- Update simtools-run-application and avoid generation of spurious directory named `output`. ([#2217](https://github.com/gammasim/simtools/pull/2217))
+- Efficiency improvements for unit tests (mostly in unit tests of the plotting routines). ([#2223](https://github.com/gammasim/simtools/pull/2223))
+- Minor refactoring of unit tests to clearly follow general rules (e.g., outlined in documentation or skills). ([#2226](https://github.com/gammasim/simtools/pull/2226))
+- Improve efficiency of integration tests. ([#2227](https://github.com/gammasim/simtools/pull/2227))
+
+
 ## [v0.30.0](https://github.com/gammasim/simtools/releases/tag/v0.30.0) - 2026-05-07
 
 ### Bugfixes

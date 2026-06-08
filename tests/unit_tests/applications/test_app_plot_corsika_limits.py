@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from astropy.table import Column, Table
 
-import simtools.applications.production_plot_corsika_limits as app
+import simtools.applications.plot_corsika_limits as app
 
 
 def _create_merged_table():
@@ -34,14 +34,14 @@ def test_main_reads_table_and_plots(tmp_test_directory):
 
     with (
         patch(
-            "simtools.applications.production_plot_corsika_limits.build_application",
+            "simtools.applications.plot_corsika_limits.build_application",
             return_value=app_context,
         ),
         patch(
-            "simtools.applications.production_plot_corsika_limits.data_reader.read_table_from_file",
+            "simtools.applications.plot_corsika_limits.data_reader.read_table_from_file",
             return_value=merged_table,
         ) as mock_read_table,
-        patch("simtools.applications.production_plot_corsika_limits.plot_limits") as mock_limits,
+        patch("simtools.applications.plot_corsika_limits.plot_limits") as mock_limits,
     ):
         app.main()
 

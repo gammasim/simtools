@@ -109,7 +109,10 @@ def test_create_results_table(mock_results):
     assert table["br_energy_max"].unit == u.TeV
     assert table["br_core_scatter_max"].unit == u.m
     assert table["br_viewcone_max"].unit == u.deg
-    assert table["br_viewcone_max"].description == "Viewcone max from broad-range simulations."
+    assert (
+        table["br_viewcone_max"].description
+        == derive_corsika_limits.COLUMN_DESCRIPTIONS["br_viewcone_max"]
+    )
     assert table.meta["loss_fraction_core_distance"] == pytest.approx(0.2)
     assert table.meta["loss_min_events_core_distance"] == 10
     assert table.meta["loss_fraction_angular_distance"] == pytest.approx(0.2)
@@ -117,6 +120,20 @@ def test_create_results_table(mock_results):
     assert table.meta["energy_threshold_fraction"] == pytest.approx(0.1)
     assert isinstance(table.meta["created"], str)
     assert "description" in table.meta
+
+
+def test_file_info_columns_are_read_from_schema():
+    """Test file-info column mappings are read from the CORSIKA limits schema."""
+    assert derive_corsika_limits.FILE_INFO_COLUMNS == {
+        "primary_particle": "primary_particle",
+        "zenith": "zenith",
+        "azimuth": "azimuth",
+        "nsb_level": "nsb_level",
+        "br_energy_min": "energy_min",
+        "br_energy_max": "energy_max",
+        "br_core_scatter_max": "core_scatter_max",
+        "br_viewcone_max": "viewcone_max",
+    }
 
 
 def test_round_value():
@@ -184,6 +201,46 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict, tm
     job_specs = mock_pool.call_args[0][1]
     assert len(job_specs) == 2  # 2 layouts
     assert mock_write.call_count == 1
+
+
+def test_generate_corsika_limits_grid_by_version_layout_resolved(
+    mocker, mock_args_dict, tmp_test_directory
+):
+    """Test that a by_version dict string for array_layout_name is resolved before DB lookup.
+
+    This covers the case where run_application serializes the by_version dict as a Python
+    dict string when passing it as a CLI argument to the subprocess.
+    """
+    args = mock_args_dict.copy()
+    args["array_layout_name"] = ["{'by_version': {'>=1.0.0': ['LST', 'MST']}}"]
+    args["site"] = "North"
+    args["model_version"] = "1.2.3"
+
+    mock_read_layouts = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits."
+        "get_array_elements_from_db_for_layouts"
+    )
+    mock_read_layouts.return_value = {"LST": [1, 2], "MST": [3, 4]}
+
+    mock_pool = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
+    )
+    mock_pool.return_value = [
+        {"primary_particle": "gamma", "array_name": "LST", "telescope_ids": [1, 2]},
+        {"primary_particle": "gamma", "array_name": "MST", "telescope_ids": [3, 4]},
+    ]
+
+    mock_io = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    )
+    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
+
+    mocker.patch("simtools.production_configuration.derive_corsika_limits.write_results")
+
+    derive_corsika_limits.generate_corsika_limits_grid(args)
+
+    # by_version must be resolved to the actual list before calling DB lookup
+    mock_read_layouts.assert_called_once_with(["LST", "MST"], "North", "1.2.3")
 
 
 def test_generate_corsika_limits_grid_with_array_element_list(
@@ -783,6 +840,16 @@ def test_get_production_directory_name_readable_and_deterministic():
     assert name1 == "production_pattern_1"
 
 
+def test_get_production_directory_name_uses_parent_dir_only():
+    """Parent directory name is used alone to avoid duplication with the filename stem."""
+    name = derive_corsika_limits._get_production_directory_name(
+        "/data/electron_z20_north_dark10p/electron_20deg_0deg_run00000*hdf5"
+    )
+    assert name == "production_electron_z20_north_dark10p"
+    # Must not repeat "electron" from the filename stem
+    assert name.count("electron") == 1
+
+
 def test_get_production_directory_name_appends_uuid_on_collision(mocker):
     """Test _get_production_directory_name appends UUID when names collide."""
     mock_uuid = mocker.patch(
@@ -1040,11 +1107,10 @@ def test_create_results_table_with_production_columns(mock_results):
 
     # Should include production-origin columns
     assert "production_index" in table.colnames
-    assert "event_data_file" in table.colnames
+    assert "event_data_file" not in table.colnames
 
     # Check values
     assert table["production_index"][0] == 0
-    assert table["event_data_file"][0] == "pattern_0_*.hdf5"
 
 
 def test_create_results_table_without_production_columns(mock_results):
@@ -1052,11 +1118,10 @@ def test_create_results_table_without_production_columns(mock_results):
     # Results without production metadata (old format)
     table = derive_corsika_limits._create_results_table(mock_results, DEFAULT_ALLOWED_LOSSES, 0.1)
 
-    # Production-origin columns are included and filled with None if missing
+    # Production-origin column is included and filled with None if missing
     assert "production_index" in table.colnames
-    assert "event_data_file" in table.colnames
+    assert "event_data_file" not in table.colnames
     assert table["production_index"][0] is None
-    assert table["event_data_file"][0] is None
 
     # Standard columns should be present
     assert "primary_particle" in table.colnames

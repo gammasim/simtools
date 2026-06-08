@@ -15,7 +15,7 @@ applications:
     label: test
     log_level: DEBUG
     model_version: 6.0.2
-    nshow: 5
+    showers_per_run: 5
     output_path: simtools-output
     pack_for_grid_register: simtools-grid-output
     primary: gamma
@@ -27,6 +27,10 @@ applications:
     curved_atmosphere_min_zenith_angle: 60. deg
     overwrite_model_parameters: tests/resources/info_test_model_parameter_changes.yml
   integration_tests:
+  - test_simtel_cfg_files:
+      "6.0.2": tests/resources/sim_telarray_configurations/6.0.2/CTA-South-MSTS-01_test.cfg
+  - test_simtel_cfg_files:
+      "6.0.2": tests/resources/sim_telarray_configurations/6.0.2/CTA-beta-South_test.cfg
   - test_output_files:
     - file: gamma_run000020_za62deg_azm180deg_South_beta_6.0.2_test.log_hist.tar.gz
       path_descriptor: pack_for_grid_register

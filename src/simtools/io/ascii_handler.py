@@ -418,13 +418,18 @@ class JsonNumpyEncoder(json.JSONEncoder):
         return _encode_compact_rows(native, indent=indent, level=0)
 
 
-def _is_numeric_list(obj):
-    """Return True if obj is a list whose elements are all int or float."""
-    return isinstance(obj, list) and obj and all(isinstance(v, (int, float)) for v in obj)
+def _is_scalar_list(obj):
+    """Return True if obj is a list whose elements are all simple scalars."""
+    return (
+        isinstance(obj, list)
+        and obj
+        and all(isinstance(v, (int, float, str, bool)) or v is None for v in obj)
+    )
 
 
 def _encode_compact_rows(obj, indent, level):
-    if _is_numeric_list(obj):
+    """Recursively encode JSON, rendering scalar lists on a single line."""
+    if _is_scalar_list(obj):
         return "[" + ", ".join(json.dumps(v) for v in obj) + "]"
 
     if isinstance(obj, (dict, list)):

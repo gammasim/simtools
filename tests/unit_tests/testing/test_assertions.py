@@ -79,8 +79,10 @@ def test_assert_no_suffix():
         ("test_logs.tar.gz", b"fake tar content", "check_tar_logs", False),
     ],
 )
-def test_check_log_files(tmp_path, mocker, filename, file_content, mock_function, expected_result):
-    log_file = tmp_path / filename
+def test_check_log_files(
+    tmp_test_directory, mocker, filename, file_content, mock_function, expected_result
+):
+    log_file = Path(str(tmp_test_directory)) / filename
     if isinstance(file_content, bytes):
         log_file.write_bytes(file_content)
     else:
