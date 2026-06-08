@@ -23,6 +23,7 @@ Example configuration
       model_version: "6.0.1"
       # ... other simulate-prod parameters
       number_of_runs: 10
+      output_path: /path/to/simtools-output  # Optional, defaults to /tmp/simtools-output
 
     parameter_scan:
       parameters:
