@@ -11,13 +11,11 @@ applications:
     - LSTS-01
     run_number: 10
     number_of_events:
-    - 10
     - 5
     - 2
     flasher_photons:
     - 1e6
     - 2e6
-    - 3e6
     log_level: DEBUG
   integration_tests:
   - test_output_files:

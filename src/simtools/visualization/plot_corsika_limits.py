@@ -7,6 +7,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import ListedColormap
+from matplotlib.lines import Line2D
 
 _logger = logging.getLogger(__name__)
 
@@ -40,11 +41,6 @@ def _resolve_broad_range_columns(limits_table):
                 break
 
     if len(resolved_columns) != len(BROAD_RANGE_COLUMN_ALIASES):
-        _logger.warning(
-            "Not all broad-range columns found. Expected aliases: %s. Found: %s",
-            BROAD_RANGE_COLUMN_ALIASES,
-            resolved_columns,
-        )
         return None
 
     return resolved_columns
@@ -183,7 +179,7 @@ def plot_limits(limits_table, output_dir):
         legend_handles, legend_labels = [], []
 
         grouped_by_nsb = group.group_by("nsb_level")
-        colors = plt.get_cmap("viridis")(np.linspace(0, 1, len(grouped_by_nsb.groups)))
+        colors = plt.get_cmap("Set1").colors  # don't expect more than 9 NSB levels
 
         for i, nsb_group in enumerate(grouped_by_nsb.groups):
             nsb_level = nsb_group["nsb_level"][0]
@@ -201,7 +197,7 @@ def plot_limits(limits_table, output_dir):
             axes[1].plot(zeniths, agg_data["upper_radius_limit"], "o-", color=colors[i])
             axes[2].plot(zeniths, agg_data["viewcone_radius"], "o-", color=colors[i])
             legend_handles.append(line)
-            legend_labels.append(f"NSB={nsb_level}")
+            legend_labels.append(f"NSB={nsb_level} GHz")
 
             if broad_range_columns:
                 broad_columns = [
@@ -248,6 +244,11 @@ def plot_limits(limits_table, output_dir):
         axes[2].set_ylabel("Viewcone Radius [deg]")
         axes[2].grid(True)
 
+        if broad_range_columns:
+            legend_handles += [
+                Line2D([0], [0], linestyle="--", color="gray"),
+            ]
+            legend_labels += ["broad-range limits"]
         fig.legend(legend_handles, legend_labels, loc="lower center", ncol=len(legend_labels))
         plt.suptitle(
             "CORSIKA Limits: "

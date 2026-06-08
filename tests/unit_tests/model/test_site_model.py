@@ -66,6 +66,40 @@ def test_get_array_elements_for_layout(model_version):
         _north.get_array_elements_for_layout("not_a_layout")
 
 
+def test_get_array_elements_for_layout_single_telescope(model_version):
+    _north = SiteModel(site="North", label="testing-sitemodel", model_version=model_version)
+    _south = SiteModel(site="South", label="testing-sitemodel", model_version=model_version)
+
+    # Valid North telescope used as single-telescope layout
+    result = _north.get_array_elements_for_layout("MSTN-05")
+    assert result == ["MSTN-05"]
+
+    result = _north.get_array_elements_for_layout("LSTN-01")
+    assert result == ["LSTN-01"]
+
+    # Valid South telescope used as single-telescope layout
+    result = _south.get_array_elements_for_layout("MSTS-05")
+    assert result == ["MSTS-05"]
+
+    # Wrong-site telescope raises ValueError
+    with pytest.raises(
+        ValueError, match=r"Array layout 'MSTS-05' not found in 'North' site model."
+    ):
+        _north.get_array_elements_for_layout("MSTS-05")
+
+    # Design-type telescope raises ValueError
+    with pytest.raises(
+        ValueError, match=r"Array layout 'LSTN-design' not found in 'North' site model."
+    ):
+        _north.get_array_elements_for_layout("LSTN-design")
+
+    # Calibration device raises ValueError
+    with pytest.raises(
+        ValueError, match=r"Array layout 'ILLN-01' not found in 'North' site model."
+    ):
+        _north.get_array_elements_for_layout("ILLN-01")
+
+
 def test_get_list_of_array_layouts(model_version):
     _north = SiteModel(
         site="North",

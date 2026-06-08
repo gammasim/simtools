@@ -403,7 +403,7 @@ def test_get_corsika_version_with_run_time(mocker):
     )
 
 
-def test_export_build_info(mocker, tmp_path):
+def test_export_build_info(mocker, tmp_test_directory):
     mock_config = mocker.patch("simtools.dependencies.settings.config")
     mock_config.corsika_path = None
     mock_config.sim_telarray_path = None
@@ -415,7 +415,7 @@ def test_export_build_info(mocker, tmp_path):
         "simtools.dependencies.get_database_version_or_name", side_effect=["test_db", "1.2.3"]
     )
 
-    output_file = tmp_path / "build_info.yml"
+    output_file = Path(str(tmp_test_directory)) / "build_info.yml"
     export_build_info(output_file, run_time=None)
 
     mock_write.assert_called_once()
@@ -426,7 +426,7 @@ def test_export_build_info(mocker, tmp_path):
     assert call_args[1]["data"]["database_version"] == "1.2.3"
 
 
-def test_export_build_info_with_run_time(mocker, tmp_path):
+def test_export_build_info_with_run_time(mocker, tmp_test_directory):
     mock_config = mocker.patch("simtools.dependencies.settings.config")
     mock_config.corsika_path = None
     mock_config.sim_telarray_path = None
@@ -438,7 +438,7 @@ def test_export_build_info_with_run_time(mocker, tmp_path):
         "simtools.dependencies.get_database_version_or_name", side_effect=["prod_db", "2.0.0"]
     )
 
-    output_file = tmp_path / "build_info.yml"
+    output_file = Path(str(tmp_test_directory)) / "build_info.yml"
     run_time = ["docker"]
     export_build_info(output_file, run_time=run_time)
 

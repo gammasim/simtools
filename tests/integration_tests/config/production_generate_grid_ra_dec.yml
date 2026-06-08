@@ -2,10 +2,7 @@
 applications:
 - application: simtools-production-generate-grid
   configuration:
-    array_layout_name:
-      by_version:
-        "<7.0.0": 1lst
-        ">=7.0.0": 1lst
+    array_layout_name: LSTN-01
     axis:
     - ra 0 deg 360 deg 36 linear
     - dec -90 deg 90 deg 18 linear
@@ -15,9 +12,10 @@ applications:
     corsika_he_interaction: epos
     corsika_le_interaction: urqmd
     energy_range: 30 GeV 300 GeV
-    corsika_limits: tests/resources/corsika_simulation_limits/merged_corsika_limits_for_test.ecsv
+    corsika_limits: tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv
     model_version: 6.0.2
-    nshow: 5
+    showers_per_run: 5
+    showers_per_run_power_law: 0.0 1 TeV
     number_of_runs: 2
     time_of_observation: '2017-09-16 00:00:00'
     output_file: job_grid_ra_dec.ecsv

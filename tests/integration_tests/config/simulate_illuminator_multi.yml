@@ -1,0 +1,43 @@
+---
+applications:
+- application: simtools-simulate-illuminator
+  configuration:
+    model_version: 7.0.0
+    output_path: simtools-output
+    site: North
+    simulate_all: true
+    light_source: ILLN-01
+    flasher_photons: 1e8
+    wavelength: 300
+    log_level: DEBUG
+  integration_tests:
+  - test_output_files:
+    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-02_300nm.simtel.zst
+      path_descriptor: output_path
+    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-03_300nm.simtel.zst
+      path_descriptor: output_path
+    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-05_300nm.simtel.zst
+      path_descriptor: output_path
+    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-06_300nm.simtel.zst
+      path_descriptor: output_path
+    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-07_300nm.simtel.zst
+      path_descriptor: output_path
+    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-10_300nm.simtel.zst
+      path_descriptor: output_path
+    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-15_300nm.simtel.zst
+      path_descriptor: output_path
+    - expected_sim_telarray_output:
+        pe_sum:
+        - 100
+        - 10000
+        photons:
+        - 1000
+        - 30000
+        event_type: illuminator
+      file: illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-02_300nm.simtel.zst
+      path_descriptor: output_path
+      output_sub_path: sim_telarray
+  model_version_use_current: true
+  test_name: run-multi-illuminator
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

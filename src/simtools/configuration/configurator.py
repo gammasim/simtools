@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import shlex
 import sys
 
 import astropy.units as u
@@ -316,7 +317,7 @@ class Configurator:
             self.config["output_file"] = f"{prefix}{label}{extension}"
 
     @staticmethod
-    def _arglist_from_config(input_var):
+    def _arglist_from_config(input_var, parser=None):
         """
         Convert input list of strings as needed by argparse.
 
@@ -333,6 +334,9 @@ class Configurator:
         ----------
         input_var: dict, list, None
            Dictionary/list of commands to convert to list.
+        parser: argparse.ArgumentParser, optional
+            Parser used to detect fixed-arity arguments (``nargs=<int>``). When provided,
+            scalar string values for those arguments are split into multiple CLI tokens.
 
         Returns
         -------
@@ -341,24 +345,68 @@ class Configurator:
 
         """
         if isinstance(input_var, dict):
-            _list_args = []
-            for key, value in input_var.items():
-                if isinstance(value, list):
-                    _list_args.append("--" + key)
-                    _list_args.extend(map(str, value))
-                elif isinstance(value, u.Quantity) or (
-                    not isinstance(value, bool) and value is not None and len(str(value)) > 0
-                ):
-                    _list_args.append("--" + key)
-                    _list_args.append(str(value))
-                elif value:
-                    _list_args.append("--" + key)
-            return _list_args
+            return Configurator._arglist_from_dict(input_var, parser=parser)
 
         try:
             return [str(value) for value in list(input_var) if value != "None"]
         except TypeError:
             return []
+
+    @staticmethod
+    def _arglist_from_dict(input_dict, parser=None):
+        """Convert a configuration dictionary into CLI-style argument tokens."""
+        list_args = []
+        for key, value in input_dict.items():
+            list_args.extend(Configurator._arg_tokens_for_item(key, value, parser=parser))
+        return list_args
+
+    @staticmethod
+    def _arg_tokens_for_item(key, value, parser=None):
+        """Return CLI argument tokens for a single configuration entry."""
+        option = f"--{key}"
+
+        if isinstance(value, list):
+            return [option, *map(str, value)]
+
+        if Configurator._is_scalar_config_value(value):
+            return [option, *Configurator._normalize_scalar_config_value(key, value, parser=parser)]
+
+        if value:
+            return [option]
+
+        return []
+
+    @staticmethod
+    def _is_scalar_config_value(value):
+        """Return True for scalar values that should produce an option and one or more tokens."""
+        return isinstance(value, u.Quantity) or (
+            not isinstance(value, bool) and value is not None and len(str(value)) > 0
+        )
+
+    @staticmethod
+    def _normalize_scalar_config_value(key, value, parser=None):
+        """Normalize a scalar config value to one or more argument tokens."""
+        expected_nargs = Configurator._get_fixed_nargs(parser, key)
+        if not (isinstance(value, str) and isinstance(expected_nargs, int) and expected_nargs > 1):
+            return [str(value)]
+
+        split_values = shlex.split(value)
+        if len(split_values) != expected_nargs:
+            raise ValueError(
+                f"Configuration value for '{key}' must provide "
+                f"{expected_nargs} entries, got {len(split_values)}: {value}"
+            )
+        return split_values
+
+    @staticmethod
+    def _get_fixed_nargs(parser, key):
+        """Return fixed integer nargs for an option key if configured."""
+        if parser is None:
+            return None
+        action = parser._option_string_actions.get(f"--{key}")  # pylint: disable=protected-access
+        if action is None:
+            return None
+        return action.nargs if isinstance(action.nargs, int) else None
 
     @staticmethod
     def _convert_string_none_to_none(input_dict):
@@ -388,8 +436,8 @@ class Configurator:
         self.config = self._convert_string_none_to_none(
             vars(
                 self.parser.parse_args(
-                    self._arglist_from_config(self.config)
-                    + self._arglist_from_config(input_container)
+                    self._arglist_from_config(self.config, parser=self.parser)
+                    + self._arglist_from_config(input_container, parser=self.parser)
                 )
             )
         )

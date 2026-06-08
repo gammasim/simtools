@@ -77,6 +77,15 @@ Support modules for running sim_telarray.
    :members:
 ```
 
+## multi_illuminator_simulator
+
+(multi-illuminator-simulator)=
+
+```{eval-rst}
+.. automodule:: simtel.multi_illuminator_simulator
+   :members:
+```
+
 ## simulator_array
 
 (simulate-array-1)=

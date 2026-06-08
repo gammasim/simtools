@@ -86,6 +86,7 @@ simtools-maintain-simulation-model-verify-production-tables <applications/simtoo
 simtools-maintain-simulation-model-write-array-element-positions <applications/simtools-maintain-simulation-model-write-array-element-positions>
 simtools-merge-tables <applications/simtools-merge-tables>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
+simtools-plot-corsika-limits <applications/simtools-plot-corsika-limits>
 simtools-plot-production-grid <applications/simtools-plot-production-grid>
 simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
 simtools-plot-tabular-data-for-model-parameter <applications/simtools-plot-tabular-data-for-model-parameter>
@@ -95,7 +96,6 @@ simtools-production-derive-corsika-limits <applications/simtools-production-deri
 simtools-production-derive-statistics <applications/simtools-production-derive-statistics>
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
 simtools-production-merge-corsika-limits <applications/simtools-production-merge-corsika-limits>
-simtools-production-plot-corsika-limits <applications/simtools-production-plot-corsika-limits>
 simtools-run-application <applications/simtools-run-application>
 simtools-simulate-flasher <applications/simtools-simulate-flasher>
 simtools-simulate-illuminator <applications/simtools-simulate-illuminator>

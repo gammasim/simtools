@@ -9,10 +9,14 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Column, Table
 
+from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler, io_handler
 from simtools.job_execution.process_pool import process_pool_map_ordered
-from simtools.layout.array_layout_utils import get_array_elements_from_db_for_layouts
+from simtools.layout.array_layout_utils import (
+    get_array_elements_from_db_for_layouts,
+    resolve_array_layout_name,
+)
 from simtools.sim_events.histograms import EventDataHistograms
 from simtools.utils.general import get_uuid
 from simtools.utils.names import normalize_array_element_identifier_container
@@ -20,36 +24,38 @@ from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
 
-FILE_INFO_KEYS = ("primary_particle", "zenith", "azimuth", "nsb_level")
-BROAD_RANGE_FILE_INFO_KEYS = {
-    "br_energy_min": "energy_min",
-    "br_energy_max": "energy_max",
-    "br_core_scatter_max": "core_scatter_max",
-    "br_viewcone_max": "viewcone_max",
-}
-COLUMN_DESCRIPTIONS = {
-    "br_energy_min": "Energy min from broad-range simulations.",
-    "br_energy_max": "Energy max from broad-range simulations.",
-    "br_core_scatter_max": "Core scatter max from broad-range simulations.",
-    "br_viewcone_max": "Viewcone max from broad-range simulations.",
-}
+CORSIKA_LIMITS_TABLE_SCHEMA_FILE = SCHEMA_PATH / "corsika_limits_table.schema.yml"
+
+
+def _load_output_table_configuration_from_schema(schema_file):
+    """Load output table columns, descriptions, and file-info mappings from schema."""
+    schema_data = ascii_handler.collect_data_from_file(file_name=schema_file)
+    data_entries = schema_data.get("data", [])
+    if not data_entries:
+        raise KeyError(f"No 'data' entry found in schema {schema_file}")
+
+    table_columns = data_entries[0].get("table_columns", [])
+    if not table_columns:
+        raise KeyError(f"No 'table_columns' entry found in schema {schema_file}")
+
+    result_columns = [entry["name"] for entry in table_columns]
+    column_descriptions = {
+        entry["name"]: entry.get("description")
+        for entry in table_columns
+        if entry.get("description") is not None
+    }
+    file_info_columns = {
+        entry["name"]: entry["file_info_key"]
+        for entry in table_columns
+        if entry.get("file_info_key") is not None
+    }
+    return result_columns, column_descriptions, file_info_columns
+
+
+RESULT_COLUMNS, COLUMN_DESCRIPTIONS, FILE_INFO_COLUMNS = (
+    _load_output_table_configuration_from_schema(CORSIKA_LIMITS_TABLE_SCHEMA_FILE)
+)
 LOSS_AXES = ("core_distance", "angular_distance")
-RESULT_COLUMNS = [
-    "production_index",
-    "event_data_file",
-    "primary_particle",
-    "array_name",
-    "zenith",
-    "azimuth",
-    "nsb_level",
-    "lower_energy_limit",
-    "upper_radius_limit",
-    "viewcone_radius",
-    "br_energy_min",
-    "br_energy_max",
-    "br_core_scatter_max",
-    "br_viewcone_max",
-]
 
 
 def _normalize_event_data_file(event_data_file):
@@ -93,27 +99,18 @@ def _get_production_directory_name(production_pattern, existing_names=None):
     str
         Safe directory name (e.g., "production_prod_a_events").
     """
+
+    def _sanitize(name):
+        name = re.sub(r"[^A-Za-z0-9]+", "_", name)
+        return re.sub(r"_+", "_", name).strip("_")
+
     pattern_path = Path(production_pattern)
-    parts = []
-
-    if pattern_path.parent.name and pattern_path.parent.name != ".":
-        parts.append(pattern_path.parent.name)
-    if pattern_path.stem:
-        parts.append(pattern_path.stem)
-
-    readable_name = "_".join(parts) if parts else "production"
-    readable_name = re.sub(r"[^A-Za-z0-9]+", "_", readable_name)
-    readable_name = readable_name.strip("_")
-    readable_name = re.sub(r"_+", "_", readable_name)
-
-    if not readable_name:
-        readable_name = "production"
-
+    parent_name = _sanitize(pattern_path.parent.name) if pattern_path.parent.name != "." else ""
+    readable_name = parent_name or _sanitize(pattern_path.stem) or "production"
     base_name = f"production_{readable_name}"
 
     if existing_names is None or base_name not in existing_names:
         return base_name
-
     return f"{base_name}_{get_uuid()}"
 
 
@@ -175,8 +172,14 @@ def _execute_production_job(job_spec):
 def _resolve_telescope_configs(args_dict):
     """Resolve telescope configurations from one of the supported input options."""
     if args_dict.get("array_layout_name"):
-        return get_array_elements_from_db_for_layouts(
+        layouts = resolve_array_layout_name(
             args_dict["array_layout_name"],
+            args_dict.get("model_version"),
+        )
+        if not isinstance(layouts, list):
+            layouts = [layouts]
+        return get_array_elements_from_db_for_layouts(
+            layouts,
             args_dict.get("site"),
             args_dict.get("model_version"),
         )
@@ -399,11 +402,10 @@ def _process_file(
             differential_loss_bins_per_decade,
         )
     )
-    limits.update({key: histograms.file_info.get(key) for key in FILE_INFO_KEYS})
     limits.update(
         {
-            output_key: histograms.file_info.get(file_info_key)
-            for output_key, file_info_key in BROAD_RANGE_FILE_INFO_KEYS.items()
+            column_name: histograms.file_info.get(file_info_key)
+            for column_name, file_info_key in FILE_INFO_COLUMNS.items()
         }
     )
 

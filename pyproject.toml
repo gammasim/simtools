@@ -110,6 +110,7 @@ scripts.simtools-maintain-simulation-model-verify-production-tables = "simtools.
 scripts.simtools-maintain-simulation-model-write-array-element-positions = "simtools.applications.maintain_simulation_model_write_array_element_positions:main"
 scripts.simtools-merge-tables = "simtools.applications.merge_tables:main"
 scripts.simtools-plot-array-layout = "simtools.applications.plot_array_layout:main"
+scripts.simtools-plot-corsika-limits = "simtools.applications.plot_corsika_limits:main"
 scripts.simtools-plot-production-grid = "simtools.applications.plot_production_grid:main"
 scripts.simtools-plot-simtel-events = "simtools.applications.plot_simtel_events:main"
 scripts.simtools-plot-simulated-event-distributions = "simtools.applications.plot_simulated_event_distributions:main"
@@ -119,7 +120,6 @@ scripts.simtools-production-derive-corsika-limits = "simtools.applications.produ
 scripts.simtools-production-derive-statistics = "simtools.applications.production_derive_statistics:main"
 scripts.simtools-production-generate-grid = "simtools.applications.production_generate_grid:main"
 scripts.simtools-production-merge-corsika-limits = "simtools.applications.production_merge_corsika_limits:main"
-scripts.simtools-production-plot-corsika-limits = "simtools.applications.production_plot_corsika_limits:main"
 scripts.simtools-run-application = "simtools.applications.run_application:main"
 scripts.simtools-simulate-flasher = "simtools.applications.simulate_flasher:main"
 scripts.simtools-simulate-illuminator = "simtools.applications.simulate_illuminator:main"
@@ -137,9 +137,9 @@ scripts.simtools-validate-optics = "simtools.applications.validate_optics:main"
 scripts.simtools-write-reduced-event-lists = "simtools.applications.write_reduced_event_lists:main"
 
 [tool.setuptools]
-package-dir = { "" = "src" }
 packages.find.where = [ "src" ]
 packages.find.exclude = [ "simtools._dev_version.*" ]
+package-dir = { "" = "src" }
 
 [tool.setuptools_scm]
 write_to = "src/simtools/_version.py"
@@ -195,89 +195,89 @@ lint.per-file-ignores."**/tests_*.py" = [
 lint.pydocstyle.convention = "numpy"
 
 [tool.pylint]
+# See discussion in issue 521
+# Agreed to not have module docstring (missing-module-docstring)
+# Pylint cannot handle overload (used in pyproj; unpacking-non-sequence)
+main.disable = [
+  "fixme",
+  "logging-format-interpolation",
+  "logging-fstring-interpolation",
+  "missing-function-docstring",
+  "missing-module-docstring",
+  "R0801",                         # duplications
+  "unpacking-non-sequence",
+]
+# see https://github.com/pylint-dev/pylint/issues/2289
+main.generated-members = [
+  "gist_heat_r",
+]
 # Good variable names which should always be accepted, separated by a comma.
 main.good-names = [
-  "e",
-  "i",
-  "j",
-  "k",
-  "x",
-  "y",
-  "n",
-  "f",
-  "r",
-  "ex",
-  "db",
-  "im",
-  "sh",
   "ax",
-  "ce",
-  "xx",
-  "yy",
-  "zz",
   "C1",
   "C2",
   "C3",
   "C4",
   "C4x",
+  "ce",
+  "db",
+  "e",
+  "ex",
+  "f",
+  "hess",
+  "i",
+  "im",
+  "j",
+  "k",
+  "lst",
+  "magic",
+  "mst",
+  "n",
   "N1",
   "N2",
   "N3",
   "N4",
   "N4x",
-  "lst",
-  "mst",
-  "sst",
+  "r",
   "sct",
-  "hess",
-  "magic",
+  "sh",
+  "sst",
   "veritas",
+  "x",
+  "xx",
+  "y",
+  "yy",
+  "zz",
 ]
 # Ignore files
 main.ignore = [
   "__init__.py",
-  "scm_version.py",
   "_version.py",
-]
-# See discussion in issue 521
-# Agreed to not have module docstring (missing-module-docstring)
-# Pylint cannot handle overload (used in pyproj; unpacking-non-sequence)
-main.disable = [
-  "missing-module-docstring",
-  "unpacking-non-sequence",
-  "logging-format-interpolation",
-  "fixme",
-  "missing-function-docstring",
-  "R0801",                         # duplications
-  "logging-fstring-interpolation",
-]
-# see https://github.com/pylint-dev/pylint/issues/2289
-main.generated-members = [
-  "gist_heat_r",
+  "scm_version.py",
 ]
 # see https://stackoverflow.com/questions/49846940/incorrect-pylint-errors-on-astropy-in-vscode
 # (required to suppress warnings from astropy.units when using pylint; not only vscode)
 main.ignored-classes = [
   "astropy.units",
 ]
-# Maximum number of characters on a single line.
-main.max-line-length = 100
-# Maximum number of lines in a module. (default 1000)
-main.max-module-lines = 1500
-# Maximum number of branch for function / method body. (default=12)
-main.max-branches = 15
 # Maximum number of arguments for function / method (default=5).
 main.max-args = 15
-# Maximum number of locals for function / method body (default=15).
-main.max-locals = 30
 # Maximum number of attributes for a class (see R0902). (default=7)
 main.max-attributes = 20
+# Maximum number of branch for function / method body. (default=12)
+main.max-branches = 15
+# Maximum number of characters on a single line.
+main.max-line-length = 100
+# Maximum number of locals for function / method body (default=15).
+main.max-locals = 30
+# Maximum number of lines in a module. (default 1000)
+main.max-module-lines = 1500
 # Maximum number of positional arguments for function / method (default=5.)
 main.max-positional-arguments = 15
-# Maximum number of statements in function / method body. (default=50)
-main.max-statements = 80
 # Maximum number of public methods for a class (see R0904). (default=20)
 main.max-public-methods = 30
+# Maximum number of statements in function / method body. (default=50)
+main.max-statements = 80
 # Minimum number of public methods for a class (see R0903). (default=2)
 main.min-public-methods = 1
 
@@ -285,11 +285,8 @@ main.min-public-methods = 1
 ignore-words-list = "chec,arrang,livetime"
 
 [tool.pytest]
-ini_options.markers = [
-  "uses_model_database: test uses model parameter database.",
-  "db_unit_test: test belongs to unit_tests/db and must not use global DatabaseHandler patching.",
-]
 ini_options.minversion = "6.0"
+ini_options.testpaths = "tests/unit_tests/"
 ini_options.norecursedirs = [
   "build",
   "docs/_build",
@@ -303,7 +300,10 @@ ini_options.addopts = [
   "-p",
   "pytest_requirements",
 ]
-ini_options.testpaths = "tests/unit_tests/"
+ini_options.markers = [
+  "db_unit_test: test belongs to unit_tests/db and must not use global DatabaseHandler patching.",
+  "uses_model_database: test uses model parameter database.",
+]
 ini_options.filterwarnings = [
   # treat warnings as errors
   "error",
@@ -322,10 +322,10 @@ report.exclude_also = [
 package = "simtools"
 directory = "docs/changes"
 filename = "CHANGELOG.md"
-underlines = [ "", "", "" ]
+start_string = "<!-- towncrier release notes start -->\n"
 title_format = "## [{version}](https://github.com/gammasim/simtools/releases/tag/{version}) - {project_date}"
 issue_format = "[#{issue}](https://github.com/gammasim/simtools/pull/{issue})"
-start_string = "<!-- towncrier release notes start -->\n"
+underlines = [ "", "", "" ]
 fragment.api.name = "API Changes"
 fragment.api.showcontent = true
 fragment.bugfix.name = "Bugfixes"

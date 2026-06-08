@@ -13,6 +13,10 @@ from astropy import units as u
 from astropy.coordinates import AltAz, EarthLocation, SkyCoord
 from astropy.units import Quantity
 
+from simtools.production_configuration.angle_ranges import (
+    ceil_with_tolerance,
+    directed_circular_span_degrees,
+)
 from simtools.production_configuration.corsika_limits_lookup import (
     CorsikaLimitsLookup,
     attach_lookup_limits_to_point,
@@ -214,6 +218,9 @@ class ProductionGridEngine:
 
     def _generate_grid_from_radec_axes(self, include_horizontal_coordinates=False):
         """Generate grid points from explicit RA/Dec axes definitions."""
+        if self._is_adaptive_radec_density_enabled():
+            return self._generate_adaptive_radec_grid(include_horizontal_coordinates)
+
         time_of_observation = self._require_time_of_observation()
 
         axis_keys = [key for key in self.target_values if key not in ("zenith_angle", "azimuth")]
@@ -299,27 +306,245 @@ class ProductionGridEngine:
         np.ndarray
             Array of bin centers.
         """
+        raw_span = abs(float(azimuth_range[1]) - float(azimuth_range[0]))
+        if raw_span > 0.0 and np.isclose(raw_span % 360.0, 0.0):
+            azimuth_start = float(azimuth_range[0]) % 360.0
+            return (azimuth_start + np.linspace(0.0, 360.0, num_bins, endpoint=False)) % 360.0
+
         azimuth_min, azimuth_max = azimuth_range
-        azimuth_min %= 360
-        azimuth_max %= 360
+        azimuth_start = float(azimuth_min) % 360.0
+        directed_distance = float((azimuth_max - azimuth_min) % 360.0)
 
-        clockwise_distance = (azimuth_max - azimuth_min) % 360
-        counterclockwise_distance = (azimuth_min - azimuth_max) % 360
-
-        if clockwise_distance <= counterclockwise_distance:
-            return (
-                np.linspace(azimuth_min, azimuth_min + clockwise_distance, num_bins, endpoint=True)
-                % 360
-            )
         return (
             np.linspace(
-                azimuth_min, azimuth_min - counterclockwise_distance, num_bins, endpoint=True
+                azimuth_start,
+                azimuth_start + directed_distance,
+                num_bins,
+                endpoint=True,
             )
-            % 360
+            % 360.0
         )
+
+    @staticmethod
+    def _is_in_directed_azimuth_range(azimuth_values_deg, azimuth_range):
+        """Return mask of azimuth values inside directed circular range [start -> end]."""
+        start, end = azimuth_range
+        raw_span = abs(float(end) - float(start))
+        if raw_span > 0.0 and np.isclose(raw_span % 360.0, 0.0):
+            return np.ones_like(azimuth_values_deg, dtype=bool)
+
+        start_norm = float(start) % 360.0
+        span = float((end - start) % 360.0)
+        offsets = (np.asarray(azimuth_values_deg) - start_norm) % 360.0
+        return offsets <= (span + 1e-12)
+
+    def _is_adaptive_radec_density_enabled(self):
+        """Return whether RA/Dec grid generation should use per-declination adaptive RA bins."""
+        return (
+            self.coordinate_system == "ra_dec"
+            and "ra" in self.axes
+            and "dec" in self.axes
+            and self.axes["ra"].get("direction_grid_density") is not None
+        )
+
+    def _compute_visible_radec_strip(self, dec_deg, spacing, lst_deg, time_of_observation):
+        """Compute visible RA, zenith, and azimuth samples for one declination strip."""
+        cos_dec = np.cos(np.deg2rad(dec_deg))
+        if cos_dec <= 0.0:
+            return None
+
+        ha_step = spacing / cos_dec
+        ha_values = np.arange(-180.0, 180.0, ha_step)
+        if len(ha_values) == 0:
+            ha_values = np.array([0.0])
+
+        ra_values = ((lst_deg - ha_values) % 360.0) * u.deg
+        skycoord = SkyCoord(
+            ra=ra_values.to(u.deg),
+            dec=np.full(len(ra_values), dec_deg) * u.deg,
+            frame="icrs",
+        )
+        altaz = skycoord.transform_to(
+            AltAz(location=self.observing_location, obstime=time_of_observation)
+        )
+
+        visible_mask = altaz.alt.to_value(u.deg) >= 0.0
+
+        zenith_values = (90.0 * u.deg - altaz.alt).to(u.deg)
+        azimuth_values = altaz.az.to(u.deg)
+
+        ra_axis = self.axes.get("ra", {})
+
+        zenith_range = ra_axis.get("local_zenith_range")
+        if zenith_range is not None:
+            zenith_min, zenith_max = sorted(
+                (
+                    float(zenith_range[0]),
+                    float(zenith_range[1]),
+                )
+            )
+            zenith_values_deg = zenith_values.to_value(u.deg)
+            visible_mask &= (zenith_values_deg >= zenith_min) & (zenith_values_deg <= zenith_max)
+
+        azimuth_range = ra_axis.get("local_azimuth_range")
+        if azimuth_range is not None:
+            azimuth_values_deg = azimuth_values.to_value(u.deg)
+            visible_mask &= self._is_in_directed_azimuth_range(
+                azimuth_values_deg,
+                azimuth_range,
+            )
+
+        if not np.any(visible_mask):
+            return None
+
+        return (
+            dec_deg * u.deg,
+            ra_values[visible_mask],
+            zenith_values[visible_mask],
+            azimuth_values[visible_mask],
+        )
+
+    def _generate_adaptive_radec_grid(self, include_horizontal_coordinates=False):
+        """Generate RA/Dec grid with Hour-Angle stepping adapted per declination strip.
+
+        Pointings are arranged along declination lines evenly spaced in declination.
+        For each strip the telescope pointings are stepped through Hour Angle (equivalent
+        to stepping through time), tracing the actual arc a source at that declination
+        sweeps across the local sky. Hour-angle spacing is scaled by 1 / cos(dec)
+        to maintain uniform density per solid angle.
+
+        Parameters
+        ----------
+        include_horizontal_coordinates : bool, optional
+            If True, include zenith_angle and azimuth in each grid point.
+
+        Returns
+        -------
+        list of dict
+            Grid points with ra, dec and optionally zenith_angle, azimuth.
+        """
+        time_of_observation = self._require_time_of_observation()
+        density = float(self.axes["ra"]["direction_grid_density"])
+        spacing = 1.0 / np.sqrt(density)
+        dec_min, dec_max = sorted(
+            (float(self.axes["dec"]["range"][0]), float(self.axes["dec"]["range"][1]))
+        )
+        dec_values_deg = np.arange(dec_min, dec_max + 0.5 * spacing, spacing)
+
+        lst_deg = time_of_observation.sidereal_time(
+            "apparent", longitude=self.observing_location.lon
+        ).deg
+
+        extra_keys, extra_units, extra_combinations = self._generate_extra_axis_combinations(
+            excluded_keys=("ra", "dec")
+        )
+
+        grid_points = []
+        for dec_deg in dec_values_deg:
+            strip = self._compute_visible_radec_strip(
+                dec_deg=dec_deg,
+                spacing=spacing,
+                lst_deg=lst_deg,
+                time_of_observation=time_of_observation,
+            )
+            if strip is None:
+                continue
+            dec, visible_ra_values, visible_zenith_values, visible_azimuth_values = strip
+
+            for extra_combination in extra_combinations:
+                point_base = {
+                    key: Quantity(extra_combination[i], extra_units[i])
+                    for i, key in enumerate(extra_keys)
+                }
+                for ra, zenith, azimuth in zip(
+                    visible_ra_values,
+                    visible_zenith_values,
+                    visible_azimuth_values,
+                    strict=True,
+                ):
+                    point = {**point_base, "ra": ra, "dec": dec}
+
+                    if include_horizontal_coordinates:
+                        point["zenith_angle"] = zenith
+                        point["azimuth"] = azimuth
+
+                    self._add_lookup_limits_to_point(
+                        point,
+                        zenith=zenith.value,
+                        azimuth=azimuth.value,
+                    )
+                    grid_points.append(point)
+
+        return grid_points
+
+    def _is_adaptive_horizontal_density_enabled(self):
+        """Return whether horizontal grid generation should use row-wise adaptive azimuth bins."""
+        return (
+            self.coordinate_system == "horizontal"
+            and "azimuth" in self.axes
+            and "zenith_angle" in self.axes
+            and self.axes["azimuth"].get("direction_grid_density") is not None
+        )
+
+    def _generate_adaptive_horizontal_grid(self):
+        """Generate horizontal grid with azimuth binning adapted per zenith row."""
+        density = float(self.axes["azimuth"]["direction_grid_density"])
+        azimuth_range = self.axes["azimuth"]["range"]
+        azimuth_span = directed_circular_span_degrees(azimuth_range)
+        zenith_values = self.target_values["zenith_angle"]
+
+        zenith_step = 1.0 / np.sqrt(density)
+        if len(zenith_values) > 1:
+            zenith_step = float(np.mean(np.abs(np.diff(zenith_values.to_value(u.deg)))))
+
+        extra_axis_keys = [
+            key for key in self.target_values if key not in ("azimuth", "zenith_angle")
+        ]
+        extra_arrays = [self.target_values[key].value for key in extra_axis_keys]
+        extra_units = [self.target_values[key].unit for key in extra_axis_keys]
+
+        if extra_arrays:
+            extra_grid = np.meshgrid(*extra_arrays, indexing="ij")
+            extra_combinations = np.vstack(list(map(np.ravel, extra_grid))).T
+        else:
+            extra_combinations = [np.array([])]
+
+        grid_points = []
+        for zenith in zenith_values:
+            altitude_cosine = np.cos(np.deg2rad(90.0 - zenith.to_value(u.deg)))
+            azimuth_bins = 1
+            if azimuth_span > 0.0 and altitude_cosine > 0.0:
+                azimuth_bins = max(
+                    1,
+                    ceil_with_tolerance(azimuth_span * density * zenith_step * altitude_cosine),
+                )
+
+            azimuth_values = self.create_circular_binning(azimuth_range, azimuth_bins) * u.deg
+            for extra_combination in extra_combinations:
+                point_base = {
+                    key: Quantity(extra_combination[i], extra_units[i])
+                    for i, key in enumerate(extra_axis_keys)
+                }
+                for azimuth in azimuth_values:
+                    point = {
+                        **point_base,
+                        "azimuth": azimuth,
+                        "zenith_angle": zenith,
+                    }
+                    self._add_lookup_limits_to_point(
+                        point,
+                        zenith=zenith.to_value(u.deg),
+                        azimuth=azimuth.to_value(u.deg),
+                    )
+                    grid_points.append(point)
+
+        return grid_points
 
     def _generate_horizontal_grid(self):
         """Generate grid points for horizontal (zenith/azimuth) mode."""
+        if self._is_adaptive_horizontal_density_enabled():
+            return self._generate_adaptive_horizontal_grid()
+
         value_arrays = [value.value for value in self.target_values.values()]
         units = [value.unit for value in self.target_values.values()]
         grid = np.meshgrid(*value_arrays, indexing="ij")
@@ -332,16 +557,24 @@ class ProductionGridEngine:
                 for i, key in enumerate(self.target_values.keys())
             }
 
-            zenith_idx = np.searchsorted(
-                self.target_values["zenith_angle"].value, grid_point["zenith_angle"].value
-            )
-            azimuth_idx = np.searchsorted(
-                self.target_values["azimuth"].value, grid_point["azimuth"].value
-            )
-            nsb_idx = np.searchsorted(
-                self.target_values["nsb_level"].value,
-                grid_point["nsb_level"].value,
-            )
+            zenith_idx = np.nonzero(
+                np.isclose(
+                    self.target_values["zenith_angle"].value,
+                    grid_point["zenith_angle"].value,
+                )
+            )[0][0]
+            azimuth_idx = np.nonzero(
+                np.isclose(
+                    self.target_values["azimuth"].value,
+                    grid_point["azimuth"].value,
+                )
+            )[0][0]
+            nsb_idx = np.nonzero(
+                np.isclose(
+                    self.target_values["nsb_level"].value,
+                    grid_point["nsb_level"].value,
+                )
+            )[0][0]
 
             if "lower_energy_threshold" in self.interpolated_limits:
                 grid_point["lower_energy_threshold"] = (

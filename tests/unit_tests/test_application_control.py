@@ -149,9 +149,8 @@ def test_redact_filter_child_logger(redact_test_setup):
         child_logger.setLevel(logging.DEBUG)
         _reset_stream(handler)
 
-        child_logger.debug(
-            f"Environment: {{'SIMTOOLS_DB_API_PW': '{test_password}', 'USER': 'test'}}"
-        )
+        env_pw = os.environ.get("SIMTOOLS_DB_API_PW", "")
+        child_logger.debug("Environment: {'SIMTOOLS_DB_API_PW': '%s', 'USER': 'test'}", env_pw)
         output = _read_stream(handler)
 
         assert "***REDACTED***" in output
@@ -655,9 +654,9 @@ def test_get_log_file_disabled():
     assert result is None
 
 
-def test_get_log_file_with_output_path(tmp_path):
+def test_get_log_file_with_output_path(tmp_test_directory):
     """Test get_log_file generates path and creates directory."""
-    output_path = tmp_path / "new_dir" / "nested"
+    output_path = Path(str(tmp_test_directory)) / "new_dir" / "nested"
     args_dict = {"application_label": "test_app", "output_path": str(output_path)}
     result = get_log_file(args_dict)
 
@@ -689,9 +688,9 @@ def test_setup_logging_with_logger_name():
     assert logger.name == "test_logger"
 
 
-def test_setup_logging_with_file_handler(tmp_path):
+def test_setup_logging_with_file_handler(tmp_test_directory):
     """Test setup_logging creates and writes to file handler."""
-    log_file = tmp_path / "test.log"
+    log_file = Path(str(tmp_test_directory)) / "test.log"
     logger = setup_logging(
         log_level="INFO", log_file=str(log_file), logger_name="test_file_handler"
     )
@@ -738,9 +737,9 @@ def test_setup_logging_clears_existing_handlers():
         ("api", 'Config: {{"api_key": "{secret}"}}', "secret_xyz"),
     ],
 )
-def test_setup_logging_redaction(tmp_path, test_id, log_message, secret_value):
+def test_setup_logging_redaction(tmp_test_directory, test_id, log_message, secret_value):
     """Test that setup_logging applies redaction filter."""
-    log_file = tmp_path / f"test_{test_id}.log"
+    log_file = Path(str(tmp_test_directory)) / f"test_{test_id}.log"
 
     with patch.dict(os.environ, {"SIMTOOLS_DB_API_PW": secret_value}, clear=False):
         logger = setup_logging(logger_name=f"test_redact_{test_id}", log_file=str(log_file))

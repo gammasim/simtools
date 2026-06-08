@@ -818,6 +818,16 @@ def test_prepare_model_parameter():
     data_validator._prepare_model_parameter()
     assert isinstance(data_validator.data_dict["value"][0], int)
 
+    # dimensionless unit as empty string (e.g. from u.Quantity("0.784")):  None
+    data_validator.data_dict = {"name": "mirror_degraded_reflection", "value": 0.784, "unit": ""}
+    data_validator._prepare_model_parameter()
+    assert data_validator.data_dict["unit"] is None
+
+    # dimensionless unit as "dimensionless" string -> None
+    data_validator.data_dict = {"name": "some_param", "value": 1.0, "unit": "dimensionless"}
+    data_validator._prepare_model_parameter()
+    assert data_validator.data_dict["unit"] is None
+
 
 def test_get_value_and_units_as_lists():
     data_validator = validate_data.DataValidator()

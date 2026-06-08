@@ -53,6 +53,16 @@ the calculation of the number of events to be simulated given a pre-determined m
 ```
 
 
+(angle-ranges)=
+
+## angle_ranges
+
+```{eval-rst}
+.. automodule:: production_configuration.angle_ranges
+   :members:
+```
+
+
 (interpolation-handler)=
 
 ## interpolation_handler
