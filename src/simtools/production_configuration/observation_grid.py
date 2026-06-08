@@ -214,7 +214,11 @@ class ProductionGridEngine:
             azimuth=azimuth,
             nsb=float(nsb_value),
         )
-        attach_lookup_limits_to_point(point, limits)
+        attach_lookup_limits_to_point(
+            point,
+            limits,
+            getattr(self._limits_lookup, "lookup_field_units", None),
+        )
 
     def _generate_grid_from_radec_axes(self, include_horizontal_coordinates=False):
         """Generate grid points from explicit RA/Dec axes definitions."""
@@ -576,27 +580,15 @@ class ProductionGridEngine:
                 )
             )[0][0]
 
-            if "lower_energy_threshold" in self.interpolated_limits:
-                grid_point["lower_energy_threshold"] = (
-                    self.interpolated_limits["lower_energy_threshold"][
-                        zenith_idx, azimuth_idx, nsb_idx
-                    ]
-                    * u.TeV
-                )
-
-            if "upper_scatter_radius" in self.interpolated_limits:
-                grid_point["scatter_radius"] = (
-                    self.interpolated_limits["upper_scatter_radius"][
-                        zenith_idx, azimuth_idx, nsb_idx
-                    ]
-                    * u.m
-                )
-
-            if "viewcone_radius" in self.interpolated_limits:
-                grid_point["viewcone_radius"] = (
-                    self.interpolated_limits["viewcone_radius"][zenith_idx, azimuth_idx, nsb_idx]
-                    * u.deg
-                )
+            limits = {
+                key: values[zenith_idx, azimuth_idx, nsb_idx]
+                for key, values in self.interpolated_limits.items()
+            }
+            attach_lookup_limits_to_point(
+                grid_point,
+                limits,
+                getattr(self._limits_lookup, "lookup_field_units", None),
+            )
 
             grid_points.append(grid_point)
 
