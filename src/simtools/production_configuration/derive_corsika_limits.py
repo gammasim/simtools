@@ -645,11 +645,11 @@ def _enforce_minimum_value(candidate, minimum):
     if minimum is None:
         return candidate
 
-    if hasattr(candidate, "unit") and hasattr(minimum, "to"):
+    if isinstance(candidate, u.Quantity) and isinstance(minimum, u.Quantity):
         minimum = minimum.to(candidate.unit)
-    elif hasattr(candidate, "unit") and not hasattr(minimum, "to"):
+    elif isinstance(candidate, u.Quantity) and not isinstance(minimum, u.Quantity):
         minimum = minimum * candidate.unit
-    elif not hasattr(candidate, "unit") and hasattr(minimum, "to"):
+    elif not isinstance(candidate, u.Quantity) and isinstance(minimum, u.Quantity):
         minimum = minimum.value
 
     return candidate if candidate >= minimum else minimum

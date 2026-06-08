@@ -137,6 +137,28 @@ def test_file_info_columns_are_read_from_schema():
     }
 
 
+def test_load_output_table_configuration_from_schema_raises_without_data(mocker):
+    """Raise if schema has no data section."""
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.ascii_handler.collect_data_from_file",
+        return_value={},
+    )
+
+    with pytest.raises(KeyError, match="No 'data' entry found"):
+        derive_corsika_limits._load_output_table_configuration_from_schema("schema.yml")
+
+
+def test_load_output_table_configuration_from_schema_raises_without_table_columns(mocker):
+    """Raise if schema has data section but no table_columns."""
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.ascii_handler.collect_data_from_file",
+        return_value={"data": [{}]},
+    )
+
+    with pytest.raises(KeyError, match="No 'table_columns' entry found"):
+        derive_corsika_limits._load_output_table_configuration_from_schema("schema.yml")
+
+
 def test_round_value():
     """Test _round_value function for different key types."""
 
@@ -283,6 +305,69 @@ def test_generate_corsika_limits_grid_with_array_element_list(
     assert mock_write.call_count == 1
 
 
+def test_generate_corsika_limits_grid_with_telescope_ids_file(
+    mocker, mock_args_dict, tmp_test_directory
+):
+    """Test generate_corsika_limits_grid resolves telescope configs from file."""
+    args = mock_args_dict.copy()
+    args["array_layout_name"] = None
+    args["array_element_list"] = None
+    args["telescope_ids"] = "telescope_ids.yml"
+
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.ascii_handler.collect_data_from_file",
+        return_value={"telescope_configs": {"LST": ["LSTN-01", "LSTN-02"]}},
+    )
+    mock_pool = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
+    )
+    mock_pool.return_value = [{"primary_particle": "gamma", "array_name": "LST"}]
+    mock_io = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    )
+    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
+    mock_write = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.write_results"
+    )
+
+    derive_corsika_limits.generate_corsika_limits_grid(args)
+
+    job_spec = mock_pool.call_args[0][1][0]
+    assert job_spec["array_name"] == "LST"
+    assert job_spec["telescope_ids"] == ["LSTN-01", "LSTN-02"]
+    assert mock_write.call_count == 1
+
+
+def test_generate_corsika_limits_grid_builds_output_subdirs_for_multiple_productions(
+    mocker, mock_args_dict, tmp_test_directory
+):
+    """Assign per-production output_subdir when plotting multiple productions."""
+    args = mock_args_dict.copy()
+    args["event_data_file"] = ["prod_a/*.h5", "prod_b/*.h5"]
+    args["plot_histograms"] = True
+    args["array_layout_name"] = None
+    args["array_element_list"] = ["LSTN-01"]
+    args["telescope_ids"] = None
+
+    mock_pool = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
+    )
+    mock_pool.return_value = [_pool_result(event_data_file="prod_a/*.h5")]
+    mock_io = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    )
+    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
+    mocker.patch("simtools.production_configuration.derive_corsika_limits.write_results")
+
+    derive_corsika_limits.generate_corsika_limits_grid(args)
+
+    job_specs = mock_pool.call_args[0][1]
+    assert len(job_specs) == 2
+    assert job_specs[0]["output_subdir"] is not None
+    assert job_specs[1]["output_subdir"] is not None
+    assert job_specs[0]["output_subdir"] != job_specs[1]["output_subdir"]
+
+
 def test_generate_corsika_limits_grid_without_telescope_configuration(mock_args_dict):
     """Test generate_corsika_limits_grid raises if no telescope input is provided."""
     args = mock_args_dict.copy()
@@ -292,6 +377,51 @@ def test_generate_corsika_limits_grid_without_telescope_configuration(mock_args_
 
     with pytest.raises(ValueError, match="No telescope configuration provided"):
         derive_corsika_limits.generate_corsika_limits_grid(args)
+
+
+def test_resolve_telescope_configs_wraps_single_layout_result(mocker):
+    """Wrap a non-list layout resolution result into a list before DB lookup."""
+    mock_resolve = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.resolve_array_layout_name",
+        return_value="single-layout",
+    )
+    mock_db_lookup = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.get_array_elements_from_db_for_layouts",
+        return_value={"LST": ["LSTN-01"]},
+    )
+
+    result = derive_corsika_limits._resolve_telescope_configs(
+        {
+            "array_layout_name": "layout",
+            "model_version": "1.0.0",
+            "site": "South",
+        }
+    )
+
+    mock_resolve.assert_called_once_with("layout", "1.0.0")
+    mock_db_lookup.assert_called_once_with(["single-layout"], "South", "1.0.0")
+    assert result == {"LST": ["LSTN-01"]}
+
+
+@pytest.mark.parametrize(
+    ("allowed_losses", "error_match"),
+    [
+        (["core_distance,0.2"], "Expected format"),
+        (["core_distance,abc,10"], "fraction must be float"),
+        (["invalid,0.2,10"], "Invalid axis"),
+        (["core_distance,0.2,10"], "Missing --allowed_losses entries"),
+    ],
+)
+def test_parse_allowed_losses_error_paths(allowed_losses, error_match):
+    """Validate error handling for malformed or incomplete allowed-loss inputs."""
+    with pytest.raises(ValueError, match=error_match):
+        derive_corsika_limits._parse_allowed_losses(allowed_losses)
+
+
+def test_parse_allowed_losses_raises_when_not_provided():
+    """Reject missing allowed-loss configuration."""
+    with pytest.raises(ValueError, match="No allowed-loss configuration provided"):
+        derive_corsika_limits._parse_allowed_losses(None)
 
 
 def test_compute_limits_lower():
@@ -429,6 +559,64 @@ def test_apply_broad_range_lower_energy_floor_same_bin_uses_broad_range_min():
     assert_quantity_allclose(result, 0.014 * u.TeV)
 
 
+def test_apply_broad_range_lower_energy_floor_without_broad_range_min_returns_derived():
+    """Return derived limit unchanged when no broad-range minimum is provided."""
+    derived = 0.02 * u.TeV
+    energy_bins = np.array([0.01, 0.02, 0.04])
+
+    result = derive_corsika_limits._apply_broad_range_lower_energy_floor(
+        derived,
+        None,
+        energy_bins,
+    )
+
+    assert_quantity_allclose(result, derived)
+
+
+def test_apply_broad_range_lower_energy_floor_uses_enforced_minimum_for_different_bins():
+    """Enforce broad-range floor when derived and broad-range minima are in different bins."""
+    derived = 0.020 * u.TeV
+    broad_range_min = 0.030 * u.TeV
+    energy_bins = np.array([0.01, 0.02, 0.03, 0.04])
+
+    result = derive_corsika_limits._apply_broad_range_lower_energy_floor(
+        derived,
+        broad_range_min,
+        energy_bins,
+    )
+
+    assert_quantity_allclose(result, 0.030 * u.TeV)
+
+
+def test_enforce_minimum_value_handles_quantity_and_scalar_mixed_types():
+    """Cover all mixed quantity/scalar branches in minimum-value enforcement."""
+    assert_quantity_allclose(
+        derive_corsika_limits._enforce_minimum_value(1.0 * u.TeV, 1.2 * u.TeV),
+        1.2 * u.TeV,
+    )
+    assert_quantity_allclose(
+        derive_corsika_limits._enforce_minimum_value(1.0 * u.TeV, 1.2),
+        1.2 * u.TeV,
+    )
+    assert derive_corsika_limits._enforce_minimum_value(1.0, 1.2 * u.TeV) == pytest.approx(1.2)
+
+
+def test_enforce_minimum_value_returns_candidate_when_minimum_is_none():
+    """Return candidate unchanged when no minimum is configured."""
+    assert derive_corsika_limits._enforce_minimum_value(1.0 * u.TeV, None) == 1.0 * u.TeV
+
+
+def test_create_table_columns_uses_object_dtype_for_curve_columns():
+    """Curve-like list values must be stored with object dtype columns."""
+    cols = ["core_distance_vs_energy_curve"]
+    columns = {"core_distance_vs_energy_curve": [[1.0, 2.0]]}
+    units = {"core_distance_vs_energy_curve": None}
+
+    table_cols = derive_corsika_limits._create_table_columns(cols, columns, units)
+
+    assert table_cols[0].dtype == object
+
+
 def test_create_results_table_rounding_keeps_lower_energy_at_or_above_broad_range_min():
     """Rounding must not push lower_energy_limit below br_energy_min."""
     results = [
@@ -484,6 +672,30 @@ def test_find_low_energy_threshold_from_histogram_peak_at_last_bin():
     # Walking left from idx=3: 10,0.5 -> first below threshold at idx=2
     result = derive_corsika_limits._find_low_energy_threshold_from_histogram(counts, bin_edges)
     assert result == pytest.approx(0.4)
+
+
+@pytest.mark.parametrize(
+    ("counts", "bin_edges", "threshold_fraction", "error_match"),
+    [
+        (np.array([[1.0, 2.0]]), np.array([0.1, 0.2, 0.4]), 0.1, "one-dimensional arrays"),
+        (np.array([]), np.array([0.1]), 0.1, "must not be empty"),
+        (np.array([1.0, 2.0]), np.array([0.1, 0.2]), 0.1, r"len\(counts\) \+ 1"),
+        (np.array([1.0, 2.0]), np.array([0.1, 0.2, 0.4]), 0.0, "interval"),
+    ],
+)
+def test_find_low_energy_threshold_from_histogram_validation_errors(
+    counts,
+    bin_edges,
+    threshold_fraction,
+    error_match,
+):
+    """Reject invalid histogram shapes and threshold settings."""
+    with pytest.raises(ValueError, match=error_match):
+        derive_corsika_limits._find_low_energy_threshold_from_histogram(
+            counts,
+            bin_edges,
+            threshold_fraction=threshold_fraction,
+        )
 
 
 def test_find_low_energy_threshold_from_histogram_raises_for_all_zero_counts():
