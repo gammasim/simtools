@@ -151,6 +151,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
       - name: Download coverage report
         uses: actions/download-artifact@v8
@@ -181,22 +182,38 @@ jobs:
         continue-on-error: ${{ github.event.pull_request.draft == true }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          SONAR_PR_KEY: ${{ github.event.pull_request.number }}
+          SONAR_PR_BRANCH: ${{ github.head_ref }}
+          SONAR_PR_BASE: ${{ github.base_ref }}
         run: |
           set +e
           for attempt in 1 2 3; do
             scanner_log="sonar-scanner-attempt-${attempt}.log"
+            sonar_args=(
+              "-Dsonar.projectKey=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14"
+              "-Dsonar.host.url=https://sonar-ctao.zeuthen.desy.de"
+              "-Dsonar.qualitygate.wait=true"
+              "-Dsonar.scanner.connectTimeout=60"
+              "-Dsonar.scanner.socketTimeout=120"
+              "-Dsonar.scanner.responseTimeout=120"
+              "-Dsonar.plugins.download.timeout=600"
+              "-Dsonar.python.coverage.reportPaths=coverage.xml"
+              "-Dsonar.python.version=3.13"
+              "-Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py"
+              "-Dsonar.coverage.exclusions=**/tests/**,src/simtools/applications/**"
+            )
+
+            if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+              sonar_args+=(
+                "-Dsonar.pullrequest.key=$SONAR_PR_KEY"
+                "-Dsonar.pullrequest.branch=$SONAR_PR_BRANCH"
+                "-Dsonar.pullrequest.base=$SONAR_PR_BASE"
+              )
+            fi
+
             "${SONAR_SCANNER_CACHE_DIR}/sonar-scanner-${SONAR_SCANNER_VERSION}-${SONAR_SCANNER_PLATFORM}/bin/sonar-scanner" \
-              -Dsonar.projectKey=gammasim_simtools_0d23837b-8b2d-4e54-9a98-2f1bde681f14 \
-              -Dsonar.host.url=https://sonar-ctao.zeuthen.desy.de \
-              -Dsonar.qualitygate.wait=true \
-              -Dsonar.scanner.connectTimeout=60 \
-              -Dsonar.scanner.socketTimeout=120 \
-              -Dsonar.scanner.responseTimeout=120 \
-              -Dsonar.plugins.download.timeout=600 \
-              -Dsonar.python.coverage.reportPaths=coverage.xml \
-              -Dsonar.python.version=3.13 \
-              -Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py \
-              -Dsonar.coverage.exclusions=**/tests/**,src/simtools/applications/** \
+              "${sonar_args[@]}" \
               2>&1 | tee "$scanner_log"
             status=${PIPESTATUS[0]}
 
