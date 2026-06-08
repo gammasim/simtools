@@ -24,6 +24,18 @@ axis (repeatable)
     ``--axis <name> <min> <unit> <max> <unit> <binning> [scaling]``.
     Example: ``--axis azimuth 310 deg 20 deg 3 linear``.
     Options for scaling are: linear, log, 1/cos.
+direction_grid_density (float or quantity, optional)
+    Direction-grid density (typically in ``1/deg^2``).
+    If provided, direction-axis binning (azimuth/zenith or ra/dec) is derived from
+    range and density, while min/max values are kept from ``--axis`` definitions.
+    In ``ra_dec`` mode, local-sky constraints can be defined with
+    ``local_zenith_range`` and ``local_azimuth_range``.
+local_zenith_range (quantity pair, optional)
+    Zenith range (deg) used to filter generated RA/Dec density nodes in local sky,
+    for example ``0 deg 70 deg``.
+local_azimuth_range (quantity pair, optional)
+    Directed azimuth range (deg) used to filter generated RA/Dec density nodes in
+    local sky, for example ``300 deg 60 deg``.
 time_of_observation (str, optional)
     Time of the observation in UTC (format: 'YYYY-MM-DD HH:MM:SS').
     Used only if RA/Dec axes are provided (for coordinate transforms and sidereal-time
@@ -72,6 +84,23 @@ execute:
             --axis offset 0 deg 10 deg 2 linear \
             --time_of_observation "2017-09-16 00:00:00" \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
+
+To generate an RA/Dec density grid constrained to local sky ranges (for example
+full zenith coverage from 0 to 70 deg and a directed azimuth window), execute:
+
+.. code-block:: console
+
+        simtools-production-generate-grid --site North --model_version 6.0.2 \
+            --array_layout_name alpha \
+            --axis ra 0 deg 360 deg 1 linear \
+            --axis dec -40 deg 80 deg 1 linear \
+            --axis nsb 4 MHz 4 MHz 1 linear \
+            --axis offset 0 deg 10 deg 2 linear \
+            --direction_grid_density 0.25 1/deg^2 \
+            --local_zenith_range 0 deg 70 deg \
+            --local_azimuth_range 300 deg 60 deg \
+            --time_of_observation "2017-09-16 00:00:00" \
+            --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
 """
 
 from simtools.application_control import build_application
@@ -102,6 +131,37 @@ def _add_arguments(parser):
         required=False,
         help=(
             "Observation time in UTC (format: 'YYYY-MM-DD HH:MM:SS'). Used only in 'ra_dec' mode."
+        ),
+    )
+    parser.add_argument(
+        "--direction_grid_density",
+        nargs="+",
+        required=False,
+        default=None,
+        help=(
+            "Direction-grid density in 1/deg^2. If set, direction-axis binning is "
+            "derived from axis ranges and this density. In ra_dec mode, use "
+            "local_zenith_range/local_azimuth_range to filter generated points in local sky."
+        ),
+    )
+    parser.add_argument(
+        "--local_zenith_range",
+        nargs="+",
+        required=False,
+        default=None,
+        help=(
+            "Local zenith range (quantity pair) used to filter RA/Dec density points, "
+            "for example: --local_zenith_range 0 deg 70 deg"
+        ),
+    )
+    parser.add_argument(
+        "--local_azimuth_range",
+        nargs="+",
+        required=False,
+        default=None,
+        help=(
+            "Local azimuth range (quantity pair) used to filter RA/Dec density points, "
+            "for example: --local_azimuth_range 300 deg 60 deg"
         ),
     )
     parser.add_argument(

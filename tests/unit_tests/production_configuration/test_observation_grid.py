@@ -10,6 +10,12 @@ from astropy.utils import iers
 
 from simtools.production_configuration.observation_grid import ProductionGridEngine
 
+DEFAULT_OBSERVING_LOCATION = EarthLocation(
+    lat=28.76 * u.deg,
+    lon=-17.89 * u.deg,
+    height=2200 * u.m,
+)
+DEFAULT_OBSERVATION_TIME = Time("2020-01-01 00:00:00", scale="utc")
 pytestmark = pytest.mark.filterwarnings("ignore::astropy.utils.iers.IERSWarning")
 
 
@@ -24,17 +30,49 @@ def disable_iers_auto_download():
         iers.conf.auto_download = previous_auto_download
 
 
-def test_generate_simulation_grid_keeps_horizontal_coordinates_for_radec_axes():
+def _make_engine(axes=None, **kwargs):
+    """Build a production-grid engine with default wrapped axes input."""
+    return ProductionGridEngine(axes={"axes": axes or {}}, **kwargs)
+
+
+def _adaptive_radec_axes(local_zenith_range=None, local_azimuth_range=None):
+    """Return baseline RA/Dec adaptive-density axes with optional local constraints."""
     axes = {
-        "axes": {
+        "ra": {
+            "range": [0, 360],
+            "binning": 36,
+            "units": "deg",
+            "direction_grid_density": 0.25,
+        },
+        "dec": {"range": [-40, 80], "binning": 10, "units": "deg"},
+        "nsb_level": {"range": [4, 4], "binning": 1, "units": "MHz"},
+        "offset": {"range": [0, 10], "binning": 2, "units": "deg"},
+    }
+    if local_zenith_range is not None:
+        axes["ra"]["local_zenith_range"] = local_zenith_range
+    if local_azimuth_range is not None:
+        axes["ra"]["local_azimuth_range"] = local_azimuth_range
+    return axes
+
+
+def _single_bin_horizontal_axes(azimuth_range=None):
+    """Return single-bin horizontal axes used for interpolation-limit tests."""
+    az_range = [0, 0] if azimuth_range is None else azimuth_range
+    return {
+        "zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"},
+        "azimuth": {"range": az_range, "binning": 1 if az_range == [0, 0] else 3, "units": "deg"},
+        "nsb_level": {"range": [1, 1], "binning": 1, "units": "1"},
+    }
+
+
+def test_generate_simulation_grid_keeps_horizontal_coordinates_for_radec_axes():
+    engine = _make_engine(
+        axes={
             "ra": {"range": [0, 0], "binning": 1, "scaling": "linear", "units": "deg"},
             "dec": {"range": [0, 0], "binning": 1, "scaling": "linear", "units": "deg"},
-        }
-    }
-    engine = ProductionGridEngine(
-        axes=axes,
+        },
         coordinate_system="ra_dec",
-        observing_location=EarthLocation(lat=28.76 * u.deg, lon=-17.89 * u.deg, height=2200 * u.m),
+        observing_location=DEFAULT_OBSERVING_LOCATION,
         time_of_observation=Time("2017-09-16 00:00:00", scale="utc"),
         lookup_table=None,
     )
@@ -48,22 +86,20 @@ def test_generate_simulation_grid_keeps_horizontal_coordinates_for_radec_axes():
 
 
 def test_require_time_of_observation_raises_without_time():
-    engine = ProductionGridEngine(axes={"axes": {}}, time_of_observation=None)
+    engine = _make_engine(time_of_observation=None)
 
     with pytest.raises(ValueError, match="Observing time"):
         engine._require_time_of_observation()
 
 
 def test_get_max_zenith_for_radec_mode_reads_axis_range():
-    engine = ProductionGridEngine(
-        axes={"axes": {"zenith_angle": {"range": [10, 60], "binning": 2, "units": "deg"}}}
-    )
+    engine = _make_engine(axes={"zenith_angle": {"range": [10, 60], "binning": 2, "units": "deg"}})
 
     assert engine._get_max_zenith_for_radec_mode() == 60
 
 
 def test_get_max_zenith_for_radec_mode_raises_for_invalid_axis_definition():
-    engine = ProductionGridEngine(axes={"axes": {}})
+    engine = _make_engine()
 
     with pytest.raises(ValueError, match="valid two-element 'range'"):
         engine._get_max_zenith_for_radec_mode()
@@ -89,7 +125,7 @@ def test_generate_target_values_supports_log_and_inverse_cos_scaling():
 
 
 def test_add_lookup_limits_to_point_uses_quantity_nsb_level():
-    engine = ProductionGridEngine(axes={"axes": {}}, lookup_table=None)
+    engine = _make_engine(lookup_table=None)
     engine.lookup_table = "limits.ecsv"
     engine._interpolate_limits_for_point = Mock(
         return_value={
@@ -111,7 +147,7 @@ def test_add_lookup_limits_to_point_uses_quantity_nsb_level():
 
 
 def test_interpolate_limits_for_point_delegates_to_lookup_helper():
-    engine = ProductionGridEngine(axes={"axes": {}}, lookup_table=None)
+    engine = _make_engine(lookup_table=None)
     engine._limits_lookup = Mock()
     engine._limits_lookup.interpolate_point.return_value = {"lower_energy_threshold": 0.02}
 
@@ -122,7 +158,7 @@ def test_interpolate_limits_for_point_delegates_to_lookup_helper():
 
 
 def test_prepare_lookup_table_limits_for_point_interpolation_prepares():
-    engine = ProductionGridEngine(axes={"axes": {}}, lookup_table=None)
+    engine = _make_engine(lookup_table=None)
     engine._limits_lookup = Mock()
 
     engine._prepare_lookup_table_limits_for_point_interpolation()
@@ -131,9 +167,7 @@ def test_prepare_lookup_table_limits_for_point_interpolation_prepares():
 
 
 def test_generate_extra_axis_combinations_returns_empty_placeholder_for_no_extra_axes():
-    engine = ProductionGridEngine(
-        axes={"axes": {"zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"}}}
-    )
+    engine = _make_engine(axes={"zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"}})
 
     keys, units, combinations = engine._generate_extra_axis_combinations(("zenith_angle",))
 
@@ -160,33 +194,180 @@ def test_generate_extra_axis_combinations_returns_mesh_for_remaining_axes():
     assert combinations.shape == (4, 2)
 
 
-def test_create_circular_binning_uses_shorter_counterclockwise_path():
-    engine = ProductionGridEngine(axes={"axes": {}})
+def test_create_circular_binning_uses_directed_span_from_start_to_end():
+    engine = _make_engine()
 
     binning = engine.create_circular_binning((10, 350), 3)
 
-    assert np.allclose(binning, [10, 0, 350])
+    assert np.allclose(binning, [10, 180, 350])
 
 
 def test_create_circular_binning_uses_clockwise_path_when_shorter():
-    engine = ProductionGridEngine(axes={"axes": {}})
+    engine = _make_engine()
 
     binning = engine.create_circular_binning((350, 10), 3)
 
     assert np.allclose(binning, [350, 0, 10])
 
 
+def test_create_circular_binning_covers_requested_range_0_to_240():
+    engine = _make_engine()
+
+    binning = engine.create_circular_binning((0, 240), 3)
+
+    assert np.allclose(binning, [0, 120, 240])
+
+
+def test_generate_horizontal_grid_uses_adaptive_azimuth_bins_per_zenith_row():
+    engine = ProductionGridEngine(
+        axes={
+            "axes": {
+                "zenith_angle": {"range": [0, 60], "binning": 61, "units": "deg"},
+                "azimuth": {
+                    "range": [0, 240],
+                    "binning": 10,
+                    "units": "deg",
+                    "direction_grid_density": 0.05,
+                },
+                "nsb_level": {"range": [1, 1], "binning": 1, "units": "1"},
+            }
+        },
+        coordinate_system="horizontal",
+    )
+
+    grid = engine._generate_horizontal_grid()
+
+    assert len(grid) > 0
+
+    azimuth_counts_by_zenith = {}
+    for point in grid:
+        zenith_value = round(point["zenith_angle"].to_value(u.deg), 6)
+        azimuth_counts_by_zenith.setdefault(zenith_value, set()).add(
+            round(point["azimuth"].to_value(u.deg), 6)
+        )
+
+    assert len(azimuth_counts_by_zenith[0.0]) == 1
+    assert len(azimuth_counts_by_zenith[30.0]) > len(azimuth_counts_by_zenith[0.0])
+    assert len(azimuth_counts_by_zenith[60.0]) > len(azimuth_counts_by_zenith[30.0])
+
+
+def test_generate_radec_grid_uses_adaptive_ra_bins_per_dec_strip():
+    engine = ProductionGridEngine(
+        axes={
+            "ra": {"range": [0, 360], "binning": 36, "units": "deg", "direction_grid_density": 1.0},
+            "dec": {"range": [-60, 60], "binning": 13, "units": "deg"},
+            "nsb_level": {"range": [4, 4], "binning": 1, "units": "MHz"},
+            "offset": {"range": [0, 0], "binning": 1, "units": "deg"},
+        },
+        coordinate_system="ra_dec",
+        time_of_observation=Time("2020-01-01 00:00:00", scale="utc"),
+    )
+
+    assert engine._is_adaptive_radec_density_enabled()
+    grid = engine._generate_adaptive_radec_grid(include_horizontal_coordinates=False)
+
+    assert len(grid) > 0
+
+    ra_counts_by_dec = {}
+    for point in grid:
+        dec_val = round(point["dec"].to_value(u.deg), 6)
+        ra_counts_by_dec.setdefault(dec_val, 0)
+        ra_counts_by_dec[dec_val] += 1
+
+    # Near equator (dec=0) should have more RA points than near the pole (dec=60 deg)
+    assert ra_counts_by_dec[0.0] > ra_counts_by_dec[60.0]
+
+
+def test_generate_grid_from_radec_axes_routes_to_adaptive_density_path():
+    engine = ProductionGridEngine(
+        axes=_adaptive_radec_axes(),
+        coordinate_system="ra_dec",
+        time_of_observation=DEFAULT_OBSERVATION_TIME,
+    )
+    expected_grid = [{"ra": 1 * u.deg, "dec": 2 * u.deg}]
+    engine._generate_adaptive_radec_grid = Mock(return_value=expected_grid)
+
+    grid = engine._generate_grid_from_radec_axes(include_horizontal_coordinates=True)
+
+    assert grid == expected_grid
+    engine._generate_adaptive_radec_grid.assert_called_once_with(True)
+
+
+def test_generate_radec_grid_adaptive_density_keeps_only_visible_nodes():
+    engine = ProductionGridEngine(
+        axes=_adaptive_radec_axes(),
+        coordinate_system="ra_dec",
+        observing_location=DEFAULT_OBSERVING_LOCATION,
+        time_of_observation=DEFAULT_OBSERVATION_TIME,
+    )
+
+    grid = engine._generate_adaptive_radec_grid(include_horizontal_coordinates=True)
+
+    assert len(grid) > 0
+    assert all(point["zenith_angle"].to_value(u.deg) <= 90.0 for point in grid)
+
+
+def test_generate_radec_grid_adaptive_density_applies_zenith_constraint():
+    engine = ProductionGridEngine(
+        axes=_adaptive_radec_axes(local_zenith_range=[0, 70]),
+        coordinate_system="ra_dec",
+        observing_location=DEFAULT_OBSERVING_LOCATION,
+        time_of_observation=DEFAULT_OBSERVATION_TIME,
+    )
+
+    grid = engine._generate_adaptive_radec_grid(include_horizontal_coordinates=True)
+
+    assert len(grid) > 0
+    assert all(point["zenith_angle"].to_value(u.deg) <= 70.0 for point in grid)
+
+
+def test_generate_radec_grid_adaptive_density_applies_azimuth_constraint():
+    engine = ProductionGridEngine(
+        axes=_adaptive_radec_axes(
+            local_zenith_range=[0, 70],
+            local_azimuth_range=[300, 60],
+        ),
+        coordinate_system="ra_dec",
+        observing_location=DEFAULT_OBSERVING_LOCATION,
+        time_of_observation=DEFAULT_OBSERVATION_TIME,
+    )
+
+    grid = engine._generate_adaptive_radec_grid(include_horizontal_coordinates=True)
+
+    assert len(grid) > 0
+    assert all(
+        (point["azimuth"].to_value(u.deg) >= 300.0) or (point["azimuth"].to_value(u.deg) <= 60.0)
+        for point in grid
+    )
+
+
+def test_is_in_directed_azimuth_range_returns_all_true_for_full_circle():
+    mask = ProductionGridEngine._is_in_directed_azimuth_range(
+        azimuth_values_deg=np.array([0.0, 90.0, 180.0, 270.0]),
+        azimuth_range=(0.0, 360.0),
+    )
+
+    assert np.all(mask)
+
+
+def test_create_circular_binning_treats_full_circle_range_as_full_span():
+    engine = _make_engine()
+
+    binning = engine.create_circular_binning((0, 360), 4)
+
+    assert np.allclose(binning, [0, 90, 180, 270])
+
+
 def test_convert_altaz_to_radec_raises_without_time_of_observation():
-    engine = ProductionGridEngine(axes={"axes": {}}, time_of_observation=None)
+    engine = _make_engine(time_of_observation=None)
 
     with pytest.raises(ValueError, match="time_of_observation"):
         engine.convert_altaz_to_radec(45 * u.deg, 180 * u.deg)
 
 
 def test_convert_altaz_to_radec_returns_icrs_coordinates():
-    engine = ProductionGridEngine(
-        axes={"axes": {}},
-        observing_location=EarthLocation(lat=28.76 * u.deg, lon=-17.89 * u.deg, height=2200 * u.m),
+    engine = _make_engine(
+        observing_location=DEFAULT_OBSERVING_LOCATION,
         time_of_observation=Time("2017-09-16 00:00:00", scale="utc"),
     )
 
@@ -197,7 +378,7 @@ def test_convert_altaz_to_radec_returns_icrs_coordinates():
 
 
 def test_convert_coordinates_drops_horizontal_coordinates_when_requested():
-    engine = ProductionGridEngine(axes={"axes": {}}, coordinate_system="ra_dec")
+    engine = _make_engine(coordinate_system="ra_dec")
     engine.convert_altaz_to_radec = Mock(return_value=Mock(ra=Mock(deg=10), dec=Mock(deg=-20)))
     points = [{"zenith_angle": 20 * u.deg, "azimuth": 180 * u.deg}]
 
@@ -210,7 +391,7 @@ def test_convert_coordinates_drops_horizontal_coordinates_when_requested():
 
 
 def test_convert_coordinates_keeps_points_without_horizontal_values():
-    engine = ProductionGridEngine(axes={"axes": {}}, coordinate_system="ra_dec")
+    engine = _make_engine(coordinate_system="ra_dec")
     points = [{"ra": 10 * u.deg, "dec": -20 * u.deg}]
 
     converted = engine.convert_coordinates(points, keep_horizontal_coordinates=False)
@@ -246,8 +427,8 @@ def test_init_with_horizontal_lookup_applies_interpolated_limits(mock_corsika_li
         "lower_energy_threshold": np.array([[[0.02]]])
     }
 
-    engine = ProductionGridEngine(
-        axes={"axes": {"zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"}}},
+    engine = _make_engine(
+        axes={"zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"}},
         lookup_table="limits.ecsv",
         array_layout_name="alpha",
     )
@@ -256,15 +437,7 @@ def test_init_with_horizontal_lookup_applies_interpolated_limits(mock_corsika_li
 
 
 def test_generate_horizontal_grid_uses_interpolated_limit_arrays():
-    engine = ProductionGridEngine(
-        axes={
-            "axes": {
-                "zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"},
-                "azimuth": {"range": [0, 0], "binning": 1, "units": "deg"},
-                "nsb_level": {"range": [1, 1], "binning": 1, "units": "1"},
-            }
-        }
-    )
+    engine = _make_engine(axes=_single_bin_horizontal_axes())
     engine.interpolated_limits = {
         "lower_energy_threshold": np.array([[[0.02]]]),
         "upper_scatter_radius": np.array([[[120.0]]]),
@@ -305,15 +478,7 @@ def test_generate_radec_grid_direction_points_filters_by_max_zenith(
 
 
 def test_generate_horizontal_grid_handles_partial_interpolated_limit_arrays():
-    engine = ProductionGridEngine(
-        axes={
-            "axes": {
-                "zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"},
-                "azimuth": {"range": [0, 0], "binning": 1, "units": "deg"},
-                "nsb_level": {"range": [1, 1], "binning": 1, "units": "1"},
-            }
-        }
-    )
+    engine = _make_engine(axes=_single_bin_horizontal_axes())
     engine.interpolated_limits = {
         "upper_scatter_radius": np.array([[[120.0]]]),
         "viewcone_radius": np.array([[[3.0]]]),
@@ -327,17 +492,9 @@ def test_generate_horizontal_grid_handles_partial_interpolated_limit_arrays():
 
 
 def test_generate_horizontal_grid_with_circular_azimuth_binning_uses_correct_indices():
-    engine = ProductionGridEngine(
-        axes={
-            "axes": {
-                "zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"},
-                "azimuth": {"range": [10, 350], "binning": 3, "units": "deg"},
-                "nsb_level": {"range": [1, 1], "binning": 1, "units": "1"},
-            }
-        }
-    )
-    # Counterclockwise shortest path gives non-monotonic order: [10, 0, 350]
-    assert np.allclose(engine.target_values["azimuth"].value, np.array([10.0, 0.0, 350.0]))
+    engine = _make_engine(axes=_single_bin_horizontal_axes(azimuth_range=[10, 350]))
+    # Directed span from start to end gives [10, 180, 350]
+    assert np.allclose(engine.target_values["azimuth"].value, np.array([10.0, 180.0, 350.0]))
 
     engine.interpolated_limits = {
         "lower_energy_threshold": np.array([[[0.1], [0.2], [0.3]]]),
@@ -350,14 +507,12 @@ def test_generate_horizontal_grid_with_circular_azimuth_binning_uses_correct_ind
     }
 
     assert by_azimuth[10.0] == pytest.approx(0.1)
-    assert by_azimuth[0.0] == pytest.approx(0.2)
+    assert by_azimuth[180.0] == pytest.approx(0.2)
     assert by_azimuth[350.0] == pytest.approx(0.3)
 
 
 def test_generate_grid_radec_mode_adds_extra_axis_quantities():
-    engine = ProductionGridEngine(
-        axes={"axes": {"zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"}}}
-    )
+    engine = _make_engine(axes={"zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"}})
     engine.coordinate_system = "ra_dec"
     engine._generate_radec_grid_direction_points = Mock(
         return_value=[{"zenith_angle": 20 * u.deg, "azimuth": 180 * u.deg}]
@@ -376,9 +531,7 @@ def test_generate_grid_radec_mode_adds_extra_axis_quantities():
 
 
 def test_generate_grid_radec_mode_uses_direction_points_when_ra_dec_axes_missing():
-    engine = ProductionGridEngine(
-        axes={"axes": {"zenith_angle": {"range": [20, 20], "binning": 1}}}
-    )
+    engine = _make_engine(axes={"zenith_angle": {"range": [20, 20], "binning": 1}})
     engine.coordinate_system = "ra_dec"
     engine._generate_radec_grid_direction_points = Mock(
         return_value=[{"zenith_angle": 20 * u.deg, "azimuth": 180 * u.deg}]
@@ -393,7 +546,7 @@ def test_generate_grid_radec_mode_uses_direction_points_when_ra_dec_axes_missing
 
 
 def test_generate_simulation_grid_uses_horizontal_grid_for_horizontal_mode():
-    engine = ProductionGridEngine(axes={"axes": {}})
+    engine = _make_engine()
     engine.coordinate_system = "horizontal"
     engine._generate_horizontal_grid = Mock(return_value=[{"azimuth": 0 * u.deg}])
 
