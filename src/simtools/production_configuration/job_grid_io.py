@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 
+import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
@@ -43,6 +44,8 @@ _QUANTITY_FIELDS = {
     "view_cone_max": ("view_cone_max_value", "view_cone_max_unit"),
 }
 
+_OPTIONAL_ANGLE_FIELDS = ("ra", "dec")
+
 
 def _serialize_quantity(value):
     """Serialize a Quantity to value/unit columns."""
@@ -72,6 +75,15 @@ def _serialize_job_row(job_row):
             job_row[quantity_name]
         )
 
+    for angle_name in _OPTIONAL_ANGLE_FIELDS:
+        angle_value = job_row.get(angle_name)
+        if angle_value is None:
+            continue
+        if isinstance(angle_value, u.Quantity):
+            serialized_row[angle_name] = float(angle_value.to_value(u.deg))
+        else:
+            serialized_row[angle_name] = float(angle_value)
+
     return serialized_row
 
 
@@ -93,6 +105,14 @@ def _deserialize_job_row(serialized_row):
             serialized_row[value_key],
             serialized_row[unit_key],
         )
+
+    for angle_name in _OPTIONAL_ANGLE_FIELDS:
+        if angle_name not in serialized_row:
+            continue
+        angle_value = serialized_row[angle_name]
+        if np.ma.is_masked(angle_value) or angle_value is None:
+            continue
+        job_row[angle_name] = float(angle_value) * u.deg
 
     return job_row
 
@@ -117,7 +137,17 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     if output_path.suffix.lower() != ".ecsv":
         raise ValueError("Job grid output file must use the '.ecsv' extension.")
 
-    output_table = Table(rows=serialized_rows, names=JOB_GRID_COLUMNS)
+    optional_columns = [
+        angle_name
+        for angle_name in _OPTIONAL_ANGLE_FIELDS
+        if any(angle_name in row for row in serialized_rows)
+    ]
+    output_columns = [*JOB_GRID_COLUMNS, *optional_columns]
+    output_rows = [
+        {column: row.get(column) for column in output_columns} for row in serialized_rows
+    ]
+
+    output_table = Table(rows=output_rows, names=output_columns)
     output_table.meta = metadata
     logger.info(f"Writing job grid with {len(job_rows)} rows to '{output_path}'.")
     output_table.write(output_path, format="ascii.ecsv", overwrite=True)
