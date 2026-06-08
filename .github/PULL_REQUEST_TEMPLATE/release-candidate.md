@@ -14,7 +14,7 @@
   This updates the changelog using the fragments in the `docs/changes` directory.
 
 - [ ] `CHANGELOG.md` reviewed and confirmed complete.
-- [ ] New version added to [docs/_static/switcher.json](docs/_static/switcher.json).
+- [ ] New version added to [docs/_static/switcher.json](https://github.com/gammasim/simtools/blob/main/docs/_static/switcher.json).
 - [ ] [CITATION](https://github.com/gammasim/simtools/blob/main/CITATION.cff) reviewed and updated if necessary.
 - [ ] Review requested from the simtools team.
 - [ ] Pull request approved and ready to merge to `main`.
