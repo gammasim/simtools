@@ -76,9 +76,9 @@ def test_generate_overwrite_file_with_float_values(tmp_test_directory):
         yaml.dump({}, f)
 
     param_combo = {
-        "gain": ("changes.LSTN-01.pm_photoelectron_spectrum.gain", 5.5),
+        "gain": ("changes.LSTN-01.pm_photoelectron_spectrum.gain", 5),
     }
-    combo_name = "gain_5.5"
+    combo_name = "gain_5"
     label = "test"
 
     result = _generate_overwrite_file(
@@ -88,7 +88,7 @@ def test_generate_overwrite_file_with_float_values(tmp_test_directory):
     with open(result, encoding="utf-8") as f:
         content = yaml.safe_load(f)
 
-    assert content["changes"]["LSTN-01"]["pm_photoelectron_spectrum"]["gain"]["value"] == 5.5
+    assert content["changes"]["LSTN-01"]["pm_photoelectron_spectrum"]["gain"]["value"] == 5
 
 
 def test_parse_parameter_scan_config_single_parameter(tmp_test_directory):
