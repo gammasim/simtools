@@ -48,6 +48,13 @@ def run_configured_applications(
         )
 
 
+def generate_simple_test_resources():
+    """Generate simple test resources."""
+    test_file = Path("tests/resources/test_file.list")
+    content = "This is a test file with two lines.\nUsed in unit tests.\n"
+    test_file.write_text(content, encoding="utf-8")
+
+
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
@@ -68,6 +75,7 @@ def main():
     args = parse_args()
 
     copy_manual_fixtures()
+    generate_simple_test_resources()
     run_configured_applications(ignore_runtime_environment=args.ignore_runtime_environment)
 
 
