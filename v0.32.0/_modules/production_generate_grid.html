@@ -1,0 +1,796 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>production_generate_grid &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=0790524f97105ba85085"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
+
+    <script src="../_static/documentation_options.js?v=4440c9c5"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_generate_grid';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.18.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.32.0" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">production_generate_grid</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for production_generate_grid</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+
+<span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate simulation job grid for production configurations.</span>
+
+<span class="sd">This application expands simulation job rows and writes them to disk.</span>
+<span class="sd">It supports both:</span>
+
+<span class="sd">- explicit cartesian job-grid configuration (primary, zenith, energy range, etc.), and</span>
+<span class="sd">- axes-based production-grid configuration with optional ``ra_dec`` coordinate handling</span>
+<span class="sd">  and lookup-table interpolation.</span>
+
+<span class="sd">Allow for flexible scaling of showers per run and total showers across the grid.</span>
+<span class="sd">``showers_per_run_power_law`` scales the baseline showers per run with</span>
+<span class="sd">``(E_mid / E_ref) ** power_index``, using the logarithmic midpoint energy of each bin.</span>
+<span class="sd">``showers_per_run_scaling=cosine_zenith`` scales showers per run with</span>
+<span class="sd">``cos(zenith_angle)`` to control run duration at larger zenith angles.</span>
+<span class="sd">``total_showers_scaling=zenith_scaled`` applies ``total_showers * exp(factor * (cos(ZD) - 1))``.</span>
+
+<span class="sd">Command line arguments</span>
+<span class="sd">----------------------</span>
+<span class="sd">axis (repeatable)</span>
+<span class="sd">    Compact axis definition in the form</span>
+<span class="sd">    ``--axis &lt;name&gt; &lt;min&gt; &lt;unit&gt; &lt;max&gt; &lt;unit&gt; &lt;binning&gt; [scaling]``.</span>
+<span class="sd">    Example: ``--axis azimuth 310 deg 20 deg 3 linear``.</span>
+<span class="sd">    Options for scaling are: linear, log, 1/cos.</span>
+<span class="sd">direction_grid_density (float or quantity, optional)</span>
+<span class="sd">    Direction-grid density (typically in ``1/deg^2``).</span>
+<span class="sd">    If provided, direction-axis binning (azimuth/zenith or ra/dec) is derived from</span>
+<span class="sd">    range and density, while min/max values are kept from ``--axis`` definitions.</span>
+<span class="sd">    In ``ra_dec`` mode, local-sky constraints can be defined with</span>
+<span class="sd">    ``local_zenith_range`` and ``local_azimuth_range``.</span>
+<span class="sd">local_zenith_range (quantity pair, optional)</span>
+<span class="sd">    Zenith range (deg) used to filter generated RA/Dec density nodes in local sky,</span>
+<span class="sd">    for example ``0 deg 70 deg``.</span>
+<span class="sd">local_azimuth_range (quantity pair, optional)</span>
+<span class="sd">    Directed azimuth range (deg) used to filter generated RA/Dec density nodes in</span>
+<span class="sd">    local sky, for example ``300 deg 60 deg``.</span>
+<span class="sd">time_of_observation (str, optional)</span>
+<span class="sd">    Time of the observation in UTC (format: &#39;YYYY-MM-DD HH:MM:SS&#39;).</span>
+<span class="sd">    Used only if RA/Dec axes are provided (for coordinate transforms and sidereal-time</span>
+<span class="sd">    sampling). Ignored otherwise.</span>
+<span class="sd">corsika_limits (str, optional)</span>
+<span class="sd">    Path to the lookup table for simulation limits. The table should contain</span>
+<span class="sd">    varying azimuth and/or zenith angles for the selected array layout.</span>
+<span class="sd">output_file (str, optional, default=&#39;job_grid.ecsv&#39;)</span>
+<span class="sd">    Output file for the generated executable job grid.</span>
+<span class="sd">showers_per_run_power_law (tuple, optional)</span>
+<span class="sd">    Scale showers per run with energy as</span>
+<span class="sd">    ``&lt;power_index&gt; &lt;reference_energy_value&gt; &lt;reference_energy_unit&gt;``</span>
+<span class="sd">    (example: ``--showers_per_run_power_law -2.0 1 TeV``).</span>
+<span class="sd">    Use for fixed energy simulations only.</span>
+<span class="sd">showers_per_run_scaling (str, optional)</span>
+<span class="sd">    Zenith-angle showers-per-run scaling mode.</span>
+<span class="sd">    ``fixed`` keeps showers per run unchanged.</span>
+<span class="sd">    ``cosine_zenith`` applies ``showers_per_run * cos(zenith_angle)``</span>
+<span class="sd">    (example: ``--showers_per_run_scaling cosine_zenith``).</span>
+<span class="sd">energy_max_scaling (tuple, optional)</span>
+<span class="sd">    Scale max energy with zenith angle as</span>
+<span class="sd">    ``energy_max_scaling_reference * cos(zenith_angle) ** power_index``.</span>
+<span class="sd">    Provide as ``&lt;power_index&gt; &lt;reference_energy_value&gt; &lt;reference_energy_unit&gt;``.</span>
+<span class="sd">    Disabled by default (``None``).</span>
+<span class="sd">    Example: ``--energy_max_scaling -2.5 300 TeV``.</span>
+
+
+<span class="sd">Example</span>
+<span class="sd">-------</span>
+<span class="sd">To generate a standard zenith/azimuth grid of simulation points, execute:</span>
+
+<span class="sd">.. code-block:: console</span>
+
+<span class="sd">        simtools-production-generate-grid --site North --model_version 6.0.2 \</span>
+<span class="sd">            --array_layout_name alpha \</span>
+<span class="sd">            --axis azimuth 310 deg 20 deg 3 linear \</span>
+<span class="sd">            --axis zenith 30 deg 40 deg 2 linear \</span>
+<span class="sd">            --axis nsb 4 MHz 5 MHz 2 linear \</span>
+<span class="sd">            --axis offset 0 deg 10 deg 2 linear \</span>
+<span class="sd">            --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv</span>
+
+<span class="sd">To generate an all-sky RA/Dec direction grid and serialize output in RA/Dec,</span>
+<span class="sd">execute:</span>
+
+<span class="sd">.. code-block:: console</span>
+
+<span class="sd">        simtools-production-generate-grid --site North --model_version 6.0.2 \</span>
+<span class="sd">            --array_layout_name alpha \</span>
+<span class="sd">            --axis ra 0 deg 360 deg 36 linear \</span>
+<span class="sd">            --axis dec -90 deg 90 deg 18 linear \</span>
+<span class="sd">            --axis nsb 4 MHz 4 MHz 1 linear \</span>
+<span class="sd">            --axis offset 0 deg 10 deg 2 linear \</span>
+<span class="sd">            --time_of_observation &quot;2017-09-16 00:00:00&quot; \</span>
+<span class="sd">            --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv</span>
+
+<span class="sd">To generate an RA/Dec density grid constrained to local sky ranges (for example</span>
+<span class="sd">full zenith coverage from 0 to 70 deg and a directed azimuth window), execute:</span>
+
+<span class="sd">.. code-block:: console</span>
+
+<span class="sd">        simtools-production-generate-grid --site North --model_version 6.0.2 \</span>
+<span class="sd">            --array_layout_name alpha \</span>
+<span class="sd">            --axis ra 0 deg 360 deg 1 linear \</span>
+<span class="sd">            --axis dec -40 deg 80 deg 1 linear \</span>
+<span class="sd">            --axis nsb 4 MHz 4 MHz 1 linear \</span>
+<span class="sd">            --axis offset 0 deg 10 deg 2 linear \</span>
+<span class="sd">            --direction_grid_density 0.25 1/deg^2 \</span>
+<span class="sd">            --local_zenith_range 0 deg 70 deg \</span>
+<span class="sd">            --local_azimuth_range 300 deg 60 deg \</span>
+<span class="sd">            --time_of_observation &quot;2017-09-16 00:00:00&quot; \</span>
+<span class="sd">            --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.application_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_application</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaults</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.job_grid_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">serialize_job_grid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.simulation_jobs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">build_job_grid_metadata</span><span class="p">,</span>
+    <span class="n">build_simulation_jobs</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_arguments</span><span class="p">(</span><span class="n">parser</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register application-specific command line arguments.&quot;&quot;&quot;</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--axis&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;append&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Compact axis definition: --axis &lt;name&gt; &lt;min&gt; &lt;unit&gt; &lt;max&gt; &lt;unit&gt; &lt;binning&gt; &quot;</span>
+            <span class="s2">&quot;[scaling]. May be repeated. &quot;</span>
+            <span class="s2">&quot;Options for scaling are: linear, log, 1/cos&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--time_of_observation&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Observation time in UTC (format: &#39;YYYY-MM-DD HH:MM:SS&#39;). Used only in &#39;ra_dec&#39; mode.&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--direction_grid_density&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Direction-grid density in 1/deg^2. If set, direction-axis binning is &quot;</span>
+            <span class="s2">&quot;derived from axis ranges and this density. In ra_dec mode, use &quot;</span>
+            <span class="s2">&quot;local_zenith_range/local_azimuth_range to filter generated points in local sky.&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--local_zenith_range&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Local zenith range (quantity pair) used to filter RA/Dec density points, &quot;</span>
+            <span class="s2">&quot;for example: --local_zenith_range 0 deg 70 deg&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--local_azimuth_range&quot;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Local azimuth range (quantity pair) used to filter RA/Dec density points, &quot;</span>
+            <span class="s2">&quot;for example: --local_azimuth_range 300 deg 60 deg&quot;</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--output_file&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;job_grid.ecsv&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output file for the generated executable job grid.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--corsika_limits&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the lookup table for simulation limits. &quot;</span>
+        <span class="s2">&quot;Table required with varying azimuth and or zenith angle. &quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--number_of_runs&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of runs to be simulated.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--total_showers&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Total number of showers to simulate.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--total_showers_scaling&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Scaling mode for total showers.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;fixed&quot;</span><span class="p">,</span> <span class="s2">&quot;zenith_scaled&quot;</span><span class="p">],</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;fixed&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--zenith_angle_scaling_factor&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Scaling factor for zenith-dependent total_showers scaling. &quot;</span>
+            <span class="s2">&quot;Used only when --total_showers_scaling is &#39;zenith_scaled&#39;.&quot;</span>
+        <span class="p">),</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">defaults</span><span class="o">.</span><span class="n">ZENITH_ANGLE_SCALING_FACTOR_DEFAULT</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--showers_per_run_power_law&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Scale showers_per_run by (E_mid / E_ref) ** power_index using the bin midpoint: &quot;</span>
+            <span class="s2">&quot;&lt;power_index&gt; &lt;reference_energy_value&gt; &lt;reference_energy_unit&gt; &quot;</span>
+            <span class="s2">&quot;(for example: --showers_per_run_power_law -2.0 1 TeV).&quot;</span>
+        <span class="p">),</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;POWER_INDEX&quot;</span><span class="p">,</span> <span class="s2">&quot;REFERENCE_ENERGY_VALUE&quot;</span><span class="p">,</span> <span class="s2">&quot;REFERENCE_ENERGY_UNIT&quot;</span><span class="p">),</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--showers_per_run_scaling&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Zenith-angle scaling mode for showers_per_run: &quot;</span>
+            <span class="s2">&quot;&#39;fixed&#39; keeps the baseline value, &quot;</span>
+            <span class="s2">&quot;&#39;cosine_zenith&#39; applies showers_per_run * cos(zenith_angle).&quot;</span>
+        <span class="p">),</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;fixed&quot;</span><span class="p">,</span> <span class="s2">&quot;cosine_zenith&quot;</span><span class="p">],</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;fixed&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--energy_max_scaling&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;Scale max energy with zenith angle as &quot;</span>
+            <span class="s2">&quot;energy_max_scaling_reference * cos(zenith_angle) ** power_index. &quot;</span>
+            <span class="s2">&quot;Provide: &lt;power_index&gt; &lt;reference_energy_value&gt; &lt;reference_energy_unit&gt; &quot;</span>
+            <span class="s2">&quot;(for example: --energy_max_scaling -2.5 300 TeV).&quot;</span>
+            <span class="s2">&quot;Max energy limited by value given through &#39;--energy_range&#39;.&quot;</span>
+        <span class="p">),</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;POWER_INDEX&quot;</span><span class="p">,</span> <span class="s2">&quot;REFERENCE_ENERGY_VALUE&quot;</span><span class="p">,</span> <span class="s2">&quot;REFERENCE_ENERGY_UNIT&quot;</span><span class="p">),</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--energy_max_scaling_index&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../user-guide/applications/simtools-production-generate-grid.html#production_generate_grid.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;See CLI description.&quot;&quot;&quot;</span>
+    <span class="n">app_context</span> <span class="o">=</span> <span class="n">build_application</span><span class="p">(</span>
+        <span class="n">initialization_kwargs</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;db_config&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;preserve_by_version_keys&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;simulation_model&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;layout&quot;</span><span class="p">,</span> <span class="s2">&quot;telescope&quot;</span><span class="p">,</span> <span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;simulation_configuration&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;software&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;corsika_configuration&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">]},</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="n">job_rows</span> <span class="o">=</span> <span class="n">build_simulation_jobs</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">serialize_job_grid</span><span class="p">(</span>
+        <span class="n">job_rows</span><span class="o">=</span><span class="n">job_rows</span><span class="p">,</span>
+        <span class="n">output_file</span><span class="o">=</span><span class="n">app_context</span><span class="o">.</span><span class="n">io_handler</span><span class="o">.</span><span class="n">get_output_file</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;output_file&quot;</span><span class="p">]),</span>
+        <span class="n">metadata</span><span class="o">=</span><span class="n">build_job_grid_metadata</span><span class="p">(</span><span class="n">app_context</span><span class="o">.</span><span class="n">args</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=0790524f97105ba85085"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.18.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

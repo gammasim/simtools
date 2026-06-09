@@ -1,0 +1,1368 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>production_configuration.derive_corsika_limits &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=0790524f97105ba85085"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
+
+    <script src="../../_static/documentation_options.js?v=4440c9c5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_configuration/derive_corsika_limits';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.18.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.32.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">production_configuration.derive_corsika_limits</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for production_configuration.derive_corsika_limits</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Derive CORSIKA limits from a reduced event data file.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Column</span><span class="p">,</span> <span class="n">Table</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">SCHEMA_PATH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.data_model.metadata_collector</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataCollector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span><span class="p">,</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.job_execution.process_pool</span><span class="w"> </span><span class="kn">import</span> <span class="n">process_pool_map_ordered</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.layout.array_layout_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get_array_elements_from_db_for_layouts</span><span class="p">,</span>
+    <span class="n">resolve_array_layout_name</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.sim_events.histograms</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventDataHistograms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_uuid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.names</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalize_array_element_identifier_container</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_simtel_event_histograms</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">CORSIKA_LIMITS_TABLE_SCHEMA_FILE</span> <span class="o">=</span> <span class="n">SCHEMA_PATH</span> <span class="o">/</span> <span class="s2">&quot;corsika_limits_table.schema.yml&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_output_table_configuration_from_schema</span><span class="p">(</span><span class="n">schema_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load output table columns, descriptions, and file-info mappings from schema.&quot;&quot;&quot;</span>
+    <span class="n">schema_data</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">schema_file</span><span class="p">)</span>
+    <span class="n">data_entries</span> <span class="o">=</span> <span class="n">schema_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">data_entries</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No &#39;data&#39; entry found in schema </span><span class="si">{</span><span class="n">schema_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">table_columns</span> <span class="o">=</span> <span class="n">data_entries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;table_columns&quot;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">table_columns</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No &#39;table_columns&#39; entry found in schema </span><span class="si">{</span><span class="n">schema_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">result_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">table_columns</span><span class="p">]</span>
+    <span class="n">column_descriptions</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]:</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">table_columns</span>
+        <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">}</span>
+    <span class="n">file_info_columns</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]:</span> <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;file_info_key&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">table_columns</span>
+        <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file_info_key&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">result_columns</span><span class="p">,</span> <span class="n">column_descriptions</span><span class="p">,</span> <span class="n">file_info_columns</span>
+
+
+<span class="n">RESULT_COLUMNS</span><span class="p">,</span> <span class="n">COLUMN_DESCRIPTIONS</span><span class="p">,</span> <span class="n">FILE_INFO_COLUMNS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">_load_output_table_configuration_from_schema</span><span class="p">(</span><span class="n">CORSIKA_LIMITS_TABLE_SCHEMA_FILE</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">LOSS_AXES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;core_distance&quot;</span><span class="p">,</span> <span class="s2">&quot;angular_distance&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalize_event_data_file</span><span class="p">(</span><span class="n">event_data_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Normalize event_data_file to an ordered list of production patterns.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    event_data_file : str or list</span>
+<span class="sd">        A single pattern string or list of pattern strings.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        Ordered list of event data file patterns.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event_data_file</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">event_data_file</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event_data_file</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">event_data_file</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;event_data_file must be str or list, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">event_data_file</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_production_directory_name</span><span class="p">(</span><span class="n">production_pattern</span><span class="p">,</span> <span class="n">existing_names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a readable, filesystem-safe production directory name.</span>
+
+<span class="sd">    The name is derived from the glob pattern and kept human-readable.</span>
+<span class="sd">    If a collision is detected with an existing directory name, append</span>
+<span class="sd">    a UUID7 suffix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    production_pattern : str</span>
+<span class="sd">        The glob pattern for this production.</span>
+<span class="sd">    existing_names : set[str] or None</span>
+<span class="sd">        Existing directory names used in this run.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Safe directory name (e.g., &quot;production_prod_a_events&quot;).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sanitize</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[^A-Za-z0-9]+&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;_+&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+
+    <span class="n">pattern_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">production_pattern</span><span class="p">)</span>
+    <span class="n">parent_name</span> <span class="o">=</span> <span class="n">_sanitize</span><span class="p">(</span><span class="n">pattern_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">if</span> <span class="n">pattern_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;.&quot;</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">readable_name</span> <span class="o">=</span> <span class="n">parent_name</span> <span class="ow">or</span> <span class="n">_sanitize</span><span class="p">(</span><span class="n">pattern_path</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;production&quot;</span>
+    <span class="n">base_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;production_</span><span class="si">{</span><span class="n">readable_name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">if</span> <span class="n">existing_names</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">base_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_names</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">base_name</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">get_uuid</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_execute_production_job</span><span class="p">(</span><span class="n">job_spec</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Execute a single production job (top-level picklable worker).</span>
+
+<span class="sd">    This function is called by process_pool_map_ordered and must be</span>
+<span class="sd">    picklable (top-level defined).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    job_spec : dict</span>
+<span class="sd">        Dictionary containing with job specifications</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Result dictionary with limits and production metadata.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">production_index</span> <span class="o">=</span> <span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;production_index&quot;</span><span class="p">]</span>
+    <span class="n">production_pattern</span> <span class="o">=</span> <span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;production_pattern&quot;</span><span class="p">]</span>
+    <span class="n">array_name</span> <span class="o">=</span> <span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;array_name&quot;</span><span class="p">]</span>
+    <span class="n">telescope_ids</span> <span class="o">=</span> <span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;telescope_ids&quot;</span><span class="p">]</span>
+    <span class="n">allowed_losses</span> <span class="o">=</span> <span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;allowed_losses&quot;</span><span class="p">]</span>
+    <span class="n">energy_threshold_fraction</span> <span class="o">=</span> <span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;energy_threshold_fraction&quot;</span><span class="p">]</span>
+    <span class="n">plot_histograms</span> <span class="o">=</span> <span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;plot_histograms&quot;</span><span class="p">]</span>
+    <span class="n">output_subdir</span> <span class="o">=</span> <span class="n">job_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_subdir&quot;</span><span class="p">)</span>
+    <span class="n">differential_loss_bins_per_decade</span> <span class="o">=</span> <span class="n">job_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;differential_loss_bins_per_decade&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Processing production </span><span class="si">{</span><span class="n">production_index</span><span class="si">}</span><span class="s2">: pattern=</span><span class="si">{</span><span class="n">production_pattern</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;array=</span><span class="si">{</span><span class="n">array_name</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">_process_file</span><span class="p">(</span>
+        <span class="n">production_pattern</span><span class="p">,</span>
+        <span class="n">array_name</span><span class="p">,</span>
+        <span class="n">telescope_ids</span><span class="p">,</span>
+        <span class="n">allowed_losses</span><span class="p">,</span>
+        <span class="n">energy_threshold_fraction</span><span class="p">,</span>
+        <span class="n">plot_histograms</span><span class="p">,</span>
+        <span class="n">output_subdir</span><span class="o">=</span><span class="n">output_subdir</span><span class="p">,</span>
+        <span class="n">differential_loss_bins_per_decade</span><span class="o">=</span><span class="n">differential_loss_bins_per_decade</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">result</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;production_index&quot;</span><span class="p">:</span> <span class="n">production_index</span><span class="p">,</span>
+            <span class="s2">&quot;event_data_file&quot;</span><span class="p">:</span> <span class="n">production_pattern</span><span class="p">,</span>
+            <span class="s2">&quot;array_name&quot;</span><span class="p">:</span> <span class="n">array_name</span><span class="p">,</span>
+            <span class="s2">&quot;telescope_ids&quot;</span><span class="p">:</span> <span class="n">telescope_ids</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_telescope_configs</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve telescope configurations from one of the supported input options.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">):</span>
+        <span class="n">layouts</span> <span class="o">=</span> <span class="n">resolve_array_layout_name</span><span class="p">(</span>
+            <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">],</span>
+            <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layouts</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">layouts</span> <span class="o">=</span> <span class="p">[</span><span class="n">layouts</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">get_array_elements_from_db_for_layouts</span><span class="p">(</span>
+            <span class="n">layouts</span><span class="p">,</span>
+            <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">),</span>
+            <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_element_list&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;array_element_list&quot;</span><span class="p">:</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;array_element_list&quot;</span><span class="p">]}</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;telescope_ids&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;telescope_ids&quot;</span><span class="p">])[</span><span class="s2">&quot;telescope_configs&quot;</span><span class="p">]</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="s2">&quot;No telescope configuration provided. Use one of --array_layout_name, &quot;</span>
+        <span class="s2">&quot;--array_element_list, or --telescope_ids.&quot;</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_allowed_losses</span><span class="p">(</span><span class="n">allowed_losses_args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse repeatable --allowed_losses values for core/viewcone axes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    allowed_losses_args : list[str]</span>
+<span class="sd">        List of values in the form &quot;axis,fraction,min_events&quot;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Mapping of axis name to dict with keys &quot;loss_fraction&quot; and &quot;loss_min_events&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">allowed_losses_args</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;No allowed-loss configuration provided. Use --allowed_losses axis,fraction,min_events&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">parsed</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">raw_value</span> <span class="ow">in</span> <span class="n">allowed_losses_args</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">part</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">raw_value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid --allowed_losses value &#39;</span><span class="si">{</span><span class="n">raw_value</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
+                <span class="s2">&quot;Expected format: axis,fraction,min_events&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">axis_raw</span><span class="p">,</span> <span class="n">fraction_raw</span><span class="p">,</span> <span class="n">min_events_raw</span> <span class="o">=</span> <span class="n">parts</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">fraction</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">fraction_raw</span><span class="p">)</span>
+            <span class="n">min_events</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_events_raw</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid --allowed_losses value &#39;</span><span class="si">{</span><span class="n">raw_value</span><span class="si">}</span><span class="s2">&#39;: &quot;</span>
+                <span class="s2">&quot;fraction must be float and min_events must be int&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+        <span class="n">axis_name</span> <span class="o">=</span> <span class="n">axis_raw</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">axis_name</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">axis_name</span> <span class="ow">in</span> <span class="n">LOSS_AXES</span><span class="p">:</span>
+                <span class="n">parsed</span><span class="p">[</span><span class="n">axis_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;loss_fraction&quot;</span><span class="p">:</span> <span class="n">fraction</span><span class="p">,</span>
+                    <span class="s2">&quot;loss_min_events&quot;</span><span class="p">:</span> <span class="n">min_events</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">axis_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">LOSS_AXES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid axis for --allowed_losses. Allowed axes: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">LOSS_AXES</span><span class="p">)</span><span class="si">}</span><span class="s2">, all.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">parsed</span><span class="p">[</span><span class="n">axis_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;loss_fraction&quot;</span><span class="p">:</span> <span class="n">fraction</span><span class="p">,</span>
+            <span class="s2">&quot;loss_min_events&quot;</span><span class="p">:</span> <span class="n">min_events</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="n">missing_axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">axis_name</span> <span class="k">for</span> <span class="n">axis_name</span> <span class="ow">in</span> <span class="n">LOSS_AXES</span> <span class="k">if</span> <span class="n">axis_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing_axes</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Missing --allowed_losses entries for axis/axes: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_axes</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">parsed</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_production_subdirectories</span><span class="p">(</span><span class="n">production_patterns</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">is_multi_production</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build and create per-production output subdirectories when needed.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_multi_production</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="n">production_subdirs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">used_subdir_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">production_pattern</span> <span class="ow">in</span> <span class="n">production_patterns</span><span class="p">:</span>
+        <span class="n">subdir_name</span> <span class="o">=</span> <span class="n">_get_production_directory_name</span><span class="p">(</span><span class="n">production_pattern</span><span class="p">,</span> <span class="n">used_subdir_names</span><span class="p">)</span>
+        <span class="n">used_subdir_names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">subdir_name</span><span class="p">)</span>
+        <span class="n">output_subdir</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">subdir_name</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">output_subdir</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">production_subdirs</span><span class="p">[</span><span class="n">production_pattern</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_subdir</span>
+
+    <span class="k">return</span> <span class="n">production_subdirs</span>
+
+
+<div class="viewcode-block" id="generate_corsika_limits_grid">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.generate_corsika_limits_grid">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_corsika_limits_grid</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate CORSIKA limits for one or more production patterns.</span>
+
+<span class="sd">    Single- and multi-production runs share the same dispatch path using</span>
+<span class="sd">    process_pool_map_ordered.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary containing command line arguments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">production_patterns</span> <span class="o">=</span> <span class="n">_normalize_event_data_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;event_data_file&quot;</span><span class="p">])</span>
+    <span class="n">allowed_losses</span> <span class="o">=</span> <span class="n">_parse_allowed_losses</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;allowed_losses&quot;</span><span class="p">))</span>
+    <span class="n">energy_threshold_fraction</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy_threshold_fraction&quot;</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">))</span>
+    <span class="n">differential_loss_bins_per_decade</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;differential_loss_bins_per_decade&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">n_productions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">production_patterns</span><span class="p">)</span>
+    <span class="n">is_multi_production</span> <span class="o">=</span> <span class="n">n_productions</span> <span class="o">&gt;</span> <span class="mi">1</span>
+
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing </span><span class="si">{</span><span class="n">n_productions</span><span class="si">}</span><span class="s2"> production(s)&quot;</span><span class="p">)</span>
+
+    <span class="n">telescope_configs</span> <span class="o">=</span> <span class="n">_resolve_telescope_configs</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
+
+    <span class="c1"># Build deterministic job specs: Cartesian product of productions and telescope configs</span>
+    <span class="n">job_specs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span>
+
+    <span class="n">production_subdirs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">is_multi_production</span> <span class="ow">and</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;plot_histograms&quot;</span><span class="p">]:</span>
+        <span class="n">production_subdirs</span> <span class="o">=</span> <span class="n">_build_production_subdirectories</span><span class="p">(</span>
+            <span class="n">production_patterns</span><span class="p">,</span>
+            <span class="n">output_dir</span><span class="p">,</span>
+            <span class="n">is_multi_production</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">prod_idx</span><span class="p">,</span> <span class="n">production_pattern</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">production_patterns</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">telescope_ids_raw</span> <span class="ow">in</span> <span class="n">telescope_configs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">telescope_ids</span> <span class="o">=</span> <span class="n">normalize_array_element_identifier_container</span><span class="p">(</span><span class="n">telescope_ids_raw</span><span class="p">)</span>
+
+            <span class="n">output_subdir</span> <span class="o">=</span> <span class="n">production_subdirs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">production_pattern</span><span class="p">)</span>
+
+            <span class="n">job_spec</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;production_index&quot;</span><span class="p">:</span> <span class="n">prod_idx</span><span class="p">,</span>
+                <span class="s2">&quot;production_pattern&quot;</span><span class="p">:</span> <span class="n">production_pattern</span><span class="p">,</span>
+                <span class="s2">&quot;array_name&quot;</span><span class="p">:</span> <span class="n">array_name</span><span class="p">,</span>
+                <span class="s2">&quot;telescope_ids&quot;</span><span class="p">:</span> <span class="n">telescope_ids</span><span class="p">,</span>
+                <span class="s2">&quot;allowed_losses&quot;</span><span class="p">:</span> <span class="n">allowed_losses</span><span class="p">,</span>
+                <span class="s2">&quot;energy_threshold_fraction&quot;</span><span class="p">:</span> <span class="n">energy_threshold_fraction</span><span class="p">,</span>
+                <span class="s2">&quot;plot_histograms&quot;</span><span class="p">:</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;plot_histograms&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;output_subdir&quot;</span><span class="p">:</span> <span class="n">output_subdir</span><span class="p">,</span>
+                <span class="s2">&quot;differential_loss_bins_per_decade&quot;</span><span class="p">:</span> <span class="n">differential_loss_bins_per_decade</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="n">job_specs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job_spec</span><span class="p">)</span>
+
+    <span class="n">n_workers</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_workers&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Executing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">job_specs</span><span class="p">)</span><span class="si">}</span><span class="s2"> jobs with </span><span class="si">{</span><span class="n">n_workers</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">&#39;auto&#39;</span><span class="si">}</span><span class="s2"> workers&quot;</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">process_pool_map_ordered</span><span class="p">(</span>
+        <span class="n">_execute_production_job</span><span class="p">,</span>
+        <span class="n">job_specs</span><span class="p">,</span>
+        <span class="n">max_workers</span><span class="o">=</span><span class="n">n_workers</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">write_results</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">allowed_losses</span><span class="p">,</span> <span class="n">energy_threshold_fraction</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_process_file</span><span class="p">(</span>
+    <span class="n">file_path</span><span class="p">,</span>
+    <span class="n">array_name</span><span class="p">,</span>
+    <span class="n">telescope_ids</span><span class="p">,</span>
+    <span class="n">allowed_losses</span><span class="p">,</span>
+    <span class="n">energy_threshold_fraction</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">plot_histograms</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">output_subdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">differential_loss_bins_per_decade</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute limits for a given event data file and telescope configuration.</span>
+
+<span class="sd">    Compute limits for energy, radial distance, and viewcone.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_path : str or list</span>
+<span class="sd">        Path or glob pattern to the event data file, or a list of files.</span>
+<span class="sd">    array_name : str</span>
+<span class="sd">        Name of the telescope array configuration.</span>
+<span class="sd">    telescope_ids : list[str]</span>
+<span class="sd">        List of telescope IDs (array-element names) to filter the events.</span>
+<span class="sd">    allowed_losses : dict</span>
+<span class="sd">        Per-axis loss settings for core_distance/angular_distance.</span>
+<span class="sd">    energy_threshold_fraction : float, optional</span>
+<span class="sd">        Fraction of the stable energy-peak count used to derive ERANGE.</span>
+<span class="sd">    plot_histograms : bool</span>
+<span class="sd">        Whether to plot histograms.</span>
+<span class="sd">    output_subdir : Path or None, optional</span>
+<span class="sd">        Output subdirectory for plots. If None, uses default output directory.</span>
+<span class="sd">    differential_loss_bins_per_decade : int, optional</span>
+<span class="sd">        Number of energy bins per decade for differential per-bin limits.</span>
+<span class="sd">        Set to 0 (default) to use integrated limits.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary containing the computed limits and metadata.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">histograms</span> <span class="o">=</span> <span class="n">EventDataHistograms</span><span class="p">(</span>
+        <span class="n">file_path</span><span class="p">,</span>
+        <span class="n">array_name</span><span class="p">,</span>
+        <span class="n">telescope_ids</span><span class="p">,</span>
+        <span class="n">differential_loss_bins_per_decade</span> <span class="ow">or</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">histograms</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">fill_efficiency_histogram</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">limits</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;lower_energy_limit&quot;</span><span class="p">:</span> <span class="n">compute_lower_energy_limit</span><span class="p">(</span>
+            <span class="n">histograms</span><span class="p">,</span>
+            <span class="n">energy_threshold_fraction</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">}</span>
+    <span class="n">limits</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="n">_compute_limits</span><span class="p">(</span>
+            <span class="n">histograms</span><span class="p">,</span>
+            <span class="n">allowed_losses</span><span class="p">,</span>
+            <span class="n">differential_loss_bins_per_decade</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">limits</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="n">column_name</span><span class="p">:</span> <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">file_info_key</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">column_name</span><span class="p">,</span> <span class="n">file_info_key</span> <span class="ow">in</span> <span class="n">FILE_INFO_COLUMNS</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">plot_histograms</span><span class="p">:</span>
+        <span class="n">plot_output_path</span> <span class="o">=</span> <span class="n">output_subdir</span> <span class="ow">or</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span>
+        <span class="n">plot_simtel_event_histograms</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">,</span>
+            <span class="n">output_path</span><span class="o">=</span><span class="n">plot_output_path</span><span class="p">,</span>
+            <span class="n">limits</span><span class="o">=</span><span class="n">limits</span><span class="p">,</span>
+            <span class="n">array_name</span><span class="o">=</span><span class="n">array_name</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">limits</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_limits</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">allowed_losses</span><span class="p">,</span> <span class="n">bins_per_decade</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute core and viewcone limits per energy bin and return max limits.</span>
+
+<span class="sd">    Apply the allowed loss criteria per energy bin and return the maximum limit</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">energy_range</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">histograms</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">histograms</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])]</span>
+    <span class="n">axis_configs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;core_distance&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;x_bins&quot;</span><span class="p">:</span> <span class="n">histograms</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">,</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;core_scatter&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;m&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;angular_distance&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;x_bins&quot;</span><span class="p">:</span> <span class="n">histograms</span><span class="o">.</span><span class="n">view_cone_bins</span><span class="p">,</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;viewcone&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;deg&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="n">per_axis_limits</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">differential_energy_bins</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">bins_per_decade</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">low</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">histograms</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">))))</span>
+        <span class="n">high</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">histograms</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">))))</span>
+        <span class="n">differential_energy_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="p">(</span><span class="n">high</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span> <span class="o">*</span> <span class="n">bins_per_decade</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">axis_name</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">axis_configs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">bins_per_decade</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">axis_max</span><span class="p">,</span> <span class="n">curve_x</span><span class="p">,</span> <span class="n">curve_y</span> <span class="o">=</span> <span class="n">_differential_upper_limits</span><span class="p">(</span>
+                <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">axis_name</span><span class="si">}</span><span class="s2">_vs_energy&quot;</span><span class="p">][</span><span class="s2">&quot;histogram&quot;</span><span class="p">],</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;x_bins&quot;</span><span class="p">],</span>
+                <span class="n">histograms</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">,</span>
+                <span class="n">differential_energy_bins</span><span class="p">,</span>
+                <span class="n">allowed_losses</span><span class="p">[</span><span class="n">axis_name</span><span class="p">],</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">axis_max</span> <span class="o">=</span> <span class="n">_integral_limits</span><span class="p">(</span>
+                <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="n">axis_name</span><span class="p">][</span><span class="s2">&quot;histogram&quot;</span><span class="p">],</span>
+                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;x_bins&quot;</span><span class="p">],</span>
+                <span class="n">allowed_losses</span><span class="p">[</span><span class="n">axis_name</span><span class="p">][</span><span class="s2">&quot;loss_fraction&quot;</span><span class="p">],</span>
+                <span class="n">allowed_losses</span><span class="p">[</span><span class="n">axis_name</span><span class="p">][</span><span class="s2">&quot;loss_min_events&quot;</span><span class="p">],</span>
+                <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;upper&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">curve_x</span> <span class="o">=</span> <span class="p">[</span><span class="n">axis_max</span><span class="p">,</span> <span class="n">axis_max</span><span class="p">]</span>
+            <span class="n">curve_y</span> <span class="o">=</span> <span class="n">energy_range</span>
+
+        <span class="n">per_axis_limits</span><span class="p">[</span><span class="n">axis_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">axis_max</span><span class="p">,</span>
+            <span class="s2">&quot;curve&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">curve_x</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">curve_y</span><span class="p">},</span>
+            <span class="s2">&quot;curve_key&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">axis_name</span><span class="si">}</span><span class="s2">_vs_energy_curve&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="n">core_max</span> <span class="o">=</span> <span class="n">per_axis_limits</span><span class="p">[</span><span class="s2">&quot;core_distance&quot;</span><span class="p">][</span><span class="s2">&quot;max&quot;</span><span class="p">]</span>
+    <span class="n">vc_max</span> <span class="o">=</span> <span class="n">per_axis_limits</span><span class="p">[</span><span class="s2">&quot;angular_distance&quot;</span><span class="p">][</span><span class="s2">&quot;max&quot;</span><span class="p">]</span>
+
+    <span class="n">upper_radius_limit</span> <span class="o">=</span> <span class="n">core_max</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span>
+    <span class="n">upper_radius_limit</span> <span class="o">=</span> <span class="n">_is_close</span><span class="p">(</span>
+        <span class="n">upper_radius_limit</span><span class="p">,</span>
+        <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span><span class="p">[</span><span class="s2">&quot;core_scatter_max&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;core_scatter_max&quot;</span> <span class="ow">in</span> <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;Upper radius limit is equal to the maximum core scatter distance of&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">viewcone_radius</span> <span class="o">=</span> <span class="n">_is_close</span><span class="p">(</span>
+        <span class="n">vc_max</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span><span class="p">[</span><span class="s2">&quot;viewcone_max&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;viewcone_max&quot;</span> <span class="ow">in</span> <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;Upper viewcone limit is equal to the maximum viewcone distance of&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Differential upper_radius_limit (max over bins): </span><span class="si">{</span><span class="n">upper_radius_limit</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Differential viewcone_radius (max over bins): </span><span class="si">{</span><span class="n">viewcone_radius</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;upper_radius_limit&quot;</span><span class="p">:</span> <span class="n">upper_radius_limit</span><span class="p">,</span>
+        <span class="s2">&quot;viewcone_radius&quot;</span><span class="p">:</span> <span class="n">viewcone_radius</span><span class="p">,</span>
+        <span class="n">per_axis_limits</span><span class="p">[</span><span class="s2">&quot;core_distance&quot;</span><span class="p">][</span><span class="s2">&quot;curve_key&quot;</span><span class="p">]:</span> <span class="n">per_axis_limits</span><span class="p">[</span><span class="s2">&quot;core_distance&quot;</span><span class="p">][</span><span class="s2">&quot;curve&quot;</span><span class="p">],</span>
+        <span class="n">per_axis_limits</span><span class="p">[</span><span class="s2">&quot;angular_distance&quot;</span><span class="p">][</span><span class="s2">&quot;curve_key&quot;</span><span class="p">]:</span> <span class="n">per_axis_limits</span><span class="p">[</span><span class="s2">&quot;angular_distance&quot;</span><span class="p">][</span>
+            <span class="s2">&quot;curve&quot;</span>
+        <span class="p">],</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_differential_upper_limits</span><span class="p">(</span>
+    <span class="n">histogram2d</span><span class="p">,</span>
+    <span class="n">x_bins</span><span class="p">,</span>
+    <span class="n">y_bins</span><span class="p">,</span>
+    <span class="n">diff_e_bins</span><span class="p">,</span>
+    <span class="n">allowed_loss</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">,</span>
+    <span class="n">unit</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute upper limits per energy slice of a 2D (x, energy) histogram.&quot;&quot;&quot;</span>
+    <span class="n">y_centers</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">y_bins</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="n">limits</span><span class="p">,</span> <span class="n">energy_centers</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">diff_e_bins</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">e_low</span><span class="p">,</span> <span class="n">e_high</span> <span class="o">=</span> <span class="n">diff_e_bins</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">diff_e_bins</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">hi_op</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">less_equal</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">less</span>
+        <span class="n">projected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">histogram2d</span><span class="p">[:,</span> <span class="p">(</span><span class="n">y_centers</span> <span class="o">&gt;=</span> <span class="n">e_low</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">hi_op</span><span class="p">(</span><span class="n">y_centers</span><span class="p">,</span> <span class="n">e_high</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">projected</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">total</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">limit</span> <span class="o">=</span> <span class="n">_integral_limits</span><span class="p">(</span>
+            <span class="n">projected</span><span class="p">,</span>
+            <span class="n">x_bins</span><span class="p">,</span>
+            <span class="n">allowed_loss</span><span class="p">[</span><span class="s2">&quot;loss_fraction&quot;</span><span class="p">],</span>
+            <span class="n">allowed_loss</span><span class="p">[</span><span class="s2">&quot;loss_min_events&quot;</span><span class="p">],</span>
+            <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;upper&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">keep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">x_bins</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="p">(</span><span class="n">total</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">projected</span><span class="p">[:</span><span class="n">keep</span><span class="p">])))</span> <span class="o">/</span> <span class="n">total</span>
+        <span class="n">limits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>
+        <span class="n">energy_centers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">e_low</span> <span class="o">*</span> <span class="n">e_high</span><span class="p">)))</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Differential </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: E=[</span><span class="si">{</span><span class="n">e_low</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">e_high</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2">] TeV, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;N=</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">total</span><span class="p">)</span><span class="si">}</span><span class="s2">, limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">, loss=</span><span class="si">{</span><span class="n">loss</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">limits</span><span class="p">)),</span> <span class="n">limits</span><span class="p">,</span> <span class="n">energy_centers</span><span class="p">)</span> <span class="k">if</span> <span class="n">limits</span> <span class="k">else</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x_bins</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="p">[],</span> <span class="p">[])</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="write_results">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.write_results">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_results</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">,</span> <span class="n">allowed_losses</span><span class="p">,</span> <span class="n">energy_threshold_fraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write the computed limits as astropy table to file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results : list[dict]</span>
+<span class="sd">        List of computed limits.</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary containing command line arguments.</span>
+<span class="sd">    allowed_losses : dict</span>
+<span class="sd">        Per-axis loss settings for core_distance/angular_distance.</span>
+<span class="sd">    energy_threshold_fraction : float</span>
+<span class="sd">        Fraction used for deriving the lower energy threshold.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">_create_results_table</span><span class="p">(</span>
+        <span class="n">results</span><span class="p">,</span>
+        <span class="n">allowed_losses</span><span class="p">,</span>
+        <span class="n">energy_threshold_fraction</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">()</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;output_file&quot;</span><span class="p">]</span>
+
+    <span class="n">table</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.ecsv&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Results saved to </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">MetadataCollector</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_results_table</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">allowed_losses</span><span class="p">,</span> <span class="n">energy_threshold_fraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert list of simulation results to an astropy Table with metadata.</span>
+
+<span class="sd">    Round values to appropriate precision and add metadata.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results : list[dict]</span>
+<span class="sd">        Computed limits per file and telescope configuration.</span>
+<span class="sd">    allowed_losses : dict</span>
+<span class="sd">        Per-axis loss settings added to metadata.</span>
+<span class="sd">    energy_threshold_fraction : float</span>
+<span class="sd">        Fraction used for deriving the lower energy threshold.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astropy.table.Table</span>
+<span class="sd">        Table with computed limits and production-origin columns.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">RESULT_COLUMNS</span><span class="p">)</span>
+
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">}</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+        <span class="n">_process_result_row</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span>
+
+    <span class="n">table_cols</span> <span class="o">=</span> <span class="n">_create_table_columns</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">table_cols</span><span class="p">)</span>
+
+    <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;created&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Lookup table for CORSIKA limits computed from simulations.&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">axis_name</span> <span class="ow">in</span> <span class="n">LOSS_AXES</span><span class="p">:</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;loss_fraction_</span><span class="si">{</span><span class="n">axis_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">allowed_losses</span><span class="p">[</span><span class="n">axis_name</span><span class="p">][</span><span class="s2">&quot;loss_fraction&quot;</span><span class="p">]</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;loss_min_events_</span><span class="si">{</span><span class="n">axis_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="n">allowed_losses</span><span class="p">[</span><span class="n">axis_name</span><span class="p">][</span><span class="s2">&quot;loss_min_events&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;energy_threshold_fraction&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">energy_threshold_fraction</span>
+
+    <span class="k">return</span> <span class="n">table</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_process_result_row</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Process a single result row and add values to columns.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">_round_value</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">res</span><span class="p">)</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2"> to column data&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">):</span>
+            <span class="n">columns</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">units</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">unit</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">columns</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">units</span><span class="p">:</span>
+                <span class="n">units</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_enforce_minimum_value</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="n">minimum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensure candidate is not below minimum while preserving units when present.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">minimum</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">candidate</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minimum</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="n">minimum</span> <span class="o">=</span> <span class="n">minimum</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">candidate</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minimum</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="n">minimum</span> <span class="o">=</span> <span class="n">minimum</span> <span class="o">*</span> <span class="n">candidate</span><span class="o">.</span><span class="n">unit</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minimum</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="n">minimum</span> <span class="o">=</span> <span class="n">minimum</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="k">return</span> <span class="n">candidate</span> <span class="k">if</span> <span class="n">candidate</span> <span class="o">&gt;=</span> <span class="n">minimum</span> <span class="k">else</span> <span class="n">minimum</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_round_value</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Round value based on key type.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;lower_energy_limit&quot;</span><span class="p">:</span>
+        <span class="n">rounded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">val</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e3</span>
+        <span class="k">if</span> <span class="n">row</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rounded</span> <span class="o">=</span> <span class="n">_enforce_minimum_value</span><span class="p">(</span><span class="n">rounded</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;br_energy_min&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">rounded</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;upper_radius_limit&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">val</span> <span class="o">/</span> <span class="mi">25</span><span class="p">)</span> <span class="o">*</span> <span class="mi">25</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;viewcone_radius&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">val</span> <span class="o">/</span> <span class="mf">0.25</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.25</span>
+    <span class="k">return</span> <span class="n">val</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_table_columns</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create table columns with appropriate data types.&quot;&quot;&quot;</span>
+    <span class="n">table_cols</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
+        <span class="n">col_data</span> <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="n">col_description</span> <span class="o">=</span> <span class="n">COLUMN_DESCRIPTIONS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">col_data</span><span class="p">):</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">col_data</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">k</span><span class="p">,</span>
+                <span class="n">unit</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">),</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="n">col_description</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">col_data</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">description</span><span class="o">=</span><span class="n">col_description</span><span class="p">)</span>
+        <span class="n">table_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">table_cols</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_bin_index_for_value</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return index of the histogram bin containing value.&quot;&quot;&quot;</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_apply_broad_range_lower_energy_floor</span><span class="p">(</span><span class="n">derived_limit</span><span class="p">,</span> <span class="n">broad_range_min</span><span class="p">,</span> <span class="n">energy_bins</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply physical and bin-consistent floor to the derived lower energy limit.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">broad_range_min</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">derived_limit</span>
+
+    <span class="n">derived_tev</span> <span class="o">=</span> <span class="n">derived_limit</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;TeV&quot;</span><span class="p">)</span>
+    <span class="n">broad_range_tev</span> <span class="o">=</span> <span class="n">broad_range_min</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;TeV&quot;</span><span class="p">)</span>
+
+    <span class="n">derived_idx</span> <span class="o">=</span> <span class="n">_find_bin_index_for_value</span><span class="p">(</span><span class="n">energy_bins</span><span class="p">,</span> <span class="n">derived_tev</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">broad_range_idx</span> <span class="o">=</span> <span class="n">_find_bin_index_for_value</span><span class="p">(</span><span class="n">energy_bins</span><span class="p">,</span> <span class="n">broad_range_tev</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">derived_idx</span> <span class="o">==</span> <span class="n">broad_range_idx</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">broad_range_tev</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">derived_limit</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_enforce_minimum_value</span><span class="p">(</span><span class="n">derived_limit</span><span class="p">,</span> <span class="n">broad_range_min</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_integral_limits</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="n">bin_edges</span><span class="p">,</span> <span class="n">loss_fraction</span><span class="p">,</span> <span class="n">loss_min_events</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">limit_type</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute integral limits based on the loss fraction and minimal required lost events.</span>
+
+<span class="sd">    Add or subtract one bin to be on the safe side of the limit.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    hist : np.ndarray</span>
+<span class="sd">        1D histogram array.</span>
+<span class="sd">    bin_edges : np.ndarray</span>
+<span class="sd">        Array of bin edges.</span>
+<span class="sd">    loss_fraction : float</span>
+<span class="sd">        Fraction of events to be lost.</span>
+<span class="sd">    loss_min_events : int, optional</span>
+<span class="sd">        Minimum number of events to be lost after applying a limit.</span>
+<span class="sd">    limit_type : str, optional</span>
+<span class="sd">        Type of limit (&#39;lower&#39; or &#39;upper&#39;). Default is &#39;lower&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Bin edge value corresponding to the threshold.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">total_events</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
+    <span class="c1"># Keep-threshold corresponding to a strictly greater-than requested absolute event loss.</span>
+    <span class="n">max_kept_for_min_loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nextafter</span><span class="p">(</span><span class="n">total_events</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">loss_min_events</span><span class="p">),</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+    <span class="n">threshold</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+        <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">loss_fraction</span><span class="p">)</span> <span class="o">*</span> <span class="n">total_events</span><span class="p">,</span>
+        <span class="n">max_kept_for_min_loss</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">threshold</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">total_events</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">limit_type</span> <span class="o">==</span> <span class="s2">&quot;upper&quot;</span><span class="p">:</span>
+        <span class="n">cum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">cum</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">bin_edges</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">limit_type</span> <span class="o">==</span> <span class="s2">&quot;lower&quot;</span><span class="p">:</span>
+        <span class="n">cum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">hist</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">cum</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">bin_edges</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;limit_type must be &#39;lower&#39; or &#39;upper&#39;&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_low_energy_threshold_from_histogram</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">bin_edges</span><span class="p">,</span> <span class="n">threshold_fraction</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find low-energy threshold from a 1D histogram using a peak-relative criterion.</span>
+
+<span class="sd">    The threshold is defined as the first bin (walking to lower energies from the</span>
+<span class="sd">    histogram maximum) where the count drops below ``threshold_fraction`` times a</span>
+<span class="sd">    stable peak estimate. The stable peak estimate is the mean of the maximum bin</span>
+<span class="sd">    and its immediate neighbors (neighbors included only when available).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    counts : np.ndarray</span>
+<span class="sd">        Histogram bin counts.</span>
+<span class="sd">    bin_edges : np.ndarray</span>
+<span class="sd">        Histogram bin edges (length must be ``len(counts) + 1``).</span>
+<span class="sd">    threshold_fraction : float, optional</span>
+<span class="sd">        Fraction of the stable peak used as threshold.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Derived energy threshold.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">bin_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">counts</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">bin_edges</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;counts and bin_edges must be one-dimensional arrays&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">counts</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;counts must not be empty&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">counts</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;counts must contain at least one positive entry&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bin_edges</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">counts</span><span class="o">.</span><span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;bin_edges length must be len(counts) + 1&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">threshold_fraction</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;threshold_fraction must be in the interval (0, 1]&quot;</span><span class="p">)</span>
+
+    <span class="n">peak_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">counts</span><span class="p">))</span>
+
+    <span class="n">left</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">peak_idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">right</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">peak_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">counts</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">n_peak</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">counts</span><span class="p">[</span><span class="n">left</span> <span class="p">:</span> <span class="n">right</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]))</span>
+    <span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold_fraction</span> <span class="o">*</span> <span class="n">n_peak</span>
+
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">peak_idx</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">counts</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="compute_lower_energy_limit">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.derive_corsika_limits.compute_lower_energy_limit">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_lower_energy_limit</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">threshold_fraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the lower energy limit in TeV based on the threshold fraction.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    histograms : EventDataHistograms</span>
+<span class="sd">        Histograms.</span>
+<span class="sd">    threshold_fraction : float</span>
+<span class="sd">        Fraction of the stable peak used as threshold.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astropy.units.Quantity</span>
+<span class="sd">        Lower energy limit.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">energy_min</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_find_low_energy_threshold_from_histogram</span><span class="p">(</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">][</span><span class="s2">&quot;histogram&quot;</span><span class="p">],</span>
+            <span class="n">histograms</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">,</span>
+            <span class="n">threshold_fraction</span><span class="o">=</span><span class="n">threshold_fraction</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span>
+    <span class="p">)</span>
+
+    <span class="n">broad_range_energy_min</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span><span class="p">[</span><span class="s2">&quot;energy_min&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;TeV&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;energy_min&quot;</span> <span class="ow">in</span> <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span>
+        <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="n">energy_min</span> <span class="o">=</span> <span class="n">_apply_broad_range_lower_energy_floor</span><span class="p">(</span>
+        <span class="n">energy_min</span><span class="p">,</span>
+        <span class="n">broad_range_energy_min</span><span class="p">,</span>
+        <span class="n">histograms</span><span class="o">.</span><span class="n">energy_bins</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_is_close</span><span class="p">(</span>
+        <span class="n">energy_min</span><span class="p">,</span>
+        <span class="n">broad_range_energy_min</span><span class="p">,</span>
+        <span class="s2">&quot;Lower energy limit is equal to the minimum energy of&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_close</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">warning_text</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if the value is close to the reference value and log a warning if so.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">reference</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">reference</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1.0e-2</span><span class="p">):</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">warning_text</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.18.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

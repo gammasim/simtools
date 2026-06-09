@@ -1,0 +1,1715 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>production_configuration.simulation_jobs &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=0790524f97105ba85085"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
+
+    <script src="../../_static/documentation_options.js?v=4440c9c5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_configuration/simulation_jobs';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.18.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.32.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">production_configuration.simulation_jobs</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for production_configuration.simulation_jobs</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Expand observation grids into full simulation job matrices.</span>
+
+<span class="sd">Combines grids (from ProductionGridEngine or explicit axes) with primaries, interactions,</span>
+<span class="sd">model versions, energy ranges, and run counts into a complete job parameter set.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">EarthLocation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.time</span><span class="w"> </span><span class="kn">import</span> <span class="n">Time</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaults</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration.commandline_parser</span><span class="w"> </span><span class="kn">import</span> <span class="n">CommandLineParser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.layout.array_layout_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_array_layout_name</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.model.site_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">SiteModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.angle_ranges</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ceil_with_tolerance</span><span class="p">,</span>
+    <span class="n">directed_circular_span_degrees</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.corsika_limits_lookup</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CorsikaLimitsLookup</span><span class="p">,</span>
+    <span class="n">attach_lookup_limits_to_point</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.observation_grid</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProductionGridEngine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="kn">import</span> <span class="n">ensure_list</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils.value_conversion</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_value_as_quantity</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">_GRID_AXES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;primary&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;azimuth_angle&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;zenith_angle&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;model_version&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;corsika_le_interaction&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;corsika_he_interaction&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">_GRID_AXIS_DEFAULTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;corsika_le_interaction&quot;</span><span class="p">:</span> <span class="n">defaults</span><span class="o">.</span><span class="n">CORSIKA_LE_INTERACTION</span><span class="p">,</span>
+    <span class="s2">&quot;corsika_he_interaction&quot;</span><span class="p">:</span> <span class="n">defaults</span><span class="o">.</span><span class="n">CORSIKA_HE_INTERACTION</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">GRID_AXIS_ARGUMENTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;engine_axis&quot;</span><span class="p">:</span> <span class="s2">&quot;azimuth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;deg&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Azimuth range (deg)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;zenith&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;engine_axis&quot;</span><span class="p">:</span> <span class="s2">&quot;zenith_angle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;deg&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Zenith angle range (deg)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;ra&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;engine_axis&quot;</span><span class="p">:</span> <span class="s2">&quot;ra&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;deg&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Right ascension range (deg)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;dec&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;engine_axis&quot;</span><span class="p">:</span> <span class="s2">&quot;dec&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;deg&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Declination range (deg)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;nsb&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;engine_axis&quot;</span><span class="p">:</span> <span class="s2">&quot;nsb_level&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;MHz&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;NSB level range (MHz)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;offset&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;engine_axis&quot;</span><span class="p">:</span> <span class="s2">&quot;offset&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;deg&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Offset range (deg)&quot;</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="n">_AXIS_SCALING_CHOICES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;1/cos&quot;</span><span class="p">)</span>
+<span class="n">_HORIZONTAL_AXES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;azimuth&quot;</span><span class="p">,</span> <span class="s2">&quot;zenith&quot;</span><span class="p">)</span>
+<span class="n">_RADEC_AXES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;ra&quot;</span><span class="p">,</span> <span class="s2">&quot;dec&quot;</span><span class="p">)</span>
+<span class="n">_REQUIRED_AXES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;nsb&quot;</span><span class="p">,</span> <span class="s2">&quot;offset&quot;</span><span class="p">)</span>
+<span class="n">_LOCAL_CONSTRAINT_ARGUMENTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;local_zenith_range&quot;</span><span class="p">:</span> <span class="s2">&quot;deg&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;local_azimuth_range&quot;</span><span class="p">:</span> <span class="s2">&quot;deg&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_DIRECTION_GRID_DENSITY_UNIT</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="o">**</span><span class="mi">2</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_axis_range_tokens</span><span class="p">(</span><span class="n">range_tokens</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a quantity pair from CLI axis range tokens.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">range_tokens</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">CommandLineParser</span><span class="o">.</span><span class="n">parse_quantity_pair</span><span class="p">(</span><span class="n">range_tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">range_tokens</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">range_tokens</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">range_tokens</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">range_tokens</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">range_tokens</span><span class="p">[</span><span class="n">index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">range_tokens</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Axis range must contain exactly two quantities.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalize_axis_spec_tokens</span><span class="p">(</span><span class="n">axis_spec</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return axis specification tokens from CLI or configuration input.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis_spec</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">axis_spec</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis_spec</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">axis_spec</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis_spec</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">axis_spec</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">axis_spec</span><span class="p">]</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Axis definitions must be strings or lists of CLI-style tokens.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_axis_spec</span><span class="p">(</span><span class="n">axis_spec</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse one compact axis definition.&quot;&quot;&quot;</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">_normalize_axis_spec_tokens</span><span class="p">(</span><span class="n">axis_spec</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Axis definitions require at least an axis name, range, and binning value.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">axis_name</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">axis_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">GRID_AXIS_ARGUMENTS</span><span class="p">:</span>
+        <span class="n">supported_axes</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">GRID_AXIS_ARGUMENTS</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown axis &#39;</span><span class="si">{</span><span class="n">axis_name</span><span class="si">}</span><span class="s2">&#39;. Supported axes: </span><span class="si">{</span><span class="n">supported_axes</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="n">scaling</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span>
+    <span class="k">if</span> <span class="n">tokens</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">_AXIS_SCALING_CHOICES</span><span class="p">:</span>
+        <span class="n">scaling</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">binning_token</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">range_tokens</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">binning_token</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">range_tokens</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">range_tokens</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Axis &#39;</span><span class="si">{</span><span class="n">axis_name</span><span class="si">}</span><span class="s2">&#39; is missing its range definition.&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">binning</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">binning_token</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Axis &#39;</span><span class="si">{</span><span class="n">axis_name</span><span class="si">}</span><span class="s2">&#39; binning must be an integer.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+    <span class="n">axis_range</span> <span class="o">=</span> <span class="n">_parse_axis_range_tokens</span><span class="p">(</span><span class="n">range_tokens</span><span class="p">)</span>
+    <span class="n">axis_args</span> <span class="o">=</span> <span class="n">GRID_AXIS_ARGUMENTS</span><span class="p">[</span><span class="n">axis_name</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">axis_name</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s2">&quot;range&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">axis_args</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">axis_range</span><span class="p">],</span>
+        <span class="s2">&quot;binning&quot;</span><span class="p">:</span> <span class="n">binning</span><span class="p">,</span>
+        <span class="s2">&quot;scaling&quot;</span><span class="p">:</span> <span class="n">scaling</span><span class="p">,</span>
+        <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="n">axis_args</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_iter_compact_axis_specs</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Iterate over compact axis definitions from CLI or configuration.&quot;&quot;&quot;</span>
+    <span class="n">axis_specs</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;axis&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis_specs</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">axis_specs</span> <span class="o">=</span> <span class="p">[</span><span class="n">axis_specs</span><span class="p">]</span>
+
+    <span class="n">normalized_specs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">axis_spec</span> <span class="ow">in</span> <span class="n">axis_specs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis_spec</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">axis_spec</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+            <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">axis_spec</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">axis_spec</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">GRID_AXIS_ARGUMENTS</span>
+        <span class="p">):</span>
+            <span class="n">normalized_specs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">axis_spec</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">normalized_specs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">axis_spec</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">normalized_specs</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_axis_configs</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve compact axis definitions into one normalized mapping.&quot;&quot;&quot;</span>
+    <span class="n">axis_configs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">axis_spec</span> <span class="ow">in</span> <span class="n">_iter_compact_axis_specs</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+        <span class="n">axis_name</span><span class="p">,</span> <span class="n">axis_config</span> <span class="o">=</span> <span class="n">_parse_axis_spec</span><span class="p">(</span><span class="n">axis_spec</span><span class="p">)</span>
+        <span class="n">axis_configs</span><span class="p">[</span><span class="n">axis_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">axis_config</span>
+
+    <span class="k">return</span> <span class="n">axis_configs</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_optional_range_argument</span><span class="p">(</span><span class="n">range_argument_value</span><span class="p">,</span> <span class="n">default_unit</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse optional quantity-pair CLI/config input into float values.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">range_argument_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">_normalize_axis_spec_tokens</span><span class="p">(</span><span class="n">range_argument_value</span><span class="p">)</span>
+    <span class="n">range_quantities</span> <span class="o">=</span> <span class="n">_parse_axis_range_tokens</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">default_unit</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">range_quantities</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_direction_grid_density</span><span class="p">(</span><span class="n">density_value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse direction-grid density and normalize it to ``1/deg^2`` units.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">density_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">density_value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">density_value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">density_value</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="n">_normalize_axis_spec_tokens</span><span class="p">(</span><span class="n">density_value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">quantity</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tokens</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">quantity</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">_DIRECTION_GRID_DENSITY_UNIT</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">UnitConversionError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;direction_grid_density must be a float or quantity in 1/deg^2.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;direction_grid_density must be a number, string, or CLI-style token list.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_mean_cosine_over_dec_span</span><span class="p">(</span><span class="n">dec_range</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return mean cos(dec) over a declination interval (degrees).&quot;&quot;&quot;</span>
+    <span class="n">dec_min</span><span class="p">,</span> <span class="n">dec_max</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">dec_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">dec_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+    <span class="n">dec_span_rad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">dec_max</span> <span class="o">-</span> <span class="n">dec_min</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">dec_span_rad</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">dec_min</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="nb">abs</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">dec_max</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">dec_min</span><span class="p">)))</span> <span class="o">/</span> <span class="n">dec_span_rad</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_mean_sine_over_zenith_span</span><span class="p">(</span><span class="n">zenith_range</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return mean sin(zenith) over a zenith interval (degrees).&quot;&quot;&quot;</span>
+    <span class="n">zenith_min</span><span class="p">,</span> <span class="n">zenith_max</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">zenith_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">zenith_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+    <span class="n">zenith_span_rad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">zenith_max</span> <span class="o">-</span> <span class="n">zenith_min</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">zenith_span_rad</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">zenith_min</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="nb">abs</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">zenith_min</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">zenith_max</span><span class="p">)))</span> <span class="o">/</span> <span class="n">zenith_span_rad</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_apply_direction_grid_density</span><span class="p">(</span><span class="n">axis_configs</span><span class="p">,</span> <span class="n">direction_axes</span><span class="p">,</span> <span class="n">density</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Derive direction-axis binning from density (points per deg^2).&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">density</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">density</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;direction_grid_density must be strictly positive.&quot;</span><span class="p">)</span>
+
+    <span class="n">density_sqrt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">density</span><span class="p">)</span>
+    <span class="n">longitudinal_axis_scale</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">direction_axes</span><span class="p">)</span> <span class="o">==</span> <span class="n">_RADEC_AXES</span><span class="p">:</span>
+        <span class="n">longitudinal_axis_scale</span> <span class="o">=</span> <span class="n">_mean_cosine_over_dec_span</span><span class="p">(</span><span class="n">axis_configs</span><span class="p">[</span><span class="s2">&quot;dec&quot;</span><span class="p">][</span><span class="s2">&quot;range&quot;</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">direction_axes</span><span class="p">)</span> <span class="o">==</span> <span class="n">_HORIZONTAL_AXES</span><span class="p">:</span>
+        <span class="n">longitudinal_axis_scale</span> <span class="o">=</span> <span class="n">_mean_sine_over_zenith_span</span><span class="p">(</span><span class="n">axis_configs</span><span class="p">[</span><span class="s2">&quot;zenith&quot;</span><span class="p">][</span><span class="s2">&quot;range&quot;</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">axis_name</span> <span class="ow">in</span> <span class="n">direction_axes</span><span class="p">:</span>
+        <span class="n">axis_range</span> <span class="o">=</span> <span class="n">axis_configs</span><span class="p">[</span><span class="n">axis_name</span><span class="p">][</span><span class="s2">&quot;range&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">axis_name</span> <span class="o">==</span> <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span>
+            <span class="n">span_degrees</span> <span class="o">=</span> <span class="n">directed_circular_span_degrees</span><span class="p">(</span><span class="n">axis_range</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">span_degrees</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">axis_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">axis_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">axis_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;azimuth&quot;</span><span class="p">,</span> <span class="s2">&quot;ra&quot;</span><span class="p">):</span>
+            <span class="n">span_degrees</span> <span class="o">*=</span> <span class="n">longitudinal_axis_scale</span>
+
+        <span class="n">axis_configs</span><span class="p">[</span><span class="n">axis_name</span><span class="p">][</span><span class="s2">&quot;binning&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="mi">1</span><span class="p">,</span>
+            <span class="n">ceil_with_tolerance</span><span class="p">(</span><span class="n">span_degrees</span> <span class="o">*</span> <span class="n">density_sqrt</span><span class="p">),</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_coordinate_system</span><span class="p">(</span><span class="n">axis_configs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve the coordinate system from axis definitions.&quot;&quot;&quot;</span>
+    <span class="n">has_horizontal_axes</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">axis_name</span> <span class="ow">in</span> <span class="n">axis_configs</span> <span class="k">for</span> <span class="n">axis_name</span> <span class="ow">in</span> <span class="n">_HORIZONTAL_AXES</span><span class="p">)</span>
+    <span class="n">has_radec_axes</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">axis_name</span> <span class="ow">in</span> <span class="n">axis_configs</span> <span class="k">for</span> <span class="n">axis_name</span> <span class="ow">in</span> <span class="n">_RADEC_AXES</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">has_horizontal_axes</span> <span class="ow">and</span> <span class="n">has_radec_axes</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot define both azimuth/zenith and ra/dec axes at the same time.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">has_radec_axes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;ra_dec&quot;</span>
+    <span class="k">if</span> <span class="n">has_horizontal_axes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;horizontal&quot;</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_coordinate_system_from_args</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve the coordinate system from raw CLI arguments.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_resolve_coordinate_system</span><span class="p">(</span><span class="n">_resolve_axis_configs</span><span class="p">(</span><span class="n">args_dict</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="resolve_time_of_observation">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.resolve_time_of_observation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_time_of_observation</span><span class="p">(</span><span class="n">time_of_observation</span><span class="p">,</span> <span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate Time object for the observing time. Required if RA/Dec axes are present.&quot;&quot;&quot;</span>
+    <span class="n">coordinate_system</span> <span class="o">=</span> <span class="n">_resolve_coordinate_system_from_args</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;ra_dec&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">time_of_observation</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;time_of_observation is required when using RA/Dec axes.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Time</span><span class="p">(</span><span class="n">time_of_observation</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="s2">&quot;utc&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="resolve_single_model_version">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.resolve_single_model_version">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_single_model_version</span><span class="p">(</span><span class="n">model_version</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve one model version for helpers that require a scalar version.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_version</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">model_version</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">model_version</span></div>
+
+
+
+<div class="viewcode-block" id="build_observing_location">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.build_observing_location">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_observing_location</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">model_version</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build observing location from the site model.&quot;&quot;&quot;</span>
+    <span class="n">site_model</span> <span class="o">=</span> <span class="n">SiteModel</span><span class="p">(</span><span class="n">model_version</span><span class="o">=</span><span class="n">resolve_single_model_version</span><span class="p">(</span><span class="n">model_version</span><span class="p">),</span> <span class="n">site</span><span class="o">=</span><span class="n">site</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">EarthLocation</span><span class="p">(</span>
+        <span class="n">lat</span><span class="o">=</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;reference_point_latitude&quot;</span><span class="p">),</span>
+        <span class="n">lon</span><span class="o">=</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;reference_point_longitude&quot;</span><span class="p">),</span>
+        <span class="n">height</span><span class="o">=</span><span class="n">site_model</span><span class="o">.</span><span class="n">get_parameter_value_with_unit</span><span class="p">(</span><span class="s2">&quot;reference_point_altitude&quot;</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_axes_dict_from_cli_args">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.build_axes_dict_from_cli_args">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_axes_dict_from_cli_args</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build ProductionGridEngine-compatible axes configuration from CLI arguments.&quot;&quot;&quot;</span>
+    <span class="n">axis_configs</span> <span class="o">=</span> <span class="n">_resolve_axis_configs</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
+    <span class="n">coordinate_system</span> <span class="o">=</span> <span class="n">_resolve_coordinate_system</span><span class="p">(</span><span class="n">axis_configs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">coordinate_system</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must provide either both azimuth/zenith or both ra/dec axis definitions.&quot;</span><span class="p">)</span>
+
+    <span class="n">missing_required_axes</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">axis_name</span> <span class="k">for</span> <span class="n">axis_name</span> <span class="ow">in</span> <span class="n">_REQUIRED_AXES</span> <span class="k">if</span> <span class="n">axis_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">axis_configs</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing_required_axes</span><span class="p">:</span>
+        <span class="n">missing_axes</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_required_axes</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing required shared axis definition(s): </span><span class="si">{</span><span class="n">missing_axes</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="n">direction_grid_density</span> <span class="o">=</span> <span class="n">_parse_direction_grid_density</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;direction_grid_density&quot;</span><span class="p">))</span>
+    <span class="n">direction_axes</span> <span class="o">=</span> <span class="n">_RADEC_AXES</span> <span class="k">if</span> <span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;ra_dec&quot;</span> <span class="k">else</span> <span class="n">_HORIZONTAL_AXES</span>
+    <span class="k">if</span> <span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;horizontal&quot;</span> <span class="ow">and</span> <span class="n">direction_grid_density</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axis_configs</span><span class="p">[</span><span class="s2">&quot;azimuth&quot;</span><span class="p">][</span><span class="s2">&quot;direction_grid_density&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">direction_grid_density</span>
+    <span class="k">if</span> <span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;ra_dec&quot;</span> <span class="ow">and</span> <span class="n">direction_grid_density</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axis_configs</span><span class="p">[</span><span class="s2">&quot;ra&quot;</span><span class="p">][</span><span class="s2">&quot;direction_grid_density&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">direction_grid_density</span>
+    <span class="n">_apply_direction_grid_density</span><span class="p">(</span>
+        <span class="n">axis_configs</span><span class="p">,</span>
+        <span class="n">direction_axes</span><span class="p">,</span>
+        <span class="n">direction_grid_density</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;ra_dec&quot;</span><span class="p">:</span>
+        <span class="n">local_constraints</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">constraint_argument</span><span class="p">,</span> <span class="n">default_unit</span> <span class="ow">in</span> <span class="n">_LOCAL_CONSTRAINT_ARGUMENTS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">parsed_argument_range</span> <span class="o">=</span> <span class="n">_parse_optional_range_argument</span><span class="p">(</span>
+                <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">constraint_argument</span><span class="p">),</span>
+                <span class="n">default_unit</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">parsed_argument_range</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">local_constraints</span><span class="p">[</span><span class="n">constraint_argument</span><span class="p">]</span> <span class="o">=</span> <span class="n">parsed_argument_range</span>
+
+        <span class="n">axis_configs</span><span class="p">[</span><span class="s2">&quot;ra&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">local_constraints</span><span class="p">)</span>
+
+    <span class="n">axes_to_export</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">_REQUIRED_AXES</span><span class="p">,</span> <span class="o">*</span><span class="n">direction_axes</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">GRID_AXIS_ARGUMENTS</span><span class="p">[</span><span class="n">axis_name</span><span class="p">][</span><span class="s2">&quot;engine_axis&quot;</span><span class="p">]:</span> <span class="n">axis_configs</span><span class="p">[</span><span class="n">axis_name</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">axis_name</span> <span class="ow">in</span> <span class="n">axes_to_export</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="build_production_grid_engine">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.build_production_grid_engine">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_production_grid_engine</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">array_layout_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a production-grid engine from application arguments.&quot;&quot;&quot;</span>
+    <span class="n">axes</span> <span class="o">=</span> <span class="n">build_axes_dict_from_cli_args</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
+    <span class="n">coordinate_system</span> <span class="o">=</span> <span class="n">_resolve_coordinate_system_from_args</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;ra_dec&quot;</span><span class="p">:</span>
+        <span class="n">observing_location</span> <span class="o">=</span> <span class="n">build_observing_location</span><span class="p">(</span>
+            <span class="n">site</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
+            <span class="n">model_version</span><span class="o">=</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;horizontal&quot;</span><span class="p">:</span>
+        <span class="n">coordinate_system</span> <span class="o">=</span> <span class="s2">&quot;horizontal&quot;</span>
+        <span class="n">observing_location</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must provide either both azimuth/zenith or both ra/dec axis definitions.&quot;</span><span class="p">)</span>
+    <span class="n">resolved_layout_name</span> <span class="o">=</span> <span class="n">array_layout_name</span> <span class="ow">or</span> <span class="n">resolve_array_layout_name</span><span class="p">(</span>
+        <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">),</span>
+        <span class="n">resolve_single_model_version</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_version&quot;</span><span class="p">)),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">ProductionGridEngine</span><span class="p">(</span>
+        <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">,</span>
+        <span class="n">coordinate_system</span><span class="o">=</span><span class="n">coordinate_system</span><span class="p">,</span>
+        <span class="n">observing_location</span><span class="o">=</span><span class="n">observing_location</span><span class="p">,</span>
+        <span class="n">time_of_observation</span><span class="o">=</span><span class="n">resolve_time_of_observation</span><span class="p">(</span>
+            <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;time_of_observation&quot;</span><span class="p">),</span>
+            <span class="n">args_dict</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">lookup_table</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;corsika_limits&quot;</span><span class="p">),</span>
+        <span class="n">array_layout_name</span><span class="o">=</span><span class="n">resolved_layout_name</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_job_grid_metadata">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.build_job_grid_metadata">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_job_grid_metadata</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build metadata stored alongside serialized executable job grids.&quot;&quot;&quot;</span>
+    <span class="n">time_of_observation</span> <span class="o">=</span> <span class="n">resolve_time_of_observation</span><span class="p">(</span>
+        <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;time_of_observation&quot;</span><span class="p">),</span>
+        <span class="n">args_dict</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">coordinate_system</span> <span class="o">=</span> <span class="n">_resolve_coordinate_system_from_args</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
+    <span class="n">direction_grid_density</span> <span class="o">=</span> <span class="n">_parse_direction_grid_density</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;direction_grid_density&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">coordinate_system</span> <span class="o">==</span> <span class="s2">&quot;ra_dec&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;site is required when using RA/Dec axes.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;simulation_software&quot;</span><span class="p">:</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simulation_software&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;coordinate_system&quot;</span><span class="p">:</span> <span class="n">coordinate_system</span><span class="p">,</span>
+        <span class="s2">&quot;direction_grid_density&quot;</span><span class="p">:</span> <span class="n">direction_grid_density</span><span class="p">,</span>
+        <span class="s2">&quot;direction_grid_density_unit&quot;</span><span class="p">:</span> <span class="s2">&quot;1/deg^2&quot;</span> <span class="k">if</span> <span class="n">direction_grid_density</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;time_of_observation_utc&quot;</span><span class="p">:</span> <span class="n">time_of_observation</span><span class="o">.</span><span class="n">isot</span> <span class="k">if</span> <span class="n">time_of_observation</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;time_of_observation_scale&quot;</span><span class="p">:</span> <span class="n">time_of_observation</span><span class="o">.</span><span class="n">scale</span> <span class="k">if</span> <span class="n">time_of_observation</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;corsika_limits&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;corsika_limits&quot;</span><span class="p">])</span> <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;corsika_limits&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="normalize_grid_axes">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.normalize_grid_axes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize_grid_axes</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return normalized grid axes for cartesian product expansion.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">axis</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">ensure_list</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="n">axis</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">args_dict</span> <span class="ow">and</span> <span class="n">args_dict</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="p">[</span><span class="n">_GRID_AXIS_DEFAULTS</span><span class="p">[</span><span class="n">axis</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">_GRID_AXIS_DEFAULTS</span>
+            <span class="k">else</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">_GRID_AXES</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="normalize_energy_ranges">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.normalize_energy_ranges">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize_energy_ranges</span><span class="p">(</span><span class="n">energy_range</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalize energy range argument to a list of ``(e_min, e_max)`` pairs.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">energy_range</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">energy_range</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">energy_range</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">energy_range</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">energy_range</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="s2">&quot;to&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">energy_range</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[(</span><span class="n">energy_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">energy_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">energy_range</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">energy_range</span><span class="p">]</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="s2">&quot;energy_range must be one pair (e_min, e_max) or a list of (e_min, e_max) pairs.&quot;</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_energy_range_for_zenith_angle">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.get_energy_range_for_zenith_angle">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_energy_range_for_zenith_angle</span><span class="p">(</span>
+    <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">energy_range_pair</span><span class="p">,</span> <span class="n">corsika_limits</span><span class="p">,</span> <span class="n">azimuth_angle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsb_level</span><span class="o">=</span><span class="mf">1.0</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a zenith-dependent energy range pair or ``None`` to skip the step.</span>
+
+<span class="sd">    The lower energy bound is clipped to the lookup-table threshold for the</span>
+<span class="sd">    requested direction. If the threshold exceeds the configured upper bound,</span>
+<span class="sd">    the simulation step is skipped.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">interpolated_limits</span> <span class="o">=</span> <span class="n">_interpolate_corsika_limits</span><span class="p">(</span>
+        <span class="n">corsika_limits</span><span class="p">,</span> <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">azimuth_angle</span><span class="p">,</span> <span class="n">nsb_level</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">interpolated_limits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">energy_range_pair</span>
+    <span class="k">return</span> <span class="n">_clip_energy_range_from_threshold</span><span class="p">(</span>
+        <span class="n">energy_range_pair</span><span class="p">,</span>
+        <span class="n">get_value_as_quantity</span><span class="p">(</span><span class="n">interpolated_limits</span><span class="p">[</span><span class="s2">&quot;lower_energy_limit&quot;</span><span class="p">],</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_core_scatter_max_for_zenith_angle">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.get_core_scatter_max_for_zenith_angle">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_core_scatter_max_for_zenith_angle</span><span class="p">(</span>
+    <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">core_scatter</span><span class="p">,</span> <span class="n">corsika_limits</span><span class="p">,</span> <span class="n">azimuth_angle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsb_level</span><span class="o">=</span><span class="mf">1.0</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return zenith-dependent max core-scatter value.</span>
+
+<span class="sd">    The lookup-table scatter radius is treated as an upper limit and therefore</span>
+<span class="sd">    clipped against the user-provided maximum value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">interpolated_limits</span> <span class="o">=</span> <span class="n">_interpolate_corsika_limits</span><span class="p">(</span>
+        <span class="n">corsika_limits</span><span class="p">,</span> <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">azimuth_angle</span><span class="p">,</span> <span class="n">nsb_level</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">interpolated_limits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">core_scatter</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">_clip_max_quantity</span><span class="p">(</span>
+        <span class="n">core_scatter</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">get_value_as_quantity</span><span class="p">(</span><span class="n">interpolated_limits</span><span class="p">[</span><span class="s2">&quot;upper_radius_limit&quot;</span><span class="p">],</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_viewcone_max_for_zenith_angle">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.get_viewcone_max_for_zenith_angle">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_viewcone_max_for_zenith_angle</span><span class="p">(</span>
+    <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">view_cone</span><span class="p">,</span> <span class="n">corsika_limits</span><span class="p">,</span> <span class="n">azimuth_angle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsb_level</span><span class="o">=</span><span class="mf">1.0</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return zenith-dependent max viewcone value.&quot;&quot;&quot;</span>
+    <span class="n">interpolated_limits</span> <span class="o">=</span> <span class="n">_interpolate_corsika_limits</span><span class="p">(</span>
+        <span class="n">corsika_limits</span><span class="p">,</span> <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">azimuth_angle</span><span class="p">,</span> <span class="n">nsb_level</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">interpolated_limits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">view_cone</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">_clip_max_quantity</span><span class="p">(</span>
+        <span class="n">view_cone</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">get_value_as_quantity</span><span class="p">(</span><span class="n">interpolated_limits</span><span class="p">[</span><span class="s2">&quot;viewcone_radius&quot;</span><span class="p">],</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="calculate_log_energy_midpoint">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.calculate_log_energy_midpoint">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_log_energy_midpoint</span><span class="p">(</span><span class="n">energy_range_pair</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the geometric-mean energy for an energy range pair.&quot;&quot;&quot;</span>
+    <span class="n">energy_min</span><span class="p">,</span> <span class="n">energy_max</span> <span class="o">=</span> <span class="n">energy_range_pair</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">energy_min</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">energy_max</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;energy_range_pair must contain astropy Quantity values.&quot;</span><span class="p">)</span>
+
+    <span class="n">energy_min_tev</span> <span class="o">=</span> <span class="n">energy_min</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">)</span>
+    <span class="n">energy_max_tev</span> <span class="o">=</span> <span class="n">energy_max</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">energy_min_tev</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span> <span class="ow">or</span> <span class="n">energy_max_tev</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Energy range values must be strictly positive.&quot;</span><span class="p">)</span>
+
+    <span class="n">mean_log_energy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">energy_min_tev</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">energy_max_tev</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="mi">10</span><span class="o">**</span><span class="n">mean_log_energy</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span></div>
+
+
+
+<div class="viewcode-block" id="calculate_scaled_showers_per_run">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.calculate_scaled_showers_per_run">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_scaled_showers_per_run</span><span class="p">(</span>
+    <span class="n">energy_range_pair</span><span class="p">,</span>
+    <span class="n">baseline_showers_per_run</span><span class="p">,</span>
+    <span class="n">showers_per_run_power_law</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return an energy-dependent showers per run value.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">baseline_showers_per_run</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;baseline_showers_per_run must be a positive integer.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">showers_per_run_power_law</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">baseline_showers_per_run</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">showers_per_run_power_law</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;showers_per_run_power_law must contain exactly two values: &quot;</span>
+            <span class="s2">&quot;(power_index, reference_energy).&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">showers_per_run_power_index</span><span class="p">,</span> <span class="n">reference_energy</span> <span class="o">=</span> <span class="n">showers_per_run_power_law</span>
+
+    <span class="n">midpoint_energy</span> <span class="o">=</span> <span class="n">calculate_log_energy_midpoint</span><span class="p">(</span><span class="n">energy_range_pair</span><span class="p">)</span>
+    <span class="n">scaling_factor</span> <span class="o">=</span> <span class="p">(</span><span class="n">midpoint_energy</span> <span class="o">/</span> <span class="n">reference_energy</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">midpoint_energy</span><span class="o">.</span><span class="n">unit</span><span class="p">))</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span>
+        <span class="n">u</span><span class="o">.</span><span class="n">dimensionless_unscaled</span>
+    <span class="p">)</span> <span class="o">**</span> <span class="n">showers_per_run_power_index</span>
+    <span class="n">scaled_showers_per_run</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">baseline_showers_per_run</span> <span class="o">*</span> <span class="n">scaling_factor</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">scaled_showers_per_run</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Scaled showers per run must be at least 1.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">scaled_showers_per_run</span></div>
+
+
+
+<div class="viewcode-block" id="calculate_zenith_scaled_showers_per_run">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.calculate_zenith_scaled_showers_per_run">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_zenith_scaled_showers_per_run</span><span class="p">(</span>
+    <span class="n">zenith_angle</span><span class="p">,</span>
+    <span class="n">baseline_showers_per_run</span><span class="p">,</span>
+    <span class="n">showers_per_run_scaling</span><span class="o">=</span><span class="s2">&quot;fixed&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a zenith-angle-dependent showers per run value.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    zenith_angle : astropy.units.Quantity</span>
+<span class="sd">        Zenith angle for one simulation point.</span>
+<span class="sd">    baseline_showers_per_run : int</span>
+<span class="sd">        Showers-per-run value before zenith-angle scaling.</span>
+<span class="sd">    showers_per_run_scaling : str</span>
+<span class="sd">        Scaling mode (&#39;fixed&#39; or &#39;cosine_zenith&#39;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        Zenith-scaled showers-per-run value.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If baseline showers per run is below 1, the selected scaling mode is unknown,</span>
+<span class="sd">        or the scaled showers-per-run result is below 1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">baseline_showers_per_run</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;baseline_showers_per_run must be a positive integer.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">showers_per_run_scaling</span> <span class="o">==</span> <span class="s2">&quot;fixed&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">baseline_showers_per_run</span>
+    <span class="k">if</span> <span class="n">showers_per_run_scaling</span> <span class="o">==</span> <span class="s2">&quot;cosine_zenith&quot;</span><span class="p">:</span>
+        <span class="n">cos_zenith</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">zenith_angle</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">scaled_showers_per_run</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">baseline_showers_per_run</span> <span class="o">*</span> <span class="n">cos_zenith</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">scaled_showers_per_run</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Scaled showers per run must be at least 1.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scaled_showers_per_run</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown showers_per_run_scaling mode: </span><span class="si">{</span><span class="n">showers_per_run_scaling</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="scale_energy_max_for_zenith_angle">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.scale_energy_max_for_zenith_angle">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">scale_energy_max_for_zenith_angle</span><span class="p">(</span>
+    <span class="n">zenith_angle</span><span class="p">,</span>
+    <span class="n">energy_range_pair</span><span class="p">,</span>
+    <span class="n">energy_max_scaling</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Scale energy_max with zenith angle and return an updated energy range pair.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    zenith_angle : astropy.units.Quantity</span>
+<span class="sd">        Zenith angle for one simulation point.</span>
+<span class="sd">    energy_range_pair : tuple</span>
+<span class="sd">        Tuple containing the minimum and maximum energy values.</span>
+<span class="sd">    energy_max_scaling : tuple or None</span>
+<span class="sd">        Tuple containing the scaling index and reference energy, or None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple or None</span>
+<span class="sd">        Updated energy range pair, or None if the scaling results in an invalid range.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the scaling is not defined for the given zenith angle.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">energy_max_scaling</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">energy_range_pair</span>
+
+    <span class="n">energy_max_scaling_index</span><span class="p">,</span> <span class="n">energy_max_scaling_reference</span> <span class="o">=</span> <span class="n">energy_max_scaling</span>
+    <span class="n">energy_min</span><span class="p">,</span> <span class="n">energy_range_max</span> <span class="o">=</span> <span class="n">energy_range_pair</span>
+    <span class="n">cos_zenith</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">zenith_angle</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">cos_zenith</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;energy_max_scaling is only defined for zenith angles with cos(zenith) &quot;</span>
+            <span class="s2">&quot;&gt;= 0 (zenith &lt;= 90 deg).&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">cos_zenith</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">energy_max_scaling_index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;energy_max_scaling with index &lt; 0 is not defined for zenith angles with cos(zenith)=0.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">scaling_reference</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">energy_range_max</span>
+        <span class="k">if</span> <span class="n">energy_max_scaling_reference</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="n">energy_max_scaling_reference</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">energy_range_max</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">scaled_energy_max</span> <span class="o">=</span> <span class="n">scaling_reference</span> <span class="o">*</span> <span class="p">(</span><span class="n">cos_zenith</span><span class="o">**</span><span class="n">energy_max_scaling_index</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">scaled_energy_max</span> <span class="o">&lt;=</span> <span class="n">energy_min</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">scaled_energy_max</span><span class="o">.</span><span class="n">unit</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">energy_min</span><span class="p">,</span> <span class="n">scaled_energy_max</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">energy_range_max</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_clip_energy_range_from_threshold</span><span class="p">(</span><span class="n">energy_range_pair</span><span class="p">,</span> <span class="n">lower_energy_threshold</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clip the lower energy bound of a configured energy range.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">lower_energy_threshold</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">energy_range_pair</span>
+
+    <span class="n">energy_min</span><span class="p">,</span> <span class="n">energy_max</span> <span class="o">=</span> <span class="n">energy_range_pair</span>
+    <span class="n">lower_energy_threshold</span> <span class="o">=</span> <span class="n">lower_energy_threshold</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">energy_min</span><span class="o">.</span><span class="n">unit</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">lower_energy_threshold</span> <span class="o">&gt;</span> <span class="n">energy_max</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">lower_energy_threshold</span><span class="o">.</span><span class="n">unit</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">lower_energy_threshold</span> <span class="o">&lt;=</span> <span class="n">energy_min</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">energy_range_pair</span>
+    <span class="k">return</span> <span class="n">lower_energy_threshold</span><span class="p">,</span> <span class="n">energy_max</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_clip_energy_range_to_configured_bounds</span><span class="p">(</span><span class="n">energy_range_pair</span><span class="p">,</span> <span class="n">configured_energy_range_pair</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clip selected energy bounds to configured energy-range bounds.&quot;&quot;&quot;</span>
+    <span class="n">energy_min</span><span class="p">,</span> <span class="n">energy_max</span> <span class="o">=</span> <span class="n">energy_range_pair</span>
+    <span class="n">configured_energy_min</span><span class="p">,</span> <span class="n">configured_energy_max</span> <span class="o">=</span> <span class="n">configured_energy_range_pair</span>
+
+    <span class="n">selected_energy_min</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="n">energy_min</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">configured_energy_min</span><span class="o">.</span><span class="n">unit</span><span class="p">),</span>
+        <span class="n">configured_energy_min</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">selected_energy_max</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+        <span class="n">energy_max</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">configured_energy_max</span><span class="o">.</span><span class="n">unit</span><span class="p">),</span>
+        <span class="n">configured_energy_max</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">selected_energy_max</span> <span class="o">&lt;=</span> <span class="n">selected_energy_min</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">selected_energy_max</span><span class="o">.</span><span class="n">unit</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">selected_energy_min</span><span class="p">,</span> <span class="n">selected_energy_max</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_interpolate_corsika_limits</span><span class="p">(</span><span class="n">corsika_limits</span><span class="p">,</span> <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">azimuth_angle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsb_level</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return interpolated lookup limits for one pointing, or ``None`` if disabled.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">corsika_limits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">corsika_limits</span><span class="p">,</span> <span class="n">CorsikaLimitsLookup</span><span class="p">):</span>
+        <span class="n">corsika_limits</span> <span class="o">=</span> <span class="n">CorsikaLimitsLookup</span><span class="p">(</span><span class="n">corsika_limits</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">corsika_limits</span><span class="o">.</span><span class="n">interpolate_point</span><span class="p">(</span>
+        <span class="n">zenith_angle</span><span class="p">,</span>
+        <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span> <span class="k">if</span> <span class="n">azimuth_angle</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">azimuth_angle</span><span class="p">,</span>
+        <span class="n">nsb_level</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_clip_max_quantity</span><span class="p">(</span><span class="n">configured_max</span><span class="p">,</span> <span class="n">lookup_max</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clip a configured maximum value against an interpolated lookup value.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">lookup_max</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">configured_max</span>
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">configured_max</span><span class="p">,</span> <span class="n">lookup_max</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">configured_max</span><span class="o">.</span><span class="n">unit</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_power_index_quantity</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">parameter_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse ``&lt;power_index&gt; &lt;reference_value&gt; &lt;reference_unit&gt;`` tokens.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter_name</span><span class="si">}</span><span class="s2"> must be provided as &quot;</span>
+            <span class="s2">&quot;&lt;power_index&gt; &lt;reference_energy_value&gt; &lt;reference_energy_unit&gt;.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">tokens</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_shower_params</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract and convert shower-statistics parameters from an args dict.&quot;&quot;&quot;</span>
+    <span class="n">showers_per_run</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;showers_per_run&quot;</span><span class="p">]</span>
+    <span class="n">showers_per_run_power_law</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;showers_per_run_power_law&quot;</span><span class="p">)</span>
+    <span class="n">showers_per_run_scaling</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;showers_per_run_scaling&quot;</span><span class="p">,</span> <span class="s2">&quot;fixed&quot;</span><span class="p">)</span>
+    <span class="n">total_showers</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;total_showers&quot;</span><span class="p">)</span>
+    <span class="n">total_showers_scaling</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;total_showers_scaling&quot;</span><span class="p">,</span> <span class="s2">&quot;fixed&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">showers_per_run_power_law</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">showers_per_run_power_law</span> <span class="o">=</span> <span class="n">_parse_power_index_quantity</span><span class="p">(</span>
+            <span class="n">showers_per_run_power_law</span><span class="p">,</span>
+            <span class="s2">&quot;showers_per_run_power_law&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">showers_per_run</span><span class="p">,</span>
+        <span class="n">showers_per_run_power_law</span><span class="p">,</span>
+        <span class="n">showers_per_run_scaling</span><span class="p">,</span>
+        <span class="n">total_showers</span><span class="p">,</span>
+        <span class="n">total_showers_scaling</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_energy_max_scaling</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve energy-max zenith scaling from CLI/config, including legacy options.&quot;&quot;&quot;</span>
+    <span class="n">energy_max_scaling</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy_max_scaling&quot;</span><span class="p">)</span>
+    <span class="n">legacy_energy_max_scaling_index</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy_max_scaling_index&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">energy_max_scaling</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">legacy_energy_max_scaling_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Both energy_max_scaling and legacy energy_max_scaling_index were provided; &quot;</span>
+                <span class="s2">&quot;energy_max_scaling takes precedence.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_parse_power_index_quantity</span><span class="p">(</span><span class="n">energy_max_scaling</span><span class="p">,</span> <span class="s2">&quot;energy_max_scaling&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">legacy_energy_max_scaling_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">legacy_energy_max_scaling_index</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_scale_total_showers</span><span class="p">(</span>
+    <span class="n">total_showers</span><span class="p">,</span>
+    <span class="n">zenith_angle</span><span class="p">,</span>
+    <span class="n">total_showers_scaling</span><span class="p">,</span>
+    <span class="n">cos_scaling_factor</span><span class="o">=</span><span class="n">defaults</span><span class="o">.</span><span class="n">ZENITH_ANGLE_SCALING_FACTOR_DEFAULT</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return total showers adjusted for the selected scaling mode.</span>
+
+<span class="sd">    Scaling modes:</span>
+
+<span class="sd">    - &quot;fixed&quot;: total showers is unchanged.</span>
+<span class="sd">    - &quot;zenith_scaled&quot;: total showers scaled by &#39;total_showers * exp(factor * (cos(ZD) - 1))&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">total_showers_scaling</span> <span class="o">==</span> <span class="s2">&quot;fixed&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">total_showers</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">total_showers_scaling</span> <span class="o">==</span> <span class="s2">&quot;zenith_scaled&quot;</span><span class="p">:</span>
+        <span class="n">cos_zenith</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">zenith_angle</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">scaled_total_showers</span> <span class="o">=</span> <span class="n">total_showers</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">cos_scaling_factor</span> <span class="o">*</span> <span class="p">(</span><span class="n">cos_zenith</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">scaled_total_showers</span><span class="p">))</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown total_showers_scaling mode: </span><span class="si">{</span><span class="n">total_showers_scaling</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_apply_clipping_chain</span><span class="p">(</span>
+    <span class="n">zenith_angle</span><span class="p">,</span>
+    <span class="n">energy_range_pair</span><span class="p">,</span>
+    <span class="n">energy_max_scaling</span><span class="p">,</span>
+    <span class="n">lower_energy_threshold</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply the full clipping chain to an energy range pair.&quot;&quot;&quot;</span>
+    <span class="n">selected_energy_range</span> <span class="o">=</span> <span class="n">scale_energy_max_for_zenith_angle</span><span class="p">(</span>
+        <span class="n">zenith_angle</span><span class="p">,</span>
+        <span class="n">energy_range_pair</span><span class="p">,</span>
+        <span class="n">energy_max_scaling</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">selected_energy_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">selected_energy_range</span> <span class="o">=</span> <span class="n">_clip_energy_range_from_threshold</span><span class="p">(</span>
+        <span class="n">selected_energy_range</span><span class="p">,</span> <span class="n">lower_energy_threshold</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">selected_energy_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">_clip_energy_range_to_configured_bounds</span><span class="p">(</span>
+        <span class="n">selected_energy_range</span><span class="p">,</span>
+        <span class="n">energy_range_pair</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_per_point_runs</span><span class="p">(</span>
+    <span class="n">total_showers</span><span class="p">,</span>
+    <span class="n">zenith_angle</span><span class="p">,</span>
+    <span class="n">total_showers_scaling</span><span class="p">,</span>
+    <span class="n">selected_showers_per_run</span><span class="p">,</span>
+    <span class="n">zenith_angle_scaling_factor</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the number of runs per point considering total-showers constraints.&quot;&quot;&quot;</span>
+    <span class="n">effective_total_showers</span> <span class="o">=</span> <span class="n">_scale_total_showers</span><span class="p">(</span>
+        <span class="n">total_showers</span><span class="p">,</span>
+        <span class="n">zenith_angle</span><span class="p">,</span>
+        <span class="n">total_showers_scaling</span><span class="p">,</span>
+        <span class="n">cos_scaling_factor</span><span class="o">=</span><span class="n">zenith_angle_scaling_factor</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">effective_total_showers</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">number_of_full_runs</span><span class="p">,</span> <span class="n">remainder_showers</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span>
+        <span class="n">effective_total_showers</span><span class="p">,</span> <span class="n">selected_showers_per_run</span>
+    <span class="p">)</span>
+    <span class="n">per_point_number_of_runs</span> <span class="o">=</span> <span class="n">number_of_full_runs</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">remainder_showers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">remainder_showers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">adjusted_total_showers</span> <span class="o">=</span> <span class="n">per_point_number_of_runs</span> <span class="o">*</span> <span class="n">selected_showers_per_run</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;total_showers=</span><span class="si">%s</span><span class="s2"> is not divisible by showers_per_run=</span><span class="si">%s</span><span class="s2">; &quot;</span>
+            <span class="s2">&quot;adjusting to </span><span class="si">%s</span><span class="s2"> to keep equal showers per run.&quot;</span><span class="p">,</span>
+            <span class="n">effective_total_showers</span><span class="p">,</span>
+            <span class="n">selected_showers_per_run</span><span class="p">,</span>
+            <span class="n">adjusted_total_showers</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">per_point_number_of_runs</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_rows_for_point</span><span class="p">(</span>
+    <span class="n">point_base</span><span class="p">,</span>
+    <span class="n">energy_ranges</span><span class="p">,</span>
+    <span class="n">lower_energy_threshold</span><span class="p">,</span>
+    <span class="n">showers_per_run</span><span class="p">,</span>
+    <span class="n">showers_per_run_power_law</span><span class="p">,</span>
+    <span class="n">number_of_runs</span><span class="p">,</span>
+    <span class="n">total_showers</span><span class="p">,</span>
+    <span class="n">total_showers_scaling</span><span class="p">,</span>
+    <span class="n">run_number</span><span class="p">,</span>
+    <span class="n">showers_per_run_scaling</span><span class="o">=</span><span class="s2">&quot;fixed&quot;</span><span class="p">,</span>
+    <span class="n">energy_max_scaling</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">zenith_angle_scaling_factor</span><span class="o">=</span><span class="n">defaults</span><span class="o">.</span><span class="n">ZENITH_ANGLE_SCALING_FACTOR_DEFAULT</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build all simulation-run rows for a single grid point across all energy ranges.&quot;&quot;&quot;</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">zenith_angle</span> <span class="o">=</span> <span class="n">point_base</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">energy_range_pair</span> <span class="ow">in</span> <span class="n">energy_ranges</span><span class="p">:</span>
+        <span class="n">selected_energy_range</span> <span class="o">=</span> <span class="n">_apply_clipping_chain</span><span class="p">(</span>
+            <span class="n">zenith_angle</span><span class="p">,</span>
+            <span class="n">energy_range_pair</span><span class="p">,</span>
+            <span class="n">energy_max_scaling</span><span class="p">,</span>
+            <span class="n">lower_energy_threshold</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">selected_energy_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">selected_showers_per_run</span> <span class="o">=</span> <span class="n">calculate_scaled_showers_per_run</span><span class="p">(</span>
+            <span class="n">selected_energy_range</span><span class="p">,</span>
+            <span class="n">showers_per_run</span><span class="p">,</span>
+            <span class="n">showers_per_run_power_law</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">selected_showers_per_run</span> <span class="o">=</span> <span class="n">calculate_zenith_scaled_showers_per_run</span><span class="p">(</span>
+            <span class="n">zenith_angle</span><span class="p">,</span>
+            <span class="n">selected_showers_per_run</span><span class="p">,</span>
+            <span class="n">showers_per_run_scaling</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">per_point_number_of_runs</span> <span class="o">=</span> <span class="n">number_of_runs</span>
+        <span class="k">if</span> <span class="n">total_showers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">per_point_number_of_runs</span> <span class="o">=</span> <span class="n">_compute_per_point_runs</span><span class="p">(</span>
+                <span class="n">total_showers</span><span class="p">,</span>
+                <span class="n">zenith_angle</span><span class="p">,</span>
+                <span class="n">total_showers_scaling</span><span class="p">,</span>
+                <span class="n">selected_showers_per_run</span><span class="p">,</span>
+                <span class="n">zenith_angle_scaling_factor</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">per_point_number_of_runs</span><span class="p">):</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="o">**</span><span class="n">point_base</span><span class="p">,</span>
+                    <span class="s2">&quot;energy_min&quot;</span><span class="p">:</span> <span class="n">selected_energy_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="s2">&quot;energy_max&quot;</span><span class="p">:</span> <span class="n">selected_energy_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="s2">&quot;showers_per_run&quot;</span><span class="p">:</span> <span class="n">selected_showers_per_run</span><span class="p">,</span>
+                    <span class="s2">&quot;run_number&quot;</span><span class="p">:</span> <span class="n">run_number</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">rows</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_generate_observation_points_from_axes</span><span class="p">(</span><span class="n">azimuth_values</span><span class="p">,</span> <span class="n">zenith_values</span><span class="p">,</span> <span class="n">corsika_limits</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sample azimuth * zenith grid with optional CORSIKA limits interpolation.&quot;&quot;&quot;</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">azimuth</span><span class="p">,</span> <span class="n">zenith</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">azimuth_values</span><span class="p">,</span> <span class="n">zenith_values</span><span class="p">):</span>
+        <span class="n">point</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span> <span class="n">azimuth</span><span class="p">,</span>
+            <span class="s2">&quot;zenith_angle&quot;</span><span class="p">:</span> <span class="n">zenith</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">corsika_limits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">attach_lookup_limits_to_point</span><span class="p">(</span>
+                <span class="n">point</span><span class="p">,</span>
+                <span class="n">corsika_limits</span><span class="o">.</span><span class="n">interpolate_point</span><span class="p">(</span><span class="n">zenith</span><span class="p">,</span> <span class="n">azimuth</span><span class="p">),</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">corsika_limits</span><span class="p">,</span> <span class="s2">&quot;lookup_field_units&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">points</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_log_energy_scaling_configuration</span><span class="p">(</span><span class="n">energy_max_scaling</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Log configured zenith-scaling behavior for energy maxima.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">energy_max_scaling</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Energy max zenith scaling: disabled.&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">energy_max_scaling_index</span><span class="p">,</span> <span class="n">energy_max_scaling_reference</span> <span class="o">=</span> <span class="n">energy_max_scaling</span>
+    <span class="k">if</span> <span class="n">energy_max_scaling_reference</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Energy max zenith scaling: Emax = E_range_max * cos(zenith)^</span><span class="si">%.3f</span><span class="s2"> (legacy mode).&quot;</span><span class="p">,</span>
+            <span class="n">energy_max_scaling_index</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">&quot;Energy max zenith scaling: Emax = </span><span class="si">%s</span><span class="s2"> * cos(zenith)^</span><span class="si">%.3f</span><span class="s2">.&quot;</span><span class="p">,</span>
+        <span class="n">energy_max_scaling_reference</span><span class="p">,</span>
+        <span class="n">energy_max_scaling_index</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_format_quantity_summary</span><span class="p">(</span><span class="n">quantity_values</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Format quantity min/max as a single value or range with explicit unit.&quot;&quot;&quot;</span>
+    <span class="n">quantity_min</span> <span class="o">=</span> <span class="n">quantity_values</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="n">quantity_max</span> <span class="o">=</span> <span class="n">quantity_values</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+    <span class="n">summary_unit</span> <span class="o">=</span> <span class="n">quantity_max</span><span class="o">.</span><span class="n">unit</span>
+    <span class="n">min_value</span> <span class="o">=</span> <span class="n">quantity_min</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">summary_unit</span><span class="p">)</span>
+    <span class="n">max_value</span> <span class="o">=</span> <span class="n">quantity_max</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">summary_unit</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">min_value</span><span class="p">,</span> <span class="n">max_value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">max_value</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">summary_unit</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">min_value</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">max_value</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">summary_unit</span><span class="si">}</span><span class="s2">&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_log_generated_row_summary</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Log a compact summary of generated row ranges for user visibility.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Generated 0 simulation rows after applying all clipping and scaling rules.&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">energy_min_values</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">([</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;energy_min&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">])</span>
+    <span class="n">energy_max_values</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">([</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;energy_max&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">])</span>
+    <span class="n">core_scatter_max_values</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">([</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;core_scatter_max&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">])</span>
+    <span class="n">view_cone_min_values</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">([</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;view_cone_min&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">])</span>
+    <span class="n">view_cone_max_values</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">([</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;view_cone_max&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">])</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">&quot;Generated </span><span class="si">%d</span><span class="s2"> simulation rows.&quot;</span><span class="p">,</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">&quot;Energy range after clipping/scaling: Emin </span><span class="si">%s</span><span class="s2">, Emax </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span>
+        <span class="n">_format_quantity_summary</span><span class="p">(</span><span class="n">energy_min_values</span><span class="p">),</span>
+        <span class="n">_format_quantity_summary</span><span class="p">(</span><span class="n">energy_max_values</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">&quot;Core scatter max range: </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span>
+        <span class="n">_format_quantity_summary</span><span class="p">(</span><span class="n">core_scatter_max_values</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">&quot;View cone range: min </span><span class="si">%s</span><span class="s2">, max </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span>
+        <span class="n">_format_quantity_summary</span><span class="p">(</span><span class="n">view_cone_min_values</span><span class="p">),</span>
+        <span class="n">_format_quantity_summary</span><span class="p">(</span><span class="n">view_cone_max_values</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_generate_observation_grids_per_layout</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">grid_axes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate observation grids per array layout.</span>
+
+<span class="sd">    Uses either ProductionGridEngine or explicit azimuth/zenith axes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">observation_grids_per_layout</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">resolved_layout_names</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">model_version</span><span class="p">:</span> <span class="n">resolve_array_layout_name</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">),</span> <span class="n">model_version</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">model_version</span> <span class="ow">in</span> <span class="n">grid_axes</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">]</span>
+    <span class="p">}</span>
+    <span class="n">use_shared_axes_definition</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;axis&quot;</span><span class="p">))</span>
+    <span class="n">corsika_limits_path</span> <span class="o">=</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;corsika_limits&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">model_version</span> <span class="ow">in</span> <span class="n">grid_axes</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">]:</span>
+        <span class="n">resolved_layout_name</span> <span class="o">=</span> <span class="n">resolved_layout_names</span><span class="p">[</span><span class="n">model_version</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">resolved_layout_name</span> <span class="ow">in</span> <span class="n">observation_grids_per_layout</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">use_shared_axes_definition</span><span class="p">:</span>
+            <span class="n">observation_grids_per_layout</span><span class="p">[</span><span class="n">resolved_layout_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">build_production_grid_engine</span><span class="p">(</span>
+                <span class="n">args_dict</span><span class="p">,</span>
+                <span class="n">array_layout_name</span><span class="o">=</span><span class="n">resolved_layout_name</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">generate_simulation_grid</span><span class="p">()</span>
+            <span class="k">continue</span>
+
+        <span class="n">corsika_limits</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">corsika_limits_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">corsika_limits</span> <span class="o">=</span> <span class="n">CorsikaLimitsLookup</span><span class="p">(</span>
+                <span class="n">corsika_limits_path</span><span class="p">,</span>
+                <span class="n">array_layout_name</span><span class="o">=</span><span class="n">resolved_layout_name</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">observation_grids_per_layout</span><span class="p">[</span><span class="n">resolved_layout_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_generate_observation_points_from_axes</span><span class="p">(</span>
+            <span class="n">azimuth_values</span><span class="o">=</span><span class="n">grid_axes</span><span class="p">[</span><span class="s2">&quot;azimuth_angle&quot;</span><span class="p">],</span>
+            <span class="n">zenith_values</span><span class="o">=</span><span class="n">grid_axes</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">],</span>
+            <span class="n">corsika_limits</span><span class="o">=</span><span class="n">corsika_limits</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">observation_grids_per_layout</span><span class="p">,</span> <span class="n">resolved_layout_names</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_observation_params_for_point</span><span class="p">(</span>
+    <span class="n">point</span><span class="p">,</span>
+    <span class="n">primary</span><span class="p">,</span>
+    <span class="n">model_version</span><span class="p">,</span>
+    <span class="n">resolved_layout_name</span><span class="p">,</span>
+    <span class="n">corsika_le</span><span class="p">,</span>
+    <span class="n">corsika_he</span><span class="p">,</span>
+    <span class="n">core_scatter</span><span class="p">,</span>
+    <span class="n">core_scatter_number</span><span class="p">,</span>
+    <span class="n">view_cone_min</span><span class="p">,</span>
+    <span class="n">configured_view_cone_max</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build observation parameters and derived lookup-limited values for one grid point.&quot;&quot;&quot;</span>
+    <span class="n">lookup_core_scatter_max</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;upper_radius_limit&quot;</span><span class="p">)</span>
+    <span class="n">lookup_view_cone_max</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;viewcone_radius&quot;</span><span class="p">)</span>
+    <span class="n">selected_core_scatter_max</span> <span class="o">=</span> <span class="n">_clip_max_quantity</span><span class="p">(</span><span class="n">core_scatter</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">lookup_core_scatter_max</span><span class="p">)</span>
+    <span class="n">selected_view_cone_max</span> <span class="o">=</span> <span class="n">_clip_max_quantity</span><span class="p">(</span><span class="n">configured_view_cone_max</span><span class="p">,</span> <span class="n">lookup_view_cone_max</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;primary&quot;</span><span class="p">:</span> <span class="n">primary</span><span class="p">,</span>
+        <span class="s2">&quot;azimuth_angle&quot;</span><span class="p">:</span> <span class="n">point</span><span class="p">[</span><span class="s2">&quot;azimuth&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;zenith_angle&quot;</span><span class="p">:</span> <span class="n">point</span><span class="p">[</span><span class="s2">&quot;zenith_angle&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;ra&quot;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ra&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;dec&quot;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dec&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;model_version&quot;</span><span class="p">:</span> <span class="n">model_version</span><span class="p">,</span>
+        <span class="s2">&quot;array_layout_name&quot;</span><span class="p">:</span> <span class="n">resolved_layout_name</span><span class="p">,</span>
+        <span class="s2">&quot;corsika_le_interaction&quot;</span><span class="p">:</span> <span class="n">corsika_le</span><span class="p">,</span>
+        <span class="s2">&quot;corsika_he_interaction&quot;</span><span class="p">:</span> <span class="n">corsika_he</span><span class="p">,</span>
+        <span class="s2">&quot;core_scatter_number&quot;</span><span class="p">:</span> <span class="n">core_scatter_number</span><span class="p">,</span>
+        <span class="s2">&quot;core_scatter_max&quot;</span><span class="p">:</span> <span class="n">selected_core_scatter_max</span><span class="p">,</span>
+        <span class="s2">&quot;view_cone_min&quot;</span><span class="p">:</span> <span class="n">_clip_max_quantity</span><span class="p">(</span><span class="n">view_cone_min</span><span class="p">,</span> <span class="n">selected_view_cone_max</span><span class="p">),</span>
+        <span class="s2">&quot;view_cone_max&quot;</span><span class="p">:</span> <span class="n">selected_view_cone_max</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<div class="viewcode-block" id="build_simulation_jobs">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.simulation_jobs.build_simulation_jobs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_simulation_jobs</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Expand production config into full simulation job matrix.</span>
+
+<span class="sd">    Cartesian product: primaries * model_versions * interactions * observation_directions</span>
+<span class="sd">    * energy_ranges * run_counts. Energy ranges clipped by direction-dependent CORSIKA</span>
+<span class="sd">    limits.</span>
+
+<span class="sd">    Activates ProductionGridEngine when axis-range CLI arguments are provided;</span>
+<span class="sd">    otherwise uses explicit azimuth * zenith axes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[dict]</span>
+<span class="sd">        Each job: primary, model_version, interactions, directions (Alt/Az), energy_min/max</span>
+<span class="sd">        (clipped), showers_per_run, run_number, scatter/viewcone values</span>
+<span class="sd">        (clipped by physics limits).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">grid_axes</span> <span class="o">=</span> <span class="n">normalize_grid_axes</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
+    <span class="n">energy_ranges</span> <span class="o">=</span> <span class="n">normalize_energy_ranges</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;energy_range&quot;</span><span class="p">])</span>
+    <span class="p">(</span>
+        <span class="n">showers_per_run</span><span class="p">,</span>
+        <span class="n">showers_per_run_power_law</span><span class="p">,</span>
+        <span class="n">showers_per_run_scaling</span><span class="p">,</span>
+        <span class="n">total_showers</span><span class="p">,</span>
+        <span class="n">total_showers_scaling</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="n">_resolve_shower_params</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
+    <span class="n">zenith_angle_scaling_factor</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+        <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;zenith_angle_scaling_factor&quot;</span><span class="p">,</span>
+            <span class="n">defaults</span><span class="o">.</span><span class="n">ZENITH_ANGLE_SCALING_FACTOR_DEFAULT</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">energy_max_scaling</span> <span class="o">=</span> <span class="n">_resolve_energy_max_scaling</span><span class="p">(</span><span class="n">args_dict</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">total_showers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;number_of_runs&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;total_showers and number_of_runs cannot be configured together.&quot;</span><span class="p">)</span>
+
+    <span class="n">number_of_runs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;number_of_runs&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">run_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;run_number&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">core_scatter</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;core_scatter&quot;</span><span class="p">]</span>
+    <span class="n">view_cone</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;view_cone&quot;</span><span class="p">]</span>
+    <span class="n">core_scatter_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">core_scatter</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">view_cone_min</span> <span class="o">=</span> <span class="n">view_cone</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">configured_view_cone_max</span> <span class="o">=</span> <span class="n">view_cone</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">observation_grids_per_layout</span><span class="p">,</span> <span class="n">resolved_layout_names</span> <span class="o">=</span> <span class="n">_generate_observation_grids_per_layout</span><span class="p">(</span>
+        <span class="n">args_dict</span><span class="p">,</span> <span class="n">grid_axes</span>
+    <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">&quot;Applying job constraints: energy clipped to configured energy_range, &quot;</span>
+        <span class="s2">&quot;core_scatter_max clipped by configured max and lookup, and view_cone min/max &quot;</span>
+        <span class="s2">&quot;clipped by configured and lookup limits.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">_log_energy_scaling_configuration</span><span class="p">(</span><span class="n">energy_max_scaling</span><span class="p">)</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">primary</span><span class="p">,</span> <span class="n">model_version</span><span class="p">,</span> <span class="n">corsika_le</span><span class="p">,</span> <span class="n">corsika_he</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span>
+        <span class="n">grid_axes</span><span class="p">[</span><span class="s2">&quot;primary&quot;</span><span class="p">],</span>
+        <span class="n">grid_axes</span><span class="p">[</span><span class="s2">&quot;model_version&quot;</span><span class="p">],</span>
+        <span class="n">grid_axes</span><span class="p">[</span><span class="s2">&quot;corsika_le_interaction&quot;</span><span class="p">],</span>
+        <span class="n">grid_axes</span><span class="p">[</span><span class="s2">&quot;corsika_he_interaction&quot;</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="n">resolved_layout_name</span> <span class="o">=</span> <span class="n">resolved_layout_names</span><span class="p">[</span><span class="n">model_version</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">observation_grids_per_layout</span><span class="p">[</span><span class="n">resolved_layout_name</span><span class="p">]:</span>
+            <span class="n">observation_params</span> <span class="o">=</span> <span class="n">_build_observation_params_for_point</span><span class="p">(</span>
+                <span class="n">point</span><span class="o">=</span><span class="n">point</span><span class="p">,</span>
+                <span class="n">primary</span><span class="o">=</span><span class="n">primary</span><span class="p">,</span>
+                <span class="n">model_version</span><span class="o">=</span><span class="n">model_version</span><span class="p">,</span>
+                <span class="n">resolved_layout_name</span><span class="o">=</span><span class="n">resolved_layout_name</span><span class="p">,</span>
+                <span class="n">corsika_le</span><span class="o">=</span><span class="n">corsika_le</span><span class="p">,</span>
+                <span class="n">corsika_he</span><span class="o">=</span><span class="n">corsika_he</span><span class="p">,</span>
+                <span class="n">core_scatter</span><span class="o">=</span><span class="n">core_scatter</span><span class="p">,</span>
+                <span class="n">core_scatter_number</span><span class="o">=</span><span class="n">core_scatter_number</span><span class="p">,</span>
+                <span class="n">view_cone_min</span><span class="o">=</span><span class="n">view_cone_min</span><span class="p">,</span>
+                <span class="n">configured_view_cone_max</span><span class="o">=</span><span class="n">configured_view_cone_max</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="n">_build_rows_for_point</span><span class="p">(</span>
+                    <span class="n">point_base</span><span class="o">=</span><span class="n">observation_params</span><span class="p">,</span>
+                    <span class="n">energy_ranges</span><span class="o">=</span><span class="n">energy_ranges</span><span class="p">,</span>
+                    <span class="n">lower_energy_threshold</span><span class="o">=</span><span class="n">point</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                        <span class="s2">&quot;lower_energy_limit&quot;</span><span class="p">,</span>
+                        <span class="n">point</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;br_energy_min&quot;</span><span class="p">),</span>
+                    <span class="p">),</span>
+                    <span class="n">showers_per_run</span><span class="o">=</span><span class="n">showers_per_run</span><span class="p">,</span>
+                    <span class="n">showers_per_run_power_law</span><span class="o">=</span><span class="n">showers_per_run_power_law</span><span class="p">,</span>
+                    <span class="n">showers_per_run_scaling</span><span class="o">=</span><span class="n">showers_per_run_scaling</span><span class="p">,</span>
+                    <span class="n">number_of_runs</span><span class="o">=</span><span class="n">number_of_runs</span><span class="p">,</span>
+                    <span class="n">total_showers</span><span class="o">=</span><span class="n">total_showers</span><span class="p">,</span>
+                    <span class="n">total_showers_scaling</span><span class="o">=</span><span class="n">total_showers_scaling</span><span class="p">,</span>
+                    <span class="n">run_number</span><span class="o">=</span><span class="n">run_number</span><span class="p">,</span>
+                    <span class="n">energy_max_scaling</span><span class="o">=</span><span class="n">energy_max_scaling</span><span class="p">,</span>
+                    <span class="n">zenith_angle_scaling_factor</span><span class="o">=</span><span class="n">zenith_angle_scaling_factor</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+    <span class="n">_log_generated_row_summary</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rows</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.18.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
