@@ -9,20 +9,9 @@ Note that `simtools` is named `gammasimtools` on PyPi and in the conda.
 
 ## Release Preparation
 
-1. Consider a release only after all tests are passing.
-2. Open a pull request to prepare the release with the branch name `<version string>-rc` (e.g., `v2.1.3-rc`). This should be the final pull request before a release.
-3. All notable changes to the simtools project must be documented in the [CHANGELOG.md](https://github.com/gammasim/simtools/blob/main/CHANGELOG.md) file. To update the changelog, run the changelog workflow using [towncrier](https://towncrier.readthedocs.io/en/stable/):
-
-   ```bash
-   towncrier build --yes --version <version string>
-    ```
-
-    This updates the changelog using the fragments in the docs/changes directory.
-
-4. Review the `CHANGELOG.md` file and ensure that all changes are documented.
-5. Add a new line to [docs/_static/switcher.json](docs/_static/switcher.json) indicating the new version.
-6. Review the [CITATION](https://github.com/gammasim/simtools/blob/main/CITATION.cff) and apply any changes if necessary.
-7. Request a review of the pull request from the simtools team. Merge to main after approval.
+Open a release candidate pull request from a branch named `<version string>-rc` (e.g., `v2.1.3-rc`).
+Use the [Release Candidate pull request template](https://github.com/gammasim/simtools/blob/main/.github/PULL_REQUEST_TEMPLATE/release-candidate.md) for the release preparation checklist.
+This should be the final pull request before a release.
 
 ## Release and Deploy
 
