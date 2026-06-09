@@ -983,3 +983,9 @@ def invalid_row_table_payloads():
             "rows": [["not", "numeric"]],
         },
     }
+
+
+@pytest.fixture
+def model_parameter_json():
+    """Fixture that returns the path to model parameter JSON file."""
+    return "tests/resources/model_parameters/array_element_position_ground-2.0.0.json"
