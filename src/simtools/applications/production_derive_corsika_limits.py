@@ -20,20 +20,15 @@ Lower energy limit (**ERANGE**)
 
     1. Find the absolute maximum bin in the triggered-energy histogram.
     2. Compute a stable peak by averaging the maximum bin and available immediate neighbors.
-    3. Define a threshold as fraction of this stable peak.
+    3. Define a threshold as fraction of this stable peak (``--energy_threshold_fraction``).
     4. Walk toward lower energies from the peak to the first bin below threshold.
     5. Use that bin's lower edge as the energy limit.
 
 Upper core distance (**CSCAT**) and viewcone radius (**VIEWCONE**)
-    Derived from per-axis allowed-loss settings (``axis,fraction,min_events``), either as
-    integrated limits or per-energy-bin
+    Derived from per-axis allowed-loss settings (``--allowed_losses` axis,fraction,min_events``),
+    either as integrated limits or per-energy-bin
     differential limits (depending on ``--differential_loss_bins_per_decade``).
-
-energy_threshold_fraction (float, optional)
-    Fraction of the stable energy-peak count used to derive ERANGE.
-
-``--allowed_losses``
-    Required for core_distance and angular_distance, or ``all`` plus overrides.
+    Differential limits are preferable, as they are more robust to variations with energy.
 
 Results are provided as a table with the following columns:
 
@@ -74,11 +69,9 @@ The input event data files are generated using the application simtools-generate
 and are required for each point in the observational parameter space (e.g., array pointing
 directions, level of night sky background, etc.).
 
-Multi-production support
-------------------------
-To process multiple independent production datasets in parallel, provide multiple glob patterns
-via ``--event_data_file``. Each pattern is processed as a separate production, with results
-merged into a single output ECSV file. Plot files are organized into per-production subdirectories.
+Distributions of triggered events (e.g., core distance vs energy) can by plotted to verify the
+derived limits using the ``--plot_histograms`` option. Plots are organized into per-production
+subdirectories derived from the input pattern names (for example ``production_production_a/``).
 
 Command line arguments
 ----------------------
@@ -86,25 +79,34 @@ event_data_file (str or list of str, required)
     Path or glob pattern for reduced event data files. Can be a single pattern or
     multiple patterns (one per ``--event_data_file`` argument) to enable parallel
     multi-production processing.
-telescope_ids (str, optional)
-    Custom array layout file containing telescope IDs.
+array_layout_name (str, required)
+    Name of the array layout (as defined in array_layouts) for which to derive limits.
+    Single-telescope layouts can be defined using the telescope ID as array name
+    (e.g. "MSTN-05").
 allowed_losses (str, required, repeatable)
     Per-axis allowed-loss tuple in the form
     ``axis,fraction,min_events``.
     Use once per axis (core_distance, angular_distance), or use ``all``
     to set both axes and optionally override selected axes.
     Core distance and angular distance limits use these settings directly.
+differential_loss_bins_per_decade (int, optional)
+    Number of differential energy bins per decade for per-bin limit computation.
+    Set to 0 (default) to use integrated limits.
 energy_threshold_fraction (float, optional)
     Fraction of the stable energy-peak count used to derive ERANGE (default: 0.01).
+model_version (str, required)
+    Simulation model version (e.g., "7.0.0") to retrieve the corresponding
+    array layout.
+n_workers (int, optional)
+    Number of worker processes to use for execution. Default is 1.
 plot_histograms (bool, optional)
     Plot histograms of the event data.
 output_file (str, optional)
     Path to the output file for the derived limits.
-n_workers (int, optional)
-    Number of worker processes to use for execution. Default is 1.
-differential_loss_bins_per_decade (int, optional)
-    Number of differential energy bins per decade for per-bin limit computation.
-    Set to 0 (default) to use integrated limits.
+output_path (str, optional)
+    Path to the output directory for the derived limits and plots.
+site (str, optional)
+    Site for which to derive limits (e.g., North or South).
 
 Example
 -------
@@ -118,18 +120,6 @@ Derive limits for a single production with a list of array layouts:
         --array_layout_name alpha,beta \\
         --allowed_losses core_distance,1e-6,10 \
         --allowed_losses angular_distance,1e-6,10 \
-        --energy_threshold_fraction 0.01 \
-        --plot_histograms \\
-        --output_file corsika_simulation_limits.ecsv
-
-Derive limits for a single production with a custom telescope-config file:
-
-.. code-block:: console
-
-    simtools-production-derive-corsika-limits \\
-        --event_data_file event_dat_file.hdf5 \\
-        --telescope_ids path/to/telescope_configs.yaml \\
-        --allowed_losses all,1e-6,10 \
         --energy_threshold_fraction 0.01 \
         --plot_histograms \\
         --output_file corsika_simulation_limits.ecsv
