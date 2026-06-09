@@ -1,8 +1,22 @@
-"""
-Parameter scan generator for HTCondor submissions.
+r"""
+Parameter scan grid generator.
 
-Generates HTCondor submission files for parameter scans that run simulate-prod
-with different overwrite YAML files for each parameter combination.
+Expands an existing production job grid with parameter scan combinations.
+For each cartesian combination of scan parameters, one overwrite YAML file is
+generated and each base grid row is duplicated with the overwrite file path
+and a scan label attached.
+
+Use with the three-step workflow::
+
+    simtools-production-generate-grid --output_file base_grid.ecsv ...
+    simtools-generate-parameter-scan-grid \\
+        --job_grid_file base_grid.ecsv \\
+        --scan_config scan.yaml \\
+        --output_file scan_grid.ecsv
+    simtools-simulate-prod-htcondor-generator \\
+        --job_grid_file scan_grid.ecsv \\
+        --output_path htcondor_submit \\
+        --apptainer_image ...
 """
 
 import itertools
@@ -11,7 +25,7 @@ from pathlib import Path
 
 import yaml
 
-from simtools.job_execution.htcondor_script_generator import _resolve_apptainer_images
+from simtools.production_configuration.job_grid_io import read_job_grid, serialize_job_grid
 
 _logger = logging.getLogger(__name__)
 
@@ -153,187 +167,51 @@ def _generate_parameter_combinations(param_specs):
     return combinations
 
 
-def _generate_submit_script(sim_params):
+def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
     """
-    Generate shell script that runs simulate-prod.
+    Expand a production job grid with parameter scan combinations.
+
+    Reads a base job grid, generates one overwrite YAML file per scan parameter
+    combination, and writes a new grid where each base row is duplicated for
+    every combination with ``overwrite_model_parameters`` and ``scan_label``
+    columns added.
 
     Parameters
     ----------
-    sim_params : dict
-        Simulation parameters.
-
-    Returns
-    -------
-    str
-        Shell script content.
+    base_grid_file : str or Path
+        Base job grid ECSV file from ``simtools-production-generate-grid``.
+    scan_config_path : str or Path
+        Path to parameter scan YAML configuration.
+    output_file : str or Path
+        Output path for the expanded scan grid ECSV.
     """
-    label = sim_params.get("label", "param_scan")
+    scan_config_path = Path(scan_config_path)
+    output_file = Path(output_file)
+    output_dir = output_file.parent
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    script = f"""#!/usr/bin/env bash
+    with open(scan_config_path, encoding="utf-8") as f:
+        scan_config = yaml.safe_load(f)
 
-OVERWRITE_FILE="$1"
-RUN_NUMBER="$2"
-COMBO_LABEL="$3"
-
-if [ -z "$OVERWRITE_FILE" ] || [ -z "$RUN_NUMBER" ]; then
-    echo "Error: Missing arguments"
-    echo "Usage: $0 <overwrite_file.yaml> <run_number> <combo_label>"
-    exit 1
-fi
-
-set -a; source env.txt; set +a
-
-# Construct full label with combo-specific parameters
-FULL_LABEL="{label}_$COMBO_LABEL"
-
-simtools-simulate-prod \\
-    --simulation_software {sim_params["simulation_software"]} \\
-    --site {sim_params["site"]} \\
-    --model_version {sim_params["model_version"]} \\
-    --array_layout_name {sim_params["array_layout_name"]} \\
-    --primary {sim_params["primary"]} \\
-    --azimuth_angle {sim_params["azimuth_angle"]} \\
-    --zenith_angle {sim_params["zenith_angle"]} \\
-    --nshow {sim_params["nshow"]} \\
-    --energy_range "{sim_params["energy_range"]}" \\
-    --core_scatter "{sim_params["core_scatter"]}" \\
-    --view_cone "{sim_params["view_cone"]}" \\
-    --run_number "$RUN_NUMBER" \\
-    --corsika_le_interaction {sim_params["corsika_le_interaction"]} \\
-    --corsika_he_interaction {sim_params["corsika_he_interaction"]} \\
-    --label "$FULL_LABEL" \\
-    --overwrite_model_parameters "$OVERWRITE_FILE" \\
-    --output_path {sim_params.get("output_path", "/tmp/simtools-output")}"""  # NOSONAR
-
-    if sim_params.get("run_number_offset"):
-        script += f" \\\n    --run_number_offset {sim_params['run_number_offset']}"
-    if sim_params.get("save_reduced_event_lists"):
-        script += " \\\n    --save_reduced_event_lists"
-    if sim_params.get("pack_for_grid_register"):
-        script += f" \\\n    --pack_for_grid_register {sim_params['pack_for_grid_register']}"
-
-    script += "\n"
-    return script
-
-
-def _generate_condor_submit_file(script_name, apptainer_image, priority, param_file, work_dir):
-    """
-    Generate HTCondor submit file.
-
-    Parameters
-    ----------
-    script_name : str
-        Name of the executable script.
-    apptainer_image : Path
-        Path to Apptainer image.
-    priority : int
-        Job priority.
-    param_file : str
-        Name of parameter file.
-    work_dir : Path
-        Working directory.
-
-    Returns
-    -------
-    str
-        HTCondor submit file content.
-    """
-    log_dir = work_dir / "htcondor_logs"
-    for subdir in ["log", "error", "output"]:
-        (log_dir / subdir).mkdir(parents=True, exist_ok=True)
-
-    return f"""universe = container
-container_image = {apptainer_image}
-transfer_container = false
-
-executable = {script_name}
-arguments = $(overwrite_file) $(run_number) $(combo_label)
-error = htcondor_logs/error/err.$(cluster)_$(process)
-output = htcondor_logs/output/out.$(cluster)_$(process)
-log = htcondor_logs/log/log.$(cluster)_$(process)
-
-priority = {priority}
-
-queue overwrite_file,run_number,combo_label from {param_file}
-"""
-
-
-def generate_parameter_scan_htcondor(config_path):
-    """
-    Generate HTCondor submission files for parameter scan.
-
-    Parameters
-    ----------
-    config_path : str or Path
-        Path to configuration file.
-    """
-    config_path = Path(config_path)
-    with open(config_path, encoding="utf-8") as f:
-        config = yaml.safe_load(f)
-
-    sim_params = config["simulation"]
-    param_scan = config["parameter_scan"]
-    htcondor_config = config["htcondor"]
-
-    param_specs, template_path = _parse_parameter_scan_config(param_scan)
+    label = scan_config.get("label", "scan")
+    param_specs, template_path = _parse_parameter_scan_config(scan_config["parameter_scan"])
     param_combinations = _generate_parameter_combinations(param_specs)
 
-    output_path = Path(htcondor_config["output_path"])
-    output_path.mkdir(parents=True, exist_ok=True)
-
-    apptainer_images = _resolve_apptainer_images(htcondor_config["apptainer_image"])
-    apptainer_image = next(iter(apptainer_images.values()))
-
-    priority = htcondor_config.get("priority", 1)
-    number_of_runs = sim_params.get("number_of_runs", 1)
-    base_run_number = sim_params.get("run_number", 1)
-    label = sim_params.get("label", "param_scan")
-
-    if len(param_specs) == 1:
-        _logger.info(
-            f"Single parameter: {param_specs[0]['name']} ({len(param_specs[0]['values'])} values)"
-        )
-    else:
-        combo_str = " x ".join(f"{len(s['values'])}" for s in param_specs)
-        _logger.info(f"Multi-parameter: {' x '.join(s['name'] for s in param_specs)}")
-        _logger.info(f"  {combo_str} = {len(param_combinations)} combinations")
-
-    job_specs = []
-    for combo_spec in param_combinations:
-        _logger.info(f"Processing: {combo_spec['name']}")
-
-        overwrite_file = _generate_overwrite_file(
-            template_path, combo_spec["combo"], combo_spec["name"], output_path, label
-        )
-
-        for run_idx in range(number_of_runs):
-            job_specs.append(
-                (overwrite_file.absolute(), base_run_number + run_idx, combo_spec["name"])
-            )
-
-    params_file = output_path / f"scan_parameters_{label}.txt"
-    with open(params_file, "w", encoding="utf-8") as f:
-        for overwrite_file, run_number, combo_label in job_specs:
-            f.write(f"{overwrite_file}, {run_number}, {combo_label}\n")
-
-    script_name = f"simulate_prod_scan_{label}.sh"
-    script_path = output_path / script_name
-    with open(script_path, "w", encoding="utf-8") as f:
-        f.write(_generate_submit_script(sim_params))
-    script_path.chmod(0o755)
-
-    condor_file = output_path / f"simulate_prod_scan_{label}.condor"
-    with open(condor_file, "w", encoding="utf-8") as f:
-        f.write(
-            _generate_condor_submit_file(
-                script_name, apptainer_image, priority, params_file.name, output_path
-            )
-        )
-
-    _logger.info("Parameter scan generation complete!")
-    _logger.info(f"Output: {output_path}")
-    _logger.info(f"  - {len(param_combinations)} overwrite files")
+    base_rows, metadata = read_job_grid(base_grid_file)
     _logger.info(
-        f"  - {len(job_specs)} total jobs "
-        f"({len(param_combinations)} combinations x {number_of_runs} runs)"
+        f"Expanding {len(base_rows)} base rows with {len(param_combinations)} scan combinations."
     )
+
+    expanded_rows = []
+    for combo_spec in param_combinations:
+        overwrite_file = _generate_overwrite_file(
+            template_path, combo_spec["combo"], combo_spec["name"], output_dir, label
+        )
+        for row in base_rows:
+            new_row = dict(row)
+            new_row["overwrite_model_parameters"] = str(overwrite_file)
+            new_row["scan_label"] = combo_spec["name"]
+            expanded_rows.append(new_row)
+
+    serialize_job_grid(expanded_rows, output_file, metadata=metadata)
+    _logger.info(f"Scan grid with {len(expanded_rows)} rows written to '{output_file}'.")

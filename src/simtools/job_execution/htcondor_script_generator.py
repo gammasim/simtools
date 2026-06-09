@@ -43,6 +43,8 @@ _PARAMS_FIELDS = [
     "pack_for_grid_register",
 ]
 
+_OPTIONAL_QUEUE_FIELDS = ("overwrite_model_parameters", "scan_label")
+
 _REQUIRED_JOB_GRID_METADATA = ("site", "simulation_software")
 
 
@@ -96,9 +98,11 @@ def _format_quantity(value, default_unit=None, convert_to=None):
 def _format_param_value(value, field_name):
     """Format a value or Quantity for params file output."""
     if value is None:
+        if field_name in _OPTIONAL_QUEUE_FIELDS:
+            return ""
         raise ValueError(f"Missing required value for field '{field_name}'.")
 
-    if field_name in ("apptainer_label", "pack_for_grid_register"):
+    if field_name in ("apptainer_label", "pack_for_grid_register", "overwrite_model_parameters"):
         return _sanitize_label_for_params(value)
 
     if field_name == "core_scatter_number":
@@ -143,8 +147,9 @@ def _group_job_specs_by_label(job_specs):
     return grouped
 
 
-def _write_params_file(params_file_path, label_job_specs):
+def _write_params_file(params_file_path, label_job_specs, params_fields=None):
     """Write parameter file consumed by HTCondor queue-from syntax."""
+    params_fields = params_fields or _PARAMS_FIELDS
     with open(params_file_path, "w", encoding="utf-8") as params_file_handle:
         for job_spec in label_job_specs:
             energy_min_value, energy_min_unit = _format_param_value(
@@ -190,6 +195,16 @@ def _write_params_file(params_file_path, label_job_specs):
                 _format_param_value(job_spec["run_number"], "run_number"),
                 _format_param_value(job_spec["pack_for_grid_register"], "pack_for_grid_register"),
             ]
+
+            if "overwrite_model_parameters" in params_fields:
+                row.append(
+                    _format_param_value(
+                        job_spec.get("overwrite_model_parameters"), "overwrite_model_parameters"
+                    )
+                )
+            if "scan_label" in params_fields:
+                row.append(_format_param_value(job_spec.get("scan_label"), "scan_label"))
+
             params_file_handle.write(" ".join(row) + "\n")
 
 
@@ -205,6 +220,10 @@ def generate_submission_script(args_dict):
     apptainer_images = _resolve_apptainer_images(args_dict["apptainer_image"])
     job_specs, job_grid_metadata = build_job_specs(args_dict, list(apptainer_images.keys()))
     grouped_job_specs = _group_job_specs_by_label(job_specs)
+    params_fields = list(_PARAMS_FIELDS)
+    for field in _OPTIONAL_QUEUE_FIELDS:
+        if any(job_spec.get(field) not in (None, "") for job_spec in job_specs):
+            params_fields.append(field)
 
     work_dir = Path(args_dict["output_path"])
     htcondor_log_path = Path(
@@ -233,7 +252,9 @@ def generate_submission_script(args_dict):
         condor_file_name = f"{submit_file_name}{suffix}.condor"
         params_file_name = f"{submit_file_name}{suffix}.params.txt"
 
-        _write_params_file(work_dir / params_file_name, label_job_specs)
+        _write_params_file(
+            work_dir / params_file_name, label_job_specs, params_fields=params_fields
+        )
 
         with open(work_dir / condor_file_name, "w", encoding="utf-8") as submit_file_handle:
             submit_file_handle.write(
@@ -243,16 +264,19 @@ def generate_submission_script(args_dict):
                     args_dict["priority"],
                     params_file_name,
                     htcondor_dirs=htcondor_dirs,
+                    params_fields=params_fields,
                 )
             )
 
     with open(work_dir / f"{submit_file_name}.sh", "w", encoding="utf-8") as submit_script_handle:
-        submit_script_handle.write(_get_submit_script(submit_args))
+        submit_script_handle.write(_get_submit_script(submit_args, params_fields=params_fields))
 
     Path(work_dir / f"{submit_file_name}.sh").chmod(0o755)
 
 
-def _get_submit_file(executable, apptainer_image, priority, params_file_name, htcondor_dirs):
+def _get_submit_file(
+    executable, apptainer_image, priority, params_file_name, htcondor_dirs, params_fields=None
+):
     """
     Return HTCondor submit file.
 
@@ -277,8 +301,9 @@ def _get_submit_file(executable, apptainer_image, priority, params_file_name, ht
     str
         HTCondor submit file content.
     """
-    arguments_string = "$(process) env.txt " + " ".join(f"$({field})" for field in _PARAMS_FIELDS)
-    queue_string = ",".join(_PARAMS_FIELDS)
+    params_fields = params_fields or _PARAMS_FIELDS
+    arguments_string = "$(process) env.txt " + " ".join(f"$({field})" for field in params_fields)
+    queue_string = ",".join(params_fields)
 
     return f"""universe = container
 container_image = {apptainer_image}
@@ -296,7 +321,7 @@ queue {queue_string} from {params_file_name}
 """
 
 
-def _get_submit_script(args_dict):
+def _get_submit_script(args_dict, params_fields=None):
     """
     Return HTCondor submit script.
 
@@ -310,10 +335,12 @@ def _get_submit_script(args_dict):
     str
         HTCondor submit script content.
     """
-    # Map _PARAMS_FIELDS to bash positional indices ($3, $4, etc.)
+    params_fields = params_fields or _PARAMS_FIELDS
+
+    # Map params fields to bash positional indices ($3, $4, etc.)
     # Indices 1-2 are reserved for: $1=process_id, $2=env_file
     bash_indices = {}
-    for i, field in enumerate(_PARAMS_FIELDS):
+    for i, field in enumerate(params_fields):
         idx = 3 + i
         bash_indices[field] = f"${{{idx}}}"
 
@@ -338,6 +365,28 @@ def _get_submit_script(args_dict):
         f"{bash_indices['energy_max_value']}{bash_indices['energy_max_unit']}"
     )
 
+    scan_label_block = ""
+    if "scan_label" in params_fields:
+        scan_label_block = (
+            f'scan_label="{bash_indices["scan_label"]}"\n'
+            'if [ -n "$scan_label" ]; then\n'
+            '    job_label="${job_label}_${scan_label}"\n'
+            "fi\n"
+        )
+
+    overwrite_parameters_block = ""
+    overwrite_parameters_argument = ""
+    if "overwrite_model_parameters" in params_fields:
+        overwrite_parameters_block = (
+            f'overwrite_model_parameters="{bash_indices["overwrite_model_parameters"]}"\n'
+            "overwrite_model_parameters_args=()\n"
+            'if [ -n "$overwrite_model_parameters" ]; then\n'
+            "    overwrite_model_parameters_args+=(--overwrite_model_parameters "
+            '"$overwrite_model_parameters")\n'
+            "fi\n"
+        )
+        overwrite_parameters_argument = '    "${overwrite_model_parameters_args[@]}" \\\n'
+
     return f"""#!/usr/bin/env bash
 
 # Process ID used to generate run number
@@ -354,6 +403,7 @@ run_number="{bash_indices["run_number"]}"
 pack_for_grid_register="{bash_indices["pack_for_grid_register"]}"
 energy_range_tag="{energy_range_tag}"
 job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
+{scan_label_block}{overwrite_parameters_block}
 
 simtools-simulate-prod \\
     --simulation_software {args_dict["simulation_software"]} \\
@@ -373,7 +423,7 @@ simtools-simulate-prod \\
     --run_number "$run_number" \\
     --run_number_offset {run_number_offset} \\
     --save_reduced_event_lists \\
-    --output_path /tmp/simtools-output \\
+{overwrite_parameters_argument}    --output_path /tmp/simtools-output \\
     --log_level {args_dict["log_level"]} \\
     --pack_for_grid_register "$pack_for_grid_register"
 """
@@ -400,11 +450,14 @@ def build_job_specs(args_dict, image_labels):
     job_specs = []
     for label in image_labels:
         for row in normalized_rows:
-            job_specs.append(
-                {
-                    "image_label": str(label),
-                    **row,
-                    "pack_for_grid_register": f"{base_pack_dir}/{label!s}",
-                }
-            )
+            job_spec = {
+                "image_label": str(label),
+                **row,
+                "pack_for_grid_register": f"{base_pack_dir}/{label!s}",
+            }
+            if row.get("scan_label") not in (None, ""):
+                job_spec["scan_label"] = row["scan_label"]
+            if row.get("overwrite_model_parameters") not in (None, ""):
+                job_spec["overwrite_model_parameters"] = row["overwrite_model_parameters"]
+            job_specs.append(job_spec)
     return job_specs, job_grid_metadata

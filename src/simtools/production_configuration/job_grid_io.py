@@ -46,6 +46,7 @@ _QUANTITY_FIELDS = {
 JOB_GRID_QUANTITY_FIELDS = dict(_QUANTITY_FIELDS)
 
 _OPTIONAL_ANGLE_FIELDS = ("ra", "dec")
+_OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label")
 
 
 def _serialize_quantity(value):
@@ -85,6 +86,10 @@ def _serialize_job_row(job_row):
         else:
             serialized_row[angle_name] = float(angle_value)
 
+    for field in _OPTIONAL_STRING_FIELDS:
+        if job_row.get(field) is not None:
+            serialized_row[field] = str(job_row[field])
+
     return serialized_row
 
 
@@ -115,6 +120,13 @@ def _deserialize_job_row(serialized_row):
             continue
         job_row[angle_name] = float(angle_value) * u.deg
 
+    for field in _OPTIONAL_STRING_FIELDS:
+        if field not in serialized_row:
+            continue
+        value = serialized_row[field]
+        if not np.ma.is_masked(value) and value is not None and str(value).strip():
+            job_row[field] = str(value)
+
     return job_row
 
 
@@ -143,7 +155,10 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
         for angle_name in _OPTIONAL_ANGLE_FIELDS
         if any(angle_name in row for row in serialized_rows)
     ]
-    output_columns = [*JOB_GRID_COLUMNS, *optional_columns]
+    optional_string_columns = [
+        field for field in _OPTIONAL_STRING_FIELDS if any(field in row for row in serialized_rows)
+    ]
+    output_columns = [*JOB_GRID_COLUMNS, *optional_columns, *optional_string_columns]
     output_rows = [
         {column: row.get(column) for column in output_columns} for row in serialized_rows
     ]

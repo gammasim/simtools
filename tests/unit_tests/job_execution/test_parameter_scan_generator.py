@@ -3,17 +3,16 @@
 from pathlib import Path
 from unittest import mock
 
+import astropy.units as u
 import pytest
 import yaml
 
 from simtools.job_execution.parameter_scan_generator import (
-    _generate_condor_submit_file,
     _generate_overwrite_file,
     _generate_parameter_combinations,
-    _generate_submit_script,
     _parse_parameter_scan_config,
     _set_nested_value,
-    generate_parameter_scan_htcondor,
+    expand_job_grid_with_scan,
 )
 
 
@@ -154,138 +153,37 @@ def test_generate_parameter_combinations_three_parameters():
     assert len(combos) == 8
 
 
-def test_generate_submit_script_basic():
-    sim_params = {
-        "simulation_software": "simtools",
-        "site": "North",
+@mock.patch("simtools.job_execution.parameter_scan_generator.serialize_job_grid")
+@mock.patch("simtools.job_execution.parameter_scan_generator.read_job_grid")
+def test_expand_job_grid_with_scan(mock_read_grid, mock_serialize_grid, tmp_test_directory):
+    template_path = Path(tmp_test_directory) / "template.yaml"
+    with open(template_path, "w", encoding="utf-8") as f:
+        yaml.dump({"existing_key": "value"}, f)
+
+    base_row = {
+        "primary": "gamma",
+        "azimuth_angle": 0.0 * u.deg,
+        "zenith_angle": 20.0 * u.deg,
+        "energy_min": 0.01 * u.TeV,
+        "energy_max": 100.0 * u.TeV,
+        "core_scatter_number": 5,
+        "core_scatter_max": 1000.0 * u.m,
+        "view_cone_min": 0.0 * u.deg,
+        "view_cone_max": 5.0 * u.deg,
+        "showers_per_run": 1000,
         "model_version": "6.0.1",
         "array_layout_name": "LSTN-01",
-        "primary": "gamma",
-        "azimuth_angle": 0,
-        "zenith_angle": 20,
-        "nshow": 1000,
-        "energy_range": "0.01 100 GeV",
-        "core_scatter": "0 1000 m",
-        "view_cone": "0 5 deg",
         "corsika_le_interaction": "urqmd",
         "corsika_he_interaction": "epos",
-        "label": "test",
+        "run_number": 1,
     }
-
-    script = _generate_submit_script(sim_params)
-
-    assert "#!/usr/bin/env bash" in script
-    assert "OVERWRITE_FILE=" in script
-    assert "RUN_NUMBER=" in script
-    assert "COMBO_LABEL=" in script
-    assert 'FULL_LABEL="test_$COMBO_LABEL"' in script
-    assert "simtools-simulate-prod" in script
-    assert "--site North" in script
-    assert "--model_version 6.0.1" in script
-    assert '--label "$FULL_LABEL"' in script
-    assert "--output_path /tmp/simtools-output" in script
-
-
-def test_generate_submit_script_with_optional_params():
-    sim_params = {
-        "simulation_software": "simtools",
-        "site": "South",
-        "model_version": "7.0.0",
-        "array_layout_name": "MSTS-01",
-        "primary": "proton",
-        "azimuth_angle": 45,
-        "zenith_angle": 30,
-        "nshow": 5000,
-        "energy_range": "1 1000 GeV",
-        "core_scatter": "0 2000 m",
-        "view_cone": "0 10 deg",
-        "corsika_le_interaction": "urqmd",
-        "corsika_he_interaction": "epos",
-        "label": "proton_scan",
-        "run_number_offset": 100,
-        "save_reduced_event_lists": True,
-        "pack_for_grid_register": "some_value",
-    }
-
-    script = _generate_submit_script(sim_params)
-
-    assert "--run_number_offset 100" in script
-    assert "--save_reduced_event_lists" in script
-    assert "--pack_for_grid_register some_value" in script
-
-
-def test_generate_submit_script_with_custom_output_path():
-    sim_params = {
-        "simulation_software": "simtools",
-        "site": "North",
-        "model_version": "6.0.1",
-        "array_layout_name": "LSTN-01",
-        "primary": "gamma",
-        "azimuth_angle": 0,
-        "zenith_angle": 20,
-        "nshow": 1000,
-        "energy_range": "0.01 100 GeV",
-        "core_scatter": "0 1000 m",
-        "view_cone": "0 5 deg",
-        "corsika_le_interaction": "urqmd",
-        "corsika_he_interaction": "epos",
-        "label": "test",
-        "output_path": "/custom/output/path",
-    }
-
-    script = _generate_submit_script(sim_params)
-
-    assert "--output_path /custom/output/path" in script
-
-
-def test_generate_condor_submit_file(tmp_test_directory):
-    script_name = "test_script.sh"
-    apptainer_image = Path("/path/to/image.sif")
-    priority = 5
-    param_file = "params.txt"
-
-    result = _generate_condor_submit_file(
-        script_name, apptainer_image, priority, param_file, Path(tmp_test_directory)
+    mock_read_grid.return_value = (
+        [base_row],
+        {"site": "North", "simulation_software": "simtools"},
     )
 
-    assert "universe = container" in result
-    assert f"container_image = {apptainer_image}" in result
-    assert f"executable = {script_name}" in result
-    assert "arguments = $(overwrite_file) $(run_number) $(combo_label)" in result
-    assert f"priority = {priority}" in result
-    assert f"queue overwrite_file,run_number,combo_label from {param_file}" in result
-
-    log_dir = Path(tmp_test_directory) / "htcondor_logs"
-    assert (log_dir / "log").exists()
-    assert (log_dir / "error").exists()
-    assert (log_dir / "output").exists()
-
-
-@pytest.fixture
-def scan_config(tmp_test_directory):
-    template_path = Path(tmp_test_directory) / "overwrite_template.yaml"
-    with open(template_path, "w", encoding="utf-8") as f:
-        yaml.dump({"existing": "value"}, f)
-
-    config = {
-        "simulation": {
-            "simulation_software": "simtools",
-            "site": "North",
-            "model_version": "6.0.1",
-            "array_layout_name": "LSTN-01",
-            "primary": "gamma",
-            "azimuth_angle": 0,
-            "zenith_angle": 20,
-            "nshow": 1000,
-            "energy_range": "0.01 100 GeV",
-            "core_scatter": "0 1000 m",
-            "view_cone": "0 5 deg",
-            "corsika_le_interaction": "urqmd",
-            "corsika_he_interaction": "epos",
-            "label": "test_scan",
-            "number_of_runs": 2,
-            "run_number": 10,
-        },
+    scan_config = {
+        "label": "test_scan",
         "parameter_scan": {
             "overwrite_template": str(template_path),
             "parameters": [
@@ -296,100 +194,84 @@ def scan_config(tmp_test_directory):
                 }
             ],
         },
-        "htcondor": {
-            "apptainer_image": "/path/to/image.sif",
-            "output_path": str(Path(tmp_test_directory) / "output"),
-            "priority": 5,
-        },
     }
+    scan_config_path = Path(tmp_test_directory) / "scan.yaml"
+    with open(scan_config_path, "w", encoding="utf-8") as f:
+        yaml.dump(scan_config, f)
 
-    config_path = Path(tmp_test_directory) / "scan_config.yaml"
-    with open(config_path, "w", encoding="utf-8") as f:
-        yaml.dump(config, f)
+    output_file = Path(tmp_test_directory) / "scan_grid.ecsv"
+    expand_job_grid_with_scan(
+        Path(tmp_test_directory) / "base_grid.ecsv",
+        scan_config_path,
+        output_file,
+    )
 
-    return config_path
-
-
-@mock.patch("simtools.job_execution.parameter_scan_generator._resolve_apptainer_images")
-def test_generate_complete_submission(mock_resolve_images, scan_config, tmp_test_directory):
-    mock_resolve_images.return_value = {"default": Path("/path/to/image.sif")}
-
-    generate_parameter_scan_htcondor(scan_config)
-
-    output_path = Path(tmp_test_directory) / "output"
-
-    overwrite_files = list(output_path.glob("overwrite_*.yaml"))
-    assert len(overwrite_files) == 2
-
-    params_file = output_path / "scan_parameters_test_scan.txt"
-    assert params_file.exists()
-
-    with open(params_file, encoding="utf-8") as f:
-        lines = f.readlines()
-    assert len(lines) == 4
-    for line in lines:
-        parts = line.strip().split(", ")
-        assert len(parts) == 3
-
-    script_file = output_path / "simulate_prod_scan_test_scan.sh"
-    assert script_file.exists()
-
-    condor_file = output_path / "simulate_prod_scan_test_scan.condor"
-    assert condor_file.exists()
+    mock_serialize_grid.assert_called_once()
+    expanded_rows, written_file = (
+        mock_serialize_grid.call_args[0][0],
+        mock_serialize_grid.call_args[0][1],
+    )
+    assert written_file == output_file
+    assert len(expanded_rows) == 2  # 2 scan combos x 1 base row
+    assert expanded_rows[0]["scan_label"] == "threshold_220"
+    assert expanded_rows[1]["scan_label"] == "threshold_230"
+    assert "overwrite_model_parameters" in expanded_rows[0]
+    assert "overwrite_model_parameters" in expanded_rows[1]
+    assert (Path(tmp_test_directory) / "overwrite_test_scan_threshold_220.yaml").exists()
+    assert (Path(tmp_test_directory) / "overwrite_test_scan_threshold_230.yaml").exists()
 
 
-@mock.patch("simtools.job_execution.parameter_scan_generator._resolve_apptainer_images")
-def test_generate_multi_parameter_scan(mock_resolve_images, tmp_test_directory):
-    mock_resolve_images.return_value = {"default": Path("/path/to/image.sif")}
-
+@mock.patch("simtools.job_execution.parameter_scan_generator.serialize_job_grid")
+@mock.patch("simtools.job_execution.parameter_scan_generator.read_job_grid")
+def test_expand_job_grid_with_scan_multiple_base_rows(
+    mock_read_grid, mock_serialize_grid, tmp_test_directory
+):
     template_path = Path(tmp_test_directory) / "template.yaml"
     with open(template_path, "w", encoding="utf-8") as f:
         yaml.dump({}, f)
 
-    config = {
-        "simulation": {
-            "simulation_software": "simtools",
-            "site": "North",
-            "model_version": "6.0.1",
-            "array_layout_name": "LSTN-01",
-            "primary": "gamma",
-            "azimuth_angle": 0,
-            "zenith_angle": 20,
-            "nshow": 1000,
-            "energy_range": "0.01 100 GeV",
-            "core_scatter": "0 1000 m",
-            "view_cone": "0 5 deg",
-            "corsika_le_interaction": "urqmd",
-            "corsika_he_interaction": "epos",
-            "label": "multi_param",
-            "number_of_runs": 1,
-        },
+    base_row = {
+        "primary": "proton",
+        "azimuth_angle": 0.0 * u.deg,
+        "zenith_angle": 20.0 * u.deg,
+        "energy_min": 0.8 * u.TeV,
+        "energy_max": 2.0 * u.TeV,
+        "core_scatter_number": 10,
+        "core_scatter_max": 2000.0 * u.m,
+        "view_cone_min": 0.0 * u.deg,
+        "view_cone_max": 10.0 * u.deg,
+        "showers_per_run": 500,
+        "model_version": "6.0.1",
+        "array_layout_name": "LSTN-01",
+        "corsika_le_interaction": "urqmd",
+        "corsika_he_interaction": "epos",
+        "run_number": 1,
+    }
+    mock_read_grid.return_value = (
+        [{**base_row, "run_number": r} for r in range(1, 4)],
+        {"site": "North", "simulation_software": "simtools"},
+    )
+
+    scan_config = {
+        "label": "scan",
         "parameter_scan": {
             "overwrite_template": str(template_path),
-            "parameters": [
-                {"name": "threshold", "path": "path1", "values": [220, 230]},
-                {"name": "test", "path": "path2", "values": [5.0, 5.5]},
-            ],
-        },
-        "htcondor": {
-            "apptainer_image": "/path/to/image.sif",
-            "output_path": str(Path(tmp_test_directory) / "output"),
-            "priority": 3,
+            "parameters": [{"name": "thr", "path": "p.thr", "values": [220, 230, 240]}],
         },
     }
+    scan_config_path = Path(tmp_test_directory) / "scan.yaml"
+    with open(scan_config_path, "w", encoding="utf-8") as f:
+        yaml.dump(scan_config, f)
 
-    config_path = Path(tmp_test_directory) / "config.yaml"
-    with open(config_path, "w", encoding="utf-8") as f:
-        yaml.dump(config, f)
+    expand_job_grid_with_scan(
+        Path(tmp_test_directory) / "base_grid.ecsv",
+        scan_config_path,
+        Path(tmp_test_directory) / "scan_grid.ecsv",
+    )
 
-    generate_parameter_scan_htcondor(config_path)
-
-    output_path = Path(tmp_test_directory) / "output"
-
-    overwrite_files = list(output_path.glob("overwrite_*.yaml"))
-    assert len(overwrite_files) == 4
-
-    params_file = output_path / "scan_parameters_multi_param.txt"
-    with open(params_file, encoding="utf-8") as f:
-        lines = f.readlines()
-    assert len(lines) == 4
+    expanded_rows = mock_serialize_grid.call_args[0][0]
+    # 3 scan combos x 3 base rows = 9
+    assert len(expanded_rows) == 9
+    assert expanded_rows[0]["scan_label"] == "thr_220"
+    assert expanded_rows[3]["scan_label"] == "thr_230"
+    assert expanded_rows[6]["scan_label"] == "thr_240"
