@@ -77,8 +77,7 @@ axis (repeatable)
     and ``offset``. Supported scaling modes are ``linear``, ``log``, and
     ``1/cos``; the default is ``linear``.
 
-    Examples
-    --------
+    **Examples**
     - ``--axis azimuth 310 deg 20 deg 3 linear``
     - ``--axis zenith 0 deg 70 deg 8 linear``
     - ``--axis nsb 0.24 MHz 0.24 MHz 1 linear``
