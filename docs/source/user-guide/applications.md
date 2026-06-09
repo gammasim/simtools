@@ -77,7 +77,7 @@ simtools-docs-produce-simulation-configuration-report <applications/simtools-doc
 simtools-generate-array-config <applications/simtools-generate-array-config>
 simtools-generate-corsika-histograms <applications/simtools-generate-corsika-histograms>
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
-simtools-generate-parameter-scan-htcondor <applications/simtools-generate-parameter-scan-htcondor>
+simtools-generate-parameter-scan-grid <applications/simtools-generate-parameter-scan-grid>
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-simtel-event-data <applications/simtools-generate-simtel-event-data>
 simtools-maintain-simulation-model-add-production <applications/simtools-maintain-simulation-model-add-production>
