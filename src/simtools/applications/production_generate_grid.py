@@ -55,6 +55,12 @@ showers_per_run_scaling (str, optional)
     ``fixed`` keeps showers per run unchanged.
     ``cosine_zenith`` applies ``showers_per_run * cos(zenith_angle)``
     (example: ``--showers_per_run_scaling cosine_zenith``).
+energy_max_scaling (tuple, optional)
+    Scale max energy with zenith angle as
+    ``energy_max_scaling_reference * cos(zenith_angle) ** power_index``.
+    Provide as ``<power_index> <reference_energy_value> <reference_energy_unit>``.
+    Disabled by default (``None``).
+    Example: ``--energy_max_scaling -2.5 300 TeV``.
 
 
 Example
@@ -102,6 +108,8 @@ full zenith coverage from 0 to 70 deg and a directed azimuth window), execute:
             --time_of_observation "2017-09-16 00:00:00" \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
 """
+
+import argparse
 
 from simtools.application_control import build_application
 from simtools.configuration import defaults
@@ -233,6 +241,28 @@ def _add_arguments(parser):
         choices=["fixed", "cosine_zenith"],
         required=False,
         default="fixed",
+    )
+    parser.add_argument(
+        "--energy_max_scaling",
+        help=(
+            "Scale max energy with zenith angle as "
+            "energy_max_scaling_reference * cos(zenith_angle) ** power_index. "
+            "Provide: <power_index> <reference_energy_value> <reference_energy_unit> "
+            "(for example: --energy_max_scaling -2.5 300 TeV)."
+            "Max energy limited by value given through '--energy_range'."
+        ),
+        nargs=3,
+        type=str,
+        metavar=("POWER_INDEX", "REFERENCE_ENERGY_VALUE", "REFERENCE_ENERGY_UNIT"),
+        required=False,
+        default=None,
+    )
+    parser.add_argument(
+        "--energy_max_scaling_index",
+        help=argparse.SUPPRESS,
+        type=float,
+        required=False,
+        default=None,
     )
 
 
