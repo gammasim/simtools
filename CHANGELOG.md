@@ -7,6 +7,35 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.32.0](https://github.com/gammasim/simtools/releases/tag/v0.32.0) - 2026-06-08
+
+### API Changes
+
+- Change application name `simtools-production-plot-corsika-limits` to `simtools-plot-corsika-limits` to align naming with other plotting scripts. ([#2243](https://github.com/gammasim/simtools/pull/2243))
+
+### Bugfixes
+
+- Fix deployment of documentation (`CI-docs`). ([#2238](https://github.com/gammasim/simtools/pull/2238))
+- Fix binning effect in the derivation of the lower CORSIKA energy limit. ([#2245](https://github.com/gammasim/simtools/pull/2245))
+- Fix tag-collision for docker and ORAS (Apptainer) images. ([#2250](https://github.com/gammasim/simtools/pull/2250))
+
+### New Features
+
+- Add functionality to define simulation production grids using a grid density parameter. Improve plotting. ([#2213](https://github.com/gammasim/simtools/pull/2213))
+- Add support for providing the wavelength in the CLI for illuminator simulations. ([#2240](https://github.com/gammasim/simtools/pull/2240))
+
+### Maintenance
+
+- Increase robustness of CI unit and integration tests. Add caching steps for CORSIKA interaction tables, simulation models, and sonar binary as a fallback. ([#2239](https://github.com/gammasim/simtools/pull/2239))
+- Disable remote-DB runs for nightly integration tests (fail too often with network issues). ([#2241](https://github.com/gammasim/simtools/pull/2241))
+- Add GitHub Copilot skill for integration testing. ([#2247](https://github.com/gammasim/simtools/pull/2247))
+- Fix issue with running SonarQube re-analysis for repeated commits to a PR. ([#2249](https://github.com/gammasim/simtools/pull/2249))
+
+### Simulation model
+
+- Update default simulation model version to [v0.16.0](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models/-/releases/v0.16.0). ([#2244](https://github.com/gammasim/simtools/pull/2244))
+
+
 ## [v0.31.0](https://github.com/gammasim/simtools/releases/tag/v0.31.0) - 2026-06-03
 
 ### API Changes
