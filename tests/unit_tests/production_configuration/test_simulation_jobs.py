@@ -61,7 +61,7 @@ def _base_simulation_jobs_args():
 
 
 def _observation_grid_return(point):
-    return ({"alpha": [point]}, {"6.3.0": "alpha"})
+    return ({"6.3.0": [point]}, {"6.3.0": "alpha"})
 
 
 def test_resolve_single_model_version_uses_first_list_entry():
@@ -1108,9 +1108,20 @@ def test_generate_observation_points_from_axes_adds_lookup_limits():
         "viewcone_radius": u.deg,
     }
 
-    points = _generate_observation_points_from_axes([180 * u.deg], [20 * u.deg], corsika_limits)
+    points = _generate_observation_points_from_axes(
+        [180 * u.deg],
+        [20 * u.deg],
+        corsika_limits,
+        nsb_rate=0.37,
+    )
 
     assert len(points) == 1
+    corsika_limits.interpolate_point.assert_called_once_with(
+        20 * u.deg,
+        180 * u.deg,
+        nsb=0.37,
+    )
+    assert points[0]["nsb_rate"] == pytest.approx(0.37)
     assert_quantity_allclose(points[0]["lower_energy_limit"], 0.05 * u.TeV)
     assert_quantity_allclose(points[0]["upper_radius_limit"], 150 * u.m)
     assert_quantity_allclose(points[0]["viewcone_radius"], 3 * u.deg)
@@ -1137,10 +1148,16 @@ def test_generate_observation_grids_per_layout_uses_layout_specific_lookup(
         args_dict, grid_axes
     )
 
-    assert set(observation_grids) == {"alpha", "beta"}
+    assert set(observation_grids) == {"6.3.0", "7.0.0"}
     assert resolved_layout_names == {"6.3.0": "alpha", "7.0.0": "beta"}
     mock_corsika_limits_lookup.assert_any_call("limits.ecsv", array_layout_name="alpha")
     mock_corsika_limits_lookup.assert_any_call("limits.ecsv", array_layout_name="beta")
+    mock_generate_observation_points_from_axes.assert_any_call(
+        azimuth_values=[0 * u.deg],
+        zenith_values=[20 * u.deg],
+        corsika_limits=mock_corsika_limits_lookup.return_value,
+        nsb_rate=1.0,
+    )
 
 
 @patch("simtools.production_configuration.simulation_jobs.build_production_grid_engine")
@@ -1167,9 +1184,46 @@ def test_generate_observation_grids_per_layout_uses_shared_axes_and_skips_duplic
         },
     )
 
-    assert observation_grids == {"alpha": [{"azimuth": 0 * u.deg}]}
+    assert observation_grids == {
+        "6.3.0": [{"azimuth": 0 * u.deg}],
+        "7.0.0": [{"azimuth": 0 * u.deg}],
+    }
     assert resolved_layout_names == {"6.3.0": "alpha", "7.0.0": "alpha"}
     mock_build_production_grid_engine.assert_called_once()
+
+
+@patch("simtools.production_configuration.simulation_jobs._resolve_nsb_rate")
+@patch("simtools.production_configuration.simulation_jobs.build_production_grid_engine")
+def test_generate_observation_grids_per_layout_does_not_reuse_different_nsb_rates(
+    mock_build_production_grid_engine,
+    mock_resolve_nsb_rate,
+):
+    mock_build_production_grid_engine.return_value.generate_simulation_grid.return_value = [
+        {"azimuth": 0 * u.deg}
+    ]
+    mock_resolve_nsb_rate.side_effect = [0.2, 0.4]
+
+    _generate_observation_grids_per_layout(
+        {
+            "axis": [
+                ["azimuth", "310", "deg", "20", "deg", "3"],
+                ["zenith", "20", "deg", "40", "deg", "2"],
+                ["offset", "0", "deg", "10", "deg", "2"],
+            ],
+            "array_layout_name": {"by_version": {"<7.0.0": "alpha", ">=7.0.0": "alpha"}},
+        },
+        {
+            "model_version": ["6.3.0", "7.0.0"],
+            "azimuth_angle": [0 * u.deg],
+            "zenith_angle": [20 * u.deg],
+        },
+    )
+
+    assert mock_build_production_grid_engine.call_count == 2
+    called_model_versions = [
+        call.kwargs["model_version"] for call in mock_build_production_grid_engine.call_args_list
+    ]
+    assert called_model_versions == ["6.3.0", "7.0.0"]
 
 
 @patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")
