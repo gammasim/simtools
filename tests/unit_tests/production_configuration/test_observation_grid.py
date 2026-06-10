@@ -499,8 +499,7 @@ def test_generate_horizontal_grid_with_circular_azimuth_binning_calls_lookup_for
     engine.lookup_table = "limits.ecsv"
     engine._add_lookup_limits_to_point = Mock()
 
-    _grid = engine._generate_horizontal_grid()
-
+    engine._generate_horizontal_grid()
     assert engine._add_lookup_limits_to_point.call_count == 3
 
 
