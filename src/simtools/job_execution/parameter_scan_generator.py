@@ -102,7 +102,7 @@ def _generate_overwrite_file(template_path, param_combo, combo_name, work_dir, l
     return overwrite_file
 
 
-def _parse_parameter_scan_config(param_scan, base_path=None):
+def _parse_parameter_scan_config(param_scan):
     """
     Parse parameter scan configuration.
 
@@ -117,8 +117,6 @@ def _parse_parameter_scan_config(param_scan, base_path=None):
         (list of parameter specs, template_path)
     """
     template_path = Path(param_scan["overwrite_template"])
-    if not template_path.is_absolute() and base_path is not None:
-        template_path = (Path(base_path) / template_path).resolve()
 
     params = []
     for param_spec in param_scan["parameters"]:
@@ -187,11 +185,8 @@ def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
     output_file : str or Path
         Output path for the expanded scan grid ECSV.
     """
-    scan_config_path = Path(scan_config_path).expanduser().resolve()
-    base_grid_file = Path(base_grid_file).expanduser().resolve()
-    output_file = Path(output_file).expanduser()
-    if not output_file.is_absolute():
-        output_file = (scan_config_path.parent / output_file).resolve()
+    scan_config_path = Path(scan_config_path)
+    output_file = Path(output_file)
     output_dir = output_file.parent
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -199,10 +194,7 @@ def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
         scan_config = yaml.safe_load(f)
 
     label = scan_config.get("label", "scan")
-    param_specs, template_path = _parse_parameter_scan_config(
-        scan_config["parameter_scan"],
-        base_path=scan_config_path.parent,
-    )
+    param_specs, template_path = _parse_parameter_scan_config(scan_config["parameter_scan"])
     param_combinations = _generate_parameter_combinations(param_specs)
 
     base_rows, metadata = read_job_grid(base_grid_file)
@@ -217,7 +209,7 @@ def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
         )
         for row in base_rows:
             new_row = dict(row)
-            new_row["overwrite_model_parameters"] = str(overwrite_file.resolve())
+            new_row["overwrite_model_parameters"] = str(overwrite_file)
             new_row["scan_label"] = combo_spec["name"]
             expanded_rows.append(new_row)
 
