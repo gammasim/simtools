@@ -41,6 +41,7 @@ class ProductionGridEngine:
         time_of_observation=None,
         lookup_table=None,
         array_layout_name=None,
+        lookup_nsb_rate=1.0,
     ):
         """
         Initialize the production-grid engine.
@@ -60,6 +61,8 @@ class ProductionGridEngine:
             Path to the lookup table file (ECSV format).
         array_layout_name : str, optional
             Array layout name used to select lookup-table rows.
+        lookup_nsb_rate : float, optional
+            NSB integrated flux used for lookup-table interpolation.
         """
         self._logger = logging.getLogger(__name__)
         self.axes = axes["axes"] if "axes" in axes else axes
@@ -72,20 +75,15 @@ class ProductionGridEngine:
         self.time_of_observation = time_of_observation
         self.lookup_table = lookup_table
         self.array_layout_name = array_layout_name
-        self.interpolated_limits = {}
+        self.lookup_nsb_rate = lookup_nsb_rate
         self._limits_lookup = None
         if self.lookup_table:
             self._limits_lookup = CorsikaLimitsLookup(
                 lookup_table=lookup_table,
                 array_layout_name=array_layout_name,
             )
+            self._prepare_lookup_table_limits_for_point_interpolation()
         self.target_values = self._generate_target_values()
-
-        if self.lookup_table:
-            if self.coordinate_system == "ra_dec":
-                self._prepare_lookup_table_limits_for_point_interpolation()
-            else:
-                self._apply_lookup_table_limits()
 
     def _require_time_of_observation(self):
         """Return observing time if available, else raise a clear error."""
@@ -141,10 +139,6 @@ class ProductionGridEngine:
             target_values[axis_name] = values
 
         return target_values
-
-    def _apply_lookup_table_limits(self):
-        """Apply limits from the lookup table and interpolate values."""
-        self.interpolated_limits = self._limits_lookup.interpolate_grid_limits(self.target_values)
 
     def _generate_radec_grid_direction_points(self):
         """Generate direction points from declination lines and hour-angle spacing."""
@@ -206,9 +200,12 @@ class ProductionGridEngine:
         if not self.lookup_table:
             return
 
-        nsb_value = point.get("nsb_level", 1)
+        nsb_value = self.lookup_nsb_rate
+        if nsb_value is None:
+            nsb_value = point.get("nsb_level", 1)
         if isinstance(nsb_value, Quantity):
             nsb_value = nsb_value.value
+        point["nsb_rate"] = float(nsb_value)
         limits = self._interpolate_limits_for_point(
             zenith=zenith,
             azimuth=azimuth,
@@ -560,34 +557,10 @@ class ProductionGridEngine:
                 key: Quantity(combination[i], units[i])
                 for i, key in enumerate(self.target_values.keys())
             }
-
-            zenith_idx = np.nonzero(
-                np.isclose(
-                    self.target_values["zenith_angle"].value,
-                    grid_point["zenith_angle"].value,
-                )
-            )[0][0]
-            azimuth_idx = np.nonzero(
-                np.isclose(
-                    self.target_values["azimuth"].value,
-                    grid_point["azimuth"].value,
-                )
-            )[0][0]
-            nsb_idx = np.nonzero(
-                np.isclose(
-                    self.target_values["nsb_level"].value,
-                    grid_point["nsb_level"].value,
-                )
-            )[0][0]
-
-            limits = {
-                key: values[zenith_idx, azimuth_idx, nsb_idx]
-                for key, values in self.interpolated_limits.items()
-            }
-            attach_lookup_limits_to_point(
+            self._add_lookup_limits_to_point(
                 grid_point,
-                limits,
-                getattr(self._limits_lookup, "lookup_field_units", None),
+                zenith=grid_point["zenith_angle"].to_value(u.deg),
+                azimuth=grid_point["azimuth"].to_value(u.deg),
             )
 
             grid_points.append(grid_point)

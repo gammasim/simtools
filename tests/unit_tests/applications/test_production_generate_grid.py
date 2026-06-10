@@ -53,18 +53,18 @@ def test_add_arguments_accepts_compact_axis_definitions():
             "3",
             "linear",
             "--axis",
-            "nsb",
-            "4",
-            "MHz",
-            "5",
-            "MHz",
+            "offset",
+            "0",
+            "deg",
+            "10",
+            "deg",
             "2",
         ]
     )
 
     assert args.axis == [
         ["azimuth", "310", "deg", "20", "deg", "3", "linear"],
-        ["nsb", "4", "MHz", "5", "MHz", "2"],
+        ["offset", "0", "deg", "10", "deg", "2"],
     ]
 
 

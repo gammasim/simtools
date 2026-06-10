@@ -23,6 +23,7 @@ axis (repeatable)
     Compact axis definition in the form
     ``--axis <name> <min> <unit> <max> <unit> <binning> [scaling]``.
     Example: ``--axis azimuth 310 deg 20 deg 3 linear``.
+    Supported axes are: azimuth, zenith, ra, dec, offset.
     Options for scaling are: linear, log, 1/cos.
 direction_grid_density (float or quantity, optional)
     Direction-grid density (typically in ``1/deg^2``).
@@ -73,7 +74,6 @@ To generate a standard zenith/azimuth grid of simulation points, execute:
             --array_layout_name alpha \
             --axis azimuth 310 deg 20 deg 3 linear \
             --axis zenith 30 deg 40 deg 2 linear \
-            --axis nsb 4 MHz 5 MHz 2 linear \
             --axis offset 0 deg 10 deg 2 linear \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
 
@@ -86,7 +86,6 @@ execute:
             --array_layout_name alpha \
             --axis ra 0 deg 360 deg 36 linear \
             --axis dec -90 deg 90 deg 18 linear \
-            --axis nsb 4 MHz 4 MHz 1 linear \
             --axis offset 0 deg 10 deg 2 linear \
             --time_of_observation "2017-09-16 00:00:00" \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
@@ -100,7 +99,6 @@ full zenith coverage from 0 to 70 deg and a directed azimuth window), execute:
             --array_layout_name alpha \
             --axis ra 0 deg 360 deg 1 linear \
             --axis dec -40 deg 80 deg 1 linear \
-            --axis nsb 4 MHz 4 MHz 1 linear \
             --axis offset 0 deg 10 deg 2 linear \
             --direction_grid_density 0.25 1/deg^2 \
             --local_zenith_range 0 deg 70 deg \
@@ -130,6 +128,7 @@ def _add_arguments(parser):
         help=(
             "Compact axis definition: --axis <name> <min> <unit> <max> <unit> <binning> "
             "[scaling]. May be repeated. "
+            "Supported axes: azimuth, zenith, ra, dec, offset. "
             "Options for scaling are: linear, log, 1/cos"
         ),
     )

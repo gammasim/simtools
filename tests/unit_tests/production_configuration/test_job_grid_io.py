@@ -21,6 +21,7 @@ def _job_rows():
             "view_cone_min": 0 * u.deg,
             "view_cone_max": 5 * u.deg,
             "showers_per_run": 1000,
+            "nsb_rate": 0.24,
             "model_version": "7.0.0",
             "array_layout_name": "CTAO-North-Alpha",
             "corsika_le_interaction": "urqmd",
@@ -48,6 +49,7 @@ def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
     assert rows[0]["energy_min"] == 30 * u.GeV
     assert rows[0]["core_scatter_number"] == 10
     assert rows[0]["array_layout_name"] == "CTAO-North-Alpha"
+    assert rows[0]["nsb_rate"] == pytest.approx(0.24)
     assert rows[0]["ra"] == 123 * u.deg
     assert rows[0]["dec"] == -45 * u.deg
 
