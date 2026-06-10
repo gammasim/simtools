@@ -145,6 +145,15 @@ def test_add_lookup_limits_to_point_uses_engine_lookup_nsb_rate():
     assert_quantity_allclose(point["viewcone_radius"], 3.5 * u.deg)
 
 
+def test_add_lookup_limits_to_point_raises_without_nsb_rate():
+    engine = _make_engine(lookup_table=None, lookup_nsb_rate=None)
+    engine.lookup_table = "limits.ecsv"
+    engine._interpolate_limits_for_point = Mock(return_value={"lower_energy_limit": 0.02})
+
+    with pytest.raises(ValueError, match="nsb_rate is required"):
+        engine._add_lookup_limits_to_point({}, zenith=20.0, azimuth=180.0)
+
+
 def test_interpolate_limits_for_point_delegates_to_lookup_helper():
     engine = _make_engine(lookup_table=None)
     engine._limits_lookup = Mock()

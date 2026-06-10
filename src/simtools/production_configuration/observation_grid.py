@@ -202,7 +202,9 @@ class ProductionGridEngine:
 
         nsb_value = self.lookup_nsb_rate
         if nsb_value is None:
-            nsb_value = point.get("nsb_level", 1)
+            nsb_value = point.get("nsb_level")
+        if nsb_value is None:
+            raise ValueError("nsb_rate is required to interpolate lookup limits.")
         if isinstance(nsb_value, Quantity):
             nsb_value = nsb_value.value
         point["nsb_rate"] = float(nsb_value)

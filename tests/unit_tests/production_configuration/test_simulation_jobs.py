@@ -44,6 +44,7 @@ from simtools.production_configuration.simulation_jobs import (
 
 def _base_simulation_jobs_args():
     return {
+        "site": "North",
         "primary": ["gamma"],
         "azimuth_angle": [180 * u.deg],
         "zenith_angle": [20 * u.deg],
@@ -523,6 +524,22 @@ def test_build_production_grid_engine_builds_observing_location_for_radec(
     mock_build_observing_location.assert_called_once_with(site="North", model_version="7.0.0")
     mock_site_model.assert_called_once_with(model_version="7.0.0", site="North")
     assert mock_production_grid_engine.call_args.kwargs["observing_location"] == location
+
+
+def test_build_production_grid_engine_raises_without_site_for_nsb_rate():
+    with pytest.raises(ValueError, match="site and model_version are required"):
+        build_production_grid_engine(
+            {
+                "model_version": ["7.0.0"],
+                "time_of_observation": None,
+                "corsika_limits": None,
+                "axis": [
+                    ["azimuth", "310", "deg", "20", "deg", "3", "linear"],
+                    ["zenith", "30", "deg", "40", "deg", "2", "linear"],
+                    ["offset", "0", "deg", "10", "deg", "2", "linear"],
+                ],
+            }
+        )
 
 
 def test_normalize_grid_axes_applies_defaults():
@@ -1127,14 +1144,18 @@ def test_generate_observation_points_from_axes_adds_lookup_limits():
     assert_quantity_allclose(points[0]["viewcone_radius"], 3 * u.deg)
 
 
-@patch("simtools.production_configuration.simulation_jobs._generate_observation_points_from_axes")
+@patch("simtools.production_configuration.simulation_jobs.SiteModel")
 @patch("simtools.production_configuration.simulation_jobs.CorsikaLimitsLookup")
+@patch("simtools.production_configuration.simulation_jobs._generate_observation_points_from_axes")
 def test_generate_observation_grids_per_layout_uses_layout_specific_lookup(
-    mock_corsika_limits_lookup,
     mock_generate_observation_points_from_axes,
+    mock_corsika_limits_lookup,
+    mock_site_model,
 ):
     mock_generate_observation_points_from_axes.return_value = [{"azimuth": 0 * u.deg}]
+    mock_site_model.return_value.get_nsb_integrated_flux.side_effect = [0.2, 0.4]
     args_dict = {
+        "site": "North",
         "array_layout_name": {"by_version": {"<7.0.0": "alpha", ">=7.0.0": "beta"}},
         "corsika_limits": "limits.ecsv",
     }
@@ -1150,26 +1171,31 @@ def test_generate_observation_grids_per_layout_uses_layout_specific_lookup(
 
     assert set(observation_grids) == {"6.3.0", "7.0.0"}
     assert resolved_layout_names == {"6.3.0": "alpha", "7.0.0": "beta"}
+    assert mock_site_model.call_count == 2
     mock_corsika_limits_lookup.assert_any_call("limits.ecsv", array_layout_name="alpha")
     mock_corsika_limits_lookup.assert_any_call("limits.ecsv", array_layout_name="beta")
     mock_generate_observation_points_from_axes.assert_any_call(
         azimuth_values=[0 * u.deg],
         zenith_values=[20 * u.deg],
         corsika_limits=mock_corsika_limits_lookup.return_value,
-        nsb_rate=1.0,
+        nsb_rate=0.2,
     )
 
 
+@patch("simtools.production_configuration.simulation_jobs.SiteModel")
 @patch("simtools.production_configuration.simulation_jobs.build_production_grid_engine")
 def test_generate_observation_grids_per_layout_uses_shared_axes_and_skips_duplicate_layouts(
     mock_build_production_grid_engine,
+    mock_site_model,
 ):
     mock_build_production_grid_engine.return_value.generate_simulation_grid.return_value = [
         {"azimuth": 0 * u.deg}
     ]
+    mock_site_model.return_value.get_nsb_integrated_flux.return_value = 0.31
 
     observation_grids, resolved_layout_names = _generate_observation_grids_per_layout(
         {
+            "site": "North",
             "axis": [
                 ["azimuth", "310", "deg", "20", "deg", "3"],
                 ["zenith", "20", "deg", "40", "deg", "2"],
@@ -1190,6 +1216,7 @@ def test_generate_observation_grids_per_layout_uses_shared_axes_and_skips_duplic
     }
     assert resolved_layout_names == {"6.3.0": "alpha", "7.0.0": "alpha"}
     mock_build_production_grid_engine.assert_called_once()
+    assert mock_site_model.call_count == 2
 
 
 @patch("simtools.production_configuration.simulation_jobs._resolve_nsb_rate")
@@ -1205,6 +1232,7 @@ def test_generate_observation_grids_per_layout_does_not_reuse_different_nsb_rate
 
     _generate_observation_grids_per_layout(
         {
+            "site": "North",
             "axis": [
                 ["azimuth", "310", "deg", "20", "deg", "3"],
                 ["zenith", "20", "deg", "40", "deg", "2"],
@@ -1251,7 +1279,6 @@ def test_build_simulation_jobs_expands_runs_from_observation_grid(
     assert rows[0]["view_cone_min"] == 0 * u.deg
     assert rows[0]["view_cone_max"] == 2 * u.deg
     assert rows[0]["showers_per_run"] == 5
-    assert rows[0]["nsb_rate"] == pytest.approx(1.0)
     assert rows[0]["ra"] == 123 * u.deg
     assert rows[0]["dec"] == -45 * u.deg
 
