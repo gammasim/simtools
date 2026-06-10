@@ -66,11 +66,6 @@ GRID_AXIS_ARGUMENTS = {
         "unit": "deg",
         "help": "Declination range (deg)",
     },
-    "nsb": {
-        "engine_axis": "nsb_level",
-        "unit": "MHz",
-        "help": "NSB level range (MHz)",
-    },
     "offset": {
         "engine_axis": "offset",
         "unit": "deg",
@@ -81,7 +76,7 @@ GRID_AXIS_ARGUMENTS = {
 _AXIS_SCALING_CHOICES = ("linear", "log", "1/cos")
 _HORIZONTAL_AXES = ("azimuth", "zenith")
 _RADEC_AXES = ("ra", "dec")
-_REQUIRED_AXES = ("nsb", "offset")
+_REQUIRED_AXES = ("offset",)
 _LOCAL_CONSTRAINT_ARGUMENTS = {
     "local_zenith_range": "deg",
     "local_azimuth_range": "deg",
@@ -167,6 +162,7 @@ def _iter_compact_axis_specs(args_dict):
             and len(axis_spec) > 1
             and all(isinstance(item, str) for item in axis_spec)
             and str(axis_spec[0]).strip() not in GRID_AXIS_ARGUMENTS
+            and " " in str(axis_spec[0])
         ):
             normalized_specs.extend(axis_spec)
             continue
@@ -358,14 +354,48 @@ def build_axes_dict_from_cli_args(args_dict):
     }
 
 
-def build_production_grid_engine(args_dict, array_layout_name=None):
-    """Build a production-grid engine from application arguments."""
+def _resolve_nsb_rate(args_dict, model_version):
+    """Resolve the NSB interpolation rate for one model version."""
+    if not args_dict.get("site") or not model_version:
+        return 1.0
+    return float(
+        SiteModel(
+            model_version=model_version,
+            site=args_dict["site"],
+        ).get_nsb_integrated_flux()
+    )
+
+
+def build_production_grid_engine(args_dict, array_layout_name=None, model_version=None):
+    """
+    Build a production-grid engine from application arguments.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Application arguments containing the axis definitions, coordinate metadata,
+        optional CORSIKA lookup table, site, model version, and array layout name.
+    array_layout_name : str, optional
+        Resolved array layout name. If omitted, it is resolved from ``args_dict`` and
+        ``model_version``.
+    model_version : str, optional
+        Model version used to resolve the site-dependent observing location, array layout,
+        and NSB rate. If omitted, the first model version from ``args_dict`` is used.
+
+    Returns
+    -------
+    ProductionGridEngine
+        Configured production-grid engine.
+    """
     axes = build_axes_dict_from_cli_args(args_dict)
     coordinate_system = _resolve_coordinate_system_from_args(args_dict)
+    resolved_model_version = model_version or resolve_single_model_version(
+        args_dict.get("model_version")
+    )
     if coordinate_system == "ra_dec":
         observing_location = build_observing_location(
             site=args_dict["site"],
-            model_version=args_dict["model_version"],
+            model_version=resolved_model_version,
         )
     elif coordinate_system == "horizontal":
         coordinate_system = "horizontal"
@@ -374,8 +404,9 @@ def build_production_grid_engine(args_dict, array_layout_name=None):
         raise ValueError("Must provide either both azimuth/zenith or both ra/dec axis definitions.")
     resolved_layout_name = array_layout_name or resolve_array_layout_name(
         args_dict.get("array_layout_name"),
-        resolve_single_model_version(args_dict.get("model_version")),
+        resolved_model_version,
     )
+
     return ProductionGridEngine(
         axes=axes,
         coordinate_system=coordinate_system,
@@ -386,6 +417,7 @@ def build_production_grid_engine(args_dict, array_layout_name=None):
         ),
         lookup_table=args_dict.get("corsika_limits"),
         array_layout_name=resolved_layout_name,
+        lookup_nsb_rate=_resolve_nsb_rate(args_dict, resolved_model_version),
     )
 
 
@@ -903,18 +935,24 @@ def _build_rows_for_point(
     return rows
 
 
-def _generate_observation_points_from_axes(azimuth_values, zenith_values, corsika_limits):
+def _generate_observation_points_from_axes(
+    azimuth_values,
+    zenith_values,
+    corsika_limits,
+    nsb_rate=1.0,
+):
     """Sample azimuth * zenith grid with optional CORSIKA limits interpolation."""
     points = []
     for azimuth, zenith in itertools.product(azimuth_values, zenith_values):
         point = {
             "azimuth": azimuth,
             "zenith_angle": zenith,
+            "nsb_rate": float(nsb_rate),
         }
         if corsika_limits is not None:
             attach_lookup_limits_to_point(
                 point,
-                corsika_limits.interpolate_point(zenith, azimuth),
+                corsika_limits.interpolate_point(zenith, azimuth, nsb=nsb_rate),
                 getattr(corsika_limits, "lookup_field_units", None),
             )
         points.append(point)
@@ -993,7 +1031,8 @@ def _generate_observation_grids_per_layout(args_dict, grid_axes):
 
     Uses either ProductionGridEngine or explicit azimuth/zenith axes.
     """
-    observation_grids_per_layout = {}
+    observation_grids_per_model_version = {}
+    observation_grid_cache = {}
     resolved_layout_names = {
         model_version: resolve_array_layout_name(args_dict.get("array_layout_name"), model_version)
         for model_version in grid_axes["model_version"]
@@ -1003,14 +1042,19 @@ def _generate_observation_grids_per_layout(args_dict, grid_axes):
 
     for model_version in grid_axes["model_version"]:
         resolved_layout_name = resolved_layout_names[model_version]
-        if resolved_layout_name in observation_grids_per_layout:
+        nsb_rate = _resolve_nsb_rate(args_dict, model_version)
+        cache_key = (resolved_layout_name, nsb_rate, use_shared_axes_definition)
+        if cache_key in observation_grid_cache:
+            observation_grids_per_model_version[model_version] = observation_grid_cache[cache_key]
             continue
 
         if use_shared_axes_definition:
-            observation_grids_per_layout[resolved_layout_name] = build_production_grid_engine(
+            observation_grid_cache[cache_key] = build_production_grid_engine(
                 args_dict,
                 array_layout_name=resolved_layout_name,
+                model_version=model_version,
             ).generate_simulation_grid()
+            observation_grids_per_model_version[model_version] = observation_grid_cache[cache_key]
             continue
 
         corsika_limits = None
@@ -1019,13 +1063,23 @@ def _generate_observation_grids_per_layout(args_dict, grid_axes):
                 corsika_limits_path,
                 array_layout_name=resolved_layout_name,
             )
-        observation_grids_per_layout[resolved_layout_name] = _generate_observation_points_from_axes(
+        observation_grid_cache[cache_key] = _generate_observation_points_from_axes(
             azimuth_values=grid_axes["azimuth_angle"],
             zenith_values=grid_axes["zenith_angle"],
             corsika_limits=corsika_limits,
+            nsb_rate=nsb_rate,
         )
+        observation_grids_per_model_version[model_version] = observation_grid_cache[cache_key]
 
-    return observation_grids_per_layout, resolved_layout_names
+    return observation_grids_per_model_version, resolved_layout_names
+
+
+def _resolve_nsb_rates_per_model_version(args_dict, model_versions):
+    """Resolve NSB interpolation rate per model version with a safe fallback."""
+    return {
+        model_version: _resolve_nsb_rate(args_dict, model_version)
+        for model_version in model_versions
+    }
 
 
 def _build_observation_params_for_point(
@@ -1039,6 +1093,7 @@ def _build_observation_params_for_point(
     core_scatter_number,
     view_cone_min,
     configured_view_cone_max,
+    nsb_rate,
 ):
     """Build observation parameters and derived lookup-limited values for one grid point."""
     lookup_core_scatter_max = point.get("upper_radius_limit")
@@ -1053,6 +1108,7 @@ def _build_observation_params_for_point(
         "ra": point.get("ra"),
         "dec": point.get("dec"),
         "model_version": model_version,
+        "nsb_rate": float(nsb_rate),
         "array_layout_name": resolved_layout_name,
         "corsika_le_interaction": corsika_le,
         "corsika_he_interaction": corsika_he,
@@ -1109,8 +1165,12 @@ def build_simulation_jobs(args_dict):
     core_scatter_number = int(core_scatter[0])
     view_cone_min = view_cone[0]
     configured_view_cone_max = view_cone[1]
-    observation_grids_per_layout, resolved_layout_names = _generate_observation_grids_per_layout(
-        args_dict, grid_axes
+    observation_grids_per_model_version, resolved_layout_names = (
+        _generate_observation_grids_per_layout(args_dict, grid_axes)
+    )
+    nsb_rates_per_model_version = _resolve_nsb_rates_per_model_version(
+        args_dict,
+        grid_axes["model_version"],
     )
     logger.info(
         "Applying job constraints: energy clipped to configured energy_range, "
@@ -1127,7 +1187,7 @@ def build_simulation_jobs(args_dict):
         grid_axes["corsika_he_interaction"],
     ):
         resolved_layout_name = resolved_layout_names[model_version]
-        for point in observation_grids_per_layout[resolved_layout_name]:
+        for point in observation_grids_per_model_version[model_version]:
             observation_params = _build_observation_params_for_point(
                 point=point,
                 primary=primary,
@@ -1139,6 +1199,7 @@ def build_simulation_jobs(args_dict):
                 core_scatter_number=core_scatter_number,
                 view_cone_min=view_cone_min,
                 configured_view_cone_max=configured_view_cone_max,
+                nsb_rate=point.get("nsb_rate", nsb_rates_per_model_version[model_version]),
             )
             rows.extend(
                 _build_rows_for_point(
