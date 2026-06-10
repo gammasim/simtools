@@ -65,7 +65,7 @@ def _serialize_job_row(job_row):
         "primary": job_row["primary"],
         "core_scatter_number": int(job_row["core_scatter_number"]),
         "showers_per_run": int(job_row["showers_per_run"]),
-        "nsb_rate": float(job_row.get("nsb_rate", 1.0)),
+        "nsb_rate": float(job_row["nsb_rate"]),
         "model_version": job_row["model_version"],
         "array_layout_name": job_row["array_layout_name"],
         "corsika_le_interaction": job_row["corsika_le_interaction"],

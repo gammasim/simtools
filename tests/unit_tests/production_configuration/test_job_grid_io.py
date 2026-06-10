@@ -61,6 +61,15 @@ def test_serialize_job_grid_rejects_non_ecsv_output(tmp_test_directory):
         serialize_job_grid(_job_rows(), output_file, metadata=_metadata())
 
 
+def test_serialize_job_grid_requires_nsb_rate(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "job_grid.ecsv"
+    rows = _job_rows()
+    rows[0].pop("nsb_rate")
+
+    with pytest.raises(KeyError, match="nsb_rate"):
+        serialize_job_grid(rows, output_file, metadata=_metadata())
+
+
 def test_read_job_grid_rejects_non_ecsv_input(tmp_test_directory):
     input_file = Path(tmp_test_directory) / "job_grid.txt"
     input_file.write_text("dummy", encoding="utf-8")

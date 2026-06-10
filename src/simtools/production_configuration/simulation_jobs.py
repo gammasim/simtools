@@ -357,7 +357,7 @@ def build_axes_dict_from_cli_args(args_dict):
 def _resolve_nsb_rate(args_dict, model_version):
     """Resolve the NSB interpolation rate for one model version."""
     if not args_dict.get("site") or not model_version:
-        return 1.0
+        raise ValueError("site and model_version are required to resolve nsb_rate.")
     return float(
         SiteModel(
             model_version=model_version,
@@ -722,6 +722,8 @@ def _interpolate_corsika_limits(corsika_limits, zenith_angle, azimuth_angle=None
         return None
     if not isinstance(corsika_limits, CorsikaLimitsLookup):
         corsika_limits = CorsikaLimitsLookup(corsika_limits)
+    if nsb_level is None:
+        raise ValueError("nsb_rate is required to interpolate lookup limits.")
     return corsika_limits.interpolate_point(
         zenith_angle,
         0.0 * u.deg if azimuth_angle is None else azimuth_angle,
