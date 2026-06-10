@@ -218,6 +218,7 @@ def generate_submission_script(args_dict):
         Arguments dictionary.
     """
     apptainer_images = _resolve_apptainer_images(args_dict["apptainer_image"])
+    job_grid_file = Path(args_dict["job_grid_file"]).expanduser().resolve()
     job_specs, job_grid_metadata = build_job_specs(args_dict, list(apptainer_images.keys()))
     grouped_job_specs = _group_job_specs_by_label(job_specs)
     params_fields = list(_PARAMS_FIELDS)
@@ -225,12 +226,17 @@ def generate_submission_script(args_dict):
         if any(job_spec.get(field) not in (None, "") for job_spec in job_specs):
             params_fields.append(field)
 
-    work_dir = Path(args_dict["output_path"])
-    htcondor_log_path = Path(
-        args_dict["htcondor_log_path"]
-        if args_dict.get("htcondor_log_path")
-        else work_dir / "htcondor_logs"
-    )
+    work_dir = Path(args_dict["output_path"]).expanduser()
+    if not work_dir.is_absolute():
+        work_dir = (job_grid_file.parent / work_dir).resolve()
+
+    htcondor_log_path_arg = args_dict.get("htcondor_log_path")
+    if htcondor_log_path_arg:
+        htcondor_log_path = Path(htcondor_log_path_arg).expanduser()
+        if not htcondor_log_path.is_absolute():
+            htcondor_log_path = (work_dir / htcondor_log_path).resolve()
+    else:
+        htcondor_log_path = work_dir / "htcondor_logs"
     htcondor_dirs = {
         "log": htcondor_log_path / "log",
         "error": htcondor_log_path / "error",
@@ -404,7 +410,6 @@ pack_for_grid_register="{bash_indices["pack_for_grid_register"]}"
 energy_range_tag="{energy_range_tag}"
 job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 {scan_label_block}{overwrite_parameters_block}
-
 simtools-simulate-prod \\
     --simulation_software {args_dict["simulation_software"]} \\
     --label "$job_label" \\
