@@ -134,7 +134,7 @@ def test_read_mirror_list_from_ecsv_empty(io_handler, tmp_test_directory, mirror
 
 def test_read_mirror_list_from_ecsv_no_db(io_handler):
     mirror_list_file = io_handler.get_test_data_file(
-        file_name="MLTdata-preproduction.ecsv",
+        file_name="manual_fixtures/MLTdata-preproduction.ecsv",
     )
     logger.info(f"Using mirror list {mirror_list_file}")
     with pytest.raises(TypeError):

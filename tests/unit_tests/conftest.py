@@ -82,7 +82,7 @@ def _is_db_unit_test(request):
 
 @functools.lru_cache
 def _load_mock_db_json(file_name):
-    mock_db_dir = Path(__file__).resolve().parent.parent / "resources" / "mock_db"
+    mock_db_dir = Path(__file__).resolve().parent.parent / "resources/manual_fixtures" / "mock_db"
     file_path = mock_db_dir / file_name
     with file_path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -873,22 +873,34 @@ _TEST_DATA_FILES = {
         "sim_telarray",
         "gamma",
     ): "tests/resources/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.simtel.zst",
-    # TODO proton file can go?
-    (
-        "sim_telarray",
-        "proton",
-    ): "tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test.simtel.zst",
     (
         "sim_telarray_hdata",
         "gamma",
     ): "tests/resources/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.hdata.zst",
-    ("telescope_positions", "North"): "tests/resources/telescope_positions-North-ground.ecsv",
+    (
+        "production_dl2_fits",
+        "20deg",
+    ): "tests/resources/manual_fixtures/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
+    (
+        "production_dl2_fits",
+        "40deg",
+    ): "tests/resources/manual_fixtures/production_dl2_fits/prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
+    (
+        "telescope_positions",
+        "North",
+    ): "tests/resources/manual_fixtures/telescope_positions-North-ground.ecsv",
     (
         "telescope_positions",
         "North-calibration",
-    ): "tests/resources/telescope_positions-North-with-calibration-devices-ground.ecsv",
-    ("telescope_positions", "North-utm"): "tests/resources/telescope_positions-North-utm.ecsv",
-    ("telescope_positions", "South"): "tests/resources/telescope_positions-South-ground.ecsv",
+    ): "tests/resources/manual_fixtures/telescope_positions-North-with-calibration-devices-ground.ecsv",
+    (
+        "telescope_positions",
+        "North-utm",
+    ): "tests/resources/manual_fixtures/telescope_positions-North-utm.ecsv",
+    (
+        "telescope_positions",
+        "South",
+    ): "tests/resources/manual_fixtures/telescope_positions-South-ground.ecsv",
 }
 
 

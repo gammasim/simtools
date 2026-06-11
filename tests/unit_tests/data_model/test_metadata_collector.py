@@ -120,7 +120,7 @@ def test_get_site(args_dict_site):
 
     _collector_2 = metadata_collector.MetadataCollector(
         args_dict=args_dict_site,
-        metadata_file_name="tests/resources/telescope_positions-North-utm.meta.yml",
+        metadata_file_name="tests/resources/manual_fixtures/telescope_positions-North-utm.meta.yml",
     )
     assert _collector_2.get_site(from_input_meta=True) == "North"
     assert _collector_2.get_site(from_input_meta=False) == "South"  # from args_dict
@@ -140,7 +140,9 @@ def test_read_input_metadata_from_file(
     ):
         metadata_1._read_input_metadata_from_file()
 
-    metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"
+    metadata_1.args_dict["input_meta"] = (
+        "tests/resources/manual_fixtures/MLTdata-preproduction.meta.yml"
+    )
     assert len(metadata_1._read_input_metadata_from_file()) > 0
 
     test_dict = {
@@ -153,7 +155,7 @@ def test_read_input_metadata_from_file(
     with pytest.raises(ValueError, match=r"^More than one metadata entry found in"):
         metadata_1._read_input_metadata_from_file()
 
-    metadata_1.args_dict["input_meta"] = "tests/resources/telescope_positions-North-utm.ecsv"
+    metadata_1.args_dict["input_meta"] = get_test_data_file("telescope_positions", "North-utm")
     assert len(metadata_1._read_input_metadata_from_file()) > 0
 
     metadata_1.args_dict["input_meta"] = "tests/resources/file_not_there.ecsv"

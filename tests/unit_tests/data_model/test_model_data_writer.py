@@ -144,7 +144,9 @@ def test_validate_and_transform(num_gains_schema_file):
     with pytest.raises(TypeError):
         w_1.validate_and_transform(product_data_table=None, validate_schema_file=None)
 
-    _table = Table.read("tests/resources/MLTdata-preproduction.ecsv", format=ascii_format)
+    _table = Table.read(
+        "tests/resources/manual_fixtures/MLTdata-preproduction.ecsv", format=ascii_format
+    )
     return_table = w_1.validate_and_transform(
         product_data_table=_table,
         validate_schema_file=SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml",

@@ -14,19 +14,13 @@ from simtools.production_configuration.derive_production_statistics import (
 
 
 @pytest.fixture
-def test_fits_file():
-    return (
-        "tests/resources/production_dl2_fits/"
-        "prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz"
-    )
+def test_fits_file(get_test_data_file):
+    return get_test_data_file("production_dl2_fits", "20deg")
 
 
 @pytest.fixture
-def test_fits_file_2():
-    return (
-        "tests/resources/production_dl2_fits/"
-        "prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz"
-    )
+def test_fits_file_2(get_test_data_file):
+    return get_test_data_file("production_dl2_fits", "40deg")
 
 
 @pytest.fixture

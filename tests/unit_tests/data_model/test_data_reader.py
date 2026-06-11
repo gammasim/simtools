@@ -39,9 +39,9 @@ def test_read_table_from_file_and_validate(get_test_data_file):
 
     assert isinstance(
         data_reader.read_table_from_file(
-            "tests/resources/telescope_positions-North-utm-without-cta-meta.ecsv",
+            "tests/resources/manual_fixtures/telescope_positions-North-utm-without-cta-meta.ecsv",
             validate=True,
-            metadata_file="tests/resources/telescope_positions-North-utm.meta.yml",
+            metadata_file="tests/resources/manual_fixtures/telescope_positions-North-utm.meta.yml",
         ),
         Table,
     )
