@@ -5,6 +5,7 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 
+from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.reporting.docs_read_parameters import ParameterDelta, ReadParameters
 from simtools.utils import names
 
@@ -218,7 +219,7 @@ def test__convert_to_md(telescope_model_lst, tmp_test_directory, mocker):
         read_parameters._convert_to_md(parameter_name, "1.0.0", "invalid-file.dat")
 
     # testing with valid file
-    valid_file = Path("tests/resources/model_parameters/spe_LST_2022-04-27_AP2.0e-4.dat")
+    valid_file = Path(f"{TEST_RESOURCES_GENERATED}/spe_LST_2022-04-27_AP2.0e-4.dat")
     new_file = read_parameters._convert_to_md(parameter_name, "1.0.0", str(valid_file))
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()

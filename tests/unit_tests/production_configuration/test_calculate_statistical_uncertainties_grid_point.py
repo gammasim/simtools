@@ -4,6 +4,7 @@ import astropy.units as u
 import numpy as np
 import pytest
 
+from simtools.constants import TEST_RESOURCES_STATIC
 from simtools.io import ascii_handler
 from simtools.production_configuration.calculate_statistical_uncertainties_grid_point import (
     StatisticalUncertaintyEvaluator,
@@ -26,7 +27,7 @@ def test_fits_file_2(get_test_data_file):
 @pytest.fixture
 def metric():
     return ascii_handler.collect_data_from_file(
-        "tests/resources/production_simulation_config_metrics.yml"
+        f"{TEST_RESOURCES_STATIC}/production_simulation_config_metrics.yml"
     )
 
 

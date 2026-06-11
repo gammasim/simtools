@@ -23,6 +23,9 @@ MODEL_PARAMETER_SCHEMA_URL = (
 )
 # Path to resource files
 RESOURCE_PATH = files("simtools") / "resources"
+# Paths to test resources
+TEST_RESOURCES_STATIC = "tests/resources/static"
+TEST_RESOURCES_GENERATED = "tests/resources/generated"
 
 # Maximum value allowed for random seeds in sim_telarray
 SIMTEL_MAX_SEED = 2147483647

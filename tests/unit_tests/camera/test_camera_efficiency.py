@@ -11,6 +11,7 @@ import pytest
 from astropy.table import Table
 
 from simtools.camera.camera_efficiency import CameraEfficiency
+from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 
 logger = logging.getLogger()
@@ -53,7 +54,7 @@ def camera_efficiency_lst(config_data_lst, mocker):
 def prepare_results_file(camera_efficiency_lst, mocker, tmp_test_directory):
     # The actual test resource file has "table_" and "validate_camera_efficiency" in the name
     test_resource_file = Path(
-        "tests/resources/camera_efficiency/"
+        f"{TEST_RESOURCES_GENERATED}/camera_efficiency/"
         "camera_efficiency_North_LSTN-02_za0.0deg_azm000deg_shower.ecsv"
     )
     test_results_file = (
@@ -162,7 +163,7 @@ def test_analyze_has_results(camera_efficiency_lst, prepare_results_file):
 
 def test_analyze_from_file(camera_efficiency_lst, mocker):
     camera_efficiency_lst._file["sim_telarray"] = Path(
-        "tests/resources/camera_efficiency/"
+        f"{TEST_RESOURCES_GENERATED}/camera_efficiency/"
         "camera_efficiency_North_MSTx-NectarCam_za0.0deg_azm000deg_nsb.dat"
     )
     mocker.patch.object(CameraEfficiency, "results_summary", return_value="summary")

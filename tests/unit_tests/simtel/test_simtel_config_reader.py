@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 from astropy.tests.helper import assert_quantity_allclose
 
-from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, TEST_RESOURCES_STATIC
 from simtools.simtel.simtel_config_reader import SimtelConfigReader, get_list_of_simtel_parameters
 from simtools.utils import names
 
@@ -18,7 +18,7 @@ logger = logging.getLogger()
 
 @pytest.fixture
 def simtel_config_file():
-    return "tests/resources/manual_fixtures/simtel_config_test_la_palma.cfg"
+    return f"{TEST_RESOURCES_STATIC}/simtel_config_test_la_palma.cfg"
 
 
 @pytest.fixture
