@@ -8,7 +8,7 @@ applications:
     parameter_version: 1.0.0
     site: North
 collection:
-  output_path: tests/resources/model_parameters
+  output_path: tests/resources/generated/model_parameters
   files:
   - Benn_LaPalma_sky_converted.lis
 schema_name: application_workflow.metaschema

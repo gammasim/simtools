@@ -18,7 +18,7 @@ applications:
     site: North
     telescope: LSTN-01
 collection:
-  output_path: tests/resources/model_parameters
+  output_path: tests/resources/generated/model_parameters
   files:
   - mirror_list-2.0.0.json
   - mirror_CTA-N-LST1_v2019-03-31_rotated.dat

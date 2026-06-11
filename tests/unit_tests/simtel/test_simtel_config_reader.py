@@ -18,7 +18,7 @@ logger = logging.getLogger()
 
 @pytest.fixture
 def simtel_config_file():
-    return "tests/resources/simtel_config_test_la_palma.cfg"
+    return "tests/resources/manual_fixtures/simtel_config_test_la_palma.cfg"
 
 
 @pytest.fixture

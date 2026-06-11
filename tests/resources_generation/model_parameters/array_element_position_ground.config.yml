@@ -9,7 +9,7 @@ applications:
     site: North
     telescope: MSTN-09
 collection:
-  output_path: tests/resources/model_parameters
+  output_path: tests/resources/generated/model_parameters
   files:
   - array_element_position_ground-2.0.0.json
 schema_name: application_workflow.metaschema

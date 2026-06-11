@@ -17,8 +17,11 @@ from simtools.io import ascii_handler
 logger = logging.getLogger()
 
 
-mirror_file = "tests/resources/MLTdata-preproduction.ecsv"
+mirror_file = "tests/resources/manual_fixtures/MLTdata-preproduction.ecsv"
 mirror_2f_schema_file = SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
+num_gains_test_file = (
+    "tests/resources/manual_fixtures/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
+)
 
 
 @pytest.fixture
@@ -108,9 +111,7 @@ def test_validate_and_transform(caplog, mocker):
         assert isinstance(_table, Table)
     assert "Validating tabled data from:" in caplog.text
 
-    data_validator.data_file_name = (
-        "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
-    )
+    data_validator.data_file_name = num_gains_test_file
     data_validator.schema_file_name = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
     mock_prepare_model_parameter = mocker.patch(
         "simtools.data_model.validate_data.DataValidator._prepare_model_parameter"
@@ -139,7 +140,7 @@ def test_validate_data_file(caplog, model_parameter_json):
 
 
 def test_validate_parameter_and_file_name(caplog):
-    num_gain_file = "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
+    num_gain_file = num_gains_test_file
     parameter = "num_gains"
     parameter_version = "1.0.0"
 
@@ -1166,7 +1167,7 @@ def test_validate_data_files_directory(tmp_test_directory, caplog):
 
 def test_validate_data_files_single_file(caplog):
     """Test validate_data_files with a single file."""
-    test_file = "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
+    test_file = num_gains_test_file
 
     with caplog.at_level(logging.INFO):
         validate_data.DataValidator.validate_data_files(file_name=test_file)
@@ -1177,7 +1178,7 @@ def test_validate_data_files_single_file(caplog):
 
 def test_validate_data_files_with_schema_file(caplog):
     """Test validate_data_files with explicit schema file."""
-    test_file = "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
+    test_file = num_gains_test_file
     schema_file = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
 
     with caplog.at_level(logging.INFO):
@@ -1196,7 +1197,7 @@ def test_validate_data_files_no_input():
 
 def test_validate_data_files_check_exact_data_type(caplog):
     """Test validate_data_files with check_exact_data_type flag."""
-    test_file = "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
+    test_file = num_gains_test_file
 
     with caplog.at_level(logging.INFO):
         validate_data.DataValidator.validate_data_files(

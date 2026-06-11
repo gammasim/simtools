@@ -25,7 +25,7 @@ applications:
     view_cone: 0 deg 10 deg
     zenith_angle: 20
 collection:
-  output_path: tests/resources/
+  output_path: tests/resources/generated/
   files:
   - gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.simtel.zst
   - gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.hdata.zst

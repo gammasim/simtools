@@ -9,7 +9,7 @@ applications:
     site: North
     telescope: LSTN-design
 collection:
-  output_path: tests/resources/model_parameters
+  output_path: tests/resources/generated/model_parameters
   files:
   - spe_LST_2022-04-27_AP2.0e-4.dat
 schema_name: application_workflow.metaschema

@@ -24,7 +24,7 @@ applications:
     site: South
     zenith_angle: 40
 collection:
-  output_path: tests/resources/
+  output_path: tests/resources/generated/
   files:
   - gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst
 schema_name: application_workflow.metaschema

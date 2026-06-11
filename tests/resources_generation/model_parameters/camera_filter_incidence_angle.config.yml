@@ -9,7 +9,7 @@ applications:
     site: South
     telescope: SSTS-design
 collection:
-  output_path: tests/resources/model_parameters
+  output_path: tests/resources/generated/model_parameters
   files:
   - sst_photon_incidence_angle_camera_window.ecsv
 schema_name: application_workflow.metaschema

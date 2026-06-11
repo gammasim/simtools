@@ -61,11 +61,11 @@ def ray_tracing_lst(telescope_model_lst_mock, site_model_north):
     output_directory = ray_tracing_lst.output_directory
     output_directory.mkdir(parents=True, exist_ok=True)
     shutil.copy(
-        "tests/resources/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv",
+        "tests/resources/manual_fixtures/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv",
         output_directory.joinpath("results"),
     )
     shutil.copy(
-        "tests/resources/ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000"
+        "tests/resources/manual_fixtures/ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000"
         "deg_validate_optics.lis.gz",
         output_directory,
     )

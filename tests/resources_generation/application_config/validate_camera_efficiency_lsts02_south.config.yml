@@ -10,7 +10,7 @@ applications:
     write_reference_nsb_rate_as_parameter: true
     zenith_angle: 0.
 collection:
-  output_path: tests/resources/camera_efficiency
+  output_path: tests/resources/generated/camera_efficiency
   files:
   - camera_efficiency_summary_South_LSTS-02_za0.0deg_azm000deg.yml
 schema_name: application_workflow.metaschema

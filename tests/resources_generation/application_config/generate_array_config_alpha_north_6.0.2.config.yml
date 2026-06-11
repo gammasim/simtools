@@ -11,7 +11,7 @@ applications:
     site: North
     label: test
 collection:
-  output_path: tests/resources/sim_telarray_configurations/6.0.2/
+  output_path: tests/resources/generated/sim_telarray_configurations/6.0.2/
   files:
   - CTA-alpha-North_test.cfg
   - CTA-North-LSTN-01_test.cfg
