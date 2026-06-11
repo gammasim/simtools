@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 r"""
-Generate an simulation job grid from production choices.
+Generate a simulation job grid from production choices.
 
 ``simtools-production-generate-grid`` expands a production definition into an ECSV
 table in which each row is one executable simulation run. The expansion combines
