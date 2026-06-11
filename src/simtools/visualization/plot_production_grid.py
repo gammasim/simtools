@@ -5,14 +5,32 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from astropy import units as u
 from astropy.table import Table
+
+from simtools.production_configuration.job_grid_io import JOB_GRID_QUANTITY_FIELDS
 
 logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
+PLOT_VALUE_KEYS = tuple(
+    key
+    for key in JOB_GRID_QUANTITY_FIELDS
+    if key not in ("azimuth_angle", "zenith_angle", "view_cone_min")
+)
 DEFAULT_OUTPUT_FILE_EXTENSION = "png"
 DEFAULT_MARKER_SIZE = 8
 DEFAULT_GRID_LINE_WIDTH = 0.6
 GRID_GROUP_ROUND_DECIMALS = 6
+
+
+def _azimuth_zenith_output_file_stem(value_key):
+    """Return output stem for azimuth/zenith color-scale plots."""
+    return f"production_grid_altaz_{value_key}"
+
+
+def _zenith_profile_output_file_stem(value_key):
+    """Return output stem for zenith profile plots."""
+    return f"production_grid_zenith_profile_{value_key}"
 
 
 class ProductionGridPlotter:
@@ -78,21 +96,38 @@ class ProductionGridPlotter:
         }.issubset(self.grid_columns)
         return self._convert_ecsv_table_to_grid_points(grid_table)
 
-    @staticmethod
-    def _convert_ecsv_table_to_grid_points(grid_table):
+    @classmethod
+    def _convert_ecsv_table_to_grid_points(cls, grid_table):
         """Convert an ECSV grid-point table to plain dictionaries."""
-        return [
-            {
-                column_name: (
-                    row[column_name].item()
-                    if isinstance(row[column_name], np.generic)
-                    else row[column_name]
-                )
-                for column_name in grid_table.colnames
-                if not np.ma.is_masked(row[column_name])
-            }
-            for row in grid_table
-        ]
+        return [cls._convert_ecsv_row_to_grid_point(row, grid_table.colnames) for row in grid_table]
+
+    @staticmethod
+    def _plain_table_value(value):
+        """Return a plain scalar for non-masked table values."""
+        if np.ma.is_masked(value):
+            return None
+        if isinstance(value, np.generic):
+            return value.item()
+        return value
+
+    @classmethod
+    def _convert_ecsv_row_to_grid_point(cls, row, column_names):
+        """Convert one ECSV row and merge split value/unit quantity columns."""
+        point = {}
+        for column_name in column_names:
+            value = cls._plain_table_value(row[column_name])
+            if value is not None:
+                point[column_name] = value
+
+        for value_key in PLOT_VALUE_KEYS:
+            value_column, unit_column = JOB_GRID_QUANTITY_FIELDS[value_key]
+            if value_column not in point or unit_column not in point:
+                continue
+            point[value_key] = float(point[value_column]) * u.Unit(point[unit_column])
+            point.pop(value_column)
+            point.pop(unit_column)
+
+        return point
 
     @staticmethod
     def _extract_quantity_value(point, key):
@@ -112,6 +147,8 @@ class ProductionGridPlotter:
             Extracted numeric value.
         """
         value = point.get(key)
+        if isinstance(value, u.Quantity):
+            return float(value.value)
         if isinstance(value, dict):
             if "value" in value:
                 return float(value["value"])
@@ -155,6 +192,7 @@ class ProductionGridPlotter:
         )
         ra = self._extract_first_available_quantity_value(point, ("ra", "ra_value"))
         dec = self._extract_first_available_quantity_value(point, ("dec", "dec_value"))
+        value_data = {value_key: point.get(value_key) for value_key in PLOT_VALUE_KEYS}
         point_ra = float(ra % 360.0) if ra is not None else None
         point_dec = float(dec) if dec is not None else None
 
@@ -165,6 +203,7 @@ class ProductionGridPlotter:
                 "zenith": zenith,
                 "ra": point_ra,
                 "dec": point_dec,
+                **value_data,
                 "visible_in_altaz": True,
             }
 
@@ -175,6 +214,7 @@ class ProductionGridPlotter:
                 "zenith": None,
                 "ra": float(ra % 360.0),
                 "dec": float(dec),
+                **value_data,
                 "visible_in_altaz": None,
             }
 
@@ -248,6 +288,30 @@ class ProductionGridPlotter:
         split_indices = np.nonzero(np.diff(visible_indices) > 1)[0] + 1
         segments = np.split(visible_indices, split_indices)
         return [segment for segment in segments if len(segment) >= 2]
+
+    @staticmethod
+    def _resolve_value_unit(plot_points, value_key):
+        """Resolve a representative unit string for one plotted value key."""
+        for point in plot_points:
+            value = point.get(value_key)
+            if isinstance(value, u.Quantity):
+                return str(value.unit)
+        return None
+
+    @staticmethod
+    def _plot_value(value):
+        """Return a plain numeric value for plotting."""
+        if isinstance(value, u.Quantity):
+            return float(value.value)
+        return float(value)
+
+    @classmethod
+    def _format_value_label_with_unit(cls, plot_points, value_key, value_label):
+        """Format a plot label with units when available in normalized points."""
+        unit_value = cls._resolve_value_unit(plot_points, value_key)
+        if unit_value:
+            return f"{value_label} [{unit_value}]"
+        return value_label
 
     @staticmethod
     def _has_plottable_radec_points(plot_points):
@@ -364,13 +428,15 @@ class ProductionGridPlotter:
         plt.close(figure)
 
     def _configure_altaz_axis(self, axis):
-        """Configure the Alt/Az polar projection axis."""
+        """Configure the azimuth/zenith polar projection axis."""
         axis.set_theta_zero_location("N")
         axis.set_theta_direction(-1)
         axis.set_rmax(90)
         axis.set_rticks(np.arange(10, 91, 10))
         axis.grid(True, color="gray", alpha=0.5, linestyle="--")
-        axis.set_title("Local Alt/Az", pad=18)
+        axis.set_title("Local Azimuth / Zenith", pad=18)
+        axis.set_xlabel("Azimuth [deg]")
+        axis.set_ylabel("")
 
     def _configure_radec_axis(self, axis, plot_points):
         """Configure the RA/Dec axis."""
@@ -496,14 +562,16 @@ class ProductionGridPlotter:
             secondary_color="tab:orange",
             x_key="azimuth",
             y_key="zenith",
-            panel_name="Alt/Az",
+            panel_name="Azimuth/Zenith",
             require_altaz_visibility=True,
             x_transform=np.radians,
         )
 
         hidden_points = sum(point["visible_in_altaz"] is False for point in plot_points)
         if hidden_points > 0:
-            logger.info(f"Skipping {hidden_points} RA/Dec points below the horizon in Alt/Az panel")
+            logger.info(
+                f"Skipping {hidden_points} RA/Dec points below the horizon in Azimuth/Zenith panel"
+            )
         return plotted_points
 
     def _plot_radec_points(self, axis, plot_points):
@@ -529,3 +597,154 @@ class ProductionGridPlotter:
             y_key="dec",
             panel_name="RA/Dec",
         )
+
+    @staticmethod
+    def _select_altaz_points_with_value(plot_points, value_key):
+        """Select native Alt/Az points that have valid coordinates and requested values."""
+        return [
+            point
+            for point in plot_points
+            if point.get("native_frame") == "altaz"
+            and point.get("azimuth") is not None
+            and point.get("zenith") is not None
+            and point.get(value_key) is not None
+        ]
+
+    def plot_azimuth_zenith_projection_with_color_scale(
+        self, value_key, value_label, output_file_stem, plot_points=None
+    ):
+        """Plot azimuth/zenith points with a color scale for one value column."""
+        plot_points = self.normalize_grid_points() if plot_points is None else plot_points
+        value_label_with_unit = self._format_value_label_with_unit(
+            plot_points,
+            value_key,
+            value_label,
+        )
+        colored_points = self._select_altaz_points_with_value(plot_points, value_key)
+
+        if not colored_points:
+            logger.warning(f"No azimuth/zenith points with '{value_key}' available for plotting")
+            return
+
+        figure = plt.figure(figsize=(8, 7))
+        axis = figure.add_subplot(1, 1, 1, projection="polar")
+        self._configure_altaz_axis(axis)
+
+        azimuth_values = np.radians([point["azimuth"] for point in colored_points])
+        zenith_values = [point["zenith"] for point in colored_points]
+        color_values = [self._plot_value(point[value_key]) for point in colored_points]
+
+        scatter = axis.scatter(
+            azimuth_values,
+            zenith_values,
+            c=color_values,
+            cmap="viridis",
+            s=DEFAULT_MARKER_SIZE * 3,
+            edgecolors="black",
+            linewidths=0.3,
+        )
+
+        colorbar = figure.colorbar(scatter, ax=axis, pad=0.12)
+        colorbar.set_label(value_label_with_unit)
+        axis.set_title(f"Local Azimuth / Zenith colored by {value_label_with_unit}", pad=18)
+
+        figure.tight_layout(rect=(0.0, 0.0, 1.0, 0.95))
+        output_file = self.output_path / f"{output_file_stem}.{DEFAULT_OUTPUT_FILE_EXTENSION}"
+        figure.savefig(output_file, bbox_inches="tight", dpi=300)
+        logger.info(f"Saved azimuth/zenith color-scale plot to {output_file}")
+        plt.close(figure)
+
+    @staticmethod
+    def _available_plot_value_keys(plot_points):
+        """Return value keys present in at least one normalized Alt/Az point."""
+        return [
+            value_key
+            for value_key in PLOT_VALUE_KEYS
+            if any(
+                point["native_frame"] == "altaz" and point.get(value_key) is not None
+                for point in plot_points
+            )
+        ]
+
+    def plot_limit_projections(self):
+        """Plot all supported production-grid limit values."""
+        plot_points = self.normalize_grid_points()
+        for value_key in self._available_plot_value_keys(plot_points):
+            self.plot_azimuth_zenith_projection_with_color_scale(
+                value_key=value_key,
+                value_label=value_key,
+                output_file_stem=_azimuth_zenith_output_file_stem(value_key),
+                plot_points=plot_points,
+            )
+            self.plot_zenith_limits_for_azimuths(
+                value_key=value_key,
+                value_label=value_key,
+                output_file_stem=_zenith_profile_output_file_stem(value_key),
+                plot_points=plot_points,
+            )
+
+    @staticmethod
+    def _circular_azimuth_difference_degrees(first_azimuth, second_azimuth):
+        """Return minimal absolute difference between two azimuth angles."""
+        return abs(((first_azimuth - second_azimuth + 180.0) % 360.0) - 180.0)
+
+    def plot_zenith_limits_for_azimuths(
+        self,
+        value_key,
+        value_label,
+        output_file_stem,
+        azimuth_targets=(0.0, 180.0),
+        azimuth_tolerance_deg=1e-6,
+        plot_points=None,
+    ):
+        """Plot value versus zenith for selected azimuth pointings."""
+        plot_points = self.normalize_grid_points() if plot_points is None else plot_points
+        value_label_with_unit = self._format_value_label_with_unit(
+            plot_points,
+            value_key,
+            value_label,
+        )
+        altaz_points = self._select_altaz_points_with_value(plot_points, value_key)
+
+        if not altaz_points:
+            logger.warning(
+                f"No azimuth/zenith points with '{value_key}' available for zenith profiling"
+            )
+            return
+
+        figure, axis = plt.subplots(figsize=(8, 5))
+        plotted_series = 0
+        for azimuth_target in azimuth_targets:
+            selected_points = [
+                point
+                for point in altaz_points
+                if self._circular_azimuth_difference_degrees(point["azimuth"], azimuth_target)
+                <= azimuth_tolerance_deg
+            ]
+            if not selected_points:
+                continue
+
+            selected_points = sorted(selected_points, key=lambda point: point["zenith"])
+            zenith_values = [point["zenith"] for point in selected_points]
+            value_values = [self._plot_value(point[value_key]) for point in selected_points]
+            axis.plot(zenith_values, value_values, marker="o", label=f"az={azimuth_target:.0f} deg")
+            plotted_series += 1
+
+        if plotted_series == 0:
+            logger.warning(
+                f"No zenith profile points for '{value_key}' at azimuths {azimuth_targets}"
+            )
+            plt.close(figure)
+            return
+
+        axis.set_xlabel("Zenith angle [deg]")
+        axis.set_ylabel(value_label_with_unit)
+        axis.set_title(f"{value_label_with_unit} vs zenith angle")
+        axis.grid(True, color="gray", alpha=0.5, linestyle="--")
+        axis.legend(loc="best")
+        figure.tight_layout()
+
+        output_file = self.output_path / f"{output_file_stem}.{DEFAULT_OUTPUT_FILE_EXTENSION}"
+        figure.savefig(output_file, bbox_inches="tight", dpi=300)
+        logger.info(f"Saved zenith profile plot to {output_file}")
+        plt.close(figure)

@@ -27,6 +27,7 @@ JOB_GRID_COLUMNS = [
     "view_cone_max_value",
     "view_cone_max_unit",
     "showers_per_run",
+    "nsb_rate",
     "model_version",
     "array_layout_name",
     "corsika_le_interaction",
@@ -43,6 +44,7 @@ _QUANTITY_FIELDS = {
     "view_cone_min": ("view_cone_min_value", "view_cone_min_unit"),
     "view_cone_max": ("view_cone_max_value", "view_cone_max_unit"),
 }
+JOB_GRID_QUANTITY_FIELDS = dict(_QUANTITY_FIELDS)
 
 _OPTIONAL_ANGLE_FIELDS = ("ra", "dec")
 
@@ -63,6 +65,7 @@ def _serialize_job_row(job_row):
         "primary": job_row["primary"],
         "core_scatter_number": int(job_row["core_scatter_number"]),
         "showers_per_run": int(job_row["showers_per_run"]),
+        "nsb_rate": float(job_row["nsb_rate"]),
         "model_version": job_row["model_version"],
         "array_layout_name": job_row["array_layout_name"],
         "corsika_le_interaction": job_row["corsika_le_interaction"],
@@ -93,6 +96,7 @@ def _deserialize_job_row(serialized_row):
         "primary": serialized_row["primary"],
         "core_scatter_number": int(serialized_row["core_scatter_number"]),
         "showers_per_run": int(serialized_row["showers_per_run"]),
+        "nsb_rate": float(serialized_row.get("nsb_rate", 1.0)),
         "model_version": serialized_row["model_version"],
         "array_layout_name": serialized_row["array_layout_name"],
         "corsika_le_interaction": serialized_row["corsika_le_interaction"],

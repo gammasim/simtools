@@ -23,6 +23,7 @@ axis (repeatable)
     Compact axis definition in the form
     ``--axis <name> <min> <unit> <max> <unit> <binning> [scaling]``.
     Example: ``--axis azimuth 310 deg 20 deg 3 linear``.
+    Supported axes are: azimuth, zenith, ra, dec, offset.
     Options for scaling are: linear, log, 1/cos.
 direction_grid_density (float or quantity, optional)
     Direction-grid density (typically in ``1/deg^2``).
@@ -55,6 +56,12 @@ showers_per_run_scaling (str, optional)
     ``fixed`` keeps showers per run unchanged.
     ``cosine_zenith`` applies ``showers_per_run * cos(zenith_angle)``
     (example: ``--showers_per_run_scaling cosine_zenith``).
+energy_max_scaling (tuple, optional)
+    Scale max energy with zenith angle as
+    ``energy_max_scaling_reference * cos(zenith_angle) ** power_index``.
+    Provide as ``<power_index> <reference_energy_value> <reference_energy_unit>``.
+    Disabled by default (``None``).
+    Example: ``--energy_max_scaling -2.5 300 TeV``.
 
 
 Example
@@ -67,7 +74,6 @@ To generate a standard zenith/azimuth grid of simulation points, execute:
             --array_layout_name alpha \
             --axis azimuth 310 deg 20 deg 3 linear \
             --axis zenith 30 deg 40 deg 2 linear \
-            --axis nsb 4 MHz 5 MHz 2 linear \
             --axis offset 0 deg 10 deg 2 linear \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
 
@@ -80,7 +86,6 @@ execute:
             --array_layout_name alpha \
             --axis ra 0 deg 360 deg 36 linear \
             --axis dec -90 deg 90 deg 18 linear \
-            --axis nsb 4 MHz 4 MHz 1 linear \
             --axis offset 0 deg 10 deg 2 linear \
             --time_of_observation "2017-09-16 00:00:00" \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
@@ -94,7 +99,6 @@ full zenith coverage from 0 to 70 deg and a directed azimuth window), execute:
             --array_layout_name alpha \
             --axis ra 0 deg 360 deg 1 linear \
             --axis dec -40 deg 80 deg 1 linear \
-            --axis nsb 4 MHz 4 MHz 1 linear \
             --axis offset 0 deg 10 deg 2 linear \
             --direction_grid_density 0.25 1/deg^2 \
             --local_zenith_range 0 deg 70 deg \
@@ -102,6 +106,8 @@ full zenith coverage from 0 to 70 deg and a directed azimuth window), execute:
             --time_of_observation "2017-09-16 00:00:00" \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
 """
+
+import argparse
 
 from simtools.application_control import build_application
 from simtools.configuration import defaults
@@ -122,6 +128,7 @@ def _add_arguments(parser):
         help=(
             "Compact axis definition: --axis <name> <min> <unit> <max> <unit> <binning> "
             "[scaling]. May be repeated. "
+            "Supported axes: azimuth, zenith, ra, dec, offset. "
             "Options for scaling are: linear, log, 1/cos"
         ),
     )
@@ -233,6 +240,28 @@ def _add_arguments(parser):
         choices=["fixed", "cosine_zenith"],
         required=False,
         default="fixed",
+    )
+    parser.add_argument(
+        "--energy_max_scaling",
+        help=(
+            "Scale max energy with zenith angle as "
+            "energy_max_scaling_reference * cos(zenith_angle) ** power_index. "
+            "Provide: <power_index> <reference_energy_value> <reference_energy_unit> "
+            "(for example: --energy_max_scaling -2.5 300 TeV)."
+            "Max energy limited by value given through '--energy_range'."
+        ),
+        nargs=3,
+        type=str,
+        metavar=("POWER_INDEX", "REFERENCE_ENERGY_VALUE", "REFERENCE_ENERGY_UNIT"),
+        required=False,
+        default=None,
+    )
+    parser.add_argument(
+        "--energy_max_scaling_index",
+        help=argparse.SUPPRESS,
+        type=float,
+        required=False,
+        default=None,
     )
 
 

@@ -11,7 +11,6 @@ applications:
     # direction_grid_density in adaptive RA/Dec mode.
     - ra 0 deg 360 deg 1 linear
     - dec -40 deg 80 deg 1 linear
-    - nsb 4 MHz 4 MHz 1 linear
     - offset 0 deg 10 deg 2 linear
     # Explicit local-sky constraints for RA/Dec density filtering.
     local_zenith_range: 0 deg 70 deg
@@ -22,7 +21,7 @@ applications:
     corsika_he_interaction: epos
     corsika_le_interaction: urqmd
     energy_range: 30 GeV 300 GeV
-    corsika_limits: tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv
+    corsika_limits: tests/resources/corsika_simulation_limits/corsika_limits_north.ecsv
     model_version: 7.0.0
     showers_per_run: 5
     showers_per_run_power_law: 0.0 1 TeV

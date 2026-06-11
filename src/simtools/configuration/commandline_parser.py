@@ -955,7 +955,7 @@ _SHOWER_ARGS = {
     "core_scatter": {
         "help": "Scatter radius for shower cores (number of use; scatter radius).",
         "type": CommandLineParser.parse_integer_and_quantity,
-        "default": ["10 1400 m"],
+        "default": ["10 10000 m"],
     },
 }
 
