@@ -2,7 +2,7 @@
 applications:
 - application: simtools-production-derive-corsika-limits
   configuration:
-    event_data_file: tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.fits.gz
+    event_data_file: tests/resources/static/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.fits.gz
     allowed_losses:
     - core_distance,0.001,10
     - angular_distance,0.001,10
@@ -10,7 +10,7 @@ applications:
     output_file: corsika_simulation_limits.ecsv
     output_path: simtools-output
     plot_histograms: false
-    telescope_ids: tests/resources/production_layouts_telescope_ids.yml
+    telescope_ids: tests/resources/static/production_layouts_telescope_ids.yml
   integration_tests:
   - output_file: corsika_simulation_limits.ecsv
   - output_file: corsika_simulation_limits.meta.yml

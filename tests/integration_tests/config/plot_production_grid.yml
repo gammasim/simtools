@@ -2,7 +2,7 @@
 applications:
 - application: simtools-plot-production-grid
   configuration:
-    grid_points_file: tests/resources/production_grid_points_horizontal.ecsv
+    grid_points_file: tests/resources/static/production_grid_points_horizontal.ecsv
     output_path: simtools-output
   integration_tests:
   - output_file: production_grid_sky_projection.png

@@ -7,7 +7,7 @@ applications:
     - png
     log_level: debug
     model_version: 6.0.2
-    nsb_spectrum: tests/resources/model_parameters/Benn_LaPalma_sky_converted.lis
+    nsb_spectrum: tests/resources/generated/model_parameters/Benn_LaPalma_sky_converted.lis
     output_path: simtools-output
     site: South
     telescope: MSTx-FlashCam
@@ -25,7 +25,7 @@ applications:
       reference_parameter_name: nsb_pixel_rate
       tolerance: 1.e-1
   - reference_output_file: |
-      tests/resources/camera_efficiency/camera_efficiency_summary_South_MSTx-FlashCam_za0.0deg_azm000deg.yml
+      ${generated:camera_efficiency/camera_efficiency_summary_South_MSTx-FlashCam_za0.0deg_azm000deg.yml}
     tolerance: 1.e-3
     test_output_file: camera_efficiency_summary_South_MSTx-FlashCam_za0.0deg_azm000deg.yml
   model_version_use_current: true

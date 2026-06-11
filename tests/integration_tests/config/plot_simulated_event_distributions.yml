@@ -2,7 +2,7 @@
 applications:
 - application: simtools-plot-simulated-event-distributions
   configuration:
-    event_data_file: tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+    event_data_file: tests/resources/static/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
     output_path: simtools-output
   integration_tests:
   - output_file: core_distance_vs_energy_triggered.png

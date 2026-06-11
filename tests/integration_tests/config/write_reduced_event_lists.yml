@@ -3,8 +3,8 @@ applications:
 - application: simtools-write-reduced-event-lists
   configuration:
     input_files:
-    - tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test.simtel.zst
-    - tests/resources/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test.simtel.zst
+    - tests/resources/static/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test.simtel.zst
+    - tests/resources/static/proton_run000202_za20deg_azm000deg_North_alpha_6.0.0_test.simtel.zst
     output_path: simtools-output
   integration_tests:
   - output_file: proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test.reduced_event_data.hdf5
