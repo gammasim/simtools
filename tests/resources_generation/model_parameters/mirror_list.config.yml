@@ -11,6 +11,7 @@ applications:
 - application: simtools-db-get-parameter-from-db
   configuration:
     export_model_file: true
+    export_model_file_as_table: true
     output_path: ./tmp-test-resources/model_parameters/
     parameter: mirror_list
     parameter_version: 2.0.0
@@ -21,6 +22,7 @@ collection:
   files:
   - mirror_list-2.0.0.json
   - mirror_CTA-N-LST1_v2019-03-31_rotated.dat
+  - mirror_CTA-N-LST1_v2019-03-31_rotated.ecsv
 schema_name: application_workflow.metaschema
 schema_url: https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/application_workflow.metaschema.yml
 schema_version: 0.4.0

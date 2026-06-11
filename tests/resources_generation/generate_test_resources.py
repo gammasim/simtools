@@ -5,8 +5,11 @@
 import argparse
 import logging
 import shutil
+import urllib.error
+import urllib.request
 from pathlib import Path
 
+from simtools.io import ascii_handler
 from simtools.runners import simtools_runner
 
 logger = logging.getLogger(__name__)
@@ -14,6 +17,7 @@ logger = logging.getLogger(__name__)
 RESOURCE_GENERATION_DIR = Path(__file__).resolve().parent
 MANUAL_FIXTURES_DIR = RESOURCE_GENERATION_DIR / "manual_fixtures"
 RESOURCES_DIR = RESOURCE_GENERATION_DIR.parent / "resources"
+DOWNLOAD_CONFIG_FILE = RESOURCE_GENERATION_DIR / "download_files.yml"
 
 
 def copy_manual_fixtures(source_dir=MANUAL_FIXTURES_DIR, target_dir=RESOURCES_DIR):
@@ -48,11 +52,44 @@ def run_configured_applications(
         )
 
 
-def generate_simple_test_resources():
-    """Generate simple test resources."""
-    test_file = Path("tests/resources/test_file.list")
-    content = "This is a test file with two lines.\nUsed in unit tests.\n"
-    test_file.write_text(content, encoding="utf-8")
+def _validate_download_entry(entry, index):
+    """Validate a download entry from YAML configuration."""
+    if not isinstance(entry, dict):
+        raise ValueError(f"Download entry {index} must be a dictionary.")
+
+    required_keys = ("url", "description", "target_path")
+    missing_keys = [key for key in required_keys if not entry.get(key)]
+    if missing_keys:
+        missing_keys_str = ", ".join(missing_keys)
+        raise ValueError(f"Download entry {index} missing required keys: {missing_keys_str}")
+
+
+def download_configured_files(config_file=DOWNLOAD_CONFIG_FILE, target_dir=RESOURCES_DIR):
+    """Download files listed in YAML configuration into test resources."""
+    if not Path(config_file).exists():
+        logger.info("Download configuration file does not exist: %s", config_file)
+        return
+
+    download_config = ascii_handler.collect_data_from_file(config_file)
+    file_entries = download_config.get("files", []) if isinstance(download_config, dict) else []
+
+    if not isinstance(file_entries, list):
+        raise ValueError("Download configuration key 'files' must be a list.")
+
+    for index, entry in enumerate(file_entries):
+        _validate_download_entry(entry, index)
+
+        destination = Path(target_dir) / Path(entry["target_path"])
+        destination.parent.mkdir(parents=True, exist_ok=True)
+
+        logger.info("Downloading %s from %s to %s", entry["description"], entry["url"], destination)
+        try:
+            urllib.request.urlretrieve(entry["url"], destination)
+        except urllib.error.HTTPError as exc:
+            exc.close()
+            raise FileNotFoundError(
+                f"Failed to download '{entry['description']}' from {entry['url']}"
+            ) from exc
 
 
 def parse_args():
@@ -71,11 +108,11 @@ def parse_args():
 
 def main():
     """Generate test resources."""
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", force=True)
     args = parse_args()
 
     copy_manual_fixtures()
-    generate_simple_test_resources()
+    download_configured_files()
     run_configured_applications(ignore_runtime_environment=args.ignore_runtime_environment)
 
 

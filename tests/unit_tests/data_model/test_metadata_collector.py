@@ -127,7 +127,7 @@ def test_get_site(args_dict_site):
 
 
 def test_read_input_metadata_from_file(
-    args_dict_site, tmp_test_directory, caplog, get_test_data_file
+    args_dict_site, tmp_test_directory, caplog, get_test_data_file, simple_test_file
 ):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.args_dict["input_meta"] = None
@@ -179,7 +179,7 @@ def test_read_input_metadata_from_file(
         metadata_1._read_input_metadata_from_file()
     assert "Metadata extraction from CORSIKA files is not supported yet." in caplog.text
 
-    metadata_1.args_dict["input_meta"] = "tests/resources/test_file.list"
+    metadata_1.args_dict["input_meta"] = simple_test_file
     with pytest.raises(ValueError, match=r"^Unknown metadata file format:"):
         metadata_1._read_input_metadata_from_file()
 

@@ -16,7 +16,7 @@ applications:
     log_level: DEBUG
     model_version: 6.0.2
     showers_per_run: 10
-    output_path: simtools-output
+    output_path: ./tmp-test-resources/simulate_prod_gamma_40_deg_south_corsika_only
     primary: gamma
     run_number: 7
     sim_telarray_seed: [1745, 290]
