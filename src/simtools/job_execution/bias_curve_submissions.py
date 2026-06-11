@@ -213,7 +213,6 @@ def _build_nsb_overwrite(telescopes, threshold, site, model_version):
             "version": _PARAMETER_VERSION,
             "value": _NSB_SCALING_FACTOR,
         },
-        "array_layouts": _array_layouts_overwrite(telescopes),
     }
 
     return {
