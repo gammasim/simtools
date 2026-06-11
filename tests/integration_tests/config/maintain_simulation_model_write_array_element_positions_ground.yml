@@ -2,7 +2,7 @@
 applications:
 - application: simtools-maintain-simulation-model-write-array-element-positions
   configuration:
-    input: ./tests/resources/telescope_positions-North-ground.ecsv
+    input: tests/resources/static/telescope_positions-North-ground.ecsv
     coordinate_system: ground
     output_path: simtools-output
     parameter_version: 0.1.0

@@ -14,10 +14,8 @@ from simtools.runners import simtools_runner
 logger = logging.getLogger(__name__)
 
 RESOURCE_GENERATION_DIR = Path(__file__).resolve().parent
-MANUAL_FIXTURES_DIR = RESOURCE_GENERATION_DIR / "manual_fixtures"
 RESOURCES_DIR = RESOURCE_GENERATION_DIR.parent / "resources"
 DOWNLOAD_CONFIG_FILE = RESOURCE_GENERATION_DIR / "download_files.yml"
-MANUAL_FIXTURE_CONFIG_FILE = RESOURCE_GENERATION_DIR / "manual_fixtures.yml"
 
 
 def _normalize_config_glob(config_glob):

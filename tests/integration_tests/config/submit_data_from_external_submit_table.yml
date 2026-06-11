@@ -2,8 +2,8 @@
 applications:
 - application: simtools-submit-data-from-external
   configuration:
-    input: ./tests/resources/MLTdata-preproduction.ecsv
-    input_meta: ./tests/resources/MLTdata-preproduction.meta.yml
+    input: tests/resources/static/MLTdata-preproduction.ecsv
+    input_meta: tests/resources/static/MLTdata-preproduction.meta.yml
     output_file: test.ecsv
     output_path: simtools-output
     schema: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml

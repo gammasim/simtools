@@ -2,7 +2,7 @@
 applications:
 - application: simtools-validate-file-using-schema
   configuration:
-    file_directory: tests/resources/model_parameters
+    file_directory: tests/resources/generated/model_parameters
   test_name: validate_directory_of_model_parameters
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
