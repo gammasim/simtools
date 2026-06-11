@@ -23,7 +23,6 @@ applications:
     simulation_software: corsika
     site: South
     zenith_angle: 40
-  test_name: gamma_40_deg_south_corsika_only
 collection:
   output_path: tests/resources/
   files:
