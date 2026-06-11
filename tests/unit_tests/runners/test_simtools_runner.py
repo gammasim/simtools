@@ -1181,6 +1181,35 @@ def test_copy_collection_files_raises_on_name_collision(tmp_test_directory):
         simtools_runner._copy_collection_files(configurations, collection_config)
 
 
+def test_copy_collection_files_allows_name_collision_with_overwrite(tmp_test_directory):
+    """Allow collisions and overwrite destination when overwrite_files is enabled."""
+    tmp_path = Path(str(tmp_test_directory))
+    src_a = tmp_path / "src_a"
+    src_b = tmp_path / "src_b"
+    src_a.mkdir()
+    src_b.mkdir()
+    (src_a / "energy_z20.png").write_text("a", encoding="utf-8")
+    (src_b / "energy_z20.png").write_text("b", encoding="utf-8")
+
+    collection_output = tmp_path / "coll_collision"
+    collection_config = {
+        "output_path": str(collection_output),
+        "files": ["energy_*.png"],
+    }
+    configurations = [
+        {"configuration": {"output_path": str(src_a)}},
+        {"configuration": {"output_path": str(src_b)}},
+    ]
+
+    simtools_runner._copy_collection_files(
+        configurations,
+        collection_config,
+        overwrite_files=True,
+    )
+
+    assert (collection_output / "energy_z20.png").read_text(encoding="utf-8") == "b"
+
+
 def test_copy_collection_files_list_format(tmp_test_directory):
     """List collection config writes to separate output directories."""
     tmp_path = Path(str(tmp_test_directory))

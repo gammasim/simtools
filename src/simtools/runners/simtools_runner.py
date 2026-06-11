@@ -25,6 +25,11 @@ def run_applications(args_dict):
     ----------
     args_dict : dict
         Dictionary containing command line arguments.
+
+        Optional keys:
+        - overwrite_collection_files : bool
+            Allow collection output files to be overwritten when different source
+            files have the same basename. Defaults to False.
     """
     (
         configurations,
@@ -88,7 +93,11 @@ def run_applications(args_dict):
                     f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n"
                 )
 
-            _copy_collection_files(configurations, collection_config)
+            _copy_collection_files(
+                configurations,
+                collection_config,
+                overwrite_files=args_dict.get("overwrite_collection_files", False),
+            )
         finally:
             _update_workflow_metadata_files(
                 args_dict=args_dict,
@@ -101,7 +110,7 @@ def run_applications(args_dict):
             )
 
 
-def _copy_collection_files(configurations, collection_config):
+def _copy_collection_files(configurations, collection_config, overwrite_files=False):
     """Copy listed files from application output paths to one or more collection output paths.
 
     Parameters
@@ -111,6 +120,9 @@ def _copy_collection_files(configurations, collection_config):
     collection_config : dict or list[dict] or None
         A single collection entry (``{output_path, files}``) or a list of such
         entries. ``None`` or an empty value is silently ignored.
+    overwrite_files : bool
+        If True, allow overwriting existing files in collection output paths
+        when different sources resolve to the same basename.
 
     Raises
     ------
@@ -132,10 +144,15 @@ def _copy_collection_files(configurations, collection_config):
         collection_output_path = Path(output_path)
         collection_output_path.mkdir(parents=True, exist_ok=True)
         for pattern in files:
-            _copy_pattern_files(pattern, source_directories, collection_output_path)
+            _copy_pattern_files(
+                pattern,
+                source_directories,
+                collection_output_path,
+                overwrite_files=overwrite_files,
+            )
 
 
-def _copy_pattern_files(pattern, source_directories, destination):
+def _copy_pattern_files(pattern, source_directories, destination, overwrite_files=False):
     """Copy all files matching *pattern* from source directories into *destination*.
 
     Parameters
@@ -146,6 +163,8 @@ def _copy_pattern_files(pattern, source_directories, destination):
         Directories to search.
     destination : Path
         Target directory (must already exist).
+    overwrite_files : bool
+        If True, overwrite existing destination files.
 
     Raises
     ------
@@ -154,7 +173,7 @@ def _copy_pattern_files(pattern, source_directories, destination):
     """
     for source_file in _find_collection_files(pattern, source_directories):
         dest = destination / source_file.name
-        if dest.exists() and dest.resolve() != source_file.resolve():
+        if not overwrite_files and dest.exists() and dest.resolve() != source_file.resolve():
             raise FileExistsError(
                 f"Filename collision in collection: '{source_file.name}' would be "
                 f"overwritten by '{source_file}'. Ensure output files have unique names."
