@@ -1060,27 +1060,27 @@ def _generate_observation_grids_per_layout(
             continue
 
         if use_shared_axes_definition:
-            observation_grid_cache[cache_key] = build_production_grid_engine(
+            generated_grid = build_production_grid_engine(
                 args_dict,
                 array_layout_name=resolved_layout_name,
                 model_version=model_version,
             ).generate_simulation_grid()
-            observation_grids_per_model_version[model_version] = observation_grid_cache[cache_key]
-            continue
-
-        corsika_limits = None
-        if corsika_limits_path is not None:
-            corsika_limits = CorsikaLimitsLookup(
-                corsika_limits_path,
-                array_layout_name=resolved_layout_name,
+        else:
+            corsika_limits = None
+            if corsika_limits_path is not None:
+                corsika_limits = CorsikaLimitsLookup(
+                    corsika_limits_path,
+                    array_layout_name=resolved_layout_name,
+                )
+            generated_grid = _generate_observation_points_from_axes(
+                azimuth_values=grid_axes["azimuth_angle"],
+                zenith_values=grid_axes["zenith_angle"],
+                corsika_limits=corsika_limits,
+                nsb_rate=nsb_rate,
             )
-        observation_grid_cache[cache_key] = _generate_observation_points_from_axes(
-            azimuth_values=grid_axes["azimuth_angle"],
-            zenith_values=grid_axes["zenith_angle"],
-            corsika_limits=corsika_limits,
-            nsb_rate=nsb_rate,
-        )
-        observation_grids_per_model_version[model_version] = observation_grid_cache[cache_key]
+
+        observation_grid_cache[cache_key] = generated_grid
+        observation_grids_per_model_version[model_version] = generated_grid
 
     return observation_grids_per_model_version, resolved_layout_names
 

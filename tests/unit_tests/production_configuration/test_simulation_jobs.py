@@ -65,6 +65,26 @@ def _observation_grid_return(point):
     return ({"6.3.0": [point]}, {"6.3.0": "alpha"})
 
 
+def _two_model_versions_grid_axes():
+    return {
+        "model_version": ["6.3.0", "7.0.0"],
+        "azimuth_angle": [0 * u.deg],
+        "zenith_angle": [20 * u.deg],
+    }
+
+
+def _horizontal_shared_axis_args(layout_by_version):
+    return {
+        "site": "North",
+        "axis": [
+            ["azimuth", "310", "deg", "20", "deg", "3"],
+            ["zenith", "20", "deg", "40", "deg", "2"],
+            ["offset", "0", "deg", "10", "deg", "2"],
+        ],
+        "array_layout_name": {"by_version": layout_by_version},
+    }
+
+
 def test_resolve_single_model_version_uses_first_list_entry():
     assert resolve_single_model_version(["7.0.0", "7.1.0"]) == "7.0.0"
     assert resolve_single_model_version("7.0.0") == "7.0.0"
@@ -1159,11 +1179,7 @@ def test_generate_observation_grids_per_layout_uses_layout_specific_lookup(
         "array_layout_name": {"by_version": {"<7.0.0": "alpha", ">=7.0.0": "beta"}},
         "corsika_limits": "limits.ecsv",
     }
-    grid_axes = {
-        "model_version": ["6.3.0", "7.0.0"],
-        "azimuth_angle": [0 * u.deg],
-        "zenith_angle": [20 * u.deg],
-    }
+    grid_axes = _two_model_versions_grid_axes()
 
     observation_grids, resolved_layout_names = _generate_observation_grids_per_layout(
         args_dict, grid_axes
@@ -1194,20 +1210,8 @@ def test_generate_observation_grids_per_layout_uses_shared_axes_and_skips_duplic
     mock_site_model.return_value.get_nsb_integrated_flux.return_value = 0.31
 
     observation_grids, resolved_layout_names = _generate_observation_grids_per_layout(
-        {
-            "site": "North",
-            "axis": [
-                ["azimuth", "310", "deg", "20", "deg", "3"],
-                ["zenith", "20", "deg", "40", "deg", "2"],
-                ["offset", "0", "deg", "10", "deg", "2"],
-            ],
-            "array_layout_name": {"by_version": {"<7.0.0": "alpha", ">=7.0.0": "alpha"}},
-        },
-        {
-            "model_version": ["6.3.0", "7.0.0"],
-            "azimuth_angle": [0 * u.deg],
-            "zenith_angle": [20 * u.deg],
-        },
+        _horizontal_shared_axis_args({"<7.0.0": "alpha", ">=7.0.0": "alpha"}),
+        _two_model_versions_grid_axes(),
     )
 
     assert observation_grids == {
@@ -1231,20 +1235,8 @@ def test_generate_observation_grids_per_layout_does_not_reuse_different_nsb_rate
     mock_resolve_nsb_rate.side_effect = [0.2, 0.4]
 
     _generate_observation_grids_per_layout(
-        {
-            "site": "North",
-            "axis": [
-                ["azimuth", "310", "deg", "20", "deg", "3"],
-                ["zenith", "20", "deg", "40", "deg", "2"],
-                ["offset", "0", "deg", "10", "deg", "2"],
-            ],
-            "array_layout_name": {"by_version": {"<7.0.0": "alpha", ">=7.0.0": "alpha"}},
-        },
-        {
-            "model_version": ["6.3.0", "7.0.0"],
-            "azimuth_angle": [0 * u.deg],
-            "zenith_angle": [20 * u.deg],
-        },
+        _horizontal_shared_axis_args({"<7.0.0": "alpha", ">=7.0.0": "alpha"}),
+        _two_model_versions_grid_axes(),
     )
 
     assert mock_build_production_grid_engine.call_count == 2
