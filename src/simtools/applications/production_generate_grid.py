@@ -311,8 +311,7 @@ def _add_arguments(parser):
         "--corsika_limits",
         type=str,
         required=False,
-        help="Path to the lookup table for simulation limits. "
-        "Use a table with varying azimuth and/or zenith angle. ",
+        help="Path to the lookup table for simulation limits. ",
     )
     parser.add_argument(
         "--number_of_runs",

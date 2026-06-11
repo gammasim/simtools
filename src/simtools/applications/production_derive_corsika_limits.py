@@ -25,7 +25,7 @@ Lower energy limit (**ERANGE**)
     5. Use that bin's lower edge as the energy limit.
 
 Upper core distance (**CSCAT**) and viewcone radius (**VIEWCONE**)
-    Derived from per-axis allowed-loss settings (``--allowed_losses` axis,fraction,min_events``),
+    Derived from per-axis allowed-loss settings (``--allowed_losses axis,fraction,min_events``),
     either as integrated limits or per-energy-bin
     differential limits (depending on ``--differential_loss_bins_per_decade``).
     Differential limits are preferable, as they are more robust to variations with energy.
@@ -151,7 +151,6 @@ from simtools.production_configuration.derive_corsika_limits import (
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.initialize_application_arguments(["telescope_ids"])
     # Override event_data_file to allow multiple patterns for multi-production support
     parser.add_argument(
         "--event_data_file",
