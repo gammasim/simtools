@@ -240,8 +240,13 @@ def test__convert_to_md(telescope_model_lst, tmp_test_directory, mocker):
 
     assert code_block.strip() == expected_block.strip()
 
-    # testing with non-utf-8 file
-    non_utf_file = Path("tests/resources/example_non_utf-8_file.lis")
+    # testing with non-utf-8 file generated on the fly
+    non_utf_file = Path(tmp_test_directory) / "example_non_utf-8_file.lis"
+    non_utf_file.write_bytes(
+        b"# Non-UTF sample file\n"
+        b"# Includes invalid UTF-8 bytes to trigger Latin-1 fallback: \x80\xff\n"
+        b"1 2 3\n"
+    )
     new_file = read_parameters._convert_to_md(parameter_name, "1.0.0", str(non_utf_file))
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()

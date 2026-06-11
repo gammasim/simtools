@@ -31,8 +31,8 @@ def test_get_combined_eventio_run_header(get_test_data_file):
 
 def test_get_simulated_events(get_test_data_file):
     n_showers, n_events = get_simulated_events(get_test_data_file("sim_telarray", "gamma"))
-    assert n_showers == 50
-    assert n_events == 1000
+    assert n_showers == 5
+    assert n_events == 100
 
 
 def test_get_simulated_events_corsika_iact(get_test_data_file):

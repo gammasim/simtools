@@ -247,6 +247,17 @@ def data_path():
     return "./data/"
 
 
+@pytest.fixture
+def corsika_limits_for_test_file():
+    """Path to the unit-test CORSIKA limits lookup ECSV file."""
+    return (
+        Path(__file__).resolve().parent.parent
+        / "resources"
+        / "corsika_simulation_limits"
+        / "corsika_limits_north.ecsv"
+    )
+
+
 @pytest.fixture(autouse=True)
 def io_handler(tmp_test_directory, data_path):
     """Define io_handler fixture including output and model directories."""
@@ -870,7 +881,7 @@ _TEST_DATA_FILES = {
     (
         "sim_telarray_hdata",
         "gamma",
-    ): "tests/resources/gamma_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.simtel.hdata.zst",
+    ): "tests/resources/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.hdata.zst",
     ("telescope_positions", "North"): "tests/resources/telescope_positions-North-ground.ecsv",
     (
         "telescope_positions",

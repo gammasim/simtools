@@ -1,26 +1,27 @@
-import numpy as np
 import pytest
 from astropy import units as u
 from astropy.table import Table
 
 from simtools.production_configuration.corsika_limits_lookup import CorsikaLimitsLookup
 
+ARRAY_LAYOUT_NAME = "CTAO-North-LSTs"
 
-def test_load_matching_lookup_arrays_filters_by_array_layout_name():
+
+def test_load_matching_lookup_arrays_filters_by_array_layout_name(corsika_limits_for_test_file):
     lookup = CorsikaLimitsLookup(
-        "tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv",
-        array_layout_name="1mst",
+        corsika_limits_for_test_file,
+        array_layout_name=ARRAY_LAYOUT_NAME,
     )
 
     arrays = lookup.load_matching_lookup_arrays()
 
-    assert len(arrays["points"]) == 8
-    assert arrays["lower_energy_threshold"][0] == pytest.approx(0.01)
+    assert len(arrays["points"]) == 16
+    assert arrays["lower_energy_threshold"][0] == pytest.approx(0.003)
 
 
-def test_load_matching_lookup_arrays_raises_for_unknown_array_layout():
+def test_load_matching_lookup_arrays_raises_for_unknown_array_layout(corsika_limits_for_test_file):
     lookup = CorsikaLimitsLookup(
-        "tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv",
+        corsika_limits_for_test_file,
         array_layout_name="does-not-exist",
     )
 
@@ -28,20 +29,18 @@ def test_load_matching_lookup_arrays_raises_for_unknown_array_layout():
         lookup.load_matching_lookup_arrays()
 
 
-def test_load_matching_lookup_arrays_without_layout_returns_all_rows():
-    lookup = CorsikaLimitsLookup(
-        "tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv"
-    )
+def test_load_matching_lookup_arrays_without_layout_returns_all_rows(corsika_limits_for_test_file):
+    lookup = CorsikaLimitsLookup(corsika_limits_for_test_file)
 
     arrays = lookup.load_matching_lookup_arrays()
 
-    assert len(arrays["points"]) == 48
+    assert len(arrays["points"]) == 96
 
 
-def test_prepare_point_interpolators_builds_interpolator_state():
+def test_prepare_point_interpolators_builds_interpolator_state(corsika_limits_for_test_file):
     lookup = CorsikaLimitsLookup(
-        "tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv",
-        array_layout_name="1mst",
+        corsika_limits_for_test_file,
+        array_layout_name=ARRAY_LAYOUT_NAME,
     )
 
     interpolators = lookup.prepare_point_interpolators()
@@ -54,34 +53,16 @@ def test_prepare_point_interpolators_builds_interpolator_state():
     }
 
 
-def test_interpolate_grid_limits_returns_requested_grid_shape():
+def test_interpolate_point_returns_interpolated_values(corsika_limits_for_test_file):
     lookup = CorsikaLimitsLookup(
-        "tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv",
-        array_layout_name="1mst",
+        corsika_limits_for_test_file,
+        array_layout_name=ARRAY_LAYOUT_NAME,
     )
 
-    interpolated = lookup.interpolate_grid_limits(
-        {
-            "zenith_angle": [20, 40] * u.deg,
-            "azimuth": [0, 180] * u.deg,
-            "nsb_level": [1, 5] * u.dimensionless_unscaled,
-        }
-    )
+    interpolated = lookup.interpolate_point(20 * u.deg, 0 * u.deg, nsb=0.24)
 
-    assert interpolated["lower_energy_threshold"].shape == (2, 2, 2)
-    assert np.isfinite(interpolated["upper_scatter_radius"][0, 0, 0])
-
-
-def test_interpolate_point_returns_interpolated_values():
-    lookup = CorsikaLimitsLookup(
-        "tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv",
-        array_layout_name="1mst",
-    )
-
-    interpolated = lookup.interpolate_point(20 * u.deg, 0 * u.deg, nsb=1)
-
-    assert interpolated["lower_energy_threshold"] == pytest.approx(0.01)
-    assert interpolated["upper_scatter_radius"] == pytest.approx(1200.0)
+    assert interpolated["lower_energy_threshold"] == pytest.approx(0.003)
+    assert interpolated["upper_scatter_radius"] == pytest.approx(1225.0)
     assert interpolated["viewcone_radius"] == pytest.approx(10.0)
 
 

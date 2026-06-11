@@ -1,4 +1,4 @@
-unit_tests/data_model/test_data_reader.py #!/usr/bin/python3
+#!/usr/bin/python3
 
 import json
 import logging
