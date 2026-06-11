@@ -15,7 +15,7 @@ from simtools.constants import TEST_RESOURCES_GENERATED
 
 @pytest.fixture
 def spe_test_file():
-    return f"{TEST_RESOURCES_GENERATED}/spe_LST_2022-04-27_AP2.0e-4.dat"
+    return f"{TEST_RESOURCES_GENERATED}/model_parameters/spe_LST_2022-04-27_AP2.0e-4.dat"
 
 
 @pytest.fixture

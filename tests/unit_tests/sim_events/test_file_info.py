@@ -16,7 +16,13 @@ def test_get_corsika_run_number_with_run_header(get_test_data_file):
 
     # The following file was actually created with the LightEmission package,
     # but it should still return the run number correctly.
-    assert get_corsika_run_number(f"{TEST_RESOURCES_GENERATED}/xyzls_layout.simtel.gz") == 1
+    assert (
+        get_corsika_run_number(
+            f"{TEST_RESOURCES_GENERATED}/"
+            "gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.simtel.zst"
+        )
+        == 10
+    )
 
 
 def test_get_corsika_run_number_without_run_header_real_file(get_test_data_file):
