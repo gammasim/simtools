@@ -861,11 +861,11 @@ _TEST_DATA_FILES = {
     (
         "sim_telarray",
         "gamma",
-    ): "tests/resources/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst",
+    ): "tests/resources/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.0_test.simtel.zst",
     (
         "sim_telarray",
         "proton",
-    ): "tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst",
+    ): "tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test.simtel.zst",
     (
         "sim_telarray_hdata",
         "gamma",
@@ -925,6 +925,14 @@ def get_test_data_file():
         return _TEST_DATA_FILES[key]
 
     return _get_test_data_file
+
+
+@pytest.fixture
+def simple_test_file(tmp_test_directory):
+    """Create a simple test file with known content."""
+    test_file_path = Path(tmp_test_directory) / "test_file.txt"
+    test_file_path.write_text("This is a simple test file.\nContains multiple lines.\nEnd of file.")
+    return str(test_file_path)
 
 
 # ============================================================================
@@ -987,5 +995,5 @@ def invalid_row_table_payloads():
 
 @pytest.fixture
 def model_parameter_json():
-    """Fixture that returns the path to model parameter JSON file."""
+    """Fixture that returns the path to an example model parameter JSON file."""
     return "tests/resources/model_parameters/array_element_position_ground-2.0.0.json"

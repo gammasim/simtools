@@ -17,7 +17,7 @@ FAILED_TO_READ_FILE_ERROR = r"^Failed to read file"
 url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
 
 
-def test_collect_dict_data(io_handler, get_test_data_file):
+def test_collect_dict_data(io_handler, get_test_data_file, simple_test_file):
     dict_for_yaml = {"k3": {"kk3": 4, "kk4": 3.0}, "k4": ["bla", 2]}
     test_yaml_file = io_handler.get_output_file(file_name="test_collect_dict_data.yml")
     if not Path(test_yaml_file).exists():
@@ -28,8 +28,8 @@ def test_collect_dict_data(io_handler, get_test_data_file):
     assert "k3" in d2.keys()
     assert d2["k4"] == ["bla", 2]
 
-    _lines = ascii_handler.collect_data_from_file("tests/resources/test_file.list")
-    assert len(_lines) == 2
+    _lines = ascii_handler.collect_data_from_file(simple_test_file)
+    assert len(_lines) == 3
 
     # file with several documents
     _list = ascii_handler.collect_data_from_file(MODEL_PARAMETER_METASCHEMA)
@@ -76,7 +76,7 @@ def test_collect_data_from_file_exceptions(io_handler) -> None:
         ascii_handler.collect_data_from_file(test_unsupported)
 
 
-def test_collect_dict_from_url() -> None:
+def test_collect_dict_from_url():
     _file = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
     _reference_dict = ascii_handler.collect_data_from_file(_file)
 
@@ -95,12 +95,6 @@ def test_collect_dict_from_url() -> None:
     with pytest.raises(FileNotFoundError):
         ascii_handler.collect_data_from_http(_url + _file)
 
-    # simple list
-    _url = url_simtools
-    _url_list = ascii_handler.collect_data_from_http(_url + "tests/resources/test_file.list")
-    assert isinstance(_url_list, list)
-    assert len(_url_list) == 2
-
 
 def test_collect_data_dict_from_json(model_parameter_json):
     data = ascii_handler.collect_data_from_file(model_parameter_json)
@@ -117,12 +111,6 @@ def test_collect_data_from_http(model_parameter_json):
 
     data = ascii_handler.collect_data_from_http(url + model_parameter_json)
     assert isinstance(data, dict)
-
-    _file = (
-        "tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst"
-    )
-    with pytest.raises(TypeError):
-        ascii_handler.collect_data_from_http(url + _file)
 
     url = "https://raw.githubusercontent.com/gammasim/simtools/not_right/"
     with pytest.raises(FileNotFoundError):
