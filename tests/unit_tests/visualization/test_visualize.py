@@ -69,7 +69,9 @@ def test_plot_table(io_handler):
     logger.debug("Testing plot_table")
 
     title = "Test plot table"
-    table = astropy.io.ascii.read("tests/resources/Transmission_Spectrum_PlexiGlass.dat")
+    table = astropy.io.ascii.read(
+        "tests/resources/model_parameters/sst_photon_incidence_angle_camera_window.ecsv"
+    )
 
     fig = visualize.plot_table(table, y_title="Transmission", title=title, no_markers=True)
 

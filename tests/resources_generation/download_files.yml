@@ -5,4 +5,4 @@ files:
     target_path: SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
   - url: https://gitlab.cta-observatory.org/cta-science/simulations/productions/production-configuration/-/raw/main/data/corsika_lookups/v1.0.0/gamma/corsika_limits_north.ecsv?ref_type=heads
     description: CORSIKA limits for the North site (gamma diffuse)
-    target_path: corsika_limits_north.ecsv
+    target_path: corsika_simulation_limits/corsika_limits_north.ecsv

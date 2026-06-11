@@ -36,3 +36,12 @@ files:
   - source_path: production_simulation_config_metrics.yml
     target_path: production_simulation_config_metrics.yml
     description: Example configuration for production simulation with metrics.
+  - source_path: production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits
+    target_path: production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits
+    description: Example DL2 FITS file from prod6.
+  - source_path: ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000deg_validate_optics.lis.gz
+    target_path: ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000deg_validate_optics.lis.gz
+    description: Example ray tracing photon list file.
+  - source_path: ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv
+    target_path: ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv
+    description: Example ray tracing file in ECSV format.
