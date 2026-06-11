@@ -1,0 +1,26 @@
+---
+# Definition of error metrics and validity ranges for statistical error evaluation
+
+uncertainty_effective_area:
+  description: |-
+    Relative uncertainty on the effective area.
+  target_uncertainty:
+    value: 0.02
+  energy_range:
+    value:
+      - 0.04
+      - 200
+    unit: TeV
+energy_estimate:
+  description: |-
+    Error in energy estimation.
+  target_uncertainty:
+    value: 0.05
+  energy_range:
+    value:
+      - 0.04
+      - 200
+    unit: TeV
+schema_name: production_configuration_metrics.metaschema
+schema_version: 0.1.0
+schema_url: https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/src/simtools/schemas/production_configuration_metrics.schema.yml

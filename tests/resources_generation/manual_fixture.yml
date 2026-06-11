@@ -33,3 +33,6 @@ files:
   - source_path: model_parameters/schema-0.2.0/num_gains-1.0.0.json
     target_path: model_parameters/schema-0.2.0/num_gains-1.0.0.json
     description: Model parameter file with deprecated schema version.
+  - source_path: production_simulation_config_metrics.yml
+    target_path: production_simulation_config_metrics.yml
+    description: Example configuration for production simulation with metrics.
