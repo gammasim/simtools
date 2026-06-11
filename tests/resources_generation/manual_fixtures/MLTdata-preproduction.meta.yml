@@ -1,0 +1,67 @@
+---
+cta:
+  reference:
+    version: 2.0.0
+  activity:
+    name: mirror_2f_measurement
+    id: null
+    type: null
+    start: null
+    end: null
+  contact:
+    organization: MST Consortium
+    name: MST Mirror Responsible Person
+    email: a@email.org
+  instrument:
+    site: The 2f test stand
+    class: mirrorPanel
+    type: MLT
+    subtype: pre-production
+    id: unique-ID-of-mirror-panel-test-stand
+  process:
+    type: lab
+    id: unique-ID-of-measurement-process
+  product:
+    description: 'Mirror curvature radius and PSF measurements
+
+      from 2f test stand'
+    creation_time: '2020-03-20T12:00:00+00:00'
+    id: null
+    valid:
+      start: '2020-03-20T12:00:00+00:00'
+      end: '2024-03-20T12:00:00+00:00'
+    format: ascii.ecsv
+    data:
+      category: CAL
+      level: R1
+      type: Service
+      association: Telescope
+      model:
+        name: simpipe-schema
+        version: 0.1.0
+        # yamllint disable rule:line-length
+        url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml
+  context:
+    associated_elements:
+    - site: South
+      class: MST
+      type: FlashCam
+      subtype: D
+      id: MSTS
+    - site: North
+      class: MST
+      type: NectarCam
+      subtype: D
+      id: MSTN
+    document:
+    - type: Issue
+      id: 22570
+      url: https://forge.in2p3.fr/issues/22570
+      creation_time: null
+      title: null
+    - type: Presentation
+      # yamllint disable rule:line-length
+      url: https://indico.cta-observatory.org/login/?next=%2Fevent%2F2680%2Fcontributions%2F23371%2Fattachments%2F17190%2F22730%2F200320_MST_optics.pdf
+      creation_time: null
+      title: null
+      id: null

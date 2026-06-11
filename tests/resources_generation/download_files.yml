@@ -1,0 +1,5 @@
+---
+files:
+  - url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-model-parameter-setting/-/raw/main/input/LSTN-01/pm_photoelectron_spectrum/019d7771-e0e0-7d09-a9e3-50b5d642bed9/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv?ref_type=heads
+    description: LSTN-01 PM photoelectron spectrum reference file
+    target_path: SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
