@@ -62,7 +62,8 @@ class ProductionGridEngine:
         array_layout_name : str, optional
             Array layout name used to select lookup-table rows.
         lookup_nsb_rate : float or None, optional
-            NSB integrated flux used for lookup-table interpolation; required when lookup_table is set.
+            NSB integrated flux used for lookup-table interpolation;
+            required when lookup_table is set.
         """
         self._logger = logging.getLogger(__name__)
         self.axes = axes["axes"] if "axes" in axes else axes
