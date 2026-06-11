@@ -6,13 +6,12 @@ applications:
     axis:
     - ra 0 deg 360 deg 36 linear
     - dec -90 deg 90 deg 18 linear
-    - nsb 4 MHz 4 MHz 1 linear
     - offset 0 deg 10 deg 2 linear
     core_scatter: 10 500 m
     corsika_he_interaction: epos
     corsika_le_interaction: urqmd
     energy_range: 30 GeV 300 GeV
-    corsika_limits: tests/resources/corsika_simulation_limits/corsika_limits_for_test.ecsv
+    corsika_limits: tests/resources/corsika_simulation_limits/corsika_limits_north.ecsv
     model_version: 6.0.2
     showers_per_run: 5
     showers_per_run_power_law: 0.0 1 TeV
