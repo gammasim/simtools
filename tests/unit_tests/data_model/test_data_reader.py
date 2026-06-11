@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+unit_tests/data_model/test_data_reader.py #!/usr/bin/python3
 
 import json
 import logging
@@ -13,11 +13,6 @@ from simtools.data_model import data_reader, schema
 logger = logging.getLogger()
 
 JSON_TEST_FILE = "test_read_value_from_file_1.json"
-
-
-@pytest.fixture
-def reference_point_altitude_file():
-    return "tests/resources/reference_point_altitude.json"
 
 
 def test_read_table_from_file(get_test_data_file):
