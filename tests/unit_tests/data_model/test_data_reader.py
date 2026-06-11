@@ -52,9 +52,9 @@ def test_read_table_from_file_and_validate(get_test_data_file):
     )
 
 
-def test_read_value_from_file(tmp_test_directory, reference_point_altitude_file):
+def test_read_value_from_file(tmp_test_directory, model_parameter_json):
     assert isinstance(
-        data_reader.read_value_from_file(reference_point_altitude_file),
+        data_reader.read_value_from_file(model_parameter_json),
         u.quantity.Quantity,
     )
 
@@ -93,17 +93,37 @@ def test_read_value_from_file(tmp_test_directory, reference_point_altitude_file)
     )
 
 
-def test_read_value_from_file_and_validate(caplog, reference_point_altitude_file):
-    with caplog.at_level("DEBUG"):
-        # schema file from metadata in file
-        data_reader.read_value_from_file(reference_point_altitude_file, validate=True)
-    assert "Successful validation of yaml/json file" in caplog.text
-
+def test_read_value_from_file_and_validate(caplog, model_parameter_json):
     # schema explicitly given
     with caplog.at_level("DEBUG"):
-        data_reader.read_value_from_file(
-            reference_point_altitude_file,
-            schema_file=schema.get_model_parameter_schema_file("reference_point_altitude"),
+        validated_value = data_reader.read_value_from_file(
+            model_parameter_json,
+            schema_file=schema.get_model_parameter_schema_file("array_element_position_ground"),
             validate=True,
         )
     assert "Successful validation of yaml/json file" in caplog.text
+    assert isinstance(validated_value, u.quantity.Quantity)
+    assert validated_value.unit == u.Unit("m")
+
+
+def test_read_value_from_file_and_validate_uses_metadata_schema(monkeypatch, model_parameter_json):
+    class DummyMetadataCollector:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def get_data_model_schema_file_name(self):
+            return schema.get_model_parameter_schema_file("array_element_position_ground")
+
+    monkeypatch.setattr(data_reader, "MetadataCollector", DummyMetadataCollector)
+
+    validated_value = data_reader.read_value_from_file(model_parameter_json, validate=True)
+
+    assert isinstance(validated_value, u.quantity.Quantity)
+    assert validated_value.unit == u.Unit("m")
+
+
+def test_collapse_unit_handles_scalar_and_heterogeneous_units():
+    assert data_reader._collapse_unit(1) == 1
+
+    with pytest.raises(ValueError, match="Cannot collapse heterogeneous units"):
+        data_reader._collapse_unit(["m", "s"])

@@ -9,6 +9,7 @@ from astropy.table import QTable
 from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler
+from simtools.utils import value_conversion
 
 _logger = logging.getLogger(__name__)
 
@@ -124,5 +125,22 @@ def read_value_from_file(file_name, schema_file=None, validate=False):
     _value = data.get("value")
     if _value is None:
         return None
-    _unit = data.get("unit")
+    _unit = _collapse_unit(data.get("unit"))
     return _value if _unit is None else _value * u.Unit(_unit)
+
+
+def _collapse_unit(unit):
+    """Collapse iterable unit containers to a scalar unit when possible."""
+    if unit is None or isinstance(unit, str):
+        return value_conversion.normalize_dimensionless_unit(unit)
+
+    try:
+        unit_entries = list(unit)
+    except TypeError:
+        return value_conversion.normalize_dimensionless_unit(unit)
+
+    unit_entries = value_conversion.normalize_dimensionless_unit(unit_entries)
+    if len(set(unit_entries)) == 1:
+        return unit_entries[0]
+
+    raise ValueError(f"Cannot collapse heterogeneous units: {unit_entries}")
