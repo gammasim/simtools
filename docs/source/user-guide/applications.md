@@ -75,6 +75,7 @@ simtools-docs-produce-model-parameter-reports <applications/simtools-docs-produc
 simtools-docs-produce-production-summary <applications/simtools-docs-produce-production-summary>
 simtools-docs-produce-simulation-configuration-report <applications/simtools-docs-produce-simulation-configuration-report>
 simtools-generate-array-config <applications/simtools-generate-array-config>
+simtools-generate-bias-curve-submissions <applications/simtools-generate-bias-curve-submissions>
 simtools-generate-corsika-histograms <applications/simtools-generate-corsika-histograms>
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
 simtools-generate-parameter-scan-grid <applications/simtools-generate-parameter-scan-grid>
