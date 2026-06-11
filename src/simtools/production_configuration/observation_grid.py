@@ -41,7 +41,7 @@ class ProductionGridEngine:
         time_of_observation=None,
         lookup_table=None,
         array_layout_name=None,
-        lookup_nsb_rate=1.0,
+        lookup_nsb_rate=None,
     ):
         """
         Initialize the production-grid engine.
@@ -61,8 +61,8 @@ class ProductionGridEngine:
             Path to the lookup table file (ECSV format).
         array_layout_name : str, optional
             Array layout name used to select lookup-table rows.
-        lookup_nsb_rate : float, optional
-            NSB integrated flux used for lookup-table interpolation.
+        lookup_nsb_rate : float or None, optional
+            NSB integrated flux used for lookup-table interpolation; required when lookup_table is set.
         """
         self._logger = logging.getLogger(__name__)
         self.axes = axes["axes"] if "axes" in axes else axes

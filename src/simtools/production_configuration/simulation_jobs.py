@@ -1077,7 +1077,7 @@ def _generate_observation_grids_per_layout(args_dict, grid_axes):
 
 
 def _resolve_nsb_rates_per_model_version(args_dict, model_versions):
-    """Resolve NSB interpolation rate per model version with a safe fallback."""
+    """Resolve NSB interpolation rate per model version."""
     return {
         model_version: _resolve_nsb_rate(args_dict, model_version)
         for model_version in model_versions
