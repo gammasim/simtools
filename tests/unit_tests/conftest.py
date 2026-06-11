@@ -861,7 +861,8 @@ _TEST_DATA_FILES = {
     (
         "sim_telarray",
         "gamma",
-    ): "tests/resources/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.0_test.simtel.zst",
+    ): "tests/resources/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.simtel.zst",
+    # TODO proton file can go?
     (
         "sim_telarray",
         "proton",
@@ -869,7 +870,7 @@ _TEST_DATA_FILES = {
     (
         "sim_telarray_hdata",
         "gamma",
-    ): "tests/resources/gamma_run2_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst",
+    ): "tests/resources/gamma_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.simtel.hdata.zst",
     ("telescope_positions", "North"): "tests/resources/telescope_positions-North-ground.ecsv",
     (
         "telescope_positions",

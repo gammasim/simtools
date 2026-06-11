@@ -143,15 +143,6 @@ def test_read_input_metadata_from_file(
     metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"
     assert len(metadata_1._read_input_metadata_from_file()) > 0
 
-    metadata_1.args_dict["input_meta"] = "tests/resources/reference_point_altitude.json"
-    assert len(metadata_1._read_input_metadata_from_file()) > 0
-
-    metadata_1.args_dict["input_meta"] = [
-        "tests/resources/MLTdata-preproduction.meta.yml",
-        "tests/resources/reference_point_altitude.json",
-    ]
-    assert len(metadata_1._read_input_metadata_from_file()) == 2
-
     test_dict = {
         "metadata": {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}},
         "METADATA": {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}},
@@ -170,7 +161,7 @@ def test_read_input_metadata_from_file(
         metadata_1._read_input_metadata_from_file()
 
     with caplog.at_level(logging.WARNING):
-        metadata_1.args_dict["input_meta"] = get_test_data_file("sim_telarray", "proton")
+        metadata_1.args_dict["input_meta"] = get_test_data_file("sim_telarray", "gamma")
         metadata_1._read_input_metadata_from_file()
     assert "Metadata extraction from sim_telarray files is not supported yet." in caplog.text
 

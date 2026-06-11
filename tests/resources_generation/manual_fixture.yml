@@ -1,0 +1,35 @@
+---
+files:
+  - source_path: MLTdata-preproduction.ecsv
+    target_path: MLTdata-preproduction.ecsv
+    description: Preproduction MST data.
+  - source_path: MLTdata-preproduction.meta.yml
+    target_path: MLTdata-preproduction.meta.yml
+    description: Preproduction MST data (metadata).
+  - source_path: mock_db
+    target_path: mock_db
+    description: Mock database fixture directory
+  - source_path: simtel_config_test_la_palma.cfg
+    target_path: simtel_config_test_la_palma.cfg
+    description: Configuration export from simtelarray.
+  - source_path: telescope_positions-North-ground.ecsv
+    target_path: telescope_positions-North-ground.ecsv
+    description: Telescope position table in ground coordinates
+  - source_path: telescope_positions-North-utm-without-cta-meta.ecsv
+    target_path: telescope_positions-North-utm-without-cta-meta.ecsv
+    description: Telescope position table in utm without CTA metadata
+  - source_path: telescope_positions-North-utm.ecsv
+    target_path: telescope_positions-North-utm.ecsv
+    description: Telescope position table in utm coordinates
+  - source_path: telescope_positions-North-utm.meta.yml
+    target_path: telescope_positions-North-utm.meta.yml
+    description: Telescope positions utm metadata fixture
+  - source_path: telescope_positions-North-with-calibration-devices-ground.ecsv
+    target_path: telescope_positions-North-with-calibration-devices-ground.ecsv
+    description: Telescope position table in ground coordinates with calibration devices
+  - source_path: telescope_positions-South-ground.ecsv
+    target_path: telescope_positions-South-ground.ecsv
+    description: Telescope position table in ground coordinates for the South site
+  - source_path: model_parameters/schema-0.2.0/num_gains-1.0.0.json
+    target_path: model_parameters/schema-0.2.0/num_gains-1.0.0.json
+    description: Model parameter file with deprecated schema version.

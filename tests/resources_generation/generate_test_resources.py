@@ -18,19 +18,55 @@ RESOURCE_GENERATION_DIR = Path(__file__).resolve().parent
 MANUAL_FIXTURES_DIR = RESOURCE_GENERATION_DIR / "manual_fixtures"
 RESOURCES_DIR = RESOURCE_GENERATION_DIR.parent / "resources"
 DOWNLOAD_CONFIG_FILE = RESOURCE_GENERATION_DIR / "download_files.yml"
+MANUAL_FIXTURE_CONFIG_FILE = RESOURCE_GENERATION_DIR / "manual_fixture.yml"
 
 
-def copy_manual_fixtures(source_dir=MANUAL_FIXTURES_DIR, target_dir=RESOURCES_DIR):
-    """Copy all manual fixtures to the test resources directory."""
-    if not source_dir.exists():
+def _validate_manual_fixture_entry(entry, index):
+    """Validate a manual fixture entry from YAML configuration."""
+    if not isinstance(entry, dict):
+        raise ValueError(f"Manual fixture entry {index} must be a dictionary.")
+
+    required_keys = ("source_path", "description", "target_path")
+    missing_keys = [key for key in required_keys if not entry.get(key)]
+    if missing_keys:
+        missing_keys_str = ", ".join(missing_keys)
+        raise ValueError(f"Manual fixture entry {index} missing required keys: {missing_keys_str}")
+
+
+def copy_manual_fixtures(
+    config_file=MANUAL_FIXTURE_CONFIG_FILE,
+    source_dir=MANUAL_FIXTURES_DIR,
+    target_dir=RESOURCES_DIR,
+):
+    """Copy manual fixtures listed in YAML configuration to test resources."""
+    if not Path(config_file).exists():
+        logger.info("Manual fixture configuration file does not exist: %s", config_file)
+        return
+
+    if not Path(source_dir).exists():
         logger.info("Manual fixtures directory does not exist: %s", source_dir)
         return
 
-    logger.info("Copying manual fixtures from %s to %s", source_dir, target_dir)
-    target_dir.mkdir(parents=True, exist_ok=True)
-    for source_path in source_dir.iterdir():
-        target_path = target_dir / source_path.name
-        logger.info("Copying %s to %s", source_path, target_path)
+    fixture_config = ascii_handler.collect_data_from_file(config_file)
+    file_entries = fixture_config.get("files", []) if isinstance(fixture_config, dict) else []
+
+    if not isinstance(file_entries, list):
+        raise ValueError("Manual fixture configuration key 'files' must be a list.")
+
+    for index, entry in enumerate(file_entries):
+        _validate_manual_fixture_entry(entry, index)
+
+        source_path = Path(source_dir) / Path(entry["source_path"])
+        target_path = Path(target_dir) / Path(entry["target_path"])
+
+        if not source_path.exists():
+            raise FileNotFoundError(
+                f"Manual fixture '{entry['description']}' does not exist at {source_path}"
+            )
+
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        logger.info("Copying %s from %s to %s", entry["description"], source_path, target_path)
+
         if source_path.is_dir():
             shutil.copytree(source_path, target_path, dirs_exist_ok=True)
         else:
@@ -64,7 +100,7 @@ def _validate_download_entry(entry, index):
         raise ValueError(f"Download entry {index} missing required keys: {missing_keys_str}")
 
 
-def download_configured_files(config_file=DOWNLOAD_CONFIG_FILE, target_dir=RESOURCES_DIR):
+def download_files(config_file=DOWNLOAD_CONFIG_FILE, target_dir=RESOURCES_DIR):
     """Download files listed in YAML configuration into test resources."""
     if not Path(config_file).exists():
         logger.info("Download configuration file does not exist: %s", config_file)
@@ -112,8 +148,10 @@ def main():
     args = parse_args()
 
     copy_manual_fixtures()
-    download_configured_files()
-    run_configured_applications(ignore_runtime_environment=args.ignore_runtime_environment)
+
+
+#    download_files()
+#    run_configured_applications(ignore_runtime_environment=args.ignore_runtime_environment)
 
 
 if __name__ == "__main__":

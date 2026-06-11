@@ -122,7 +122,7 @@ def test_validate_and_transform(caplog, mocker):
     mock_prepare_model_parameter.assert_called_once()
 
 
-def test_validate_data_file(caplog):
+def test_validate_data_file(caplog, model_parameter_json):
     data_validator = validate_data.DataValidator()
     # no input file defined, should pass
     data_validator.validate_data_file()
@@ -132,7 +132,7 @@ def test_validate_data_file(caplog):
         data_validator.validate_data_file()
     assert "Validating tabled data from:" in caplog.text
 
-    data_validator.data_file_name = "tests/resources/reference_point_altitude.json"
+    data_validator.data_file_name = model_parameter_json
     with caplog.at_level(logging.INFO):
         data_validator.validate_data_file()
     assert "Validating data from:" in caplog.text
