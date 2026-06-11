@@ -69,7 +69,7 @@ The input event data files are generated using the application simtools-generate
 and are required for each point in the observational parameter space (e.g., array pointing
 directions, level of night sky background, etc.).
 
-Distributions of triggered events (e.g., core distance vs energy) can by plotted to verify the
+Distributions of triggered events (e.g., core distance vs energy) can be plotted to verify the
 derived limits using the ``--plot_histograms`` option. Plots are organized into per-production
 subdirectories derived from the input pattern names (for example ``production_production_a/``).
 
