@@ -162,3 +162,60 @@ files:
 
     with pytest.raises(FileNotFoundError, match="Failed to download 'test file'"):
         generate_test_resources.download_files(config_file=config_file)
+
+
+def test_run_configured_applications_with_config_glob(tmp_test_directory, monkeypatch):
+    config_root = Path(tmp_test_directory) / "resources_generation"
+    model_parameters_dir = config_root / "model_parameters"
+    application_config_dir = config_root / "application_config"
+    model_parameters_dir.mkdir(parents=True)
+    application_config_dir.mkdir(parents=True)
+
+    model_config = model_parameters_dir / "array_element_position_ground.config.yml"
+    app_config = application_config_dir / "simulate_prod.config.yml"
+    model_config.write_text("steps: []\n", encoding="utf-8")
+    app_config.write_text("steps: []\n", encoding="utf-8")
+
+    called_configs = []
+
+    def _fake_run_applications(config_dict):
+        called_configs.append(config_dict)
+
+    monkeypatch.setattr(
+        generate_test_resources.simtools_runner, "run_applications", _fake_run_applications
+    )
+
+    generate_test_resources.run_configured_applications(
+        config_dir=config_root,
+        config_glob="model_parameters/*.config.yml",
+    )
+
+    assert [config["config_file"] for config in called_configs] == [str(model_config)]
+    assert called_configs[0]["overwrite_collection_files"] is False
+
+
+def test_run_configured_applications_with_prefixed_config_glob(tmp_test_directory, monkeypatch):
+    config_root = Path(tmp_test_directory) / "resources_generation"
+    model_parameters_dir = config_root / "model_parameters"
+    model_parameters_dir.mkdir(parents=True)
+
+    model_config = model_parameters_dir / "mirror_list.config.yml"
+    model_config.write_text("steps: []\n", encoding="utf-8")
+
+    called_configs = []
+
+    def _fake_run_applications(config_dict):
+        called_configs.append(config_dict)
+
+    monkeypatch.setattr(
+        generate_test_resources.simtools_runner, "run_applications", _fake_run_applications
+    )
+
+    generate_test_resources.run_configured_applications(
+        config_dir=config_root,
+        config_glob="tests/resources_generation/model_parameters/*.config.yml",
+        overwrite_collection_files=True,
+    )
+
+    assert [config["config_file"] for config in called_configs] == [str(model_config)]
+    assert called_configs[0]["overwrite_collection_files"] is True

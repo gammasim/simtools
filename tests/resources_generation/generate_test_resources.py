@@ -21,6 +21,14 @@ DOWNLOAD_CONFIG_FILE = RESOURCE_GENERATION_DIR / "download_files.yml"
 MANUAL_FIXTURE_CONFIG_FILE = RESOURCE_GENERATION_DIR / "manual_fixture.yml"
 
 
+def _normalize_config_glob(config_glob):
+    """Normalize config glob to be relative to RESOURCE_GENERATION_DIR."""
+    prefix = f"tests/{RESOURCE_GENERATION_DIR.name}/"
+    if config_glob.startswith(prefix):
+        return config_glob[len(prefix) :]
+    return config_glob
+
+
 def _validate_manual_fixture_entry(entry, index):
     """Validate a manual fixture entry from YAML configuration."""
     if not isinstance(entry, dict):
@@ -74,16 +82,21 @@ def copy_manual_fixtures(
 
 
 def run_configured_applications(
-    config_dir=RESOURCE_GENERATION_DIR, ignore_runtime_environment=True
+    config_dir=RESOURCE_GENERATION_DIR,
+    ignore_runtime_environment=True,
+    config_glob="*.config.yml",
+    overwrite_collection_files=False,
 ):
-    """Run all applications configured in *.config.yml files."""
-    for config_file in sorted(config_dir.rglob("*.config.yml")):
+    """Run configured applications matching the given glob pattern."""
+    normalized_glob = _normalize_config_glob(config_glob)
+    for config_file in sorted(config_dir.rglob(normalized_glob)):
         logger.info("Executing applications configured in %s", config_file)
         simtools_runner.run_applications(
             {
                 "config_file": str(config_file),
                 "steps": None,
                 "ignore_runtime_environment": ignore_runtime_environment,
+                "overwrite_collection_files": overwrite_collection_files,
             }
         )
 
@@ -139,6 +152,24 @@ def parse_args():
         default=True,
         help="Ignore runtime environments configured in application files.",
     )
+    parser.add_argument(
+        "--config_glob",
+        type=str,
+        default="*.config.yml",
+        help=(
+            "Glob pattern under tests/resources_generation for selecting config files "
+            "(e.g. 'model_parameters/*.config.yml' for debugging)."
+        ),
+    )
+    parser.add_argument(
+        "--overwrite_collection_files",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "Allow files copied by run_application collection blocks to overwrite existing "
+            "files with identical names."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -148,10 +179,12 @@ def main():
     args = parse_args()
 
     copy_manual_fixtures()
-
-
-#    download_files()
-#    run_configured_applications(ignore_runtime_environment=args.ignore_runtime_environment)
+    download_files()
+    run_configured_applications(
+        ignore_runtime_environment=args.ignore_runtime_environment,
+        config_glob=args.config_glob,
+        overwrite_collection_files=args.overwrite_collection_files,
+    )
 
 
 if __name__ == "__main__":

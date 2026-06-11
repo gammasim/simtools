@@ -43,6 +43,10 @@ prod6-baseline-qgs2-no_opt:20250716-122341
 If the ``ignore_runtime_environment`` flag is set, the application will run in the current
 environment, ignoring any definitions in the configuration file.
 
+If the ``overwrite_collection_files`` flag is set, files collected in the optional
+``collection`` block of the workflow configuration are allowed to overwrite existing
+destination files with the same basename.
+
 The database configuration and setting of other environment variables is done as
 described in :ref:`environment-variables`.
 
@@ -87,6 +91,15 @@ def _add_arguments(parser):
         "--ignore_runtime_environment",
         action="store_true",
         help="Ignore the runtime environment and run the application in the current environment.",
+        default=False,
+    )
+    parser.add_argument(
+        "--overwrite_collection_files",
+        action="store_true",
+        help=(
+            "Allow files copied by the workflow collection block to overwrite existing files "
+            "with identical names."
+        ),
         default=False,
     )
 
