@@ -1,7 +1,6 @@
 # Production Pre-Requisites
 
-Production pre-requisites are inputs derived from broad-range simulations or other sources
-and used by multiple productions.
+Production pre-requisites are inputs derived from broad-range simulations or other sources.
 
 ```{Note}
 This step is not required for every new production.
@@ -14,12 +13,11 @@ are expected to include the necessary pre-requisites for most productions.
 
 CORSIKA configuration limits are derived from broad-range simulations and include
 the lower CORSIKA energy limit, the maximum core scatter radius, and the maximum viewcone radius.
-All these limits depend on observation parameters like zenith angle or level of night-sky
-background light (NSB).
+All these limits depend on observation parameters like zenith angle and the integrated NSB rate.
 Limits are derived for each array layout from distributions of triggered events.
 
 Input for the derivation are reduced event-data files from broad-range simulations generated
-typically for each production using the
+typically during productions using the
 [simtools-generate-simtel-event-data](../applications/simtools-generate-simtel-event-data)
 application.
 

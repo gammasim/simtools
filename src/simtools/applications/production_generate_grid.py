@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 
 r"""
-Generate an executable simulation job grid from production choices.
+Generate an simulation job grid from production choices.
 
 ``simtools-production-generate-grid`` expands a production definition into an ECSV
 table in which each row is one executable simulation run. The expansion combines
-particle, model, interaction, shower, pointing, night-sky background, source-offset,
-energy, and run choices. The generated grid is intended as input for local
-production execution or workload-management submission tools.
+particle, model, interaction, shower, pointing, source-offset, model-version
+dependent night-sky background rate, energy, and run choices. The generated grid
+is intended as input for local production execution or workload-management
+submission tools.
 
 The application supports two pointing-grid modes:
 
@@ -20,10 +21,21 @@ direction-grid density. If a CORSIKA limits lookup table is supplied, the grid i
 interpolated at each direction point and the configured energy, core-scatter, and
 view-cone values act as absolute bounds.
 
+NSB handling
+------------
+NSB is not configured as a production-grid axis. The generated rows contain
+``nsb_rate``, derived from the site model through the selected ``site`` and
+``model_version``. This means NSB values are directly dependent on the model
+version; when multiple model versions are requested, simtools resolves the NSB
+rate separately for each version. The resolved ``nsb_rate`` is also used for
+CORSIKA-limit lookup interpolation.
+
 Production context
 ------------------
 site (str)
-    Observatory site, for example ``North`` or ``South``.
+    Observatory site, for example ``North`` or ``South``. Required for resolving
+    the model-version-dependent NSB rate and for RA/Dec-to-horizontal coordinate
+    conversion.
 model_version (str or list)
     Simulation model version. Multiple values expand the job grid over all
     requested versions.
@@ -73,14 +85,13 @@ Pointing and grid axes
 axis (repeatable)
     Compact axis definition:
     ``--axis <name> <min> <unit> <max> <unit> <binning> [scaling]``.
-    Supported axis names are ``azimuth``, ``zenith``, ``ra``, ``dec``, ``nsb``,
-    and ``offset``. Supported scaling modes are ``linear``, ``log``, and
+    Supported axis names are ``azimuth``, ``zenith``, ``ra``, ``dec``, and
+    ``offset``. Supported scaling modes are ``linear``, ``log``, and
     ``1/cos``; the default is ``linear``.
 
     **Examples**
     - ``--axis azimuth 310 deg 20 deg 3 linear``
     - ``--axis zenith 0 deg 70 deg 8 linear``
-    - ``--axis nsb 0.24 MHz 0.24 MHz 1 linear``
     - ``--axis offset 0 deg 10 deg 2 linear``
 
     For explicit grids, ``binning`` is the number of points on that axis.
@@ -92,8 +103,8 @@ direction_grid_density (float or quantity, optional)
     Target density for direction points, normally in ``1/deg^2``. When set,
     simtools derives the number of horizontal ``azimuth``/``zenith`` or
     equatorial ``ra``/``dec`` direction points from the axis ranges and this
-    density. Non-direction axes such as ``nsb`` and ``offset`` still use their
-    explicit axis binning.
+    density. Non-direction axes such as ``offset`` still use their explicit
+    axis binning.
 time_of_observation (str, optional)
     UTC observation time in ``YYYY-MM-DD HH:MM:SS`` format. Required when RA/Dec
     axes are used because the conversion to local azimuth and zenith depends on
@@ -111,7 +122,8 @@ CORSIKA limits lookup
 corsika_limits (str, optional)
     Path to an ECSV lookup table with direction-dependent CORSIKA simulation
     limits for the selected array layout. When provided, simtools interpolates
-    limits at each grid point. The configured ``energy_range``, ``core_scatter``,
+    limits at each grid point using zenith, azimuth, and the model-version
+    dependent ``nsb_rate``. The configured ``energy_range``, ``core_scatter``,
     and ``view_cone`` values remain absolute bounds:
 
     - the lower energy is raised when the lookup threshold is above the
@@ -176,7 +188,9 @@ Output
 ------
 output_file (str, optional)
     Output ECSV file for the generated job grid. The path is resolved through
-    the simtools output handler. Default is ``job_grid.ecsv``.
+    the simtools output handler. The output rows include ``nsb_rate`` resolved
+    from the selected ``site`` and ``model_version``. Default is
+    ``job_grid.ecsv``.
 
 
 Example
@@ -189,7 +203,6 @@ To generate a standard zenith/azimuth grid of simulation points, execute:
             --array_layout_name alpha \
             --axis azimuth 310 deg 20 deg 3 linear \
             --axis zenith 30 deg 40 deg 2 linear \
-            --axis nsb 4 MHz 5 MHz 2 linear \
             --axis offset 0 deg 10 deg 2 linear \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
 
@@ -202,7 +215,6 @@ execute:
             --array_layout_name alpha \
             --axis ra 0 deg 360 deg 36 linear \
             --axis dec -90 deg 90 deg 18 linear \
-            --axis nsb 4 MHz 4 MHz 1 linear \
             --axis offset 0 deg 10 deg 2 linear \
             --time_of_observation "2017-09-16 00:00:00" \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
@@ -216,7 +228,6 @@ full zenith coverage from 0 to 70 deg and a directed azimuth window), execute:
             --array_layout_name alpha \
             --axis ra 0 deg 360 deg 1 linear \
             --axis dec -40 deg 80 deg 1 linear \
-            --axis nsb 4 MHz 4 MHz 1 linear \
             --axis offset 0 deg 10 deg 2 linear \
             --direction_grid_density 0.25 1/deg^2 \
             --local_zenith_range 0 deg 70 deg \
@@ -246,6 +257,7 @@ def _add_arguments(parser):
         help=(
             "Compact axis definition: --axis <name> <min> <unit> <max> <unit> <binning> "
             "[scaling]. May be repeated. "
+            "Supported axes: azimuth, zenith, ra, dec, offset. "
             "Options for scaling are: linear, log, 1/cos"
         ),
     )
