@@ -1028,7 +1028,11 @@ def _log_generated_row_summary(rows):
     )
 
 
-def _generate_observation_grids_per_layout(args_dict, grid_axes):
+def _generate_observation_grids_per_layout(
+    args_dict,
+    grid_axes,
+    nsb_rates_per_model_version=None,
+):
     """Generate observation grids per array layout.
 
     Uses either ProductionGridEngine or explicit azimuth/zenith axes.
@@ -1041,10 +1045,15 @@ def _generate_observation_grids_per_layout(args_dict, grid_axes):
     }
     use_shared_axes_definition = bool(args_dict.get("axis"))
     corsika_limits_path = args_dict.get("corsika_limits")
+    nsb_rates_per_model_version = (
+        _resolve_nsb_rates_per_model_version(args_dict, grid_axes["model_version"])
+        if nsb_rates_per_model_version is None
+        else nsb_rates_per_model_version
+    )
 
     for model_version in grid_axes["model_version"]:
         resolved_layout_name = resolved_layout_names[model_version]
-        nsb_rate = _resolve_nsb_rate(args_dict, model_version)
+        nsb_rate = nsb_rates_per_model_version[model_version]
         cache_key = (resolved_layout_name, nsb_rate, use_shared_axes_definition)
         if cache_key in observation_grid_cache:
             observation_grids_per_model_version[model_version] = observation_grid_cache[cache_key]
@@ -1167,12 +1176,16 @@ def build_simulation_jobs(args_dict):
     core_scatter_number = int(core_scatter[0])
     view_cone_min = view_cone[0]
     configured_view_cone_max = view_cone[1]
-    observation_grids_per_model_version, resolved_layout_names = (
-        _generate_observation_grids_per_layout(args_dict, grid_axes)
-    )
     nsb_rates_per_model_version = _resolve_nsb_rates_per_model_version(
         args_dict,
         grid_axes["model_version"],
+    )
+    observation_grids_per_model_version, resolved_layout_names = (
+        _generate_observation_grids_per_layout(
+            args_dict,
+            grid_axes,
+            nsb_rates_per_model_version=nsb_rates_per_model_version,
+        )
     )
     logger.info(
         "Applying job constraints: energy clipped to configured energy_range, "
