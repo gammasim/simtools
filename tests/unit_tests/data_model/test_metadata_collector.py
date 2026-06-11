@@ -12,7 +12,7 @@ import pytest
 from astropy.table import Table
 
 import simtools.data_model.metadata_collector as metadata_collector
-from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH
+from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH, TEST_RESOURCES_STATIC
 from simtools.data_model import schema
 from simtools.utils import names
 
@@ -120,7 +120,7 @@ def test_get_site(args_dict_site):
 
     _collector_2 = metadata_collector.MetadataCollector(
         args_dict=args_dict_site,
-        metadata_file_name="tests/resources/manual_fixtures/telescope_positions-North-utm.meta.yml",
+        metadata_file_name=f"{TEST_RESOURCES_STATIC}/telescope_positions-North-utm.meta.yml",
     )
     assert _collector_2.get_site(from_input_meta=True) == "North"
     assert _collector_2.get_site(from_input_meta=False) == "South"  # from args_dict
@@ -140,9 +140,7 @@ def test_read_input_metadata_from_file(
     ):
         metadata_1._read_input_metadata_from_file()
 
-    metadata_1.args_dict["input_meta"] = (
-        "tests/resources/manual_fixtures/MLTdata-preproduction.meta.yml"
-    )
+    metadata_1.args_dict["input_meta"] = f"{TEST_RESOURCES_STATIC}/MLTdata-preproduction.meta.yml"
     assert len(metadata_1._read_input_metadata_from_file()) > 0
 
     test_dict = {

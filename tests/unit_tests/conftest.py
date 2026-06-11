@@ -26,6 +26,7 @@ from dotenv import load_dotenv
 import simtools.io.io_handler
 from simtools import settings
 from simtools.configuration.configurator import Configurator
+from simtools.constants import TEST_RESOURCES_GENERATED, TEST_RESOURCES_STATIC
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.db import db_handler
 from simtools.db.mongo_db import MongoDBHandler
@@ -82,7 +83,7 @@ def _is_db_unit_test(request):
 
 @functools.lru_cache
 def _load_mock_db_json(file_name):
-    mock_db_dir = Path(__file__).resolve().parent.parent / "resources/manual_fixtures" / "mock_db"
+    mock_db_dir = Path(__file__).resolve().parent.parent / "resources/static" / "mock_db"
     file_path = mock_db_dir / file_name
     with file_path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -248,14 +249,9 @@ def data_path():
 
 
 @pytest.fixture
-def corsika_limits_for_test_file():
+def corsika_limits_for_test_file(get_test_data_file):
     """Path to the unit-test CORSIKA limits lookup ECSV file."""
-    return (
-        Path(__file__).resolve().parent.parent
-        / "resources"
-        / "corsika_simulation_limits"
-        / "corsika_limits_north.ecsv"
-    )
+    return get_test_data_file("corsika_limits", "North")
 
 
 @pytest.fixture(autouse=True)
@@ -868,39 +864,43 @@ _TEST_DATA_FILES = {
     (
         "corsika",
         "gamma",
-    ): "tests/resources/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst",
+    ): f"{TEST_RESOURCES_GENERATED}/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst",
     (
         "sim_telarray",
         "gamma",
-    ): "tests/resources/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.simtel.zst",
+    ): f"{TEST_RESOURCES_GENERATED}/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.simtel.zst",
     (
         "sim_telarray_hdata",
         "gamma",
-    ): "tests/resources/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.hdata.zst",
+    ): f"{TEST_RESOURCES_GENERATED}/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.hdata.zst",
     (
         "production_dl2_fits",
         "20deg",
-    ): "tests/resources/manual_fixtures/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
+    ): f"{TEST_RESOURCES_STATIC}/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
     (
         "production_dl2_fits",
         "40deg",
-    ): "tests/resources/manual_fixtures/production_dl2_fits/prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
+    ): f"{TEST_RESOURCES_STATIC}/production_dl2_fits/prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
     (
         "telescope_positions",
         "North",
-    ): "tests/resources/manual_fixtures/telescope_positions-North-ground.ecsv",
+    ): f"{TEST_RESOURCES_STATIC}/telescope_positions-North-ground.ecsv",
     (
         "telescope_positions",
         "North-calibration",
-    ): "tests/resources/manual_fixtures/telescope_positions-North-with-calibration-devices-ground.ecsv",
+    ): f"{TEST_RESOURCES_STATIC}/telescope_positions-North-with-calibration-devices-ground.ecsv",
     (
         "telescope_positions",
         "North-utm",
-    ): "tests/resources/manual_fixtures/telescope_positions-North-utm.ecsv",
+    ): f"{TEST_RESOURCES_STATIC}/telescope_positions-North-utm.ecsv",
     (
         "telescope_positions",
         "South",
-    ): "tests/resources/manual_fixtures/telescope_positions-South-ground.ecsv",
+    ): f"{TEST_RESOURCES_STATIC}/telescope_positions-South-ground.ecsv",
+    (
+        "corsika_limits",
+        "North",
+    ): f"{TEST_RESOURCES_GENERATED}/corsika_simulation_limits/corsika_limits_north.ecsv",
 }
 
 
@@ -1020,4 +1020,4 @@ def invalid_row_table_payloads():
 @pytest.fixture
 def model_parameter_json():
     """Fixture that returns the path to an example model parameter JSON file."""
-    return "tests/resources/model_parameters/array_element_position_ground-2.0.0.json"
+    return f"{TEST_RESOURCES_GENERATED}/model_parameters/array_element_position_ground-2.0.0.json"

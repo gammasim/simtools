@@ -2,6 +2,7 @@
 
 import warnings
 
+from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.sim_events.file_info import (
     get_combined_eventio_run_header,
     get_corsika_run_and_event_headers,
@@ -15,7 +16,7 @@ def test_get_corsika_run_number_with_run_header(get_test_data_file):
 
     # The following file was actually created with the LightEmission package,
     # but it should still return the run number correctly.
-    assert get_corsika_run_number("tests/resources/xyzls_layout.simtel.gz") == 1
+    assert get_corsika_run_number(f"{TEST_RESOURCES_GENERATED}/xyzls_layout.simtel.gz") == 1
 
 
 def test_get_corsika_run_number_without_run_header_real_file(get_test_data_file):

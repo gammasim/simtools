@@ -7,6 +7,7 @@ import astropy.units as u
 import pytest
 
 from simtools.camera.camera_efficiency import CameraEfficiency
+from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 
 logger = logging.getLogger()
@@ -80,7 +81,7 @@ def test_make_run_command(simulator_camera_efficiency):
 def test_make_run_command_with_nsb_spectrum(simulator_camera_efficiency):
     # With mocked database, just verify make_run_command() executes without errors
     simulator_camera_efficiency.nsb_spectrum = (
-        "tests/resources/model_parameters/Benn_LaPalma_sky_converted.lis"
+        f"{TEST_RESOURCES_GENERATED}/model_parameters/Benn_LaPalma_sky_converted.lis"
     )
     command, _, _ = simulator_camera_efficiency.make_run_command()
 
@@ -215,7 +216,7 @@ def test_validate_or_fix_nsb_spectrum_file_format(simulator_camera_efficiency):
     """
     validated_nsb_spectrum_file = (
         simulator_camera_efficiency._validate_or_fix_nsb_spectrum_file_format(
-            "tests/resources/model_parameters/Benn_LaPalma_sky_converted.lis"
+            f"{TEST_RESOURCES_GENERATED}/model_parameters/Benn_LaPalma_sky_converted.lis"
         )
     )
     assert validated_nsb_spectrum_file.exists()

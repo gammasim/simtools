@@ -10,18 +10,16 @@ from astropy import units as u
 from astropy.table import Column, Table
 from astropy.utils.diff import report_diff_values
 
-from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH, TEST_RESOURCES_STATIC
 from simtools.data_model import schema, validate_data
 from simtools.io import ascii_handler
 
 logger = logging.getLogger()
 
 
-mirror_file = "tests/resources/manual_fixtures/MLTdata-preproduction.ecsv"
+mirror_file = f"{TEST_RESOURCES_STATIC}/MLTdata-preproduction.ecsv"
 mirror_2f_schema_file = SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
-num_gains_test_file = (
-    "tests/resources/manual_fixtures/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
-)
+num_gains_test_file = f"{TEST_RESOURCES_STATIC}/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
 
 
 @pytest.fixture

@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 from astropy.table import Table
 
+from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.visualization import plot_tables
 
 
@@ -72,7 +73,7 @@ def test_read_simtel_table_data_from_file():
         ]
     }
 
-    result = plot_tables.read_table_data(config, Path("tests/resources/model_parameters"))
+    result = plot_tables.read_table_data(config, Path(TEST_RESOURCES_GENERATED))
 
     assert len(result["test_table"]) == 2101
     assert result["test_table"].dtype.names == ("amplitude", "response")
@@ -93,7 +94,7 @@ def test_read_simtel_table_data_from_file_without_parameter_raises():
     with pytest.raises(
         ValueError, match=r"Parameter name must be provided for sim_telarray table reading\."
     ):
-        plot_tables.read_table_data(config, Path("tests/resources/model_parameters/"))
+        plot_tables.read_table_data(config, Path(TEST_RESOURCES_GENERATED))
 
 
 @mock.patch("simtools.visualization.plot_tables.gen.get_structure_array_from_table")
@@ -266,7 +267,7 @@ def test_read_table_and_normalize():
         "tables": [
             {
                 "file_name": (
-                    "tests/resources//SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv"
+                    f"{TEST_RESOURCES_GENERATED}/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv"
                 ),
                 "type": "legacy_lst_single_pe",
                 "label": "test_table",
