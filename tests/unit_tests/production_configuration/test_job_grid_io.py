@@ -2,8 +2,9 @@ from pathlib import Path
 
 import astropy.units as u
 import pytest
+from astropy.table import Table
 
-import simtools.production_configuration.job_grid_io as job_grid_io
+from simtools.production_configuration import job_grid_io
 
 
 def _job_rows():
@@ -42,8 +43,8 @@ def _metadata():
 def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
     output_file = Path(tmp_test_directory) / "job_grid.ecsv"
 
-    serialize_job_grid(_job_rows(), output_file, metadata=_metadata())
-    rows, metadata = read_job_grid(output_file)
+    job_grid_io.serialize_job_grid(_job_rows(), output_file, metadata=_metadata())
+    rows, metadata = job_grid_io.read_job_grid(output_file)
 
     assert metadata["site"] == "North"
     assert rows[0]["energy_min"] == 30 * u.GeV
@@ -88,6 +89,19 @@ def test_serialize_job_grid_stream_appends_astropy_formatted_chunks(
     assert rows[1]["array_layout_name"] == "layout with spaces"
 
 
+def test_serialize_job_grid_stream_skips_empty_optional_radec_columns(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "job_grid.ecsv"
+    rows_to_write = _job_rows()
+    rows_to_write[0]["ra"] = None
+    rows_to_write[0]["dec"] = None
+
+    job_grid_io.serialize_job_grid_stream(iter(rows_to_write), output_file, metadata=_metadata())
+    output_table = Table.read(output_file, format="ascii.ecsv")
+
+    assert "ra" not in output_table.colnames
+    assert "dec" not in output_table.colnames
+
+
 def test_serialize_job_grid_rejects_non_ecsv_output(tmp_test_directory):
     output_file = Path(tmp_test_directory) / "job_grid.txt"
 
@@ -101,7 +115,7 @@ def test_serialize_job_grid_requires_nsb_rate(tmp_test_directory):
     rows[0].pop("nsb_rate")
 
     with pytest.raises(KeyError, match="nsb_rate"):
-        serialize_job_grid(rows, output_file, metadata=_metadata())
+        job_grid_io.serialize_job_grid(rows, output_file, metadata=_metadata())
 
 
 def test_read_job_grid_rejects_non_ecsv_input(tmp_test_directory):
@@ -109,4 +123,4 @@ def test_read_job_grid_rejects_non_ecsv_input(tmp_test_directory):
     input_file.write_text("dummy", encoding="utf-8")
 
     with pytest.raises(ValueError, match="\\.ecsv"):
-        read_job_grid(input_file)
+        job_grid_io.read_job_grid(input_file)
