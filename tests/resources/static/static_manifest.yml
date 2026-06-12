@@ -18,6 +18,8 @@ files:
     description: Telescope positions utm metadata fixture
   - file_name: telescope_positions-North-with-calibration-devices-ground.ecsv
     description: Telescope position table in ground coordinates with calibration devices
+  - file_name: telescope_positions-North-mercator.ecsv
+    description: Telescope position table in mercator coordinates
   - file_name: telescope_positions-South-ground.ecsv
     description: Telescope position table in ground coordinates for the South site
   - file_name: model_parameters/schema-0.2.0/num_gains-1.0.0.json
@@ -32,3 +34,7 @@ files:
     description: Example ray tracing photon list file.
   - file_name: ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv
     description: Example ray tracing file in ECSV format.
+  - file_name: dummy_apptainer_image.sif
+    description: Dummy Apptainer image file for testing.
+  - file_name: trigger_rates_user_spectrum_powerlaw.yml
+    description: Example user spectrum configuration file for trigger rate calculations.

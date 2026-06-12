@@ -3,10 +3,8 @@ applications:
 - application: simtools-validate-file-using-schema
   configuration:
     data_type: data
-    file_name: tests/resources/static/reference_point_altitude.json
-    schema: 'https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameters/reference_point_altitude.schema.yml
-
-      '
+    file_name: tests/resources/static/model_parameters/schema-0.2.0/num_gains-1.0.0.json
+    schema: src/simtools/schemas/model_parameters/num_gains.schema.yml
   test_name: json_validate_data
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
