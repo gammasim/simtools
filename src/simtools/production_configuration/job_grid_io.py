@@ -1,8 +1,7 @@
 """Read and write executable job grids for production preparation."""
 
-import csv
-import itertools
 import logging
+from io import StringIO
 from pathlib import Path
 
 import numpy as np
@@ -13,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 _ECSV_SUFFIX = ".ecsv"
 _ECSV_FORMAT = "ascii.ecsv"
+_STREAM_CHUNK_SIZE = 10_000
 
 JOB_GRID_COLUMNS = [
     "primary",
@@ -190,15 +190,11 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     output_table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
 
 
-def _format_streamed_value(value):
-    """Format one serialized row value for ECSV output."""
-    if value is None:
-        return ""
-    if isinstance(value, (float, np.floating)):
-        return repr(float(value))
-    if isinstance(value, (int, np.integer)):
-        return str(int(value))
-    return str(value)
+def _build_output_table(output_rows, output_columns, metadata=None):
+    """Build an Astropy table for serialized output rows."""
+    output_table = Table(rows=output_rows, names=output_columns)
+    output_table.meta = metadata or {}
+    return output_table
 
 
 def _write_empty_ecsv_header(output_path, output_columns, metadata):
@@ -209,6 +205,52 @@ def _write_empty_ecsv_header(output_path, output_columns, metadata):
     )
     empty_table.meta = metadata
     empty_table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
+
+
+def _extract_ecsv_data_rows(table):
+    """Return Astropy-formatted ECSV data rows without metadata or column header."""
+    buffer = StringIO()
+    table.write(buffer, format=_ECSV_FORMAT)
+    data_rows = []
+    column_header_seen = False
+    for line in buffer.getvalue().splitlines():
+        if line.startswith("#"):
+            continue
+        if not column_header_seen:
+            column_header_seen = True
+            continue
+        data_rows.append(line)
+    return data_rows
+
+
+def _write_ecsv_data_rows(output_path, output_rows, output_columns):
+    """Append Astropy-formatted ECSV data rows to an existing ECSV file."""
+    output_table = _build_output_table(output_rows, output_columns)
+    data_rows = _extract_ecsv_data_rows(output_table)
+    with output_path.open("a", encoding="utf-8") as output:
+        for row in data_rows:
+            output.write(f"{row}\n")
+
+
+def _serialize_output_row(job_row, output_columns):
+    """Serialize one job row and restrict it to output columns."""
+    serialized_row = _serialize_job_row(job_row)
+    return {column: serialized_row.get(column) for column in output_columns}
+
+
+def _flush_stream_chunk(output_path, output_rows, output_columns, metadata, write_header):
+    """Write or append one chunk of serialized output rows."""
+    if write_header:
+        output_table = _build_output_table(output_rows, output_columns, metadata)
+        output_table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
+    else:
+        _write_ecsv_data_rows(output_path, output_rows, output_columns)
+
+
+def _iter_with_first(first_row, row_iterator):
+    """Iterate over the first row followed by the remaining row iterator."""
+    yield first_row
+    yield from row_iterator
 
 
 def serialize_job_grid_stream(job_rows, output_file, metadata=None):
@@ -253,15 +295,31 @@ def serialize_job_grid_stream(job_rows, output_file, metadata=None):
     output_columns = [*JOB_GRID_COLUMNS, *optional_columns]
     _write_empty_ecsv_header(output_path, output_columns, metadata)
 
+    output_rows = []
     row_count = 0
-    with output_path.open("a", encoding="utf-8", newline="") as output:
-        writer = csv.writer(output, delimiter=" ", lineterminator="\n")
-        for job_row in itertools.chain([first_row], row_iterator):
-            serialized_row = _serialize_job_row(job_row)
-            writer.writerow(
-                [_format_streamed_value(serialized_row.get(column)) for column in output_columns]
+    write_header = True
+    for job_row in _iter_with_first(first_row, row_iterator):
+        output_rows.append(_serialize_output_row(job_row, output_columns))
+        row_count += 1
+        if len(output_rows) >= _STREAM_CHUNK_SIZE:
+            _flush_stream_chunk(
+                output_path,
+                output_rows,
+                output_columns,
+                metadata,
+                write_header=write_header,
             )
-            row_count += 1
+            output_rows = []
+            write_header = False
+
+    if output_rows:
+        _flush_stream_chunk(
+            output_path,
+            output_rows,
+            output_columns,
+            metadata,
+            write_header=write_header,
+        )
 
     logger.info(f"Writing job grid with {row_count} rows to '{output_path}'.")
     return row_count

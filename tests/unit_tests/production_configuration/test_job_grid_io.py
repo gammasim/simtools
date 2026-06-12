@@ -3,6 +3,7 @@ from pathlib import Path
 import astropy.units as u
 import pytest
 
+import simtools.production_configuration.job_grid_io as job_grid_io
 from simtools.production_configuration.job_grid_io import (
     read_job_grid,
     serialize_job_grid,
@@ -69,6 +70,23 @@ def test_serialize_job_grid_stream_and_read_job_grid_ecsv(tmp_test_directory):
     assert rows[0]["energy_min"] == 30 * u.GeV
     assert rows[0]["ra"] == 123 * u.deg
     assert rows[0]["dec"] == -45 * u.deg
+
+
+def test_serialize_job_grid_stream_appends_astropy_formatted_chunks(
+    tmp_test_directory, monkeypatch
+):
+    output_file = Path(tmp_test_directory) / "job_grid.ecsv"
+    rows_to_write = _job_rows()
+    second_row = dict(rows_to_write[0], run_number=11, array_layout_name="layout with spaces")
+    rows_to_write.append(second_row)
+    monkeypatch.setattr(job_grid_io, "_STREAM_CHUNK_SIZE", 1)
+
+    row_count = serialize_job_grid_stream(iter(rows_to_write), output_file, metadata=_metadata())
+    rows, _ = read_job_grid(output_file)
+
+    assert row_count == 2
+    assert [row["run_number"] for row in rows] == [10, 11]
+    assert rows[1]["array_layout_name"] == "layout with spaces"
 
 
 def test_serialize_job_grid_rejects_non_ecsv_output(tmp_test_directory):
