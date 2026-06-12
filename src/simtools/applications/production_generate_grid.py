@@ -323,7 +323,7 @@ def _add_arguments(parser):
     parser.add_argument(
         "--total_showers",
         help="Total number of showers to simulate.",
-        type=int,
+        type=parser.scientific_int,
         required=False,
         default=None,
     )
