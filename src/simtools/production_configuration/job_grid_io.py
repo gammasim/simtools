@@ -11,6 +11,9 @@ from astropy.table import Table
 
 logger = logging.getLogger(__name__)
 
+_ECSV_SUFFIX = ".ecsv"
+_ECSV_FORMAT = "ascii.ecsv"
+
 JOB_GRID_COLUMNS = [
     "primary",
     "azimuth_angle_value",
@@ -168,7 +171,7 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     serialized_rows = [_serialize_job_row(job_row) for job_row in job_rows]
     metadata = metadata or {}
 
-    if output_path.suffix.lower() != ".ecsv":
+    if output_path.suffix.lower() != _ECSV_SUFFIX:
         raise ValueError("Job grid output file must use the '.ecsv' extension.")
 
     optional_columns = [
@@ -184,7 +187,7 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     output_table = Table(rows=output_rows, names=output_columns)
     output_table.meta = metadata
     logger.info(f"Writing job grid with {len(job_rows)} rows to '{output_path}'.")
-    output_table.write(output_path, format="ascii.ecsv", overwrite=True)
+    output_table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
 
 
 def _format_streamed_value(value):
@@ -205,7 +208,7 @@ def _write_empty_ecsv_header(output_path, output_columns, metadata):
         dtype=[_JOB_GRID_COLUMN_DTYPES[column] for column in output_columns],
     )
     empty_table.meta = metadata
-    empty_table.write(output_path, format="ascii.ecsv", overwrite=True)
+    empty_table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
 
 
 def serialize_job_grid_stream(job_rows, output_file, metadata=None):
@@ -219,7 +222,7 @@ def serialize_job_grid_stream(job_rows, output_file, metadata=None):
     output_path = Path(output_file)
     metadata = metadata or {}
 
-    if output_path.suffix.lower() != ".ecsv":
+    if output_path.suffix.lower() != _ECSV_SUFFIX:
         raise ValueError("Job grid output file must use the '.ecsv' extension.")
 
     row_iterator = iter(job_rows)
@@ -266,9 +269,9 @@ def read_job_grid(input_file):
     """
     input_path = Path(input_file)
 
-    if input_path.suffix.lower() != ".ecsv":
+    if input_path.suffix.lower() != _ECSV_SUFFIX:
         raise ValueError("Job grid input file must use the '.ecsv' extension.")
 
-    table = Table.read(input_path, format="ascii.ecsv")
+    table = Table.read(input_path, format=_ECSV_FORMAT)
     rows = [{column_name: row[column_name] for column_name in table.colnames} for row in table]
     return [_deserialize_job_row(row) for row in rows], dict(table.meta)
