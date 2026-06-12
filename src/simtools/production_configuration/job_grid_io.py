@@ -218,6 +218,20 @@ def serialize_job_grid_stream(job_rows, output_file, metadata=None):
     This avoids materializing serialized rows and the full Astropy table in memory.
     Optional RA/Dec columns are determined from the first row, which matches the
     homogeneous output produced by the production grid generator.
+
+    Parameters
+    ----------
+    job_rows : iterable of dict
+        Job rows in the in-memory schema.
+    output_file : str or pathlib.Path
+        Output file path. Must use the ``.ecsv`` suffix.
+    metadata : dict, optional
+        Metadata to store alongside the rows.
+
+    Returns
+    -------
+    int
+        Number of rows written to the output file.
     """
     output_path = Path(output_file)
     metadata = metadata or {}

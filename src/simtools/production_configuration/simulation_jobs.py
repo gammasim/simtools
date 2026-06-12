@@ -1362,6 +1362,12 @@ def iter_simulation_jobs(args_dict):
     Activates ProductionGridEngine when axis-range CLI arguments are provided;
     otherwise uses explicit azimuth * zenith axes.
 
+    Parameters
+    ----------
+    args_dict : dict
+        Application arguments containing axes, energy ranges, shower settings,
+        interaction models, and output-grid constraints.
+
     Yields
     ------
     dict
@@ -1422,6 +1428,12 @@ def iter_simulation_jobs(args_dict):
 def build_simulation_jobs(args_dict):
     """
     Expand production config into full simulation job matrix.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Application arguments containing axes, energy ranges, shower settings,
+        interaction models, and output-grid constraints.
 
     Returns
     -------
