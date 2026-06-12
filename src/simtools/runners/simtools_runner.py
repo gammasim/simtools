@@ -118,8 +118,10 @@ def _copy_collection_files(configurations, collection_config, overwrite_files=Fa
     configurations : list[dict]
         Application configurations from the workflow config file.
     collection_config : dict or list[dict] or None
-        A single collection entry (``{output_path, files}``) or a list of such
-        entries. ``None`` or an empty value is silently ignored.
+        A single collection entry (``{output_path, files, source_directory}``) or
+        a list of such entries. ``source_directory`` is optional, can be a string
+        or list of strings, and defaults to ``output_path``. ``None`` or an empty
+        value is silently ignored.
     overwrite_files : bool
         If True, allow overwriting existing files in collection output paths
         when different sources resolve to the same basename.
@@ -135,12 +137,15 @@ def _copy_collection_files(configurations, collection_config, overwrite_files=Fa
     if isinstance(collection_config, dict):
         collection_config = [collection_config]
 
-    source_directories = _collect_source_directories(configurations)
     for entry in collection_config:
         output_path = entry.get("output_path")
         files = entry.get("files") or []
         if output_path is None or not files:
             continue
+        source_directories = _collect_source_directories(
+            configurations,
+            source_directory=entry.get("source_directory"),
+        )
         collection_output_path = Path(output_path)
         collection_output_path.mkdir(parents=True, exist_ok=True)
         for pattern in files:
@@ -181,16 +186,33 @@ def _copy_pattern_files(pattern, source_directories, destination, overwrite_file
         shutil.copy2(source_file, dest)
 
 
-def _collect_source_directories(configurations):
-    """Return unique output directories from application configurations."""
+def _collect_source_directories(configurations, source_directory=None):
+    """Return unique source directories from application configurations.
+
+    ``source_directory`` selects application configuration keys containing
+    directories to search. It can be a string or a list of strings and defaults
+    to ``output_path``.
+    """
     source_directories = []
+    source_directory_keys = _normalize_collection_source_directories(source_directory)
     for config in configurations:
-        source_dir = config.get("configuration", {}).get("output_path")
-        if source_dir is not None:
-            source_directory = Path(source_dir)
-            if source_directory not in source_directories:
-                source_directories.append(source_directory)
+        app_configuration = config.get("configuration", {})
+        for source_key in source_directory_keys:
+            source_dir = app_configuration.get(source_key)
+            if source_dir is not None:
+                source_path = Path(source_dir)
+                if source_path not in source_directories:
+                    source_directories.append(source_path)
     return source_directories
+
+
+def _normalize_collection_source_directories(source_directory):
+    """Return source directory keys as a list."""
+    if source_directory is None:
+        return ["output_path"]
+    if isinstance(source_directory, str):
+        return [source_directory]
+    return list(source_directory)
 
 
 def _find_collection_files(pattern, source_directories):

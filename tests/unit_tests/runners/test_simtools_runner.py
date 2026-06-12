@@ -450,6 +450,110 @@ def test_run_applications_copies_collection_files(monkeypatch, tmp_test_director
     assert copied_file.read_text(encoding="utf-8") == "test-data"
 
 
+def test_run_applications_copies_collection_files_from_pack_for_grid_register(
+    monkeypatch, tmp_test_directory
+):
+    """Copy collection files from pack_for_grid_register when not in output_path."""
+    tmp_path = Path(str(tmp_test_directory))
+    source_output = tmp_path / "app_output"
+    source_output.mkdir(parents=True, exist_ok=True)
+    grid_output = tmp_path / "grid_output"
+    grid_output.mkdir(parents=True, exist_ok=True)
+    source_file = grid_output / "result.simtel.zst"
+    source_file.write_text("grid-data", encoding="utf-8")
+
+    collection_output = tmp_path / "collection"
+
+    mock_configurations = [
+        {
+            "application": "app1",
+            "run_application": True,
+            "configuration": {
+                "activity_id": "cfg-id-1",
+                "output_path": str(source_output),
+                "pack_for_grid_register": str(grid_output),
+            },
+        }
+    ]
+    log_file_path = tmp_path / "simtools.log"
+
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._read_application_configuration",
+        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id")),
+    )
+    monkeypatch.setattr(
+        "simtools.io.ascii_handler.collect_data_from_file",
+        mock.Mock(
+            return_value={
+                "collection": {
+                    "output_path": str(collection_output),
+                    "source_directory": "pack_for_grid_register",
+                    "files": ["result.simtel.zst"],
+                }
+            }
+        ),
+    )
+    monkeypatch.setattr(
+        "simtools.dependencies.get_version_string",
+        mock.Mock(return_value="simtools version: 1.2.3\n"),
+    )
+    monkeypatch.setattr(
+        "simtools.job_execution.job_manager.submit",
+        mock.Mock(return_value=mock.Mock(stdout="ok", stderr="")),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner.workflow_metadata.build_workflow_activity_metadata",
+        mock.Mock(return_value={"id": "wf-activity-id"}),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner.workflow_metadata.update_model_parameter_metadata_file",
+        mock.Mock(),
+    )
+
+    simtools_runner.run_applications(
+        {
+            "config_file": "dummy_config.yml",
+            "steps": None,
+            "ignore_runtime_environment": False,
+        }
+    )
+
+    copied_file = collection_output / "result.simtel.zst"
+    assert copied_file.exists()
+    assert copied_file.read_text(encoding="utf-8") == "grid-data"
+
+
+def test_copy_collection_files_uses_source_directory_list(tmp_test_directory):
+    """Copy collection files from all configured source directories."""
+    tmp_path = Path(str(tmp_test_directory))
+    source_output = tmp_path / "app_output_multi"
+    source_output.mkdir()
+    grid_output = tmp_path / "grid_output_multi"
+    grid_output.mkdir()
+    (source_output / "result.dat").write_text("output-data", encoding="utf-8")
+    (grid_output / "result.simtel.zst").write_text("grid-data", encoding="utf-8")
+
+    collection_output = tmp_path / "collection_multi"
+    configurations = [
+        {
+            "configuration": {
+                "output_path": str(source_output),
+                "pack_for_grid_register": str(grid_output),
+            }
+        }
+    ]
+    collection_config = {
+        "output_path": str(collection_output),
+        "source_directory": ["output_path", "pack_for_grid_register"],
+        "files": ["result.dat", "result.simtel.zst"],
+    }
+
+    simtools_runner._copy_collection_files(configurations, collection_config)
+
+    assert (collection_output / "result.dat").read_text(encoding="utf-8") == "output-data"
+    assert (collection_output / "result.simtel.zst").read_text(encoding="utf-8") == "grid-data"
+
+
 def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_test_directory):
     mock_args_dict = {
         "config_file": "dummy_config.yml",
