@@ -2,9 +2,8 @@
 applications:
 - application: simtools-derive-photon-electron-spectrum
   configuration:
-    afterpulse_spectrum: tests/resources/static/LST_afterpulses.dat
-    input_spectrum: |
-     tests/resources/generated/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
+    afterpulse_spectrum: tests/resources/generated/LST_afterpulses.dat
+    input_spectrum: tests/resources/generated/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
     log_level: DEBUG
     output_file: test_single_pe_lst.ecsv
     output_path: simtools-output

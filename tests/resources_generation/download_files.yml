@@ -3,6 +3,9 @@ files:
   - url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-model-parameter-setting/-/raw/main/input/LSTN-01/pm_photoelectron_spectrum/019d7771-e0e0-7d09-a9e3-50b5d642bed9/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv?ref_type=heads
     description: LSTN-01 PM photoelectron spectrum reference file
     target_path: generated/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
+  - url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-model-parameter-setting/-/raw/main/input/LSTN-design/pm_photoelectron_spectrum/019d776b-e24c-741d-bc05-e3f6f7ec77c7/LST_afterpulses.dat?ref_type=heads
+    description: LSTN-deisgn PM photoelectron after pulses spectrum (sim_telarray format)
+    target_path: generated/LST_afterpulses.dat
   - url: https://gitlab.cta-observatory.org/cta-science/simulations/productions/production-configuration/-/raw/main/data/corsika_lookups/v1.0.0/gamma/corsika_limits_north.ecsv?ref_type=heads
     description: CORSIKA limits for the North site (gamma diffuse)
     target_path: generated/corsika_simulation_limits/corsika_limits_north.ecsv
