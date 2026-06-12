@@ -284,6 +284,13 @@ jobs:
         shell: bash -leo pipefail {0}
 
     steps:
+      - name: Install Git LFS
+        run: |
+          if ! command -v git-lfs >/dev/null 2>&1; then
+            apt-get update
+            apt-get install --yes --no-install-recommends git-lfs
+          fi
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
