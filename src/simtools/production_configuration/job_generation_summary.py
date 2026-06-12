@@ -7,7 +7,16 @@ import numpy as np
 
 @dataclass
 class GeneratedRowSummary:
-    """Track generated-row ranges without retaining all rows."""
+    """
+    Track generated-row ranges without retaining all rows.
+
+    Attributes
+    ----------
+    count : int
+        Number of rows added to the summary.
+    energy_min, energy_max, core_scatter_max, view_cone_min, view_cone_max : tuple or None
+        Minimum and maximum bounds for the corresponding generated-row quantities.
+    """
 
     count: int = 0
     energy_min: object = None
@@ -17,7 +26,14 @@ class GeneratedRowSummary:
     view_cone_max: object = None
 
     def add(self, row):
-        """Add one generated row to the summary."""
+        """
+        Add one generated row to the summary.
+
+        Parameters
+        ----------
+        row : dict
+            Generated job row containing energy, core-scatter, and view-cone quantities.
+        """
         self.count += 1
         self.energy_min = update_quantity_bounds(self.energy_min, row["energy_min"])
         self.energy_max = update_quantity_bounds(self.energy_max, row["energy_max"])
@@ -30,7 +46,20 @@ class GeneratedRowSummary:
 
 @dataclass
 class ShowerRoundingSummary:
-    """Aggregate total-showers rounding warnings for large grids."""
+    """
+    Aggregate total-showers rounding warnings for large grids.
+
+    Attributes
+    ----------
+    count : int
+        Number of grid points requiring a total-showers adjustment.
+    first_effective_total_showers : int or None
+        Effective total showers for the first adjusted grid point.
+    first_showers_per_run : int or None
+        Showers per run for the first adjusted grid point.
+    first_adjusted_total_showers : int or None
+        Rounded total showers for the first adjusted grid point.
+    """
 
     count: int = 0
     first_effective_total_showers: int | None = None
@@ -38,7 +67,18 @@ class ShowerRoundingSummary:
     first_adjusted_total_showers: int | None = None
 
     def add(self, effective_total_showers, selected_showers_per_run, adjusted_total_showers):
-        """Record one total-showers rounding adjustment."""
+        """
+        Record one total-showers rounding adjustment.
+
+        Parameters
+        ----------
+        effective_total_showers : int
+            Total showers requested for the grid point after any configured scaling.
+        selected_showers_per_run : int
+            Showers per run selected for the grid point.
+        adjusted_total_showers : int
+            Total showers after rounding up to full runs.
+        """
         self.count += 1
         if self.first_effective_total_showers is None:
             self.first_effective_total_showers = effective_total_showers
@@ -46,7 +86,14 @@ class ShowerRoundingSummary:
             self.first_adjusted_total_showers = adjusted_total_showers
 
     def log(self, logger):
-        """Log one aggregate warning for all recorded adjustments."""
+        """
+        Log one aggregate warning for all recorded adjustments.
+
+        Parameters
+        ----------
+        logger : logging.Logger
+            Logger used for the warning message.
+        """
         if self.count == 0:
             return
         logger.warning(
@@ -62,7 +109,48 @@ class ShowerRoundingSummary:
 
 @dataclass
 class SimulationJobContext:
-    """Resolved inputs shared by simulation-job generation passes."""
+    """
+    Resolved inputs shared by simulation-job generation passes.
+
+    Attributes
+    ----------
+    grid_axes : dict
+        Normalized cartesian axes for primary, model, and interaction expansion.
+    energy_ranges : list
+        Energy range pairs used when building job rows.
+    showers_per_run : int
+        Baseline showers per run.
+    showers_per_run_power_law : tuple or None
+        Optional energy-dependent showers-per-run scaling definition.
+    showers_per_run_scaling : str
+        Zenith-dependent showers-per-run scaling mode.
+    total_showers : int or None
+        Requested total showers per grid point.
+    total_showers_scaling : str
+        Total-showers scaling mode.
+    zenith_angle_scaling_factor : float
+        Scaling factor for zenith-dependent total showers.
+    energy_max_scaling : tuple or None
+        Optional zenith-dependent maximum-energy scaling definition.
+    number_of_runs : int
+        Fixed number of runs when total showers is not configured.
+    run_number : int
+        First run number to assign at each grid point.
+    core_scatter : list
+        Configured core-scatter definition.
+    view_cone_min : astropy.units.Quantity
+        Configured minimum view-cone angle.
+    configured_view_cone_max : astropy.units.Quantity
+        Configured maximum view-cone angle.
+    core_scatter_number : int
+        Number of core-scatter samples.
+    nsb_rates_per_model_version : dict
+        NSB interpolation rates keyed by model version.
+    observation_grids_per_model_version : dict
+        Generated observation grids keyed by model version.
+    resolved_layout_names : dict
+        Resolved array layout names keyed by model version.
+    """
 
     grid_axes: dict
     energy_ranges: list
@@ -85,7 +173,21 @@ class SimulationJobContext:
 
 
 def update_quantity_bounds(bounds, value):
-    """Update quantity min/max bounds with one value."""
+    """
+    Update quantity min/max bounds with one value.
+
+    Parameters
+    ----------
+    bounds : tuple or None
+        Existing ``(minimum, maximum)`` quantity bounds, or None for the first value.
+    value : astropy.units.Quantity
+        Quantity to include in the bounds.
+
+    Returns
+    -------
+    tuple
+        Updated ``(minimum, maximum)`` quantity bounds.
+    """
     if bounds is None:
         return value, value
     value_for_min = value.to(bounds[0].unit)
@@ -94,7 +196,19 @@ def update_quantity_bounds(bounds, value):
 
 
 def format_quantity_bounds(bounds):
-    """Format precomputed quantity min/max bounds."""
+    """
+    Format precomputed quantity min/max bounds.
+
+    Parameters
+    ----------
+    bounds : tuple
+        ``(minimum, maximum)`` quantity bounds to format.
+
+    Returns
+    -------
+    str
+        Compact value or range string with unit.
+    """
     quantity_min, quantity_max = bounds
     summary_unit = quantity_max.unit
     min_value = quantity_min.to_value(summary_unit)
@@ -105,7 +219,16 @@ def format_quantity_bounds(bounds):
 
 
 def log_streamed_row_summary(summary, logger):
-    """Log a compact summary collected during streaming generation."""
+    """
+    Log a compact summary collected during streaming generation.
+
+    Parameters
+    ----------
+    summary : GeneratedRowSummary
+        Summary object populated while job rows were streamed.
+    logger : logging.Logger
+        Logger used for summary messages.
+    """
     if summary.count == 0:
         logger.info("Generated 0 simulation rows after applying all clipping and scaling rules.")
         return
