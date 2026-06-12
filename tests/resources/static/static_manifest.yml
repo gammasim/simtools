@@ -38,3 +38,9 @@ files:
     description: Dummy Apptainer image file for testing.
   - file_name: trigger_rates_user_spectrum_powerlaw.yml
     description: Example user spectrum configuration file for trigger rate calculations.
+  - file_name: grid_definition.yaml
+    description: Example grid definition file for simulations.
+  - file_name: info_test_model_parameter_changes.yml
+    description: Example configuration file for testing model parameter changes.
+  - file_name: info_test_camera_efficiency_change_LSTN-02.yml
+    description: Example configuration file for testing camera efficiency changes.

@@ -1,0 +1,12 @@
+---
+model_version: "6.0.2"
+model_update: "patch_update"
+model_version_history:
+  - "6.0.2"
+description: "test file"
+changes:
+  LSTN-design:
+    camera_transmission:
+      version: "2.0.0"
+      value: 0.1
+      unit: null

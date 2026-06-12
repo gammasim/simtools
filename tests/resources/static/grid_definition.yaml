@@ -1,0 +1,6 @@
+---
+# Grid definition for testing CORSIKA limit merging
+zenith: [20.0, 40.0, 60.0]
+azimuth: [0.0, 180.0]
+nsb_level: [1.0, 5.0]
+array_name: [alpha]

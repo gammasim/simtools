@@ -8,11 +8,17 @@ applications:
     output_file: test_single_pe_lst.ecsv
     output_path: simtools-output
     step_size: 0.02
+    scale_afterpulse_spectrum: 1.0
+    fit_afterpulse: false
+    afterpulse_decay_factor_fixed_value: 15
+    afterpulse_amplitude_range:
+    - 3.6
+    - 40
     use_norm_spe: true
   integration_tests:
   - output_file: test_single_pe_lst.dat
   - output_file: test_single_pe_lst.ecsv
-  - reference_output_file: ${static:spe_LST_2022-04-27_AP2.0e-4.ecsv}
+  - reference_output_file: ${generated:spe_LST_2022-04-27_AP2.0e-4.ecsv}
     tolerance: 0.0001
   test_name: LST_legacy_format
   test_use_case: UC-150-2.1.2
