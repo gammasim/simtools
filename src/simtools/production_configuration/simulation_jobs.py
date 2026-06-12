@@ -7,7 +7,6 @@ model versions, energy ranges, and run counts into a complete job parameter set.
 import itertools
 import logging
 import shlex
-from importlib import import_module
 
 import numpy as np
 from astropy import units as u
@@ -26,16 +25,17 @@ from simtools.production_configuration.corsika_limits_lookup import (
     CorsikaLimitsLookup,
     attach_lookup_limits_to_point,
 )
+from simtools.production_configuration.job_generation_summary import (
+    GeneratedRowSummary,
+    ShowerRoundingSummary,
+    SimulationJobContext,
+    log_streamed_row_summary,
+)
 from simtools.production_configuration.observation_grid import ProductionGridEngine
 from simtools.utils.general import ensure_list
 from simtools.utils.value_conversion import get_value_as_quantity
 
 logger = logging.getLogger(__name__)
-_job_generation_summary = import_module("simtools.production_configuration.job_generation_summary")
-GeneratedRowSummary = _job_generation_summary.GeneratedRowSummary
-ShowerRoundingSummary = _job_generation_summary.ShowerRoundingSummary
-SimulationJobContext = _job_generation_summary.SimulationJobContext
-log_streamed_row_summary = _job_generation_summary.log_streamed_row_summary
 
 _GRID_AXES = [
     "primary",
@@ -313,11 +313,6 @@ def build_observing_location(site, model_version):
     )
 
 
-def _instantiate_production_grid_engine(engine_kwargs):
-    """Instantiate the production-grid engine from resolved keyword arguments."""
-    return ProductionGridEngine(**engine_kwargs)
-
-
 def build_axes_dict_from_cli_args(args_dict):
     """Build ProductionGridEngine-compatible axes configuration from CLI arguments."""
     axis_configs = _resolve_axis_configs(args_dict)
@@ -418,19 +413,18 @@ def build_production_grid_engine(args_dict, array_layout_name=None, model_versio
         resolved_model_version,
     )
 
-    engine_kwargs = {
-        "axes": axes,
-        "coordinate_system": coordinate_system,
-        "observing_location": observing_location,
-        "time_of_observation": resolve_time_of_observation(
+    return ProductionGridEngine(
+        axes=axes,
+        coordinate_system=coordinate_system,
+        observing_location=observing_location,
+        time_of_observation=resolve_time_of_observation(
             args_dict.get("time_of_observation"),
             args_dict,
         ),
-        "lookup_table": args_dict.get("corsika_limits"),
-        "array_layout_name": resolved_layout_name,
-        "lookup_nsb_rate": _resolve_nsb_rate(args_dict, resolved_model_version),
-    }
-    return _instantiate_production_grid_engine(engine_kwargs)
+        lookup_table=args_dict.get("corsika_limits"),
+        array_layout_name=resolved_layout_name,
+        lookup_nsb_rate=_resolve_nsb_rate(args_dict, resolved_model_version),
+    )
 
 
 def build_job_grid_metadata(args_dict):
