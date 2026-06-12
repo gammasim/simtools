@@ -4,11 +4,6 @@ import astropy.units as u
 import pytest
 
 import simtools.production_configuration.job_grid_io as job_grid_io
-from simtools.production_configuration.job_grid_io import (
-    read_job_grid,
-    serialize_job_grid,
-    serialize_job_grid_stream,
-)
 
 
 def _job_rows():
@@ -62,8 +57,10 @@ def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
 def test_serialize_job_grid_stream_and_read_job_grid_ecsv(tmp_test_directory):
     output_file = Path(tmp_test_directory) / "job_grid.ecsv"
 
-    row_count = serialize_job_grid_stream(iter(_job_rows()), output_file, metadata=_metadata())
-    rows, metadata = read_job_grid(output_file)
+    row_count = job_grid_io.serialize_job_grid_stream(
+        iter(_job_rows()), output_file, metadata=_metadata()
+    )
+    rows, metadata = job_grid_io.read_job_grid(output_file)
 
     assert row_count == 1
     assert metadata["site"] == "North"
@@ -81,8 +78,10 @@ def test_serialize_job_grid_stream_appends_astropy_formatted_chunks(
     rows_to_write.append(second_row)
     monkeypatch.setattr(job_grid_io, "_STREAM_CHUNK_SIZE", 1)
 
-    row_count = serialize_job_grid_stream(iter(rows_to_write), output_file, metadata=_metadata())
-    rows, _ = read_job_grid(output_file)
+    row_count = job_grid_io.serialize_job_grid_stream(
+        iter(rows_to_write), output_file, metadata=_metadata()
+    )
+    rows, _ = job_grid_io.read_job_grid(output_file)
 
     assert row_count == 2
     assert [row["run_number"] for row in rows] == [10, 11]
@@ -93,7 +92,7 @@ def test_serialize_job_grid_rejects_non_ecsv_output(tmp_test_directory):
     output_file = Path(tmp_test_directory) / "job_grid.txt"
 
     with pytest.raises(ValueError, match="\\.ecsv"):
-        serialize_job_grid(_job_rows(), output_file, metadata=_metadata())
+        job_grid_io.serialize_job_grid(_job_rows(), output_file, metadata=_metadata())
 
 
 def test_serialize_job_grid_requires_nsb_rate(tmp_test_directory):
