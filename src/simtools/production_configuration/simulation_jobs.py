@@ -891,8 +891,8 @@ def _compute_per_point_runs(
     return per_point_number_of_runs
 
 
-def _iter_rows_for_point(
-    point_base,
+def _iter_run_groups_for_point(
+    zenith_angle,
     energy_ranges,
     lower_energy_threshold,
     showers_per_run,
@@ -900,14 +900,12 @@ def _iter_rows_for_point(
     number_of_runs,
     total_showers,
     total_showers_scaling,
-    run_number,
     showers_per_run_scaling="fixed",
     energy_max_scaling=None,
     zenith_angle_scaling_factor=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
     rounding_summary=None,
 ):
-    """Iterate over all simulation-run rows for a single grid point."""
-    zenith_angle = point_base["zenith_angle"]
+    """Iterate over selected energy ranges and run counts for one grid point."""
     for energy_range_pair in energy_ranges:
         selected_energy_range = _apply_clipping_chain(
             zenith_angle,
@@ -939,6 +937,43 @@ def _iter_rows_for_point(
                 rounding_summary=rounding_summary,
             )
 
+        yield selected_energy_range, selected_showers_per_run, per_point_number_of_runs
+
+
+def _iter_rows_for_point(
+    point_base,
+    energy_ranges,
+    lower_energy_threshold,
+    showers_per_run,
+    showers_per_run_power_law,
+    number_of_runs,
+    total_showers,
+    total_showers_scaling,
+    run_number,
+    showers_per_run_scaling="fixed",
+    energy_max_scaling=None,
+    zenith_angle_scaling_factor=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
+    rounding_summary=None,
+):
+    """Iterate over all simulation-run rows for a single grid point."""
+    for (
+        selected_energy_range,
+        selected_showers_per_run,
+        per_point_number_of_runs,
+    ) in _iter_run_groups_for_point(
+        zenith_angle=point_base["zenith_angle"],
+        energy_ranges=energy_ranges,
+        lower_energy_threshold=lower_energy_threshold,
+        showers_per_run=showers_per_run,
+        showers_per_run_power_law=showers_per_run_power_law,
+        number_of_runs=number_of_runs,
+        total_showers=total_showers,
+        total_showers_scaling=total_showers_scaling,
+        showers_per_run_scaling=showers_per_run_scaling,
+        energy_max_scaling=energy_max_scaling,
+        zenith_angle_scaling_factor=zenith_angle_scaling_factor,
+        rounding_summary=rounding_summary,
+    ):
         for i in range(per_point_number_of_runs):
             yield {
                 **point_base,
@@ -996,40 +1031,23 @@ def _count_rows_for_point(
     zenith_angle_scaling_factor=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
 ):
     """Count generated rows for one grid point without materializing them."""
-    row_count = 0
-    zenith_angle = point_base["zenith_angle"]
-    for energy_range_pair in energy_ranges:
-        selected_energy_range = _apply_clipping_chain(
-            zenith_angle,
-            energy_range_pair,
-            energy_max_scaling,
-            lower_energy_threshold,
+    return sum(
+        per_point_number_of_runs
+        for _, _, per_point_number_of_runs in _iter_run_groups_for_point(
+            zenith_angle=point_base["zenith_angle"],
+            energy_ranges=energy_ranges,
+            lower_energy_threshold=lower_energy_threshold,
+            showers_per_run=showers_per_run,
+            showers_per_run_power_law=showers_per_run_power_law,
+            number_of_runs=number_of_runs,
+            total_showers=total_showers,
+            total_showers_scaling=total_showers_scaling,
+            showers_per_run_scaling=showers_per_run_scaling,
+            energy_max_scaling=energy_max_scaling,
+            zenith_angle_scaling_factor=zenith_angle_scaling_factor,
+            rounding_summary=ShowerRoundingSummary(),
         )
-        if selected_energy_range is None:
-            continue
-        selected_showers_per_run = calculate_scaled_showers_per_run(
-            selected_energy_range,
-            showers_per_run,
-            showers_per_run_power_law,
-        )
-        selected_showers_per_run = calculate_zenith_scaled_showers_per_run(
-            zenith_angle,
-            selected_showers_per_run,
-            showers_per_run_scaling,
-        )
-
-        per_point_number_of_runs = number_of_runs
-        if total_showers is not None:
-            per_point_number_of_runs = _compute_per_point_runs(
-                total_showers,
-                zenith_angle,
-                total_showers_scaling,
-                selected_showers_per_run,
-                zenith_angle_scaling_factor,
-                rounding_summary=ShowerRoundingSummary(),
-            )
-        row_count += per_point_number_of_runs
-    return row_count
+    )
 
 
 def _generate_observation_points_from_axes(
@@ -1283,6 +1301,56 @@ def _resolve_simulation_job_context(args_dict):
     )
 
 
+def _iter_observation_params(context):
+    """Iterate over observation points with expanded primary/model/interactions."""
+    for primary, model_version, corsika_le, corsika_he in itertools.product(
+        context.grid_axes["primary"],
+        context.grid_axes["model_version"],
+        context.grid_axes["corsika_le_interaction"],
+        context.grid_axes["corsika_he_interaction"],
+    ):
+        resolved_layout_name = context.resolved_layout_names[model_version]
+        for point in context.observation_grids_per_model_version[model_version]:
+            yield (
+                point,
+                _build_observation_params_for_point(
+                    point=point,
+                    primary=primary,
+                    model_version=model_version,
+                    resolved_layout_name=resolved_layout_name,
+                    corsika_le=corsika_le,
+                    corsika_he=corsika_he,
+                    core_scatter=context.core_scatter,
+                    core_scatter_number=context.core_scatter_number,
+                    view_cone_min=context.view_cone_min,
+                    configured_view_cone_max=context.configured_view_cone_max,
+                    nsb_rate=point.get(
+                        "nsb_rate", context.nsb_rates_per_model_version[model_version]
+                    ),
+                ),
+            )
+
+
+def _count_rows_for_context(context):
+    """Count generated rows for a resolved job context."""
+    return sum(
+        _count_rows_for_point(
+            point_base=observation_params,
+            energy_ranges=context.energy_ranges,
+            lower_energy_threshold=point.get("lower_energy_limit", point.get("br_energy_min")),
+            showers_per_run=context.showers_per_run,
+            showers_per_run_power_law=context.showers_per_run_power_law,
+            showers_per_run_scaling=context.showers_per_run_scaling,
+            number_of_runs=context.number_of_runs,
+            total_showers=context.total_showers,
+            total_showers_scaling=context.total_showers_scaling,
+            energy_max_scaling=context.energy_max_scaling,
+            zenith_angle_scaling_factor=context.zenith_angle_scaling_factor,
+        )
+        for point, observation_params in _iter_observation_params(context)
+    )
+
+
 def iter_simulation_jobs(args_dict):
     """
     Iterate over production jobs from a simulation config.
@@ -1309,47 +1377,10 @@ def iter_simulation_jobs(args_dict):
     )
     _log_energy_scaling_configuration(context.energy_max_scaling)
 
-    estimated_rows = 0
     estimated_observation_points = sum(
         len(grid_points) for grid_points in context.observation_grids_per_model_version.values()
     )
-    for primary, model_version, corsika_le, corsika_he in itertools.product(
-        context.grid_axes["primary"],
-        context.grid_axes["model_version"],
-        context.grid_axes["corsika_le_interaction"],
-        context.grid_axes["corsika_he_interaction"],
-    ):
-        resolved_layout_name = context.resolved_layout_names[model_version]
-        for point in context.observation_grids_per_model_version[model_version]:
-            observation_params = _build_observation_params_for_point(
-                point=point,
-                primary=primary,
-                model_version=model_version,
-                resolved_layout_name=resolved_layout_name,
-                corsika_le=corsika_le,
-                corsika_he=corsika_he,
-                core_scatter=context.core_scatter,
-                core_scatter_number=context.core_scatter_number,
-                view_cone_min=context.view_cone_min,
-                configured_view_cone_max=context.configured_view_cone_max,
-                nsb_rate=point.get("nsb_rate", context.nsb_rates_per_model_version[model_version]),
-            )
-            estimated_rows += _count_rows_for_point(
-                point_base=observation_params,
-                energy_ranges=context.energy_ranges,
-                lower_energy_threshold=point.get(
-                    "lower_energy_limit",
-                    point.get("br_energy_min"),
-                ),
-                showers_per_run=context.showers_per_run,
-                showers_per_run_power_law=context.showers_per_run_power_law,
-                showers_per_run_scaling=context.showers_per_run_scaling,
-                number_of_runs=context.number_of_runs,
-                total_showers=context.total_showers,
-                total_showers_scaling=context.total_showers_scaling,
-                energy_max_scaling=context.energy_max_scaling,
-                zenith_angle_scaling_factor=context.zenith_angle_scaling_factor,
-            )
+    estimated_rows = _count_rows_for_context(context)
 
     logger.info(
         "Prepared %d observation point(s); estimated executable job rows: %d.",
@@ -1365,47 +1396,24 @@ def iter_simulation_jobs(args_dict):
 
     row_summary = GeneratedRowSummary()
     rounding_summary = ShowerRoundingSummary()
-    for primary, model_version, corsika_le, corsika_he in itertools.product(
-        context.grid_axes["primary"],
-        context.grid_axes["model_version"],
-        context.grid_axes["corsika_le_interaction"],
-        context.grid_axes["corsika_he_interaction"],
-    ):
-        resolved_layout_name = context.resolved_layout_names[model_version]
-        for point in context.observation_grids_per_model_version[model_version]:
-            observation_params = _build_observation_params_for_point(
-                point=point,
-                primary=primary,
-                model_version=model_version,
-                resolved_layout_name=resolved_layout_name,
-                corsika_le=corsika_le,
-                corsika_he=corsika_he,
-                core_scatter=context.core_scatter,
-                core_scatter_number=context.core_scatter_number,
-                view_cone_min=context.view_cone_min,
-                configured_view_cone_max=context.configured_view_cone_max,
-                nsb_rate=point.get("nsb_rate", context.nsb_rates_per_model_version[model_version]),
-            )
-            for row in _iter_rows_for_point(
-                point_base=observation_params,
-                energy_ranges=context.energy_ranges,
-                lower_energy_threshold=point.get(
-                    "lower_energy_limit",
-                    point.get("br_energy_min"),
-                ),
-                showers_per_run=context.showers_per_run,
-                showers_per_run_power_law=context.showers_per_run_power_law,
-                showers_per_run_scaling=context.showers_per_run_scaling,
-                number_of_runs=context.number_of_runs,
-                total_showers=context.total_showers,
-                total_showers_scaling=context.total_showers_scaling,
-                run_number=context.run_number,
-                energy_max_scaling=context.energy_max_scaling,
-                zenith_angle_scaling_factor=context.zenith_angle_scaling_factor,
-                rounding_summary=rounding_summary,
-            ):
-                row_summary.add(row)
-                yield row
+    for point, observation_params in _iter_observation_params(context):
+        for row in _iter_rows_for_point(
+            point_base=observation_params,
+            energy_ranges=context.energy_ranges,
+            lower_energy_threshold=point.get("lower_energy_limit", point.get("br_energy_min")),
+            showers_per_run=context.showers_per_run,
+            showers_per_run_power_law=context.showers_per_run_power_law,
+            showers_per_run_scaling=context.showers_per_run_scaling,
+            number_of_runs=context.number_of_runs,
+            total_showers=context.total_showers,
+            total_showers_scaling=context.total_showers_scaling,
+            run_number=context.run_number,
+            energy_max_scaling=context.energy_max_scaling,
+            zenith_angle_scaling_factor=context.zenith_angle_scaling_factor,
+            rounding_summary=rounding_summary,
+        ):
+            row_summary.add(row)
+            yield row
 
     rounding_summary.log(logger)
     log_streamed_row_summary(row_summary, logger)
