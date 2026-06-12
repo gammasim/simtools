@@ -359,8 +359,7 @@ def _create_2d_histogram_plot(data, bins, plot_params):
     matplotlib.collections.QuadMesh
         The created pcolormesh object for colorbar attachment
     """
-    cmap = plt.get_cmap(plot_params.get("cmap", "viridis")).copy()
-    cmap.set_bad(color="white", alpha=0.0)
+    cmap = plt.get_cmap(plot_params.get("cmap", "viridis")).with_extremes(bad=(1.0, 1.0, 1.0, 0.0))
 
     if plot_params.get("norm") == "linear":
         masked_data = np.ma.masked_equal(data.T, 0)
