@@ -1,5 +1,7 @@
 """Read and write executable job grids for production preparation."""
 
+import csv
+import itertools
 import logging
 from pathlib import Path
 
@@ -47,6 +49,34 @@ _QUANTITY_FIELDS = {
 JOB_GRID_QUANTITY_FIELDS = dict(_QUANTITY_FIELDS)
 
 _OPTIONAL_ANGLE_FIELDS = ("ra", "dec")
+
+_JOB_GRID_COLUMN_DTYPES = {
+    "primary": str,
+    "azimuth_angle_value": float,
+    "azimuth_angle_unit": str,
+    "zenith_angle_value": float,
+    "zenith_angle_unit": str,
+    "energy_min_value": float,
+    "energy_min_unit": str,
+    "energy_max_value": float,
+    "energy_max_unit": str,
+    "core_scatter_number": int,
+    "core_scatter_max_value": float,
+    "core_scatter_max_unit": str,
+    "view_cone_min_value": float,
+    "view_cone_min_unit": str,
+    "view_cone_max_value": float,
+    "view_cone_max_unit": str,
+    "showers_per_run": int,
+    "nsb_rate": float,
+    "model_version": str,
+    "array_layout_name": str,
+    "corsika_le_interaction": str,
+    "corsika_he_interaction": str,
+    "run_number": int,
+    "ra": float,
+    "dec": float,
+}
 
 
 def _serialize_quantity(value):
@@ -155,6 +185,69 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     output_table.meta = metadata
     logger.info(f"Writing job grid with {len(job_rows)} rows to '{output_path}'.")
     output_table.write(output_path, format="ascii.ecsv", overwrite=True)
+
+
+def _format_streamed_value(value):
+    """Format one serialized row value for ECSV output."""
+    if value is None:
+        return ""
+    if isinstance(value, (float, np.floating)):
+        return repr(float(value))
+    if isinstance(value, (int, np.integer)):
+        return str(int(value))
+    return str(value)
+
+
+def _write_empty_ecsv_header(output_path, output_columns, metadata):
+    """Write an ECSV header using Astropy's schema/metadata handling."""
+    empty_table = Table(
+        names=output_columns,
+        dtype=[_JOB_GRID_COLUMN_DTYPES[column] for column in output_columns],
+    )
+    empty_table.meta = metadata
+    empty_table.write(output_path, format="ascii.ecsv", overwrite=True)
+
+
+def serialize_job_grid_stream(job_rows, output_file, metadata=None):
+    """
+    Stream executable job rows to ECSV output.
+
+    This avoids materializing serialized rows and the full Astropy table in memory.
+    Optional RA/Dec columns are determined from the first row, which matches the
+    homogeneous output produced by the production grid generator.
+    """
+    output_path = Path(output_file)
+    metadata = metadata or {}
+
+    if output_path.suffix.lower() != ".ecsv":
+        raise ValueError("Job grid output file must use the '.ecsv' extension.")
+
+    row_iterator = iter(job_rows)
+    try:
+        first_row = next(row_iterator)
+    except StopIteration:
+        _write_empty_ecsv_header(output_path, JOB_GRID_COLUMNS, metadata)
+        logger.info(f"Writing job grid with 0 rows to '{output_path}'.")
+        return 0
+
+    optional_columns = [
+        angle_name for angle_name in _OPTIONAL_ANGLE_FIELDS if angle_name in first_row
+    ]
+    output_columns = [*JOB_GRID_COLUMNS, *optional_columns]
+    _write_empty_ecsv_header(output_path, output_columns, metadata)
+
+    row_count = 0
+    with output_path.open("a", encoding="utf-8", newline="") as output:
+        writer = csv.writer(output, delimiter=" ", lineterminator="\n")
+        for job_row in itertools.chain([first_row], row_iterator):
+            serialized_row = _serialize_job_row(job_row)
+            writer.writerow(
+                [_format_streamed_value(serialized_row.get(column)) for column in output_columns]
+            )
+            row_count += 1
+
+    logger.info(f"Writing job grid with {row_count} rows to '{output_path}'.")
+    return row_count
 
 
 def read_job_grid(input_file):
