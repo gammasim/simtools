@@ -88,6 +88,7 @@ _LOCAL_CONSTRAINT_ARGUMENTS = {
     "local_azimuth_range": "deg",
 }
 _DIRECTION_GRID_DENSITY_UNIT = 1 / u.deg**2
+_LARGE_GRID_ROW_WARNING_THRESHOLD = 1_000_000
 
 
 def _parse_axis_range_tokens(range_tokens):
@@ -1331,26 +1332,6 @@ def _iter_observation_params(context):
             )
 
 
-def _count_rows_for_context(context):
-    """Count generated rows for a resolved job context."""
-    return sum(
-        _count_rows_for_point(
-            point_base=observation_params,
-            energy_ranges=context.energy_ranges,
-            lower_energy_threshold=point.get("lower_energy_limit", point.get("br_energy_min")),
-            showers_per_run=context.showers_per_run,
-            showers_per_run_power_law=context.showers_per_run_power_law,
-            showers_per_run_scaling=context.showers_per_run_scaling,
-            number_of_runs=context.number_of_runs,
-            total_showers=context.total_showers,
-            total_showers_scaling=context.total_showers_scaling,
-            energy_max_scaling=context.energy_max_scaling,
-            zenith_angle_scaling_factor=context.zenith_angle_scaling_factor,
-        )
-        for point, observation_params in _iter_observation_params(context)
-    )
-
-
 def iter_simulation_jobs(args_dict):
     """
     Iterate over production jobs from a simulation config.
@@ -1383,25 +1364,14 @@ def iter_simulation_jobs(args_dict):
     )
     _log_energy_scaling_configuration(context.energy_max_scaling)
 
-    estimated_observation_points = sum(
+    observation_points = sum(
         len(grid_points) for grid_points in context.observation_grids_per_model_version.values()
     )
-    estimated_rows = _count_rows_for_context(context)
-
-    logger.info(
-        "Prepared %d observation point(s); estimated executable job rows: %d.",
-        estimated_observation_points,
-        estimated_rows,
-    )
-    if estimated_rows >= 1_000_000:
-        logger.warning(
-            "Large production grid requested: estimated executable job rows: %d. "
-            "Rows will be streamed to disk to limit memory use.",
-            estimated_rows,
-        )
+    logger.info("Prepared %d observation point(s).", observation_points)
 
     row_summary = GeneratedRowSummary()
     rounding_summary = ShowerRoundingSummary()
+    large_grid_warning_logged = False
     for point, observation_params in _iter_observation_params(context):
         for row in _iter_rows_for_point(
             point_base=observation_params,
@@ -1419,6 +1389,16 @@ def iter_simulation_jobs(args_dict):
             rounding_summary=rounding_summary,
         ):
             row_summary.add(row)
+            if (
+                not large_grid_warning_logged
+                and row_summary.count == _LARGE_GRID_ROW_WARNING_THRESHOLD
+            ):
+                logger.warning(
+                    "Large production grid requested: generated at least %d executable "
+                    "job rows. Rows are streamed to disk to limit memory use.",
+                    _LARGE_GRID_ROW_WARNING_THRESHOLD,
+                )
+                large_grid_warning_logged = True
             yield row
 
     rounding_summary.log(logger)

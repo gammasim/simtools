@@ -289,17 +289,18 @@ def serialize_job_grid_stream(job_rows, output_file, metadata=None):
         logger.info(f"Writing job grid with 0 rows to '{output_path}'.")
         return 0
 
+    serialized_first_row = _serialize_job_row(first_row)
     optional_columns = [
-        angle_name for angle_name in _OPTIONAL_ANGLE_FIELDS if angle_name in first_row
+        angle_name for angle_name in _OPTIONAL_ANGLE_FIELDS if angle_name in serialized_first_row
     ]
     output_columns = [*JOB_GRID_COLUMNS, *optional_columns]
-    _write_empty_ecsv_header(output_path, output_columns, metadata)
 
     output_rows = []
     row_count = 0
     write_header = True
-    for job_row in _iter_with_first(first_row, row_iterator):
-        output_rows.append(_serialize_output_row(job_row, output_columns))
+    serialized_rows = _iter_with_first(serialized_first_row, map(_serialize_job_row, row_iterator))
+    for serialized_row in serialized_rows:
+        output_rows.append({column: serialized_row.get(column) for column in output_columns})
         row_count += 1
         if len(output_rows) >= _STREAM_CHUNK_SIZE:
             _flush_stream_chunk(
