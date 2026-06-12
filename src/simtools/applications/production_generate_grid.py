@@ -108,11 +108,14 @@ full zenith coverage from 0 to 70 deg and a directed azimuth window), execute:
 """
 
 import argparse
-from importlib import import_module
 
 from simtools.application_control import build_application
 from simtools.configuration import defaults
-from simtools.production_configuration.simulation_jobs import build_job_grid_metadata
+from simtools.production_configuration.job_grid_io import serialize_job_grid_stream
+from simtools.production_configuration.simulation_jobs import (
+    build_job_grid_metadata,
+    iter_simulation_jobs,
+)
 
 
 def _add_arguments(parser):
@@ -264,8 +267,6 @@ def _add_arguments(parser):
 
 def main():
     """See CLI description."""
-    job_grid_io = import_module("simtools.production_configuration.job_grid_io")
-    simulation_jobs = import_module("simtools.production_configuration.simulation_jobs")
     app_context = build_application(
         initialization_kwargs={
             "db_config": True,
@@ -275,8 +276,8 @@ def main():
         },
     )
 
-    job_grid_io.serialize_job_grid_stream(
-        job_rows=simulation_jobs.iter_simulation_jobs(app_context.args),
+    serialize_job_grid_stream(
+        job_rows=iter_simulation_jobs(app_context.args),
         output_file=app_context.io_handler.get_output_file(app_context.args["output_file"]),
         metadata=build_job_grid_metadata(app_context.args),
     )
