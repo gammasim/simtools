@@ -3,7 +3,11 @@ from pathlib import Path
 import astropy.units as u
 import pytest
 
-from simtools.production_configuration.job_grid_io import read_job_grid, serialize_job_grid
+from simtools.production_configuration.job_grid_io import (
+    read_job_grid,
+    serialize_job_grid,
+    serialize_job_grid_stream,
+)
 
 
 def _job_rows():
@@ -50,6 +54,19 @@ def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
     assert rows[0]["core_scatter_number"] == 10
     assert rows[0]["array_layout_name"] == "CTAO-North-Alpha"
     assert rows[0]["nsb_rate"] == pytest.approx(0.24)
+    assert rows[0]["ra"] == 123 * u.deg
+    assert rows[0]["dec"] == -45 * u.deg
+
+
+def test_serialize_job_grid_stream_and_read_job_grid_ecsv(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "job_grid.ecsv"
+
+    row_count = serialize_job_grid_stream(iter(_job_rows()), output_file, metadata=_metadata())
+    rows, metadata = read_job_grid(output_file)
+
+    assert row_count == 1
+    assert metadata["site"] == "North"
+    assert rows[0]["energy_min"] == 30 * u.GeV
     assert rows[0]["ra"] == 123 * u.deg
     assert rows[0]["dec"] == -45 * u.deg
 

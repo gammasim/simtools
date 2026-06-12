@@ -7,6 +7,7 @@ model versions, energy ranges, and run counts into a complete job parameter set.
 import itertools
 import logging
 import shlex
+from importlib import import_module
 
 import numpy as np
 from astropy import units as u
@@ -30,6 +31,11 @@ from simtools.utils.general import ensure_list
 from simtools.utils.value_conversion import get_value_as_quantity
 
 logger = logging.getLogger(__name__)
+_job_generation_summary = import_module("simtools.production_configuration.job_generation_summary")
+GeneratedRowSummary = _job_generation_summary.GeneratedRowSummary
+ShowerRoundingSummary = _job_generation_summary.ShowerRoundingSummary
+SimulationJobContext = _job_generation_summary.SimulationJobContext
+log_streamed_row_summary = _job_generation_summary.log_streamed_row_summary
 
 _GRID_AXES = [
     "primary",
@@ -307,6 +313,11 @@ def build_observing_location(site, model_version):
     )
 
 
+def _instantiate_production_grid_engine(engine_kwargs):
+    """Instantiate the production-grid engine from resolved keyword arguments."""
+    return ProductionGridEngine(**engine_kwargs)
+
+
 def build_axes_dict_from_cli_args(args_dict):
     """Build ProductionGridEngine-compatible axes configuration from CLI arguments."""
     axis_configs = _resolve_axis_configs(args_dict)
@@ -407,18 +418,19 @@ def build_production_grid_engine(args_dict, array_layout_name=None, model_versio
         resolved_model_version,
     )
 
-    return ProductionGridEngine(
-        axes=axes,
-        coordinate_system=coordinate_system,
-        observing_location=observing_location,
-        time_of_observation=resolve_time_of_observation(
+    engine_kwargs = {
+        "axes": axes,
+        "coordinate_system": coordinate_system,
+        "observing_location": observing_location,
+        "time_of_observation": resolve_time_of_observation(
             args_dict.get("time_of_observation"),
             args_dict,
         ),
-        lookup_table=args_dict.get("corsika_limits"),
-        array_layout_name=resolved_layout_name,
-        lookup_nsb_rate=_resolve_nsb_rate(args_dict, resolved_model_version),
-    )
+        "lookup_table": args_dict.get("corsika_limits"),
+        "array_layout_name": resolved_layout_name,
+        "lookup_nsb_rate": _resolve_nsb_rate(args_dict, resolved_model_version),
+    }
+    return _instantiate_production_grid_engine(engine_kwargs)
 
 
 def build_job_grid_metadata(args_dict):
@@ -851,6 +863,7 @@ def _compute_per_point_runs(
     total_showers_scaling,
     selected_showers_per_run,
     zenith_angle_scaling_factor,
+    rounding_summary=None,
 ):
     """Compute the number of runs per point considering total-showers constraints."""
     effective_total_showers = _scale_total_showers(
@@ -867,17 +880,24 @@ def _compute_per_point_runs(
     per_point_number_of_runs = number_of_full_runs + int(remainder_showers > 0)
     if remainder_showers > 0:
         adjusted_total_showers = per_point_number_of_runs * selected_showers_per_run
-        logger.warning(
-            "total_showers=%s is not divisible by showers_per_run=%s; "
-            "adjusting to %s to keep equal showers per run.",
-            effective_total_showers,
-            selected_showers_per_run,
-            adjusted_total_showers,
-        )
+        if rounding_summary is None:
+            logger.warning(
+                "total_showers=%s is not divisible by showers_per_run=%s; "
+                "adjusting to %s to keep equal showers per run.",
+                effective_total_showers,
+                selected_showers_per_run,
+                adjusted_total_showers,
+            )
+        else:
+            rounding_summary.add(
+                effective_total_showers,
+                selected_showers_per_run,
+                adjusted_total_showers,
+            )
     return per_point_number_of_runs
 
 
-def _build_rows_for_point(
+def _iter_rows_for_point(
     point_base,
     energy_ranges,
     lower_energy_threshold,
@@ -890,9 +910,9 @@ def _build_rows_for_point(
     showers_per_run_scaling="fixed",
     energy_max_scaling=None,
     zenith_angle_scaling_factor=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
+    rounding_summary=None,
 ):
-    """Build all simulation-run rows for a single grid point across all energy ranges."""
-    rows = []
+    """Iterate over all simulation-run rows for a single grid point."""
     zenith_angle = point_base["zenith_angle"]
     for energy_range_pair in energy_ranges:
         selected_energy_range = _apply_clipping_chain(
@@ -922,19 +942,100 @@ def _build_rows_for_point(
                 total_showers_scaling,
                 selected_showers_per_run,
                 zenith_angle_scaling_factor,
+                rounding_summary=rounding_summary,
             )
 
         for i in range(per_point_number_of_runs):
-            rows.append(
-                {
-                    **point_base,
-                    "energy_min": selected_energy_range[0],
-                    "energy_max": selected_energy_range[1],
-                    "showers_per_run": selected_showers_per_run,
-                    "run_number": run_number + i,
-                }
+            yield {
+                **point_base,
+                "energy_min": selected_energy_range[0],
+                "energy_max": selected_energy_range[1],
+                "showers_per_run": selected_showers_per_run,
+                "run_number": run_number + i,
+            }
+
+
+def _build_rows_for_point(
+    point_base,
+    energy_ranges,
+    lower_energy_threshold,
+    showers_per_run,
+    showers_per_run_power_law,
+    number_of_runs,
+    total_showers,
+    total_showers_scaling,
+    run_number,
+    showers_per_run_scaling="fixed",
+    energy_max_scaling=None,
+    zenith_angle_scaling_factor=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
+):
+    """Build all simulation-run rows for a single grid point across all energy ranges."""
+    return list(
+        _iter_rows_for_point(
+            point_base=point_base,
+            energy_ranges=energy_ranges,
+            lower_energy_threshold=lower_energy_threshold,
+            showers_per_run=showers_per_run,
+            showers_per_run_power_law=showers_per_run_power_law,
+            number_of_runs=number_of_runs,
+            total_showers=total_showers,
+            total_showers_scaling=total_showers_scaling,
+            run_number=run_number,
+            showers_per_run_scaling=showers_per_run_scaling,
+            energy_max_scaling=energy_max_scaling,
+            zenith_angle_scaling_factor=zenith_angle_scaling_factor,
+        )
+    )
+
+
+def _count_rows_for_point(
+    point_base,
+    energy_ranges,
+    lower_energy_threshold,
+    showers_per_run,
+    showers_per_run_power_law,
+    number_of_runs,
+    total_showers,
+    total_showers_scaling,
+    showers_per_run_scaling="fixed",
+    energy_max_scaling=None,
+    zenith_angle_scaling_factor=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
+):
+    """Count generated rows for one grid point without materializing them."""
+    row_count = 0
+    zenith_angle = point_base["zenith_angle"]
+    for energy_range_pair in energy_ranges:
+        selected_energy_range = _apply_clipping_chain(
+            zenith_angle,
+            energy_range_pair,
+            energy_max_scaling,
+            lower_energy_threshold,
+        )
+        if selected_energy_range is None:
+            continue
+        selected_showers_per_run = calculate_scaled_showers_per_run(
+            selected_energy_range,
+            showers_per_run,
+            showers_per_run_power_law,
+        )
+        selected_showers_per_run = calculate_zenith_scaled_showers_per_run(
+            zenith_angle,
+            selected_showers_per_run,
+            showers_per_run_scaling,
+        )
+
+        per_point_number_of_runs = number_of_runs
+        if total_showers is not None:
+            per_point_number_of_runs = _compute_per_point_runs(
+                total_showers,
+                zenith_angle,
+                total_showers_scaling,
+                selected_showers_per_run,
+                zenith_angle_scaling_factor,
+                rounding_summary=ShowerRoundingSummary(),
             )
-    return rows
+        row_count += per_point_number_of_runs
+    return row_count
 
 
 def _generate_observation_points_from_axes(
@@ -1130,24 +1231,8 @@ def _build_observation_params_for_point(
     }
 
 
-def build_simulation_jobs(args_dict):
-    """
-    Expand production config into full simulation job matrix.
-
-    Cartesian product: primaries * model_versions * interactions * observation_directions
-    * energy_ranges * run_counts. Energy ranges clipped by direction-dependent CORSIKA
-    limits.
-
-    Activates ProductionGridEngine when axis-range CLI arguments are provided;
-    otherwise uses explicit azimuth * zenith axes.
-
-    Returns
-    -------
-    list[dict]
-        Each job: primary, model_version, interactions, directions (Alt/Az), energy_min/max
-        (clipped), showers_per_run, run_number, scatter/viewcone values
-        (clipped by physics limits).
-    """
+def _resolve_simulation_job_context(args_dict):
+    """Resolve common simulation-job generation inputs."""
     grid_axes = normalize_grid_axes(args_dict)
     energy_ranges = normalize_energy_ranges(args_dict["energy_range"])
     (
@@ -1168,14 +1253,8 @@ def build_simulation_jobs(args_dict):
     if total_showers is not None and args_dict.get("number_of_runs") is not None:
         raise ValueError("total_showers and number_of_runs cannot be configured together.")
 
-    number_of_runs = int(args_dict.get("number_of_runs") or 1)
-    run_number = int(args_dict.get("run_number") or 1)
-
     core_scatter = args_dict["core_scatter"]
     view_cone = args_dict["view_cone"]
-    core_scatter_number = int(core_scatter[0])
-    view_cone_min = view_cone[0]
-    configured_view_cone_max = view_cone[1]
     nsb_rates_per_model_version = _resolve_nsb_rates_per_model_version(
         args_dict,
         grid_axes["model_version"],
@@ -1187,22 +1266,67 @@ def build_simulation_jobs(args_dict):
             nsb_rates_per_model_version=nsb_rates_per_model_version,
         )
     )
+
+    return SimulationJobContext(
+        grid_axes=grid_axes,
+        energy_ranges=energy_ranges,
+        showers_per_run=showers_per_run,
+        showers_per_run_power_law=showers_per_run_power_law,
+        showers_per_run_scaling=showers_per_run_scaling,
+        total_showers=total_showers,
+        total_showers_scaling=total_showers_scaling,
+        zenith_angle_scaling_factor=zenith_angle_scaling_factor,
+        energy_max_scaling=energy_max_scaling,
+        number_of_runs=int(args_dict.get("number_of_runs") or 1),
+        run_number=int(args_dict.get("run_number") or 1),
+        core_scatter=core_scatter,
+        view_cone_min=view_cone[0],
+        configured_view_cone_max=view_cone[1],
+        core_scatter_number=int(core_scatter[0]),
+        nsb_rates_per_model_version=nsb_rates_per_model_version,
+        observation_grids_per_model_version=observation_grids_per_model_version,
+        resolved_layout_names=resolved_layout_names,
+    )
+
+
+def iter_simulation_jobs(args_dict):
+    """
+    Iterate over production jobs from a simulation config.
+
+    Cartesian product: primaries * model_versions * interactions * observation_directions
+    * energy_ranges * run_counts. Energy ranges clipped by direction-dependent CORSIKA
+    limits.
+
+    Activates ProductionGridEngine when axis-range CLI arguments are provided;
+    otherwise uses explicit azimuth * zenith axes.
+
+    Yields
+    ------
+    dict
+        One job: primary, model_version, interactions, directions (Alt/Az), energy_min/max
+        (clipped), showers_per_run, run_number, scatter/viewcone values
+        (clipped by physics limits).
+    """
+    context = _resolve_simulation_job_context(args_dict)
     logger.info(
         "Applying job constraints: energy clipped to configured energy_range, "
         "core_scatter_max clipped by configured max and lookup, and view_cone min/max "
         "clipped by configured and lookup limits."
     )
-    _log_energy_scaling_configuration(energy_max_scaling)
-    rows = []
+    _log_energy_scaling_configuration(context.energy_max_scaling)
 
+    estimated_rows = 0
+    estimated_observation_points = sum(
+        len(grid_points) for grid_points in context.observation_grids_per_model_version.values()
+    )
     for primary, model_version, corsika_le, corsika_he in itertools.product(
-        grid_axes["primary"],
-        grid_axes["model_version"],
-        grid_axes["corsika_le_interaction"],
-        grid_axes["corsika_he_interaction"],
+        context.grid_axes["primary"],
+        context.grid_axes["model_version"],
+        context.grid_axes["corsika_le_interaction"],
+        context.grid_axes["corsika_he_interaction"],
     ):
-        resolved_layout_name = resolved_layout_names[model_version]
-        for point in observation_grids_per_model_version[model_version]:
+        resolved_layout_name = context.resolved_layout_names[model_version]
+        for point in context.observation_grids_per_model_version[model_version]:
             observation_params = _build_observation_params_for_point(
                 point=point,
                 primary=primary,
@@ -1210,30 +1334,96 @@ def build_simulation_jobs(args_dict):
                 resolved_layout_name=resolved_layout_name,
                 corsika_le=corsika_le,
                 corsika_he=corsika_he,
-                core_scatter=core_scatter,
-                core_scatter_number=core_scatter_number,
-                view_cone_min=view_cone_min,
-                configured_view_cone_max=configured_view_cone_max,
-                nsb_rate=point.get("nsb_rate", nsb_rates_per_model_version[model_version]),
+                core_scatter=context.core_scatter,
+                core_scatter_number=context.core_scatter_number,
+                view_cone_min=context.view_cone_min,
+                configured_view_cone_max=context.configured_view_cone_max,
+                nsb_rate=point.get("nsb_rate", context.nsb_rates_per_model_version[model_version]),
             )
-            rows.extend(
-                _build_rows_for_point(
-                    point_base=observation_params,
-                    energy_ranges=energy_ranges,
-                    lower_energy_threshold=point.get(
-                        "lower_energy_limit",
-                        point.get("br_energy_min"),
-                    ),
-                    showers_per_run=showers_per_run,
-                    showers_per_run_power_law=showers_per_run_power_law,
-                    showers_per_run_scaling=showers_per_run_scaling,
-                    number_of_runs=number_of_runs,
-                    total_showers=total_showers,
-                    total_showers_scaling=total_showers_scaling,
-                    run_number=run_number,
-                    energy_max_scaling=energy_max_scaling,
-                    zenith_angle_scaling_factor=zenith_angle_scaling_factor,
-                )
+            estimated_rows += _count_rows_for_point(
+                point_base=observation_params,
+                energy_ranges=context.energy_ranges,
+                lower_energy_threshold=point.get(
+                    "lower_energy_limit",
+                    point.get("br_energy_min"),
+                ),
+                showers_per_run=context.showers_per_run,
+                showers_per_run_power_law=context.showers_per_run_power_law,
+                showers_per_run_scaling=context.showers_per_run_scaling,
+                number_of_runs=context.number_of_runs,
+                total_showers=context.total_showers,
+                total_showers_scaling=context.total_showers_scaling,
+                energy_max_scaling=context.energy_max_scaling,
+                zenith_angle_scaling_factor=context.zenith_angle_scaling_factor,
             )
-    _log_generated_row_summary(rows)
-    return rows
+
+    logger.info(
+        "Prepared %d observation point(s); estimated executable job rows: %d.",
+        estimated_observation_points,
+        estimated_rows,
+    )
+    if estimated_rows >= 1_000_000:
+        logger.warning(
+            "Large production grid requested: estimated executable job rows: %d. "
+            "Rows will be streamed to disk to limit memory use.",
+            estimated_rows,
+        )
+
+    row_summary = GeneratedRowSummary()
+    rounding_summary = ShowerRoundingSummary()
+    for primary, model_version, corsika_le, corsika_he in itertools.product(
+        context.grid_axes["primary"],
+        context.grid_axes["model_version"],
+        context.grid_axes["corsika_le_interaction"],
+        context.grid_axes["corsika_he_interaction"],
+    ):
+        resolved_layout_name = context.resolved_layout_names[model_version]
+        for point in context.observation_grids_per_model_version[model_version]:
+            observation_params = _build_observation_params_for_point(
+                point=point,
+                primary=primary,
+                model_version=model_version,
+                resolved_layout_name=resolved_layout_name,
+                corsika_le=corsika_le,
+                corsika_he=corsika_he,
+                core_scatter=context.core_scatter,
+                core_scatter_number=context.core_scatter_number,
+                view_cone_min=context.view_cone_min,
+                configured_view_cone_max=context.configured_view_cone_max,
+                nsb_rate=point.get("nsb_rate", context.nsb_rates_per_model_version[model_version]),
+            )
+            for row in _iter_rows_for_point(
+                point_base=observation_params,
+                energy_ranges=context.energy_ranges,
+                lower_energy_threshold=point.get(
+                    "lower_energy_limit",
+                    point.get("br_energy_min"),
+                ),
+                showers_per_run=context.showers_per_run,
+                showers_per_run_power_law=context.showers_per_run_power_law,
+                showers_per_run_scaling=context.showers_per_run_scaling,
+                number_of_runs=context.number_of_runs,
+                total_showers=context.total_showers,
+                total_showers_scaling=context.total_showers_scaling,
+                run_number=context.run_number,
+                energy_max_scaling=context.energy_max_scaling,
+                zenith_angle_scaling_factor=context.zenith_angle_scaling_factor,
+                rounding_summary=rounding_summary,
+            ):
+                row_summary.add(row)
+                yield row
+
+    rounding_summary.log(logger)
+    log_streamed_row_summary(row_summary, logger)
+
+
+def build_simulation_jobs(args_dict):
+    """
+    Expand production config into full simulation job matrix.
+
+    Returns
+    -------
+    list[dict]
+        Each job row in the in-memory schema.
+    """
+    return list(iter_simulation_jobs(args_dict))
