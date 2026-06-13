@@ -24,6 +24,9 @@ for config, test_id in zip(test_configs, test_ids):
     if config.get("test_use_case"):
         marks.append(pytest.mark.verifies_usecase(config["test_use_case"]))
 
+    if config.get("xfail"):
+        marks.append(pytest.mark.xfail(reason=config["xfail"]))
+
     param = pytest.param(config, id=test_id, marks=marks)
     test_parameters.append(param)
 
