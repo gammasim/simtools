@@ -19,6 +19,7 @@ applications:
     output_path: ./tmp-test-resources/simulate_prod_gamma_20deg_north_alpha
     primary: gamma
     run_number: 10
+    save_reduced_event_lists: true
     sim_telarray_seed: [1745, 290]
     simulation_software: corsika_sim_telarray
     site: North
@@ -29,6 +30,7 @@ collection:
   files:
   - gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.simtel.zst
   - gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.hdata.zst
+  - gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.reduced_event_data.hdf5
 schema_name: application_workflow.metaschema
 schema_url: https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/application_workflow.metaschema.yml
 schema_version: 0.4.0
