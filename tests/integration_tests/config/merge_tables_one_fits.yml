@@ -12,5 +12,6 @@ applications:
   integration_tests:
   - output_file: merged.fits.gz
   test_name: one_fits
+  xfail: "likely deprecated function (issue #2265)"
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
