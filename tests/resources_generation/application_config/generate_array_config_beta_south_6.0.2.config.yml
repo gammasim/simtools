@@ -14,6 +14,7 @@ collection:
   output_path: tests/resources/generated/sim_telarray_configurations/6.0.2/
   files:
   - CTA-beta-South_test.cfg
+  - CTA-South-LSTS-01_test.cfg
   - CTA-South-MSTS-01_test.cfg
 schema_name: application_workflow.metaschema
 schema_url: https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/application_workflow.metaschema.yml
