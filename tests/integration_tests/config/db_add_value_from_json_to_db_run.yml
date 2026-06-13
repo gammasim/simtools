@@ -4,7 +4,7 @@ applications:
   configuration:
     db_collection: telescopes
     db_simulation_model: sandbox
-    file_name: tests/resources/static/model_parameters/num_gains-0.0.0.json
+    file_name: tests/resources/generated/model_parameters/array_layouts-2.0.2.json
     test_db: true
   skip_for_production_db: true
   test_name: run
