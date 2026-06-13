@@ -12,3 +12,6 @@ files:
   - url: https://gitlab.cta-observatory.org/cta-science/simulations/productions/production-configuration/-/raw/main/data/corsika_lookups/v1.0.0/gamma/corsika_limits_north.ecsv?ref_type=heads
     description: CORSIKA limits for the North site (gamma diffuse)
     target_path: generated/corsika_simulation_limits/corsika_limits_north.ecsv
+  - url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-model-parameter-setting/-/raw/main/input/LSTN-design/asum_threshold/019e6ed9-bf83-7401-af4e-f49b4fe87948/input.meta.yml?ref_type=heads
+    description: Model parameter setting metadata file.
+    target_path: generated/asum_threshold.meta.yml

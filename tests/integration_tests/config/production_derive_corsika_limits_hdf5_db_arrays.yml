@@ -10,7 +10,7 @@ applications:
         ">=7.0.0":
         - LSTN-01
         - CTAO-North-Alpha
-    event_data_file: tests/resources/static/proton_za20deg_azm000deg_North_alpha_6.0.0_*.hdf5
+    event_data_file: tests/resources/generated/proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_test.*hdf5
     allowed_losses:
     - core_distance,0.001,10
     - angular_distance,0.001,10

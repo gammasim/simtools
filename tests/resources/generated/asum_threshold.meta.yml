@@ -1,0 +1,44 @@
+---
+cta:
+  reference:
+    version: 2.0.0
+  activity:
+    name: setting_workflow
+    type: software
+    id: 019e6ed9-bf83-7401-af4e-f49b4fe87948
+    start: '2026-05-28T12:00:00+00:00'
+    end: '2026-05-28T12:00:00+00:00'
+  contact:
+    organization: IFAE, Barcelona
+    name: Abelardo Moralejo
+  instrument:
+    site: North
+    class: null
+    type: LSTN
+    id: design
+  process:
+    type: null
+    id: null
+  product:
+    description: Analog sum trigger threshold.
+    creation_time: '2026-05-28T12:00:00+00:00'
+    id: null
+    valid:
+      start: '2026-05-28T12:00:00+00:00'
+    format: number
+    filename: null
+    data:
+      category: null
+      level: null
+      type: Service
+      association: Telescope
+      model:
+        name: asum_threshold
+        version: 4.0.0
+  context:
+    document:
+    - type: LST-all-sky simulations MC updates
+      title: "LSTN-design: Update `asum_treshold`"
+      id: null
+      creation_time: '2026-05-28T12:00:00+00:00'
+      url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models/-/work_items/59
