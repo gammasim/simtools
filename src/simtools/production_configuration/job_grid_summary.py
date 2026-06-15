@@ -64,7 +64,10 @@ def build_job_grid_summary(rows):
         "view_cone_min_configured": _get_quantity_summary(rows, "configured_view_cone_min"),
         "view_cone_max_configured": _get_quantity_summary(rows, "configured_view_cone_max"),
         "view_cone_max_lookup_limit": _get_quantity_summary(rows, "lookup_view_cone_max"),
+        "showers_per_run_min": min(showers_per_run_values),
+        "showers_per_run_max": max(showers_per_run_values),
         "showers_per_run_used": _format_integer_summary(showers_per_run_values),
+        "showers_per_run_configured_max": max(configured_showers_per_run_values),
         "showers_per_run_configured": _format_integer_summary(configured_showers_per_run_values),
         "total_showers": int(sum(showers_per_run_values)),
     }
