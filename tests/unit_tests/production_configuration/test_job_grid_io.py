@@ -16,7 +16,7 @@ def _job_rows():
             "dec": -45 * u.deg,
             "energy_min": 30 * u.GeV,
             "energy_max": 10 * u.TeV,
-            "core_scatter_number": 10,
+            "cores_per_shower": 10,
             "core_scatter_max": 200 * u.m,
             "view_cone_min": 0 * u.deg,
             "view_cone_max": 5 * u.deg,
@@ -47,7 +47,7 @@ def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
 
     assert metadata["site"] == "North"
     assert rows[0]["energy_min"] == 30 * u.GeV
-    assert rows[0]["core_scatter_number"] == 10
+    assert rows[0]["cores_per_shower"] == 10
     assert rows[0]["array_layout_name"] == "CTAO-North-Alpha"
     assert rows[0]["nsb_rate"] == pytest.approx(0.24)
     assert rows[0]["ra"] == 123 * u.deg
