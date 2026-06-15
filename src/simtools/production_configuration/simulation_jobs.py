@@ -1161,7 +1161,7 @@ def _build_observation_params_for_point(
     corsika_le,
     corsika_he,
     core_scatter,
-    core_scatter_number,
+    cores_per_shower,
     view_cone_min,
     configured_view_cone_max,
     nsb_rate,
@@ -1183,7 +1183,7 @@ def _build_observation_params_for_point(
         "array_layout_name": resolved_layout_name,
         "corsika_le_interaction": corsika_le,
         "corsika_he_interaction": corsika_he,
-        "core_scatter_number": core_scatter_number,
+        "cores_per_shower": cores_per_shower,
         "core_scatter_max": selected_core_scatter_max,
         "configured_core_scatter_max": core_scatter[1],
         "lookup_core_scatter_max": lookup_core_scatter_max,
@@ -1238,7 +1238,7 @@ def build_simulation_jobs(args_dict):
 
     core_scatter = args_dict["core_scatter"]
     view_cone = args_dict["view_cone"]
-    core_scatter_number = int(core_scatter[0])
+    cores_per_shower = int(core_scatter[0])
     view_cone_min = view_cone[0]
     configured_view_cone_max = view_cone[1]
     nsb_rates_per_model_version = _resolve_nsb_rates_per_model_version(
@@ -1276,7 +1276,7 @@ def build_simulation_jobs(args_dict):
                 corsika_le=corsika_le,
                 corsika_he=corsika_he,
                 core_scatter=core_scatter,
-                core_scatter_number=core_scatter_number,
+                cores_per_shower=cores_per_shower,
                 view_cone_min=view_cone_min,
                 configured_view_cone_max=configured_view_cone_max,
                 nsb_rate=point.get("nsb_rate", nsb_rates_per_model_version[model_version]),
