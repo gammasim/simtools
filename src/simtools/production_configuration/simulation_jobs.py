@@ -25,6 +25,10 @@ from simtools.production_configuration.corsika_limits_lookup import (
     CorsikaLimitsLookup,
     attach_lookup_limits_to_point,
 )
+from simtools.production_configuration.job_grid_summary import (
+    build_job_grid_summary,
+    format_quantity_summary,
+)
 from simtools.production_configuration.observation_grid import ProductionGridEngine
 from simtools.utils.general import ensure_list
 from simtools.utils.value_conversion import get_value_as_quantity
@@ -928,6 +932,10 @@ def _build_rows_for_point(
             rows.append(
                 {
                     **point_base,
+                    "configured_energy_min": energy_range_pair[0],
+                    "configured_energy_max": energy_range_pair[1],
+                    "energy_min_lookup_limit": lower_energy_threshold,
+                    "configured_showers_per_run": showers_per_run,
                     "energy_min": selected_energy_range[0],
                     "energy_max": selected_energy_range[1],
                     "showers_per_run": selected_showers_per_run,
@@ -984,47 +992,99 @@ def _log_energy_scaling_configuration(energy_max_scaling):
 
 def _format_quantity_summary(quantity_values):
     """Format quantity min/max as a single value or range with explicit unit."""
+    return format_quantity_summary(quantity_values)
+
+
+def _format_quantity_value_range(rows, key, summary_unit=None):
+    """Format one quantity field as either a fixed value or range across jobs."""
+    values = [row[key] for row in rows if row.get(key) is not None]
+    if not values:
+        return "is not available"
+
+    quantity_values = u.Quantity(values)
     quantity_min = quantity_values.min()
     quantity_max = quantity_values.max()
-
-    summary_unit = quantity_max.unit
+    summary_unit = summary_unit or quantity_max.unit
     min_value = quantity_min.to_value(summary_unit)
     max_value = quantity_max.to_value(summary_unit)
 
     if np.isclose(min_value, max_value):
-        return f"{max_value:.6g} {summary_unit}"
-    return f"[{min_value:.6g}, {max_value:.6g}] {summary_unit}"
+        return f"is {max_value:.6g} {summary_unit}"
+    return f"ranges from {min_value:.6g} to {max_value:.6g} {summary_unit}"
 
 
 def _log_generated_row_summary(rows):
     """Log a compact summary of generated row ranges for user visibility."""
-    if not rows:
+    summary = build_job_grid_summary(rows)
+    if summary["simulation_rows"] == 0:
         logger.info("Generated 0 simulation rows after applying all clipping and scaling rules.")
         return
 
-    energy_min_values = u.Quantity([row["energy_min"] for row in rows])
-    energy_max_values = u.Quantity([row["energy_max"] for row in rows])
-    core_scatter_max_values = u.Quantity([row["core_scatter_max"] for row in rows])
-    view_cone_min_values = u.Quantity([row["view_cone_min"] for row in rows])
-    view_cone_max_values = u.Quantity([row["view_cone_max"] for row in rows])
-
     logger.info(
         "Generated %d simulation rows.",
-        len(rows),
+        summary["simulation_rows"],
     )
     logger.info(
-        "Energy range after clipping/scaling: Emin %s, Emax %s.",
-        _format_quantity_summary(energy_min_values),
-        _format_quantity_summary(energy_max_values),
+        "Minimum energy used by jobs %s.",
+        _format_quantity_value_range(rows, "energy_min"),
     )
     logger.info(
-        "Core scatter max range: %s.",
-        _format_quantity_summary(core_scatter_max_values),
+        "Maximum energy used by jobs %s.",
+        _format_quantity_value_range(rows, "energy_max"),
     )
     logger.info(
-        "View cone range: min %s, max %s.",
-        _format_quantity_summary(view_cone_min_values),
-        _format_quantity_summary(view_cone_max_values),
+        "Minimum energy from configuration %s.",
+        _format_quantity_value_range(rows, "configured_energy_min"),
+    )
+    logger.info(
+        "Maximum energy from configuration %s.",
+        _format_quantity_value_range(rows, "configured_energy_max"),
+    )
+    logger.info(
+        "Minimum energy from lookup tables %s.",
+        _format_quantity_value_range(rows, "energy_min_lookup_limit", summary_unit=u.GeV),
+    )
+    logger.info(
+        "Core scatter max used by jobs %s.",
+        _format_quantity_value_range(rows, "core_scatter_max"),
+    )
+    logger.info(
+        "Core scatter max from configuration %s.",
+        _format_quantity_value_range(rows, "configured_core_scatter_max"),
+    )
+    logger.info(
+        "Core scatter max from lookup tables %s.",
+        _format_quantity_value_range(rows, "lookup_core_scatter_max"),
+    )
+    logger.info(
+        "Minimum view cone used by jobs %s.",
+        _format_quantity_value_range(rows, "view_cone_min"),
+    )
+    logger.info(
+        "Maximum view cone used by jobs %s.",
+        _format_quantity_value_range(rows, "view_cone_max"),
+    )
+    logger.info(
+        "Minimum view cone from configuration %s.",
+        _format_quantity_value_range(rows, "configured_view_cone_min"),
+    )
+    logger.info(
+        "Maximum view cone from configuration %s.",
+        _format_quantity_value_range(rows, "configured_view_cone_max"),
+    )
+    logger.info(
+        "Maximum view cone from lookup tables %s.",
+        _format_quantity_value_range(rows, "lookup_view_cone_max"),
+    )
+    logger.info(
+        "Showers per job in generated job grid: minimum %d, maximum %d (configured maximum %d).",
+        summary["showers_per_run_min"],
+        summary["showers_per_run_max"],
+        summary["showers_per_run_configured_max"],
+    )
+    logger.info(
+        "Total showers for the entire production: %d.",
+        summary["total_showers"],
     )
 
 
@@ -1125,8 +1185,13 @@ def _build_observation_params_for_point(
         "corsika_he_interaction": corsika_he,
         "core_scatter_number": core_scatter_number,
         "core_scatter_max": selected_core_scatter_max,
+        "configured_core_scatter_max": core_scatter[1],
+        "lookup_core_scatter_max": lookup_core_scatter_max,
         "view_cone_min": _clip_max_quantity(view_cone_min, selected_view_cone_max),
         "view_cone_max": selected_view_cone_max,
+        "configured_view_cone_min": view_cone_min,
+        "configured_view_cone_max": configured_view_cone_max,
+        "lookup_view_cone_max": lookup_view_cone_max,
     }
 
 
