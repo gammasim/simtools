@@ -8,7 +8,8 @@ The grid is created with
 [simtools-production-generate-grid](../applications/simtools-production-generate-grid).
 
 ```{warning}
-Production configuration is a policy-heavy step. Small changes to pointing coverage, event
+Production configuration is a policy-heavy step, with many parameter choices defined by the user.
+Small changes to pointing coverage, event
 statistics, CORSIKA limits, or energy scaling can multiply the number of generated jobs or change
 the simulated phase space. A review of the generated grid is required before submission.
 ```
@@ -55,6 +56,9 @@ axis:
 - zenith 30 deg 40 deg 2 linear
 - offset 0 deg 0 deg 1 linear
 ```
+
+This example defines a horizontal grid with evenly spaced bins between the listed minimum and
+maximum azimuth and zenith values, plus a single offset point.
 
 Directed azimuth ranges may cross the 0 deg boundary. For example, `310 deg` to `20 deg` covers
 the interval through North.
