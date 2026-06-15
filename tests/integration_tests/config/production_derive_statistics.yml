@@ -20,6 +20,6 @@ applications:
   integration_tests:
   - output_file: interpolated_production_statistics.ecsv
   test_name: production_derive_statistics
-  xfail: "TODO application requires outdated production grid file"
+  xfail: "TODO application requires outdated production grid file (issue #2270)"
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
