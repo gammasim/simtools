@@ -84,15 +84,30 @@ _SIMULATION_CLI_ARGS = [
 def _resolve_telescopes_from_layout(args):
     """Resolve telescope names from array layout and enforce single-telescope layouts."""
     site_model = SiteModel(site=args["site"], model_version=args["model_version"])
-    layout_elements = site_model.get_array_elements_for_layout(args["array_layout_name"])
+    layout_elements = list(site_model.get_array_elements_for_layout(args["array_layout_name"]))
+
+    _logger.info(
+        "Resolved array layout '%s' to elements: %s",
+        args["array_layout_name"],
+        layout_elements,
+    )
 
     if len(layout_elements) != 1:
         raise ValueError(
-            "Bias-curve submissions currently support only single-telescope layouts; "
-            f"got {len(layout_elements)} elements in '{args['array_layout_name']}'."
+            f"Bias-curve submissions currently support only single-telescope layouts; "
+            f"got {len(layout_elements)} elements in '{args['array_layout_name']}': "
+            f"{layout_elements}"
         )
 
-    return list(layout_elements)
+    telescope = layout_elements[0]
+
+    if "invalid" in telescope.lower():
+        raise ValueError(
+            f"Array layout '{args['array_layout_name']}' resolved to invalid telescope "
+            f"'{telescope}'."
+        )
+
+    return [telescope]
 
 
 def _run_command(command, working_directory):
