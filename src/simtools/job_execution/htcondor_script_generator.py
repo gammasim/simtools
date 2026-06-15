@@ -153,9 +153,7 @@ def _write_params_file(params_file_path, label_job_specs):
             energy_max_value, energy_max_unit = _format_param_value(
                 job_spec["energy_max"], "energy_max_value"
             )
-            cores_per_shower = _format_param_value(
-                job_spec["cores_per_shower"], "cores_per_shower"
-            )
+            cores_per_shower = _format_param_value(job_spec["cores_per_shower"], "cores_per_shower")
             core_scatter_max_value, core_scatter_max_unit = _format_param_value(
                 job_spec["core_scatter_max"], "core_scatter_max_value"
             )
