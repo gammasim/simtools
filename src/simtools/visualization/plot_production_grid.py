@@ -437,6 +437,7 @@ class ProductionGridPlotter:
         axis.set_title("Local Azimuth / Zenith", pad=18)
         axis.set_xlabel("Azimuth [deg]")
         axis.set_ylabel("")
+        axis.set_axisbelow(False)
 
     def _configure_radec_axis(self, axis, plot_points):
         """Configure the RA/Dec axis."""
@@ -486,7 +487,7 @@ class ProductionGridPlotter:
             linewidths=1.0,
             edgecolors=color,
             facecolors="none",
-            zorder=10,
+            zorder=2.2,
         )
         return len(plot_points)
 

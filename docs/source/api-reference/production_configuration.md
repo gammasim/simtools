@@ -90,6 +90,15 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
+(job-grid-summary)=
+
+## job_grid_summary
+
+```{eval-rst}
+.. automodule:: production_configuration.job_grid_summary
+   :members:
+```
+
 (observation-grid)=
 
 ## observation_grid
