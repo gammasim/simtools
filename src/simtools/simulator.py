@@ -301,7 +301,7 @@ class Simulator:
         """
         runtime = []
         _resources = self._simulation_runner.get_resources(self.get_files(file_type="sub_out"))
-        if _resources.get("runtime"):
+        if _resources.get("runtime") is not None:
             runtime.append(_resources["runtime"])
 
         mean_runtime = np.mean(runtime)
