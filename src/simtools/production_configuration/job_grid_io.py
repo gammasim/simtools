@@ -8,6 +8,8 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
+from simtools.production_configuration.job_grid_summary import build_job_grid_summary
+
 logger = logging.getLogger(__name__)
 
 _ECSV_SUFFIX = ".ecsv"
@@ -169,7 +171,8 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     """
     output_path = Path(output_file)
     serialized_rows = [_serialize_job_row(job_row) for job_row in job_rows]
-    metadata = metadata or {}
+    metadata = metadata.copy() if metadata else {}
+    metadata["job_grid_summary"] = build_job_grid_summary(job_rows)
 
     if output_path.suffix.lower() != _ECSV_SUFFIX:
         raise ValueError("Job grid output file must use the '.ecsv' extension.")
