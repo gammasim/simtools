@@ -26,7 +26,7 @@ JOB_GRID_COLUMNS = [
     "energy_min_unit",
     "energy_max_value",
     "energy_max_unit",
-    "core_scatter_number",
+    "cores_per_shower",
     "core_scatter_max_value",
     "core_scatter_max_unit",
     "view_cone_min_value",
@@ -98,7 +98,7 @@ def _serialize_job_row(job_row):
     """Serialize one job row to the on-disk schema."""
     serialized_row = {
         "primary": job_row["primary"],
-        "core_scatter_number": int(job_row["core_scatter_number"]),
+        "cores_per_shower": int(job_row["cores_per_shower"]),
         "showers_per_run": int(job_row["showers_per_run"]),
         "nsb_rate": float(job_row["nsb_rate"]),
         "model_version": job_row["model_version"],
@@ -129,7 +129,7 @@ def _deserialize_job_row(serialized_row):
     """Deserialize one stored row to the in-memory job-row schema."""
     job_row = {
         "primary": serialized_row["primary"],
-        "core_scatter_number": int(serialized_row["core_scatter_number"]),
+        "cores_per_shower": int(serialized_row["cores_per_shower"]),
         "showers_per_run": int(serialized_row["showers_per_run"]),
         "nsb_rate": float(serialized_row.get("nsb_rate", 1.0)),
         "model_version": serialized_row["model_version"],
