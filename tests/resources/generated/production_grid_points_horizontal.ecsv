@@ -10,7 +10,7 @@
 # - {name: energy_min_unit, datatype: string}
 # - {name: energy_max_value, datatype: float64}
 # - {name: energy_max_unit, datatype: string}
-# - {name: core_scatter_number, datatype: int64}
+# - {name: cores_per_shower, datatype: int64}
 # - {name: core_scatter_max_value, datatype: float64}
 # - {name: core_scatter_max_unit, datatype: string}
 # - {name: view_cone_min_value, datatype: float64}
@@ -34,7 +34,7 @@
 # - {time_of_observation_scale: null}
 # - {corsika_limits: tests/resources/generated/corsika_simulation_limits/corsika_limits_north.ecsv}
 # schema: astropy-2.0
-primary azimuth_angle_value azimuth_angle_unit zenith_angle_value zenith_angle_unit energy_min_value energy_min_unit energy_max_value energy_max_unit core_scatter_number core_scatter_max_value core_scatter_max_unit view_cone_min_value view_cone_min_unit view_cone_max_value view_cone_max_unit showers_per_run nsb_rate model_version array_layout_name corsika_le_interaction corsika_he_interaction run_number
+primary azimuth_angle_value azimuth_angle_unit zenith_angle_value zenith_angle_unit energy_min_value energy_min_unit energy_max_value energy_max_unit cores_per_shower core_scatter_max_value core_scatter_max_unit view_cone_min_value view_cone_min_unit view_cone_max_value view_cone_max_unit showers_per_run nsb_rate model_version array_layout_name corsika_le_interaction corsika_he_interaction run_number
 gamma 310.0 deg 30.0 deg 30.0 GeV 300.0 GeV 10 500.0 m 0.0 deg 10.0 deg 5 0.24053832149999996 7.0.0 LSTN-01 urqmd epos 1
 gamma 310.0 deg 30.0 deg 30.0 GeV 300.0 GeV 10 500.0 m 0.0 deg 10.0 deg 5 0.24053832149999996 7.0.0 LSTN-01 urqmd epos 2
 gamma 310.0 deg 40.0 deg 30.0 GeV 300.0 GeV 10 500.0 m 0.0 deg 10.0 deg 5 0.24053832149999996 7.0.0 LSTN-01 urqmd epos 1
