@@ -3,6 +3,7 @@ applications:
 - application: simtools-validate-camera-efficiency
   configuration:
     model_version: 6.0.2
+    nsb_spectrum: tests/resources/generated/model_parameters/Benn_LaPalma_sky_converted.lis
     output_path: ./tmp-test-resources/camera_efficiency
     site: South
     telescope: MSTx-FlashCam
