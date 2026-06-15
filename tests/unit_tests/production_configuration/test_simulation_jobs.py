@@ -12,7 +12,6 @@ from simtools.production_configuration.simulation_jobs import (
     _clip_energy_range_from_threshold,
     _clip_energy_range_to_configured_bounds,
     _clip_max_quantity,
-    _format_quantity_summary,
     _generate_observation_grids_per_layout,
     _generate_observation_points_from_axes,
     _iter_compact_axis_specs,
@@ -903,18 +902,6 @@ def test_clip_max_quantity_returns_configured_value_without_lookup():
     assert _clip_max_quantity(5 * u.deg, None) == 5 * u.deg
 
 
-def test_format_quantity_summary_returns_single_value_for_constant_series():
-    summary = _format_quantity_summary(u.Quantity([200, 200, 200], u.TeV))
-
-    assert summary == "200 TeV"
-
-
-def test_format_quantity_summary_returns_range_with_explicit_unit():
-    summary = _format_quantity_summary(u.Quantity([30 * u.GeV, 1 * u.TeV]))
-
-    assert summary == "[30, 1000] GeV"
-
-
 def test_resolve_shower_params_converts_showers_per_run_power_law():
     (
         showers_per_run,
@@ -1319,8 +1306,13 @@ def test_build_simulation_jobs_clips_core_and_viewcone_max_by_configured_limits(
     rows = build_simulation_jobs(args_dict)
 
     assert rows[0]["core_scatter_max"] == 200 * u.m
+    assert rows[0]["configured_core_scatter_max"] == 200 * u.m
+    assert rows[0]["lookup_core_scatter_max"] == 400 * u.m
     assert rows[0]["view_cone_min"] == 3 * u.deg
     assert rows[0]["view_cone_max"] == 5 * u.deg
+    assert rows[0]["configured_view_cone_min"] == 3 * u.deg
+    assert rows[0]["configured_view_cone_max"] == 5 * u.deg
+    assert rows[0]["lookup_view_cone_max"] == 10 * u.deg
 
 
 @patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")
@@ -1341,6 +1333,10 @@ def test_build_simulation_jobs_uses_interpolated_energy_min_when_threshold_key_m
     assert len(rows) == 1
     assert rows[0]["energy_min"] == 50 * u.GeV
     assert rows[0]["energy_max"] == 100 * u.GeV
+    assert rows[0]["configured_energy_min"] == 30 * u.GeV
+    assert rows[0]["configured_energy_max"] == 100 * u.GeV
+    assert rows[0]["energy_min_lookup_limit"] == 50 * u.GeV
+    assert rows[0]["configured_showers_per_run"] == 5
 
 
 @patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")
