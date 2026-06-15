@@ -1077,9 +1077,13 @@ def _log_generated_row_summary(rows):
         _format_quantity_value_range(rows, "lookup_view_cone_max"),
     )
     logger.info(
-        "Showers per job used: %s (configured maximum %s); total showers: %d.",
-        summary["showers_per_run_used"],
-        summary["showers_per_run_configured"],
+        "Showers per job in generated job grid: minimum %d, maximum %d (configured maximum %d).",
+        summary["showers_per_run_min"],
+        summary["showers_per_run_max"],
+        summary["showers_per_run_configured_max"],
+    )
+    logger.info(
+        "Total showers for the entire production: %d.",
         summary["total_showers"],
     )
 

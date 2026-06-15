@@ -63,6 +63,9 @@ def test_build_job_grid_summary_includes_used_configured_and_lookup_values():
     assert summary["core_scatter_max_used"] == "[150, 200] m"
     assert summary["core_scatter_max_configured"] == "200 m"
     assert summary["view_cone_max_lookup_limit"] == "[2, 10] deg"
+    assert summary["showers_per_run_min"] == 500
+    assert summary["showers_per_run_max"] == 1000
     assert summary["showers_per_run_used"] == "[500, 1000]"
+    assert summary["showers_per_run_configured_max"] == 1000
     assert summary["showers_per_run_configured"] == "1000"
     assert summary["total_showers"] == 1500
