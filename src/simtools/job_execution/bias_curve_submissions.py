@@ -68,6 +68,7 @@ _CURVE_DEFINITIONS = {
 _SIMULATION_CLI_ARGS = [
     "site",
     "model_version",
+    "telescope",
     "array_layout_name",
     "simulation_software",
     "azimuth_angle",
