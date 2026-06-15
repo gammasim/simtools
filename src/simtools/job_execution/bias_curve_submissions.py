@@ -143,21 +143,7 @@ def _format_threshold_value(threshold):
     return int(threshold) if float(threshold).is_integer() else threshold
 
 
-def _array_layouts_overwrite(telescopes):
-    """Build the OBS array_layouts overwrite block."""
-    return {
-        "version": _PARAMETER_VERSION,
-        "value": [
-            {
-                "elements": [telescope],
-                "name": telescope,
-            }
-            for telescope in telescopes
-        ],
-    }
-
-
-def _build_proton_overwrite(telescopes, threshold, site, model_version):
+def _build_proton_overwrite(telescopes, threshold, model_version):
     """Build overwrite YAML content for one proton threshold scan point."""
     threshold_value = _format_threshold_value(threshold)
 
@@ -171,10 +157,6 @@ def _build_proton_overwrite(telescopes, threshold, site, model_version):
                 "value": threshold_value,
             }
         }
-
-    changes[f"OBS-{site}"] = {
-        "array_layouts": _array_layouts_overwrite(telescopes),
-    }
 
     return {
         "model_version": model_version,
@@ -238,7 +220,6 @@ def _build_overwrite_content(curve_name, telescopes, threshold, args):
         return _build_proton_overwrite(
             telescopes=telescopes,
             threshold=threshold,
-            site=args["site"],
             model_version=args["model_version"],
         )
 
