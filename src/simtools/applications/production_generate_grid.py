@@ -316,7 +316,7 @@ def _add_arguments(parser):
     parser.add_argument(
         "--number_of_runs",
         help="Number of runs to be simulated.",
-        type=int,
+        type=parser.scientific_int,
         required=False,
         default=None,
     )

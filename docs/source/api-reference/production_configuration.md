@@ -81,6 +81,15 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
+(job-generation-summary)=
+
+## job_generation_summary
+
+```{eval-rst}
+.. automodule:: production_configuration.job_generation_summary
+   :members:
+```
+
 (job-grid-summary)=
 
 ## job_grid_summary
