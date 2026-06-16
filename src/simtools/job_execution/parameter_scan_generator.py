@@ -3,24 +3,25 @@ Parameter scan grid generator.
 
 Expands an existing production job grid with parameter scan combinations.
 For each cartesian combination of scan parameters, one overwrite YAML file is
-generated and each base grid row is duplicated with the overwrite file path
-and a scan label attached.
+created dynamically from the scan configuration, and each base grid row is
+duplicated with the overwrite file path and a scan label attached.
 
 Use with the three-step workflow::
 
     simtools-production-generate-grid --output_file base_grid.ecsv ...
-    simtools-generate-parameter-scan-grid \\
-        --job_grid_file base_grid.ecsv \\
-        --scan_config scan.yaml \\
+    simtools-generate-parameter-scan-grid \
+        --job_grid_file base_grid.ecsv \
+        --scan_config scan.yaml \
         --output_file scan_grid.ecsv
-    simtools-simulate-prod-htcondor-generator \\
-        --job_grid_file scan_grid.ecsv \\
-        --output_path htcondor_submit \\
+    simtools-simulate-prod-htcondor-generator \
+        --job_grid_file scan_grid.ecsv \
+        --output_path htcondor_submit \
         --apptainer_image ...
 """
 
 import itertools
 import logging
+from copy import deepcopy
 from pathlib import Path
 
 import yaml
@@ -30,93 +31,114 @@ from simtools.production_configuration.job_grid_io import read_job_grid, seriali
 _logger = logging.getLogger(__name__)
 
 
-def _set_nested_value(data, path_parts, value):
-    """
-    Set a value in a nested dictionary using a path.
+def _format_scan_value(value):
+    """Return scan values in a stable YAML/filename-friendly representation."""
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    return value
 
-    Parameters
-    ----------
-    data : dict
-        Dictionary to modify.
-    path_parts : list
-        List of keys representing the path.
-    value : any
-        Value to set.
+
+def _format_value_for_name(value):
+    """Return a scan value string that is safe enough for generated filenames."""
+    value = _format_scan_value(value)
+    return str(value).replace(" ", "").replace("/", "-")
+
+
+def _set_nested_parameter(data, path_parts, value, version=None):
+    """Set a model-parameter value in a nested dictionary using a dotted path.
+
+    The path points to the model-parameter node, e.g.
+    ``changes.LSTN-01.asum_threshold``. If the node already exists as a
+    dictionary, its ``value`` field is updated and existing metadata is kept.
+    If the node does not exist, it is created as ``{version, value}`` when a
+    version is given, otherwise as ``{value}``.
     """
     current = data
     for key in path_parts[:-1]:
-        if key not in current:
+        if key not in current or current[key] is None:
             current[key] = {}
+        if not isinstance(current[key], dict):
+            raise TypeError(
+                f"Cannot set nested parameter at '{'.'.join(path_parts)}'; "
+                f"intermediate key '{key}' is not a dictionary."
+            )
         current = current[key]
 
-    current[path_parts[-1]] = {"value": value}
+    final_key = path_parts[-1]
+    parameter_entry = current.get(final_key)
+
+    if parameter_entry is None:
+        parameter_entry = {}
+        current[final_key] = parameter_entry
+
+    if not isinstance(parameter_entry, dict):
+        parameter_entry = {}
+        current[final_key] = parameter_entry
+
+    if version is not None:
+        parameter_entry["version"] = version
+    parameter_entry["value"] = _format_scan_value(value)
 
 
-def _generate_overwrite_file(template_path, param_combo, combo_name, work_dir, label):
-    """
-    Generate overwrite YAML file for a parameter combination.
-
-    Parameters
-    ----------
-    template_path : Path
-        Path to overwrite template file.
-    param_combo : dict
-        Dictionary of parameter_name: (path, value) pairs.
-    combo_name : str
-        String representation for filename.
-    work_dir : Path
-        Output directory.
-    label : str
-        Label for the scan.
-
-    Returns
-    -------
-    Path
-        Path to generated overwrite file.
-    """
-    if not template_path.exists():
-        raise FileNotFoundError(f"Overwrite template file not found: {template_path}")
-
-    with open(template_path, encoding="utf-8") as f:
-        template_data = yaml.safe_load(f)
-
+def _build_overwrite_data(overwrite_base, param_combo):
+    """Build overwrite YAML content for one parameter combination."""
+    overwrite_data = deepcopy(overwrite_base)
     param_descriptions = []
-    for param_name, (param_path, param_value) in param_combo.items():
-        path_parts = param_path.split(".")
 
-        if isinstance(param_value, float) and param_value.is_integer():
-            value = int(param_value)
-        else:
-            value = param_value
-
-        _set_nested_value(template_data, path_parts, value)
+    for param_name, param in param_combo.items():
+        param_value = _format_scan_value(param["value"])
+        path_parts = param["path"].split(".")
+        _set_nested_parameter(
+            overwrite_data,
+            path_parts,
+            param_value,
+            version=param.get("version"),
+        )
         param_descriptions.append(f"{param_name}={param_value}")
 
-    template_data["description"] = f"Parameter scan - {', '.join(param_descriptions)}"
+    base_description = overwrite_data.get("description", "Parameter scan")
+    overwrite_data["description"] = f"{base_description} - {', '.join(param_descriptions)}"
+    return overwrite_data
+
+
+def _generate_overwrite_file(overwrite_base, param_combo, combo_name, work_dir, label):
+    """Generate overwrite YAML file for one parameter combination."""
+    overwrite_data = _build_overwrite_data(overwrite_base, param_combo)
 
     overwrite_file = work_dir / f"overwrite_{label}_{combo_name}.yaml"
-    with open(overwrite_file, "w", encoding="utf-8") as f:
-        yaml.dump(template_data, f, default_flow_style=False, sort_keys=False)
+    with open(overwrite_file, "w", encoding="utf-8") as file_handle:
+        yaml.safe_dump(overwrite_data, file_handle, default_flow_style=False, sort_keys=False)
 
     _logger.debug(f"Generated overwrite file: {overwrite_file}")
     return overwrite_file
 
 
+def _load_legacy_overwrite_template(template_path):
+    """Load legacy file-based overwrite template configuration."""
+    template_path = Path(template_path)
+    if not template_path.exists():
+        raise FileNotFoundError(f"Overwrite template file not found: {template_path}")
+
+    with open(template_path, encoding="utf-8") as file_handle:
+        return yaml.safe_load(file_handle)
+
+
 def _parse_parameter_scan_config(param_scan):
-    """
-    Parse parameter scan configuration.
+    """Parse parameter scan configuration.
 
-    Parameters
-    ----------
-    param_scan : dict
-        Parameter scan configuration section.
-
-    Returns
-    -------
-    tuple
-        (list of parameter specs, template_path)
+    The preferred configuration is fully dynamic and contains an inline
+    ``overwrite`` dictionary. Legacy ``overwrite_template`` files are still
+    accepted for backward compatibility.
     """
-    template_path = Path(param_scan["overwrite_template"])
+    if "overwrite" in param_scan:
+        overwrite_base = param_scan["overwrite"] or {}
+    elif "overwrite_template" in param_scan:
+        overwrite_base = _load_legacy_overwrite_template(param_scan["overwrite_template"])
+    else:
+        raise KeyError(
+            "Parameter scan configuration requires either 'overwrite' or "
+            "legacy 'overwrite_template'."
+        )
 
     params = []
     for param_spec in param_scan["parameters"]:
@@ -125,37 +147,30 @@ def _parse_parameter_scan_config(param_scan):
                 "name": param_spec["name"],
                 "path": param_spec["path"],
                 "values": param_spec["values"],
+                "version": param_spec.get("version"),
             }
         )
 
-    return params, template_path
+    return params, overwrite_base
 
 
 def _generate_parameter_combinations(param_specs):
-    """
-    Generate all combinations of parameter values (cartesian product).
-
-    Parameters
-    ----------
-    param_specs : list
-        List of parameter specifications.
-
-    Returns
-    -------
-    list
-        List of parameter combinations.
-    """
+    """Generate all cartesian combinations of parameter values."""
     param_names = [p["name"] for p in param_specs]
-    param_paths = [p["path"] for p in param_specs]
     value_lists = [p["values"] for p in param_specs]
 
     combinations = []
     for value_combo in itertools.product(*value_lists):
         combo = {}
         combo_name_parts = []
-        for name, path, value in zip(param_names, param_paths, value_combo):
-            combo[name] = (path, value)
-            combo_name_parts.append(f"{name}_{value}")
+        for param_spec, name, value in zip(param_specs, param_names, value_combo):
+            scan_value = _format_scan_value(value)
+            combo[name] = {
+                "path": param_spec["path"],
+                "value": scan_value,
+                "version": param_spec.get("version"),
+            }
+            combo_name_parts.append(f"{name}_{_format_value_for_name(scan_value)}")
 
         combinations.append(
             {
@@ -168,33 +183,23 @@ def _generate_parameter_combinations(param_specs):
 
 
 def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
-    """
-    Expand a production job grid with parameter scan combinations.
+    """Expand a production job grid with parameter scan combinations.
 
-    Reads a base job grid, generates one overwrite YAML file per scan parameter
-    combination, and writes a new grid where each base row is duplicated for
-    every combination with ``overwrite_model_parameters`` and ``scan_label``
-    columns added.
-
-    Parameters
-    ----------
-    base_grid_file : str or Path
-        Base job grid ECSV file from ``simtools-production-generate-grid``.
-    scan_config_path : str or Path
-        Path to parameter scan YAML configuration.
-    output_file : str or Path
-        Output path for the expanded scan grid ECSV.
+    Reads a base job grid, dynamically generates one overwrite YAML file per
+    scan parameter combination, and writes a new grid where each base row is
+    duplicated for every combination with ``overwrite_model_parameters`` and
+    ``scan_label`` columns added.
     """
     scan_config_path = Path(scan_config_path)
     output_file = Path(output_file)
     output_dir = output_file.parent
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    with open(scan_config_path, encoding="utf-8") as f:
-        scan_config = yaml.safe_load(f)
+    with open(scan_config_path, encoding="utf-8") as file_handle:
+        scan_config = yaml.safe_load(file_handle)
 
     label = scan_config.get("label", "scan")
-    param_specs, template_path = _parse_parameter_scan_config(scan_config["parameter_scan"])
+    param_specs, overwrite_base = _parse_parameter_scan_config(scan_config["parameter_scan"])
     param_combinations = _generate_parameter_combinations(param_specs)
 
     base_rows, metadata = read_job_grid(base_grid_file)
@@ -205,7 +210,7 @@ def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
     expanded_rows = []
     for combo_spec in param_combinations:
         overwrite_file = _generate_overwrite_file(
-            template_path, combo_spec["combo"], combo_spec["name"], output_dir, label
+            overwrite_base, combo_spec["combo"], combo_spec["name"], output_dir, label
         )
         for row in base_rows:
             new_row = dict(row)

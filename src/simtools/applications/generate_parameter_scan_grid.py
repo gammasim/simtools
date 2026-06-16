@@ -3,10 +3,10 @@
 r"""
 Generate a parameter scan job grid by expanding a base production grid.
 
-Reads a base job grid ECSV (from ``simtools-production-generate-grid``), generates
+Reads a base job grid ECSV from ``simtools-production-generate-grid``, generates
 one overwrite YAML file per scan parameter combination, and writes an expanded
-``scan_grid.ecsv``.  The resulting file is passed directly to
-``simtools-simulate-prod-htcondor-generator``, which handles all submit-file
+``scan_grid.ecsv``. The resulting file is passed directly to
+``simtools-simulate-prod-htcondor-generator``, which handles submit-file
 rendering, image-label grouping, and log-directory setup.
 
 Command line arguments
@@ -24,11 +24,31 @@ Scan configuration format
 
     label: threshold_scan
     parameter_scan:
-      overwrite_template: ./overwrite.yaml
+      overwrite:
+        model_version: 7.0.0
+        model_update: patch_update
+        model_version_history: [7.0.0]
+        description: Tune for NSB telescope trigger scan
+        changes:
+          LSTN-01:
+            min_photons:
+              version: 2.0.0
+              value: 0
+            min_photoelectrons:
+              version: 2.0.0
+              value: 0
+          OBS-North:
+            nsb_scaling_factor:
+              version: 2.0.0
+              value: 2
       parameters:
-        - name: threshold
+        - name: asum_threshold
           path: changes.LSTN-01.asum_threshold
+          version: 2.0.0
           values: [220, 230, 240]
+
+For each value, the scan generator creates an overwrite YAML file by copying the
+``overwrite`` dictionary and setting the requested parameter path.
 
 Example
 -------
