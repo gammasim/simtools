@@ -124,7 +124,6 @@ def main():
     args = parse_args()
 
     download_files()
-    return
     run_configured_applications(
         ignore_runtime_environment=args.ignore_runtime_environment,
         config_glob=args.config_glob,
