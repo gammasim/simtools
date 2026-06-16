@@ -253,6 +253,30 @@ def _data_columns_nsb_reference_spectrum():
     return _data_columns_nsb_spectrum()
 
 
+def _data_columns_mirror_list():
+    """Column description for parameter mirror_list."""
+    return (
+        [
+            {"name": "mirror_x", "description": "Mirror x position", "unit": "cm"},
+            {"name": "mirror_y", "description": "Mirror y position", "unit": "cm"},
+            {
+                "name": "mirror_diameter",
+                "description": "Mirror diameter (flat-to-flat)",
+                "unit": "cm",
+            },
+            {"name": "focal_length", "description": "Mirror focal length", "unit": "cm"},
+            {"name": "shape_type", "description": "Mirror shape code", "unit": None},
+            {"name": "mirror_z", "description": "Mirror z position", "unit": "cm"},
+            {
+                "name": "mirror_panel_id",
+                "description": "Mirror number in original list",
+                "unit": None,
+            },
+        ],
+        "Mirror positions and focal lengths",
+    )
+
+
 def read_simtel_table(parameter_name, file_path):
     """
     Read sim_telarray table file for a given parameter.
@@ -279,6 +303,8 @@ def read_simtel_table(parameter_name, file_path):
         return _read_simtel_data_for_atmospheric_transmission(file_path)
     if parameter_name == "lightguide_efficiency_vs_wavelength":
         return _read_simtel_data_for_lightguide_efficiency(file_path)
+    if parameter_name == "mirror_list":
+        return _read_simtel_data_for_mirror_list(file_path)
 
     rows, meta_from_simtel, n_columns, n_dim = _read_simtel_data(file_path)
     columns_info, description = _data_columns(parameter_name, n_columns, n_dim)
@@ -599,6 +625,68 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
             "Description": "Atmospheric transmission",
             "context_from_sim_telarray": "\n".join(meta_lines),
             "observatory_level": observatory_level,
+        }
+    )
+
+    return table
+
+
+def _read_simtel_data_for_mirror_list(file_path):
+    """
+    Read mirror list data and return a table.
+
+    Parameters
+    ----------
+    file_path : str or Path
+
+    Returns
+    -------
+    astropy.table.Table
+    """
+    rows = []
+    meta_lines = []
+
+    lines = ascii_handler.read_file_encoded_in_utf_or_latin(file_path)
+
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+
+        if stripped.startswith("#"):
+            meta_lines.append(stripped.lstrip("#").strip())
+            continue
+
+        data_and_tail = stripped.split("#%", maxsplit=1)
+        data_row = _process_line_parts(data_and_tail[0].split())
+
+        if len(data_row) < 6:
+            logger.debug(f"Skipping malformed mirror_list line: {stripped}")
+            continue
+
+        mirror_panel_id = -1
+        if len(data_and_tail) > 1:
+            id_match = re.search(r"\bid\s*=\s*(-?\d+)\b", data_and_tail[1])
+            if id_match:
+                mirror_panel_id = int(id_match.group(1))
+
+        rows.append([*data_row[:6], mirror_panel_id])
+
+    if not rows:
+        raise ValueError("No valid mirror_list entries found in file")
+
+    columns_info, description = _data_columns_mirror_list()
+    table = Table(rows=rows, names=[col["name"] for col in columns_info])
+    for col, info in zip(table.colnames, columns_info):
+        table[col].unit = info.get("unit")
+        table[col].description = info.get("description")
+
+    table.meta.update(
+        {
+            "Name": "mirror_list",
+            "File": str(file_path),
+            "Description": description,
+            "context_from_sim_telarray": "\n".join(meta_lines),
         }
     )
 
