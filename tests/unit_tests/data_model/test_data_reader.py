@@ -105,7 +105,9 @@ def test_read_value_from_file_and_validate(caplog, model_parameter_json):
 def test_read_value_from_file_and_validate_uses_metadata_schema(monkeypatch, model_parameter_json):
     class DummyMetadataCollector:
         def __init__(self, *args, **kwargs):
-            pass
+            # Keep constructor signature compatible with MetadataCollector usage.
+            self.args = args
+            self.kwargs = kwargs
 
         def get_data_model_schema_file_name(self):
             return schema.get_model_parameter_schema_file("array_element_position_ground")
