@@ -45,8 +45,10 @@ def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
 
     job_grid_io.serialize_job_grid(_job_rows(), output_file, metadata=_metadata())
     rows, metadata = job_grid_io.read_job_grid(output_file)
+    output_table = Table.read(output_file, format="ascii.ecsv")
 
     assert metadata["site"] == "North"
+    assert output_table.colnames[0] == "run_number"
     assert rows[0]["energy_min"] == 30 * u.GeV
     assert rows[0]["cores_per_shower"] == 10
     assert rows[0]["array_layout_name"] == "CTAO-North-Alpha"
