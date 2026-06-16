@@ -25,10 +25,12 @@ these parameters.
 
 No external overwrite templates are used; overwrite YAML files are generated
 dynamically from scratch.
+
+Base production grids are generated through simtools workflow configuration files
+and ``simtools_runner`` rather than by spawning external commands directly.
 """
 
 import logging
-import subprocess
 from pathlib import Path
 
 import yaml
@@ -36,6 +38,7 @@ import yaml
 from simtools.job_execution import htcondor_script_generator
 from simtools.model.site_model import SiteModel
 from simtools.production_configuration.job_grid_io import read_job_grid, serialize_job_grid
+from simtools.runners import simtools_runner
 
 _logger = logging.getLogger(__name__)
 
@@ -68,7 +71,6 @@ _CURVE_DEFINITIONS = {
 _SIMULATION_CLI_ARGS = [
     "site",
     "model_version",
-    "telescope",
     "array_layout_name",
     "simulation_software",
     "azimuth_angle",
@@ -85,7 +87,10 @@ _SIMULATION_CLI_ARGS = [
 def _resolve_telescopes_from_layout(args):
     """Resolve telescope names from array layout and enforce single-telescope layouts."""
     site_model = SiteModel(site=args["site"], model_version=args["model_version"])
-    layout_elements = list(site_model.get_array_elements_for_layout(args["array_layout_name"]))
+    layout_elements = [
+        str(element)
+        for element in site_model.get_array_elements_for_layout(args["array_layout_name"])
+    ]
 
     _logger.info(
         "Resolved array layout '%s' to elements: %s",
@@ -109,18 +114,6 @@ def _resolve_telescopes_from_layout(args):
         )
 
     return [telescope]
-
-
-def _run_command(command, working_directory):
-    """Run a shell command and raise a readable error on failure."""
-    _logger.info(f"Running command: {' '.join(str(argument) for argument in command)}")
-
-    try:
-        subprocess.run(command, cwd=working_directory, check=True)
-    except subprocess.CalledProcessError as exc:
-        raise RuntimeError(
-            f"Command failed: {' '.join(str(argument) for argument in command)}"
-        ) from exc
 
 
 def _threshold_param_name(telescope):
@@ -307,29 +300,74 @@ def _build_scan_grid(base_grid_file, overwrite_files_and_labels, scan_grid_file)
     _logger.info(f"Scan grid with {len(expanded_rows)} rows written to '{scan_grid_file}'.")
 
 
-def _simulation_to_cli_args(args, primary, energy_range, output_file, label):
-    """Build CLI command arguments for simtools-production-generate-grid."""
-    command = ["simtools-production-generate-grid"]
+def _grid_generation_configuration(args, primary, energy_range, output_file, label):
+    """Build configuration for simtools-production-generate-grid."""
+    configuration = {}
 
     for key in _SIMULATION_CLI_ARGS:
         value = args.get(key)
         if value is not None:
-            command.extend([f"--{key}", str(value)])
+            configuration[key] = value
 
-    command.extend(
-        [
-            "--primary",
-            primary,
-            "--energy_range",
-            energy_range,
-            "--label",
-            label,
-            "--output_file",
-            str(output_file),
-        ]
+    configuration.update(
+        {
+            "primary": primary,
+            "energy_range": energy_range,
+            "label": label,
+            "output_file": str(output_file),
+            "output_path": str(output_file.parent),
+        }
     )
 
-    return command
+    return configuration
+
+
+def _write_grid_generation_workflow_config(
+    curve_name,
+    args,
+    primary,
+    energy_range,
+    output_file,
+    label,
+    curve_directory,
+):
+    """Write workflow configuration for production-grid generation."""
+    workflow_config = {
+        "applications": [
+            {
+                "application": "simtools-production-generate-grid",
+                "configuration": _grid_generation_configuration(
+                    args=args,
+                    primary=primary,
+                    energy_range=energy_range,
+                    output_file=output_file,
+                    label=label,
+                ),
+            }
+        ]
+    }
+
+    config_file = curve_directory / f"{curve_name}_generate_grid_config.yml"
+
+    with open(config_file, "w", encoding="utf-8") as file_handle:
+        yaml.safe_dump(workflow_config, file_handle, sort_keys=False)
+
+    _logger.info(f"Grid-generation workflow configuration written to '{config_file}'.")
+    return config_file
+
+
+def _run_grid_generation_workflow(config_file, args):
+    """Run production-grid generation through the simtools workflow runner."""
+    runner_args = {
+        "config_file": str(config_file),
+        "steps": None,
+        "ignore_runtime_environment": True,
+    }
+
+    if args.get("activity_id") is not None:
+        runner_args["activity_id"] = args["activity_id"]
+
+    simtools_runner.run_applications(runner_args)
 
 
 def _build_htcondor_args(label, curve_directory, scan_grid_file, args):
@@ -364,16 +402,16 @@ def _generate_curve_submissions(curve_name, curve_definition, args, output_root)
     base_label = args.get("label") or "bias_curve"
     curve_label = f"{base_label}_{curve_name}"
 
-    _run_command(
-        _simulation_to_cli_args(
-            args=args,
-            primary=primary,
-            energy_range=energy_range,
-            output_file=base_grid_file,
-            label=curve_label,
-        ),
-        output_root,
+    grid_workflow_config_file = _write_grid_generation_workflow_config(
+        curve_name=curve_name,
+        args=args,
+        primary=primary,
+        energy_range=energy_range,
+        output_file=base_grid_file,
+        label=curve_label,
+        curve_directory=curve_directory,
     )
+    _run_grid_generation_workflow(grid_workflow_config_file, args)
 
     overwrite_files_and_labels = _generate_overwrite_files(
         curve_name=curve_name,
