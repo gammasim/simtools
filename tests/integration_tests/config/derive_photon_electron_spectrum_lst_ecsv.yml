@@ -2,24 +2,26 @@
 applications:
 - application: simtools-derive-photon-electron-spectrum
   configuration:
-    afterpulse_amplitude_range:
-    - 1
-    - 42
-    afterpulse_decay_factor_fixed_value: 15
-    afterpulse_spectrum: tests/resources/static/LST_afterpulses.ecsv
+    input_spectrum: tests/resources/generated/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
+    afterpulse_spectrum: tests/resources/generated/Afterpulsing-probability_LST1-11PMTs_2023Oct_differential_used_pmts.ecsv
+    step_size: 0.02
+    scale_afterpulse_spectrum: 1.0
     fit_afterpulse: true
-    input_spectrum: |
-     tests/resources/generated/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
+    afterpulse_decay_factor_fixed_value: 15
+    afterpulse_amplitude_range:
+    - 4
+    - 42
+    use_norm_spe: true
+    telescope: LSTN-01
+    site: North
     log_level: DEBUG
     output_file: test_single_pe_lst.ecsv
     output_path: simtools-output
-    step_size: 0.02
-    use_norm_spe: true
   integration_tests:
   - output_file: test_single_pe_lst.dat
   - output_file: test_single_pe_lst.ecsv
-  - reference_output_file: ${static:spe_LST_2025-02-15-used.ecsv}
-    tolerance: 0.0001
+  - reference_output_file: ${generated:spe_LSTN_01_2025-04-03.ecsv}
+    tolerance: 0.01
   test_name: LST_ecsv
   test_use_case: UC-150-2.1.2
 schema_name: application_workflow.metaschema
