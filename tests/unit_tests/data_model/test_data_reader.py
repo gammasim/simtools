@@ -1,15 +1,11 @@
 #!/usr/bin/python3
 
-import logging
-
 import pytest
 from astropy.io.registry.base import IORegistryError
 from astropy.table import Table
 
 from simtools.constants import TEST_RESOURCES_STATIC
 from simtools.data_model import data_reader
-
-logger = logging.getLogger()
 
 
 def test_read_table_from_file(get_test_data_file):

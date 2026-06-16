@@ -4,7 +4,6 @@ import copy
 import logging
 import shutil
 import tarfile
-import warnings
 from pathlib import Path
 from unittest import mock
 from unittest.mock import call
@@ -901,12 +900,9 @@ def test_make_resources_report(array_simulator, mocker):
         array_simulator._simulation_runner, "get_resources", return_value=mock_resources
     )
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
-        result = array_simulator._make_resources_report()
-        # np.mean([]) returns nan
-        assert "Mean wall time/run [sec]: nan" in result
-        assert ", #events/run: 500" in result
+    result = array_simulator._make_resources_report()
+    assert "Mean wall time/run [sec]: nan" in result
+    assert ", #events/run: 500" in result
 
 
 def test_get_corsika_file(array_simulator, mocker):
