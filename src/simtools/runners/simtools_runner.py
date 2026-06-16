@@ -25,11 +25,9 @@ def run_applications(args_dict):
     ----------
     args_dict : dict
         Dictionary containing command line arguments.
-
-        Optional keys:
-        - overwrite_collection_files : bool
-            Allow collection output files to be overwritten when different source
-            files have the same basename. Defaults to False.
+        Optional key ``overwrite_collection_files`` (bool) allows collection
+        output files to be overwritten when different source files have the
+        same basename. Defaults to False.
     """
     (
         configurations,
