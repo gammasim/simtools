@@ -190,7 +190,7 @@ def test_get_submit_script():
     assert '    --primary "$primary" \\' in script
     assert '    --azimuth_angle "${5}" \\' in script
     assert '    --zenith_angle "${6}" \\' in script
-    assert '    --nshow "${18}" \\' in script
+    assert '    --showers_per_run "${18}" \\' in script
     assert '    --energy_range "${7} ${8} ${9} ${10}" \\' in script
     assert '    --core_scatter "${11} ${12} ${13}" \\' in script
     assert '    --view_cone "${14} ${15} ${16} ${17}" \\' in script

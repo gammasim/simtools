@@ -414,7 +414,7 @@ simtools-simulate-prod \\
     --primary "$primary" \\
     --azimuth_angle "{bash_indices["azimuth_angle"]}" \\
     --zenith_angle "{bash_indices["zenith_angle"]}" \\
-    --nshow "{bash_indices["showers_per_run"]}" \\
+    --showers_per_run "{bash_indices["showers_per_run"]}" \\
     --energy_range {energy_range_string} \\
     --core_scatter {core_scatter_string} \\
     --view_cone {view_cone_string} \\
