@@ -14,6 +14,7 @@ from pathlib import Path
 
 import astropy.units as u
 
+from simtools.model.site_model import SiteModel
 from simtools.production_configuration.job_grid_io import read_job_grid
 
 _logger = logging.getLogger(__name__)
@@ -43,7 +44,7 @@ _PARAMS_FIELDS = [
     "pack_for_grid_register",
 ]
 
-_OPTIONAL_QUEUE_FIELDS = ("overwrite_model_parameters", "scan_label")
+_OPTIONAL_QUEUE_FIELDS = ("overwrite_model_parameters", "scan_label", "telescope")
 
 _REQUIRED_JOB_GRID_METADATA = ("site", "simulation_software")
 
@@ -102,7 +103,12 @@ def _format_param_value(value, field_name):
             return ""
         raise ValueError(f"Missing required value for field '{field_name}'.")
 
-    if field_name in ("apptainer_label", "pack_for_grid_register", "overwrite_model_parameters"):
+    if field_name in (
+        "apptainer_label",
+        "pack_for_grid_register",
+        "overwrite_model_parameters",
+        "telescope",
+    ):
         return _sanitize_label_for_params(value)
 
     if field_name == "cores_per_shower":
@@ -202,6 +208,8 @@ def _write_params_file(params_file_path, label_job_specs, params_fields=None):
                 )
             if "scan_label" in params_fields:
                 row.append(_format_param_value(job_spec.get("scan_label"), "scan_label"))
+            if "telescope" in params_fields:
+                row.append(_format_param_value(job_spec.get("telescope"), "telescope"))
 
             params_file_handle.write(" ".join(row) + "\n")
 
@@ -385,6 +393,10 @@ def _get_submit_script(args_dict, params_fields=None):
         )
         overwrite_parameters_argument = '    "${overwrite_model_parameters_args[@]}" \\\n'
 
+    telescope_argument = ""
+    if "telescope" in params_fields:
+        telescope_argument = f'    --telescope "{bash_indices["telescope"]}" \\\n'
+
     return f"""#!/usr/bin/env bash
 
 # Process ID used to generate run number
@@ -409,7 +421,7 @@ simtools-simulate-prod \\
     --model_version "$model_version" \\
     --site {args_dict["site"]} \\
     --array_layout_name "$array_layout_name" \\
-    --primary "$primary" \\
+{telescope_argument}    --primary "$primary" \\
     --azimuth_angle "{bash_indices["azimuth_angle"]}" \\
     --zenith_angle "{bash_indices["zenith_angle"]}" \\
     --showers_per_run "{bash_indices["showers_per_run"]}" \\
@@ -425,6 +437,28 @@ simtools-simulate-prod \\
     --log_level {args_dict["log_level"]} \\
     --pack_for_grid_register "$pack_for_grid_register"
 """
+
+
+def _resolve_telescope_from_layout(site, model_version, array_layout_name, cache):
+    """Resolve a telescope name from a single-telescope array layout.
+
+    Returns an empty string for multi-telescope layouts, because in that case no
+    single ``--telescope`` argument should be passed to simtools-simulate-prod.
+    """
+    cache_key = (site, model_version, array_layout_name)
+
+    if cache_key not in cache:
+        site_model = SiteModel(site=site, model_version=model_version)
+        layout_elements = [
+            str(element) for element in site_model.get_array_elements_for_layout(array_layout_name)
+        ]
+
+        if len(layout_elements) == 1:
+            cache[cache_key] = layout_elements[0]
+        else:
+            cache[cache_key] = ""
+
+    return cache[cache_key]
 
 
 def build_job_specs(args_dict, image_labels):
@@ -446,6 +480,8 @@ def build_job_specs(args_dict, image_labels):
         )
 
     job_specs = []
+    layout_telescope_cache = {}
+
     for label in image_labels:
         for row in normalized_rows:
             job_spec = {
@@ -453,9 +489,21 @@ def build_job_specs(args_dict, image_labels):
                 **row,
                 "pack_for_grid_register": f"{base_pack_dir}/{label!s}",
             }
+
+            telescope = row.get("telescope") or _resolve_telescope_from_layout(
+                site=job_grid_metadata["site"],
+                model_version=row["model_version"],
+                array_layout_name=row["array_layout_name"],
+                cache=layout_telescope_cache,
+            )
+            if telescope:
+                job_spec["telescope"] = telescope
+
             if row.get("scan_label") not in (None, ""):
                 job_spec["scan_label"] = row["scan_label"]
             if row.get("overwrite_model_parameters") not in (None, ""):
                 job_spec["overwrite_model_parameters"] = row["overwrite_model_parameters"]
+
             job_specs.append(job_spec)
+
     return job_specs, job_grid_metadata
