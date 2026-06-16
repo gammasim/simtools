@@ -27,16 +27,16 @@ applications:
     zenith_angle: 20
   integration_tests:
   - test_simtel_cfg_files:
-      "5.0.0": ${static:sim_telarray_configurations/5.0.0/CTA-North-LSTN-01_test.cfg}
+      "5.0.0": ${generated:sim_telarray_configurations/5.0.0/CTA-North-LSTN-01_test.cfg}
       "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg}
   - test_simtel_cfg_files:
-      "5.0.0": ${static:sim_telarray_configurations/5.0.0/CTA-North-LSTN-02_test.cfg}
+      "5.0.0": ${generated:sim_telarray_configurations/5.0.0/CTA-North-LSTN-02_test.cfg}
       "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTA-North-LSTN-02_test.cfg}
   - test_simtel_cfg_files:
-      "5.0.0": ${static:sim_telarray_configurations/5.0.0/CTA-North-MSTN-01_test.cfg}
+      "5.0.0": ${generated:sim_telarray_configurations/5.0.0/CTA-North-MSTN-01_test.cfg}
       "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTA-North-MSTN-01_test.cfg}
   - test_simtel_cfg_files:
-      "5.0.0": ${static:sim_telarray_configurations/5.0.0/CTA-alpha-North_test.cfg}
+      "5.0.0": ${generated:sim_telarray_configurations/5.0.0/CTA-alpha-North_test.cfg}
       "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTA-alpha-North_test.cfg}
   - test_output_files:
     - file: proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_test.log_hist.tar.gz
