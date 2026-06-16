@@ -27,7 +27,7 @@ _PARAMS_FIELDS = [
     "energy_min_unit",
     "energy_max_value",
     "energy_max_unit",
-    "cores_per_shower",
+    "core_scatter_number",
     "core_scatter_max_value",
     "core_scatter_max_unit",
     "view_cone_min_value",
@@ -105,7 +105,7 @@ def _format_param_value(value, field_name):
     if field_name in ("apptainer_label", "pack_for_grid_register", "overwrite_model_parameters"):
         return _sanitize_label_for_params(value)
 
-    if field_name == "cores_per_shower":
+    if field_name == "core_scatter_number":
         return f"{int(value)}"
 
     quantity_fields = {
@@ -158,7 +158,9 @@ def _write_params_file(params_file_path, label_job_specs, params_fields=None):
             energy_max_value, energy_max_unit = _format_param_value(
                 job_spec["energy_max"], "energy_max_value"
             )
-            cores_per_shower = _format_param_value(job_spec["cores_per_shower"], "cores_per_shower")
+            core_scatter_number = _format_param_value(
+                job_spec["core_scatter_number"], "core_scatter_number"
+            )
             core_scatter_max_value, core_scatter_max_unit = _format_param_value(
                 job_spec["core_scatter_max"], "core_scatter_max_value"
             )
@@ -178,7 +180,7 @@ def _write_params_file(params_file_path, label_job_specs, params_fields=None):
                 energy_min_unit,
                 energy_max_value,
                 energy_max_unit,
-                cores_per_shower,
+                core_scatter_number,
                 core_scatter_max_value,
                 core_scatter_max_unit,
                 view_cone_min_value,
@@ -350,7 +352,7 @@ def _get_submit_script(args_dict, params_fields=None):
         f'{bash_indices["energy_max_value"]} {bash_indices["energy_max_unit"]}"'
     )
     core_scatter_string = (
-        f'"{bash_indices["cores_per_shower"]} {bash_indices["core_scatter_max_value"]} '
+        f'"{bash_indices["core_scatter_number"]} {bash_indices["core_scatter_max_value"]} '
         f'{bash_indices["core_scatter_max_unit"]}"'
     )
     view_cone_string = (
@@ -402,6 +404,7 @@ pack_for_grid_register="{bash_indices["pack_for_grid_register"]}"
 energy_range_tag="{energy_range_tag}"
 job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 {scan_label_block}{overwrite_parameters_block}
+
 simtools-simulate-prod \\
     --simulation_software {args_dict["simulation_software"]} \\
     --label "$job_label" \\
@@ -447,11 +450,14 @@ def build_job_specs(args_dict, image_labels):
     job_specs = []
     for label in image_labels:
         for row in normalized_rows:
-            job_specs.append(
-                {
-                    "image_label": str(label),
-                    **row,
-                    "pack_for_grid_register": f"{base_pack_dir}/{label!s}",
-                }
-            )
+            job_spec = {
+                "image_label": str(label),
+                **row,
+                "pack_for_grid_register": f"{base_pack_dir}/{label!s}",
+            }
+            if row.get("scan_label") not in (None, ""):
+                job_spec["scan_label"] = row["scan_label"]
+            if row.get("overwrite_model_parameters") not in (None, ""):
+                job_spec["overwrite_model_parameters"] = row["overwrite_model_parameters"]
+            job_specs.append(job_spec)
     return job_specs, job_grid_metadata
