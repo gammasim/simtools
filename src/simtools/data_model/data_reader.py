@@ -2,14 +2,11 @@
 
 import logging
 
-import astropy.units as u
 from astropy.io.registry.base import IORegistryError
 from astropy.table import QTable
 
 from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
-from simtools.io import ascii_handler
-from simtools.utils import value_conversion
 
 _logger = logging.getLogger(__name__)
 
@@ -68,79 +65,3 @@ def read_table_from_file(file_name, schema_file=None, validate=False, metadata_f
         return _validator.validate_and_transform()
 
     return data_table
-
-
-def read_value_from_file(file_name, schema_file=None, validate=False):
-    """
-    Read value from file and validate against schema.
-
-    Expect data to follow the convention for
-    how simulation model parameters are stored in the simulation model database: to be a single
-    value stored in the 'value' field (with possible units in the 'units' field).
-    Metadata is read from metadata file or from the metadata section of the data file.
-    Schema for validation can be given as argument, or is determined
-    from the metadata associated to the file.
-
-    Parameters
-    ----------
-    file_name: str or Path
-        Name of file to be read.
-    schema_file: str or Path
-        Name of schema file to be used for validation.
-    validate: bool
-        Validate data against schema (if true).
-
-    Returns
-    -------
-    astro quantity or str
-        Value read from file. If units are given, return an astropy quantity, otherwise a string.
-        Return None if no value is found in the file.
-
-    Raises
-    ------
-    FileNotFoundError
-        If file does not exist.
-
-    """
-    try:
-        data = ascii_handler.collect_data_from_file(file_name=file_name)
-    except FileNotFoundError as exc:
-        _logger.error("Error reading data from %s", file_name)
-        raise exc
-    _logger.info("Reading data from %s", file_name)
-
-    if validate:
-        if schema_file is None:
-            _collector = MetadataCollector(None, metadata_file_name=file_name)
-            schema_file = _collector.get_data_model_schema_file_name()
-            _logger.debug(f"Using schema from meta_data_url: {schema_file}")
-
-        _validator = validate_data.DataValidator(
-            schema_file=schema_file,
-            data_dict=data,
-        )
-        data = _validator.validate_and_transform()
-        _logger.debug("Successful validation of yaml/json file")
-
-    _value = data.get("value")
-    if _value is None:
-        return None
-    _unit = _collapse_unit(data.get("unit"))
-    return _value if _unit is None else _value * u.Unit(_unit)
-
-
-def _collapse_unit(unit):
-    """Collapse iterable unit containers to a scalar unit when possible."""
-    if unit is None or isinstance(unit, str):
-        return value_conversion.normalize_dimensionless_unit(unit)
-
-    try:
-        unit_entries = list(unit)
-    except TypeError:
-        return value_conversion.normalize_dimensionless_unit(unit)
-
-    unit_entries = value_conversion.normalize_dimensionless_unit(unit_entries)
-    if len(set(unit_entries)) == 1:
-        return unit_entries[0]
-
-    raise ValueError(f"Cannot collapse heterogeneous units: {unit_entries}")
