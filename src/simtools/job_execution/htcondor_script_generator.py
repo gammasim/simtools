@@ -43,7 +43,7 @@ _PARAMS_FIELDS = [
     "pack_for_grid_register",
 ]
 
-_OPTIONAL_QUEUE_FIELDS = ("overwrite_model_parameters", "scan_label", "telescope")
+_OPTIONAL_QUEUE_FIELDS = ("overwrite_model_parameters", "scan_label")
 
 _REQUIRED_JOB_GRID_METADATA = ("site", "simulation_software")
 
@@ -102,12 +102,7 @@ def _format_param_value(value, field_name):
             return ""
         raise ValueError(f"Missing required value for field '{field_name}'.")
 
-    if field_name in (
-        "apptainer_label",
-        "pack_for_grid_register",
-        "overwrite_model_parameters",
-        "telescope",
-    ):
+    if field_name in ("apptainer_label", "pack_for_grid_register", "overwrite_model_parameters"):
         return _sanitize_label_for_params(value)
 
     if field_name == "cores_per_shower":
@@ -207,8 +202,6 @@ def _write_params_file(params_file_path, label_job_specs, params_fields=None):
                 )
             if "scan_label" in params_fields:
                 row.append(_format_param_value(job_spec.get("scan_label"), "scan_label"))
-            if "telescope" in params_fields:
-                row.append(_format_param_value(job_spec.get("telescope"), "telescope"))
 
             params_file_handle.write(" ".join(row) + "\n")
 
@@ -392,10 +385,6 @@ def _get_submit_script(args_dict, params_fields=None):
         )
         overwrite_parameters_argument = '    "${overwrite_model_parameters_args[@]}" \\\n'
 
-    telescope_argument = ""
-    if "telescope" in params_fields:
-        telescope_argument = f'    --telescope "{bash_indices["telescope"]}" \\\n'
-
     return f"""#!/usr/bin/env bash
 
 # Process ID used to generate run number
@@ -413,14 +402,13 @@ pack_for_grid_register="{bash_indices["pack_for_grid_register"]}"
 energy_range_tag="{energy_range_tag}"
 job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 {scan_label_block}{overwrite_parameters_block}
-
 simtools-simulate-prod \\
     --simulation_software {args_dict["simulation_software"]} \\
     --label "$job_label" \\
     --model_version "$model_version" \\
     --site {args_dict["site"]} \\
     --array_layout_name "$array_layout_name" \\
-{telescope_argument}    --primary "$primary" \\
+    --primary "$primary" \\
     --azimuth_angle "{bash_indices["azimuth_angle"]}" \\
     --zenith_angle "{bash_indices["zenith_angle"]}" \\
     --showers_per_run "{bash_indices["showers_per_run"]}" \\
@@ -457,24 +445,13 @@ def build_job_specs(args_dict, image_labels):
         )
 
     job_specs = []
-
     for label in image_labels:
         for row in normalized_rows:
-            job_spec = {
-                "image_label": str(label),
-                **row,
-                "pack_for_grid_register": f"{base_pack_dir}/{label!s}",
-            }
-
-            telescope = row.get("telescope") or args_dict.get("telescope")
-            if telescope not in (None, ""):
-                job_spec["telescope"] = telescope
-
-            if row.get("scan_label") not in (None, ""):
-                job_spec["scan_label"] = row["scan_label"]
-            if row.get("overwrite_model_parameters") not in (None, ""):
-                job_spec["overwrite_model_parameters"] = row["overwrite_model_parameters"]
-
-            job_specs.append(job_spec)
-
+            job_specs.append(
+                {
+                    "image_label": str(label),
+                    **row,
+                    "pack_for_grid_register": f"{base_pack_dir}/{label!s}",
+                }
+            )
     return job_specs, job_grid_metadata
