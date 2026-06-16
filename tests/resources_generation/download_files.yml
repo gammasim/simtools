@@ -18,3 +18,9 @@ files:
   - url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-model-parameter-setting/-/raw/main/input/LSTN-01/setting_psf_parameters/019d7772-b58f-78d4-9d7e-cd7fcbc2ccc9/PSFcurve_data_v2.ecsv?ref_type=heads
     description: PSF measurement as function of offsets angle (LSTN-01)
     target_path: generated/PSFcurve_data_v2.ecsv
+  - url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-model-parameter-setting/-/raw/main/input/LSTN-01/pm_photoelectron_spectrum/019d7771-e0e0-7d09-a9e3-50b5d642bed9/Afterpulsing-probability_LST1-11PMTs_2023Oct_differential_used_pmts.ecsv?ref_type=heads
+    description: LSTN-01 PM photoelectron afterpulsing probability spectrum (differential, used PMTs)
+    target_path: generated/Afterpulsing-probability_LST1-11PMTs_2023Oct_differential_used_pmts.ecsv
+  - url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-model-parameter-setting/-/raw/main/output/LSTN-01/pm_photoelectron_spectrum/019d7771-e0e0-7d09-a9e3-50b5d642bed9/spe_LSTN_01_2025-04-03.ecsv?ref_type=heads
+    description: LSTN-01 single pe distribution
+    target_path: generated/spe_LSTN_01_2025-04-03.ecsv

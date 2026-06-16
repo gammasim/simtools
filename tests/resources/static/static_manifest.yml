@@ -44,3 +44,5 @@ files:
     description: Example configuration file for testing model parameter changes.
   - file_name: info_test_camera_efficiency_change_LSTN-02.yml
     description: Example configuration file for testing camera efficiency changes.
+  - file_name: plot_single_pe_config_from_ecsv_file.yml
+    description: Plotting configuration example.
