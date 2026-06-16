@@ -660,11 +660,15 @@ def _read_simtel_data_for_mirror_list(file_path):
         data_and_tail = stripped.split("#%", maxsplit=1)
         data_row = _process_line_parts(data_and_tail[0].split())
 
-        if len(data_row) < 6:
+        if len(data_row) < 5:
             logger.debug(f"Skipping malformed mirror_list line: {stripped}")
             continue
 
-        mirror_panel_id = -1
+        # mirror_z is optional in some mirror list files; default to 0.0 cm when missing
+        if len(data_row) == 5:
+            data_row.append(0.0)
+
+        mirror_panel_id = len(rows)
         if len(data_and_tail) > 1:
             id_match = re.search(r"\bid\s*=\s*(-?\d+)\b", data_and_tail[1])
             if id_match:
