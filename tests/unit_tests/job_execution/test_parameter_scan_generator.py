@@ -7,271 +7,288 @@ import astropy.units as u
 import pytest
 import yaml
 
-from simtools.job_execution.parameter_scan_generator import (
-    _generate_overwrite_file,
-    _generate_parameter_combinations,
-    _parse_parameter_scan_config,
-    _set_nested_value,
-    expand_job_grid_with_scan,
-)
+from simtools.job_execution import parameter_scan_generator
 
 
-def test_set_nested_value():
-    data = {}
-    _set_nested_value(data, ["level1", "level2", "key"], "value")
-    assert data == {"level1": {"level2": {"key": {"value": "value"}}}}
-
-
-def test_set_nested_value_existing_path():
-    data = {"level1": {"existing": {"value": "old"}}}
-    _set_nested_value(data, ["level1", "level2", "key"], "value")
-    assert data["level1"]["existing"] == {"value": "old"}
-    assert data["level1"]["level2"]["key"] == {"value": "value"}
-
-
-def test_generate_overwrite_file(tmp_test_directory):
-    template_path = Path(tmp_test_directory) / "template.yaml"
-    template_data = {"existing_key": "existing_value"}
-    with open(template_path, "w", encoding="utf-8") as f:
-        yaml.dump(template_data, f)
-
-    param_combo = {
-        "threshold": ("changes.LSTN-01.asum_threshold", 220),
-    }
-    combo_name = "threshold_220"
-    label = "test_label"
-
-    result = _generate_overwrite_file(
-        template_path, param_combo, combo_name, Path(tmp_test_directory), label
-    )
-
-    assert result.exists()
-    assert result.name == "overwrite_test_label_threshold_220.yaml"
-
-    with open(result, encoding="utf-8") as f:
-        content = yaml.safe_load(f)
-
-    assert "existing_key" in content
-    assert content["existing_key"] == "existing_value"
-    assert "description" in content
-    assert "threshold=220" in content["description"]
-    assert "changes" in content
-    assert content["changes"]["LSTN-01"]["asum_threshold"]["value"] == 220
-
-
-def test_generate_overwrite_file_missing_template(tmp_test_directory):
-    template_path = Path(tmp_test_directory) / "nonexistent.yaml"
-    param_combo = {"threshold": ("path", 220)}
-
-    with pytest.raises(FileNotFoundError, match="Overwrite template file not found"):
-        _generate_overwrite_file(
-            template_path, param_combo, "name", Path(tmp_test_directory), "label"
-        )
-
-
-def test_parse_parameter_scan_config_single_parameter(tmp_test_directory):
-    template_path = Path(tmp_test_directory) / "template.yaml"
-    template_path.touch()
-
-    param_scan = {
-        "overwrite_template": str(template_path),
-        "parameters": [
-            {
-                "name": "threshold",
-                "path": "changes.LSTN-01.asum_threshold",
-                "values": [220, 230, 240],
-            }
-        ],
+def _base_row(run_number=1):
+    return {
+        "primary": "gamma",
+        "azimuth_angle": 0.0 * u.deg,
+        "zenith_angle": 20.0 * u.deg,
+        "energy_min": 0.02 * u.GeV,
+        "energy_max": 0.025 * u.GeV,
+        "core_scatter_number": 20,
+        "core_scatter_max": 1900.0 * u.m,
+        "view_cone_min": 0.0 * u.deg,
+        "view_cone_max": 5.0 * u.deg,
+        "showers_per_run": 1000,
+        "model_version": "7.0.0",
+        "array_layout_name": "LSTN-01",
+        "corsika_le_interaction": "urqmd",
+        "corsika_he_interaction": "epos",
+        "run_number": run_number,
     }
 
-    params, parsed_template = _parse_parameter_scan_config(param_scan)
 
-    assert len(params) == 1
-    assert params[0]["name"] == "threshold"
-    assert params[0]["path"] == "changes.LSTN-01.asum_threshold"
-    assert params[0]["values"] == [220, 230, 240]
-    assert parsed_template == template_path
+def _write_scan_config(tmp_test_directory, scan_config):
+    scan_config_path = Path(tmp_test_directory) / "scan_config.yml"
+
+    with open(scan_config_path, "w", encoding="utf-8") as file_handle:
+        yaml.safe_dump(scan_config, file_handle, sort_keys=False)
+
+    return scan_config_path
 
 
-def test_parse_parameter_scan_config_multiple_parameters(tmp_test_directory):
-    template_path = Path(tmp_test_directory) / "template.yaml"
-    template_path.touch()
-
-    param_scan = {
-        "overwrite_template": str(template_path),
-        "parameters": [
-            {"name": "threshold", "path": "path1", "values": [220, 230]},
-            {"name": "test", "path": "path2", "values": [5.0, 5.5]},
-        ],
+def _inline_scan_config(tmp_test_directory, values=None):
+    return {
+        "label": "test_scan",
+        "parameter_scan": {
+            "overwrite": {
+                "model_version": "7.0.0",
+                "model_update": "patch_update",
+                "model_version_history": ["7.0.0"],
+                "description": "Base overwrite for test scan",
+                "changes": {
+                    "LSTN-01": {
+                        "asum_threshold": {
+                            "version": "2.0.0",
+                            "value": 0,
+                        }
+                    }
+                },
+            },
+            "parameters": [
+                {
+                    "name": "asum_threshold",
+                    "path": "changes.LSTN-01.asum_threshold",
+                    "values": values or [220, 230],
+                }
+            ],
+        },
+        "output_path": str(tmp_test_directory),
     }
-
-    params, _ = _parse_parameter_scan_config(param_scan)
-
-    assert len(params) == 2
-    assert params[0]["name"] == "threshold"
-    assert params[1]["name"] == "test"
-
-
-def test_generate_parameter_combinations_single_parameter():
-    param_specs = [
-        {"name": "threshold", "path": "path", "values": [220, 230, 240]},
-    ]
-
-    combos = _generate_parameter_combinations(param_specs)
-
-    assert len(combos) == 3
-    assert combos[0]["name"] == "threshold_220"
-    assert combos[0]["combo"]["threshold"] == ("path", 220)
-    assert combos[1]["name"] == "threshold_230"
-    assert combos[2]["name"] == "threshold_240"
-
-
-def test_generate_parameter_combinations_cartesian_product():
-    param_specs = [
-        {"name": "threshold", "path": "path1", "values": [220, 230]},
-        {"name": "test", "path": "path2", "values": [5.0, 5.5]},
-    ]
-
-    combos = _generate_parameter_combinations(param_specs)
-
-    assert len(combos) == 4
-    assert combos[0]["name"] == "threshold_220_test_5.0"
-    assert combos[1]["name"] == "threshold_220_test_5.5"
-    assert combos[2]["name"] == "threshold_230_test_5.0"
-    assert combos[3]["name"] == "threshold_230_test_5.5"
-
-
-def test_generate_parameter_combinations_three_parameters():
-    param_specs = [
-        {"name": "p1", "path": "path1", "values": [1, 2]},
-        {"name": "p2", "path": "path2", "values": [3, 4]},
-        {"name": "p3", "path": "path3", "values": [5, 6]},
-    ]
-
-    combos = _generate_parameter_combinations(param_specs)
-
-    assert len(combos) == 8
 
 
 @mock.patch("simtools.job_execution.parameter_scan_generator.serialize_job_grid")
 @mock.patch("simtools.job_execution.parameter_scan_generator.read_job_grid")
-def test_expand_job_grid_with_scan(mock_read_grid, mock_serialize_grid, tmp_test_directory):
-    template_path = Path(tmp_test_directory) / "template.yaml"
-    with open(template_path, "w", encoding="utf-8") as f:
-        yaml.dump({"existing_key": "value"}, f)
-
-    base_row = {
-        "primary": "gamma",
-        "azimuth_angle": 0.0 * u.deg,
-        "zenith_angle": 20.0 * u.deg,
-        "energy_min": 0.01 * u.TeV,
-        "energy_max": 100.0 * u.TeV,
-        "core_scatter_number": 5,
-        "core_scatter_max": 1000.0 * u.m,
-        "view_cone_min": 0.0 * u.deg,
-        "view_cone_max": 5.0 * u.deg,
-        "showers_per_run": 1000,
-        "model_version": "6.0.1",
-        "array_layout_name": "LSTN-01",
-        "corsika_le_interaction": "urqmd",
-        "corsika_he_interaction": "epos",
-        "run_number": 1,
-    }
+def test_expand_job_grid_with_scan_writes_one_row_per_scan_value(
+    mock_read_grid,
+    mock_serialize_grid,
+    tmp_test_directory,
+):
     mock_read_grid.return_value = (
-        [base_row],
-        {"site": "North", "simulation_software": "simtools"},
+        [_base_row()],
+        {"site": "North", "simulation_software": "corsika_sim_telarray"},
     )
 
-    scan_config = {
-        "label": "test_scan",
-        "parameter_scan": {
-            "overwrite_template": str(template_path),
-            "parameters": [
-                {
-                    "name": "threshold",
-                    "path": "changes.LSTN-01.asum_threshold",
-                    "values": [220, 230],
-                }
-            ],
-        },
-    }
-    scan_config_path = Path(tmp_test_directory) / "scan.yaml"
-    with open(scan_config_path, "w", encoding="utf-8") as f:
-        yaml.dump(scan_config, f)
+    scan_config_path = _write_scan_config(
+        tmp_test_directory,
+        _inline_scan_config(tmp_test_directory, values=[220, 230]),
+    )
 
     output_file = Path(tmp_test_directory) / "scan_grid.ecsv"
-    expand_job_grid_with_scan(
+
+    parameter_scan_generator.expand_job_grid_with_scan(
         Path(tmp_test_directory) / "base_grid.ecsv",
         scan_config_path,
         output_file,
     )
 
     mock_serialize_grid.assert_called_once()
+
     expanded_rows, written_file = (
-        mock_serialize_grid.call_args[0][0],
-        mock_serialize_grid.call_args[0][1],
+        mock_serialize_grid.call_args.args[0],
+        mock_serialize_grid.call_args.args[1],
     )
+
     assert written_file == output_file
-    assert len(expanded_rows) == 2  # 2 scan combos x 1 base row
-    assert expanded_rows[0]["scan_label"] == "threshold_220"
-    assert expanded_rows[1]["scan_label"] == "threshold_230"
+    assert len(expanded_rows) == 2
+    assert expanded_rows[0]["scan_label"] == "asum_threshold_220"
+    assert expanded_rows[1]["scan_label"] == "asum_threshold_230"
     assert "overwrite_model_parameters" in expanded_rows[0]
     assert "overwrite_model_parameters" in expanded_rows[1]
-    assert (Path(tmp_test_directory) / "overwrite_test_scan_threshold_220.yaml").exists()
-    assert (Path(tmp_test_directory) / "overwrite_test_scan_threshold_230.yaml").exists()
+
+    overwrite_220 = Path(expanded_rows[0]["overwrite_model_parameters"])
+    overwrite_230 = Path(expanded_rows[1]["overwrite_model_parameters"])
+
+    assert overwrite_220.exists()
+    assert overwrite_230.exists()
+    assert overwrite_220.name == "overwrite_test_scan_asum_threshold_220.yaml"
+    assert overwrite_230.name == "overwrite_test_scan_asum_threshold_230.yaml"
 
 
 @mock.patch("simtools.job_execution.parameter_scan_generator.serialize_job_grid")
 @mock.patch("simtools.job_execution.parameter_scan_generator.read_job_grid")
-def test_expand_job_grid_with_scan_multiple_base_rows(
-    mock_read_grid, mock_serialize_grid, tmp_test_directory
+def test_expand_job_grid_with_scan_preserves_base_row_content(
+    mock_read_grid,
+    mock_serialize_grid,
+    tmp_test_directory,
 ):
-    template_path = Path(tmp_test_directory) / "template.yaml"
-    with open(template_path, "w", encoding="utf-8") as f:
-        yaml.dump({}, f)
-
-    base_row = {
-        "primary": "proton",
-        "azimuth_angle": 0.0 * u.deg,
-        "zenith_angle": 20.0 * u.deg,
-        "energy_min": 0.8 * u.TeV,
-        "energy_max": 2.0 * u.TeV,
-        "core_scatter_number": 10,
-        "core_scatter_max": 2000.0 * u.m,
-        "view_cone_min": 0.0 * u.deg,
-        "view_cone_max": 10.0 * u.deg,
-        "showers_per_run": 500,
-        "model_version": "6.0.1",
-        "array_layout_name": "LSTN-01",
-        "corsika_le_interaction": "urqmd",
-        "corsika_he_interaction": "epos",
-        "run_number": 1,
-    }
+    base_row = _base_row(run_number=7)
     mock_read_grid.return_value = (
-        [{**base_row, "run_number": r} for r in range(1, 4)],
-        {"site": "North", "simulation_software": "simtools"},
+        [base_row],
+        {"site": "North", "simulation_software": "corsika_sim_telarray"},
     )
 
-    scan_config = {
-        "label": "scan",
-        "parameter_scan": {
-            "overwrite_template": str(template_path),
-            "parameters": [{"name": "thr", "path": "p.thr", "values": [220, 230, 240]}],
-        },
-    }
-    scan_config_path = Path(tmp_test_directory) / "scan.yaml"
-    with open(scan_config_path, "w", encoding="utf-8") as f:
-        yaml.dump(scan_config, f)
+    scan_config_path = _write_scan_config(
+        tmp_test_directory,
+        _inline_scan_config(tmp_test_directory, values=[220]),
+    )
 
-    expand_job_grid_with_scan(
+    output_file = Path(tmp_test_directory) / "scan_grid.ecsv"
+
+    parameter_scan_generator.expand_job_grid_with_scan(
+        Path(tmp_test_directory) / "base_grid.ecsv",
+        scan_config_path,
+        output_file,
+    )
+
+    expanded_rows = mock_serialize_grid.call_args.args[0]
+
+    assert len(expanded_rows) == 1
+    assert expanded_rows[0]["primary"] == base_row["primary"]
+    assert expanded_rows[0]["run_number"] == 7
+    assert expanded_rows[0]["array_layout_name"] == "LSTN-01"
+    assert expanded_rows[0]["scan_label"] == "asum_threshold_220"
+
+
+@mock.patch("simtools.job_execution.parameter_scan_generator.serialize_job_grid")
+@mock.patch("simtools.job_execution.parameter_scan_generator.read_job_grid")
+def test_expand_job_grid_with_scan_writes_overwrite_content(
+    mock_read_grid,
+    mock_serialize_grid,
+    tmp_test_directory,
+):
+    mock_read_grid.return_value = (
+        [_base_row()],
+        {"site": "North", "simulation_software": "corsika_sim_telarray"},
+    )
+
+    scan_config_path = _write_scan_config(
+        tmp_test_directory,
+        _inline_scan_config(tmp_test_directory, values=[220]),
+    )
+
+    parameter_scan_generator.expand_job_grid_with_scan(
         Path(tmp_test_directory) / "base_grid.ecsv",
         scan_config_path,
         Path(tmp_test_directory) / "scan_grid.ecsv",
     )
 
-    expanded_rows = mock_serialize_grid.call_args[0][0]
-    # 3 scan combos x 3 base rows = 9
+    expanded_rows = mock_serialize_grid.call_args.args[0]
+    overwrite_file = Path(expanded_rows[0]["overwrite_model_parameters"])
+
+    with open(overwrite_file, encoding="utf-8") as file_handle:
+        overwrite = yaml.safe_load(file_handle)
+
+    assert overwrite["model_version"] == "7.0.0"
+    assert overwrite["model_update"] == "patch_update"
+    assert overwrite["changes"]["LSTN-01"]["asum_threshold"]["version"] == "2.0.0"
+    assert overwrite["changes"]["LSTN-01"]["asum_threshold"]["value"] == 220
+    assert "asum_threshold=220" in overwrite["description"]
+
+
+@mock.patch("simtools.job_execution.parameter_scan_generator.serialize_job_grid")
+@mock.patch("simtools.job_execution.parameter_scan_generator.read_job_grid")
+def test_expand_job_grid_with_scan_multiple_base_rows(
+    mock_read_grid,
+    mock_serialize_grid,
+    tmp_test_directory,
+):
+    mock_read_grid.return_value = (
+        [_base_row(run_number=run_number) for run_number in range(1, 4)],
+        {"site": "North", "simulation_software": "corsika_sim_telarray"},
+    )
+
+    scan_config_path = _write_scan_config(
+        tmp_test_directory,
+        _inline_scan_config(tmp_test_directory, values=[220, 230, 240]),
+    )
+
+    parameter_scan_generator.expand_job_grid_with_scan(
+        Path(tmp_test_directory) / "base_grid.ecsv",
+        scan_config_path,
+        Path(tmp_test_directory) / "scan_grid.ecsv",
+    )
+
+    expanded_rows = mock_serialize_grid.call_args.args[0]
+
     assert len(expanded_rows) == 9
-    assert expanded_rows[0]["scan_label"] == "thr_220"
-    assert expanded_rows[3]["scan_label"] == "thr_230"
-    assert expanded_rows[6]["scan_label"] == "thr_240"
+    assert expanded_rows[0]["scan_label"] == "asum_threshold_220"
+    assert expanded_rows[3]["scan_label"] == "asum_threshold_230"
+    assert expanded_rows[6]["scan_label"] == "asum_threshold_240"
+
+
+@mock.patch("simtools.job_execution.parameter_scan_generator.serialize_job_grid")
+@mock.patch("simtools.job_execution.parameter_scan_generator.read_job_grid")
+def test_expand_job_grid_with_scan_cartesian_product(
+    mock_read_grid,
+    mock_serialize_grid,
+    tmp_test_directory,
+):
+    mock_read_grid.return_value = (
+        [_base_row()],
+        {"site": "North", "simulation_software": "corsika_sim_telarray"},
+    )
+
+    scan_config = {
+        "label": "test_scan",
+        "parameter_scan": {
+            "overwrite": {
+                "model_version": "7.0.0",
+                "model_update": "patch_update",
+                "model_version_history": ["7.0.0"],
+                "description": "Base overwrite for test scan",
+                "changes": {
+                    "LSTN-01": {
+                        "asum_threshold": {
+                            "version": "2.0.0",
+                            "value": 0,
+                        },
+                        "min_photoelectrons": {
+                            "version": "2.0.0",
+                            "value": 0,
+                        },
+                    }
+                },
+            },
+            "parameters": [
+                {
+                    "name": "asum_threshold",
+                    "path": "changes.LSTN-01.asum_threshold",
+                    "values": [220, 230],
+                },
+                {
+                    "name": "min_photoelectrons",
+                    "path": "changes.LSTN-01.min_photoelectrons",
+                    "values": [0, 1],
+                },
+            ],
+        },
+        "output_path": str(tmp_test_directory),
+    }
+
+    scan_config_path = _write_scan_config(tmp_test_directory, scan_config)
+
+    parameter_scan_generator.expand_job_grid_with_scan(
+        Path(tmp_test_directory) / "base_grid.ecsv",
+        scan_config_path,
+        Path(tmp_test_directory) / "scan_grid.ecsv",
+    )
+
+    expanded_rows = mock_serialize_grid.call_args.args[0]
+
+    assert len(expanded_rows) == 4
+    assert expanded_rows[0]["scan_label"] == "asum_threshold_220_min_photoelectrons_0"
+    assert expanded_rows[1]["scan_label"] == "asum_threshold_220_min_photoelectrons_1"
+    assert expanded_rows[2]["scan_label"] == "asum_threshold_230_min_photoelectrons_0"
+    assert expanded_rows[3]["scan_label"] == "asum_threshold_230_min_photoelectrons_1"
+
+
+def test_expand_job_grid_with_scan_requires_existing_scan_config(tmp_test_directory):
+    with pytest.raises(FileNotFoundError):
+        parameter_scan_generator.expand_job_grid_with_scan(
+            Path(tmp_test_directory) / "base_grid.ecsv",
+            Path(tmp_test_directory) / "missing_scan_config.yml",
+            Path(tmp_test_directory) / "scan_grid.ecsv",
+        )

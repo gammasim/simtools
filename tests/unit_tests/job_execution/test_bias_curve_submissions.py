@@ -2,6 +2,7 @@ from pathlib import Path
 from unittest.mock import call, patch
 
 import pytest
+import yaml
 
 from simtools.job_execution import bias_curve_submissions
 
@@ -76,28 +77,14 @@ def test_resolve_telescopes_from_layout_enforces_single_telescope(tmp_test_direc
             bias_curve_submissions._resolve_telescopes_from_layout(args)
 
 
-@patch("simtools.job_execution.bias_curve_submissions._build_htcondor_args")
-@patch(
-    "simtools.job_execution.bias_curve_submissions.htcondor_script_generator.generate_submission_script"
-)
-@patch("simtools.job_execution.bias_curve_submissions._build_scan_grid")
-@patch("simtools.job_execution.bias_curve_submissions._generate_overwrite_files")
-@patch("simtools.job_execution.bias_curve_submissions._run_command")
-def test_generate_curve_submissions_forwards_curve_specific_energy_range(
-    mock_run_command,
-    mock_generate_overwrite_files,
-    mock_build_scan_grid,
-    mock_generate_submission_script,
-    mock_build_htcondor_args,
+@patch("simtools.job_execution.bias_curve_submissions.simtools_runner.run_applications")
+def test_generate_curve_submissions_writes_workflow_with_curve_specific_energy_range(
+    mock_run_applications,
     tmp_test_directory,
 ):
     args = _base_args(tmp_test_directory)
     output_root = Path(args["output_path"]).expanduser().resolve()
     curve_directory = output_root / "nsb"
-    scan_grid_file = curve_directory / "scan_grid.ecsv"
-
-    mock_generate_overwrite_files.return_value = [("overwrite.yaml", "asum_threshold_220")]
-    mock_build_htcondor_args.return_value = {"output_path": "htcondor_submit"}
 
     bias_curve_submissions._generate_curve_submissions(
         "nsb",
@@ -106,88 +93,133 @@ def test_generate_curve_submissions_forwards_curve_specific_energy_range(
         output_root,
     )
 
-    command = mock_run_command.call_args.args[0]
-    assert command[command.index("--primary") + 1] == "gamma"
-    assert command[command.index("--energy_range") + 1] == "20 MeV 25 MeV"
-    assert command[command.index("--label") + 1] == "test_label_nsb"
-    assert str(curve_directory / "base_grid.ecsv") in command
+    workflow_file = curve_directory / "nsb_workflow.yml"
+    assert workflow_file.exists()
 
-    mock_generate_overwrite_files.assert_called_once_with(
-        curve_name="nsb",
-        telescopes=["LSTN-01"],
-        args=args,
-        curve_directory=curve_directory,
-        label="test_label_nsb",
-    )
-    mock_build_scan_grid.assert_called_once()
-    mock_build_htcondor_args.assert_called_once_with(
-        label="test_label_nsb",
-        curve_directory=curve_directory,
-        scan_grid_file=scan_grid_file,
-        args=args,
-    )
-    mock_generate_submission_script.assert_called_once_with({"output_path": "htcondor_submit"})
+    workflow = yaml.safe_load(workflow_file.read_text(encoding="utf-8"))
+    applications = workflow["applications"]
+
+    generate_grid_step = applications[0]
+    generate_grid_config = generate_grid_step["configuration"]
+
+    assert generate_grid_step["application"] == "simtools-production-generate-grid"
+    assert generate_grid_config["primary"] == "gamma"
+    assert generate_grid_config["energy_range"] == "20 MeV 25 MeV"
+    assert generate_grid_config["label"] == "test_label_nsb"
+    assert generate_grid_config["output_file"] == str(curve_directory / "base_grid.ecsv")
+
+    assert applications[1]["application"] == "simtools-generate-parameter-scan-grid"
+    assert applications[2]["application"] == "simtools-simulate-prod-htcondor-generator"
+
+    mock_run_applications.assert_called_once()
+    runner_args = mock_run_applications.call_args.args[0]
+    assert runner_args["config_file"] == str(workflow_file)
+    assert runner_args["steps"] is None
+    assert runner_args["ignore_runtime_environment"] is True
 
 
+@patch("simtools.job_execution.bias_curve_submissions.simtools_runner.run_applications")
 @pytest.mark.parametrize(
-    ("telescope", "threshold", "threshold_param"),
+    ("curve_name", "expected_primary", "expected_energy_range"),
     [
-        ("LSTN-01", 220, "asum_threshold"),
-        ("MSTN-01", 22, "dsum_threshold"),
+        ("nsb", "gamma", "20 MeV 25 MeV"),
+        ("proton", "proton", "800 GeV 2000 GeV"),
     ],
 )
-def test_build_proton_overwrite_sets_only_trigger_threshold(
-    telescope,
-    threshold,
-    threshold_param,
+def test_workflow_uses_curve_specific_primary_and_energy_range(
+    mock_run_applications,
+    curve_name,
+    expected_primary,
+    expected_energy_range,
+    tmp_test_directory,
 ):
-    overwrite = bias_curve_submissions._build_proton_overwrite(
-        telescopes=[telescope],
-        threshold=threshold,
-        site="North",
-        model_version="7.0.0",
+    args = _base_args(tmp_test_directory)
+    output_root = Path(args["output_path"]).expanduser().resolve()
+    curve_directory = output_root / curve_name
+
+    bias_curve_submissions._generate_curve_submissions(
+        curve_name,
+        bias_curve_submissions._CURVE_DEFINITIONS[curve_name],
+        args,
+        output_root,
     )
 
-    telescope_changes = overwrite["changes"][telescope]
-    obs_changes = overwrite["changes"]["OBS-North"]
+    workflow_file = curve_directory / f"{curve_name}_workflow.yml"
+    workflow = yaml.safe_load(workflow_file.read_text(encoding="utf-8"))
 
-    assert telescope_changes == {
-        threshold_param: {
-            "version": "2.0.0",
-            "value": threshold,
-        }
-    }
-    assert "nsb_scaling_factor" not in obs_changes
-    assert "min_photons" not in telescope_changes
-    assert "min_photoelectrons" not in telescope_changes
+    generate_grid_config = workflow["applications"][0]["configuration"]
+
+    assert generate_grid_config["primary"] == expected_primary
+    assert generate_grid_config["energy_range"] == expected_energy_range
+    assert generate_grid_config["label"] == f"test_label_{curve_name}"
+    assert generate_grid_config["output_file"] == str(curve_directory / "base_grid.ecsv")
+
+    mock_run_applications.assert_called_once()
 
 
-@pytest.mark.parametrize(
-    ("telescope", "threshold", "threshold_param"),
-    [
-        ("LSTN-01", 220, "asum_threshold"),
-        ("MSTN-01", 22, "dsum_threshold"),
-    ],
-)
-def test_build_nsb_overwrite_sets_nsb_fields_and_trigger_threshold(
-    telescope,
-    threshold,
-    threshold_param,
+@patch("simtools.job_execution.bias_curve_submissions.simtools_runner.run_applications")
+def test_nsb_scan_config_contains_nsb_fields_and_trigger_scan(
+    mock_run_applications,
+    tmp_test_directory,
 ):
-    overwrite = bias_curve_submissions._build_nsb_overwrite(
-        telescopes=[telescope],
-        threshold=threshold,
-        site="North",
-        model_version="7.0.0",
+    args = _base_args(tmp_test_directory)
+    output_root = Path(args["output_path"]).expanduser().resolve()
+    curve_directory = output_root / "nsb"
+
+    bias_curve_submissions._generate_curve_submissions(
+        "nsb",
+        bias_curve_submissions._CURVE_DEFINITIONS["nsb"],
+        args,
+        output_root,
     )
 
-    telescope_changes = overwrite["changes"][telescope]
-    obs_changes = overwrite["changes"]["OBS-North"]
+    scan_config_file = curve_directory / "scan_config.yml"
+    assert scan_config_file.exists()
 
-    assert telescope_changes["min_photons"]["value"] == 0
-    assert telescope_changes["min_photoelectrons"]["value"] == 0
-    assert telescope_changes[threshold_param]["value"] == threshold
-    assert obs_changes["nsb_scaling_factor"]["value"] == 2
+    scan_config_text = scan_config_file.read_text(encoding="utf-8")
+
+    assert "LSTN-01" in scan_config_text
+    assert "asum_threshold" in scan_config_text
+    assert "220" in scan_config_text
+    assert "300" in scan_config_text
+    assert "min_photons" in scan_config_text
+    assert "min_photoelectrons" in scan_config_text
+    assert "nsb_scaling_factor" in scan_config_text
+    assert "value: 2" in scan_config_text
+
+    mock_run_applications.assert_called_once()
+
+
+@patch("simtools.job_execution.bias_curve_submissions.simtools_runner.run_applications")
+def test_proton_scan_config_contains_only_trigger_scan(
+    mock_run_applications,
+    tmp_test_directory,
+):
+    args = _base_args(tmp_test_directory)
+    output_root = Path(args["output_path"]).expanduser().resolve()
+    curve_directory = output_root / "proton"
+
+    bias_curve_submissions._generate_curve_submissions(
+        "proton",
+        bias_curve_submissions._CURVE_DEFINITIONS["proton"],
+        args,
+        output_root,
+    )
+
+    scan_config_file = curve_directory / "scan_config.yml"
+    assert scan_config_file.exists()
+
+    scan_config_text = scan_config_file.read_text(encoding="utf-8")
+
+    assert "LSTN-01" in scan_config_text
+    assert "asum_threshold" in scan_config_text
+    assert "220" in scan_config_text
+    assert "300" in scan_config_text
+    assert "min_photons" not in scan_config_text
+    assert "min_photoelectrons" not in scan_config_text
+    assert "nsb_scaling_factor" not in scan_config_text
+
+    mock_run_applications.assert_called_once()
 
 
 @pytest.mark.parametrize(
