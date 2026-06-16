@@ -15,6 +15,10 @@ the telescope type:
 - LST: ``asum_threshold``
 - MST/SST: ``dsum_threshold``
 
+The resolved single telescope is passed to production generation as an
+``array_element_list`` entry. This keeps the HTCondor generator independent of
+model/layout resolution and avoids requiring a separate telescope argument there.
+
 For each curve, a parameter-scan configuration is generated dynamically. The
 scan-grid application then creates one overwrite file per threshold value and
 writes the expanded scan grid. Only one scan parameter is used, so the generic
@@ -68,7 +72,6 @@ _CURVE_DEFINITIONS = {
 _SIMULATION_CLI_ARGS = [
     "site",
     "model_version",
-    "array_layout_name",
     "simulation_software",
     "azimuth_angle",
     "zenith_angle",
@@ -224,8 +227,15 @@ def _grid_generation_configuration(args, primary, energy_range, output_file, lab
         if value is not None:
             configuration[key] = value
 
+    if len(args.get("telescopes", [])) != 1:
+        raise ValueError(
+            "Bias-curve grid generation requires exactly one resolved telescope; "
+            f"got {len(args.get('telescopes', []))}: {args.get('telescopes', [])}"
+        )
+
     configuration.update(
         {
+            "array_element_list": args["telescopes"][0],
             "primary": primary,
             "energy_range": energy_range,
             "label": label,
@@ -281,13 +291,6 @@ def _htcondor_generator_configuration(label, curve_directory, scan_grid_file, ar
     if not apptainer_image:
         raise ValueError("Missing required argument: --apptainer_image")
 
-    telescopes = args.get("telescopes", [])
-    if len(telescopes) != 1:
-        raise ValueError(
-            "Bias-curve HTCondor generation requires exactly one resolved telescope; "
-            f"got {len(telescopes)}: {telescopes}"
-        )
-
     return {
         "apptainer_image": apptainer_image,
         "priority": args.get("priority", 1),
@@ -296,7 +299,6 @@ def _htcondor_generator_configuration(label, curve_directory, scan_grid_file, ar
         "simulation_output": str(Path(args.get("output_path") or ".").expanduser().resolve()),
         "label": label,
         "log_level": args.get("log_level", "INFO"),
-        "telescope": telescopes[0],
     }
 
 
