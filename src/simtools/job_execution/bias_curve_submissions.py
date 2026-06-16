@@ -424,6 +424,7 @@ def generate_bias_curve_submissions(args):
     _validate_required_args(args)
 
     args["telescopes"] = _resolve_telescopes_from_layout(args)
+    args["telescope"] = args["telescopes"][0]
 
     output_root = Path(args.get("output_path") or ".").expanduser().resolve()
     output_root.mkdir(parents=True, exist_ok=True)
