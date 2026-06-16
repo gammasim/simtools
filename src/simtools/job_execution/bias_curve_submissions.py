@@ -68,6 +68,7 @@ _CURVE_DEFINITIONS = {
 _SIMULATION_CLI_ARGS = [
     "site",
     "model_version",
+    "telescope",
     "array_layout_name",
     "simulation_software",
     "azimuth_angle",
@@ -84,15 +85,30 @@ _SIMULATION_CLI_ARGS = [
 def _resolve_telescopes_from_layout(args):
     """Resolve telescope names from array layout and enforce single-telescope layouts."""
     site_model = SiteModel(site=args["site"], model_version=args["model_version"])
-    layout_elements = site_model.get_array_elements_for_layout(args["array_layout_name"])
+    layout_elements = list(site_model.get_array_elements_for_layout(args["array_layout_name"]))
+
+    _logger.info(
+        "Resolved array layout '%s' to elements: %s",
+        args["array_layout_name"],
+        layout_elements,
+    )
 
     if len(layout_elements) != 1:
         raise ValueError(
-            "Bias-curve submissions currently support only single-telescope layouts; "
-            f"got {len(layout_elements)} elements in '{args['array_layout_name']}'."
+            f"Bias-curve submissions currently support only single-telescope layouts; "
+            f"got {len(layout_elements)} elements in '{args['array_layout_name']}': "
+            f"{layout_elements}"
         )
 
-    return list(layout_elements)
+    telescope = layout_elements[0]
+
+    if "invalid" in telescope.lower():
+        raise ValueError(
+            f"Array layout '{args['array_layout_name']}' resolved to invalid telescope "
+            f"'{telescope}'."
+        )
+
+    return [telescope]
 
 
 def _run_command(command, working_directory):
@@ -143,21 +159,7 @@ def _format_threshold_value(threshold):
     return int(threshold) if float(threshold).is_integer() else threshold
 
 
-def _array_layouts_overwrite(telescopes):
-    """Build the OBS array_layouts overwrite block."""
-    return {
-        "version": _PARAMETER_VERSION,
-        "value": [
-            {
-                "elements": [telescope],
-                "name": telescope,
-            }
-            for telescope in telescopes
-        ],
-    }
-
-
-def _build_proton_overwrite(telescopes, threshold, site, model_version):
+def _build_proton_overwrite(telescopes, threshold, model_version):
     """Build overwrite YAML content for one proton threshold scan point."""
     threshold_value = _format_threshold_value(threshold)
 
@@ -171,10 +173,6 @@ def _build_proton_overwrite(telescopes, threshold, site, model_version):
                 "value": threshold_value,
             }
         }
-
-    changes[f"OBS-{site}"] = {
-        "array_layouts": _array_layouts_overwrite(telescopes),
-    }
 
     return {
         "model_version": model_version,
@@ -238,7 +236,6 @@ def _build_overwrite_content(curve_name, telescopes, threshold, args):
         return _build_proton_overwrite(
             telescopes=telescopes,
             threshold=threshold,
-            site=args["site"],
             model_version=args["model_version"],
         )
 
