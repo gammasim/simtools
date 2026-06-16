@@ -27,7 +27,7 @@ _PARAMS_FIELDS = [
     "energy_min_unit",
     "energy_max_value",
     "energy_max_unit",
-    "core_scatter_number",
+    "cores_per_shower",
     "core_scatter_max_value",
     "core_scatter_max_unit",
     "view_cone_min_value",
@@ -105,7 +105,7 @@ def _format_param_value(value, field_name):
     if field_name in ("apptainer_label", "pack_for_grid_register", "overwrite_model_parameters"):
         return _sanitize_label_for_params(value)
 
-    if field_name == "core_scatter_number":
+    if field_name == "cores_per_shower":
         return f"{int(value)}"
 
     quantity_fields = {
@@ -158,9 +158,7 @@ def _write_params_file(params_file_path, label_job_specs, params_fields=None):
             energy_max_value, energy_max_unit = _format_param_value(
                 job_spec["energy_max"], "energy_max_value"
             )
-            core_scatter_number = _format_param_value(
-                job_spec["core_scatter_number"], "core_scatter_number"
-            )
+            cores_per_shower = _format_param_value(job_spec["cores_per_shower"], "cores_per_shower")
             core_scatter_max_value, core_scatter_max_unit = _format_param_value(
                 job_spec["core_scatter_max"], "core_scatter_max_value"
             )
@@ -180,7 +178,7 @@ def _write_params_file(params_file_path, label_job_specs, params_fields=None):
                 energy_min_unit,
                 energy_max_value,
                 energy_max_unit,
-                core_scatter_number,
+                cores_per_shower,
                 core_scatter_max_value,
                 core_scatter_max_unit,
                 view_cone_min_value,
@@ -352,7 +350,7 @@ def _get_submit_script(args_dict, params_fields=None):
         f'{bash_indices["energy_max_value"]} {bash_indices["energy_max_unit"]}"'
     )
     core_scatter_string = (
-        f'"{bash_indices["core_scatter_number"]} {bash_indices["core_scatter_max_value"]} '
+        f'"{bash_indices["cores_per_shower"]} {bash_indices["core_scatter_max_value"]} '
         f'{bash_indices["core_scatter_max_unit"]}"'
     )
     view_cone_string = (

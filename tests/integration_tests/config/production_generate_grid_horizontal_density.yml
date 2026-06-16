@@ -9,7 +9,6 @@ applications:
     axis:
     - azimuth 0 deg 360 deg 0 linear
     - zenith 0 deg 70 deg 0 linear
-    - nsb 0.24 MHz 0.24 MHz 1 linear
     - offset 0 deg 10 deg 2 linear
     direction_grid_density: 0.25 1/deg^2
     corsika_he_interaction: epos

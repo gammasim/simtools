@@ -81,6 +81,24 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
+(job-generation-summary)=
+
+## job_generation_summary
+
+```{eval-rst}
+.. automodule:: production_configuration.job_generation_summary
+   :members:
+```
+
+(job-grid-summary)=
+
+## job_grid_summary
+
+```{eval-rst}
+.. automodule:: production_configuration.job_grid_summary
+   :members:
+```
+
 (observation-grid)=
 
 ## observation_grid
@@ -96,14 +114,5 @@ the calculation of the number of events to be simulated given a pre-determined m
 
 ```{eval-rst}
 .. automodule:: production_configuration.simulation_jobs
-   :members:
-```
-
-(merge-corsika-limits)=
-
-## merge_corsika_limits
-
-```{eval-rst}
-.. automodule:: production_configuration.merge_corsika_limits
    :members:
 ```
