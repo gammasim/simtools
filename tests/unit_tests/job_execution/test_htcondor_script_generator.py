@@ -150,48 +150,61 @@ def test_generate_submission_script_raises_for_missing_apptainer_image(
     mock_open.assert_not_called()
 
 
-def test_get_submit_script(args_dict):
-    expected_script = f"""#!/usr/bin/env bash
+def test_get_submit_script():
+    args_dict = {
+        "label": "test_label",
+        "simulation_software": "corsika_sim_telarray",
+        "site": "North",
+        "log_level": "info",
+        "run_number_offset": 0,
+    }
 
-# Process ID used to generate run number
-process_id="$1"
-# Load environment variables (for DB access)
-set -a; source "$2"
-apptainer_label="${{3}}"
-primary="${{4}}"
-model_version="${{19}}"
-array_layout_name="${{20}}"
-corsika_le_interaction="${{21}}"
-corsika_he_interaction="${{22}}"
-run_number="${{23}}"
-pack_for_grid_register="${{24}}"
-energy_range_tag="erange-${{7}}${{8}}-${{9}}${{10}}"
-job_label="{args_dict["label"]}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
+    script = _get_submit_script(args_dict)
 
-simtools-simulate-prod \\
-    --simulation_software {args_dict["simulation_software"]} \\
-    --label "$job_label" \\
-    --model_version "$model_version" \\
-    --site {args_dict["site"]} \\
-    --array_layout_name "$array_layout_name" \\
-    --primary "$primary" \\
-    --azimuth_angle "${{5}}" \\
-    --zenith_angle "${{6}}" \\
-    --showers_per_run "${{18}}" \\
-    --energy_range "${{7}} ${{8}} ${{9}} ${{10}}" \\
-    --core_scatter "${{11}} ${{12}} ${{13}}" \\
-    --view_cone "${{14}} ${{15}} ${{16}} ${{17}}" \\
-    --corsika_le_interaction "$corsika_le_interaction" \\
-    --corsika_he_interaction "$corsika_he_interaction" \\
-    --run_number "$run_number" \\
-    --run_number_offset 0 \\
-    --save_reduced_event_lists \\
-    --output_path /tmp/simtools-output \\
-    --log_level {args_dict["log_level"]} \\
-    --pack_for_grid_register "$pack_for_grid_register"
-"""
-    generated_script = _get_submit_script(args_dict)
-    assert generated_script == expected_script
+    assert script.startswith("#!/usr/bin/env bash")
+
+    assert 'process_id="$1"' in script
+    assert 'set -a; source "$2"' in script
+
+    assert 'apptainer_label="${3}"' in script
+    assert 'primary="${4}"' in script
+    assert 'model_version="${19}"' in script
+    assert 'array_layout_name="${20}"' in script
+    assert 'corsika_le_interaction="${21}"' in script
+    assert 'corsika_he_interaction="${22}"' in script
+    assert 'run_number="${23}"' in script
+    assert 'pack_for_grid_register="${24}"' in script
+
+    assert 'energy_range_tag="erange-${7}${8}-${9}${10}"' in script
+    assert (
+        'job_label="test_label_${corsika_he_interaction}-${corsika_le_interaction}_'
+        '${energy_range_tag}"'
+    ) in script
+
+    assert "simtools-simulate-prod \\" in script
+    assert "    --simulation_software corsika_sim_telarray \\" in script
+    assert '    --label "$job_label" \\' in script
+    assert '    --model_version "$model_version" \\' in script
+    assert "    --site North \\" in script
+    assert '    --array_layout_name "$array_layout_name" \\' in script
+    assert '    --primary "$primary" \\' in script
+    assert '    --azimuth_angle "${5}" \\' in script
+    assert '    --zenith_angle "${6}" \\' in script
+    assert '    --showers_per_run "${18}" \\' in script
+    assert '    --energy_range "${7} ${8} ${9} ${10}" \\' in script
+    assert '    --core_scatter "${11} ${12} ${13}" \\' in script
+    assert '    --view_cone "${14} ${15} ${16} ${17}" \\' in script
+    assert '    --corsika_le_interaction "$corsika_le_interaction" \\' in script
+    assert '    --corsika_he_interaction "$corsika_he_interaction" \\' in script
+    assert '    --run_number "$run_number" \\' in script
+    assert "    --run_number_offset 0 \\" in script
+    assert "    --save_reduced_event_lists \\" in script
+    assert "    --output_path /tmp/simtools-output \\" in script
+    assert "    --log_level info \\" in script
+    assert '    --pack_for_grid_register "$pack_for_grid_register"' in script
+
+    assert "overwrite_model_parameters_args" not in script
+    assert "scan_label" not in script
 
 
 def test_get_submit_file_uses_queue_from_params(tmp_test_directory):

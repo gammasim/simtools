@@ -3,8 +3,9 @@ Parameter scan grid generator.
 
 Expands an existing production job grid with parameter scan combinations.
 For each cartesian combination of scan parameters, one overwrite YAML file is
-created dynamically from the scan configuration, and each base grid row is
-duplicated with the overwrite file path and a scan label attached.
+created dynamically from the inline ``overwrite`` block in the scan configuration,
+and each base grid row is duplicated with the overwrite file path and a scan
+label attached.
 
 Use with the three-step workflow::
 
@@ -113,32 +114,19 @@ def _generate_overwrite_file(overwrite_base, param_combo, combo_name, work_dir, 
     return overwrite_file
 
 
-def _load_legacy_overwrite_template(template_path):
-    """Load legacy file-based overwrite template configuration."""
-    template_path = Path(template_path)
-    if not template_path.exists():
-        raise FileNotFoundError(f"Overwrite template file not found: {template_path}")
-
-    with open(template_path, encoding="utf-8") as file_handle:
-        return yaml.safe_load(file_handle)
-
-
 def _parse_parameter_scan_config(param_scan):
     """Parse parameter scan configuration.
 
-    The preferred configuration is fully dynamic and contains an inline
-    ``overwrite`` dictionary. Legacy ``overwrite_template`` files are still
-    accepted for backward compatibility.
+    The configuration must contain an inline ``overwrite`` dictionary. External
+    overwrite template files are intentionally not supported.
     """
-    if "overwrite" in param_scan:
-        overwrite_base = param_scan["overwrite"] or {}
-    elif "overwrite_template" in param_scan:
-        overwrite_base = _load_legacy_overwrite_template(param_scan["overwrite_template"])
-    else:
-        raise KeyError(
-            "Parameter scan configuration requires either 'overwrite' or "
-            "legacy 'overwrite_template'."
-        )
+    if "overwrite" not in param_scan:
+        raise KeyError("Parameter scan configuration requires 'overwrite'.")
+
+    overwrite_base = param_scan["overwrite"] or {}
+
+    if not isinstance(overwrite_base, dict):
+        raise TypeError("Parameter scan configuration field 'overwrite' must be a dictionary.")
 
     params = []
     for param_spec in param_scan["parameters"]:

@@ -32,3 +32,10 @@ This is mostly used for small productions during the validation or verification 
 .. automodule:: job_execution.process_pool
    :members:
 ```
+
+(bias-curve-submissions)=
+
+```{eval-rst}
+.. automodule:: job_execution.bias_curve_submissions
+   :members:
+```
