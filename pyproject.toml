@@ -119,7 +119,6 @@ scripts.simtools-plot-tabular-data-for-model-parameter = "simtools.applications.
 scripts.simtools-production-derive-corsika-limits = "simtools.applications.production_derive_corsika_limits:main"
 scripts.simtools-production-derive-statistics = "simtools.applications.production_derive_statistics:main"
 scripts.simtools-production-generate-grid = "simtools.applications.production_generate_grid:main"
-scripts.simtools-production-merge-corsika-limits = "simtools.applications.production_merge_corsika_limits:main"
 scripts.simtools-run-application = "simtools.applications.run_application:main"
 scripts.simtools-simulate-flasher = "simtools.applications.simulate_flasher:main"
 scripts.simtools-simulate-illuminator = "simtools.applications.simulate_illuminator:main"

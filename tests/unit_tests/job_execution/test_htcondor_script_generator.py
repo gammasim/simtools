@@ -41,7 +41,7 @@ def job_rows():
             "zenith_angle": 20 * u.deg,
             "energy_min": 1 * u.GeV,
             "energy_max": 10 * u.GeV,
-            "core_scatter_number": 10,
+            "cores_per_shower": 10,
             "core_scatter_max": 100 * u.m,
             "view_cone_min": 0 * u.deg,
             "view_cone_max": 5 * u.deg,
@@ -222,7 +222,7 @@ def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
     )
 
     assert "queue apptainer_label,primary" in content
-    assert "core_scatter_number,core_scatter_max_value,core_scatter_max_unit" in content
+    assert "cores_per_shower,core_scatter_max_value,core_scatter_max_unit" in content
     assert (
         "view_cone_min_value,view_cone_min_unit,view_cone_max_value,view_cone_max_unit" in content
     )
@@ -360,7 +360,7 @@ def test_write_params_file_keeps_energy_units(tmp_test_directory):
             "zenith_angle": 20 * u.deg,
             "energy_min": 30 * u.GeV,
             "energy_max": 10 * u.TeV,
-            "core_scatter_number": 10,
+            "cores_per_shower": 10,
             "core_scatter_max": 200 * u.m,
             "view_cone_min": 0 * u.deg,
             "view_cone_max": 5 * u.deg,
@@ -392,7 +392,7 @@ def test_write_params_file_replaces_whitespace_in_apptainer_label(tmp_test_direc
             "zenith_angle": 20 * u.deg,
             "energy_min": 30 * u.GeV,
             "energy_max": 10 * u.TeV,
-            "core_scatter_number": 10,
+            "cores_per_shower": 10,
             "core_scatter_max": 200 * u.m,
             "view_cone_min": 0 * u.deg,
             "view_cone_max": 5 * u.deg,
