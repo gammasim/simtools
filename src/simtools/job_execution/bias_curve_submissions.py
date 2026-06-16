@@ -281,6 +281,13 @@ def _htcondor_generator_configuration(label, curve_directory, scan_grid_file, ar
     if not apptainer_image:
         raise ValueError("Missing required argument: --apptainer_image")
 
+    telescopes = args.get("telescopes", [])
+    if len(telescopes) != 1:
+        raise ValueError(
+            "Bias-curve HTCondor generation requires exactly one resolved telescope; "
+            f"got {len(telescopes)}: {telescopes}"
+        )
+
     return {
         "apptainer_image": apptainer_image,
         "priority": args.get("priority", 1),
@@ -289,6 +296,7 @@ def _htcondor_generator_configuration(label, curve_directory, scan_grid_file, ar
         "simulation_output": str(Path(args.get("output_path") or ".").expanduser().resolve()),
         "label": label,
         "log_level": args.get("log_level", "INFO"),
+        "telescope": telescopes[0],
     }
 
 
