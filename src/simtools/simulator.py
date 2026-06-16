@@ -304,7 +304,7 @@ class Simulator:
         if _resources.get("runtime") is not None:
             runtime.append(_resources["runtime"])
 
-        mean_runtime = np.mean(runtime)
+        mean_runtime = np.mean(runtime) if runtime else np.nan
 
         resource_summary = f"Mean wall time/run [sec]: {mean_runtime}"
         if "n_events" in _resources and _resources["n_events"] > 0:
