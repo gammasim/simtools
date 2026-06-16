@@ -885,7 +885,17 @@ def test_make_resources_report(array_simulator, mocker):
     expected = "Mean wall time/run [sec]: 99.99"
     assert result == expected
 
-    # Test case 4: No runtime available (empty runtime list)
+    # Test case 4: Runtime of 0 is a valid value
+    mock_resources = {"runtime": 0, "n_events": 500}
+    mocker.patch.object(
+        array_simulator._simulation_runner, "get_resources", return_value=mock_resources
+    )
+
+    result = array_simulator._make_resources_report()
+    expected = "Mean wall time/run [sec]: 0.0, #events/run: 500"
+    assert result == expected
+
+    # Test case 5: No runtime available (empty runtime list)
     mock_resources = {"n_events": 500}
     mocker.patch.object(
         array_simulator._simulation_runner, "get_resources", return_value=mock_resources
