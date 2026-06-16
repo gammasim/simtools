@@ -14,7 +14,6 @@ from pathlib import Path
 
 import astropy.units as u
 
-from simtools.model.site_model import SiteModel
 from simtools.production_configuration.job_grid_io import read_job_grid
 
 _logger = logging.getLogger(__name__)
@@ -439,28 +438,6 @@ simtools-simulate-prod \\
 """
 
 
-def _resolve_telescope_from_layout(site, model_version, array_layout_name, cache):
-    """Resolve a telescope name from a single-telescope array layout.
-
-    Returns an empty string for multi-telescope layouts, because in that case no
-    single ``--telescope`` argument should be passed to simtools-simulate-prod.
-    """
-    cache_key = (site, model_version, array_layout_name)
-
-    if cache_key not in cache:
-        site_model = SiteModel(site=site, model_version=model_version)
-        layout_elements = [
-            str(element) for element in site_model.get_array_elements_for_layout(array_layout_name)
-        ]
-
-        if len(layout_elements) == 1:
-            cache[cache_key] = layout_elements[0]
-        else:
-            cache[cache_key] = ""
-
-    return cache[cache_key]
-
-
 def build_job_specs(args_dict, image_labels):
     """Build backend-agnostic job specs from comparison and production grids."""
     base_pack_dir = args_dict.get("simulation_output") or "simtools-output"
@@ -480,7 +457,6 @@ def build_job_specs(args_dict, image_labels):
         )
 
     job_specs = []
-    layout_telescope_cache = {}
 
     for label in image_labels:
         for row in normalized_rows:
@@ -490,13 +466,8 @@ def build_job_specs(args_dict, image_labels):
                 "pack_for_grid_register": f"{base_pack_dir}/{label!s}",
             }
 
-            telescope = row.get("telescope") or _resolve_telescope_from_layout(
-                site=job_grid_metadata["site"],
-                model_version=row["model_version"],
-                array_layout_name=row["array_layout_name"],
-                cache=layout_telescope_cache,
-            )
-            if telescope:
+            telescope = row.get("telescope") or args_dict.get("telescope")
+            if telescope not in (None, ""):
                 job_spec["telescope"] = telescope
 
             if row.get("scan_label") not in (None, ""):
