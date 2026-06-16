@@ -15,3 +15,6 @@ files:
   - url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-model-parameter-setting/-/raw/main/input/LSTN-design/asum_threshold/019e6ed9-bf83-7401-af4e-f49b4fe87948/input.meta.yml?ref_type=heads
     description: Model parameter setting metadata file.
     target_path: generated/asum_threshold.meta.yml
+  - url: https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-model-parameter-setting/-/raw/main/input/LSTN-01/setting_psf_parameters/019d7772-b58f-78d4-9d7e-cd7fcbc2ccc9/PSFcurve_data_v2.ecsv?ref_type=heads
+    description: PSF measurement as function of offsets angle (LSTN-01)
+    target_path: generated/PSFcurve_data_v2.ecsv
