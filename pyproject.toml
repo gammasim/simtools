@@ -99,6 +99,7 @@ scripts.simtools-docs-produce-model-parameter-reports = "simtools.applications.d
 scripts.simtools-docs-produce-production-summary = "simtools.applications.docs_produce_production_summary:main"
 scripts.simtools-docs-produce-simulation-configuration-report = "simtools.applications.docs_produce_simulation_configuration_report:main"
 scripts.simtools-generate-array-config = "simtools.applications.generate_array_config:main"
+scripts.simtools-generate-bias-curve-submissions = "simtools.applications.generate_bias_curve_submissions:main"
 scripts.simtools-generate-corsika-histograms = "simtools.applications.generate_corsika_histograms:main"
 scripts.simtools-generate-default-metadata = "simtools.applications.generate_default_metadata:main"
 scripts.simtools-generate-parameter-scan-grid = "simtools.applications.generate_parameter_scan_grid:main"
