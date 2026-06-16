@@ -461,12 +461,23 @@ def test_rotate_azimuth_by_180deg(corsika_config_mock_array_model):
 
 def test_get_config_parameter(corsika_config_mock_array_model):
     cc = corsika_config_mock_array_model
+    cc.config["RUNNR"] = [42]
+    assert cc.get_config_parameter("RUNNR") == 42
     assert isinstance(cc.get_config_parameter("NSHOW"), int)
     assert isinstance(cc.get_config_parameter("THETAP"), list)
     with pytest.raises(
         KeyError, match="Parameter not_really_a_parameter is not a CORSIKA config parameter"
     ):
         cc.get_config_parameter("not_really_a_parameter")
+
+
+def test_get_top_level_run_parameters(corsika_config_mock_array_model):
+    corsika_config_mock_array_model.config["RUNNR"] = [42]
+    assert corsika_config_mock_array_model._get_top_level_run_parameters() == {
+        "RUNNR": [42],
+        "USER": [settings.config.user],
+        "HOST": [settings.config.hostname],
+    }
 
 
 def test_get_text_single_line(corsika_config_mock_array_model):
@@ -486,6 +497,7 @@ def test_generate_corsika_input_file(corsika_config_mock_array_model, tmp_path):
     logger.info("test_generate_corsika_input_file")
     input_file = tmp_path / "test_corsika.input"
     output_file = tmp_path / "test_corsika.corsika.zst"
+    corsika_config_mock_array_model.config["RUNNR"] = [42]
     corsika_config_mock_array_model.generate_corsika_input_file(
         use_multipipe=False,
         input_file=input_file,
@@ -493,7 +505,11 @@ def test_generate_corsika_input_file(corsika_config_mock_array_model, tmp_path):
     )
     assert input_file.exists()
     with open(input_file) as f:
-        assert "TELFIL |" not in f.read()
+        input_file_text = f.read()
+        assert "RUNNR 42 " in input_file_text
+        assert f"USER {settings.config.user} " in input_file_text
+        assert f"HOST {settings.config.hostname} " in input_file_text
+        assert "TELFIL |" not in input_file_text
 
 
 def test_generate_corsika_input_file_multipipe(corsika_config_mock_array_model, tmp_path):
