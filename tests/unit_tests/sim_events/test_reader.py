@@ -42,7 +42,7 @@ def mock_tables():
     # Create FILE_INFO table
     file_info_table = Table()
     file_info_table.meta["EXTNAME"] = "FILE_INFO"
-    file_info_table["file_name"] = ["test.fits"]
+    file_info_table["file_name"] = ["test.hdf5"]
     file_info_table["file_id"] = [0]
     file_info_table["particle_id"] = [1]
     file_info_table["zenith"] = [20.0] * u.deg
@@ -59,68 +59,78 @@ def mock_tables():
 
 
 @pytest.fixture
-def mock_fits_file(mock_tables, tmp_test_directory):
-    """Create a mock FITS file with test data."""
-    test_file = tmp_test_directory / "test.fits"
+def mock_hdf5_file(mock_tables, tmp_test_directory):
+    """Create a mock HDF5 file with test data."""
+    test_file = tmp_test_directory / "test.hdf5"
     shower_table, trigger_table, file_info_table = mock_tables
 
-    shower_table.write(test_file, format="fits", overwrite=True)
-    trigger_table.write(test_file, format="fits", append=True)
-    file_info_table.write(test_file, format="fits", append=True)
+    write_tables(
+        [shower_table, trigger_table, file_info_table],
+        test_file,
+        file_type="HDF5",
+    )
 
     return str(test_file)
 
 
-def test_reader_initialization(mock_fits_file):
+def test_reader_initialization(mock_hdf5_file):
     """Test basic reader initialization."""
-    reader = EventDataReader(mock_fits_file)
+    reader = EventDataReader(mock_hdf5_file)
     data_sets = reader.data_sets
 
     assert len(data_sets) > 0
     assert all("SHOWERS" in ds and "TRIGGERS" in ds for ds in data_sets)
 
 
-def test_telescope_filtering(mock_fits_file):
+def test_reader_rejects_fits_file(tmp_test_directory):
+    """Test that FITS reduced event data files are rejected."""
+    test_file = tmp_test_directory / "test.fits"
+
+    with pytest.raises(ValueError, match="Only HDF5 files"):
+        EventDataReader(test_file)
+
+
+def test_telescope_filtering(mock_hdf5_file):
     """Test filtering by telescope list."""
     # Should only keep events with telescope 1
-    reader = EventDataReader(mock_fits_file, telescope_list=["LSTN-01"])
-    _, _, _, triggered_data = reader.read_event_data(mock_fits_file)
+    reader = EventDataReader(mock_hdf5_file, telescope_list=["LSTN-01"])
+    _, _, _, triggered_data = reader.read_event_data(mock_hdf5_file)
 
     assert len(triggered_data.telescope_list) == 1
     assert "LSTN-01" in triggered_data.telescope_list[0]
 
     # Should keep both events (all have telescope "LSTN-03")
-    reader = EventDataReader(mock_fits_file, telescope_list=["LSTN-03"])
-    _, _, _, triggered_data = reader.read_event_data(mock_fits_file)
+    reader = EventDataReader(mock_hdf5_file, telescope_list=["LSTN-03"])
+    _, _, _, triggered_data = reader.read_event_data(mock_hdf5_file)
 
     assert len(triggered_data.telescope_list) == 2
     for tel_list in triggered_data.telescope_list:
         assert "LSTN-03" in tel_list
 
 
-def test_shower_coordinate_transformation(mock_fits_file):
+def test_shower_coordinate_transformation(mock_hdf5_file):
     """Test transformation of core positions to shower coordinates."""
-    reader = EventDataReader(mock_fits_file)
-    _, _, triggered_shower, _ = reader.read_event_data(mock_fits_file)
+    reader = EventDataReader(mock_hdf5_file)
+    _, _, triggered_shower, _ = reader.read_event_data(mock_hdf5_file)
 
     assert hasattr(triggered_shower, "x_core_shower")
     assert hasattr(triggered_shower, "y_core_shower")
     assert hasattr(triggered_shower, "core_distance_shower")
 
 
-def test_angular_separation_calculation(mock_fits_file):
+def test_angular_separation_calculation(mock_hdf5_file):
     """Test calculation of angular separation."""
-    reader = EventDataReader(mock_fits_file)
-    _, _, _, triggered_data = reader.read_event_data(mock_fits_file)
+    reader = EventDataReader(mock_hdf5_file)
+    _, _, _, triggered_data = reader.read_event_data(mock_hdf5_file)
 
     assert hasattr(triggered_data, "angular_distance")
     assert len(triggered_data.angular_distance) == 2
 
 
-def test_get_reduced_simulation_info(mock_fits_file):
+def test_get_reduced_simulation_info(mock_hdf5_file):
     """Test getting reduced simulation information."""
-    reader = EventDataReader(mock_fits_file)
-    file_info, _, _, _ = reader.read_event_data(mock_fits_file)
+    reader = EventDataReader(mock_hdf5_file)
+    file_info, _, _, _ = reader.read_event_data(mock_hdf5_file)
     info = reader.get_reduced_simulation_file_info(file_info)
 
     assert info["primary_particle"] == "gamma"
@@ -130,14 +140,14 @@ def test_get_reduced_simulation_info(mock_fits_file):
 
 
 @patch("simtools.sim_events.reader.PrimaryParticle")
-def test_get_reduced_simulation_info_with_warning(mock_primary_particle, mock_fits_file, caplog):
+def test_get_reduced_simulation_info_with_warning(mock_primary_particle, mock_hdf5_file, caplog):
     """Test get_reduced_simulation_info with multiple values that trigger warning."""
 
-    reader = EventDataReader(mock_fits_file)
+    reader = EventDataReader(mock_hdf5_file)
 
     new_file_info = Table()
     new_file_info.meta["EXTNAME"] = "FILE_INFO"
-    new_file_info["file_name"] = ["test1.fits", "test2.fits"]
+    new_file_info["file_name"] = ["test1.hdf5", "test2.hdf5"]
     new_file_info["file_id"] = [0, 1]
     new_file_info["particle_id"] = [1, 1]  # Same value, no warning
     new_file_info["zenith"] = [20.0, 30.0]  # Different value, warning
@@ -162,13 +172,13 @@ def test_get_reduced_simulation_info_with_warning(mock_primary_particle, mock_fi
     assert info["zenith"] == pytest.approx(20.0)  # Should use first value
 
 
-def test_get_reduced_simulation_info_with_string_encoded_numeric_values(mock_fits_file):
+def test_get_reduced_simulation_info_with_string_encoded_numeric_values(mock_hdf5_file):
     """Test conversion of numeric FILE_INFO columns stored as byte strings."""
-    reader = EventDataReader(mock_fits_file)
+    reader = EventDataReader(mock_hdf5_file)
 
     file_info = Table()
     file_info.meta["EXTNAME"] = "FILE_INFO"
-    file_info["file_name"] = ["test.fits"]
+    file_info["file_name"] = ["test.hdf5"]
     file_info["file_id"] = [0]
     file_info["particle_id"] = [b"1"]
     file_info["zenith"] = [20.0] * u.deg
@@ -187,9 +197,9 @@ def test_get_reduced_simulation_info_with_string_encoded_numeric_values(mock_fit
     assert info["nsb_level"] == pytest.approx(0.24)
 
 
-def test_convert_numeric_column_decodes_object_bytes(mock_fits_file):
+def test_convert_numeric_column_decodes_object_bytes(mock_hdf5_file):
     """Test object arrays with byte entries are decoded and converted."""
-    reader = EventDataReader(mock_fits_file)
+    reader = EventDataReader(mock_hdf5_file)
 
     values = np.array([b" 1.5 ", b"2.0"], dtype=object)
     result = reader._convert_numeric_column(values, key="nsb_level", dtype=np.float64)
@@ -197,9 +207,9 @@ def test_convert_numeric_column_decodes_object_bytes(mock_fits_file):
     np.testing.assert_allclose(result, np.array([1.5, 2.0]))
 
 
-def test_convert_numeric_column_raises_on_invalid_values(mock_fits_file):
+def test_convert_numeric_column_raises_on_invalid_values(mock_hdf5_file):
     """Test conversion helper raises clear error message for invalid numeric data."""
-    reader = EventDataReader(mock_fits_file)
+    reader = EventDataReader(mock_hdf5_file)
 
     values = np.array(["not-a-number"], dtype=np.str_)
 
@@ -210,10 +220,10 @@ def test_convert_numeric_column_raises_on_invalid_values(mock_fits_file):
         reader._convert_numeric_column(values, key="nsb_level", dtype=np.float64)
 
 
-def test_get_triggered_shower_data_single_match(mock_fits_file):
+def test_get_triggered_shower_data_single_match(mock_hdf5_file):
     """Test _get_triggered_shower_data with single matches."""
-    reader = EventDataReader(mock_fits_file)
-    _, shower_data, triggered_shower, _ = reader.read_event_data(mock_fits_file)
+    reader = EventDataReader(mock_hdf5_file)
+    _, shower_data, triggered_shower, _ = reader.read_event_data(mock_hdf5_file)
 
     # Get triggered shower data
     triggered_shower = reader._get_triggered_shower_data(
@@ -228,10 +238,10 @@ def test_get_triggered_shower_data_single_match(mock_fits_file):
     assert triggered_shower.simulated_energy[0] == pytest.approx(1.0)
 
 
-def test_get_triggered_shower_data_no_matches(mock_fits_file, caplog):
+def test_get_triggered_shower_data_no_matches(mock_hdf5_file, caplog):
     """Test _get_triggered_shower_data when no matches are found."""
-    reader = EventDataReader(mock_fits_file)
-    _, shower_data, triggered_shower, _ = reader.read_event_data(mock_fits_file)
+    reader = EventDataReader(mock_hdf5_file)
+    _, shower_data, triggered_shower, _ = reader.read_event_data(mock_hdf5_file)
 
     with caplog.at_level(logging.WARNING):
         triggered_shower = reader._get_triggered_shower_data(
@@ -246,11 +256,11 @@ def test_get_triggered_shower_data_no_matches(mock_fits_file, caplog):
         assert "Found 0 matches" in caplog.text
 
 
-def test_read_event_data_returns_expected_types_and_values(mock_fits_file):
+def test_read_event_data_returns_expected_types_and_values(mock_hdf5_file):
     """Test that read_event_data returns expected types and values."""
-    reader = EventDataReader(mock_fits_file)
+    reader = EventDataReader(mock_hdf5_file)
     file_info, shower_data, triggered_shower, triggered_data = reader.read_event_data(
-        mock_fits_file
+        mock_hdf5_file
     )
 
     assert hasattr(file_info, "colnames")
@@ -265,33 +275,16 @@ def test_read_event_data_returns_expected_types_and_values(mock_fits_file):
 def test_read_event_data_with_missing_triggers(tmp_test_directory, mock_tables):
     """Test read_event_data when TRIGGERS table is missing."""
 
-    test_file = tmp_test_directory / "test_no_triggers.fits"
+    test_file = tmp_test_directory / "test_no_triggers.hdf5"
     shower_table, _, file_info_table = mock_tables
 
-    shower_table.write(test_file, format="fits", overwrite=True)
-    file_info_table.write(test_file, format="fits", append=True)
+    write_tables([shower_table, file_info_table], test_file, file_type="HDF5")
 
-    # Patch table_handler.read_tables to simulate missing 'TRIGGERS' extension
-    import simtools.io.table_handler as table_handler_mod
-
-    with patch.object(table_handler_mod, "read_tables") as mock_read_tables:
-
-        def fake_read_tables(file, table_names=None, **kwargs):
-            # Only return SHOWERS and FILE_INFO, omit TRIGGERS
-            from astropy.table import Table
-
-            tables = {}
-            for name in table_names:
-                if name in ("SHOWERS", "FILE_INFO"):
-                    tables[name] = Table.read(file, hdu=name)
-            return tables
-
-        mock_read_tables.side_effect = fake_read_tables
-
-        reader = EventDataReader(str(test_file))
-        file_info, shower_data, triggered_shower, triggered_data = reader.read_event_data(
-            str(test_file)
-        )
+    reader = EventDataReader(str(test_file))
+    file_info, shower_data, triggered_shower, triggered_data = reader.read_event_data(
+        str(test_file),
+        table_name_map={"SHOWERS": "SHOWERS", "FILE_INFO": "FILE_INFO"},
+    )
 
     assert triggered_shower is None
     assert triggered_data is None
