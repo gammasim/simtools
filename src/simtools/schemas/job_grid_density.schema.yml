@@ -57,8 +57,8 @@ data:
         required: true
         unit: dimensionless
         type: string
-      - name: core_scatter_number
-        description: Number of core scatter samples.
+      - name: cores_per_shower
+        description: Number of core scatter samples per shower.
         required: true
         unit: dimensionless
         type: int64
@@ -97,6 +97,11 @@ data:
         required: true
         unit: dimensionless
         type: int64
+      - name: nsb_rate
+        description: Night sky background rate used for the simulation grid point.
+        required: true
+        unit: dimensionless
+        type: float64
       - name: model_version
         description: Simulation model version.
         required: true

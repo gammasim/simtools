@@ -65,7 +65,7 @@ _JOB_GRID_COLUMN_DTYPES = {
     "energy_min_unit": str,
     "energy_max_value": float,
     "energy_max_unit": str,
-    "core_scatter_number": int,
+    "cores_per_shower": int,
     "core_scatter_max_value": float,
     "core_scatter_max_unit": str,
     "view_cone_min_value": float,
