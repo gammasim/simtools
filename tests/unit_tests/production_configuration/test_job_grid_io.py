@@ -4,6 +4,8 @@ import astropy.units as u
 import pytest
 from astropy.table import Table
 
+from simtools.constants import SCHEMA_PATH
+from simtools.io import ascii_handler
 from simtools.production_configuration import job_grid_io
 
 
@@ -103,6 +105,27 @@ def test_serialize_job_grid_stream_skips_empty_optional_radec_columns(tmp_test_d
 
     assert "ra" not in output_table.colnames
     assert "dec" not in output_table.colnames
+
+
+def test_serialize_job_grid_stream_writes_empty_grid_header(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "empty_job_grid.ecsv"
+
+    row_count = job_grid_io.serialize_job_grid_stream(iter([]), output_file, metadata=_metadata())
+    output_table = Table.read(output_file, format="ascii.ecsv")
+
+    assert row_count == 0
+    assert output_table.colnames == job_grid_io.JOB_GRID_COLUMNS
+
+
+def test_job_grid_density_schema_matches_serialized_required_columns():
+    schema = ascii_handler.collect_data_from_file(
+        SCHEMA_PATH / "job_grid_density.schema.yml",
+    )
+    required_columns = [
+        column["name"] for column in schema["data"][0]["table_columns"] if column.get("required")
+    ]
+
+    assert required_columns == job_grid_io.JOB_GRID_COLUMNS
 
 
 def test_serialize_job_grid_rejects_non_ecsv_output(tmp_test_directory):
