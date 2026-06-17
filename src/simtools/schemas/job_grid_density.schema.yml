@@ -80,10 +80,6 @@ data:
         description: Number of showers simulated per run.
         required: true
         type: int64
-      - name: nsb_rate
-        description: Night sky background rate used for the simulation grid point.
-        required: true
-        type: float64
       - name: model_version
         description: Simulation model version.
         required: true
