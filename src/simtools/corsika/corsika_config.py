@@ -632,9 +632,11 @@ class CorsikaConfig:
         list
             Value(s) of the parameter.
         """
-        par_value = []
+        par_value = self.config.get(par_name, [])
+        if isinstance(par_value, dict):
+            par_value = []
         for values in self.config.values():
-            if par_name in values:
+            if isinstance(values, dict) and par_name in values:
                 par_value = values[par_name]
         if len(par_value) == 0:
             raise KeyError(f"Parameter {par_name} is not a CORSIKA config parameter")
@@ -664,6 +666,10 @@ class CorsikaConfig:
             text += line
         return text
 
+    def _get_top_level_run_parameters(self):
+        """Return top-level configuration parameters for the CORSIKA input file."""
+        return {key: values for key, values in self.config.items() if not isinstance(values, dict)}
+
     def generate_corsika_input_file(self, use_multipipe, input_file, output_file):
         """
         Generate a CORSIKA input file.
@@ -682,6 +688,8 @@ class CorsikaConfig:
 
         with open(input_file, "w", encoding="utf-8") as file:
             file.write("\n* [ RUN PARAMETERS ]\n")
+            text_run_parameters = self._get_text_single_line(self._get_top_level_run_parameters())
+            file.write(text_run_parameters)
             text_parameters = self._get_text_single_line(self.config["USER_INPUT"])
             file.write(text_parameters)
 
