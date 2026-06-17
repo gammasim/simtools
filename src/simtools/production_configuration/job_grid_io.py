@@ -34,7 +34,6 @@ JOB_GRID_COLUMNS = [
     "view_cone_max_value",
     "view_cone_max_unit",
     "showers_per_run",
-    "nsb_rate",
     "model_version",
     "array_layout_name",
     "corsika_le_interaction",
