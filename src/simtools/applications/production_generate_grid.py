@@ -414,7 +414,7 @@ def main():
 
     job_rows = _renumber_job_rows(
         build_simulation_jobs(app_context.args),
-        start_run_number=int(app_context.args.get("run_number") or 1),
+        start_run_number=int(app_context.args.get("run_number", 1)),
     )
     serialize_job_grid(
         job_rows=job_rows,
