@@ -330,6 +330,7 @@ class SimtelConfigWriter:
             )
 
             file.write(self.TAB + f"maximum_telescopes = {len(telescope_model)}\n\n")
+
             # Default telescope in sim_telarray - 0th tel in telescope list
             _, first_telescope = next(iter(telescope_model.items()))
             invalid_telescope_name = "InvalidTelescope"
@@ -340,22 +341,12 @@ class SimtelConfigWriter:
                 invalid_telescope_name,
             )
 
-            # For single-telescope layouts, the dummy telescope must not remain the final
-            # telescope configuration from the TELESCOPE == 0 pass. sim_telarray appears to
-            # retain file-backed/structural telescope settings from this pass, so include the
-            # real telescope config immediately after the dummy to let the real telescope
-            # values override the dummy defaults.
-            if len(telescope_model) == 1:
-                tel_name, tel_model = next(iter(telescope_model.items()))
-                tel_config_file = tel_model.config_file_path.name
-                file.write(f"% Single-telescope default override: {tel_name}\n")
-                file.write(f"# include <{tel_config_file}>\n\n")
-
             for count, (tel_name, tel_model) in enumerate(telescope_model.items()):
                 tel_config_file = tel_model.config_file_path.name
                 file.write(f"% {tel_name}\n")
                 file.write(f"#elif TELESCOPE == {count + 1}\n\n")
                 file.write(f"# include <{tel_config_file}>\n\n")
+            file.write("#endif \n\n")  # configuration files need to end with \n\n
 
     def write_single_mirror_list_file(
         self, mirror_number, mirrors, single_mirror_list_file, set_focal_length_to_zero=False
