@@ -290,7 +290,7 @@ def _generate_overwrite_files(curve_name, telescopes, args, curve_directory, lab
     return overwrite_files_and_labels
 
 
-def _build_scan_grid(base_grid_file, overwrite_files_and_labels, scan_grid_file):
+def _build_scan_grid(base_grid_file, overwrite_files_and_labels, scan_grid_file, telescope=None):
     """Expand a base job grid with one row set per overwrite file."""
     base_rows, metadata = read_job_grid(base_grid_file)
 
@@ -301,6 +301,8 @@ def _build_scan_grid(base_grid_file, overwrite_files_and_labels, scan_grid_file)
             new_row = dict(row)
             new_row["overwrite_model_parameters"] = str(overwrite_file)
             new_row["scan_label"] = scan_label
+            if telescope not in (None, ""):
+                new_row.setdefault("telescope", str(telescope))
             expanded_rows.append(new_row)
 
     serialize_job_grid(expanded_rows, scan_grid_file, metadata=metadata)
@@ -339,7 +341,7 @@ def _build_htcondor_args(label, curve_directory, scan_grid_file, args):
     if not apptainer_image:
         raise ValueError("Missing required argument: --apptainer_image")
 
-    return {
+    htcondor_args = {
         "apptainer_image": apptainer_image,
         "priority": args.get("priority", 1),
         "job_grid_file": str(scan_grid_file),
@@ -348,6 +350,9 @@ def _build_htcondor_args(label, curve_directory, scan_grid_file, args):
         "label": label,
         "log_level": args.get("log_level", "INFO"),
     }
+    if args.get("telescope") not in (None, ""):
+        htcondor_args["telescope"] = args["telescope"]
+    return htcondor_args
 
 
 def _generate_curve_submissions(curve_name, curve_definition, args, output_root):
@@ -387,6 +392,7 @@ def _generate_curve_submissions(curve_name, curve_definition, args, output_root)
         base_grid_file=base_grid_file,
         overwrite_files_and_labels=overwrite_files_and_labels,
         scan_grid_file=scan_grid_file,
+        telescope=args.get("telescope"),
     )
 
     htcondor_script_generator.generate_submission_script(
@@ -424,7 +430,8 @@ def generate_bias_curve_submissions(args):
     _validate_required_args(args)
 
     args["telescopes"] = _resolve_telescopes_from_layout(args)
-    args["telescope"] = args["telescopes"][0]
+    if len(args["telescopes"]) == 1:
+        args["telescope"] = str(args["telescopes"][0])
 
     output_root = Path(args.get("output_path") or ".").expanduser().resolve()
     output_root.mkdir(parents=True, exist_ok=True)
