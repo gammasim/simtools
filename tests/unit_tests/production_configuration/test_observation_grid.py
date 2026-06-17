@@ -45,7 +45,6 @@ def _adaptive_radec_axes(local_zenith_range=None, local_azimuth_range=None):
             "direction_grid_density": 0.25,
         },
         "dec": {"range": [-40, 80], "binning": 10, "units": "deg"},
-        "nsb_level": {"range": [4, 4], "binning": 1, "units": "MHz"},
         "offset": {"range": [0, 10], "binning": 2, "units": "deg"},
     }
     if local_zenith_range is not None:
@@ -61,7 +60,6 @@ def _single_bin_horizontal_axes(azimuth_range=None):
     return {
         "zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"},
         "azimuth": {"range": az_range, "binning": 1 if az_range == [0, 0] else 3, "units": "deg"},
-        "nsb_level": {"range": [1, 1], "binning": 1, "units": "1"},
     }
 
 
@@ -124,8 +122,8 @@ def test_generate_target_values_supports_log_and_inverse_cos_scaling():
     assert len(engine.target_values["zenith_angle"]) == 3
 
 
-def test_add_lookup_limits_to_point_normalizes_legacy_lookup_keys():
-    engine = _make_engine(lookup_table=None)
+def test_add_lookup_limits_to_point_uses_engine_lookup_nsb_rate():
+    engine = _make_engine(lookup_table=None, lookup_nsb_rate=1.7)
     engine.lookup_table = "limits.ecsv"
     engine._interpolate_limits_for_point = Mock(
         return_value={
@@ -134,16 +132,26 @@ def test_add_lookup_limits_to_point_normalizes_legacy_lookup_keys():
             "viewcone_radius": 3.5,
         }
     )
-    point = {"nsb_level": 5 * u.dimensionless_unscaled}
+    point = {}
 
     engine._add_lookup_limits_to_point(point, zenith=20.0, azimuth=180.0)
 
     engine._interpolate_limits_for_point.assert_called_once_with(
-        zenith=20.0, azimuth=180.0, nsb=5.0
+        zenith=20.0, azimuth=180.0, nsb=1.7
     )
+    assert point["nsb_rate"] == pytest.approx(1.7)
     assert_quantity_allclose(point["lower_energy_limit"], 0.02 * u.TeV)
     assert_quantity_allclose(point["upper_radius_limit"], 120 * u.m)
     assert_quantity_allclose(point["viewcone_radius"], 3.5 * u.deg)
+
+
+def test_add_lookup_limits_to_point_raises_without_nsb_rate():
+    engine = _make_engine(lookup_table=None, lookup_nsb_rate=None)
+    engine.lookup_table = "limits.ecsv"
+    engine._interpolate_limits_for_point = Mock(return_value={"lower_energy_limit": 0.02})
+
+    with pytest.raises(ValueError, match="nsb_rate is required"):
+        engine._add_lookup_limits_to_point({}, zenith=20.0, azimuth=180.0)
 
 
 def test_interpolate_limits_for_point_delegates_to_lookup_helper():
@@ -256,7 +264,6 @@ def test_generate_radec_grid_uses_adaptive_ra_bins_per_dec_strip():
         axes={
             "ra": {"range": [0, 360], "binning": 36, "units": "deg", "direction_grid_density": 1.0},
             "dec": {"range": [-60, 60], "binning": 13, "units": "deg"},
-            "nsb_level": {"range": [4, 4], "binning": 1, "units": "MHz"},
             "offset": {"range": [0, 0], "binning": 1, "units": "deg"},
         },
         coordinate_system="ra_dec",
@@ -401,7 +408,7 @@ def test_convert_coordinates_keeps_points_without_horizontal_values():
 
 @patch.object(ProductionGridEngine, "_prepare_lookup_table_limits_for_point_interpolation")
 @patch("simtools.production_configuration.observation_grid.CorsikaLimitsLookup")
-def test_init_with_radec_lookup_prepares_point_interpolation(
+def test_init_with_lookup_prepares_point_interpolation(
     mock_corsika_limits_lookup,
     mock_prepare_lookup_table_limits,
 ):
@@ -420,33 +427,17 @@ def test_init_with_radec_lookup_prepares_point_interpolation(
     mock_prepare_lookup_table_limits.assert_called_once_with()
 
 
-@patch("simtools.production_configuration.observation_grid.CorsikaLimitsLookup")
-def test_init_with_horizontal_lookup_applies_interpolated_limits(mock_corsika_limits_lookup):
-    mock_lookup = mock_corsika_limits_lookup.return_value
-    mock_lookup.interpolate_grid_limits.return_value = {"lower_energy_limit": np.array([[[0.02]]])}
-
-    engine = _make_engine(
-        axes={"zenith_angle": {"range": [20, 20], "binning": 1, "units": "deg"}},
-        lookup_table="limits.ecsv",
-        array_layout_name="alpha",
-    )
-
-    assert "lower_energy_limit" in engine.interpolated_limits
-
-
-def test_generate_horizontal_grid_uses_interpolated_limit_arrays():
+def test_generate_horizontal_grid_interpolates_limits_per_point():
     engine = _make_engine(axes=_single_bin_horizontal_axes())
-    engine.interpolated_limits = {
-        "lower_energy_limit": np.array([[[0.02]]]),
-        "upper_radius_limit": np.array([[[120.0]]]),
-        "viewcone_radius": np.array([[[3.0]]]),
-    }
-    engine._limits_lookup = Mock(
-        lookup_field_units={
-            "lower_energy_limit": u.TeV,
-            "upper_radius_limit": u.m,
-            "viewcone_radius": u.deg,
-        }
+    engine.lookup_table = "limits.ecsv"
+    engine._add_lookup_limits_to_point = Mock(
+        side_effect=lambda point, zenith, azimuth: point.update(
+            {
+                "lower_energy_limit": 0.02 * u.TeV,
+                "upper_radius_limit": 120 * u.m,
+                "viewcone_radius": 3 * u.deg,
+            }
+        )
     )
 
     grid = engine._generate_horizontal_grid()
@@ -482,17 +473,16 @@ def test_generate_radec_grid_direction_points_filters_by_max_zenith(
     mock_altaz.assert_called_once()
 
 
-def test_generate_horizontal_grid_handles_partial_interpolated_limit_arrays():
+def test_generate_horizontal_grid_handles_partial_lookup_limits():
     engine = _make_engine(axes=_single_bin_horizontal_axes())
-    engine.interpolated_limits = {
-        "upper_radius_limit": np.array([[[120.0]]]),
-        "viewcone_radius": np.array([[[3.0]]]),
-    }
-    engine._limits_lookup = Mock(
-        lookup_field_units={
-            "upper_radius_limit": u.m,
-            "viewcone_radius": u.deg,
-        }
+    engine.lookup_table = "limits.ecsv"
+    engine._add_lookup_limits_to_point = Mock(
+        side_effect=lambda point, zenith, azimuth: point.update(
+            {
+                "upper_radius_limit": 120 * u.m,
+                "viewcone_radius": 3 * u.deg,
+            }
+        )
     )
 
     grid = engine._generate_horizontal_grid()
@@ -502,25 +492,15 @@ def test_generate_horizontal_grid_handles_partial_interpolated_limit_arrays():
     assert_quantity_allclose(grid[0]["viewcone_radius"], 3 * u.deg)
 
 
-def test_generate_horizontal_grid_with_circular_azimuth_binning_uses_correct_indices():
+def test_generate_horizontal_grid_with_circular_azimuth_binning_calls_lookup_for_each_point():
     engine = _make_engine(axes=_single_bin_horizontal_axes(azimuth_range=[10, 350]))
     # Directed span from start to end gives [10, 180, 350]
     assert np.allclose(engine.target_values["azimuth"].value, np.array([10.0, 180.0, 350.0]))
+    engine.lookup_table = "limits.ecsv"
+    engine._add_lookup_limits_to_point = Mock()
 
-    engine.interpolated_limits = {
-        "lower_energy_limit": np.array([[[0.1], [0.2], [0.3]]]),
-    }
-    engine._limits_lookup = Mock(lookup_field_units={"lower_energy_limit": u.TeV})
-
-    grid = engine._generate_horizontal_grid()
-    by_azimuth = {
-        float(point["azimuth"].to_value(u.deg)): point["lower_energy_limit"].to_value(u.TeV)
-        for point in grid
-    }
-
-    assert by_azimuth[10.0] == pytest.approx(0.1)
-    assert by_azimuth[180.0] == pytest.approx(0.2)
-    assert by_azimuth[350.0] == pytest.approx(0.3)
+    engine._generate_horizontal_grid()
+    assert engine._add_lookup_limits_to_point.call_count == 3
 
 
 def test_generate_grid_radec_mode_adds_extra_axis_quantities():

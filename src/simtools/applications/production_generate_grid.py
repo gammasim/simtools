@@ -1,66 +1,196 @@
 #!/usr/bin/python3
 
 r"""
-Generate simulation job grid for production configurations.
+Generate a simulation job grid from production choices.
 
-This application expands simulation job rows and writes them to disk.
-It supports both:
+``simtools-production-generate-grid`` expands a production definition into an ECSV
+table in which each row is one executable simulation run. The expansion combines
+particle, model, interaction, shower, pointing, source-offset, model-version
+dependent night-sky background rate, energy, and run choices. The generated grid
+is intended as input for local production execution or workload-management
+submission tools.
 
-- explicit cartesian job-grid configuration (primary, zenith, energy range, etc.), and
-- axes-based production-grid configuration with optional ``ra_dec`` coordinate handling
-  and lookup-table interpolation.
+The application supports two pointing-grid modes:
 
-Allow for flexible scaling of showers per run and total showers across the grid.
-``showers_per_run_power_law`` scales the baseline showers per run with
-``(E_mid / E_ref) ** power_index``, using the logarithmic midpoint energy of each bin.
-``showers_per_run_scaling=cosine_zenith`` scales showers per run with
-``cos(zenith_angle)`` to control run duration at larger zenith angles.
-``total_showers_scaling=zenith_scaled`` applies ``total_showers * exp(factor * (cos(ZD) - 1))``.
+- horizontal grids, configured with ``azimuth`` and ``zenith`` axes;
+- equatorial grids, configured with ``ra`` and ``dec`` axes and converted to
+  local horizontal coordinates using ``site`` and ``time_of_observation``.
 
-Command line arguments
+Direction axes can be specified explicitly by the number of bins or derived from a
+direction-grid density. If a CORSIKA limits lookup table is supplied, the grid is
+interpolated at each direction point and the configured energy, core-scatter, and
+view-cone values act as absolute bounds.
+
+NSB handling
+------------
+NSB is not configured as a production-grid axis. The generated rows contain
+``nsb_rate``, derived from the site model through the selected ``site`` and
+``model_version``. This means NSB values are directly dependent on the model
+version; when multiple model versions are requested, simtools resolves the NSB
+rate separately for each version. The resolved ``nsb_rate`` is also used for
+CORSIKA-limit lookup interpolation.
+
+Production context
+------------------
+site (str)
+    Observatory site, for example ``North`` or ``South``. Required for resolving
+    the model-version-dependent NSB rate and for RA/Dec-to-horizontal coordinate
+    conversion.
+model_version (str or list)
+    Simulation model version. Multiple values expand the job grid over all
+    requested versions.
+array_layout_name (str or list)
+    Array layout name, for example ``CTAO-North-Alpha`` or ``LSTN-01``.
+    Multiple layouts expand the grid.
+primary (str or list)
+    Primary particle to simulate, for example ``gamma`` or ``proton``. Values are
+    common particle names by default; use ``primary_id_type`` for CORSIKA7 or PDG
+    particle identifiers.
+primary_id_type (str, optional)
+    Identifier type for ``primary``. Allowed values are ``common_name``,
+    ``corsika7_id``, and ``pdg_id``. Default is ``common_name``.
+corsika_le_interaction, corsika_he_interaction (str or list, optional)
+    Low- and high-energy CORSIKA hadronic interaction models. Missing values use
+    the simtools defaults. Multiple values expand the grid.
+simulation_software (str, optional)
+    Simulation steps represented by the grid. Typical values are ``corsika``,
+    ``sim_telarray``, and ``corsika_sim_telarray``. The executable versions are
+    determined by the runtime environment, not by this grid file.
+
+Shower and CORSIKA parameters
+-----------------------------
+energy_range (quantity pair or list of pairs, optional)
+    Primary-particle energy range. Provide one min/max pair, for example
+    ``--energy_range 30 GeV 300 TeV``. Configuration files may also provide a
+    list of min/max pairs to generate several fixed-energy or binned-energy
+    ranges. A fixed energy is represented by equal minimum and maximum values.
+    Default is ``3 GeV 330 TeV``.
+eslope (float, optional)
+    CORSIKA spectral index. Default is ``-2.0``.
+core_scatter (integer and quantity, optional)
+    CORSIKA core-scatter configuration as ``<reuse_count> <max_radius> <unit>``,
+    for example ``--core_scatter 10 500 m``. The reuse count is written as
+    ``core_scatter_number`` and the radius as ``core_scatter_max``. Default is
+    ``10 10000 m``.
+view_cone (quantity pair, optional)
+    Minimum and maximum view-cone radius for primary arrival directions, for
+    example ``--view_cone 0 deg 10 deg``. Default is ``0 deg 0 deg``.
+curved_atmosphere_min_zenith_angle (quantity, optional)
+    Zenith angle above which curved-atmosphere CORSIKA binaries are selected.
+    This is normally a production-policy setting. The default is configured in
+    simtools defaults.
+
+Pointing and grid axes
 ----------------------
 axis (repeatable)
-    Compact axis definition in the form
+    Compact axis definition:
     ``--axis <name> <min> <unit> <max> <unit> <binning> [scaling]``.
-    Example: ``--axis azimuth 310 deg 20 deg 3 linear``.
-    Options for scaling are: linear, log, 1/cos.
+    Supported axis names are ``azimuth``, ``zenith``, ``ra``, ``dec``, and
+    ``offset``. Supported scaling modes are ``linear``, ``log``, and
+    ``1/cos``; the default is ``linear``.
+
+    **Examples**
+    - ``--axis azimuth 310 deg 20 deg 3 linear``
+    - ``--axis zenith 0 deg 70 deg 8 linear``
+    - ``--axis offset 0 deg 10 deg 2 linear``
+
+    For explicit grids, ``binning`` is the number of points on that axis.
+    Directed angular ranges such as azimuth ``310 deg`` to ``20 deg`` may cross
+    the 0 deg boundary. For density-based direction grids, direction-axis
+    binning is derived from ``direction_grid_density`` and the axis min/max
+    values define the accepted range.
 direction_grid_density (float or quantity, optional)
-    Direction-grid density (typically in ``1/deg^2``).
-    If provided, direction-axis binning (azimuth/zenith or ra/dec) is derived from
-    range and density, while min/max values are kept from ``--axis`` definitions.
-    In ``ra_dec`` mode, local-sky constraints can be defined with
-    ``local_zenith_range`` and ``local_azimuth_range``.
-local_zenith_range (quantity pair, optional)
-    Zenith range (deg) used to filter generated RA/Dec density nodes in local sky,
-    for example ``0 deg 70 deg``.
-local_azimuth_range (quantity pair, optional)
-    Directed azimuth range (deg) used to filter generated RA/Dec density nodes in
-    local sky, for example ``300 deg 60 deg``.
+    Target density for direction points, normally in ``1/deg^2``. When set,
+    simtools derives the number of horizontal ``azimuth``/``zenith`` or
+    equatorial ``ra``/``dec`` direction points from the axis ranges and this
+    density. Non-direction axes such as ``offset`` still use their explicit
+    axis binning.
 time_of_observation (str, optional)
-    Time of the observation in UTC (format: 'YYYY-MM-DD HH:MM:SS').
-    Used only if RA/Dec axes are provided (for coordinate transforms and sidereal-time
-    sampling). Ignored otherwise.
+    UTC observation time in ``YYYY-MM-DD HH:MM:SS`` format. Required when RA/Dec
+    axes are used because the conversion to local azimuth and zenith depends on
+    time and site. Ignored for horizontal grids.
+local_zenith_range (quantity pair, optional)
+    Local zenith range used to keep or reject points generated for density-based
+    RA/Dec grids, for example ``--local_zenith_range 0 deg 70 deg``.
+local_azimuth_range (quantity pair, optional)
+    Directed local azimuth range used to keep or reject points generated for
+    density-based RA/Dec grids, for example
+    ``--local_azimuth_range 300 deg 60 deg``. The interval may cross 0 deg.
+
+CORSIKA limits lookup
+---------------------
 corsika_limits (str, optional)
-    Path to the lookup table for simulation limits. The table should contain
-    varying azimuth and/or zenith angles for the selected array layout.
-output_file (str, optional, default='job_grid.ecsv')
-    Output file for the generated executable job grid.
+    Path to an ECSV lookup table with direction-dependent CORSIKA simulation
+    limits for the selected array layout. When provided, simtools interpolates
+    limits at each grid point using zenith, azimuth, and the model-version
+    dependent ``nsb_rate``. The configured ``energy_range``, ``core_scatter``,
+    and ``view_cone`` values remain absolute bounds:
+
+    - the lower energy is raised when the lookup threshold is above the
+      configured minimum;
+    - the upper energy is clipped by configured maximum energy and optional
+      zenith scaling;
+    - ``core_scatter_max`` and ``view_cone_max`` are clipped by the configured
+      maxima and lookup limits;
+    - grid points whose selected lower energy is above the selected upper energy
+      are skipped.
+
+Run statistics
+--------------
+showers_per_run (int)
+    Baseline number of CORSIKA showers per run. This value can be modified per
+    energy bin with ``showers_per_run_power_law`` and per zenith angle with
+    ``showers_per_run_scaling``.
+number_of_runs (int, optional)
+    Number of runs generated for each production grid point and energy range.
+    Use either ``number_of_runs`` or ``total_showers``.
+total_showers (int, optional)
+    Requested total shower count per production grid point and energy range.
+    simtools derives the number of runs from ``showers_per_run``. If the total
+    is not divisible by the selected showers per run, the number of runs is
+    rounded up so all generated runs have the same shower count.
+total_showers_scaling (str, optional)
+    Scaling mode for ``total_showers`` before deriving the number of runs.
+    ``fixed`` keeps the configured total. ``zenith_scaled`` applies
+    ``total_showers * exp(factor * (cos(zenith_angle) - 1))``. Default is
+    ``fixed``.
+zenith_angle_scaling_factor (float, optional)
+    Factor used by ``total_showers_scaling=zenith_scaled``. The default is
+    configured in simtools defaults.
 showers_per_run_power_law (tuple, optional)
-    Scale showers per run with energy as
-    ``<power_index> <reference_energy_value> <reference_energy_unit>``
-    (example: ``--showers_per_run_power_law -2.0 1 TeV``).
-    Use for fixed energy simulations only.
+    Energy-dependent showers-per-run scaling as
+    ``<power_index> <reference_energy_value> <reference_energy_unit>``. simtools
+    uses the logarithmic energy-bin midpoint and applies
+    ``showers_per_run * (E_mid / E_ref) ** power_index``. Example:
+    ``--showers_per_run_power_law -2.0 1 TeV``.
 showers_per_run_scaling (str, optional)
-    Zenith-angle showers-per-run scaling mode.
-    ``fixed`` keeps showers per run unchanged.
-    ``cosine_zenith`` applies ``showers_per_run * cos(zenith_angle)``
-    (example: ``--showers_per_run_scaling cosine_zenith``).
+    Zenith-dependent showers-per-run scaling mode. ``fixed`` keeps the current
+    showers-per-run value. ``cosine_zenith`` applies
+    ``showers_per_run * cos(zenith_angle)`` and rounds up to at least one
+    shower. Default is ``fixed``.
+run_number_offset (int, optional)
+    Offset added to generated run numbers. Default is ``0``.
+
+Energy scaling
+--------------
 energy_max_scaling (tuple, optional)
-    Scale max energy with zenith angle as
-    ``energy_max_scaling_reference * cos(zenith_angle) ** power_index``.
-    Provide as ``<power_index> <reference_energy_value> <reference_energy_unit>``.
-    Disabled by default (``None``).
-    Example: ``--energy_max_scaling -2.5 300 TeV``.
+    Zenith-dependent maximum-energy scaling as
+    ``<power_index> <reference_energy_value> <reference_energy_unit>``.
+    simtools applies
+    ``E_max = reference_energy * cos(zenith_angle) ** power_index`` and clips
+    the result to the configured ``energy_range`` maximum. Example:
+    ``--energy_max_scaling -2.5 300 TeV``.
+energy_max_scaling_index (float, optional)
+    Legacy hidden option for zenith-dependent maximum-energy scaling. Prefer
+    ``energy_max_scaling`` for new configurations.
+
+Output
+------
+output_file (str, optional)
+    Output ECSV file for the generated job grid. The path is resolved through
+    the simtools output handler. The output rows include ``nsb_rate`` resolved
+    from the selected ``site`` and ``model_version``. Default is
+    ``job_grid.ecsv``.
 
 
 Example
@@ -73,7 +203,6 @@ To generate a standard zenith/azimuth grid of simulation points, execute:
             --array_layout_name alpha \
             --axis azimuth 310 deg 20 deg 3 linear \
             --axis zenith 30 deg 40 deg 2 linear \
-            --axis nsb 4 MHz 5 MHz 2 linear \
             --axis offset 0 deg 10 deg 2 linear \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
 
@@ -86,7 +215,6 @@ execute:
             --array_layout_name alpha \
             --axis ra 0 deg 360 deg 36 linear \
             --axis dec -90 deg 90 deg 18 linear \
-            --axis nsb 4 MHz 4 MHz 1 linear \
             --axis offset 0 deg 10 deg 2 linear \
             --time_of_observation "2017-09-16 00:00:00" \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
@@ -100,7 +228,6 @@ full zenith coverage from 0 to 70 deg and a directed azimuth window), execute:
             --array_layout_name alpha \
             --axis ra 0 deg 360 deg 1 linear \
             --axis dec -40 deg 80 deg 1 linear \
-            --axis nsb 4 MHz 4 MHz 1 linear \
             --axis offset 0 deg 10 deg 2 linear \
             --direction_grid_density 0.25 1/deg^2 \
             --local_zenith_range 0 deg 70 deg \
@@ -130,6 +257,7 @@ def _add_arguments(parser):
         help=(
             "Compact axis definition: --axis <name> <min> <unit> <max> <unit> <binning> "
             "[scaling]. May be repeated. "
+            "Supported axes: azimuth, zenith, ra, dec, offset. "
             "Options for scaling are: linear, log, 1/cos"
         ),
     )
@@ -138,7 +266,8 @@ def _add_arguments(parser):
         type=str,
         required=False,
         help=(
-            "Observation time in UTC (format: 'YYYY-MM-DD HH:MM:SS'). Used only in 'ra_dec' mode."
+            "Observation time in UTC (format: 'YYYY-MM-DD HH:MM:SS'). "
+            "Used when RA/Dec axes are configured."
         ),
     )
     parser.add_argument(
@@ -148,8 +277,8 @@ def _add_arguments(parser):
         default=None,
         help=(
             "Direction-grid density in 1/deg^2. If set, direction-axis binning is "
-            "derived from axis ranges and this density. In ra_dec mode, use "
-            "local_zenith_range/local_azimuth_range to filter generated points in local sky."
+            "derived from axis ranges and this density. With RA/Dec axes, use "
+            "local_zenith_range/local_azimuth_range to filter generated points."
         ),
     )
     parser.add_argument(
@@ -182,20 +311,19 @@ def _add_arguments(parser):
         "--corsika_limits",
         type=str,
         required=False,
-        help="Path to the lookup table for simulation limits. "
-        "Table required with varying azimuth and or zenith angle. ",
+        help="Path to the lookup table for simulation limits. ",
     )
     parser.add_argument(
         "--number_of_runs",
         help="Number of runs to be simulated.",
-        type=int,
+        type=parser.scientific_int,
         required=False,
         default=None,
     )
     parser.add_argument(
         "--total_showers",
         help="Total number of showers to simulate.",
-        type=int,
+        type=parser.scientific_int,
         required=False,
         default=None,
     )
@@ -248,7 +376,8 @@ def _add_arguments(parser):
             "Scale max energy with zenith angle as "
             "energy_max_scaling_reference * cos(zenith_angle) ** power_index. "
             "Provide: <power_index> <reference_energy_value> <reference_energy_unit> "
-            "(for example: --energy_max_scaling -2.5 300 TeV)."
+            "(for example: --energy_max_scaling -2.5 300 TeV). "
+            "Max energy is limited by the configured energy_range."
         ),
         nargs=3,
         type=str,
