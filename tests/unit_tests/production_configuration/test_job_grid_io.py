@@ -121,11 +121,11 @@ def test_job_grid_density_schema_matches_serialized_required_columns():
     schema = ascii_handler.collect_data_from_file(
         SCHEMA_PATH / "job_grid_density.schema.yml",
     )
-    required_columns = [
-        column["name"] for column in schema["data"][0]["table_columns"] if column.get("required")
-    ]
+    table_columns = schema["data"][0]["table_columns"]
+    required_columns = [column["name"] for column in table_columns if column.get("required")]
 
     assert required_columns == job_grid_io.JOB_GRID_COLUMNS
+    assert all("unit" not in column for column in table_columns)
 
 
 def test_serialize_job_grid_rejects_non_ecsv_output(tmp_test_directory):
