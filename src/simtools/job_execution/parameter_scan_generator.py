@@ -6,18 +6,6 @@ For each cartesian combination of scan parameters, one overwrite YAML file is
 created dynamically from the inline ``overwrite`` block in the scan configuration,
 and each base grid row is duplicated with the overwrite file path and a scan
 label attached.
-
-Use with the three-step workflow::
-
-    simtools-production-generate-grid --output_file base_grid.ecsv ...
-    simtools-generate-parameter-scan-grid \
-        --job_grid_file base_grid.ecsv \
-        --scan_config scan.yaml \
-        --output_file scan_grid.ecsv
-    simtools-simulate-prod-htcondor-generator \
-        --job_grid_file scan_grid.ecsv \
-        --output_path htcondor_submit \
-        --apptainer_image ...
 """
 
 import itertools
