@@ -7,8 +7,8 @@ meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/si
 meta_schema_version: 0.1.0
 name: production_generate_grid_density
 description: |-
-  Executable CORSIKA/sim_telarray job grid produced by production_generate_grid
-  for direction-grid-density driven sampling.
+  Job grid for simulation production (including CORSIKA/sim_telarray) with
+  configuration parameters.
 data:
   - type: data_table
     table_columns:
