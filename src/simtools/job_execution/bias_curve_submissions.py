@@ -42,7 +42,7 @@ _logger = logging.getLogger(__name__)
 _PARAMETER_VERSION = "2.0.0"
 
 _NSB_ENERGY_RANGE = "20 MeV 25 MeV"
-_PROTON_ENERGY_RANGE = "800 GeV 2000 GeV"
+_PROTON_ENERGY_RANGE = "2 GeV 2000 GeV"
 _NSB_SCALING_FACTOR = 2
 
 _ASUM_THRESHOLDS = [220, 230, 240, 250, 260, 270, 280, 290, 300]
@@ -159,6 +159,17 @@ def _format_threshold_value(threshold):
     return int(threshold) if float(threshold).is_integer() else threshold
 
 
+def _threshold_label(threshold_param, threshold_value):
+    """Return a compact threshold label suitable for generated file names."""
+    short_parameter_name = threshold_param.removesuffix("_threshold")
+    return f"{short_parameter_name}{threshold_value}"
+
+
+def _scan_label(curve_name, telescope, threshold_param, threshold_value):
+    """Return the full short label used for each bias-curve production job."""
+    return f"{telescope}_{curve_name}_{_threshold_label(threshold_param, threshold_value)}"
+
+
 def _build_proton_overwrite(telescopes, threshold, model_version):
     """Build overwrite YAML content for one proton threshold scan point."""
     threshold_value = _format_threshold_value(threshold)
@@ -242,7 +253,7 @@ def _build_overwrite_content(curve_name, telescopes, threshold, args):
     raise ValueError(f"Unsupported curve name '{curve_name}'.")
 
 
-def _generate_overwrite_files(curve_name, telescopes, args, curve_directory, label):
+def _generate_overwrite_files(curve_name, telescopes, args, curve_directory):
     """Write one overwrite YAML file per threshold value.
 
     Returns
@@ -279,8 +290,8 @@ def _generate_overwrite_files(curve_name, telescopes, args, curve_directory, lab
             args=args,
         )
 
-        scan_label = f"{threshold_param}_{threshold_value}"
-        overwrite_file = overwrite_dir / f"overwrite_{label}_{scan_label}.yaml"
+        scan_label = _scan_label(curve_name, telescope, threshold_param, threshold_value)
+        overwrite_file = overwrite_dir / f"overwrite_{scan_label}.yaml"
 
         with open(overwrite_file, "w", encoding="utf-8") as file_handle:
             yaml.safe_dump(content, file_handle, sort_keys=False)
@@ -366,8 +377,9 @@ def _generate_curve_submissions(curve_name, curve_definition, args, output_root)
     base_grid_file = curve_directory / "base_grid.ecsv"
     scan_grid_file = curve_directory / "scan_grid.ecsv"
 
-    base_label = args.get("label") or "bias_curve"
-    curve_label = f"{base_label}_{curve_name}"
+    # Keep generated simtools file names short. The per-job scan_label carries the
+    # unique information needed to avoid overwrites: telescope, curve, and threshold.
+    curve_label = curve_name
 
     _run_command(
         _simulation_to_cli_args(
@@ -385,7 +397,6 @@ def _generate_curve_submissions(curve_name, curve_definition, args, output_root)
         telescopes=args["telescopes"],
         args=args,
         curve_directory=curve_directory,
-        label=curve_label,
     )
 
     _build_scan_grid(

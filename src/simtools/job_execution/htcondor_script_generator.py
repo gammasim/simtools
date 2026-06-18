@@ -106,6 +106,7 @@ def _format_param_value(value, field_name):
         "apptainer_label",
         "pack_for_grid_register",
         "overwrite_model_parameters",
+        "scan_label",
         "telescope",
     ):
         return _sanitize_label_for_params(value)
@@ -365,17 +366,12 @@ def _get_submit_script(args_dict, params_fields=None):
         f"{bash_indices['view_cone_max_value']} "
         f'{bash_indices["view_cone_max_unit"]}"'
     )
-    energy_range_tag = (
-        f"erange-{bash_indices['energy_min_value']}{bash_indices['energy_min_unit']}-"
-        f"{bash_indices['energy_max_value']}{bash_indices['energy_max_unit']}"
-    )
-
     scan_label_block = ""
     if "scan_label" in params_fields:
         scan_label_block = (
             f'scan_label="{bash_indices["scan_label"]}"\n'
             'if [ -n "$scan_label" ]; then\n'
-            '    job_label="${job_label}_${scan_label}"\n'
+            '    job_label="$scan_label"\n'
             "fi\n"
         )
 
@@ -418,8 +414,7 @@ corsika_le_interaction="{bash_indices["corsika_le_interaction"]}"
 corsika_he_interaction="{bash_indices["corsika_he_interaction"]}"
 run_number="{bash_indices["run_number"]}"
 pack_for_grid_register="{bash_indices["pack_for_grid_register"]}"
-energy_range_tag="{energy_range_tag}"
-job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
+job_label="{label}"
 {scan_label_block}{overwrite_parameters_block}{telescope_block}
 
 simtools-simulate-prod \\
