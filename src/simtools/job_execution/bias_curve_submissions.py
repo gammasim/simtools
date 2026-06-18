@@ -160,14 +160,9 @@ def _format_threshold_value(threshold):
 
 
 def _threshold_label(threshold_param, threshold_value):
-    """Return a compact threshold label suitable for generated file names."""
+    """Return the compact threshold tag used as the simulation label."""
     short_parameter_name = threshold_param.removesuffix("_threshold")
     return f"{short_parameter_name}{threshold_value}"
-
-
-def _scan_label(curve_name, telescope, threshold_param, threshold_value):
-    """Return the full short label used for each bias-curve production job."""
-    return f"{telescope}_{curve_name}_{_threshold_label(threshold_param, threshold_value)}"
 
 
 def _build_proton_overwrite(telescopes, threshold, model_version):
@@ -290,7 +285,7 @@ def _generate_overwrite_files(curve_name, telescopes, args, curve_directory):
             args=args,
         )
 
-        scan_label = _scan_label(curve_name, telescope, threshold_param, threshold_value)
+        scan_label = _threshold_label(threshold_param, threshold_value)
         overwrite_file = overwrite_dir / f"overwrite_{scan_label}.yaml"
 
         with open(overwrite_file, "w", encoding="utf-8") as file_handle:
