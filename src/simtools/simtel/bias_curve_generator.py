@@ -1,6 +1,9 @@
 """Generate bias curves from NSB and proton trigger rates."""
 
 import logging
+import shutil
+import tarfile
+import tempfile
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -13,6 +16,9 @@ from simtools.simtel.nsb_trigger_calculator import derive_nsb_triggers
 from simtools.telescope_trigger_rates import telescope_trigger_rates
 
 _logger = logging.getLogger(__name__)
+_SIMTEL_LOG_SUFFIX = ".simtel.log.gz"
+_COPY_CHUNK_SIZE = 1024 * 1024
+_STAGING_DIR_NAME = ".simtools-nsb-logs"
 
 
 def generate_bias_curves(args):
@@ -143,39 +149,123 @@ def _get_telescope_name_from_layout(args):
 
 
 def _extract_nsb_rates(args, time_window):
-    """
-    Extract NSB trigger rates from log files.
-
-    Parameters
-    ----------
-    args : dict
-        Arguments including nsb_dir and optional nsb_table_output.
-    time_window : float
-        Time window in seconds.
-
-    Returns
-    -------
-    dict
-        NSB statistics by threshold.
-    """
+    """Extract NSB trigger rates from log_hist archives or direct sim_telarray logs."""
     nsb_dir = Path(args["nsb_dir"])
+
+    try:
+        direct_logs = list(nsb_dir.rglob(f"*{_SIMTEL_LOG_SUFFIX}"))
+        if direct_logs:
+            _logger.info(f"Found {len(direct_logs)} direct sim_telarray log file(s)")
+            return _run_nsb_trigger_derivation(nsb_dir, args, time_window)
+
+        log_hist_archives = list(nsb_dir.rglob("*.log_hist.tar.gz"))
+        if not log_hist_archives:
+            raise FileNotFoundError(
+                f"No *{_SIMTEL_LOG_SUFFIX} files or *.log_hist.tar.gz archives found in {nsb_dir}"
+            )
+
+        return _extract_archived_nsb_rates(args, nsb_dir, log_hist_archives, time_window)
+
+    except (FileNotFoundError, ValueError) as e:
+        _logger.warning(f"Could not extract NSB rates: {e}")
+        return {}
+
+
+def _extract_archived_nsb_rates(args, nsb_dir, log_hist_archives, time_window):
+    """Extract archived sim_telarray logs and derive NSB rates from them."""
+    staging_parent = _get_nsb_staging_parent(args, nsb_dir)
+
+    with tempfile.TemporaryDirectory(
+        prefix="simtools-nsb-logs-",
+        dir=staging_parent,
+    ) as tmp_dir:
+        tmp_dir = Path(tmp_dir)
+        n_extracted = _extract_simtel_logs_from_archives(log_hist_archives, tmp_dir)
+
+        if n_extracted == 0:
+            raise FileNotFoundError(
+                f"No *{_SIMTEL_LOG_SUFFIX} files found inside *.log_hist.tar.gz "
+                f"archives in {nsb_dir}"
+            )
+
+        _logger.info(f"Extracted {n_extracted} sim_telarray log file(s) to {tmp_dir}")
+
+        nsb_stats = _run_nsb_trigger_derivation(tmp_dir, args, time_window)
+        _logger.info(f"Found NSB rates for {len(nsb_stats)} thresholds")
+        return nsb_stats
+
+
+def _get_nsb_staging_parent(args, nsb_dir):
+    """
+    Return a non-public parent directory for temporary NSB log extraction.
+
+    Avoids /tmp to satisfy python:S5443.
+    """
+    if args.get("temporary_directory"):
+        staging_parent = Path(args["temporary_directory"])
+    else:
+        output_path = Path(args.get("output", nsb_dir))
+        output_parent = output_path if output_path.suffix == "" else output_path.parent
+        staging_parent = output_parent / _STAGING_DIR_NAME
+
+    staging_parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    return staging_parent
+
+
+def _run_nsb_trigger_derivation(root_dir, args, time_window):
+    """Run NSB trigger derivation on a directory containing *.simtel.log.gz files."""
     nsb_args = {
-        "root_dir": nsb_dir,
-        "pattern": "**/*.simtel.log.gz",
-        "output": args.get("nsb_table_output"),  # Write ECSV if specified
+        "root_dir": root_dir,
+        "pattern": f"**/*{_SIMTEL_LOG_SUFFIX}",
+        "output": args.get("nsb_table_output"),
         "time_window": time_window,
         "verbose": False,
     }
+    return derive_nsb_triggers(nsb_args)
 
+
+def _extract_simtel_logs_from_archives(archives, output_dir):
+    """Extract *.simtel.log.gz files from *.log_hist.tar.gz archives."""
+    n_extracted = 0
+
+    for archive in sorted(archives):
+        n_extracted += _extract_simtel_logs_from_archive(archive, output_dir)
+
+    return n_extracted
+
+
+def _extract_simtel_logs_from_archive(archive, output_dir):
+    """Extract *.simtel.log.gz files from one *.log_hist.tar.gz archive."""
     try:
-        nsb_stats = derive_nsb_triggers(nsb_args)
-        _logger.info(f"Found NSB rates for {len(nsb_stats)} thresholds")
-        return nsb_stats
-    except (FileNotFoundError, ValueError) as e:
-        # FileNotFoundError: no log files found
-        # ValueError: no log files could be parsed successfully
-        _logger.warning(f"Could not extract NSB rates: {e}")
-        return {}
+        with tarfile.open(archive, "r:gz") as tar:
+            return sum(
+                _extract_simtel_log_member(tar, member, output_dir) for member in tar.getmembers()
+            )
+
+    except tarfile.TarError as e:
+        _logger.warning(f"Could not read archive {archive}: {e}")
+        return 0
+
+
+def _extract_simtel_log_member(tar, member, output_dir):
+    """Extract one tar member if it is a sim_telarray log file."""
+    member_name = Path(member.name).name
+
+    if not (member.isfile() and member_name.endswith(_SIMTEL_LOG_SUFFIX)):
+        return 0
+
+    source = tar.extractfile(member)
+    if source is None:
+        return 0
+
+    _write_tar_member_to_file(source, output_dir / member_name)
+    return 1
+
+
+def _write_tar_member_to_file(source, target):
+    """Write a tar member stream to disk."""
+    with source, target.open("wb") as output:
+        shutil.copyfileobj(source, output, length=_COPY_CHUNK_SIZE)
 
 
 def _extract_proton_rates(args):
