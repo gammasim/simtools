@@ -2,32 +2,10 @@
 
 import urllib.error
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 
-from simtools.applications import generate_test_resource
-
-
-def test_parse_args(monkeypatch):
-    monkeypatch.setattr(
-        "sys.argv",
-        [
-            "generate_test_resource.py",
-            "--test_directory",
-            "../simtools-tests",
-            "--simtools_version",
-            "v0.32.0",
-            "--download_only",
-        ],
-    )
-
-    args = generate_test_resource.parse_args()
-
-    assert args.test_directory == Path("../simtools-tests")
-    assert args.simtools_version == "v0.32.0"
-    assert args.download_only is True
-    assert not hasattr(args, "config_glob")
+from simtools.testing import resource_generation
 
 
 def test_download_files(tmp_test_directory, monkeypatch):
@@ -48,10 +26,10 @@ files:
         Path(destination).write_text("value\n", encoding="utf-8")
         return destination, None
 
-    monkeypatch.setattr(generate_test_resource.urllib.request, "urlretrieve", _fake_urlretrieve)
+    monkeypatch.setattr(resource_generation.urllib.request, "urlretrieve", _fake_urlretrieve)
 
     resources_dir = Path(tmp_test_directory) / "resources"
-    generate_test_resource.download_files(config_file=config_file, target_dir=resources_dir)
+    resource_generation.download_files(config_file=config_file, target_dir=resources_dir)
 
     assert (resources_dir / "folder" / "test.csv").exists()
 
@@ -69,9 +47,7 @@ files:
     )
 
     with pytest.raises(ValueError, match="missing required keys: target_path"):
-        generate_test_resource.download_files(
-            config_file=config_file, target_dir=tmp_test_directory
-        )
+        resource_generation.download_files(config_file=config_file, target_dir=tmp_test_directory)
 
 
 def test_download_files_download_failure(tmp_test_directory, monkeypatch):
@@ -90,12 +66,10 @@ files:
     def _fail_urlretrieve(url, destination):
         raise urllib.error.HTTPError(url, 404, "Not Found", {}, None)
 
-    monkeypatch.setattr(generate_test_resource.urllib.request, "urlretrieve", _fail_urlretrieve)
+    monkeypatch.setattr(resource_generation.urllib.request, "urlretrieve", _fail_urlretrieve)
 
     with pytest.raises(FileNotFoundError, match="Failed to download 'test file'"):
-        generate_test_resource.download_files(
-            config_file=config_file, target_dir=tmp_test_directory
-        )
+        resource_generation.download_files(config_file=config_file, target_dir=tmp_test_directory)
 
 
 def test_run_configured_applications_runs_all_configs(tmp_test_directory, monkeypatch):
@@ -115,9 +89,11 @@ def test_run_configured_applications_runs_all_configs(tmp_test_directory, monkey
     def _fake_run_applications(config_dict, **kwargs):
         called_configs.append((config_dict, kwargs))
 
-    monkeypatch.setattr("simtools.runners.simtools_runner.run_applications", _fake_run_applications)
+    monkeypatch.setattr(
+        resource_generation.simtools_runner, "run_applications", _fake_run_applications
+    )
 
-    generate_test_resource.run_configured_applications(
+    resource_generation.run_configured_applications(
         config_dir=config_root,
         log_dir=Path(tmp_test_directory) / "log_files",
         replacements={"__SIMTOOLS_VERSION__": "v0.32.0"},
@@ -147,9 +123,11 @@ def test_run_configured_applications_reuses_runtime(tmp_test_directory, monkeypa
     def _fake_run_applications(config_dict, **kwargs):
         called_configs.append((config_dict, kwargs))
 
-    monkeypatch.setattr("simtools.runners.simtools_runner.run_applications", _fake_run_applications)
+    monkeypatch.setattr(
+        resource_generation.simtools_runner, "run_applications", _fake_run_applications
+    )
 
-    generate_test_resource.run_configured_applications(
+    resource_generation.run_configured_applications(
         config_dir=config_root,
         log_dir=Path(tmp_test_directory) / "log_files",
         ignore_runtime_environment=False,
@@ -175,14 +153,14 @@ def test_get_resource_generation_directory(tmp_test_directory):
     expected.mkdir(parents=True)
 
     assert (
-        generate_test_resource.get_resource_generation_directory(tmp_test_directory, "v0.32.0")
+        resource_generation.get_resource_generation_directory(tmp_test_directory, "v0.32.0")
         == expected
     )
 
 
 def test_get_resource_generation_directory_missing(tmp_test_directory):
     with pytest.raises(FileNotFoundError, match="Resource-generation directory"):
-        generate_test_resource.get_resource_generation_directory(tmp_test_directory, "v0.32.0")
+        resource_generation.get_resource_generation_directory(tmp_test_directory, "v0.32.0")
 
 
 def test_download_files_replaces_version_placeholder(tmp_test_directory, monkeypatch):
@@ -202,9 +180,9 @@ def test_download_files_replaces_version_placeholder(tmp_test_directory, monkeyp
         called_urls.append(url)
         Path(destination).write_text("value\n", encoding="utf-8")
 
-    monkeypatch.setattr(generate_test_resource.urllib.request, "urlretrieve", _fake_urlretrieve)
+    monkeypatch.setattr(resource_generation.urllib.request, "urlretrieve", _fake_urlretrieve)
 
-    generate_test_resource.download_files(
+    resource_generation.download_files(
         config_file=config_file,
         target_dir=tmp_test_directory,
     )
@@ -223,13 +201,81 @@ def test_download_files_requires_configured_version(tmp_test_directory):
     )
 
     with pytest.raises(ValueError, match="No GitLab version configured"):
-        generate_test_resource.download_files(
+        resource_generation.download_files(
             config_file=config_file,
             target_dir=tmp_test_directory,
         )
 
 
-def test_main_download_only_does_not_run_applications(tmp_test_directory, monkeypatch):
+def test_validate_static_files(tmp_test_directory):
+    static_dir = Path(tmp_test_directory) / "static"
+    static_dir.mkdir()
+    (static_dir / "fixture.txt").write_text("abc", encoding="utf-8")
+    manifest = static_dir / "static_manifest.yml"
+    manifest.write_text(
+        "files:\n"
+        "- file_name: fixture.txt\n"
+        "  sha256: ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\n",
+        encoding="utf-8",
+    )
+
+    resource_generation.validate_static_files(manifest)
+
+
+def test_validate_static_files_reports_all_errors(tmp_test_directory):
+    static_dir = Path(tmp_test_directory) / "static"
+    static_dir.mkdir()
+    (static_dir / "changed.txt").write_text("changed", encoding="utf-8")
+    (static_dir / "unlisted.txt").write_text("unlisted", encoding="utf-8")
+    manifest = static_dir / "static_manifest.yml"
+    manifest.write_text(
+        "files:\n"
+        "- file_name: changed.txt\n"
+        "  sha256: ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\n"
+        "- file_name: missing.txt\n"
+        "  sha256: ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match=r"Checksum mismatch: changed.txt") as exc_info:
+        resource_generation.validate_static_files(manifest)
+
+    assert "Checksum mismatch: changed.txt" in str(exc_info.value)
+    assert "Missing static file: missing.txt" in str(exc_info.value)
+    assert "File not listed in manifest: unlisted.txt" in str(exc_info.value)
+
+
+def test_generate_test_resources_tests_static_files_only(tmp_test_directory, monkeypatch):
+    integration_test_dir = (
+        Path(tmp_test_directory) / "simtools-tests" / "v0.32.0" / "integration_tests"
+    )
+    manifest = integration_test_dir / "static" / "static_manifest.yml"
+    manifest.parent.mkdir(parents=True)
+    manifest.write_text("files: []\n", encoding="utf-8")
+    calls = []
+    monkeypatch.setattr(
+        resource_generation,
+        "validate_static_files",
+        lambda path: calls.append(path),
+    )
+    monkeypatch.setattr(
+        resource_generation,
+        "download_files",
+        lambda *_: pytest.fail("download_files must not be called"),
+    )
+
+    resource_generation.generate_test_resources(
+        test_directory=tmp_test_directory,
+        simtools_version="v0.32.0",
+        test_static_files=True,
+    )
+
+    assert calls == [manifest]
+
+
+def test_generate_test_resources_download_only_does_not_run_applications(
+    tmp_test_directory, monkeypatch
+):
     config_dir = (
         Path(tmp_test_directory)
         / "simtools-tests"
@@ -241,29 +287,21 @@ def test_main_download_only_does_not_run_applications(tmp_test_directory, monkey
     (config_dir / "download_files.yml").write_text("files: []\n", encoding="utf-8")
     called = []
     monkeypatch.setattr(
-        generate_test_resource,
-        "parse_args",
-        lambda: SimpleNamespace(
-            test_directory=Path(tmp_test_directory),
-            simtools_version="v0.32.0",
-            download_only=True,
-            runtime_environment_file=None,
-            ignore_runtime_environment=None,
-            overwrite_collection_files=False,
-        ),
-    )
-    monkeypatch.setattr(
-        generate_test_resource,
+        resource_generation,
         "run_configured_applications",
         lambda **kwargs: called.append(kwargs),
     )
 
-    generate_test_resource.main()
+    resource_generation.generate_test_resources(
+        test_directory=tmp_test_directory,
+        simtools_version="v0.32.0",
+        download_only=True,
+    )
 
     assert called == []
 
 
-def test_main_prepares_shared_runtime_once(tmp_test_directory, monkeypatch):
+def test_generate_test_resources_prepares_shared_runtime_once(tmp_test_directory, monkeypatch):
     config_dir = (
         Path(tmp_test_directory)
         / "simtools-tests"
@@ -276,31 +314,23 @@ def test_main_prepares_shared_runtime_once(tmp_test_directory, monkeypatch):
     runtime_file = Path(tmp_test_directory) / "runtime.yml"
     prepare_mock = []
     run_calls = []
-    monkeypatch.setattr(
-        generate_test_resource,
-        "parse_args",
-        lambda: SimpleNamespace(
-            test_directory=Path(tmp_test_directory),
-            simtools_version="v0.32.0",
-            download_only=False,
-            runtime_environment_file=runtime_file,
-            ignore_runtime_environment=None,
-            overwrite_collection_files=False,
-        ),
-    )
 
     def _prepare(path):
         prepare_mock.append(path)
         return {"image": "image"}, ["podman", "run", "image"]
 
-    monkeypatch.setattr(generate_test_resource, "prepare_runtime_environment", _prepare)
+    monkeypatch.setattr(resource_generation, "prepare_runtime_environment", _prepare)
     monkeypatch.setattr(
-        generate_test_resource,
+        resource_generation,
         "run_configured_applications",
         lambda **kwargs: run_calls.append(kwargs),
     )
 
-    generate_test_resource.main()
+    resource_generation.generate_test_resources(
+        test_directory=tmp_test_directory,
+        simtools_version="v0.32.0",
+        runtime_environment_file=runtime_file,
+    )
 
     assert prepare_mock == [runtime_file]
     assert run_calls[0]["ignore_runtime_environment"] is False

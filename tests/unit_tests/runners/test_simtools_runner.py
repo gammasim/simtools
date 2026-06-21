@@ -458,6 +458,7 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
 
 
 def test_run_applications_uses_log_file_override(monkeypatch, tmp_test_directory):
+    tmp_test_directory = Path(tmp_test_directory)
     default_log = tmp_test_directory / "tmp_application_output" / "simtools.log"
     requested_log = tmp_test_directory / "log_files" / "workflow.log"
     monkeypatch.setattr(
