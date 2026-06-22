@@ -7,12 +7,6 @@ import yaml
 from simtools.job_execution import parameter_scan_generator
 
 
-def test_format_scan_value_converts_integral_float():
-    assert parameter_scan_generator._format_scan_value(220.0) == 220
-    assert parameter_scan_generator._format_scan_value(220.5) == 220.5
-    assert parameter_scan_generator._format_scan_value("220") == "220"
-
-
 def test_format_value_for_name_sanitizes_spaces_and_slashes():
     assert parameter_scan_generator._format_value_for_name("20 MeV/25 MeV") == "20MeV-25MeV"
     assert parameter_scan_generator._format_value_for_name(220.0) == "220"

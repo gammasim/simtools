@@ -83,7 +83,7 @@ Example
         --view_cone "0 deg 5 deg" \
         --number_of_runs 10 \
         --nsb_scaling_factor 2 \
-        --apptainer_image ./simtools-output/simtools.sif \
+        --apptainer_image /path/to/image.sif \
         --label LSTN1_7-0-0_dark \
         --output_path ./bias_curves \
         --priority 5
