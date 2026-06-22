@@ -78,6 +78,15 @@ def test_add_arguments_accepts_zenith_angle_scaling_factor():
     assert args.zenith_angle_scaling_factor == pytest.approx(2.5)
 
 
+def test_add_arguments_accepts_max_total_showers_rounding_warnings():
+    parser = CommandLineParser()
+    app._add_arguments(parser)
+
+    args = parser.parse_args(["--max_total_showers_rounding_warnings", "7"])
+
+    assert args.max_total_showers_rounding_warnings == 7
+
+
 def test_add_arguments_accepts_direction_grid_density():
     parser = CommandLineParser()
     app._add_arguments(parser)

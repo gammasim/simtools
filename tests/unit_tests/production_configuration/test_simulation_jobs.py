@@ -1031,6 +1031,41 @@ def test_build_rows_for_point_rounds_total_showers_up_with_warning(caplog):
     assert "adjusting to 3000 to keep equal showers per run" in caplog.text
 
 
+def test_build_rows_for_point_caps_total_showers_rounding_warnings(caplog):
+    caplog.set_level("WARNING")
+
+    _build_rows_for_point(
+        point_base={"primary": "gamma", "zenith_angle": 20 * u.deg},
+        energy_ranges=[(30 * u.GeV, 100 * u.GeV)] * 4,
+        lower_energy_threshold=None,
+        showers_per_run=1000,
+        showers_per_run_power_law=None,
+        number_of_runs=1,
+        total_showers=2500,
+        total_showers_scaling="fixed",
+        run_number=1,
+        rounding_warning_state={
+            "emitted_warnings": 0,
+            "max_warnings": 2,
+            "suppression_warning_emitted": False,
+        },
+    )
+
+    detailed_warning_messages = [
+        record.message
+        for record in caplog.records
+        if "adjusting to 3000 to keep equal showers per run" in record.message
+    ]
+    suppression_warning_messages = [
+        record.message
+        for record in caplog.records
+        if "further total_showers rounding warnings will be suppressed" in record.message
+    ]
+
+    assert len(detailed_warning_messages) == 2
+    assert len(suppression_warning_messages) == 1
+
+
 def test_build_rows_for_point_scales_total_showers_with_zenith_scaled():
     rows = _build_rows_for_point(
         point_base={"primary": "gamma", "zenith_angle": 60 * u.deg},

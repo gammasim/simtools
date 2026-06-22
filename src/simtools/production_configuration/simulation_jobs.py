@@ -35,6 +35,8 @@ from simtools.utils.value_conversion import get_value_as_quantity
 
 logger = logging.getLogger(__name__)
 
+TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT = 20
+
 _GRID_AXES = [
     "primary",
     "azimuth_angle",
@@ -855,6 +857,7 @@ def _compute_per_point_runs(
     total_showers_scaling,
     selected_showers_per_run,
     zenith_angle_scaling_factor,
+    rounding_warning_state=None,
 ):
     """Compute the number of runs per point considering total-showers constraints."""
     effective_total_showers = _scale_total_showers(
@@ -871,13 +874,27 @@ def _compute_per_point_runs(
     per_point_number_of_runs = number_of_full_runs + int(remainder_showers > 0)
     if remainder_showers > 0:
         adjusted_total_showers = per_point_number_of_runs * selected_showers_per_run
-        logger.warning(
-            "total_showers=%s is not divisible by showers_per_run=%s; "
-            "adjusting to %s to keep equal showers per run.",
-            effective_total_showers,
-            selected_showers_per_run,
-            adjusted_total_showers,
-        )
+        should_log_warning = True
+        if rounding_warning_state is not None:
+            if rounding_warning_state["emitted_warnings"] >= rounding_warning_state["max_warnings"]:
+                should_log_warning = False
+                if not rounding_warning_state.get("suppression_warning_emitted", False):
+                    logger.warning(
+                        "Reached max_total_showers_rounding_warnings=%s; further total_showers "
+                        "rounding warnings will be suppressed.",
+                        rounding_warning_state["max_warnings"],
+                    )
+                    rounding_warning_state["suppression_warning_emitted"] = True
+            else:
+                rounding_warning_state["emitted_warnings"] += 1
+        if should_log_warning:
+            logger.warning(
+                "total_showers=%s is not divisible by showers_per_run=%s; "
+                "adjusting to %s to keep equal showers per run.",
+                effective_total_showers,
+                selected_showers_per_run,
+                adjusted_total_showers,
+            )
     return per_point_number_of_runs
 
 
@@ -894,6 +911,7 @@ def _build_rows_for_point(
     showers_per_run_scaling="fixed",
     energy_max_scaling=None,
     zenith_angle_scaling_factor=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
+    rounding_warning_state=None,
 ):
     """Build all simulation-run rows for a single grid point across all energy ranges."""
     rows = []
@@ -926,6 +944,7 @@ def _build_rows_for_point(
                 total_showers_scaling,
                 selected_showers_per_run,
                 zenith_angle_scaling_factor,
+                rounding_warning_state=rounding_warning_state,
             )
 
         for i in range(per_point_number_of_runs):
@@ -1228,6 +1247,19 @@ def build_simulation_jobs(args_dict):
             defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
         )
     )
+    rounding_warning_state = {
+        "emitted_warnings": 0,
+        "max_warnings": max(
+            0,
+            int(
+                args_dict.get(
+                    "max_total_showers_rounding_warnings",
+                    TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
+                )
+            ),
+        ),
+        "suppression_warning_emitted": False,
+    }
     energy_max_scaling = _resolve_energy_max_scaling(args_dict)
 
     if total_showers is not None and args_dict.get("number_of_runs") is not None:
@@ -1298,6 +1330,7 @@ def build_simulation_jobs(args_dict):
                     run_number=run_number,
                     energy_max_scaling=energy_max_scaling,
                     zenith_angle_scaling_factor=zenith_angle_scaling_factor,
+                    rounding_warning_state=rounding_warning_state,
                 )
             )
     _log_generated_row_summary(rows)
