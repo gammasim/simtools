@@ -46,5 +46,5 @@ files:
     description: Example configuration file for testing camera efficiency changes.
   - file_name: plot_single_pe_config_from_ecsv_file.yml
     description: Plotting configuration example.
-  - file_name: tests/resources/static/plot_single_pe_config_data_from_legacy_csv.yml
-    description: Plotting configuration example (legacy cvs input)
+  - file_name: plot_single_pe_config_data_from_legacy_csv.yml
+    description: Plotting configuration example (legacy csv input)
