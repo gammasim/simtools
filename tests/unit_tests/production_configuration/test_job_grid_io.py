@@ -12,6 +12,7 @@ from simtools.production_configuration import job_grid_io
 def _job_rows():
     return [
         {
+            "run_number": 10,
             "primary": "gamma",
             "azimuth_angle": 45 * u.deg,
             "zenith_angle": 20 * u.deg,
@@ -29,7 +30,6 @@ def _job_rows():
             "array_layout_name": "CTAO-North-Alpha",
             "corsika_le_interaction": "urqmd",
             "corsika_he_interaction": "epos",
-            "run_number": 10,
         }
     ]
 
