@@ -107,12 +107,13 @@ def get_log_file(args_dict):
         return None
     if args_dict.get("log_file") is not None:
         return args_dict["log_file"]
-    if args_dict.get("application_label") is None or args_dict.get("output_path") is None:
+    log_file_path = args_dict.get("log_file_path") or args_dict.get("output_path")
+    if args_dict.get("application_label") is None or log_file_path is None:
         return None
 
     log_file = f"{args_dict['application_label']}_{config.activity_id}.log"
-    Path(args_dict["output_path"]).mkdir(parents=True, exist_ok=True)
-    return Path(args_dict["output_path"]) / log_file
+    Path(log_file_path).mkdir(parents=True, exist_ok=True)
+    return Path(log_file_path) / log_file
 
 
 class RedactFilter(logging.Filter):
