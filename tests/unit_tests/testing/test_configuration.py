@@ -96,6 +96,38 @@ applications:
     )
 
 
+def test_resolve_test_resource_path_macros_nested_structures():
+    value = {
+        "config": {
+            "input": "${static:data/file.ecsv}",
+            "groups": [
+                "prefix/${generated:run/output.fits}",
+                {
+                    "items": [
+                        "${static:layout/array.ecsv}",
+                        "${generated:plots/summary.png}",
+                    ],
+                    "keep_number": 7,
+                    "keep_bool": True,
+                },
+            ],
+        },
+        "plain": "no_macro",
+    }
+
+    resolved = configuration._resolve_test_resource_path_macros(value)
+
+    assert resolved["config"]["input"] == "tests/resources/static/data/file.ecsv"
+    assert resolved["config"]["groups"][0] == "prefix/tests/resources/generated/run/output.fits"
+    assert resolved["config"]["groups"][1]["items"][0] == "tests/resources/static/layout/array.ecsv"
+    assert (
+        resolved["config"]["groups"][1]["items"][1] == "tests/resources/generated/plots/summary.png"
+    )
+    assert resolved["config"]["groups"][1]["keep_number"] == 7
+    assert resolved["config"]["groups"][1]["keep_bool"] is True
+    assert resolved["plain"] == "no_macro"
+
+
 def test_create_tmp_output_path(tmp_test_directory):
     config = {"application": "test_app", "test_name": "test_name"}
     tmp_output_path = configuration.create_tmp_output_path(tmp_test_directory, config)

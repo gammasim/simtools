@@ -667,8 +667,9 @@ def test_get_log_file_with_output_path(tmp_test_directory):
     assert output_path.exists()
 
 
-def test_get_log_file_with_log_file_path_preferred_over_output_path(tmp_path):
+def test_get_log_file_with_log_file_path_preferred_over_output_path(tmp_test_directory):
     """Test get_log_file uses log_file_path when provided."""
+    tmp_path = Path(tmp_test_directory)
     output_path = tmp_path / "output"
     log_path = tmp_path / "logs"
     args_dict = {
