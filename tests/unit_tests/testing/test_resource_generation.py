@@ -29,9 +29,12 @@ files:
     monkeypatch.setattr(resource_generation.urllib.request, "urlretrieve", _fake_urlretrieve)
 
     resources_dir = Path(tmp_test_directory) / "resources"
-    resource_generation.download_files(config_file=config_file, target_dir=resources_dir)
+    downloaded_files = resource_generation.download_files(
+        config_file=config_file, target_dir=resources_dir
+    )
 
     assert (resources_dir / "folder" / "test.csv").exists()
+    assert downloaded_files == [resources_dir / "folder" / "test.csv"]
 
 
 def test_download_files_missing_required_field(tmp_test_directory):
@@ -70,6 +73,30 @@ files:
 
     with pytest.raises(FileNotFoundError, match="Failed to download 'test file'"):
         resource_generation.download_files(config_file=config_file, target_dir=tmp_test_directory)
+
+
+def test_download_files_missing_configuration(tmp_test_directory):
+    with pytest.raises(FileNotFoundError, match="Download configuration file does not exist"):
+        resource_generation.download_files(
+            Path(tmp_test_directory) / "missing.yml", tmp_test_directory
+        )
+
+
+@pytest.mark.parametrize(
+    ("content", "match"),
+    [
+        ("- not-a-mapping\n", "must be a YAML mapping"),
+        ("files: {}\n", "key 'files' must be a list"),
+        ("gitlab_versions: []\nfiles: []\n", "key 'gitlab_versions' must be a dictionary"),
+        ("files:\n- invalid-entry\n", "Download entry 0 must be a dictionary"),
+    ],
+)
+def test_download_files_invalid_configuration(tmp_test_directory, content, match):
+    config_file = Path(tmp_test_directory) / "download_files.yml"
+    config_file.write_text(content, encoding="utf-8")
+
+    with pytest.raises(ValueError, match=match):
+        resource_generation.download_files(config_file, tmp_test_directory)
 
 
 def test_run_configured_applications_runs_all_configs(tmp_test_directory, monkeypatch):
@@ -245,6 +272,78 @@ def test_validate_static_files_reports_all_errors(tmp_test_directory):
     assert "File not listed in manifest: unlisted.txt" in str(exc_info.value)
 
 
+@pytest.mark.parametrize(
+    ("content", "expected_exception", "match"),
+    [
+        (None, FileNotFoundError, "Static-file manifest does not exist"),
+        ("files: {}\n", ValueError, "key 'files' must be a list"),
+    ],
+)
+def test_validate_static_files_invalid_manifest(
+    tmp_test_directory, content, expected_exception, match
+):
+    manifest = Path(tmp_test_directory) / "static_manifest.yml"
+    if content is not None:
+        manifest.write_text(content, encoding="utf-8")
+
+    with pytest.raises(expected_exception, match=match):
+        resource_generation.validate_static_files(manifest)
+
+
+def test_validate_static_files_invalid_entries(tmp_test_directory):
+    static_dir = Path(tmp_test_directory)
+    (static_dir / "fixture.txt").write_text("abc", encoding="utf-8")
+    manifest = static_dir / "static_manifest.yml"
+    manifest.write_text(
+        "files:\n"
+        "- file_name: missing-checksum.txt\n"
+        "- file_name: /absolute.txt\n"
+        "  sha256: unused\n"
+        "- file_name: fixture.txt\n"
+        "  sha256: ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\n"
+        "- file_name: fixture.txt\n"
+        "  sha256: ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="Static-file validation failed") as exc_info:
+        resource_generation.validate_static_files(manifest)
+
+    assert "requires file_name and sha256" in str(exc_info.value)
+    assert "Invalid manifest path: /absolute.txt" in str(exc_info.value)
+    assert "Duplicate manifest entry: fixture.txt" in str(exc_info.value)
+
+
+def test_prepare_runtime_environment(tmp_test_directory, monkeypatch):
+    runtime_file = Path(tmp_test_directory) / "runtime.yml"
+    runtime_file.write_text("runtime_environment:\n  image: test-image\n", encoding="utf-8")
+    monkeypatch.setattr(
+        resource_generation.simtools_runner,
+        "read_runtime_environment",
+        lambda config: ["runtime", config["image"]],
+    )
+
+    runtime_environment, run_time = resource_generation.prepare_runtime_environment(runtime_file)
+
+    assert runtime_environment == {"image": "test-image"}
+    assert run_time == ["runtime", "test-image"]
+
+
+@pytest.mark.parametrize(
+    ("content", "match"),
+    [
+        ("- invalid\n", "must be a YAML mapping"),
+        ("other: value\n", "must contain a 'runtime_environment' block"),
+    ],
+)
+def test_prepare_runtime_environment_invalid(tmp_test_directory, content, match):
+    runtime_file = Path(tmp_test_directory) / "runtime.yml"
+    runtime_file.write_text(content, encoding="utf-8")
+
+    with pytest.raises(ValueError, match=match):
+        resource_generation.prepare_runtime_environment(runtime_file)
+
+
 def test_generate_test_resources_tests_static_files_only(tmp_test_directory, monkeypatch):
     integration_test_dir = (
         Path(tmp_test_directory) / "simtools-tests" / "v0.32.0" / "integration_tests"
@@ -335,3 +434,92 @@ def test_generate_test_resources_prepares_shared_runtime_once(tmp_test_directory
     assert prepare_mock == [runtime_file]
     assert run_calls[0]["ignore_runtime_environment"] is False
     assert run_calls[0]["run_time"] == ["podman", "run", "image"]
+
+
+def test_generate_test_resources_ignores_supplied_runtime(tmp_test_directory, monkeypatch):
+    config_dir = (
+        Path(tmp_test_directory)
+        / "simtools-tests"
+        / "v0.32.0"
+        / "integration_tests"
+        / "config_files"
+    )
+    config_dir.mkdir(parents=True)
+    (config_dir / "download_files.yml").write_text("files: []\n", encoding="utf-8")
+    run_calls = []
+    monkeypatch.setattr(
+        resource_generation,
+        "prepare_runtime_environment",
+        lambda _: pytest.fail("runtime must not be prepared"),
+    )
+    monkeypatch.setattr(
+        resource_generation,
+        "run_configured_applications",
+        lambda **kwargs: run_calls.append(kwargs),
+    )
+
+    resource_generation.generate_test_resources(
+        test_directory=tmp_test_directory,
+        simtools_version="v0.32.0",
+        runtime_environment_file=Path(tmp_test_directory) / "runtime.yml",
+        ignore_runtime_environment=True,
+    )
+
+    assert run_calls[0]["ignore_runtime_environment"] is True
+    assert run_calls[0]["run_time"] is None
+
+
+def test_remove_empty_download_directories_edge_cases(tmp_test_directory):
+    target_dir = Path(tmp_test_directory) / "integration_tests"
+    removable_dir = target_dir / "temporary"
+    preserved_dir = target_dir / "generated"
+    nonempty_dir = target_dir / "nonempty"
+    removable_dir.mkdir(parents=True)
+    preserved_dir.mkdir()
+    nonempty_dir.mkdir()
+    (nonempty_dir / "kept.txt").write_text("content", encoding="utf-8")
+
+    resource_generation._remove_empty_download_directories(
+        [
+            Path(tmp_test_directory) / "outside" / "file.txt",
+            target_dir / "root-file.txt",
+            removable_dir / "removed.txt",
+            preserved_dir / "preserved.txt",
+            nonempty_dir / "removed.txt",
+        ],
+        target_dir,
+    )
+
+    assert not removable_dir.exists()
+    assert preserved_dir.is_dir()
+    assert nonempty_dir.is_dir()
+
+
+def test_generate_test_resources_removes_empty_download_directory(tmp_test_directory, monkeypatch):
+    integration_test_dir = (
+        Path(tmp_test_directory) / "simtools-tests" / "v0.32.0" / "integration_tests"
+    )
+    config_dir = integration_test_dir / "config_files"
+    config_dir.mkdir(parents=True)
+    (config_dir / "download_files.yml").write_text("files: []\n", encoding="utf-8")
+    downloaded_file = integration_test_dir / "folder" / "input.dat"
+
+    def _download_files(*_):
+        downloaded_file.parent.mkdir()
+        downloaded_file.write_text("input", encoding="utf-8")
+        return [downloaded_file]
+
+    def _run_configured_applications(**_):
+        downloaded_file.unlink()
+
+    monkeypatch.setattr(resource_generation, "download_files", _download_files)
+    monkeypatch.setattr(
+        resource_generation, "run_configured_applications", _run_configured_applications
+    )
+
+    resource_generation.generate_test_resources(
+        test_directory=tmp_test_directory,
+        simtools_version="v0.32.0",
+    )
+
+    assert not (integration_test_dir / "folder").exists()

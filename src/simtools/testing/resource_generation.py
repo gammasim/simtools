@@ -12,6 +12,13 @@ from simtools.runners import simtools_runner
 
 logger = logging.getLogger(__name__)
 STATIC_MANIFEST = "static_manifest.yml"
+_PRESERVED_INTEGRATION_TEST_DIRECTORIES = {
+    "config_files",
+    "generated",
+    "log_files",
+    "static",
+    "tmp_application_output",
+}
 
 
 def get_integration_test_directory(test_directory, simtools_version):
@@ -20,7 +27,7 @@ def get_integration_test_directory(test_directory, simtools_version):
     Parameters
     ----------
     test_directory : str or pathlib.Path
-        Root directory of the ``simtools-tests`` repository.
+        Root directory of the ``simtools-tests`` repository (or a directory containing it).
     simtools_version : str
         Version directory to use, for example ``v0.32.0``.
 
@@ -29,7 +36,13 @@ def get_integration_test_directory(test_directory, simtools_version):
     pathlib.Path
         Path to the release-specific ``integration_tests`` directory.
     """
-    return Path(test_directory) / "simtools-tests" / simtools_version / "integration_tests"
+    test_directory = Path(test_directory)
+    repo_root = (
+        test_directory / "simtools-tests"
+        if (test_directory / "simtools-tests").is_dir()
+        else test_directory
+    )
+    return repo_root / simtools_version / "integration_tests"
 
 
 def get_resource_generation_directory(test_directory, simtools_version):
@@ -116,6 +129,12 @@ def _validate_download_entry(entry, index):
     if missing_keys:
         raise ValueError(f"Download entry {index} missing required keys: {', '.join(missing_keys)}")
 
+    target_path = Path(entry["target_path"])
+    if target_path.is_absolute() or ".." in target_path.parts:
+        raise ValueError(
+            f"Download entry {index} has invalid target_path: {target_path.as_posix()}"
+        )
+
 
 def download_files(config_file, target_dir):
     """Download external files listed in a resource-generation configuration.
@@ -133,6 +152,11 @@ def download_files(config_file, target_dir):
         If the configuration or a remote file does not exist.
     ValueError
         If the configuration structure is invalid or a version placeholder is unresolved.
+
+    Returns
+    -------
+    list[pathlib.Path]
+        Downloaded file paths.
     """
     if not Path(config_file).is_file():
         raise FileNotFoundError(f"Download configuration file does not exist: {config_file}")
@@ -154,6 +178,7 @@ def download_files(config_file, target_dir):
     }
     file_entries = gen.replace_placeholders_recursively(file_entries, replacements)
 
+    downloaded_files = []
     for index, entry in enumerate(file_entries):
         _validate_download_entry(entry, index)
         url = entry["url"]
@@ -170,6 +195,28 @@ def download_files(config_file, target_dir):
             raise FileNotFoundError(
                 f"Failed to download '{entry['description']}' from {url}"
             ) from exc
+        downloaded_files.append(destination)
+    return downloaded_files
+
+
+def _remove_empty_download_directories(downloaded_files, target_dir):
+    """Remove empty nonstandard top-level directories created for downloads."""
+    target_dir = Path(target_dir).resolve()
+    candidate_directories = set()
+    for downloaded_file in downloaded_files or []:
+        try:
+            relative_path = Path(downloaded_file).resolve().relative_to(target_dir)
+        except ValueError:
+            continue
+        if len(relative_path.parts) > 1:
+            candidate_directories.add(target_dir / relative_path.parts[0])
+
+    for directory in sorted(candidate_directories):
+        if directory.name in _PRESERVED_INTEGRATION_TEST_DIRECTORIES:
+            continue
+        if directory.is_dir() and not any(directory.iterdir()):
+            directory.rmdir()
+            logger.info("Removed empty download directory %s", directory)
 
 
 def prepare_runtime_environment(runtime_environment_file):
@@ -208,6 +255,27 @@ def _calculate_sha256(file_path):
     return checksum.hexdigest()
 
 
+def _validate_static_manifest_entry(entry, index, static_dir, declared_files):
+    """Validate one static-file manifest entry and return discovered errors."""
+    if not isinstance(entry, dict) or not entry.get("file_name") or not entry.get("sha256"):
+        return [f"Manifest entry {index} requires file_name and sha256 values."]
+
+    relative_path = Path(entry["file_name"])
+    file_name = relative_path.as_posix()
+    if relative_path.is_absolute() or ".." in relative_path.parts:
+        return [f"Invalid manifest path: {file_name}"]
+    if file_name in declared_files:
+        return [f"Duplicate manifest entry: {file_name}"]
+
+    declared_files.add(file_name)
+    static_file = static_dir / relative_path
+    if not static_file.is_file():
+        return [f"Missing static file: {file_name}"]
+    if _calculate_sha256(static_file) != str(entry["sha256"]):
+        return [f"Checksum mismatch: {file_name}"]
+    return []
+
+
 def validate_static_files(manifest_file):
     """Validate static integration-test files against their manifest.
 
@@ -236,25 +304,7 @@ def validate_static_files(manifest_file):
     declared_files = set()
     errors = []
     for index, entry in enumerate(entries):
-        if not isinstance(entry, dict) or not entry.get("file_name") or not entry.get("sha256"):
-            errors.append(f"Manifest entry {index} requires file_name and sha256 values.")
-            continue
-
-        relative_path = Path(entry["file_name"])
-        file_name = relative_path.as_posix()
-        if relative_path.is_absolute() or ".." in relative_path.parts:
-            errors.append(f"Invalid manifest path: {file_name}")
-            continue
-        if file_name in declared_files:
-            errors.append(f"Duplicate manifest entry: {file_name}")
-            continue
-        declared_files.add(file_name)
-
-        static_file = static_dir / relative_path
-        if not static_file.is_file():
-            errors.append(f"Missing static file: {file_name}")
-        elif _calculate_sha256(static_file) != str(entry["sha256"]):
-            errors.append(f"Checksum mismatch: {file_name}")
+        errors.extend(_validate_static_manifest_entry(entry, index, static_dir, declared_files))
 
     actual_files = {
         path.relative_to(static_dir).as_posix()
@@ -309,7 +359,7 @@ def generate_test_resources(
         "__TEST_DIRECTORY__": str(test_directory),
         "__SIMTOOLS_VERSION__": simtools_version,
     }
-    download_files(config_dir / "download_files.yml", integration_test_dir)
+    downloaded_files = download_files(config_dir / "download_files.yml", integration_test_dir)
     if download_only:
         return
 
@@ -321,12 +371,15 @@ def generate_test_resources(
     if runtime_environment_file is not None and not ignore_runtime_environment:
         runtime_environment, run_time = prepare_runtime_environment(runtime_environment_file)
 
-    run_configured_applications(
-        config_dir=config_dir,
-        log_dir=integration_test_dir / "log_files",
-        ignore_runtime_environment=ignore_runtime_environment,
-        overwrite_collection_files=overwrite_collection_files,
-        run_time=run_time,
-        runtime_environment=runtime_environment,
-        replacements=replacements,
-    )
+    try:
+        run_configured_applications(
+            config_dir=config_dir,
+            log_dir=integration_test_dir / "log_files",
+            ignore_runtime_environment=ignore_runtime_environment,
+            overwrite_collection_files=overwrite_collection_files,
+            run_time=run_time,
+            runtime_environment=runtime_environment,
+            replacements=replacements,
+        )
+    finally:
+        _remove_empty_download_directories(downloaded_files, integration_test_dir)
