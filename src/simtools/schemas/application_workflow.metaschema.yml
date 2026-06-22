@@ -58,8 +58,8 @@ definitions:
             items:
               type: string
         description: |
-          "Application configuration key or list of keys containing source directories
-          searched for collection files. Defaults to output_path."
+          Application configuration key or list of keys containing source directories searched for collection files.
+          Defaults to output_path.
     required:
       - output_path
       - files
