@@ -157,6 +157,9 @@ total_showers_scaling (str, optional)
 zenith_angle_scaling_factor (float, optional)
     Factor used by ``total_showers_scaling=zenith_scaled``. The default is
     configured in simtools defaults.
+max_total_showers_rounding_warnings (int, optional)
+    Maximum number of per-point warnings emitted when ``total_showers`` is
+    rounded up to keep equal showers per run. Default is ``20``.
 showers_per_run_power_law (tuple, optional)
     Energy-dependent showers-per-run scaling as
     ``<power_index> <reference_energy_value> <reference_energy_unit>``. simtools
@@ -242,6 +245,7 @@ from simtools.application_control import build_application
 from simtools.configuration import defaults
 from simtools.production_configuration.job_grid_io import serialize_job_grid
 from simtools.production_configuration.simulation_jobs import (
+    TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
     build_job_grid_metadata,
     build_simulation_jobs,
 )
@@ -344,6 +348,16 @@ def _add_arguments(parser):
         type=float,
         required=False,
         default=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
+    )
+    parser.add_argument(
+        "--max_total_showers_rounding_warnings",
+        help=(
+            "Maximum number of per-point warnings emitted when total_showers is "
+            "rounded up to keep equal showers per run."
+        ),
+        type=parser.scientific_int,
+        required=False,
+        default=TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
     )
     parser.add_argument(
         "--showers_per_run_power_law",
