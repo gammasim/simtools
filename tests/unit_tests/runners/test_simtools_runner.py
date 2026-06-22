@@ -123,10 +123,10 @@ def test_set_input_output_directories():
 
     assert setting_workflow == "LSTN-01/pm_photoelectron_spectrum/20250304T073000"
 
-    path = "tests/resources_generation/application_config/config.yml"
+    path = "tests/config_files/application_config/config.yml"
     output_path, setting_workflow = simtools_runner._set_input_output_directories(path)
-    assert str(output_path) == "output/tests/resources_generation/application_config"
-    assert setting_workflow == "tests/resources_generation/application_config"
+    assert str(output_path) == "output/tests/config_files/application_config"
+    assert setting_workflow == "tests/config_files/application_config"
 
 
 def test_replace_placeholders_in_configuration_replaces_string():
@@ -206,11 +206,40 @@ def test_prepare_application_configuration_resolves_by_version(tmp_test_director
     result = simtools_runner._prepare_application_configuration(
         config.copy(),
         tmp_test_directory / "workflow",
-        "tests/resources_generation/application_config",
+        "tests/config_files/application_config",
     )
 
     assert result["array_layout_name"] == "alpha"
     assert result["output_path"] == "existing-output"
+
+
+def test_read_application_configuration_applies_replacements(monkeypatch, tmp_test_directory):
+    monkeypatch.setattr(
+        simtools_runner.ascii_handler,
+        "collect_data_from_file",
+        lambda _: {
+            "applications": [
+                {
+                    "application": "app",
+                    "configuration": {
+                        "output_path": "__TEST_DIRECTORY__/generated",
+                    },
+                }
+            ]
+        },
+    )
+
+    configurations, _, _, _ = simtools_runner._read_application_configuration(
+        "workflow.config.yml",
+        steps=None,
+        replacements={
+            "__TEST_DIRECTORY__": str(tmp_test_directory),
+        },
+    )
+
+    assert configurations[0]["configuration"]["output_path"] == str(
+        tmp_test_directory / "generated"
+    )
 
 
 def test_read_application_configuration_selected_steps(
@@ -426,6 +455,39 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     version_string_mock.assert_called_once_with([], include_software_versions=False)
     workflow_build_mock.assert_not_called()
     workflow_update_mock.assert_not_called()
+
+
+def test_run_applications_uses_log_file_override(monkeypatch, tmp_test_directory):
+    tmp_test_directory = Path(tmp_test_directory)
+    default_log = tmp_test_directory / "tmp_application_output" / "simtools.log"
+    requested_log = tmp_test_directory / "log_files" / "workflow.log"
+    monkeypatch.setattr(
+        simtools_runner,
+        "_read_application_configuration",
+        mock.Mock(return_value=([], None, default_log, "wf-activity-id")),
+    )
+    monkeypatch.setattr(
+        simtools_runner.ascii_handler,
+        "collect_data_from_file",
+        mock.Mock(return_value={}),
+    )
+    monkeypatch.setattr(
+        simtools_runner.dependencies,
+        "get_version_string",
+        mock.Mock(return_value=""),
+    )
+
+    simtools_runner.run_applications(
+        {
+            "config_file": "workflow.config.yml",
+            "log_file": str(requested_log),
+            "steps": None,
+            "ignore_runtime_environment": True,
+        }
+    )
+
+    assert requested_log.is_file()
+    assert not default_log.exists()
 
 
 def test_run_applications_copies_collection_files(monkeypatch, tmp_test_directory):

@@ -17,7 +17,7 @@ from simtools.job_execution import job_manager
 logger = logging.getLogger(__name__)
 
 
-def run_applications(args_dict):
+def run_applications(args_dict, run_time=None, replacements=None):
     """
     Run simtools applications step-by-step as defined in a configuration file.
 
@@ -28,6 +28,11 @@ def run_applications(args_dict):
         Optional key ``overwrite_collection_files`` (bool) allows collection
         output files to be overwritten when different source files have the
         same basename. Defaults to False.
+    run_time : list or None
+        Prepared runtime command. If provided, reuse it instead of preparing
+        the runtime environment from the workflow configuration.
+    replacements : dict or None
+        Placeholder replacements applied recursively to the workflow configuration.
     """
     (
         configurations,
@@ -38,13 +43,19 @@ def run_applications(args_dict):
         args_dict["config_file"],
         args_dict.get("steps"),
         args_dict.get("activity_id"),
+        replacements=replacements,
     )
+    if args_dict.get("log_file") is not None:
+        log_file = args_dict["log_file"]
+
+    if args_dict.get("runtime_environment") is not None:
+        runtime_environment = args_dict["runtime_environment"]
 
     collection_config = None
     try:
-        collection_config = ascii_handler.collect_data_from_file(args_dict["config_file"]).get(
-            "collection"
-        )
+        workflow_config = ascii_handler.collect_data_from_file(args_dict["config_file"])
+        workflow_config = gen.replace_placeholders_recursively(workflow_config, replacements or {})
+        collection_config = workflow_config.get("collection")
     except (OSError, TypeError):
         logger.debug("Could not read collection configuration from workflow file.")
 
@@ -53,11 +64,10 @@ def run_applications(args_dict):
     runtime_environment_snapshot = deepcopy(runtime_environment)
     model_parameter_metadata_files = []
 
-    run_time = (
-        read_runtime_environment(runtime_environment)
-        if not args_dict["ignore_runtime_environment"]
-        else []
-    )
+    if args_dict["ignore_runtime_environment"]:
+        run_time = []
+    elif run_time is None:
+        run_time = read_runtime_environment(runtime_environment)
 
     log_file = Path(log_file)
     log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -341,7 +351,9 @@ def _update_workflow_metadata_files(
         )
 
 
-def _read_application_configuration(configuration_file, steps, workflow_activity_id=None):
+def _read_application_configuration(
+    configuration_file, steps, workflow_activity_id=None, replacements=None
+):
     """
     Read application configuration from file and modify for setting workflows.
 
@@ -360,6 +372,8 @@ def _read_application_configuration(configuration_file, steps, workflow_activity
         List of steps to be executed (None: all steps).
     workflow_activity_id : str
         Workflow activity id fallback from command-line context.
+    replacements : dict or None
+        Placeholder replacements applied recursively before processing.
 
     Returns
     -------
@@ -374,6 +388,7 @@ def _read_application_configuration(configuration_file, steps, workflow_activity
 
     """
     job_configuration = ascii_handler.collect_data_from_file(configuration_file)
+    job_configuration = gen.replace_placeholders_recursively(job_configuration, replacements or {})
     workflow_activity_id = (
         gen.extract_uuid7_from_path(configuration_file) or workflow_activity_id or gen.get_uuid()
     )
