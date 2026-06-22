@@ -12,6 +12,10 @@ description: |-
 data:
   - type: data_table
     table_columns:
+      - name: run_number
+        description: Run index within each grid point.
+        required: true
+        type: uint32
       - name: primary
         description: Primary particle type.
         required: true
@@ -51,7 +55,7 @@ data:
       - name: cores_per_shower
         description: Number of core scatter samples per shower.
         required: true
-        type: int64
+        type: uint32
       - name: core_scatter_max_value
         description: Maximum core scatter radius value.
         required: true
@@ -79,7 +83,7 @@ data:
       - name: showers_per_run
         description: Number of showers simulated per run.
         required: true
-        type: int64
+        type: uint32
       - name: model_version
         description: Simulation model version.
         required: true
@@ -96,10 +100,6 @@ data:
         description: CORSIKA high-energy interaction model.
         required: true
         type: string
-      - name: run_number
-        description: Run index within each grid point.
-        required: true
-        type: int64
       - name: ra
         description: Right ascension coordinate value for ra_dec coordinate systems.
         required: false
