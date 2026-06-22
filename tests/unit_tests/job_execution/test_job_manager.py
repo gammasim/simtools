@@ -333,3 +333,60 @@ def test_raise_job_execution_error_no_logs(mocker):
         jm._raise_job_execution_error(exc, None, None, None)
 
     assert "See excerpt from log file above" in str(exc_info.value)
+
+
+# Coverage edge cases for job_manager.py
+
+
+def test_retry_command_zero_attempts_returns_false(mocker):
+    mock_run = mocker.patch("simtools.job_execution.job_manager.subprocess.run")
+
+    assert jm.retry_command("test cmd", max_attempts=0) is False
+    mock_run.assert_not_called()
+
+
+def test_submit_passes_custom_environment(mocker):
+    mock_run = mocker.patch("simtools.job_execution.job_manager.subprocess.run")
+    mock_result = MagicMock()
+    mock_result.returncode = 0
+    mock_run.return_value = mock_result
+
+    result = jm.submit("echo test", env={"SIMTOOLS_TEST_ENV": "1"})
+
+    assert result is mock_result
+    assert mock_run.call_args.kwargs["env"]["SIMTOOLS_TEST_ENV"] == "1"
+
+
+def test_build_command_with_path_object_script(tmp_path):
+    script_file = tmp_path / "script.sh"
+    script_file.write_text("#!/usr/bin/env bash\necho test\n", encoding="utf-8")
+
+    result = jm._build_command(script_file)
+
+    assert result == str(script_file)
+    assert script_file.stat().st_mode & 0o111
+
+
+def test_build_command_with_path_script_runtime_and_configuration(tmp_path):
+    script_file = tmp_path / "script.sh"
+    script_file.write_text("#!/usr/bin/env bash\necho test\n", encoding="utf-8")
+
+    result = jm._build_command(
+        script_file,
+        configuration={"flag": True, "value": "abc"},
+        runtime_environment=["container", "exec"],
+    )
+
+    assert result == ["container", "exec", str(script_file), "--flag", "--value", "abc"]
+
+
+def test_prepare_streams_with_only_stderr_file(tmp_path):
+    err_file = tmp_path / "err.log"
+
+    stdout, stderr = jm._prepare_streams(None, err_file, capture_output=True)
+
+    try:
+        assert stdout == subprocess.PIPE
+        assert stderr.name == str(err_file)
+    finally:
+        stderr.close()
