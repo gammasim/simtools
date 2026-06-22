@@ -29,9 +29,12 @@ files:
     monkeypatch.setattr(resource_generation.urllib.request, "urlretrieve", _fake_urlretrieve)
 
     resources_dir = Path(tmp_test_directory) / "resources"
-    resource_generation.download_files(config_file=config_file, target_dir=resources_dir)
+    downloaded_files = resource_generation.download_files(
+        config_file=config_file, target_dir=resources_dir
+    )
 
     assert (resources_dir / "folder" / "test.csv").exists()
+    assert downloaded_files == [resources_dir / "folder" / "test.csv"]
 
 
 def test_download_files_missing_required_field(tmp_test_directory):
@@ -335,3 +338,33 @@ def test_generate_test_resources_prepares_shared_runtime_once(tmp_test_directory
     assert prepare_mock == [runtime_file]
     assert run_calls[0]["ignore_runtime_environment"] is False
     assert run_calls[0]["run_time"] == ["podman", "run", "image"]
+
+
+def test_generate_test_resources_removes_empty_download_directory(tmp_test_directory, monkeypatch):
+    integration_test_dir = (
+        Path(tmp_test_directory) / "simtools-tests" / "v0.32.0" / "integration_tests"
+    )
+    config_dir = integration_test_dir / "config_files"
+    config_dir.mkdir(parents=True)
+    (config_dir / "download_files.yml").write_text("files: []\n", encoding="utf-8")
+    downloaded_file = integration_test_dir / "folder" / "input.dat"
+
+    def _download_files(*_):
+        downloaded_file.parent.mkdir()
+        downloaded_file.write_text("input", encoding="utf-8")
+        return [downloaded_file]
+
+    def _run_configured_applications(**_):
+        downloaded_file.unlink()
+
+    monkeypatch.setattr(resource_generation, "download_files", _download_files)
+    monkeypatch.setattr(
+        resource_generation, "run_configured_applications", _run_configured_applications
+    )
+
+    resource_generation.generate_test_resources(
+        test_directory=tmp_test_directory,
+        simtools_version="v0.32.0",
+    )
+
+    assert not (integration_test_dir / "folder").exists()
