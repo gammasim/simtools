@@ -126,4 +126,4 @@ def test_add_arguments_accepts_legacy_energy_max_scaling_index():
 def test_renumber_job_rows_starts_at_configured_run_number():
     job_rows = [{"run_number": 10}, {"run_number": 10}, {"run_number": 11}]
 
-    assert [row["run_number"] for row in app._renumber_job_rows(job_rows, 10)] == [10, 11, 12]
+    assert [row["run_number"] for row in app._renumber_job_rows(job_rows, 42)] == [42, 43, 44]
