@@ -3,7 +3,7 @@ applications:
 - application: simtools-validate-file-using-schema
   configuration:
     data_type: data
-    file_name: tests/resources/reference_point_altitude.json
+    file_name: tests/resources/static/reference_point_altitude.json
     schema: 'https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameters/reference_point_altitude.schema.yml
 
       '

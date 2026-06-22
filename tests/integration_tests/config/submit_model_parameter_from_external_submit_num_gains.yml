@@ -2,7 +2,7 @@
 applications:
 - application: simtools-submit-model-parameter-from-external
   configuration:
-    input_meta: ./tests/resources/num_gains.meta.yml
+    input_meta: tests/resources/static/num_gains.meta.yml
     instrument: LSTN-design
     output_path: simtools-output
     parameter: num_gains

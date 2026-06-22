@@ -13,22 +13,29 @@ from simtools.testing import configuration, helpers, log_inspector, validate_out
 
 logger = logging.getLogger()
 
-config_files = sorted(Path(__file__).parent.glob("config/*.yml"))
-test_configs, test_ids = configuration.get_list_of_test_configurations(config_files)
-test_parameters = []
-for config, test_id in zip(test_configs, test_ids):
-    marks = []
-    if config.get("test_requirement"):
-        marks.append(pytest.mark.verifies_requirement(config["test_requirement"]))
 
-    if config.get("test_use_case"):
-        marks.append(pytest.mark.verifies_usecase(config["test_use_case"]))
+def pytest_generate_tests(metafunc):
+    """Parametrize application tests using the configured test-resources path."""
+    if "config" not in metafunc.fixturenames:
+        return
 
-    param = pytest.param(config, id=test_id, marks=marks)
-    test_parameters.append(param)
+    config_files = sorted(Path(__file__).parent.glob("config/*.yml"))
+    test_configs, test_ids = configuration.get_list_of_test_configurations(
+        config_files,
+        test_resources_path=metafunc.config.getoption("test_resources_path"),
+    )
+    test_parameters = []
+    for config, test_id in zip(test_configs, test_ids):
+        marks = []
+        if config.get("test_requirement"):
+            marks.append(pytest.mark.verifies_requirement(config["test_requirement"]))
+        if config.get("test_use_case"):
+            marks.append(pytest.mark.verifies_usecase(config["test_use_case"]))
+        test_parameters.append(pytest.param(config, id=test_id, marks=marks))
+
+    metafunc.parametrize("config", test_parameters)
 
 
-@pytest.mark.parametrize("config", test_parameters)
 def test_applications_from_config(tmp_test_directory, config, request):
     """
     Test all applications from config files found in the config directory.

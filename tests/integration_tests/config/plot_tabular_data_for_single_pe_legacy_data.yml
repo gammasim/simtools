@@ -7,7 +7,7 @@ applications:
     - png
     output_file: single_pe_data
     output_path: simtools-output
-    plot_config: tests/resources/plot_single_pe_config_data.yml
+    plot_config: tests/resources/static/plot_single_pe_config_data.yml
     table_data_path: tests/resources
   integration_tests:
   - output_file: single_pe_data.pdf

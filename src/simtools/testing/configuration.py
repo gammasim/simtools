@@ -12,6 +12,7 @@ from simtools.io import ascii_handler
 _logger = logging.getLogger(__name__)
 
 _TEST_RESOURCE_PATTERN = re.compile(r"\$\{(static|generated):([^}]+)\}")
+_TEST_RESOURCE_PATH_PATTERN = re.compile(r"(?<![\w/])(?:\./)?tests/resources(?=/|$)")
 
 
 class VersionError(Exception):
@@ -22,7 +23,7 @@ class ProductionDBError(Exception):
     """Raise if production db is used."""
 
 
-def get_list_of_test_configurations(config_files):
+def get_list_of_test_configurations(config_files, test_resources_path=None):
     """
     Return list of test configuration dictionaries or test names.
 
@@ -33,6 +34,8 @@ def get_list_of_test_configurations(config_files):
     ----------
     config_files: list
         List of integration test configuration files.
+    test_resources_path: str or pathlib.Path, optional
+        Base directory containing the ``static`` and ``generated`` resource directories.
 
     Returns
     -------
@@ -42,7 +45,7 @@ def get_list_of_test_configurations(config_files):
     """
     _logger.debug(f"Configuration files: {config_files}")
 
-    configs = _read_configs_from_files(config_files)
+    configs = _read_configs_from_files(config_files, test_resources_path=test_resources_path)
 
     # list of all applications
     # (needs to be sorted for pytest-xdist, see Known Limitations in their website)
@@ -69,7 +72,7 @@ def get_list_of_test_configurations(config_files):
     )
 
 
-def _read_configs_from_files(config_files):
+def _read_configs_from_files(config_files, test_resources_path=None):
     """Read test configuration from files."""
     configs = []
     for config_file in config_files:
@@ -79,28 +82,45 @@ def _read_configs_from_files(config_files):
         _dict = gen.remove_substring_recursively_from_dict(
             ascii_handler.collect_data_from_file(file_name=config_file), substring="\n"
         )
-        configs.extend(_resolve_integration_test_resource_paths(_dict.get("applications", [])))
+        configs.extend(
+            resolve_test_resource_paths(
+                _dict.get("applications", []), test_resources_path=test_resources_path
+            )
+        )
     return configs
 
 
-def _resolve_integration_test_resource_paths(applications):
-    """Resolve test resource macros in integration test definitions."""
-    for application in applications:
-        if "integration_tests" in application:
-            application["integration_tests"] = _resolve_test_resource_path_macros(
-                application["integration_tests"]
-            )
-    return applications
+def resolve_test_resource_paths(value, test_resources_path=None):
+    """Resolve all test-resource references recursively.
 
+    Both ``${static:...}`` / ``${generated:...}`` macros and existing
+    ``tests/resources/...`` paths are resolved against ``test_resources_path``.
 
-def _resolve_test_resource_path_macros(value):
-    """Resolve ${static:...} and ${generated:...} macros recursively."""
+    Parameters
+    ----------
+    value : object
+        Configuration value, mapping, or sequence to resolve.
+    test_resources_path : str or pathlib.Path, optional
+        Base directory containing test resources. Defaults to ``tests/resources``.
+
+    Returns
+    -------
+    object
+        Configuration with absolute test-resource paths.
+    """
+    base_path = Path(test_resources_path or "tests/resources").expanduser().resolve()
     if isinstance(value, dict):
-        return {key: _resolve_test_resource_path_macros(item) for key, item in value.items()}
+        return {
+            key: resolve_test_resource_paths(item, test_resources_path=base_path)
+            for key, item in value.items()
+        }
     if isinstance(value, list):
-        return [_resolve_test_resource_path_macros(item) for item in value]
+        return [resolve_test_resource_paths(item, test_resources_path=base_path) for item in value]
     if isinstance(value, str):
-        return _TEST_RESOURCE_PATTERN.sub(r"tests/resources/\1/\2", value)
+        value = _TEST_RESOURCE_PATTERN.sub(
+            lambda match: str(base_path / match.group(1) / match.group(2)), value
+        )
+        return _TEST_RESOURCE_PATH_PATTERN.sub(str(base_path), value)
     return value
 
 

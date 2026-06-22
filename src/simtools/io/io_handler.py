@@ -26,6 +26,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         self.logger = logging.getLogger(__name__)
         self.output_path = {}
         self.model_path = None
+        self.test_resources_path = Path("tests/resources").resolve()
 
     def set_paths(self, output_path=None, model_path=None, output_path_label="default"):
         """
@@ -119,7 +120,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         -------
         Path
         """
-        base_path = Path("tests/resources")
+        base_path = self.test_resources_path
         file_path = (base_path / file_name).resolve()
 
         if file_path.exists():
