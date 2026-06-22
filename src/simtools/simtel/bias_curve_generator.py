@@ -215,7 +215,7 @@ def _run_nsb_trigger_derivation(root_dir, args, time_window):
     """Run NSB trigger derivation on a directory containing *.simtel.log.gz files."""
     nsb_args = {
         "root_dir": root_dir,
-        "pattern": f"**/*{_SIMTEL_LOG_SUFFIX}",
+        "pattern": f"**/gamma*{_SIMTEL_LOG_SUFFIX}",
         "output": args.get("nsb_table_output"),
         "time_window": time_window,
         "verbose": False,
