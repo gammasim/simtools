@@ -10,27 +10,24 @@ to generate bias curves showing how trigger rates vary with threshold.
 
 The tool:
 1. Extracts NSB trigger rates from SIMTEL log files
-2. Calculates proton trigger rates from simulation HDF5 files organized by threshold
+2. Calculates proton trigger rates from simulation HDF5 files
 3. Plots both curves on the same figure for comparison
 
-The input directory structure should contain:
-- NSB log files: **/*.simtel.log.gz with threshold information in path
-- Proton sim files: threshold subdirectories (e.g., 220/, 230/) containing *.hdf5 files
+The input directory should contain both:
+- NSB log files or log_hist archives
+- Proton simulation HDF5 files
 
 Command line arguments
 ----------------------
 
-root_dir (str, optional)
-    Root directory containing both NSB logs and proton simulation files.
-    Can be overridden by --nsb_dir and --proton_dir.
-nsb_dir (str, optional)
-    Directory containing NSB log files. If not specified, uses --root_dir.
-proton_dir (str, optional)
-    Directory containing proton simulation files. If not specified, uses --root_dir.
+data_dir (str, required)
+    Directory containing both NSB logs/log_hist archives and proton simulation files.
 output (str, optional)
-    Output plot file path. Default: bias_curve.png
-nsb_table_output (str, optional)
+    Output plot file path or output directory. Default: bias_curve.png
+nsb_output (str, optional)
     Output ECSV table file for NSB trigger rates. If not specified, no table is written.
+proton_output (str, optional)
+    Output ECSV table file for proton rates. If not specified, no table is written.
 site (str, required)
     Site name (North/South) for telescope configuration.
 model_version (str, required)
@@ -46,29 +43,13 @@ ymin (float, optional)
 ymax (float, optional)
     Maximum y-axis value for plot. Default: 5e5
 
-
-
 Example
 -------
 
-Generate bias curves with data in same directory:
-
 .. code-block:: console
 
     simtools-derive-bias-curves \\
-        --root_dir /path/to/data \\
-        --site North \\
-        --model_version 7.0.0 \\
-        --array_layout_name LSTN-01 \\
-        --output bias_curves.png
-
-Generate bias curves with NSB and proton data in separate directories:
-
-.. code-block:: console
-
-    simtools-derive-bias-curves \\
-        --nsb_dir /path/to/nsb/data \\
-        --proton_dir /path/to/proton/data \\
+        --data_dir /path/to/data \\
         --site North \\
         --model_version 7.0.0 \\
         --array_layout_name LSTN-01 \\
@@ -85,32 +66,17 @@ from simtools.simtel.bias_curve_generator import generate_bias_curves
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
     parser.add_argument(
-        "--root_dir",
+        "--data_dir",
         type=Path,
-        required=False,
-        help="Root directory containing both NSB logs and proton simulation files. "
-        "Can be overridden by --nsb_dir and --proton_dir.",
-    )
-
-    parser.add_argument(
-        "--nsb_dir",
-        type=Path,
-        required=False,
-        help="Directory containing NSB log files. If not specified, uses --root_dir.",
-    )
-
-    parser.add_argument(
-        "--proton_dir",
-        type=Path,
-        required=False,
-        help="Directory containing proton simulation files. If not specified, uses --root_dir.",
+        required=True,
+        help="Directory containing both NSB logs/log_hist archives and proton simulation files.",
     )
 
     parser.add_argument(
         "--output",
         type=Path,
         default=Path("bias_curve.png"),
-        help="Output plot file path. Default: bias_curve.png",
+        help="Output plot file path or output directory. Default: bias_curve.png",
     )
 
     parser.add_argument(
@@ -164,18 +130,7 @@ def main():
         },
     )
 
-    # Validate directory arguments
-    args = app_context.args
-    if not args.get("root_dir") and not (args.get("nsb_dir") and args.get("proton_dir")):
-        raise ValueError("Must specify either --root_dir or both --nsb_dir and --proton_dir")
-
-    # Set defaults: use specific dirs if provided, otherwise fall back to root_dir
-    if not args.get("nsb_dir"):
-        args["nsb_dir"] = args["root_dir"]
-    if not args.get("proton_dir"):
-        args["proton_dir"] = args["root_dir"]
-
-    generate_bias_curves(args)
+    generate_bias_curves(app_context.args)
 
 
 if __name__ == "__main__":

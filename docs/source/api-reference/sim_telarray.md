@@ -4,12 +4,39 @@
 
 Support modules for running sim_telarray.
 
+## bias-curve-generator
+
+(bias-curve-generator-1)=
+
+```{eval-rst}
+.. automodule:: simtel.bias_curve_generator
+   :members:
+```
+
+## nsb-trigger-calculator
+
+(nsb-trigger-calculator-1)=
+
+```{eval-rst}
+.. automodule:: simtel.nsb_trigger_calculator
+   :members:
+```
+
 ## simtel_config_reader
 
 (simtel-config-reader-1)=
 
 ```{eval-rst}
 .. automodule:: simtel.simtel_config_reader
+   :members:
+```
+
+## simtel_log_reader
+
+(simtel-log-reader-1)=
+
+```{eval-rst}
+.. automodule:: simtel.simtel_log_reader
    :members:
 ```
 
