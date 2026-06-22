@@ -248,9 +248,10 @@ def data_path():
 
 
 @pytest.fixture(autouse=True)
-def io_handler(tmp_test_directory, data_path):
+def io_handler(tmp_test_directory, data_path, test_resources_path):
     """Define io_handler fixture including output and model directories."""
     tmp_io_handler = simtools.io.io_handler.IOHandler()
+    tmp_io_handler.test_resources_path = test_resources_path
     tmp_io_handler.set_paths(
         output_path=str(tmp_test_directory) + "/output",
         model_path=str(tmp_test_directory) + "/model",
@@ -881,7 +882,7 @@ _TEST_DATA_FILES = {
 
 
 @pytest.fixture
-def get_test_data_file():
+def get_test_data_file(test_resources_path):
     """Fixture providing test data file path retrieval.
 
     Returns
@@ -922,7 +923,15 @@ def get_test_data_file():
             raise KeyError(
                 f"Test data file not found for {file_type}[{variant}]. Available: {available}"
             )
-        return _TEST_DATA_FILES[key]
+        relative_path = Path(_TEST_DATA_FILES[key]).relative_to("tests/resources")
+        direct_path = test_resources_path / relative_path
+        if direct_path.exists():
+            return str(direct_path)
+        for resource_type in ("static", "generated"):
+            candidate = test_resources_path / resource_type / relative_path
+            if candidate.exists():
+                return str(candidate)
+        return str(direct_path)
 
     return _get_test_data_file
 

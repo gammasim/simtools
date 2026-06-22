@@ -2,7 +2,7 @@
 applications:
 - application: simtools-plot-array-layout
   configuration:
-    array_layout_parameter_file: tests/resources/model_parameters/array_layouts-2.0.2.json
+    array_layout_parameter_file: tests/resources/static/model_parameters/array_layouts-2.0.2.json
     figure_format:
     - pdf
     - png

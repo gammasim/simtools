@@ -3,7 +3,7 @@ applications:
 - application: simtools-convert-geo-coordinates-of-array-elements
   configuration:
     export: ground
-    input: tests/resources/telescope_positions-North-utm.ecsv
+    input: tests/resources/static/telescope_positions-North-utm.ecsv
     log_level: DEBUG
     model_version: 6.0.2
     output_file: test.ecsv
@@ -13,7 +13,7 @@ applications:
     - MSTN
   integration_tests:
   - reference_output_file: |
-     ./tests/resources/telescope_positions-North-ground.ecsv
+     ${static:telescope_positions-North-ground.ecsv}
     tolerance: 0.01
   test_name: utm_to_ground_in_table
 schema_name: application_workflow.metaschema

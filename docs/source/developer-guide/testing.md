@@ -120,6 +120,20 @@ pytest -v -k "simtools-convert-all-model-parameters-from-simtel_num_gains" tests
 
 This runs to run the tool for the specific test called `num_gains`.
 
+### Test resources
+
+Unit and integration tests use `tests/resources` by default. To use a versioned resources
+directory from `simtools-tests`, provide its full path to pytest:
+
+```bash
+pytest --test_resources_path=/full/path/to/integration_tests/resources tests/unit_tests tests/integration_tests
+```
+
+Integration-test configuration files may reference resource files in both the application
+`configuration` and the `integration_tests` validation blocks. Use `${static:path/to/file}` for
+maintained input files and `${generated:path/to/file}` for generated resources. Pytest resolves
+these references against the directory supplied with `--test_resources_path`.
+
 ### Validation of test outputs
 
 The integration test module allows to compare test outputs with expected outputs or files (see the [simtools/tests/integration_tests/config](https://github.com/gammasim/simtools/tree/main/tests/integration_tests/config) directory for examples).
@@ -169,7 +183,7 @@ The following examples compares only rows with `best_fit==True` and only the col
 
 ```text
 integration_tests:
-  - reference_output_file: tests/resources/derive_mirror_rnda_psf_random_flen.ecsv
+  - reference_output_file: ${static:derive_mirror_rnda_psf_random_flen.ecsv}
     test_columns:
     - cut_column_name: best_fit
       cut_condition: ==True
@@ -258,11 +272,11 @@ Test sim_telarray configuration files against reference files for different mode
 ```text
 integration_tests:
   - test_simtel_cfg_files:
-      "5.0.0": tests/resources/sim_telarray_configurations/5.0.0/CTA-South-LSTS-01_test.cfg
-      "6.0.2": tests/resources/sim_telarray_configurations/6.0.2/CTA-South-LSTS-01_test.cfg
+      "5.0.0": ${static:sim_telarray_configurations/5.0.0/CTA-South-LSTS-01_test.cfg}
+      "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTA-South-LSTS-01_test.cfg}
   - test_simtel_cfg_files:
-      "5.0.0": tests/resources/sim_telarray_configurations/5.0.0/CTA-South-MSTS-01_test.cfg
-      "6.0.2": tests/resources/sim_telarray_configurations/6.0.2/CTA-South-MSTS-01_test.cfg
+      "5.0.0": ${static:sim_telarray_configurations/5.0.0/CTA-South-MSTS-01_test.cfg}
+      "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTA-South-MSTS-01_test.cfg}
 ```
 
 ### Model versions for integration tests

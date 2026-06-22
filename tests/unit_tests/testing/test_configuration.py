@@ -65,6 +65,31 @@ def test_read_configs_from_files(integration_test_config_files):
     assert len(configs) == len(config_files)
 
 
+def test_resolve_test_resource_paths(tmp_test_directory):
+    resources_path = Path(tmp_test_directory) / "versioned-resources"
+    config = {
+        "configuration": {
+            "input": "tests/resources/static/input.ecsv",
+            "inputs": ["./tests/resources/generated/events.simtel.zst"],
+        },
+        "integration_tests": [
+            {"reference_output_file": "${static:reference.ecsv}"},
+            {"reference_output_file": "${generated:model/parameter.json}"},
+        ],
+    }
+
+    resolved = configuration.resolve_test_resource_paths(config, resources_path)
+
+    assert resolved["configuration"]["input"] == str(resources_path / "static/input.ecsv")
+    assert resolved["configuration"]["inputs"] == [
+        str(resources_path / "generated/events.simtel.zst")
+    ]
+    assert resolved["integration_tests"] == [
+        {"reference_output_file": str(resources_path / "static/reference.ecsv")},
+        {"reference_output_file": str(resources_path / "generated/model/parameter.json")},
+    ]
+
+
 def test_create_tmp_output_path(tmp_test_directory):
     config = {"application": "test_app", "test_name": "test_name"}
     tmp_output_path = configuration.create_tmp_output_path(tmp_test_directory, config)
