@@ -85,8 +85,18 @@ class EventDataReader:
         self._logger = logging.getLogger(__name__)
         self.telescope_list = telescope_list
 
+        self._validate_hdf5_event_data_file(event_data_file)
         self.data_sets = self.read_table_list(event_data_file)
         self.reduced_file_info = None
+
+    @staticmethod
+    def _validate_hdf5_event_data_file(event_data_file):
+        """Validate that reduced event data are stored in HDF5 format."""
+        if table_handler.read_table_file_type([event_data_file]) != "HDF5":
+            raise ValueError(
+                f"Unsupported reduced event data format for '{event_data_file}'. "
+                "Only HDF5 files with suffix '.hdf5' or '.h5' are supported."
+            )
 
     def read_table_list(self, event_data_file):
         """
@@ -296,6 +306,7 @@ class EventDataReader:
         tuple
             A tuple with file info table, shower, triggered shower, and triggered event data.
         """
+        self._validate_hdf5_event_data_file(event_data_file)
 
         def get_name(k):
             return k if table_name_map is None else table_name_map.get(k)
@@ -315,6 +326,7 @@ class EventDataReader:
         tables = table_handler.read_tables(
             event_data_file,
             table_names=table_names,
+            file_type="HDF5",
             table_columns=table_columns,
         )
         self.reduced_file_info = self.get_reduced_simulation_file_info(
