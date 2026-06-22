@@ -30,6 +30,31 @@ def _base_args(tmp_test_directory):
     }
 
 
+def _command_value(command, option):
+    """Return the value following an option in a command list."""
+    return command[command.index(option) + 1]
+
+
+def _run_generation_without_external_side_effects(curve_name, args, output_root):
+    """Run one curve-generation step while mocking external execution."""
+    with (
+        patch("simtools.job_execution.bias_curve_submissions._run_command") as mock_run_command,
+        patch("simtools.job_execution.bias_curve_submissions._build_scan_grid") as mock_build_scan,
+        patch(
+            "simtools.job_execution.bias_curve_submissions."
+            "htcondor_script_generator.generate_submission_script"
+        ) as mock_generate_submission_script,
+    ):
+        bias_curve_submissions._generate_curve_submissions(
+            curve_name,
+            bias_curve_submissions._CURVE_DEFINITIONS[curve_name],
+            args,
+            output_root,
+        )
+
+    return mock_run_command, mock_build_scan, mock_generate_submission_script
+
+
 @patch("simtools.job_execution.bias_curve_submissions._generate_curve_submissions")
 @patch(
     "simtools.job_execution.bias_curve_submissions._resolve_telescopes_from_layout",
@@ -47,6 +72,7 @@ def test_generate_bias_curve_submissions_uses_fixed_curve_definitions(
 
     output_root = Path(args["output_path"]).expanduser().resolve()
     assert args["telescopes"] == ["LSTN-01"]
+    assert args["telescope"] == "LSTN-01"
     mock_resolve_telescopes.assert_called_once_with(args)
     assert mock_generate_curve_submissions.call_args_list == [
         call(
@@ -77,57 +103,57 @@ def test_resolve_telescopes_from_layout_enforces_single_telescope(tmp_test_direc
             bias_curve_submissions._resolve_telescopes_from_layout(args)
 
 
-@patch("simtools.job_execution.bias_curve_submissions.simtools_runner.run_applications")
-def test_generate_curve_submissions_writes_workflow_with_curve_specific_energy_range(
-    mock_run_applications,
+def test_generate_curve_submissions_runs_grid_generation_and_htcondor_generation(
     tmp_test_directory,
 ):
     args = _base_args(tmp_test_directory)
+    args["telescope"] = "LSTN-01"
     output_root = Path(args["output_path"]).expanduser().resolve()
     curve_directory = output_root / "nsb"
 
-    bias_curve_submissions._generate_curve_submissions(
-        "nsb",
-        bias_curve_submissions._CURVE_DEFINITIONS["nsb"],
-        args,
-        output_root,
+    mock_run_command, mock_build_scan, mock_generate_submission_script = (
+        _run_generation_without_external_side_effects("nsb", args, output_root)
     )
 
-    workflow_file = curve_directory / "nsb_workflow.yml"
-    assert workflow_file.exists()
+    base_grid_file = curve_directory / "base_grid.ecsv"
+    scan_grid_file = curve_directory / "scan_grid.ecsv"
 
-    workflow = yaml.safe_load(workflow_file.read_text(encoding="utf-8"))
-    applications = workflow["applications"]
+    mock_run_command.assert_called_once()
+    command, working_directory = mock_run_command.call_args.args
 
-    generate_grid_step = applications[0]
-    generate_grid_config = generate_grid_step["configuration"]
+    assert working_directory == output_root
+    assert command[0] == "simtools-production-generate-grid"
+    assert _command_value(command, "--primary") == "gamma"
+    assert _command_value(command, "--energy_range") == "20 MeV 25 MeV"
+    assert _command_value(command, "--label") == "nsb"
+    assert _command_value(command, "--output_file") == str(base_grid_file)
 
-    assert generate_grid_step["application"] == "simtools-production-generate-grid"
-    assert generate_grid_config["primary"] == "gamma"
-    assert generate_grid_config["energy_range"] == "20 MeV 25 MeV"
-    assert generate_grid_config["label"] == "test_label_nsb"
-    assert generate_grid_config["output_file"] == str(curve_directory / "base_grid.ecsv")
+    mock_build_scan.assert_called_once()
+    build_scan_kwargs = mock_build_scan.call_args.kwargs
+    assert build_scan_kwargs["base_grid_file"] == base_grid_file
+    assert build_scan_kwargs["scan_grid_file"] == scan_grid_file
+    assert build_scan_kwargs["telescope"] == "LSTN-01"
+    assert len(build_scan_kwargs["overwrite_files_and_labels"]) == len(
+        bias_curve_submissions._ASUM_THRESHOLDS
+    )
 
-    assert applications[1]["application"] == "simtools-generate-parameter-scan-grid"
-    assert applications[2]["application"] == "simtools-simulate-prod-htcondor-generator"
+    mock_generate_submission_script.assert_called_once()
+    htcondor_args = mock_generate_submission_script.call_args.args[0]
+    assert htcondor_args["label"] == "nsb"
+    assert htcondor_args["job_grid_file"] == str(scan_grid_file)
+    assert htcondor_args["output_path"] == str(curve_directory / "htcondor_submit")
+    assert htcondor_args["simulation_output"] == str(output_root)
+    assert htcondor_args["telescope"] == "LSTN-01"
 
-    mock_run_applications.assert_called_once()
-    runner_args = mock_run_applications.call_args.args[0]
-    assert runner_args["config_file"] == str(workflow_file)
-    assert runner_args["steps"] is None
-    assert runner_args["ignore_runtime_environment"] is True
 
-
-@patch("simtools.job_execution.bias_curve_submissions.simtools_runner.run_applications")
 @pytest.mark.parametrize(
     ("curve_name", "expected_primary", "expected_energy_range"),
     [
         ("nsb", "gamma", "20 MeV 25 MeV"),
-        ("proton", "proton", "800 GeV 2000 GeV"),
+        ("proton", "proton", "2 GeV 2000 GeV"),
     ],
 )
-def test_workflow_uses_curve_specific_primary_and_energy_range(
-    mock_run_applications,
+def test_curve_generation_uses_curve_specific_primary_and_energy_range(
     curve_name,
     expected_primary,
     expected_energy_range,
@@ -137,95 +163,97 @@ def test_workflow_uses_curve_specific_primary_and_energy_range(
     output_root = Path(args["output_path"]).expanduser().resolve()
     curve_directory = output_root / curve_name
 
-    bias_curve_submissions._generate_curve_submissions(
-        curve_name,
-        bias_curve_submissions._CURVE_DEFINITIONS[curve_name],
-        args,
-        output_root,
+    mock_run_command, mock_build_scan, mock_generate_submission_script = (
+        _run_generation_without_external_side_effects(curve_name, args, output_root)
     )
 
-    workflow_file = curve_directory / f"{curve_name}_workflow.yml"
-    workflow = yaml.safe_load(workflow_file.read_text(encoding="utf-8"))
+    command, working_directory = mock_run_command.call_args.args
 
-    generate_grid_config = workflow["applications"][0]["configuration"]
+    assert working_directory == output_root
+    assert _command_value(command, "--primary") == expected_primary
+    assert _command_value(command, "--energy_range") == expected_energy_range
+    assert _command_value(command, "--label") == curve_name
+    assert _command_value(command, "--output_file") == str(curve_directory / "base_grid.ecsv")
 
-    assert generate_grid_config["primary"] == expected_primary
-    assert generate_grid_config["energy_range"] == expected_energy_range
-    assert generate_grid_config["label"] == f"test_label_{curve_name}"
-    assert generate_grid_config["output_file"] == str(curve_directory / "base_grid.ecsv")
-
-    mock_run_applications.assert_called_once()
+    mock_build_scan.assert_called_once()
+    mock_generate_submission_script.assert_called_once()
 
 
-@patch("simtools.job_execution.bias_curve_submissions.simtools_runner.run_applications")
-def test_nsb_scan_config_contains_nsb_fields_and_trigger_scan(
-    mock_run_applications,
-    tmp_test_directory,
-):
+def test_nsb_overwrite_files_contain_nsb_fields_and_trigger_scan(tmp_test_directory):
     args = _base_args(tmp_test_directory)
     output_root = Path(args["output_path"]).expanduser().resolve()
     curve_directory = output_root / "nsb"
 
-    bias_curve_submissions._generate_curve_submissions(
-        "nsb",
-        bias_curve_submissions._CURVE_DEFINITIONS["nsb"],
-        args,
-        output_root,
+    mock_run_command, mock_build_scan, mock_generate_submission_script = (
+        _run_generation_without_external_side_effects("nsb", args, output_root)
     )
 
-    scan_config_file = curve_directory / "scan_config.yml"
-    assert scan_config_file.exists()
+    overwrite_file = curve_directory / "overwrite_files" / "overwrite_asum220.yaml"
+    assert overwrite_file.exists()
 
-    scan_config_text = scan_config_file.read_text(encoding="utf-8")
+    overwrite = yaml.safe_load(overwrite_file.read_text(encoding="utf-8"))
 
-    assert "LSTN-01" in scan_config_text
-    assert "asum_threshold" in scan_config_text
-    assert "220" in scan_config_text
-    assert "300" in scan_config_text
-    assert "min_photons" in scan_config_text
-    assert "min_photoelectrons" in scan_config_text
-    assert "nsb_scaling_factor" in scan_config_text
-    assert "value: 2" in scan_config_text
+    assert overwrite["model_version"] == args["model_version"]
+    assert overwrite["description"] == "Tune for NSB telescope trigger scan"
 
-    mock_run_applications.assert_called_once()
+    telescope_changes = overwrite["changes"]["LSTN-01"]
+    assert telescope_changes["asum_threshold"]["value"] == 220
+    assert telescope_changes["min_photons"]["value"] == 0
+    assert telescope_changes["min_photoelectrons"]["value"] == 0
+
+    site_changes = overwrite["changes"]["OBS-North"]
+    assert site_changes["nsb_scaling_factor"]["value"] == 2
+
+    build_scan_kwargs = mock_build_scan.call_args.kwargs
+    labels = [label for _, label in build_scan_kwargs["overwrite_files_and_labels"]]
+    assert labels == [f"asum{threshold}" for threshold in bias_curve_submissions._ASUM_THRESHOLDS]
+
+    mock_run_command.assert_called_once()
+    mock_generate_submission_script.assert_called_once()
 
 
-@patch("simtools.job_execution.bias_curve_submissions.simtools_runner.run_applications")
-def test_proton_scan_config_contains_only_trigger_scan(
-    mock_run_applications,
-    tmp_test_directory,
-):
+def test_proton_overwrite_files_contain_only_trigger_scan(tmp_test_directory):
     args = _base_args(tmp_test_directory)
     output_root = Path(args["output_path"]).expanduser().resolve()
     curve_directory = output_root / "proton"
 
-    bias_curve_submissions._generate_curve_submissions(
-        "proton",
-        bias_curve_submissions._CURVE_DEFINITIONS["proton"],
-        args,
-        output_root,
+    mock_run_command, mock_build_scan, mock_generate_submission_script = (
+        _run_generation_without_external_side_effects("proton", args, output_root)
     )
 
-    scan_config_file = curve_directory / "scan_config.yml"
-    assert scan_config_file.exists()
+    overwrite_file = curve_directory / "overwrite_files" / "overwrite_asum220.yaml"
+    assert overwrite_file.exists()
 
-    scan_config_text = scan_config_file.read_text(encoding="utf-8")
+    overwrite = yaml.safe_load(overwrite_file.read_text(encoding="utf-8"))
 
-    assert "LSTN-01" in scan_config_text
-    assert "asum_threshold" in scan_config_text
-    assert "220" in scan_config_text
-    assert "300" in scan_config_text
-    assert "min_photons" not in scan_config_text
-    assert "min_photoelectrons" not in scan_config_text
-    assert "nsb_scaling_factor" not in scan_config_text
+    assert overwrite["model_version"] == args["model_version"]
+    assert overwrite["description"] == "Tune for proton telescope trigger scan"
 
-    mock_run_applications.assert_called_once()
+    changes = overwrite["changes"]
+    assert set(changes.keys()) == {"LSTN-01"}
+    assert changes["LSTN-01"] == {
+        "asum_threshold": {
+            "version": bias_curve_submissions._PARAMETER_VERSION,
+            "value": 220,
+        }
+    }
+
+    build_scan_kwargs = mock_build_scan.call_args.kwargs
+    labels = [label for _, label in build_scan_kwargs["overwrite_files_and_labels"]]
+    assert labels == [f"asum{threshold}" for threshold in bias_curve_submissions._ASUM_THRESHOLDS]
+
+    mock_run_command.assert_called_once()
+    mock_generate_submission_script.assert_called_once()
 
 
 @pytest.mark.parametrize(
     ("telescope", "expected_param", "expected_values"),
     [
-        ("LSTN-01", "asum_threshold", [220, 230, 240, 250, 260, 270, 280, 290, 300]),
+        (
+            "LSTN-01",
+            "asum_threshold",
+            [220, 230, 240, 250, 260, 270, 280, 290, 300, 320, 340, 360],
+        ),
         ("MSTN-01", "dsum_threshold", [22, 23, 24, 25, 26, 27, 28, 29, 30]),
     ],
 )
