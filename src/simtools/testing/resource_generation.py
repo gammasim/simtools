@@ -12,6 +12,13 @@ from simtools.runners import simtools_runner
 
 logger = logging.getLogger(__name__)
 STATIC_MANIFEST = "static_manifest.yml"
+_PRESERVED_INTEGRATION_TEST_DIRECTORIES = {
+    "config_files",
+    "generated",
+    "log_files",
+    "static",
+    "tmp_application_output",
+}
 
 
 def get_integration_test_directory(test_directory, simtools_version):
@@ -133,6 +140,11 @@ def download_files(config_file, target_dir):
         If the configuration or a remote file does not exist.
     ValueError
         If the configuration structure is invalid or a version placeholder is unresolved.
+
+    Returns
+    -------
+    list[pathlib.Path]
+        Downloaded file paths.
     """
     if not Path(config_file).is_file():
         raise FileNotFoundError(f"Download configuration file does not exist: {config_file}")
@@ -154,6 +166,7 @@ def download_files(config_file, target_dir):
     }
     file_entries = gen.replace_placeholders_recursively(file_entries, replacements)
 
+    downloaded_files = []
     for index, entry in enumerate(file_entries):
         _validate_download_entry(entry, index)
         url = entry["url"]
@@ -170,6 +183,28 @@ def download_files(config_file, target_dir):
             raise FileNotFoundError(
                 f"Failed to download '{entry['description']}' from {url}"
             ) from exc
+        downloaded_files.append(destination)
+    return downloaded_files
+
+
+def _remove_empty_download_directories(downloaded_files, target_dir):
+    """Remove empty nonstandard top-level directories created for downloads."""
+    target_dir = Path(target_dir).resolve()
+    candidate_directories = set()
+    for downloaded_file in downloaded_files or []:
+        try:
+            relative_path = Path(downloaded_file).resolve().relative_to(target_dir)
+        except ValueError:
+            continue
+        if len(relative_path.parts) > 1:
+            candidate_directories.add(target_dir / relative_path.parts[0])
+
+    for directory in sorted(candidate_directories):
+        if directory.name in _PRESERVED_INTEGRATION_TEST_DIRECTORIES:
+            continue
+        if directory.is_dir() and not any(directory.iterdir()):
+            directory.rmdir()
+            logger.info("Removed empty download directory %s", directory)
 
 
 def prepare_runtime_environment(runtime_environment_file):
@@ -312,7 +347,7 @@ def generate_test_resources(
         "__TEST_DIRECTORY__": str(test_directory),
         "__SIMTOOLS_VERSION__": simtools_version,
     }
-    download_files(config_dir / "download_files.yml", integration_test_dir)
+    downloaded_files = download_files(config_dir / "download_files.yml", integration_test_dir)
     if download_only:
         return
 
@@ -324,12 +359,15 @@ def generate_test_resources(
     if runtime_environment_file is not None and not ignore_runtime_environment:
         runtime_environment, run_time = prepare_runtime_environment(runtime_environment_file)
 
-    run_configured_applications(
-        config_dir=config_dir,
-        log_dir=integration_test_dir / "log_files",
-        ignore_runtime_environment=ignore_runtime_environment,
-        overwrite_collection_files=overwrite_collection_files,
-        run_time=run_time,
-        runtime_environment=runtime_environment,
-        replacements=replacements,
-    )
+    try:
+        run_configured_applications(
+            config_dir=config_dir,
+            log_dir=integration_test_dir / "log_files",
+            ignore_runtime_environment=ignore_runtime_environment,
+            overwrite_collection_files=overwrite_collection_files,
+            run_time=run_time,
+            runtime_environment=runtime_environment,
+            replacements=replacements,
+        )
+    finally:
+        _remove_empty_download_directories(downloaded_files, integration_test_dir)
