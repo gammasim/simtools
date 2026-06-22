@@ -25,7 +25,6 @@ _logger = logging.getLogger(__name__)
 _SIMTEL_LOG_SUFFIX = ".simtel.log.gz"
 _REDUCED_EVENT_DATA_SUFFIX = ".reduced_event_data.hdf5"
 _COPY_CHUNK_SIZE = 1024 * 1024
-_STAGING_DIR_NAME = ".simtools-nsb-logs"
 _DEFAULT_PLOT_FILE_NAME = "bias_curve.png"
 
 
@@ -37,8 +36,7 @@ def generate_bias_curves(args):
     ----------
     args : dict
         Configuration parameters including:
-        - nsb_dir: Directory for NSB log files or log_hist archives
-        - proton_dir: Directory for proton simulation files
+        - data_dir: Directory containing both NSB log_hist archives/logs and proton simulation files
         - output: Output plot file path or output directory
         - nsb_output: Optional ECSV table output for NSB rates
         - proton_output: Optional ECSV table output for proton rates
@@ -163,34 +161,32 @@ def _get_telescope_name_from_layout(args):
 
 def _extract_nsb_rates(args, time_window):
     """Extract NSB trigger rates from direct sim_telarray logs or log_hist archives."""
-    nsb_dir = Path(args["nsb_dir"])
+    data_dir = Path(args["data_dir"])
 
     try:
-        direct_logs = list(nsb_dir.rglob(f"*{_SIMTEL_LOG_SUFFIX}"))
+        direct_logs = list(data_dir.rglob(f"*{_SIMTEL_LOG_SUFFIX}"))
         if direct_logs:
             _logger.info(f"Found {len(direct_logs)} direct sim_telarray log file(s)")
-            return _run_nsb_trigger_derivation(nsb_dir, args, time_window)
+            return _run_nsb_trigger_derivation(data_dir, args, time_window)
 
-        log_hist_archives = list(nsb_dir.rglob("*.log_hist.tar.gz"))
+        log_hist_archives = list(data_dir.rglob("*.log_hist.tar.gz"))
         if not log_hist_archives:
             raise FileNotFoundError(
-                f"No *{_SIMTEL_LOG_SUFFIX} files or *.log_hist.tar.gz archives found in {nsb_dir}"
+                f"No *{_SIMTEL_LOG_SUFFIX} files or *.log_hist.tar.gz archives found in {data_dir}"
             )
 
-        return _extract_archived_nsb_rates(args, nsb_dir, log_hist_archives, time_window)
+        return _extract_archived_nsb_rates(args, data_dir, log_hist_archives, time_window)
 
     except (FileNotFoundError, ValueError) as e:
         _logger.warning(f"Could not extract NSB rates: {e}")
         return {}
 
 
-def _extract_archived_nsb_rates(args, nsb_dir, log_hist_archives, time_window):
-    """Extract archived sim_telarray logs and derive NSB rates from them."""
-    staging_parent = _get_nsb_staging_parent(args, nsb_dir)
-
+def _extract_archived_nsb_rates(args, data_dir, log_hist_archives, time_window):
+    """Extract archived sim_telarray logs to /tmp and derive NSB rates from them."""
     with tempfile.TemporaryDirectory(
         prefix="simtools-nsb-logs-",
-        dir=staging_parent,
+        dir="/tmp",  # NOSONAR: temporary extracted logs are short-lived.
     ) as tmp_dir:
         tmp_dir = Path(tmp_dir)
         n_extracted = _extract_simtel_logs_from_archives(log_hist_archives, tmp_dir)
@@ -198,7 +194,7 @@ def _extract_archived_nsb_rates(args, nsb_dir, log_hist_archives, time_window):
         if n_extracted == 0:
             raise FileNotFoundError(
                 f"No *{_SIMTEL_LOG_SUFFIX} files found inside *.log_hist.tar.gz "
-                f"archives in {nsb_dir}"
+                f"archives in {data_dir}"
             )
 
         _logger.info(f"Extracted {n_extracted} sim_telarray log file(s) to {tmp_dir}")
@@ -206,23 +202,6 @@ def _extract_archived_nsb_rates(args, nsb_dir, log_hist_archives, time_window):
         nsb_stats = _run_nsb_trigger_derivation(tmp_dir, args, time_window)
         _logger.info(f"Found NSB rates for {len(nsb_stats)} thresholds")
         return nsb_stats
-
-
-def _get_nsb_staging_parent(args, nsb_dir):
-    """
-    Return a non-public parent directory for temporary NSB log extraction.
-
-    Avoids /tmp to satisfy python:S5443.
-    """
-    if args.get("temporary_directory"):
-        staging_parent = Path(args["temporary_directory"])
-    else:
-        output_path = Path(args.get("output", nsb_dir))
-        output_parent = output_path if output_path.suffix == "" else output_path.parent
-        staging_parent = output_parent / _STAGING_DIR_NAME
-
-    staging_parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-    return staging_parent
 
 
 def _run_nsb_trigger_derivation(root_dir, args, time_window):
@@ -287,11 +266,11 @@ def _extract_proton_rates(args):
 
     Thresholds and run numbers are extracted from file names.
     """
-    proton_dir = Path(args["proton_dir"])
-    proton_files = _group_hdf5_files_by_threshold_and_run(proton_dir)
+    data_dir = Path(args["data_dir"])
+    proton_files = _group_hdf5_files_by_threshold_and_run(data_dir)
 
     if not proton_files:
-        _logger.warning(f"No proton HDF5 files with threshold labels found in {proton_dir}")
+        _logger.warning(f"No proton HDF5 files with threshold labels found in {data_dir}")
         return {}
 
     _logger.info(f"Found proton HDF5 files for {len(proton_files)} thresholds")
