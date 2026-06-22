@@ -74,7 +74,7 @@ def _calculate_time_window(args):
     Calculate time window from telescope parameters.
 
     Gets telescope from array_layout_name and retrieves its parameters.
-    time_window = disc_bins / (fadc_mhz * 1e6)
+    time_window = disc_bins / (fadc_mhz x 1e6)
 
     Parameters
     ----------
@@ -204,7 +204,7 @@ def _extract_archived_nsb_rates(args, data_dir, log_hist_archives, time_window):
 
 
 def _run_nsb_trigger_derivation(root_dir, args, time_window):
-    """Run NSB trigger derivation on a directory containing *.simtel.log.gz files."""
+    """Run NSB trigger derivation on a directory containing ``gamma*.simtel.log.gz`` files."""
     nsb_args = {
         "root_dir": root_dir,
         "pattern": f"**/gamma*{_SIMTEL_LOG_SUFFIX}",
@@ -216,7 +216,7 @@ def _run_nsb_trigger_derivation(root_dir, args, time_window):
 
 
 def _extract_simtel_logs_from_archives(archives, output_dir):
-    """Extract *.simtel.log.gz files from *.log_hist.tar.gz archives."""
+    """Extract ``*.simtel.log.gz`` files from ``*.log_hist.tar.gz`` archives."""
     n_extracted = 0
 
     for archive in sorted(archives):
@@ -226,7 +226,7 @@ def _extract_simtel_logs_from_archives(archives, output_dir):
 
 
 def _extract_simtel_logs_from_archive(archive, output_dir):
-    """Extract *.simtel.log.gz files from one *.log_hist.tar.gz archive."""
+    """Extract ``*.simtel.log.gz`` files from one ``*.log_hist.tar.gz`` archive."""
     try:
         with tarfile.open(archive, "r:gz") as tar:
             return sum(
