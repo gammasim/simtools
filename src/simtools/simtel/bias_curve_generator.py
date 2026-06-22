@@ -9,6 +9,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
+from astropy.table import Table
 
 from simtools.layout.array_layout_utils import get_array_elements_from_db_for_layouts
 from simtools.model.telescope_model import TelescopeModel
@@ -16,6 +17,7 @@ from simtools.simtel.nsb_trigger_calculator import (
     derive_nsb_triggers,
     extract_threshold_from_file_name,
 )
+from simtools.simtel.simtel_log_reader import extract_run_number
 from simtools.telescope_trigger_rates import telescope_trigger_rates
 
 _logger = logging.getLogger(__name__)
@@ -24,6 +26,7 @@ _SIMTEL_LOG_SUFFIX = ".simtel.log.gz"
 _REDUCED_EVENT_DATA_SUFFIX = ".reduced_event_data.hdf5"
 _COPY_CHUNK_SIZE = 1024 * 1024
 _STAGING_DIR_NAME = ".simtools-nsb-logs"
+_DEFAULT_PLOT_FILE_NAME = "bias_curve.png"
 
 
 def generate_bias_curves(args):
@@ -36,8 +39,9 @@ def generate_bias_curves(args):
         Configuration parameters including:
         - nsb_dir: Directory for NSB log files or log_hist archives
         - proton_dir: Directory for proton simulation files
-        - output: Output plot file path
-        - nsb_table_output: Optional ECSV table output for NSB rates
+        - output: Output plot file path or output directory
+        - nsb_output: Optional ECSV table output for NSB rates
+        - proton_output: Optional ECSV table output for proton rates
         - site, model_version, array_layout_name or telescope_ids: For telescope config
         - title, ymin, ymax: Plot parameters
     """
@@ -50,12 +54,22 @@ def generate_bias_curves(args):
     _logger.info("Calculating proton trigger rates...")
     proton_stats = _extract_proton_rates(args)
 
-    _logger.info("Plotting bias curves...")
-    _plot_bias_curves(nsb_stats, proton_stats, args)
+    if args.get("proton_output"):
+        _write_proton_ecsv(proton_stats, args["proton_output"])
+        _logger.info(f"Proton table written to {args['proton_output']}")
 
-    _logger.info(f"Bias curves written to {args['output']}")
-    if args.get("nsb_table_output"):
-        _logger.info(f"NSB table written to {args['nsb_table_output']}")
+    plot_output_path = _resolve_plot_output_path(args["output"])
+    bias_curve_table_output = plot_output_path.with_suffix(".ecsv")
+
+    _logger.info("Plotting bias curves...")
+    _plot_bias_curves(nsb_stats, proton_stats, args, plot_output_path)
+
+    _write_bias_curve_ecsv(nsb_stats, proton_stats, bias_curve_table_output)
+
+    _logger.info(f"Bias curve plot written to {plot_output_path}")
+    _logger.info(f"Bias curve table written to {bias_curve_table_output}")
+    if args.get("nsb_output"):
+        _logger.info(f"NSB table written to {args['nsb_output']}")
 
 
 def _calculate_time_window(args):
@@ -216,7 +230,7 @@ def _run_nsb_trigger_derivation(root_dir, args, time_window):
     nsb_args = {
         "root_dir": root_dir,
         "pattern": f"**/gamma*{_SIMTEL_LOG_SUFFIX}",
-        "output": args.get("nsb_table_output"),
+        "output": args.get("nsb_output"),
         "time_window": time_window,
         "verbose": False,
     }
@@ -271,40 +285,27 @@ def _extract_proton_rates(args):
     """
     Extract proton trigger rates from HDF5 files.
 
-    Thresholds are extracted from file names like *_asum220.* or *_dsum220.*.
+    Thresholds and run numbers are extracted from file names.
     """
     proton_dir = Path(args["proton_dir"])
-    proton_stats = {}
+    proton_files = _group_hdf5_files_by_threshold_and_run(proton_dir)
 
-    threshold_files = _group_hdf5_files_by_threshold(proton_dir)
-
-    if not threshold_files:
+    if not proton_files:
         _logger.warning(f"No proton HDF5 files with threshold labels found in {proton_dir}")
-        return proton_stats
+        return {}
 
-    _logger.info(f"Found proton HDF5 files for {len(threshold_files)} thresholds")
+    _logger.info(f"Found proton HDF5 files for {len(proton_files)} thresholds")
 
-    for threshold, hdf5_files in sorted(threshold_files.items()):
-        _logger.info(f"Processing threshold {threshold}: {len(hdf5_files)} HDF5 file(s)")
-
-        threshold_rates = [
-            rate
-            for hdf5_file in hdf5_files
-            if (rate := _calculate_proton_rate_for_file(hdf5_file, args)) is not None
-        ]
-
-        if threshold_rates:
-            avg_rate = np.mean(threshold_rates)
-            proton_stats[threshold] = avg_rate
-            _logger.info(
-                f"Threshold {threshold}: {avg_rate:.2f} Hz (from {len(threshold_rates)} files)"
-            )
+    proton_stats = {}
+    for threshold, run_files in sorted(proton_files.items()):
+        _logger.info(f"Processing threshold {threshold}: {len(run_files)} HDF5 file(s)")
+        proton_stats[threshold] = _calculate_proton_statistics_for_threshold(run_files, args)
 
     return proton_stats
 
 
-def _group_hdf5_files_by_threshold(proton_dir):
-    """Group proton HDF5 files by threshold extracted from the file name."""
+def _group_hdf5_files_by_threshold_and_run(proton_dir):
+    """Group proton HDF5 files by threshold and run extracted from file names."""
     threshold_files = {}
 
     for hdf5_file in proton_dir.rglob(f"*{_REDUCED_EVENT_DATA_SUFFIX}"):
@@ -312,12 +313,48 @@ def _group_hdf5_files_by_threshold(proton_dir):
             continue
 
         threshold = extract_threshold_from_file_name(hdf5_file)
-        if threshold is None:
+        run = extract_run_number(hdf5_file)
+
+        if threshold is None or run is None:
+            _logger.warning(
+                f"Skipping proton file with missing threshold or run: "
+                f"{hdf5_file} (threshold={threshold}, run={run})"
+            )
             continue
 
-        threshold_files.setdefault(threshold, []).append(hdf5_file)
+        threshold_files.setdefault(threshold, {})[run] = hdf5_file
 
     return threshold_files
+
+
+def _calculate_proton_statistics_for_threshold(run_files, args):
+    """Calculate mean proton trigger rate and error for one threshold."""
+    run_rates = {}
+
+    for run, hdf5_file in sorted(run_files.items()):
+        rate = _calculate_proton_rate_for_file(hdf5_file, args)
+        if rate is not None:
+            run_rates[run] = rate
+
+    rates = list(run_rates.values())
+    if not rates:
+        return {
+            "runs": {},
+            "rate_hz": np.nan,
+            "error_hz": np.nan,
+            "num_runs": 0,
+        }
+
+    error_hz = 0
+    if len(rates) > 1:
+        error_hz = np.std(rates, ddof=1) / np.sqrt(len(rates))
+
+    return {
+        "runs": run_rates,
+        "rate_hz": float(np.mean(rates)),
+        "error_hz": float(error_hz),
+        "num_runs": len(rates),
+    }
 
 
 def _calculate_proton_rate_for_file(hdf5_file, args):
@@ -366,7 +403,89 @@ def _calculate_proton_rate_for_file(hdf5_file, args):
         return None
 
 
-def _plot_bias_curves(nsb_stats, proton_stats, args):
+def _resolve_plot_output_path(output):
+    """Resolve output as either an explicit plot file or an output directory."""
+    output_path = Path(output)
+
+    if output_path.suffix:
+        return output_path
+
+    return output_path / _DEFAULT_PLOT_FILE_NAME
+
+
+def _write_proton_ecsv(proton_stats, output_file):
+    """Write runwise proton trigger rates to an ECSV table."""
+    output_file = Path(output_file)
+
+    if not proton_stats:
+        raise ValueError("No proton statistics to write")
+
+    all_runs = sorted(
+        {run for threshold_stats in proton_stats.values() for run in threshold_stats["runs"].keys()}
+    )
+
+    threshold_col = []
+    run_cols = {run: [] for run in all_runs}
+    rate_hz_col = []
+    error_hz_col = []
+    num_runs_col = []
+
+    for threshold in sorted(proton_stats.keys()):
+        stats = proton_stats[threshold]
+        threshold_col.append(threshold)
+
+        for run in all_runs:
+            run_cols[run].append(stats["runs"].get(run, np.nan))
+
+        rate_hz_col.append(stats["rate_hz"])
+        error_hz_col.append(stats["error_hz"])
+        num_runs_col.append(stats["num_runs"])
+
+    table_data = {"threshold": threshold_col}
+    for run in all_runs:
+        table_data[f"run{run}"] = run_cols[run]
+
+    table_data["Rate (Hz)"] = rate_hz_col
+    table_data["Error (Hz)"] = error_hz_col
+    table_data["Num runs"] = num_runs_col
+
+    table = Table(table_data)
+    table.meta["comments"] = ["Run columns contain proton trigger rates in Hz."]
+
+    for col in ["Rate (Hz)", "Error (Hz)"]:
+        table[col].format = ".2f"
+
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    table.write(output_file, format="ascii.ecsv", overwrite=True)
+
+
+def _write_bias_curve_ecsv(nsb_stats, proton_stats, output_file):
+    """Write final plotted bias-curve values to an ECSV table."""
+    output_file = Path(output_file)
+    thresholds = sorted(set(nsb_stats.keys()) | set(proton_stats.keys()))
+
+    table = Table(
+        {
+            "threshold": thresholds,
+            "NSB rate (Hz)": [
+                nsb_stats[threshold]["rate_hz"] if threshold in nsb_stats else np.nan
+                for threshold in thresholds
+            ],
+            "Proton rate (Hz)": [
+                proton_stats[threshold]["rate_hz"] if threshold in proton_stats else np.nan
+                for threshold in thresholds
+            ],
+        }
+    )
+
+    table["NSB rate (Hz)"].format = ".2f"
+    table["Proton rate (Hz)"].format = ".2f"
+
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    table.write(output_file, format="ascii.ecsv", overwrite=True)
+
+
+def _plot_bias_curves(nsb_stats, proton_stats, args, output_path):
     """
     Plot NSB and proton bias curves.
 
@@ -375,9 +494,11 @@ def _plot_bias_curves(nsb_stats, proton_stats, args):
     nsb_stats : dict
         NSB statistics by threshold.
     proton_stats : dict
-        Proton rates by threshold.
+        Proton statistics by threshold.
     args : dict
         Plot parameters.
+    output_path : Path
+        Output path for plot image.
     """
     fig, axis = plt.subplots(figsize=(10, 7))
 
@@ -386,7 +507,6 @@ def _plot_bias_curves(nsb_stats, proton_stats, args):
     _configure_bias_curve_axis(axis, args)
 
     fig.tight_layout()
-    output_path = Path(args["output"])
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
@@ -420,7 +540,7 @@ def _plot_proton_curve(axis, proton_stats):
         return
 
     proton_thresholds = sorted(proton_stats.keys())
-    proton_rates = [proton_stats[t] for t in proton_thresholds]
+    proton_rates = [proton_stats[t]["rate_hz"] for t in proton_thresholds]
 
     axis.plot(
         proton_thresholds,
