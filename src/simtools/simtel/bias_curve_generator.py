@@ -6,7 +6,6 @@ import tarfile
 import tempfile
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
@@ -19,13 +18,13 @@ from simtools.simtel.nsb_trigger_calculator import (
 )
 from simtools.simtel.simtel_log_reader import extract_run_number
 from simtools.telescope_trigger_rates import telescope_trigger_rates
+from simtools.visualization import plot_tables
 
 _logger = logging.getLogger(__name__)
 
 _SIMTEL_LOG_SUFFIX = ".simtel.log.gz"
 _REDUCED_EVENT_DATA_SUFFIX = ".reduced_event_data.hdf5"
 _COPY_CHUNK_SIZE = 1024 * 1024
-_DEFAULT_PLOT_FILE_NAME = "bias_curve.png"
 
 
 def generate_bias_curves(args):
@@ -56,11 +55,11 @@ def generate_bias_curves(args):
         _write_proton_ecsv(proton_stats, args["proton_output"])
         _logger.info(f"Proton table written to {args['proton_output']}")
 
-    plot_output_path = _resolve_plot_output_path(args["output"])
+    plot_output_path = plot_tables.resolve_plot_output_path(args["output"])
     bias_curve_table_output = plot_output_path.with_suffix(".ecsv")
 
     _logger.info("Plotting bias curves...")
-    _plot_bias_curves(nsb_stats, proton_stats, args, plot_output_path)
+    plot_tables.plot_bias_curves(nsb_stats, proton_stats, args, plot_output_path)
 
     _write_bias_curve_ecsv(nsb_stats, proton_stats, bias_curve_table_output)
 
@@ -186,7 +185,7 @@ def _extract_archived_nsb_rates(args, data_dir, log_hist_archives, time_window):
     """Extract archived sim_telarray logs to /tmp and derive NSB rates from them."""
     with tempfile.TemporaryDirectory(
         prefix="simtools-nsb-logs-",
-        dir="/tmp",  # NOSONAR: temporary extracted logs are short-lived.
+        dir="/tmp",
     ) as tmp_dir:
         tmp_dir = Path(tmp_dir)
         n_extracted = _extract_simtel_logs_from_archives(log_hist_archives, tmp_dir)
@@ -377,19 +376,17 @@ def _calculate_proton_rate_for_file(hdf5_file, args):
 
         return None
 
-    except (OSError, KeyError, ValueError, AttributeError) as e:
+    except TypeError as e:
+        if "NoneType" in str(e):
+            _logger.info(f"No triggered event data found in {hdf5_file}; using 0 Hz")
+            return 0.0
+
         _logger.debug(f"Error calculating rate for {hdf5_file}: {e}")
         return None
 
-
-def _resolve_plot_output_path(output):
-    """Resolve output as either an explicit plot file or an output directory."""
-    output_path = Path(output)
-
-    if output_path.suffix:
-        return output_path
-
-    return output_path / _DEFAULT_PLOT_FILE_NAME
+    except (OSError, KeyError, ValueError, AttributeError) as e:
+        _logger.debug(f"Error calculating rate for {hdf5_file}: {e}")
+        return None
 
 
 def _write_proton_ecsv(proton_stats, output_file):
@@ -462,107 +459,3 @@ def _write_bias_curve_ecsv(nsb_stats, proton_stats, output_file):
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
     table.write(output_file, format="ascii.ecsv", overwrite=True)
-
-
-def _plot_bias_curves(nsb_stats, proton_stats, args, output_path):
-    """
-    Plot NSB and proton bias curves.
-
-    Parameters
-    ----------
-    nsb_stats : dict
-        NSB statistics by threshold.
-    proton_stats : dict
-        Proton statistics by threshold.
-    args : dict
-        Plot parameters.
-    output_path : Path
-        Output path for plot image.
-    """
-    fig, axis = plt.subplots(figsize=(10, 7))
-
-    _plot_nsb_curve(axis, nsb_stats)
-    _plot_proton_curve(axis, proton_stats)
-    _configure_bias_curve_axis(axis, args)
-
-    fig.tight_layout()
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output_path, dpi=200, bbox_inches="tight")
-    plt.close(fig)
-
-
-def _plot_nsb_curve(axis, nsb_stats):
-    """Plot NSB trigger rates."""
-    if not nsb_stats:
-        return
-
-    nsb_thresholds = sorted(nsb_stats.keys())
-    nsb_rates = [nsb_stats[t]["rate_hz"] for t in nsb_thresholds]
-    nsb_errors = [nsb_stats[t]["error_hz"] for t in nsb_thresholds]
-
-    axis.errorbar(
-        nsb_thresholds,
-        nsb_rates,
-        yerr=nsb_errors,
-        fmt="o",
-        label="NSB",
-        color="tab:blue",
-        capsize=3,
-    )
-
-    _plot_log_linear_trend(axis, nsb_thresholds, nsb_rates, color="tab:blue")
-
-
-def _plot_proton_curve(axis, proton_stats):
-    """Plot proton trigger rates."""
-    if not proton_stats:
-        return
-
-    proton_thresholds = sorted(proton_stats.keys())
-    proton_rates = [proton_stats[t]["rate_hz"] for t in proton_thresholds]
-
-    axis.plot(
-        proton_thresholds,
-        proton_rates,
-        "s",
-        label="Proton",
-        color="tab:orange",
-        markersize=8,
-    )
-
-    _plot_log_linear_trend(axis, proton_thresholds, proton_rates, color="tab:orange")
-
-
-def _plot_log_linear_trend(axis, thresholds, rates, color):
-    """Plot a log-linear trend line when at least two positive rates are available."""
-    if len(thresholds) < 2:
-        return
-
-    valid_mask = np.array(rates) > 0
-    if np.sum(valid_mask) < 2:
-        return
-
-    fit_thresholds = np.array(thresholds)[valid_mask]
-    fit_rates = np.array(rates)[valid_mask]
-
-    coeffs = np.polyfit(fit_thresholds, np.log10(fit_rates), 1)
-    x_fit = np.linspace(min(fit_thresholds), max(fit_thresholds), 100)
-    y_fit = 10 ** (coeffs[0] * x_fit + coeffs[1])
-
-    axis.plot(x_fit, y_fit, "--", color=color, alpha=0.5, linewidth=1)
-
-
-def _configure_bias_curve_axis(axis, args):
-    """Configure bias-curve axis labels, scaling, and legend."""
-    axis.set_title(args["title"], fontsize=14, fontweight="bold")
-    axis.set_xlabel("Threshold", fontsize=12)
-    axis.set_ylabel("Trigger Rate [Hz]", fontsize=12)
-    axis.set_yscale("log")
-    axis.set_ylim(args["ymin"], args["ymax"])
-    axis.grid(which="both", alpha=0.3, linestyle=":")
-
-    handles, _ = axis.get_legend_handles_labels()
-    if handles:
-        axis.legend(fontsize=11, loc="best")
-    else:
-        _logger.warning("No NSB or proton rates found; writing empty bias-curve plot")
