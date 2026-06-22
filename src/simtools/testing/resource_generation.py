@@ -208,6 +208,27 @@ def _calculate_sha256(file_path):
     return checksum.hexdigest()
 
 
+def _validate_static_manifest_entry(entry, index, static_dir, declared_files):
+    """Validate one static-file manifest entry and return discovered errors."""
+    if not isinstance(entry, dict) or not entry.get("file_name") or not entry.get("sha256"):
+        return [f"Manifest entry {index} requires file_name and sha256 values."]
+
+    relative_path = Path(entry["file_name"])
+    file_name = relative_path.as_posix()
+    if relative_path.is_absolute() or ".." in relative_path.parts:
+        return [f"Invalid manifest path: {file_name}"]
+    if file_name in declared_files:
+        return [f"Duplicate manifest entry: {file_name}"]
+
+    declared_files.add(file_name)
+    static_file = static_dir / relative_path
+    if not static_file.is_file():
+        return [f"Missing static file: {file_name}"]
+    if _calculate_sha256(static_file) != str(entry["sha256"]):
+        return [f"Checksum mismatch: {file_name}"]
+    return []
+
+
 def validate_static_files(manifest_file):
     """Validate static integration-test files against their manifest.
 
@@ -236,25 +257,7 @@ def validate_static_files(manifest_file):
     declared_files = set()
     errors = []
     for index, entry in enumerate(entries):
-        if not isinstance(entry, dict) or not entry.get("file_name") or not entry.get("sha256"):
-            errors.append(f"Manifest entry {index} requires file_name and sha256 values.")
-            continue
-
-        relative_path = Path(entry["file_name"])
-        file_name = relative_path.as_posix()
-        if relative_path.is_absolute() or ".." in relative_path.parts:
-            errors.append(f"Invalid manifest path: {file_name}")
-            continue
-        if file_name in declared_files:
-            errors.append(f"Duplicate manifest entry: {file_name}")
-            continue
-        declared_files.add(file_name)
-
-        static_file = static_dir / relative_path
-        if not static_file.is_file():
-            errors.append(f"Missing static file: {file_name}")
-        elif _calculate_sha256(static_file) != str(entry["sha256"]):
-            errors.append(f"Checksum mismatch: {file_name}")
+        errors.extend(_validate_static_manifest_entry(entry, index, static_dir, declared_files))
 
     actual_files = {
         path.relative_to(static_dir).as_posix()
