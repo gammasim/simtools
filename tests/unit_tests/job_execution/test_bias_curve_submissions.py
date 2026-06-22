@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 from unittest.mock import call, patch
 
@@ -269,3 +270,178 @@ def test_threshold_scan_is_chosen_from_telescope_type(
 def test_threshold_param_name_rejects_empty_telescope_name():
     with pytest.raises(ValueError, match="empty telescope name"):
         bias_curve_submissions._threshold_param_name("")
+
+
+# Coverage edge cases for bias_curve_submissions.py
+
+
+def test_resolve_telescopes_from_layout_returns_single_valid_telescope(tmp_test_directory):
+    args = _base_args(tmp_test_directory)
+
+    with patch("simtools.job_execution.bias_curve_submissions.SiteModel") as mock_site_model:
+        mock_site_model.return_value.get_array_elements_for_layout.return_value = ["LSTN-01"]
+
+        assert bias_curve_submissions._resolve_telescopes_from_layout(args) == ["LSTN-01"]
+
+
+def test_resolve_telescopes_from_layout_rejects_invalid_telescope(tmp_test_directory):
+    args = _base_args(tmp_test_directory)
+
+    with patch("simtools.job_execution.bias_curve_submissions.SiteModel") as mock_site_model:
+        mock_site_model.return_value.get_array_elements_for_layout.return_value = ["Invalid-LST"]
+
+        with pytest.raises(ValueError, match="resolved to invalid telescope"):
+            bias_curve_submissions._resolve_telescopes_from_layout(args)
+
+
+def test_run_command_success(tmp_test_directory):
+    with patch("simtools.job_execution.bias_curve_submissions.subprocess.run") as mock_run:
+        bias_curve_submissions._run_command(["echo", "ok"], Path(tmp_test_directory))
+
+    mock_run.assert_called_once_with(["echo", "ok"], cwd=Path(tmp_test_directory), check=True)
+
+
+def test_run_command_raises_runtime_error_on_failure(tmp_test_directory):
+    with patch("simtools.job_execution.bias_curve_submissions.subprocess.run") as mock_run:
+        mock_run.side_effect = subprocess.CalledProcessError(1, ["bad", "cmd"])
+
+        with pytest.raises(RuntimeError, match="Command failed: bad cmd"):
+            bias_curve_submissions._run_command(["bad", "cmd"], Path(tmp_test_directory))
+
+
+def test_threshold_param_name_rejects_unknown_telescope_type():
+    with pytest.raises(ValueError, match="Expected telescope name to start with L, M, or S"):
+        bias_curve_submissions._threshold_param_name("XSTN-01")
+
+
+def test_threshold_values_rejects_unsupported_threshold_parameter(monkeypatch):
+    monkeypatch.setattr(
+        bias_curve_submissions,
+        "_threshold_param_name",
+        lambda telescope: "unknown_threshold",
+    )
+
+    with pytest.raises(ValueError, match="Unsupported threshold parameter"):
+        bias_curve_submissions._threshold_values_for_telescope("LSTN-01")
+
+
+@pytest.mark.parametrize(
+    ("threshold", "expected"),
+    [
+        (220.0, 220),
+        (220, 220),
+        (220.5, 220.5),
+    ],
+)
+def test_format_threshold_value(threshold, expected):
+    assert bias_curve_submissions._format_threshold_value(threshold) == expected
+
+
+def test_threshold_label_uses_short_parameter_name():
+    assert bias_curve_submissions._threshold_label("asum_threshold", 220) == "asum220"
+    assert bias_curve_submissions._threshold_label("dsum_threshold", 22) == "dsum22"
+
+
+def test_build_overwrite_content_rejects_unknown_curve(tmp_test_directory):
+    args = _base_args(tmp_test_directory)
+
+    with pytest.raises(ValueError, match="Unsupported curve name"):
+        bias_curve_submissions._build_overwrite_content(
+            curve_name="unknown",
+            telescopes=["LSTN-01"],
+            threshold=220,
+            args=args,
+        )
+
+
+def test_generate_overwrite_files_rejects_multiple_telescopes(tmp_test_directory):
+    args = _base_args(tmp_test_directory)
+
+    with pytest.raises(ValueError, match="expects exactly one telescope"):
+        bias_curve_submissions._generate_overwrite_files(
+            curve_name="nsb",
+            telescopes=["LSTN-01", "LSTN-02"],
+            args=args,
+            curve_directory=Path(tmp_test_directory),
+        )
+
+
+@patch("simtools.job_execution.bias_curve_submissions.serialize_job_grid")
+@patch("simtools.job_execution.bias_curve_submissions.read_job_grid")
+def test_build_scan_grid_adds_overwrite_scan_label_and_telescope(
+    mock_read_job_grid,
+    mock_serialize_job_grid,
+    tmp_test_directory,
+):
+    base_row = {"primary": "gamma", "run_number": 1}
+    metadata = {"site": "North"}
+    mock_read_job_grid.return_value = ([base_row], metadata)
+
+    overwrite_file = Path(tmp_test_directory) / "overwrite_asum220.yaml"
+    scan_grid_file = Path(tmp_test_directory) / "scan_grid.ecsv"
+
+    bias_curve_submissions._build_scan_grid(
+        base_grid_file=Path(tmp_test_directory) / "base_grid.ecsv",
+        overwrite_files_and_labels=[(overwrite_file, "asum220")],
+        scan_grid_file=scan_grid_file,
+        telescope="LSTN-01",
+    )
+
+    expanded_rows = mock_serialize_job_grid.call_args.args[0]
+    assert expanded_rows == [
+        {
+            "primary": "gamma",
+            "run_number": 1,
+            "overwrite_model_parameters": str(overwrite_file),
+            "scan_label": "asum220",
+            "telescope": "LSTN-01",
+        }
+    ]
+    mock_serialize_job_grid.assert_called_once_with(
+        expanded_rows,
+        scan_grid_file,
+        metadata=metadata,
+    )
+
+
+@patch("simtools.job_execution.bias_curve_submissions.serialize_job_grid")
+@patch("simtools.job_execution.bias_curve_submissions.read_job_grid")
+def test_build_scan_grid_does_not_add_empty_telescope(
+    mock_read_job_grid,
+    mock_serialize_job_grid,
+    tmp_test_directory,
+):
+    mock_read_job_grid.return_value = ([{"primary": "gamma"}], {})
+
+    overwrite_file = Path(tmp_test_directory) / "overwrite_asum220.yaml"
+
+    bias_curve_submissions._build_scan_grid(
+        base_grid_file=Path(tmp_test_directory) / "base_grid.ecsv",
+        overwrite_files_and_labels=[(overwrite_file, "asum220")],
+        scan_grid_file=Path(tmp_test_directory) / "scan_grid.ecsv",
+        telescope="",
+    )
+
+    expanded_rows = mock_serialize_job_grid.call_args.args[0]
+    assert "telescope" not in expanded_rows[0]
+
+
+def test_build_htcondor_args_requires_apptainer_image(tmp_test_directory):
+    args = _base_args(tmp_test_directory)
+    args["apptainer_image"] = ""
+
+    with pytest.raises(ValueError, match="Missing required argument: --apptainer_image"):
+        bias_curve_submissions._build_htcondor_args(
+            label="nsb",
+            curve_directory=Path(tmp_test_directory),
+            scan_grid_file=Path(tmp_test_directory) / "scan_grid.ecsv",
+            args=args,
+        )
+
+
+def test_validate_required_args_rejects_missing_required_argument(tmp_test_directory):
+    args = _base_args(tmp_test_directory)
+    args["site"] = ""
+
+    with pytest.raises(ValueError, match="Missing required argument: --site"):
+        bias_curve_submissions._validate_required_args(args)
