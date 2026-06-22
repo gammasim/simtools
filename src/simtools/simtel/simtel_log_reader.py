@@ -39,6 +39,7 @@ def read_log_file(file_path):
     if file_path.suffix == ".gz":
         with gzip.open(file_path, mode="rt", encoding="utf-8") as f:
             return f.read()
+
     with open(file_path, encoding="utf-8") as f:
         return f.read()
 
@@ -47,7 +48,8 @@ def extract_trigger_count(log_text):
     """
     Extract telescope trigger count from log text.
 
-    Searches for the pattern "Tel. triggered: N" in the log.
+    SIMTEL logs can contain multiple "Tel. triggered" lines. The final trigger
+    statistics block is the run summary, so use the last match.
 
     Parameters
     ----------
@@ -57,11 +59,12 @@ def extract_trigger_count(log_text):
     Returns
     -------
     int or None
-        Number of telescopes triggered, or None if not found.
+        Number of telescope triggers, or None if not found.
     """
-    match = TRIGGERED_PATTERN.search(log_text)
-    if match:
-        return int(match.group(1))
+    matches = TRIGGERED_PATTERN.findall(log_text)
+    if matches:
+        return int(matches[-1])
+
     _logger.warning("Could not find 'Tel. triggered' pattern in log")
     return None
 
@@ -70,7 +73,8 @@ def extract_event_count(log_text):
     """
     Extract total event count from log text.
 
-    Searches for the pattern "Run(s) completed as expected after N events".
+    SIMTEL logs can contain more than one completion message. Use the last match
+    to get the final run summary.
 
     Parameters
     ----------
@@ -82,9 +86,10 @@ def extract_event_count(log_text):
     int or None
         Number of events, or None if not found.
     """
-    match = EVENT_COUNT_PATTERN.search(log_text)
-    if match:
-        return int(match.group(1))
+    matches = EVENT_COUNT_PATTERN.findall(log_text)
+    if matches:
+        return int(matches[-1])
+
     _logger.warning("Could not find event count pattern in log")
     return None
 
@@ -107,12 +112,10 @@ def extract_run_number(file_path):
     """
     file_path = Path(file_path)
 
-    # Search in filename first
     match = RUN_NUMBER_PATTERN.search(file_path.name)
     if match:
         return int(match.group(1))
 
-    # Search in parent directories
     for part in file_path.parts:
         match = RUN_NUMBER_PATTERN.search(part)
         if match:
@@ -140,10 +143,7 @@ def extract_threshold(file_path):
     """
     file_path = Path(file_path)
 
-    # Look for a numeric directory name in the path
-    # Start from the beginning of the path to find threshold directories
     for part in file_path.parts:
-        # Check if this part is a number (threshold directory)
         if part.isdigit():
             threshold = int(part)
             if 10 <= threshold <= 1000:
@@ -173,7 +173,6 @@ def parse_log_file(file_path):
     try:
         log_text = read_log_file(file_path)
     except Exception as e:  # pylint: disable=broad-exception-caught
-        # Catch all exceptions to continue processing remaining files
         _logger.error(f"Failed to read {file_path}: {e}")
         return None
 
