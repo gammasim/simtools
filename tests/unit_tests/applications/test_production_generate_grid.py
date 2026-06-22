@@ -132,7 +132,7 @@ def test_add_arguments_accepts_legacy_energy_max_scaling_index():
     assert args.energy_max_scaling_index == pytest.approx(-2.5)
 
 
-def test_renumber_job_rows_starts_at_configured_run_number_offset():
+def test_renumber_job_rows_applies_run_number_offset():
     job_rows = [{"run_number": 10}, {"run_number": 10}, {"run_number": 11}]
 
     assert [
