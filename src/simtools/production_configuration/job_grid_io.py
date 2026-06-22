@@ -17,6 +17,7 @@ _ECSV_FORMAT = "ascii.ecsv"
 _STREAM_CHUNK_SIZE = 10_000
 
 JOB_GRID_COLUMNS = [
+    "run_number",
     "primary",
     "azimuth_angle_value",
     "azimuth_angle_unit",
@@ -34,12 +35,10 @@ JOB_GRID_COLUMNS = [
     "view_cone_max_value",
     "view_cone_max_unit",
     "showers_per_run",
-    "nsb_rate",
     "model_version",
     "array_layout_name",
     "corsika_le_interaction",
     "corsika_he_interaction",
-    "run_number",
 ]
 
 _QUANTITY_FIELDS = {
@@ -65,7 +64,7 @@ _JOB_GRID_COLUMN_DTYPES = {
     "energy_min_unit": str,
     "energy_max_value": float,
     "energy_max_unit": str,
-    "core_scatter_number": int,
+    "cores_per_shower": int,
     "core_scatter_max_value": float,
     "core_scatter_max_unit": str,
     "view_cone_min_value": float,
