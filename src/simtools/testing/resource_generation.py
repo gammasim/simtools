@@ -44,6 +44,7 @@ def get_integration_test_directory(test_directory, simtools_version):
     )
     return repo_root / simtools_version / "integration_tests"
 
+
 def get_resource_generation_directory(test_directory, simtools_version):
     """Return the configuration directory for resource generation.
 
@@ -130,7 +131,10 @@ def _validate_download_entry(entry, index):
 
     target_path = Path(entry["target_path"])
     if target_path.is_absolute() or ".." in target_path.parts:
-        raise ValueError(f"Download entry {index} has invalid target_path: {target_path.as_posix()}")
+        raise ValueError(
+            f"Download entry {index} has invalid target_path: {target_path.as_posix()}"
+        )
+
 
 def download_files(config_file, target_dir):
     """Download external files listed in a resource-generation configuration.
