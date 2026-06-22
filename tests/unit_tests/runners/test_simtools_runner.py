@@ -51,6 +51,71 @@ def mock_change_dict_keys_case(monkeypatch):
     return _mocked_change_dict_keys_case
 
 
+def _patch_application_configuration_read(
+    monkeypatch,
+    applications,
+    mock_collect_data_from_file,
+    mock_set_input_output_directories,
+    mock_change_dict_keys_case,
+    placeholder_replacement,
+):
+    monkeypatch.setattr(
+        "simtools.io.ascii_handler.collect_data_from_file",
+        mock_collect_data_from_file(applications),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._set_input_output_directories",
+        mock_set_input_output_directories,
+    )
+    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
+        placeholder_replacement,
+    )
+
+
+def _patch_run_applications_dependencies(
+    monkeypatch,
+    mock_configurations,
+    log_file_path,
+    collection_config=None,
+    submit_mock=None,
+):
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._read_application_configuration",
+        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id")),
+    )
+    if collection_config is not None:
+        monkeypatch.setattr(
+            "simtools.io.ascii_handler.collect_data_from_file",
+            mock.Mock(return_value={"collection": collection_config}),
+        )
+    monkeypatch.setattr(
+        "simtools.dependencies.get_version_string",
+        mock.Mock(return_value="simtools version: 1.2.3\n"),
+    )
+    monkeypatch.setattr(
+        "simtools.job_execution.job_manager.submit",
+        submit_mock or mock.Mock(return_value=mock.Mock(stdout="ok", stderr="")),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner.workflow_metadata.build_workflow_activity_metadata",
+        mock.Mock(return_value={"id": "wf-activity-id"}),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner.workflow_metadata.update_model_parameter_metadata_file",
+        mock.Mock(),
+    )
+
+
+def _runner_args(config_file="dummy_config.yml", steps=None, ignore_runtime_environment=False):
+    return {
+        "config_file": config_file,
+        "steps": steps,
+        "ignore_runtime_environment": ignore_runtime_environment,
+    }
+
+
 def test_set_input_output_directories():
     path = "input/LSTN-01/pm_photoelectron_spectrum/20250304T073000/config.yml"
     output_path, setting_workflow = simtools_runner._set_input_output_directories(path)
@@ -58,10 +123,10 @@ def test_set_input_output_directories():
 
     assert setting_workflow == "LSTN-01/pm_photoelectron_spectrum/20250304T073000"
 
-    path = "tests/resources_generation/application_config/config.yml"
+    path = "tests/config_files/application_config/config.yml"
     output_path, setting_workflow = simtools_runner._set_input_output_directories(path)
-    assert str(output_path) == "output/tests/resources_generation/application_config"
-    assert setting_workflow == "tests/resources_generation/application_config"
+    assert str(output_path) == "output/tests/config_files/application_config"
+    assert setting_workflow == "tests/config_files/application_config"
 
 
 def test_replace_placeholders_in_configuration_replaces_string():
@@ -126,6 +191,57 @@ def test_replace_placeholders_in_configuration_keeps_existing_output_path(tmp_te
     assert result["input_file"] == "LSTN-01/workflow/data.txt"
 
 
+def test_prepare_application_configuration_resolves_by_version(tmp_test_directory):
+    config = {
+        "model_version": "6.0.2",
+        "array_layout_name": {
+            "by_version": {
+                "<7.0.0": "alpha",
+                ">=7.0.0": "CTAO-North-Alpha",
+            }
+        },
+        "output_path": "existing-output",
+    }
+
+    result = simtools_runner._prepare_application_configuration(
+        config.copy(),
+        tmp_test_directory / "workflow",
+        "tests/config_files/application_config",
+    )
+
+    assert result["array_layout_name"] == "alpha"
+    assert result["output_path"] == "existing-output"
+
+
+def test_read_application_configuration_applies_replacements(monkeypatch, tmp_test_directory):
+    monkeypatch.setattr(
+        simtools_runner.ascii_handler,
+        "collect_data_from_file",
+        lambda _: {
+            "applications": [
+                {
+                    "application": "app",
+                    "configuration": {
+                        "output_path": "__TEST_DIRECTORY__/generated",
+                    },
+                }
+            ]
+        },
+    )
+
+    configurations, _, _, _ = simtools_runner._read_application_configuration(
+        "workflow.config.yml",
+        steps=None,
+        replacements={
+            "__TEST_DIRECTORY__": str(tmp_test_directory),
+        },
+    )
+
+    assert configurations[0]["configuration"]["output_path"] == str(
+        tmp_test_directory / "generated"
+    )
+
+
 def test_read_application_configuration_selected_steps(
     monkeypatch,
     mock_logger,
@@ -138,17 +254,12 @@ def test_read_application_configuration_selected_steps(
         {"application": "app2", "configuration": {"key": "value2"}},
         {"application": "app3", "configuration": {"key": "value3"}},
     ]
-    monkeypatch.setattr(
-        "simtools.io.ascii_handler.collect_data_from_file",
-        mock_collect_data_from_file(applications),
-    )
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._set_input_output_directories",
+    _patch_application_configuration_read(
+        monkeypatch,
+        applications,
+        mock_collect_data_from_file,
         mock_set_input_output_directories,
-    )
-    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
+        mock_change_dict_keys_case,
         lambda config, output_path, setting_workflow: {**config, "output_path": str(output_path)},
     )
 
@@ -172,17 +283,12 @@ def test_read_application_configuration_empty_applications(
     mock_change_dict_keys_case,
 ):
     applications = []
-    monkeypatch.setattr(
-        "simtools.io.ascii_handler.collect_data_from_file",
-        mock_collect_data_from_file(applications),
-    )
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._set_input_output_directories",
+    _patch_application_configuration_read(
+        monkeypatch,
+        applications,
+        mock_collect_data_from_file,
         mock_set_input_output_directories,
-    )
-    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
+        mock_change_dict_keys_case,
         lambda config, output_path, setting_workflow: config,
     )
 
@@ -206,17 +312,12 @@ def test_read_application_configuration_uses_first_app_output_path_for_log(
         {"application": "app1", "configuration": {"key": "value", "output_path": "my-output"}},
         {"application": "app2", "configuration": {"key": "value2", "output_path": "other-output"}},
     ]
-    monkeypatch.setattr(
-        "simtools.io.ascii_handler.collect_data_from_file",
-        mock_collect_data_from_file(applications),
-    )
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._set_input_output_directories",
+    _patch_application_configuration_read(
+        monkeypatch,
+        applications,
+        mock_collect_data_from_file,
         mock_set_input_output_directories,
-    )
-    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
+        mock_change_dict_keys_case,
         lambda config, output_path, setting_workflow: config,
     )
 
@@ -237,18 +338,12 @@ def test_read_application_configuration_falls_back_to_derived_path_when_first_ap
     applications = [
         {"application": "app1", "configuration": {"key": "value", "output_path": "my-output"}},
     ]
-    monkeypatch.setattr(
-        "simtools.io.ascii_handler.collect_data_from_file",
-        mock_collect_data_from_file(applications),
-    )
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._set_input_output_directories",
+    _patch_application_configuration_read(
+        monkeypatch,
+        applications,
+        mock_collect_data_from_file,
         mock_set_input_output_directories,
-    )
-    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
-    # placeholder replacement strips output_path from the config
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
+        mock_change_dict_keys_case,
         lambda config, output_path, setting_workflow: {
             k: v for k, v in config.items() if k != "output_path"
         },
@@ -362,6 +457,39 @@ def test_run_applications_runs_and_logs(monkeypatch, tmp_test_directory):
     workflow_update_mock.assert_not_called()
 
 
+def test_run_applications_uses_log_file_override(monkeypatch, tmp_test_directory):
+    tmp_test_directory = Path(tmp_test_directory)
+    default_log = tmp_test_directory / "tmp_application_output" / "simtools.log"
+    requested_log = tmp_test_directory / "log_files" / "workflow.log"
+    monkeypatch.setattr(
+        simtools_runner,
+        "_read_application_configuration",
+        mock.Mock(return_value=([], None, default_log, "wf-activity-id")),
+    )
+    monkeypatch.setattr(
+        simtools_runner.ascii_handler,
+        "collect_data_from_file",
+        mock.Mock(return_value={}),
+    )
+    monkeypatch.setattr(
+        simtools_runner.dependencies,
+        "get_version_string",
+        mock.Mock(return_value=""),
+    )
+
+    simtools_runner.run_applications(
+        {
+            "config_file": "workflow.config.yml",
+            "log_file": str(requested_log),
+            "steps": None,
+            "ignore_runtime_environment": True,
+        }
+    )
+
+    assert requested_log.is_file()
+    assert not default_log.exists()
+
+
 def test_run_applications_copies_collection_files(monkeypatch, tmp_test_directory):
     """Copy collection files from application output_path to collection output_path."""
     tmp_path = Path(str(tmp_test_directory))
@@ -372,11 +500,6 @@ def test_run_applications_copies_collection_files(monkeypatch, tmp_test_director
 
     collection_output = tmp_path / "collection"
 
-    mock_args_dict = {
-        "config_file": "dummy_config.yml",
-        "steps": None,
-        "ignore_runtime_environment": False,
-    }
     mock_configurations = [
         {
             "application": "app1",
@@ -387,45 +510,92 @@ def test_run_applications_copies_collection_files(monkeypatch, tmp_test_director
             },
         }
     ]
-    log_file_path = tmp_path / "simtools.log"
-
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._read_application_configuration",
-        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id")),
-    )
-    monkeypatch.setattr(
-        "simtools.io.ascii_handler.collect_data_from_file",
-        mock.Mock(
-            return_value={
-                "collection": {
-                    "output_path": str(collection_output),
-                    "files": ["result.dat"],
-                }
-            }
-        ),
-    )
-    monkeypatch.setattr(
-        "simtools.dependencies.get_version_string",
-        mock.Mock(return_value="simtools version: 1.2.3\n"),
-    )
-    monkeypatch.setattr(
-        "simtools.job_execution.job_manager.submit",
-        mock.Mock(return_value=mock.Mock(stdout="ok", stderr="")),
-    )
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner.workflow_metadata.build_workflow_activity_metadata",
-        mock.Mock(return_value={"id": "wf-activity-id"}),
-    )
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner.workflow_metadata.update_model_parameter_metadata_file",
-        mock.Mock(),
+    _patch_run_applications_dependencies(
+        monkeypatch,
+        mock_configurations,
+        tmp_path / "simtools.log",
+        {"output_path": str(collection_output), "files": ["result.dat"]},
     )
 
-    simtools_runner.run_applications(mock_args_dict)
+    simtools_runner.run_applications(_runner_args())
 
     copied_file = collection_output / "result.dat"
     assert copied_file.exists()
     assert copied_file.read_text(encoding="utf-8") == "test-data"
+
+
+def test_run_applications_copies_collection_files_from_pack_for_grid_register(
+    monkeypatch, tmp_test_directory
+):
+    """Copy collection files from pack_for_grid_register when not in output_path."""
+    tmp_path = Path(str(tmp_test_directory))
+    source_output = tmp_path / "app_output"
+    source_output.mkdir(parents=True, exist_ok=True)
+    grid_output = tmp_path / "grid_output"
+    grid_output.mkdir(parents=True, exist_ok=True)
+    source_file = grid_output / "result.simtel.zst"
+    source_file.write_text("grid-data", encoding="utf-8")
+
+    collection_output = tmp_path / "collection"
+
+    mock_configurations = [
+        {
+            "application": "app1",
+            "run_application": True,
+            "configuration": {
+                "activity_id": "cfg-id-1",
+                "output_path": str(source_output),
+                "pack_for_grid_register": str(grid_output),
+            },
+        }
+    ]
+    _patch_run_applications_dependencies(
+        monkeypatch,
+        mock_configurations,
+        tmp_path / "simtools.log",
+        {
+            "output_path": str(collection_output),
+            "source_directory": "pack_for_grid_register",
+            "files": ["result.simtel.zst"],
+        },
+    )
+
+    simtools_runner.run_applications(_runner_args())
+
+    copied_file = collection_output / "result.simtel.zst"
+    assert copied_file.exists()
+    assert copied_file.read_text(encoding="utf-8") == "grid-data"
+
+
+def test_copy_collection_files_uses_source_directory_list(tmp_test_directory):
+    """Copy collection files from all configured source directories."""
+    tmp_path = Path(str(tmp_test_directory))
+    source_output = tmp_path / "app_output_multi"
+    source_output.mkdir()
+    grid_output = tmp_path / "grid_output_multi"
+    grid_output.mkdir()
+    (source_output / "result.dat").write_text("output-data", encoding="utf-8")
+    (grid_output / "result.simtel.zst").write_text("grid-data", encoding="utf-8")
+
+    collection_output = tmp_path / "collection_multi"
+    configurations = [
+        {
+            "configuration": {
+                "output_path": str(source_output),
+                "pack_for_grid_register": str(grid_output),
+            }
+        }
+    ]
+    collection_config = {
+        "output_path": str(collection_output),
+        "source_directory": ["output_path", "pack_for_grid_register"],
+        "files": ["result.dat", "result.simtel.zst"],
+    }
+
+    simtools_runner._copy_collection_files(configurations, collection_config)
+
+    assert (collection_output / "result.dat").read_text(encoding="utf-8") == "output-data"
+    assert (collection_output / "result.simtel.zst").read_text(encoding="utf-8") == "grid-data"
 
 
 def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_test_directory):
@@ -1021,6 +1191,18 @@ def test_find_collection_files_exact_not_found(tmp_test_directory):
         _find_collection_files("result.ecsv", [src])
 
 
+def test_find_collection_files_exact_recursive_match(tmp_test_directory):
+    """Exact filename falls back to a unique nested match."""
+    src = Path(str(tmp_test_directory)) / "src_nested"
+    nested = src / "model" / "6.0.2"
+    nested.mkdir(parents=True)
+    (nested / "CTA-alpha-North_test.cfg").write_text("cfg", encoding="utf-8")
+
+    matched = _find_collection_files("CTA-alpha-North_test.cfg", [src])
+    assert len(matched) == 1
+    assert matched[0] == nested / "CTA-alpha-North_test.cfg"
+
+
 def test_find_collection_files_glob_matches_multiple(tmp_test_directory):
     """Glob pattern collects all matching files recursively."""
     src = Path(str(tmp_test_directory)) / "src_glob"
@@ -1078,47 +1260,14 @@ def test_run_applications_copies_collection_files_glob(monkeypatch, tmp_test_dir
             },
         }
     ]
-    log_file_path = tmp_path / "simtools.log"
-
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._read_application_configuration",
-        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id")),
-    )
-    monkeypatch.setattr(
-        "simtools.io.ascii_handler.collect_data_from_file",
-        mock.Mock(
-            return_value={
-                "collection": {
-                    "output_path": str(collection_output),
-                    "files": ["energy_*.png"],
-                }
-            }
-        ),
-    )
-    monkeypatch.setattr(
-        "simtools.dependencies.get_version_string",
-        mock.Mock(return_value="simtools version: 1.2.3\n"),
-    )
-    monkeypatch.setattr(
-        "simtools.job_execution.job_manager.submit",
-        mock.Mock(return_value=mock.Mock(stdout="ok", stderr="")),
-    )
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner.workflow_metadata.build_workflow_activity_metadata",
-        mock.Mock(return_value={"id": "wf-activity-id"}),
-    )
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner.workflow_metadata.update_model_parameter_metadata_file",
-        mock.Mock(),
+    _patch_run_applications_dependencies(
+        monkeypatch,
+        mock_configurations,
+        tmp_path / "simtools.log",
+        {"output_path": str(collection_output), "files": ["energy_*.png"]},
     )
 
-    simtools_runner.run_applications(
-        {
-            "config_file": "dummy_config.yml",
-            "steps": None,
-            "ignore_runtime_environment": False,
-        }
-    )
+    simtools_runner.run_applications(_runner_args())
 
     assert (collection_output / "energy_MyArray_z20_az0_nsb0.png").exists()
     assert (collection_output / "energy_MyArray_z52_az0_nsb0.png").exists()
@@ -1145,6 +1294,35 @@ def test_copy_collection_files_raises_on_name_collision(tmp_test_directory):
     ]
     with pytest.raises(FileExistsError, match=r"energy_z20\.png"):
         simtools_runner._copy_collection_files(configurations, collection_config)
+
+
+def test_copy_collection_files_allows_name_collision_with_overwrite(tmp_test_directory):
+    """Allow collisions and overwrite destination when overwrite_files is enabled."""
+    tmp_path = Path(str(tmp_test_directory))
+    src_a = tmp_path / "src_a"
+    src_b = tmp_path / "src_b"
+    src_a.mkdir()
+    src_b.mkdir()
+    (src_a / "energy_z20.png").write_text("a", encoding="utf-8")
+    (src_b / "energy_z20.png").write_text("b", encoding="utf-8")
+
+    collection_output = tmp_path / "coll_collision"
+    collection_config = {
+        "output_path": str(collection_output),
+        "files": ["energy_*.png"],
+    }
+    configurations = [
+        {"configuration": {"output_path": str(src_a)}},
+        {"configuration": {"output_path": str(src_b)}},
+    ]
+
+    simtools_runner._copy_collection_files(
+        configurations,
+        collection_config,
+        overwrite_files=True,
+    )
+
+    assert (collection_output / "energy_z20.png").read_text(encoding="utf-8") == "b"
 
 
 def test_copy_collection_files_list_format(tmp_test_directory):

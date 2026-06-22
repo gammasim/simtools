@@ -50,7 +50,16 @@ definitions:
         type: array
         items:
           type: string
-        description: "List of files to copy from application output_path to collection output_path."
+        description: "List of files to copy from source directories to collection output_path."
+      source_directory:
+        oneOf:
+          - type: string
+          - type: array
+            items:
+              type: string
+        description: |
+          Application configuration key or list of keys containing source directories searched for collection files.
+          Defaults to output_path.
     required:
       - output_path
       - files

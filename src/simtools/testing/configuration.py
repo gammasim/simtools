@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -9,6 +10,8 @@ import simtools.version as simtools_version
 from simtools.io import ascii_handler
 
 _logger = logging.getLogger(__name__)
+
+_TEST_RESOURCE_PATTERN = re.compile(r"\$\{(static|generated):([^}]+)\}")
 
 
 class VersionError(Exception):
@@ -76,8 +79,29 @@ def _read_configs_from_files(config_files):
         _dict = gen.remove_substring_recursively_from_dict(
             ascii_handler.collect_data_from_file(file_name=config_file), substring="\n"
         )
-        configs.extend(_dict.get("applications", []))
+        configs.extend(_resolve_integration_test_resource_paths(_dict.get("applications", [])))
     return configs
+
+
+def _resolve_integration_test_resource_paths(applications):
+    """Resolve test resource macros in integration test definitions."""
+    for application in applications:
+        if "integration_tests" in application:
+            application["integration_tests"] = _resolve_test_resource_path_macros(
+                application["integration_tests"]
+            )
+    return applications
+
+
+def _resolve_test_resource_path_macros(value):
+    """Resolve ${static:...} and ${generated:...} macros recursively."""
+    if isinstance(value, dict):
+        return {key: _resolve_test_resource_path_macros(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_resolve_test_resource_path_macros(item) for item in value]
+    if isinstance(value, str):
+        return _TEST_RESOURCE_PATTERN.sub(r"tests/resources/\1/\2", value)
+    return value
 
 
 def configure(config, tmp_test_directory, request):
