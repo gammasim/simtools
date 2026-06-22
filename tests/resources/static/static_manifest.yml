@@ -26,6 +26,8 @@ files:
     description: Model parameter file with deprecated schema version.
   - file_name: production_simulation_config_metrics.yml
     description: Example configuration for production simulation with metrics.
+  - file_name: PSFcurve_data_v2.txt
+    description: Plain-text cumulative PSF input data.
   - file_name: production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz
     description: Example DL2 FITS file from prod6.
   - file_name: production_dl2_fits/prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz
@@ -47,4 +49,4 @@ files:
   - file_name: plot_single_pe_config_from_ecsv_file.yml
     description: Plotting configuration example.
   - file_name: plot_single_pe_config_data_from_legacy_csv.yml
-    description: Plotting configuration example (legacy csv input)
+    description: Plotting configuration example (legacy CSV input)

@@ -65,8 +65,8 @@ def test_read_configs_from_files(integration_test_config_files):
     assert len(configs) == len(config_files)
 
 
-def test_read_configs_resolves_integration_test_resource_macros(tmp_path):
-    config_file = tmp_path / "config.yml"
+def test_read_configs_resolves_integration_test_resource_macros(tmp_test_directory):
+    config_file = tmp_test_directory / "config.yml"
     config_file.write_text(
         """
 applications:
