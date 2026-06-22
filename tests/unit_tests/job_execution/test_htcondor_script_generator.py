@@ -175,11 +175,9 @@ def test_get_submit_script():
     assert 'run_number="${23}"' in script
     assert 'pack_for_grid_register="${24}"' in script
 
-    assert 'energy_range_tag="erange-${7}${8}-${9}${10}"' in script
-    assert (
-        'job_label="test_label_${corsika_he_interaction}-${corsika_le_interaction}_'
-        '${energy_range_tag}"'
-    ) in script
+    assert 'job_label="test_label"' in script
+    assert '--label "$job_label"' in script
+    assert '--energy_range "${7} ${8} ${9} ${10}"' in script
 
     assert "simtools-simulate-prod \\" in script
     assert "    --simulation_software corsika_sim_telarray \\" in script
