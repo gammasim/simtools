@@ -408,9 +408,9 @@ def _add_arguments(parser):
     )
 
 
-def _renumber_job_rows(job_rows, start_run_number):
+def _renumber_job_rows(job_rows, run_number_offset):
     """Set output run numbers continuously."""
-    for run_number, job_row in enumerate(job_rows, start=start_run_number):
+    for run_number, job_row in enumerate(job_rows, start=run_number_offset + 1):
         job_row["run_number"] = run_number
     return job_rows
 
@@ -428,7 +428,7 @@ def main():
 
     job_rows = _renumber_job_rows(
         build_simulation_jobs(app_context.args),
-        start_run_number=int(app_context.args.get("run_number", 1)),
+        run_number_offset=int(app_context.args.get("run_number_offset", 0)),
     )
     serialize_job_grid(
         job_rows=job_rows,
