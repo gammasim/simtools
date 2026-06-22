@@ -34,6 +34,20 @@ Example
     simtools-generate-test-resources \
         --test_directory ../simtools-tests \
         --simtools_version v0.32.0
+
+Runtime environment file example
+--------------------------------
+
+.. code-block:: yaml
+
+        runtime_environment:
+            container_engine: podman
+            image: ghcr.io/gammasim/simtools-prod:20260622-v78010-v2025-11-30-rc-generic
+            network: simtools-mongo-network
+            env_file: .env
+            options:
+                - "--arch amd64"
+                - "-v /path/to/simpipe:/workdir/external/simpipe:ro"
 """
 
 import argparse
