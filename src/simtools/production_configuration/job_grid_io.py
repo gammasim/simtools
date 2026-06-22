@@ -17,6 +17,7 @@ _ECSV_FORMAT = "ascii.ecsv"
 _STREAM_CHUNK_SIZE = 10_000
 
 JOB_GRID_COLUMNS = [
+    "run_number",
     "primary",
     "azimuth_angle_value",
     "azimuth_angle_unit",
@@ -38,7 +39,6 @@ JOB_GRID_COLUMNS = [
     "array_layout_name",
     "corsika_le_interaction",
     "corsika_he_interaction",
-    "run_number",
 ]
 
 _QUANTITY_FIELDS = {
