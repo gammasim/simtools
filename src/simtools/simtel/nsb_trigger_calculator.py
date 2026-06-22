@@ -77,6 +77,10 @@ def parse_nsb_log_file(file_path):
     triggers = extract_trigger_count(log_text)
     events = extract_event_count(log_text)
 
+    if triggers is None and events is not None:
+        _logger.info(f"No NSB triggers found in {file_path}; using 0 triggers")
+        triggers = 0
+
     if run_number is None or threshold is None or triggers is None:
         _logger.warning(
             f"Skipping {file_path}: missing critical info "
