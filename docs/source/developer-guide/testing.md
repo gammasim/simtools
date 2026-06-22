@@ -169,7 +169,7 @@ The following examples compares only rows with `best_fit==True` and only the col
 
 ```text
 integration_tests:
-  - reference_output_file: tests/resources/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv
+  - reference_output_file: tests/resources/static/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv
     test_columns:
     - cut_column_name: Off-axis angle
       cut_condition: ==0.0
