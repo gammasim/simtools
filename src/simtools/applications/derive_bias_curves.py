@@ -57,9 +57,9 @@ Generate bias curves with data in same directory:
 
     simtools-derive-bias-curves \\
         --root_dir /path/to/data \\
-        --site South \\
+        --site North \\
         --model_version 7.0.0 \\
-        --array_layout_name 1lst \\
+        --array_layout_name LSTN-01 \\
         --output bias_curves.png
 
 Generate bias curves with NSB and proton data in separate directories:
@@ -69,9 +69,9 @@ Generate bias curves with NSB and proton data in separate directories:
     simtools-derive-bias-curves \\
         --nsb_dir /path/to/nsb/data \\
         --proton_dir /path/to/proton/data \\
-        --site South \\
+        --site North \\
         --model_version 7.0.0 \\
-        --array_layout_name 1lst \\
+        --array_layout_name LSTN-01 \\
         --output bias_curves.png
 
 """
@@ -114,10 +114,17 @@ def _add_arguments(parser):
     )
 
     parser.add_argument(
-        "--nsb_table_output",
+        "--nsb_output",
         type=Path,
         required=False,
         help="Output ECSV table file for NSB trigger rates. If not specified, no table is written.",
+    )
+
+    parser.add_argument(
+        "--proton_output",
+        type=Path,
+        required=False,
+        help="Output ECSV table file for proton rates. If not specified, no table is written.",
     )
 
     parser.initialize_application_arguments(["telescope_ids"])
