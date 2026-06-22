@@ -246,7 +246,6 @@ definitions:
       - description
       - name
       - type
-      - unit
     title: TableColumn
   Instrument:
     type: object

@@ -5,7 +5,7 @@ from simtools.sim_events.output_validator import validate_event_numbers, validat
 
 def test_validate_sim_events_calls_validate_event_numbers(tmp_path, monkeypatch):
     """Test validate_sim_events properly wraps validate_event_numbers."""
-    test_files = [tmp_path / f"test_{i}.fits" for i in range(2)]
+    test_files = [tmp_path / f"test_{i}.hdf5" for i in range(2)]
     for f in test_files:
         f.touch()
 
@@ -20,7 +20,7 @@ def test_validate_sim_events_calls_validate_event_numbers(tmp_path, monkeypatch)
 
 def test_validate_sim_events_with_string_input(tmp_path, monkeypatch):
     """Test validate_sim_events handles single file as string."""
-    test_file = tmp_path / "test_events.fits"
+    test_file = tmp_path / "test_events.hdf5"
     test_file.touch()
 
     mock_tables = {"SHOWERS": [1, 2, 3]}
@@ -32,9 +32,18 @@ def test_validate_sim_events_with_string_input(tmp_path, monkeypatch):
     validate_sim_events(str(test_file), 3)
 
 
+def test_validate_sim_events_rejects_fits_files(tmp_path):
+    """Test validate_sim_events rejects FITS reduced event lists."""
+    test_file = tmp_path / "test_events.fits"
+    test_file.touch()
+
+    with pytest.raises(ValueError, match="Only HDF5 files"):
+        validate_sim_events(str(test_file), 3)
+
+
 def test_validate_event_numbers_single_file_match(tmp_path, monkeypatch):
     """Test validate_event_numbers with matching event count."""
-    test_file = tmp_path / "test_events.fits"
+    test_file = tmp_path / "test_events.hdf5"
     test_file.touch()
 
     mock_tables = {"SHOWERS": [1, 2, 3]}
@@ -48,7 +57,7 @@ def test_validate_event_numbers_single_file_match(tmp_path, monkeypatch):
 
 def test_validate_event_numbers_single_file_mismatch(tmp_path, monkeypatch):
     """Test validate_event_numbers raises ValueError when event count mismatches."""
-    test_file = tmp_path / "test_events.fits"
+    test_file = tmp_path / "test_events.hdf5"
     test_file.touch()
 
     mock_tables = {"SHOWERS": [1, 2, 3]}
@@ -63,7 +72,7 @@ def test_validate_event_numbers_single_file_mismatch(tmp_path, monkeypatch):
 
 def test_validate_event_numbers_multiple_files_all_match(tmp_path, monkeypatch):
     """Test validate_event_numbers with multiple files all matching."""
-    test_files = [tmp_path / f"test_{i}.fits" for i in range(2)]
+    test_files = [tmp_path / f"test_{i}.hdf5" for i in range(2)]
     for f in test_files:
         f.touch()
 
@@ -78,7 +87,7 @@ def test_validate_event_numbers_multiple_files_all_match(tmp_path, monkeypatch):
 
 def test_validate_event_numbers_multiple_files_one_mismatch(tmp_path, monkeypatch):
     """Test validate_event_numbers with multiple files where one mismatches."""
-    test_files = [tmp_path / f"test_{i}.fits" for i in range(2)]
+    test_files = [tmp_path / f"test_{i}.hdf5" for i in range(2)]
     for f in test_files:
         f.touch()
 
@@ -103,7 +112,7 @@ def test_validate_event_numbers_multiple_files_one_mismatch(tmp_path, monkeypatc
 
 def test_validate_event_numbers_missing_showers_table(tmp_path, monkeypatch):
     """Test validate_event_numbers raises ValueError when SHOWERS table is missing."""
-    test_file = tmp_path / "test_events.fits"
+    test_file = tmp_path / "test_events.hdf5"
     test_file.touch()
 
     mock_tables = {"OTHER_TABLE": [1, 2, 3]}
