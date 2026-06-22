@@ -45,9 +45,11 @@ def run_applications(args_dict, run_time=None, replacements=None):
         args_dict.get("activity_id"),
         replacements=replacements,
     )
-    log_file = args_dict.get("log_file", log_file)
+    if args_dict.get("log_file") is not None:
+        log_file = args_dict["log_file"]
 
-    runtime_environment = args_dict.get("runtime_environment", runtime_environment)
+    if args_dict.get("runtime_environment") is not None:
+        runtime_environment = args_dict["runtime_environment"]
 
     collection_config = None
     try:

@@ -27,7 +27,7 @@ def get_integration_test_directory(test_directory, simtools_version):
     Parameters
     ----------
     test_directory : str or pathlib.Path
-        Root directory of the ``simtools-tests`` repository.
+        Root directory of the ``simtools-tests`` repository (or a directory containing it).
     simtools_version : str
         Version directory to use, for example ``v0.32.0``.
 
@@ -36,8 +36,13 @@ def get_integration_test_directory(test_directory, simtools_version):
     pathlib.Path
         Path to the release-specific ``integration_tests`` directory.
     """
-    return Path(test_directory) / "simtools-tests" / simtools_version / "integration_tests"
-
+    test_directory = Path(test_directory)
+    repo_root = (
+        test_directory / "simtools-tests"
+        if (test_directory / "simtools-tests").is_dir()
+        else test_directory
+    )
+    return repo_root / simtools_version / "integration_tests"
 
 def get_resource_generation_directory(test_directory, simtools_version):
     """Return the configuration directory for resource generation.
@@ -123,6 +128,9 @@ def _validate_download_entry(entry, index):
     if missing_keys:
         raise ValueError(f"Download entry {index} missing required keys: {', '.join(missing_keys)}")
 
+    target_path = Path(entry["target_path"])
+    if target_path.is_absolute() or ".." in target_path.parts:
+        raise ValueError(f"Download entry {index} has invalid target_path: {target_path.as_posix()}")
 
 def download_files(config_file, target_dir):
     """Download external files listed in a resource-generation configuration.
