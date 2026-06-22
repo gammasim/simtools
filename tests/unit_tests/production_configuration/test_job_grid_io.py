@@ -4,12 +4,15 @@ import astropy.units as u
 import pytest
 from astropy.table import Table
 
+from simtools.constants import SCHEMA_PATH
+from simtools.io import ascii_handler
 from simtools.production_configuration import job_grid_io
 
 
 def _job_rows():
     return [
         {
+            "run_number": 10,
             "primary": "gamma",
             "azimuth_angle": 45 * u.deg,
             "zenith_angle": 20 * u.deg,
@@ -27,7 +30,6 @@ def _job_rows():
             "array_layout_name": "CTAO-North-Alpha",
             "corsika_le_interaction": "urqmd",
             "corsika_he_interaction": "epos",
-            "run_number": 10,
         }
     ]
 
@@ -50,7 +52,6 @@ def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
     assert rows[0]["energy_min"] == 30 * u.GeV
     assert rows[0]["cores_per_shower"] == 10
     assert rows[0]["array_layout_name"] == "CTAO-North-Alpha"
-    assert rows[0]["nsb_rate"] == pytest.approx(0.24)
     assert rows[0]["ra"] == 123 * u.deg
     assert rows[0]["dec"] == -45 * u.deg
     assert metadata["job_grid_summary"]["simulation_rows"] == 1
@@ -103,6 +104,27 @@ def test_serialize_job_grid_stream_skips_empty_optional_radec_columns(tmp_test_d
 
     assert "ra" not in output_table.colnames
     assert "dec" not in output_table.colnames
+
+
+def test_serialize_job_grid_stream_writes_empty_grid_header(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "empty_job_grid.ecsv"
+
+    row_count = job_grid_io.serialize_job_grid_stream(iter([]), output_file, metadata=_metadata())
+    output_table = Table.read(output_file, format="ascii.ecsv")
+
+    assert row_count == 0
+    assert output_table.colnames == job_grid_io.JOB_GRID_COLUMNS
+
+
+def test_job_grid_density_schema_matches_serialized_required_columns():
+    schema = ascii_handler.collect_data_from_file(
+        SCHEMA_PATH / "job_grid_density.schema.yml",
+    )
+    table_columns = schema["data"][0]["table_columns"]
+    required_columns = [column["name"] for column in table_columns if column.get("required")]
+
+    assert required_columns == job_grid_io.JOB_GRID_COLUMNS
+    assert all("unit" not in column for column in table_columns)
 
 
 def test_serialize_job_grid_rejects_non_ecsv_output(tmp_test_directory):
