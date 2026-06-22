@@ -441,16 +441,14 @@ simtools-simulate-prod \\
 """
 
 
-def build_job_specs(args_dict, image_labels):
-    """Build backend-agnostic job specs from comparison and production grids."""
-    base_pack_dir = args_dict.get("simulation_output") or "simtools-output"
-    normalized_rows, job_grid_metadata = read_job_grid(args_dict["job_grid_file"])
-
+def _validate_job_grid_metadata(job_grid_metadata):
+    """Validate required job-grid metadata."""
     missing_metadata = [
         key
         for key in _REQUIRED_JOB_GRID_METADATA
         if key not in job_grid_metadata or job_grid_metadata.get(key) in (None, "")
     ]
+
     if missing_metadata:
         missing_keys = ", ".join(missing_metadata)
         raise ValueError(
@@ -459,20 +457,47 @@ def build_job_specs(args_dict, image_labels):
             "simtools-production-generate-grid so metadata includes these values."
         )
 
-    job_specs = []
-    for label in image_labels:
-        for row in normalized_rows:
-            job_spec = {
-                "image_label": str(label),
-                **row,
-                "pack_for_grid_register": f"{base_pack_dir}/{label!s}",
-            }
-            telescope = row.get("telescope") or args_dict.get("telescope")
-            if telescope not in (None, ""):
-                job_spec["telescope"] = telescope
-            if row.get("scan_label") not in (None, ""):
-                job_spec["scan_label"] = row["scan_label"]
-            if row.get("overwrite_model_parameters") not in (None, ""):
-                job_spec["overwrite_model_parameters"] = row["overwrite_model_parameters"]
-            job_specs.append(job_spec)
+
+def _add_optional_job_spec_field(job_spec, field_name, value):
+    """Add an optional field to a job spec when it has a usable value."""
+    if value not in (None, ""):
+        job_spec[field_name] = value
+
+
+def _build_job_spec(row, label, base_pack_dir, args_dict):
+    """Build one job spec from one job-grid row and one image label."""
+    job_spec = {
+        "image_label": str(label),
+        **row,
+        "pack_for_grid_register": f"{base_pack_dir}/{label!s}",
+    }
+
+    _add_optional_job_spec_field(
+        job_spec,
+        "telescope",
+        row.get("telescope") or args_dict.get("telescope"),
+    )
+    _add_optional_job_spec_field(job_spec, "scan_label", row.get("scan_label"))
+    _add_optional_job_spec_field(
+        job_spec,
+        "overwrite_model_parameters",
+        row.get("overwrite_model_parameters"),
+    )
+
+    return job_spec
+
+
+def build_job_specs(args_dict, image_labels):
+    """Build backend-agnostic job specs from comparison and production grids."""
+    base_pack_dir = args_dict.get("simulation_output") or "simtools-output"
+    normalized_rows, job_grid_metadata = read_job_grid(args_dict["job_grid_file"])
+
+    _validate_job_grid_metadata(job_grid_metadata)
+
+    job_specs = [
+        _build_job_spec(row, label, base_pack_dir, args_dict)
+        for label in image_labels
+        for row in normalized_rows
+    ]
+
     return job_specs, job_grid_metadata
