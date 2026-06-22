@@ -206,7 +206,7 @@ def crawl_log_files(root_dir, pattern="**/*.simtel.log.gz"):
     root_dir : Path or str
         Root directory to search in.
     pattern : str, optional
-        Glob pattern for log files. Default: "**/*.simtel.log.gz"
+        Glob pattern for log files. Default: ``**/*.simtel.log.gz``.
 
     Returns
     -------

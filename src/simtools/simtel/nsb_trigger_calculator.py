@@ -25,8 +25,9 @@ def extract_threshold_from_file_name(file_path):
     Extract threshold value from file name.
 
     Supports current production labels like:
-    - *_asum220.simtel.log.gz
-    - *_dsum450.simtel.log.gz
+
+    - ``*_asum220.simtel.log.gz``
+    - ``*_dsum450.simtel.log.gz``
 
     Parameters
     ----------
@@ -317,7 +318,7 @@ def derive_nsb_triggers(args):
     args : dict
         Configuration parameters with keys:
         - root_dir: Root directory to search for log files
-        - pattern: Glob pattern for log files (default: "**/*.simtel.log.gz")
+        - pattern: Glob pattern for log files, default: ``**/*.simtel.log.gz``
         - output: Output ECSV file path (optional, if None, no file is written)
         - time_window: Time window per event in seconds (default: 66.4e-9)
         - verbose: Enable verbose logging (optional)
