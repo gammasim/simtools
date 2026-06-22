@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-"""Generate versioned integration-test resources for a simtools release.
+"""Generate and check versioned integration-test resources for a simtools release.
 
 The application reads download and workflow configurations from the release-specific
 ``integration_tests/config_files`` directory in the ``simtools-tests`` repository. External
 inputs are downloaded first, followed by execution of all configured resource-generation
 workflows. Intermediate output is written below ``tmp_application_output``; retained resources
-and logs are collected below ``generated`` and ``log_files``, respectively.
+and logs are collected below ``generated`` and ``log_files``, respectively. The application also
+checks existing static files against their configured checksums.
 
 Command line arguments
 ----------------------
