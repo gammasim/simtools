@@ -633,7 +633,8 @@ def prepare_runtime_environment(runtime_environment_file):
     ------
     ValueError
         If the YAML content is not a mapping or lacks ``runtime_environment``.
-    """
+    jsonschema.ValidationError
+        If the configuration does not conform to the runtime-environment schema.
     runtime_config = ascii_handler.collect_data_from_file(runtime_environment_file)
     if not isinstance(runtime_config, dict):
         raise ValueError("Runtime configuration must be a YAML mapping.")
