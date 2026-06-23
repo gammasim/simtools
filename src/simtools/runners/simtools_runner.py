@@ -10,7 +10,8 @@ from pathlib import Path
 import simtools.utils.general as gen
 from simtools import dependencies
 from simtools import version as simtools_version
-from simtools.data_model import workflow_metadata
+from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA
+from simtools.data_model import schema, workflow_metadata
 from simtools.io import ascii_handler
 from simtools.job_execution import job_manager
 
@@ -604,7 +605,7 @@ def read_runtime_environment(runtime_environment, workdir="/workdir/external/"):
         for opt in options:
             cmd.extend(opt.split())
 
-    if env := runtime_environment.get("env_file"):
+    if env := runtime_environment.get("environment_file"):
         cmd += ["--env-file", env]
     if net := runtime_environment.get("network"):
         cmd += ["--network", net]
@@ -613,6 +614,38 @@ def read_runtime_environment(runtime_environment, workdir="/workdir/external/"):
     _pull_image(engine, runtime_environment["image"])
 
     return cmd
+
+
+def prepare_runtime_environment(runtime_environment_file):
+    """Read and prepare a standalone runtime environment.
+
+    Parameters
+    ----------
+    runtime_environment_file : str or pathlib.Path
+        YAML file containing a top-level ``runtime_environment`` mapping.
+
+    Returns
+    -------
+    tuple[dict, list[str]]
+        Runtime-environment configuration and prepared runtime command.
+
+    Raises
+    ------
+    ValueError
+        If the YAML content is not a mapping or lacks ``runtime_environment``.
+    jsonschema.ValidationError
+        If the configuration does not conform to the runtime-environment schema.
+    """
+    runtime_config = ascii_handler.collect_data_from_file(runtime_environment_file)
+    if not isinstance(runtime_config, dict):
+        raise ValueError("Runtime configuration must be a YAML mapping.")
+    runtime_environment = runtime_config.get("runtime_environment")
+    if runtime_environment is None:
+        raise ValueError("Runtime configuration must contain a 'runtime_environment' block.")
+    schema.validate_dict_using_schema(
+        runtime_config, schema_file=RUN_TIME_ENVIRONMENT_SCHEMA, offline=True
+    )
+    return runtime_environment, read_runtime_environment(runtime_environment)
 
 
 def _pull_image(engine, image):
