@@ -32,14 +32,14 @@ shows how to define a runtime environment:
 
 .. code-block:: yaml
 
-     runtime_environment:
-     image: ghcr.io/gammasim/simtools-prod-sim-telarray-240927-corsika-77550-bernlohr-1.68-\
+    runtime_environment:
+        image: ghcr.io/gammasim/simtools-prod-sim-telarray-240927-corsika-77550-bernlohr-1.68-\
 prod6-baseline-qgs2-no_opt:20250716-122341
-     network: simtools-mongo-network
-     environment_file: ./.env
-     container_engine: podman
-     options:
-     - '--arch amd64'
+        network: simtools-mongo-network
+        environment_file: ./.env
+        container_engine: podman
+        options:
+        - '--arch amd64'
 
 If the ``ignore_runtime_environment`` flag is set, the application will run in the current
 environment, ignoring any definitions in the configuration file.
@@ -72,7 +72,7 @@ step 2 and 3 (useful for debugging):
 from pathlib import Path
 
 from simtools.application_control import build_application
-from simtools.runners import simtools_runner
+from simtools.runners.simtools_runner import prepare_runtime_environment, run_applications
 
 
 def _add_arguments(parser):
@@ -99,7 +99,9 @@ def _add_arguments(parser):
     parser.add_argument(
         "--runtime_environment_file",
         type=Path,
-        help="Path to a standalone runtime-environment YAML file (top-level 'runtime_environment').",
+        help=(
+            "Path to a standalone runtime-environment YAML file (top-level 'runtime_environment')."
+        ),
         default=None,
     )
     parser.add_argument(
@@ -129,12 +131,12 @@ def main():
         app_context.args.get("runtime_environment_file") is not None
         and not app_context.args["ignore_runtime_environment"]
     ):
-        runtime_environment, run_time = simtools_runner.prepare_runtime_environment(
+        runtime_environment, run_time = prepare_runtime_environment(
             app_context.args["runtime_environment_file"]
         )
         app_context.args["runtime_environment"] = runtime_environment
 
-    simtools_runner.run_applications(app_context.args, run_time=run_time)
+    run_applications(app_context.args, run_time=run_time)
 
 
 if __name__ == "__main__":
