@@ -16,7 +16,7 @@ applications:
       reference_parameter_name: nsb_pixel_rate
       tolerance: 1.e-1
   - reference_output_file: |
-      tests/resources/camera_efficiency/camera_efficiency_summary_North_LSTN-02_za0.0deg_azm000deg.yml
+      ${generated:camera_efficiency/camera_efficiency_summary_North_LSTN-02_za0.0deg_azm000deg.yml}
     tolerance: 1.e-3
     test_output_file: camera_efficiency_summary_North_LSTN-02_za0.0deg_azm000deg.yml
   model_version_use_current: true

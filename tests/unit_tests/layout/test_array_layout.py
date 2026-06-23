@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 from astropy.table import QTable
 
+from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.data_model import data_reader
 from simtools.layout.array_layout import ArrayLayout, InvalidTelescopeListFileError
 
@@ -420,7 +421,7 @@ def test_export_one_telescope_as_json(model_version, get_test_data_file):
         site="North",
         model_version=model_version,
         telescope_list_file=(
-            "tests/resources/model_parameters/array_element_position_ground-2.0.0.json"
+            f"{TEST_RESOURCES_GENERATED}/model_parameters/array_element_position_ground-2.0.0.json"
         ),
     )
 
@@ -445,7 +446,9 @@ def test_export_one_telescope_as_json(model_version, get_test_data_file):
 
 
 def test_read_table_from_json_file(model_version, get_test_data_file):
-    ground_table_file = "tests/resources/model_parameters/array_element_position_ground-2.0.0.json"
+    ground_table_file = (
+        f"{TEST_RESOURCES_GENERATED}/model_parameters/array_element_position_ground-2.0.0.json"
+    )
     layout = ArrayLayout(
         site="North",
         model_version=model_version,
@@ -456,7 +459,7 @@ def test_read_table_from_json_file(model_version, get_test_data_file):
     assert "position_x" in ground_table.colnames
 
     utm_table = layout._read_table_from_json_file(
-        "tests/resources/model_parameters/array_element_position_utm-2.0.0.json"
+        f"{TEST_RESOURCES_GENERATED}/model_parameters/array_element_position_utm-2.0.0.json"
     )
     assert isinstance(utm_table, QTable)
     assert "utm_north" in utm_table.colnames

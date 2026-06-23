@@ -3,8 +3,8 @@ applications:
 - application: simtools-merge-tables
   configuration:
     input_files:
-    - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
-    - tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+    - tests/resources/generated/proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_test.reduced_event_data.hdf5
+    - tests/resources/generated/proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_test.reduced_event_data.hdf5
     output_file: merged.hdf5
     output_path: simtools-output
     table_names:

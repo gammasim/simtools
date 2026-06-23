@@ -12,6 +12,7 @@ import numpy as np
 import pytest
 from astropy.table import QTable
 
+from simtools.constants import TEST_RESOURCES_STATIC
 from simtools.ray_tracing.ray_tracing import INVALID_KEY_TO_PLOT, RayTracing
 
 
@@ -61,11 +62,11 @@ def ray_tracing_lst(telescope_model_lst_mock, site_model_north):
     output_directory = ray_tracing_lst.output_directory
     output_directory.mkdir(parents=True, exist_ok=True)
     shutil.copy(
-        "tests/resources/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv",
+        f"{TEST_RESOURCES_STATIC}/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv",
         output_directory.joinpath("results"),
     )
     shutil.copy(
-        "tests/resources/ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000"
+        f"{TEST_RESOURCES_STATIC}/ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000"
         "deg_validate_optics.lis.gz",
         output_directory,
     )
