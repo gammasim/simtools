@@ -12,22 +12,22 @@ cam_eff:
   value: 0.27480515918085935
   description: Camera nominal efficiency with gaps (B-TEL-1170)
 tel_eff:
-  value: 0.2753378432890198
+  value: 0.2753378440779259
   description: Telescope total efficiency with gaps (was A-PERF-2020)
 tot_sens:
-  value: 0.5178491882429949
+  value: 0.5178491709845622
   description: Telescope total Cherenkov light efficiency / sqrt(total NSB efficiency)
     (A-PERF-2025/B-TEL-0090)
 nsb_rate:
   value:
-    value: 0.2405660809929109
+    value: 0.24056609840622503
     unit: GHz
   description: Expected NSB pixel rate for the provided NSB spectrum
 nsb_ref:
   value:
-    value: 0.21733732914533868
+    value: 0.21733734487724557
     unit: GHz
   description: Expected NSB pixel rate for the reference NSB
 muon_frac:
-  value: 0.013568988379155737
+  value: 0.01356898834976382
   description: Fraction of light (from muons) in the wavelength range 200-290 nm (B-TEL-0095)

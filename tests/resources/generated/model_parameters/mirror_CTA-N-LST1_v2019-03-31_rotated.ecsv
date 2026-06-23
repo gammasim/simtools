@@ -10,7 +10,7 @@
 # - {name: mirror_panel_id, datatype: int64, description: Mirror number in original list}
 # meta: !!omap
 # - {Name: mirror_list}
-# - {File: /workdir/external/simtools-dev2/tmp-test-resources/model_parameters/mirror_CTA-N-LST1_v2019-03-31_rotated.dat}
+# - {File: /workdir/external/simtools-tests/v0.33.0/integration_tests/tmp_application_output/mirror_CTA-N-LST1_v2019-03-31_rotated.dat}
 # - {Description: Mirror positions and focal lengths}
 # - {context_from_sim_telarray: 'Mirror positions and focal lengths for the LST1 prototype
 #

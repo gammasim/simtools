@@ -1,52 +1,83 @@
 ---
 files:
   - file_name: MLTdata-preproduction.ecsv
+    sha256: 9a9da8f4ab5a93fea62d646cb15da32adef5054221da58a488e950f5a466150a
     description: Preproduction MST data.
   - file_name: MLTdata-preproduction.meta.yml
-    description: Preproduction MST data (metadata).
-  - file_name: mock_db
-    description: Mock database fixture directory
-  - file_name: simtel_config_test_la_palma.cfg
-    description: Configuration export from simtelarray.
-  - file_name: telescope_positions-North-ground.ecsv
-    description: Telescope position table in ground coordinates
-  - file_name: telescope_positions-North-utm-without-cta-meta.ecsv
-    description: Telescope position table in utm without CTA metadata
-  - file_name: telescope_positions-North-utm.ecsv
-    description: Telescope position table in utm coordinates
-  - file_name: telescope_positions-North-utm.meta.yml
-    description: Telescope positions utm metadata fixture
-  - file_name: telescope_positions-North-with-calibration-devices-ground.ecsv
-    description: Telescope position table in ground coordinates with calibration devices
-  - file_name: telescope_positions-North-mercator.ecsv
-    description: Telescope position table in mercator coordinates
-  - file_name: telescope_positions-South-ground.ecsv
-    description: Telescope position table in ground coordinates for the South site
-  - file_name: model_parameters/schema-0.2.0/num_gains-1.0.0.json
-    description: Model parameter file with deprecated schema version.
-  - file_name: production_simulation_config_metrics.yml
-    description: Example configuration for production simulation with metrics.
-  - file_name: PSFcurve_data_v2.txt
-    description: Plain-text cumulative PSF input data.
-  - file_name: production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz
-    description: Example DL2 FITS file from prod6.
-  - file_name: production_dl2_fits/prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz
-    description: Example DL2 FITS file from prod6
-  - file_name: ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000deg_validate_optics.lis.gz
-    description: Example ray tracing photon list file.
-  - file_name: ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv
-    description: Example ray tracing file in ECSV format.
+    sha256: b363cbbb821a91454b67a738600ed770e94d447ac269a73b067d25c110f7b00b
+    description: Preproduction MST data metadata.
   - file_name: dummy_apptainer_image.sif
+    sha256: 3238f87efc48cf3ffa8a1aaafe38e9362515191ecf2395de4fcf8227d5747644
     description: Dummy Apptainer image file for testing.
-  - file_name: trigger_rates_user_spectrum_powerlaw.yml
-    description: Example user spectrum configuration file for trigger rate calculations.
   - file_name: grid_definition.yaml
+    sha256: 60e405d000c216af64da38f2e8ab2d4a487c54cca69798ccc8d537a75a3c545b
     description: Example grid definition file for simulations.
-  - file_name: info_test_model_parameter_changes.yml
-    description: Example configuration file for testing model parameter changes.
   - file_name: info_test_camera_efficiency_change_LSTN-02.yml
-    description: Example configuration file for testing camera efficiency changes.
-  - file_name: plot_single_pe_config_from_ecsv_file.yml
-    description: Plotting configuration example.
+    sha256: 3f6c60e7f9715043c67932c38dcac5341e871dc7f5d5f1e51dd011d7f98ce798
+    description: Configuration for testing camera-efficiency changes.
+  - file_name: info_test_model_parameter_changes.yml
+    sha256: 741e0fef37c73caa128b3f63b97eda0ccd44540f646ce221aaa6ee91720e32b6
+    description: Configuration for testing model-parameter changes.
+  - file_name: mock_db/mock_parameters.json
+    sha256: c2eead04de7d8ec8db01becf3dc6925b934b6b0d6fb8d68bec7425b5836a77eb
+    description: Mock database model parameters.
+  - file_name: mock_db/mock_sim_config_params.json
+    sha256: b40871a61a5388b8a60bbd26e9709fbaab3e08c2692176fdd92cfc9021c840e8
+    description: Mock database simulation-configuration parameters.
+  - file_name: mock_db/site_params_north.json
+    sha256: 17286cb32b1d005d69e20942719532bf5f0fcc82c09c8403bf83e28ef320a639
+    description: Mock database parameters for the North site.
+  - file_name: mock_db/site_params_south.json
+    sha256: 248cd12476b42067f1d1ec2752ac05f766b26ff656dc5d8cd0f4b708a4c279d6
+    description: Mock database parameters for the South site.
+  - file_name: model_parameters/schema-0.2.0/num_gains-1.0.0.json
+    sha256: 5eaa7ef5955a12e31abb829874dc07f97ea06c3c679b948881e458885d9bb9e7
+    description: Model parameter file with deprecated schema version.
   - file_name: plot_single_pe_config_data_from_legacy_csv.yml
-    description: Plotting configuration example (legacy CSV input)
+    sha256: 7d26916413ae437cbfdb49f1c244ed04b6596a0127d0edabc5832428cd8a4360
+    description: Plotting configuration for legacy CSV input.
+  - file_name: plot_single_pe_config_from_ecsv_file.yml
+    sha256: e62aefa73df361b8fc47607855e54096aeb39b432f29b0d1db72b532cb02f16e
+    description: Plotting configuration for ECSV input.
+  - file_name: production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz
+    sha256: 5edc9be42c5c15caf46933ac4314b3039a023f615b7a79ba491c7cfadcc0f183
+    description: Reduced DL2 gamma-ray production data at 20-degree zenith angle.
+  - file_name: production_dl2_fits/prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz
+    sha256: 8ddb9215fb53fbcdffaeb4d6f73c544da5c5dc7a392b448f0069f6c04ad98090
+    description: Reduced DL2 gamma-ray production data at 40-degree zenith angle.
+  - file_name: production_simulation_config_metrics.yml
+    sha256: 21e4dce5da3b7bafedb2e5707f78a59aa41aa0eb3880ae04ffc16051d79910bb
+    description: Example production-simulation metrics configuration.
+  - file_name: ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv
+    sha256: 5e6c648779ad90650c900f0af94e0696916fe4064a1001961fd72467a639bb9b
+    description: Example ray-tracing result in ECSV format.
+  - file_name: ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000deg_validate_optics.lis.gz
+    sha256: a46c8397fa96f4189ac5d52de3737c7bc0ab91b11c5cd4346b2a36e72e75398b
+    description: Example ray-tracing photon list.
+  - file_name: simtel_config_test_la_palma.cfg
+    sha256: 4f0a55dcb0cd2110c04111844efc9e4a5c343449879ad107525003a981bfc959
+    description: Configuration exported from sim_telarray.
+  - file_name: telescope_positions-North-ground.ecsv
+    sha256: 5c33111d3687e29ffe6ead424f980aa67dcce12e61b41a163f42106d1355a29a
+    description: North-site telescope positions in ground coordinates.
+  - file_name: telescope_positions-North-mercator.ecsv
+    sha256: 13095c9ffd84f2568fb74940e48953a6c22bd68aae37de1c2ada429d807a2498
+    description: North-site telescope positions in Mercator coordinates.
+  - file_name: telescope_positions-North-utm-without-cta-meta.ecsv
+    sha256: de75557d1bb78317dd6455ccc298470c109dac7d32472b823d3fab9a3fdf1beb
+    description: North-site UTM telescope positions without CTA metadata.
+  - file_name: telescope_positions-North-utm.ecsv
+    sha256: 363f81377760e5f6668555878ccabf8d8073b2c3adf5828880754b8555ba6fea
+    description: North-site telescope positions in UTM coordinates.
+  - file_name: telescope_positions-North-utm.meta.yml
+    sha256: 939d09020eae061d4480f1cdb758a42fb1222d806e399389e108c51da4e08816
+    description: Metadata for North-site UTM telescope positions.
+  - file_name: telescope_positions-North-with-calibration-devices-ground.ecsv
+    sha256: 77ad18c2ad9cd50b2c0684dd2026821abedee5a132d4f6ec8ca4029a1fb1a054
+    description: North-site ground positions including calibration devices.
+  - file_name: telescope_positions-South-ground.ecsv
+    sha256: 038942162efded1fd4b73d9da1db4625843090e805a05241da7de4b2caf23c15
+    description: South-site telescope positions in ground coordinates.
+  - file_name: trigger_rates_user_spectrum_powerlaw.yml
+    sha256: fdda243645c38b738e003ba4afec2abd76d0b0ac5407dcc05dda3e5805e4e783
+    description: User power-law spectrum for trigger-rate calculations.
