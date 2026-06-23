@@ -228,6 +228,39 @@ def test_prepare_test_options_with_single_boolean_option(tmp_test_directory):
     assert config_file_model_version is None
 
 
+def test_prepare_test_options_copies_resolved_resource_config_files(tmp_test_directory):
+    resources_path = Path(tmp_test_directory) / "versioned-resources"
+    static_path = resources_path / "static"
+    static_path.mkdir(parents=True)
+    plot_config = static_path / "plot.yml"
+    plot_config.write_text(
+        """
+plot:
+  tables:
+  - file_name: tests/resources/generated/table.ecsv
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    config = {
+        "plot_config": str(plot_config),
+        "output_file": "plot",
+        "output_path": "simtools-output",
+    }
+
+    configuration._prepare_test_options(
+        config,
+        output_path=tmp_test_directory,
+        test_resources_path=resources_path,
+    )
+
+    resolved_plot_config = Path(config["plot_config"])
+    assert resolved_plot_config.parent == tmp_test_directory / "resolved-resource-configs"
+    assert yaml.safe_load(resolved_plot_config.read_text(encoding="utf-8")) == {
+        "plot": {"tables": [{"file_name": str(resources_path / "generated/table.ecsv")}]}
+    }
+
+
 def test_prepare_test_options_with_model_version(tmp_test_directory, tmp_config_string):
     config = {"model_version": "v1.0"}
     model_version = "v2.0"
