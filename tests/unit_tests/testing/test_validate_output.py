@@ -7,6 +7,7 @@ import pytest
 import yaml
 from astropy.table import Table
 
+from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.testing import validate_output
 from simtools.testing.validate_output import (
     _validate_output_path_and_file,
@@ -492,8 +493,12 @@ def test_validate_application_output_with_file_type(
 
 
 def test_compare_simtel_cfg_files(tmp_test_directory):
-    file1 = Path("tests/resources/sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg")
-    file2 = Path("tests/resources/sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg")
+    file1 = Path(
+        f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg"
+    )
+    file2 = Path(
+        f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg"
+    )
 
     assert validate_output._compare_simtel_cfg_files(file1, file2)
 

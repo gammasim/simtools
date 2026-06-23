@@ -3,7 +3,7 @@ applications:
 - application: simtools-simulate-prod-htcondor-generator
   configuration:
     apptainer_image: tests/resources/static/dummy_apptainer_image.sif
-    job_grid_file: tests/resources/static/production_job_grid_horizontal_single.ecsv
+    job_grid_file: tests/resources/generated/production_grid_points_horizontal.ecsv
     label: test-production-North
     log_level: DEBUG
     output_path: htcondor_submit

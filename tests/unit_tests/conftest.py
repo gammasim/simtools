@@ -26,6 +26,7 @@ from dotenv import load_dotenv
 import simtools.io.io_handler
 from simtools import settings
 from simtools.configuration.configurator import Configurator
+from simtools.constants import TEST_RESOURCES_GENERATED, TEST_RESOURCES_STATIC
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.db import db_handler
 from simtools.db.mongo_db import MongoDBHandler
@@ -82,7 +83,7 @@ def _is_db_unit_test(request):
 
 @functools.lru_cache
 def _load_mock_db_json(file_name):
-    mock_db_dir = Path(__file__).resolve().parent.parent / "resources" / "mock_db"
+    mock_db_dir = Path(__file__).resolve().parent.parent / "resources/static" / "mock_db"
     file_path = mock_db_dir / file_name
     with file_path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -245,6 +246,12 @@ def tmp_test_directory(tmpdir_factory):
 @pytest.fixture
 def data_path():
     return "./data/"
+
+
+@pytest.fixture
+def corsika_limits_for_test_file(get_test_data_file):
+    """Path to the unit-test CORSIKA limits lookup ECSV file."""
+    return get_test_data_file("corsika_limits", "North")
 
 
 @pytest.fixture(autouse=True)
@@ -858,26 +865,43 @@ _TEST_DATA_FILES = {
     (
         "corsika",
         "gamma",
-    ): "tests/resources/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst",
+    ): f"{TEST_RESOURCES_GENERATED}/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst",
     (
         "sim_telarray",
         "gamma",
-    ): "tests/resources/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst",
-    (
-        "sim_telarray",
-        "proton",
-    ): "tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst",
+    ): f"{TEST_RESOURCES_GENERATED}/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.simtel.zst",
     (
         "sim_telarray_hdata",
         "gamma",
-    ): "tests/resources/gamma_run2_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst",
-    ("telescope_positions", "North"): "tests/resources/telescope_positions-North-ground.ecsv",
+    ): f"{TEST_RESOURCES_GENERATED}/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.hdata.zst",
+    (
+        "production_dl2_fits",
+        "20deg",
+    ): f"{TEST_RESOURCES_STATIC}/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
+    (
+        "production_dl2_fits",
+        "40deg",
+    ): f"{TEST_RESOURCES_STATIC}/production_dl2_fits/prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
+    (
+        "telescope_positions",
+        "North",
+    ): f"{TEST_RESOURCES_STATIC}/telescope_positions-North-ground.ecsv",
     (
         "telescope_positions",
         "North-calibration",
-    ): "tests/resources/telescope_positions-North-with-calibration-devices-ground.ecsv",
-    ("telescope_positions", "North-utm"): "tests/resources/telescope_positions-North-utm.ecsv",
-    ("telescope_positions", "South"): "tests/resources/telescope_positions-South-ground.ecsv",
+    ): f"{TEST_RESOURCES_STATIC}/telescope_positions-North-with-calibration-devices-ground.ecsv",
+    (
+        "telescope_positions",
+        "North-utm",
+    ): f"{TEST_RESOURCES_STATIC}/telescope_positions-North-utm.ecsv",
+    (
+        "telescope_positions",
+        "South",
+    ): f"{TEST_RESOURCES_STATIC}/telescope_positions-South-ground.ecsv",
+    (
+        "corsika_limits",
+        "North",
+    ): f"{TEST_RESOURCES_GENERATED}/corsika_simulation_limits/corsika_limits_north.ecsv",
 }
 
 
@@ -936,6 +960,14 @@ def get_test_data_file(test_resources_path):
     return _get_test_data_file
 
 
+@pytest.fixture
+def simple_test_file(tmp_test_directory):
+    """Create a simple test file with known content."""
+    test_file_path = Path(tmp_test_directory) / "test_file.txt"
+    test_file_path.write_text("This is a simple test file.\nContains multiple lines.\nEnd of file.")
+    return str(test_file_path)
+
+
 # ============================================================================
 # Shared fixtures for row-table and export testing (Phase 3 consolidation)
 # ============================================================================
@@ -992,3 +1024,9 @@ def invalid_row_table_payloads():
             "rows": [["not", "numeric"]],
         },
     }
+
+
+@pytest.fixture
+def model_parameter_json():
+    """Fixture that returns the path to an example model parameter JSON file."""
+    return f"{TEST_RESOURCES_GENERATED}/model_parameters/array_element_position_ground-2.0.0.json"
