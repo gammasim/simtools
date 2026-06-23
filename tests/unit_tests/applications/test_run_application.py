@@ -37,7 +37,7 @@ def test_main_uses_runtime_environment_file(monkeypatch):
         lambda **_: SimpleNamespace(args=args),
     )
     monkeypatch.setattr(
-        run_application.simtools_runner,
+        run_application,
         "prepare_runtime_environment",
         lambda runtime_file: ({"image": f"image-from-{runtime_file}"}, ["runtime", "image"]),
     )
@@ -46,7 +46,7 @@ def test_main_uses_runtime_environment_file(monkeypatch):
         calls["app_args"] = app_args.copy()
         calls["run_time"] = run_time
 
-    monkeypatch.setattr(run_application.simtools_runner, "run_applications", _fake_run_applications)
+    monkeypatch.setattr(run_application, "run_applications", _fake_run_applications)
 
     run_application.main()
 
@@ -68,7 +68,7 @@ def test_main_ignores_runtime_environment_file_when_requested(monkeypatch):
         lambda **_: SimpleNamespace(args=args),
     )
     monkeypatch.setattr(
-        run_application.simtools_runner,
+        run_application,
         "prepare_runtime_environment",
         lambda _: (_ for _ in ()).throw(AssertionError("should not prepare runtime")),
     )
@@ -77,7 +77,7 @@ def test_main_ignores_runtime_environment_file_when_requested(monkeypatch):
         calls["app_args"] = app_args.copy()
         calls["run_time"] = run_time
 
-    monkeypatch.setattr(run_application.simtools_runner, "run_applications", _fake_run_applications)
+    monkeypatch.setattr(run_application, "run_applications", _fake_run_applications)
 
     run_application.main()
 
