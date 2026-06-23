@@ -8,6 +8,8 @@ SCHEMA_PATH = files("simtools") / "schemas"
 METADATA_JSON_SCHEMA = SCHEMA_PATH / "metadata.metaschema.yml"
 # Path to plotting configuration json schema
 PLOT_CONFIG_SCHEMA = SCHEMA_PATH / "plot_configuration.metaschema.yml"
+# Path to run time environment json schema
+RUN_TIME_ENVIRONMENT_SCHEMA = SCHEMA_PATH / "run_time_environment.schema.yml"
 # Path to model parameter metaschema
 MODEL_PARAMETER_METASCHEMA = SCHEMA_PATH / "model_parameter.metaschema.yml"
 # Path to model parameter description metaschema

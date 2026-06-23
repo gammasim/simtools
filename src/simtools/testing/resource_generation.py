@@ -219,33 +219,6 @@ def _remove_empty_download_directories(downloaded_files, target_dir):
             logger.info("Removed empty download directory %s", directory)
 
 
-def prepare_runtime_environment(runtime_environment_file):
-    """Read and prepare a standalone runtime environment.
-
-    Parameters
-    ----------
-    runtime_environment_file : str or pathlib.Path
-        YAML file containing a top-level ``runtime_environment`` mapping.
-
-    Returns
-    -------
-    tuple[dict, list[str]]
-        Runtime-environment configuration and prepared runtime command.
-
-    Raises
-    ------
-    ValueError
-        If the YAML content is not a mapping or lacks ``runtime_environment``.
-    """
-    runtime_config = ascii_handler.collect_data_from_file(runtime_environment_file)
-    if not isinstance(runtime_config, dict):
-        raise ValueError("Runtime configuration must be a YAML mapping.")
-    runtime_environment = runtime_config.get("runtime_environment")
-    if runtime_environment is None:
-        raise ValueError("Runtime configuration must contain a 'runtime_environment' block.")
-    return runtime_environment, simtools_runner.read_runtime_environment(runtime_environment)
-
-
 def _calculate_sha256(file_path):
     """Return the SHA-256 checksum of a file."""
     checksum = hashlib.sha256()
@@ -369,7 +342,9 @@ def generate_test_resources(
     runtime_environment = None
     run_time = None
     if runtime_environment_file is not None and not ignore_runtime_environment:
-        runtime_environment, run_time = prepare_runtime_environment(runtime_environment_file)
+        runtime_environment, run_time = simtools_runner.prepare_runtime_environment(
+            runtime_environment_file
+        )
 
     try:
         run_configured_applications(
