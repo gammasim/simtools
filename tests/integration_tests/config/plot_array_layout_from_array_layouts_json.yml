@@ -2,7 +2,7 @@
 applications:
 - application: simtools-plot-array-layout
   configuration:
-    array_layout_parameter_file: tests/resources/static/model_parameters/array_layouts-2.0.2.json
+    array_layout_parameter_file: tests/resources/generated/model_parameters/array_layouts-2.0.2.json
     figure_format:
     - pdf
     - png
@@ -11,6 +11,7 @@ applications:
   integration_tests:
   - output_file: array_layout_subsystem_msts_North_ground_6-0-2.png
   - output_file: array_layout_4mst_North_ground_6-0-2.pdf
+  model_version_use_current: true
   test_name: from_array_layouts_json
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

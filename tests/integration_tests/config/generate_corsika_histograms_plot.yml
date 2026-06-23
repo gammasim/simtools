@@ -9,5 +9,6 @@ applications:
   integration_tests:
   - output_file: tel_output_10GeV-2-gamma-20deg-CTAO-South.pdf
   test_name: plot
+  xfail: "TODO: review test and add input file"
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

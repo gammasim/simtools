@@ -1,0 +1,52 @@
+---
+files:
+  - file_name: MLTdata-preproduction.ecsv
+    description: Preproduction MST data.
+  - file_name: MLTdata-preproduction.meta.yml
+    description: Preproduction MST data (metadata).
+  - file_name: mock_db
+    description: Mock database fixture directory
+  - file_name: simtel_config_test_la_palma.cfg
+    description: Configuration export from simtelarray.
+  - file_name: telescope_positions-North-ground.ecsv
+    description: Telescope position table in ground coordinates
+  - file_name: telescope_positions-North-utm-without-cta-meta.ecsv
+    description: Telescope position table in utm without CTA metadata
+  - file_name: telescope_positions-North-utm.ecsv
+    description: Telescope position table in utm coordinates
+  - file_name: telescope_positions-North-utm.meta.yml
+    description: Telescope positions utm metadata fixture
+  - file_name: telescope_positions-North-with-calibration-devices-ground.ecsv
+    description: Telescope position table in ground coordinates with calibration devices
+  - file_name: telescope_positions-North-mercator.ecsv
+    description: Telescope position table in mercator coordinates
+  - file_name: telescope_positions-South-ground.ecsv
+    description: Telescope position table in ground coordinates for the South site
+  - file_name: model_parameters/schema-0.2.0/num_gains-1.0.0.json
+    description: Model parameter file with deprecated schema version.
+  - file_name: production_simulation_config_metrics.yml
+    description: Example configuration for production simulation with metrics.
+  - file_name: PSFcurve_data_v2.txt
+    description: Plain-text cumulative PSF input data.
+  - file_name: production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz
+    description: Example DL2 FITS file from prod6.
+  - file_name: production_dl2_fits/prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz
+    description: Example DL2 FITS file from prod6
+  - file_name: ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000deg_validate_optics.lis.gz
+    description: Example ray tracing photon list file.
+  - file_name: ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv
+    description: Example ray tracing file in ECSV format.
+  - file_name: dummy_apptainer_image.sif
+    description: Dummy Apptainer image file for testing.
+  - file_name: trigger_rates_user_spectrum_powerlaw.yml
+    description: Example user spectrum configuration file for trigger rate calculations.
+  - file_name: grid_definition.yaml
+    description: Example grid definition file for simulations.
+  - file_name: info_test_model_parameter_changes.yml
+    description: Example configuration file for testing model parameter changes.
+  - file_name: info_test_camera_efficiency_change_LSTN-02.yml
+    description: Example configuration file for testing camera efficiency changes.
+  - file_name: plot_single_pe_config_from_ecsv_file.yml
+    description: Plotting configuration example.
+  - file_name: plot_single_pe_config_data_from_legacy_csv.yml
+    description: Plotting configuration example (legacy CSV input)

@@ -31,6 +31,8 @@ def pytest_generate_tests(metafunc):
             marks.append(pytest.mark.verifies_requirement(config["test_requirement"]))
         if config.get("test_use_case"):
             marks.append(pytest.mark.verifies_usecase(config["test_use_case"]))
+        if config.get("xfail"):
+            marks.append(pytest.mark.xfail(reason=config["xfail"]))
         test_parameters.append(pytest.param(config, id=test_id, marks=marks))
 
     metafunc.parametrize("config", test_parameters)

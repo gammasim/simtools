@@ -3,12 +3,13 @@
 import pytest
 from astropy.table import Table
 
+from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.io import legacy_data_handler
 
 
 @pytest.fixture
 def test_spe_file():
-    return "tests/resources/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv"
+    return f"{TEST_RESOURCES_GENERATED}/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv"
 
 
 def test_read_legacy_data_file(test_spe_file):

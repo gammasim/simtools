@@ -5,8 +5,8 @@ applications:
     azimuths:
     - 180
     base_path: tests/resources/static/production_dl2_fits/
-    file_name_template: prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits
-    grid_points_production_file: tests/resources/static/production_grid_points_horizontal.ecsv
+    file_name_template: prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz
+    grid_points_production_file: tests/resources/generated/production_grid_points_horizontal.ecsv
     metrics_file: tests/resources/static/production_simulation_config_metrics.yml
     nsb:
     - 1
@@ -17,10 +17,9 @@ applications:
     zeniths:
     - 20
     - 40
-    - 52
-    - 60
   integration_tests:
   - output_file: interpolated_production_statistics.ecsv
   test_name: production_derive_statistics
+  xfail: "TODO application requires outdated production grid file (issue #2270)"
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

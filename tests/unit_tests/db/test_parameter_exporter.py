@@ -45,8 +45,8 @@ def test_export_parameter_data_writes_ecsv_for_dict_parameter(mocker, db_handler
         parameter_version="2.0.0",
         model_version=None,
         output_file="fadc_pulse_shape.json",
-        export_model_file=True,
-        export_model_file_as_table=False,
+        export_model_file=False,
+        export_model_file_as_table=True,
     )
 
     mock_export_single.assert_called_once_with(
@@ -88,33 +88,19 @@ def test_export_parameter_data_requires_output_file_for_dict_parameter(db_handle
             parameter_version="2.0.0",
             model_version=None,
             output_file=None,
-            export_model_file=True,
-            export_model_file_as_table=False,
-        )
-
-
-def test_export_parameter_data_requires_export_model_file_for_table_export(db_handler_mock):
-    """Reject export_model_file_as_table without export_model_file."""
-    with pytest.raises(ValueError, match="Use --export_model_file together"):
-        parameter_exporter.export_parameter_data(
-            db=db_handler_mock,
-            parameter="mirror_reflectivity",
-            site="North",
-            array_element_name="LSTN-01",
-            parameter_version=None,
-            model_version="6.0.2",
-            output_file=None,
             export_model_file=False,
             export_model_file_as_table=True,
         )
 
 
-def test_export_parameter_data_allows_output_file_for_file_parameter(mocker, db_handler_mock):
-    """Allow overriding exported file name for file-backed parameter export."""
+def test_export_parameter_data_exports_original_file_only(mocker, db_handler_mock):
+    """Export only the original model file when export_model_file is set."""
     db_handler_mock.get_model_parameter.return_value = {
         "mirror_reflectivity": {"type": "file", "value": "ref_LST1_2022_04_01.dat"}
     }
-    mocker.patch.object(parameter_exporter, "export_single_model_file", return_value=None)
+    mock_export_single = mocker.patch.object(
+        parameter_exporter, "export_single_model_file", return_value=None
+    )
     source_file = mocker.MagicMock()
     target_file = mocker.MagicMock()
     db_handler_mock.io_handler.get_output_file.side_effect = [source_file, target_file]
@@ -131,12 +117,60 @@ def test_export_parameter_data_allows_output_file_for_file_parameter(mocker, db_
         export_model_file_as_table=False,
     )
 
+    mock_export_single.assert_called_once_with(
+        db=db_handler_mock,
+        parameter="mirror_reflectivity",
+        site="North",
+        array_element_name="LSTN-01",
+        parameter_version=None,
+        model_version="6.0.2",
+        export_file_as_table=False,
+        parameters=db_handler_mock.get_model_parameter.return_value,
+        par_info=db_handler_mock.get_model_parameter.return_value["mirror_reflectivity"],
+    )
     source_file.rename.assert_called_once_with(target_file)
     assert output_files == [target_file]
 
 
-def test_export_parameter_data_returns_file_and_table_outputs(mocker, db_handler_mock):
-    """Return both original file and ECSV file for file-backed table export."""
+def test_export_parameter_data_allows_output_file_for_file_parameter(mocker, db_handler_mock):
+    """Allow overriding output file name for file-backed table export."""
+    db_handler_mock.get_model_parameter.return_value = {
+        "mirror_reflectivity": {"type": "file", "value": "ref_LST1_2022_04_01.dat"}
+    }
+    table = mocker.Mock()
+    mocker.patch.object(parameter_exporter, "export_single_model_file", return_value=table)
+    source_file = mocker.MagicMock()
+    source_file.exists.return_value = True
+    target_file = mocker.MagicMock()
+    ecsv_output = mocker.MagicMock()
+    target_file.with_suffix.return_value = ecsv_output
+
+    def _mock_get_output_file(file_name):
+        if file_name == "ref_LST1_2022_04_01.dat":
+            return source_file
+        return target_file
+
+    db_handler_mock.io_handler.get_output_file.side_effect = _mock_get_output_file
+
+    output_files = parameter_exporter.export_parameter_data(
+        db=db_handler_mock,
+        parameter="mirror_reflectivity",
+        site="North",
+        array_element_name="LSTN-01",
+        parameter_version=None,
+        model_version="6.0.2",
+        output_file="mirror_reflectivity.dat",
+        export_model_file=False,
+        export_model_file_as_table=True,
+    )
+
+    table.write.assert_called_once_with(ecsv_output, format="ascii.ecsv", overwrite=True)
+    source_file.unlink.assert_called_once()
+    assert output_files == [ecsv_output]
+
+
+def test_export_parameter_data_returns_only_table_output(mocker, db_handler_mock):
+    """Return only ECSV output for file-backed table export."""
     db_handler_mock.get_model_parameter.return_value = {
         "mirror_reflectivity": {"type": "file", "value": "ref_LST1_2022_04_01.dat"}
     }
@@ -145,7 +179,7 @@ def test_export_parameter_data_returns_file_and_table_outputs(mocker, db_handler
         parameter_exporter, "export_single_model_file", return_value=table
     )
     file_path = mocker.MagicMock()
-    file_path.suffix = ".dat"
+    file_path.exists.return_value = False
     file_path.with_suffix.return_value = "ref_LST1_2022_04_01.ecsv"
     db_handler_mock.io_handler.get_output_file.return_value = file_path
 
@@ -157,7 +191,7 @@ def test_export_parameter_data_returns_file_and_table_outputs(mocker, db_handler
         parameter_version=None,
         model_version="6.0.2",
         output_file=None,
-        export_model_file=True,
+        export_model_file=False,
         export_model_file_as_table=True,
     )
 
@@ -175,7 +209,38 @@ def test_export_parameter_data_returns_file_and_table_outputs(mocker, db_handler
     table.write.assert_called_once_with(
         "ref_LST1_2022_04_01.ecsv", format="ascii.ecsv", overwrite=True
     )
-    assert output_files == [file_path, "ref_LST1_2022_04_01.ecsv"]
+    assert output_files == ["ref_LST1_2022_04_01.ecsv"]
+
+
+def test_export_parameter_data_returns_file_and_table_outputs(mocker, db_handler_mock):
+    """Return both original and ECSV outputs when both export flags are set."""
+    db_handler_mock.get_model_parameter.return_value = {
+        "mirror_reflectivity": {"type": "file", "value": "ref_LST1_2022_04_01.dat"}
+    }
+    table = mocker.Mock()
+    mocker.patch.object(parameter_exporter, "export_single_model_file", return_value=table)
+
+    source_file = mocker.MagicMock()
+    model_output_file = mocker.MagicMock()
+    table_output_file = mocker.MagicMock()
+    model_output_file.with_suffix.return_value = table_output_file
+    db_handler_mock.io_handler.get_output_file.side_effect = [source_file, model_output_file]
+
+    output_files = parameter_exporter.export_parameter_data(
+        db=db_handler_mock,
+        parameter="mirror_reflectivity",
+        site="North",
+        array_element_name="LSTN-01",
+        parameter_version=None,
+        model_version="6.0.2",
+        output_file="mirror_reflectivity.dat",
+        export_model_file=True,
+        export_model_file_as_table=True,
+    )
+
+    source_file.rename.assert_called_once_with(model_output_file)
+    table.write.assert_called_once_with(table_output_file, format="ascii.ecsv", overwrite=True)
+    assert output_files == [model_output_file, table_output_file]
 
 
 def test_export_model_files_requires_destination(db_handler_mock):
@@ -196,7 +261,7 @@ def test_normalize_file_names_returns_empty_list_for_no_inputs():
 def test_export_parameter_data_file_parameter_ecsv_suffix_skips_table_conversion(
     mocker, db_handler_mock
 ):
-    """Skip creating an extra ECSV file when exported model file is already .ecsv."""
+    """Write ECSV output even when source payload filename already has .ecsv suffix."""
     db_handler_mock.get_model_parameter.return_value = {
         "mirror_reflectivity": {"type": "file", "value": "mirror_reflectivity.ecsv"}
     }
@@ -204,7 +269,8 @@ def test_export_parameter_data_file_parameter_ecsv_suffix_skips_table_conversion
     mocker.patch.object(parameter_exporter, "export_single_model_file", return_value=table)
 
     output_file = mocker.MagicMock()
-    output_file.suffix = ".ecsv"
+    output_file.with_suffix.return_value = output_file
+    output_file.exists.return_value = False
     db_handler_mock.io_handler.get_output_file.return_value = output_file
 
     output_files = parameter_exporter.export_parameter_data(
@@ -215,12 +281,12 @@ def test_export_parameter_data_file_parameter_ecsv_suffix_skips_table_conversion
         parameter_version=None,
         model_version="6.0.2",
         output_file=None,
-        export_model_file=True,
+        export_model_file=False,
         export_model_file_as_table=True,
     )
 
     assert output_files == [output_file]
-    table.write.assert_not_called()
+    table.write.assert_called_once_with(output_file, format="ascii.ecsv", overwrite=True)
 
 
 def test_export_parameter_data_no_export_returns_empty_list(db_handler_mock):
