@@ -3,7 +3,7 @@ applications:
 - application: simtools-validate-file-using-schema
   configuration:
     data_type: metadata
-    file_name: tests/resources/telescope_positions-North-utm.ecsv
+    file_name: tests/resources/static/telescope_positions-North-utm.ecsv
   test_name: ecsv_validate_metadata
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

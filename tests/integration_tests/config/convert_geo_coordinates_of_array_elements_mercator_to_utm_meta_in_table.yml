@@ -3,7 +3,7 @@ applications:
 - application: simtools-convert-geo-coordinates-of-array-elements
   configuration:
     export: utm
-    input: tests/resources/telescope_positions-North-mercator.ecsv
+    input: tests/resources/static/telescope_positions-North-mercator.ecsv
     log_level: DEBUG
     model_version: 6.0.2
     output_file: test.ecsv
@@ -14,7 +14,7 @@ applications:
     skip_input_validation: true
     skip_output_validation: true
   integration_tests:
-  - reference_output_file: ./tests/resources/telescope_positions-North-utm.ecsv
+  - reference_output_file: ${static:telescope_positions-North-utm.ecsv}
     tolerance: 0.01
   test_name: mercator_to_utm_in_table
 schema_name: application_workflow.metaschema

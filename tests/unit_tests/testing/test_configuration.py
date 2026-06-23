@@ -65,6 +65,37 @@ def test_read_configs_from_files(integration_test_config_files):
     assert len(configs) == len(config_files)
 
 
+def test_read_configs_resolves_integration_test_resource_macros(tmp_test_directory):
+    config_file = tmp_test_directory / "config.yml"
+    config_file.write_text(
+        """
+applications:
+- application: simtools-test
+  test_name: resource_macros
+  configuration:
+    input: ${static:input.ecsv}
+  integration_tests:
+  - reference_output_file: ${generated:reference.ecsv}
+  - test_simtel_cfg_files:
+      "6.0.2": ${static:simtel.cfg}
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+
+    configs = configuration._read_configs_from_files([config_file])
+
+    assert configs[0]["configuration"]["input"] == "${static:input.ecsv}"
+    assert (
+        configs[0]["integration_tests"][0]["reference_output_file"]
+        == "tests/resources/generated/reference.ecsv"
+    )
+    assert (
+        configs[0]["integration_tests"][1]["test_simtel_cfg_files"]["6.0.2"]
+        == "tests/resources/static/simtel.cfg"
+    )
+
+
 def test_resolve_test_resource_path_macros_nested_structures():
     value = {
         "config": {
