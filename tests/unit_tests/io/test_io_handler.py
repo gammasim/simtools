@@ -50,10 +50,10 @@ def test_get_output_file(args_dict, io_handler):
     ) == Path(f"{args_dict['output_path']}/output/test-io-handler/{test_file}")
 
 
-def test_get_test_data_file(args_dict, io_handler):
+def test_get_test_data_file(io_handler, test_resources_path):
     assert (
         io_handler.get_test_data_file(file_name=test_file)
-        == Path(f"tests/resources/{test_file}").absolute()
+        == (test_resources_path / test_file).resolve()
     )
 
 
