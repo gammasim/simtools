@@ -26,7 +26,6 @@ from dotenv import load_dotenv
 import simtools.io.io_handler
 from simtools import settings
 from simtools.configuration.configurator import Configurator
-from simtools.constants import TEST_RESOURCES_GENERATED, TEST_RESOURCES_STATIC
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.db import db_handler
 from simtools.db.mongo_db import MongoDBHandler
@@ -82,8 +81,8 @@ def _is_db_unit_test(request):
 
 
 @functools.lru_cache
-def _load_mock_db_json(file_name):
-    mock_db_dir = Path(__file__).resolve().parent.parent / "resources/static" / "mock_db"
+def _load_mock_db_json(test_resources_path, file_name):
+    mock_db_dir = Path(test_resources_path) / "static" / "mock_db"
     file_path = mock_db_dir / file_name
     with file_path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -471,7 +470,7 @@ def db_config():
 
 
 @pytest.fixture
-def mock_db_handler(request):
+def mock_db_handler(request, test_resources_path):
     """
     Mock DatabaseHandler for unit tests.
 
@@ -483,15 +482,17 @@ def mock_db_handler(request):
         return request.getfixturevalue("db")
 
     # Load mock data from JSON files
-    mock_parameters = _apply_mock_param_defaults(_load_mock_db_json("mock_parameters.json"))
+    mock_parameters = _apply_mock_param_defaults(
+        _load_mock_db_json(test_resources_path, "mock_parameters.json")
+    )
     mock_sim_config_params = _apply_mock_param_defaults(
-        _load_mock_db_json("mock_sim_config_params.json")
+        _load_mock_db_json(test_resources_path, "mock_sim_config_params.json")
     )
     site_specific_params_north = _apply_mock_param_defaults(
-        _load_mock_db_json("site_params_north.json")
+        _load_mock_db_json(test_resources_path, "site_params_north.json")
     )
     site_specific_params_south = _apply_mock_param_defaults(
-        _load_mock_db_json("site_params_south.json")
+        _load_mock_db_json(test_resources_path, "site_params_south.json")
     )
 
     # Create closures for mock functions with captured data
@@ -865,43 +866,43 @@ _TEST_DATA_FILES = {
     (
         "corsika",
         "gamma",
-    ): f"{TEST_RESOURCES_GENERATED}/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst",
+    ): "generated/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst",
     (
         "sim_telarray",
         "gamma",
-    ): f"{TEST_RESOURCES_GENERATED}/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.simtel.zst",
+    ): "generated/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.simtel.zst",
     (
         "sim_telarray_hdata",
         "gamma",
-    ): f"{TEST_RESOURCES_GENERATED}/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.hdata.zst",
+    ): "generated/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.hdata.zst",
     (
         "production_dl2_fits",
         "20deg",
-    ): f"{TEST_RESOURCES_STATIC}/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
+    ): "static/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
     (
         "production_dl2_fits",
         "40deg",
-    ): f"{TEST_RESOURCES_STATIC}/production_dl2_fits/prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
+    ): "static/production_dl2_fits/prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
     (
         "telescope_positions",
         "North",
-    ): f"{TEST_RESOURCES_STATIC}/telescope_positions-North-ground.ecsv",
+    ): "static/telescope_positions-North-ground.ecsv",
     (
         "telescope_positions",
         "North-calibration",
-    ): f"{TEST_RESOURCES_STATIC}/telescope_positions-North-with-calibration-devices-ground.ecsv",
+    ): "static/telescope_positions-North-with-calibration-devices-ground.ecsv",
     (
         "telescope_positions",
         "North-utm",
-    ): f"{TEST_RESOURCES_STATIC}/telescope_positions-North-utm.ecsv",
+    ): "static/telescope_positions-North-utm.ecsv",
     (
         "telescope_positions",
         "South",
-    ): f"{TEST_RESOURCES_STATIC}/telescope_positions-South-ground.ecsv",
+    ): "static/telescope_positions-South-ground.ecsv",
     (
         "corsika_limits",
         "North",
-    ): f"{TEST_RESOURCES_GENERATED}/corsika_simulation_limits/corsika_limits_north.ecsv",
+    ): "generated/corsika_simulation_limits/corsika_limits_north.ecsv",
 }
 
 
@@ -947,7 +948,7 @@ def get_test_data_file(test_resources_path):
             raise KeyError(
                 f"Test data file not found for {file_type}[{variant}]. Available: {available}"
             )
-        relative_path = Path(_TEST_DATA_FILES[key]).relative_to("tests/resources")
+        relative_path = Path(_TEST_DATA_FILES[key])
         direct_path = test_resources_path / relative_path
         if direct_path.exists():
             return str(direct_path)
@@ -1027,6 +1028,11 @@ def invalid_row_table_payloads():
 
 
 @pytest.fixture
-def model_parameter_json():
+def model_parameter_json(test_resources_path):
     """Fixture that returns the path to an example model parameter JSON file."""
-    return f"{TEST_RESOURCES_GENERATED}/model_parameters/array_element_position_ground-2.0.0.json"
+    return str(
+        test_resources_path
+        / "generated"
+        / "model_parameters"
+        / "array_element_position_ground-2.0.0.json"
+    )
