@@ -218,6 +218,24 @@ def _validate_model_parameter_json_file(config, model_parameter_validation):
     )
 
 
+def _resource_path_suffixes(value):
+    """Return comparable suffixes for resource path strings."""
+    if not isinstance(value, str) or "/" not in value:
+        return set()
+
+    parts = tuple(part for part in Path(value).as_posix().split("/") if part not in ("", "."))
+    suffixes = set()
+    for marker in ("integration_tests", "tests", "static", "generated"):
+        if marker in parts:
+            suffixes.add(parts[parts.index(marker) :])
+    return suffixes
+
+
+def _compare_resource_path_strings(data1, data2):
+    """Compare strings that represent the same resource using different path roots."""
+    return bool(_resource_path_suffixes(data1) & _resource_path_suffixes(data2))
+
+
 def compare_files(file1, file2, tolerance=1.0e-5, test_columns=None):
     """
     Compare two files of file type ecsv, json or yaml.
@@ -293,6 +311,8 @@ def _compare_nested_dicts_with_tolerance(data1, data2, tolerance, is_value_field
             return _compare_value_from_parameter_dict(data1, data2, tolerance)
         except (TypeError, ValueError):
             return data1 == data2
+    if isinstance(data1, str) and isinstance(data2, str):
+        return data1 == data2 or _compare_resource_path_strings(data1, data2)
     return data1 == data2
 
 
