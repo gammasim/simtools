@@ -125,9 +125,7 @@ This runs to run the tool for the specific test called `num_gains`.
 Unit and integration tests use `tests/resources` by default. To use a versioned resources
 directory from `simtools-tests`, provide its full path to pytest:
 
-```bash
-pytest --test_resources_path=/full/path/to/integration_tests/resources tests/unit_tests tests/integration_tests
-```
+    pytest --test_resources_path=/full/path/to/integration_tests tests/unit_tests tests/integration_tests
 
 Integration-test configuration files may reference resource files in both the application
 `configuration` and the `integration_tests` validation blocks. Use `${static:path/to/file}` for
