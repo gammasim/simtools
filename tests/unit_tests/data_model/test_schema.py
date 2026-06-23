@@ -12,6 +12,7 @@ from simtools.constants import (
     MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
     MODEL_PARAMETER_METASCHEMA,
     MODEL_PARAMETER_SCHEMA_PATH,
+    SCHEMA_PATH,
 )
 from simtools.data_model import schema
 from simtools.io import ascii_handler
@@ -129,6 +130,36 @@ def test_validate_dict_using_schema(tmp_test_directory, caplog):
     invalid_data = {"name": "Alice", "age": "Thirty"}
     with pytest.raises(jsonschema.exceptions.ValidationError):
         schema.validate_dict_using_schema(invalid_data, schema_file)
+
+
+def test_runtime_environment_definition_is_reused_by_workflow_schema():
+    workflow_config = {
+        "schema_version": "0.4.0",
+        "schema_name": "application_workflow.metaschema",
+        "runtime_environment": {
+            "container_engine": "podman",
+            "image": "test-image",
+            "network": "simtools-mongo-network",
+            "env_file": ".env",
+            "options": ["--arch amd64"],
+        },
+        "applications": [
+            {
+                "application": "simtools-test",
+                "configuration": {},
+            }
+        ],
+    }
+
+    schema.validate_dict_using_schema(
+        workflow_config, schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml"
+    )
+
+    workflow_config["runtime_environment"]["unknown"] = "value"
+    with pytest.raises(jsonschema.ValidationError):
+        schema.validate_dict_using_schema(
+            workflow_config, schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml"
+        )
 
 
 def test_validate_dict_using_schema_remote(tmp_test_directory, mocker):
