@@ -3,7 +3,6 @@
 import urllib.error
 from pathlib import Path
 
-import jsonschema
 import pytest
 
 from simtools.testing import resource_generation
@@ -315,72 +314,6 @@ def test_validate_static_files_invalid_entries(tmp_test_directory):
     assert "Duplicate manifest entry: fixture.txt" in str(exc_info.value)
 
 
-def test_prepare_runtime_environment(tmp_test_directory, monkeypatch):
-    runtime_file = Path(tmp_test_directory) / "runtime.yml"
-    runtime_file.write_text(
-        "\n".join(
-            [
-                "runtime_environment:",
-                "  container_engine: podman",
-                "  image: test-image",
-                "  network: simtools-mongo-network",
-                "  env_file: .env",
-                "  options:",
-                '    - "--arch amd64"',
-            ]
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(
-        resource_generation.simtools_runner,
-        "read_runtime_environment",
-        lambda config: ["runtime", config["image"]],
-    )
-
-    runtime_environment, run_time = resource_generation.prepare_runtime_environment(runtime_file)
-
-    assert runtime_environment == {
-        "container_engine": "podman",
-        "image": "test-image",
-        "network": "simtools-mongo-network",
-        "env_file": ".env",
-        "options": ["--arch amd64"],
-    }
-    assert run_time == ["runtime", "test-image"]
-
-
-@pytest.mark.parametrize(
-    ("content", "match"),
-    [
-        ("- invalid\n", "must be a YAML mapping"),
-        ("other: value\n", "must contain a 'runtime_environment' block"),
-    ],
-)
-def test_prepare_runtime_environment_invalid(tmp_test_directory, content, match):
-    runtime_file = Path(tmp_test_directory) / "runtime.yml"
-    runtime_file.write_text(content, encoding="utf-8")
-
-    with pytest.raises(ValueError, match=match):
-        resource_generation.prepare_runtime_environment(runtime_file)
-
-
-@pytest.mark.parametrize(
-    "content",
-    [
-        "runtime_environment:\n  container_engine: podman\n",
-        "runtime_environment:\n  image: test-image\n  options: --arch amd64\n",
-        "runtime_environment:\n  image: test-image\n  unknown: value\n",
-    ],
-)
-def test_prepare_runtime_environment_schema_validation(tmp_test_directory, content):
-    runtime_file = Path(tmp_test_directory) / "runtime.yml"
-    runtime_file.write_text(content, encoding="utf-8")
-
-    with pytest.raises(jsonschema.ValidationError):
-        resource_generation.prepare_runtime_environment(runtime_file)
-
-
 def test_generate_test_resources_tests_static_files_only(tmp_test_directory, monkeypatch):
     integration_test_dir = (
         Path(tmp_test_directory) / "simtools-tests" / "v0.32.0" / "integration_tests"
@@ -455,7 +388,9 @@ def test_generate_test_resources_prepares_shared_runtime_once(tmp_test_directory
         prepare_mock.append(path)
         return {"image": "image"}, ["podman", "run", "image"]
 
-    monkeypatch.setattr(resource_generation, "prepare_runtime_environment", _prepare)
+    monkeypatch.setattr(
+        resource_generation.simtools_runner, "prepare_runtime_environment", _prepare
+    )
     monkeypatch.setattr(
         resource_generation,
         "run_configured_applications",
@@ -485,7 +420,7 @@ def test_generate_test_resources_ignores_supplied_runtime(tmp_test_directory, mo
     (config_dir / "download_files.yml").write_text("files: []\n", encoding="utf-8")
     run_calls = []
     monkeypatch.setattr(
-        resource_generation,
+        resource_generation.simtools_runner,
         "prepare_runtime_environment",
         lambda _: pytest.fail("runtime must not be prepared"),
     )

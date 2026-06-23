@@ -5,6 +5,7 @@ import shutil
 from pathlib import Path
 from unittest import mock
 
+import jsonschema
 import pytest
 
 import simtools.utils.general as gen
@@ -764,7 +765,7 @@ def test_read_runtime_environment_with_full_options(monkeypatch):
     runtime_environment = {
         "image": common_image,
         "network": common_network,
-        "env_file": common_env_file,
+        "environment_file": common_env_file,
         "container_engine": common_container_engine,
         "options": common_options,
     }
@@ -824,6 +825,72 @@ def test_read_runtime_environment_with_no_runtime_environment():
     workdir = TEST_WORKDIR
     result = simtools_runner.read_runtime_environment(runtime_environment, workdir)
     assert result == []
+
+
+def test_prepare_runtime_environment(tmp_test_directory, monkeypatch):
+    runtime_file = Path(tmp_test_directory) / "runtime.yml"
+    runtime_file.write_text(
+        "\n".join(
+            [
+                "runtime_environment:",
+                "  container_engine: podman",
+                "  image: test-image",
+                "  network: simtools-mongo-network",
+                "  environment_file: .env",
+                "  options:",
+                '    - "--arch amd64"',
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        simtools_runner,
+        "read_runtime_environment",
+        lambda config: ["runtime", config["image"]],
+    )
+
+    runtime_environment, run_time = simtools_runner.prepare_runtime_environment(runtime_file)
+
+    assert runtime_environment == {
+        "container_engine": "podman",
+        "image": "test-image",
+        "network": "simtools-mongo-network",
+        "environment_file": ".env",
+        "options": ["--arch amd64"],
+    }
+    assert run_time == ["runtime", "test-image"]
+
+
+@pytest.mark.parametrize(
+    ("content", "match"),
+    [
+        ("- invalid\n", "must be a YAML mapping"),
+        ("other: value\n", "must contain a 'runtime_environment' block"),
+    ],
+)
+def test_prepare_runtime_environment_invalid(tmp_test_directory, content, match):
+    runtime_file = Path(tmp_test_directory) / "runtime.yml"
+    runtime_file.write_text(content, encoding="utf-8")
+
+    with pytest.raises(ValueError, match=match):
+        simtools_runner.prepare_runtime_environment(runtime_file)
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "runtime_environment:\n  container_engine: podman\n",
+        "runtime_environment:\n  image: test-image\n  options: --arch amd64\n",
+        "runtime_environment:\n  image: test-image\n  unknown: value\n",
+    ],
+)
+def test_prepare_runtime_environment_schema_validation(tmp_test_directory, content):
+    runtime_file = Path(tmp_test_directory) / "runtime.yml"
+    runtime_file.write_text(content, encoding="utf-8")
+
+    with pytest.raises(jsonschema.ValidationError):
+        simtools_runner.prepare_runtime_environment(runtime_file)
 
 
 def test_read_runtime_environment_with_missing_options(monkeypatch):
@@ -912,12 +979,12 @@ def test_read_runtime_environment_error_handling(monkeypatch):
         simtools_runner.read_runtime_environment(runtime_environment)
 
 
-def test_read_runtime_environment_with_env_file_and_options(monkeypatch):
-    """Test read_runtime_environment with env_file and various options."""
+def test_read_runtime_environment_with_environment_file_and_options(monkeypatch):
+    """Test read_runtime_environment with environment_file and various options."""
     runtime_environment = {
         "image": "test-image",
         "container_engine": "podman",
-        "env_file": ".env",
+        "environment_file": ".env",
         "options": ["--privileged", "--user", "root"],
     }
 
