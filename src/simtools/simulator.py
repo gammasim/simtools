@@ -301,10 +301,10 @@ class Simulator:
         """
         runtime = []
         _resources = self._simulation_runner.get_resources(self.get_files(file_type="sub_out"))
-        if _resources.get("runtime"):
+        if _resources.get("runtime") is not None:
             runtime.append(_resources["runtime"])
 
-        mean_runtime = np.mean(runtime)
+        mean_runtime = np.mean(runtime) if runtime else np.nan
 
         resource_summary = f"Mean wall time/run [sec]: {mean_runtime}"
         if "n_events" in _resources and _resources["n_events"] > 0:

@@ -628,7 +628,7 @@ def _process_result_row(res, cols, columns, units):
     for k in cols:
         val = res.get(k, None)
         if val is not None:
-            val = _round_value(k, val)
+            val = _round_value(k, val, res)
             _logger.debug(f"Adding {k}: {val} to column data")
 
         if hasattr(val, "unit"):
@@ -640,10 +640,28 @@ def _process_result_row(res, cols, columns, units):
                 units[k] = None
 
 
-def _round_value(key, val):
+def _enforce_minimum_value(candidate, minimum):
+    """Ensure candidate is not below minimum while preserving units when present."""
+    if minimum is None:
+        return candidate
+
+    if isinstance(candidate, u.Quantity) and isinstance(minimum, u.Quantity):
+        minimum = minimum.to(candidate.unit)
+    elif isinstance(candidate, u.Quantity) and not isinstance(minimum, u.Quantity):
+        minimum = minimum * candidate.unit
+    elif not isinstance(candidate, u.Quantity) and isinstance(minimum, u.Quantity):
+        minimum = minimum.value
+
+    return candidate if candidate >= minimum else minimum
+
+
+def _round_value(key, val, row=None):
     """Round value based on key type."""
     if key == "lower_energy_limit":
-        return np.floor(val * 1e3) / 1e3
+        rounded = np.floor(val * 1e3) / 1e3
+        if row is not None:
+            rounded = _enforce_minimum_value(rounded, row.get("br_energy_min"))
+        return rounded
     if key == "upper_radius_limit":
         return np.ceil(val / 25) * 25
     if key == "viewcone_radius":
@@ -669,6 +687,29 @@ def _create_table_columns(cols, columns, units):
             col = Column(data=col_data, name=k, unit=units.get(k), description=col_description)
         table_cols.append(col)
     return table_cols
+
+
+def _find_bin_index_for_value(bin_edges, value):
+    """Return index of the histogram bin containing value."""
+    edges = np.asarray(bin_edges, dtype=float)
+    idx = int(np.searchsorted(edges, float(value), side="right") - 1)
+    return int(np.clip(idx, 0, len(edges) - 2))
+
+
+def _apply_broad_range_lower_energy_floor(derived_limit, broad_range_min, energy_bins):
+    """Apply physical and bin-consistent floor to the derived lower energy limit."""
+    if broad_range_min is None:
+        return derived_limit
+
+    derived_tev = derived_limit.to("TeV")
+    broad_range_tev = broad_range_min.to("TeV")
+
+    derived_idx = _find_bin_index_for_value(energy_bins, derived_tev.value)
+    broad_range_idx = _find_bin_index_for_value(energy_bins, broad_range_tev.value)
+    if derived_idx == broad_range_idx:
+        return broad_range_tev.to(derived_limit.unit)
+
+    return _enforce_minimum_value(derived_limit, broad_range_min)
 
 
 def _integral_limits(hist, bin_edges, loss_fraction, loss_min_events=10, limit_type="lower"):
@@ -789,11 +830,20 @@ def compute_lower_energy_limit(histograms, threshold_fraction):
         * u.TeV
     )
 
-    return _is_close(
-        energy_min,
+    broad_range_energy_min = (
         histograms.file_info["energy_min"].to("TeV")
         if "energy_min" in histograms.file_info
-        else None,
+        else None
+    )
+    energy_min = _apply_broad_range_lower_energy_floor(
+        energy_min,
+        broad_range_energy_min,
+        histograms.energy_bins,
+    )
+
+    return _is_close(
+        energy_min,
+        broad_range_energy_min,
         "Lower energy limit is equal to the minimum energy of",
     )
 
