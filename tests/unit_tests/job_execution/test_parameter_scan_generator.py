@@ -88,9 +88,76 @@ def test_parse_parameter_scan_config_requires_overwrite_dict():
         )
 
 
+def test_parse_parameter_scan_config_adds_label_fields():
+    params, overwrite = parameter_scan_generator._parse_parameter_scan_config(
+        {
+            "overwrite": {"changes": {}},
+            "parameters": [
+                {
+                    "name": "asum_threshold",
+                    "path": "changes.LSTN-01.asum_threshold",
+                    "values": [220],
+                    "label": "asum",
+                    "label_separator": "",
+                }
+            ],
+        }
+    )
+
+    assert overwrite == {"changes": {}}
+    assert params == [
+        {
+            "name": "asum_threshold",
+            "path": "changes.LSTN-01.asum_threshold",
+            "values": [220],
+            "version": None,
+            "label": "asum",
+            "label_separator": "",
+        }
+    ]
+
+
+def test_generate_parameter_combinations_uses_compact_labels():
+    combinations = parameter_scan_generator._generate_parameter_combinations(
+        [
+            {
+                "name": "asum_threshold",
+                "path": "changes.LSTN-01.asum_threshold",
+                "values": [220, 230],
+                "version": "2.0.0",
+                "label": "asum",
+                "label_separator": "",
+            }
+        ]
+    )
+
+    assert combinations == [
+        {
+            "combo": {
+                "asum_threshold": {
+                    "path": "changes.LSTN-01.asum_threshold",
+                    "value": 220,
+                    "version": "2.0.0",
+                }
+            },
+            "name": "asum220",
+        },
+        {
+            "combo": {
+                "asum_threshold": {
+                    "path": "changes.LSTN-01.asum_threshold",
+                    "value": 230,
+                    "version": "2.0.0",
+                }
+            },
+            "name": "asum230",
+        },
+    ]
+
+
 @mock.patch("simtools.job_execution.parameter_scan_generator.serialize_job_grid")
 @mock.patch("simtools.job_execution.parameter_scan_generator.read_job_grid")
-def test_expand_job_grid_with_scan_uses_default_label_and_description(
+def test_expand_job_grid_with_scan_uses_sanitized_default_label_and_description(
     mock_read_grid,
     mock_serialize_grid,
     tmp_test_directory,
@@ -125,7 +192,59 @@ def test_expand_job_grid_with_scan_uses_default_label_and_description(
     expanded_rows = mock_serialize_grid.call_args.args[0]
     overwrite_file = Path(expanded_rows[0]["overwrite_model_parameters"])
 
-    assert overwrite_file.name == "overwrite_scan_threshold value_20MeV-25MeV.yaml"
+    assert overwrite_file.name == "overwrite_scan_thresholdvalue_20MeV-25MeV.yaml"
+    assert expanded_rows[0]["scan_label"] == "thresholdvalue_20MeV-25MeV"
 
     overwrite = yaml.safe_load(overwrite_file.read_text(encoding="utf-8"))
     assert overwrite["description"] == "Parameter scan - threshold value=20 MeV/25 MeV"
+
+
+@mock.patch("simtools.job_execution.parameter_scan_generator.serialize_job_grid")
+@mock.patch("simtools.job_execution.parameter_scan_generator.read_job_grid")
+def test_expand_job_grid_with_scan_uses_explicit_compact_label(
+    mock_read_grid,
+    mock_serialize_grid,
+    tmp_test_directory,
+):
+    mock_read_grid.return_value = ([{"primary": "gamma"}], {"site": "North"})
+
+    scan_config = {
+        "label": "nsb",
+        "parameter_scan": {
+            "overwrite": {
+                "changes": {"LSTN-01": {}},
+            },
+            "parameters": [
+                {
+                    "name": "asum_threshold",
+                    "path": "changes.LSTN-01.asum_threshold",
+                    "version": "2.0.0",
+                    "values": [220],
+                    "label": "asum",
+                    "label_separator": "",
+                }
+            ],
+        },
+    }
+    scan_config_path = Path(tmp_test_directory) / "scan_config.yml"
+    scan_config_path.write_text(yaml.safe_dump(scan_config), encoding="utf-8")
+
+    output_file = Path(tmp_test_directory) / "scan_grid.ecsv"
+
+    parameter_scan_generator.expand_job_grid_with_scan(
+        Path(tmp_test_directory) / "base_grid.ecsv",
+        scan_config_path,
+        output_file,
+    )
+
+    expanded_rows = mock_serialize_grid.call_args.args[0]
+    overwrite_file = Path(expanded_rows[0]["overwrite_model_parameters"])
+
+    assert overwrite_file.name == "overwrite_nsb_asum220.yaml"
+    assert expanded_rows[0]["scan_label"] == "asum220"
+
+    overwrite = yaml.safe_load(overwrite_file.read_text(encoding="utf-8"))
+    assert overwrite["changes"]["LSTN-01"]["asum_threshold"] == {
+        "version": "2.0.0",
+        "value": 220,
+    }

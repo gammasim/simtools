@@ -124,29 +124,37 @@ def _parse_parameter_scan_config(param_scan):
                 "path": param_spec["path"],
                 "values": param_spec["values"],
                 "version": param_spec.get("version"),
+                "label": param_spec.get("label", param_spec["name"]),
+                "label_separator": param_spec.get("label_separator", "_"),
             }
         )
 
     return params, overwrite_base
 
 
+def _combo_name_part(param_spec, value):
+    """Return the label component for a single scan parameter value."""
+    scan_label = _format_value_for_name(param_spec.get("label", param_spec["name"]))
+    scan_value = _format_value_for_name(value)
+    return f"{scan_label}{param_spec.get('label_separator', '_')}{scan_value}"
+
+
 def _generate_parameter_combinations(param_specs):
     """Generate all cartesian combinations of parameter values."""
-    param_names = [p["name"] for p in param_specs]
     value_lists = [p["values"] for p in param_specs]
 
     combinations = []
     for value_combo in itertools.product(*value_lists):
         combo = {}
         combo_name_parts = []
-        for param_spec, name, value in zip(param_specs, param_names, value_combo):
+        for param_spec, value in zip(param_specs, value_combo):
             scan_value = _format_scan_value(value)
-            combo[name] = {
+            combo[param_spec["name"]] = {
                 "path": param_spec["path"],
                 "value": scan_value,
                 "version": param_spec.get("version"),
             }
-            combo_name_parts.append(f"{name}_{_format_value_for_name(scan_value)}")
+            combo_name_parts.append(_combo_name_part(param_spec, scan_value))
 
         combinations.append(
             {
