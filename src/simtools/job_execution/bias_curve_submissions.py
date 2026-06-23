@@ -13,7 +13,7 @@ single-telescope array layout, and the correct threshold parameter is chosen fro
 the telescope type:
 
 - LST: ``asum_threshold``
-- MST/SST: ``dsum_threshold``
+- MST: ``dsum_threshold``
 
 For each threshold value, one overwrite file is generated. The base job grid is
 then expanded manually so that each threshold corresponds to one overwrite file.
