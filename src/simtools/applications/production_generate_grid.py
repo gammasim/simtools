@@ -70,7 +70,7 @@ eslope (float, optional)
 core_scatter (integer and quantity, optional)
     CORSIKA core-scatter configuration as ``<reuse_count> <max_radius> <unit>``,
     for example ``--core_scatter 10 500 m``. The reuse count is written as
-    ``core_scatter_number`` and the radius as ``core_scatter_max``. Default is
+    ``cores_per_shower`` and the radius as ``core_scatter_max``. Default is
     ``10 10000 m``.
 view_cone (quantity pair, optional)
     Minimum and maximum view-cone radius for primary arrival directions, for

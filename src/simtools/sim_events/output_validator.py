@@ -39,9 +39,16 @@ def validate_event_numbers(data_files, expected_mc_events):
     ValueError
         If the number of simulated events does not match the expected number.
     """
+    data_files = general.ensure_list(data_files)
+
     event_errors = []
     for data_file in data_files:
-        tables = table_handler.read_tables(data_file, ["SHOWERS"])
+        if table_handler.read_table_file_type([data_file]) != "HDF5":
+            raise ValueError(
+                f"Unsupported reduced event data format for '{data_file}'. "
+                "Only HDF5 files with suffix '.hdf5' or '.h5' are supported."
+            )
+        tables = table_handler.read_tables(data_file, ["SHOWERS"], file_type="HDF5")
         try:
             mc_events = len(tables["SHOWERS"])
         except KeyError as exc:

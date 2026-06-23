@@ -745,6 +745,36 @@ def test_validate_schema_from_files(tmp_test_directory, caplog):
         )
 
 
+def test_table_column_unit_is_optional_in_data_description_schema():
+    data_description = {
+        "title": "Schema without table column units",
+        "schema_version": "0.1.0",
+        "meta_schema": "simpipe-schema",
+        "meta_schema_version": "0.1.0",
+        "name": "schema_without_table_column_units",
+        "description": "Table columns without explicit units default to dimensionless.",
+        "data": [
+            {
+                "type": "data_table",
+                "table_columns": [
+                    {
+                        "name": "value",
+                        "description": "Dimensionless value.",
+                        "required": True,
+                        "type": "float64",
+                    }
+                ],
+            }
+        ],
+    }
+
+    schema.validate_dict_using_schema(
+        data_description,
+        schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
+        offline=True,
+    )
+
+
 def test_validate_meta_schema_url_offline():
     """Test _validate_meta_schema_url function."""
     # Test with non-dict data

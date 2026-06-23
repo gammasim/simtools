@@ -14,7 +14,6 @@ from eventio.simtel import (
 
 from simtools.sim_events.writer import EventDataWriter
 
-OUTPUT_FILE_NAME = "output.fits"
 one_two_three = "LSTN-01,LSTN-02,MSTN-01"
 
 
