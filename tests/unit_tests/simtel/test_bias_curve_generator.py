@@ -224,7 +224,7 @@ def test_calculate_proton_rate_for_file_returns_zero_for_missing_trigger_histogr
     ):
         assert (
             bias_curve_generator._calculate_proton_rate_for_file(tmp_path / "events.hdf5", args)
-            == 0.0
+            == 0
         )
 
 

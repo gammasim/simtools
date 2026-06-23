@@ -225,7 +225,7 @@ def test_derive_nsb_triggers_runs_full_pipeline_without_output(tmp_path):
             {"root_dir": tmp_path, "time_window": 0.001}
         )
 
-    assert stats[220]["rate_hz"] == 100.0
+    assert stats[220]["rate_hz"] == 100
     mock_generate.assert_not_called()
 
 
