@@ -223,11 +223,12 @@ def _resource_path_suffixes(value):
     if not isinstance(value, str) or "/" not in value:
         return set()
 
-    parts = tuple(part for part in Path(value).as_posix().split("/") if part not in ("", "."))
+    parts = [part for part in Path(value).as_posix().split("/") if part not in ("", ".")]
     suffixes = set()
-    for marker in ("integration_tests", "tests", "static", "generated"):
-        if marker in parts:
-            suffixes.add(parts[parts.index(marker) :])
+    markers = ("integration_tests", "tests", "static", "generated")
+    for idx, part in enumerate(parts):
+        if part in markers:
+            suffixes.add(tuple(parts[idx:]))
     return suffixes
 
 
