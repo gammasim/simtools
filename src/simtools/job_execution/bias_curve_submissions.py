@@ -1,41 +1,27 @@
 r"""Generate HTCondor submit files for NSB (gamma) and proton bias curves.
 
-This module generates two independent HTCondor submission sets:
+This module generates two independent HTCondor submission workflows:
 
 - NSB curve:
   Uses gamma primary, fixed low-energy range, and NSB-specific model overwrites.
 - Proton curve:
   Uses proton primary, fixed proton energy range, and proton trigger overwrites.
 
-The trigger-threshold scan is built into this module. The user does not provide
-threshold values through the CLI. The telescope is resolved from the requested
-single-telescope array layout, and the correct threshold parameter is chosen from
-the telescope type:
-
-- LST: ``asum_threshold``
-- MST: ``dsum_threshold``
-
-For each threshold value, one overwrite file is generated. The base job grid is
-then expanded manually so that each threshold corresponds to one overwrite file.
-This avoids the cartesian-product behaviour of the generic scan generator.
+For each curve, this module writes a scan configuration and a simtools workflow
+configuration, then executes the workflow through ``simtools_runner.run_applications``.
 
 The NSB overwrite always sets ``min_photons`` and ``min_photoelectrons`` to zero
 and resets ``nsb_scaling_factor`` to 2. The proton overwrite does not touch
 these parameters.
-
-No external overwrite templates are used; overwrite YAML files are generated
-dynamically from scratch.
 """
 
 import logging
-import subprocess
 from pathlib import Path
 
 import yaml
 
-from simtools.job_execution import htcondor_script_generator
 from simtools.model.site_model import SiteModel
-from simtools.production_configuration.job_grid_io import read_job_grid, serialize_job_grid
+from simtools.runners import simtools_runner
 
 _logger = logging.getLogger(__name__)
 
@@ -61,7 +47,7 @@ _CURVE_DEFINITIONS = {
     },
 }
 
-_SIMULATION_CLI_ARGS = [
+_PRODUCTION_GRID_ARGS = [
     "site",
     "model_version",
     "telescope",
@@ -107,18 +93,6 @@ def _resolve_telescopes_from_layout(args):
     return [telescope]
 
 
-def _run_command(command, working_directory):
-    """Run a shell command and raise a readable error on failure."""
-    _logger.info(f"Running command: {' '.join(str(argument) for argument in command)}")
-
-    try:
-        subprocess.run(command, cwd=working_directory, check=True)
-    except subprocess.CalledProcessError as exc:
-        raise RuntimeError(
-            f"Command failed: {' '.join(str(argument) for argument in command)}"
-        ) from exc
-
-
 def _threshold_param_name(telescope):
     """Return the trigger-threshold parameter name for a telescope."""
     if not telescope:
@@ -150,261 +124,230 @@ def _threshold_values_for_telescope(telescope):
     )
 
 
-def _format_threshold_value(threshold):
-    """Return integer threshold values without a trailing .0."""
-    return int(threshold) if float(threshold).is_integer() else threshold
+def _threshold_label_prefix(threshold_param):
+    """Return a compact prefix for threshold scan labels."""
+    return threshold_param.removesuffix("_threshold")
 
 
-def _threshold_label(threshold_param, threshold_value):
-    """Return the compact threshold tag used as the simulation label."""
-    short_parameter_name = threshold_param.removesuffix("_threshold")
-    return f"{short_parameter_name}{threshold_value}"
+def _parameter_scan_entry(telescope):
+    """Build the parameter-scan entry for the telescope trigger threshold."""
+    threshold_param = _threshold_param_name(telescope)
+    return {
+        "name": threshold_param,
+        "path": f"changes.{telescope}.{threshold_param}",
+        "version": _PARAMETER_VERSION,
+        "values": _threshold_values_for_telescope(telescope),
+        "label": _threshold_label_prefix(threshold_param),
+        "label_separator": "",
+    }
 
 
-def _build_proton_overwrite(telescopes, threshold, model_version):
-    """Build overwrite YAML content for one proton threshold scan point."""
-    threshold_value = _format_threshold_value(threshold)
-
-    changes = {}
-
-    for telescope in telescopes:
-        threshold_param = _threshold_param_name(telescope)
-        changes[telescope] = {
-            threshold_param: {
-                "version": _PARAMETER_VERSION,
-                "value": threshold_value,
-            }
-        }
-
+def _base_proton_overwrite(telescope, model_version):
+    """Build the proton base overwrite block before threshold insertion."""
     return {
         "model_version": model_version,
         "model_update": "patch_update",
         "model_version_history": [model_version],
         "description": "Tune for proton telescope trigger scan",
-        "changes": changes,
+        "changes": {telescope: {}},
     }
 
 
-def _build_nsb_overwrite(telescopes, threshold, site, model_version):
-    """Build overwrite YAML content for one NSB threshold scan point."""
-    threshold_value = _format_threshold_value(threshold)
-
-    changes = {}
-
-    for telescope in telescopes:
-        threshold_param = _threshold_param_name(telescope)
-        changes[telescope] = {
-            "min_photons": {
-                "version": _PARAMETER_VERSION,
-                "value": 0,
-            },
-            "min_photoelectrons": {
-                "version": _PARAMETER_VERSION,
-                "value": 0,
-            },
-            threshold_param: {
-                "version": _PARAMETER_VERSION,
-                "value": threshold_value,
-            },
-        }
-
-    changes[f"OBS-{site}"] = {
-        "nsb_scaling_factor": {
-            "version": _PARAMETER_VERSION,
-            "value": _NSB_SCALING_FACTOR,
-        },
-    }
-
+def _base_nsb_overwrite(telescope, site, model_version):
+    """Build the NSB base overwrite block before threshold insertion."""
     return {
         "model_version": model_version,
         "model_update": "patch_update",
         "model_version_history": [model_version],
         "description": "Tune for NSB telescope trigger scan",
-        "changes": changes,
+        "changes": {
+            telescope: {
+                "min_photons": {
+                    "version": _PARAMETER_VERSION,
+                    "value": 0,
+                },
+                "min_photoelectrons": {
+                    "version": _PARAMETER_VERSION,
+                    "value": 0,
+                },
+            },
+            f"OBS-{site}": {
+                "nsb_scaling_factor": {
+                    "version": _PARAMETER_VERSION,
+                    "value": _NSB_SCALING_FACTOR,
+                },
+            },
+        },
     }
 
 
-def _build_overwrite_content(curve_name, telescopes, threshold, args):
-    """Build overwrite YAML content for one curve and one threshold value."""
+def _base_overwrite(curve_name, telescope, args):
+    """Build the curve-specific base overwrite block before threshold insertion."""
     if curve_name == "nsb":
-        return _build_nsb_overwrite(
-            telescopes=telescopes,
-            threshold=threshold,
+        return _base_nsb_overwrite(
+            telescope=telescope,
             site=args["site"],
             model_version=args["model_version"],
         )
 
     if curve_name == "proton":
-        return _build_proton_overwrite(
-            telescopes=telescopes,
-            threshold=threshold,
+        return _base_proton_overwrite(
+            telescope=telescope,
             model_version=args["model_version"],
         )
 
     raise ValueError(f"Unsupported curve name '{curve_name}'.")
 
 
-def _generate_overwrite_files(curve_name, telescopes, args, curve_directory):
-    """Write one overwrite YAML file per threshold value.
+def _write_yaml(file_path, content):
+    """Write YAML content to file."""
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(file_path, "w", encoding="utf-8") as file_handle:
+        yaml.safe_dump(content, file_handle, sort_keys=False)
+    _logger.info("Wrote %s", file_path)
 
-    Returns
-    -------
-    list[tuple[Path, str]]
-        Pairs of overwrite file path and scan label.
-    """
-    if len(telescopes) != 1:
-        raise ValueError(
-            f"Bias-curve overwrite generation expects exactly one telescope; got {len(telescopes)}."
-        )
 
-    telescope = telescopes[0]
-    threshold_param = _threshold_param_name(telescope)
-    threshold_values = _threshold_values_for_telescope(telescope)
+def _scan_config(curve_name, telescope, args):
+    """Build the parameter-scan configuration for one curve."""
+    return {
+        "label": curve_name,
+        "parameter_scan": {
+            "overwrite": _base_overwrite(curve_name, telescope, args),
+            "parameters": [_parameter_scan_entry(telescope)],
+        },
+    }
 
-    _logger.info(
-        f"Generating {curve_name} overwrite files for {telescope} using "
-        f"{threshold_param}: {threshold_values}"
+
+def _production_grid_configuration(args, curve_definition, base_grid_file, curve_label):
+    """Build configuration for simtools-production-generate-grid."""
+    configuration = {
+        key: args[key]
+        for key in _PRODUCTION_GRID_ARGS
+        if key in args and args[key] not in (None, "")
+    }
+    configuration.update(
+        {
+            "primary": curve_definition["primary"],
+            "energy_range": curve_definition["energy_range"],
+            "label": curve_label,
+            "output_file": str(base_grid_file),
+        }
     )
-
-    overwrite_dir = curve_directory / "overwrite_files"
-    overwrite_dir.mkdir(parents=True, exist_ok=True)
-
-    overwrite_files_and_labels = []
-
-    for threshold in threshold_values:
-        threshold_value = _format_threshold_value(threshold)
-
-        content = _build_overwrite_content(
-            curve_name=curve_name,
-            telescopes=telescopes,
-            threshold=threshold_value,
-            args=args,
-        )
-
-        scan_label = _threshold_label(threshold_param, threshold_value)
-        overwrite_file = overwrite_dir / f"overwrite_{scan_label}.yaml"
-
-        with open(overwrite_file, "w", encoding="utf-8") as file_handle:
-            yaml.safe_dump(content, file_handle, sort_keys=False)
-
-        overwrite_files_and_labels.append((overwrite_file, scan_label))
-
-    return overwrite_files_and_labels
+    return configuration
 
 
-def _build_scan_grid(base_grid_file, overwrite_files_and_labels, scan_grid_file, telescope=None):
-    """Expand a base job grid with one row set per overwrite file."""
-    base_rows, metadata = read_job_grid(base_grid_file)
-
-    expanded_rows = []
-
-    for overwrite_file, scan_label in overwrite_files_and_labels:
-        for row in base_rows:
-            new_row = dict(row)
-            new_row["overwrite_model_parameters"] = str(overwrite_file)
-            new_row["scan_label"] = scan_label
-            if telescope not in (None, ""):
-                new_row.setdefault("telescope", str(telescope))
-            expanded_rows.append(new_row)
-
-    serialize_job_grid(expanded_rows, scan_grid_file, metadata=metadata)
-    _logger.info(f"Scan grid with {len(expanded_rows)} rows written to '{scan_grid_file}'.")
+def _scan_grid_configuration(base_grid_file, scan_config_file, scan_grid_file):
+    """Build configuration for simtools-generate-parameter-scan-grid."""
+    return {
+        "job_grid_file": str(base_grid_file),
+        "scan_config": str(scan_config_file),
+        "output_file": str(scan_grid_file),
+    }
 
 
-def _simulation_to_cli_args(args, primary, energy_range, output_file, label):
-    """Build CLI command arguments for simtools-production-generate-grid."""
-    command = ["simtools-production-generate-grid"]
-
-    for key in _SIMULATION_CLI_ARGS:
-        value = args.get(key)
-        if value is not None:
-            command.extend([f"--{key}", str(value)])
-
-    command.extend(
-        [
-            "--primary",
-            primary,
-            "--energy_range",
-            energy_range,
-            "--label",
-            label,
-            "--output_file",
-            str(output_file),
-        ]
-    )
-
-    return command
-
-
-def _build_htcondor_args(label, curve_directory, scan_grid_file, args):
-    """Build args for htcondor_script_generator.generate_submission_script."""
+def _htcondor_configuration(curve_label, curve_directory, scan_grid_file, args, output_root):
+    """Build configuration for simtools-simulate-prod-htcondor-generator."""
     apptainer_image = args.get("apptainer_image")
-
     if not apptainer_image:
         raise ValueError("Missing required argument: --apptainer_image")
 
-    htcondor_args = {
+    configuration = {
         "apptainer_image": apptainer_image,
         "priority": args.get("priority", 1),
         "job_grid_file": str(scan_grid_file),
         "output_path": str(curve_directory / args.get("htcondor_output_path", "htcondor_submit")),
-        "simulation_output": str(Path(args.get("output_path") or ".").expanduser().resolve()),
-        "label": label,
+        "simulation_output": str(output_root),
+        "label": curve_label,
         "log_level": args.get("log_level", "INFO"),
     }
     if args.get("telescope") not in (None, ""):
-        htcondor_args["telescope"] = args["telescope"]
-    return htcondor_args
+        configuration["telescope"] = args["telescope"]
+    return configuration
+
+
+def _workflow_config(
+    curve_name,
+    curve_definition,
+    args,
+    base_grid_file,
+    scan_config_file,
+    scan_grid_file,
+    curve_directory,
+    output_root,
+):
+    """Build the runner workflow configuration for one curve."""
+    curve_label = curve_name
+    return {
+        "applications": [
+            {
+                "application": "simtools-production-generate-grid",
+                "configuration": _production_grid_configuration(
+                    args=args,
+                    curve_definition=curve_definition,
+                    base_grid_file=base_grid_file,
+                    curve_label=curve_label,
+                ),
+            },
+            {
+                "application": "simtools-generate-parameter-scan-grid",
+                "configuration": _scan_grid_configuration(
+                    base_grid_file=base_grid_file,
+                    scan_config_file=scan_config_file,
+                    scan_grid_file=scan_grid_file,
+                ),
+            },
+            {
+                "application": "simtools-simulate-prod-htcondor-generator",
+                "configuration": _htcondor_configuration(
+                    curve_label=curve_label,
+                    curve_directory=curve_directory,
+                    scan_grid_file=scan_grid_file,
+                    args=args,
+                    output_root=output_root,
+                ),
+            },
+        ]
+    }
+
+
+def _run_workflow(workflow_file, args):
+    """Run a generated simtools workflow configuration through simtools runners."""
+    simtools_runner.run_applications(
+        {
+            "config_file": str(workflow_file),
+            "steps": None,
+            "activity_id": args.get("activity_id"),
+            "ignore_runtime_environment": True,
+        }
+    )
 
 
 def _generate_curve_submissions(curve_name, curve_definition, args, output_root):
-    """Generate grid, overwrite files, scan grid, and HTCondor scripts for one curve."""
-    primary = curve_definition["primary"]
-    energy_range = curve_definition["energy_range"]
-
+    """Generate grid, scan config, scan grid, and HTCondor scripts for one curve."""
     curve_directory = output_root / curve_name
     curve_directory.mkdir(parents=True, exist_ok=True)
 
+    telescope = args["telescopes"][0]
     base_grid_file = curve_directory / "base_grid.ecsv"
+    scan_config_file = curve_directory / "scan_config.yaml"
     scan_grid_file = curve_directory / "scan_grid.ecsv"
+    workflow_file = curve_directory / "workflow.yaml"
 
-    # Keep generated simtools file names short. The per-job scan_label carries the
-    # unique information needed to avoid overwrites: telescope, curve, and threshold.
-    curve_label = curve_name
-
-    _run_command(
-        _simulation_to_cli_args(
+    _write_yaml(scan_config_file, _scan_config(curve_name, telescope, args))
+    _write_yaml(
+        workflow_file,
+        _workflow_config(
+            curve_name=curve_name,
+            curve_definition=curve_definition,
             args=args,
-            primary=primary,
-            energy_range=energy_range,
-            output_file=base_grid_file,
-            label=curve_label,
-        ),
-        output_root,
-    )
-
-    overwrite_files_and_labels = _generate_overwrite_files(
-        curve_name=curve_name,
-        telescopes=args["telescopes"],
-        args=args,
-        curve_directory=curve_directory,
-    )
-
-    _build_scan_grid(
-        base_grid_file=base_grid_file,
-        overwrite_files_and_labels=overwrite_files_and_labels,
-        scan_grid_file=scan_grid_file,
-        telescope=args.get("telescope"),
-    )
-
-    htcondor_script_generator.generate_submission_script(
-        _build_htcondor_args(
-            label=curve_label,
-            curve_directory=curve_directory,
+            base_grid_file=base_grid_file,
+            scan_config_file=scan_config_file,
             scan_grid_file=scan_grid_file,
-            args=args,
-        )
+            curve_directory=curve_directory,
+            output_root=output_root,
+        ),
     )
+    _run_workflow(workflow_file, args)
 
 
 def _validate_required_args(args):
