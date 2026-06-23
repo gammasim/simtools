@@ -4,8 +4,8 @@ Parameter scan grid generator.
 Expands an existing production job grid with parameter scan combinations.
 For each cartesian combination of scan parameters, one overwrite YAML file is
 created dynamically from the inline ``overwrite`` block in the scan configuration,
-and each base grid row is duplicated with the overwrite file path and a scan
-label attached.
+and each base grid row is duplicated with the overwrite file path, scan
+label, and optional fixed job-grid updates attached.
 """
 
 import itertools
@@ -129,7 +129,13 @@ def _parse_parameter_scan_config(param_scan):
             }
         )
 
-    return params, overwrite_base
+    job_grid_updates = param_scan.get("job_grid_updates") or {}
+    if not isinstance(job_grid_updates, dict):
+        raise TypeError(
+            "Parameter scan configuration field 'job_grid_updates' must be a dictionary."
+        )
+
+    return params, overwrite_base, job_grid_updates
 
 
 def _combo_name_part(param_spec, value):
@@ -183,7 +189,9 @@ def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
         scan_config = yaml.safe_load(file_handle)
 
     label = scan_config.get("label", "scan")
-    param_specs, overwrite_base = _parse_parameter_scan_config(scan_config["parameter_scan"])
+    param_specs, overwrite_base, job_grid_updates = _parse_parameter_scan_config(
+        scan_config["parameter_scan"]
+    )
     param_combinations = _generate_parameter_combinations(param_specs)
 
     base_rows, metadata = read_job_grid(base_grid_file)
@@ -200,6 +208,7 @@ def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
             new_row = dict(row)
             new_row["overwrite_model_parameters"] = str(overwrite_file)
             new_row["scan_label"] = combo_spec["name"]
+            new_row.update(job_grid_updates)
             expanded_rows.append(new_row)
 
     serialize_job_grid(expanded_rows, output_file, metadata=metadata)

@@ -184,6 +184,8 @@ def test_scan_config_contains_nsb_base_overwrite_and_trigger_scan(tmp_test_direc
     assert scan_config["parameter_scan"]["parameters"] == [
         bias_curve_submissions._parameter_scan_entry(args["telescope"])
     ]
+    assert scan_config["parameter_scan"]["job_grid_updates"] == {"telescope": "LSTN-01"}
+    assert scan_config["parameter_scan"]["job_grid_updates"] == {"telescope": "LSTN-01"}
 
 
 def test_scan_config_contains_proton_base_overwrite_and_trigger_scan(tmp_test_directory):
@@ -288,6 +290,7 @@ def test_workflow_config_runs_expected_applications_in_order(tmp_test_directory)
     assert applications[2]["configuration"]["output_path"] == str(
         curve_directory / "htcondor_submit"
     )
+    assert "telescope" not in applications[2]["configuration"]
 
 
 def test_run_workflow_uses_simtools_runner(tmp_test_directory):
@@ -334,6 +337,7 @@ def test_generate_curve_submissions_writes_configs_and_runs_workflow(tmp_test_di
     assert scan_config["label"] == "nsb"
     assert scan_config["parameter_scan"]["parameters"][0]["label"] == "asum"
     assert scan_config["parameter_scan"]["parameters"][0]["label_separator"] == ""
+    assert scan_config["parameter_scan"]["job_grid_updates"] == {"telescope": "LSTN-01"}
 
     workflow_config = yaml.safe_load(workflow_file.read_text(encoding="utf-8"))
     assert [app["application"] for app in workflow_config["applications"]] == [

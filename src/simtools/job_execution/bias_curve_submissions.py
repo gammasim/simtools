@@ -214,6 +214,7 @@ def _scan_config(curve_name, telescope, args):
         "parameter_scan": {
             "overwrite": _base_overwrite(curve_name, telescope, args),
             "parameters": [_parameter_scan_entry(telescope)],
+            "job_grid_updates": {"telescope": telescope},
         },
     }
 
@@ -251,7 +252,7 @@ def _htcondor_configuration(curve_label, curve_directory, scan_grid_file, args, 
     if not apptainer_image:
         raise ValueError("Missing required argument: --apptainer_image")
 
-    configuration = {
+    return {
         "apptainer_image": apptainer_image,
         "priority": args.get("priority", 1),
         "job_grid_file": str(scan_grid_file),
@@ -260,9 +261,6 @@ def _htcondor_configuration(curve_label, curve_directory, scan_grid_file, args, 
         "label": curve_label,
         "log_level": args.get("log_level", "INFO"),
     }
-    if args.get("telescope") not in (None, ""):
-        configuration["telescope"] = args["telescope"]
-    return configuration
 
 
 def _workflow_config(

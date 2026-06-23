@@ -89,7 +89,7 @@ def test_parse_parameter_scan_config_requires_overwrite_dict():
 
 
 def test_parse_parameter_scan_config_adds_label_fields():
-    params, overwrite = parameter_scan_generator._parse_parameter_scan_config(
+    params, overwrite, job_grid_updates = parameter_scan_generator._parse_parameter_scan_config(
         {
             "overwrite": {"changes": {}},
             "parameters": [
@@ -105,6 +105,7 @@ def test_parse_parameter_scan_config_adds_label_fields():
     )
 
     assert overwrite == {"changes": {}}
+    assert job_grid_updates == {}
     assert params == [
         {
             "name": "asum_threshold",
@@ -115,6 +116,23 @@ def test_parse_parameter_scan_config_adds_label_fields():
             "label_separator": "",
         }
     ]
+
+
+def test_parse_parameter_scan_config_rejects_non_dict_job_grid_updates():
+    with pytest.raises(TypeError, match=r"job_grid_updates.*must be a dictionary"):
+        parameter_scan_generator._parse_parameter_scan_config(
+            {
+                "overwrite": {"changes": {}},
+                "job_grid_updates": "not-a-dict",
+                "parameters": [
+                    {
+                        "name": "asum_threshold",
+                        "path": "changes.LSTN-01.asum_threshold",
+                        "values": [220],
+                    }
+                ],
+            }
+        )
 
 
 def test_generate_parameter_combinations_uses_compact_labels():
@@ -214,6 +232,7 @@ def test_expand_job_grid_with_scan_uses_explicit_compact_label(
             "overwrite": {
                 "changes": {"LSTN-01": {}},
             },
+            "job_grid_updates": {"telescope": "LSTN-01"},
             "parameters": [
                 {
                     "name": "asum_threshold",
@@ -242,6 +261,7 @@ def test_expand_job_grid_with_scan_uses_explicit_compact_label(
 
     assert overwrite_file.name == "overwrite_nsb_asum220.yaml"
     assert expanded_rows[0]["scan_label"] == "asum220"
+    assert expanded_rows[0]["telescope"] == "LSTN-01"
 
     overwrite = yaml.safe_load(overwrite_file.read_text(encoding="utf-8"))
     assert overwrite["changes"]["LSTN-01"]["asum_threshold"] == {
