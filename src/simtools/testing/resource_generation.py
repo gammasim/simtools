@@ -7,6 +7,8 @@ import urllib.request
 from pathlib import Path
 
 import simtools.utils.general as gen
+from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA
+from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.runners import simtools_runner
 
@@ -243,6 +245,9 @@ def prepare_runtime_environment(runtime_environment_file):
     runtime_environment = runtime_config.get("runtime_environment")
     if runtime_environment is None:
         raise ValueError("Runtime configuration must contain a 'runtime_environment' block.")
+    schema.validate_dict_using_schema(
+        runtime_config, schema_file=RUN_TIME_ENVIRONMENT_SCHEMA, offline=True
+    )
     return runtime_environment, simtools_runner.read_runtime_environment(runtime_environment)
 
 
