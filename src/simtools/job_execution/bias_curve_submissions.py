@@ -48,11 +48,7 @@ _NSB_SCALING_FACTOR = 2
 _ASUM_THRESHOLDS = [220, 230, 240, 250, 260, 270, 280, 290, 300, 320, 340, 360]
 _DSUM_THRESHOLDS = [22, 23, 24, 25, 26, 27, 28, 29, 30]
 
-_TELESCOPE_THRESHOLD_PARAM = {
-    "L": "asum_threshold",
-    "M": "dsum_threshold",
-    "S": "dsum_threshold",
-}
+_TELESCOPE_THRESHOLD_PARAM = {"L": "asum_threshold", "M": "dsum_threshold"}
 
 _CURVE_DEFINITIONS = {
     "nsb": {

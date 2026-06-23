@@ -17,12 +17,12 @@ application currently supports only single-telescope layouts. The threshold
 parameter is chosen automatically from the telescope type:
 
 - LST: ``asum_threshold``
-- MST/SST: ``dsum_threshold``
+- MST: ``dsum_threshold``
 
 Energy ranges are fixed internally:
 
 - NSB gamma curve: ``20 MeV 25 MeV``
-- Proton curve: ``800 GeV 2000 GeV``
+- Proton curve: ``2 GeV 2000 GeV``
 
 Overwrite model-parameter files are generated dynamically from scratch. No
 external overwrite templates are needed.
