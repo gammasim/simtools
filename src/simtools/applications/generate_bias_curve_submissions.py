@@ -53,8 +53,6 @@ corsika_le_interaction (str)
     CORSIKA low-energy interaction model (default: urqmd).
 corsika_he_interaction (str)
     CORSIKA high-energy interaction model (default: epos).
-nsb_scaling_factor (float, required)
-    NSB scaling factor for the gamma NSB curve.
 htcondor_output_path (str)
     Sub-directory inside each curve output dir for HTCondor submit files
     (default: htcondor_submit).
@@ -82,7 +80,6 @@ Example
         --core_scatter "20 1900 m" \
         --view_cone "0 deg 5 deg" \
         --number_of_runs 10 \
-        --nsb_scaling_factor 2 \
         --apptainer_image /path/to/image.sif \
         --label LSTN1_7-0-0_dark \
         --output_path ./bias_curves \
