@@ -19,6 +19,7 @@ def pytest_generate_tests(metafunc):
     if "config" not in metafunc.fixturenames:
         return
 
+    config_files = sorted(Path(__file__).parent.glob("config/*.yml"))
     test_configs, test_ids = configuration.get_list_of_test_configurations(
         config_files,
         test_resources_path=metafunc.config.getoption("test_resources_path", default=None),

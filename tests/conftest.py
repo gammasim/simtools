@@ -7,7 +7,7 @@ import pytest
 
 def _configured_test_resources_path(config):
     """Return the absolute path to the configured test resources directory."""
-    configured_path = config.getoption("test_resources_path")
+    configured_path = config.getoption("test_resources_path", default=None)
     path = configured_path or config.rootpath / "tests" / "resources"
     return Path(path).expanduser().resolve()
 
