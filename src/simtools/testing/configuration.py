@@ -208,7 +208,7 @@ def configure(config, tmp_test_directory, request):
             config["configuration"],
             output_path=tmp_output_path,
             model_version=model_version_requested,
-            test_resources_path=request.config.getoption("test_resources_path"),
+            test_resources_path=request.config.getoption("test_resources_path", default=None),
         )
     else:
         config_file = None
