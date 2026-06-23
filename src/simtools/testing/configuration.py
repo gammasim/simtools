@@ -124,6 +124,55 @@ def resolve_test_resource_paths(value, test_resources_path=None):
     return value
 
 
+def _copy_resolved_resource_config_files(config, output_path, test_resources_path):
+    """Copy resource config files to output path with test-resource paths resolved."""
+    if test_resources_path is None:
+        return
+
+    test_resources_path = Path(test_resources_path).expanduser().resolve()
+    config_dir = Path(output_path) / "resolved-resource-configs"
+    config_dir.mkdir(parents=True, exist_ok=True)
+
+    def _resolve(value):
+        if isinstance(value, dict):
+            return {key: _resolve(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [_resolve(item) for item in value]
+        if not isinstance(value, str):
+            return value
+
+        path = Path(value).expanduser()
+        if (
+            not path.is_absolute()
+            or not path.exists()
+            or path.suffix.lower()
+            not in (
+                ".json",
+                ".yaml",
+                ".yml",
+            )
+        ):
+            return value
+
+        try:
+            path.relative_to(test_resources_path)
+        except ValueError:
+            return value
+
+        resolved_data = resolve_test_resource_paths(
+            ascii_handler.collect_data_from_file(path), test_resources_path=test_resources_path
+        )
+        resolved_config_file = config_dir / path.name
+        ascii_handler.write_data_to_file(
+            data=resolved_data,
+            output_file=resolved_config_file,
+            sort_keys=False,
+        )
+        return str(resolved_config_file)
+
+    config.update(_resolve(config))
+
+
 def configure(config, tmp_test_directory, request):
     """
     Prepare configuration and command for integration tests.
@@ -159,6 +208,7 @@ def configure(config, tmp_test_directory, request):
             config["configuration"],
             output_path=tmp_output_path,
             model_version=model_version_requested,
+            test_resources_path=request.config.getoption("test_resources_path"),
         )
     else:
         config_file = None
@@ -208,7 +258,7 @@ def _skip_test_for_production_db(config):
         raise ProductionDBError("Production database used for this test")
 
 
-def _prepare_test_options(config, output_path, model_version=None):
+def _prepare_test_options(config, output_path, model_version=None, test_resources_path=None):
     """
     Prepare test configuration.
 
@@ -250,6 +300,8 @@ def _prepare_test_options(config, output_path, model_version=None):
     for key in ["output_path", "pack_for_grid_register"]:
         if key in config:
             config[key] = str(Path(output_path).joinpath(config[key]))
+
+    _copy_resolved_resource_config_files(config, output_path, test_resources_path)
 
     _logger.info(f"Writing config file: {tmp_config_file}")
     ascii_handler.write_data_to_file(data=config, output_file=tmp_config_file, sort_keys=False)
