@@ -13,7 +13,7 @@ from jsonschema.exceptions import ValidationError
 import simtools.data_model.metadata_collector as metadata_collector
 import simtools.data_model.model_data_writer as writer
 from simtools import settings
-from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH, TEST_RESOURCES_STATIC
 from simtools.data_model import schema
 from simtools.io import ascii_handler
 from simtools.utils import names
@@ -144,7 +144,7 @@ def test_validate_and_transform(num_gains_schema_file):
     with pytest.raises(TypeError):
         w_1.validate_and_transform(product_data_table=None, validate_schema_file=None)
 
-    _table = Table.read("tests/resources/MLTdata-preproduction.ecsv", format=ascii_format)
+    _table = Table.read(f"{TEST_RESOURCES_STATIC}/MLTdata-preproduction.ecsv", format=ascii_format)
     return_table = w_1.validate_and_transform(
         product_data_table=_table,
         validate_schema_file=SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml",

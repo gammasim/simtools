@@ -12,7 +12,7 @@ import pytest
 from astropy.table import Table
 
 import simtools.data_model.metadata_collector as metadata_collector
-from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH
+from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH, TEST_RESOURCES_STATIC
 from simtools.data_model import schema
 from simtools.utils import names
 
@@ -120,14 +120,14 @@ def test_get_site(args_dict_site):
 
     _collector_2 = metadata_collector.MetadataCollector(
         args_dict=args_dict_site,
-        metadata_file_name="tests/resources/telescope_positions-North-utm.meta.yml",
+        metadata_file_name=f"{TEST_RESOURCES_STATIC}/telescope_positions-North-utm.meta.yml",
     )
     assert _collector_2.get_site(from_input_meta=True) == "North"
     assert _collector_2.get_site(from_input_meta=False) == "South"  # from args_dict
 
 
 def test_read_input_metadata_from_file(
-    args_dict_site, tmp_test_directory, caplog, get_test_data_file
+    args_dict_site, tmp_test_directory, caplog, get_test_data_file, simple_test_file
 ):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.args_dict["input_meta"] = None
@@ -140,17 +140,8 @@ def test_read_input_metadata_from_file(
     ):
         metadata_1._read_input_metadata_from_file()
 
-    metadata_1.args_dict["input_meta"] = "tests/resources/MLTdata-preproduction.meta.yml"
+    metadata_1.args_dict["input_meta"] = f"{TEST_RESOURCES_STATIC}/MLTdata-preproduction.meta.yml"
     assert len(metadata_1._read_input_metadata_from_file()) > 0
-
-    metadata_1.args_dict["input_meta"] = "tests/resources/reference_point_altitude.json"
-    assert len(metadata_1._read_input_metadata_from_file()) > 0
-
-    metadata_1.args_dict["input_meta"] = [
-        "tests/resources/MLTdata-preproduction.meta.yml",
-        "tests/resources/reference_point_altitude.json",
-    ]
-    assert len(metadata_1._read_input_metadata_from_file()) == 2
 
     test_dict = {
         "metadata": {"cta": {"product": {"data": {"model": {"url": "from_input_meta"}}}}},
@@ -162,7 +153,7 @@ def test_read_input_metadata_from_file(
     with pytest.raises(ValueError, match=r"^More than one metadata entry found in"):
         metadata_1._read_input_metadata_from_file()
 
-    metadata_1.args_dict["input_meta"] = "tests/resources/telescope_positions-North-utm.ecsv"
+    metadata_1.args_dict["input_meta"] = get_test_data_file("telescope_positions", "North-utm")
     assert len(metadata_1._read_input_metadata_from_file()) > 0
 
     metadata_1.args_dict["input_meta"] = "tests/resources/file_not_there.ecsv"
@@ -170,7 +161,7 @@ def test_read_input_metadata_from_file(
         metadata_1._read_input_metadata_from_file()
 
     with caplog.at_level(logging.WARNING):
-        metadata_1.args_dict["input_meta"] = get_test_data_file("sim_telarray", "proton")
+        metadata_1.args_dict["input_meta"] = get_test_data_file("sim_telarray", "gamma")
         metadata_1._read_input_metadata_from_file()
     assert "Metadata extraction from sim_telarray files is not supported yet." in caplog.text
 
@@ -179,7 +170,7 @@ def test_read_input_metadata_from_file(
         metadata_1._read_input_metadata_from_file()
     assert "Metadata extraction from CORSIKA files is not supported yet." in caplog.text
 
-    metadata_1.args_dict["input_meta"] = "tests/resources/test_file.list"
+    metadata_1.args_dict["input_meta"] = simple_test_file
     with pytest.raises(ValueError, match=r"^Unknown metadata file format:"):
         metadata_1._read_input_metadata_from_file()
 

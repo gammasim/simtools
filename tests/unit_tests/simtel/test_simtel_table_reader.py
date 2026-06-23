@@ -10,11 +10,12 @@ from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 
 import simtools.simtel.simtel_table_reader as simtel_table_reader
+from simtools.constants import TEST_RESOURCES_GENERATED
 
 
 @pytest.fixture
 def spe_test_file():
-    return "tests/resources/spe_LST_2022-04-27_AP2.0e-4.dat"
+    return f"{TEST_RESOURCES_GENERATED}/model_parameters/spe_LST_2022-04-27_AP2.0e-4.dat"
 
 
 @pytest.fixture
@@ -24,7 +25,7 @@ def spe_meta_test_comment():
 
 @pytest.fixture
 def mirror_list_test_file():
-    return "tests/resources/mirror_list_CTA-N-LST1_v2019-03-31_rotated_simtel.dat"
+    return f"{TEST_RESOURCES_GENERATED}/model_parameters/mirror_CTA-N-LST1_v2019-03-31_rotated.dat"
 
 
 def test_read_simtel_data(spe_test_file, spe_meta_test_comment):

@@ -4,8 +4,8 @@ applications:
   configuration:
     db: sandbox
     file_name:
-    - ./tests/resources/MLTdata-preproduction.meta.yml
-    - ./tests/resources/MLTdata-preproduction.ecsv
+    - tests/resources/static/MLTdata-preproduction.meta.yml
+    - tests/resources/static/MLTdata-preproduction.ecsv
     test_db: true
   skip_for_production_db: true
   test_name: run
