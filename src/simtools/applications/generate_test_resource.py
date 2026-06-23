@@ -44,7 +44,7 @@ Runtime environment file example
             container_engine: podman
             image: ghcr.io/gammasim/simtools-prod:20260622-v78010-v2025-11-30-rc-generic
             network: simtools-mongo-network
-            env_file: .env
+            environment_file: .env
             options:
                 - "--arch amd64"
                 - "-v /path/to/simpipe:/workdir/external/simpipe:ro"

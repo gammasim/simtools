@@ -140,7 +140,7 @@ def test_runtime_environment_definition_is_reused_by_workflow_schema():
             "container_engine": "podman",
             "image": "test-image",
             "network": "simtools-mongo-network",
-            "env_file": ".env",
+            "environment_file": ".env",
             "options": ["--arch amd64"],
         },
         "applications": [
