@@ -53,18 +53,18 @@ def test_add_arguments_accepts_compact_axis_definitions():
             "3",
             "linear",
             "--axis",
-            "nsb",
-            "4",
-            "MHz",
-            "5",
-            "MHz",
+            "offset",
+            "0",
+            "deg",
+            "10",
+            "deg",
             "2",
         ]
     )
 
     assert args.axis == [
         ["azimuth", "310", "deg", "20", "deg", "3", "linear"],
-        ["nsb", "4", "MHz", "5", "MHz", "2"],
+        ["offset", "0", "deg", "10", "deg", "2"],
     ]
 
 
@@ -102,3 +102,21 @@ def test_add_arguments_accepts_showers_per_run_scaling():
     args = parser.parse_args(["--showers_per_run_scaling", "cosine_zenith"])
 
     assert args.showers_per_run_scaling == "cosine_zenith"
+
+
+def test_add_arguments_accepts_energy_max_scaling():
+    parser = CommandLineParser()
+    app._add_arguments(parser)
+
+    args = parser.parse_args(["--energy_max_scaling", "-2.5", "300", "TeV"])
+
+    assert args.energy_max_scaling == ["-2.5", "300", "TeV"]
+
+
+def test_add_arguments_accepts_legacy_energy_max_scaling_index():
+    parser = CommandLineParser()
+    app._add_arguments(parser)
+
+    args = parser.parse_args(["--energy_max_scaling_index", "-2.5"])
+
+    assert args.energy_max_scaling_index == pytest.approx(-2.5)

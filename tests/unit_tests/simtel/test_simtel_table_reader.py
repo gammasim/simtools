@@ -22,6 +22,11 @@ def spe_meta_test_comment():
     return "Norm_spe processing of single-p.e. response."
 
 
+@pytest.fixture
+def mirror_list_test_file():
+    return "tests/resources/mirror_list_CTA-N-LST1_v2019-03-31_rotated_simtel.dat"
+
+
 def test_read_simtel_data(spe_test_file, spe_meta_test_comment):
     """Test reading of sim_telarray table file into strings."""
 
@@ -100,6 +105,58 @@ def test_read_simtel_table_to_table(spe_test_file, spe_meta_test_comment):
     ) as mock_read:
         simtel_table_reader.read_simtel_table("atmospheric_transmission", "test_file")
         mock_read.assert_called_once()
+
+
+def test_read_simtel_table_for_mirror_list(mirror_list_test_file):
+    """Test reading mirror_list table including mirror panel IDs from '#% id=' data."""
+    table = simtel_table_reader.read_simtel_table("mirror_list", mirror_list_test_file)
+
+    assert len(table) > 0
+    assert table.colnames == [
+        "mirror_x",
+        "mirror_y",
+        "mirror_diameter",
+        "focal_length",
+        "shape_type",
+        "mirror_z",
+        "mirror_panel_id",
+    ]
+    assert str(table["mirror_x"].unit) == "cm"
+    assert str(table["mirror_y"].unit) == "cm"
+    assert str(table["mirror_diameter"].unit) == "cm"
+    assert str(table["focal_length"].unit) == "cm"
+    assert str(table["mirror_z"].unit) == "cm"
+
+    assert table["mirror_x"][0] == pytest.approx(1022.49)
+    assert table["mirror_y"][0] == pytest.approx(-462.00)
+    assert table["mirror_panel_id"][0] == 198
+
+
+def test_read_simtel_table_as_row_data_for_mirror_list(mirror_list_test_file):
+    """Test row-data serialization of mirror_list table."""
+    row_data = simtel_table_reader.read_simtel_table_as_row_data(
+        "mirror_list", mirror_list_test_file
+    )
+
+    assert row_data["columns"] == [
+        "mirror_x",
+        "mirror_y",
+        "mirror_diameter",
+        "focal_length",
+        "shape_type",
+        "mirror_z",
+        "mirror_panel_id",
+    ]
+    assert row_data["column_units"] == [
+        "cm",
+        "cm",
+        "cm",
+        "cm",
+        "dimensionless",
+        "cm",
+        "dimensionless",
+    ]
+    assert row_data["rows"][0][6] == 198
 
 
 def test_read_simtel_table_as_row_data():
@@ -239,6 +296,7 @@ def test_data_simple_columns():
         "lightguide_efficiency_vs_incidence_angle",
         "nsb_spectrum",
         "atmospheric_profile",
+        "mirror_list",
     ]
     for column in columns:
         column_list, description = simtel_table_reader._data_columns(column, 2, None)

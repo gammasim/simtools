@@ -77,6 +77,7 @@ def main():
         plot_ra_dec_tracks=app_context.args["plot_ra_dec_tracks"],
         dec_values=app_context.args["dec_values"],
     )
+    plotter.plot_limit_projections()
 
 
 if __name__ == "__main__":

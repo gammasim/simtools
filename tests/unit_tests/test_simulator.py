@@ -4,7 +4,6 @@ import copy
 import logging
 import shutil
 import tarfile
-import warnings
 from pathlib import Path
 from unittest import mock
 from unittest.mock import call
@@ -885,18 +884,25 @@ def test_make_resources_report(array_simulator, mocker):
     expected = "Mean wall time/run [sec]: 99.99"
     assert result == expected
 
-    # Test case 4: No runtime available (empty runtime list)
+    # Test case 4: Runtime of 0 is a valid value
+    mock_resources = {"runtime": 0, "n_events": 500}
+    mocker.patch.object(
+        array_simulator._simulation_runner, "get_resources", return_value=mock_resources
+    )
+
+    result = array_simulator._make_resources_report()
+    expected = "Mean wall time/run [sec]: 0.0, #events/run: 500"
+    assert result == expected
+
+    # Test case 5: No runtime available (empty runtime list)
     mock_resources = {"n_events": 500}
     mocker.patch.object(
         array_simulator._simulation_runner, "get_resources", return_value=mock_resources
     )
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
-        result = array_simulator._make_resources_report()
-        # np.mean([]) returns nan
-        assert "Mean wall time/run [sec]: nan" in result
-        assert ", #events/run: 500" in result
+    result = array_simulator._make_resources_report()
+    assert "Mean wall time/run [sec]: nan" in result
+    assert ", #events/run: 500" in result
 
 
 def test_get_corsika_file(array_simulator, mocker):

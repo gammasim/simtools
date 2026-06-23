@@ -7,7 +7,7 @@ Processes sim_telarray output files (typically of type '.simtel.zst') and create
 reduced datasets containing shower information, array-level parameters, and data about
 triggered telescopes.
 
-The output consists of an HDF5 or FITS file containing the following tables:
+The output consists of an HDF5 file containing the following tables:
 
 **FILE_INFO**
 
@@ -166,9 +166,14 @@ def main():
         return
 
     output_filepath = io_handler.IOHandler().get_output_file(app_context.args["output_file"])
+    if output_filepath.suffix.lower() not in (".hdf5", ".h5"):
+        raise ValueError(
+            f"Unsupported reduced event data format for '{output_filepath}'. "
+            "Only HDF5 files with suffix '.hdf5' or '.h5' are supported."
+        )
     generator = EventDataWriter(files, app_context.args["max_files"])
     tables = generator.process_files()
-    table_handler.write_tables(tables, output_filepath, overwrite_existing=True)
+    table_handler.write_tables(tables, output_filepath, overwrite_existing=True, file_type="HDF5")
     MetadataCollector.dump(
         args_dict=app_context.args, output_file=output_filepath.with_suffix(".yml")
     )
