@@ -96,7 +96,12 @@ def _add_arguments(parser):
         help="Ignore the runtime environment and run the application in the current environment.",
         default=False,
     )
-    parser.add_argument("--runtime_environment_file", type=Path)
+    parser.add_argument(
+        "--runtime_environment_file",
+        type=Path,
+        help="Path to a standalone runtime-environment YAML file (top-level 'runtime_environment').",
+        default=None,
+    )
     parser.add_argument(
         "--overwrite_collection_files",
         action="store_true",
