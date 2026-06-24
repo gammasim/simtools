@@ -53,6 +53,11 @@ simulation_output (str, optional)
     Base directory for simulation output packages passed through as ``pack_for_grid_register``.
 job_grid_file (str, required)
     Path to the pre-generated executable job grid file.
+run_number_offset (int, optional)
+    Offset passed to ``simtools-simulate-prod`` and added to each grid
+    ``run_number`` at execution time. Keep this at ``0`` for grids generated
+    with ``simtools-production-generate-grid --run_number_offset``, because
+    those grids already contain absolute run numbers.
 priority (int, optional)
     Job priority (default: 1).
 
