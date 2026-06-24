@@ -172,7 +172,12 @@ showers_per_run_scaling (str, optional)
     ``showers_per_run * cos(zenith_angle)`` and rounds up to at least one
     shower. Default is ``fixed``.
 run_number_offset (int, optional)
-    Offset added to generated run numbers. Default is ``0``.
+    Number of already assigned run numbers before this generated grid. The
+    first generated run is ``run_number_offset + 1``. For example, use
+    ``run_number_offset=100`` to continue a production after run 100 and start
+    this grid at run 101. The generated grid stores absolute ``run_number``
+    values; do not apply the same offset again when executing the grid.
+    Default is ``0``.
 
 Energy scaling
 --------------
@@ -408,9 +413,9 @@ def _add_arguments(parser):
     )
 
 
-def _renumber_job_rows(job_rows, start_run_number):
+def _renumber_job_rows(job_rows, run_number_offset):
     """Set output run numbers continuously."""
-    for run_number, job_row in enumerate(job_rows, start=start_run_number):
+    for run_number, job_row in enumerate(job_rows, start=run_number_offset + 1):
         job_row["run_number"] = run_number
     return job_rows
 
@@ -428,7 +433,7 @@ def main():
 
     job_rows = _renumber_job_rows(
         build_simulation_jobs(app_context.args),
-        start_run_number=int(app_context.args.get("run_number", 1)),
+        run_number_offset=int(app_context.args.get("run_number_offset", 0)),
     )
     serialize_job_grid(
         job_rows=job_rows,
