@@ -279,8 +279,8 @@ def test_read_event_data_rejects_string_encoded_shower_numeric_columns(
     test_file = tmp_test_directory / "test_string_encoded_showers.hdf5"
     shower_table, trigger_table, file_info_table = mock_tables
     shower_table["event_id"] = ["100", "101"]
-    shower_table["x_core"] = ["100.0", "200.0"] * u.m
-    shower_table["y_core"] = ["150.0", "250.0"] * u.m
+    shower_table["x_core"] = ["100.0", "200.0"]
+    shower_table["y_core"] = ["150.0", "250.0"]
     shower_table["area_weight"] = ["1.0", "1.0"]
 
     write_tables(
