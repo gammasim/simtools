@@ -205,7 +205,7 @@ def test_write_array_config_file_raises_for_too_long_include_filename(
     simtel_config_writer, io_handler, site_model_north, telescope_model_lst
 ):
     output_file = io_handler.get_output_file(file_name="simtel-config-writer_array-long-name.txt")
-    too_long_name = "a" * 74 + ".cfg"
+    too_long_name = "a" * (SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH - 3) + ".cfg"
     telescope_model = {
         "LSTN-01": mock.Mock(
             config_file_path=Path(too_long_name),
