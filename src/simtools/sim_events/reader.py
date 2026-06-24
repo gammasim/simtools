@@ -413,9 +413,7 @@ class EventDataReader:
             required_tables,
             include_indexed_tables=False,
         )
-        missing_tables = [
-            name for name in required_tables if not available_tables.get(name)
-        ]
+        missing_tables = [name for name in required_tables if not available_tables.get(name)]
         if missing_tables:
             raise ValueError(
                 f"Reduced event data file '{event_data_file}' is missing required "
