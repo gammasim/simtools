@@ -22,6 +22,7 @@ import yaml
 
 from simtools.model.site_model import SiteModel
 from simtools.runners import simtools_runner
+from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
 
@@ -82,13 +83,15 @@ def _resolve_telescopes_from_layout(args):
             f"{layout_elements}"
         )
 
-    telescope = layout_elements[0]
+    raw_telescope = layout_elements[0]
 
-    if "invalid" in telescope.lower():
+    try:
+        telescope = names.validate_array_element_name(str(raw_telescope))
+    except ValueError as exc:
         raise ValueError(
             f"Array layout '{args['array_layout_name']}' resolved to invalid telescope "
-            f"'{telescope}'."
-        )
+            f"'{raw_telescope}'."
+        ) from exc
 
     return [telescope]
 
