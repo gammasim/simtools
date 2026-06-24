@@ -94,7 +94,8 @@ def _generate_overwrite_file(overwrite_base, param_combo, combo_name, work_dir, 
     """Generate overwrite YAML file for one parameter combination."""
     overwrite_data = _build_overwrite_data(overwrite_base, param_combo)
 
-    overwrite_file = work_dir / f"overwrite_{label}_{combo_name}.yaml"
+    safe_label = _format_value_for_name(label)
+    overwrite_file = work_dir / f"overwrite_{safe_label}_{combo_name}.yaml"
     with open(overwrite_file, "w", encoding="utf-8") as file_handle:
         yaml.safe_dump(overwrite_data, file_handle, default_flow_style=False, sort_keys=False)
 

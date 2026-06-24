@@ -53,7 +53,7 @@ _QUANTITY_FIELDS = {
 JOB_GRID_QUANTITY_FIELDS = dict(_QUANTITY_FIELDS)
 
 _OPTIONAL_ANGLE_FIELDS = ("ra", "dec")
-_OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label")
+_OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label", "telescope")
 
 _JOB_GRID_COLUMN_DTYPES = {
     "primary": str,
