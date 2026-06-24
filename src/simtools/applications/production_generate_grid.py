@@ -157,6 +157,9 @@ total_showers_scaling (str, optional)
 zenith_angle_scaling_factor (float, optional)
     Factor used by ``total_showers_scaling=zenith_scaled``. The default is
     configured in simtools defaults.
+max_total_showers_rounding_warnings (int, optional)
+    Maximum number of per-point warnings emitted when ``total_showers`` is
+    rounded up to keep equal showers per run. Default is ``20``.
 showers_per_run_power_law (tuple, optional)
     Energy-dependent showers-per-run scaling as
     ``<power_index> <reference_energy_value> <reference_energy_unit>``. simtools
@@ -169,7 +172,12 @@ showers_per_run_scaling (str, optional)
     ``showers_per_run * cos(zenith_angle)`` and rounds up to at least one
     shower. Default is ``fixed``.
 run_number_offset (int, optional)
-    Offset added to generated run numbers. Default is ``0``.
+    Number of already assigned run numbers before this generated grid. The
+    first generated run is ``run_number_offset + 1``. For example, use
+    ``run_number_offset=100`` to continue a production after run 100 and start
+    this grid at run 101. The generated grid stores absolute ``run_number``
+    values; do not apply the same offset again when executing the grid.
+    Default is ``0``.
 
 Energy scaling
 --------------
@@ -242,6 +250,7 @@ from simtools.application_control import build_application
 from simtools.configuration import defaults
 from simtools.production_configuration.job_grid_io import serialize_job_grid
 from simtools.production_configuration.simulation_jobs import (
+    TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
     build_job_grid_metadata,
     build_simulation_jobs,
 )
@@ -346,6 +355,16 @@ def _add_arguments(parser):
         default=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
     )
     parser.add_argument(
+        "--max_total_showers_rounding_warnings",
+        help=(
+            "Maximum number of per-point warnings emitted when total_showers is "
+            "rounded up to keep equal showers per run."
+        ),
+        type=parser.scientific_int,
+        required=False,
+        default=TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
+    )
+    parser.add_argument(
         "--showers_per_run_power_law",
         help=(
             "Scale showers_per_run by (E_mid / E_ref) ** power_index using the bin midpoint: "
@@ -394,6 +413,13 @@ def _add_arguments(parser):
     )
 
 
+def _renumber_job_rows(job_rows, run_number_offset):
+    """Set output run numbers continuously."""
+    for run_number, job_row in enumerate(job_rows, start=run_number_offset + 1):
+        job_row["run_number"] = run_number
+    return job_rows
+
+
 def main():
     """See CLI description."""
     app_context = build_application(
@@ -405,7 +431,10 @@ def main():
         },
     )
 
-    job_rows = build_simulation_jobs(app_context.args)
+    job_rows = _renumber_job_rows(
+        build_simulation_jobs(app_context.args),
+        run_number_offset=int(app_context.args.get("run_number_offset", 0)),
+    )
     serialize_job_grid(
         job_rows=job_rows,
         output_file=app_context.io_handler.get_output_file(app_context.args["output_file"]),
