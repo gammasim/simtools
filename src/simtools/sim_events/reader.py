@@ -79,6 +79,24 @@ class EventDataReader:
         "core_scatter_min",
         "core_scatter_max",
     ]
+    _shower_column_dtypes = {
+        "shower_id": np.uint32,
+        "event_id": np.uint32,
+        "file_id": np.uint32,
+        "simulated_energy": np.float64,
+        "x_core": np.float64,
+        "y_core": np.float64,
+        "shower_azimuth": np.float64,
+        "shower_altitude": np.float64,
+        "area_weight": np.float64,
+    }
+    _trigger_column_dtypes = {
+        "shower_id": np.uint32,
+        "event_id": np.uint32,
+        "file_id": np.uint32,
+        "array_altitude": np.float64,
+        "array_azimuth": np.float64,
+    }
 
     def __init__(self, event_data_file, telescope_list=None):
         """Initialize EventDataReader."""
@@ -323,11 +341,28 @@ class EventDataReader:
         if triggers_name is not None:
             table_columns[triggers_name] = self._required_trigger_columns
 
+        table_requirements = {
+            get_name("SHOWERS"): (self._required_shower_columns, self._shower_column_dtypes),
+            get_name("FILE_INFO"): (self._required_file_info_columns, {}),
+        }
+        if triggers_name is not None:
+            table_requirements[triggers_name] = (
+                self._required_trigger_columns,
+                self._trigger_column_dtypes,
+            )
+
+        self._validate_available_tables(event_data_file, table_names)
         tables = table_handler.read_tables(
             event_data_file,
             table_names=table_names,
             file_type="HDF5",
             table_columns=table_columns,
+        )
+        self._validate_event_data_tables(
+            tables,
+            event_data_file,
+            required_tables=table_names,
+            table_requirements=table_requirements,
         )
         self.reduced_file_info = self.get_reduced_simulation_file_info(
             tables[get_name("FILE_INFO")]
@@ -370,6 +405,85 @@ class EventDataReader:
             triggered_shower,
             triggered_data,
         )
+
+    def _validate_available_tables(self, event_data_file, required_tables):
+        """Validate required table names before reading selected columns."""
+        available_tables = table_handler.read_table_list(
+            event_data_file,
+            required_tables,
+            include_indexed_tables=False,
+        )
+        missing_tables = [
+            name for name in required_tables if not available_tables.get(name)
+        ]
+        if missing_tables:
+            raise ValueError(
+                f"Reduced event data file '{event_data_file}' is missing required "
+                f"table(s): {', '.join(missing_tables)}."
+            )
+
+    def _validate_event_data_tables(
+        self,
+        tables,
+        event_data_file,
+        required_tables,
+        table_requirements,
+    ):
+        """Validate reduced event-data table presence, row counts, and numeric dtypes."""
+        missing_tables = [name for name in required_tables if tables.get(name) is None]
+        if missing_tables:
+            raise ValueError(
+                f"Reduced event data file '{event_data_file}' is missing required "
+                f"table(s): {', '.join(missing_tables)}."
+            )
+
+        empty_tables = [name for name in required_tables if len(tables[name]) == 0]
+        if empty_tables:
+            raise ValueError(
+                f"Reduced event data file '{event_data_file}' has empty required "
+                f"table(s): {', '.join(empty_tables)}."
+            )
+
+        for table_name, (required_columns, numeric_columns) in table_requirements.items():
+            self._validate_table_columns(
+                tables,
+                event_data_file,
+                table_name=table_name,
+                required_columns=required_columns,
+                numeric_columns=numeric_columns,
+            )
+
+    def _validate_table_columns(
+        self,
+        tables,
+        event_data_file,
+        table_name,
+        required_columns,
+        numeric_columns,
+    ):
+        """Validate required columns and reject string/object numeric event columns."""
+        if table_name not in tables:
+            return
+
+        table = tables[table_name]
+        missing_columns = [col for col in required_columns if col not in table.colnames]
+        if missing_columns:
+            raise ValueError(
+                f"Reduced event data file '{event_data_file}' table '{table_name}' "
+                f"is missing required column(s): {', '.join(missing_columns)}."
+            )
+
+        invalid_numeric_columns = [
+            col
+            for col in numeric_columns
+            if col in table.colnames and np.asarray(table[col].data).dtype.kind not in "uif"
+        ]
+        if invalid_numeric_columns:
+            raise ValueError(
+                f"Reduced event data file '{event_data_file}' table '{table_name}' "
+                "has non-numeric dtype for required numeric column(s): "
+                f"{', '.join(invalid_numeric_columns)}."
+            )
 
     def _filter_by_telescopes(self, triggered_data, triggered_shower):
         """Filter trigger data and triggered shower data by the specified telescope list."""
@@ -481,7 +595,7 @@ class EventDataReader:
 
         return reduced_info
 
-    def _convert_numeric_column(self, values, key, dtype):
+    def _convert_numeric_column(self, values, key, dtype, table_name="FILE_INFO"):
         """Convert table column values to a numeric numpy array."""
         array_values = np.asarray(values)
 
@@ -499,7 +613,7 @@ class EventDataReader:
             return array_values.astype(dtype)
         except (TypeError, ValueError) as exc:
             raise ValueError(
-                f"Unable to convert FILE_INFO column '{key}' to numeric values."
+                f"Unable to convert {table_name} column '{key}' to numeric values."
             ) from exc
 
     def scatter_area(self, core_scatter_min, core_scatter_max):
