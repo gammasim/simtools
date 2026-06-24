@@ -4,6 +4,7 @@
 import logging
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import packaging.version
 
@@ -249,7 +250,6 @@ def generate_plot_configurations(
     }
     parameter_dict = _read_parameter_dict_from_model_database(table_config)
 
-    # Get schema configuration
     schema = gen.change_dict_keys_case(
         _select_schema_entry(
             ascii_handler.collect_data_from_file(
@@ -262,11 +262,9 @@ def generate_plot_configurations(
     if not configs:
         return None
 
-    # Get data table and determine valid columns
     table = _read_table_from_model_database(table_config)
     valid_columns = _get_valid_columns(table)
 
-    # Filter configs based on plot type and column validity
     valid_configs = []
     for config in configs:
         if not _filter_config_by_plot_type(config, plot_type):
@@ -280,7 +278,6 @@ def generate_plot_configurations(
             logger.warning("No valid plot config found.")
         return None
 
-    # Generate output files
     output_files = []
     for _config in valid_configs:
         for _table in _config.get("tables", []):
@@ -320,3 +317,118 @@ def _generate_output_file_name(
     filename = "_".join(parts) + file_extension
 
     return Path(output_path) / filename if output_path else Path(filename)
+
+
+def resolve_plot_output_path(output, file_name="bias_curve.png"):
+    """Resolve output as either an explicit plot file or an output directory."""
+    output_path = Path(output)
+
+    if output_path.suffix:
+        return output_path
+
+    return output_path / file_name
+
+
+def plot_bias_curves(nsb_stats, proton_stats, config, output_path):
+    """
+    Plot NSB and proton bias curves.
+
+    Parameters
+    ----------
+    nsb_stats : dict
+        NSB statistics by threshold.
+    proton_stats : dict
+        Proton statistics by threshold.
+    config : dict
+        Plot configuration with title, ymin, and ymax.
+    output_path : Path or str
+        Output path for plot image.
+    """
+    fig, axis = plt.subplots(figsize=(10, 7))
+
+    _plot_nsb_curve(axis, nsb_stats)
+    _plot_proton_curve(axis, proton_stats)
+    _configure_bias_curve_axis(axis, config)
+
+    fig.tight_layout()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
+def _plot_nsb_curve(axis, nsb_stats):
+    """Plot NSB trigger rates."""
+    if not nsb_stats:
+        return
+
+    nsb_thresholds = sorted(nsb_stats.keys())
+    nsb_rates = [nsb_stats[t]["rate_hz"] for t in nsb_thresholds]
+    nsb_errors = [nsb_stats[t]["error_hz"] for t in nsb_thresholds]
+
+    axis.errorbar(
+        nsb_thresholds,
+        nsb_rates,
+        yerr=nsb_errors,
+        fmt="o",
+        label="NSB",
+        color="tab:blue",
+        capsize=3,
+    )
+
+    _plot_log_linear_trend(axis, nsb_thresholds, nsb_rates, color="tab:blue")
+
+
+def _plot_proton_curve(axis, proton_stats):
+    """Plot proton trigger rates."""
+    if not proton_stats:
+        return
+
+    proton_thresholds = sorted(proton_stats.keys())
+    proton_rates = [proton_stats[t]["rate_hz"] for t in proton_thresholds]
+
+    axis.plot(
+        proton_thresholds,
+        proton_rates,
+        "s",
+        label="Proton",
+        color="tab:orange",
+        markersize=8,
+    )
+
+    _plot_log_linear_trend(axis, proton_thresholds, proton_rates, color="tab:orange")
+
+
+def _plot_log_linear_trend(axis, thresholds, rates, color):
+    """Plot a log-linear trend line when at least two positive rates are available."""
+    if len(thresholds) < 2:
+        return
+
+    valid_mask = np.array(rates) > 0
+    if np.sum(valid_mask) < 2:
+        return
+
+    fit_thresholds = np.array(thresholds)[valid_mask]
+    fit_rates = np.array(rates)[valid_mask]
+
+    coeffs = np.polyfit(fit_thresholds, np.log10(fit_rates), 1)
+    x_fit = np.linspace(min(fit_thresholds), max(fit_thresholds), 100)
+    y_fit = 10 ** (coeffs[0] * x_fit + coeffs[1])
+
+    axis.plot(x_fit, y_fit, "--", color=color, alpha=0.5, linewidth=1)
+
+
+def _configure_bias_curve_axis(axis, config):
+    """Configure bias-curve axis labels, scaling, and legend."""
+    axis.set_title(config["title"], fontsize=14, fontweight="bold")
+    axis.set_xlabel("Threshold", fontsize=12)
+    axis.set_ylabel("Trigger Rate [Hz]", fontsize=12)
+    axis.set_yscale("log")
+    axis.set_ylim(config["ymin"], config["ymax"])
+    axis.grid(which="both", alpha=0.3, linestyle=":")
+
+    handles, _ = axis.get_legend_handles_labels()
+    if handles:
+        axis.legend(fontsize=11, loc="best")
+    else:
+        _logger.warning("No NSB or proton rates found; writing empty bias-curve plot")
