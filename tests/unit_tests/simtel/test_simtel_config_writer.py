@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 
 import simtools.simtel.simtel_table_writer as simtel_table_writer
+from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 
 logger = logging.getLogger()
@@ -198,6 +199,31 @@ def test_write_array_config_file(
         lines = f.readlines()
         assert lines[-2].endswith("\n")
         assert lines[-1] == "\n"
+
+
+def test_write_array_config_file_raises_for_too_long_include_filename(
+    simtel_config_writer, io_handler, site_model_north, telescope_model_lst
+):
+    output_file = io_handler.get_output_file(file_name="simtel-config-writer_array-long-name.txt")
+    too_long_name = "a" * 74 + ".cfg"
+    telescope_model = {
+        "LSTN-01": mock.Mock(
+            config_file_path=Path(too_long_name),
+            parameters=telescope_model_lst.parameters,
+        )
+    }
+
+    with pytest.raises(ValueError, match=r"^sim_telarray include filename exceeds parser limit"):
+        simtel_config_writer.write_array_config_file(
+            config_file_path=output_file,
+            telescope_model=telescope_model,
+            site_model=site_model_north,
+        )
+
+
+def test_validate_include_file_name_length_accepts_boundary(simtel_config_writer):
+    max_len = SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
+    simtel_config_writer._validate_include_file_name_length("a" * (max_len - 4) + ".cfg")
 
 
 def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
