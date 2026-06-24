@@ -58,7 +58,7 @@ def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
     assert metadata["job_grid_summary"]["energy_min_used"] == "30 GeV"
 
 
-def test_serialize_and_read_job_grid_with_optional_scan_fields(tmp_test_directory):
+def test_serialize_and_read_job_grid_with_optional_string_fields(tmp_test_directory):
     output_file = Path(tmp_test_directory) / "job_grid.ecsv"
     rows = _job_rows()
     rows[0]["overwrite_model_parameters"] = "overwrite_nsb_asum220.yaml"
