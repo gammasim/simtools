@@ -172,7 +172,12 @@ showers_per_run_scaling (str, optional)
     ``showers_per_run * cos(zenith_angle)`` and rounds up to at least one
     shower. Default is ``fixed``.
 run_number_offset (int, optional)
-    Offset added to generated run numbers. Default is ``0``.
+    Number of already assigned run numbers before this generated grid. The
+    first generated run is ``run_number_offset + 1``. For example, use
+    ``run_number_offset=100`` to continue a production after run 100 and start
+    this grid at run 101. The generated grid stores absolute ``run_number``
+    values; do not apply the same offset again when executing the grid.
+    Default is ``0``.
 
 Energy scaling
 --------------

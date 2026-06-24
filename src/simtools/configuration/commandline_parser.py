@@ -406,7 +406,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 "type": int,
             },
             "run_number_offset": {
-                "help": "An offset for the run number to be simulated.",
+                "help": ("Offset added to run number when executing a simulation."),
                 "type": int,
                 "default": 0,
             },
