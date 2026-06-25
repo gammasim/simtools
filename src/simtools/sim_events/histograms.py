@@ -35,6 +35,10 @@ class EventDataHistograms:
         List of telescope IDs to filter the events (default is None).
     energy_bins_per_decade : int, optional
         Number of energy bins per decade for logarithmic energy histograms.
+    skip_invalid_event_data_files : bool, optional
+        Skip invalid event-data files while reading resolved input files.
+    require_triggered_data : bool, optional
+        Require triggered-event tables in each input file.
     """
 
     def __init__(
@@ -75,6 +79,10 @@ class EventDataHistograms:
         """Check if a reader exposes triggered event tables."""
         return any(isinstance(ds, dict) and "TRIGGERS" in ds for ds in reader.data_sets)
 
+    def _log_skipped_event_data_file(self, event_data_file, exception):
+        """Log skipped invalid event-data file."""
+        self._logger.warning(f"Skipping invalid event data file '{event_data_file}': {exception}")
+
     def _iter_readers(self):
         """Yield one reader per input file to keep memory usage bounded."""
         for index, event_data_file in enumerate(self.event_data_files):
@@ -85,11 +93,9 @@ class EventDataHistograms:
                     reader = EventDataReader(event_data_file, telescope_list=self.telescope_list)
                 if self.require_triggered_data and not self._reader_has_triggered_data(reader):
                     raise ValueError("Missing triggered event table(s).")
-            except ValueError as exc:
+            except (OSError, KeyError, ValueError) as exc:
                 if self.skip_invalid_event_data_files:
-                    self._logger.warning(
-                        f"Skipping invalid event data file '{event_data_file}': {exc}"
-                    )
+                    self._log_skipped_event_data_file(event_data_file, exc)
                     continue
                 raise
 
@@ -170,11 +176,9 @@ class EventDataHistograms:
                         file_index=file_index,
                         total_files=total_files,
                     )
-                except ValueError as exc:
+                except (OSError, KeyError, ValueError) as exc:
                     if self.skip_invalid_event_data_files:
-                        self._logger.warning(
-                            f"Skipping invalid event data file '{event_data_file}': {exc}"
-                        )
+                        self._log_skipped_event_data_file(event_data_file, exc)
                         break
                     raise
                 self._update_file_info(file_info_table)

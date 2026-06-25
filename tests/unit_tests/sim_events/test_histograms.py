@@ -338,6 +338,37 @@ def test_fill_reads_multiple_files_sequentially(mock_reader, mocker):
     assert all(call.kwargs.get("table_name_map") == "test_dataset" for call in read_calls)
 
 
+@pytest.mark.parametrize("exception", [OSError("bad file"), KeyError("missing dataset")])
+def test_iter_readers_skips_unreadable_files_when_enabled(mocker, exception):
+    """Test unreadable files are skipped when creating readers."""
+    mocker.patch(
+        "simtools.sim_events.histograms.resolve_file_patterns",
+        return_value=["bad_file.h5"],
+    )
+    mocker.patch("simtools.sim_events.histograms.EventDataReader", side_effect=exception)
+
+    histograms = EventDataHistograms("*.h5", skip_invalid_event_data_files=True)
+
+    assert list(histograms._iter_readers()) == []
+
+
+@pytest.mark.parametrize("exception", [OSError("bad file"), KeyError("missing dataset")])
+def test_fill_skips_read_errors_when_enabled(mock_reader, mocker, hdf5_file_name, exception):
+    """Test read errors are skipped while filling histograms."""
+    histograms = EventDataHistograms(hdf5_file_name, skip_invalid_event_data_files=True)
+    mock_reader.return_value.data_sets = ["test_dataset"]
+    mock_reader.return_value.read_event_data.side_effect = exception
+    mocker.patch.object(histograms, "print_summary")
+    mocker.patch.object(histograms, "calculate_efficiency_data")
+    mocker.patch.object(histograms, "calculate_cumulative_data")
+
+    histograms.fill()
+
+    mock_reader.return_value.read_event_data.assert_called_once_with(
+        hdf5_file_name, table_name_map="test_dataset"
+    )
+
+
 def test_fill_accumulates_histograms_across_data_sets(
     mock_reader, hdf5_file_name, mocker, reduced_file_info
 ):
