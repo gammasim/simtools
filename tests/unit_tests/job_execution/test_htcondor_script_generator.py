@@ -14,6 +14,7 @@ from simtools.job_execution.htcondor_script_generator import (
     _write_params_file,
     build_job_specs,
     generate_submission_script,
+    select_job_specs,
 )
 
 
@@ -335,6 +336,37 @@ def test_build_job_specs_raises_for_missing_required_metadata(args_dict, job_row
             ValueError, match=r"missing required field\(s\): site, simulation_software"
         ):
             build_job_specs(args_dict, ["7.0.0"])
+
+
+def test_build_job_specs_selects_grid_line_before_expanding_labels(
+    args_dict, job_rows, job_grid_metadata
+):
+    rows = [{**job_rows[0], "run_number": run_number} for run_number in range(1, 7)]
+    args_dict["job_grid_line"] = 5
+
+    with mock.patch(
+        "simtools.job_execution.htcondor_script_generator.read_job_grid",
+        return_value=(rows, job_grid_metadata),
+    ):
+        job_specs, _ = build_job_specs(args_dict, ["7.0.0", "8.0.0"])
+
+    assert [job_spec["run_number"] for job_spec in job_specs] == [5, 5]
+    assert [job_spec["image_label"] for job_spec in job_specs] == ["7.0.0", "8.0.0"]
+
+
+def test_select_job_specs_returns_selected_one_based_line(job_rows):
+    job_specs = [{**job_rows[0], "run_number": run_number} for run_number in range(1, 7)]
+
+    selected_job_specs = select_job_specs(job_specs, 5)
+
+    assert selected_job_specs == [job_specs[4]]
+
+
+def test_select_job_specs_raises_for_invalid_line(job_rows):
+    job_specs = [{**job_rows[0], "run_number": run_number} for run_number in range(1, 3)]
+
+    with pytest.raises(ValueError, match="Requested job_grid_line 5"):
+        select_job_specs(job_specs, 5)
 
 
 def test_write_params_file_keeps_energy_units(tmp_test_directory):

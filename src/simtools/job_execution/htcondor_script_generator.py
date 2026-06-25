@@ -381,6 +381,7 @@ def build_job_specs(args_dict, image_labels):
     """Build backend-agnostic job specs from comparison and production grids."""
     base_pack_dir = args_dict.get("simulation_output") or "simtools-output"
     normalized_rows, job_grid_metadata = read_job_grid(args_dict["job_grid_file"])
+    normalized_rows = select_job_specs(normalized_rows, args_dict.get("job_grid_line"))
 
     missing_metadata = [
         key
@@ -406,3 +407,17 @@ def build_job_specs(args_dict, image_labels):
                 }
             )
     return job_specs, job_grid_metadata
+
+
+def select_job_specs(job_specs, job_grid_line=None):
+    """Return all job specs or the selected 1-based job-grid data row."""
+    if job_grid_line is None:
+        return job_specs
+
+    if job_grid_line < 1 or job_grid_line > len(job_specs):
+        raise ValueError(
+            f"Requested job_grid_line {job_grid_line}, but job grid contains "
+            f"{len(job_specs)} normalized data row(s)."
+        )
+
+    return [job_specs[job_grid_line - 1]]

@@ -1,7 +1,8 @@
 ---
 applications:
-- application: simtools-simulate-prod-htcondor-generator
+- application: simtools-simulate-prod-job-generator
   configuration:
+    backend: htcondor
     apptainer_image: tests/resources/dummy_apptainer_image.sif
     job_grid_file: tests/resources/production_job_grid_horizontal_single.ecsv
     label: test-production-North

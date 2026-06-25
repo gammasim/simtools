@@ -1,7 +1,8 @@
 ---
 applications:
-- application: simtools-simulate-prod-htcondor-generator
+- application: simtools-simulate-prod-job-generator
   configuration:
+    backend: htcondor
     apptainer_image:
       0.30.0: tests/resources/dummy_apptainer_image.sif
       0.29.0: tests/resources/dummy_apptainer_image.sif

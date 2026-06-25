@@ -1,0 +1,17 @@
+---
+applications:
+- application: simtools-simulate-prod-job-generator
+  configuration:
+    backend: script
+    job_grid_file: tests/resources/production_job_grid_horizontal.ecsv
+    job_grid_line: 2
+    label: test-production-script
+    log_level: DEBUG
+    output_path: job_scripts
+  integration_tests:
+  - test_output_files:
+    - file: simulate_prod.job_2.sh
+      path_descriptor: output_path
+  test_name: script-line
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

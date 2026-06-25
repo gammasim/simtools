@@ -86,7 +86,7 @@ def test_config_from_file_preserves_selected_by_version_keys(tmp_test_directory)
     config_dict = {
         "applications": [
             {
-                "application": "simtools-simulate-prod-htcondor-generator",
+                "application": "simtools-simulate-prod-job-generator",
                 "configuration": {
                     "model_version": ["6.3.0", "7.0.0"],
                     "array_layout_name": {
