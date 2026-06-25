@@ -275,7 +275,7 @@ def test_read_event_data_returns_expected_types_and_values(mock_hdf5_file):
 def test_read_event_data_rejects_string_encoded_shower_numeric_columns(
     tmp_test_directory, mock_tables
 ):
-    """Test rejection of numeric SHOWERS columns stored as byte strings."""
+    """Test rejection of numeric SHOWERS columns stored as strings."""
     test_file = tmp_test_directory / "test_string_encoded_showers.hdf5"
     shower_table, trigger_table, file_info_table = mock_tables
     shower_table["event_id"] = ["100", "101"]
