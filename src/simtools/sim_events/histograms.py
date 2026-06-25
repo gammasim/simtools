@@ -166,6 +166,7 @@ class EventDataHistograms:
             Whether to calculate and fill the efficiency histograms.
         """
         total_files = len(self.event_data_files)
+        filled_data_sets = 0
         for file_index, (event_data_file, reader) in enumerate(self._iter_readers(), start=1):
             for data_set in reader.data_sets:
                 try:
@@ -187,7 +188,10 @@ class EventDataHistograms:
                 )
                 self._merge_histograms(current_histograms)
                 self._fill_current_histograms()
+                filled_data_sets += 1
 
+        if filled_data_sets == 0:
+            raise ValueError("No readable event data files or datasets found.")
         self.print_summary()
         if fill_efficiency_histogram:
             self.calculate_efficiency_data()
