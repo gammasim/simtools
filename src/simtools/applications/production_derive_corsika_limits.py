@@ -101,6 +101,8 @@ n_workers (int, optional)
     Number of worker processes to use for execution. Default is 1.
 plot_histograms (bool, optional)
     Plot histograms of the event data.
+skip_invalid_event_data_files (bool, optional)
+    Skip malformed or incomplete reduced event-data files inside each input pattern.
 output_file (str, optional)
     Path to the output file for the derived limits.
 output_path (str, optional)
@@ -186,6 +188,15 @@ def _add_arguments(parser):
     parser.add_argument(
         "--plot_histograms",
         help="Plot histograms of the event data.",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
+        "--skip_invalid_event_data_files",
+        help=(
+            "Skip malformed or incomplete reduced event-data files inside each input pattern. "
+            "By default, the application stops at the first invalid file."
+        ),
         action="store_true",
         default=False,
     )
