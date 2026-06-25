@@ -35,6 +35,10 @@ class EventDataHistograms:
         List of telescope IDs to filter the events (default is None).
     energy_bins_per_decade : int, optional
         Number of energy bins per decade for logarithmic energy histograms.
+    skip_invalid_event_data_files : bool, optional
+        Skip invalid event-data files while reading resolved input files.
+    require_triggered_data : bool, optional
+        Require triggered-event tables in each input file.
     """
 
     def __init__(
@@ -43,6 +47,8 @@ class EventDataHistograms:
         array_name=None,
         telescope_list=None,
         energy_bins_per_decade=10,
+        skip_invalid_event_data_files=False,
+        require_triggered_data=False,
     ):
         """Initialize."""
         self._logger = logging.getLogger(__name__)
@@ -50,14 +56,20 @@ class EventDataHistograms:
         self.event_data_files = self._normalize_event_data_files(event_data_file)
         self.array_name = array_name
         self.energy_bins_per_decade = max(int(energy_bins_per_decade), 1)
+        self.skip_invalid_event_data_files = skip_invalid_event_data_files
+        self.require_triggered_data = require_triggered_data
+        self.telescope_list = telescope_list
 
         self.histograms = {}
         self.file_info = {}
         self._contains_triggered_data = False
 
-        self.reader = EventDataReader(self.event_data_files[0], telescope_list=telescope_list)
-        self._contains_triggered_data = self._reader_has_triggered_data(self.reader)
-        self.telescope_list = telescope_list
+        self.reader = None
+        if not self.skip_invalid_event_data_files:
+            self.reader = EventDataReader(
+                self.event_data_files[0], telescope_list=self.telescope_list
+            )
+            self._contains_triggered_data = self._reader_has_triggered_data(self.reader)
 
     def _normalize_event_data_files(self, event_data_file):
         """Return event-data files as a list of resolved file names."""
@@ -67,14 +79,27 @@ class EventDataHistograms:
         """Check if a reader exposes triggered event tables."""
         return any(isinstance(ds, dict) and "TRIGGERS" in ds for ds in reader.data_sets)
 
+    def _log_skipped_event_data_file(self, event_data_file, exception):
+        """Log skipped invalid event-data file."""
+        self._logger.warning(f"Skipping invalid event data file '{event_data_file}': {exception}")
+
     def _iter_readers(self):
         """Yield one reader per input file to keep memory usage bounded."""
         for index, event_data_file in enumerate(self.event_data_files):
-            if index == 0:
-                yield event_data_file, self.reader
-                continue
+            try:
+                if index == 0 and self.reader is not None:
+                    reader = self.reader
+                else:
+                    reader = EventDataReader(event_data_file, telescope_list=self.telescope_list)
+                if self.require_triggered_data and not self._reader_has_triggered_data(reader):
+                    raise ValueError("Missing triggered event table(s).")
+            except (OSError, KeyError, ValueError) as exc:
+                if self.skip_invalid_event_data_files:
+                    self._log_skipped_event_data_file(event_data_file, exc)
+                    continue
+                raise
 
-            self.reader = EventDataReader(event_data_file, telescope_list=self.telescope_list)
+            self.reader = reader
             self._contains_triggered_data = (
                 self._contains_triggered_data or self._reader_has_triggered_data(self.reader)
             )
@@ -141,22 +166,32 @@ class EventDataHistograms:
             Whether to calculate and fill the efficiency histograms.
         """
         total_files = len(self.event_data_files)
+        filled_data_sets = 0
         for file_index, (event_data_file, reader) in enumerate(self._iter_readers(), start=1):
             for data_set in reader.data_sets:
-                file_info_table, shower_data, event_data, triggered_data = self._read_data_set(
-                    reader,
-                    event_data_file,
-                    data_set,
-                    file_index=file_index,
-                    total_files=total_files,
-                )
+                try:
+                    file_info_table, shower_data, event_data, triggered_data = self._read_data_set(
+                        reader,
+                        event_data_file,
+                        data_set,
+                        file_index=file_index,
+                        total_files=total_files,
+                    )
+                except (OSError, KeyError, ValueError) as exc:
+                    if self.skip_invalid_event_data_files:
+                        self._log_skipped_event_data_file(event_data_file, exc)
+                        break
+                    raise
                 self._update_file_info(file_info_table)
                 current_histograms = self._define_histograms(
                     event_data, triggered_data, shower_data
                 )
                 self._merge_histograms(current_histograms)
                 self._fill_current_histograms()
+                filled_data_sets += 1
 
+        if filled_data_sets == 0:
+            raise ValueError("No readable event data files or datasets found.")
         self.print_summary()
         if fill_efficiency_histogram:
             self.calculate_efficiency_data()
