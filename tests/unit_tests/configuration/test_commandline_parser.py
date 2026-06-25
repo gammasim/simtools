@@ -662,10 +662,7 @@ def test_get_dictionary_with_corsika_configuration(mocker):
 
     # Test the "run_number_offset" key
     assert "run_number_offset" in corsika_config
-    assert (
-        corsika_config["run_number_offset"]["help"]
-        == "An offset for the run number to be simulated."
-    )
+    assert "Offset added to run number" in corsika_config["run_number_offset"]["help"]
     assert corsika_config["run_number_offset"]["type"] is int
     assert corsika_config["run_number_offset"]["default"] == 0
 
