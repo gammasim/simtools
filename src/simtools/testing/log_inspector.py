@@ -27,6 +27,7 @@ IGNORE_PATTERNS = [
     re.compile(r"Job output/error streams", re.IGNORECASE),
     # typically model parameters like 'transit_time_error'
     re.compile(r"'[A-Za-z0-9_]+_error'", re.IGNORECASE),  # NOSONAR
+    re.compile(r"DEBUG: Setting environment variables for job execution:", re.IGNORECASE),
     re.compile(r"INFO:", re.IGNORECASE),
 ]
 
