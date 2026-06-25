@@ -135,7 +135,9 @@ class ModelDataWriter:
             output_file_format="json",
             output_path=output_path,
         )
-        if check_db_for_existing_parameter:
+        if check_db_for_existing_parameter and not settings.config.args.get(
+            "ignore_existing_parameter_version", False
+        ):
             writer.check_db_for_existing_parameter(parameter_name, instrument, parameter_version)
 
         output_file = writer.io_handler.get_output_file(
