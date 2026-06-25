@@ -323,12 +323,19 @@ class EventDataReader:
         if triggers_name is not None:
             table_columns[triggers_name] = self._required_trigger_columns
 
-        tables = table_handler.read_tables(
-            event_data_file,
-            table_names=table_names,
-            file_type="HDF5",
-            table_columns=table_columns,
-        )
+        try:
+            tables = table_handler.read_tables(
+                event_data_file,
+                table_names=table_names,
+                file_type="HDF5",
+                table_columns=table_columns,
+            )
+        except KeyError as exc:
+            raise ValueError(
+                f"Reduced event data file '{event_data_file}' is missing a required "
+                f"table or column: {exc}."
+            ) from exc
+        self._validate_event_data_tables(tables, event_data_file, table_names, get_name)
         self.reduced_file_info = self.get_reduced_simulation_file_info(
             tables[get_name("FILE_INFO")]
         )
@@ -370,6 +377,33 @@ class EventDataReader:
             triggered_shower,
             triggered_data,
         )
+
+    def _validate_event_data_tables(self, tables, event_data_file, table_names, get_name):
+        """Validate reduced event-data table presence, row counts, and numeric dtypes."""
+        empty_tables = [name for name in table_names if len(tables[name]) == 0]
+        if empty_tables:
+            raise ValueError(
+                f"Reduced event data file '{event_data_file}' has empty required "
+                f"table(s): {', '.join(empty_tables)}."
+            )
+
+        for table_name, columns in (
+            (get_name("SHOWERS"), self._required_shower_columns),
+            (get_name("TRIGGERS"), self._required_trigger_columns[:-1]),
+        ):
+            if table_name is None:
+                continue
+            invalid_columns = [
+                col
+                for col in columns
+                if np.asarray(tables[table_name][col].data).dtype.kind not in "uif"
+            ]
+            if invalid_columns:
+                raise ValueError(
+                    f"Reduced event data file '{event_data_file}' table '{table_name}' "
+                    "has non-numeric dtype for required numeric column(s): "
+                    f"{', '.join(invalid_columns)}."
+                )
 
     def _filter_by_telescopes(self, triggered_data, triggered_shower):
         """Filter trigger data and triggered shower data by the specified telescope list."""
