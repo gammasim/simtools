@@ -311,7 +311,7 @@ def test_read_event_data_with_missing_triggers(tmp_test_directory, mock_tables):
 
     reader = EventDataReader(str(test_file))
 
-    with pytest.raises(ValueError, match="missing required table\\(s\\): TRIGGERS"):
+    with pytest.raises(ValueError, match="missing a required table or column"):
         reader.read_event_data(str(test_file))
 
     file_info, shower_data, triggered_shower, triggered_data = reader.read_event_data(
