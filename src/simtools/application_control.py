@@ -328,11 +328,12 @@ def startup_application(
 
     io_handler_instance = io_handler.IOHandler() if setup_io_handler else None
 
-    _resolve_model_version_to_latest_patch(args_dict, logger)
-
     if apply_job_grid_override:
-        _apply_job_grid_override(args_dict, db_config)
+        _apply_job_grid_override(
+            args_dict, db_config, resolve_sim_software_executables=resolve_sim_software_executables
+        )
 
+    _resolve_model_version_to_latest_patch(args_dict, logger)
     _version_info(args_dict, io_handler_instance, logger)
 
     return ApplicationContext(
@@ -398,7 +399,7 @@ def get_module_description_line(docstring):
     raise ValueError("Empty docstring (only whitespace)")
 
 
-def _apply_job_grid_override(args_dict, db_config):
+def _apply_job_grid_override(args_dict, db_config, resolve_sim_software_executables=True):
     """
     Apply job grid row overrides to the args dictionary.
 
@@ -415,6 +416,8 @@ def _apply_job_grid_override(args_dict, db_config):
         Parsed command line arguments and configuration. Modified in-place.
     db_config : dict
         Database configuration forwarded to ``settings.config.load``.
+    resolve_sim_software_executables : bool, optional
+        Whether to resolve simulation software executables. Default is True.
     """
     if not args_dict.get("job_grid_file"):
         return
@@ -424,7 +427,9 @@ def _apply_job_grid_override(args_dict, db_config):
         args_dict.get("job_grid_row", 1),
     )
     args_dict.update(job_grid_row_to_simulate_prod_args(job_row, metadata))
-    config.load(args_dict, db_config)
+    config.load(
+        args_dict, db_config, resolve_sim_software_executables=resolve_sim_software_executables
+    )
 
 
 def _resolve_model_version_to_latest_patch(args_dict, logger):

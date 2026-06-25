@@ -751,11 +751,6 @@ def test_setup_logging_redaction(tmp_test_directory, test_id, log_message, secre
         assert secret_value not in content
 
 
-# ---------------------------------------------------------------------------
-# _apply_job_grid_override
-# ---------------------------------------------------------------------------
-
-
 @patch("simtools.application_control.config")
 def test_apply_job_grid_override_no_op_when_no_file(mock_config):
     """Override is a no-op when job_grid_file is absent."""
@@ -800,13 +795,13 @@ def test_apply_job_grid_override_updates_args_and_reloads_config(mock_config, tm
     db_config = {"db": "cfg"}
     args = {"job_grid_file": str(grid_file), "job_grid_row": 1, "primary": "proton"}
 
-    _apply_job_grid_override(args, db_config)
+    _apply_job_grid_override(args, db_config, resolve_sim_software_executables=True)
 
     assert args["primary"] == "gamma"
     assert args["run_number"] == 7
     assert args["site"] == "North"
     assert args["simulation_software"] == "corsika_sim_telarray"
-    mock_config.load.assert_called_once_with(args, db_config)
+    mock_config.load.assert_called_once_with(args, db_config, resolve_sim_software_executables=True)
 
 
 @patch("simtools.application_control._apply_job_grid_override")

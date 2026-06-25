@@ -415,6 +415,9 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
         "corsika_le_interaction": job_row["corsika_le_interaction"],
         "corsika_he_interaction": job_row["corsika_he_interaction"],
         "run_number": int(job_row["run_number"]),
+        # Force the run number offset to zero,
+        # since the job grid row already specifies the run number.
+        "run_number_offset": 0,
     }
     if metadata:
         for key in ("site", "simulation_software"):
