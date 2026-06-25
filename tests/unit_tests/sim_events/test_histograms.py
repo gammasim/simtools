@@ -362,7 +362,8 @@ def test_fill_skips_read_errors_when_enabled(mock_reader, mocker, hdf5_file_name
     mocker.patch.object(histograms, "calculate_efficiency_data")
     mocker.patch.object(histograms, "calculate_cumulative_data")
 
-    histograms.fill()
+    with pytest.raises(ValueError, match="No readable event data files or datasets found"):
+        histograms.fill()
 
     mock_reader.return_value.read_event_data.assert_called_once_with(
         hdf5_file_name, table_name_map="test_dataset"
