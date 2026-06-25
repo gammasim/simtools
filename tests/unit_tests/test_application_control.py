@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from simtools.application_control import (
+    _apply_job_grid_override,
     _resolve_model_version_to_latest_patch,
     _version_info,
     build_application,
@@ -748,3 +749,112 @@ def test_setup_logging_redaction(tmp_test_directory, test_id, log_message, secre
         content = log_file.read_text()
         assert "***REDACTED***" in content
         assert secret_value not in content
+
+
+# ---------------------------------------------------------------------------
+# _apply_job_grid_override
+# ---------------------------------------------------------------------------
+
+
+@patch("simtools.application_control.config")
+def test_apply_job_grid_override_no_op_when_no_file(mock_config):
+    """Override is a no-op when job_grid_file is absent."""
+    args = {"primary": "proton"}
+    _apply_job_grid_override(args, {})
+    mock_config.load.assert_not_called()
+    assert args == {"primary": "proton"}
+
+
+@patch("simtools.application_control.config")
+def test_apply_job_grid_override_updates_args_and_reloads_config(mock_config, tmp_test_directory):
+    """When job_grid_file is set, args are updated and config is reloaded."""
+    import astropy.units as u
+
+    from simtools.production_configuration import job_grid_io
+
+    grid_file = Path(str(tmp_test_directory)) / "grid.ecsv"
+    job_grid_io.serialize_job_grid(
+        [
+            {
+                "run_number": 7,
+                "primary": "gamma",
+                "azimuth_angle": 45 * u.deg,
+                "zenith_angle": 20 * u.deg,
+                "energy_min": 30 * u.GeV,
+                "energy_max": 10 * u.TeV,
+                "cores_per_shower": 10,
+                "core_scatter_max": 200 * u.m,
+                "view_cone_min": 0 * u.deg,
+                "view_cone_max": 5 * u.deg,
+                "showers_per_run": 1000,
+                "nsb_rate": 0.24,
+                "model_version": "7.0.0",
+                "array_layout_name": "CTAO-North-Alpha",
+                "corsika_le_interaction": "urqmd",
+                "corsika_he_interaction": "epos",
+            }
+        ],
+        grid_file,
+        metadata={"site": "North", "simulation_software": "corsika_sim_telarray"},
+    )
+    db_config = {"db": "cfg"}
+    args = {"job_grid_file": str(grid_file), "job_grid_row": 1, "primary": "proton"}
+
+    _apply_job_grid_override(args, db_config)
+
+    assert args["primary"] == "gamma"
+    assert args["run_number"] == 7
+    assert args["site"] == "North"
+    assert args["simulation_software"] == "corsika_sim_telarray"
+    mock_config.load.assert_called_once_with(args, db_config)
+
+
+@patch("simtools.application_control._apply_job_grid_override")
+def test_startup_application_calls_job_grid_override_when_flag_set(mock_override):
+    """startup_application calls _apply_job_grid_override when flag is True."""
+
+    def _parse():
+        return (
+            {
+                "log_level": "INFO",
+                "label": "test",
+                "application_label": "test",
+                "activity_id": "abc123",
+                "job_grid_file": None,
+                "job_grid_row": 1,
+            },
+            {},
+        )
+
+    startup_application(
+        _parse,
+        setup_io_handler=False,
+        resolve_sim_software_executables=False,
+        apply_job_grid_override=True,
+    )
+
+    mock_override.assert_called_once()
+
+
+@patch("simtools.application_control._apply_job_grid_override")
+def test_startup_application_skips_job_grid_override_by_default(mock_override):
+    """startup_application does not call _apply_job_grid_override by default."""
+
+    def _parse():
+        return (
+            {
+                "log_level": "INFO",
+                "label": "test",
+                "application_label": "test",
+                "activity_id": "abc123",
+            },
+            {},
+        )
+
+    startup_application(
+        _parse,
+        setup_io_handler=False,
+        resolve_sim_software_executables=False,
+    )
+
+    mock_override.assert_not_called()
