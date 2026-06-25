@@ -3,7 +3,7 @@ applications:
 - application: simtools-validate-file-using-schema
   configuration:
     data_type: model_parameter
-    file_name: tests/resources/model_parameters/schema-0.3.0/num_gains-1.0.0.json
+    file_name: tests/resources/generated/model_parameters/array_layouts-2.0.2.json
   test_name: json_validate_model_parameter
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

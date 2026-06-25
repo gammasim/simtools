@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import pytest
@@ -283,6 +284,15 @@ def test_initialize_default_arguments_accepts_figure_format():
     args = parser_with_defaults.parse_args(["--figure_format", "png", "pdf"])
 
     assert args.figure_format == ["png", "pdf"]
+
+
+def test_initialize_default_arguments_accepts_log_file_path():
+    parser_with_defaults = parser.CommandLineParser()
+    parser_with_defaults.initialize_default_arguments()
+
+    args = parser_with_defaults.parse_args(["--log_file_path", "./custom-logs"])
+
+    assert args.log_file_path == Path("custom-logs")
 
 
 def test_initialize_default_arguments_accepts_apptainer_image_dict(tmp_test_directory):
