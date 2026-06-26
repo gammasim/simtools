@@ -1,6 +1,6 @@
-r"""Generate HTCondor submit files for NSB (gamma) and proton bias curves.
+r"""Generate scan grids for NSB (gamma) and proton bias curves.
 
-This module generates two independent HTCondor submission workflows:
+This module generates two independent bias-curve scan-grid workflows:
 
 - NSB curve:
   Uses gamma primary, fixed low-energy range, and NSB-specific model overwrites.
@@ -8,7 +8,8 @@ This module generates two independent HTCondor submission workflows:
   Uses proton primary, fixed proton energy range, and proton trigger overwrites.
 
 For each curve, this module writes a scan configuration and a simtools workflow
-configuration, then executes the workflow through ``simtools_runner.run_applications``.
+configuration, then executes only the backend-neutral grid-generation steps through
+``simtools_runner.run_applications``.
 
 The NSB overwrite always sets ``min_photons`` and ``min_photoelectrons`` to zero
 and resets ``nsb_scaling_factor`` to 2. The proton overwrite does not touch
@@ -16,10 +17,9 @@ these parameters.
 """
 
 import logging
-from pathlib import Path
 
-import yaml
-
+from simtools.io import ascii_handler
+from simtools.io.io_handler import IOHandler
 from simtools.model.site_model import SiteModel
 from simtools.runners import simtools_runner
 from simtools.utils import names
@@ -35,7 +35,10 @@ _NSB_SCALING_FACTOR = 2
 _ASUM_THRESHOLDS = [220, 230, 240, 250, 260, 270, 280, 290, 300, 320, 340, 360]
 _DSUM_THRESHOLDS = [22, 23, 24, 25, 26, 27, 28, 29, 30]
 
-_TELESCOPE_THRESHOLD_PARAM = {"L": "asum_threshold", "M": "dsum_threshold"}
+_TELESCOPE_THRESHOLD_PARAM = {
+    "LST": "asum_threshold",
+    "MST": "dsum_threshold",
+}
 
 _CURVE_DEFINITIONS = {
     "nsb": {
@@ -101,14 +104,15 @@ def _threshold_param_name(telescope):
     if not telescope:
         raise ValueError("Cannot determine threshold parameter for empty telescope name.")
 
-    telescope_type = telescope[0].upper()
+    # Extract telescope type (e.g., "LSTN-01" -> "LST", "MSTS-05" -> "MST")
+    telescope_type = telescope.split("-")[0][:3].upper()
 
     try:
         return _TELESCOPE_THRESHOLD_PARAM[telescope_type]
     except KeyError as exc:
         raise ValueError(
             f"Cannot determine threshold parameter for telescope '{telescope}'. "
-            "Expected telescope name to start with L, M, or S."
+            f"Supported telescope types: {list(_TELESCOPE_THRESHOLD_PARAM.keys())}."
         ) from exc
 
 
@@ -204,9 +208,7 @@ def _base_overwrite(curve_name, telescope, args):
 
 def _write_yaml(file_path, content):
     """Write YAML content to file."""
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(file_path, "w", encoding="utf-8") as file_handle:
-        yaml.safe_dump(content, file_handle, sort_keys=False)
+    ascii_handler.write_data_to_file(content, file_path, sort_keys=False)
     _logger.info("Wrote %s", file_path)
 
 
@@ -249,23 +251,6 @@ def _scan_grid_configuration(base_grid_file, scan_config_file, scan_grid_file):
     }
 
 
-def _htcondor_configuration(curve_label, curve_directory, scan_grid_file, args, output_root):
-    """Build configuration for simtools-simulate-prod-htcondor-generator."""
-    apptainer_image = args.get("apptainer_image")
-    if not apptainer_image:
-        raise ValueError("Missing required argument: --apptainer_image")
-
-    return {
-        "apptainer_image": apptainer_image,
-        "priority": args.get("priority", 1),
-        "job_grid_file": str(scan_grid_file),
-        "output_path": str(curve_directory / args.get("htcondor_output_path", "htcondor_submit")),
-        "simulation_output": str(output_root),
-        "label": curve_label,
-        "log_level": args.get("log_level", "INFO"),
-    }
-
-
 def _workflow_config(
     curve_name,
     curve_definition,
@@ -273,8 +258,6 @@ def _workflow_config(
     base_grid_file,
     scan_config_file,
     scan_grid_file,
-    curve_directory,
-    output_root,
 ):
     """Build the runner workflow configuration for one curve."""
     curve_label = curve_name
@@ -297,16 +280,6 @@ def _workflow_config(
                     scan_grid_file=scan_grid_file,
                 ),
             },
-            {
-                "application": "simtools-simulate-prod-htcondor-generator",
-                "configuration": _htcondor_configuration(
-                    curve_label=curve_label,
-                    curve_directory=curve_directory,
-                    scan_grid_file=scan_grid_file,
-                    args=args,
-                    output_root=output_root,
-                ),
-            },
         ]
     }
 
@@ -323,10 +296,9 @@ def _run_workflow(workflow_file, args):
     )
 
 
-def _generate_curve_submissions(curve_name, curve_definition, args, output_root):
-    """Generate grid, scan config, scan grid, and HTCondor scripts for one curve."""
-    curve_directory = output_root / curve_name
-    curve_directory.mkdir(parents=True, exist_ok=True)
+def _generate_curve_submissions(curve_name, curve_definition, args, io_handler):
+    """Generate base grid, scan config, and scan grid for one curve."""
+    curve_directory = io_handler.get_output_directory(sub_dir=curve_name)
 
     telescope = args["telescopes"][0]
     base_grid_file = curve_directory / "base_grid.ecsv"
@@ -344,8 +316,6 @@ def _generate_curve_submissions(curve_name, curve_definition, args, output_root)
             base_grid_file=base_grid_file,
             scan_config_file=scan_config_file,
             scan_grid_file=scan_grid_file,
-            curve_directory=curve_directory,
-            output_root=output_root,
         ),
     )
     _run_workflow(workflow_file, args)
@@ -363,7 +333,6 @@ def _validate_required_args(args):
         "core_scatter",
         "view_cone",
         "number_of_runs",
-        "apptainer_image",
     ]
 
     for key in required_args:
@@ -372,20 +341,20 @@ def _validate_required_args(args):
 
 
 def generate_bias_curve_submissions(args):
-    """Generate NSB and proton bias-curve HTCondor submissions from CLI args."""
+    """Generate NSB and proton bias-curve scan grids from CLI args."""
     _validate_required_args(args)
 
     args["telescopes"] = _resolve_telescopes_from_layout(args)
     if len(args["telescopes"]) == 1:
         args["telescope"] = str(args["telescopes"][0])
 
-    output_root = Path(args.get("output_path") or ".").expanduser().resolve()
-    output_root.mkdir(parents=True, exist_ok=True)
+    io_handler = IOHandler()
+    io_handler.set_paths(output_path=args.get("output_path"))
 
     for curve_name, curve_definition in _CURVE_DEFINITIONS.items():
         _generate_curve_submissions(
             curve_name=curve_name,
             curve_definition=curve_definition,
             args=args,
-            output_root=output_root,
+            io_handler=io_handler,
         )

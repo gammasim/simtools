@@ -13,9 +13,9 @@ import logging
 from copy import deepcopy
 from pathlib import Path
 
-import yaml
-
+from simtools.io import ascii_handler
 from simtools.production_configuration.job_grid_io import read_job_grid, serialize_job_grid
+from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
 
@@ -96,8 +96,7 @@ def _generate_overwrite_file(overwrite_base, param_combo, combo_name, work_dir, 
 
     safe_label = _format_value_for_name(label)
     overwrite_file = work_dir / f"overwrite_{safe_label}_{combo_name}.yaml"
-    with open(overwrite_file, "w", encoding="utf-8") as file_handle:
-        yaml.safe_dump(overwrite_data, file_handle, default_flow_style=False, sort_keys=False)
+    ascii_handler.write_data_to_file(overwrite_data, overwrite_file, sort_keys=False)
 
     _logger.debug(f"Generated overwrite file: {overwrite_file}")
     return overwrite_file
@@ -119,11 +118,14 @@ def _parse_parameter_scan_config(param_scan):
 
     params = []
     for param_spec in param_scan["parameters"]:
+        values = general.ensure_list(param_spec["values"])
+        if not values:
+            raise ValueError("'values' must contain at least one scan value.")
         params.append(
             {
                 "name": param_spec["name"],
                 "path": param_spec["path"],
-                "values": param_spec["values"],
+                "values": values,
                 "version": param_spec.get("version"),
                 "label": param_spec.get("label", param_spec["name"]),
                 "label_separator": param_spec.get("label_separator", "_"),
@@ -180,14 +182,36 @@ def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
     scan parameter combination, and writes a new grid where each base row is
     duplicated for every combination with ``overwrite_model_parameters`` and
     ``scan_label`` columns added.
+
+    Parameters
+    ----------
+    base_grid_file : str or Path
+        Path to the base job grid file (ECSV format).
+    scan_config_path : str or Path
+        Path to the parameter scan configuration file (YAML format).
+    output_file : str or Path
+        Path to the output file where the expanded grid will be written.
+
+    Returns
+    -------
+    None
+        Writes the expanded grid to the specified output file.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the base grid file or scan configuration file does not exist.
+    KeyError
+        If the scan configuration is missing required fields (e.g., 'overwrite').
+    TypeError
+        If the scan configuration fields are not of the expected type.
     """
     scan_config_path = Path(scan_config_path)
     output_file = Path(output_file)
     output_dir = output_file.parent
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    with open(scan_config_path, encoding="utf-8") as file_handle:
-        scan_config = yaml.safe_load(file_handle)
+    scan_config = ascii_handler.collect_data_from_file(scan_config_path)
 
     label = scan_config.get("label", "scan")
     param_specs, overwrite_base, job_grid_updates = _parse_parameter_scan_config(
