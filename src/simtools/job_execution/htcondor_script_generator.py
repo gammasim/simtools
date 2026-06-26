@@ -17,7 +17,6 @@ import astropy.units as u
 from simtools.production_configuration.job_grid_io import read_job_grid
 
 _logger = logging.getLogger(__name__)
-
 _PARAMS_FIELDS = [
     "apptainer_label",
     "primary",
@@ -42,7 +41,6 @@ _PARAMS_FIELDS = [
     "run_number",
     "pack_for_grid_register",
 ]
-
 _OPTIONAL_QUEUE_FIELDS = ("overwrite_model_parameters", "scan_label", "telescope")
 
 _REQUIRED_JOB_GRID_METADATA = ("site", "simulation_software")
@@ -153,9 +151,8 @@ def _group_job_specs_by_label(job_specs):
     return grouped
 
 
-def _write_params_file(params_file_path, label_job_specs, params_fields=None):
+def _write_params_file(params_file_path, label_job_specs, params_fields):
     """Write parameter file consumed by HTCondor queue-from syntax."""
-    params_fields = params_fields or _PARAMS_FIELDS
     with open(params_file_path, "w", encoding="utf-8") as params_file_handle:
         for job_spec in label_job_specs:
             energy_min_value, energy_min_unit = _format_param_value(
@@ -281,7 +278,7 @@ def generate_submission_script(args_dict):
 
 
 def _get_submit_file(
-    executable, apptainer_image, priority, params_file_name, htcondor_dirs, params_fields=None
+    executable, apptainer_image, priority, params_file_name, htcondor_dirs, params_fields
 ):
     """
     Return HTCondor submit file.
@@ -301,13 +298,14 @@ def _get_submit_file(
     htcondor_dirs: dict
         Directory mapping with HTCondor files locations. Expected keys are
         ``log``, ``error``, and ``output``.
+    params_fields : list
+        List of parameter fields to include in the submit file.
 
     Returns
     -------
     str
         HTCondor submit file content.
     """
-    params_fields = params_fields or _PARAMS_FIELDS
     arguments_string = "$(process) env.txt " + " ".join(f"$({field})" for field in params_fields)
     queue_string = ",".join(params_fields)
 
@@ -327,7 +325,7 @@ queue {queue_string} from {params_file_name}
 """
 
 
-def _get_submit_script(args_dict, params_fields=None):
+def _get_submit_script(args_dict, params_fields):
     """
     Return HTCondor submit script.
 
@@ -335,14 +333,14 @@ def _get_submit_script(args_dict, params_fields=None):
     ----------
     args_dict: dict
         Arguments dictionary.
+    params_fields : list
+        List of parameter fields to include in the submit script.
 
     Returns
     -------
     str
         HTCondor submit script content.
     """
-    params_fields = params_fields or _PARAMS_FIELDS
-
     # Map params fields to bash positional indices ($3, $4, etc.)
     # Indices 1-2 are reserved for: $1=process_id, $2=env_file
     bash_indices = {}
