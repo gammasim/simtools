@@ -189,18 +189,18 @@ def test_find_signal_peaks_empty_trace():
 # get_time_axis tests - parametrized
 # ============================================================================
 @pytest.mark.parametrize(
-    ("sampling_rate_ns", "n_samples", "expected_max"),
+    ("time_slice_ns", "n_samples", "expected_max"),
     [
         (1, 5, 4),
-        (2, 4, 1.5),
+        (2, 4, 6),
         (0, 3, 2),
-        (4, 3, 0.5),
+        (4, 3, 8),
         (1, 1, 0),
     ],
 )
-def test_get_time_axis(sampling_rate_ns, n_samples, expected_max):
-    sampling_rate = sampling_rate_ns * u.ns
-    axis = trace.get_time_axis(sampling_rate, n_samples)
+def test_get_time_axis(time_slice_ns, n_samples, expected_max):
+    time_slice = time_slice_ns * u.ns
+    axis = trace.get_time_axis(time_slice, n_samples)
     expected = np.linspace(0, expected_max, n_samples)
     assert np.allclose(axis, expected)
 
