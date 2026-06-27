@@ -303,26 +303,60 @@ def test_write_tables_fits_overwrite_false(tmp_path, mock_table, mock_fits_objec
         write_tables([mock_table], output_file, overwrite_existing=False, file_type="FITS")
 
 
-def test_write_tables_hdf5(tmp_path, mock_table, mock_h5py_file):
+def test_write_tables_hdf5(tmp_path, mock_table):
     """Test writing tables in HDF5 format."""
     output_file = tmp_path / TEST_H5
     write_tables([mock_table], output_file, file_type="HDF5")
 
-    # Verify h5py operations were called correctly
-    mock_h5py_file.create_dataset.assert_called_once()
-    call_args = mock_h5py_file.create_dataset.call_args[1]
-    assert call_args["compression"] == "gzip"
-    assert call_args["compression_opts"] == 4
+    with h5py.File(output_file, "r") as hdf5_file:
+        assert hdf5_file.attrs["simtools_write_status"] == "complete"
+        assert len(hdf5_file[TEST_TABLE_NAME]) == 2
+        assert hdf5_file[TEST_TABLE_NAME].compression == "gzip"
+        assert hdf5_file[TEST_TABLE_NAME].compression_opts == 4
+    assert not list(tmp_path.glob(f"{TEST_H5}.incomplete-*"))
 
 
-def test_write_tables_dict_input(tmp_path, mock_table, mock_h5py_file):
+def test_write_tables_dict_input(tmp_path, mock_table):
     """Test writing dictionary of tables."""
     tables_dict = {"table1": mock_table}
     output_file = tmp_path / TEST_H5
     write_tables(tables_dict, output_file, file_type="HDF5")
 
-    # Verify h5py operations were called
-    mock_h5py_file.create_dataset.assert_called_once()
+    with h5py.File(output_file, "r") as hdf5_file:
+        assert TEST_TABLE_NAME in hdf5_file
+
+
+def test_write_tables_hdf5_failure_preserves_existing_output(tmp_path, mock_table, mocker):
+    """A mid-write failure preserves prior output and leaves the partial file identifiable."""
+    output_file = tmp_path / TEST_H5
+    output_file.write_bytes(b"existing output")
+    second_table = mock_table.copy()
+    second_table.meta["EXTNAME"] = "second_table"
+    original_writer = write_table_in_hdf5
+    write_count = 0
+
+    def fail_after_first_table(table, file_name, table_name):
+        nonlocal write_count
+        write_count += 1
+        if write_count == 2:
+            raise RuntimeError("injected write failure")
+        original_writer(table, file_name, table_name)
+
+    mocker.patch(
+        f"{TABLE_HANDLER_PATH}.write_table_in_hdf5",
+        side_effect=fail_after_first_table,
+    )
+
+    with pytest.raises(RuntimeError, match="injected write failure"):
+        write_tables([mock_table, second_table], output_file, file_type="HDF5")
+
+    assert output_file.read_bytes() == b"existing output"
+    incomplete_files = list(tmp_path.glob(f"{TEST_H5}.incomplete-*"))
+    assert len(incomplete_files) == 1
+    with h5py.File(incomplete_files[0], "r") as hdf5_file:
+        assert hdf5_file.attrs["simtools_write_status"] == "incomplete"
+        assert TEST_TABLE_NAME in hdf5_file
+        assert "second_table" not in hdf5_file
 
 
 def test_write_tables_existing_file(tmp_path, mocker):
@@ -736,6 +770,7 @@ def test_write_table_in_hdf5_unicode_conversion(mock_h5py_file):
 
     write_table_in_hdf5(table, TEST_H5, TEST_TABLE_NAME)
 
+    assert table["unicode_col"].dtype.kind == "U"
     mock_h5py_file.create_dataset.assert_called_once()
     call_args = mock_h5py_file.create_dataset.call_args[1]
 
@@ -774,6 +809,7 @@ def test_write_table_in_hdf5_object_dtype_conversion(mock_h5py_file):
 
     write_table_in_hdf5(table, TEST_H5, TEST_TABLE_NAME)
 
+    assert table["file_name"].dtype.kind == "O"
     mock_h5py_file.create_dataset.assert_called_once()
     call_args = mock_h5py_file.create_dataset.call_args[1]
     data_array = call_args["data"]
@@ -781,6 +817,16 @@ def test_write_table_in_hdf5_object_dtype_conversion(mock_h5py_file):
     assert data_array.dtype.kind != "O"
     for original in data["file_name"]:
         assert original.encode("ascii") in data_array.tobytes()
+
+
+def test_write_table_in_hdf5_rejects_non_string_object_dtype(mock_h5py_file):
+    """Object columns containing missing numeric data must not be converted to strings."""
+    table = Table({"x_core": np.array([1.0, None], dtype=object)})
+
+    with pytest.raises(TypeError, match="contains non-string or missing values"):
+        write_table_in_hdf5(table, TEST_H5, TEST_TABLE_NAME)
+
+    mock_h5py_file.create_dataset.assert_not_called()
 
 
 def test_read_table_from_hdf5_basic(mocker):
