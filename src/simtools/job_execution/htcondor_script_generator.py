@@ -41,7 +41,8 @@ _PARAMS_FIELDS = [
     "run_number",
     "pack_for_grid_register",
 ]
-_OPTIONAL_QUEUE_FIELDS = ("overwrite_model_parameters", "scan_label", "telescope")
+_OPTIONAL_QUEUE_FIELDS = ("scan_label", "telescope", "overwrite_model_parameters")
+_OPTIONAL_FIELD_PLACEHOLDER = "__SIMTOOLS_UNSET__"
 
 _REQUIRED_JOB_GRID_METADATA = ("site", "simulation_software")
 
@@ -97,17 +98,22 @@ def _format_param_value(value, field_name):
     """Format a value or Quantity for params file output."""
     if value is None:
         if field_name in _OPTIONAL_QUEUE_FIELDS:
-            return ""
+            return _OPTIONAL_FIELD_PLACEHOLDER
         raise ValueError(f"Missing required value for field '{field_name}'.")
 
-    if field_name in (
+    string_fields = (
         "apptainer_label",
         "pack_for_grid_register",
-        "overwrite_model_parameters",
         "scan_label",
         "telescope",
-    ):
-        return _sanitize_label_for_params(value)
+        "overwrite_model_parameters",
+    )
+    if field_name in string_fields:
+        return (
+            str(value)
+            if field_name == "overwrite_model_parameters"
+            else _sanitize_label_for_params(value)
+        )
 
     if field_name == "cores_per_shower":
         return f"{int(value)}"
@@ -197,16 +203,9 @@ def _write_params_file(params_file_path, label_job_specs, params_fields):
                 _format_param_value(job_spec["pack_for_grid_register"], "pack_for_grid_register"),
             ]
 
-            if "overwrite_model_parameters" in params_fields:
-                row.append(
-                    _format_param_value(
-                        job_spec.get("overwrite_model_parameters"), "overwrite_model_parameters"
-                    )
-                )
-            if "scan_label" in params_fields:
-                row.append(_format_param_value(job_spec.get("scan_label"), "scan_label"))
-            if "telescope" in params_fields:
-                row.append(_format_param_value(job_spec.get("telescope"), "telescope"))
+            for field in _OPTIONAL_QUEUE_FIELDS:
+                if field in params_fields:
+                    row.append(_format_param_value(job_spec.get(field), field))
 
             params_file_handle.write(" ".join(row) + "\n")
 
@@ -306,7 +305,11 @@ def _get_submit_file(
     str
         HTCondor submit file content.
     """
-    arguments_string = "$(process) env.txt " + " ".join(f"$({field})" for field in params_fields)
+    arguments = [
+        f"'$({field})'" if field == "overwrite_model_parameters" else f"$({field})"
+        for field in params_fields
+    ]
+    arguments_string = "$(process) env.txt " + " ".join(arguments)
     queue_string = ",".join(params_fields)
 
     return f"""universe = container
@@ -364,12 +367,16 @@ def _get_submit_script(args_dict, params_fields):
         f"{bash_indices['view_cone_max_value']} "
         f'{bash_indices["view_cone_max_unit"]}"'
     )
+    energy_range_tag = (
+        f"erange-{bash_indices['energy_min_value']}{bash_indices['energy_min_unit']}-"
+        f"{bash_indices['energy_max_value']}{bash_indices['energy_max_unit']}"
+    )
     scan_label_block = ""
     if "scan_label" in params_fields:
         scan_label_block = (
             f'scan_label="{bash_indices["scan_label"]}"\n'
-            'if [ -n "$scan_label" ]; then\n'
-            '    job_label="$scan_label"\n'
+            f'if [ "$scan_label" != "{_OPTIONAL_FIELD_PLACEHOLDER}" ]; then\n'
+            '    job_label="${job_label}_${scan_label}"\n'
             "fi\n"
         )
 
@@ -379,7 +386,7 @@ def _get_submit_script(args_dict, params_fields):
         overwrite_parameters_block = (
             f'overwrite_model_parameters="{bash_indices["overwrite_model_parameters"]}"\n'
             "overwrite_model_parameters_args=()\n"
-            'if [ -n "$overwrite_model_parameters" ]; then\n'
+            f'if [ "$overwrite_model_parameters" != "{_OPTIONAL_FIELD_PLACEHOLDER}" ]; then\n'
             "    overwrite_model_parameters_args+=(--overwrite_model_parameters "
             '"$overwrite_model_parameters")\n'
             "fi\n"
@@ -392,11 +399,13 @@ def _get_submit_script(args_dict, params_fields):
         telescope_block = (
             f'telescope="{bash_indices["telescope"]}"\n'
             "telescope_args=()\n"
-            'if [ -n "$telescope" ]; then\n'
+            f'if [ "$telescope" != "{_OPTIONAL_FIELD_PLACEHOLDER}" ]; then\n'
             '    telescope_args+=(--telescope "$telescope")\n'
             "fi\n"
         )
         telescope_argument = '    "${telescope_args[@]}" \\\n'
+
+    optional_arguments = telescope_argument + overwrite_parameters_argument
 
     return f"""#!/usr/bin/env bash
 
@@ -412,7 +421,8 @@ corsika_le_interaction="{bash_indices["corsika_le_interaction"]}"
 corsika_he_interaction="{bash_indices["corsika_he_interaction"]}"
 run_number="{bash_indices["run_number"]}"
 pack_for_grid_register="{bash_indices["pack_for_grid_register"]}"
-job_label="{label}"
+energy_range_tag="{energy_range_tag}"
+job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 {scan_label_block}{overwrite_parameters_block}{telescope_block}
 
 simtools-simulate-prod \\
@@ -421,7 +431,7 @@ simtools-simulate-prod \\
     --model_version "$model_version" \\
     --site {args_dict["site"]} \\
     --array_layout_name "$array_layout_name" \\
-{telescope_argument}    --primary "$primary" \\
+    --primary "$primary" \\
     --azimuth_angle "{bash_indices["azimuth_angle"]}" \\
     --zenith_angle "{bash_indices["zenith_angle"]}" \\
     --showers_per_run "{bash_indices["showers_per_run"]}" \\
@@ -433,7 +443,7 @@ simtools-simulate-prod \\
     --run_number "$run_number" \\
     --run_number_offset {run_number_offset} \\
     --save_reduced_event_lists \\
-{overwrite_parameters_argument}    --output_path /tmp/simtools-output \\
+{optional_arguments}    --output_path /tmp/simtools-output \\
     --log_level {args_dict["log_level"]} \\
     --pack_for_grid_register "$pack_for_grid_register"
 """
