@@ -74,6 +74,8 @@ def test_process_file_passes_event_data_patterns_through(mocker):
         "array_name",
         [1, 2],
         10,
+        skip_invalid_event_data_files=False,
+        require_triggered_data=True,
     )
 
 
@@ -780,6 +782,8 @@ def test_process_file_with_mocked_histograms(mocker):
         "MockArray",
         [1, 2],
         10,
+        skip_invalid_event_data_files=False,
+        require_triggered_data=True,
     )
     mock_histograms.fill.assert_called_once()
     mock_compute_lower_energy_limit.assert_called_once_with(mock_histograms, 0.01)
@@ -954,6 +958,8 @@ def test_process_file_passes_energy_bins_per_decade_to_histograms(mocker):
         "MockArray",
         [1, 2],
         6,
+        skip_invalid_event_data_files=False,
+        require_triggered_data=True,
     )
 
 

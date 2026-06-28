@@ -17,6 +17,7 @@ import logging
 import re
 from functools import cache
 from pathlib import Path
+from uuid import uuid4
 
 import yaml
 
@@ -24,6 +25,7 @@ from simtools.constants import (
     MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
     MODEL_PARAMETER_SCHEMA_PATH,
     RESOURCE_PATH,
+    SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH,
 )
 
 _logger = logging.getLogger(__name__)
@@ -771,6 +773,23 @@ def simtel_config_file_name(
     name += f"_{label}" if label is not None else ""
     name += f"_{extra_label}" if extra_label is not None else ""
     name += ".cfg"
+
+    # Telescope config files are included by the array config and parsed by sim_telarray
+    # through a fixed-size getword buffer. Keep include targets within that parser limit.
+    if telescope_model_name is not None and len(name) > SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH:
+        token = uuid4().hex[:8]
+        prefix = "CTA"
+        prefix += f"-{array_name}" if array_name is not None else ""
+        prefix += f"-{site}"
+        suffix = f"_{token}.cfg"
+        telescope_component = f"-{telescope_model_name}"
+
+        available_length = SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH - len(prefix) - len(suffix)
+        if available_length < len(telescope_component):
+            telescope_component = telescope_component[: max(0, available_length)]
+
+        name = f"{prefix}{telescope_component}{suffix}"
+
     return name
 
 

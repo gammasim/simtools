@@ -140,6 +140,7 @@ def _execute_production_job(job_spec):
     plot_histograms = job_spec["plot_histograms"]
     output_subdir = job_spec.get("output_subdir")
     differential_loss_bins_per_decade = job_spec.get("differential_loss_bins_per_decade", 0)
+    skip_invalid_event_data_files = job_spec.get("skip_invalid_event_data_files", False)
 
     _logger.info(
         f"Processing production {production_index}: pattern={production_pattern}, "
@@ -155,6 +156,7 @@ def _execute_production_job(job_spec):
         plot_histograms,
         output_subdir=output_subdir,
         differential_loss_bins_per_decade=differential_loss_bins_per_decade,
+        skip_invalid_event_data_files=skip_invalid_event_data_files,
     )
 
     result.update(
@@ -327,6 +329,9 @@ def generate_corsika_limits_grid(args_dict):
                 "plot_histograms": args_dict["plot_histograms"],
                 "output_subdir": output_subdir,
                 "differential_loss_bins_per_decade": differential_loss_bins_per_decade,
+                "skip_invalid_event_data_files": args_dict.get(
+                    "skip_invalid_event_data_files", False
+                ),
             }
             job_specs.append(job_spec)
 
@@ -350,6 +355,7 @@ def _process_file(
     plot_histograms=False,
     output_subdir=None,
     differential_loss_bins_per_decade=0,
+    skip_invalid_event_data_files=False,
 ):
     """
     Compute limits for a given event data file and telescope configuration.
@@ -375,6 +381,8 @@ def _process_file(
     differential_loss_bins_per_decade : int, optional
         Number of energy bins per decade for differential per-bin limits.
         Set to 0 (default) to use integrated limits.
+    skip_invalid_event_data_files : bool, optional
+        Skip malformed or incomplete reduced event-data files inside the input pattern.
 
     Returns
     -------
@@ -386,6 +394,8 @@ def _process_file(
         array_name,
         telescope_ids,
         differential_loss_bins_per_decade or 10,
+        skip_invalid_event_data_files=skip_invalid_event_data_files,
+        require_triggered_data=True,
     )
     histograms.fill(fill_efficiency_histogram=False)
 

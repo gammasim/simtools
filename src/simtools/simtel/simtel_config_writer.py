@@ -11,6 +11,7 @@ import numpy as np
 import simtools.utils.general as gen
 import simtools.version
 from simtools import dependencies, settings
+from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
 from simtools.simtel import simtel_table_writer
 from simtools.utils import names
 
@@ -334,7 +335,9 @@ class SimtelConfigWriter:
             # Default telescope in sim_telarray - 0th tel in telescope list
             _, first_telescope = next(iter(telescope_model.items()))
             invalid_telescope_name = "InvalidTelescope"
-            file.write(f"# include <{invalid_telescope_name}.cfg>\n\n")
+            invalid_telescope_config = f"{invalid_telescope_name}.cfg"
+            self._validate_include_file_name_length(invalid_telescope_config)
+            file.write(f"# include <{invalid_telescope_config}>\n\n")
             self.write_dummy_telescope_configuration_file(
                 deepcopy(first_telescope.parameters),
                 config_file_directory / f"{invalid_telescope_name}.cfg",
@@ -343,10 +346,19 @@ class SimtelConfigWriter:
 
             for count, (tel_name, tel_model) in enumerate(telescope_model.items()):
                 tel_config_file = tel_model.config_file_path.name
+                self._validate_include_file_name_length(tel_config_file)
                 file.write(f"% {tel_name}\n")
                 file.write(f"#elif TELESCOPE == {count + 1}\n\n")
                 file.write(f"# include <{tel_config_file}>\n\n")
             file.write("#endif \n\n")  # configuration files need to end with \n\n
+
+    def _validate_include_file_name_length(self, file_name):
+        """Validate include-file names against the sim_telarray parser word-length limit."""
+        if len(file_name) > SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH:
+            raise ValueError(
+                "sim_telarray include filename exceeds parser limit "
+                f"({len(file_name)}>{SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH}): {file_name}"
+            )
 
     def write_single_mirror_list_file(
         self, mirror_number, mirrors, single_mirror_list_file, set_focal_length_to_zero=False
