@@ -101,17 +101,6 @@ def test_threshold_values_use_parameter_defaults(threshold_param, expected_value
     assert bias_curve_submissions._threshold_values(threshold_param) == expected_values
 
 
-@pytest.mark.parametrize(
-    ("threshold_param", "expected_prefix"),
-    [
-        ("asum_threshold", "asum"),
-        ("dsum_threshold", "dsum"),
-    ],
-)
-def test_threshold_label_prefix_uses_short_parameter_name(threshold_param, expected_prefix):
-    assert bias_curve_submissions._threshold_label_prefix(threshold_param) == expected_prefix
-
-
 def test_parameter_scan_entry_uses_compact_threshold_label(tmp_test_directory):
     entry = bias_curve_submissions._parameter_scan_entry("LSTN-01", "asum_threshold")
 

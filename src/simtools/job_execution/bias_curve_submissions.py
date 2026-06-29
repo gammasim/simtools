@@ -1,4 +1,4 @@
-r"""Generate scan grids for NSB (gamma) and proton bias curves.
+r"""Generate scan grids for NSB and proton bias curves.
 
 This module generates two independent bias-curve scan-grid workflows:
 
@@ -64,86 +64,40 @@ def _threshold_values(threshold_param, trigger_thresholds=None):
     return list(range(22, 31))
 
 
-def _threshold_label_prefix(threshold_param):
-    """Return a compact prefix for threshold scan labels."""
-    return threshold_param.removesuffix("_threshold")
-
-
 def _parameter_scan_entry(telescope, threshold_param, trigger_thresholds=None):
     """Build the parameter-scan entry for the telescope trigger threshold."""
     return {
         "name": threshold_param,
         "path": f"changes.{telescope}.{threshold_param}",
         "values": _threshold_values(threshold_param, trigger_thresholds),
-        "label": _threshold_label_prefix(threshold_param),
+        "label": threshold_param.removesuffix("_threshold"),
         "label_separator": "",
-    }
-
-
-def _nsb_scaling_change(nsb_scaling_factor):
-    """Return the NSB scaling model-parameter change."""
-    return {
-        "nsb_scaling_factor": {
-            "value": nsb_scaling_factor,
-        }
-    }
-
-
-def _base_proton_overwrite(telescope, site, model_version, nsb_scaling_factor):
-    """Build the proton base overwrite block before threshold insertion."""
-    return {
-        "model_version": model_version,
-        "model_update": "patch_update",
-        "model_version_history": [model_version],
-        "description": "Tune for proton telescope trigger scan",
-        "changes": {
-            telescope: {},
-            f"OBS-{site}": _nsb_scaling_change(nsb_scaling_factor),
-        },
-    }
-
-
-def _base_nsb_overwrite(telescope, site, model_version, nsb_scaling_factor):
-    """Build the NSB base overwrite block before threshold insertion."""
-    return {
-        "model_version": model_version,
-        "model_update": "patch_update",
-        "model_version_history": [model_version],
-        "description": "Tune for NSB telescope trigger scan",
-        "changes": {
-            telescope: {
-                "min_photons": {
-                    "value": 0,
-                },
-                "min_photoelectrons": {
-                    "value": 0,
-                },
-            },
-            f"OBS-{site}": _nsb_scaling_change(nsb_scaling_factor),
-        },
     }
 
 
 def _base_overwrite(curve_name, telescope, args):
     """Build the curve-specific base overwrite block before threshold insertion."""
-    nsb_scaling_factor = args["nsb_scaling_factor"]
+    if curve_name not in ("nsb", "proton"):
+        raise ValueError(f"Unsupported curve name '{curve_name}'.")
+
+    telescope_changes = {}
     if curve_name == "nsb":
-        return _base_nsb_overwrite(
-            telescope, args["site"], args["model_version"], nsb_scaling_factor
-        )
+        telescope_changes = {
+            "min_photons": {"value": 0},
+            "min_photoelectrons": {"value": 0},
+        }
 
-    if curve_name == "proton":
-        return _base_proton_overwrite(
-            telescope, args["site"], args["model_version"], nsb_scaling_factor
-        )
-
-    raise ValueError(f"Unsupported curve name '{curve_name}'.")
-
-
-def _write_yaml(file_path, content):
-    """Write YAML content to file."""
-    ascii_handler.write_data_to_file(content, file_path, sort_keys=False)
-    _logger.info("Wrote %s", file_path)
+    curve_label = "NSB" if curve_name == "nsb" else "proton"
+    return {
+        "model_version": args["model_version"],
+        "model_update": "patch_update",
+        "model_version_history": [args["model_version"]],
+        "description": f"Tune for {curve_label} telescope trigger scan",
+        "changes": {
+            telescope: telescope_changes,
+            f"OBS-{args['site']}": {"nsb_scaling_factor": {"value": args["nsb_scaling_factor"]}},
+        },
+    }
 
 
 def _scan_config(curve_name, telescope, args):
@@ -247,9 +201,10 @@ def _generate_curve_submissions(curve_name, curve_definition, args, io_handler):
     scan_grid_file = curve_directory / "scan_grid.ecsv"
     workflow_file = curve_directory / "workflow.yaml"
 
-    _write_yaml(scan_config_file, _scan_config(curve_name, telescope, args))
-    _write_yaml(
-        workflow_file,
+    ascii_handler.write_data_to_file(
+        _scan_config(curve_name, telescope, args), scan_config_file, sort_keys=False
+    )
+    ascii_handler.write_data_to_file(
         _workflow_config(
             curve_name=curve_name,
             curve_definition=curve_definition,
@@ -258,6 +213,8 @@ def _generate_curve_submissions(curve_name, curve_definition, args, io_handler):
             scan_config_file=scan_config_file,
             scan_grid_file=scan_grid_file,
         ),
+        workflow_file,
+        sort_keys=False,
     )
     _run_workflow(workflow_file, args)
 
@@ -296,7 +253,7 @@ def _curve_definitions(args):
 
 
 def generate_bias_curve_submissions(args, io_handler):
-    """Generate NSB and proton bias-curve scan grids from CLI args.
+    """Generate NSB and proton bias-curve scan grids.
 
     Parameters
     ----------
