@@ -158,7 +158,7 @@ def project_ground_to_corsika_shower_coordinates(
         Ground y coordinate.
     z_ground: numpy.array
         Ground z coordinate.
-    azimuth: numpy.array
+    azimuth_from_north_east: numpy.array
         Azimuth angle of the shower (in radians).
     altitude: numpy.array
         Altitude angle of the shower (in radians).

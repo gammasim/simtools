@@ -68,6 +68,8 @@ def run_applications(args_dict):
                     continue
 
                 app_configuration = config.get("configuration", {})
+                if args_dict.get("ignore_existing_parameter_version"):
+                    app_configuration["ignore_existing_parameter_version"] = True
                 app_activity_id = app_configuration.get("activity_id") or gen.get_uuid()
                 app_configuration["activity_id"] = app_activity_id
                 app_configuration.setdefault("label", app)
