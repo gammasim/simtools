@@ -491,6 +491,49 @@ def test_run_applications_uses_log_file_override(monkeypatch, tmp_test_directory
     assert not default_log.exists()
 
 
+def test_run_applications_propagates_ignore_existing_parameter_version(
+    monkeypatch, tmp_test_directory
+):
+    mock_args_dict = {
+        "config_file": "dummy_config.yml",
+        "steps": None,
+        "ignore_runtime_environment": False,
+        "ignore_existing_parameter_version": True,
+    }
+    mock_configurations = [
+        {"application": "app1", "run_application": True, "configuration": {"key": "value1"}},
+        {"application": "app2", "run_application": True, "configuration": {"key": "value2"}},
+    ]
+    log_file_path = tmp_test_directory / "simtools.log"
+
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner._read_application_configuration",
+        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id")),
+    )
+    monkeypatch.setattr(
+        "simtools.dependencies.get_version_string",
+        mock.Mock(return_value="simtools version: 1.2.3\n"),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner.workflow_metadata.build_workflow_activity_metadata",
+        mock.Mock(return_value={"id": "wf-activity-id"}),
+    )
+    monkeypatch.setattr(
+        "simtools.runners.simtools_runner.workflow_metadata.update_model_parameter_metadata_file",
+        mock.Mock(),
+    )
+    submit_mock = mock.Mock(return_value=mock.Mock(stdout="stdout", stderr="stderr", returncode=0))
+    monkeypatch.setattr("simtools.job_execution.job_manager.submit", submit_mock)
+
+    simtools_runner.run_applications(mock_args_dict)
+
+    submitted_configurations = [call.kwargs["configuration"] for call in submit_mock.call_args_list]
+    assert all(
+        configuration["ignore_existing_parameter_version"] is True
+        for configuration in submitted_configurations
+    )
+
+
 def test_run_applications_copies_collection_files(monkeypatch, tmp_test_directory):
     """Copy collection files from application output_path to collection output_path."""
     tmp_path = Path(str(tmp_test_directory))

@@ -86,6 +86,15 @@ def test_site():
         parser.CommandLineParser.site("East")
 
 
+def test_ignore_existing_parameter_version_argument():
+    commandline_parser = parser.CommandLineParser()
+    commandline_parser.initialize_application_execution_arguments()
+
+    args = commandline_parser.parse_args(["--ignore_existing_parameter_version"])
+
+    assert args.ignore_existing_parameter_version is True
+
+
 def test_telescope():
     assert parser.CommandLineParser.telescope("LSTN-01") == "LSTN-01"
     assert parser.CommandLineParser.telescope("MSTx-NectarCam") == "MSTx-NectarCam"
