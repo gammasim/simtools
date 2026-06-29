@@ -47,10 +47,7 @@ properties:
             - values
       job_grid_updates:
         type: object
-        additionalProperties: false
-        properties:
-          telescope:
-            $ref: common_definitions.schema.yml#/$defs/telescope_name_pattern
+        description: Fixed values added to every expanded job-grid row.
     required:
       - overwrite
       - parameters

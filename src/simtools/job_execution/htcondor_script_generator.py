@@ -41,8 +41,7 @@ _PARAMS_FIELDS = [
     "run_number",
     "pack_for_grid_register",
 ]
-_OPTIONAL_QUEUE_FIELDS = ("scan_label", "telescope", "overwrite_model_parameters")
-_OPTIONAL_FIELD_PLACEHOLDER = "__SIMTOOLS_UNSET__"
+_OPTIONAL_QUEUE_FIELDS = ("overwrite_model_parameters", "scan_label", "telescope")
 
 _REQUIRED_JOB_GRID_METADATA = ("site", "simulation_software")
 
@@ -98,22 +97,16 @@ def _format_param_value(value, field_name):
     """Format a value or Quantity for params file output."""
     if value is None:
         if field_name in _OPTIONAL_QUEUE_FIELDS:
-            return _OPTIONAL_FIELD_PLACEHOLDER
+            return ""
         raise ValueError(f"Missing required value for field '{field_name}'.")
 
-    string_fields = (
+    if field_name in (
         "apptainer_label",
         "pack_for_grid_register",
         "scan_label",
         "telescope",
-        "overwrite_model_parameters",
-    )
-    if field_name in string_fields:
-        return (
-            str(value)
-            if field_name == "overwrite_model_parameters"
-            else _sanitize_label_for_params(value)
-        )
+    ):
+        return _sanitize_label_for_params(value)
 
     if field_name == "cores_per_shower":
         return f"{int(value)}"
@@ -305,11 +298,7 @@ def _get_submit_file(
     str
         HTCondor submit file content.
     """
-    arguments = [
-        f"'$({field})'" if field == "overwrite_model_parameters" else f"$({field})"
-        for field in params_fields
-    ]
-    arguments_string = "$(process) env.txt " + " ".join(arguments)
+    arguments_string = "$(process) env.txt " + " ".join(f"$({field})" for field in params_fields)
     queue_string = ",".join(params_fields)
 
     return f"""universe = container
@@ -375,7 +364,7 @@ def _get_submit_script(args_dict, params_fields):
     if "scan_label" in params_fields:
         scan_label_block = (
             f'scan_label="{bash_indices["scan_label"]}"\n'
-            f'if [ "$scan_label" != "{_OPTIONAL_FIELD_PLACEHOLDER}" ]; then\n'
+            'if [ -n "$scan_label" ]; then\n'
             '    job_label="${job_label}_${scan_label}"\n'
             "fi\n"
         )
@@ -386,7 +375,7 @@ def _get_submit_script(args_dict, params_fields):
         overwrite_parameters_block = (
             f'overwrite_model_parameters="{bash_indices["overwrite_model_parameters"]}"\n'
             "overwrite_model_parameters_args=()\n"
-            f'if [ "$overwrite_model_parameters" != "{_OPTIONAL_FIELD_PLACEHOLDER}" ]; then\n'
+            'if [ -n "$overwrite_model_parameters" ]; then\n'
             "    overwrite_model_parameters_args+=(--overwrite_model_parameters "
             '"$overwrite_model_parameters")\n'
             "fi\n"
@@ -399,7 +388,7 @@ def _get_submit_script(args_dict, params_fields):
         telescope_block = (
             f'telescope="{bash_indices["telescope"]}"\n'
             "telescope_args=()\n"
-            f'if [ "$telescope" != "{_OPTIONAL_FIELD_PLACEHOLDER}" ]; then\n'
+            'if [ -n "$telescope" ]; then\n'
             '    telescope_args+=(--telescope "$telescope")\n'
             "fi\n"
         )
