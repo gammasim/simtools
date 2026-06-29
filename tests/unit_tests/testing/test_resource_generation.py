@@ -27,7 +27,7 @@ files:
     )
 
     def _fake_urlretrieve(url, destination):
-        assert url == "https://example.org/test.csv"
+        assert url == "https://example.org/v1.0.0/test.csv"
         Path(destination).write_text("value\n", encoding="utf-8")
         return destination, None
 
@@ -205,7 +205,7 @@ def test_get_resource_generation_directory_missing(tmp_test_directory):
         resource_generation.get_resource_generation_directory(tmp_test_directory, "v0.32.0")
 
 
-def test_download_files_replaces_version_placeholder(tmp_test_directory, monkeypatch):
+def test_download_files_auto_injects_version(tmp_test_directory, monkeypatch):
     config_file = Path(tmp_test_directory) / "download_files.yml"
     config_file.write_text(
         "base_urls:\n"
@@ -214,7 +214,7 @@ def test_download_files_replaces_version_placeholder(tmp_test_directory, monkeyp
         "    version: 0.1.0\n"
         "files:\n"
         "- base_url_key: simulation_model_parameter_setting\n"
-        "  path: __SIMULATION_MODEL_PARAMETER_SETTING_VERSION__/test.csv\n"
+        "  path: input/test.csv\n"
         "  description: test file\n"
         "  target_path: generated/test.csv\n",
         encoding="utf-8",
@@ -232,7 +232,7 @@ def test_download_files_replaces_version_placeholder(tmp_test_directory, monkeyp
         target_dir=tmp_test_directory,
     )
 
-    assert called_urls == ["https://example.org/0.1.0/test.csv"]
+    assert called_urls == ["https://example.org/0.1.0/input/test.csv"]
 
 
 def test_download_files_requires_valid_base_url_key(tmp_test_directory):
