@@ -158,7 +158,7 @@ format.skip-magic-trailing-comma = false
 lint.extend-select = [
   "A",   # built-in shadowing
   "C4",  # comprehension
-  "C90", # mcabe complex structure
+  "C90", # mccabe complex structure
   "COM", # flake8-commas
   "D",   # pydocstyle
   "ERA", # commented-out code
