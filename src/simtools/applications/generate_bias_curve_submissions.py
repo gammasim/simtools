@@ -77,7 +77,7 @@ Example
         --trigger_thresholds 220 230 240 \
         --output_path ./bias_curves
 
-Afterwards, submit files can be generated explicitly for a chosen backend, for
+Submit files can be generated explicitly for a chosen backend, for
 example:
 
 .. code-block:: console
@@ -123,13 +123,13 @@ def _add_arguments(parser):
     parser.add_argument(
         "--azimuth_angle",
         help="Azimuth angle in degrees.",
-        type=float,
+        type=parser.azimuth_angle,
         required=True,
     )
     parser.add_argument(
         "--zenith_angle",
         help="Zenith angle in degrees.",
-        type=float,
+        type=parser.zenith_angle,
         required=True,
     )
     parser.add_argument(
@@ -141,13 +141,13 @@ def _add_arguments(parser):
     parser.add_argument(
         "--core_scatter",
         help="Core scatter, e.g. '20 1900 m'.",
-        type=str,
+        type=parser.parse_integer_and_quantity,
         required=True,
     )
     parser.add_argument(
         "--view_cone",
         help="View cone, e.g. '0 deg 5 deg'.",
-        type=str,
+        type=parser.parse_quantity_pair,
         required=True,
     )
     parser.add_argument(
@@ -171,13 +171,13 @@ def _add_arguments(parser):
     parser.add_argument(
         "--nsb_energy_range",
         help="Energy range for the NSB gamma curve.",
-        type=str,
+        type=parser.parse_quantity_pair,
         default="20 MeV 25 MeV",
     )
     parser.add_argument(
         "--proton_energy_range",
         help="Energy range for the proton curve.",
-        type=str,
+        type=parser.parse_quantity_pair,
         default="2 GeV 2000 GeV",
     )
     parser.add_argument(
