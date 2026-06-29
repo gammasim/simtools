@@ -652,6 +652,23 @@ def test_validate_sim_telarray(tmp_path, array_models, should_call_metadata):
                 mock_meta.assert_not_called()
 
 
+def test_validate_sim_telarray_checks_zero_expected_events(tmp_path):
+    data_file = tmp_path / "test.simtel.zst"
+    data_file.write_bytes(b"dummy")
+    log_file = tmp_path / "test.log"
+    log_file.write_text("test log")
+
+    with (
+        patch("simtools.simtel.simtel_output_validator.validate_log_files"),
+        patch("simtools.simtel.simtel_output_validator.validate_event_numbers") as mock_events,
+    ):
+        validate_sim_telarray(
+            [data_file], [log_file], expected_mc_events=0, expected_shower_events=0
+        )
+
+    mock_events.assert_called_once_with([data_file], 0, 0)
+
+
 def test_validate_metadata_with_matching_file(tmp_path, caplog):
     """Test validate_metadata logging when file matches."""
     caplog.set_level(logging.INFO)
