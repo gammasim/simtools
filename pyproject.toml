@@ -102,7 +102,6 @@ scripts.simtools-generate-array-config = "simtools.applications.generate_array_c
 scripts.simtools-generate-bias-curve-submissions = "simtools.applications.generate_bias_curve_submissions:main"
 scripts.simtools-generate-corsika-histograms = "simtools.applications.generate_corsika_histograms:main"
 scripts.simtools-generate-default-metadata = "simtools.applications.generate_default_metadata:main"
-scripts.simtools-generate-parameter-scan-grid = "simtools.applications.generate_parameter_scan_grid:main"
 scripts.simtools-generate-regular-arrays = "simtools.applications.generate_regular_arrays:main"
 scripts.simtools-generate-simtel-event-data = "simtools.applications.generate_simtel_event_data:main"
 scripts.simtools-maintain-simulation-model-add-production = "simtools.applications.maintain_simulation_model_add_production:main"

@@ -78,7 +78,6 @@ simtools-generate-array-config <applications/simtools-generate-array-config>
 simtools-generate-bias-curve-submissions <applications/simtools-generate-bias-curve-submissions>
 simtools-generate-corsika-histograms <applications/simtools-generate-corsika-histograms>
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
-simtools-generate-parameter-scan-grid <applications/simtools-generate-parameter-scan-grid>
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-simtel-event-data <applications/simtools-generate-simtel-event-data>
 simtools-maintain-simulation-model-add-production <applications/simtools-maintain-simulation-model-add-production>
