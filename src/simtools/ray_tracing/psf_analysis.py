@@ -390,7 +390,7 @@ class PSFImage:
         x_pos_sig = np.std(self.photon_pos_x)
         y_pos_sig = np.std(self.photon_pos_y)
         radius_sig = sqrt(x_pos_sig**2 + y_pos_sig**2)
-        if radius_sig == 0:
+        if np.isclose(radius_sig, 0.0):
             return 0.0
 
         target_number = fraction * self._number_of_detected_photons
