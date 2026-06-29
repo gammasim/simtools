@@ -1,0 +1,60 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+title: Parameter scan configuration schema
+description: Schema for expanding a production job grid with model-parameter scans.
+schema_version: 0.1.0
+schema_name: parameter_scan_config
+type: object
+additionalProperties: false
+properties:
+  label:
+    type: string
+    minLength: 1
+  parameter_scan:
+    type: object
+    additionalProperties: false
+    properties:
+      overwrite:
+        type: object
+      parameters:
+        type: array
+        minItems: 1
+        items:
+          type: object
+          additionalProperties: false
+          properties:
+            name:
+              type: string
+              minLength: 1
+            path:
+              type: string
+              pattern: '^[^.]+(\.[^.]+)+$'
+            values:
+              oneOf:
+                - type: array
+                  minItems: 1
+                - type: [string, number, boolean]
+            version:
+              $ref: common_definitions.schema.yml#/$defs/semantic_version_pattern
+            label:
+              type: string
+              minLength: 1
+            label_separator:
+              type: string
+          required:
+            - name
+            - path
+            - values
+      job_grid_updates:
+        type: object
+        additionalProperties: false
+        properties:
+          telescope:
+            $ref: common_definitions.schema.yml#/$defs/telescope_name_pattern
+    required:
+      - overwrite
+      - parameters
+required:
+  - label
+  - parameter_scan
+...
