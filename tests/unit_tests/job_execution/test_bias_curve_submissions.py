@@ -1,9 +1,10 @@
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 import yaml
 
+from simtools.io.io_handler import IOHandler
 from simtools.job_execution import bias_curve_submissions
 
 
@@ -43,7 +44,8 @@ def test_generate_bias_curve_submissions_uses_configured_curve_definitions_witho
     args = _base_args(tmp_test_directory)
     original_args = dict(args)
 
-    bias_curve_submissions.generate_bias_curve_submissions(args)
+    io_handler = Mock()
+    bias_curve_submissions.generate_bias_curve_submissions(args, io_handler)
 
     assert args == original_args
     mock_threshold_param_name.assert_called_once_with(args)
@@ -116,7 +118,6 @@ def test_parameter_scan_entry_uses_compact_threshold_label(tmp_test_directory):
     assert entry == {
         "name": "asum_threshold",
         "path": "changes.LSTN-01.asum_threshold",
-        "version": bias_curve_submissions._PARAMETER_VERSION,
         "values": [220, 230, 240, 250, 260, 270, 280, 290, 300, 320, 340, 360],
         "label": "asum",
         "label_separator": "",
@@ -169,7 +170,6 @@ def test_scan_config_contains_proton_base_overwrite_and_trigger_scan(tmp_test_di
         "LSTN-01": {},
         "OBS-North": {
             "nsb_scaling_factor": {
-                "version": bias_curve_submissions._PARAMETER_VERSION,
                 "value": 2,
             }
         },
@@ -300,7 +300,7 @@ def test_generate_curve_submissions_writes_configs_and_runs_workflow(tmp_test_di
     args = _base_args(tmp_test_directory)
     output_root = Path(args["output_path"]).expanduser().resolve()
     curve_directory = output_root / "nsb"
-    io_handler = bias_curve_submissions.IOHandler()
+    io_handler = IOHandler()
     io_handler.set_paths(output_path=output_root)
 
     with patch(

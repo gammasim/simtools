@@ -25,8 +25,6 @@ from simtools.runners import simtools_runner
 
 _logger = logging.getLogger(__name__)
 
-_PARAMETER_VERSION = "2.0.0"
-
 _PRODUCTION_GRID_ARGS = [
     "site",
     "model_version",
@@ -76,7 +74,6 @@ def _parameter_scan_entry(telescope, threshold_param, trigger_thresholds=None):
     return {
         "name": threshold_param,
         "path": f"changes.{telescope}.{threshold_param}",
-        "version": _PARAMETER_VERSION,
         "values": _threshold_values(threshold_param, trigger_thresholds),
         "label": _threshold_label_prefix(threshold_param),
         "label_separator": "",
@@ -87,7 +84,6 @@ def _nsb_scaling_change(nsb_scaling_factor):
     """Return the NSB scaling model-parameter change."""
     return {
         "nsb_scaling_factor": {
-            "version": _PARAMETER_VERSION,
             "value": nsb_scaling_factor,
         }
     }
@@ -117,11 +113,9 @@ def _base_nsb_overwrite(telescope, site, model_version, nsb_scaling_factor):
         "changes": {
             telescope: {
                 "min_photons": {
-                    "version": _PARAMETER_VERSION,
                     "value": 0,
                 },
                 "min_photoelectrons": {
-                    "version": _PARAMETER_VERSION,
                     "value": 0,
                 },
             },
