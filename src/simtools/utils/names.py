@@ -710,7 +710,7 @@ def get_simulation_software_name_from_parameter_name(
     Get the name used in the given simulation software from the model parameter name.
 
     Name convention is expected to be defined in the model parameter schema.
-    Returns the parameter name if no simulation software name is found.
+    Returns ``None`` if no matching simulation software entry is found.
 
     Parameters
     ----------
