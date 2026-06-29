@@ -387,11 +387,11 @@ class PSFImage:
         """
         self._logger.debug(f"Finding PSF for fraction = {fraction}")
 
-        x_pos_sq = [i**2 for i in self.photon_pos_x]
-        y_pos_sq = [i**2 for i in self.photon_pos_y]
-        x_pos_sig = sqrt(np.mean(x_pos_sq) - self.centroid_x**2)
-        y_pos_sig = sqrt(np.mean(y_pos_sq) - self.centroid_y**2)
+        x_pos_sig = np.std(self.photon_pos_x)
+        y_pos_sig = np.std(self.photon_pos_y)
         radius_sig = sqrt(x_pos_sig**2 + y_pos_sig**2)
+        if np.isclose(radius_sig, 0.0):
+            return 0.0
 
         target_number = fraction * self._number_of_detected_photons
         current_radius = 1.5 * radius_sig
