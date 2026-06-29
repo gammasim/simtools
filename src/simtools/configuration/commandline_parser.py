@@ -203,6 +203,11 @@ class CommandLineParser(argparse.ArgumentParser):
             help="export build information to file",
             type=str,
         )
+        _job_group.add_argument(
+            "--ignore_existing_parameter_version",
+            action="store_true",
+            help="skip checking for an existing model parameter version in the database",
+        )
 
     def initialize_user_arguments(self):
         """Initialize user arguments."""
