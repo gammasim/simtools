@@ -220,6 +220,9 @@ def test_check_run_result_success(simtel_runner, mocker, tmp_path):
 
     result = simtel_runner._check_run_result(run_number=1)
     assert result is True
+    simtel_runner.runner_service.get_file_name.assert_called_once_with(
+        file_type="sim_telarray_output", run_number=1
+    )
 
 
 def test_check_run_result_file_not_exists(simtel_runner, mocker, tmp_path):
