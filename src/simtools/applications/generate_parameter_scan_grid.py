@@ -5,7 +5,7 @@ Generate a parameter scan job grid by expanding a base production grid.
 
 Reads a base job grid ECSV from ``simtools-production-generate-grid``, generates
 one overwrite YAML file per scan parameter combination, and writes an expanded
-``scan_grid.ecsv``. The resulting backend-neutral grid can be consumed by a
+``scan_grid.ecsv``. The resulting file with a production grid can be consumed by a
 submission generator such as ``simtools-simulate-prod-htcondor-generator``.
 
 Command line arguments

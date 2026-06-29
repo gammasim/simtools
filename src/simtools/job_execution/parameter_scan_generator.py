@@ -94,12 +94,6 @@ def _build_overwrite_data(overwrite_base, param_combo):
 def _generate_overwrite_file(overwrite_base, param_combo, combo_name, work_dir, label):
     """Generate overwrite YAML file for one parameter combination."""
     overwrite_data = _build_overwrite_data(overwrite_base, param_combo)
-    schema.validate_dict_using_schema(
-        overwrite_data,
-        schema_file="simulation_models_info.schema.yml",
-        ignore_software_version=True,
-        offline=True,
-    )
 
     safe_label = _format_value_for_name(label)
     overwrite_file = work_dir / f"overwrite_{safe_label}_{combo_name}.yaml"
@@ -221,14 +215,10 @@ def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
     scan_config = schema.validate_dict_using_schema(
         ascii_handler.collect_data_from_file(scan_config_path),
         schema_file="parameter_scan_config.schema.yml",
-        ignore_software_version=True,
-        offline=True,
     )
     schema.validate_dict_using_schema(
         scan_config["parameter_scan"]["overwrite"],
         schema_file="simulation_models_info.schema.yml",
-        ignore_software_version=True,
-        offline=True,
     )
 
     label = scan_config["label"]

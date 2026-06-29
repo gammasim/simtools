@@ -26,20 +26,23 @@ from simtools.utils import names
 
 _logger = logging.getLogger(__name__)
 
-DEFAULT_PARAMETER_VERSION = "2.0.0"
+_PARAMETER_VERSION = "2.0.0"
 
-DEFAULT_NSB_ENERGY_RANGE = "20 MeV 25 MeV"
-DEFAULT_PROTON_ENERGY_RANGE = "2 GeV 2000 GeV"
-DEFAULT_NSB_SCALING_FACTOR = 2
+_NSB_ENERGY_RANGE = "20 MeV 25 MeV"
+_PROTON_ENERGY_RANGE = "2 GeV 2000 GeV"
+_NSB_SCALING_FACTOR = 2
 
-_DEFAULT_THRESHOLDS = {
-    "asum_threshold": [220, 230, 240, 250, 260, 270, 280, 290, 300, 320, 340, 360],
-    "dsum_threshold": [22, 23, 24, 25, 26, 27, 28, 29, 30],
-}
+_ASUM_THRESHOLDS = [220, 230, 240, 250, 260, 270, 280, 290, 300, 320, 340, 360]
+_DSUM_THRESHOLDS = [22, 23, 24, 25, 26, 27, 28, 29, 30]
 
 _TELESCOPE_THRESHOLD_PARAM = {
     "LST": "asum_threshold",
     "MST": "dsum_threshold",
+}
+
+_CURVE_DEFINITIONS = {
+    "nsb": {"primary": "gamma", "energy_range": _NSB_ENERGY_RANGE},
+    "proton": {"primary": "proton", "energy_range": _PROTON_ENERGY_RANGE},
 }
 
 _PRODUCTION_GRID_ARGS = [
@@ -107,17 +110,16 @@ def _threshold_param_name(telescope):
         ) from exc
 
 
-def _threshold_values_for_telescope(telescope, args):
-    """Return configured threshold scan values for a telescope."""
+def _threshold_values_for_telescope(telescope):
+    """Return the threshold scan values for a telescope."""
     threshold_param = _threshold_param_name(telescope)
-    if args.get("threshold_values"):
-        return args["threshold_values"]
-    try:
-        return _DEFAULT_THRESHOLDS[threshold_param]
-    except KeyError as exc:
-        raise ValueError(
-            f"Unsupported threshold parameter '{threshold_param}' for telescope '{telescope}'."
-        ) from exc
+    if threshold_param == "asum_threshold":
+        return _ASUM_THRESHOLDS
+    if threshold_param == "dsum_threshold":
+        return _DSUM_THRESHOLDS
+    raise ValueError(
+        f"Unsupported threshold parameter '{threshold_param}' for telescope '{telescope}'."
+    )
 
 
 def _threshold_label_prefix(threshold_param):
@@ -125,65 +127,62 @@ def _threshold_label_prefix(threshold_param):
     return threshold_param.removesuffix("_threshold")
 
 
-def _parameter_scan_entry(telescope, args):
+def _parameter_scan_entry(telescope):
     """Build the parameter-scan entry for the telescope trigger threshold."""
     threshold_param = _threshold_param_name(telescope)
     return {
         "name": threshold_param,
         "path": f"changes.{telescope}.{threshold_param}",
-        "version": args.get("model_parameter_version", DEFAULT_PARAMETER_VERSION),
-        "values": _threshold_values_for_telescope(telescope, args),
+        "version": _PARAMETER_VERSION,
+        "values": _threshold_values_for_telescope(telescope),
         "label": _threshold_label_prefix(threshold_param),
         "label_separator": "",
     }
 
 
-def _nsb_scaling_overwrite(site, args):
-    """Build the observatory-level NSB scaling overwrite."""
+def _nsb_scaling_change():
+    """Return the NSB scaling model-parameter change."""
     return {
-        f"OBS-{site}": {
-            "nsb_scaling_factor": {
-                "version": args.get("model_parameter_version", DEFAULT_PARAMETER_VERSION),
-                "value": args.get("nsb_scaling_factor", DEFAULT_NSB_SCALING_FACTOR),
-            },
-        },
+        "nsb_scaling_factor": {
+            "version": _PARAMETER_VERSION,
+            "value": _NSB_SCALING_FACTOR,
+        }
     }
 
 
-def _base_proton_overwrite(telescope, args):
+def _base_proton_overwrite(telescope, site, model_version):
     """Build the proton base overwrite block before threshold insertion."""
     return {
-        "model_version": args["model_version"],
+        "model_version": model_version,
         "model_update": "patch_update",
-        "model_version_history": [args["model_version"]],
+        "model_version_history": [model_version],
         "description": "Tune for proton telescope trigger scan",
         "changes": {
             telescope: {},
-            **_nsb_scaling_overwrite(args["site"], args),
+            f"OBS-{site}": _nsb_scaling_change(),
         },
     }
 
 
-def _base_nsb_overwrite(telescope, args):
+def _base_nsb_overwrite(telescope, site, model_version):
     """Build the NSB base overwrite block before threshold insertion."""
-    parameter_version = args.get("model_parameter_version", DEFAULT_PARAMETER_VERSION)
     return {
-        "model_version": args["model_version"],
+        "model_version": model_version,
         "model_update": "patch_update",
-        "model_version_history": [args["model_version"]],
+        "model_version_history": [model_version],
         "description": "Tune for NSB telescope trigger scan",
         "changes": {
             telescope: {
                 "min_photons": {
-                    "version": parameter_version,
+                    "version": _PARAMETER_VERSION,
                     "value": 0,
                 },
                 "min_photoelectrons": {
-                    "version": parameter_version,
+                    "version": _PARAMETER_VERSION,
                     "value": 0,
                 },
             },
-            **_nsb_scaling_overwrite(args["site"], args),
+            f"OBS-{site}": _nsb_scaling_change(),
         },
     }
 
@@ -191,10 +190,10 @@ def _base_nsb_overwrite(telescope, args):
 def _base_overwrite(curve_name, telescope, args):
     """Build the curve-specific base overwrite block before threshold insertion."""
     if curve_name == "nsb":
-        return _base_nsb_overwrite(telescope, args)
+        return _base_nsb_overwrite(telescope, args["site"], args["model_version"])
 
     if curve_name == "proton":
-        return _base_proton_overwrite(telescope, args)
+        return _base_proton_overwrite(telescope, args["site"], args["model_version"])
 
     raise ValueError(f"Unsupported curve name '{curve_name}'.")
 
@@ -211,7 +210,7 @@ def _scan_config(curve_name, telescope, args):
         "label": curve_name,
         "parameter_scan": {
             "overwrite": _base_overwrite(curve_name, telescope, args),
-            "parameters": [_parameter_scan_entry(telescope, args)],
+            "parameters": [_parameter_scan_entry(telescope)],
             "job_grid_updates": {"telescope": telescope},
         },
     }
@@ -241,20 +240,6 @@ def _scan_grid_configuration(base_grid_file, scan_config_file, scan_grid_file):
         "job_grid_file": str(base_grid_file),
         "scan_config": str(scan_config_file),
         "output_file": str(scan_grid_file),
-    }
-
-
-def _curve_definitions(args):
-    """Return curve definitions using configured or default energy ranges."""
-    return {
-        "nsb": {
-            "primary": "gamma",
-            "energy_range": args.get("nsb_energy_range") or DEFAULT_NSB_ENERGY_RANGE,
-        },
-        "proton": {
-            "primary": "proton",
-            "energy_range": args.get("proton_energy_range") or DEFAULT_PROTON_ENERGY_RANGE,
-        },
     }
 
 
@@ -363,7 +348,7 @@ def generate_bias_curve_submissions(args):
     io_handler = IOHandler()
     io_handler.set_paths(output_path=args.get("output_path"))
 
-    for curve_name, curve_definition in _curve_definitions(args).items():
+    for curve_name, curve_definition in _CURVE_DEFINITIONS.items():
         _generate_curve_submissions(
             curve_name=curve_name,
             curve_definition=curve_definition,

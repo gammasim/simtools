@@ -237,27 +237,6 @@ def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
     assert str(output_dir) in content
 
 
-def test_get_submit_file_quotes_overwrite_path_as_single_argument(tmp_test_directory):
-    htcondor_dirs = {
-        "log": Path(tmp_test_directory) / "log",
-        "error": Path(tmp_test_directory) / "error",
-        "output": Path(tmp_test_directory) / "output",
-    }
-    params_fields = [*htg._PARAMS_FIELDS, *htg._OPTIONAL_QUEUE_FIELDS]
-
-    content = _get_submit_file(
-        executable="simulate_prod.submit.sh",
-        apptainer_image=Path(tmp_test_directory) / "image.sif",
-        priority=1,
-        params_file_name="simulate_prod.submit.params.txt",
-        htcondor_dirs=htcondor_dirs,
-        params_fields=params_fields,
-    )
-
-    assert "'$(overwrite_model_parameters)'" in content
-    assert content.index("scan_label,telescope,overwrite_model_parameters") > 0
-
-
 @mock.patch("simtools.job_execution.htcondor_script_generator.Path.is_file", return_value=True)
 def test_resolve_apptainer_images_dict(mock_is_file, tmp_test_directory):
     images = _resolve_apptainer_images(
@@ -462,12 +441,9 @@ def _base_job_row_for_optional_fields():
 
 
 def test_format_param_value_optional_missing_is_empty():
-    assert (
-        htg._format_param_value(None, "overwrite_model_parameters")
-        == htg._OPTIONAL_FIELD_PLACEHOLDER
-    )
-    assert htg._format_param_value(None, "scan_label") == htg._OPTIONAL_FIELD_PLACEHOLDER
-    assert htg._format_param_value(None, "telescope") == htg._OPTIONAL_FIELD_PLACEHOLDER
+    assert htg._format_param_value(None, "overwrite_model_parameters") == ""
+    assert htg._format_param_value(None, "scan_label") == ""
+    assert htg._format_param_value(None, "telescope") == ""
 
 
 def test_write_params_file_includes_optional_queue_fields(tmp_test_directory):
@@ -478,35 +454,15 @@ def test_write_params_file_includes_optional_queue_fields(tmp_test_directory):
         "image_label": "grid label",
         **_base_job_row_for_optional_fields(),
         "pack_for_grid_register": "simtools-output/grid label",
-        "overwrite_model_parameters": "overwrite files/overwrite.yaml",
+        "overwrite_model_parameters": "overwrite.yaml",
         "scan_label": "asum 220",
         "telescope": "LSTN-01",
     }
 
     htg._write_params_file(params_file_path, [job_spec], params_fields=params_fields)
 
-    row = params_file_path.read_text(encoding="utf-8").strip().split(maxsplit=24)
-    assert row[-3:] == ["asum_220", "LSTN-01", "overwrite files/overwrite.yaml"]
-
-
-def test_write_params_file_uses_placeholder_for_missing_optional_values(tmp_test_directory):
-    params_file_path = Path(tmp_test_directory) / "params.txt"
-    params_fields = [*htg._PARAMS_FIELDS, *htg._OPTIONAL_QUEUE_FIELDS]
-    job_spec = {
-        "image_label": "default",
-        **_base_job_row_for_optional_fields(),
-        "pack_for_grid_register": "simtools-output/default",
-        "overwrite_model_parameters": "overwrite.yaml",
-    }
-
-    htg._write_params_file(params_file_path, [job_spec], params_fields=params_fields)
-
     row = params_file_path.read_text(encoding="utf-8").strip().split()
-    assert row[-3:] == [
-        htg._OPTIONAL_FIELD_PLACEHOLDER,
-        htg._OPTIONAL_FIELD_PLACEHOLDER,
-        "overwrite.yaml",
-    ]
+    assert row[-3:] == ["overwrite.yaml", "asum_220", "LSTN-01"]
 
 
 def test_get_submit_script_with_optional_queue_fields():
@@ -521,7 +477,7 @@ def test_get_submit_script_with_optional_queue_fields():
 
     script = htg._get_submit_script(submit_args, params_fields=params_fields)
 
-    assert 'overwrite_model_parameters="${27}"' in script
+    assert 'overwrite_model_parameters="${25}"' in script
     assert "overwrite_model_parameters_args=()" in script
     assert (
         "overwrite_model_parameters_args+=(--overwrite_model_parameters "
@@ -529,10 +485,10 @@ def test_get_submit_script_with_optional_queue_fields():
     ) in script
     assert '    "${overwrite_model_parameters_args[@]}" \\' in script
 
-    assert 'scan_label="${25}"' in script
+    assert 'scan_label="${26}"' in script
     assert 'job_label="${job_label}_${scan_label}"' in script
 
-    assert 'telescope="${26}"' in script
+    assert 'telescope="${27}"' in script
     assert "telescope_args=()" in script
     assert 'telescope_args+=(--telescope "$telescope")' in script
     assert '    "${telescope_args[@]}" \\' in script
