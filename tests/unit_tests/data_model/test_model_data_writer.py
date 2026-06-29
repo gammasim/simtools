@@ -248,6 +248,27 @@ def test_write_model_parameter(tmp_test_directory):
         mock_db_check.assert_called_once_with(num_gains_name, instrument, parameter_version)
 
 
+def test_write_model_parameter_ignores_existing_parameter_version(monkeypatch, tmp_test_directory):
+    parameter_version = "1.1.0"
+    instrument = "LSTN-01"
+    num_gains_name = "num_gains"
+    monkeypatch.setattr(settings.config, "_args", {"ignore_existing_parameter_version": True})
+
+    with patch(
+        "simtools.data_model.model_data_writer.ModelDataWriter.check_db_for_existing_parameter"
+    ) as mock_db_check:
+        writer.ModelDataWriter.write_model_parameter(
+            parameter_name=num_gains_name,
+            value=2,
+            instrument=instrument,
+            parameter_version=parameter_version,
+            output_file=num_gains_name + ".json",
+            output_path=tmp_test_directory,
+        )
+
+    mock_db_check.assert_not_called()
+
+
 def test_write_model_parameter_does_not_write_metadata_on_validation_failure(tmp_test_directory):
     output_file = "num_gains.json"
 
