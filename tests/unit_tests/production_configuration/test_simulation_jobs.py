@@ -18,6 +18,7 @@ from simtools.production_configuration.simulation_jobs import (
     _normalize_axis_spec_tokens,
     _parse_axis_range_tokens,
     _parse_axis_spec,
+    _renumber_job_rows,
     _resolve_coordinate_system,
     _resolve_energy_max_scaling,
     _resolve_shower_params,
@@ -30,6 +31,7 @@ from simtools.production_configuration.simulation_jobs import (
     calculate_log_energy_midpoint,
     calculate_scaled_showers_per_run,
     calculate_zenith_scaled_showers_per_run,
+    generate_job_grid,
     get_core_scatter_max_for_zenith_angle,
     get_energy_range_for_zenith_angle,
     get_viewcone_max_for_zenith_angle,
@@ -39,6 +41,39 @@ from simtools.production_configuration.simulation_jobs import (
     resolve_time_of_observation,
     scale_energy_max_for_zenith_angle,
 )
+
+
+def test_renumber_job_rows_applies_run_number_offset():
+    job_rows = [{"run_number": 10}, {"run_number": 10}, {"run_number": 11}]
+
+    assert [row["run_number"] for row in _renumber_job_rows(job_rows, run_number_offset=42)] == [
+        43,
+        44,
+        45,
+    ]
+
+
+@patch("simtools.production_configuration.simulation_jobs.serialize_job_grid")
+@patch("simtools.production_configuration.simulation_jobs.build_job_grid_metadata")
+@patch("simtools.production_configuration.simulation_jobs.build_simulation_jobs")
+def test_generate_job_grid_builds_renumbers_and_serializes(
+    mock_build_simulation_jobs,
+    mock_build_job_grid_metadata,
+    mock_serialize_job_grid,
+):
+    args = {"run_number_offset": 10}
+    mock_build_simulation_jobs.return_value = [{"run_number": 1}, {"run_number": 1}]
+    mock_build_job_grid_metadata.return_value = {"site": "North"}
+
+    generate_job_grid(args, "job_grid.ecsv")
+
+    mock_build_simulation_jobs.assert_called_once_with(args)
+    mock_build_job_grid_metadata.assert_called_once_with(args)
+    mock_serialize_job_grid.assert_called_once_with(
+        job_rows=[{"run_number": 11}, {"run_number": 12}],
+        output_file="job_grid.ecsv",
+        metadata={"site": "North"},
+    )
 
 
 def _base_simulation_jobs_args():
