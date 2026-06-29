@@ -206,20 +206,16 @@ def test_production_grid_configuration_uses_curve_specific_primary_and_energy_ra
     tmp_test_directory,
 ):
     args = _base_args(tmp_test_directory)
-    base_grid_file = Path(tmp_test_directory) / "base_grid.ecsv"
-
     curve_definition = bias_curve_submissions._curve_definitions(args)[curve_name]
     configuration = bias_curve_submissions._production_grid_configuration(
         args,
         curve_definition,
-        base_grid_file,
         curve_name,
     )
 
     assert configuration["primary"] == expected_primary
     assert configuration["energy_range"] == expected_energy_range
     assert configuration["label"] == curve_name
-    assert configuration["output_file"] == str(base_grid_file)
     assert configuration["array_layout_name"] == "LSTN-01"
     assert "telescope" not in configuration
 
@@ -235,66 +231,22 @@ def test_curve_definitions_use_configured_energy_ranges(tmp_test_directory):
     assert definitions["proton"]["energy_range"] == "5 GeV 500 GeV"
 
 
-def test_workflow_config_runs_expected_applications_in_order(tmp_test_directory):
-    args = _base_args(tmp_test_directory)
-    output_root = Path(args["output_path"]).expanduser().resolve()
-    curve_directory = output_root / "nsb"
-    base_grid_file = curve_directory / "base_grid.ecsv"
-    scan_config_file = curve_directory / "scan_config.yaml"
-    scan_grid_file = curve_directory / "scan_grid.ecsv"
-
-    workflow_config = bias_curve_submissions._workflow_config(
-        curve_name="nsb",
-        curve_definition=bias_curve_submissions._curve_definitions(args)["nsb"],
-        args=args,
-        base_grid_file=base_grid_file,
-        scan_config_file=scan_config_file,
-        scan_grid_file=scan_grid_file,
-    )
-
-    applications = workflow_config["applications"]
-    assert [app["application"] for app in applications] == [
-        "simtools-production-generate-grid",
-        "simtools-generate-parameter-scan-grid",
-    ]
-
-    assert applications[0]["configuration"]["output_file"] == str(base_grid_file)
-    assert applications[1]["configuration"] == {
-        "job_grid_file": str(base_grid_file),
-        "scan_config": str(scan_config_file),
-        "output_file": str(scan_grid_file),
-    }
-
-
-def test_run_workflow_uses_simtools_runner(tmp_test_directory):
-    args = _base_args(tmp_test_directory)
-    workflow_file = Path(tmp_test_directory) / "workflow.yaml"
-
-    with patch(
-        "simtools.job_execution.bias_curve_submissions.simtools_runner.run_applications"
-    ) as mock_run_applications:
-        bias_curve_submissions._run_workflow(workflow_file, args)
-
-    mock_run_applications.assert_called_once_with(
-        {
-            "config_file": str(workflow_file),
-            "steps": None,
-            "activity_id": args.get("activity_id"),
-            "ignore_runtime_environment": True,
-        }
-    )
-
-
-def test_generate_curve_submissions_writes_configs_and_runs_workflow(tmp_test_directory):
+def test_generate_curve_submissions_generates_and_expands_grid(tmp_test_directory):
     args = _base_args(tmp_test_directory)
     output_root = Path(args["output_path"]).expanduser().resolve()
     curve_directory = output_root / "nsb"
     io_handler = IOHandler()
     io_handler.set_paths(output_path=output_root)
 
-    with patch(
-        "simtools.job_execution.bias_curve_submissions.simtools_runner.run_applications"
-    ) as mock_run_applications:
+    with (
+        patch(
+            "simtools.job_execution.bias_curve_submissions.generate_job_grid"
+        ) as mock_generate_job_grid,
+        patch(
+            "simtools.job_execution.bias_curve_submissions."
+            "parameter_scan_generator.expand_job_grid_with_scan"
+        ) as mock_expand_job_grid,
+    ):
         bias_curve_submissions._generate_curve_submissions(
             curve_name="nsb",
             curve_definition=bias_curve_submissions._curve_definitions(args)["nsb"],
@@ -303,10 +255,11 @@ def test_generate_curve_submissions_writes_configs_and_runs_workflow(tmp_test_di
         )
 
     scan_config_file = curve_directory / "scan_config.yaml"
-    workflow_file = curve_directory / "workflow.yaml"
+    base_grid_file = curve_directory / "base_grid.ecsv"
+    scan_grid_file = curve_directory / "scan_grid.ecsv"
 
     assert scan_config_file.exists()
-    assert workflow_file.exists()
+    assert not (curve_directory / "workflow.yaml").exists()
 
     scan_config = yaml.safe_load(scan_config_file.read_text(encoding="utf-8"))
     assert scan_config["label"] == "nsb"
@@ -314,20 +267,13 @@ def test_generate_curve_submissions_writes_configs_and_runs_workflow(tmp_test_di
     assert scan_config["parameter_scan"]["parameters"][0]["label_separator"] == ""
     assert scan_config["parameter_scan"]["job_grid_updates"] == {"telescope": "LSTN-01"}
 
-    workflow_config = yaml.safe_load(workflow_file.read_text(encoding="utf-8"))
-    assert [app["application"] for app in workflow_config["applications"]] == [
-        "simtools-production-generate-grid",
-        "simtools-generate-parameter-scan-grid",
-    ]
-
-    mock_run_applications.assert_called_once_with(
-        {
-            "config_file": str(workflow_file),
-            "steps": None,
-            "activity_id": args.get("activity_id"),
-            "ignore_runtime_environment": True,
-        }
+    mock_generate_job_grid.assert_called_once_with(
+        bias_curve_submissions._production_grid_configuration(
+            args, bias_curve_submissions._curve_definitions(args)["nsb"], "nsb"
+        ),
+        base_grid_file,
     )
+    mock_expand_job_grid.assert_called_once_with(base_grid_file, scan_config_file, scan_grid_file)
 
 
 def test_validate_required_args_rejects_missing_required_argument(tmp_test_directory):

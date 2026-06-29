@@ -1,6 +1,6 @@
 r"""Generate scan grids for NSB and proton bias curves.
 
-This module generates two independent bias-curve scan-grid workflows:
+This module generates two independent bias-curve scan grids:
 
 - NSB curve:
   Uses gamma primary, a configurable low-energy range, and NSB-specific model
@@ -8,9 +8,8 @@ This module generates two independent bias-curve scan-grid workflows:
 - Proton curve:
   Uses proton primary, a configurable energy range, and proton trigger overwrites.
 
-For each curve, this module writes a scan configuration and a simtools workflow
-configuration, then executes only the backend-neutral grid-generation steps through
-``simtools_runner.run_applications``.
+For each curve, this module generates a production grid, writes a scan
+configuration, and expands the grid with the configured threshold values.
 
 The NSB overwrite always sets ``min_photons`` and ``min_photoelectrons`` to zero.
 Both curves set ``nsb_scaling_factor`` because night-sky background affects the
@@ -20,8 +19,9 @@ trigger response in both simulations.
 import logging
 
 from simtools.io import ascii_handler
+from simtools.job_execution import parameter_scan_generator
 from simtools.model.telescope_model import TelescopeModel
-from simtools.runners import simtools_runner
+from simtools.production_configuration.simulation_jobs import generate_job_grid
 
 _logger = logging.getLogger(__name__)
 
@@ -118,8 +118,8 @@ def _scan_config(curve_name, telescope, args):
     }
 
 
-def _production_grid_configuration(args, curve_definition, base_grid_file, curve_label):
-    """Build configuration for simtools-production-generate-grid."""
+def _production_grid_configuration(args, curve_definition, curve_label):
+    """Build configuration for production-grid generation."""
     configuration = {
         key: args[key]
         for key in _PRODUCTION_GRID_ARGS
@@ -131,64 +131,9 @@ def _production_grid_configuration(args, curve_definition, base_grid_file, curve
             "primary": curve_definition["primary"],
             "energy_range": curve_definition["energy_range"],
             "label": curve_label,
-            "output_file": str(base_grid_file),
         }
     )
     return configuration
-
-
-def _scan_grid_configuration(base_grid_file, scan_config_file, scan_grid_file):
-    """Build configuration for simtools-generate-parameter-scan-grid."""
-    return {
-        "job_grid_file": str(base_grid_file),
-        "scan_config": str(scan_config_file),
-        "output_file": str(scan_grid_file),
-    }
-
-
-def _workflow_config(
-    curve_name,
-    curve_definition,
-    args,
-    base_grid_file,
-    scan_config_file,
-    scan_grid_file,
-):
-    """Build the runner workflow configuration for one curve."""
-    curve_label = curve_name
-    return {
-        "applications": [
-            {
-                "application": "simtools-production-generate-grid",
-                "configuration": _production_grid_configuration(
-                    args=args,
-                    curve_definition=curve_definition,
-                    base_grid_file=base_grid_file,
-                    curve_label=curve_label,
-                ),
-            },
-            {
-                "application": "simtools-generate-parameter-scan-grid",
-                "configuration": _scan_grid_configuration(
-                    base_grid_file=base_grid_file,
-                    scan_config_file=scan_config_file,
-                    scan_grid_file=scan_grid_file,
-                ),
-            },
-        ]
-    }
-
-
-def _run_workflow(workflow_file, args):
-    """Run a generated simtools workflow configuration through simtools runners."""
-    simtools_runner.run_applications(
-        {
-            "config_file": str(workflow_file),
-            "steps": None,
-            "activity_id": args.get("activity_id"),
-            "ignore_runtime_environment": True,
-        }
-    )
 
 
 def _generate_curve_submissions(curve_name, curve_definition, args, io_handler):
@@ -199,24 +144,19 @@ def _generate_curve_submissions(curve_name, curve_definition, args, io_handler):
     base_grid_file = curve_directory / "base_grid.ecsv"
     scan_config_file = curve_directory / "scan_config.yaml"
     scan_grid_file = curve_directory / "scan_grid.ecsv"
-    workflow_file = curve_directory / "workflow.yaml"
 
     ascii_handler.write_data_to_file(
         _scan_config(curve_name, telescope, args), scan_config_file, sort_keys=False
     )
-    ascii_handler.write_data_to_file(
-        _workflow_config(
-            curve_name=curve_name,
-            curve_definition=curve_definition,
-            args=args,
-            base_grid_file=base_grid_file,
-            scan_config_file=scan_config_file,
-            scan_grid_file=scan_grid_file,
-        ),
-        workflow_file,
-        sort_keys=False,
+    generate_job_grid(
+        _production_grid_configuration(args, curve_definition, curve_name),
+        base_grid_file,
     )
-    _run_workflow(workflow_file, args)
+    parameter_scan_generator.expand_job_grid_with_scan(
+        base_grid_file,
+        scan_config_file,
+        scan_grid_file,
+    )
 
 
 def _validate_required_args(args):
