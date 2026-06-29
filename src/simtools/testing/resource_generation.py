@@ -6,7 +6,6 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-import simtools.utils.general as gen
 from simtools.io import ascii_handler
 from simtools.runners import simtools_runner
 
@@ -173,16 +172,12 @@ def download_files(config_file, target_dir):
     if not isinstance(base_urls, dict):
         raise ValueError("Download configuration key 'base_urls' must be a dictionary.")
 
-    replacements = {}
     processed_base_urls = {}
     for base_key, base_info in base_urls.items():
         if isinstance(base_info, dict):
             url = base_info.get("url", "")
             version = base_info.get("version", "")
-            replacements[f"__{base_key.upper()}_VERSION__"] = str(version)
-            processed_base_urls[base_key] = url
-
-    file_entries = gen.replace_placeholders_recursively(file_entries, replacements)
+            processed_base_urls[base_key] = {"url": url, "version": version}
 
     downloaded_files = []
     for index, entry in enumerate(file_entries):
@@ -192,7 +187,10 @@ def download_files(config_file, target_dir):
         if base_key not in processed_base_urls:
             raise ValueError(f"Base URL key '{base_key}' not found in base_urls configuration")
 
-        url = processed_base_urls[base_key].rstrip("/") + "/" + entry["path"].lstrip("/")
+        base_url_info = processed_base_urls[base_key]
+        version = base_url_info["version"]
+        path_with_version = version + "/" + entry["path"].lstrip("/") if version else entry["path"]
+        url = base_url_info["url"].rstrip("/") + "/" + path_with_version.lstrip("/")
 
         destination = Path(target_dir) / entry["target_path"]
         destination.parent.mkdir(parents=True, exist_ok=True)
