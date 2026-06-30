@@ -404,6 +404,7 @@ def test_generate_test_resources_prepares_shared_runtime_once(tmp_test_directory
     )
 
     assert prepare_mock == [runtime_file]
+    assert len(run_calls) == 1
     assert run_calls[0]["ignore_runtime_environment"] is False
     assert run_calls[0]["run_time"] == ["podman", "run", "image"]
 
@@ -437,6 +438,7 @@ def test_generate_test_resources_ignores_supplied_runtime(tmp_test_directory, mo
         ignore_runtime_environment=True,
     )
 
+    assert len(run_calls) == 1
     assert run_calls[0]["ignore_runtime_environment"] is True
     assert run_calls[0]["run_time"] is None
 
