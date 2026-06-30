@@ -50,8 +50,9 @@ proton_energy_range (str)
     Proton energy range (default: "2 GeV 2000 GeV").
 nsb_scaling_factor (float)
     NSB scaling factor used for both curves (default: 2).
-trigger_thresholds (float, optional)
-    One or more trigger thresholds used for both curves. Trigger-dependent
+trigger_thresholds (float, int, float, optional)
+    Three values defining the trigger-threshold scan used for both curves:
+    minimum threshold, number of thresholds, and step size. Trigger-dependent
     defaults are used when omitted.
 output_path (Path)
     Root output directory; nsb/ and proton/ sub-dirs are created inside it
@@ -74,7 +75,7 @@ Example
         --nsb_energy_range "20 MeV 25 MeV" \
         --proton_energy_range "2 GeV 2000 GeV" \
         --nsb_scaling_factor 2 \
-        --trigger_thresholds 220 230 240 \
+        --trigger_thresholds 220 3 10 \
         --output_path ./bias_curves
 
 Submit files can be generated explicitly for a chosen backend, for
@@ -188,9 +189,13 @@ def _add_arguments(parser):
     )
     parser.add_argument(
         "--trigger_thresholds",
-        help="Trigger thresholds used for both curves.",
+        help=(
+            "Define evenly spaced trigger thresholds for both curves as "
+            "MIN_THRESHOLD NUMBER_OF_THRESHOLDS STEP_SIZE."
+        ),
         type=float,
-        nargs="+",
+        nargs=3,
+        metavar=("MIN_THRESHOLD", "NUMBER_OF_THRESHOLDS", "STEP_SIZE"),
         default=None,
     )
 
