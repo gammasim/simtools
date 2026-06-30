@@ -44,12 +44,16 @@ def test__make_simtel_script_bypass_optics_condition(simulator_instance):
         patch.object(
             simulator_instance, "_get_light_emission_application_name", return_value="ff-1m"
         ),
+        patch("simtools.simtel.simulator_light_emission.settings") as mock_settings,
     ):
+        mock_settings.config.sim_telarray_exe = "/mock/simtel/bin/sim_telarray"
+        mock_settings.config.sim_telarray_path = Path("/mock/simtel")
         # Test flat_fielding - should include Bypass_Optics
         simulator_instance.light_emission_config = {"light_source_type": "flat_fielding"}
 
         options = simulator_instance._make_simtel_script()
         assert "Bypass_Optics=1" in options
+        assert "-I/mock/simtel/bin/sim_telarray" not in options
 
         # Test illuminator - should NOT include Bypass_Optics
         simulator_instance.light_emission_config = {"light_source_type": "illuminator"}
