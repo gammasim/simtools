@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import astropy.units as u
+import numpy as np
 import pytest
 from astropy.table import Table
 
@@ -116,6 +117,9 @@ def test_serialize_job_grid_stream_writes_empty_grid_header(tmp_test_directory):
 
     assert row_count == 0
     assert output_table.colnames == job_grid_io.JOB_GRID_COLUMNS
+    assert output_table["run_number"].dtype == np.dtype("uint32")
+    assert output_table["azimuth_angle_value"].dtype == np.dtype("float64")
+    assert output_table["primary"].dtype.kind == "U"
 
 
 def test_serialize_and_read_job_grid_with_optional_string_fields(tmp_test_directory):
@@ -148,14 +152,22 @@ def test_serialize_job_grid_stream_with_optional_string_fields(tmp_test_director
     assert read_rows[0]["telescope"] == "LSTN-01"
 
 
-def test_job_grid_density_schema_matches_serialized_required_columns():
+def test_job_grid_density_schema_defines_supported_columns():
     schema = ascii_handler.collect_data_from_file(
         SCHEMA_PATH / "job_grid_density.schema.yml",
     )
     table_columns = schema["data"][0]["table_columns"]
     required_columns = [column["name"] for column in table_columns if column.get("required")]
+    optional_columns = [column["name"] for column in table_columns if not column.get("required")]
 
     assert required_columns == job_grid_io.JOB_GRID_COLUMNS
+    assert optional_columns == [
+        "ra",
+        "dec",
+        "overwrite_model_parameters",
+        "scan_label",
+        "telescope",
+    ]
     assert all("unit" not in column for column in table_columns)
 
 

@@ -8,6 +8,8 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
+from simtools.constants import SCHEMA_PATH
+from simtools.io import ascii_handler
 from simtools.production_configuration.job_grid_summary import build_job_grid_summary
 
 logger = logging.getLogger(__name__)
@@ -15,30 +17,28 @@ logger = logging.getLogger(__name__)
 _ECSV_SUFFIX = ".ecsv"
 _ECSV_FORMAT = "ascii.ecsv"
 _STREAM_CHUNK_SIZE = 10_000
+_JOB_GRID_SCHEMA_FILE = SCHEMA_PATH / "job_grid_density.schema.yml"
 
+
+def _load_job_grid_schema_columns():
+    """Load job-grid column definitions indexed by column name."""
+    schema = ascii_handler.collect_data_from_file(_JOB_GRID_SCHEMA_FILE)
+    return {column["name"]: column for column in schema["data"][0]["table_columns"]}
+
+
+def _schema_type_to_dtype(schema_type):
+    """Convert a job-grid schema type to an Astropy-compatible dtype."""
+    if schema_type == "string":
+        return str
+    try:
+        return np.dtype(schema_type)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Unsupported job-grid schema type: {schema_type}") from exc
+
+
+_JOB_GRID_SCHEMA_COLUMNS = _load_job_grid_schema_columns()
 JOB_GRID_COLUMNS = [
-    "run_number",
-    "primary",
-    "azimuth_angle_value",
-    "azimuth_angle_unit",
-    "zenith_angle_value",
-    "zenith_angle_unit",
-    "energy_min_value",
-    "energy_min_unit",
-    "energy_max_value",
-    "energy_max_unit",
-    "cores_per_shower",
-    "core_scatter_max_value",
-    "core_scatter_max_unit",
-    "view_cone_min_value",
-    "view_cone_min_unit",
-    "view_cone_max_value",
-    "view_cone_max_unit",
-    "showers_per_run",
-    "model_version",
-    "array_layout_name",
-    "corsika_le_interaction",
-    "corsika_he_interaction",
+    name for name, column in _JOB_GRID_SCHEMA_COLUMNS.items() if column.get("required")
 ]
 
 _QUANTITY_FIELDS = {
@@ -54,37 +54,6 @@ JOB_GRID_QUANTITY_FIELDS = dict(_QUANTITY_FIELDS)
 
 _OPTIONAL_ANGLE_FIELDS = ("ra", "dec")
 _OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label", "telescope")
-
-_JOB_GRID_COLUMN_DTYPES = {
-    "primary": str,
-    "azimuth_angle_value": float,
-    "azimuth_angle_unit": str,
-    "zenith_angle_value": float,
-    "zenith_angle_unit": str,
-    "energy_min_value": float,
-    "energy_min_unit": str,
-    "energy_max_value": float,
-    "energy_max_unit": str,
-    "cores_per_shower": int,
-    "core_scatter_max_value": float,
-    "core_scatter_max_unit": str,
-    "view_cone_min_value": float,
-    "view_cone_min_unit": str,
-    "view_cone_max_value": float,
-    "view_cone_max_unit": str,
-    "showers_per_run": int,
-    "nsb_rate": float,
-    "model_version": str,
-    "array_layout_name": str,
-    "corsika_le_interaction": str,
-    "corsika_he_interaction": str,
-    "run_number": int,
-    "ra": float,
-    "dec": float,
-    "overwrite_model_parameters": str,
-    "scan_label": str,
-    "telescope": str,
-}
 
 
 def _serialize_quantity(value):
@@ -221,7 +190,10 @@ def _write_empty_ecsv_header(output_path, output_columns, metadata):
     """Write an ECSV header using Astropy's schema/metadata handling."""
     empty_table = Table(
         names=output_columns,
-        dtype=[_JOB_GRID_COLUMN_DTYPES[column] for column in output_columns],
+        dtype=[
+            _schema_type_to_dtype(_JOB_GRID_SCHEMA_COLUMNS[column]["type"])
+            for column in output_columns
+        ],
     )
     empty_table.meta = metadata
     empty_table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
