@@ -108,3 +108,15 @@ data:
         description: Declination coordinate value for ra_dec coordinate systems.
         required: false
         type: float64
+      - name: overwrite_model_parameters
+        description: File containing model parameter values that overwrite production defaults.
+        required: false
+        type: string
+      - name: scan_label
+        description: Label identifying a parameter-scan grid point.
+        required: false
+        type: string
+      - name: telescope
+        description: Telescope for which model parameters are overwritten.
+        required: false
+        type: string
