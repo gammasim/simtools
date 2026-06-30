@@ -13,12 +13,24 @@ from simtools.corsika import corsika_output_validator
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler, table_handler
 from simtools.job_execution import job_manager
+from simtools.job_execution.process_pool import process_pool_map_ordered
 from simtools.model.array_model import ArrayModel
 from simtools.runners import corsika_runner, corsika_simtel_runner, runner_services, simtel_runner
 from simtools.sim_events import file_info, output_validator, writer
 from simtools.simtel import simtel_output_validator
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.utils import general
+
+
+def _write_reduced_event_list_batch(job_spec):
+    """Write one reduced-event output file from one input-file batch."""
+    input_files, output_file = job_spec
+    generator = writer.EventDataWriter(input_files)
+    table_handler.write_tables(
+        tables=generator.process_files(),
+        output_file=Path(output_file),
+        overwrite_existing=True,
+    )
 
 
 class Simulator:
@@ -368,6 +380,7 @@ class Simulator:
         output_files=None,
         input_file_list=None,
         files_per_reduced_event_file=1,
+        max_workers=1,
     ):
         """
         Write reduced event lists for given sim_telarray output files.
@@ -390,6 +403,9 @@ class Simulator:
             Text file containing one sim_telarray output file per line.
         files_per_reduced_event_file : int, optional
             Number of input files combined into each output file. Defaults to 1.
+        max_workers : int, optional
+            Maximum number of output-file worker processes. ``None`` uses 60% of
+            available CPUs, 0 uses all CPUs, and 1 runs serially. Defaults to 1.
 
         Raises
         ------
@@ -437,12 +453,15 @@ class Simulator:
                 f"{len(input_file_batches)} batch(es), {len(output_files)} output file(s)."
             )
 
-        for input_file_batch, output_file in zip(input_file_batches, output_files):
-            generator = writer.EventDataWriter(input_file_batch)
-            table_handler.write_tables(
-                tables=generator.process_files(),
-                output_file=Path(output_file),
-                overwrite_existing=True,
+        job_specs = list(zip(input_file_batches, output_files))
+        if max_workers == 1 or len(job_specs) < 2:
+            for job_spec in job_specs:
+                _write_reduced_event_list_batch(job_spec)
+        else:
+            process_pool_map_ordered(
+                _write_reduced_event_list_batch,
+                job_specs,
+                max_workers=max_workers,
             )
 
     def pack_for_register(self, directory_for_grid_upload=None):

@@ -129,7 +129,7 @@ def test_does_not_set_mp_context_when_start_method_none(monkeypatch):
 
 
 def test_single_worker(monkeypatch):
-    """Should work with n_workers=1 (serial execution)."""
+    """Should work with max_workers=1."""
     monkeypatch.setattr(pp, "ProcessPoolExecutor", _FakeExecutor)
     monkeypatch.setattr(pp, "as_completed", list)
     results = pp.process_pool_map_ordered(_identity, [5, 6, 7], max_workers=1)

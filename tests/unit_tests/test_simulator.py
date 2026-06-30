@@ -569,6 +569,20 @@ def test_write_reduced_event_lists_from_file_list_in_batches(mocker, tmp_test_di
     ]
 
 
+def test_write_reduced_event_lists_parallelizes_output_batches(mocker):
+    """Execute independent output batches through the shared process-pool helper."""
+    mock_pool = mocker.patch("simtools.simulator.process_pool_map_ordered")
+
+    Simulator.write_reduced_event_lists(
+        input_files=["input1.simtel.zst", "input2.simtel.zst"],
+        max_workers=2,
+    )
+
+    mock_pool.assert_called_once()
+    assert mock_pool.call_args.kwargs["max_workers"] == 2
+    assert len(mock_pool.call_args.args[1]) == 2
+
+
 @pytest.mark.parametrize("files_per_reduced_event_file", [0, -1])
 def test_write_reduced_event_lists_rejects_invalid_batch_size(
     files_per_reduced_event_file,
