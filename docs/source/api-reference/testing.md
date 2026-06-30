@@ -35,6 +35,16 @@ The Testing module provides tools for testing the code. This might be part of th
 
 ```
 
+(resourcegenerationmodule)=
+
+## resource_generation
+
+```{eval-rst}
+.. automodule:: testing.resource_generation
+   :members:
+
+```
+
 (validate_outputmodule)=
 
 ## validate_output

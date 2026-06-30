@@ -36,7 +36,7 @@ dependencies = [
   "h5py",
   "jsonschema",
   "matplotlib",
-  "numpy<2.5",                    # eventio 2.1.0 uses deprecated ndarray.shape assignment
+  "numpy",
   "particle",
   "pymongo",
   "pyproj",
@@ -103,6 +103,7 @@ scripts.simtools-generate-corsika-histograms = "simtools.applications.generate_c
 scripts.simtools-generate-default-metadata = "simtools.applications.generate_default_metadata:main"
 scripts.simtools-generate-regular-arrays = "simtools.applications.generate_regular_arrays:main"
 scripts.simtools-generate-simtel-event-data = "simtools.applications.generate_simtel_event_data:main"
+scripts.simtools-generate-test-resources = "simtools.applications.generate_test_resource:main"
 scripts.simtools-maintain-simulation-model-add-production = "simtools.applications.maintain_simulation_model_add_production:main"
 scripts.simtools-maintain-simulation-model-compare-productions = "simtools.applications.maintain_simulation_model_compare_productions:main"
 scripts.simtools-maintain-simulation-model-verify-production-tables = "simtools.applications.maintain_simulation_model_verify_production_tables:main"
@@ -155,24 +156,27 @@ format.quote-style = "double"
 format.line-ending = "auto"
 # no documentation linting for test files
 format.skip-magic-trailing-comma = false
+lint.select = [ "E4", "E7", "E9", "F" ]
 lint.extend-select = [
-  "A",   # built-in shadowing
-  "C4",  # comprehension
-  "COM", # flake8-commas
-  "D",   # pydocstyle
-  "ERA", # commented-out code
-  "F",   # pyflakes
-  "G",   # logging
-  "I",   # isort
-  "ICN", # import name conventions
-  "ISC", # implicit string concat rules
-  "N",   # pep8 naming
-  "NPY", # numpy
-  "PT",  # pytest
-  "PTH", # use pathlib
-  "RET", # return statements
-  "RUF", # ruff
-  "UP",  # pyupgrade
+  "A",      # built-in shadowing
+  "C4",     # comprehension
+  "C90",    # mccabe complex structure
+  "COM",    # flake8-commas
+  "D",      # pydocstyle
+  "ERA",    # commented-out code
+  "F",      # pyflakes
+  "G",      # logging
+  "I",      # isort
+  "ICN",    # import name conventions
+  "ISC",    # implicit string concat rules
+  "N",      # pep8 naming
+  "NPY",    # numpy
+  "PT",     # pytest
+  "PTH",    # use pathlib
+  "RET",    # return statements
+  "RUF",    # ruff
+  "RUF069", # float equality comparison (preview)
+  "UP",     # pyupgrade
 ]
 lint.ignore = [
   "COM812", # incompatible with ruff format
@@ -184,13 +188,16 @@ lint.ignore = [
   "PTH123", # open("foo") should be replaced by Path("foo").open()
   "RUF012", # Mutable class attributes should be annotated
 ]
+lint.explicit-preview-rules = true
 lint.per-file-ignores."**/tests/**" = [
   "D",
 ]
 lint.per-file-ignores."**/tests_*.py" = [
   "D",
 ]
+lint.mccabe.max-complexity = 12
 lint.pydocstyle.convention = "numpy"
+lint.preview = true
 
 [tool.pylint]
 # See discussion in issue 521

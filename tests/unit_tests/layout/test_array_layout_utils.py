@@ -1008,10 +1008,10 @@ def test_create_regular_array_metadata():
     assert list(table["telescope_name"]) == sorted(table["telescope_name"])
 
 
-def test_write_array_elements_from_file_to_repository_utm(tmp_test_directory):
+def test_write_array_elements_from_file_to_repository_utm(tmp_test_directory, get_test_data_file):
     array_layout_utils.write_array_elements_from_file_to_repository(
         coordinate_system="utm",
-        input_file="tests/resources/telescope_positions-North-utm.ecsv",
+        input_file=get_test_data_file("telescope_positions", "North-utm"),
         repository_path=tmp_test_directory,
         parameter_version="5.7.0",
     )
@@ -1027,10 +1027,12 @@ def test_write_array_elements_from_file_to_repository_utm(tmp_test_directory):
     assert para["value"][0] == pytest.approx(217401.1)
 
 
-def test_write_array_elements_from_file_to_repository_ground(tmp_test_directory):
+def test_write_array_elements_from_file_to_repository_ground(
+    tmp_test_directory, get_test_data_file
+):
     array_layout_utils.write_array_elements_from_file_to_repository(
         coordinate_system="ground",
-        input_file="tests/resources/telescope_positions-North-ground.ecsv",
+        input_file=get_test_data_file("telescope_positions", "North"),
         repository_path=tmp_test_directory,
         parameter_version="5.7.0",
     )
@@ -1045,13 +1047,13 @@ def test_write_array_elements_from_file_to_repository_ground(tmp_test_directory)
     assert para["value"][0] == pytest.approx(26.86)
 
 
-def test_write_array_elements_from_file_to_repository_error(tmp_test_directory):
+def test_write_array_elements_from_file_to_repository_error(tmp_test_directory, get_test_data_file):
     with pytest.raises(
         ValueError, match=r"Unsupported coordinate system: invalid. Allowed are 'utm' and 'ground'."
     ):
         array_layout_utils.write_array_elements_from_file_to_repository(
             coordinate_system="invalid",
-            input_file="tests/resources/telescope_positions-North-ground.ecsv",
+            input_file=get_test_data_file("telescope_positions", "North"),
             repository_path=tmp_test_directory,
             parameter_version="5.7.0",
         )
