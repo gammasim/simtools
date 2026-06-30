@@ -87,12 +87,12 @@ def test_calculate_center():
     handlebox = MockHandleBox(xdescent=10, ydescent=20, width=30, height=40)
 
     x0, y0 = leg_h.calculate_center(handlebox, width_factor=3, height_factor=4)
-    assert x0 == 10 + 30 / 3
-    assert y0 == 20 + 40 / 4
+    assert x0 == pytest.approx(10 + 30 / 3)
+    assert y0 == pytest.approx(20 + 40 / 4)
 
     x0, y0 = leg_h.calculate_center(handlebox, width_factor=2, height_factor=2)
-    assert x0 == 10 + 30 / 2
-    assert y0 == 20 + 40 / 2
+    assert x0 == pytest.approx(10 + 30 / 2)
+    assert y0 == pytest.approx(20 + 40 / 2)
 
 
 def test_base_hex_pixel_handler_create_hex_patch():
