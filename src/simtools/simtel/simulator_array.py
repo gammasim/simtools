@@ -268,7 +268,7 @@ class SimulatorArray(SimtelRunner):
             If sim_telarray output file does not exist.
         """
         output_file = self.runner_service.get_file_name(
-            file_type="simtel_output", run_number=run_number
+            file_type="sim_telarray_output", run_number=run_number
         )
         if not output_file.exists():
             raise FileNotFoundError(f"sim_telarray output file {output_file} does not exist.")
