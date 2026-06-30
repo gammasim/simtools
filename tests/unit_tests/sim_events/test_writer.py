@@ -32,20 +32,6 @@ def lookup_table_generator(mock_eventio_file):
 
 
 @pytest.fixture
-def mock_corsika_run_header(mocker):
-    """Mock the get_combined_eventio_run_header."""
-    mock_get_header = mocker.patch("simtools.sim_events.writer.get_combined_eventio_run_header")
-    mock_get_header.return_value = {
-        "direction": [0.0, 70.0 / 57.3],
-        "particle_id": 1,
-        "E_range": [0.003, 330.0],
-        "viewcone": [0.0, 10.0],
-        "core_range": [0.0, 1000.0],
-    }
-    return mock_get_header
-
-
-@pytest.fixture
 def mock_get_sim_telarray_telescope_id_to_telescope_name_mapping(mocker):
     """Mock the get_sim_telarray_telescope_id_to_telescope_name_mapping."""
     mock_get_mapping = mocker.patch(
@@ -73,7 +59,10 @@ def create_mc_run_header():
     mock_header = MagicMock(spec=MCRunHeader)
     mock_header.parse.return_value = {
         "n_use": 2,  # Important: Must be >= 1
+        "direction": [0.0, 70.0 / 57.3],
+        "E_range": [0.003, 330.0],
         "viewcone": [0.0, 10.0],
+        "core_range": [0.0, 1000.0],
     }
     return mock_header
 
@@ -86,6 +75,7 @@ def create_mc_shower(shower_id=1):
         "azimuth": 0.1,
         "altitude": 0.1,
         "shower": shower_id,  # Must match shower_num in mc_event
+        "primary_id": 1,
     }
     return mock_shower
 
@@ -135,7 +125,6 @@ def validate_datasets(reduced_data, triggered_data, file_info, trigger_telescope
 def test_process_files(
     mock_eventio_class,
     lookup_table_generator,
-    mock_corsika_run_header,
     mock_get_sim_telarray_telescope_id_to_telescope_name_mapping,
     mock_read_sim_telarray_metadata,
 ):
@@ -151,6 +140,7 @@ def test_process_files(
 
     tables = lookup_table_generator.process_files()
 
+    assert mock_eventio_class.call_count == 1
     # Verify tables structure and content
     assert len(tables) == 3
     assert tables[0].meta["EXTNAME"] == "SHOWERS"
@@ -175,11 +165,34 @@ def test_no_input_files():
         EventDataWriter(None, None)
 
 
+def test_default_processes_all_input_files():
+    """Do not silently truncate batches at 100 input files."""
+    writer = EventDataWriter([f"input_{index}" for index in range(101)])
+
+    assert writer.max_files == 101
+
+
+@pytest.mark.parametrize(
+    ("requested", "expected"),
+    [(0, 0), (2, 2), (200, 101)],
+)
+def test_max_files_respects_requested_and_available_files(requested, expected):
+    """Respect explicit limits without exceeding the available input files."""
+    writer = EventDataWriter([f"input_{index}" for index in range(101)], max_files=requested)
+
+    assert writer.max_files == expected
+
+
+def test_max_files_rejects_negative_values():
+    """Reject negative limits instead of silently excluding files from the end."""
+    with pytest.raises(ValueError, match="max_files must be non-negative"):
+        EventDataWriter(["input"], max_files=-1)
+
+
 @patch("simtools.sim_events.writer.EventIOFile", autospec=True)
 def test_multiple_files(
     mock_eventio_class,
     tmp_path,
-    mock_corsika_run_header,
     mock_get_sim_telarray_telescope_id_to_telescope_name_mapping,
     mock_read_sim_telarray_metadata,
 ):
@@ -201,8 +214,10 @@ def test_multiple_files(
     writer = EventDataWriter(input_files=input_files, max_files=3)
     tables = writer.process_files()
 
+    assert mock_eventio_class.call_count == 3
     assert len(tables) == 3
     assert len(tables[2]) == 3  # file_info table should have 3 entries
+    assert set(tables[2]["file_id"]) == {0, 1, 2}
 
 
 def create_test_data():
@@ -527,10 +542,6 @@ def test_process_file_info_else(monkeypatch, tmp_path):
         "viewcone_outer_angle": 0.2,
     }
 
-    monkeypatch.setattr(
-        "simtools.sim_events.writer.get_combined_eventio_run_header",
-        lambda f: None,
-    )
     monkeypatch.setattr(
         "simtools.sim_events.writer.get_corsika_run_and_event_headers",
         lambda f: (fake_run_header, fake_event_header),

@@ -5,22 +5,20 @@ from dataclasses import dataclass
 
 import astropy.units as u
 import numpy as np
-from astropy.table import Table
+from astropy.table import Table, vstack
 from eventio import EventIOFile, iact
 from eventio.simtel import (
     ArrayEvent,
     MCEvent,
     MCRunHeader,
     MCShower,
+    RunHeader,
     TrackingPosition,
     TriggerInformation,
 )
 
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.sim_events.file_info import (
-    get_combined_eventio_run_header,
-    get_corsika_run_and_event_headers,
-)
+from simtools.sim_events.file_info import get_corsika_run_and_event_headers
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
     read_sim_telarray_metadata,
@@ -86,17 +84,22 @@ class EventDataWriter:
     input_files : list
         List of input file paths to process.
     max_files : int, optional
-        Maximum number of files to process.
+        Maximum number of files to process. By default, process all input files.
     """
 
-    def __init__(self, input_files, max_files=100):
+    def __init__(self, input_files, max_files=None):
         """Initialize class."""
         self._logger = logging.getLogger(__name__)
         self.input_files = input_files
         try:
-            self.max_files = max_files if max_files < len(input_files) else len(input_files)
+            number_of_input_files = len(input_files)
         except TypeError as exc:
             raise TypeError("No input files provided.") from exc
+        if max_files is not None and max_files < 0:
+            raise ValueError("max_files must be non-negative.")
+        self.max_files = (
+            number_of_input_files if max_files is None else min(max_files, number_of_input_files)
+        )
 
         self.n_use = None
         self.shower_data = []
@@ -113,11 +116,21 @@ class EventDataWriter:
         list
             List of tables containing processed data.
         """
-        for i, file in enumerate(self.input_files[: self.max_files]):
-            self._logger.info(f"Processing file {i + 1}/{self.max_files}: {file}")
-            self._process_file(i, file)
+        table_batches = list(self.iter_file_tables())
+        if not table_batches:
+            return self.create_tables()
+        return [vstack(tables) for tables in zip(*table_batches)]
 
-        return self.create_tables()
+    def iter_file_tables(self):
+        """Process and yield tables for one input file at a time."""
+        for file_id, file in enumerate(self.input_files[: self.max_files]):
+            self._logger.info(f"Processing file {file_id + 1}/{self.max_files}: {file}")
+            self.shower_data = []
+            self.trigger_data = []
+            self.file_info = []
+            self.telescope_id_to_name = {}
+            self._process_file(file_id, file)
+            yield self.create_tables()
 
     def create_tables(self):
         """Create tables from collected data."""
@@ -159,13 +172,24 @@ class EventDataWriter:
         shower_start = len(self.shower_data)
         trigger_start = len(self.trigger_data)
         file_info_start = len(self.file_info)
-        self._process_file_info(file_id, file)
+        run_info = {}
         with EventIOFile(file) as f:
             for eventio_object in f:
-                if isinstance(eventio_object, MCRunHeader):
-                    self._process_mc_run_header(eventio_object)
+                if isinstance(eventio_object, RunHeader):
+                    run_info.update(eventio_object.parse())
+                    self.telescope_id_to_name = (
+                        get_sim_telarray_telescope_id_to_telescope_name_mapping(file)
+                    )
+                elif isinstance(eventio_object, MCRunHeader):
+                    run_info.update(self._process_mc_run_header(eventio_object))
+                    if not self.telescope_id_to_name:
+                        self.telescope_id_to_name = (
+                            get_sim_telarray_telescope_id_to_telescope_name_mapping(file)
+                        )
                 elif isinstance(eventio_object, MCShower):
-                    self._process_mc_shower(eventio_object, file_id)
+                    shower = self._process_mc_shower(eventio_object, file_id)
+                    if shower.get("primary_id") is not None:
+                        run_info.setdefault("primary_id", shower["primary_id"])
                 elif isinstance(eventio_object, MCEvent):
                     self._process_mc_event(eventio_object)
                 elif isinstance(eventio_object, ArrayEvent):
@@ -173,6 +197,7 @@ class EventDataWriter:
                 elif isinstance(eventio_object, iact.EventHeader):
                     self._process_mc_shower_from_iact(eventio_object, file_id)
 
+        self._process_file_info(file_id, file, run_info or None)
         self._validate_processed_file(
             file,
             self.shower_data[shower_start:],
@@ -233,14 +258,11 @@ class EventDataWriter:
         mc_head = eventio_object.parse()
         self.n_use = mc_head["n_use"]  # reuse factor n_use needed to extend the values below
         self._logger.info(f"Shower reuse factor: {self.n_use} (viewcone: {mc_head['viewcone']})")
+        return mc_head
 
-    def _process_file_info(self, file_id, file):
+    def _process_file_info(self, file_id, file, run_info=None):
         """Process file information and append to file info list."""
-        run_info = get_combined_eventio_run_header(file)
         if run_info:  # sim_telarray file
-            self.telescope_id_to_name = get_sim_telarray_telescope_id_to_telescope_name_mapping(
-                file
-            )
             corsika7_id = PrimaryParticle(
                 particle_id_type="eventio_id",
                 particle_id=run_info.get("primary_id", 1),
@@ -308,6 +330,7 @@ class EventDataWriter:
             }
             for _ in range(self.n_use)
         )
+        return shower
 
     def _process_mc_shower_from_iact(self, eventio_object, file_id):
         """
@@ -363,7 +386,8 @@ class EventDataWriter:
 
     def _process_array_event(self, eventio_object, file_id):
         """Process array event and update triggered event list."""
-        tracking_positions = []
+        altitudes = []
+        azimuths = []
         telescopes = []
 
         for obj in eventio_object:
@@ -376,26 +400,20 @@ class EventDataWriter:
                 )
             if isinstance(obj, TrackingPosition):
                 tracking_position = obj.parse()
-                tracking_positions.append(
-                    {
-                        "altitude": np.degrees(tracking_position["altitude_raw"]),
-                        "azimuth": np.degrees(tracking_position["azimuth_raw"]),
-                    }
-                )
+                altitudes.append(np.degrees(tracking_position["altitude_raw"]))
+                azimuths.append(np.degrees(tracking_position["azimuth_raw"]))
 
-        if len(telescopes) > 0 and tracking_positions:
+        if len(telescopes) > 0 and altitudes:
             self._fill_array_event(
                 self._map_telescope_names(telescopes),
-                tracking_positions,
+                altitudes,
+                azimuths,
                 eventio_object.event_id,
                 file_id,
             )
 
-    def _fill_array_event(self, telescopes, tracking_positions, event_id, file_id):
+    def _fill_array_event(self, telescopes, altitudes, azimuths, event_id, file_id):
         """Add array event triggered events with tracking positions."""
-        altitudes = [pos["altitude"] for pos in tracking_positions]
-        azimuths = [pos["azimuth"] for pos in tracking_positions]
-
         self.trigger_data.append(
             {
                 "shower_id": self.shower_data[-1]["shower_id"],

@@ -15,6 +15,8 @@ input_file_list (str, optional)
     Text file containing one sim_telarray output file per line.
 files_per_reduced_event_file (int, optional)
     Number of input files combined into each reduced event file. Defaults to 1.
+max_workers (int, optional)
+    Maximum number of parallel output-file workers.
 output_path (str, optional)
     Directory for the output files. Defaults to './simtools-output/'.
 
@@ -53,6 +55,15 @@ def _add_arguments(parser):
         default=1,
         help="Number of input files combined into each reduced event file (default: 1).",
     )
+    parser.add_argument(
+        "--max_workers",
+        type=int,
+        default=None,
+        help=(
+            "Maximum number of parallel output-file workers. Default: 60%% of CPU cores; "
+            "use 1 for serial execution or 0 for all cores."
+        ),
+    )
 
 
 def main():
@@ -66,6 +77,7 @@ def main():
         input_files=app_context.args["input_files"],
         input_file_list=app_context.args["input_file_list"],
         files_per_reduced_event_file=app_context.args["files_per_reduced_event_file"],
+        max_workers=app_context.args["max_workers"],
         output_path=app_context.io_handler.get_output_directory(),
     )
 
