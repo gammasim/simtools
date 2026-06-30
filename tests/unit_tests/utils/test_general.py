@@ -12,6 +12,7 @@ import pytest
 from astropy.table import Table
 
 import simtools.utils.general as gen
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, TEST_RESOURCES_GENERATED
 
 FAILED_TO_READ_FILE_ERROR = r"^Failed to read file"
 KEY2_ADDED = "['key2']: added in second object"
@@ -557,15 +558,18 @@ def test_resolve_file_patterns():
         gen.resolve_file_patterns(None)
 
     assert gen.resolve_file_patterns("LICENSE") == [Path("LICENSE")]
-    yml_list = gen.resolve_file_patterns("tests/resources/*.yml")
+    yml_list = gen.resolve_file_patterns(f"{MODEL_PARAMETER_SCHEMA_PATH}/*.yml")
     assert len(yml_list) > 0
     yml_and_ecvs_list = gen.resolve_file_patterns(
-        ["tests/resources/*.yml", "tests/resources/*.ecsv"]
+        [
+            f"{MODEL_PARAMETER_SCHEMA_PATH}/*.yml",
+            f"{TEST_RESOURCES_GENERATED}/camera_efficiency/*.ecsv",
+        ]
     )
     assert len(yml_and_ecvs_list) > len(yml_list)
 
     with pytest.raises(FileNotFoundError, match=r"^No files found"):
-        gen.resolve_file_patterns("tests/resources/*.non_existent")
+        gen.resolve_file_patterns(f"{TEST_RESOURCES_GENERATED}/*.non_existent")
 
 
 def test_now_date_time_in_isoformat():

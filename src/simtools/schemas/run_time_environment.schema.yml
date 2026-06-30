@@ -1,0 +1,19 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/RunTimeEnvironmentFile'
+title: Run Time Environment Schema
+description: YAML representation of a standalone runtime-environment configuration.
+schema_version: 0.1.0
+schema_name: run_time_environment.schema
+type: object
+additionalProperties: false
+
+definitions:
+  RunTimeEnvironmentFile:
+    type: object
+    additionalProperties: false
+    properties:
+      runtime_environment:
+        $ref: 'common_definitions.schema.yml#/$defs/run_time_environment'
+    required:
+      - runtime_environment

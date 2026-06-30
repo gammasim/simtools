@@ -8,6 +8,8 @@ SCHEMA_PATH = files("simtools") / "schemas"
 METADATA_JSON_SCHEMA = SCHEMA_PATH / "metadata.metaschema.yml"
 # Path to plotting configuration json schema
 PLOT_CONFIG_SCHEMA = SCHEMA_PATH / "plot_configuration.metaschema.yml"
+# Path to run time environment json schema
+RUN_TIME_ENVIRONMENT_SCHEMA = SCHEMA_PATH / "run_time_environment.schema.yml"
 # Path to model parameter metaschema
 MODEL_PARAMETER_METASCHEMA = SCHEMA_PATH / "model_parameter.metaschema.yml"
 # Path to model parameter description metaschema
@@ -23,6 +25,9 @@ MODEL_PARAMETER_SCHEMA_URL = (
 )
 # Path to resource files
 RESOURCE_PATH = files("simtools") / "resources"
+# Paths to test resources
+TEST_RESOURCES_STATIC = "tests/resources/static"
+TEST_RESOURCES_GENERATED = "tests/resources/generated"
 
 # Maximum value allowed for random seeds in sim_telarray
 SIMTEL_MAX_SEED = 2147483647
