@@ -4,6 +4,8 @@ import argparse
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from simtools.applications import run_application
 
 
@@ -70,7 +72,7 @@ def test_main_ignores_runtime_environment_file_when_requested(monkeypatch):
     monkeypatch.setattr(
         run_application,
         "prepare_runtime_environment",
-        lambda _: (_ for _ in ()).throw(AssertionError("should not prepare runtime")),
+        lambda _: pytest.fail("should not prepare runtime"),
     )
 
     def _fake_run_applications(app_args, run_time=None):
