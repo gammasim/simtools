@@ -1,3 +1,4 @@
+import pytest
 from astropy import units as u
 
 import simtools.applications.generate_bias_curve_submissions as app
@@ -63,5 +64,5 @@ def test_add_arguments_accepts_custom_bias_curve_values():
 
     assert args.nsb_energy_range == (10 * u.MeV, 30 * u.MeV)
     assert args.proton_energy_range == (5 * u.GeV, 500 * u.GeV)
-    assert args.nsb_scaling_factor == 3.5
+    assert args.nsb_scaling_factor == pytest.approx(3.5)
     assert args.trigger_thresholds == [225.0, 2.0, 10.0]

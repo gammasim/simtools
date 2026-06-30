@@ -185,12 +185,9 @@ def test_scan_config_uses_configured_scaling_and_thresholds(curve_name, tmp_test
 
     scan_config = bias_curve_submissions._scan_config(curve_name, "LSTN-01", args)
 
-    assert (
-        scan_config["parameter_scan"]["overwrite"]["changes"]["OBS-North"]["nsb_scaling_factor"][
-            "value"
-        ]
-        == 3.5
-    )
+    assert scan_config["parameter_scan"]["overwrite"]["changes"]["OBS-North"]["nsb_scaling_factor"][
+        "value"
+    ] == pytest.approx(3.5)
     assert scan_config["parameter_scan"]["parameters"][0]["values"] == [225, 235]
 
 
