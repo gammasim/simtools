@@ -409,7 +409,7 @@ def is_safe_tar_member(member_name):
         return False
 
     # Verify the normalized path is still relative
-    normalized = PurePosixPath(*parts) if parts else PurePosixPath(".")
+    normalized = PurePosixPath(*parts) if parts else PurePosixPath()
     if normalized.is_absolute():
         return False
 
