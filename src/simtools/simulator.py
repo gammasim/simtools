@@ -362,12 +362,19 @@ class Simulator:
         )
 
     @staticmethod
-    def write_reduced_event_lists(input_files, output_path=None, output_files=None):
+    def write_reduced_event_lists(
+        input_files=None,
+        output_path=None,
+        output_files=None,
+        input_file_list=None,
+        files_per_reduced_event_file=1,
+    ):
         """
         Write reduced event lists for given sim_telarray output files.
 
-        One output file is written per input file, named after the input file
-        with the sim_telarray suffix replaced by '.reduced_event_data.hdf5'.
+        Input files can be passed directly or read from a text file containing
+        one path per line. Files are processed in batches, with one output file
+        written per batch.
 
         Parameters
         ----------
@@ -378,33 +385,60 @@ class Simulator:
             each input file.
         output_files : list, optional
             Explicit output files. When provided, these are used directly and
-            zipped with input_files.
+            zipped with the input file batches.
+        input_file_list : str or Path, optional
+            Text file containing one sim_telarray output file per line.
+        files_per_reduced_event_file : int, optional
+            Number of input files combined into each output file. Defaults to 1.
 
         Raises
         ------
         ValueError
-            If explicit output_files are provided and their number does not
-            match the number of input_files.
+            If the input parameters or number of explicit output files are invalid.
         """
+        if (input_files is None) == (input_file_list is None):
+            raise ValueError("Provide exactly one of input_files or input_file_list.")
+        if files_per_reduced_event_file < 1:
+            raise ValueError("files_per_reduced_event_file must be greater than zero.")
+
+        if input_file_list is not None:
+            input_file_list = Path(input_file_list)
+            with open(input_file_list, encoding="utf-8") as file_list:
+                input_files = [line.strip() for line in file_list if line.strip()]
+
+        input_file_batches = [
+            input_files[index : index + files_per_reduced_event_file]
+            for index in range(0, len(input_files), files_per_reduced_event_file)
+        ]
+
         if output_files is None:
             output_files = []
-            for input_file in input_files:
-                stem = Path(input_file).name
-                for suffix in (".simtel.zst", ".simtel.gz", ".simtel"):
-                    if stem.endswith(suffix):
-                        stem = stem[: -len(suffix)]
-                        break
-                output_dir = Path(output_path) if output_path else Path(input_file).parent
-                output_files.append(output_dir / f"{stem}.reduced_event_data.hdf5")
+            if input_file_list is not None:
+                output_dir = Path(output_path) if output_path else input_file_list.parent
+                output_files = [
+                    output_dir / f"{input_file_list.stem}.part{index:04d}.reduced_event_data.hdf5"
+                    for index in range(1, len(input_file_batches) + 1)
+                ]
+            else:
+                for input_file_batch in input_file_batches:
+                    stem = Path(input_file_batch[0]).name
+                    for suffix in (".simtel.zst", ".simtel.gz", ".simtel"):
+                        if stem.endswith(suffix):
+                            stem = stem[: -len(suffix)]
+                            break
+                    output_dir = (
+                        Path(output_path) if output_path else Path(input_file_batch[0]).parent
+                    )
+                    output_files.append(output_dir / f"{stem}.reduced_event_data.hdf5")
 
-        if len(output_files) != len(input_files):
+        if len(output_files) != len(input_file_batches):
             raise ValueError(
                 "Length mismatch between input_files and output_files: "
-                f"{len(input_files)} input file(s), {len(output_files)} output file(s)."
+                f"{len(input_file_batches)} batch(es), {len(output_files)} output file(s)."
             )
 
-        for input_file, output_file in zip(input_files, output_files):
-            generator = writer.EventDataWriter([input_file])
+        for input_file_batch, output_file in zip(input_file_batches, output_files):
+            generator = writer.EventDataWriter(input_file_batch)
             table_handler.write_tables(
                 tables=generator.process_files(),
                 output_file=Path(output_file),
