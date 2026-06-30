@@ -126,14 +126,14 @@ def find_signal_peaks(trace, prominence=None):
     return peaks if peaks.size > 0 else np.array([np.argmax(np.abs(trace))])
 
 
-def get_time_axis(sampling_rate, n_samples):
+def get_time_axis(time_slice, n_samples):
     """
-    Generate time axis using sampling frequency logic.
+    Generate a time axis from the sampling period.
 
     Parameters
     ----------
-    sampling_rate : astropy.units.Quantity
-        Sampling rate with time units (e.g., ns).
+    time_slice : astropy.units.Quantity
+        Length of one sampling time slice (e.g., ns).
     n_samples : int
         Number of samples.
 
@@ -142,7 +142,9 @@ def get_time_axis(sampling_rate, n_samples):
     np.ndarray
         Time axis array.
     """
-    dt = 1.0 / sampling_rate.to("ns").value if sampling_rate.to("ns").value > 0 else 1.0
+    dt = time_slice.to("ns").value
+    if dt <= 0:
+        dt = 1.0
     return np.linspace(0, (n_samples - 1) * dt, n_samples)
 
 
