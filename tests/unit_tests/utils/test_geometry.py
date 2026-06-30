@@ -68,7 +68,7 @@ def test_rotate_telescope_position(caplog) -> None:
 def test_calculate_circular_mean():
     # Test opposite angles cancel out
     angles = np.array([0, np.pi])
-    assert transf.calculate_circular_mean(angles) == np.pi / 2
+    assert transf.calculate_circular_mean(angles) == pytest.approx(np.pi / 2)
 
     # Test mean of same angles
     angles = np.array([np.pi / 4, np.pi / 4, np.pi / 4])
