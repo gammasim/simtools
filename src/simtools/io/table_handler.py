@@ -395,6 +395,33 @@ def _validate_written_hdf5(output_file, expected_tables):
                 )
 
 
+def _prepare_string_columns_for_hdf5(table):
+    """Convert supported string columns to the byte strings required by HDF5."""
+    string_columns = []
+    for column_name in table.colnames:
+        column = table[column_name]
+        if column.dtype.kind == "U":  # hdf5 does not support unicode
+            string_columns.append(column_name)
+        elif column.dtype.kind == "O":
+            values = np.asarray(column)
+            if not all(
+                isinstance(value, (str, bytes, np.str_, np.bytes_)) for value in values.flat
+            ):
+                raise TypeError(
+                    f"Object-dtype column '{column_name}' contains non-string or missing values; "
+                    "refusing to serialize it as strings."
+                )
+            string_columns.append(column_name)
+
+    if not string_columns:
+        return table
+
+    table = table.copy(copy_data=False)
+    for column_name in string_columns:
+        table[column_name] = table[column_name].astype("S")
+    return table
+
+
 def write_table_in_hdf5(table, output_file, table_name):
     """
     Write or append a single astropy table to an HDF5 file.
@@ -412,25 +439,7 @@ def write_table_in_hdf5(table, output_file, table_name):
     -------
     None
     """
-    string_columns = []
-    for col in table.colnames:
-        if table[col].dtype.kind == "U":  # hdf5 does not support unicode
-            string_columns.append(col)
-        elif table[col].dtype.kind == "O":
-            values = np.asarray(table[col])
-            if not all(
-                isinstance(value, (str, bytes, np.str_, np.bytes_)) for value in values.flat
-            ):
-                raise TypeError(
-                    f"Object-dtype column '{col}' contains non-string or missing values; "
-                    "refusing to serialize it as strings."
-                )
-            string_columns.append(col)
-
-    if string_columns:
-        table = table.copy(copy_data=False)
-        for col in string_columns:
-            table[col] = table[col].astype("S")
+    table = _prepare_string_columns_for_hdf5(table)
 
     with h5py.File(output_file, "a") as f:
         data = np.array(table)
