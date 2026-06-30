@@ -36,7 +36,7 @@ dependencies = [
   "h5py",
   "jsonschema",
   "matplotlib",
-  "numpy<2.5",                    # eventio 2.1.0 uses deprecated ndarray.shape assignment
+  "numpy",
   "particle",
   "pymongo",
   "pyproj",
