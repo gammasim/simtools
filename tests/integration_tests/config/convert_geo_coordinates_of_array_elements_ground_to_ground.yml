@@ -3,7 +3,7 @@ applications:
 - application: simtools-convert-geo-coordinates-of-array-elements
   configuration:
     export: ground
-    input: tests/resources/telescope_positions-North-ground.ecsv
+    input: tests/resources/static/telescope_positions-North-ground.ecsv
     model_version: 6.0.2
     output_path: simtools-output
     select_assets:

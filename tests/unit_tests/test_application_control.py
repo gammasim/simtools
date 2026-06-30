@@ -667,6 +667,25 @@ def test_get_log_file_with_output_path(tmp_test_directory):
     assert output_path.exists()
 
 
+def test_get_log_file_with_log_file_path_preferred_over_output_path(tmp_test_directory):
+    """Test get_log_file uses log_file_path when provided."""
+    tmp_path = Path(tmp_test_directory)
+    output_path = tmp_path / "output"
+    log_path = tmp_path / "logs"
+    args_dict = {
+        "application_label": "test_app",
+        "output_path": str(output_path),
+        "log_file_path": str(log_path),
+    }
+    result = get_log_file(args_dict)
+
+    assert isinstance(result, Path)
+    assert result.parent == log_path
+    assert result.name.startswith("test_app_")
+    assert result.name.endswith(".log")
+    assert log_path.exists()
+
+
 @pytest.mark.parametrize(
     ("log_level", "expected_level"),
     [
