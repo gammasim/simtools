@@ -11,7 +11,7 @@ applications:
     telescope: MSTN-09
   integration_tests:
   - reference_output_file: |
-     ./tests/resources/model_parameters/array_element_position_ground-2.0.0.json
+     ${generated:model_parameters/array_element_position_ground-2.0.0.json}
     tolerance: 1.0e-05
   test_name: telescope_parameter_array_element_position_ground
 schema_name: application_workflow.metaschema

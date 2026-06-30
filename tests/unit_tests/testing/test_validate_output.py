@@ -7,6 +7,7 @@ import pytest
 import yaml
 from astropy.table import Table
 
+from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.testing import validate_output
 from simtools.testing.validate_output import (
     _validate_output_path_and_file,
@@ -228,6 +229,27 @@ def test_compare_json_files_nested_dicts_with_values(create_json_file, file_name
     assert not validate_output.compare_json_or_yaml_files(file1, file3)
 
     assert validate_output.compare_json_or_yaml_files(file1, file3, tolerance=0.05)
+
+
+def test_compare_json_files_resource_paths(create_json_file, file_name, tmp_test_directory):
+    """Test comparison of equivalent resource paths with different roots."""
+    resource_file = Path("generated") / "model_parameters" / "file.lis"
+    configured_resource_root = tmp_test_directory / "configured-resources"
+
+    content = {"meta": {"nsb": str(resource_file)}}
+    content_absolute = {"meta": {"nsb": str(configured_resource_root / resource_file)}}
+    content_other = {
+        "meta": {
+            "nsb": str(configured_resource_root / "generated" / "model_parameters" / "other.lis")
+        }
+    }
+
+    file1 = create_json_file(file_name(1, "json"), content)
+    file2 = create_json_file(file_name(2, "json"), content_absolute)
+    file3 = create_json_file(file_name(3, "json"), content_other)
+
+    assert validate_output.compare_json_or_yaml_files(file1, file2)
+    assert not validate_output.compare_json_or_yaml_files(file1, file3)
 
 
 @pytest.mark.parametrize(
@@ -492,8 +514,12 @@ def test_validate_application_output_with_file_type(
 
 
 def test_compare_simtel_cfg_files(tmp_test_directory):
-    file1 = Path("tests/resources/sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg")
-    file2 = Path("tests/resources/sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg")
+    file1 = Path(
+        f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg"
+    )
+    file2 = Path(
+        f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg"
+    )
 
     assert validate_output._compare_simtel_cfg_files(file1, file2)
 

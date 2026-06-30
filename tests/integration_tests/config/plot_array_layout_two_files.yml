@@ -3,8 +3,8 @@ applications:
 - application: simtools-plot-array-layout
   configuration:
     array_layout_file:
-    - tests/resources/telescope_positions-North-ground.ecsv
-    - tests/resources/telescope_positions-South-ground.ecsv
+    - tests/resources/static/telescope_positions-North-ground.ecsv
+    - tests/resources/static/telescope_positions-South-ground.ecsv
     figure_format:
     - pdf
     - png
