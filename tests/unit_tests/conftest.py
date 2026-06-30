@@ -81,8 +81,8 @@ def _is_db_unit_test(request):
 
 
 @functools.lru_cache
-def _load_mock_db_json(file_name):
-    mock_db_dir = Path(__file__).resolve().parent.parent / "resources" / "mock_db"
+def _load_mock_db_json(test_resources_path, file_name):
+    mock_db_dir = Path(test_resources_path) / "static" / "mock_db"
     file_path = mock_db_dir / file_name
     with file_path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -247,10 +247,17 @@ def data_path():
     return "./data/"
 
 
+@pytest.fixture
+def corsika_limits_for_test_file(get_test_data_file):
+    """Path to the unit-test CORSIKA limits lookup ECSV file."""
+    return get_test_data_file("corsika_limits", "North")
+
+
 @pytest.fixture(autouse=True)
-def io_handler(tmp_test_directory, data_path):
+def io_handler(tmp_test_directory, data_path, test_resources_path):
     """Define io_handler fixture including output and model directories."""
     tmp_io_handler = simtools.io.io_handler.IOHandler()
+    tmp_io_handler.test_resources_path = test_resources_path
     tmp_io_handler.set_paths(
         output_path=str(tmp_test_directory) + "/output",
         model_path=str(tmp_test_directory) + "/model",
@@ -463,7 +470,7 @@ def db_config():
 
 
 @pytest.fixture
-def mock_db_handler(request):
+def mock_db_handler(request, test_resources_path):
     """
     Mock DatabaseHandler for unit tests.
 
@@ -475,15 +482,17 @@ def mock_db_handler(request):
         return request.getfixturevalue("db")
 
     # Load mock data from JSON files
-    mock_parameters = _apply_mock_param_defaults(_load_mock_db_json("mock_parameters.json"))
+    mock_parameters = _apply_mock_param_defaults(
+        _load_mock_db_json(test_resources_path, "mock_parameters.json")
+    )
     mock_sim_config_params = _apply_mock_param_defaults(
-        _load_mock_db_json("mock_sim_config_params.json")
+        _load_mock_db_json(test_resources_path, "mock_sim_config_params.json")
     )
     site_specific_params_north = _apply_mock_param_defaults(
-        _load_mock_db_json("site_params_north.json")
+        _load_mock_db_json(test_resources_path, "site_params_north.json")
     )
     site_specific_params_south = _apply_mock_param_defaults(
-        _load_mock_db_json("site_params_south.json")
+        _load_mock_db_json(test_resources_path, "site_params_south.json")
     )
 
     # Create closures for mock functions with captured data
@@ -857,31 +866,48 @@ _TEST_DATA_FILES = {
     (
         "corsika",
         "gamma",
-    ): "tests/resources/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst",
+    ): "generated/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst",
     (
         "sim_telarray",
         "gamma",
-    ): "tests/resources/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst",
-    (
-        "sim_telarray",
-        "proton",
-    ): "tests/resources/proton_run000201_za20deg_azm000deg_North_alpha_6.0.0_test_file.simtel.zst",
+    ): "generated/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.simtel.zst",
     (
         "sim_telarray_hdata",
         "gamma",
-    ): "tests/resources/gamma_run2_za20deg_azm0deg-North-Prod5_test-production-5.hdata.zst",
-    ("telescope_positions", "North"): "tests/resources/telescope_positions-North-ground.ecsv",
+    ): "generated/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.hdata.zst",
+    (
+        "production_dl2_fits",
+        "20deg",
+    ): "static/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
+    (
+        "production_dl2_fits",
+        "40deg",
+    ): "static/production_dl2_fits/prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
+    (
+        "telescope_positions",
+        "North",
+    ): "static/telescope_positions-North-ground.ecsv",
     (
         "telescope_positions",
         "North-calibration",
-    ): "tests/resources/telescope_positions-North-with-calibration-devices-ground.ecsv",
-    ("telescope_positions", "North-utm"): "tests/resources/telescope_positions-North-utm.ecsv",
-    ("telescope_positions", "South"): "tests/resources/telescope_positions-South-ground.ecsv",
+    ): "static/telescope_positions-North-with-calibration-devices-ground.ecsv",
+    (
+        "telescope_positions",
+        "North-utm",
+    ): "static/telescope_positions-North-utm.ecsv",
+    (
+        "telescope_positions",
+        "South",
+    ): "static/telescope_positions-South-ground.ecsv",
+    (
+        "corsika_limits",
+        "North",
+    ): "generated/corsika_simulation_limits/corsika_limits_north.ecsv",
 }
 
 
 @pytest.fixture
-def get_test_data_file():
+def get_test_data_file(test_resources_path):
     """Fixture providing test data file path retrieval.
 
     Returns
@@ -922,9 +948,25 @@ def get_test_data_file():
             raise KeyError(
                 f"Test data file not found for {file_type}[{variant}]. Available: {available}"
             )
-        return _TEST_DATA_FILES[key]
+        relative_path = Path(_TEST_DATA_FILES[key])
+        direct_path = test_resources_path / relative_path
+        if direct_path.exists():
+            return str(direct_path)
+        for resource_type in ("static", "generated"):
+            candidate = test_resources_path / resource_type / relative_path
+            if candidate.exists():
+                return str(candidate)
+        return str(direct_path)
 
     return _get_test_data_file
+
+
+@pytest.fixture
+def simple_test_file(tmp_test_directory):
+    """Create a simple test file with known content."""
+    test_file_path = Path(tmp_test_directory) / "test_file.txt"
+    test_file_path.write_text("This is a simple test file.\nContains multiple lines.\nEnd of file.")
+    return str(test_file_path)
 
 
 # ============================================================================
@@ -983,3 +1025,14 @@ def invalid_row_table_payloads():
             "rows": [["not", "numeric"]],
         },
     }
+
+
+@pytest.fixture
+def model_parameter_json(test_resources_path):
+    """Fixture that returns the path to an example model parameter JSON file."""
+    return str(
+        test_resources_path
+        / "generated"
+        / "model_parameters"
+        / "array_element_position_ground-2.0.0.json"
+    )

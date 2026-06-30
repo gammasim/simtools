@@ -224,16 +224,20 @@ def test_simulation_software(array_simulator, shower_simulator, shower_array_sim
         test_array_simulator.simulation_software = "this_simulator_is_not_there"
 
 
+def test_get_files_returns_empty_list_for_unknown_type(array_simulator):
+    assert array_simulator.get_files("unknown_file_type") == []
+
+
 def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_test_directory):
+    files_by_type = {
+        "sim_telarray_output": [f"output_file_{model_version}_simtel.zst"],
+        "sim_telarray_log": Path(f"log_file_{model_version}_simtel.log.gz"),
+        "sim_telarray_histogram": [f"hist_file_{model_version}_hist_log.zst"],
+    }
     mocker.patch.object(
         array_simulator,
         "get_files",
-        side_effect=[
-            [f"output_file_{model_version}_simtel.zst"],
-            [f"log_file_{model_version}_simtel.log.gz"],
-            [f"log_file_corsika_{model_version}.log.gz"],
-            [f"hist_file_{model_version}_hist_log.zst"],
-        ],
+        side_effect=lambda file_type: files_by_type.get(file_type, []),
     )
     mocker.patch("shutil.move")
     mocker.patch("tarfile.open")  # NOSONAR
