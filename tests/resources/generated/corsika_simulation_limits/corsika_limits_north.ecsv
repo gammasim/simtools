@@ -1,0 +1,122 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: production_index, datatype: int64, description: Production index for multi-production runs.}
+# - {name: primary_particle, datatype: string, description: Primary particle type.}
+# - {name: array_name, datatype: string, description: Array layout or array identifier.}
+# - {name: zenith, unit: deg, datatype: float64, description: Direction of array pointing zenith.}
+# - {name: azimuth, unit: deg, datatype: float64, description: Direction of array pointing azimuth.}
+# - {name: nsb_level, datatype: float64, description: Night sky background level.}
+# - {name: lower_energy_limit, unit: TeV, datatype: float64, description: Derived lower energy limit.}
+# - {name: upper_radius_limit, unit: m, datatype: float64, description: Derived upper core distance limit.}
+# - {name: viewcone_radius, unit: deg, datatype: float64, description: Derived viewcone radius limit.}
+# - {name: br_energy_min, unit: TeV, datatype: float64, description: Broad-range simulation minimum energy.}
+# - {name: br_energy_max, unit: TeV, datatype: float64, description: Broad-range simulation maximum energy.}
+# - {name: br_core_scatter_max, unit: m, datatype: float64, description: Broad-range simulation core scatter maximum.}
+# - {name: br_viewcone_max, unit: deg, datatype: float64, description: Broad-range simulation viewcone maximum.}
+# meta: !!omap
+# - {created: '2026-05-29T17:29:13.275604'}
+# - {description: Lookup table for CORSIKA limits computed from simulations.}
+# - {loss_fraction_core_distance: 0.001}
+# - {loss_min_events_core_distance: 10}
+# - {loss_fraction_angular_distance: 0.001}
+# - {loss_min_events_angular_distance: 10}
+# - {energy_threshold_fraction: 0.01}
+# schema: astropy-2.0
+production_index primary_particle array_name zenith azimuth nsb_level lower_energy_limit upper_radius_limit viewcone_radius br_energy_min br_energy_max br_core_scatter_max br_viewcone_max
+0 gamma CTAO-North-4-LSTs-1-MSTs 20.0 0.0 0.24 0.003 1300.0 10.0 0.003 330.0 1900.0 10.0
+0 gamma CTAO-North-Alpha 20.0 0.0 0.24 0.006 1425.0 10.0 0.003 330.0 1900.0 10.0
+0 gamma LSTN-01 20.0 0.0 0.24 0.003 1200.0 10.0 0.003 330.0 1900.0 10.0
+0 gamma CTAO-North-LSTs 20.0 0.0 0.24 0.003 1225.0 10.0 0.003 330.0 1900.0 10.0
+0 gamma 1mst 20.0 0.0 0.24 0.01 1200.0 10.0 0.003 330.0 1900.0 10.0
+0 gamma CTAO-North-4-LSTs-5-MSTs 20.0 0.0 0.24 0.003 1375.0 10.0 0.003 330.0 1900.0 10.0
+1 gamma CTAO-North-4-LSTs-1-MSTs 40.0 0.0 0.24 0.01 1850.0 10.0 0.006 660.0 2200.0 10.0
+1 gamma CTAO-North-Alpha 40.0 0.0 0.24 0.01 1925.0 10.0 0.006 660.0 2200.0 10.0
+1 gamma LSTN-01 40.0 0.0 0.24 0.006 1750.0 10.0 0.006 660.0 2200.0 10.0
+1 gamma CTAO-North-LSTs 40.0 0.0 0.24 0.006 1750.0 10.0 0.006 660.0 2200.0 10.0
+1 gamma 1mst 40.0 0.0 0.24 0.015 1650.0 10.0 0.006 660.0 2200.0 10.0
+1 gamma CTAO-North-4-LSTs-5-MSTs 40.0 0.0 0.24 0.01 1900.0 10.0 0.006 660.0 2200.0 10.0
+2 gamma CTAO-North-4-LSTs-1-MSTs 52.0 0.0 0.24 0.015 2275.0 10.0 0.009 860.0 2525.0 10.0
+2 gamma CTAO-North-Alpha 52.0 0.0 0.24 0.015 2425.0 10.0 0.009 860.0 2525.0 10.0
+2 gamma LSTN-01 52.0 0.0 0.24 0.015 2225.0 10.0 0.009 860.0 2525.0 10.0
+2 gamma CTAO-North-LSTs 52.0 0.0 0.24 0.015 2250.0 10.0 0.009 860.0 2525.0 10.0
+2 gamma 1mst 52.0 0.0 0.24 0.025 2125.0 10.0 0.009 860.0 2525.0 10.0
+2 gamma CTAO-North-4-LSTs-5-MSTs 52.0 0.0 0.24 0.015 2400.0 10.0 0.009 860.0 2525.0 10.0
+3 gamma CTAO-North-4-LSTs-1-MSTs 60.0 0.0 0.24 0.025 2750.0 10.0 0.012 990.0 2800.0 10.0
+3 gamma CTAO-North-Alpha 60.0 0.0 0.24 0.039 2775.0 10.0 0.012 990.0 2800.0 10.0
+3 gamma LSTN-01 60.0 0.0 0.24 0.025 2725.0 10.0 0.012 990.0 2800.0 10.0
+3 gamma CTAO-North-LSTs 60.0 0.0 0.24 0.025 2725.0 10.0 0.012 990.0 2800.0 10.0
+3 gamma 1mst 60.0 0.0 0.24 0.039 2625.0 10.0 0.012 990.0 2800.0 10.0
+3 gamma CTAO-North-4-LSTs-5-MSTs 60.0 0.0 0.24 0.025 2775.0 10.0 0.012 990.0 2800.0 10.0
+4 gamma CTAO-North-4-LSTs-1-MSTs 20.0 180.0 0.24 0.003 1325.0 10.0 0.003 330.0 1900.0 10.0
+4 gamma CTAO-North-Alpha 20.0 180.0 0.24 0.003 1400.0 10.0 0.003 330.0 1900.0 10.0
+4 gamma LSTN-01 20.0 180.0 0.24 0.003 1200.0 10.0 0.003 330.0 1900.0 10.0
+4 gamma CTAO-North-LSTs 20.0 180.0 0.24 0.003 1225.0 10.0 0.003 330.0 1900.0 10.0
+4 gamma 1mst 20.0 180.0 0.24 0.006 1150.0 10.0 0.003 330.0 1900.0 10.0
+4 gamma CTAO-North-4-LSTs-5-MSTs 20.0 180.0 0.24 0.003 1350.0 10.0 0.003 330.0 1900.0 10.0
+5 gamma CTAO-North-4-LSTs-1-MSTs 40.0 180.0 0.24 0.006 1750.0 10.0 0.006 660.0 2200.0 10.0
+5 gamma CTAO-North-Alpha 40.0 180.0 0.24 0.01 1825.0 10.0 0.006 660.0 2200.0 10.0
+5 gamma LSTN-01 40.0 180.0 0.24 0.006 1675.0 10.0 0.006 660.0 2200.0 10.0
+5 gamma CTAO-North-LSTs 40.0 180.0 0.24 0.006 1675.0 10.0 0.006 660.0 2200.0 10.0
+5 gamma 1mst 40.0 180.0 0.24 0.015 1600.0 10.0 0.006 660.0 2200.0 10.0
+5 gamma CTAO-North-4-LSTs-5-MSTs 40.0 180.0 0.24 0.006 1800.0 10.0 0.006 660.0 2200.0 10.0
+6 gamma CTAO-North-4-LSTs-1-MSTs 52.0 180.0 0.24 0.015 2300.0 10.0 0.009 860.0 2525.0 10.0
+6 gamma CTAO-North-Alpha 52.0 180.0 0.24 0.015 2375.0 10.0 0.009 860.0 2525.0 10.0
+6 gamma LSTN-01 52.0 180.0 0.24 0.01 2250.0 10.0 0.009 860.0 2525.0 10.0
+6 gamma CTAO-North-LSTs 52.0 180.0 0.24 0.01 2250.0 10.0 0.009 860.0 2525.0 10.0
+6 gamma 1mst 52.0 180.0 0.24 0.025 2200.0 10.0 0.009 860.0 2525.0 10.0
+6 gamma CTAO-North-4-LSTs-5-MSTs 52.0 180.0 0.24 0.015 2350.0 10.0 0.009 860.0 2525.0 10.0
+7 gamma CTAO-North-4-LSTs-1-MSTs 60.0 180.0 0.24 0.025 2750.0 10.0 0.012 990.0 2800.0 10.0
+7 gamma CTAO-North-Alpha 60.0 180.0 0.24 0.025 2775.0 10.0 0.012 990.0 2800.0 10.0
+7 gamma LSTN-01 60.0 180.0 0.24 0.025 2725.0 10.0 0.012 990.0 2800.0 10.0
+7 gamma CTAO-North-LSTs 60.0 180.0 0.24 0.025 2725.0 10.0 0.012 990.0 2800.0 10.0
+7 gamma 1mst 60.0 180.0 0.24 0.039 2675.0 10.0 0.012 990.0 2800.0 10.0
+7 gamma CTAO-North-4-LSTs-5-MSTs 60.0 180.0 0.24 0.025 2750.0 10.0 0.012 990.0 2800.0 10.0
+8 gamma CTAO-North-4-LSTs-1-MSTs 20.0 0.0 0.84 0.003 1200.0 10.0 0.003 330.0 1900.0 10.0
+8 gamma CTAO-North-Alpha 20.0 0.0 0.84 0.006 1350.0 10.0 0.003 330.0 1900.0 10.0
+8 gamma LSTN-01 20.0 0.0 0.84 0.003 1175.0 10.0 0.003 330.0 1900.0 10.0
+8 gamma CTAO-North-LSTs 20.0 0.0 0.84 0.003 1175.0 10.0 0.003 330.0 1900.0 10.0
+8 gamma 1mst 20.0 0.0 0.84 0.01 1125.0 10.0 0.003 330.0 1900.0 10.0
+8 gamma CTAO-North-4-LSTs-5-MSTs 20.0 0.0 0.84 0.006 1300.0 10.0 0.003 330.0 1900.0 10.0
+9 gamma CTAO-North-4-LSTs-1-MSTs 40.0 0.0 0.84 0.01 1725.0 10.0 0.006 660.0 2200.0 10.0
+9 gamma CTAO-North-Alpha 40.0 0.0 0.84 0.01 1850.0 10.0 0.006 660.0 2200.0 10.0
+9 gamma LSTN-01 40.0 0.0 0.84 0.01 1675.0 10.0 0.006 660.0 2200.0 10.0
+9 gamma CTAO-North-LSTs 40.0 0.0 0.84 0.01 1675.0 10.0 0.006 660.0 2200.0 10.0
+9 gamma 1mst 40.0 0.0 0.84 0.025 1550.0 10.0 0.006 660.0 2200.0 10.0
+9 gamma CTAO-North-4-LSTs-5-MSTs 40.0 0.0 0.84 0.01 1800.0 10.0 0.006 660.0 2200.0 10.0
+10 gamma CTAO-North-4-LSTs-1-MSTs 52.0 0.0 0.84 0.015 2200.0 10.0 0.009 860.0 2525.0 10.0
+10 gamma CTAO-North-Alpha 52.0 0.0 0.84 0.025 2300.0 10.0 0.009 860.0 2525.0 10.0
+10 gamma LSTN-01 52.0 0.0 0.84 0.015 2150.0 10.0 0.009 860.0 2525.0 10.0
+10 gamma CTAO-North-LSTs 52.0 0.0 0.84 0.015 2200.0 10.0 0.009 860.0 2525.0 10.0
+10 gamma 1mst 52.0 0.0 0.84 0.039 2025.0 10.0 0.009 860.0 2525.0 10.0
+10 gamma CTAO-North-4-LSTs-5-MSTs 52.0 0.0 0.84 0.015 2250.0 10.0 0.009 860.0 2525.0 10.0
+11 gamma CTAO-North-4-LSTs-1-MSTs 60.0 0.0 0.84 0.039 2725.0 10.0 0.012 990.0 2800.0 10.0
+11 gamma CTAO-North-Alpha 60.0 0.0 0.84 0.039 2750.0 10.0 0.012 990.0 2800.0 10.0
+11 gamma LSTN-01 60.0 0.0 0.84 0.039 2725.0 10.0 0.012 990.0 2800.0 10.0
+11 gamma CTAO-North-LSTs 60.0 0.0 0.84 0.025 2725.0 10.0 0.012 990.0 2800.0 10.0
+11 gamma 1mst 60.0 0.0 0.84 0.063 2475.0 10.0 0.012 990.0 2800.0 10.0
+11 gamma CTAO-North-4-LSTs-5-MSTs 60.0 0.0 0.84 0.039 2750.0 10.0 0.012 990.0 2800.0 10.0
+12 gamma CTAO-North-4-LSTs-1-MSTs 20.0 180.0 0.84 0.003 1225.0 10.0 0.003 330.0 1900.0 10.0
+12 gamma CTAO-North-Alpha 20.0 180.0 0.84 0.006 1325.0 10.0 0.003 330.0 1900.0 10.0
+12 gamma LSTN-01 20.0 180.0 0.84 0.003 1175.0 10.0 0.003 330.0 1900.0 10.0
+12 gamma CTAO-North-LSTs 20.0 180.0 0.84 0.003 1200.0 10.0 0.003 330.0 1900.0 10.0
+12 gamma 1mst 20.0 180.0 0.84 0.01 1100.0 10.0 0.003 330.0 1900.0 10.0
+12 gamma CTAO-North-4-LSTs-5-MSTs 20.0 180.0 0.84 0.006 1275.0 10.0 0.003 330.0 1900.0 10.0
+13 gamma CTAO-North-4-LSTs-1-MSTs 40.0 180.0 0.84 0.01 1675.0 10.0 0.006 660.0 2200.0 10.0
+13 gamma CTAO-North-Alpha 40.0 180.0 0.84 0.01 1725.0 10.0 0.006 660.0 2200.0 10.0
+13 gamma LSTN-01 40.0 180.0 0.84 0.006 1625.0 10.0 0.006 660.0 2200.0 10.0
+13 gamma CTAO-North-LSTs 40.0 180.0 0.84 0.006 1625.0 10.0 0.006 660.0 2200.0 10.0
+13 gamma 1mst 40.0 180.0 0.84 0.015 1475.0 10.0 0.006 660.0 2200.0 10.0
+13 gamma CTAO-North-4-LSTs-5-MSTs 40.0 180.0 0.84 0.01 1675.0 10.0 0.006 660.0 2200.0 10.0
+14 gamma CTAO-North-4-LSTs-1-MSTs 52.0 180.0 0.84 0.015 2250.0 10.0 0.009 860.0 2525.0 10.0
+14 gamma CTAO-North-Alpha 52.0 180.0 0.84 0.015 2275.0 10.0 0.009 860.0 2525.0 10.0
+14 gamma LSTN-01 52.0 180.0 0.84 0.015 2200.0 10.0 0.009 860.0 2525.0 10.0
+14 gamma CTAO-North-LSTs 52.0 180.0 0.84 0.015 2200.0 10.0 0.009 860.0 2525.0 10.0
+14 gamma 1mst 52.0 180.0 0.84 0.025 2000.0 10.0 0.009 860.0 2525.0 10.0
+14 gamma CTAO-North-4-LSTs-5-MSTs 52.0 180.0 0.84 0.015 2275.0 10.0 0.009 860.0 2525.0 10.0
+15 gamma CTAO-North-4-LSTs-1-MSTs 60.0 180.0 0.84 0.025 2700.0 10.0 0.012 990.0 2800.0 10.0
+15 gamma CTAO-North-Alpha 60.0 180.0 0.84 0.025 2700.0 10.0 0.012 990.0 2800.0 10.0
+15 gamma LSTN-01 60.0 180.0 0.84 0.025 2675.0 10.0 0.012 990.0 2800.0 10.0
+15 gamma CTAO-North-LSTs 60.0 180.0 0.84 0.025 2675.0 10.0 0.012 990.0 2800.0 10.0
+15 gamma 1mst 60.0 180.0 0.84 0.063 2475.0 10.0 0.012 990.0 2800.0 10.0
+15 gamma CTAO-North-4-LSTs-5-MSTs 60.0 180.0 0.84 0.025 2700.0 10.0 0.012 990.0 2800.0 10.0

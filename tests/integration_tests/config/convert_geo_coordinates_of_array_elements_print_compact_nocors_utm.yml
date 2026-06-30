@@ -2,7 +2,7 @@
 applications:
 - application: simtools-convert-geo-coordinates-of-array-elements
   configuration:
-    input: ./tests/resources/telescope_positions-North-utm.ecsv
+    input: tests/resources/static/telescope_positions-North-utm.ecsv
     model_version: 6.0.2
     print: utm
   test_name: print_compact_nocors_utm
