@@ -149,7 +149,7 @@ class PlotSimtelEvent:
         self.time_axis = None
         if len(event_data):
             self.time_axis = trace.get_time_axis(
-                sampling_rate=tel_desc["pixel_settings"]["time_slice"] * u.ns,
+                time_slice=tel_desc["pixel_settings"]["time_slice"] * u.ns,
                 n_samples=n_samples,  # assume all pixels with same number of samples
             )
 
