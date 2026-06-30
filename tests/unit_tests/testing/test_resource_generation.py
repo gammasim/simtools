@@ -12,8 +12,13 @@ def test_download_files(tmp_test_directory, monkeypatch):
     config_file = Path(tmp_test_directory) / "download_files.yml"
     config_file.write_text(
         """
+base_urls:
+  test_base:
+    url: https://example.org/
+    version: v1.0.0
 files:
-  - url: https://example.org/test.csv
+  - base_url_key: test_base
+    path: test.csv
     description: test file
     target_path: folder/test.csv
 """.strip()
@@ -22,7 +27,7 @@ files:
     )
 
     def _fake_urlretrieve(url, destination):
-        assert url == "https://example.org/test.csv"
+        assert url == "https://example.org/v1.0.0/test.csv"
         Path(destination).write_text("value\n", encoding="utf-8")
         return destination, None
 
@@ -41,8 +46,13 @@ def test_download_files_missing_required_field(tmp_test_directory):
     config_file = Path(tmp_test_directory) / "download_files.yml"
     config_file.write_text(
         """
+base_urls:
+  test_base:
+    url: https://example.org/
+    version: v1.0.0
 files:
-  - url: https://example.org/test.csv
+  - base_url_key: test_base
+    path: test.csv
     description: test file
 """.strip()
         + "\n",
@@ -57,8 +67,13 @@ def test_download_files_download_failure(tmp_test_directory, monkeypatch):
     config_file = Path(tmp_test_directory) / "download_files.yml"
     config_file.write_text(
         """
+base_urls:
+  test_base:
+    url: https://example.org/
+    version: v1.0.0
 files:
-  - url: https://example.org/test.csv
+  - base_url_key: test_base
+    path: test.csv
     description: test file
     target_path: folder/test.csv
 """.strip()
@@ -87,7 +102,7 @@ def test_download_files_missing_configuration(tmp_test_directory):
     [
         ("- not-a-mapping\n", "must be a YAML mapping"),
         ("files: {}\n", "key 'files' must be a list"),
-        ("gitlab_versions: []\nfiles: []\n", "key 'gitlab_versions' must be a dictionary"),
+        ("base_urls: []\nfiles: []\n", "key 'base_urls' must be a dictionary"),
         ("files:\n- invalid-entry\n", "Download entry 0 must be a dictionary"),
     ],
 )
@@ -190,13 +205,16 @@ def test_get_resource_generation_directory_missing(tmp_test_directory):
         resource_generation.get_resource_generation_directory(tmp_test_directory, "v0.32.0")
 
 
-def test_download_files_replaces_version_placeholder(tmp_test_directory, monkeypatch):
+def test_download_files_auto_injects_version(tmp_test_directory, monkeypatch):
     config_file = Path(tmp_test_directory) / "download_files.yml"
     config_file.write_text(
-        "gitlab_versions:\n"
-        "  simulation_model_parameter_setting: 0.1.0\n"
+        "base_urls:\n"
+        "  simulation_model_parameter_setting:\n"
+        "    url: https://example.org/\n"
+        "    version: 0.1.0\n"
         "files:\n"
-        "- url: https://example.org/__SIMULATION_MODEL_PARAMETER_SETTING_VERSION__/test.csv\n"
+        "- base_url_key: simulation_model_parameter_setting\n"
+        "  path: input/test.csv\n"
         "  description: test file\n"
         "  target_path: generated/test.csv\n",
         encoding="utf-8",
@@ -214,20 +232,25 @@ def test_download_files_replaces_version_placeholder(tmp_test_directory, monkeyp
         target_dir=tmp_test_directory,
     )
 
-    assert called_urls == ["https://example.org/0.1.0/test.csv"]
+    assert called_urls == ["https://example.org/0.1.0/input/test.csv"]
 
 
-def test_download_files_requires_configured_version(tmp_test_directory):
+def test_download_files_requires_valid_base_url_key(tmp_test_directory):
     config_file = Path(tmp_test_directory) / "download_files.yml"
     config_file.write_text(
+        "base_urls:\n"
+        "  test_base:\n"
+        "    url: https://example.org/\n"
+        "    version: v1.0.0\n"
         "files:\n"
-        "- url: https://example.org/__EXAMPLE_VERSION__/test.csv\n"
+        "- base_url_key: unknown_base\n"
+        "  path: test.csv\n"
         "  description: test file\n"
         "  target_path: generated/test.csv\n",
         encoding="utf-8",
     )
 
-    with pytest.raises(ValueError, match="No GitLab version configured"):
+    with pytest.raises(ValueError, match="Base URL key 'unknown_base' not found"):
         resource_generation.download_files(
             config_file=config_file,
             target_dir=tmp_test_directory,

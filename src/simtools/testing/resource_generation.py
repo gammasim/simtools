@@ -6,7 +6,6 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-import simtools.utils.general as gen
 from simtools.io import ascii_handler
 from simtools.runners import simtools_runner
 
@@ -124,7 +123,7 @@ def _validate_download_entry(entry, index):
     if not isinstance(entry, dict):
         raise ValueError(f"Download entry {index} must be a dictionary.")
 
-    required_keys = ("url", "description", "target_path")
+    required_keys = ("base_url_key", "path", "description", "target_path")
     missing_keys = [key for key in required_keys if not entry.get(key)]
     if missing_keys:
         raise ValueError(f"Download entry {index} missing required keys: {', '.join(missing_keys)}")
@@ -142,7 +141,7 @@ def download_files(config_file, target_dir):
     Parameters
     ----------
     config_file : str or pathlib.Path
-        YAML file containing ``gitlab_versions`` and ``files`` entries.
+        YAML file containing ``base_urls`` and ``files`` entries.
     target_dir : str or pathlib.Path
         Base directory for each entry's relative ``target_path``.
 
@@ -166,24 +165,32 @@ def download_files(config_file, target_dir):
         raise ValueError("Download configuration must be a YAML mapping.")
 
     file_entries = download_config.get("files", [])
-    gitlab_versions = download_config.get("gitlab_versions", {})
     if not isinstance(file_entries, list):
         raise ValueError("Download configuration key 'files' must be a list.")
-    if not isinstance(gitlab_versions, dict):
-        raise ValueError("Download configuration key 'gitlab_versions' must be a dictionary.")
 
-    replacements = {
-        f"__{repository.upper()}_VERSION__": str(version)
-        for repository, version in gitlab_versions.items()
-    }
-    file_entries = gen.replace_placeholders_recursively(file_entries, replacements)
+    base_urls = download_config.get("base_urls", {})
+    if not isinstance(base_urls, dict):
+        raise ValueError("Download configuration key 'base_urls' must be a dictionary.")
+
+    processed_base_urls = {}
+    for base_key, base_info in base_urls.items():
+        if isinstance(base_info, dict):
+            url = base_info.get("url", "")
+            version = base_info.get("version", "")
+            processed_base_urls[base_key] = {"url": url, "version": version}
 
     downloaded_files = []
     for index, entry in enumerate(file_entries):
         _validate_download_entry(entry, index)
-        url = entry["url"]
-        if "_VERSION__" in url:
-            raise ValueError(f"No GitLab version configured for download URL: {url}")
+
+        base_key = entry["base_url_key"]
+        if base_key not in processed_base_urls:
+            raise ValueError(f"Base URL key '{base_key}' not found in base_urls configuration")
+
+        base_url_info = processed_base_urls[base_key]
+        version = base_url_info["version"]
+        path_with_version = version + "/" + entry["path"].lstrip("/") if version else entry["path"]
+        url = base_url_info["url"].rstrip("/") + "/" + path_with_version.lstrip("/")
 
         destination = Path(target_dir) / entry["target_path"]
         destination.parent.mkdir(parents=True, exist_ok=True)
