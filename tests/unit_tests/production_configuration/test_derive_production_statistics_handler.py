@@ -5,12 +5,13 @@ import numpy as np
 import pytest
 from astropy.table import Table
 
+from simtools.constants import TEST_RESOURCES_STATIC
 from simtools.production_configuration.derive_production_statistics_handler import (
     ProductionStatisticsHandler,
 )
 
 # Define constants for frequently used literals
-BASE_PATH = "tests/resources/production_dl2_fits/"
+BASE_PATH = f"{TEST_RESOURCES_STATIC}/production_dl2_fits/"
 FILE_NAME_TEMPLATE = "prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits"
 OUTPUT_FILE = "output.ecsv"
 
@@ -40,7 +41,7 @@ def grid_points_file(tmp_path, grid_points_content):
 @pytest.fixture
 def metrics_file():
     """Fixture to return a metrics file."""
-    return Path("tests/resources/production_simulation_config_metrics.yml")
+    return Path(f"{TEST_RESOURCES_STATIC}/production_simulation_config_metrics.yml")
 
 
 @pytest.fixture

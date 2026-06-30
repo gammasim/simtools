@@ -9,14 +9,16 @@ from pathlib import Path
 
 import simtools.utils.general as gen
 from simtools import dependencies
-from simtools.data_model import workflow_metadata
+from simtools import version as simtools_version
+from simtools.constants import RUN_TIME_ENVIRONMENT_SCHEMA
+from simtools.data_model import schema, workflow_metadata
 from simtools.io import ascii_handler
 from simtools.job_execution import job_manager
 
 logger = logging.getLogger(__name__)
 
 
-def run_applications(args_dict):
+def run_applications(args_dict, run_time=None, replacements=None):
     """
     Run simtools applications step-by-step as defined in a configuration file.
 
@@ -24,6 +26,14 @@ def run_applications(args_dict):
     ----------
     args_dict : dict
         Dictionary containing command line arguments.
+        Optional key ``overwrite_collection_files`` (bool) allows collection
+        output files to be overwritten when different source files have the
+        same basename. Defaults to False.
+    run_time : list or None
+        Prepared runtime command. If provided, reuse it instead of preparing
+        the runtime environment from the workflow configuration.
+    replacements : dict or None
+        Placeholder replacements applied recursively to the workflow configuration.
     """
     (
         configurations,
@@ -34,13 +44,19 @@ def run_applications(args_dict):
         args_dict["config_file"],
         args_dict.get("steps"),
         args_dict.get("activity_id"),
+        replacements=replacements,
     )
+    if args_dict.get("log_file") is not None:
+        log_file = args_dict["log_file"]
+
+    if args_dict.get("runtime_environment") is not None:
+        runtime_environment = args_dict["runtime_environment"]
 
     collection_config = None
     try:
-        collection_config = ascii_handler.collect_data_from_file(args_dict["config_file"]).get(
-            "collection"
-        )
+        workflow_config = ascii_handler.collect_data_from_file(args_dict["config_file"])
+        workflow_config = gen.replace_placeholders_recursively(workflow_config, replacements or {})
+        collection_config = workflow_config.get("collection")
     except (OSError, TypeError):
         logger.debug("Could not read collection configuration from workflow file.")
 
@@ -49,11 +65,10 @@ def run_applications(args_dict):
     runtime_environment_snapshot = deepcopy(runtime_environment)
     model_parameter_metadata_files = []
 
-    run_time = (
-        read_runtime_environment(runtime_environment)
-        if not args_dict["ignore_runtime_environment"]
-        else []
-    )
+    if args_dict["ignore_runtime_environment"]:
+        run_time = []
+    elif run_time is None:
+        run_time = read_runtime_environment(runtime_environment)
 
     log_file = Path(log_file)
     log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -89,7 +104,11 @@ def run_applications(args_dict):
                     f"Application: {app}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}\n"
                 )
 
-            _copy_collection_files(configurations, collection_config)
+            _copy_collection_files(
+                configurations,
+                collection_config,
+                overwrite_files=args_dict.get("overwrite_collection_files", False),
+            )
         finally:
             _update_workflow_metadata_files(
                 args_dict=args_dict,
@@ -102,7 +121,7 @@ def run_applications(args_dict):
             )
 
 
-def _copy_collection_files(configurations, collection_config):
+def _copy_collection_files(configurations, collection_config, overwrite_files=False):
     """Copy listed files from application output paths to one or more collection output paths.
 
     Parameters
@@ -110,8 +129,13 @@ def _copy_collection_files(configurations, collection_config):
     configurations : list[dict]
         Application configurations from the workflow config file.
     collection_config : dict or list[dict] or None
-        A single collection entry (``{output_path, files}``) or a list of such
-        entries. ``None`` or an empty value is silently ignored.
+        A single collection entry (``{output_path, files, source_directory}``) or
+        a list of such entries. ``source_directory`` is optional, can be a string
+        or list of strings, and defaults to ``output_path``. ``None`` or an empty
+        value is silently ignored.
+    overwrite_files : bool
+        If True, allow overwriting existing files in collection output paths
+        when different sources resolve to the same basename.
 
     Raises
     ------
@@ -124,19 +148,27 @@ def _copy_collection_files(configurations, collection_config):
     if isinstance(collection_config, dict):
         collection_config = [collection_config]
 
-    source_directories = _collect_source_directories(configurations)
     for entry in collection_config:
         output_path = entry.get("output_path")
         files = entry.get("files") or []
         if output_path is None or not files:
             continue
+        source_directories = _collect_source_directories(
+            configurations,
+            source_directory=entry.get("source_directory"),
+        )
         collection_output_path = Path(output_path)
         collection_output_path.mkdir(parents=True, exist_ok=True)
         for pattern in files:
-            _copy_pattern_files(pattern, source_directories, collection_output_path)
+            _copy_pattern_files(
+                pattern,
+                source_directories,
+                collection_output_path,
+                overwrite_files=overwrite_files,
+            )
 
 
-def _copy_pattern_files(pattern, source_directories, destination):
+def _copy_pattern_files(pattern, source_directories, destination, overwrite_files=False):
     """Copy all files matching *pattern* from source directories into *destination*.
 
     Parameters
@@ -147,6 +179,8 @@ def _copy_pattern_files(pattern, source_directories, destination):
         Directories to search.
     destination : Path
         Target directory (must already exist).
+    overwrite_files : bool
+        If True, overwrite existing destination files.
 
     Raises
     ------
@@ -155,7 +189,7 @@ def _copy_pattern_files(pattern, source_directories, destination):
     """
     for source_file in _find_collection_files(pattern, source_directories):
         dest = destination / source_file.name
-        if dest.exists() and dest.resolve() != source_file.resolve():
+        if not overwrite_files and dest.exists() and dest.resolve() != source_file.resolve():
             raise FileExistsError(
                 f"Filename collision in collection: '{source_file.name}' would be "
                 f"overwritten by '{source_file}'. Ensure output files have unique names."
@@ -163,24 +197,42 @@ def _copy_pattern_files(pattern, source_directories, destination):
         shutil.copy2(source_file, dest)
 
 
-def _collect_source_directories(configurations):
-    """Return unique output directories from application configurations."""
+def _collect_source_directories(configurations, source_directory=None):
+    """Return unique source directories from application configurations.
+
+    ``source_directory`` selects application configuration keys containing
+    directories to search. It can be a string or a list of strings and defaults
+    to ``output_path``.
+    """
     source_directories = []
+    source_directory_keys = _normalize_collection_source_directories(source_directory)
     for config in configurations:
-        source_dir = config.get("configuration", {}).get("output_path")
-        if source_dir is not None:
-            source_directory = Path(source_dir)
-            if source_directory not in source_directories:
-                source_directories.append(source_directory)
+        app_configuration = config.get("configuration", {})
+        for source_key in source_directory_keys:
+            source_dir = app_configuration.get(source_key)
+            if source_dir is not None:
+                source_path = Path(source_dir)
+                if source_path not in source_directories:
+                    source_directories.append(source_path)
     return source_directories
+
+
+def _normalize_collection_source_directories(source_directory):
+    """Return source directory keys as a list."""
+    if source_directory is None:
+        return ["output_path"]
+    if isinstance(source_directory, str):
+        return [source_directory]
+    return list(source_directory)
 
 
 def _find_collection_files(pattern, source_directories):
     """Find files matching a name or glob pattern in the list of source directories.
 
     For literal filenames (no wildcard characters), the existing exact-match
-    semantics are preserved: the first directory that contains the file wins and
-    a :exc:`FileNotFoundError` is raised when no match is found.
+    semantics are preserved when the file exists directly under a source
+    directory. If not, a unique recursive match anywhere below a source
+    directory is accepted so collection files can live in nested output trees.
 
     For glob patterns (containing ``*``, ``?``, or ``[``), all source
     directories are searched recursively and all matching regular files are
@@ -217,10 +269,23 @@ def _find_collection_files(pattern, source_directories):
             )
         return matched
 
+    recursive_matches = []
     for source_directory in source_directories:
         candidate = source_directory / pattern
         if candidate.exists():
             return [candidate]
+        recursive_matches.extend(
+            file_path for file_path in source_directory.rglob(pattern) if file_path.is_file()
+        )
+
+    if len(recursive_matches) == 1:
+        return recursive_matches
+    if len(recursive_matches) > 1:
+        raise FileExistsError(
+            f"Collection file '{pattern}' matched multiple nested files in {source_directories}: "
+            f"{recursive_matches}. Use a more specific path or glob pattern."
+        )
+
     raise FileNotFoundError(f"Could not find collection file '{pattern}' in {source_directories}.")
 
 
@@ -289,7 +354,9 @@ def _update_workflow_metadata_files(
         )
 
 
-def _read_application_configuration(configuration_file, steps, workflow_activity_id=None):
+def _read_application_configuration(
+    configuration_file, steps, workflow_activity_id=None, replacements=None
+):
     """
     Read application configuration from file and modify for setting workflows.
 
@@ -308,6 +375,8 @@ def _read_application_configuration(configuration_file, steps, workflow_activity
         List of steps to be executed (None: all steps).
     workflow_activity_id : str
         Workflow activity id fallback from command-line context.
+    replacements : dict or None
+        Placeholder replacements applied recursively before processing.
 
     Returns
     -------
@@ -322,6 +391,7 @@ def _read_application_configuration(configuration_file, steps, workflow_activity
 
     """
     job_configuration = ascii_handler.collect_data_from_file(configuration_file)
+    job_configuration = gen.replace_placeholders_recursively(job_configuration, replacements or {})
     workflow_activity_id = (
         gen.extract_uuid7_from_path(configuration_file) or workflow_activity_id or gen.get_uuid()
     )
@@ -335,7 +405,7 @@ def _read_application_configuration(configuration_file, steps, workflow_activity
         app_config = config.get("configuration", {})
         if "output_path" not in app_config:
             output_path_used_as_default = True
-        config["configuration"] = _replace_placeholders_in_configuration(
+        config["configuration"] = _prepare_application_configuration(
             app_config,
             derived_output_path,
             setting_workflow,
@@ -464,6 +534,19 @@ def _replace_placeholders_in_configuration(
     return configuration
 
 
+def _prepare_application_configuration(configuration, output_path, setting_workflow):
+    """Resolve placeholders and version-dependent values in a workflow configuration."""
+    configuration = _replace_placeholders_in_configuration(
+        configuration,
+        output_path,
+        setting_workflow,
+    )
+    model_version = configuration.get("model_version")
+    if model_version is not None:
+        configuration = simtools_version.resolve_by_version(configuration, model_version)
+    return configuration
+
+
 def _set_input_output_directories(path):
     """
     Set input and output directories based on the configuration file path.
@@ -524,7 +607,7 @@ def read_runtime_environment(runtime_environment, workdir="/workdir/external/"):
         for opt in options:
             cmd.extend(opt.split())
 
-    if env := runtime_environment.get("env_file"):
+    if env := runtime_environment.get("environment_file"):
         cmd += ["--env-file", env]
     if net := runtime_environment.get("network"):
         cmd += ["--network", net]
@@ -533,6 +616,38 @@ def read_runtime_environment(runtime_environment, workdir="/workdir/external/"):
     _pull_image(engine, runtime_environment["image"])
 
     return cmd
+
+
+def prepare_runtime_environment(runtime_environment_file):
+    """Read and prepare a standalone runtime environment.
+
+    Parameters
+    ----------
+    runtime_environment_file : str or pathlib.Path
+        YAML file containing a top-level ``runtime_environment`` mapping.
+
+    Returns
+    -------
+    tuple[dict, list[str]]
+        Runtime-environment configuration and prepared runtime command.
+
+    Raises
+    ------
+    ValueError
+        If the YAML content is not a mapping or lacks ``runtime_environment``.
+    jsonschema.ValidationError
+        If the configuration does not conform to the runtime-environment schema.
+    """
+    runtime_config = ascii_handler.collect_data_from_file(runtime_environment_file)
+    if not isinstance(runtime_config, dict):
+        raise ValueError("Runtime configuration must be a YAML mapping.")
+    runtime_environment = runtime_config.get("runtime_environment")
+    if runtime_environment is None:
+        raise ValueError("Runtime configuration must contain a 'runtime_environment' block.")
+    schema.validate_dict_using_schema(
+        runtime_config, schema_file=RUN_TIME_ENVIRONMENT_SCHEMA, offline=True
+    )
+    return runtime_environment, read_runtime_environment(runtime_environment)
 
 
 def _pull_image(engine, image):

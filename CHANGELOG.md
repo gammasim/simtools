@@ -7,6 +7,44 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.33.0](https://github.com/gammasim/simtools/releases/tag/v0.33.0) - 2026-06-30
+
+### API Changes
+
+- Remove obsolete `read_value_from_file` function from `data_reader` and corresponding unit tests. ([#2272](https://github.com/gammasim/simtools/pull/2272))
+
+### Bugfixes
+
+- Fix writing of CORSIKA input file: add setting of runnumber (`RUNNR`), `HOST`, `USER`. ([#2259](https://github.com/gammasim/simtools/pull/2259))
+- Small bug fix in retrieving run times < 1 s: zero should be treated as a valid value. ([#2274](https://github.com/gammasim/simtools/pull/2274))
+- Fix sim_telarray output validation and include paths, stabilize PSF calculations, correct waveform plot time axes, and validate expected event counts of zero. ([#2294](https://github.com/gammasim/simtools/pull/2294))
+
+### Documentation
+
+- Improve and expand documentation on how to configure and run simulation productions. ([#2253](https://github.com/gammasim/simtools/pull/2253))
+
+### New Features
+
+- Improved generation of CORSIKA production grid, including Emax scaling, better interpolation, more plotting. ([#2246](https://github.com/gammasim/simtools/pull/2246))
+- Replace NSB axis in simtools-production-generate-grid by using integrated nsb rate derived from site model. ([#2257](https://github.com/gammasim/simtools/pull/2257))
+- Allow simtools-production-generate-grid to generate large grids with millions of grid points. ([#2262](https://github.com/gammasim/simtools/pull/2262))
+- Add export functionality for mirror list model parameter file to `ecsv` format. ([#2273](https://github.com/gammasim/simtools/pull/2273))
+- Add schema for production grid table file. ([#2277](https://github.com/gammasim/simtools/pull/2277))
+- Enforce file length limits for sim_telarray configuration files. ([#2287](https://github.com/gammasim/simtools/pull/2287))
+- Allow `simtools-production-derive-corsika-limits` to skip invalid reduced event-data HDF5 files. ([#2289](https://github.com/gammasim/simtools/pull/2289))
+- Add `--ignore_existing_parameter_version` to skip model-parameter version checks in applications and workflows. ([#2292](https://github.com/gammasim/simtools/pull/2292))
+
+### Maintenance
+
+- Add GitHub pull request template for release candidates. ([#2252](https://github.com/gammasim/simtools/pull/2252))
+- Update `plt.get_cmap` command to run with matplotlib v3.11. ([#2261](https://github.com/gammasim/simtools/pull/2261))
+- Remove obsolete application `simtools-production-merge-corsika-limits`. ([#2263](https://github.com/gammasim/simtools/pull/2263))
+- Add git-lfs to the simtools development Docker image. ([#2266](https://github.com/gammasim/simtools/pull/2266))
+- Remove FITS support for reduced event data writer and reader. ([#2276](https://github.com/gammasim/simtools/pull/2276))
+- Add McCabe complexity check to ruff settings. ([#2302](https://github.com/gammasim/simtools/pull/2302))
+- Add ruff rule on floating point comparison (currently in ruff preview). ([#2304](https://github.com/gammasim/simtools/pull/2304))
+
+
 ## [v0.32.0](https://github.com/gammasim/simtools/releases/tag/v0.32.0) - 2026-06-08
 
 ### API Changes
