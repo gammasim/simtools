@@ -7,7 +7,7 @@ applications:
     output_path: simtools-output
     site: North
     telescope: LSTN-02
-    overwrite_model_parameters: tests/resources/info_test_camera_efficiency_change_LSTN-02.yml
+    overwrite_model_parameters: tests/resources/static/info_test_camera_efficiency_change_LSTN-02.yml
     parameter_version: 0.0.99
     write_reference_nsb_rate_as_parameter: true
     zenith_angle: 0.
