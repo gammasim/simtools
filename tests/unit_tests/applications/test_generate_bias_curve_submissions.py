@@ -56,11 +56,12 @@ def test_add_arguments_accepts_custom_bias_curve_values():
             "3.5",
             "--trigger_thresholds",
             "225",
-            "235",
+            "2",
+            "10",
         ]
     )
 
     assert args.nsb_energy_range == (10 * u.MeV, 30 * u.MeV)
     assert args.proton_energy_range == (5 * u.GeV, 500 * u.GeV)
     assert args.nsb_scaling_factor == 3.5
-    assert args.trigger_thresholds == [225.0, 235.0]
+    assert args.trigger_thresholds == [225.0, 2.0, 10.0]

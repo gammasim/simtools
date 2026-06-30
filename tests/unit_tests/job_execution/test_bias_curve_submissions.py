@@ -113,15 +113,24 @@ def test_parameter_scan_entry_uses_compact_threshold_label(tmp_test_directory):
     }
 
 
-def test_parameter_scan_entry_uses_configured_thresholds():
-    assert bias_curve_submissions._parameter_scan_entry("LSTN-01", "asum_threshold", [225, 235])[
+def test_parameter_scan_entry_expands_configured_thresholds():
+    assert bias_curve_submissions._parameter_scan_entry("LSTN-01", "asum_threshold", [225, 3, 10])[
         "values"
-    ] == [225, 235]
+    ] == [225, 235, 245]
 
 
-def test_empty_configured_thresholds_are_rejected():
-    with pytest.raises(ValueError, match="at least one value"):
-        bias_curve_submissions._threshold_values("asum_threshold", [])
+@pytest.mark.parametrize(
+    ("trigger_thresholds", "error"),
+    [
+        ([225, 2], "must contain minimum threshold"),
+        ([225, 0, 10], "positive integer"),
+        ([225, 2.5, 10], "positive integer"),
+        ([225, 2, 0], "step size must be positive"),
+    ],
+)
+def test_invalid_configured_thresholds_are_rejected(trigger_thresholds, error):
+    with pytest.raises(ValueError, match=error):
+        bias_curve_submissions._threshold_values("asum_threshold", trigger_thresholds)
 
 
 def test_scan_config_contains_nsb_base_overwrite_and_trigger_scan(tmp_test_directory):
@@ -172,7 +181,7 @@ def test_scan_config_contains_proton_base_overwrite_and_trigger_scan(tmp_test_di
 def test_scan_config_uses_configured_scaling_and_thresholds(curve_name, tmp_test_directory):
     args = _base_args(tmp_test_directory)
     args["nsb_scaling_factor"] = 3.5
-    args["trigger_thresholds"] = [225, 235]
+    args["trigger_thresholds"] = [225, 2, 10]
 
     scan_config = bias_curve_submissions._scan_config(curve_name, "LSTN-01", args)
 

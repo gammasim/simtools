@@ -53,11 +53,21 @@ def _threshold_param_name(args):
 
 
 def _threshold_values(threshold_param, trigger_thresholds=None):
-    """Return configured thresholds or defaults for the threshold parameter."""
+    """Return thresholds expanded from a scan specification, or defaults."""
     if trigger_thresholds is not None:
-        if not trigger_thresholds:
-            raise ValueError("trigger_thresholds must contain at least one value.")
-        return trigger_thresholds
+        if len(trigger_thresholds) != 3:
+            raise ValueError(
+                "trigger_thresholds must contain minimum threshold, number of "
+                "thresholds, and step size."
+            )
+
+        minimum, number, step_size = trigger_thresholds
+        if number < 1 or not float(number).is_integer():
+            raise ValueError("Number of trigger thresholds must be a positive integer.")
+        if step_size <= 0:
+            raise ValueError("Trigger-threshold step size must be positive.")
+
+        return [minimum + index * step_size for index in range(int(number))]
 
     if threshold_param == "asum_threshold":
         return [*range(220, 310, 10), *range(320, 361, 20)]
