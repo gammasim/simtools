@@ -155,25 +155,27 @@ format.quote-style = "double"
 format.line-ending = "auto"
 # no documentation linting for test files
 format.skip-magic-trailing-comma = false
+lint.select = [ "E4", "E7", "E9", "F" ]
 lint.extend-select = [
-  "A",   # built-in shadowing
-  "C4",  # comprehension
-  "C90", # mccabe complex structure
-  "COM", # flake8-commas
-  "D",   # pydocstyle
-  "ERA", # commented-out code
-  "F",   # pyflakes
-  "G",   # logging
-  "I",   # isort
-  "ICN", # import name conventions
-  "ISC", # implicit string concat rules
-  "N",   # pep8 naming
-  "NPY", # numpy
-  "PT",  # pytest
-  "PTH", # use pathlib
-  "RET", # return statements
-  "RUF", # ruff
-  "UP",  # pyupgrade
+  "A",      # built-in shadowing
+  "C4",     # comprehension
+  "C90",    # mccabe complex structure
+  "COM",    # flake8-commas
+  "D",      # pydocstyle
+  "ERA",    # commented-out code
+  "F",      # pyflakes
+  "G",      # logging
+  "I",      # isort
+  "ICN",    # import name conventions
+  "ISC",    # implicit string concat rules
+  "N",      # pep8 naming
+  "NPY",    # numpy
+  "PT",     # pytest
+  "PTH",    # use pathlib
+  "RET",    # return statements
+  "RUF",    # ruff
+  "RUF069", # float equality comparison (preview)
+  "UP",     # pyupgrade
 ]
 lint.ignore = [
   "COM812", # incompatible with ruff format
@@ -185,6 +187,7 @@ lint.ignore = [
   "PTH123", # open("foo") should be replaced by Path("foo").open()
   "RUF012", # Mutable class attributes should be annotated
 ]
+lint.explicit-preview-rules = true
 lint.per-file-ignores."**/tests/**" = [
   "D",
 ]
@@ -193,6 +196,7 @@ lint.per-file-ignores."**/tests_*.py" = [
 ]
 lint.mccabe.max-complexity = 12
 lint.pydocstyle.convention = "numpy"
+lint.preview = true
 
 [tool.pylint]
 # See discussion in issue 521
