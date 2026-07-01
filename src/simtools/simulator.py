@@ -412,57 +412,152 @@ class Simulator:
         ValueError
             If the input parameters or number of explicit output files are invalid.
         """
+        Simulator._validate_reduced_event_list_args(
+            input_files=input_files,
+            input_file_list=input_file_list,
+            files_per_reduced_event_file=files_per_reduced_event_file,
+        )
+
+        resolved_input_files, input_file_list_path = Simulator._resolve_reduced_event_input_files(
+            input_files=input_files,
+            input_file_list=input_file_list,
+        )
+        input_file_batches = Simulator._build_input_file_batches(
+            input_files=resolved_input_files,
+            files_per_reduced_event_file=files_per_reduced_event_file,
+        )
+
+        resolved_output_files = Simulator._resolve_reduced_event_output_files(
+            output_files=output_files,
+            output_path=output_path,
+            input_file_list=input_file_list_path,
+            input_file_batches=input_file_batches,
+        )
+        Simulator._validate_reduced_event_output_count(
+            input_file_batches=input_file_batches,
+            output_files=resolved_output_files,
+        )
+
+        Simulator._run_reduced_event_list_jobs(
+            input_file_batches=input_file_batches,
+            output_files=resolved_output_files,
+            max_workers=max_workers,
+        )
+
+    @staticmethod
+    def _validate_reduced_event_list_args(
+        input_files,
+        input_file_list,
+        files_per_reduced_event_file,
+    ):
+        """Validate argument combinations for reduced event list writing."""
         if (input_files is None) == (input_file_list is None):
             raise ValueError("Provide exactly one of input_files or input_file_list.")
         if files_per_reduced_event_file < 1:
             raise ValueError("files_per_reduced_event_file must be greater than zero.")
 
-        if input_file_list is not None:
-            input_file_list = Path(input_file_list)
-            with open(input_file_list, encoding="utf-8") as file_list:
-                input_files = [line.strip() for line in file_list if line.strip()]
+    @staticmethod
+    def _resolve_reduced_event_input_files(input_files, input_file_list):
+        """Resolve input files from either direct list input or file-list input."""
+        if input_file_list is None:
+            return input_files, None
 
-        input_file_batches = [
+        input_file_list = Path(input_file_list)
+        with open(input_file_list, encoding="utf-8") as file_list:
+            input_files = [line.strip() for line in file_list if line.strip()]
+        return input_files, input_file_list
+
+    @staticmethod
+    def _build_input_file_batches(input_files, files_per_reduced_event_file):
+        """Split input files into fixed-size batches."""
+        return [
             input_files[index : index + files_per_reduced_event_file]
             for index in range(0, len(input_files), files_per_reduced_event_file)
         ]
 
-        if output_files is None:
-            output_files = []
-            if input_file_list is not None:
-                output_dir = Path(output_path) if output_path else input_file_list.parent
-                output_files = [
-                    output_dir / f"{input_file_list.stem}.part{index:04d}.reduced_event_data.hdf5"
-                    for index in range(1, len(input_file_batches) + 1)
-                ]
-            else:
-                for input_file_batch in input_file_batches:
-                    stem = Path(input_file_batch[0]).name
-                    for suffix in (".simtel.zst", ".simtel.gz", ".simtel"):
-                        if stem.endswith(suffix):
-                            stem = stem[: -len(suffix)]
-                            break
-                    output_dir = (
-                        Path(output_path) if output_path else Path(input_file_batch[0]).parent
-                    )
-                    output_files.append(output_dir / f"{stem}.reduced_event_data.hdf5")
+    @staticmethod
+    def _resolve_reduced_event_output_files(
+        output_files,
+        output_path,
+        input_file_list,
+        input_file_batches,
+    ):
+        """Resolve output file paths for all input batches."""
+        if output_files is not None:
+            return output_files
+        if input_file_list is not None:
+            return Simulator._build_output_files_from_input_file_list(
+                output_path=output_path,
+                input_file_list=input_file_list,
+                input_file_batches=input_file_batches,
+            )
+        return Simulator._build_output_files_from_input_batches(
+            output_path=output_path,
+            input_file_batches=input_file_batches,
+        )
 
+    @staticmethod
+    def _build_output_files_from_input_file_list(output_path, input_file_list, input_file_batches):
+        """Build output files using a file-list stem plus part index."""
+        output_dir = Path(output_path) if output_path else input_file_list.parent
+        return [
+            output_dir / f"{input_file_list.stem}.part{index:04d}.reduced_event_data.hdf5"
+            for index in range(1, len(input_file_batches) + 1)
+        ]
+
+    @staticmethod
+    def _build_output_files_from_input_batches(output_path, input_file_batches):
+        """Build one output file per input-file batch."""
+        output_files = []
+        for input_file_batch in input_file_batches:
+            output_files.append(
+                Simulator._build_output_file_for_input_batch(
+                    output_path=output_path,
+                    input_file_batch=input_file_batch,
+                )
+            )
+        return output_files
+
+    @staticmethod
+    def _build_output_file_for_input_batch(output_path, input_file_batch):
+        """Build output filename for a single input batch."""
+        input_file = Path(input_file_batch[0])
+        output_dir = Path(output_path) if output_path else input_file.parent
+        stem = Simulator._strip_simtel_suffix(input_file.name)
+        return output_dir / f"{stem}.reduced_event_data.hdf5"
+
+    @staticmethod
+    def _strip_simtel_suffix(file_name):
+        """Strip simtel suffix from a file name."""
+        stem = file_name
+        for suffix in (".simtel.zst", ".simtel.gz", ".simtel"):
+            if stem.endswith(suffix):
+                return stem[: -len(suffix)]
+        return stem
+
+    @staticmethod
+    def _validate_reduced_event_output_count(input_file_batches, output_files):
+        """Validate that output-file and batch counts match."""
         if len(output_files) != len(input_file_batches):
             raise ValueError(
                 "Length mismatch between input_files and output_files: "
                 f"{len(input_file_batches)} batch(es), {len(output_files)} output file(s)."
             )
 
+    @staticmethod
+    def _run_reduced_event_list_jobs(input_file_batches, output_files, max_workers):
+        """Run reduced event list jobs serially or in parallel."""
         job_specs = list(zip(input_file_batches, output_files))
         if max_workers == 1 or len(job_specs) < 2:
             for job_spec in job_specs:
                 _write_reduced_event_list_batch(job_spec)
-        else:
-            process_pool_map_ordered(
-                _write_reduced_event_list_batch,
-                job_specs,
-                max_workers=max_workers,
-            )
+            return
+
+        process_pool_map_ordered(
+            _write_reduced_event_list_batch,
+            job_specs,
+            max_workers=max_workers,
+        )
 
     def pack_for_register(self, directory_for_grid_upload=None):
         """
