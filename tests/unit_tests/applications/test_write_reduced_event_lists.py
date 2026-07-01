@@ -8,7 +8,7 @@ from simtools.applications import write_reduced_event_lists
 
 
 def test_input_file_list_arguments():
-    """Accept a file list and the suggested plural batch-size alias."""
+    """Accept a file list and batch size."""
     parser = argparse.ArgumentParser()
     write_reduced_event_lists._add_arguments(parser)
 
@@ -16,7 +16,7 @@ def test_input_file_list_arguments():
         [
             "--input_file_list",
             "simtel_files.txt",
-            "--files_per_reduced_events_file",
+            "--files_per_reduced_event_file",
             "10",
         ]
     )
