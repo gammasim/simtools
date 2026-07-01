@@ -1,6 +1,7 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import h5py
 import numpy as np
 import pytest
 from eventio.simtel import (
@@ -12,6 +13,7 @@ from eventio.simtel import (
     TriggerInformation,
 )
 
+from simtools.io import table_handler
 from simtools.sim_events.writer import EventDataWriter
 
 one_two_three = "LSTN-01,LSTN-02,MSTN-01"
@@ -220,6 +222,32 @@ def test_multiple_files(
     assert set(tables[2]["file_id"]) == {0, 1, 2}
 
 
+def test_chunked_output_matches_non_chunked_output(get_test_data_file, tmp_path):
+    """Chunked conversion must preserve datasets, dtypes, values, and attributes."""
+    input_file = get_test_data_file("sim_telarray", "gamma")
+    reference_file = tmp_path / "reference.hdf5"
+    chunked_file = tmp_path / "chunked.hdf5"
+
+    reference_tables = EventDataWriter([input_file]).process_files()
+    table_handler.write_tables(reference_tables, reference_file)
+    chunked_writer = EventDataWriter([input_file])
+    table_handler.write_table_chunks(
+        chunked_writer.iter_table_chunks(chunk_size=3),
+        chunked_file,
+    )
+
+    assert chunked_writer.shower_data == []
+    assert chunked_writer.trigger_data == []
+    assert chunked_writer.file_info == []
+    with h5py.File(reference_file) as reference, h5py.File(chunked_file) as chunked:
+        assert set(reference) == set(chunked)
+        assert dict(reference.attrs) == dict(chunked.attrs)
+        for table_name in reference:
+            assert reference[table_name].dtype == chunked[table_name].dtype
+            np.testing.assert_array_equal(reference[table_name][:], chunked[table_name][:])
+            assert dict(reference[table_name].attrs) == dict(chunked[table_name].attrs)
+
+
 def create_test_data():
     """Create a complete set of test data matching schemas."""
     return {
@@ -263,7 +291,7 @@ def test_create_tables_enforces_schema_and_writes_empty_triggers(lookup_table_ge
     assert tables[0]["x_core"].dtype == np.dtype(np.float64)
 
 
-def test_validate_processed_file_rejects_unset_shower_fields(lookup_table_generator):
+def test_create_chunk_rejects_unset_shower_fields(lookup_table_generator):
     """Partially populated MC event rows are rejected before HDF5 serialization."""
     shower = create_test_data()
     shower["x_core"] = None
@@ -272,12 +300,7 @@ def test_validate_processed_file_rejects_unset_shower_fields(lookup_table_genera
         ValueError,
         match=r"Incomplete reduced event data.*SHOWERS.*unset required field.*x_core",
     ):
-        lookup_table_generator._validate_processed_file(
-            "truncated.simtel.zst",
-            [shower],
-            [],
-            [{"file_id": 0}],
-        )
+        lookup_table_generator._create_chunk("SHOWERS", [shower])
 
 
 def test_process_array_event(lookup_table_generator):

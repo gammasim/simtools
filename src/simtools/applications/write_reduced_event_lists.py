@@ -50,7 +50,6 @@ def _add_arguments(parser):
     )
     parser.add_argument(
         "--files_per_reduced_event_file",
-        "--files_per_reduced_events_file",
         type=int,
         default=1,
         help="Number of input files combined into each reduced event file (default: 1).",

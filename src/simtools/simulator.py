@@ -26,8 +26,8 @@ def _write_reduced_event_list_batch(job_spec):
     """Write one reduced-event output file from one input-file batch."""
     input_files, output_file = job_spec
     generator = writer.EventDataWriter(input_files)
-    table_handler.write_tables(
-        tables=generator.process_files(),
+    table_handler.write_table_chunks(
+        table_chunks=generator.iter_table_chunks(),
         output_file=Path(output_file),
         overwrite_existing=True,
     )
