@@ -16,7 +16,7 @@ def _job_rows():
             "primary": "gamma",
             "azimuth_angle": 45 * u.deg,
             "zenith_angle": 20 * u.deg,
-            "ra": 123 * u.deg,
+            "ha": 123 * u.deg,
             "dec": -45 * u.deg,
             "energy_min": 30 * u.GeV,
             "energy_max": 10 * u.TeV,
@@ -38,7 +38,7 @@ def _metadata():
     return {
         "site": "North",
         "simulation_software": "corsika_sim_telarray",
-        "coordinate_system": "ra_dec",
+        "coordinate_system": "ha_dec",
     }
 
 
@@ -54,7 +54,7 @@ def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
     assert rows[0]["energy_min"] == 30 * u.GeV
     assert rows[0]["cores_per_shower"] == 10
     assert rows[0]["array_layout_name"] == "CTAO-North-Alpha"
-    assert rows[0]["ra"] == 123 * u.deg
+    assert rows[0]["ha"] == 123 * u.deg
     assert rows[0]["dec"] == -45 * u.deg
     assert metadata["job_grid_summary"]["simulation_rows"] == 1
     assert metadata["job_grid_summary"]["total_showers"] == 1000
@@ -72,7 +72,7 @@ def test_serialize_job_grid_stream_and_read_job_grid_ecsv(tmp_test_directory):
     assert row_count == 1
     assert metadata["site"] == "North"
     assert rows[0]["energy_min"] == 30 * u.GeV
-    assert rows[0]["ra"] == 123 * u.deg
+    assert rows[0]["ha"] == 123 * u.deg
     assert rows[0]["dec"] == -45 * u.deg
 
 
@@ -95,17 +95,16 @@ def test_serialize_job_grid_stream_appends_astropy_formatted_chunks(
     assert rows[1]["array_layout_name"] == "layout with spaces"
 
 
-def test_serialize_job_grid_stream_skips_empty_optional_radec_columns(tmp_test_directory):
+def test_serialize_job_grid_stream_requires_hadec_columns(tmp_test_directory):
     output_file = Path(tmp_test_directory) / "job_grid.ecsv"
     rows_to_write = _job_rows()
-    rows_to_write[0]["ra"] = None
+    rows_to_write[0]["ha"] = None
     rows_to_write[0]["dec"] = None
 
-    job_grid_io.serialize_job_grid_stream(iter(rows_to_write), output_file, metadata=_metadata())
-    output_table = Table.read(output_file, format="ascii.ecsv")
-
-    assert "ra" not in output_table.colnames
-    assert "dec" not in output_table.colnames
+    with pytest.raises(TypeError):
+        job_grid_io.serialize_job_grid_stream(
+            iter(rows_to_write), output_file, metadata=_metadata()
+        )
 
 
 def test_serialize_job_grid_stream_writes_empty_grid_header(tmp_test_directory):
