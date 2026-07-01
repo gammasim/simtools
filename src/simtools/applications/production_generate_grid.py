@@ -191,13 +191,7 @@ energy_max_scaling_index (float, optional)
 Output
 ------
 output_file (str, optional)
-    Output ECSV file for the generated job grid. The path is resolved through
-    the simtools output handler. Quantity column names match their internal job
-    fields and store canonical units in ECSV metadata: angles in degrees,
-    energies in GeV, core-scatter distances in metres, and ``nsb_rate`` in
-    ``1 / (cm2 ns sr)``. The output rows include ``nsb_rate`` resolved from the
-    selected ``site`` and ``model_version``. Default is ``job_grid.ecsv``.
-
+    Output ECSV file for the generated job grid.
 
 Example
 -------
