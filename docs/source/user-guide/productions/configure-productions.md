@@ -218,6 +218,11 @@ off_axis_angles:
 The output is an ECSV production grid. Each row describes one executable run, including primary,
 pointing, energy range, core scatter settings, view cone, showers per run, model version,
 model-version-dependent `nsb_rate`, array layout, interaction models, and run number.
+Quantity columns use semantic names such as `azimuth_angle`, `energy_min`, and
+`core_scatter_max`. Units are stored once in the ECSV column metadata: degrees for angles, GeV for
+energies, metres for core-scatter distances, and `1 / (cm2 ns sr)` for `nsb_rate`. HTCondor
+parameter files contain the corresponding normalized numeric values; their generated wrapper adds the fixed units when calling
+`simtools-simulate-prod`.
 
 The generated table is inspected before job submission. The review includes:
 
