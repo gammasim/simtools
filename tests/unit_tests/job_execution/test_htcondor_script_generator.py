@@ -153,19 +153,16 @@ def test_generate_submission_script_raises_for_missing_apptainer_image(
 def test_get_submit_script(args_dict):
     expected_script = f"""#!/usr/bin/env bash
 
-# Process ID used to generate run number
-process_id="$1"
 # Load environment variables (for DB access)
-set -a; source "$2"
-apptainer_label="${{3}}"
-primary="${{4}}"
-model_version="${{14}}"
-array_layout_name="${{15}}"
-corsika_le_interaction="${{16}}"
-corsika_he_interaction="${{17}}"
-run_number="${{18}}"
-pack_for_grid_register="${{19}}"
-energy_range_tag="erange-${{7}}GeV-${{8}}GeV"
+set -a; source "$1"
+primary="${{2}}"
+model_version="${{12}}"
+array_layout_name="${{13}}"
+corsika_le_interaction="${{14}}"
+corsika_he_interaction="${{15}}"
+    run_number="${{16}}"
+    pack_for_grid_register="${{17}}"
+energy_range_tag="erange-${{5}}GeV-${{6}}GeV"
 job_label="{args_dict["label"]}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
 simtools-simulate-prod \\
@@ -175,12 +172,12 @@ simtools-simulate-prod \\
     --site {args_dict["site"]} \\
     --array_layout_name "$array_layout_name" \\
     --primary "$primary" \\
-    --azimuth_angle "${{5}}" \\
-    --zenith_angle "${{6}}" \\
-    --showers_per_run "${{13}}" \\
-    --energy_range "${{7}} GeV ${{8}} GeV" \\
-    --core_scatter "${{9}} ${{10}} m" \\
-    --view_cone "${{11}} deg ${{12}} deg" \\
+    --azimuth_angle "${{3}}" \
+    --zenith_angle "${{4}}" \
+    --showers_per_run "${{11}}" \
+    --energy_range "${{5}} GeV ${{6}} GeV" \
+    --core_scatter "${{7}} ${{8}} m" \
+    --view_cone "${{9}} deg ${{10}} deg" \
     --corsika_le_interaction "$corsika_le_interaction" \\
     --corsika_he_interaction "$corsika_he_interaction" \\
     --run_number "$run_number" \\
@@ -192,6 +189,17 @@ simtools-simulate-prod \\
 """
     generated_script = _get_submit_script(args_dict)
     assert generated_script == expected_script
+
+
+def test_get_submit_script_includes_save_file_lists_when_requested(args_dict):
+    args_dict["save_file_lists"] = True
+
+    generated_script = _get_submit_script(args_dict)
+
+    assert "--save_file_lists" in generated_script
+    assert generated_script.index("--save_file_lists") < generated_script.index(
+        "--pack_for_grid_register"
+    )
 
 
 def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
@@ -208,12 +216,12 @@ def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
         htcondor_dirs=htcondor_dirs,
     )
 
-    assert "queue apptainer_label,primary" in content
+    assert "queue primary" in content
     assert "cores_per_shower,core_scatter_max" in content
     assert "view_cone_min,view_cone_max" in content
     assert "showers_per_run,model_version,array_layout_name" in content
     assert "from simulate_prod.submit.params.txt" in content
-    assert 'arguments = "$(process) env.txt' in content
+    assert 'arguments = "env.txt' in content
     assert str(log_dir) in content
     assert str(error_dir) in content
     assert str(output_dir) in content
@@ -350,38 +358,6 @@ def test_write_params_file_uses_canonical_numeric_units(tmp_test_directory):
     _write_params_file(params_file_path, label_job_specs)
 
     assert params_file_path.read_text(encoding="utf-8") == (
-        "7.0.0 gamma 0.0 20.0 30.0 10000.0 10 200.0 0.0 5.0 "
+        "gamma 0.0 20.0 30.0 10000.0 10 200.0 0.0 5.0 "
         "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/7.0.0\n"
-    )
-
-
-def test_write_params_file_replaces_whitespace_in_apptainer_label(tmp_test_directory):
-    params_file_path = Path(tmp_test_directory) / "params.txt"
-    label_job_specs = [
-        {
-            "image_label": "grid label 7.0.0",
-            "primary": "gamma",
-            "azimuth_angle": 0 * u.deg,
-            "zenith_angle": 20 * u.deg,
-            "energy_min": 30 * u.GeV,
-            "energy_max": 10 * u.TeV,
-            "cores_per_shower": 10,
-            "core_scatter_max": 200 * u.m,
-            "view_cone_min": 0 * u.deg,
-            "view_cone_max": 5 * u.deg,
-            "showers_per_run": 1000,
-            "model_version": "7.0.0",
-            "array_layout_name": "CTAO-North-Alpha",
-            "corsika_le_interaction": "urqmd",
-            "corsika_he_interaction": "epos",
-            "run_number": 10,
-            "pack_for_grid_register": "simtools-output/grid label 7.0.0",
-        }
-    ]
-
-    _write_params_file(params_file_path, label_job_specs)
-
-    assert params_file_path.read_text(encoding="utf-8") == (
-        "grid_label_7.0.0 gamma 0.0 20.0 30.0 10000.0 10 200.0 0.0 5.0 "
-        "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/grid_label_7.0.0\n"
     )

@@ -19,7 +19,6 @@ from simtools.production_configuration.job_grid_io import JOB_GRID_QUANTITY_UNIT
 _logger = logging.getLogger(__name__)
 
 _PARAMS_FIELDS = [
-    "apptainer_label",
     "primary",
     "azimuth_angle",
     "zenith_angle",
@@ -39,7 +38,6 @@ _PARAMS_FIELDS = [
 ]
 
 _PARAMS_JOB_SPEC_FIELDS = {field: field for field in _PARAMS_FIELDS}
-_PARAMS_JOB_SPEC_FIELDS["apptainer_label"] = "image_label"
 
 _PARAM_QUANTITY_UNITS = {
     field: JOB_GRID_QUANTITY_UNITS[field]
@@ -99,7 +97,7 @@ def _format_param_value(value, field_name):
     if value is None:
         raise ValueError(f"Missing required value for field '{field_name}'.")
 
-    if field_name in ("apptainer_label", "pack_for_grid_register"):
+    if field_name in ("pack_for_grid_register"):
         return _sanitize_label_for_params(value)
 
     if field_name == "cores_per_shower":
@@ -226,7 +224,7 @@ def _get_submit_file(executable, apptainer_image, priority, params_file_name, ht
     str
         HTCondor submit file content.
     """
-    arguments_string = "$(process) env.txt " + " ".join(f"$({field})" for field in _PARAMS_FIELDS)
+    arguments_string = "env.txt " + " ".join(f"$({field})" for field in _PARAMS_FIELDS)
     queue_string = ",".join(_PARAMS_FIELDS)
 
     return f"""universe = container
@@ -259,15 +257,11 @@ def _get_submit_script(args_dict):
     str
         HTCondor submit script content.
     """
-    # Map _PARAMS_FIELDS to bash positional indices ($3, $4, etc.)
-    # Indices 1-2 are reserved for: $1=process_id, $2=env_file
-    bash_indices = {}
-    for i, field in enumerate(_PARAMS_FIELDS):
-        idx = 3 + i
-        bash_indices[field] = f"${{{idx}}}"
+    # Map _PARAMS_FIELDS to bash positional indices ($2, $3, etc.).
+    # Index 1 is reserved for the environment file.
+    bash_indices = {field: f"${{{index}}}" for index, field in enumerate(_PARAMS_FIELDS, start=2)}
 
     label = args_dict["label"] if args_dict["label"] else "simulate-prod"
-    run_number_offset = args_dict.get("run_number_offset", 0)
 
     energy_unit = _PARAM_QUANTITY_UNITS["energy_min"]
     core_scatter_unit = _PARAM_QUANTITY_UNITS["core_scatter_max"]
@@ -283,50 +277,61 @@ def _get_submit_script(args_dict):
         f'"{bash_indices["view_cone_min"]} {view_cone_unit} '
         f'{bash_indices["view_cone_max"]} {view_cone_unit}"'
     )
-    energy_range_tag = (
-        f"erange-{bash_indices['energy_min']}{energy_unit}-"
+
+    job_label = (
+        f"{label}_{bash_indices['corsika_he_interaction']}_"
+        f"{bash_indices['corsika_le_interaction']}_"
+        f"{bash_indices['energy_min']}{energy_unit}-"
         f"{bash_indices['energy_max']}{energy_unit}"
     )
 
-    return f"""#!/usr/bin/env bash
+    command_parts = ['--label "$job_label"']
+    for arg_name in ("simulation_software", "site", "log_level"):
+        command_parts.append(f"--{arg_name} {args_dict[arg_name]}")
 
-# Process ID used to generate run number
-process_id="$1"
-# Load environment variables (for DB access)
-set -a; source "$2"
-apptainer_label="{bash_indices["apptainer_label"]}"
-primary="{bash_indices["primary"]}"
-model_version="{bash_indices["model_version"]}"
-array_layout_name="{bash_indices["array_layout_name"]}"
-corsika_le_interaction="{bash_indices["corsika_le_interaction"]}"
-corsika_he_interaction="{bash_indices["corsika_he_interaction"]}"
-run_number="{bash_indices["run_number"]}"
-pack_for_grid_register="{bash_indices["pack_for_grid_register"]}"
-energy_range_tag="{energy_range_tag}"
-job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
+    for field in (
+        "model_version",
+        "array_layout_name",
+        "primary",
+        "azimuth_angle",
+        "zenith_angle",
+        "showers_per_run",
+        "corsika_le_interaction",
+        "corsika_he_interaction",
+        "run_number",
+        "pack_for_grid_register",
+    ):
+        command_parts.append(f'--{field} "{bash_indices[field]}"')
 
-simtools-simulate-prod \\
-    --simulation_software {args_dict["simulation_software"]} \\
-    --label "$job_label" \\
-    --model_version "$model_version" \\
-    --site {args_dict["site"]} \\
-    --array_layout_name "$array_layout_name" \\
-    --primary "$primary" \\
-    --azimuth_angle "{bash_indices["azimuth_angle"]}" \\
-    --zenith_angle "{bash_indices["zenith_angle"]}" \\
-    --showers_per_run "{bash_indices["showers_per_run"]}" \\
-    --energy_range {energy_range_string} \\
-    --core_scatter {core_scatter_string} \\
-    --view_cone {view_cone_string} \\
-    --corsika_le_interaction "$corsika_le_interaction" \\
-    --corsika_he_interaction "$corsika_he_interaction" \\
-    --run_number "$run_number" \\
-    --run_number_offset {run_number_offset} \\
-    --save_reduced_event_lists \\
-    --output_path /tmp/simtools-output \\
-    --log_level {args_dict["log_level"]} \\
-    --pack_for_grid_register "$pack_for_grid_register"
-"""
+    command_parts.extend(
+        [
+            f"--energy_range {energy_range_string}",
+            f"--core_scatter {core_scatter_string}",
+            f"--view_cone {view_cone_string}",
+            f"--run_number_offset {args_dict.get('run_number_offset', 0)}",
+            "--save_reduced_event_lists",
+            "--output_path /tmp/simtools-output",
+        ]
+    )
+
+    command_lines = []
+    for index, part in enumerate(command_parts):
+        line_end = " \\" if index < len(command_parts) - 1 else ""
+        command_lines.append(f"    {part}{line_end}")
+
+    script_lines = [
+        "#!/usr/bin/env bash",
+        "",
+        "# Load environment variables (for DB access)",
+        'set -a; source "$1"',
+        f'job_label="{job_label}"',
+        "",
+        "simtools-simulate-prod \\",
+        *command_lines,
+        "",
+    ]
+
+    return "\n".join(script_lines)
 
 
 def build_job_specs(args_dict, image_labels):
