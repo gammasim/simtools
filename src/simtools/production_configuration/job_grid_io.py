@@ -206,3 +206,77 @@ def read_job_grid(input_file):
     table = Table.read(input_path, format=_ECSV_FORMAT)
     rows = [{column_name: row[column_name] for column_name in table.colnames} for row in table]
     return [_deserialize_job_row(row) for row in rows], dict(table.meta)
+
+
+def read_job_grid_row(input_file, row_index):
+    """
+    Read a single row from an ECSV job grid by its 1-based index.
+
+    Parameters
+    ----------
+    input_file : str or Path
+        Input file path.
+    row_index : int
+        1-based index of the row to read (first row is 1).
+
+    Returns
+    -------
+    tuple[dict, dict]
+        Deserialized job row and metadata.
+
+    Raises
+    ------
+    IndexError
+        If ``row_index`` is outside the valid range.
+    """
+    rows, metadata = read_job_grid(input_file)
+    if row_index < 1 or row_index > len(rows):
+        raise IndexError(
+            f"Row index {row_index} is out of range for a grid with {len(rows)} row(s)."
+        )
+    return rows[row_index - 1], metadata
+
+
+def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
+    """
+    Convert an in-memory job grid row to simulate_prod argument format.
+
+    The returned dictionary can be merged into a simulate_prod ``args_dict`` so that
+    values from the job grid row take precedence over previously parsed arguments.
+
+    Parameters
+    ----------
+    job_row : dict
+        A single deserialized job row as returned by :func:`read_job_grid` or
+        :func:`read_job_grid_row`.
+    metadata : dict, optional
+        Job grid metadata as returned alongside the rows.  When provided,
+        ``site`` and ``simulation_software`` are included in the result.
+
+    Returns
+    -------
+    dict
+        Argument dictionary compatible with ``simulate_prod`` ``args_dict`` keys.
+    """
+    args = {
+        "primary": job_row["primary"],
+        "azimuth_angle": job_row["azimuth_angle"],
+        "zenith_angle": job_row["zenith_angle"],
+        "energy_range": (job_row["energy_min"], job_row["energy_max"]),
+        "core_scatter": (int(job_row["cores_per_shower"]), job_row["core_scatter_max"]),
+        "view_cone": (job_row["view_cone_min"], job_row["view_cone_max"]),
+        "showers_per_run": int(job_row["showers_per_run"]),
+        "model_version": job_row["model_version"],
+        "array_layout_name": job_row["array_layout_name"],
+        "corsika_le_interaction": job_row["corsika_le_interaction"],
+        "corsika_he_interaction": job_row["corsika_he_interaction"],
+        "run_number": int(job_row["run_number"]),
+        # Force the run number offset to zero,
+        # since the job grid row already specifies the run number.
+        "run_number_offset": 0,
+    }
+    if metadata:
+        for key in ("site", "simulation_software"):
+            if metadata.get(key):
+                args[key] = metadata[key]
+    return args
