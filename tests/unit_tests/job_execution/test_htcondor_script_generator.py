@@ -4,6 +4,7 @@ from unittest import mock
 import astropy.units as u
 import pytest
 
+from simtools.job_execution import htcondor_script_generator as htg
 from simtools.job_execution.htcondor_script_generator import (
     _format_param_value,
     _format_quantity,
@@ -150,48 +151,62 @@ def test_generate_submission_script_raises_for_missing_apptainer_image(
     mock_open.assert_not_called()
 
 
-def test_get_submit_script(args_dict):
-    expected_script = f"""#!/usr/bin/env bash
+def test_get_submit_script():
+    args_dict = {
+        "label": "test_label",
+        "simulation_software": "corsika_sim_telarray",
+        "site": "North",
+        "log_level": "info",
+        "run_number_offset": 0,
+    }
 
-# Process ID used to generate run number
-process_id="$1"
-# Load environment variables (for DB access)
-set -a; source "$2"
-apptainer_label="${{3}}"
-primary="${{4}}"
-model_version="${{19}}"
-array_layout_name="${{20}}"
-corsika_le_interaction="${{21}}"
-corsika_he_interaction="${{22}}"
-run_number="${{23}}"
-pack_for_grid_register="${{24}}"
-energy_range_tag="erange-${{7}}${{8}}-${{9}}${{10}}"
-job_label="{args_dict["label"]}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
+    script = _get_submit_script(args_dict, params_fields=htg._PARAMS_FIELDS)
 
-simtools-simulate-prod \\
-    --simulation_software {args_dict["simulation_software"]} \\
-    --label "$job_label" \\
-    --model_version "$model_version" \\
-    --site {args_dict["site"]} \\
-    --array_layout_name "$array_layout_name" \\
-    --primary "$primary" \\
-    --azimuth_angle "${{5}}" \\
-    --zenith_angle "${{6}}" \\
-    --showers_per_run "${{18}}" \\
-    --energy_range "${{7}} ${{8}} ${{9}} ${{10}}" \\
-    --core_scatter "${{11}} ${{12}} ${{13}}" \\
-    --view_cone "${{14}} ${{15}} ${{16}} ${{17}}" \\
-    --corsika_le_interaction "$corsika_le_interaction" \\
-    --corsika_he_interaction "$corsika_he_interaction" \\
-    --run_number "$run_number" \\
-    --run_number_offset 0 \\
-    --save_reduced_event_lists \\
-    --output_path /tmp/simtools-output \\
-    --log_level {args_dict["log_level"]} \\
-    --pack_for_grid_register "$pack_for_grid_register"
-"""
-    generated_script = _get_submit_script(args_dict)
-    assert generated_script == expected_script
+    assert script.startswith("#!/usr/bin/env bash")
+
+    assert 'process_id="$1"' in script
+    assert 'set -a; source "$2"' in script
+
+    assert 'apptainer_label="${3}"' in script
+    assert 'primary="${4}"' in script
+    assert 'model_version="${19}"' in script
+    assert 'array_layout_name="${20}"' in script
+    assert 'corsika_le_interaction="${21}"' in script
+    assert 'corsika_he_interaction="${22}"' in script
+    assert 'run_number="${23}"' in script
+    assert 'pack_for_grid_register="${24}"' in script
+
+    assert (
+        'job_label="test_label_${corsika_he_interaction}-${corsika_le_interaction}_'
+        '${energy_range_tag}"' in script
+    )
+    assert '--label "$job_label"' in script
+    assert '--energy_range "${7} ${8} ${9} ${10}"' in script
+
+    assert "simtools-simulate-prod \\" in script
+    assert "    --simulation_software corsika_sim_telarray \\" in script
+    assert '    --label "$job_label" \\' in script
+    assert '    --model_version "$model_version" \\' in script
+    assert "    --site North \\" in script
+    assert '    --array_layout_name "$array_layout_name" \\' in script
+    assert '    --primary "$primary" \\' in script
+    assert '    --azimuth_angle "${5}" \\' in script
+    assert '    --zenith_angle "${6}" \\' in script
+    assert '    --showers_per_run "${18}" \\' in script
+    assert '    --energy_range "${7} ${8} ${9} ${10}" \\' in script
+    assert '    --core_scatter "${11} ${12} ${13}" \\' in script
+    assert '    --view_cone "${14} ${15} ${16} ${17}" \\' in script
+    assert '    --corsika_le_interaction "$corsika_le_interaction" \\' in script
+    assert '    --corsika_he_interaction "$corsika_he_interaction" \\' in script
+    assert '    --run_number "$run_number" \\' in script
+    assert "    --run_number_offset 0 \\" in script
+    assert "    --save_reduced_event_lists \\" in script
+    assert "    --output_path /tmp/simtools-output \\" in script
+    assert "    --log_level info \\" in script
+    assert '    --pack_for_grid_register "$pack_for_grid_register"' in script
+
+    assert "overwrite_model_parameters_args" not in script
+    assert "scan_label" not in script
 
 
 def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
@@ -206,6 +221,7 @@ def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
         priority=1,
         params_file_name="simulate_prod.submit.params.txt",
         htcondor_dirs=htcondor_dirs,
+        params_fields=htg._PARAMS_FIELDS,
     )
 
     assert "queue apptainer_label,primary" in content
@@ -361,7 +377,7 @@ def test_write_params_file_keeps_energy_units(tmp_test_directory):
         }
     ]
 
-    _write_params_file(params_file_path, label_job_specs)
+    _write_params_file(params_file_path, label_job_specs, params_fields=htg._PARAMS_FIELDS)
 
     assert params_file_path.read_text(encoding="utf-8") == (
         "7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 10 200.0 m 0.0 deg 5.0 deg "
@@ -393,9 +409,176 @@ def test_write_params_file_replaces_whitespace_in_apptainer_label(tmp_test_direc
         }
     ]
 
-    _write_params_file(params_file_path, label_job_specs)
+    _write_params_file(params_file_path, label_job_specs, params_fields=htg._PARAMS_FIELDS)
 
     assert params_file_path.read_text(encoding="utf-8") == (
         "grid_label_7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 10 200.0 m 0.0 deg 5.0 deg "
         "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/grid_label_7.0.0\n"
     )
+
+
+# Coverage edge cases for htcondor_script_generator.py
+
+
+def _base_job_row_for_optional_fields():
+    return {
+        "primary": "gamma",
+        "azimuth_angle": 45 * u.deg,
+        "zenith_angle": 20 * u.deg,
+        "energy_min": 1 * u.GeV,
+        "energy_max": 10 * u.GeV,
+        "cores_per_shower": 10,
+        "core_scatter_max": 100 * u.m,
+        "view_cone_min": 0 * u.deg,
+        "view_cone_max": 5 * u.deg,
+        "showers_per_run": 1000,
+        "model_version": "7.0.0",
+        "array_layout_name": "CTAO-North-Alpha",
+        "corsika_le_interaction": "urqmd",
+        "corsika_he_interaction": "epos",
+        "run_number": 1,
+    }
+
+
+def test_format_param_value_optional_missing_is_empty():
+    assert htg._format_param_value(None, "overwrite_model_parameters") == ""
+    assert htg._format_param_value(None, "scan_label") == ""
+    assert htg._format_param_value(None, "telescope") == ""
+
+
+def test_write_params_file_includes_optional_queue_fields(tmp_test_directory):
+    params_file_path = Path(tmp_test_directory) / "params.txt"
+    params_fields = [*htg._PARAMS_FIELDS, *htg._OPTIONAL_QUEUE_FIELDS]
+
+    job_spec = {
+        "image_label": "grid label",
+        **_base_job_row_for_optional_fields(),
+        "pack_for_grid_register": "simtools-output/grid label",
+        "overwrite_model_parameters": "overwrite.yaml",
+        "scan_label": "asum 220",
+        "telescope": "LSTN-01",
+    }
+
+    htg._write_params_file(params_file_path, [job_spec], params_fields=params_fields)
+
+    row = params_file_path.read_text(encoding="utf-8").strip().split()
+    assert row[-3:] == ["overwrite.yaml", "asum_220", "LSTN-01"]
+
+
+def test_get_submit_script_with_optional_queue_fields():
+    submit_args = {
+        "label": "test_label",
+        "simulation_software": "corsika_sim_telarray",
+        "site": "North",
+        "log_level": "info",
+        "run_number_offset": 0,
+    }
+    params_fields = [*htg._PARAMS_FIELDS, *htg._OPTIONAL_QUEUE_FIELDS]
+
+    script = htg._get_submit_script(submit_args, params_fields=params_fields)
+
+    assert 'overwrite_model_parameters="${25}"' in script
+    assert "overwrite_model_parameters_args=()" in script
+    assert (
+        "overwrite_model_parameters_args+=(--overwrite_model_parameters "
+        '"$overwrite_model_parameters")'
+    ) in script
+    assert '    "${overwrite_model_parameters_args[@]}" \\' in script
+
+    assert 'scan_label="${26}"' in script
+    assert 'job_label="${job_label}_${scan_label}"' in script
+
+    assert 'telescope="${27}"' in script
+    assert "telescope_args=()" in script
+    assert 'telescope_args+=(--telescope "$telescope")' in script
+    assert '    "${telescope_args[@]}" \\' in script
+
+
+@mock.patch("simtools.job_execution.htcondor_script_generator.read_job_grid")
+@mock.patch("simtools.job_execution.htcondor_script_generator.Path.mkdir")
+@mock.patch("simtools.job_execution.htcondor_script_generator.open", new_callable=mock.mock_open)
+@mock.patch("simtools.job_execution.htcondor_script_generator.Path.chmod")
+@mock.patch("simtools.job_execution.htcondor_script_generator.Path.is_file", return_value=True)
+def test_generate_submission_script_detects_optional_queue_fields(
+    mock_is_file,
+    mock_chmod,
+    mock_open,
+    mock_mkdir,
+    mock_read_job_grid,
+    tmp_test_directory,
+):
+    row = {
+        **_base_job_row_for_optional_fields(),
+        "overwrite_model_parameters": "overwrite.yaml",
+        "scan_label": "asum220",
+        "telescope": "LSTN-01",
+    }
+    metadata = {"site": "North", "simulation_software": "corsika_sim_telarray"}
+    mock_read_job_grid.return_value = ([row], metadata)
+
+    htg.generate_submission_script(
+        {
+            "output_path": str(Path(tmp_test_directory) / "output"),
+            "apptainer_image": str(Path(tmp_test_directory) / "image.sif"),
+            "priority": 5,
+            "job_grid_file": str(Path(tmp_test_directory) / "job_grid.ecsv"),
+            "label": "test_label",
+            "simulation_software": "corsika_sim_telarray",
+            "site": "North",
+            "log_level": "INFO",
+            "simulation_output": "simtools-output",
+        }
+    )
+
+    written_text = "".join(call.args[0] for call in mock_open().write.call_args_list)
+    assert "overwrite_model_parameters" in written_text
+    assert "scan_label" in written_text
+    assert "telescope" in written_text
+    mock_chmod.assert_called_once_with(0o755)
+
+
+def test_build_job_specs_preserves_optional_scan_fields(tmp_test_directory):
+    submit_args = {
+        "job_grid_file": str(Path(tmp_test_directory) / "job_grid.ecsv"),
+        "simulation_output": "simtools-output",
+        "telescope": "LSTN-01",
+    }
+
+    row = {
+        **_base_job_row_for_optional_fields(),
+        "overwrite_model_parameters": "overwrite.yaml",
+        "scan_label": "asum220",
+    }
+    metadata = {"site": "North", "simulation_software": "corsika_sim_telarray"}
+
+    with mock.patch(
+        "simtools.job_execution.htcondor_script_generator.read_job_grid",
+        return_value=([row], metadata),
+    ):
+        job_specs, _ = htg.build_job_specs(submit_args, ["default"])
+
+    assert job_specs[0]["telescope"] == "LSTN-01"
+    assert job_specs[0]["scan_label"] == "asum220"
+    assert job_specs[0]["overwrite_model_parameters"] == "overwrite.yaml"
+
+
+def test_build_job_specs_prefers_row_telescope_over_args_telescope(tmp_test_directory):
+    submit_args = {
+        "job_grid_file": str(Path(tmp_test_directory) / "job_grid.ecsv"),
+        "simulation_output": "simtools-output",
+        "telescope": "LSTN-01",
+    }
+
+    row = {
+        **_base_job_row_for_optional_fields(),
+        "telescope": "MSTN-01",
+    }
+    metadata = {"site": "North", "simulation_software": "corsika_sim_telarray"}
+
+    with mock.patch(
+        "simtools.job_execution.htcondor_script_generator.read_job_grid",
+        return_value=([row], metadata),
+    ):
+        job_specs, _ = htg.build_job_specs(submit_args, ["default"])
+
+    assert job_specs[0]["telescope"] == "MSTN-01"

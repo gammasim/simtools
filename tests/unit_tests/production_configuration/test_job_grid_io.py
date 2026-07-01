@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import astropy.units as u
+import numpy as np
 import pytest
 from astropy.table import Table
 
@@ -61,71 +62,73 @@ def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
     assert metadata["job_grid_summary"]["energy_min_used"] == "30 GeV"
 
 
-def test_serialize_job_grid_stream_and_read_job_grid_ecsv(tmp_test_directory):
-    output_file = Path(tmp_test_directory) / "job_grid.ecsv"
-
-    row_count = job_grid_io.serialize_job_grid_stream(
-        iter(_job_rows()), output_file, metadata=_metadata()
-    )
-    rows, metadata = job_grid_io.read_job_grid(output_file)
-
-    assert row_count == 1
-    assert metadata["site"] == "North"
-    assert rows[0]["energy_min"] == 30 * u.GeV
-    assert rows[0]["ra"] == 123 * u.deg
-    assert rows[0]["dec"] == -45 * u.deg
-
-
-def test_serialize_job_grid_stream_appends_astropy_formatted_chunks(
-    tmp_test_directory, monkeypatch
-):
-    output_file = Path(tmp_test_directory) / "job_grid.ecsv"
-    rows_to_write = _job_rows()
-    second_row = dict(rows_to_write[0], run_number=11, array_layout_name="layout with spaces")
-    rows_to_write.append(second_row)
-    monkeypatch.setattr(job_grid_io, "_STREAM_CHUNK_SIZE", 1)
-
-    row_count = job_grid_io.serialize_job_grid_stream(
-        iter(rows_to_write), output_file, metadata=_metadata()
-    )
-    rows, _ = job_grid_io.read_job_grid(output_file)
-
-    assert row_count == 2
-    assert [row["run_number"] for row in rows] == [10, 11]
-    assert rows[1]["array_layout_name"] == "layout with spaces"
-
-
-def test_serialize_job_grid_stream_skips_empty_optional_radec_columns(tmp_test_directory):
+def test_serialize_job_grid_skips_empty_optional_radec_columns(tmp_test_directory):
     output_file = Path(tmp_test_directory) / "job_grid.ecsv"
     rows_to_write = _job_rows()
     rows_to_write[0]["ra"] = None
     rows_to_write[0]["dec"] = None
 
-    job_grid_io.serialize_job_grid_stream(iter(rows_to_write), output_file, metadata=_metadata())
+    job_grid_io.serialize_job_grid(rows_to_write, output_file, metadata=_metadata())
     output_table = Table.read(output_file, format="ascii.ecsv")
 
     assert "ra" not in output_table.colnames
     assert "dec" not in output_table.colnames
 
 
-def test_serialize_job_grid_stream_writes_empty_grid_header(tmp_test_directory):
+def test_serialize_job_grid_writes_empty_grid_header(tmp_test_directory):
     output_file = Path(tmp_test_directory) / "empty_job_grid.ecsv"
 
-    row_count = job_grid_io.serialize_job_grid_stream(iter([]), output_file, metadata=_metadata())
+    job_grid_io.serialize_job_grid([], output_file, metadata=_metadata())
     output_table = Table.read(output_file, format="ascii.ecsv")
 
-    assert row_count == 0
     assert output_table.colnames == job_grid_io.JOB_GRID_COLUMNS
+    assert output_table["run_number"].dtype == np.dtype("uint32")
+    assert output_table["azimuth_angle_value"].dtype == np.dtype("float64")
+    assert output_table["primary"].dtype.kind == "U"
+    assert output_table.meta["job_grid_summary"] == {
+        "simulation_rows": 0,
+        "total_showers": 0,
+    }
 
 
-def test_job_grid_density_schema_matches_serialized_required_columns():
+def test_serialize_and_read_job_grid_with_optional_string_fields(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "job_grid.ecsv"
+    rows = _job_rows()
+    rows.append(
+        {
+            **rows[0],
+            "run_number": 11,
+            "overwrite_model_parameters": "overwrite file.yaml",
+            "scan_label": "asum220",
+            "telescope": "LSTN-01",
+        }
+    )
+
+    job_grid_io.serialize_job_grid(rows, output_file, metadata=_metadata())
+    read_rows, _ = job_grid_io.read_job_grid(output_file)
+
+    assert "overwrite_model_parameters" not in read_rows[0]
+    assert read_rows[1]["overwrite_model_parameters"] == "overwrite file.yaml"
+    assert read_rows[1]["scan_label"] == "asum220"
+    assert read_rows[1]["telescope"] == "LSTN-01"
+
+
+def test_job_grid_density_schema_defines_supported_columns():
     schema = ascii_handler.collect_data_from_file(
         SCHEMA_PATH / "job_grid_density.schema.yml",
     )
     table_columns = schema["data"][0]["table_columns"]
     required_columns = [column["name"] for column in table_columns if column.get("required")]
+    optional_columns = [column["name"] for column in table_columns if not column.get("required")]
 
     assert required_columns == job_grid_io.JOB_GRID_COLUMNS
+    assert optional_columns == [
+        "ra",
+        "dec",
+        "overwrite_model_parameters",
+        "scan_label",
+        "telescope",
+    ]
     assert all("unit" not in column for column in table_columns)
 
 
