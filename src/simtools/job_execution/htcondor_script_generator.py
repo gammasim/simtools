@@ -198,7 +198,8 @@ def _write_params_file(params_file_path, label_job_specs, params_fields):
 
             for field in _OPTIONAL_QUEUE_FIELDS:
                 if field in params_fields:
-                    row.append(_format_param_value(job_spec.get(field), field))
+                    value = _format_param_value(job_spec.get(field), field)
+                    row.append(f"\"{value}\"" if isinstance(value, str) and re.search(r"\s", value) else value)
 
             params_file_handle.write(" ".join(row) + "\n")
 
