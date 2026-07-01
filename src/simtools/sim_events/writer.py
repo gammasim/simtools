@@ -127,13 +127,26 @@ class EventDataWriter:
             (self.trigger_data, TableSchemas.trigger_schema, "TRIGGERS"),
             (self.file_info, TableSchemas.file_info_schema, "FILE_INFO"),
         ]:
-            if len(data) == 0:
-                continue
-            table = Table(rows=data, names=schema.keys())
+            table = self._create_typed_table(data, schema, name)
             table.meta["EXTNAME"] = name
             self._add_units_to_table(table, schema)
             tables.append(table)
         return tables
+
+    @staticmethod
+    def _create_typed_table(data, schema, table_name):
+        """Create a table using the declared schema instead of inferred dtypes."""
+        try:
+            return Table(
+                rows=data,
+                names=list(schema),
+                dtype=[column_type for column_type, _ in schema.values()],
+            )
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Failed to create reduced event data table '{table_name}' using its "
+                "declared schema."
+            ) from exc
 
     def _add_units_to_table(self, table, schema):
         """Add units to a single table's columns."""
@@ -143,6 +156,9 @@ class EventDataWriter:
 
     def _process_file(self, file_id, file):
         """Process a single file and update data lists."""
+        shower_start = len(self.shower_data)
+        trigger_start = len(self.trigger_data)
+        file_info_start = len(self.file_info)
         self._process_file_info(file_id, file)
         with EventIOFile(file) as f:
             for eventio_object in f:
@@ -156,6 +172,61 @@ class EventDataWriter:
                     self._process_array_event(eventio_object, file_id)
                 elif isinstance(eventio_object, iact.EventHeader):
                     self._process_mc_shower_from_iact(eventio_object, file_id)
+
+        self._validate_processed_file(
+            file,
+            self.shower_data[shower_start:],
+            self.trigger_data[trigger_start:],
+            self.file_info[file_info_start:],
+        )
+
+    def _validate_processed_file(self, file, shower_data, trigger_data, file_info):
+        """Reject incomplete event records before they can be serialized."""
+        self._validate_records(file, "SHOWERS", shower_data, TableSchemas.shower_schema)
+        self._validate_records(file, "FILE_INFO", file_info, TableSchemas.file_info_schema)
+        self._validate_records(
+            file,
+            "TRIGGERS",
+            trigger_data,
+            TableSchemas.trigger_schema,
+            allow_empty=True,
+        )
+        if len(file_info) != 1:
+            raise ValueError(
+                f"Incomplete reduced event data for '{file}': expected exactly one "
+                f"FILE_INFO row, found {len(file_info)}."
+            )
+        if not trigger_data:
+            self._logger.warning(f"No triggered events found in input file '{file}'.")
+
+    @staticmethod
+    def _validate_records(file, table_name, records, schema, allow_empty=False):
+        """Validate row presence and required values for one output table."""
+        if not records and not allow_empty:
+            raise ValueError(
+                f"Incomplete reduced event data for '{file}': table '{table_name}' "
+                "contains no rows."
+            )
+
+        incomplete = []
+        for row_index, record in enumerate(records):
+            missing = [name for name in schema if record.get(name) is None]
+            if missing:
+                incomplete.append(
+                    (row_index, missing, record.get("shower_id"), record.get("event_id"))
+                )
+
+        if incomplete:
+            fields = sorted({field for _, missing, _, _ in incomplete for field in missing})
+            examples = ", ".join(
+                f"row={index}, shower_id={shower_id}, event_id={event_id}"
+                for index, _, shower_id, event_id in incomplete[:5]
+            )
+            raise ValueError(
+                f"Incomplete reduced event data for '{file}': table '{table_name}' has "
+                f"{len(incomplete)} row(s) with unset required field(s) "
+                f"{', '.join(fields)}. Examples: {examples}."
+            )
 
     def _process_mc_run_header(self, eventio_object):
         """Process MC run header (sim_telarray file)."""

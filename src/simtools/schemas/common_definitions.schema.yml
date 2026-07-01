@@ -22,6 +22,37 @@ $defs:
     type: string
     description: Name of the schema.
 
+  run_time_environment:
+    type: object
+    description: Container runtime configuration used to execute simtools applications.
+    additionalProperties: false
+    properties:
+      container_engine:
+        type: string
+        minLength: 1
+        description: Container engine executable, for example docker or podman.
+        default: docker
+      image:
+        type: string
+        minLength: 1
+        description: Container image used for the runtime environment.
+      network:
+        type: string
+        minLength: 1
+        description: Container network name.
+      environment_file:
+        type: string
+        minLength: 1
+        description: Environment file passed to the container engine.
+      options:
+        type: array
+        description: Additional container-engine options.
+        items:
+          type: string
+          minLength: 1
+    required:
+      - image
+
   telescope_name_pattern:
     type: string
     description: |

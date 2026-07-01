@@ -187,6 +187,17 @@ def test_find_psf(psf_image):
     assert psf > 0
 
 
+def test_find_psf_identical_positions(psf_image):
+    image = psf_image
+    image.photon_pos_x = np.ones(10)
+    image.photon_pos_y = np.ones(10)
+    image.centroid_x = 1.0
+    image.centroid_y = 1.0
+    image._number_of_detected_photons = 10
+
+    assert image._find_psf(fraction=0.8) == pytest.approx(0.0)
+
+
 def test_get_effective_area(psf_image, caplog):
     image = psf_image
 

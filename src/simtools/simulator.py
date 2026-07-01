@@ -287,7 +287,7 @@ class Simulator:
             File or list with the full path of output files of a certain file type.
 
         """
-        return self.file_list[file_type]
+        return self.file_list.get(file_type, [])
 
     def _make_resources_report(self):
         """
@@ -426,12 +426,13 @@ class Simulator:
         self.logger.info(
             f"Packing output files for registering on the grid ({directory_for_grid_upload})"
         )
-        output_files = self.get_files(file_type="sim_telarray_output")
-        log_files = self.get_files(file_type="sim_telarray_log")
+        output_files = general.ensure_list(self.get_files(file_type="sim_telarray_output"))
+        log_files = general.ensure_list(self.get_files(file_type="sim_telarray_log"))
         simtools_log_file = general.get_simtools_log_file()
-        histogram_files = self.get_files(file_type="sim_telarray_histogram")
+        histogram_files = general.ensure_list(self.get_files(file_type="sim_telarray_histogram"))
+        corsika_log_files = general.ensure_list(self.get_files(file_type="corsika_log"))
         reduced_event_files = (
-            self.get_files(file_type="sim_telarray_event_data")
+            general.ensure_list(self.get_files(file_type="sim_telarray_event_data"))
             if settings.config.args.get("save_reduced_event_lists")
             else []
         )
@@ -457,7 +458,7 @@ class Simulator:
             files_to_tar = (
                 model_logs
                 + [f for f in histogram_files if model_version in str(f)]
-                + [str(self.get_files(file_type="corsika_log"))]
+                + corsika_log_files
                 + general.ensure_list(model.pack_model_files())
             )
             # simtools log file duplicated for each model version

@@ -4,6 +4,7 @@ import pytest
 from astropy.io.registry.base import IORegistryError
 from astropy.table import Table
 
+from simtools.constants import TEST_RESOURCES_STATIC
 from simtools.data_model import data_reader
 
 
@@ -31,9 +32,9 @@ def test_read_table_from_file_and_validate(get_test_data_file):
 
     assert isinstance(
         data_reader.read_table_from_file(
-            "tests/resources/telescope_positions-North-utm-without-cta-meta.ecsv",
+            f"{TEST_RESOURCES_STATIC}/telescope_positions-North-utm-without-cta-meta.ecsv",
             validate=True,
-            metadata_file="tests/resources/telescope_positions-North-utm.meta.yml",
+            metadata_file=f"{TEST_RESOURCES_STATIC}/telescope_positions-North-utm.meta.yml",
         ),
         Table,
     )

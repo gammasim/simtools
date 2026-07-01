@@ -188,6 +188,7 @@ def test_multiple_files(
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = [
         create_mc_run_header(),
         create_mc_shower(shower_id=1),
+        create_mc_event(shower_num=1, event_id=10000),
         create_mc_event(shower_num=1, event_id=10001),
         create_array_event(),
     ]
@@ -217,6 +218,51 @@ def create_test_data():
         "shower_altitude": 1.2,
         "area_weight": 1.0,
     }
+
+
+def test_create_tables_enforces_schema_and_writes_empty_triggers(lookup_table_generator):
+    """Schemas are applied and an empty trigger table is represented explicitly."""
+    lookup_table_generator.shower_data = [create_test_data()]
+    lookup_table_generator.file_info = [
+        {
+            "file_name": "input.simtel.zst",
+            "file_id": 0,
+            "particle_id": 1,
+            "energy_min": 0.1,
+            "energy_max": 10.0,
+            "viewcone_min": 0.0,
+            "viewcone_max": 0.0,
+            "core_scatter_min": 0.0,
+            "core_scatter_max": 1000.0,
+            "zenith": 20.0,
+            "azimuth": 0.0,
+            "nsb_level": 0.24,
+        }
+    ]
+
+    tables = lookup_table_generator.create_tables()
+
+    assert [table.meta["EXTNAME"] for table in tables] == ["SHOWERS", "TRIGGERS", "FILE_INFO"]
+    assert len(tables[1]) == 0
+    assert tables[0]["event_id"].dtype == np.dtype(np.uint32)
+    assert tables[0]["x_core"].dtype == np.dtype(np.float64)
+
+
+def test_validate_processed_file_rejects_unset_shower_fields(lookup_table_generator):
+    """Partially populated MC event rows are rejected before HDF5 serialization."""
+    shower = create_test_data()
+    shower["x_core"] = None
+
+    with pytest.raises(
+        ValueError,
+        match=r"Incomplete reduced event data.*SHOWERS.*unset required field.*x_core",
+    ):
+        lookup_table_generator._validate_processed_file(
+            "truncated.simtel.zst",
+            [shower],
+            [],
+            [{"file_id": 0}],
+        )
 
 
 def test_process_array_event(lookup_table_generator):

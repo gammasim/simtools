@@ -631,6 +631,16 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
     return table
 
 
+def _extract_mirror_panel_id(data_and_tail, default_id):
+    """Extract the optional mirror panel id from the tail comment."""
+    mirror_panel_id = default_id
+    if len(data_and_tail) > 1:
+        id_match = re.search(r"\bid\s*=\s*(-?\d+)\b", data_and_tail[1])
+        if id_match:
+            mirror_panel_id = int(id_match.group(1))
+    return mirror_panel_id
+
+
 def _read_simtel_data_for_mirror_list(file_path):
     """
     Read mirror list data and return a table.
@@ -668,12 +678,7 @@ def _read_simtel_data_for_mirror_list(file_path):
         if len(data_row) == 5:
             data_row.append(0.0)
 
-        mirror_panel_id = len(rows)
-        if len(data_and_tail) > 1:
-            id_match = re.search(r"\bid\s*=\s*(-?\d+)\b", data_and_tail[1])
-            if id_match:
-                mirror_panel_id = int(id_match.group(1))
-
+        mirror_panel_id = _extract_mirror_panel_id(data_and_tail, len(rows))
         rows.append([*data_row[:6], mirror_panel_id])
 
     if not rows:
