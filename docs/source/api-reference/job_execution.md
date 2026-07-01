@@ -19,9 +19,23 @@ This is mostly used for small productions during the validation or verification 
    :members:
 ```
 
+(parameter-scan-generator)=
+
+```{eval-rst}
+.. automodule:: job_execution.parameter_scan_generator
+   :members:
+```
+
 (process-pool)=
 
 ```{eval-rst}
 .. automodule:: job_execution.process_pool
+   :members:
+```
+
+(bias-curve-submissions)=
+
+```{eval-rst}
+.. automodule:: job_execution.bias_curve_submissions
    :members:
 ```
