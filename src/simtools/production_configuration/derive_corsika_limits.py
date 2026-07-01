@@ -335,12 +335,12 @@ def generate_corsika_limits_grid(args_dict):
             }
             job_specs.append(job_spec)
 
-    n_workers = int(args_dict.get("n_workers", 1))
-    _logger.info(f"Executing {len(job_specs)} jobs with {n_workers or 'auto'} workers")
+    max_workers = int(args_dict.get("max_workers", 1))
+    _logger.info(f"Executing {len(job_specs)} jobs with {max_workers or 'auto'} workers")
     results = process_pool_map_ordered(
         _execute_production_job,
         job_specs,
-        max_workers=n_workers,
+        max_workers=max_workers,
     )
 
     write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
