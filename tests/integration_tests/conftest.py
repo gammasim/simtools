@@ -16,7 +16,7 @@ def pytest_addoption(parser):
 
 @pytest.fixture(autouse=True)
 def simtools_settings(db_config):
-    """Load simtools settings for the test session."""
+    """Load simtools settings for a test."""
     settings.config.load(db_config=db_config)
 
 
