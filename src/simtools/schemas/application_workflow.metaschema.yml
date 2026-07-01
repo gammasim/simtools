@@ -27,7 +27,7 @@ definitions:
         type: string
         description: "Workflow activity UUID. If omitted, generated automatically."
       runtime_environment:
-        "$ref": "#/definitions/runtime_environment"
+        $ref: 'common_definitions.schema.yml#/$defs/run_time_environment'
     required:
       - applications
       - schema_version
@@ -50,29 +50,19 @@ definitions:
         type: array
         items:
           type: string
-        description: "List of files to copy from application output_path to collection output_path."
+        description: "List of files to copy from source directories to collection output_path."
+      source_directory:
+        oneOf:
+          - type: string
+          - type: array
+            items:
+              type: string
+        description: |
+          Application configuration key or list of keys containing source directories searched for collection files.
+          Defaults to output_path.
     required:
       - output_path
       - files
-  runtime_environment:
-    additionalProperties: false
-    type: array
-    items:
-      type: object
-      properties:
-        image:
-          type: string
-          description: "Container image to use for the application."
-        network:
-          type: string
-          description: "Network configuration for the container."
-        environment_file:
-          type: string
-          description: "Path to the environment file for the container."
-        container_engine:
-          type: string
-          description: "Container engine to use (e.g., docker, podman)."
-          default: "docker"
   applications:
     additionalProperties: false
     type: array

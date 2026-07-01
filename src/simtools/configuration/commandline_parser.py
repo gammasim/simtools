@@ -172,6 +172,11 @@ class CommandLineParser(argparse.ArgumentParser):
             type=Path,
         )
         _job_group.add_argument(
+            "--log_file_path",
+            help="path pointing towards log directory",
+            type=Path,
+        )
+        _job_group.add_argument(
             "--disable_log_file",
             action="store_true",
             help=argparse.SUPPRESS,
@@ -202,6 +207,11 @@ class CommandLineParser(argparse.ArgumentParser):
             "--export_build_info",
             help="export build information to file",
             type=str,
+        )
+        _job_group.add_argument(
+            "--ignore_existing_parameter_version",
+            action="store_true",
+            help="skip checking for an existing model parameter version in the database",
         )
 
     def initialize_user_arguments(self):

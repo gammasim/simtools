@@ -9,6 +9,8 @@ import numpy as np
 from astropy.io import fits
 from astropy.table import Table, vstack
 
+from simtools.utils import general
+
 _logger = logging.getLogger(__name__)
 
 
@@ -289,6 +291,11 @@ def write_tables(tables, output_file, overwrite_existing=True, file_type=None):
     """
     Write tables to file (overwriting if exists).
 
+    HDF5 files are written to a sibling ``.incomplete-<uuid>`` file, validated,
+    and atomically moved to the requested output path. If writing fails, the
+    incomplete file is retained for diagnosis and any existing output remains
+    unchanged.
+
     Parameters
     ----------
     tables : list or dict
@@ -306,26 +313,113 @@ def write_tables(tables, output_file, overwrite_existing=True, file_type=None):
     """
     output_file = Path(output_file)
     file_type = file_type or read_table_file_type([output_file])
-    if output_file.exists():
-        if overwrite_existing:
-            output_file.unlink()
-        else:
-            raise FileExistsError(f"Output file {output_file} already exists.")
+    if output_file.exists() and not overwrite_existing:
+        raise FileExistsError(f"Output file {output_file} already exists.")
+    if output_file.exists() and file_type != "HDF5":
+        output_file.unlink()
     hdus = [fits.PrimaryHDU()]
     if isinstance(tables, dict):
         tables = list(tables.values())
+    if file_type == "HDF5":
+        _write_tables_atomically_to_hdf5(tables, output_file)
+        return
     for table in tables:
         _table_name = table.meta.get("EXTNAME")
-        _logger.info(f"Writing table {_table_name} of length {len(table)} to {output_file}")
-        if file_type == "HDF5":
-            write_table_in_hdf5(table, output_file, _table_name)
         if file_type == "FITS":
+            _logger.info(f"Writing table {_table_name} of length {len(table)} to {output_file}")
             hdu = fits.table_to_hdu(table)
             hdu.name = _table_name
             hdus.append(hdu)
 
     if file_type == "FITS":
         fits.HDUList(hdus).writeto(output_file, checksum=False)
+
+
+def _write_tables_atomically_to_hdf5(tables, output_file):
+    """Write and validate an HDF5 file before publishing it atomically."""
+    incomplete_file = output_file.with_name(f"{output_file.name}.incomplete-{general.get_uuid()}")
+    expected_tables = {}
+
+    try:
+        with h5py.File(incomplete_file, "w") as hdf5_file:
+            hdf5_file.attrs["simtools_write_status"] = "incomplete"
+
+        for table in tables:
+            table_name = table.meta.get("EXTNAME")
+            if not table_name:
+                raise ValueError("Cannot write table without an 'EXTNAME' metadata value.")
+            if table_name in expected_tables:
+                raise ValueError(f"Duplicate output table name '{table_name}'.")
+
+            expected_tables[table_name] = len(table)
+            _logger.info(
+                f"Starting table {table_name} of length {len(table)} in incomplete "
+                f"output file {incomplete_file}"
+            )
+            write_table_in_hdf5(table, incomplete_file, table_name)
+            _logger.info(f"Completed table {table_name} of length {len(table)}")
+
+        _validate_written_hdf5(incomplete_file, expected_tables)
+        with h5py.File(incomplete_file, "r+") as hdf5_file:
+            hdf5_file.attrs["simtools_write_status"] = "complete"
+            hdf5_file.flush()
+
+        incomplete_file.replace(output_file)
+        _logger.info(f"Published complete HDF5 output file {output_file}")
+    except Exception:
+        _logger.exception(
+            f"Failed to publish HDF5 output file '{output_file}'. "
+            f"Incomplete output, if created, is stored at '{incomplete_file}'."
+        )
+        raise
+
+
+def _validate_written_hdf5(output_file, expected_tables):
+    """Verify that all requested tables were persisted with the expected row counts."""
+    if not expected_tables:
+        raise ValueError("Cannot publish an HDF5 file without tables.")
+
+    with h5py.File(output_file, "r") as hdf5_file:
+        for table_name, expected_rows in expected_tables.items():
+            if table_name not in hdf5_file:
+                raise ValueError(f"Output table '{table_name}' was not written.")
+            dataset = hdf5_file[table_name]
+            if not isinstance(dataset, h5py.Dataset):
+                raise ValueError(f"Output object '{table_name}' is not an HDF5 dataset.")
+            if dataset.dtype.names is None:
+                raise ValueError(f"Output table '{table_name}' has no compound dtype.")
+            if len(dataset) != expected_rows:
+                raise ValueError(
+                    f"Output table '{table_name}' has {len(dataset)} row(s), "
+                    f"expected {expected_rows}."
+                )
+
+
+def _prepare_string_columns_for_hdf5(table):
+    """Convert supported string columns to the byte strings required by HDF5."""
+    string_columns = []
+    for column_name in table.colnames:
+        column = table[column_name]
+        if column.dtype.kind == "U":  # hdf5 does not support unicode
+            string_columns.append(column_name)
+        elif column.dtype.kind == "O":
+            values = np.asarray(column)
+            if not all(
+                isinstance(value, (str, bytes, np.str_, np.bytes_)) for value in values.flat
+            ):
+                raise TypeError(
+                    f"Object-dtype column '{column_name}' contains non-string or missing values; "
+                    "refusing to serialize it as strings."
+                )
+            string_columns.append(column_name)
+
+    if not string_columns:
+        return table
+
+    table = table.copy(copy_data=False)
+    for column_name in string_columns:
+        table[column_name] = table[column_name].astype("S")
+    return table
 
 
 def write_table_in_hdf5(table, output_file, table_name):
@@ -345,9 +439,7 @@ def write_table_in_hdf5(table, output_file, table_name):
     -------
     None
     """
-    for col in table.colnames:
-        if table[col].dtype.kind in ("U", "O"):  # hdf5 does not support unicode or object dtypes
-            table[col] = table[col].astype("S")
+    table = _prepare_string_columns_for_hdf5(table)
 
     with h5py.File(output_file, "a") as f:
         data = np.array(table)

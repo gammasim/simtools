@@ -2,11 +2,18 @@
 repos:
 # Ruff
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.15.15
+  rev: v0.15.20
   hooks:
   - id: ruff
     args: ["--fix"]
   - id: ruff-format
+# Flake8 cognitive complexity
+- repo: https://github.com/pycqa/flake8
+  rev: 7.3.0
+  hooks:
+  - id: flake8
+    additional_dependencies: [flake8-cognitive-complexity==0.1.0]
+    args: ["--select=CCR001", "--max-cognitive-complexity=15"]
 # pylint
 - repo: local
   hooks:
@@ -46,7 +53,7 @@ repos:
   - id: actionlint
 # https://pyproject-fmt.readthedocs.io/en/latest/
 - repo: https://github.com/tox-dev/pyproject-fmt
-  rev: "v2.23.0"
+  rev: "v2.25.1"
   hooks:
   - id: pyproject-fmt
 # codespell
@@ -56,15 +63,14 @@ repos:
   - id: codespell
     args: [
       "--skip=tests/resources/example_non_utf-8_file.lis",
-      "--ignore-words-list=als",
+      "--ignore-words-list=als,hel",
     ]
 # markdownlint
 - repo: https://github.com/igorshubovych/markdownlint-cli
-  rev: v0.48.0
+  rev: v0.49.0
   hooks:
   - id: markdownlint
     args: ["--disable", "MD041"]
-    language_version: 25.9.0
 # yamllint
 - repo: https://github.com/adrienverge/yamllint.git
   rev: v1.38.0

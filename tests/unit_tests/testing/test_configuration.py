@@ -65,6 +65,102 @@ def test_read_configs_from_files(integration_test_config_files):
     assert len(configs) == len(config_files)
 
 
+def test_resolve_test_resource_paths(tmp_test_directory):
+    resources_path = Path(tmp_test_directory) / "versioned-resources"
+    config = {
+        "configuration": {
+            "input": "tests/resources/static/input.ecsv",
+            "inputs": ["./tests/resources/generated/events.simtel.zst"],
+        },
+        "integration_tests": [
+            {"reference_output_file": "${static:reference.ecsv}"},
+            {"reference_output_file": "${generated:model/parameter.json}"},
+        ],
+    }
+
+    resolved = configuration.resolve_test_resource_paths(config, resources_path)
+
+    assert resolved["configuration"]["input"] == str(resources_path / "static/input.ecsv")
+    assert resolved["configuration"]["inputs"] == [
+        str(resources_path / "generated/events.simtel.zst")
+    ]
+    assert resolved["integration_tests"] == [
+        {"reference_output_file": str(resources_path / "static/reference.ecsv")},
+        {"reference_output_file": str(resources_path / "generated/model/parameter.json")},
+    ]
+
+
+def test_read_configs_resolves_test_resource_references(tmp_test_directory):
+    config_file = tmp_test_directory / "config.yml"
+    resources_path = Path(tmp_test_directory) / "versioned-resources"
+    config_file.write_text(
+        """
+applications:
+- application: simtools-test
+  test_name: resource_macros
+  configuration:
+    input: ${static:input.ecsv}
+    existing_path: tests/resources/static/existing.ecsv
+  integration_tests:
+  - reference_output_file: ${generated:reference.ecsv}
+  - test_simtel_cfg_files:
+      "6.0.2": ${static:simtel.cfg}
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+
+    configs = configuration._read_configs_from_files(
+        [config_file], test_resources_path=resources_path
+    )
+
+    assert configs[0]["configuration"]["input"] == str(resources_path / "static/input.ecsv")
+    assert configs[0]["configuration"]["existing_path"] == str(
+        resources_path / "static/existing.ecsv"
+    )
+    assert configs[0]["integration_tests"][0]["reference_output_file"] == str(
+        resources_path / "generated/reference.ecsv"
+    )
+    assert configs[0]["integration_tests"][1]["test_simtel_cfg_files"]["6.0.2"] == str(
+        resources_path / "static/simtel.cfg"
+    )
+
+
+def test_resolve_test_resource_path_macros_nested_structures(tmp_test_directory):
+    resources_path = Path(tmp_test_directory) / "versioned-resources"
+    value = {
+        "config": {
+            "input": "${static:data/file.ecsv}",
+            "groups": [
+                "prefix/${generated:run/output.fits}",
+                {
+                    "items": [
+                        "${static:layout/array.ecsv}",
+                        "${generated:plots/summary.png}",
+                    ],
+                    "keep_number": 7,
+                    "keep_bool": True,
+                },
+            ],
+        },
+        "plain": "no_macro",
+    }
+
+    resolved = configuration.resolve_test_resource_paths(value, resources_path)
+
+    assert resolved["config"]["input"] == str(resources_path / "static/data/file.ecsv")
+    assert resolved["config"]["groups"][0] == f"prefix/{resources_path}/generated/run/output.fits"
+    assert resolved["config"]["groups"][1]["items"][0] == str(
+        resources_path / "static/layout/array.ecsv"
+    )
+    assert resolved["config"]["groups"][1]["items"][1] == str(
+        resources_path / "generated/plots/summary.png"
+    )
+    assert resolved["config"]["groups"][1]["keep_number"] == 7
+    assert resolved["config"]["groups"][1]["keep_bool"] is True
+    assert resolved["plain"] == "no_macro"
+
+
 def test_create_tmp_output_path(tmp_test_directory):
     config = {"application": "test_app", "test_name": "test_name"}
     tmp_output_path = configuration.create_tmp_output_path(tmp_test_directory, config)
@@ -130,6 +226,39 @@ def test_prepare_test_options_with_single_boolean_option(tmp_test_directory):
     assert config_file is None
     assert config_string == "--version"
     assert config_file_model_version is None
+
+
+def test_prepare_test_options_copies_resolved_resource_config_files(tmp_test_directory):
+    resources_path = Path(tmp_test_directory) / "versioned-resources"
+    static_path = resources_path / "static"
+    static_path.mkdir(parents=True)
+    plot_config = static_path / "plot.yml"
+    plot_config.write_text(
+        """
+plot:
+  tables:
+  - file_name: tests/resources/generated/table.ecsv
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    config = {
+        "plot_config": str(plot_config),
+        "output_file": "plot",
+        "output_path": "simtools-output",
+    }
+
+    configuration._prepare_test_options(
+        config,
+        output_path=tmp_test_directory,
+        test_resources_path=resources_path,
+    )
+
+    resolved_plot_config = Path(config["plot_config"])
+    assert resolved_plot_config.parent == tmp_test_directory / "resolved-resource-configs"
+    assert yaml.safe_load(resolved_plot_config.read_text(encoding="utf-8")) == {
+        "plot": {"tables": [{"file_name": str(resources_path / "generated/table.ecsv")}]}
+    }
 
 
 def test_prepare_test_options_with_model_version(tmp_test_directory, tmp_config_string):
