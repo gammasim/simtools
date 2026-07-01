@@ -21,7 +21,7 @@ The production context includes:
 - the site, model version, and array layout;
 - the primary particles and CORSIKA interaction models;
 - the simulation energy range, core scatter, and view cone;
-- whether the pointing grid is horizontal (`azimuth`/`zenith`) or equatorial (`ra`/`dec`);
+- whether the pointing grid is horizontal (`azimuth`/`zenith`) or hour-angle (`ha`/`dec`);
 - the source-offset grid points;
 - the model version, which determines the NSB rate used by the production grid;
 - whether the number of runs is fixed or derived from a total shower target;
@@ -63,16 +63,15 @@ maximum azimuth and zenith values, plus a single offset point.
 Directed azimuth ranges may cross the 0 deg boundary. For example, `310 deg` to `20 deg` covers
 the interval through North.
 
-An equatorial grid is used when the production is defined in sky coordinates. simtools converts
-each RA/Dec point to local azimuth and zenith using the site and `time_of_observation`, because
+An hour-angle grid is used when the production is defined by local hour angle and declination.
+simtools converts each HA/Dec point to local azimuth and zenith using the site latitude, because
 CORSIKA and sim_telarray still need local horizontal coordinates:
 
 ```yaml
 axis:
-- ra 0 deg 360 deg 36 linear
+- ha 0 deg 360 deg 36 linear
 - dec -90 deg 90 deg 18 linear
 - offset 0 deg 10 deg 2 linear
-time_of_observation: '2017-09-16 00:00:00'
 ```
 
 For either coordinate system, `direction_grid_density` can be used instead of an explicit number
@@ -88,18 +87,17 @@ axis:
 direction_grid_density: 0.25 1/deg^2
 ```
 
-For density-based RA/Dec grids, local-sky filters restrict the generated points to the observable
+For density-based HA/Dec grids, local-sky filters restrict the generated points to the observable
 region needed for the production:
 
 ```yaml
 axis:
-- ra 0 deg 360 deg 1 linear
+- ha 0 deg 360 deg 1 linear
 - dec -40 deg 80 deg 1 linear
 - offset 0 deg 10 deg 2 linear
 direction_grid_density: 0.25 1/deg^2
 local_zenith_range: 0 deg 70 deg
 local_azimuth_range: 300 deg 60 deg
-time_of_observation: '2017-09-16 00:00:00'
 ```
 
 ## Energy and CORSIKA Limits
@@ -173,7 +171,7 @@ simtools-production-generate-grid --config path/to/production_generate_grid.yml
 Several integration-test configurations are useful starting points:
 
 - `tests/integration_tests/config/production_generate_grid_horizontal.yml`
-- `tests/integration_tests/config/production_generate_grid_ra_dec.yml`
+- `tests/integration_tests/config/production_generate_grid_ha_dec.yml`
 - `tests/integration_tests/config/production_derive_statistics.yml`
 
 ## Derive Required Event Statistics
@@ -220,6 +218,11 @@ off_axis_angles:
 The output is an ECSV production grid. Each row describes one executable run, including primary,
 pointing, energy range, core scatter settings, view cone, showers per run, model version,
 model-version-dependent `nsb_rate`, array layout, interaction models, and run number.
+Quantity columns use semantic names such as `azimuth_angle`, `energy_min`, and
+`core_scatter_max`. Units are stored once in the ECSV column metadata: degrees for angles, GeV for
+energies, metres for core-scatter distances, and `1 / (cm2 ns sr)` for `nsb_rate`. HTCondor
+parameter files contain the corresponding normalized numeric values; their generated wrapper adds the fixed units when calling
+`simtools-simulate-prod`.
 
 The generated table is inspected before job submission. The review includes:
 
@@ -235,14 +238,5 @@ coverage:
 ```bash
 simtools-plot-production-grid \
     --grid_points_file tests/resources/production_job_grid_horizontal.ecsv \
-    --output_path simtools-output
-```
-
-For RA/Dec grids, guide tracks can be included:
-
-```bash
-simtools-plot-production-grid \
-    --grid_points_file path/to/job_grid_ra_dec.ecsv \
-    --plot_ra_dec_tracks \
     --output_path simtools-output
 ```

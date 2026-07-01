@@ -7,12 +7,12 @@ applications:
         "<7.0.0": 1lst
         ">=7.0.0": LSTN-01
     axis:
-    # RA/Dec define the sampling frame; binning placeholders are overridden by
-    # direction_grid_density in adaptive RA/Dec mode.
-    - ra 0 deg 360 deg 1 linear
+    # HA/Dec define the sampling frame; binning placeholders are overridden by
+    # direction_grid_density in adaptive HA/Dec mode.
+    - ha 0 deg 360 deg 1 linear
     - dec -40 deg 80 deg 1 linear
     - offset 0 deg 10 deg 2 linear
-    # Explicit local-sky constraints for RA/Dec density filtering.
+    # Explicit local-sky constraints for HA/Dec density filtering.
     local_zenith_range: 0 deg 70 deg
     # Directed azimuth interval (300 -> 60) across wrap-around.
     local_azimuth_range: 300 deg 60 deg
@@ -26,16 +26,15 @@ applications:
     showers_per_run: 5
     showers_per_run_power_law: 0.0 1 TeV
     number_of_runs: 2
-    time_of_observation: '2017-09-16 00:00:00'
-    output_file: job_grid_ra_dec_density.ecsv
+    output_file: job_grid_ha_dec_density.ecsv
     output_path: simtools-output
     primary: gamma
     simulation_software: corsika_sim_telarray
     site: North
     view_cone: 0 deg 10 deg
   integration_tests:
-  - output_file: job_grid_ra_dec_density.ecsv
-  skip_integration_test: Requires model DB access for site-location lookup in ra_dec mode.
-  test_name: production_generate_grid_ra_dec
+  - output_file: job_grid_ha_dec_density.ecsv
+  skip_integration_test: Requires model DB access for site-location lookup in ha_dec mode.
+  test_name: production_generate_grid_ha_dec
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
