@@ -16,14 +16,10 @@ Both curves set ``nsb_scaling_factor`` because night-sky background affects the
 trigger response in both simulations.
 """
 
-import logging
-
 from simtools.io import ascii_handler
 from simtools.job_execution import parameter_scan_generator
 from simtools.model.telescope_model import TelescopeModel
 from simtools.production_configuration.simulation_jobs import generate_job_grid
-
-_logger = logging.getLogger(__name__)
 
 _PRODUCTION_GRID_ARGS = [
     "site",
