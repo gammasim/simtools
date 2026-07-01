@@ -50,7 +50,13 @@ def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
     output_table = Table.read(output_file, format="ascii.ecsv")
 
     assert metadata["site"] == "North"
+    assert metadata["job_grid_format_version"] == job_grid_io.JOB_GRID_FORMAT_VERSION
     assert output_table.colnames[0] == "run_number"
+    assert output_table["energy_min"].unit == u.GeV
+    assert output_table["energy_max"].unit == u.GeV
+    assert output_table["core_scatter_max"].unit == u.m
+    assert output_table["azimuth_angle"].unit == u.deg
+    assert output_table["nsb_rate"][0] == pytest.approx(0.24)
     assert rows[0]["energy_min"] == 30 * u.GeV
     assert rows[0]["cores_per_shower"] == 10
     assert rows[0]["array_layout_name"] == "CTAO-North-Alpha"
@@ -71,6 +77,7 @@ def test_serialize_job_grid_stream_and_read_job_grid_ecsv(tmp_test_directory):
 
     assert row_count == 1
     assert metadata["site"] == "North"
+    assert metadata["job_grid_format_version"] == job_grid_io.JOB_GRID_FORMAT_VERSION
     assert rows[0]["energy_min"] == 30 * u.GeV
     assert rows[0]["ha"] == 123 * u.deg
     assert rows[0]["dec"] == -45 * u.deg
@@ -125,7 +132,10 @@ def test_job_grid_density_schema_matches_serialized_required_columns():
     required_columns = [column["name"] for column in table_columns if column.get("required")]
 
     assert required_columns == job_grid_io.JOB_GRID_COLUMNS
-    assert all("unit" not in column for column in table_columns)
+    schema_units = {
+        column["name"]: u.Unit(column["unit"]) for column in table_columns if "unit" in column
+    }
+    assert schema_units == job_grid_io.JOB_GRID_COLUMN_UNITS
 
 
 def test_serialize_job_grid_rejects_non_ecsv_output(tmp_test_directory):

@@ -159,13 +159,13 @@ process_id="$1"
 set -a; source "$2"
 apptainer_label="${{3}}"
 primary="${{4}}"
-model_version="${{19}}"
-array_layout_name="${{20}}"
-corsika_le_interaction="${{21}}"
-corsika_he_interaction="${{22}}"
-run_number="${{23}}"
-pack_for_grid_register="${{24}}"
-energy_range_tag="erange-${{7}}${{8}}-${{9}}${{10}}"
+model_version="${{14}}"
+array_layout_name="${{15}}"
+corsika_le_interaction="${{16}}"
+corsika_he_interaction="${{17}}"
+run_number="${{18}}"
+pack_for_grid_register="${{19}}"
+energy_range_tag="erange-${{7}}GeV-${{8}}GeV"
 job_label="{args_dict["label"]}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
 simtools-simulate-prod \\
@@ -177,10 +177,10 @@ simtools-simulate-prod \\
     --primary "$primary" \\
     --azimuth_angle "${{5}}" \\
     --zenith_angle "${{6}}" \\
-    --showers_per_run "${{18}}" \\
-    --energy_range "${{7}} ${{8}} ${{9}} ${{10}}" \\
-    --core_scatter "${{11}} ${{12}} ${{13}}" \\
-    --view_cone "${{14}} ${{15}} ${{16}} ${{17}}" \\
+    --showers_per_run "${{13}}" \\
+    --energy_range "${{7}} GeV ${{8}} GeV" \\
+    --core_scatter "${{9}} ${{10}} m" \\
+    --view_cone "${{11}} deg ${{12}} deg" \\
     --corsika_le_interaction "$corsika_le_interaction" \\
     --corsika_he_interaction "$corsika_he_interaction" \\
     --run_number "$run_number" \\
@@ -209,10 +209,8 @@ def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
     )
 
     assert "queue apptainer_label,primary" in content
-    assert "cores_per_shower,core_scatter_max_value,core_scatter_max_unit" in content
-    assert (
-        "view_cone_min_value,view_cone_min_unit,view_cone_max_value,view_cone_max_unit" in content
-    )
+    assert "cores_per_shower,core_scatter_max" in content
+    assert "view_cone_min,view_cone_max" in content
     assert "showers_per_run,model_version,array_layout_name" in content
     assert "from simulate_prod.submit.params.txt" in content
     assert 'arguments = "$(process) env.txt' in content
@@ -284,21 +282,9 @@ def test_resolve_apptainer_images_raises_for_missing_file(tmp_test_directory):
 
 
 def test_format_quantity_full_coverage():
-    value, unit = _format_quantity(5 * u.TeV)
-    assert float(value) == pytest.approx(5.0)
-    assert unit == "TeV"
-
-    value, unit = _format_quantity(100 * u.cm, convert_to=u.m)
-    assert float(value) == pytest.approx(1.0)
-    assert unit == "m"
-
-    value, unit = _format_quantity(42, default_unit=u.GeV)
-    assert value == "42"
-    assert unit == "GeV"
-
-    value, unit = _format_quantity("abc")
-    assert value == "abc"
-    assert unit is None
+    assert float(_format_quantity(5 * u.TeV, u.GeV)) == pytest.approx(5000.0)
+    assert float(_format_quantity(100 * u.cm, u.m)) == pytest.approx(1.0)
+    assert _format_quantity(42, u.GeV) == "42"
 
 
 def test_format_param_value_raises_for_missing_required_value():
@@ -337,7 +323,7 @@ def test_build_job_specs_raises_for_missing_required_metadata(args_dict, job_row
             build_job_specs(args_dict, ["7.0.0"])
 
 
-def test_write_params_file_keeps_energy_units(tmp_test_directory):
+def test_write_params_file_uses_canonical_numeric_units(tmp_test_directory):
     params_file_path = Path(tmp_test_directory) / "params.txt"
     label_job_specs = [
         {
@@ -364,7 +350,7 @@ def test_write_params_file_keeps_energy_units(tmp_test_directory):
     _write_params_file(params_file_path, label_job_specs)
 
     assert params_file_path.read_text(encoding="utf-8") == (
-        "7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 10 200.0 m 0.0 deg 5.0 deg "
+        "7.0.0 gamma 0.0 20.0 30.0 10000.0 10 200.0 0.0 5.0 "
         "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/7.0.0\n"
     )
 
@@ -396,6 +382,6 @@ def test_write_params_file_replaces_whitespace_in_apptainer_label(tmp_test_direc
     _write_params_file(params_file_path, label_job_specs)
 
     assert params_file_path.read_text(encoding="utf-8") == (
-        "grid_label_7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 10 200.0 m 0.0 deg 5.0 deg "
+        "grid_label_7.0.0 gamma 0.0 20.0 30.0 10000.0 10 200.0 0.0 5.0 "
         "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/grid_label_7.0.0\n"
     )

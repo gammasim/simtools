@@ -4,7 +4,6 @@ import logging
 from io import StringIO
 from pathlib import Path
 
-import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
@@ -15,64 +14,57 @@ logger = logging.getLogger(__name__)
 _ECSV_SUFFIX = ".ecsv"
 _ECSV_FORMAT = "ascii.ecsv"
 _STREAM_CHUNK_SIZE = 10_000
+JOB_GRID_FORMAT_VERSION = "0.2.0"
 
 JOB_GRID_COLUMNS = [
     "run_number",
     "primary",
-    "azimuth_angle_value",
-    "azimuth_angle_unit",
-    "zenith_angle_value",
-    "zenith_angle_unit",
+    "azimuth_angle",
+    "zenith_angle",
     "ha",
     "dec",
-    "energy_min_value",
-    "energy_min_unit",
-    "energy_max_value",
-    "energy_max_unit",
+    "energy_min",
+    "energy_max",
     "cores_per_shower",
-    "core_scatter_max_value",
-    "core_scatter_max_unit",
-    "view_cone_min_value",
-    "view_cone_min_unit",
-    "view_cone_max_value",
-    "view_cone_max_unit",
+    "core_scatter_max",
+    "view_cone_min",
+    "view_cone_max",
     "showers_per_run",
+    "nsb_rate",
     "model_version",
     "array_layout_name",
     "corsika_le_interaction",
     "corsika_he_interaction",
 ]
 
-_QUANTITY_FIELDS = {
-    "azimuth_angle": ("azimuth_angle_value", "azimuth_angle_unit"),
-    "zenith_angle": ("zenith_angle_value", "zenith_angle_unit"),
-    "energy_min": ("energy_min_value", "energy_min_unit"),
-    "energy_max": ("energy_max_value", "energy_max_unit"),
-    "core_scatter_max": ("core_scatter_max_value", "core_scatter_max_unit"),
-    "view_cone_min": ("view_cone_min_value", "view_cone_min_unit"),
-    "view_cone_max": ("view_cone_max_value", "view_cone_max_unit"),
+JOB_GRID_QUANTITY_UNITS = {
+    "azimuth_angle": u.deg,
+    "zenith_angle": u.deg,
+    "ha": u.deg,
+    "dec": u.deg,
+    "energy_min": u.GeV,
+    "energy_max": u.GeV,
+    "core_scatter_max": u.m,
+    "view_cone_min": u.deg,
+    "view_cone_max": u.deg,
 }
-JOB_GRID_QUANTITY_FIELDS = dict(_QUANTITY_FIELDS)
+JOB_GRID_COLUMN_UNITS = {
+    **JOB_GRID_QUANTITY_UNITS,
+    "nsb_rate": 1 / (u.cm**2 * u.ns * u.sr),
+}
 
-_ANGLE_FIELDS = ("ha", "dec")
+JOB_GRID_QUANTITY_FIELDS = tuple(JOB_GRID_QUANTITY_UNITS)
 
 _JOB_GRID_COLUMN_DTYPES = {
     "primary": str,
-    "azimuth_angle_value": float,
-    "azimuth_angle_unit": str,
-    "zenith_angle_value": float,
-    "zenith_angle_unit": str,
-    "energy_min_value": float,
-    "energy_min_unit": str,
-    "energy_max_value": float,
-    "energy_max_unit": str,
+    "azimuth_angle": float,
+    "zenith_angle": float,
+    "energy_min": float,
+    "energy_max": float,
     "cores_per_shower": int,
-    "core_scatter_max_value": float,
-    "core_scatter_max_unit": str,
-    "view_cone_min_value": float,
-    "view_cone_min_unit": str,
-    "view_cone_max_value": float,
-    "view_cone_max_unit": str,
+    "core_scatter_max": float,
+    "view_cone_min": float,
+    "view_cone_max": float,
     "showers_per_run": int,
     "nsb_rate": float,
     "model_version": str,
@@ -85,13 +77,13 @@ _JOB_GRID_COLUMN_DTYPES = {
 }
 
 
-def _serialize_quantity(value):
-    """Serialize a Quantity to value/unit columns."""
-    return float(value.value), str(value.unit)
+def _serialize_quantity(value, unit):
+    """Serialize a quantity as a scalar in its canonical grid unit."""
+    return float(u.Quantity(value).to_value(unit))
 
 
 def _deserialize_quantity(value, unit):
-    """Deserialize value/unit columns to a Quantity."""
+    """Deserialize a scalar with its ECSV column unit."""
     return float(value) * u.Unit(unit)
 
 
@@ -109,22 +101,13 @@ def _serialize_job_row(job_row):
         "run_number": int(job_row["run_number"]),
     }
 
-    for quantity_name, (value_key, unit_key) in _QUANTITY_FIELDS.items():
-        serialized_row[value_key], serialized_row[unit_key] = _serialize_quantity(
-            job_row[quantity_name]
-        )
-
-    for angle_name in _ANGLE_FIELDS:
-        angle_value = job_row[angle_name]
-        if isinstance(angle_value, u.Quantity):
-            serialized_row[angle_name] = float(angle_value.to_value(u.deg))
-        else:
-            serialized_row[angle_name] = float(angle_value)
+    for quantity_name, unit in JOB_GRID_QUANTITY_UNITS.items():
+        serialized_row[quantity_name] = _serialize_quantity(job_row[quantity_name], unit)
 
     return serialized_row
 
 
-def _deserialize_job_row(serialized_row):
+def _deserialize_job_row(serialized_row, column_units=None):
     """Deserialize one stored row to the in-memory job-row schema."""
     job_row = {
         "primary": serialized_row["primary"],
@@ -138,19 +121,17 @@ def _deserialize_job_row(serialized_row):
         "run_number": int(serialized_row["run_number"]),
     }
 
-    for quantity_name, (value_key, unit_key) in _QUANTITY_FIELDS.items():
-        job_row[quantity_name] = _deserialize_quantity(
-            serialized_row[value_key],
-            serialized_row[unit_key],
-        )
+    column_units = column_units or {}
+    for quantity_name, canonical_unit in JOB_GRID_QUANTITY_UNITS.items():
+        if quantity_name in serialized_row:
+            unit = column_units.get(quantity_name) or canonical_unit
+            job_row[quantity_name] = _deserialize_quantity(serialized_row[quantity_name], unit).to(
+                canonical_unit
+            )
+            continue
 
-    for angle_name in _ANGLE_FIELDS:
-        if angle_name not in serialized_row:
-            continue
-        angle_value = serialized_row[angle_name]
-        if np.ma.is_masked(angle_value) or angle_value is None:
-            continue
-        job_row[angle_name] = float(angle_value) * u.deg
+        if quantity_name not in ("ha", "dec"):
+            raise KeyError(f"Missing required job-grid column '{quantity_name}'.")
 
     return job_row
 
@@ -171,6 +152,7 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     output_path = Path(output_file)
     serialized_rows = [_serialize_job_row(job_row) for job_row in job_rows]
     metadata = metadata.copy() if metadata else {}
+    metadata["job_grid_format_version"] = JOB_GRID_FORMAT_VERSION
     metadata["job_grid_summary"] = build_job_grid_summary(job_rows)
 
     if output_path.suffix.lower() != _ECSV_SUFFIX:
@@ -181,8 +163,7 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
         {column: row.get(column) for column in output_columns} for row in serialized_rows
     ]
 
-    output_table = Table(rows=output_rows, names=output_columns)
-    output_table.meta = metadata
+    output_table = _build_output_table(output_rows, output_columns, metadata)
     logger.info(f"Writing job grid with {len(job_rows)} rows to '{output_path}'.")
     output_table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
 
@@ -190,6 +171,9 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
 def _build_output_table(output_rows, output_columns, metadata=None):
     """Build an Astropy table for serialized output rows."""
     output_table = Table(rows=output_rows, names=output_columns)
+    for column_name, unit in JOB_GRID_COLUMN_UNITS.items():
+        if column_name in output_table.colnames:
+            output_table[column_name].unit = unit
     output_table.meta = metadata or {}
     return output_table
 
@@ -200,6 +184,8 @@ def _write_empty_ecsv_header(output_path, output_columns, metadata):
         names=output_columns,
         dtype=[_JOB_GRID_COLUMN_DTYPES[column] for column in output_columns],
     )
+    for column_name, unit in JOB_GRID_COLUMN_UNITS.items():
+        empty_table[column_name].unit = unit
     empty_table.meta = metadata
     empty_table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
 
@@ -272,7 +258,8 @@ def serialize_job_grid_stream(job_rows, output_file, metadata=None):
         Number of rows written to the output file.
     """
     output_path = Path(output_file)
-    metadata = metadata or {}
+    metadata = metadata.copy() if metadata else {}
+    metadata["job_grid_format_version"] = JOB_GRID_FORMAT_VERSION
 
     if output_path.suffix.lower() != _ECSV_SUFFIX:
         raise ValueError("Job grid output file must use the '.ecsv' extension.")
@@ -340,7 +327,8 @@ def read_job_grid(input_file):
 
     table = Table.read(input_path, format=_ECSV_FORMAT)
     rows = [{column_name: row[column_name] for column_name in table.colnames} for row in table]
-    return [_deserialize_job_row(row) for row in rows], dict(table.meta)
+    column_units = {column_name: table[column_name].unit for column_name in table.colnames}
+    return [_deserialize_job_row(row, column_units) for row in rows], dict(table.meta)
 
 
 def read_job_grid_row(input_file, row_index):
