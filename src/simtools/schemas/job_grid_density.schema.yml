@@ -36,6 +36,14 @@ data:
         description: Unit of zenith pointing angle.
         required: true
         type: string
+      - name: ha
+        description: Hour angle coordinate value in degrees (positive westward).
+        required: true
+        type: float64
+      - name: dec
+        description: Declination coordinate value in degrees.
+        required: true
+        type: float64
       - name: energy_min_value
         description: Minimum primary energy value.
         required: true
@@ -100,11 +108,3 @@ data:
         description: CORSIKA high-energy interaction model.
         required: true
         type: string
-      - name: ra
-        description: Right ascension coordinate value for ra_dec coordinate systems.
-        required: false
-        type: float64
-      - name: dec
-        description: Declination coordinate value for ra_dec coordinate systems.
-        required: false
-        type: float64

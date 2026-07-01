@@ -4,7 +4,7 @@ applications:
   configuration:
     array_layout_name: LSTN-01
     axis:
-    - ra 0 deg 360 deg 36 linear
+    - ha 0 deg 360 deg 36 linear
     - dec -90 deg 90 deg 18 linear
     - offset 0 deg 10 deg 2 linear
     core_scatter: 10 500 m
@@ -16,16 +16,15 @@ applications:
     showers_per_run: 5
     showers_per_run_power_law: 0.0 1 TeV
     number_of_runs: 2
-    time_of_observation: '2017-09-16 00:00:00'
-    output_file: job_grid_ra_dec.ecsv
+    output_file: job_grid_ha_dec.ecsv
     output_path: simtools-output
     primary: gamma
     simulation_software: corsika_sim_telarray
     site: North
     view_cone: 0 deg 10 deg
   integration_tests:
-  - output_file: job_grid_ra_dec.ecsv
-  skip_integration_test: Requires model DB access for site-location lookup in ra_dec mode.
-  test_name: production_generate_grid_ra_dec
+  - output_file: job_grid_ha_dec.ecsv
+  skip_integration_test: Requires model DB access for site-location lookup in ha_dec mode.
+  test_name: production_generate_grid_ha_dec
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

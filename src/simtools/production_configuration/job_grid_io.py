@@ -23,6 +23,8 @@ JOB_GRID_COLUMNS = [
     "azimuth_angle_unit",
     "zenith_angle_value",
     "zenith_angle_unit",
+    "ha",
+    "dec",
     "energy_min_value",
     "energy_min_unit",
     "energy_max_value",
@@ -52,7 +54,7 @@ _QUANTITY_FIELDS = {
 }
 JOB_GRID_QUANTITY_FIELDS = dict(_QUANTITY_FIELDS)
 
-_OPTIONAL_ANGLE_FIELDS = ("ra", "dec")
+_ANGLE_FIELDS = ("ha", "dec")
 
 _JOB_GRID_COLUMN_DTYPES = {
     "primary": str,
@@ -78,7 +80,7 @@ _JOB_GRID_COLUMN_DTYPES = {
     "corsika_le_interaction": str,
     "corsika_he_interaction": str,
     "run_number": int,
-    "ra": float,
+    "ha": float,
     "dec": float,
 }
 
@@ -112,10 +114,8 @@ def _serialize_job_row(job_row):
             job_row[quantity_name]
         )
 
-    for angle_name in _OPTIONAL_ANGLE_FIELDS:
-        angle_value = job_row.get(angle_name)
-        if angle_value is None:
-            continue
+    for angle_name in _ANGLE_FIELDS:
+        angle_value = job_row[angle_name]
         if isinstance(angle_value, u.Quantity):
             serialized_row[angle_name] = float(angle_value.to_value(u.deg))
         else:
@@ -144,7 +144,7 @@ def _deserialize_job_row(serialized_row):
             serialized_row[unit_key],
         )
 
-    for angle_name in _OPTIONAL_ANGLE_FIELDS:
+    for angle_name in _ANGLE_FIELDS:
         if angle_name not in serialized_row:
             continue
         angle_value = serialized_row[angle_name]
@@ -176,12 +176,7 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     if output_path.suffix.lower() != _ECSV_SUFFIX:
         raise ValueError("Job grid output file must use the '.ecsv' extension.")
 
-    optional_columns = [
-        angle_name
-        for angle_name in _OPTIONAL_ANGLE_FIELDS
-        if any(angle_name in row for row in serialized_rows)
-    ]
-    output_columns = [*JOB_GRID_COLUMNS, *optional_columns]
+    output_columns = JOB_GRID_COLUMNS
     output_rows = [
         {column: row.get(column) for column in output_columns} for row in serialized_rows
     ]
@@ -260,8 +255,7 @@ def serialize_job_grid_stream(job_rows, output_file, metadata=None):
     Stream executable job rows to ECSV output.
 
     This avoids materializing serialized rows and the full Astropy table in memory.
-    Optional RA/Dec columns are determined from the first row, which matches the
-    homogeneous output produced by the production grid generator.
+    All coordinate columns are required so every row carries HA/Dec and Az/Ze.
 
     Parameters
     ----------
@@ -292,10 +286,7 @@ def serialize_job_grid_stream(job_rows, output_file, metadata=None):
         return 0
 
     serialized_first_row = _serialize_job_row(first_row)
-    optional_columns = [
-        angle_name for angle_name in _OPTIONAL_ANGLE_FIELDS if angle_name in serialized_first_row
-    ]
-    output_columns = [*JOB_GRID_COLUMNS, *optional_columns]
+    output_columns = JOB_GRID_COLUMNS
 
     output_rows = []
     row_count = 0
