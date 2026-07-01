@@ -47,6 +47,8 @@ dependencies = [
   "uuid6",                        # temporary dependency; not needed for python >= 3.14
 ]
 optional-dependencies.dev = [
+  "flake8",
+  "flake8-cognitive-complexity",
   "pre-commit",
   "pylint",
   "ruff",

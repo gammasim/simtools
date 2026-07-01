@@ -7,6 +7,13 @@ repos:
   - id: ruff
     args: ["--fix"]
   - id: ruff-format
+# Flake8 cognitive complexity
+- repo: https://github.com/pycqa/flake8
+  rev: 7.3.0
+  hooks:
+  - id: flake8
+    additional_dependencies: [flake8-cognitive-complexity==0.1.0]
+    args: ["--select=CCR001", "--max-cognitive-complexity=15"]
 # pylint
 - repo: local
   hooks:
