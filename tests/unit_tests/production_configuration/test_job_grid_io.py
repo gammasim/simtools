@@ -151,3 +151,68 @@ def test_read_job_grid_rejects_non_ecsv_input(tmp_test_directory):
 
     with pytest.raises(ValueError, match="\\.ecsv"):
         job_grid_io.read_job_grid(input_file)
+
+
+def test_read_job_grid_row_returns_correct_row(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "job_grid.ecsv"
+    rows = _job_rows()
+    second_row = dict(rows[0], run_number=11, azimuth_angle=90 * u.deg)
+    job_grid_io.serialize_job_grid([rows[0], second_row], output_file, metadata=_metadata())
+
+    row, metadata = job_grid_io.read_job_grid_row(output_file, 2)
+
+    assert row["run_number"] == 11
+    assert row["azimuth_angle"] == 90 * u.deg
+    assert metadata["site"] == "North"
+
+
+def test_read_job_grid_row_raises_on_out_of_range(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "job_grid.ecsv"
+    job_grid_io.serialize_job_grid(_job_rows(), output_file, metadata=_metadata())
+
+    with pytest.raises(IndexError, match="out of range"):
+        job_grid_io.read_job_grid_row(output_file, 5)
+
+    with pytest.raises(IndexError, match="out of range"):
+        job_grid_io.read_job_grid_row(output_file, 0)
+
+
+def test_job_grid_row_to_simulate_prod_args_maps_fields():
+    row = _job_rows()[0]
+
+    args = job_grid_io.job_grid_row_to_simulate_prod_args(row)
+
+    assert args["primary"] == "gamma"
+    assert args["azimuth_angle"] == 45 * u.deg
+    assert args["zenith_angle"] == 20 * u.deg
+    assert args["energy_range"] == (30 * u.GeV, 10 * u.TeV)
+    assert args["core_scatter"] == (10, 200 * u.m)
+    assert args["view_cone"] == (0 * u.deg, 5 * u.deg)
+    assert args["showers_per_run"] == 1000
+    assert args["model_version"] == "7.0.0"
+    assert args["array_layout_name"] == "CTAO-North-Alpha"
+    assert args["corsika_le_interaction"] == "urqmd"
+    assert args["corsika_he_interaction"] == "epos"
+    assert args["run_number"] == 10
+    assert "site" not in args
+
+
+def test_job_grid_row_to_simulate_prod_args_includes_metadata_site_and_software():
+    row = _job_rows()[0]
+    metadata = _metadata()
+
+    args = job_grid_io.job_grid_row_to_simulate_prod_args(row, metadata)
+
+    assert args["site"] == "North"
+    assert args["simulation_software"] == "corsika_sim_telarray"
+
+
+def test_job_grid_row_to_simulate_prod_args_skips_empty_metadata():
+    row = _job_rows()[0]
+
+    args_no_meta = job_grid_io.job_grid_row_to_simulate_prod_args(row, metadata=None)
+    args_empty_meta = job_grid_io.job_grid_row_to_simulate_prod_args(row, metadata={})
+
+    for args in (args_no_meta, args_empty_meta):
+        assert "site" not in args
+        assert "simulation_software" not in args
