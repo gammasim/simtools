@@ -173,13 +173,13 @@ def _add_arguments(parser):
         "--nsb_energy_range",
         help="Energy range for the NSB gamma curve.",
         type=parser.parse_quantity_pair,
-        default="20 MeV 25 MeV",
+        default=parser.parse_quantity_pair("20 MeV 25 MeV"),
     )
     parser.add_argument(
         "--proton_energy_range",
         help="Energy range for the proton curve.",
         type=parser.parse_quantity_pair,
-        default="2 GeV 2000 GeV",
+        default=parser.parse_quantity_pair("2 GeV 2000 GeV"),
     )
     parser.add_argument(
         "--nsb_scaling_factor",
