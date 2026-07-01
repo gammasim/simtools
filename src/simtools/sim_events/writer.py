@@ -150,46 +150,81 @@ class EventDataWriter:
 
             with EventIOFile(file) as eventio_file:
                 for eventio_object in eventio_file:
-                    if (
-                        isinstance(eventio_object, MCShower | iact.EventHeader)
-                        and len(self.shower_data) >= chunk_size
-                    ):
-                        shower_rows += len(self.shower_data)
-                        shower_table = self._create_chunk("SHOWERS", self.shower_data)
-                        self.shower_data = []
+                    shower_table, flushed_shower_rows = self._flush_shower_chunk_if_full(
+                        eventio_object, chunk_size
+                    )
+                    if shower_table is not None:
+                        shower_rows += flushed_shower_rows
                         yield [shower_table]
 
                     self._process_eventio_object(eventio_object, file_id, file, run_info)
 
-                    if len(self.trigger_data) >= chunk_size:
-                        trigger_rows += len(self.trigger_data)
-                        trigger_table = self._create_chunk(
-                            "TRIGGERS", self.trigger_data, allow_empty=True
-                        )
-                        self.trigger_data = []
+                    trigger_table, flushed_trigger_rows = self._flush_trigger_chunk_if_full(
+                        chunk_size
+                    )
+                    if trigger_table is not None:
+                        trigger_rows += flushed_trigger_rows
                         yield [trigger_table]
 
-            self._process_file_info(file_id, file, run_info or None)
-            shower_rows += len(self.shower_data)
-            trigger_rows += len(self.trigger_data)
-            if shower_rows == 0:
-                raise ValueError(
-                    f"Incomplete reduced event data for '{file}': table 'SHOWERS' contains no rows."
-                )
-            if trigger_rows == 0:
-                self._logger.warning(f"No triggered events found in input file '{file}'.")
-            if len(self.file_info) != 1:
-                raise ValueError(
-                    f"Incomplete reduced event data for '{file}': expected exactly one "
-                    f"FILE_INFO row, found {len(self.file_info)}."
-                )
-
-            tables = [self._create_chunk("SHOWERS", self.shower_data)]
-            if self.trigger_data:
-                tables.append(self._create_chunk("TRIGGERS", self.trigger_data, allow_empty=True))
-            tables.append(self._create_chunk("FILE_INFO", self.file_info))
+            tables = self._finalize_file_chunk_tables(
+                file_id=file_id,
+                file_name=file,
+                run_info=run_info,
+                shower_rows=shower_rows,
+                trigger_rows=trigger_rows,
+            )
             self._reset_data()
             yield tables
+
+    def _flush_shower_chunk_if_full(self, eventio_object, chunk_size):
+        """Flush shower rows when the chunk-size boundary is reached."""
+        if not isinstance(eventio_object, MCShower | iact.EventHeader):
+            return None, 0
+        if len(self.shower_data) < chunk_size:
+            return None, 0
+
+        n_rows = len(self.shower_data)
+        table = self._create_chunk("SHOWERS", self.shower_data)
+        self.shower_data = []
+        return table, n_rows
+
+    def _flush_trigger_chunk_if_full(self, chunk_size):
+        """Flush trigger rows when the chunk-size boundary is reached."""
+        if len(self.trigger_data) < chunk_size:
+            return None, 0
+
+        n_rows = len(self.trigger_data)
+        table = self._create_chunk("TRIGGERS", self.trigger_data, allow_empty=True)
+        self.trigger_data = []
+        return table, n_rows
+
+    def _finalize_file_chunk_tables(self, file_id, file_name, run_info, shower_rows, trigger_rows):
+        """Finalize one file and return output tables for remaining records."""
+        self._process_file_info(file_id, file_name, run_info or None)
+        shower_rows += len(self.shower_data)
+        trigger_rows += len(self.trigger_data)
+        self._validate_file_chunk_data(file_name, shower_rows, trigger_rows)
+
+        tables = [self._create_chunk("SHOWERS", self.shower_data)]
+        if self.trigger_data:
+            tables.append(self._create_chunk("TRIGGERS", self.trigger_data, allow_empty=True))
+        tables.append(self._create_chunk("FILE_INFO", self.file_info))
+        return tables
+
+    def _validate_file_chunk_data(self, file_name, shower_rows, trigger_rows):
+        """Validate per-file row counts before writing final chunk tables."""
+        if shower_rows == 0:
+            raise ValueError(
+                f"Incomplete reduced event data for '{file_name}': "
+                f"table 'SHOWERS' contains no rows."
+            )
+        if trigger_rows == 0:
+            self._logger.warning(f"No triggered events found in input file '{file_name}'.")
+        if len(self.file_info) != 1:
+            raise ValueError(
+                f"Incomplete reduced event data for '{file_name}': expected exactly one "
+                f"FILE_INFO row, found {len(self.file_info)}."
+            )
 
     def _create_chunk(self, table_name, data, allow_empty=False):
         """Validate records and create one typed output-table chunk."""
