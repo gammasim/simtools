@@ -28,7 +28,7 @@ class JobGridSchema:
 
     version: str
     columns: tuple[str, ...]
-    column_units: dict[str, u.UnitBase]
+    column_units: dict[str, u.Unit]
     column_dtypes: dict[str, object]
 
 
