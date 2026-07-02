@@ -19,8 +19,8 @@ def is_dimensionless_unit(unit):
 
     Parameters
     ----------
-    unit: str or None
-        Unit to be checked.
+    unit: str, object, or None
+        Unit string or Astropy unit object to be checked.
 
     Returns
     -------
@@ -28,6 +28,10 @@ def is_dimensionless_unit(unit):
     """
     if unit is None:
         return True
+    try:
+        unit = unit.to_string()
+    except AttributeError:
+        pass
     return isinstance(unit, str) and unit in _DIMENSIONLESS_UNITS
 
 
@@ -37,12 +41,12 @@ def normalize_dimensionless_unit(unit):
 
     Parameters
     ----------
-    unit: str or None
-        Unit to be normalized.
+    unit: str, object, or None
+        Unit string or Astropy unit object to be normalized.
 
     Returns
     -------
-    str or None
+    str, object, or None
         Normalized unit, where dimensionless units are converted to None.
 
     """
