@@ -12,9 +12,8 @@ import logging
 import re
 from pathlib import Path
 
-import astropy.units as u
-
 from simtools.production_configuration.job_grid_io import JOB_GRID_SCHEMA, read_job_grid
+from simtools.utils.value_conversion import format_quantity
 
 _logger = logging.getLogger(__name__)
 
@@ -85,13 +84,6 @@ def _resolve_apptainer_images(apptainer_image_arg):
     return resolved
 
 
-def _format_quantity(value, unit):
-    """Format a scalar or Quantity in the canonical job-grid unit."""
-    if isinstance(value, u.Quantity):
-        value = value.to_value(unit)
-    return f"{value}"
-
-
 def _format_param_value(value, field_name):
     """Format a value or Quantity for params file output."""
     if value is None:
@@ -104,7 +96,7 @@ def _format_param_value(value, field_name):
         return f"{int(value)}"
 
     if field_name in _PARAM_QUANTITY_UNITS:
-        return _format_quantity(value, _PARAM_QUANTITY_UNITS[field_name])
+        return format_quantity(value, _PARAM_QUANTITY_UNITS[field_name])
 
     return f"{value}"
 

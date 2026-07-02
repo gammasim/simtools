@@ -6,7 +6,6 @@ import pytest
 
 from simtools.job_execution.htcondor_script_generator import (
     _format_param_value,
-    _format_quantity,
     _get_submit_file,
     _get_submit_script,
     _resolve_apptainer_images,
@@ -279,12 +278,6 @@ def test_resolve_apptainer_images_raises_for_missing_file(tmp_test_directory):
 
     with pytest.raises(FileNotFoundError, match="Apptainer image file not found"):
         _resolve_apptainer_images(str(missing_path))
-
-
-def test_format_quantity_full_coverage():
-    assert float(_format_quantity(5 * u.TeV, u.GeV)) == pytest.approx(5000.0)
-    assert float(_format_quantity(100 * u.cm, u.m)) == pytest.approx(1.0)
-    assert _format_quantity(42, u.GeV) == "42"
 
 
 def test_format_param_value_raises_for_missing_required_value():
