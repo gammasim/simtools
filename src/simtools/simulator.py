@@ -13,12 +13,24 @@ from simtools.corsika import corsika_output_validator
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler, table_handler
 from simtools.job_execution import job_manager
+from simtools.job_execution.process_pool import process_pool_map_ordered
 from simtools.model.array_model import ArrayModel
 from simtools.runners import corsika_runner, corsika_simtel_runner, runner_services, simtel_runner
 from simtools.sim_events import file_info, output_validator, writer
 from simtools.simtel import simtel_output_validator
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.utils import general
+
+
+def _write_reduced_event_list_batch(job_spec):
+    """Write one reduced-event output file from one input-file batch."""
+    input_files, output_file = job_spec
+    generator = writer.EventDataWriter(input_files)
+    table_handler.write_table_chunks(
+        table_chunks=generator.iter_table_chunks(),
+        output_file=Path(output_file),
+        overwrite_existing=True,
+    )
 
 
 class Simulator:
@@ -362,12 +374,20 @@ class Simulator:
         )
 
     @staticmethod
-    def write_reduced_event_lists(input_files, output_path=None, output_files=None):
+    def write_reduced_event_lists(
+        input_files=None,
+        output_path=None,
+        output_files=None,
+        input_file_list=None,
+        files_per_reduced_event_file=1,
+        max_workers=1,
+    ):
         """
         Write reduced event lists for given sim_telarray output files.
 
-        One output file is written per input file, named after the input file
-        with the sim_telarray suffix replaced by '.reduced_event_data.hdf5'.
+        Input files can be passed directly or read from a text file containing
+        one path per line. Files are processed in batches, with one output file
+        written per batch.
 
         Parameters
         ----------
@@ -378,38 +398,166 @@ class Simulator:
             each input file.
         output_files : list, optional
             Explicit output files. When provided, these are used directly and
-            zipped with input_files.
+            zipped with the input file batches.
+        input_file_list : str or Path, optional
+            Text file containing one sim_telarray output file per line.
+        files_per_reduced_event_file : int, optional
+            Number of input files combined into each output file. Defaults to 1.
+        max_workers : int, optional
+            Maximum number of output-file worker processes. ``None`` uses 60% of
+            available CPUs, 0 uses all CPUs, and 1 runs serially. Defaults to 1.
 
         Raises
         ------
         ValueError
-            If explicit output_files are provided and their number does not
-            match the number of input_files.
+            If the input parameters or number of explicit output files are invalid.
         """
-        if output_files is None:
-            output_files = []
-            for input_file in input_files:
-                stem = Path(input_file).name
-                for suffix in (".simtel.zst", ".simtel.gz", ".simtel"):
-                    if stem.endswith(suffix):
-                        stem = stem[: -len(suffix)]
-                        break
-                output_dir = Path(output_path) if output_path else Path(input_file).parent
-                output_files.append(output_dir / f"{stem}.reduced_event_data.hdf5")
+        Simulator._validate_reduced_event_list_args(
+            input_files=input_files,
+            input_file_list=input_file_list,
+            files_per_reduced_event_file=files_per_reduced_event_file,
+        )
 
-        if len(output_files) != len(input_files):
+        resolved_input_files, input_file_list_path = Simulator._resolve_reduced_event_input_files(
+            input_files=input_files,
+            input_file_list=input_file_list,
+        )
+        input_file_batches = Simulator._build_input_file_batches(
+            input_files=resolved_input_files,
+            files_per_reduced_event_file=files_per_reduced_event_file,
+        )
+
+        resolved_output_files = Simulator._resolve_reduced_event_output_files(
+            output_files=output_files,
+            output_path=output_path,
+            input_file_list=input_file_list_path,
+            input_file_batches=input_file_batches,
+        )
+        Simulator._validate_reduced_event_output_count(
+            input_file_batches=input_file_batches,
+            output_files=resolved_output_files,
+        )
+
+        Simulator._run_reduced_event_list_jobs(
+            input_file_batches=input_file_batches,
+            output_files=resolved_output_files,
+            max_workers=max_workers,
+        )
+
+    @staticmethod
+    def _validate_reduced_event_list_args(
+        input_files,
+        input_file_list,
+        files_per_reduced_event_file,
+    ):
+        """Validate argument combinations for reduced event list writing."""
+        if (input_files is None) == (input_file_list is None):
+            raise ValueError("Provide exactly one of input_files or input_file_list.")
+        if files_per_reduced_event_file < 1:
+            raise ValueError("files_per_reduced_event_file must be greater than zero.")
+
+    @staticmethod
+    def _resolve_reduced_event_input_files(input_files, input_file_list):
+        """Resolve input files from either direct list input or file-list input."""
+        if input_file_list is None:
+            return input_files, None
+
+        input_file_list = Path(input_file_list)
+        with open(input_file_list, encoding="utf-8") as file_list:
+            input_files = [line.strip() for line in file_list if line.strip()]
+        return input_files, input_file_list
+
+    @staticmethod
+    def _build_input_file_batches(input_files, files_per_reduced_event_file):
+        """Split input files into fixed-size batches."""
+        return [
+            input_files[index : index + files_per_reduced_event_file]
+            for index in range(0, len(input_files), files_per_reduced_event_file)
+        ]
+
+    @staticmethod
+    def _resolve_reduced_event_output_files(
+        output_files,
+        output_path,
+        input_file_list,
+        input_file_batches,
+    ):
+        """Resolve output file paths for all input batches."""
+        if output_files is not None:
+            return output_files
+        if input_file_list is not None:
+            return Simulator._build_output_files_from_input_file_list(
+                output_path=output_path,
+                input_file_list=input_file_list,
+                input_file_batches=input_file_batches,
+            )
+        return Simulator._build_output_files_from_input_batches(
+            output_path=output_path,
+            input_file_batches=input_file_batches,
+        )
+
+    @staticmethod
+    def _build_output_files_from_input_file_list(output_path, input_file_list, input_file_batches):
+        """Build output files using a file-list stem plus part index."""
+        output_dir = Path(output_path) if output_path else input_file_list.parent
+        return [
+            output_dir / f"{input_file_list.stem}.part{index:04d}.reduced_event_data.hdf5"
+            for index in range(1, len(input_file_batches) + 1)
+        ]
+
+    @staticmethod
+    def _build_output_files_from_input_batches(output_path, input_file_batches):
+        """Build one output file per input-file batch."""
+        output_files = []
+        for input_file_batch in input_file_batches:
+            output_files.append(
+                Simulator._build_output_file_for_input_batch(
+                    output_path=output_path,
+                    input_file_batch=input_file_batch,
+                )
+            )
+        return output_files
+
+    @staticmethod
+    def _build_output_file_for_input_batch(output_path, input_file_batch):
+        """Build output filename for a single input batch."""
+        input_file = Path(input_file_batch[0])
+        output_dir = Path(output_path) if output_path else input_file.parent
+        stem = Simulator._strip_simtel_suffix(input_file.name)
+        return output_dir / f"{stem}.reduced_event_data.hdf5"
+
+    @staticmethod
+    def _strip_simtel_suffix(file_name):
+        """Strip simtel suffix from a file name."""
+        stem = file_name
+        for suffix in (".simtel.zst", ".simtel.gz", ".simtel"):
+            if stem.endswith(suffix):
+                return stem[: -len(suffix)]
+        return stem
+
+    @staticmethod
+    def _validate_reduced_event_output_count(input_file_batches, output_files):
+        """Validate that output-file and batch counts match."""
+        if len(output_files) != len(input_file_batches):
             raise ValueError(
                 "Length mismatch between input_files and output_files: "
-                f"{len(input_files)} input file(s), {len(output_files)} output file(s)."
+                f"{len(input_file_batches)} batch(es), {len(output_files)} output file(s)."
             )
 
-        for input_file, output_file in zip(input_files, output_files):
-            generator = writer.EventDataWriter([input_file])
-            table_handler.write_tables(
-                tables=generator.process_files(),
-                output_file=Path(output_file),
-                overwrite_existing=True,
-            )
+    @staticmethod
+    def _run_reduced_event_list_jobs(input_file_batches, output_files, max_workers):
+        """Run reduced event list jobs serially or in parallel."""
+        job_specs = list(zip(input_file_batches, output_files))
+        if max_workers == 1 or len(job_specs) < 2:
+            for job_spec in job_specs:
+                _write_reduced_event_list_batch(job_spec)
+            return
+
+        process_pool_map_ordered(
+            _write_reduced_event_list_batch,
+            job_specs,
+            max_workers=max_workers,
+        )
 
     def pack_for_register(self, directory_for_grid_upload=None):
         """

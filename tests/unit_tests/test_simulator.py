@@ -435,14 +435,14 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
     mock_simtel_io_writer.assert_any_call(["output_file1.simtel.zst"])
     mock_simtel_io_writer.assert_any_call(["output_file2.simtel.zst"])
 
-    assert mock_table_handler.write_tables.call_count == 2
-    mock_table_handler.write_tables.assert_any_call(
-        tables=mock_generator.process_files.return_value,
+    assert mock_table_handler.write_table_chunks.call_count == 2
+    mock_table_handler.write_table_chunks.assert_any_call(
+        table_chunks=mock_generator.iter_table_chunks.return_value,
         output_file=Path("output_file1.reduced_event_data.hdf5"),
         overwrite_existing=True,
     )
-    mock_table_handler.write_tables.assert_any_call(
-        tables=mock_generator.process_files.return_value,
+    mock_table_handler.write_table_chunks.assert_any_call(
+        table_chunks=mock_generator.iter_table_chunks.return_value,
         output_file=Path("output_file2.reduced_event_data.hdf5"),
         overwrite_existing=True,
     )
@@ -458,7 +458,7 @@ def test_save_reduced_event_lists_no_output_files(array_simulator, mocker, caplo
         array_simulator.save_reduced_event_lists()
 
     mock_simtel_io_writer.assert_not_called()
-    mock_io_table_handler.write_tables.assert_not_called()
+    mock_io_table_handler.write_table_chunks.assert_not_called()
     assert "No sim_telarray output files found" in caplog.text or caplog.text == ""
 
 
@@ -485,14 +485,14 @@ def test_write_reduced_event_lists_derives_output_files(mocker, tmp_test_directo
     mock_simtel_io_writer.assert_any_call([str(data_dir / "output_file1.simtel.zst")])
     mock_simtel_io_writer.assert_any_call([str(data_dir / "output_file2.simtel.gz")])
 
-    assert mock_table_handler.write_tables.call_count == 2
-    mock_table_handler.write_tables.assert_any_call(
-        tables=mock_generator.process_files.return_value,
+    assert mock_table_handler.write_table_chunks.call_count == 2
+    mock_table_handler.write_table_chunks.assert_any_call(
+        table_chunks=mock_generator.iter_table_chunks.return_value,
         output_file=output_dir / "output_file1.reduced_event_data.hdf5",
         overwrite_existing=True,
     )
-    mock_table_handler.write_tables.assert_any_call(
-        tables=mock_generator.process_files.return_value,
+    mock_table_handler.write_table_chunks.assert_any_call(
+        table_chunks=mock_generator.iter_table_chunks.return_value,
         output_file=output_dir / "output_file2.reduced_event_data.hdf5",
         overwrite_existing=True,
     )
@@ -512,8 +512,8 @@ def test_write_reduced_event_lists_derives_output_to_input_directory(mocker, tmp
     Simulator.write_reduced_event_lists(input_files=[input_file])
 
     mock_simtel_io_writer.assert_called_once_with([input_file])
-    mock_table_handler.write_tables.assert_called_once_with(
-        tables=mock_generator.process_files.return_value,
+    mock_table_handler.write_table_chunks.assert_called_once_with(
+        table_chunks=mock_generator.iter_table_chunks.return_value,
         output_file=data_dir / "output_file3.reduced_event_data.hdf5",
         overwrite_existing=True,
     )
@@ -531,7 +531,68 @@ def test_write_reduced_event_lists_raises_for_mismatched_explicit_output_files(m
         Simulator.write_reduced_event_lists(input_files=input_files, output_files=output_files)
 
     mock_simtel_io_writer.assert_not_called()
-    mock_table_handler.write_tables.assert_not_called()
+    mock_table_handler.write_table_chunks.assert_not_called()
+
+
+def test_write_reduced_event_lists_from_file_list_in_batches(mocker, tmp_test_directory):
+    """Read input paths from a text file and combine them in batches."""
+    tmp_base = Path(str(tmp_test_directory))
+    input_file_list = tmp_base / "simtel_files.txt"
+    input_files = [f"input_file{index}.simtel.zst" for index in range(1, 6)]
+    input_file_list.write_text("\n".join(input_files) + "\n", encoding="utf-8")
+    output_dir = tmp_base / "reduced"
+
+    mock_generator = mocker.MagicMock()
+    mock_simtel_io_writer = mocker.patch(
+        "simtools.sim_events.writer.EventDataWriter", return_value=mock_generator
+    )
+    mock_table_handler = mocker.patch("simtools.simulator.table_handler")
+
+    Simulator.write_reduced_event_lists(
+        input_file_list=input_file_list,
+        files_per_reduced_event_file=2,
+        output_path=output_dir,
+    )
+
+    assert mock_simtel_io_writer.call_args_list == [
+        mocker.call(input_files[0:2]),
+        mocker.call(input_files[2:4]),
+        mocker.call(input_files[4:5]),
+    ]
+    assert mock_table_handler.write_table_chunks.call_args_list == [
+        mocker.call(
+            table_chunks=mock_generator.iter_table_chunks.return_value,
+            output_file=output_dir / f"simtel_files.part{index:04d}.reduced_event_data.hdf5",
+            overwrite_existing=True,
+        )
+        for index in range(1, 4)
+    ]
+
+
+def test_write_reduced_event_lists_parallelizes_output_batches(mocker):
+    """Execute independent output batches through the shared process-pool helper."""
+    mock_pool = mocker.patch("simtools.simulator.process_pool_map_ordered")
+
+    Simulator.write_reduced_event_lists(
+        input_files=["input1.simtel.zst", "input2.simtel.zst"],
+        max_workers=2,
+    )
+
+    mock_pool.assert_called_once()
+    assert mock_pool.call_args.kwargs["max_workers"] == 2
+    assert len(mock_pool.call_args.args[1]) == 2
+
+
+@pytest.mark.parametrize("files_per_reduced_event_file", [0, -1])
+def test_write_reduced_event_lists_rejects_invalid_batch_size(
+    files_per_reduced_event_file,
+):
+    """Reject non-positive input batch sizes."""
+    with pytest.raises(ValueError, match="must be greater than zero"):
+        Simulator.write_reduced_event_lists(
+            input_files=["input.simtel.zst"],
+            files_per_reduced_event_file=files_per_reduced_event_file,
+        )
 
 
 @pytest.mark.parametrize(
