@@ -26,7 +26,9 @@ def is_dimensionless_unit(unit):
     -------
     bool        True if the unit encodes a dimensionless quantity, False otherwise.
     """
-    return unit in _DIMENSIONLESS_UNITS
+    if unit is None:
+        return True
+    return isinstance(unit, str) and unit in _DIMENSIONLESS_UNITS
 
 
 def normalize_dimensionless_unit(unit):
@@ -222,7 +224,8 @@ def get_value_as_quantity(value, unit):
     if is_dimensionless_unit(unit):
         return value * u.dimensionless_unscaled
 
-    return value * u.Unit(unit)
+    target_unit = u.Unit(unit) if isinstance(unit, str) else unit
+    return value * target_unit
 
 
 def _unit_as_string(unit):

@@ -90,6 +90,7 @@ def test_get_value_unit_type() -> None:
 
 def test_assign_unit_to_quantity():
     assert value_conversion.get_value_as_quantity(10, u.m) == 10 * u.m
+    assert value_conversion.get_value_as_quantity(10, "m") == 10 * u.m
 
     assert value_conversion.get_value_as_quantity(1000 * u.cm, u.m) == 10 * u.m
 

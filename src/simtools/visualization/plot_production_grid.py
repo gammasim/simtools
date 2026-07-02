@@ -8,13 +8,13 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
-from simtools.production_configuration.job_grid_io import JOB_GRID_QUANTITY_FIELDS
+from simtools.production_configuration.job_grid_io import JOB_GRID_SCHEMA
 
 logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
 PLOT_VALUE_KEYS = tuple(
     key
-    for key in JOB_GRID_QUANTITY_FIELDS
+    for key in JOB_GRID_SCHEMA.quantity_units
     if key not in ("azimuth_angle", "zenith_angle", "ha", "dec", "view_cone_min")
 )
 DEFAULT_OUTPUT_FILE_EXTENSION = "png"
