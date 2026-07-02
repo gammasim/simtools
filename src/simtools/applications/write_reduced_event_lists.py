@@ -3,15 +3,20 @@
 r"""
 Write reduced event lists from sim_telarray output files.
 
-Processes one or more sim_telarray output files and writes one reduced event
-list (HDF5) per input file.  The output file names are derived from the
-input file names by replacing the sim_telarray suffix with
-'.reduced_event_data.hdf5'.
+Processes one or more sim_telarray output files and writes reduced event
+lists (HDF5). Input files can be given directly or read from a text file and
+processed in batches.
 
 Command line arguments
 ----------------------
-input_files (list of str, required)
+input_files (list of str, optional)
     One or more sim_telarray output files (e.g., ``*.simtel.zst``).
+input_file_list (str, optional)
+    Text file containing one sim_telarray output file per line.
+files_per_reduced_event_file (int, optional)
+    Number of input files combined into each reduced event file. Defaults to 1.
+max_workers (int, optional)
+    Maximum number of parallel output-file workers.
 output_path (str, optional)
     Directory for the output files. Defaults to './simtools-output/'.
 
@@ -33,11 +38,30 @@ from simtools.simulator import Simulator
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.add_argument(
+    input_group = parser.add_mutually_exclusive_group(required=True)
+    input_group.add_argument(
         "--input_files",
         nargs="+",
-        required=True,
         help="sim_telarray output file(s) to process (e.g., '*.simtel.zst').",
+    )
+    input_group.add_argument(
+        "--input_file_list",
+        help="Text file containing one sim_telarray output file per line.",
+    )
+    parser.add_argument(
+        "--files_per_reduced_event_file",
+        type=int,
+        default=1,
+        help="Number of input files combined into each reduced event file (default: 1).",
+    )
+    parser.add_argument(
+        "--max_workers",
+        type=int,
+        default=None,
+        help=(
+            "Maximum number of parallel output-file workers. Default: 60%% of CPU cores; "
+            "use 1 for serial execution or 0 for all cores."
+        ),
     )
 
 
@@ -50,6 +74,9 @@ def main():
 
     Simulator.write_reduced_event_lists(
         input_files=app_context.args["input_files"],
+        input_file_list=app_context.args["input_file_list"],
+        files_per_reduced_event_file=app_context.args["files_per_reduced_event_file"],
+        max_workers=app_context.args["max_workers"],
         output_path=app_context.io_handler.get_output_directory(),
     )
 

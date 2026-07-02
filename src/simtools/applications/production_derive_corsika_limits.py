@@ -97,7 +97,7 @@ energy_threshold_fraction (float, optional)
 model_version (str, required)
     Simulation model version (e.g., "7.0.0") to retrieve the corresponding
     array layout.
-n_workers (int, optional)
+max_workers (int, optional)
     Number of worker processes to use for execution. Default is 1.
 plot_histograms (bool, optional)
     Plot histograms of the event data.
@@ -137,7 +137,7 @@ Derive limits for multiple independent productions in parallel:
         --allowed_losses all,1e-6,10 \
         --energy_threshold_fraction 0.01 \
         --plot_histograms \\
-        --n_workers 4 \\
+        --max_workers 4 \\
         --output_file corsika_simulation_limits.ecsv
 
 When multiple ``--event_data_file`` patterns are provided, results are merged into a single output
@@ -201,7 +201,7 @@ def _add_arguments(parser):
         default=False,
     )
     parser.add_argument(
-        "--n_workers",
+        "--max_workers",
         help=(
             "Number of worker processes to use for execution "
             "(default: 1; set to 0 for auto-detection of available cores)."
