@@ -128,13 +128,11 @@ def _execute_production_job(job_spec):
 
     Returns
     -------
-    dict
-        Result dictionary with limits and production metadata.
+    list[dict]
+        Result dictionaries with limits and production metadata.
     """
     production_index = job_spec["production_index"]
     production_pattern = job_spec["production_pattern"]
-    array_name = job_spec["array_name"]
-    telescope_ids = job_spec["telescope_ids"]
     allowed_losses = job_spec["allowed_losses"]
     energy_threshold_fraction = job_spec["energy_threshold_fraction"]
     plot_histograms = job_spec["plot_histograms"]
@@ -142,15 +140,16 @@ def _execute_production_job(job_spec):
     differential_loss_bins_per_decade = job_spec.get("differential_loss_bins_per_decade", 0)
     skip_invalid_event_data_files = job_spec.get("skip_invalid_event_data_files", False)
 
+    telescope_configs = job_spec["telescope_configs"]
+
     _logger.info(
         f"Processing production {production_index}: pattern={production_pattern}, "
-        f"array={array_name}"
+        f"arrays={len(telescope_configs)}"
     )
 
-    result = _process_file(
+    results = _process_production(
         production_pattern,
-        array_name,
-        telescope_ids,
+        telescope_configs,
         allowed_losses,
         energy_threshold_fraction,
         plot_histograms,
@@ -159,16 +158,17 @@ def _execute_production_job(job_spec):
         skip_invalid_event_data_files=skip_invalid_event_data_files,
     )
 
-    result.update(
-        {
-            "production_index": production_index,
-            "event_data_file": production_pattern,
-            "array_name": array_name,
-            "telescope_ids": telescope_ids,
-        }
-    )
+    for result, telescope_config in zip(results, telescope_configs):
+        result.update(
+            {
+                "production_index": production_index,
+                "event_data_file": production_pattern,
+                "array_name": telescope_config["array_name"],
+                "telescope_ids": telescope_config["telescope_ids"],
+            }
+        )
 
-    return result
+    return results
 
 
 def _resolve_telescope_configs(args_dict):
@@ -301,7 +301,8 @@ def generate_corsika_limits_grid(args_dict):
 
     telescope_configs = _resolve_telescope_configs(args_dict)
 
-    # Build deterministic job specs: Cartesian product of productions and telescope configs
+    # Build deterministic production jobs. Each worker reads a production once and
+    # accumulates the same complete histogram set for every telescope configuration.
     job_specs = []
     output_dir = io_handler.IOHandler().get_output_directory()
 
@@ -314,36 +315,102 @@ def generate_corsika_limits_grid(args_dict):
         )
 
     for prod_idx, production_pattern in enumerate(production_patterns):
-        for array_name, telescope_ids_raw in telescope_configs.items():
-            telescope_ids = normalize_array_element_identifier_container(telescope_ids_raw)
-
-            output_subdir = production_subdirs.get(production_pattern)
-
-            job_spec = {
+        normalized_telescope_configs = [
+            {
+                "array_name": array_name,
+                "telescope_ids": normalize_array_element_identifier_container(telescope_ids_raw),
+            }
+            for array_name, telescope_ids_raw in telescope_configs.items()
+        ]
+        job_specs.append(
+            {
                 "production_index": prod_idx,
                 "production_pattern": production_pattern,
-                "array_name": array_name,
-                "telescope_ids": telescope_ids,
+                "telescope_configs": normalized_telescope_configs,
                 "allowed_losses": allowed_losses,
                 "energy_threshold_fraction": energy_threshold_fraction,
                 "plot_histograms": args_dict["plot_histograms"],
-                "output_subdir": output_subdir,
+                "output_subdir": production_subdirs.get(production_pattern),
                 "differential_loss_bins_per_decade": differential_loss_bins_per_decade,
                 "skip_invalid_event_data_files": args_dict.get(
                     "skip_invalid_event_data_files", False
                 ),
             }
-            job_specs.append(job_spec)
+        )
 
     max_workers = int(args_dict.get("max_workers", 1))
     _logger.info(f"Executing {len(job_specs)} jobs with {max_workers or 'auto'} workers")
-    results = process_pool_map_ordered(
+    production_results = process_pool_map_ordered(
         _execute_production_job,
         job_specs,
         max_workers=max_workers,
     )
+    results = [result for production_result in production_results for result in production_result]
 
     write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
+
+
+def _process_production(
+    file_path,
+    telescope_configs,
+    allowed_losses,
+    energy_threshold_fraction=0.01,
+    plot_histograms=False,
+    output_subdir=None,
+    differential_loss_bins_per_decade=0,
+    skip_invalid_event_data_files=False,
+):
+    """Read one production once and derive limits for all telescope configurations."""
+    energy_bins_per_decade = differential_loss_bins_per_decade or 10
+    event_source = EventDataHistograms(
+        file_path,
+        energy_bins_per_decade=energy_bins_per_decade,
+        skip_invalid_event_data_files=skip_invalid_event_data_files,
+        require_triggered_data=True,
+    )
+    accumulators = [
+        EventDataHistograms.create_accumulator(
+            array_name=config["array_name"],
+            telescope_list=config["telescope_ids"],
+            energy_bins_per_decade=energy_bins_per_decade,
+        )
+        for config in telescope_configs
+    ]
+
+    for reader, values in event_source.iter_event_data():
+        file_info_table, shower_data, triggered_shower, triggered_data = values
+        for config, histograms in zip(telescope_configs, accumulators):
+            if config["telescope_ids"]:
+                filtered_triggered_data, filtered_triggered_shower = reader.filter_by_telescopes(
+                    triggered_data,
+                    triggered_shower,
+                    telescope_list=config["telescope_ids"],
+                )
+            else:
+                filtered_triggered_data = triggered_data
+                filtered_triggered_shower = triggered_shower
+            histograms.accumulate(
+                file_info_table,
+                shower_data,
+                filtered_triggered_shower,
+                filtered_triggered_data,
+            )
+
+    results = []
+    for config, histograms in zip(telescope_configs, accumulators):
+        histograms.finalize(fill_efficiency_histogram=False)
+        results.append(
+            _derive_limits_from_histograms(
+                histograms,
+                config["array_name"],
+                allowed_losses,
+                energy_threshold_fraction,
+                plot_histograms,
+                output_subdir,
+                differential_loss_bins_per_decade,
+            )
+        )
+    return results
 
 
 def _process_file(
@@ -399,6 +466,27 @@ def _process_file(
     )
     histograms.fill(fill_efficiency_histogram=False)
 
+    return _derive_limits_from_histograms(
+        histograms,
+        array_name,
+        allowed_losses,
+        energy_threshold_fraction,
+        plot_histograms,
+        output_subdir,
+        differential_loss_bins_per_decade,
+    )
+
+
+def _derive_limits_from_histograms(
+    histograms,
+    array_name,
+    allowed_losses,
+    energy_threshold_fraction,
+    plot_histograms,
+    output_subdir,
+    differential_loss_bins_per_decade,
+):
+    """Compute, optionally plot, and return limits from finalized histograms."""
     limits = {
         "lower_energy_limit": compute_lower_energy_limit(
             histograms,
