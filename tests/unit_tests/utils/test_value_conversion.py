@@ -186,7 +186,10 @@ def test_is_dimensionless_unit():
     assert value_conversion.is_dimensionless_unit("")
     assert value_conversion.is_dimensionless_unit("dimensionless")
     assert value_conversion.is_dimensionless_unit("null")
+    assert value_conversion.is_dimensionless_unit(u.dimensionless_unscaled)
+    assert value_conversion.is_dimensionless_unit(u.UnrecognizedUnit("dimensionless"))
     assert not value_conversion.is_dimensionless_unit("m")
+    assert not value_conversion.is_dimensionless_unit(u.m)
 
 
 def test_normalize_dimensionless_unit():
@@ -194,6 +197,10 @@ def test_normalize_dimensionless_unit():
     assert value_conversion.normalize_dimensionless_unit("") is None
     assert value_conversion.normalize_dimensionless_unit("dimensionless") is None
     assert value_conversion.normalize_dimensionless_unit("null") is None
+    assert value_conversion.normalize_dimensionless_unit(u.dimensionless_unscaled) is None
+    assert (
+        value_conversion.normalize_dimensionless_unit(u.UnrecognizedUnit("dimensionless")) is None
+    )
     assert value_conversion.normalize_dimensionless_unit("m") == "m"
     assert value_conversion.normalize_dimensionless_unit(["m", "dimensionless", "null", None]) == [
         "m",
