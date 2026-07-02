@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
 PLOT_VALUE_KEYS = tuple(
     key
-    for key in JOB_GRID_SCHEMA.quantity_units
-    if key not in ("azimuth_angle", "zenith_angle", "ha", "dec", "view_cone_min")
+    for key in JOB_GRID_SCHEMA.column_units
+    if key not in ("azimuth_angle", "zenith_angle", "ha", "dec", "view_cone_min", "nsb_rate")
 )
 DEFAULT_OUTPUT_FILE_EXTENSION = "png"
 DEFAULT_MARKER_SIZE = 8

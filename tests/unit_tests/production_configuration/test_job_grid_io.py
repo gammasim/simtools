@@ -62,6 +62,7 @@ def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
     assert rows[0]["array_layout_name"] == "CTAO-North-Alpha"
     assert rows[0]["ha"] == 123 * u.deg
     assert rows[0]["dec"] == -45 * u.deg
+    assert rows[0]["nsb_rate"].to_value(output_table["nsb_rate"].unit) == pytest.approx(0.24)
     assert metadata["job_grid_summary"]["simulation_rows"] == 1
     assert metadata["job_grid_summary"]["total_showers"] == 1000
     assert metadata["job_grid_summary"]["energy_min_used"] == "30 GeV"

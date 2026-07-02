@@ -20,7 +20,6 @@ _ECSV_SUFFIX = ".ecsv"
 _ECSV_FORMAT = "ascii.ecsv"
 _STREAM_CHUNK_SIZE = 10_000
 _JOB_GRID_SCHEMA_FILE = SCHEMA_PATH / "job_grid_density.schema.yml"
-_SCALAR_UNIT_COLUMNS = {"nsb_rate"}
 
 
 @dataclass(frozen=True)
@@ -30,7 +29,6 @@ class JobGridSchema:
     version: str
     columns: tuple[str, ...]
     column_units: dict[str, u.UnitBase]
-    quantity_units: dict[str, u.UnitBase]
     column_dtypes: dict[str, object]
 
 
@@ -48,9 +46,6 @@ def _load_job_grid_schema():
         version=schema["schema_version"],
         columns=tuple(column["name"] for column in column_definitions),
         column_units=column_units,
-        quantity_units={
-            name: unit for name, unit in column_units.items() if name not in _SCALAR_UNIT_COLUMNS
-        },
         column_dtypes={
             column["name"]: str if column["type"] == "string" else np.dtype(column["type"])
             for column in column_definitions
@@ -71,8 +66,8 @@ def _cast_scalar(value, dtype):
 def _serialize_job_row(job_row):
     """Serialize one job row to the on-disk schema."""
     return {
-        name: float(get_value_in_unit(job_row[name], JOB_GRID_SCHEMA.quantity_units[name]))
-        if name in JOB_GRID_SCHEMA.quantity_units
+        name: float(get_value_in_unit(job_row[name], JOB_GRID_SCHEMA.column_units[name]))
+        if name in JOB_GRID_SCHEMA.column_units
         else _cast_scalar(job_row[name], JOB_GRID_SCHEMA.column_dtypes[name])
         for name in JOB_GRID_SCHEMA.columns
     }
@@ -84,9 +79,9 @@ def _deserialize_job_row(serialized_row, column_units=None):
     return {
         name: get_value_as_quantity(
             float(serialized_row[name]),
-            column_units.get(name) or JOB_GRID_SCHEMA.quantity_units[name],
-        ).to(JOB_GRID_SCHEMA.quantity_units[name])
-        if name in JOB_GRID_SCHEMA.quantity_units
+            column_units.get(name) or JOB_GRID_SCHEMA.column_units[name],
+        ).to(JOB_GRID_SCHEMA.column_units[name])
+        if name in JOB_GRID_SCHEMA.column_units
         else _cast_scalar(serialized_row[name], JOB_GRID_SCHEMA.column_dtypes[name])
         for name in JOB_GRID_SCHEMA.columns
     }
