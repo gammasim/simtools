@@ -267,3 +267,10 @@ def get_value_in_unit(value, unit=None):
         )
 
     return value
+
+
+def format_quantity(value, unit):
+    """Format a scalar or Quantity in the requested unit."""
+    if isinstance(value, u.Quantity):
+        value = value.to_value(unit)
+    return f"{value}"
