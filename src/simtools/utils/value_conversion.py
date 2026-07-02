@@ -28,10 +28,9 @@ def is_dimensionless_unit(unit):
     """
     if unit is None:
         return True
-    try:
-        unit = unit.to_string()
-    except AttributeError:
-        pass
+    to_string = getattr(unit, "to_string", None)
+    if to_string is not None:
+        unit = to_string()
     return isinstance(unit, str) and unit in _DIMENSIONLESS_UNITS
 
 
