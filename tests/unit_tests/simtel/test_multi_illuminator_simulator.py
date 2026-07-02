@@ -202,7 +202,7 @@ def test_simulate_filter_by_illuminators(
     "SimulatorLightEmission.get_available_wavelengths_from_config"
 )
 @patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
-def test_simulatefilter_by_telescopes(
+def test_simulate_filter_by_telescopes(
     mock_pool, mock_get_wavelengths, simple_visibility_data, base_config
 ):
     """Test simulate() with telescope filtering and auto-fetch wavelengths."""
