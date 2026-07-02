@@ -65,9 +65,9 @@ Results are provided as a table with the following columns:
 | br_viewcone_max           | float64   | deg    | Viewcone max from broad-range simulations.   |
 +---------------------------+-----------+--------+----------------------------------------------+
 
-The input event data files are generated using the application simtools-generate-simtel-event-data
-and are required for each point in the observational parameter space (e.g., array pointing
-directions, level of night sky background, etc.).
+The input event data files are generated using the application simtools-generate-simtel-event-data.
+These files define most of the sampled observational parameter space (zenith, azimuth, and NSB
+level), and one file entry is required per point in that parameter space.
 
 Distributions of triggered events (e.g., core distance vs energy) can be plotted to verify the
 derived limits using the ``--plot_histograms`` option. Plots are organized into per-production
@@ -76,8 +76,10 @@ subdirectories derived from the input pattern names (for example ``production_pr
 Command line arguments
 ----------------------
 event_data_file (str or list of str, required)
-    Path or glob pattern for reduced event data files. Can be a single pattern or
-    multiple patterns (one per ``--event_data_file`` argument) to enable parallel
+    Path or glob pattern for reduced event data files. The matched files define most
+    of the sampled observational parameter space (zenith, azimuth, and NSB level),
+    with one file entry required per parameter-space point. Can be a single pattern
+    or multiple patterns (one per ``--event_data_file`` argument) to enable parallel
     multi-production processing.
 array_layout_name (str, required)
     Name of the array layout (as defined in array_layouts) for which to derive limits.
@@ -157,8 +159,9 @@ def _add_arguments(parser):
     parser.add_argument(
         "--event_data_file",
         help=(
-            "Event data file or glob pattern (one or more patterns for "
-            "multi-production processing)."
+            "Event data file or glob pattern. Matched files define most of the sampled "
+            "zenith/azimuth/NSB parameter space (one file entry per point); provide one "
+            "or more patterns for multi-production processing."
         ),
         nargs="+",
         action="extend",
