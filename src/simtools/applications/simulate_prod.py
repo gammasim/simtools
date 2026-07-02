@@ -112,6 +112,27 @@ def _add_arguments(parser):
         action="store_true",
         default=False,
     )
+    parser.add_argument(
+        "--job_grid_file",
+        help=(
+            "Path to an ECSV job grid file produced by simtools-production-generate-grid. "
+            "When provided together with '--job_grid_row', the parameters of the selected row "
+            "override all other simulation arguments."
+        ),
+        type=str,
+        required=False,
+        default=None,
+    )
+    parser.add_argument(
+        "--job_grid_row",
+        help=(
+            "1-based index of the row to read from the file given by '--job_grid_file'. "
+            "Defaults to 1 (first row)."
+        ),
+        type=int,
+        required=False,
+        default=1,
+    )
 
 
 def main():
@@ -126,7 +147,10 @@ def main():
                 "sim_telarray_configuration": ["all"],
             },
         },
-        startup_kwargs={"setup_io_handler": False},
+        startup_kwargs={
+            "setup_io_handler": False,
+            "apply_job_grid_override": True,
+        },
     )
 
     simulator = Simulator(label=app_context.args.get("label"))
