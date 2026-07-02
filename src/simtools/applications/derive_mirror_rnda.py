@@ -38,7 +38,7 @@ learning_rate (float, optional)
     Learning rate for gradient descent. Default: 0.001.
 test (optional)
     Only optimize a small number of mirrors.
-n_workers (int, optional)
+max_workers (int, optional)
     Number of parallel worker processes to use. Default: 0 (auto chooses maximum).
 number_of_mirrors_to_test (int, optional)
     Number of mirrors to optimize when --test is used. Default: 10.
@@ -103,7 +103,7 @@ def _add_arguments(parser):
         default=0.8,
     )
     parser.add_argument(
-        "--n_workers",
+        "--max_workers",
         help="Number of parallel worker processes to use.",
         type=int,
         required=False,

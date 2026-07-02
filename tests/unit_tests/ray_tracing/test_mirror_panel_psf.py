@@ -148,7 +148,7 @@ def test_rnda_bounds_clamps_sigma_min_to_positive(monkeypatch):
 
 def test_optimize_with_gradient_descent_limits_mirrors_in_test_mode(mocker):
     inst = _make_minimal_instance(
-        args_dict={"test": True, "number_of_mirrors_to_test": 2, "n_workers": 4}
+        args_dict={"test": True, "number_of_mirrors_to_test": 2, "max_workers": 4}
     )
     inst.measured_data = [10.0, 11.0, 12.0]
     inst.telescope_model.mirrors = SimpleNamespace(number_of_mirrors=3)

@@ -1315,12 +1315,12 @@ def test_generate_corsika_limits_grid_multi_production(mocker, tmp_test_director
         ],
         "plot_histograms": False,
         "output_file": "test_output.ecsv",
-        "n_workers": 2,
+        "max_workers": 2,
     }
 
     derive_corsika_limits.generate_corsika_limits_grid(args_dict)
 
-    # Verify process_pool_map_ordered was called with correct n_workers
+    # Verify process_pool_map_ordered was called with correct max_workers
     mock_pool.assert_called_once()
     call_kwargs = mock_pool.call_args[1]
     assert call_kwargs["max_workers"] == 2
@@ -1367,7 +1367,7 @@ def test_generate_corsika_limits_grid_single_production_uses_pool(mocker, tmp_te
         ],
         "plot_histograms": False,
         "output_file": "test_output.ecsv",
-        "n_workers": 0,
+        "max_workers": 0,
     }
 
     derive_corsika_limits.generate_corsika_limits_grid(args_dict)
@@ -1471,7 +1471,7 @@ def mock_args_dict():
         ],
         "energy_threshold_fraction": 0.1,
         "plot_histograms": False,
-        "n_workers": 1,
+        "max_workers": 1,
         "array_layout_name": None,
         "array_element_list": ["LSTN-01"],
         "telescope_ids": None,
