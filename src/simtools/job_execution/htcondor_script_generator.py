@@ -14,7 +14,7 @@ from pathlib import Path
 
 import astropy.units as u
 
-from simtools.production_configuration.job_grid_io import JOB_GRID_QUANTITY_UNITS, read_job_grid
+from simtools.production_configuration.job_grid_io import JOB_GRID_SCHEMA, read_job_grid
 
 _logger = logging.getLogger(__name__)
 
@@ -40,9 +40,9 @@ _PARAMS_FIELDS = [
 _PARAMS_JOB_SPEC_FIELDS = {field: field for field in _PARAMS_FIELDS}
 
 _PARAM_QUANTITY_UNITS = {
-    field: JOB_GRID_QUANTITY_UNITS[field]
+    field: JOB_GRID_SCHEMA.quantity_units[field]
     for field in _PARAMS_FIELDS
-    if field in JOB_GRID_QUANTITY_UNITS
+    if field in JOB_GRID_SCHEMA.quantity_units
 }
 
 _REQUIRED_JOB_GRID_METADATA = ("site", "simulation_software")
