@@ -73,6 +73,7 @@ def get_resource_generation_directory(test_directory, simtools_version):
 def run_configured_applications(
     config_dir,
     log_dir,
+    config_file=None,
     ignore_runtime_environment=True,
     overwrite_collection_files=False,
     run_time=None,
@@ -87,6 +88,10 @@ def run_configured_applications(
         Directory containing the ``*.config.yml`` workflow files.
     log_dir : str or pathlib.Path
         Destination directory for one log file per workflow.
+    config_file : str or pathlib.Path or None, optional
+        Run only the selected workflow file. Relative paths are resolved against
+        ``config_dir``. A plain file name is accepted when it matches exactly one
+        workflow under ``config_dir``.
     ignore_runtime_environment : bool, optional
         Run applications in the current environment instead of a configured runtime.
     overwrite_collection_files : bool, optional
@@ -100,11 +105,11 @@ def run_configured_applications(
     """
     config_dir = Path(config_dir)
     log_dir = Path(log_dir)
-    for config_file in sorted(config_dir.rglob("*.config.yml")):
-        logger.info("Executing applications configured in %s", config_file)
+    for workflow_config in _get_selected_config_files(config_dir, config_file):
+        logger.info("Executing applications configured in %s", workflow_config)
         args_dict = {
-            "config_file": str(config_file),
-            "log_file": str(log_dir / f"{config_file.name.removesuffix('.config.yml')}.log"),
+            "config_file": str(workflow_config),
+            "log_file": str(log_dir / f"{workflow_config.name.removesuffix('.config.yml')}.log"),
             "steps": None,
             "ignore_runtime_environment": ignore_runtime_environment,
             "overwrite_collection_files": overwrite_collection_files,
@@ -116,6 +121,47 @@ def run_configured_applications(
             run_time=run_time,
             replacements=replacements,
         )
+
+
+def _get_selected_config_files(config_dir, config_file=None):
+    """Return the workflow config files to execute."""
+    config_dir = Path(config_dir).resolve()
+    available_configs = sorted(path.resolve() for path in config_dir.rglob("*.config.yml"))
+
+    if config_file is None:
+        return available_configs
+
+    requested_path = Path(config_file)
+    if requested_path.is_absolute():
+        resolved_requested_path = requested_path.resolve()
+        if resolved_requested_path in available_configs:
+            return [resolved_requested_path]
+        raise FileNotFoundError(
+            f"Selected workflow config does not exist in {config_dir}: {requested_path}"
+        )
+
+    exact_matches = []
+    try:
+        exact_matches = [
+            path for path in available_configs if path.relative_to(config_dir) == requested_path
+        ]
+    except ValueError:
+        exact_matches = []
+    if exact_matches:
+        return exact_matches
+
+    name_matches = [path for path in available_configs if path.name == requested_path.name]
+    if len(name_matches) == 1:
+        return name_matches
+    if len(name_matches) > 1:
+        raise ValueError(
+            f"Selected workflow config is ambiguous: {requested_path}. "
+            "Use a path relative to integration_tests/config_files."
+        )
+
+    raise FileNotFoundError(
+        f"Selected workflow config does not exist in {config_dir}: {requested_path}"
+    )
 
 
 def _validate_download_entry(entry, index):
@@ -305,6 +351,7 @@ def generate_test_resources(
     simtools_version,
     download_only=False,
     test_static_files=False,
+    config_file=None,
     runtime_environment_file=None,
     ignore_runtime_environment=None,
     overwrite_collection_files=False,
@@ -321,6 +368,8 @@ def generate_test_resources(
         Download external files without running workflows.
     test_static_files : bool, optional
         Validate static files against their manifest without downloading or running workflows.
+    config_file : str or pathlib.Path or None, optional
+        Run only the selected workflow file from ``integration_tests/config_files``.
     runtime_environment_file : str or pathlib.Path or None, optional
         Standalone runtime-environment YAML reused for all workflows.
     ignore_runtime_environment : bool or None, optional
@@ -357,6 +406,7 @@ def generate_test_resources(
         run_configured_applications(
             config_dir=config_dir,
             log_dir=integration_test_dir / "log_files",
+            config_file=config_file,
             ignore_runtime_environment=ignore_runtime_environment,
             overwrite_collection_files=overwrite_collection_files,
             run_time=run_time,
