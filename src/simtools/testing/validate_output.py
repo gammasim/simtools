@@ -480,9 +480,12 @@ def _validate_simtel_cfg_files(config, simtel_cfg_file):
 
     """
     reference_file = _resolve_path(simtel_cfg_file)
+    run_number = config["configuration"].get("run_number", 1) + config["configuration"].get(
+        "run_number_offset", 0
+    )
     test_file = (
         Path(config["configuration"]["output_path"])
-        / f"model/{config['configuration']['model_version']}"
+        / f"model/run{run_number:06d}/{config['configuration']['model_version']}"
         / reference_file.name.replace("_test", f"_{config['configuration']['label']}")
     )
     _logger.info(

@@ -546,12 +546,14 @@ def test_validate_simtel_cfg_files(mocker, test_path):
             "output_path": PATH_TO_OUTPUT,
             "model_version": "3.4.5",
             "label": "label",
+            "run_number": 42,
+            "run_number_offset": 1,
         },
         "integration_tests": [{"test_simtel_cfg_files": test_path}],
     }
     validate_output._validate_simtel_cfg_files(config, test_path)
 
-    mock_compare.assert_called()
+    assert mock_compare.call_args.args[1].parent == Path(PATH_TO_OUTPUT) / "model/run000043/3.4.5"
 
 
 def test_compare_value_from_parameter_dict():
