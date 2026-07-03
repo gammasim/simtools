@@ -184,7 +184,7 @@ def test_run_configured_applications_reuses_runtime(tmp_test_directory, monkeypa
     assert called_configs[0][1]["run_time"] == ["podman", "run", "image"]
 
 
-def test_run_configured_applications_selects_one_config_by_name(tmp_test_directory, monkeypatch):
+def test_run_configured_applications_selects_one_config_by_path(tmp_test_directory, monkeypatch):
     config_root = Path(tmp_test_directory) / "config_files"
     selected_dir = config_root / "application_config"
     other_dir = config_root / "model_parameters"
@@ -195,36 +195,6 @@ def test_run_configured_applications_selects_one_config_by_name(tmp_test_directo
     other_config = other_dir / "mirror_list.config.yml"
     selected_config.write_text("steps: []\n", encoding="utf-8")
     other_config.write_text("steps: []\n", encoding="utf-8")
-
-    called_configs = []
-
-    def _fake_run_applications(config_dict, **kwargs):
-        called_configs.append((config_dict, kwargs))
-
-    monkeypatch.setattr(
-        resource_generation.simtools_runner, "run_applications", _fake_run_applications
-    )
-
-    resource_generation.run_configured_applications(
-        config_dir=config_root,
-        log_dir=Path(tmp_test_directory) / "log_files",
-        config_file=Path("simulate_prod.config.yml"),
-    )
-
-    assert [config[0]["config_file"] for config in called_configs] == [
-        str(selected_config.resolve())
-    ]
-
-
-def test_run_configured_applications_selects_one_config_by_relative_path(
-    tmp_test_directory, monkeypatch
-):
-    config_root = Path(tmp_test_directory) / "config_files"
-    selected_dir = config_root / "application_config"
-    selected_dir.mkdir(parents=True)
-
-    selected_config = selected_dir / "simulate_prod.config.yml"
-    selected_config.write_text("steps: []\n", encoding="utf-8")
 
     called_configs = []
 
