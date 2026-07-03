@@ -9,6 +9,7 @@ from astropy.table import Table
 import simtools.utils.general as gen
 from simtools.db import db_handler
 from simtools.io import ascii_handler
+from simtools.sim_events import file_info
 from simtools.testing import assertions
 
 _logger = logging.getLogger(__name__)
@@ -480,13 +481,16 @@ def _validate_simtel_cfg_files(config, simtel_cfg_file):
 
     """
     reference_file = _resolve_path(simtel_cfg_file)
-    run_number = config["configuration"].get("run_number", 1) + config["configuration"].get(
-        "run_number_offset", 0
+    configuration = config["configuration"]
+    run_number = (
+        file_info.get_corsika_run_number(configuration["corsika_file"])
+        if configuration.get("corsika_file")
+        else configuration.get("run_number", 1) + configuration.get("run_number_offset", 0)
     )
     test_file = (
-        Path(config["configuration"]["output_path"])
-        / f"model/run{run_number:06d}/{config['configuration']['model_version']}"
-        / reference_file.name.replace("_test", f"_{config['configuration']['label']}")
+        Path(configuration["output_path"])
+        / f"model/run{run_number:06d}/{configuration['model_version']}"
+        / reference_file.name.replace("_test", f"_{configuration['label']}")
     )
     _logger.info(
         f"Comparing simtel cfg files: {reference_file} and {test_file} "
