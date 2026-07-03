@@ -80,6 +80,13 @@ def _add_arguments(parser):
         default=None,
     )
     parser.add_argument(
+        "--pack_for_grid_register_hdata",
+        help="Include histogram files in the tarball for registering the output files on the grid.",
+        action="store_true",
+        required=False,
+        default=False,
+    )
+    parser.add_argument(
         "--save_file_lists",
         help="Save lists of output and log files.",
         action="store_true",
@@ -166,7 +173,10 @@ def main():
         simulator.save_file_lists()
 
     if app_context.args.get("pack_for_grid_register"):
-        simulator.pack_for_register(app_context.args["pack_for_grid_register"])
+        simulator.pack_for_register(
+            app_context.args["pack_for_grid_register"],
+            app_context.args.get("pack_for_grid_register_hdata", False),
+        )
 
 
 if __name__ == "__main__":
