@@ -85,7 +85,7 @@ def test_main_passes_pack_for_grid_register_hdata_to_simulator(
         "label": "myprod",
         "save_reduced_event_lists": False,
         "save_file_lists": False,
-        "pack_for_grid_register": "/tmp/grid",
+        "pack_for_grid_register": "/data_directory/grid",
         "pack_for_grid_register_hdata": True,
     }
     mock_build_app.return_value = mock_context
@@ -94,4 +94,4 @@ def test_main_passes_pack_for_grid_register_hdata_to_simulator(
 
     app.main()
 
-    mock_simulator.pack_for_register.assert_called_once_with("/tmp/grid", True)
+    mock_simulator.pack_for_register.assert_called_once_with("/data_directory/grid", True)
