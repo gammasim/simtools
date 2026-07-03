@@ -6,6 +6,7 @@ from pathlib import Path
 import astropy.units as u
 from astropy.table import QTable
 
+from simtools import settings
 from simtools.data_model import data_reader, schema
 from simtools.io import io_handler
 from simtools.model.calibration_model import CalibrationModel
@@ -547,9 +548,22 @@ class ArrayModel:
         dict
             Dictionary with additional metadata.
         """
-        return {
+        metadata = {
             "nsb_integrated_flux": self.site_model.get_nsb_integrated_flux(),
         }
+        for metadata_key, args_key in {
+            "primary": "primary",
+            "azimuth_angle": "azimuth_angle",
+            "zenith_angle": "zenith_angle",
+            "ha_angle": "ha",
+            "dec_angle": "dec",
+        }.items():
+            value = settings.config.args.get(args_key)
+            if value is not None:
+                metadata[metadata_key] = (
+                    value.to_value(u.deg) if hasattr(value, "to_value") else value
+                )
+        return metadata
 
     def initialize_seeds(self, zenith_angle=None, azimuth_angle=None):
         """Initialize sim_telarray seeds for instrument and shower simulations."""

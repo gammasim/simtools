@@ -9,6 +9,7 @@ import pytest
 from astropy import units as u
 from astropy.table import QTable
 
+from simtools import settings
 from simtools.data_model import schema
 from simtools.model.array_model import ArrayModel
 
@@ -241,8 +242,26 @@ def test_get_additional_simtel_metadata(array_model_north, mocker):
     mocker.patch.object(
         array_model_north_cp.site_model, "get_nsb_integrated_flux", return_value=42.0
     )
+    mocker.patch.object(
+        settings.config,
+        "_args",
+        {
+            "primary": "gamma",
+            "azimuth_angle": 180.0 * u.deg,
+            "zenith_angle": 20.0 * u.deg,
+            "ha": 0.0 * u.deg,
+            "dec": 30.0 * u.deg,
+        },
+    )
 
-    assert "nsb_integrated_flux" in array_model_north_cp._get_additional_simtel_metadata()
+    metadata = array_model_north_cp._get_additional_simtel_metadata()
+
+    assert metadata["nsb_integrated_flux"] == pytest.approx(42.0)
+    assert metadata["primary"] == "gamma"
+    assert metadata["azimuth_angle"] == pytest.approx(180.0)
+    assert metadata["zenith_angle"] == pytest.approx(20.0)
+    assert metadata["ha_angle"] == pytest.approx(0.0)
+    assert metadata["dec_angle"] == pytest.approx(30.0)
 
 
 def test_build_calibration_models():

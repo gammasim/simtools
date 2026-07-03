@@ -265,7 +265,7 @@ class SimtelConfigWriter:
 
         if additional_metadata:
             for key, value in additional_metadata.items():
-                if value:
+                if value is not None:
                     meta_parameters.append(f"{prefix} set {key}={value}")
 
         return meta_parameters
