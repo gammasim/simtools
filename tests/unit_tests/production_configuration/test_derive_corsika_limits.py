@@ -5,6 +5,7 @@ from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 
 import simtools.production_configuration.derive_corsika_limits as derive_corsika_limits
+from simtools.sim_events.reader import EventDataReader
 
 # Constants
 SIM_EVENTS_HISTOGRAMS_PATH = (
@@ -210,8 +211,10 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict, tm
         "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
     )
     mock_pool.return_value = [
-        {"primary_particle": "gamma", "array_name": "LST", "telescope_ids": [1, 2]},
-        {"primary_particle": "gamma", "array_name": "MST", "telescope_ids": [3, 4]},
+        [
+            {"primary_particle": "gamma", "array_name": "LST", "telescope_ids": [1, 2]},
+            {"primary_particle": "gamma", "array_name": "MST", "telescope_ids": [3, 4]},
+        ]
     ]
 
     mock_io = mocker.patch(
@@ -229,7 +232,11 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict, tm
         args["array_layout_name"], args["site"], args["model_version"]
     )
     job_specs = mock_pool.call_args[0][1]
-    assert len(job_specs) == 2  # 2 layouts
+    assert len(job_specs) == 1  # one production containing both layouts
+    assert job_specs[0]["telescope_configs"] == [
+        {"array_name": "LST", "telescope_ids": ["LSTN-01", "LSTN-02"]},
+        {"array_name": "MST", "telescope_ids": ["LSTN-03", "LSTN-04"]},
+    ]
     assert mock_write.call_count == 1
 
 
@@ -256,8 +263,10 @@ def test_generate_corsika_limits_grid_by_version_layout_resolved(
         "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
     )
     mock_pool.return_value = [
-        {"primary_particle": "gamma", "array_name": "LST", "telescope_ids": [1, 2]},
-        {"primary_particle": "gamma", "array_name": "MST", "telescope_ids": [3, 4]},
+        [
+            {"primary_particle": "gamma", "array_name": "LST", "telescope_ids": [1, 2]},
+            {"primary_particle": "gamma", "array_name": "MST", "telescope_ids": [3, 4]},
+        ]
     ]
 
     mock_io = mocker.patch(
@@ -285,7 +294,7 @@ def test_generate_corsika_limits_grid_with_array_element_list(
         "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
     )
     mock_pool.return_value = [
-        {"primary_particle": "gamma", "array_name": "array_element_list"},
+        [{"primary_particle": "gamma", "array_name": "array_element_list"}],
     ]
 
     mock_io = mocker.patch(
@@ -302,8 +311,12 @@ def test_generate_corsika_limits_grid_with_array_element_list(
     job_specs = mock_pool.call_args[0][1]
     assert len(job_specs) == 1
     job_spec = job_specs[0]
-    assert job_spec["array_name"] == "array_element_list"
-    assert job_spec["telescope_ids"] == ["LSTN-01", "LSTN-02", "MSTN-03"]
+    assert job_spec["telescope_configs"] == [
+        {
+            "array_name": "array_element_list",
+            "telescope_ids": ["LSTN-01", "LSTN-02", "MSTN-03"],
+        }
+    ]
     assert mock_write.call_count == 1
 
 
@@ -323,7 +336,7 @@ def test_generate_corsika_limits_grid_with_telescope_ids_file(
     mock_pool = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
     )
-    mock_pool.return_value = [{"primary_particle": "gamma", "array_name": "LST"}]
+    mock_pool.return_value = [[{"primary_particle": "gamma", "array_name": "LST"}]]
     mock_io = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
     )
@@ -335,8 +348,9 @@ def test_generate_corsika_limits_grid_with_telescope_ids_file(
     derive_corsika_limits.generate_corsika_limits_grid(args)
 
     job_spec = mock_pool.call_args[0][1][0]
-    assert job_spec["array_name"] == "LST"
-    assert job_spec["telescope_ids"] == ["LSTN-01", "LSTN-02"]
+    assert job_spec["telescope_configs"] == [
+        {"array_name": "LST", "telescope_ids": ["LSTN-01", "LSTN-02"]}
+    ]
     assert mock_write.call_count == 1
 
 
@@ -354,7 +368,7 @@ def test_generate_corsika_limits_grid_builds_output_subdirs_for_multiple_product
     mock_pool = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
     )
-    mock_pool.return_value = [_pool_result(event_data_file="prod_a/*.h5")]
+    mock_pool.return_value = [[_pool_result(event_data_file="prod_a/*.h5")]]
     mock_io = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
     )
@@ -1224,51 +1238,110 @@ def test_build_production_subdirectories_creates_dirs(tmp_test_directory):
         assert output_subdir.isdir()
 
 
-def test_execute_production_job_single_job(mocker):
-    """Test _execute_production_job executes one job correctly."""
-    mock_histograms = mocker.MagicMock()
-    mock_histograms.fill.return_value = None
-    mock_histograms.file_info = {}
-
-    mocker.patch(
-        SIM_EVENTS_HISTOGRAMS_PATH,
-        return_value=mock_histograms,
+def test_execute_production_job_groups_layouts_and_preserves_result_order(mocker):
+    """A production job returns layout results in configuration order."""
+    process_production = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._process_production",
+        return_value=[{"lower_energy_limit": 1.0}, {"lower_energy_limit": 2.0}],
     )
-
-    mocker.patch(
-        COMPUTE_LOWER_ENERGY_LIMIT_PATH,
-        return_value=1.0 * u.TeV,
-    )
-    mocker.patch(
-        COMPUTE_LIMITS_PATH,
-        return_value={
-            "upper_radius_limit": 100.0 * u.m,
-            "viewcone_radius": 2.0 * u.deg,
-            "core_distance_vs_energy_curve": {"x": [100.0, 100.0], "y": [0.1, 1.0]},
-            "angular_distance_vs_energy_curve": {"x": [2.0, 2.0], "y": [0.1, 1.0]},
-        },
-    )
-
+    telescope_configs = [
+        {"array_name": "LST", "telescope_ids": ["LSTN-01"]},
+        {"array_name": "MST", "telescope_ids": ["MSTN-03"]},
+    ]
     job_spec = {
-        "production_index": 0,
+        "production_index": 3,
         "production_pattern": "pattern_*.hdf5",
-        "array_name": "LST",
-        "telescope_ids": ["LSTN-01"],
+        "telescope_configs": telescope_configs,
         "allowed_losses": DEFAULT_ALLOWED_LOSSES,
         "energy_threshold_fraction": 0.1,
         "plot_histograms": False,
         "output_subdir": None,
     }
 
-    result = derive_corsika_limits._execute_production_job(job_spec)
+    results = derive_corsika_limits._execute_production_job(job_spec)
 
-    # Result should include production metadata
-    assert result["production_index"] == 0
-    assert result["event_data_file"] == "pattern_*.hdf5"
-    assert result["array_name"] == "LST"
-    assert "lower_energy_limit" in result
-    assert "upper_radius_limit" in result
-    assert "viewcone_radius" in result
+    process_production.assert_called_once()
+    assert [result["array_name"] for result in results] == ["LST", "MST"]
+    assert [result["telescope_ids"] for result in results] == [
+        ["LSTN-01"],
+        ["MSTN-03"],
+    ]
+    assert all(result["production_index"] == 3 for result in results)
+
+
+def test_process_production_reads_once_and_matches_single_layout_results(
+    mocker, test_resources_path
+):
+    """Grouped layouts reuse one read and preserve the single-layout numerical results."""
+    event_file = (
+        test_resources_path
+        / "generated"
+        / "proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_test."
+        "reduced_event_data.hdf5"
+    )
+    telescope_configs = [
+        {"array_name": "LSTN-01", "telescope_ids": ["LSTN-01"]},
+        {"array_name": "MSTN-03", "telescope_ids": ["MSTN-03"]},
+    ]
+
+    expected = [
+        derive_corsika_limits._process_file(
+            str(event_file),
+            config["array_name"],
+            config["telescope_ids"],
+            DEFAULT_ALLOWED_LOSSES,
+            differential_loss_bins_per_decade=5,
+        )
+        for config in telescope_configs
+    ]
+
+    read_spy = mocker.spy(EventDataReader, "read_event_data")
+    plot_mock = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.plot_simtel_event_histograms.plot"
+    )
+    actual = derive_corsika_limits._process_production(
+        str(event_file),
+        telescope_configs,
+        DEFAULT_ALLOWED_LOSSES,
+        plot_histograms=True,
+        output_subdir=event_file.parent,
+        differential_loss_bins_per_decade=5,
+    )
+
+    assert read_spy.call_count == 1
+    expected_histograms = {
+        "energy",
+        "core_distance",
+        "angular_distance",
+        "x_core_shower_vs_y_core_shower",
+        "core_distance_vs_energy",
+        "angular_distance_vs_energy",
+        "energy_mc",
+        "core_distance_mc",
+        "angular_distance_mc",
+        "x_core_shower_vs_y_core_shower_mc",
+        "core_distance_vs_energy_mc",
+        "angular_distance_vs_energy_mc",
+        "core_distance_vs_energy_cumulative",
+        "angular_distance_vs_energy_cumulative",
+        "energy_cumulative",
+        "core_distance_cumulative",
+        "angular_distance_cumulative",
+    }
+    assert plot_mock.call_count == len(telescope_configs)
+    assert all(set(call.args[0]) == expected_histograms for call in plot_mock.call_args_list)
+    assert len(actual) == len(expected)
+    for actual_result, expected_result in zip(actual, expected):
+        assert actual_result.keys() == expected_result.keys()
+        for key, expected_value in expected_result.items():
+            actual_value = actual_result[key]
+            if isinstance(expected_value, u.Quantity):
+                assert u.allclose(actual_value, expected_value)
+            elif isinstance(expected_value, dict):
+                np.testing.assert_allclose(actual_value["x"], expected_value["x"])
+                np.testing.assert_allclose(actual_value["y"], expected_value["y"])
+            else:
+                assert actual_value == expected_value
 
 
 def test_generate_corsika_limits_grid_multi_production(mocker, tmp_test_directory):
@@ -1282,14 +1355,16 @@ def test_generate_corsika_limits_grid_multi_production(mocker, tmp_test_director
     )
     # Mock process_pool_map_ordered to return results directly
     mock_pool.return_value = [
-        _pool_result(production_index=0, event_data_file="pattern_1_*.hdf5"),
-        _pool_result(
-            production_index=1,
-            event_data_file="pattern_2_*.hdf5",
-            lower_energy_limit=0.6 * u.TeV,
-            upper_radius_limit=450.0 * u.m,
-            viewcone_radius=5.5 * u.deg,
-        ),
+        [_pool_result(production_index=0, event_data_file="pattern_1_*.hdf5")],
+        [
+            _pool_result(
+                production_index=1,
+                event_data_file="pattern_2_*.hdf5",
+                lower_energy_limit=0.6 * u.TeV,
+                upper_radius_limit=450.0 * u.m,
+                viewcone_radius=5.5 * u.deg,
+            )
+        ],
     ]
 
     mock_write = mocker.patch(
@@ -1344,7 +1419,7 @@ def test_generate_corsika_limits_grid_single_production_uses_pool(mocker, tmp_te
     mock_pool = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
     )
-    mock_pool.return_value = [_pool_result()]
+    mock_pool.return_value = [[_pool_result()]]
 
     mock_execute_job = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits._execute_production_job"
