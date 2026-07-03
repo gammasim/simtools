@@ -61,7 +61,7 @@ specified by the production configuration or production release notes:
 
 ```bash
 apptainer pull --force \
-    docker://ghcr.io/gammasim/simtools-prod:v0.27.1-v78010-v2025-11-30-rc-avx2
+  oras://ghcr.io/gammasim/simtools-prod:v0.27.1-v78010-v2025-11-30-rc-avx2-apptainer
 ```
 
 The generator supports either one image for all jobs or a mapping from image labels to image
