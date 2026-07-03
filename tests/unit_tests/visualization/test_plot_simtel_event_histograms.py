@@ -122,6 +122,8 @@ def test_add_lines(lines, expect_lines, expect_circles):
             plotted = ax.get_lines()[-1]
             np.testing.assert_array_equal(plotted.get_xdata(), np.array([1, 2]))
             np.testing.assert_array_equal(plotted.get_ydata(), np.array([3, 4]))
+            assert plotted.get_color() == "r"
+            assert plotted.get_linestyle() == "--"
     else:
         if not lines or ("x" not in lines and "y" not in lines):
             remaining = [ln for ln in ax.get_lines() if ln.get_label() == "_nolegend_"]
@@ -465,7 +467,7 @@ def test_execute_plotting_loop():
     np.testing.assert_array_equal(call_kwargs["bins"], np.array([0, 1, 2, 3]))
     assert call_kwargs["plot_type"] == "histogram"
     assert call_kwargs["plot_params"] == {"color": "blue"}
-    assert call_kwargs["labels"]["title"] == "Test Plot (test_array array)"
+    assert call_kwargs["labels"]["title"] == "Test Plot (test_array)"
     assert call_kwargs["scales"] == {"x": "linear", "y": "log"}
     # Optional parameters not provided should not appear explicitly
     assert "colorbar_label" not in call_kwargs
@@ -823,8 +825,8 @@ def test_broad_range_axis_limits_are_used_for_distance_histograms():
     assert angular_limits == {"x": (0.0, 4.0), "y": (0.02, 200.0)}
 
 
-def test_broad_range_plot_lines_replace_derived_limits():
-    """Reference overlays use the same broad-range values as the output table."""
+def test_broad_range_axis_limits_do_not_replace_derived_limits():
+    """Broad-range view limits keep the derived limit overlays intact."""
     limits = {
         "lower_energy_limit": 0.1 * u.TeV,
         "upper_radius_limit": 1200.0 * u.m,
@@ -835,15 +837,20 @@ def test_broad_range_plot_lines_replace_derived_limits():
         "br_viewcone_max": 4.0 * u.deg,
     }
 
-    assert plot_simtel_event_histograms._get_broad_range_plot_lines(
-        "core_distance_vs_energy", limits
-    ) == {"x": 1800.0, "y": [0.02, 200.0]}
-    assert plot_simtel_event_histograms._get_broad_range_plot_lines(
-        "angular_distance_vs_energy_mc", limits
-    ) == {"x": 4.0, "y": [0.02, 200.0]}
-    assert plot_simtel_event_histograms._get_broad_range_plot_lines(
-        "x_core_shower_vs_y_core_shower_mc", limits
-    ) == {"r": 1800.0}
+    plot_config = {"lines": _get_limits("core_distance_vs_energy", limits)}
+    plot_simtel_event_histograms._add_plot_overrides(
+        plot_config,
+        "core_distance_vs_energy",
+        limits,
+        use_broad_range_limits=True,
+    )
+
+    assert plot_config["axis_limits"] == {"x": (0.0, 1800.0), "y": (0.02, 200.0)}
+    assert plot_config["lines"] == {
+        "x": 1200.0,
+        "y": 0.1,
+        "curve": None,
+    }
 
 
 def test_projection_slice_coordinates():
@@ -901,3 +908,20 @@ def test_create_2d_plot_with_distance_projections(tmp_path):
         "1000 m",
         "1500 m",
     ]
+    assert fig.axes[1].get_legend()._loc == 1
+    assert fig.axes[2].get_legend()._loc == 1
+
+
+def test_execute_plotting_loop_removes_array_suffix_word():
+    plots = {
+        "plot": {
+            "data": np.array([1.0]),
+            "labels": {"title": "Triggered"},
+            "filename": "test",
+        }
+    }
+
+    with patch(f"{MOD}._create_plot") as mock_create_plot:
+        _execute_plotting_loop(plots, None, "CTAO-Test")
+
+    assert mock_create_plot.call_args.kwargs["labels"]["title"] == "Triggered (CTAO-Test)"

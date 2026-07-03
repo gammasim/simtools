@@ -182,7 +182,6 @@ def _add_plot_overrides(
     """Add optional broad-range limits and projection metadata."""
     if use_broad_range_limits:
         plot_config["axis_limits"] = _get_broad_range_axis_limits(name, limits)
-        plot_config["lines"] = _get_broad_range_plot_lines(name, limits)
     if add_distance_projections and _supports_distance_projections(name):
         plot_config["projection_kind"] = (
             "core_distance" if name.startswith("core_distance") else "angular_distance"
@@ -341,7 +340,7 @@ def _execute_plotting_loop(plots, output_path, array_name, file_info=None):
             continue
 
         if array_name and plot_args.get("labels", {}).get("title"):
-            plot_args["labels"]["title"] += f" ({array_name} array)"
+            plot_args["labels"]["title"] += f" ({array_name})"
 
         filename = _build_plot_filename(plot_filename, array_name, file_info)
         output_file = output_path / filename if output_path else None
@@ -520,14 +519,14 @@ def _create_2d_plot_with_projections(
     projection_kind,
 ):
     """Create a 2D histogram with x/y projection panels on its right."""
-    fig = plt.figure(figsize=(11, 6), constrained_layout=True)
-    grid = fig.add_gridspec(2, 2, width_ratios=(3.2, 2.0), wspace=0.25, hspace=0.32)
+    fig = plt.figure(figsize=(10.4, 6), constrained_layout=True)
+    grid = fig.add_gridspec(4, 2, width_ratios=(3.6, 2.1), wspace=0.08, hspace=0.08)
     ax = fig.add_subplot(grid[:, 0])
-    ax_x = fig.add_subplot(grid[0, 1])
-    ax_y = fig.add_subplot(grid[1, 1])
+    ax_x = fig.add_subplot(grid[:2, 1])
+    ax_y = fig.add_subplot(grid[2:, 1])
 
     pcm = _create_2d_histogram_plot(data, bins, plot_params, ax=ax)
-    fig.colorbar(pcm, ax=ax, label=colorbar_label, pad=0.02)
+    fig.colorbar(pcm, ax=ax, label=colorbar_label, pad=0.01)
     _add_lines(ax, lines)
     ax.set(
         xlabel=labels.get("x", ""),
@@ -550,11 +549,15 @@ def _plot_distance_projections(ax_x, ax_y, data, bins, labels, axis_limits, proj
 
     for value, label in _energy_slice_values(bins[1], axis_limits.get("y")):
         index = _bin_index(bins[1], value)
-        ax_x.step(x_centers, data[:, index], where="mid", label=label)
+        slice_data = data[:, index]
+        if np.any(slice_data > 0):
+            ax_x.step(x_centers, slice_data, where="mid", label=label)
 
     for value, label in _distance_slice_values(bins[0], axis_limits.get("x"), projection_kind):
         index = _bin_index(bins[0], value)
-        ax_y.step(y_centers, data[index, :], where="mid", label=label)
+        slice_data = data[index, :]
+        if np.any(slice_data > 0):
+            ax_y.step(y_centers, slice_data, where="mid", label=label)
 
     ax_x.set(
         xlabel=labels.get("x", ""),
@@ -571,8 +574,15 @@ def _plot_distance_projections(ax_x, ax_y, data, bins, labels, axis_limits, proj
     )
     _apply_axis_limits(ax_x, {"x": axis_limits.get("x")})
     _apply_axis_limits(ax_y, {"x": axis_limits.get("y")})
-    ax_x.legend(fontsize="x-small", ncol=2)
-    ax_y.legend(fontsize="x-small", ncol=2)
+    _add_projection_legend(ax_x)
+    _add_projection_legend(ax_y)
+
+
+def _add_projection_legend(ax):
+    """Add a compact legend in a stable location if labeled artists exist."""
+    handles, legend_labels = ax.get_legend_handles_labels()
+    if handles:
+        ax.legend(handles, legend_labels, fontsize="x-small", loc="upper right")
 
 
 def _bin_index(bin_edges, value):
@@ -638,7 +648,7 @@ def _add_lines(ax, lines):
 
     curve = lines.get("curve")
     if curve and curve.get("x") and curve.get("y"):
-        ax.plot(curve["x"], curve["y"], color="tab:orange", linestyle="-", linewidth=1.0)
+        ax.plot(curve["x"], curve["y"], color="r", linestyle="--", linewidth=1.0)
 
 
 def _create_2d_histogram_plot(data, bins, plot_params, ax=None):
