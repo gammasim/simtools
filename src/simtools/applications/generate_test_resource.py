@@ -19,6 +19,9 @@ download_only (flag, optional)
     Download external inputs without executing workflows.
 test_static_files (flag, optional)
     Validate static files against their checksums and exit.
+config_file (path, optional)
+    Run only the selected ``*.config.yml`` workflow from the release-specific
+    ``integration_tests/config_files`` directory.
 runtime_environment_file (path, optional)
     Standalone runtime-environment YAML reused for all workflows.
 ignore_runtime_environment (flag, optional)
@@ -63,6 +66,11 @@ def _add_arguments(parser):
     parser.add_argument("--simtools_version", required=True)
     parser.add_argument("--download_only", action="store_true")
     parser.add_argument("--test_static_files", action="store_true")
+    parser.add_argument(
+        "--config_file",
+        type=Path,
+        help="Run only the selected workflow config file from integration_tests/config_files.",
+    )
     parser.add_argument("--runtime_environment_file", type=Path)
     parser.add_argument(
         "--ignore_runtime_environment",
@@ -89,6 +97,7 @@ def main():
         simtools_version=app_context.args["simtools_version"],
         download_only=app_context.args["download_only"],
         test_static_files=app_context.args["test_static_files"],
+        config_file=app_context.args["config_file"],
         runtime_environment_file=app_context.args["runtime_environment_file"],
         ignore_runtime_environment=app_context.args["ignore_runtime_environment"],
         overwrite_collection_files=app_context.args["overwrite_collection_files"],

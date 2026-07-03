@@ -50,6 +50,7 @@ class ArrayModel:
         calibration_device_types=None,
         overwrite_model_parameters=None,
         ignore_software_version=False,
+        model_directory_subdir=None,
     ):
         """Initialize ArrayModel."""
         self._logger = logging.getLogger(__name__)
@@ -72,6 +73,13 @@ class ArrayModel:
         self.array_elements, self.site_model, self.telescope_models, self.calibration_models = (
             self._initialize(site, array_elements, calibration_device_types)
         )
+        if model_directory_subdir:
+            self._config_file_directory = self.io_handler.get_model_configuration_directory(
+                model_version=self.model_version, sub_dir=model_directory_subdir
+            )
+            models = [self.site_model, *self.telescope_models.values()]
+            for model in models:
+                model._config_file_directory = self._config_file_directory
 
         self._telescope_model_files_exported = False
         self._array_model_file_exported = False
@@ -143,14 +151,11 @@ class ArrayModel:
         Path
             Path of the exported config file for sim_telarray.
         """
-        if self._config_file_path is None:
-            config_file_name = names.simtel_config_file_name(
-                array_name=self.layout_name,
-                site=self.site_model.site,
-                label=self.label,
+        return self._config_file_path or self.get_config_directory().joinpath(
+            names.sim_telarray_config_file_name(
+                array_name=self.layout_name, site=self.site_model.site
             )
-            self._config_file_path = self.get_config_directory().joinpath(config_file_name)
-        return self._config_file_path
+        )
 
     @property
     def number_of_telescopes(self):
