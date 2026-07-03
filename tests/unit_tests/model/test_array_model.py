@@ -35,6 +35,21 @@ def test_array_model_north_from_file(model_version, get_test_data_file):
     assert am.number_of_telescopes == 13
 
 
+def test_array_model_run_specific_config_directory(model_version, io_handler):
+    am = ArrayModel(
+        site="North",
+        model_version=model_version,
+        array_elements=["LSTN-01"],
+        model_directory_subdir="run000010",
+    )
+
+    expected = io_handler.get_model_configuration_directory(model_version, "run000010")
+    assert am.get_config_directory() == expected
+    assert am.site_model.config_file_directory == expected
+    assert am.telescope_models["LSTN-01"].config_file_directory == expected
+    assert am.telescope_models["LSTN-01"].config_file_path.parent == expected
+
+
 def test_array_model_north_init_without_layout_or_telescope_list(model_version):
     with pytest.raises(ValueError, match=r"No array elements found."):
         ArrayModel(label="test", site="North", model_version=model_version)

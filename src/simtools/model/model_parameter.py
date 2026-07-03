@@ -268,9 +268,10 @@ class ModelParameter:
         if self.name is None and self.site is None:
             return
 
-        self._config_file_directory = self.io_handler.get_model_configuration_directory(
-            model_version=self.model_version
-        )
+        if self._config_file_directory is None:
+            self._config_file_directory = self.io_handler.get_model_configuration_directory(
+                model_version=self.model_version
+            )
 
         self._config_file_path = self.config_file_directory.joinpath(
             names.sim_telarray_config_file_name(site=self.site, telescope_model_name=self.name)

@@ -152,5 +152,5 @@ class IOHandler(metaclass=IOHandlerSingleton):
         Path
         """
         return self.get_output_directory(
-            sub_dir=[sub_dir, "model", model_version] if sub_dir else ["model", model_version]
+            sub_dir=["model", sub_dir, model_version] if sub_dir else ["model", model_version]
         )
