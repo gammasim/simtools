@@ -1009,7 +1009,9 @@ def test_constant_angular_distance_distributions_are_not_plotted(mocker, tmp_tes
     )
 
     plotted_histograms = plot.call_args.args[0]
-    assert set(plotted_histograms) == {"energy"}
+    assert set(plotted_histograms) == set()
+    assert plot.call_args.kwargs["add_distance_projections"] is True
+    assert plot.call_args.kwargs["use_broad_range_limits"] is True
 
 
 def test_process_file_passes_energy_bins_per_decade_to_histograms(mocker):
@@ -1107,6 +1109,7 @@ def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
     mock_histograms = mocker.MagicMock()
     mock_histograms.fill.return_value = None
     mock_histograms.file_info = {}
+    mock_histograms.histograms = {"energy": {}, "core_distance": {}}
 
     mocker.patch(
         SIM_EVENTS_HISTOGRAMS_PATH,
@@ -1146,8 +1149,7 @@ def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
 
     mock_plot.assert_called_once()
     args, kwargs = mock_plot.call_args
-    # First positional argument should be the histograms instance
-    assert args[0] is mock_histograms.histograms
+    assert set(args[0]) == {"core_distance"}
     assert kwargs["output_path"] == tmp_test_directory
     assert kwargs["limits"] == {
         "primary_particle": None,
@@ -1165,6 +1167,8 @@ def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
         "angular_distance_vs_energy_curve": {"x": [2.0, 2.0], "y": [0.1, 1.0]},
     }
     assert kwargs["array_name"] == "MockArray"
+    assert kwargs["add_distance_projections"] is True
+    assert kwargs["use_broad_range_limits"] is True
 
 
 # Tests for multi-production and parallel execution support
@@ -1383,7 +1387,6 @@ def test_process_production_reads_once_and_matches_single_layout_results(
 
     assert read_spy.call_count == 1
     expected_histograms = {
-        "energy",
         "core_distance",
         "angular_distance",
         "x_core_shower_vs_y_core_shower",

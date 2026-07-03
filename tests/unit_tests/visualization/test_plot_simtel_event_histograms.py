@@ -715,7 +715,12 @@ def test_plot_with_output_path(mock_histograms):
             array_name=array_name,
         )
 
-        mock_generate_configs.assert_called_once_with(mock_histograms, limits)
+        mock_generate_configs.assert_called_once_with(
+            mock_histograms,
+            limits,
+            add_distance_projections=False,
+            use_broad_range_limits=False,
+        )
         mock_execute_loop.assert_called_once_with(
             {"mock_plot": "mock_config"}, output_path, array_name, {}
         )
@@ -738,7 +743,12 @@ def test_plot_without_output_path(mock_histograms):
             array_name=array_name,
         )
 
-        mock_generate_configs.assert_called_once_with(mock_histograms, limits)
+        mock_generate_configs.assert_called_once_with(
+            mock_histograms,
+            limits,
+            add_distance_projections=False,
+            use_broad_range_limits=False,
+        )
         mock_execute_loop.assert_called_once_with(
             {"mock_plot": "mock_config"}, None, array_name, {}
         )
@@ -791,3 +801,103 @@ def test_generate_plot_configurations():
         _, kwargs = mock_create_2d.call_args
         assert "plot_params" in kwargs
         assert kwargs["plot_params"]["norm"] == "linear"
+
+
+def test_broad_range_axis_limits_are_used_for_distance_histograms():
+    """Plot ranges come from broad-range metadata rather than derived limits."""
+    limits = {
+        "br_energy_min": 0.02 * u.TeV,
+        "br_energy_max": 200.0 * u.TeV,
+        "br_core_scatter_max": 1800.0 * u.m,
+        "br_viewcone_max": 4.0 * u.deg,
+    }
+
+    core_limits = plot_simtel_event_histograms._get_broad_range_axis_limits(
+        "core_distance_vs_energy", limits
+    )
+    angular_limits = plot_simtel_event_histograms._get_broad_range_axis_limits(
+        "angular_distance_vs_energy_mc", limits
+    )
+
+    assert core_limits == {"x": (0.0, 1800.0), "y": (0.02, 200.0)}
+    assert angular_limits == {"x": (0.0, 4.0), "y": (0.02, 200.0)}
+
+
+def test_broad_range_plot_lines_replace_derived_limits():
+    """Reference overlays use the same broad-range values as the output table."""
+    limits = {
+        "lower_energy_limit": 0.1 * u.TeV,
+        "upper_radius_limit": 1200.0 * u.m,
+        "viewcone_radius": 2.5 * u.deg,
+        "br_energy_min": 0.02 * u.TeV,
+        "br_energy_max": 200.0 * u.TeV,
+        "br_core_scatter_max": 1800.0 * u.m,
+        "br_viewcone_max": 4.0 * u.deg,
+    }
+
+    assert plot_simtel_event_histograms._get_broad_range_plot_lines(
+        "core_distance_vs_energy", limits
+    ) == {"x": 1800.0, "y": [0.02, 200.0]}
+    assert plot_simtel_event_histograms._get_broad_range_plot_lines(
+        "angular_distance_vs_energy_mc", limits
+    ) == {"x": 4.0, "y": [0.02, 200.0]}
+    assert plot_simtel_event_histograms._get_broad_range_plot_lines(
+        "x_core_shower_vs_y_core_shower_mc", limits
+    ) == {"r": 1800.0}
+
+
+def test_projection_slice_coordinates():
+    """Generate the requested fixed energy and distance slice sequences."""
+    energy_slices = plot_simtel_event_histograms._energy_slice_values(
+        np.logspace(-2, 3, 6), (0.02, 200.0)
+    )
+    core_slices = plot_simtel_event_histograms._distance_slice_values(
+        np.linspace(0.0, 2000.0, 5), (0.0, 1800.0), "core_distance"
+    )
+    angular_slices = plot_simtel_event_histograms._distance_slice_values(
+        np.linspace(0.0, 5.0, 6), (0.0, 4.0), "angular_distance"
+    )
+
+    assert [np.log10(value) for value, _ in energy_slices] == pytest.approx([-1.5, -0.5, 0.5, 1.5])
+    assert [value for value, _ in core_slices] == [0.0, 500.0, 1000.0, 1500.0]
+    assert [value for value, _ in angular_slices] == [0.0, 1.0, 2.0, 3.0, 4.0]
+
+
+def test_create_2d_plot_with_distance_projections(tmp_path):
+    """Render overall and sliced projections in two right-hand panels."""
+    output_file = tmp_path / "projected.png"
+    data = np.arange(1.0, 21.0).reshape(4, 5)
+    bins = [np.linspace(0.0, 2000.0, 5), np.logspace(-2, 3, 6)]
+
+    fig = _create_plot(
+        data=data,
+        bins=bins,
+        plot_type="histogram2d",
+        plot_params={"norm": "log", "cmap": "viridis"},
+        labels={"x": "Core distance (m)", "y": "Energy (TeV)", "title": "Triggered"},
+        scales={"y": "log"},
+        colorbar_label="Event count",
+        output_file=output_file,
+        lines={},
+        axis_limits={"x": (0.0, 1800.0), "y": (0.02, 200.0)},
+        projection_kind="core_distance",
+    )
+
+    assert output_file.exists()
+    assert len(fig.axes) >= 3
+    assert fig.axes[0].get_xlim() == pytest.approx((0.0, 1800.0))
+    assert fig.axes[0].get_ylim() == pytest.approx((0.02, 200.0))
+    assert [line.get_label() for line in fig.axes[1].lines] == [
+        "overall",
+        "log10(E/TeV)=-1.5",
+        "log10(E/TeV)=-0.5",
+        "log10(E/TeV)=0.5",
+        "log10(E/TeV)=1.5",
+    ]
+    assert [line.get_label() for line in fig.axes[2].lines] == [
+        "overall",
+        "0 m",
+        "500 m",
+        "1000 m",
+        "1500 m",
+    ]

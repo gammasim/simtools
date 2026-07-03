@@ -509,11 +509,13 @@ def _derive_limits_from_histograms(
 
     if plot_histograms:
         plot_output_path = output_subdir or io_handler.IOHandler().get_output_directory()
-        histograms_to_plot = histograms.histograms
+        histograms_to_plot = {
+            name: histogram for name, histogram in histograms.histograms.items() if name != "energy"
+        }
         if limits.get("angular_distance_is_constant", False):
             histograms_to_plot = {
                 name: histogram
-                for name, histogram in histograms.histograms.items()
+                for name, histogram in histograms_to_plot.items()
                 if not name.startswith("angular_distance_vs_")
             }
         plot_simtel_event_histograms.plot(
@@ -521,6 +523,8 @@ def _derive_limits_from_histograms(
             output_path=plot_output_path,
             limits=limits,
             array_name=array_name,
+            add_distance_projections=True,
+            use_broad_range_limits=True,
         )
 
     return limits
