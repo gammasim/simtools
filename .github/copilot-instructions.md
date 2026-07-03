@@ -269,7 +269,7 @@ make linkcheck              # Check links
 
 **Changelog:**
 - Add fragments to `docs/changes/<pr-number>.<type>.md` (types: feature, bugfix, api, doc, maintenance, model).
-- Changelogs should not exceed 1 line.
+- Short concise description; few lines only.
 - Use pull request IDs (not issue IDs) as the fragment number.
 
 **API Reference:**
