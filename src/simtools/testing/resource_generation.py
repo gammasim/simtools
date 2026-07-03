@@ -124,17 +124,18 @@ def run_configured_applications(
 
 def _get_selected_config_files(config_dir, config_file=None):
     """Return the workflow config files to execute."""
-    config_dir = Path(config_dir).resolve()
-    available_configs = sorted(path.resolve() for path in config_dir.rglob("*.config.yml"))
+    config_dir = Path(config_dir)
+    available_configs = sorted(config_dir.rglob("*.config.yml"))
 
     if config_file is None:
         return available_configs
 
+    resolved_map = {path.resolve(): path for path in available_configs}
     requested_path = Path(config_file)
     for candidate in (requested_path, config_dir / requested_path):
         resolved_candidate = candidate.resolve()
-        if resolved_candidate in available_configs:
-            return [resolved_candidate]
+        if resolved_candidate in resolved_map:
+            return [resolved_map[resolved_candidate]]
 
     raise FileNotFoundError(
         f"Selected workflow config does not exist in {config_dir}: {requested_path}"
