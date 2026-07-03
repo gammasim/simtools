@@ -256,6 +256,30 @@ def test_get_triggered_shower_data_no_matches(mock_hdf5_file, caplog):
         assert "Found 0 matches" in caplog.text
 
 
+def test_get_triggered_shower_data_numpy_matching_preserves_order_and_duplicates(
+    mock_hdf5_file, caplog
+):
+    """NumPy matching keeps trigger order and rejects ambiguous shower keys."""
+    reader = EventDataReader(mock_hdf5_file)
+    _, shower_data, _, _ = reader.read_event_data(mock_hdf5_file)
+
+    for attribute, values in vars(shower_data).items():
+        if not attribute.endswith("_unit") and isinstance(values, np.ndarray):
+            setattr(shower_data, attribute, np.concatenate([values, values[:1]]))
+
+    with caplog.at_level(logging.WARNING):
+        triggered_shower = reader._get_triggered_shower_data(
+            shower_data,
+            [0, 0, 999],
+            [2, 1, 999],
+            [2, 1, 999],
+        )
+
+    np.testing.assert_array_equal(triggered_shower.shower_id, np.array([2]))
+    assert "Found multiple matches for shower 1 event 1 file 0" in caplog.text
+    assert "Found 0 matches for shower 999 event 999 file 999" in caplog.text
+
+
 def test_read_event_data_returns_expected_types_and_values(mock_hdf5_file):
     """Test that read_event_data returns expected types and values."""
     reader = EventDataReader(mock_hdf5_file)
