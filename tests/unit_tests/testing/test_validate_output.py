@@ -514,12 +514,8 @@ def test_validate_application_output_with_file_type(
 
 
 def test_compare_simtel_cfg_files(tmp_test_directory):
-    file1 = Path(
-        f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg"
-    )
-    file2 = Path(
-        f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg"
-    )
+    file1 = Path(f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/6.0.2/CTAO-LSTN-01.cfg")
+    file2 = Path(f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/6.0.2/CTAO-LSTN-01.cfg")
 
     assert validate_output._compare_simtel_cfg_files(file1, file2)
 
@@ -542,6 +538,9 @@ def test_compare_simtel_cfg_files(tmp_test_directory):
 
 def test_validate_simtel_cfg_files(mocker, test_path):
     """Test validation of simtel cfg files."""
+    mock_run_number = mocker.patch(
+        "simtools.testing.validate_output.file_info.get_corsika_run_number", return_value=7
+    )
     mock_compare = mocker.patch(
         "simtools.testing.validate_output._compare_simtel_cfg_files", return_value=True
     )
@@ -550,12 +549,16 @@ def test_validate_simtel_cfg_files(mocker, test_path):
             "output_path": PATH_TO_OUTPUT,
             "model_version": "3.4.5",
             "label": "label",
+            "run_number": 42,
+            "run_number_offset": 1,
+            "corsika_file": test_path,
         },
         "integration_tests": [{"test_simtel_cfg_files": test_path}],
     }
     validate_output._validate_simtel_cfg_files(config, test_path)
 
-    mock_compare.assert_called()
+    mock_run_number.assert_called_once_with(test_path)
+    assert mock_compare.call_args.args[1].parent == Path(PATH_TO_OUTPUT) / "model/run000007/3.4.5"
 
 
 def test_compare_value_from_parameter_dict():

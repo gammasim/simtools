@@ -259,13 +259,15 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
 
 
 def test_initialize_array_models_with_single_version(
-    shower_simulator, model_version, mock_array_model
+    shower_simulator, model_version, mock_array_model, mocker
 ):
     """Test array models initialization with a single model version."""
+    array_model_cls = mocker.patch("simtools.simulator.ArrayModel", return_value=mock_array_model)
     array_models, corsika_configurations = shower_simulator._initialize_array_models()
     assert len(array_models) == 1
     assert array_models[0] == mock_array_model
     assert corsika_configurations is not None
+    assert array_model_cls.call_args.kwargs["model_directory_subdir"] == "run000001"
 
 
 def test_initialize_from_tool_configuration_with_corsika_file(shower_simulator, mocker):
