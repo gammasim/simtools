@@ -17,7 +17,7 @@ applications:
     model_version: 6.0.2
     showers_per_run: 5
     output_path: simtools-output
-    pack_for_grid_register: simtools-grid-output
+    grid_output_path: simtools-grid-output
     primary: proton
     run_number: 1
     sim_telarray_seed: [1745, 290]
@@ -39,8 +39,10 @@ applications:
       "5.0.0": ${generated:sim_telarray_configurations/5.0.0/CTA-alpha-North_test.cfg}
       "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTA-alpha-North_test.cfg}
   - test_output_files:
-    - file: proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_test.log_hist.tar.gz
-      path_descriptor: pack_for_grid_register
+    - file: proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_test.simtel.log.gz
+      path_descriptor: grid_output_path
+    - file: proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_test.hdata.zst
+      path_descriptor: grid_output_path
     - expected_sim_telarray_output:
         pe_sum:
         - 20
@@ -52,7 +54,7 @@ applications:
         - 0
         - 50
       file: proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_test.simtel.zst
-      path_descriptor: pack_for_grid_register
+      path_descriptor: grid_output_path
   test_name: proton_20_deg_north_check_output
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
