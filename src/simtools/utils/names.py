@@ -757,9 +757,6 @@ def sim_telarray_config_file_name(site, array_name=None, telescope_model_name=No
     str
         Configuration file name.
     """
-    if bool(array_name) == bool(telescope_model_name):
-        raise ValueError("Provide exactly one of array_name or telescope_model_name.")
-
     name = "CTAO"
     if array_name:
         name += f"-{site}-{array_name}"
