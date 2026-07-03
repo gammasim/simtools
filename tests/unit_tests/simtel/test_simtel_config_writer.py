@@ -428,6 +428,19 @@ def test_get_sim_telarray_metadata_without_model_parameters(simtel_config_writer
         simtel_config_writer._get_sim_telarray_metadata("unknown", None, None)
 
 
+def test_get_sim_telarray_metadata_includes_falsey_additional_metadata(simtel_config_writer):
+    metadata = simtel_config_writer._get_sim_telarray_metadata(
+        "site",
+        None,
+        None,
+        {"primary": "gamma", "azimuth_angle": 0.0, "ha_angle": 0.0},
+    )
+
+    assert "metaparam global set primary=gamma" in metadata
+    assert "metaparam global set azimuth_angle=0.0" in metadata
+    assert "metaparam global set ha_angle=0.0" in metadata
+
+
 def test_write_dummy_telescope_configuration_file(
     simtel_config_writer, io_handler, tmp_test_directory, file_has_text
 ):
