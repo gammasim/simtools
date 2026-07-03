@@ -559,7 +559,7 @@ class Simulator:
             max_workers=max_workers,
         )
 
-    def pack_for_register(self, directory_for_grid_upload=None):
+    def pack_for_register(self, directory_for_grid_upload=None, include_histogram_files=False):
         """
         Pack simulation output files for registering on the grid.
 
@@ -569,6 +569,8 @@ class Simulator:
         ----------
         directory_for_grid_upload: str
             Directory for the tarball with output files.
+        include_histogram_files: bool
+            Include histogram files in the tarball with log and model files.
 
         """
         self.logger.info(
@@ -604,11 +606,10 @@ class Simulator:
             tar_path = directory_for_grid_upload / tar_name
 
             files_to_tar = (
-                model_logs
-                + [f for f in histogram_files if model_version in str(f)]
-                + corsika_log_files
-                + general.ensure_list(model.pack_model_files())
+                model_logs + corsika_log_files + general.ensure_list(model.pack_model_files())
             )
+            if include_histogram_files:
+                files_to_tar += [f for f in histogram_files if model_version in str(f)]
             # simtools log file duplicated for each model version
             if simtools_log_file and Path(simtools_log_file).exists():
                 files_to_tar.append(str(simtools_log_file))

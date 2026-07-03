@@ -258,6 +258,37 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
     )
 
 
+def test_pack_for_register_includes_histograms_only_when_requested(
+    array_simulator, mocker, model_version, tmp_test_directory
+):
+    files_by_type = {
+        "sim_telarray_output": [f"output_file_{model_version}_simtel.zst"],
+        "sim_telarray_log": [f"log_file_{model_version}_simtel.log.gz"],
+        "sim_telarray_histogram": [f"hist_file_{model_version}_hist_log.zst"],
+        "corsika_log": [],
+        "sim_telarray_event_data": [],
+    }
+    mocker.patch.object(
+        array_simulator,
+        "get_files",
+        side_effect=lambda file_type: files_by_type.get(file_type, []),
+    )
+    mocker.patch("shutil.move")
+    mocker.patch("pathlib.Path.exists", return_value=False)
+    mock_pack_tar_file = mocker.patch("simtools.utils.general.pack_tar_file")
+
+    directory_for_grid_upload = tmp_test_directory / "directory_for_grid_upload"
+
+    array_simulator.pack_for_register(str(directory_for_grid_upload))
+    first_files_to_tar = mock_pack_tar_file.call_args.args[1]
+    assert files_by_type["sim_telarray_histogram"][0] not in first_files_to_tar
+
+    mock_pack_tar_file.reset_mock()
+    array_simulator.pack_for_register(str(directory_for_grid_upload), include_histogram_files=True)
+    second_files_to_tar = mock_pack_tar_file.call_args.args[1]
+    assert files_by_type["sim_telarray_histogram"][0] in second_files_to_tar
+
+
 def test_initialize_array_models_with_single_version(
     shower_simulator, model_version, mock_array_model
 ):
