@@ -448,11 +448,15 @@ def test_build_observing_location_uses_site_model(mock_site_model):
 
 
 @patch("simtools.production_configuration.simulation_jobs.SiteModel")
+@patch("simtools.production_configuration.simulation_jobs.build_observing_location")
 @patch("simtools.production_configuration.simulation_jobs.ProductionGridEngine")
 def test_build_production_grid_engine_resolves_layout_name(
     mock_production_grid_engine,
+    mock_build_observing_location,
     mock_site_model,
 ):
+    location = EarthLocation(lat=1 * u.deg, lon=2 * u.deg, height=3 * u.m)
+    mock_build_observing_location.return_value = location
     mock_site_model.return_value.get_nsb_integrated_flux.return_value = 0.42
     args_dict = {
         "site": "North",
@@ -485,11 +489,12 @@ def test_build_production_grid_engine_resolves_layout_name(
             },
         },
         coordinate_system="horizontal",
-        observing_location=None,
+        observing_location=location,
         lookup_table="limits.ecsv",
         array_layout_name="beta",
         lookup_nsb_rate=0.42,
     )
+    mock_build_observing_location.assert_called_once_with(site="North", model_version="7.0.0")
     mock_site_model.assert_called_once_with(model_version="7.0.0", site="North")
 
 

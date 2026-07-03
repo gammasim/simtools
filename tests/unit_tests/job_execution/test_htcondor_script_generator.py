@@ -187,8 +187,7 @@ def test_get_submit_script_includes_save_file_lists_when_requested(args_dict):
 
     generated_script = _get_submit_script(args_dict)
 
-    # Current production code doesn't include --save_file_lists flag
-    # Updated test to match current production code behavior
+    assert "--save_file_lists" in generated_script
     assert "--save_reduced_event_lists" in generated_script
     assert "--output_path /tmp/simtools-output" in generated_script
 

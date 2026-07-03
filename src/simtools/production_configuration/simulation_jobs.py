@@ -387,15 +387,16 @@ def build_production_grid_engine(args_dict, array_layout_name=None, model_versio
     resolved_model_version = model_version or resolve_single_model_version(
         args_dict.get("model_version")
     )
-    if coordinate_system == "ha_dec":
+    observing_location = None
+    if args_dict.get("site") and resolved_model_version:
         observing_location = build_observing_location(
             site=args_dict["site"],
             model_version=resolved_model_version,
         )
-    elif coordinate_system == "horizontal":
-        coordinate_system = "horizontal"
-        observing_location = None
-    else:
+    if coordinate_system == "ha_dec":
+        if observing_location is None:
+            raise ValueError("site is required when using HA/Dec axes.")
+    elif coordinate_system != "horizontal":
         raise ValueError("Must provide either both azimuth/zenith or both ha/dec axis definitions.")
     resolved_layout_name = array_layout_name or resolve_array_layout_name(
         args_dict.get("array_layout_name"),
