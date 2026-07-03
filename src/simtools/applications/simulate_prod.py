@@ -39,8 +39,8 @@ r"""
         It allows the transformation system to keep using sequential run numbers without repetition.
     run (int, required)
         Run number (actual run number will be 'start_run' + 'run').
-    pack_for_grid_register (str, optional)
-        Set whether to prepare a tarball for registering the output files on the grid.
+    grid_output_path (str, optional)
+        Set whether to prepare output files for registering on the grid.
         The files are written to the specified directory.
     log_level (str, optional)
         Log level to print.
@@ -73,18 +73,11 @@ def _add_arguments(parser):
         required=False,
     )
     parser.add_argument(
-        "--pack_for_grid_register",
-        help="Directory for a tarball for registering the output files on the grid.",
+        "--grid_output_path",
+        help="Directory for output files for registering on the grid.",
         type=str,
         required=False,
         default=None,
-    )
-    parser.add_argument(
-        "--pack_for_grid_register_hdata",
-        help="Include histogram files in the tarball for registering the output files on the grid.",
-        action="store_true",
-        required=False,
-        default=False,
     )
     parser.add_argument(
         "--save_file_lists",
@@ -172,11 +165,8 @@ def main():
     if app_context.args["save_file_lists"]:
         simulator.save_file_lists()
 
-    if app_context.args.get("pack_for_grid_register"):
-        simulator.pack_for_register(
-            app_context.args["pack_for_grid_register"],
-            app_context.args.get("pack_for_grid_register_hdata", False),
-        )
+    if app_context.args.get("grid_output_path"):
+        simulator.pack_for_register(app_context.args["grid_output_path"])
 
 
 if __name__ == "__main__":

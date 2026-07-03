@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 import copy
+import gzip
 import logging
 import shutil
-import tarfile
 from pathlib import Path
 from unittest import mock
 from unittest.mock import call
@@ -229,43 +229,26 @@ def test_get_files_returns_empty_list_for_unknown_type(array_simulator):
 
 
 def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_test_directory):
+    source_dir = Path(str(tmp_test_directory)) / "source"
+    source_dir.mkdir(parents=True, exist_ok=True)
+    output_file = source_dir / f"output_file_{model_version}_simtel.zst"
+    output_file.write_text("output", encoding="utf-8")
+    log_file = source_dir / f"log_file_{model_version}_simtel.log.gz"
+    log_file.write_text("log", encoding="utf-8")
+    histogram_file = source_dir / f"hist_file_{model_version}_hist_log.zst"
+    histogram_file.write_text("hist", encoding="utf-8")
+    corsika_log_file = source_dir / f"corsika_{model_version}.log.gz"
+    corsika_log_file.write_text("corsika", encoding="utf-8")
+    model_archive = source_dir / f"model_files_{model_version}.tar.gz"
+    model_archive.write_text("model", encoding="utf-8")
+    simtools_log_file = source_dir / "simtools.log"
+    simtools_log_file.write_text("simtools", encoding="utf-8")
+
     files_by_type = {
-        "sim_telarray_output": [f"output_file_{model_version}_simtel.zst"],
-        "sim_telarray_log": Path(f"log_file_{model_version}_simtel.log.gz"),
-        "sim_telarray_histogram": [f"hist_file_{model_version}_hist_log.zst"],
-    }
-    mocker.patch.object(
-        array_simulator,
-        "get_files",
-        side_effect=lambda file_type: files_by_type.get(file_type, []),
-    )
-    mocker.patch("shutil.move")
-    mocker.patch("tarfile.open")  # NOSONAR
-    mocker.patch("pathlib.Path.exists", return_value=True)
-    mocker.patch("pathlib.Path.is_file", return_value=True)
-
-    directory_for_grid_upload = tmp_test_directory / "directory_for_grid_upload"
-    with caplog.at_level(logging.INFO):
-        array_simulator.pack_for_register(str(directory_for_grid_upload))
-
-    assert "Overwriting existing file" in caplog.text
-    assert "Packing output files for registering on the grid" in caplog.text
-    assert "Grid output files grid placed in" in caplog.text
-    tarfile.open.assert_called_once()  # NOSONAR
-    shutil.move.assert_any_call(
-        f"output_file_{model_version}_simtel.zst",
-        directory_for_grid_upload / Path(f"output_file_{model_version}_simtel.zst"),
-    )
-
-
-def test_pack_for_register_includes_histograms_only_when_requested(
-    array_simulator, mocker, model_version, tmp_test_directory
-):
-    files_by_type = {
-        "sim_telarray_output": [f"output_file_{model_version}_simtel.zst"],
-        "sim_telarray_log": [f"log_file_{model_version}_simtel.log.gz"],
-        "sim_telarray_histogram": [f"hist_file_{model_version}_hist_log.zst"],
-        "corsika_log": [],
+        "sim_telarray_output": [str(output_file)],
+        "sim_telarray_log": [str(log_file)],
+        "sim_telarray_histogram": [str(histogram_file)],
+        "corsika_log": [str(corsika_log_file)],
         "sim_telarray_event_data": [],
     }
     mocker.patch.object(
@@ -273,20 +256,28 @@ def test_pack_for_register_includes_histograms_only_when_requested(
         "get_files",
         side_effect=lambda file_type: files_by_type.get(file_type, []),
     )
-    mocker.patch("shutil.move")
-    mocker.patch("pathlib.Path.exists", return_value=False)
-    mock_pack_tar_file = mocker.patch("simtools.utils.general.pack_tar_file")
+    array_simulator.array_models = [mocker.Mock(model_version=model_version)]
+    array_simulator.array_models[0].pack_model_files.return_value = str(model_archive)
+    mocker.patch(
+        "simtools.utils.general.get_simtools_log_file", return_value=str(simtools_log_file)
+    )
 
     directory_for_grid_upload = tmp_test_directory / "directory_for_grid_upload"
+    with caplog.at_level(logging.INFO):
+        array_simulator.pack_for_register(str(directory_for_grid_upload))
 
-    array_simulator.pack_for_register(str(directory_for_grid_upload))
-    first_files_to_tar = mock_pack_tar_file.call_args.args[1]
-    assert files_by_type["sim_telarray_histogram"][0] not in first_files_to_tar
-
-    mock_pack_tar_file.reset_mock()
-    array_simulator.pack_for_register(str(directory_for_grid_upload), include_histogram_files=True)
-    second_files_to_tar = mock_pack_tar_file.call_args.args[1]
-    assert files_by_type["sim_telarray_histogram"][0] in second_files_to_tar
+    assert "Packing output files for registering on the grid" in caplog.text
+    assert "Grid output files grid placed in" in caplog.text
+    assert (directory_for_grid_upload / log_file.name).read_text(encoding="utf-8") == "log"
+    assert (directory_for_grid_upload / histogram_file.name).read_text(encoding="utf-8") == "hist"
+    assert (directory_for_grid_upload / corsika_log_file.name).read_text(
+        encoding="utf-8"
+    ) == "corsika"
+    assert (directory_for_grid_upload / model_archive.name).read_text(encoding="utf-8") == "model"
+    assert not output_file.exists()
+    assert (directory_for_grid_upload / output_file.name).read_text(encoding="utf-8") == "output"
+    with gzip.open(directory_for_grid_upload / "simtools.log.gz", "rt", encoding="utf-8") as handle:
+        assert handle.read() == "simtools"
 
 
 def test_initialize_array_models_with_single_version(
@@ -398,9 +389,10 @@ def test_pack_for_register_with_multiple_versions(
 
     mocker.patch.object(local_shower_array_simulator, "get_files", side_effect=mock_get_files)
     mocker.patch("shutil.move")
+    mocker.patch("shutil.copy2")
     mocker.patch("pathlib.Path.is_file", return_value=True)
     mocker.patch("pathlib.Path.exists", return_value=True)
-    mocker.patch("simtools.utils.general.pack_tar_file")
+    mocker.patch("simtools.utils.general.get_simtools_log_file", return_value=None)
 
     directory_for_grid_upload = tmp_test_directory / "directory_for_grid_upload"
     with caplog.at_level(logging.INFO):
@@ -414,6 +406,10 @@ def test_pack_for_register_with_multiple_versions(
         shutil.move.assert_any_call(
             output_file,
             directory_for_grid_upload / Path(output_file),
+        )
+        shutil.copy2.assert_any_call(
+            file_patterns["log"].format(version),
+            directory_for_grid_upload / Path(file_patterns["log"].format(version)),
         )
 
 

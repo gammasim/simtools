@@ -568,10 +568,10 @@ def test_run_applications_copies_collection_files(monkeypatch, tmp_test_director
     assert copied_file.read_text(encoding="utf-8") == "test-data"
 
 
-def test_run_applications_copies_collection_files_from_pack_for_grid_register(
+def test_run_applications_copies_collection_files_from_grid_output_path(
     monkeypatch, tmp_test_directory
 ):
-    """Copy collection files from pack_for_grid_register when not in output_path."""
+    """Copy collection files from grid_output_path when not in output_path."""
     tmp_path = Path(str(tmp_test_directory))
     source_output = tmp_path / "app_output"
     source_output.mkdir(parents=True, exist_ok=True)
@@ -589,7 +589,7 @@ def test_run_applications_copies_collection_files_from_pack_for_grid_register(
             "configuration": {
                 "activity_id": "cfg-id-1",
                 "output_path": str(source_output),
-                "pack_for_grid_register": str(grid_output),
+                "grid_output_path": str(grid_output),
             },
         }
     ]
@@ -599,7 +599,7 @@ def test_run_applications_copies_collection_files_from_pack_for_grid_register(
         tmp_path / "simtools.log",
         {
             "output_path": str(collection_output),
-            "source_directory": "pack_for_grid_register",
+            "source_directory": "grid_output_path",
             "files": ["result.simtel.zst"],
         },
     )
@@ -626,13 +626,13 @@ def test_copy_collection_files_uses_source_directory_list(tmp_test_directory):
         {
             "configuration": {
                 "output_path": str(source_output),
-                "pack_for_grid_register": str(grid_output),
+                "grid_output_path": str(grid_output),
             }
         }
     ]
     collection_config = {
         "output_path": str(collection_output),
-        "source_directory": ["output_path", "pack_for_grid_register"],
+        "source_directory": ["output_path", "grid_output_path"],
         "files": ["result.dat", "result.simtel.zst"],
     }
 

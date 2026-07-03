@@ -26,7 +26,6 @@ def test_add_arguments_job_grid_row_defaults_to_one():
 
     assert args.job_grid_file is None
     assert args.job_grid_row == 1
-    assert args.pack_for_grid_register_hdata is False
 
 
 @patch("simtools.applications.simulate_prod.Simulator")
@@ -39,8 +38,7 @@ def test_main_calls_build_application_with_job_grid_override_flag(
         "label": "test",
         "save_reduced_event_lists": False,
         "save_file_lists": False,
-        "pack_for_grid_register": None,
-        "pack_for_grid_register_hdata": False,
+        "grid_output_path": None,
     }
     mock_build_app.return_value = mock_context
     mock_simulator_class.return_value = MagicMock()
@@ -60,8 +58,7 @@ def test_main_runs_simulator_and_reports(mock_build_app, mock_simulator_class):
         "label": "myprod",
         "save_reduced_event_lists": False,
         "save_file_lists": False,
-        "pack_for_grid_register": None,
-        "pack_for_grid_register_hdata": False,
+        "grid_output_path": None,
     }
     mock_build_app.return_value = mock_context
     mock_simulator = MagicMock()
@@ -73,25 +70,3 @@ def test_main_runs_simulator_and_reports(mock_build_app, mock_simulator_class):
     mock_simulator.simulate.assert_called_once()
     mock_simulator.validate_simulations.assert_called_once()
     mock_simulator.report.assert_called_once()
-
-
-@patch("simtools.applications.simulate_prod.Simulator")
-@patch("simtools.applications.simulate_prod.build_application")
-def test_main_passes_pack_for_grid_register_hdata_to_simulator(
-    mock_build_app, mock_simulator_class
-):
-    mock_context = MagicMock()
-    mock_context.args = {
-        "label": "myprod",
-        "save_reduced_event_lists": False,
-        "save_file_lists": False,
-        "pack_for_grid_register": "/data_directory/grid",
-        "pack_for_grid_register_hdata": True,
-    }
-    mock_build_app.return_value = mock_context
-    mock_simulator = MagicMock()
-    mock_simulator_class.return_value = mock_simulator
-
-    app.main()
-
-    mock_simulator.pack_for_register.assert_called_once_with("/data_directory/grid", True)
