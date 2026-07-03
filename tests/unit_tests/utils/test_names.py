@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
 from simtools.utils import names
 
 logging.getLogger().setLevel(logging.DEBUG)
@@ -370,54 +369,14 @@ def test_generate_file_name_camera_efficiency():
     )
 
 
-def test_simtel_telescope_config_file_name():
+def test_simtel_config_file_name():
     assert (
-        names.simtel_config_file_name(
-            "South", telescope_model_name="LSTS-01", label=None, extra_label=None
-        )
-        == "CTA-South-LSTS-01.cfg"
+        names.sim_telarray_config_file_name("South", telescope_model_name="LSTS-01")
+        == "CTAO-LSTS-01.cfg"
     )
     assert (
-        names.simtel_config_file_name(
-            "South", telescope_model_name="LSTS-01", label="A", extra_label=None
-        )
-        == "CTA-South-LSTS-01_A.cfg"
-    )
-    assert (
-        names.simtel_config_file_name(
-            "South", telescope_model_name="LSTS-01", label="A", extra_label="B"
-        )
-        == "CTA-South-LSTS-01_A_B.cfg"
-    )
-
-
-def test_simtel_telescope_config_file_name_uses_uuid_suffix_when_too_long():
-    file_name = names.simtel_config_file_name(
-        "South",
-        telescope_model_name="LSTS-01-" + "x" * 120,
-        label="very-long-label-" + "y" * 80,
-        extra_label="extra-long-label-" + "z" * 80,
-    )
-
-    assert len(file_name) <= SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
-    assert file_name.startswith("CTA-South-")
-    assert file_name.endswith(".cfg")
-    assert "very-long-label" not in file_name
-    assert "extra-long-label" not in file_name
-
-    token = file_name.rsplit("_", 1)[1].removesuffix(".cfg")
-    assert len(token) == 8
-    assert all(character in "0123456789abcdef" for character in token)
-
-
-def test_sim_telarray_config_file_name():
-    assert (
-        names.simtel_config_file_name(array_name="4LSTs", site="South", label=None)
-        == "CTA-4LSTs-South.cfg"
-    )
-    assert (
-        names.simtel_config_file_name(array_name="4LSTs", site="South", label="A")
-        == "CTA-4LSTs-South_A.cfg"
+        names.sim_telarray_config_file_name(array_name="4LSTs", site="South")
+        == "CTAO-South-4LSTs.cfg"
     )
 
 

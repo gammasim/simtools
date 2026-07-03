@@ -81,7 +81,7 @@ def test_get_telescope_position_parameter(array_model_north):
 
 def test_get_config_file(array_model_north):
     am = array_model_north
-    assert am.config_file_path.name == "CTA-test_layout-North_test-lst-array.cfg"
+    assert am.config_file_path.name == "CTAO-North-test_layout.cfg"
 
 
 def test_get_config_directory(array_model_north):

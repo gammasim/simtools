@@ -143,14 +143,11 @@ class ArrayModel:
         Path
             Path of the exported config file for sim_telarray.
         """
-        if self._config_file_path is None:
-            config_file_name = names.simtel_config_file_name(
-                array_name=self.layout_name,
-                site=self.site_model.site,
-                label=self.label,
+        return self._config_file_path or self.get_config_directory().joinpath(
+            names.sim_telarray_config_file_name(
+                array_name=self.layout_name, site=self.site_model.site
             )
-            self._config_file_path = self.get_config_directory().joinpath(config_file_name)
-        return self._config_file_path
+        )
 
     @property
     def number_of_telescopes(self):
