@@ -273,7 +273,9 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
     with gzip.open(directory_for_grid_upload / log_file.name, "rt", encoding="utf-8") as handle:
         assert handle.read() == "log"
     assert (directory_for_grid_upload / histogram_file.name).read_text(encoding="utf-8") == "hist"
-    with gzip.open(directory_for_grid_upload / corsika_log_file.name, "rt", encoding="utf-8") as handle:
+    with gzip.open(
+        directory_for_grid_upload / corsika_log_file.name, "rt", encoding="utf-8"
+    ) as handle:
         assert handle.read() == "corsika"
     assert (directory_for_grid_upload / model_archive.name).read_text(encoding="utf-8") == "model"
     assert not output_file.exists()
