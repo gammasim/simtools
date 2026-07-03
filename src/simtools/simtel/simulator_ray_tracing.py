@@ -108,7 +108,7 @@ class SimulatorRayTracing(SimtelRunner):
             self.__dict__["_" + base_name + "_file"] = file
 
         if not file.exists() or force_simulate:
-            config_file_path = self.telescope_model.get_config_file_path(label=self.label)
+            config_file_path = self.telescope_model.config_file_path
             # Adding header to photon list file.
             with self._photons_file.open("w", encoding="utf-8") as file:
                 file.write(f"#{50 * '='}\n")
@@ -147,7 +147,7 @@ class SimulatorRayTracing(SimtelRunner):
             label=self.label,
         )
 
-        config_file_path = self.telescope_model.get_config_file_path(label=self.label)
+        config_file_path = self.telescope_model.config_file_path
 
         if self.config.single_mirror_mode:
             # Note: no mirror length defined for dual-mirror telescopes
