@@ -89,9 +89,8 @@ def run_configured_applications(
     log_dir : str or pathlib.Path
         Destination directory for one log file per workflow.
     config_file : str or pathlib.Path or None, optional
-        Run only the selected workflow file. Relative paths are resolved against
-        ``config_dir``. A plain file name is accepted when it matches exactly one
-        workflow under ``config_dir``.
+        Run only the selected workflow file. Relative paths are resolved either
+        from the working directory or against ``config_dir``.
     ignore_runtime_environment : bool, optional
         Run applications in the current environment instead of a configured runtime.
     overwrite_collection_files : bool, optional
@@ -132,32 +131,10 @@ def _get_selected_config_files(config_dir, config_file=None):
         return available_configs
 
     requested_path = Path(config_file)
-    if requested_path.is_absolute():
-        resolved_requested_path = requested_path.resolve()
-        if resolved_requested_path in available_configs:
-            return [resolved_requested_path]
-        raise FileNotFoundError(
-            f"Selected workflow config does not exist in {config_dir}: {requested_path}"
-        )
-
-    exact_matches = []
-    try:
-        exact_matches = [
-            path for path in available_configs if path.relative_to(config_dir) == requested_path
-        ]
-    except ValueError:
-        exact_matches = []
-    if exact_matches:
-        return exact_matches
-
-    name_matches = [path for path in available_configs if path.name == requested_path.name]
-    if len(name_matches) == 1:
-        return name_matches
-    if len(name_matches) > 1:
-        raise ValueError(
-            f"Selected workflow config is ambiguous: {requested_path}. "
-            "Use a path relative to integration_tests/config_files."
-        )
+    for candidate in (requested_path, config_dir / requested_path):
+        resolved_candidate = candidate.resolve()
+        if resolved_candidate in available_configs:
+            return [resolved_candidate]
 
     raise FileNotFoundError(
         f"Selected workflow config does not exist in {config_dir}: {requested_path}"
