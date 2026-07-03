@@ -234,11 +234,13 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
     output_file = source_dir / f"output_file_{model_version}_simtel.zst"
     output_file.write_text("output", encoding="utf-8")
     log_file = source_dir / f"log_file_{model_version}_simtel.log.gz"
-    log_file.write_text("log", encoding="utf-8")
+    with gzip.open(log_file, "wt", encoding="utf-8") as handle:
+        handle.write("log")
     histogram_file = source_dir / f"hist_file_{model_version}_hist_log.zst"
     histogram_file.write_text("hist", encoding="utf-8")
     corsika_log_file = source_dir / f"corsika_{model_version}.log.gz"
-    corsika_log_file.write_text("corsika", encoding="utf-8")
+    with gzip.open(corsika_log_file, "wt", encoding="utf-8") as handle:
+        handle.write("corsika")
     model_archive = source_dir / f"model_files_{model_version}.tar.gz"
     model_archive.write_text("model", encoding="utf-8")
     simtools_log_file = source_dir / "simtools.log"
