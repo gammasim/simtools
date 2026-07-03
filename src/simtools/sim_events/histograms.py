@@ -63,6 +63,8 @@ class EventDataHistograms:
         self.histograms = {}
         self.file_info = {}
         self._contains_triggered_data = False
+        self._filled_data_sets = 0
+        self._release_event_data_after_fill = False
 
         self.reader = None
         if not self.skip_invalid_event_data_files:
@@ -70,6 +72,30 @@ class EventDataHistograms:
                 self.event_data_files[0], telescope_list=self.telescope_list
             )
             self._contains_triggered_data = self._reader_has_triggered_data(self.reader)
+
+    @classmethod
+    def create_accumulator(cls, array_name=None, telescope_list=None, energy_bins_per_decade=10):
+        """Create an empty histogram accumulator for externally supplied event data.
+
+        This avoids opening the same input files for every telescope configuration when
+        one caller reads the event data once and distributes it to several accumulators.
+        """
+        instance = cls.__new__(cls)
+        instance._logger = logging.getLogger(__name__)
+        instance.event_data_file = None
+        instance.event_data_files = []
+        instance.array_name = array_name
+        instance.energy_bins_per_decade = max(int(energy_bins_per_decade), 1)
+        instance.skip_invalid_event_data_files = False
+        instance.require_triggered_data = True
+        instance.telescope_list = telescope_list
+        instance.histograms = {}
+        instance.file_info = {}
+        instance._contains_triggered_data = True
+        instance._filled_data_sets = 0
+        instance._release_event_data_after_fill = True
+        instance.reader = None
+        return instance
 
     def _normalize_event_data_files(self, event_data_file):
         """Return event-data files as a list of resolved file names."""
@@ -150,6 +176,50 @@ class EventDataHistograms:
         for data in self.histograms.values():
             self._fill_histogram_and_bin_edges(data)
 
+    def _release_event_data(self):
+        """Release raw event references after their histogram counts have been accumulated."""
+        for data in self.histograms.values():
+            data["event_data"] = None if data["1d"] else (None, None)
+
+    def accumulate(self, file_info_table, shower_data, event_data, triggered_data):
+        """Accumulate one already-read event dataset into all configured histograms."""
+        self._update_file_info(file_info_table)
+        current_histograms = self._define_histograms(event_data, triggered_data, shower_data)
+        self._merge_histograms(current_histograms)
+        self._fill_current_histograms()
+        if self._release_event_data_after_fill:
+            self._release_event_data()
+        self._filled_data_sets += 1
+
+    def finalize(self, fill_efficiency_histogram=True):
+        """Finalize accumulated histograms after all event datasets have been added."""
+        if self._filled_data_sets == 0:
+            raise ValueError("No readable event data files or datasets found.")
+        self.print_summary()
+        if fill_efficiency_histogram:
+            self.calculate_efficiency_data()
+        self.calculate_cumulative_data()
+
+    def iter_event_data(self):
+        """Yield reduced event datasets sequentially, keeping input memory bounded."""
+        total_files = len(self.event_data_files)
+        for file_index, (event_data_file, reader) in enumerate(self._iter_readers(), start=1):
+            for data_set in reader.data_sets:
+                try:
+                    values = self._read_data_set(
+                        reader,
+                        event_data_file,
+                        data_set,
+                        file_index=file_index,
+                        total_files=total_files,
+                    )
+                except (OSError, KeyError, ValueError) as exc:
+                    if self.skip_invalid_event_data_files:
+                        self._log_skipped_event_data_file(event_data_file, exc)
+                        break
+                    raise
+                yield reader, values
+
     def fill(self, fill_efficiency_histogram=True):
         """
         Fill histograms with event data.
@@ -165,37 +235,9 @@ class EventDataHistograms:
         fill_efficiency_histogram : bool, optional
             Whether to calculate and fill the efficiency histograms.
         """
-        total_files = len(self.event_data_files)
-        filled_data_sets = 0
-        for file_index, (event_data_file, reader) in enumerate(self._iter_readers(), start=1):
-            for data_set in reader.data_sets:
-                try:
-                    file_info_table, shower_data, event_data, triggered_data = self._read_data_set(
-                        reader,
-                        event_data_file,
-                        data_set,
-                        file_index=file_index,
-                        total_files=total_files,
-                    )
-                except (OSError, KeyError, ValueError) as exc:
-                    if self.skip_invalid_event_data_files:
-                        self._log_skipped_event_data_file(event_data_file, exc)
-                        break
-                    raise
-                self._update_file_info(file_info_table)
-                current_histograms = self._define_histograms(
-                    event_data, triggered_data, shower_data
-                )
-                self._merge_histograms(current_histograms)
-                self._fill_current_histograms()
-                filled_data_sets += 1
-
-        if filled_data_sets == 0:
-            raise ValueError("No readable event data files or datasets found.")
-        self.print_summary()
-        if fill_efficiency_histogram:
-            self.calculate_efficiency_data()
-        self.calculate_cumulative_data()
+        for _, values in self.iter_event_data():
+            self.accumulate(*values)
+        self.finalize(fill_efficiency_histogram=fill_efficiency_histogram)
 
     def _define_histograms(self, event_data, triggered_data, shower_data):
         """
