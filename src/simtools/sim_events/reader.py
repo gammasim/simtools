@@ -245,44 +245,72 @@ class EventDataReader:
         """
         triggered_shower = ShowerEventData()
 
-        shower_key_to_index = {}
-        duplicate_shower_keys = set()
-        for idx, (shower_id, event_id, file_id) in enumerate(
-            zip(shower_data.shower_id, shower_data.event_id, shower_data.file_id)
-        ):
-            key = (int(shower_id), int(event_id), int(file_id))
-            if key in shower_key_to_index:
-                duplicate_shower_keys.add(key)
-                continue
-            shower_key_to_index[key] = idx
+        key_dtype = np.dtype(
+            [("shower_id", np.int64), ("event_id", np.int64), ("file_id", np.int64)]
+        )
 
-        matched_indices = []
-        for tr_shower_id, tr_event_id, tr_file_id in zip(
-            triggered_shower_id, triggered_event_id, triggered_file_id
-        ):
-            trigger_key = (int(tr_shower_id), int(tr_event_id), int(tr_file_id))
-            if trigger_key in duplicate_shower_keys:
+        def build_keys(shower_ids, event_ids, file_ids):
+            keys = np.empty(len(shower_ids), dtype=key_dtype)
+            keys["shower_id"] = np.asarray(shower_ids, dtype=np.int64)
+            keys["event_id"] = np.asarray(event_ids, dtype=np.int64)
+            keys["file_id"] = np.asarray(file_ids, dtype=np.int64)
+            return keys
+
+        shower_keys = build_keys(
+            shower_data.shower_id,
+            shower_data.event_id,
+            shower_data.file_id,
+        )
+        trigger_keys = build_keys(
+            triggered_shower_id,
+            triggered_event_id,
+            triggered_file_id,
+        )
+
+        order = np.argsort(shower_keys, kind="stable")
+        sorted_shower_keys = shower_keys[order]
+        positions = np.searchsorted(sorted_shower_keys, trigger_keys)
+
+        found = positions < len(sorted_shower_keys)
+        if np.any(found):
+            found_indices = np.flatnonzero(found)
+            found[found_indices] = (
+                sorted_shower_keys[positions[found_indices]] == trigger_keys[found_indices]
+            )
+
+        duplicate_sorted = np.zeros(len(sorted_shower_keys), dtype=np.bool_)
+        if len(sorted_shower_keys) > 1:
+            equal_neighbors = sorted_shower_keys[1:] == sorted_shower_keys[:-1]
+            duplicate_sorted[:-1] |= equal_neighbors
+            duplicate_sorted[1:] |= equal_neighbors
+
+        duplicate_match = np.zeros(len(trigger_keys), dtype=np.bool_)
+        if np.any(found):
+            found_indices = np.flatnonzero(found)
+            duplicate_match[found_indices] = duplicate_sorted[positions[found_indices]]
+
+        for trigger_index in np.flatnonzero(~found | duplicate_match):
+            if duplicate_match[trigger_index]:
                 self._logger.warning(
-                    f"Found multiple matches for shower {tr_shower_id}"
-                    f" event {tr_event_id} file {tr_file_id}"
+                    f"Found multiple matches for shower {triggered_shower_id[trigger_index]}"
+                    f" event {triggered_event_id[trigger_index]}"
+                    f" file {triggered_file_id[trigger_index]}"
                 )
-                continue
-
-            matched_idx = shower_key_to_index.get(trigger_key)
-            if matched_idx is None:
+            else:
                 self._logger.warning(
-                    f"Found 0 matches for shower {tr_shower_id}"
-                    f" event {tr_event_id} file {tr_file_id}"
+                    f"Found 0 matches for shower {triggered_shower_id[trigger_index]}"
+                    f" event {triggered_event_id[trigger_index]}"
+                    f" file {triggered_file_id[trigger_index]}"
                 )
-                continue
 
-            matched_indices.append(matched_idx)
+        valid_matches = found & ~duplicate_match
+        matched_indices = order[positions[valid_matches]]
 
         for attr in vars(shower_data):
             if not attr.endswith("_unit"):
                 value = getattr(shower_data, attr)
                 if isinstance(value, list | np.ndarray):
-                    setattr(triggered_shower, attr, np.array(value)[matched_indices])
+                    setattr(triggered_shower, attr, np.asarray(value)[matched_indices])
 
         return triggered_shower
 
@@ -365,7 +393,7 @@ class EventDataReader:
         )
 
         if self.telescope_list:
-            triggered_data, triggered_shower = self._filter_by_telescopes(
+            triggered_data, triggered_shower = self.filter_by_telescopes(
                 triggered_data, triggered_shower
             )
 
@@ -405,9 +433,26 @@ class EventDataReader:
                     f"{', '.join(invalid_columns)}."
                 )
 
-    def _filter_by_telescopes(self, triggered_data, triggered_shower):
-        """Filter trigger data and triggered shower data by the specified telescope list."""
-        telescope_set = set(self.telescope_list)
+    def filter_by_telescopes(self, triggered_data, triggered_shower, telescope_list=None):
+        """
+        Filter trigger and shower data by an explicit or reader telescope list.
+
+        Parameters
+        ----------
+        triggered_data : TriggeredEventData
+            Triggered event data to filter.
+        triggered_shower : ShowerEventData
+            Shower data corresponding to the triggered events.
+        telescope_list : list, optional
+            List of telescopes to filter by. If None, uses the reader's telescope list.
+
+        Returns
+        -------
+        tuple
+            A tuple containing the filtered triggered event data and the corresponding
+            triggered shower data.
+        """
+        telescope_set = set(self.telescope_list if telescope_list is None else telescope_list)
         mask = np.fromiter(
             (not telescope_set.isdisjoint(event) for event in triggered_data.telescope_list),
             dtype=np.bool_,
