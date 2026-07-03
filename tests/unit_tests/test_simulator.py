@@ -270,11 +270,11 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
 
     assert "Packing output files for registering on the grid" in caplog.text
     assert "Grid output files grid placed in" in caplog.text
-    assert (directory_for_grid_upload / log_file.name).read_text(encoding="utf-8") == "log"
+    with gzip.open(directory_for_grid_upload / log_file.name, "rt", encoding="utf-8") as handle:
+        assert handle.read() == "log"
     assert (directory_for_grid_upload / histogram_file.name).read_text(encoding="utf-8") == "hist"
-    assert (directory_for_grid_upload / corsika_log_file.name).read_text(
-        encoding="utf-8"
-    ) == "corsika"
+    with gzip.open(directory_for_grid_upload / corsika_log_file.name, "rt", encoding="utf-8") as handle:
+        assert handle.read() == "corsika"
     assert (directory_for_grid_upload / model_archive.name).read_text(encoding="utf-8") == "model"
     assert not output_file.exists()
     assert (directory_for_grid_upload / output_file.name).read_text(encoding="utf-8") == "output"
