@@ -157,9 +157,7 @@ def test_make_run_command(simulator_ray_tracing_sst, model_version):
     command, stdout_file, stderr_file = simulator_ray_tracing_sst.make_run_command()
 
     assert any("bin/sim_telarray" in str(cmd) for cmd in command)
-    assert any(
-        f"model/{model_version}/CTA-South-SSTS-design_{LABEL}.cfg" in str(cmd) for cmd in command
-    )
+    assert any(f"model/{model_version}/CTAO-SSTS-design.cfg" in str(cmd) for cmd in command)
     # Check that the relevant options are present as substrings in the command
     assert any("altitude=2147.0" in str(cmd) for cmd in command)
     assert any("telescope_theta=20.0" in str(cmd) for cmd in command)

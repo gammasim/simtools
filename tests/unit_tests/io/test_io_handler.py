@@ -62,7 +62,7 @@ def test_get_model_configuration_directory(args_dict, io_handler):
     label = "test-io-handler"
 
     # Test directory creation
-    expected_path = Path(f"{args_dict['output_path']}/output/{label}/model/{model_version}")
+    expected_path = Path(f"{args_dict['output_path']}/output/model/{label}/{model_version}")
     assert (
         io_handler.get_model_configuration_directory(sub_dir=label, model_version=model_version)
         == expected_path
