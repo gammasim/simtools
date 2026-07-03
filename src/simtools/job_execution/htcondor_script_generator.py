@@ -302,9 +302,11 @@ def _get_submit_script(args_dict):
             f"--view_cone {view_cone_string}",
             f"--run_number_offset {args_dict.get('run_number_offset', 0)}",
             "--save_reduced_event_lists",
-            "--output_path /tmp/simtools-output",
         ]
     )
+    if args_dict.get("save_file_lists"):
+        command_parts.append("--save_file_lists")
+    command_parts.append("--output_path /tmp/simtools-output")
 
     command_lines = []
     for index, part in enumerate(command_parts):
