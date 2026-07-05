@@ -1,0 +1,194 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/SimTelarrayMetaparameterRegistrySource'
+title: sim_telarray Metaparameter Registry Metaschema
+description: |
+  YAML representation of the sim_telarray metaparameter registry metaschema.
+schema_version: 0.1.0
+schema_name: sim_telarray_metaparameter.metaschema
+type: object
+additionalProperties: false
+
+definitions:
+  SimTelarrayMetaparameterRegistrySource:
+    type: object
+    additionalProperties: false
+    properties:
+      title:
+        type: string
+      schema_version:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_version_field'
+      meta_schema:
+        type: string
+      meta_schema_url:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_url_field'
+      meta_schema_version:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_version_field'
+      name:
+        type: string
+      description:
+        type: string
+      generated_metaparameters:
+        type: object
+        description: Writer-generated sim_telarray metadata fields keyed by emitted name.
+        additionalProperties:
+          $ref: '#/definitions/GeneratedSimTelarrayMetaparameterDefinition'
+      model_parameters:
+        type: object
+        description: |-
+          Model parameter source names keyed by simtools model-parameter name.
+          Full sim_telarray metadata definitions are derived from the referenced
+          model parameter schema plus the optional overlay fields defined here.
+        additionalProperties:
+          $ref: '#/definitions/ModelParameterMetaparameterOverlay'
+    required:
+      - schema_version
+      - meta_schema
+      - meta_schema_version
+      - name
+      - generated_metaparameters
+      - model_parameters
+
+  GeneratedSimTelarrayMetaparameterDefinition:
+    type: object
+    additionalProperties: false
+    properties:
+      scope:
+        type: string
+        enum:
+          - telescope
+          - global
+      mode:
+        type: string
+        enum:
+          - add
+          - set
+          - assign
+      category:
+        type: string
+        enum:
+          - simulation_model
+          - software
+          - run_parameter
+          - site_configuration
+          - array_configuration
+          - provenance
+          - environment
+      source_type:
+        type: string
+        enum:
+          - generated
+      description:
+        type: string
+      unit:
+        anyOf:
+          - type: string
+          - type: "null"
+      value_schema:
+        $ref: '#/definitions/ValueSchema'
+      validation:
+        $ref: '#/definitions/ValidationPolicy'
+      comparison_policy:
+        $ref: '#/definitions/ComparisonPolicy'
+    required:
+      - scope
+      - mode
+      - category
+      - source_type
+      - description
+      - value_schema
+      - validation
+      - comparison_policy
+
+  ModelParameterMetaparameterOverlay:
+    type: object
+    additionalProperties: false
+    properties:
+      category:
+        type: string
+        enum:
+          - simulation_model
+          - software
+          - run_parameter
+          - site_configuration
+          - array_configuration
+          - provenance
+          - environment
+      value_schema:
+        $ref: '#/definitions/ValueSchema'
+      comparison_policy:
+        $ref: '#/definitions/ComparisonPolicy'
+
+  ValueSchema:
+    type: object
+    additionalProperties: false
+    properties:
+      kind:
+        type: string
+        enum:
+          - scalar
+          - file_name
+          - fixed_numeric_tuple
+          - sim_telarray_key_value_string
+      data_type:
+        type: string
+        enum:
+          - string
+          - number
+          - integer
+          - boolean
+      item_type:
+        type: string
+        enum:
+          - string
+          - number
+          - integer
+      length:
+        type: integer
+        minimum: 1
+      regex:
+        type: string
+      allow_empty:
+        type: boolean
+      allow_none_literal:
+        type: boolean
+    required:
+      - kind
+
+  ValidationPolicy:
+    type: object
+    additionalProperties: false
+    properties:
+      source_must_exist:
+        type: boolean
+      mapping_must_match:
+        type: boolean
+      config_value_required:
+        type: boolean
+      emitted_value_must_match:
+        type: boolean
+    required:
+      - source_must_exist
+      - mapping_must_match
+      - config_value_required
+      - emitted_value_must_match
+
+  ComparisonPolicy:
+    type: object
+    additionalProperties: false
+    properties:
+      mode:
+        type: string
+        enum:
+          - exact
+          - numeric_tolerance
+          - unordered_set
+          - ignore
+      absolute_tolerance:
+        type: number
+        minimum: 0.0
+      relative_tolerance:
+        type: number
+        minimum: 0.0
+    required:
+      - mode
