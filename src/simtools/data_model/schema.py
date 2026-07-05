@@ -220,25 +220,15 @@ def _build_sim_telarray_metaparameter_registry(registry_source):
             emitted_name, definition
         )
 
-    described_names = set(registry_source.get("described_metaparameters", {}))
-    for emitted_name, overlay in registry_source.get("described_metaparameters", {}).items():
-        definition = _build_model_parameter_metaparameter_definition(
-            overlay["source_name"], overlay, emitted_name=emitted_name
-        )
-        metaparameters[definition["name"]] = definition
-
     for source_name, model_schema in names.model_parameters().items():
-        if source_name in described_names:
-            continue
         try:
             emitted_name, _ = _get_sim_telarray_emitted_name_and_mode(model_schema)
         except KeyError:
             continue
         if emitted_name in metaparameters:
             continue
-        if emitted_name != source_name:
-            continue
-        definition = _build_model_parameter_metaparameter_definition(source_name, {})
+        overlay = registry_source.get("described_metaparameters", {}).get(emitted_name, {})
+        definition = _build_model_parameter_metaparameter_definition(source_name, overlay)
         metaparameters[definition["name"]] = definition
 
     registry["metaparameters"] = metaparameters
@@ -282,7 +272,11 @@ def _build_model_parameter_metaparameter_definition(source_name, overlay, emitte
     model_schema = get_model_parameter_schema(source_name)
     derived_name, mode = _get_sim_telarray_emitted_name_and_mode(model_schema)
     emitted_name = emitted_name or derived_name
-    value_schema = overlay.get("value_schema") or _derive_sim_telarray_value_schema(model_schema)
+    value_schema = (
+        overlay.get("value_schema")
+        or _get_sim_telarray_output_value_schema(model_schema)
+        or _derive_sim_telarray_value_schema(model_schema)
+    )
 
     return {
         "name": emitted_name,
@@ -308,13 +302,23 @@ def _build_model_parameter_metaparameter_definition(source_name, overlay, emitte
 
 def _get_sim_telarray_emitted_name_and_mode(model_schema):
     """Return emitted sim_telarray metadata name and metadata mode."""
+    software = _get_sim_telarray_software_definition(model_schema)
+    if software.get("set_meta_parameter", False):
+        return software.get("internal_parameter_name", model_schema["name"]), "set"
+    return software.get("internal_parameter_name", model_schema["name"]), "add"
+
+
+def _get_sim_telarray_software_definition(model_schema):
+    """Return the sim_telarray simulation_software definition for a model schema."""
     for software in model_schema.get("simulation_software", []):
-        if software.get("name") != "sim_telarray":
-            continue
-        if software.get("set_meta_parameter", False):
-            return software.get("internal_parameter_name", model_schema["name"]), "set"
-        return software.get("internal_parameter_name", model_schema["name"]), "add"
+        if software.get("name") == "sim_telarray":
+            return software
     raise KeyError(f"Model parameter without sim_telarray mapping: {model_schema['name']}")
+
+
+def _get_sim_telarray_output_value_schema(model_schema):
+    """Return an explicit sim_telarray emitted-value schema when declared."""
+    return _get_sim_telarray_software_definition(model_schema).get("output_value_schema")
 
 
 def _derive_sim_telarray_scope(model_schema):

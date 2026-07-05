@@ -166,6 +166,7 @@ def test_validate_sim_telarray_metaparameter_registry_consistency():
 def test_sim_telarray_metaparameter_registry_uses_simple_name_check_or_description():
     registry_source = ascii_handler.collect_data_from_file(SIM_TELARRAY_METAPARAMETER_REGISTRY)
     described = set(registry_source["described_metaparameters"])
+    model_parameter_names, _ = schema.get_model_parameter_schema_files()
 
     registry = schema.get_sim_telarray_metaparameter_registry()["metaparameters"]
     generated = set(registry_source["generated_metaparameters"])
@@ -174,12 +175,10 @@ def test_sim_telarray_metaparameter_registry_uses_simple_name_check_or_descripti
         if emitted_name in generated:
             continue
         if emitted_name in described:
-            assert (
-                definition["source_name"]
-                == registry_source["described_metaparameters"][emitted_name]["source_name"]
-            )
+            assert registry_source["described_metaparameters"][emitted_name]
             continue
-        assert (MODEL_PARAMETER_SCHEMA_PATH / f"{emitted_name}.schema.yml").exists()
+        assert definition["source_type"] == "model_parameter"
+        assert definition["source_name"] in model_parameter_names
 
 
 def test_sim_telarray_metaparameter_registry_covers_emitted_keys():

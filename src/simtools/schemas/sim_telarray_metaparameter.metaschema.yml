@@ -36,8 +36,8 @@ definitions:
       described_metaparameters:
         type: object
         description: |-
-          Optional descriptions for metaparameters that cannot be resolved by a
-          simple name check against the model-parameter schema directory.
+          Optional overrides for model-derived sim_telarray metaparameters keyed
+          by emitted sim_telarray name.
         additionalProperties:
           $ref: '#/definitions/DescribedSimTelarrayMetaparameter'
     required:
@@ -87,8 +87,6 @@ definitions:
     type: object
     additionalProperties: false
     properties:
-      source_name:
-        type: string
       category:
         type: string
         enum:
@@ -101,8 +99,6 @@ definitions:
           - environment
       value_schema:
         $ref: '#/definitions/ValueSchema'
-    required:
-      - source_name
 
   ValueSchema:
     type: object
