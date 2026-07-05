@@ -1,16 +1,16 @@
 ---
 $schema: http://json-schema.org/draft-06/schema#
-$ref: '#/definitions/SimTelarrayMetaparameterRegistrySource'
-title: sim_telarray Metaparameter Registry Metaschema
+$ref: '#/definitions/SimTelarrayMetaParameterRegistrySource'
+title: sim_telarray Meta-Parameter Registry Metaschema
 description: |
-  YAML representation of the sim_telarray metaparameter registry metaschema.
+  YAML representation of the sim_telarray meta_parameter registry metaschema.
 schema_version: 0.1.0
-schema_name: sim_telarray_metaparameter.metaschema
+schema_name: sim_telarray_meta_parameter.metaschema
 type: object
 additionalProperties: false
 
 definitions:
-  SimTelarrayMetaparameterRegistrySource:
+  SimTelarrayMetaParameterRegistrySource:
     type: object
     additionalProperties: false
     properties:
@@ -28,19 +28,19 @@ definitions:
         type: string
       description:
         type: string
-      generated_metaparameters:
+      generated_meta_parameters:
         type: object
         description: Writer-generated sim_telarray metadata fields keyed by emitted name.
         additionalProperties:
-          $ref: '#/definitions/GeneratedSimTelarrayMetaparameterDefinition'
+          $ref: '#/definitions/GeneratedSimTelarrayMetaParameterDefinition'
     required:
       - schema_version
       - meta_schema
       - meta_schema_version
       - name
-      - generated_metaparameters
+      - generated_meta_parameters
 
-  GeneratedSimTelarrayMetaparameterDefinition:
+  GeneratedSimTelarrayMetaParameterDefinition:
     type: object
     additionalProperties: false
     properties:
