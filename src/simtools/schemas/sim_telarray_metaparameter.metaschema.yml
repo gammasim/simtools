@@ -33,20 +33,12 @@ definitions:
         description: Writer-generated sim_telarray metadata fields keyed by emitted name.
         additionalProperties:
           $ref: '#/definitions/GeneratedSimTelarrayMetaparameterDefinition'
-      described_metaparameters:
-        type: object
-        description: |-
-          Optional overrides for model-derived sim_telarray metaparameters keyed
-          by emitted sim_telarray name.
-        additionalProperties:
-          $ref: '#/definitions/DescribedSimTelarrayMetaparameter'
     required:
       - schema_version
       - meta_schema
       - meta_schema_version
       - name
       - generated_metaparameters
-      - described_metaparameters
 
   GeneratedSimTelarrayMetaparameterDefinition:
     type: object
@@ -82,23 +74,6 @@ definitions:
       - mode
       - category
       - description
-
-  DescribedSimTelarrayMetaparameter:
-    type: object
-    additionalProperties: false
-    properties:
-      category:
-        type: string
-        enum:
-          - simulation_model
-          - software
-          - run_parameter
-          - site_configuration
-          - array_configuration
-          - provenance
-          - environment
-      value_schema:
-        $ref: '#/definitions/ValueSchema'
 
   ValueSchema:
     type: object

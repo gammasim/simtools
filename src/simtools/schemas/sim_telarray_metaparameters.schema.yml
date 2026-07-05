@@ -11,8 +11,6 @@ description: |-
   Generated metadata are described explicitly here.
   Model-parameter-derived metadata are resolved automatically from the
   sim_telarray mapping declared in src/simtools/schemas/model_parameters.
-  described_metaparameters is only for exceptions that need sim_telarray-specific
-  overrides such as a special emitted value format.
 generated_metaparameters:
   array_config_name:
     scope: global
