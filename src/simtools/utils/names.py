@@ -17,7 +17,6 @@ import logging
 import re
 from functools import cache
 from pathlib import Path
-from uuid import uuid4
 
 import yaml
 
@@ -740,56 +739,38 @@ def get_simulation_software_name_from_parameter_name(
     return None
 
 
-def simtel_config_file_name(
-    site,
-    array_name=None,
-    telescope_model_name=None,
-    label=None,
-    extra_label=None,
-):
+def sim_telarray_config_file_name(site, array_name=None, telescope_model_name=None):
     """
-    sim_telarray config file name for a telescope.
+    sim_telarray configuration file name for an array or a telescope.
 
     Parameters
     ----------
     site: str
         South or North.
+    array_name: str
+        Array name (e.g., CTAO-North-4-LSTs-1-MSTs)
     telescope_model_name: str
-        LST-1, MST-FlashCam, ...
-    label: str
-        Instance label.
-    extra_label: str
-        Extra label in case of multiple telescope config files.
+        Telescope name (e.g., LSTN-01, MSTS-05)
 
     Returns
     -------
     str
-        File name.
+        Configuration file name.
     """
-    name = "CTA"
-    name += f"-{array_name}" if array_name is not None else ""
-    name += f"-{site}"
-    name += f"-{telescope_model_name}" if telescope_model_name is not None else ""
-    name += f"_{label}" if label is not None else ""
-    name += f"_{extra_label}" if extra_label is not None else ""
+    name = "CTAO"
+    if array_name:
+        name += f"-{site}-{array_name}"
+    if telescope_model_name:
+        name += f"-{telescope_model_name}"
     name += ".cfg"
 
     # Telescope config files are included by the array config and parsed by sim_telarray
-    # through a fixed-size getword buffer. Keep include targets within that parser limit.
+    # through a fixed-size getword buffer.
     if telescope_model_name is not None and len(name) > SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH:
-        token = uuid4().hex[:8]
-        prefix = "CTA"
-        prefix += f"-{array_name}" if array_name is not None else ""
-        prefix += f"-{site}"
-        suffix = f"_{token}.cfg"
-        telescope_component = f"-{telescope_model_name}"
-
-        available_length = SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH - len(prefix) - len(suffix)
-        if available_length < len(telescope_component):
-            telescope_component = telescope_component[: max(0, available_length)]
-
-        name = f"{prefix}{telescope_component}{suffix}"
-
+        raise ValueError(
+            f"Generated configuration file name {name} exceeds the maximum length of "
+            f"{SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH} characters."
+        )
     return name
 
 
