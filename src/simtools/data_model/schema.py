@@ -209,9 +209,7 @@ def validate_sim_telarray_metaparameter_registry_consistency(registry=None):
 def _build_sim_telarray_metaparameter_registry(registry_source):
     """Build expanded sim_telarray metaparameter registry from source overlays."""
     registry = {
-        key: value
-        for key, value in registry_source.items()
-        if key not in {"generated_metaparameters", "described_metaparameters"}
+        key: value for key, value in registry_source.items() if key != "generated_metaparameters"
     }
     metaparameters = {}
 
@@ -227,8 +225,7 @@ def _build_sim_telarray_metaparameter_registry(registry_source):
             continue
         if emitted_name in metaparameters:
             continue
-        overlay = registry_source.get("described_metaparameters", {}).get(emitted_name, {})
-        definition = _build_model_parameter_metaparameter_definition(source_name, overlay)
+        definition = _build_model_parameter_metaparameter_definition(source_name)
         metaparameters[definition["name"]] = definition
 
     registry["metaparameters"] = metaparameters
@@ -267,23 +264,20 @@ def _build_generated_sim_telarray_metaparameter_definition(emitted_name, definit
     }
 
 
-def _build_model_parameter_metaparameter_definition(source_name, overlay, emitted_name=None):
+def _build_model_parameter_metaparameter_definition(source_name, emitted_name=None):
     """Build one sim_telarray metaparameter definition from a model parameter schema."""
     model_schema = get_model_parameter_schema(source_name)
     derived_name, mode = _get_sim_telarray_emitted_name_and_mode(model_schema)
     emitted_name = emitted_name or derived_name
-    value_schema = (
-        overlay.get("value_schema")
-        or _get_sim_telarray_output_value_schema(model_schema)
-        or _derive_sim_telarray_value_schema(model_schema)
-    )
+    value_schema = _get_sim_telarray_output_value_schema(
+        model_schema
+    ) or _derive_sim_telarray_value_schema(model_schema)
 
     return {
         "name": emitted_name,
         "scope": _derive_sim_telarray_scope(model_schema),
         "mode": mode,
-        "category": overlay.get("category")
-        or _derive_sim_telarray_category(source_name, model_schema),
+        "category": _derive_sim_telarray_category(source_name, model_schema),
         "source_type": "model_parameter",
         "source_name": source_name,
         "description": model_schema.get("short_description") or model_schema.get("description", ""),
@@ -295,8 +289,7 @@ def _build_model_parameter_metaparameter_definition(source_name, overlay, emitte
             "config_value_required": True,
             "emitted_value_must_match": True,
         },
-        "comparison_policy": overlay.get("comparison_policy")
-        or _derive_sim_telarray_comparison_policy(value_schema),
+        "comparison_policy": _derive_sim_telarray_comparison_policy(value_schema),
     }
 
 
