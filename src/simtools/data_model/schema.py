@@ -13,6 +13,8 @@ from simtools.constants import (
     MODEL_PARAMETER_METASCHEMA,
     MODEL_PARAMETER_SCHEMA_PATH,
     SCHEMA_PATH,
+    SIM_TELARRAY_METAPARAMETER_METASCHEMA,
+    SIM_TELARRAY_METAPARAMETER_REGISTRY,
 )
 from simtools.data_model import format_checkers
 from simtools.dependencies import get_software_version
@@ -85,6 +87,273 @@ def get_model_parameter_schema(parameter, schema_version=None):
     """
     schema_file = get_model_parameter_schema_file(parameter)
     return load_schema(schema_file, schema_version=schema_version or "latest")
+
+
+def get_sim_telarray_metaparameter_registry(schema_version=None, validate=True):
+    """
+    Return the sim_telarray metaparameter registry.
+
+    Parameters
+    ----------
+    schema_version: str, optional
+        Registry schema version. If not provided, the latest version is used.
+    validate: bool
+        Validate the registry against its metaschema before returning it.
+
+    Returns
+    -------
+    dict
+        sim_telarray metaparameter registry.
+    """
+    registry_source = load_schema(
+        SIM_TELARRAY_METAPARAMETER_REGISTRY, schema_version=schema_version or "latest"
+    )
+    if validate:
+        validate_dict_using_schema(
+            registry_source,
+            schema_file=SIM_TELARRAY_METAPARAMETER_METASCHEMA,
+            offline=True,
+            ignore_software_version=True,
+        )
+    return _build_sim_telarray_metaparameter_registry(registry_source)
+
+
+def get_sim_telarray_metaparameter_definition(name, schema_version=None):
+    """
+    Return one sim_telarray metaparameter definition by emitted name.
+
+    Parameters
+    ----------
+    name: str
+        Emitted sim_telarray metaparameter name.
+    schema_version: str, optional
+        Registry schema version. If not provided, the latest version is used.
+
+    Returns
+    -------
+    dict
+        sim_telarray metaparameter definition.
+    """
+    registry = get_sim_telarray_metaparameter_registry(schema_version=schema_version)
+    try:
+        return registry["metaparameters"][name]
+    except KeyError as exc:
+        raise KeyError(f"sim_telarray metaparameter definition not found: {name}") from exc
+
+
+def validate_sim_telarray_metaparameter_registry_consistency(registry=None):
+    """
+    Validate consistency of the sim_telarray metaparameter registry.
+
+    Checks that source model parameters exist, generated entries do not set
+    a source name, and emitted names match the configured sim_telarray
+    mapping for model-parameter-derived entries.
+
+    Parameters
+    ----------
+    registry: dict, optional
+        Preloaded sim_telarray metaparameter registry.
+
+    Returns
+    -------
+    dict
+        Validated registry.
+    """
+    registry = registry or get_sim_telarray_metaparameter_registry()
+    model_parameters = names.model_parameters()
+
+    for emitted_name, definition in registry.get("metaparameters", {}).items():
+        if definition.get("name") != emitted_name:
+            raise ValueError(
+                "sim_telarray metaparameter registry key/name mismatch: "
+                f"{emitted_name} != {definition.get('name')}"
+            )
+
+        source_type = definition.get("source_type")
+        source_name = definition.get("source_name")
+        mode = definition.get("mode")
+
+        if source_type == "generated":
+            if source_name is not None:
+                raise ValueError(
+                    f"Generated sim_telarray metaparameter {emitted_name} must not set source_name."
+                )
+            continue
+
+        if source_name not in model_parameters:
+            raise KeyError(
+                f"Source model parameter for sim_telarray metaparameter {emitted_name} "
+                f"not found: {source_name}"
+            )
+
+        if mode == "assign":
+            raise ValueError(
+                f"Model-parameter-derived sim_telarray metaparameter {emitted_name} "
+                "cannot use mode 'assign'."
+            )
+
+        expected_name = names.get_simulation_software_name_from_parameter_name(
+            source_name,
+            software_name="sim_telarray",
+            set_meta_parameter=(mode == "set"),
+        )
+        if expected_name != emitted_name:
+            raise ValueError(
+                "sim_telarray mapping mismatch for source model parameter "
+                f"{source_name}: expected {expected_name}, registry defines {emitted_name}"
+            )
+
+    return registry
+
+
+def _build_sim_telarray_metaparameter_registry(registry_source):
+    """Build expanded sim_telarray metaparameter registry from source overlays."""
+    registry = {
+        key: value for key, value in registry_source.items() if key != "generated_metaparameters"
+    }
+    metaparameters = {}
+
+    for emitted_name, definition in registry_source.get("generated_metaparameters", {}).items():
+        metaparameters[emitted_name] = {"name": emitted_name, **definition}
+
+    for source_name, overlay in registry_source.get("model_parameters", {}).items():
+        definition = _build_model_parameter_metaparameter_definition(source_name, overlay)
+        metaparameters[definition["name"]] = definition
+
+    registry["metaparameters"] = metaparameters
+    return registry
+
+
+def _build_model_parameter_metaparameter_definition(source_name, overlay):
+    """Build one sim_telarray metaparameter definition from a model parameter schema."""
+    model_schema = get_model_parameter_schema(source_name)
+    emitted_name, mode = _get_sim_telarray_emitted_name_and_mode(model_schema)
+    value_schema = overlay.get("value_schema") or _derive_sim_telarray_value_schema(model_schema)
+
+    return {
+        "name": emitted_name,
+        "scope": _derive_sim_telarray_scope(model_schema),
+        "mode": mode,
+        "category": overlay.get("category")
+        or _derive_sim_telarray_category(source_name, model_schema),
+        "source_type": "model_parameter",
+        "source_name": source_name,
+        "description": model_schema.get("short_description") or model_schema.get("description", ""),
+        "unit": _derive_sim_telarray_unit(model_schema),
+        "value_schema": value_schema,
+        "validation": {
+            "source_must_exist": True,
+            "mapping_must_match": True,
+            "config_value_required": True,
+            "emitted_value_must_match": True,
+        },
+        "comparison_policy": overlay.get("comparison_policy")
+        or _derive_sim_telarray_comparison_policy(value_schema),
+    }
+
+
+def _get_sim_telarray_emitted_name_and_mode(model_schema):
+    """Return emitted sim_telarray metadata name and metadata mode."""
+    for software in model_schema.get("simulation_software", []):
+        if software.get("name") != "sim_telarray":
+            continue
+        if software.get("set_meta_parameter", False):
+            return software.get("internal_parameter_name", model_schema["name"]), "set"
+        return software.get("internal_parameter_name", model_schema["name"]), "add"
+    raise KeyError(f"Model parameter without sim_telarray mapping: {model_schema['name']}")
+
+
+def _derive_sim_telarray_scope(model_schema):
+    """Infer sim_telarray metadata scope from instrument class."""
+    if model_schema.get("instrument", {}).get("class") == "Site":
+        return "global"
+    return "telescope"
+
+
+def _derive_sim_telarray_category(source_name, model_schema):
+    """Infer default sim_telarray metadata category from model parameter schema."""
+    if source_name == "array_triggers":
+        return "array_configuration"
+    if model_schema.get("instrument", {}).get("class") == "Site":
+        return "site_configuration"
+    return "simulation_model"
+
+
+def _derive_sim_telarray_unit(model_schema):
+    """Infer a compact unit representation from model parameter schema data."""
+    data = model_schema.get("data", [])
+    if isinstance(data, dict):
+        return value_conversion.normalize_dimensionless_unit(data.get("unit"))
+    if not isinstance(data, list) or len(data) == 0:
+        return None
+    units = [value_conversion.normalize_dimensionless_unit(entry.get("unit")) for entry in data]
+    if len(set(units)) == 1:
+        return units[0]
+    return None
+
+
+def _derive_scalar_data_type(data_type):
+    """Return the sim_telarray scalar data_type string for a model parameter type."""
+    if _is_integer_type(data_type):
+        return "integer"
+    if _is_numeric_type(data_type):
+        return "number"
+    if data_type == "boolean":
+        return "boolean"
+    return "string"
+
+
+def _derive_sim_telarray_value_schema(model_schema):
+    """Infer value schema from model parameter schema structure."""
+    data = model_schema.get("data", [])
+    if isinstance(data, dict):
+        data = [data]
+    if not isinstance(data, list) or len(data) == 0:
+        return {"kind": "scalar", "data_type": "string"}
+
+    if len(data) > 1 and all(_is_numeric_type(entry.get("type")) for entry in data):
+        return {"kind": "fixed_numeric_tuple", "item_type": "number", "length": len(data)}
+
+    datum = data[0]
+    data_type = datum.get("type")
+
+    if data_type == "file":
+        value_schema = {"kind": "file_name"}
+        if datum.get("default") is None:
+            value_schema["allow_none_literal"] = True
+        return value_schema
+
+    return {"kind": "scalar", "data_type": _derive_scalar_data_type(data_type)}
+
+
+def _derive_sim_telarray_comparison_policy(value_schema):
+    """Infer comparison policy from value schema kind."""
+    if value_schema.get("kind") == "fixed_numeric_tuple":
+        return {
+            "mode": "numeric_tolerance",
+            "absolute_tolerance": 1.0e-12,
+            "relative_tolerance": 1.0e-12,
+        }
+    if value_schema.get("kind") == "scalar" and value_schema.get("data_type") in {
+        "integer",
+        "number",
+    }:
+        return {
+            "mode": "numeric_tolerance",
+            "absolute_tolerance": 1.0e-12,
+            "relative_tolerance": 1.0e-12,
+        }
+    return {"mode": "exact"}
+
+
+def _is_integer_type(data_type):
+    """Check whether a schema data type is integer-like."""
+    return data_type in {"int", "int64", "uint", "uint32", "uint64"}
+
+
+def _is_numeric_type(data_type):
+    """Check whether a schema data type is numeric-like."""
+    return _is_integer_type(data_type) or data_type in {"double", "float64"}
 
 
 def get_model_parameter_schema_version(schema_version=None):
