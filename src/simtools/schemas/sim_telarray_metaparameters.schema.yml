@@ -1,17 +1,17 @@
 %YAML 1.2
 ---
-title: Schema for sim_telarray metaparameter registry
+title: Schema for sim_telarray meta_parameter registry
 schema_version: 0.1.0
 meta_schema: simpipe-schema
-meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/sim_telarray_metaparameter.metaschema.yml
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/sim_telarray_meta_parameter.metaschema.yml
 meta_schema_version: 0.1.0
-name: sim_telarray_metaparameters
+name: sim_telarray_meta_parameters
 description: |-
   Registry of sim_telarray metadata keys emitted by simtools.
   Generated metadata are described explicitly here.
   Model-parameter-derived metadata are resolved automatically from the
-  sim_telarray mapping declared in src/simtools/schemas/model_parameters.
-generated_metaparameters:
+  sim_telarray mapping declared in the model-parameter schemas.
+generated_meta_parameters:
   array_config_name:
     scope: global
     mode: assign

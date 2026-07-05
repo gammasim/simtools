@@ -120,28 +120,28 @@ def test_get_model_parameter_schema_returns_independent_copies():
     assert schema_2["data"][0]["unit"] == "cm"
 
 
-def test_get_sim_telarray_metaparameter_registry():
-    registry = schema.get_sim_telarray_metaparameter_registry()
+def test_get_sim_telarray_meta_parameter_registry():
+    registry = schema.get_sim_telarray_meta_parameter_registry()
 
-    assert registry["name"] == "sim_telarray_metaparameters"
-    assert "camera_config_file" in registry["metaparameters"]
+    assert registry["name"] == "sim_telarray_meta_parameters"
+    assert "camera_config_file" in registry["meta_parameters"]
     assert (
-        registry["metaparameters"]["random_mono_prob"]["source_name"] == "random_mono_probability"
+        registry["meta_parameters"]["random_mono_prob"]["source_name"] == "random_mono_probability"
     )
 
 
-def test_get_sim_telarray_metaparameter_definition():
-    definition = schema.get_sim_telarray_metaparameter_definition("focal_length")
+def test_get_sim_telarray_meta_parameter_definition():
+    definition = schema.get_sim_telarray_meta_parameter_definition("focal_length")
 
     assert definition["name"] == "focal_length"
     assert definition["scope"] == "telescope"
     assert definition["mode"] == "add"
 
-    with pytest.raises(KeyError, match=r"sim_telarray metaparameter definition not found"):
-        schema.get_sim_telarray_metaparameter_definition("does_not_exist")
+    with pytest.raises(KeyError, match=r"sim_telarray meta_parameter definition not found"):
+        schema.get_sim_telarray_meta_parameter_definition("does_not_exist")
 
 
-def test_validate_sim_telarray_metaparameter_registry_schema():
+def test_validate_sim_telarray_meta_parameter_registry_schema():
     registry = ascii_handler.collect_data_from_file(SIM_TELARRAY_METAPARAMETER_REGISTRY)
 
     schema.validate_dict_using_schema(
@@ -151,23 +151,23 @@ def test_validate_sim_telarray_metaparameter_registry_schema():
         ignore_software_version=True,
     )
 
-    assert "generated_metaparameters" in registry
+    assert "generated_meta_parameters" in registry
     assert "model_parameters" not in registry
 
 
-def test_validate_sim_telarray_metaparameter_registry_consistency():
-    registry = schema.get_sim_telarray_metaparameter_registry()
-    validated_registry = schema.validate_sim_telarray_metaparameter_registry_consistency(registry)
+def test_validate_sim_telarray_meta_parameter_registry_consistency():
+    registry = schema.get_sim_telarray_meta_parameter_registry()
+    validated_registry = schema.validate_sim_telarray_meta_parameter_registry_consistency(registry)
 
     assert validated_registry == registry
 
 
-def test_sim_telarray_metaparameter_registry_uses_generated_or_model_parameter_schema():
+def test_sim_telarray_meta_parameter_registry_uses_generated_or_model_parameter_schema():
     model_parameter_names, _ = schema.get_model_parameter_schema_files()
 
-    registry = schema.get_sim_telarray_metaparameter_registry()["metaparameters"]
+    registry = schema.get_sim_telarray_meta_parameter_registry()["meta_parameters"]
     registry_source = ascii_handler.collect_data_from_file(SIM_TELARRAY_METAPARAMETER_REGISTRY)
-    generated = set(registry_source["generated_metaparameters"])
+    generated = set(registry_source["generated_meta_parameters"])
 
     for emitted_name, definition in registry.items():
         if emitted_name in generated:
@@ -176,9 +176,9 @@ def test_sim_telarray_metaparameter_registry_uses_generated_or_model_parameter_s
         assert definition["source_name"] in model_parameter_names
 
 
-def test_sim_telarray_metaparameter_registry_covers_emitted_keys():
-    registry = schema.get_sim_telarray_metaparameter_registry()
-    registry_keys = set(registry["metaparameters"])
+def test_sim_telarray_meta_parameter_registry_covers_emitted_keys():
+    registry = schema.get_sim_telarray_meta_parameter_registry()
+    registry_keys = set(registry["meta_parameters"])
 
     telescope_cfg = _parse_sim_telarray_config_metadata(
         Path("simtools-output/model/run000001/6.0.2/CTAO-MSTS-05.cfg")
@@ -217,8 +217,8 @@ def test_sim_telarray_metaparameter_registry_covers_emitted_keys():
     assert generated_assignment_keys.issubset(registry_keys)
 
 
-def test_sim_telarray_metaparameter_registry_sample_value_validation():
-    registry = schema.get_sim_telarray_metaparameter_registry()["metaparameters"]
+def test_sim_telarray_meta_parameter_registry_sample_value_validation():
+    registry = schema.get_sim_telarray_meta_parameter_registry()["meta_parameters"]
 
     telescope_cfg = _parse_sim_telarray_config_metadata(
         Path("simtools-output/model/run000001/6.0.2/CTAO-MSTS-05.cfg")
@@ -267,8 +267,8 @@ def test_sim_telarray_metaparameter_registry_sample_value_validation():
     assert registry["random_seed"]["category"] == "run_parameter"
 
 
-def test_sim_telarray_metaparameter_registry_categories_support_reference_filters():
-    registry = schema.get_sim_telarray_metaparameter_registry()["metaparameters"]
+def test_sim_telarray_meta_parameter_registry_categories_support_reference_filters():
+    registry = schema.get_sim_telarray_meta_parameter_registry()["meta_parameters"]
 
     assert registry["focal_length"]["category"] == "simulation_model"
     assert registry["simtools_version"]["category"] == "software"
