@@ -65,17 +65,17 @@ generated_metaparameters:
     scope: telescope
     mode: assign
     category: provenance
-    description: Generated optics configuration family name.
+    description: Optics configuration name.
   optics_config_variant:
     scope: telescope
     mode: assign
     category: provenance
-    description: Generated optics configuration variant.
+    description: Optics configuration variant.
   optics_config_version:
     scope: telescope
     mode: assign
     category: provenance
-    description: Generated optics configuration version.
+    description: Optics configuration version.
   random_seed:
     scope: global
     mode: add
@@ -152,20 +152,15 @@ generated_metaparameters:
     scope: global
     mode: assign
     category: provenance
-    description: Generated site configuration name.
+    description: Site configuration name.
   site_config_variant:
     scope: global
     mode: assign
     category: provenance
-    description: Generated site configuration variant.
+    description: Site configuration variant.
     value_schema: {kind: scalar, data_type: string, allow_empty: true}
   site_config_version:
     scope: global
     mode: assign
     category: provenance
-    description: Generated site configuration version.
-described_metaparameters:
-  nightsky_background:
-    value_schema:
-      kind: sim_telarray_key_value_string
-      regex: '^(all|\([0-9]+-[0-9]+\)):\s*-?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$'
+    description: Site configuration version.
