@@ -8,354 +8,200 @@ meta_schema_version: 0.1.0
 name: sim_telarray_metaparameters
 description: |-
   Registry of sim_telarray metadata keys emitted by simtools.
-  Model-parameter-derived entries are referenced by simtools model-parameter
-  name and expanded at load time using the schema files in
-  src/simtools/schemas/model_parameters.
+  Generated metadata are described explicitly here.
+  Model-parameter-derived metadata are resolved automatically either by a simple
+  name match against src/simtools/schemas/model_parameters or, for renamed keys,
+  through described_metaparameters.
 generated_metaparameters:
   array_config_name:
     scope: global
     mode: assign
     category: provenance
-    source_type: generated
     description: Generated array configuration family name.
-    unit: null
-    value_schema: &string_scalar {kind: scalar, data_type: string}
-    validation: &generated_validation {source_must_exist: false, mapping_must_match: false, config_value_required: true, emitted_value_must_match: true}
-    comparison_policy: &exact_compare {mode: exact}
   array_config_variant:
     scope: global
     mode: assign
     category: provenance
-    source_type: generated
     description: Generated array configuration variant.
-    unit: null
-    value_schema: &string_scalar_allow_empty {kind: scalar, data_type: string, allow_empty: true}
-    validation: *generated_validation
-    comparison_policy: *exact_compare
+    value_schema: {kind: scalar, data_type: string, allow_empty: true}
   array_config_version:
     scope: global
     mode: assign
     category: provenance
-    source_type: generated
     description: Generated array configuration version.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   camera_config_name:
     scope: telescope
     mode: assign
     category: provenance
-    source_type: generated
     description: Generated camera configuration family name.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   camera_config_variant:
     scope: telescope
     mode: assign
     category: provenance
-    source_type: generated
     description: Generated camera configuration variant.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   camera_config_version:
     scope: telescope
     mode: assign
     category: provenance
-    source_type: generated
     description: Generated camera configuration version.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   config_release:
     scope: global
     mode: assign
     category: provenance
-    source_type: generated
     description: Generated configuration release string.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   config_version:
     scope: global
     mode: assign
     category: provenance
-    source_type: generated
     description: Generated configuration version.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   nsb_integrated_flux:
     scope: global
     mode: set
     category: site_configuration
-    source_type: generated
     description: Integrated night-sky background flux.
-    unit: null
-    value_schema: &number_scalar {kind: scalar, data_type: number}
-    validation: *generated_validation
-    comparison_policy: &numeric_compare {mode: numeric_tolerance, absolute_tolerance: 1.0e-12, relative_tolerance: 1.0e-12}
+    value_schema: {kind: scalar, data_type: number}
   optics_config_name:
     scope: telescope
     mode: assign
     category: provenance
-    source_type: generated
     description: Generated optics configuration family name.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   optics_config_variant:
     scope: telescope
     mode: assign
     category: provenance
-    source_type: generated
     description: Generated optics configuration variant.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   optics_config_version:
     scope: telescope
     mode: assign
     category: provenance
-    source_type: generated
     description: Generated optics configuration version.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   random_seed:
     scope: global
     mode: add
     category: run_parameter
-    source_type: generated
     description: Random seed included in sim_telarray metadata.
-    unit: null
     value_schema: {kind: scalar, data_type: integer}
-    validation: &generated_no_value {source_must_exist: false, mapping_must_match: false, config_value_required: false, emitted_value_must_match: false}
-    comparison_policy: *exact_compare
   simtools_avx_flag:
     scope: global
     mode: set
     category: software
-    source_type: generated
     description: simtools build AVX flag.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   simtools_build_date:
     scope: global
     mode: set
     category: software
-    source_type: generated
     description: simtools build date.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   simtools_corsika_config_version:
     scope: global
     mode: set
     category: software
-    source_type: generated
     description: simtools CORSIKA configuration version.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   simtools_corsika_exec:
     scope: global
     mode: set
     category: software
-    source_type: generated
     description: CORSIKA executable identifier used by simtools.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   simtools_corsika_opt_patch_version:
     scope: global
     mode: set
     category: software
-    source_type: generated
     description: simtools CORSIKA optical patch version.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   simtools_corsika_version:
     scope: global
     mode: set
     category: software
-    source_type: generated
     description: CORSIKA version used by simtools.
-    unit: null
     value_schema: {kind: scalar, data_type: integer}
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   simtools_extra_defines:
     scope: global
     mode: set
     category: software
-    source_type: generated
     description: Extra compiler defines recorded by simtools.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   simtools_hessio_version:
     scope: global
     mode: set
     category: software
-    source_type: generated
     description: HESSIO version used by simtools.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   simtools_iact_atmo_version:
     scope: global
     mode: set
     category: software
-    source_type: generated
     description: IACT/atmosphere package version used by simtools.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   simtools_model_production_version:
     scope: global
     mode: set
     category: software
-    source_type: generated
     description: Simulation-model production version used by simtools.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   simtools_simtel_version:
     scope: global
     mode: set
     category: software
-    source_type: generated
     description: sim_telarray version used by simtools.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   simtools_stdtools_version:
     scope: global
     mode: set
     category: software
-    source_type: generated
     description: stdtools version used by simtools.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   simtools_version:
     scope: global
     mode: set
     category: software
-    source_type: generated
     description: simtools version.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   site_config_name:
     scope: global
     mode: assign
     category: provenance
-    source_type: generated
     description: Generated site configuration name.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
   site_config_variant:
     scope: global
     mode: assign
     category: provenance
-    source_type: generated
     description: Generated site configuration variant.
-    unit: null
-    value_schema: *string_scalar_allow_empty
-    validation: *generated_validation
-    comparison_policy: *exact_compare
+    value_schema: {kind: scalar, data_type: string, allow_empty: true}
   site_config_version:
     scope: global
     mode: assign
     category: provenance
-    source_type: generated
     description: Generated site configuration version.
-    unit: null
-    value_schema: *string_scalar
-    validation: *generated_validation
-    comparison_policy: *exact_compare
-model_parameters:
-  array_triggers:
-    category: array_configuration
-    value_schema: {kind: file_name}
-  atmospheric_transmission: {}
-  asum_clipping: {}
-  asum_shaping: {}
-  asum_threshold: {}
-  camera_config_file: {}
-  camera_degraded_efficiency: {}
-  camera_degraded_map: {}
-  corsika_observation_level: {}
-  default_trigger: {}
-  discriminator_gate_length: {}
-  discriminator_pulse_shape: {}
-  discriminator_sigsum_over_threshold: {}
-  discriminator_threshold: {}
-  discriminator_time_over_threshold: {}
-  dish_shape_length: {}
-  dsum_clipping: {}
-  dsum_prescale: {}
-  dsum_shaping: {}
-  dsum_threshold: {}
-  effective_focal_length: {}
-  fadc_pulse_shape: {}
-  focal_length: {}
-  focus_offset: {}
-  mirror_class: {}
-  mirror_degraded_reflection: {}
-  mirror_focal_length: {}
-  mirror_list: {}
-  muon_mono_threshold: {}
-  nsb_autoscale_airmass: {}
-  nsb_pixel_rate:
+described_metaparameters:
+  altitude:
+    source_name: corsika_observation_level
+  dsum_shaping_file:
+    source_name: dsum_shaping
+  muon_mono_thresh:
+    source_name: muon_mono_threshold
+  nightsky_background:
+    source_name: nsb_pixel_rate
     value_schema:
       kind: sim_telarray_key_value_string
       regex: '^(all|\([0-9]+-[0-9]+\)):\s*-?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$'
-  nsb_scaling_factor: {}
-  nsb_sky_map: {}
-  parabolic_dish: {}
-  pixels_parallel: {}
-  primary_mirror_degraded_map: {}
-  primary_mirror_diameter: {}
-  primary_mirror_hole_diameter: {}
-  primary_mirror_segmentation: {}
-  random_mono_probability: {}
-  reference_point_latitude: {}
-  reference_point_longitude: {}
-  secondary_mirror_baffle: {}
-  secondary_mirror_degraded_map: {}
-  secondary_mirror_degraded_reflection: {}
-  secondary_mirror_diameter: {}
-  secondary_mirror_hole_diameter: {}
-  secondary_mirror_segmentation: {}
-  secondary_mirror_shadow_diameter: {}
-  secondary_mirror_shadow_offset: {}
-  stars: {}
+  latitude:
+    source_name: reference_point_latitude
+  longitude:
+    source_name: reference_point_longitude
+  mirror2_degraded_reflection:
+    source_name: secondary_mirror_degraded_reflection
+  primary_degraded_map:
+    source_name: primary_mirror_degraded_map
+  primary_diameter:
+    source_name: primary_mirror_diameter
+  primary_hole_diameter:
+    source_name: primary_mirror_hole_diameter
+  primary_segmentation:
+    source_name: primary_mirror_segmentation
+  random_mono_prob:
+    source_name: random_mono_probability
+  secondary_baffle:
+    source_name: secondary_mirror_baffle
+  secondary_degraded_map:
+    source_name: secondary_mirror_degraded_map
+  secondary_diameter:
+    source_name: secondary_mirror_diameter
+  secondary_hole_diameter:
+    source_name: secondary_mirror_hole_diameter
+  secondary_segmentation:
+    source_name: secondary_mirror_segmentation
+  secondary_shadow_diameter:
+    source_name: secondary_mirror_shadow_diameter
+  secondary_shadow_offset:
+    source_name: secondary_mirror_shadow_offset

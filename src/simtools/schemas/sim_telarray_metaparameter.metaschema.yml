@@ -33,21 +33,20 @@ definitions:
         description: Writer-generated sim_telarray metadata fields keyed by emitted name.
         additionalProperties:
           $ref: '#/definitions/GeneratedSimTelarrayMetaparameterDefinition'
-      model_parameters:
+      described_metaparameters:
         type: object
         description: |-
-          Model parameter source names keyed by simtools model-parameter name.
-          Full sim_telarray metadata definitions are derived from the referenced
-          model parameter schema plus the optional overlay fields defined here.
+          Optional descriptions for metaparameters that cannot be resolved by a
+          simple name check against the model-parameter schema directory.
         additionalProperties:
-          $ref: '#/definitions/ModelParameterMetaparameterOverlay'
+          $ref: '#/definitions/DescribedSimTelarrayMetaparameter'
     required:
       - schema_version
       - meta_schema
       - meta_schema_version
       - name
       - generated_metaparameters
-      - model_parameters
+      - described_metaparameters
 
   GeneratedSimTelarrayMetaparameterDefinition:
     type: object
@@ -74,36 +73,22 @@ definitions:
           - array_configuration
           - provenance
           - environment
-      source_type:
-        type: string
-        enum:
-          - generated
       description:
         type: string
-      unit:
-        anyOf:
-          - type: string
-          - type: "null"
       value_schema:
         $ref: '#/definitions/ValueSchema'
-      validation:
-        $ref: '#/definitions/ValidationPolicy'
-      comparison_policy:
-        $ref: '#/definitions/ComparisonPolicy'
     required:
       - scope
       - mode
       - category
-      - source_type
       - description
-      - value_schema
-      - validation
-      - comparison_policy
 
-  ModelParameterMetaparameterOverlay:
+  DescribedSimTelarrayMetaparameter:
     type: object
     additionalProperties: false
     properties:
+      source_name:
+        type: string
       category:
         type: string
         enum:
@@ -116,8 +101,8 @@ definitions:
           - environment
       value_schema:
         $ref: '#/definitions/ValueSchema'
-      comparison_policy:
-        $ref: '#/definitions/ComparisonPolicy'
+    required:
+      - source_name
 
   ValueSchema:
     type: object
@@ -154,24 +139,6 @@ definitions:
         type: boolean
     required:
       - kind
-
-  ValidationPolicy:
-    type: object
-    additionalProperties: false
-    properties:
-      source_must_exist:
-        type: boolean
-      mapping_must_match:
-        type: boolean
-      config_value_required:
-        type: boolean
-      emitted_value_must_match:
-        type: boolean
-    required:
-      - source_must_exist
-      - mapping_must_match
-      - config_value_required
-      - emitted_value_must_match
 
   ComparisonPolicy:
     type: object

@@ -209,25 +209,79 @@ def validate_sim_telarray_metaparameter_registry_consistency(registry=None):
 def _build_sim_telarray_metaparameter_registry(registry_source):
     """Build expanded sim_telarray metaparameter registry from source overlays."""
     registry = {
-        key: value for key, value in registry_source.items() if key != "generated_metaparameters"
+        key: value
+        for key, value in registry_source.items()
+        if key not in {"generated_metaparameters", "described_metaparameters"}
     }
     metaparameters = {}
 
     for emitted_name, definition in registry_source.get("generated_metaparameters", {}).items():
-        metaparameters[emitted_name] = {"name": emitted_name, **definition}
+        metaparameters[emitted_name] = _build_generated_sim_telarray_metaparameter_definition(
+            emitted_name, definition
+        )
 
-    for source_name, overlay in registry_source.get("model_parameters", {}).items():
-        definition = _build_model_parameter_metaparameter_definition(source_name, overlay)
+    described_names = set(registry_source.get("described_metaparameters", {}))
+    for emitted_name, overlay in registry_source.get("described_metaparameters", {}).items():
+        definition = _build_model_parameter_metaparameter_definition(
+            overlay["source_name"], overlay, emitted_name=emitted_name
+        )
+        metaparameters[definition["name"]] = definition
+
+    for source_name, model_schema in names.model_parameters().items():
+        if source_name in described_names:
+            continue
+        try:
+            emitted_name, _ = _get_sim_telarray_emitted_name_and_mode(model_schema)
+        except KeyError:
+            continue
+        if emitted_name in metaparameters:
+            continue
+        if emitted_name != source_name:
+            continue
+        definition = _build_model_parameter_metaparameter_definition(source_name, {})
         metaparameters[definition["name"]] = definition
 
     registry["metaparameters"] = metaparameters
     return registry
 
 
-def _build_model_parameter_metaparameter_definition(source_name, overlay):
+def _build_generated_sim_telarray_metaparameter_definition(emitted_name, definition):
+    """Build one generated sim_telarray metaparameter definition."""
+    value_schema = definition.get("value_schema") or {"kind": "scalar", "data_type": "string"}
+    validation = {
+        "source_must_exist": False,
+        "mapping_must_match": False,
+        "config_value_required": definition.get("mode") != "add",
+        "emitted_value_must_match": definition.get("mode") != "add",
+    }
+    if emitted_name == "random_seed":
+        validation = {
+            "source_must_exist": False,
+            "mapping_must_match": False,
+            "config_value_required": False,
+            "emitted_value_must_match": False,
+        }
+    return {
+        "name": emitted_name,
+        "scope": definition["scope"],
+        "mode": definition["mode"],
+        "category": definition["category"],
+        "source_type": "generated",
+        "source_name": None,
+        "description": definition["description"],
+        "unit": None,
+        "value_schema": value_schema,
+        "validation": validation,
+        "comparison_policy": definition.get("comparison_policy")
+        or _derive_sim_telarray_comparison_policy(value_schema),
+    }
+
+
+def _build_model_parameter_metaparameter_definition(source_name, overlay, emitted_name=None):
     """Build one sim_telarray metaparameter definition from a model parameter schema."""
     model_schema = get_model_parameter_schema(source_name)
-    emitted_name, mode = _get_sim_telarray_emitted_name_and_mode(model_schema)
+    derived_name, mode = _get_sim_telarray_emitted_name_and_mode(model_schema)
+    emitted_name = emitted_name or derived_name
     value_schema = overlay.get("value_schema") or _derive_sim_telarray_value_schema(model_schema)
 
     return {
