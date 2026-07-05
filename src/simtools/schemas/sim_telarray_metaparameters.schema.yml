@@ -9,51 +9,52 @@ name: sim_telarray_metaparameters
 description: |-
   Registry of sim_telarray metadata keys emitted by simtools.
   Generated metadata are described explicitly here.
-  Model-parameter-derived metadata are resolved automatically either by a simple
-  name match against src/simtools/schemas/model_parameters or, for renamed keys,
-  through described_metaparameters.
+  Model-parameter-derived metadata are resolved automatically from the
+  sim_telarray mapping declared in src/simtools/schemas/model_parameters.
+  described_metaparameters is only for exceptions that need sim_telarray-specific
+  overrides such as a special emitted value format.
 generated_metaparameters:
   array_config_name:
     scope: global
     mode: assign
     category: provenance
-    description: Generated array configuration family name.
+    description: Array configuration name.
   array_config_variant:
     scope: global
     mode: assign
     category: provenance
-    description: Generated array configuration variant.
+    description: Array configuration variant.
     value_schema: {kind: scalar, data_type: string, allow_empty: true}
   array_config_version:
     scope: global
     mode: assign
     category: provenance
-    description: Generated array configuration version.
+    description: Array configuration version.
   camera_config_name:
     scope: telescope
     mode: assign
     category: provenance
-    description: Generated camera configuration family name.
+    description: Camera configuration name.
   camera_config_variant:
     scope: telescope
     mode: assign
     category: provenance
-    description: Generated camera configuration variant.
+    description: Camera configuration variant.
   camera_config_version:
     scope: telescope
     mode: assign
     category: provenance
-    description: Generated camera configuration version.
+    description: Camera configuration version.
   config_release:
     scope: global
     mode: assign
     category: provenance
-    description: Generated configuration release string.
+    description: Configuration release string.
   config_version:
     scope: global
     mode: assign
     category: provenance
-    description: Generated configuration version.
+    description: Configuration version.
   nsb_integrated_flux:
     scope: global
     mode: set
@@ -164,44 +165,7 @@ generated_metaparameters:
     category: provenance
     description: Generated site configuration version.
 described_metaparameters:
-  altitude:
-    source_name: corsika_observation_level
-  dsum_shaping_file:
-    source_name: dsum_shaping
-  muon_mono_thresh:
-    source_name: muon_mono_threshold
   nightsky_background:
-    source_name: nsb_pixel_rate
     value_schema:
       kind: sim_telarray_key_value_string
       regex: '^(all|\([0-9]+-[0-9]+\)):\s*-?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$'
-  latitude:
-    source_name: reference_point_latitude
-  longitude:
-    source_name: reference_point_longitude
-  mirror2_degraded_reflection:
-    source_name: secondary_mirror_degraded_reflection
-  primary_degraded_map:
-    source_name: primary_mirror_degraded_map
-  primary_diameter:
-    source_name: primary_mirror_diameter
-  primary_hole_diameter:
-    source_name: primary_mirror_hole_diameter
-  primary_segmentation:
-    source_name: primary_mirror_segmentation
-  random_mono_prob:
-    source_name: random_mono_probability
-  secondary_baffle:
-    source_name: secondary_mirror_baffle
-  secondary_degraded_map:
-    source_name: secondary_mirror_degraded_map
-  secondary_diameter:
-    source_name: secondary_mirror_diameter
-  secondary_hole_diameter:
-    source_name: secondary_mirror_hole_diameter
-  secondary_segmentation:
-    source_name: secondary_mirror_segmentation
-  secondary_shadow_diameter:
-    source_name: secondary_mirror_shadow_diameter
-  secondary_shadow_offset:
-    source_name: secondary_mirror_shadow_offset
