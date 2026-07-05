@@ -303,8 +303,17 @@ class SimtelConfigWriter:
             Site model.
         additional_metadata: dict
             Dictionary with additional metadata to include.
+
+        Raises
+        ------
+        FileExistsError
+            If the config file already exists.
         """
         config_file_directory = Path(config_file_path).parent
+        config_file_path = Path(config_file_path)
+        if config_file_path.exists():
+            raise FileExistsError(f"Array config file {config_file_path} already exists.")
+
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "ARRAY CONFIGURATION FILE")
 

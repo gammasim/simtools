@@ -125,6 +125,7 @@ class Simulator:
 
         array_model = []
         corsika_configurations = []
+        model_subdir = f"run{self.run_number:06d}"
 
         for version in versions:
             model = ArrayModel(
@@ -135,6 +136,7 @@ class Simulator:
                 model_version=version,
                 calibration_device_types=self._get_calibration_device_types(self.run_mode),
                 overwrite_model_parameters=settings.config.args.get("overwrite_model_parameters"),
+                model_directory_subdir=model_subdir,
             )
             cfg = CorsikaConfig(array_model=model, label=self.label, run_number=self.run_number)
             model.initialize_seeds(cfg.zenith_angle, cfg.azimuth_angle)

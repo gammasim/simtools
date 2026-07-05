@@ -268,17 +268,14 @@ class ModelParameter:
         if self.name is None and self.site is None:
             return
 
-        self._config_file_directory = self.io_handler.get_model_configuration_directory(
-            model_version=self.model_version
-        )
+        if self._config_file_directory is None:
+            self._config_file_directory = self.io_handler.get_model_configuration_directory(
+                model_version=self.model_version
+            )
 
-        # Setting file name and the location
-        config_file_name = names.simtel_config_file_name(
-            self.site,
-            telescope_model_name=self.name,
-            label=self.label,
+        self._config_file_path = self.config_file_directory.joinpath(
+            names.sim_telarray_config_file_name(site=self.site, telescope_model_name=self.name)
         )
-        self._config_file_path = self.config_file_directory.joinpath(config_file_name)
 
     def get_simulation_software_parameters(self, simulation_software):
         """
@@ -828,29 +825,7 @@ class ModelParameter:
         )
         self._is_exported_model_files_up_to_date = True
 
-    def get_config_file_path(self, label=None):
-        """Return config file path for a given label.
-
-        Parameters
-        ----------
-        label : str or None
-            Label used for output file naming. If None, use this model's label.
-
-        Returns
-        -------
-        pathlib.Path
-            Path to the sim_telarray configuration file.
-        """
-        config_file_name = names.simtel_config_file_name(
-            self.site,
-            telescope_model_name=self.name,
-            label=self.label if label is None else label,
-        )
-        return self.config_file_directory.joinpath(config_file_name)
-
-    def write_sim_telarray_config_file(
-        self, additional_models=None, label=None, config_file_path=None
-    ):
+    def write_sim_telarray_config_file(self, additional_models=None, label=None):
         """
         Write the sim_telarray configuration file.
 
@@ -860,24 +835,16 @@ class ModelParameter:
             Model object for additional parameter to be written to the config file.
         label: str or None
             Optional label override used for output file naming.
-        config_file_path: pathlib.Path or str or None
-            Optional explicit path of the config file. If not given, it is derived from ``label``.
         """
         self.parameters.update(self._simulation_config_parameters.get("sim_telarray", {}))
         self.export_model_files(update_if_necessary=True)
 
         self._add_additional_models(additional_models)
 
-        config_file_path = (
-            Path(config_file_path)
-            if config_file_path is not None
-            else self.get_config_file_path(label=label)
-        )
-
         # Ensure the writer label matches the config file naming label.
         self._load_simtel_config_writer(label=label)
         self.simtel_config_writer.write_telescope_config_file(
-            config_file_path=config_file_path,
+            config_file_path=self.config_file_path,
             parameters=self.parameters,
         )
 
