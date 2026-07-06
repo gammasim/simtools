@@ -40,6 +40,7 @@ def run_applications(args_dict, run_time=None, replacements=None):
         runtime_environment,
         log_file,
         workflow_activity_id,
+        collection_config,
     ) = _read_application_configuration(
         args_dict["config_file"],
         args_dict.get("steps"),
@@ -51,14 +52,6 @@ def run_applications(args_dict, run_time=None, replacements=None):
 
     if args_dict.get("runtime_environment") is not None:
         runtime_environment = args_dict["runtime_environment"]
-
-    collection_config = None
-    try:
-        workflow_config = ascii_handler.collect_data_from_file(args_dict["config_file"])
-        workflow_config = gen.replace_placeholders_recursively(workflow_config, replacements or {})
-        collection_config = workflow_config.get("collection")
-    except (OSError, TypeError):
-        logger.debug("Could not read collection configuration from workflow file.")
 
     workflow_start = datetime.now(UTC)
     associated_activities = []
@@ -375,14 +368,13 @@ def _read_application_configuration(
 
     Returns
     -------
-    dict
-        Application configuration.
-    dict:
-        Runtime environment configuration.
-    Path
-        Path to the log file.
-    str
-        Workflow activity id.
+    tuple
+        Tuple containing:
+        - configurations: list of application configurations
+        - runtime_environment: dict with runtime environment configuration
+        - log_file: Path to the log file
+        - workflow_activity_id: str with workflow activity id
+        - collection_config: dict or None with collection configuration
 
     """
     job_configuration = ascii_handler.collect_data_from_file(configuration_file)
@@ -421,6 +413,7 @@ def _read_application_configuration(
         job_configuration.get("runtime_environment"),
         log_path / "simtools.log",
         workflow_activity_id,
+        job_configuration.get("collection"),
     )
 
 
