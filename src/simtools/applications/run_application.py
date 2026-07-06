@@ -69,10 +69,8 @@ step 2 and 3 (useful for debugging):
 
 """
 
-from pathlib import Path
-
 from simtools.application_control import build_application
-from simtools.runners.simtools_runner import prepare_runtime_environment, run_applications
+from simtools.runners.simtools_runner import run_applications
 
 
 def _add_arguments(parser):
@@ -90,29 +88,6 @@ def _add_arguments(parser):
         nargs="+",
         help="List of steps to be execution (e.g., '--steps 7 8 9'; do not specify to run all).",
     )
-    parser.add_argument(
-        "--ignore_runtime_environment",
-        action="store_true",
-        help="Ignore the runtime environment and run the application in the current environment.",
-        default=False,
-    )
-    parser.add_argument(
-        "--runtime_environment_file",
-        type=Path,
-        help=(
-            "Path to a standalone runtime-environment YAML file (top-level 'runtime_environment')."
-        ),
-        default=None,
-    )
-    parser.add_argument(
-        "--overwrite_collection_files",
-        action="store_true",
-        help=(
-            "Allow files copied by the workflow collection block to overwrite existing files "
-            "with identical names."
-        ),
-        default=False,
-    )
 
 
 def main():
@@ -126,17 +101,7 @@ def main():
         },
     )
 
-    run_time = None
-    if (
-        app_context.args.get("runtime_environment_file") is not None
-        and not app_context.args["ignore_runtime_environment"]
-    ):
-        runtime_environment, run_time = prepare_runtime_environment(
-            app_context.args["runtime_environment_file"]
-        )
-        app_context.args["runtime_environment"] = runtime_environment
-
-    run_applications(app_context.args, run_time=run_time)
+    run_applications(app_context.args, run_time=app_context.run_time)
 
 
 if __name__ == "__main__":
