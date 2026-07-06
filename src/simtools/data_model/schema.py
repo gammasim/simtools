@@ -118,95 +118,6 @@ def get_sim_telarray_meta_parameter_registry(schema_version=None, validate=True)
     return _build_sim_telarray_meta_parameter_registry(registry_source)
 
 
-def get_sim_telarray_meta_parameter_definition(name, schema_version=None):
-    """
-    Return one sim_telarray meta_parameter definition by emitted name.
-
-    Parameters
-    ----------
-    name: str
-        Emitted sim_telarray meta_parameter name.
-    schema_version: str, optional
-        Registry schema version. If not provided, the latest version is used.
-
-    Returns
-    -------
-    dict
-        sim_telarray meta_parameter definition.
-    """
-    registry = get_sim_telarray_meta_parameter_registry(schema_version=schema_version)
-    try:
-        return registry["meta_parameters"][name]
-    except KeyError as exc:
-        raise KeyError(f"sim_telarray meta_parameter definition not found: {name}") from exc
-
-
-def validate_sim_telarray_meta_parameter_registry_consistency(registry=None):
-    """
-    Validate consistency of the sim_telarray meta_parameter registry.
-
-    Checks that source model parameters exist, generated entries do not set
-    a source name, and emitted names match the configured sim_telarray
-    mapping for model-parameter-derived entries.
-
-    Parameters
-    ----------
-    registry: dict, optional
-        Preloaded sim_telarray meta_parameter registry.
-
-    Returns
-    -------
-    dict
-        Validated registry.
-    """
-    registry = registry or get_sim_telarray_meta_parameter_registry()
-    model_parameters = names.model_parameters()
-
-    for emitted_name, definition in registry.get("meta_parameters", {}).items():
-        if definition.get("name") != emitted_name:
-            raise ValueError(
-                "sim_telarray meta_parameter registry key/name mismatch: "
-                f"{emitted_name} != {definition.get('name')}"
-            )
-
-        source_type = definition.get("source_type")
-        source_name = definition.get("source_name")
-        mode = definition.get("mode")
-
-        if source_type == "generated":
-            if source_name is not None:
-                raise ValueError(
-                    f"Generated sim_telarray meta_parameter {emitted_name} "
-                    "must not set source_name."
-                )
-            continue
-
-        if source_name not in model_parameters:
-            raise KeyError(
-                f"Source model parameter for sim_telarray meta_parameter {emitted_name} "
-                f"not found: {source_name}"
-            )
-
-        if mode == "assign":
-            raise ValueError(
-                f"Model-parameter-derived sim_telarray meta_parameter {emitted_name} "
-                "cannot use mode 'assign'."
-            )
-
-        expected_name = names.get_simulation_software_name_from_parameter_name(
-            source_name,
-            software_name="sim_telarray",
-            set_meta_parameter=(mode == "set"),
-        )
-        if expected_name != emitted_name:
-            raise ValueError(
-                "sim_telarray mapping mismatch for source model parameter "
-                f"{source_name}: expected {expected_name}, registry defines {emitted_name}"
-            )
-
-    return registry
-
-
 def _build_sim_telarray_meta_parameter_registry(registry_source):
     """Build expanded sim_telarray meta_parameter registry from source overlays."""
     registry = {
@@ -371,7 +282,7 @@ def _is_integer_type(data_type):
 
 def _is_numeric_type(data_type):
     """Check whether a schema data type is numeric-like."""
-    return _is_integer_type(data_type) or data_type in {"double", "float64"}
+    return _is_integer_type(data_type) or data_type in {"double", "float64", "float32"}
 
 
 def get_model_parameter_schema_version(schema_version=None):

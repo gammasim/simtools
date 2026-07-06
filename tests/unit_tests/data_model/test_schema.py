@@ -130,17 +130,6 @@ def test_get_sim_telarray_meta_parameter_registry():
     )
 
 
-def test_get_sim_telarray_meta_parameter_definition():
-    definition = schema.get_sim_telarray_meta_parameter_definition("focal_length")
-
-    assert definition["name"] == "focal_length"
-    assert definition["scope"] == "telescope"
-    assert definition["mode"] == "add"
-
-    with pytest.raises(KeyError, match=r"sim_telarray meta_parameter definition not found"):
-        schema.get_sim_telarray_meta_parameter_definition("does_not_exist")
-
-
 def test_validate_sim_telarray_meta_parameter_registry_schema():
     registry = ascii_handler.collect_data_from_file(SIM_TELARRAY_META_PARAMETER_REGISTRY)
 
@@ -153,13 +142,6 @@ def test_validate_sim_telarray_meta_parameter_registry_schema():
 
     assert "generated_meta_parameters" in registry
     assert "model_parameters" not in registry
-
-
-def test_validate_sim_telarray_meta_parameter_registry_consistency():
-    registry = schema.get_sim_telarray_meta_parameter_registry()
-    validated_registry = schema.validate_sim_telarray_meta_parameter_registry_consistency(registry)
-
-    assert validated_registry == registry
 
 
 def test_sim_telarray_meta_parameter_registry_uses_generated_or_model_parameter_schema():
