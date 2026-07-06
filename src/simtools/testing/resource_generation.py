@@ -122,6 +122,34 @@ def _get_selected_config_files(config_dir, config_file=None):
     )
 
 
+def _construct_download_url(base_url_info, base_key, path):
+    """Construct the full download URL from base URL info, base key, and path.
+
+    Parameters
+    ----------
+    base_url_info : dict
+        Dictionary containing 'url' and 'version' keys for the base URL.
+    base_key : str
+        The key identifying the base URL configuration.
+    path : str
+        The path component which may contain version placeholders.
+
+    Returns
+    -------
+    str
+        The fully constructed download URL.
+    """
+    version = base_url_info["version"]
+    placeholder = f"__{base_key.upper()}_VERSION__"
+    if placeholder in path:
+        path = path.replace(placeholder, version)
+    if version and not path.startswith(version + "/"):
+        path_with_version = version + "/" + path.lstrip("/")
+    else:
+        path_with_version = path
+    return base_url_info["url"].rstrip("/") + "/" + path_with_version.lstrip("/")
+
+
 def _validate_download_entry(entry, index):
     """Validate a download entry from YAML configuration."""
     if not isinstance(entry, dict):
@@ -192,9 +220,7 @@ def download_files(config_file, target_dir):
             raise ValueError(f"Base URL key '{base_key}' not found in base_urls configuration")
 
         base_url_info = processed_base_urls[base_key]
-        version = base_url_info["version"]
-        path_with_version = version + "/" + entry["path"].lstrip("/") if version else entry["path"]
-        url = base_url_info["url"].rstrip("/") + "/" + path_with_version.lstrip("/")
+        url = _construct_download_url(base_url_info, base_key, entry["path"])
 
         destination = Path(target_dir) / entry["target_path"]
         destination.parent.mkdir(parents=True, exist_ok=True)
