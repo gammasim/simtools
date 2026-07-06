@@ -198,12 +198,7 @@ def _copy_pattern_files(pattern, source_directories, destination, overwrite_file
 
 
 def _collect_source_directories(configurations, source_directory=None):
-    """Return unique source directories from application configurations.
-
-    ``source_directory`` selects application configuration keys containing
-    directories to search. It can be a string or a list of strings and defaults
-    to ``output_path``.
-    """
+    """Return unique source directories from application configurations."""
     source_directories = []
     source_directory_keys = _normalize_collection_source_directories(source_directory)
     for config in configurations:
@@ -577,7 +572,7 @@ def _set_input_output_directories(path):
             f"using fallback '{setting_workflow}'"
         )
 
-    output_path = Path("output") / Path(setting_workflow)
+    output_path = Path("simtools-output") / Path(setting_workflow)
     return output_path, setting_workflow
 
 

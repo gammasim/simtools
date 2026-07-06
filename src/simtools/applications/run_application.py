@@ -74,7 +74,7 @@ from simtools.runners.simtools_runner import run_applications
 
 
 def _add_arguments(parser):
-    """Register application-specific command line arguments."""
+    """Register application-specific command-line arguments."""
     parser.add_argument(
         "--config_file",
         help="Application configuration.",
