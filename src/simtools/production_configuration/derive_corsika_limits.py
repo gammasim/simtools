@@ -509,11 +509,22 @@ def _derive_limits_from_histograms(
 
     if plot_histograms:
         plot_output_path = output_subdir or io_handler.IOHandler().get_output_directory()
+        histograms_to_plot = {
+            name: histogram for name, histogram in histograms.histograms.items() if name != "energy"
+        }
+        if limits.get("angular_distance_is_constant", False):
+            histograms_to_plot = {
+                name: histogram
+                for name, histogram in histograms_to_plot.items()
+                if not name.startswith("angular_distance_vs_")
+            }
         plot_simtel_event_histograms.plot(
-            histograms.histograms,
+            histograms_to_plot,
             output_path=plot_output_path,
             limits=limits,
             array_name=array_name,
+            add_distance_projections=True,
+            use_broad_range_limits=True,
         )
 
     return limits
@@ -540,6 +551,7 @@ def _compute_limits(histograms, allowed_losses, bins_per_decade):
     }
 
     per_axis_limits = {}
+    constant_angular_distance = _get_constant_data_value(histograms, "angular_distance")
     differential_energy_bins = None
     if bins_per_decade > 0:
         low = int(np.floor(np.log10(np.min(histograms.energy_bins))))
@@ -547,7 +559,15 @@ def _compute_limits(histograms, allowed_losses, bins_per_decade):
         differential_energy_bins = np.logspace(low, high, (high - low) * bins_per_decade + 1)
 
     for axis_name, config in axis_configs.items():
-        if bins_per_decade > 0:
+        if axis_name == "angular_distance" and constant_angular_distance is not None:
+            axis_max = constant_angular_distance
+            curve_x = [axis_max, axis_max]
+            curve_y = energy_range
+            _logger.info(
+                f"All simulated events have angular distance {axis_max} deg; "
+                "using this exact value as the viewcone limit."
+            )
+        elif bins_per_decade > 0:
             axis_max, curve_x, curve_y = _differential_upper_limits(
                 histograms.histograms[f"{axis_name}_vs_energy"]["histogram"],
                 config["x_bins"],
@@ -597,11 +617,24 @@ def _compute_limits(histograms, allowed_losses, bins_per_decade):
     return {
         "upper_radius_limit": upper_radius_limit,
         "viewcone_radius": viewcone_radius,
+        "angular_distance_is_constant": constant_angular_distance is not None,
         per_axis_limits["core_distance"]["curve_key"]: per_axis_limits["core_distance"]["curve"],
         per_axis_limits["angular_distance"]["curve_key"]: per_axis_limits["angular_distance"][
             "curve"
         ],
     }
+
+
+def _get_constant_data_value(histograms, name):
+    """Return an event-data value when its accumulated range is constant."""
+    data_ranges = getattr(histograms, "data_ranges", None)
+    if not isinstance(data_ranges, dict) or name not in data_ranges:
+        return None
+
+    minimum, maximum = data_ranges[name]
+    if np.isclose(minimum, maximum, rtol=1.0e-12, atol=1.0e-12):
+        return float(minimum)
+    return None
 
 
 def _differential_upper_limits(
@@ -763,6 +796,8 @@ def _round_value(key, val, row=None):
     if key == "upper_radius_limit":
         return np.ceil(val / 25) * 25
     if key == "viewcone_radius":
+        if row is not None and row.get("angular_distance_is_constant", False):
+            return val
         return np.ceil(val / 0.25) * 0.25
     return val
 
