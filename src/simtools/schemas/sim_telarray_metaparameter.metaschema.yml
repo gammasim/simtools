@@ -44,6 +44,14 @@ definitions:
     type: object
     additionalProperties: false
     properties:
+      source_type:
+        type: string
+        enum:
+          - generated
+      source_name:
+        type: "null"
+      unit:
+        type: "null"
       scope:
         type: string
         enum:
@@ -69,11 +77,21 @@ definitions:
         type: string
       value_schema:
         $ref: '#/definitions/ValueSchema'
+      validation:
+        $ref: '#/definitions/ValidationPolicy'
+      comparison_policy:
+        $ref: '#/definitions/ComparisonPolicy'
     required:
+      - source_type
+      - source_name
+      - unit
       - scope
       - mode
       - category
       - description
+      - value_schema
+      - validation
+      - comparison_policy
 
   ValueSchema:
     type: object
@@ -110,6 +128,24 @@ definitions:
         type: boolean
     required:
       - kind
+
+  ValidationPolicy:
+    type: object
+    additionalProperties: false
+    properties:
+      source_must_exist:
+        type: boolean
+      mapping_must_match:
+        type: boolean
+      config_value_required:
+        type: boolean
+      emitted_value_must_match:
+        type: boolean
+    required:
+      - source_must_exist
+      - mapping_must_match
+      - config_value_required
+      - emitted_value_must_match
 
   ComparisonPolicy:
     type: object
