@@ -102,6 +102,56 @@ generated_meta_parameters:
     description: Integrated night-sky background flux.
     value_schema: {kind: scalar, data_type: number}
     validation: &generated_set_validation {source_must_exist: false, mapping_must_match: false, config_value_required: true, emitted_value_must_match: true}
+  primary:
+    source_type: generated
+    source_name: null
+    unit: null
+    scope: global
+    mode: set
+    category: run_parameter
+    description: Primary particle type for the simulation run.
+    value_schema: *string_scalar
+    validation: *generated_set_validation
+  azimuth_angle:
+    source_type: generated
+    source_name: null
+    unit: null
+    scope: global
+    mode: set
+    category: run_parameter
+    description: Azimuth angle for the simulation run.
+    value_schema: {kind: scalar, data_type: number}
+    validation: *generated_set_validation
+  zenith_angle:
+    source_type: generated
+    source_name: null
+    unit: null
+    scope: global
+    mode: set
+    category: run_parameter
+    description: Zenith angle for the simulation run.
+    value_schema: {kind: scalar, data_type: number}
+    validation: *generated_set_validation
+  ha_angle:
+    source_type: generated
+    source_name: null
+    unit: null
+    scope: global
+    mode: set
+    category: run_parameter
+    description: Hour angle for the simulation run.
+    value_schema: {kind: scalar, data_type: number}
+    validation: *generated_set_validation
+  dec_angle:
+    source_type: generated
+    source_name: null
+    unit: null
+    scope: global
+    mode: set
+    category: run_parameter
+    description: Declination angle for the simulation run.
+    value_schema: {kind: scalar, data_type: number}
+    validation: *generated_set_validation
   optics_config_name:
     source_type: generated
     source_name: null
