@@ -170,13 +170,13 @@ simtools-simulate-prod \\
     --corsika_le_interaction "${{14}}" \\
     --corsika_he_interaction "${{15}}" \\
     --run_number "${{16}}" \\
-    --pack_for_grid_register "${{17}}" \\
     --energy_range "${{5}} GeV ${{6}} GeV" \\
     --core_scatter "${{7}} ${{8}} m" \\
     --view_cone "${{9}} deg ${{10}} deg" \\
     --run_number_offset 0 \\
     --save_reduced_event_lists \\
-    --output_path /tmp/simtools-output
+    --output_path /tmp/simtools-output \\
+    --grid_output_path "${{17}}"
 """
     generated_script = _get_submit_script(args_dict)
     assert generated_script == expected_script
@@ -300,7 +300,7 @@ def test_build_job_specs_reads_grid_file(args_dict, job_rows, job_grid_metadata)
     mock_read_job_grid.assert_called_once_with(args_dict["job_grid_file"])
     assert metadata == job_grid_metadata
     assert job_specs[0]["image_label"] == "7.0.0"
-    assert job_specs[0]["pack_for_grid_register"] == "simtools-output/7.0.0"
+    assert job_specs[0]["grid_output_path"] == "simtools-output/7.0.0"
     assert job_specs[0]["array_layout_name"] == "CTAO-North-Alpha"
 
 
@@ -335,7 +335,7 @@ def test_write_params_file_uses_canonical_numeric_units(tmp_test_directory):
             "corsika_le_interaction": "urqmd",
             "corsika_he_interaction": "epos",
             "run_number": 10,
-            "pack_for_grid_register": "simtools-output/7.0.0",
+            "grid_output_path": "simtools-output/7.0.0",
         }
     ]
 
@@ -344,4 +344,36 @@ def test_write_params_file_uses_canonical_numeric_units(tmp_test_directory):
     assert params_file_path.read_text(encoding="utf-8") == (
         "gamma 0.0 20.0 30.0 10000.0 10 200.0 0.0 5.0 "
         "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/7.0.0\n"
+    )
+
+
+def test_write_params_file_replaces_whitespace_in_grid_output_path(tmp_test_directory):
+    params_file_path = Path(tmp_test_directory) / "params.txt"
+    label_job_specs = [
+        {
+            "image_label": "7.0.0",
+            "primary": "gamma",
+            "azimuth_angle": 0 * u.deg,
+            "zenith_angle": 20 * u.deg,
+            "energy_min": 30 * u.GeV,
+            "energy_max": 10 * u.TeV,
+            "cores_per_shower": 10,
+            "core_scatter_max": 200 * u.m,
+            "view_cone_min": 0 * u.deg,
+            "view_cone_max": 5 * u.deg,
+            "showers_per_run": 1000,
+            "model_version": "7.0.0",
+            "array_layout_name": "CTAO-North-Alpha",
+            "corsika_le_interaction": "urqmd",
+            "corsika_he_interaction": "epos",
+            "run_number": 10,
+            "grid_output_path": "simtools-output/grid label 7.0.0",
+        }
+    ]
+
+    _write_params_file(params_file_path, label_job_specs)
+
+    assert params_file_path.read_text(encoding="utf-8") == (
+        "gamma 0.0 20.0 30.0 10000.0 10 200.0 0.0 5.0 "
+        "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/grid_label_7.0.0\n"
     )
