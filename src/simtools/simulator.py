@@ -1,5 +1,6 @@
 """Simulator class for managing simulations of showers and array of telescopes."""
 
+import gzip
 import logging
 import shutil
 from pathlib import Path
@@ -563,14 +564,12 @@ class Simulator:
 
     def pack_for_register(self, directory_for_grid_upload=None):
         """
-        Pack simulation output files for registering on the grid.
-
-        Creates separate tarballs for each model version's log files.
+        Prepare simulation output files for registering on the grid.
 
         Parameters
         ----------
         directory_for_grid_upload: str
-            Directory for the tarball with output files.
+            Directory for the output files.
 
         """
         self.logger.info(
@@ -594,27 +593,25 @@ class Simulator:
         )
         directory_for_grid_upload.mkdir(parents=True, exist_ok=True)
 
-        # Group files by model version
+        files_to_copy = log_files + histogram_files + corsika_log_files
         for model in self.array_models:
-            model_version = model.model_version
-            model_logs = [f for f in log_files if model_version in str(f)]
+            files_to_copy += general.ensure_list(model.pack_model_files())
 
-            if not model_logs:
-                continue
+        for file_to_copy in files_to_copy:
+            destination_file = directory_for_grid_upload / Path(file_to_copy).name
+            if destination_file.exists():
+                self.logger.warning(f"Overwriting existing file: {destination_file}")
+            shutil.copy2(file_to_copy, destination_file)
 
-            tar_name = Path(model_logs[0]).name.replace("simtel.log.gz", "log_hist.tar.gz")
-            tar_path = directory_for_grid_upload / tar_name
-
-            files_to_tar = (
-                model_logs
-                + [f for f in histogram_files if model_version in str(f)]
-                + corsika_log_files
-                + general.ensure_list(model.pack_model_files())
-            )
-            # simtools log file duplicated for each model version
-            if simtools_log_file and Path(simtools_log_file).exists():
-                files_to_tar.append(str(simtools_log_file))
-            general.pack_tar_file(tar_path, files_to_tar)
+        if simtools_log_file and Path(simtools_log_file).exists():
+            destination_file = directory_for_grid_upload / f"{Path(simtools_log_file).name}.gz"
+            if destination_file.exists():
+                self.logger.warning(f"Overwriting existing file: {destination_file}")
+            with (
+                Path(simtools_log_file).open("rb") as file_in,
+                gzip.open(destination_file, "wb") as file_out,
+            ):
+                shutil.copyfileobj(file_in, file_out)
 
         for file_to_move in output_files + reduced_event_files:
             destination_file = directory_for_grid_upload / Path(file_to_move).name

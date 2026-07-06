@@ -38,7 +38,7 @@ def test_main_calls_build_application_with_job_grid_override_flag(
         "label": "test",
         "save_reduced_event_lists": False,
         "save_file_lists": False,
-        "pack_for_grid_register": None,
+        "grid_output_path": None,
     }
     mock_build_app.return_value = mock_context
     mock_simulator_class.return_value = MagicMock()
@@ -58,7 +58,7 @@ def test_main_runs_simulator_and_reports(mock_build_app, mock_simulator_class):
         "label": "myprod",
         "save_reduced_event_lists": False,
         "save_file_lists": False,
-        "pack_for_grid_register": None,
+        "grid_output_path": None,
     }
     mock_build_app.return_value = mock_context
     mock_simulator = MagicMock()

@@ -19,7 +19,7 @@ applications:
     - 6.1
     showers_per_run: 5
     output_path: simtools-output
-    pack_for_grid_register: simtools-grid-output
+    grid_output_path: simtools-grid-output
     primary: 1
     primary_id_type: corsika7_id
     run_number: 1
@@ -30,8 +30,10 @@ applications:
     zenith_angle: 20
   integration_tests:
   - test_output_files:
-    - file: gamma_run000001_za20deg_azm180deg_South_CTAO-South-Alpha_6.0.2_multiple_model_versions.log_hist.tar.gz
-      path_descriptor: pack_for_grid_register
+    - file: gamma_run000001_za20deg_azm180deg_South_CTAO-South-Alpha_6.0.2_multiple_model_versions.simtel.log.gz
+      path_descriptor: grid_output_path
+    - file: gamma_run000001_za20deg_azm180deg_South_CTAO-South-Alpha_6.0.2_multiple_model_versions.hdata.zst
+      path_descriptor: grid_output_path
     - expected_sim_telarray_output:
         pe_sum:
         - 20
@@ -43,15 +45,17 @@ applications:
         - 0
         - 50
       file: gamma_run000001_za20deg_azm180deg_South_CTAO-South-Alpha_6.0.2_multiple_model_versions.simtel.zst
-      path_descriptor: pack_for_grid_register
+      path_descriptor: grid_output_path
     - file: gamma_run000001_za20deg_azm180deg_South_CTAO-South-Alpha_6.0.2_multiple_model_versions.reduced_event_data.hdf5
-      path_descriptor: pack_for_grid_register
-    - file: gamma_run000001_za20deg_azm180deg_South_CTAO-South-Alpha_6.1_multiple_model_versions.log_hist.tar.gz
-      path_descriptor: pack_for_grid_register
+      path_descriptor: grid_output_path
+    - file: gamma_run000001_za20deg_azm180deg_South_CTAO-South-Alpha_6.1_multiple_model_versions.simtel.log.gz
+      path_descriptor: grid_output_path
+    - file: gamma_run000001_za20deg_azm180deg_South_CTAO-South-Alpha_6.1_multiple_model_versions.hdata.zst
+      path_descriptor: grid_output_path
     - file: gamma_run000001_za20deg_azm180deg_South_CTAO-South-Alpha_6.1_multiple_model_versions.simtel.zst
-      path_descriptor: pack_for_grid_register
+      path_descriptor: grid_output_path
     - file: gamma_run000001_za20deg_azm180deg_South_CTAO-South-Alpha_6.1_multiple_model_versions.reduced_event_data.hdf5
-      path_descriptor: pack_for_grid_register
+      path_descriptor: grid_output_path
   test_name: gamma_20_deg_multiple_model_versions
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
