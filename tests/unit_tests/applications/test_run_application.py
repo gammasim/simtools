@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 
 import argparse
-from pathlib import Path
 from types import SimpleNamespace
-
-import pytest
 
 from simtools.applications import run_application
 
 
-def test_add_arguments_runtime_environment_file():
+def test_add_arguments():
+    """Test that _add_arguments only adds config_file and steps arguments."""
     parser = argparse.ArgumentParser()
 
     run_application._add_arguments(parser)
@@ -17,31 +15,28 @@ def test_add_arguments_runtime_environment_file():
         [
             "--config_file",
             "config.yml",
-            "--runtime_environment_file",
-            "run_time.yml",
+            "--steps",
+            "1",
+            "2",
         ]
     )
 
-    assert args.runtime_environment_file == Path("run_time.yml")
+    assert args.config_file == "config.yml"
+    assert args.steps == [1, 2]
 
 
-def test_main_uses_runtime_environment_file(monkeypatch):
+def test_main_pass_args_to_run_applications(monkeypatch):
+    """Test that main passes arguments and run_time to run_applications."""
     args = {
         "config_file": "config.yml",
-        "ignore_runtime_environment": False,
-        "runtime_environment_file": Path("run_time.yml"),
+        "steps": [1, 2],
     }
     calls = {}
 
     monkeypatch.setattr(
         run_application,
         "build_application",
-        lambda **_: SimpleNamespace(args=args),
-    )
-    monkeypatch.setattr(
-        run_application,
-        "prepare_runtime_environment",
-        lambda runtime_file: ({"image": f"image-from-{runtime_file}"}, ["runtime", "image"]),
+        lambda **_: SimpleNamespace(args=args, run_time=["mock", "runtime"]),
     )
 
     def _fake_run_applications(app_args, run_time=None):
@@ -52,27 +47,21 @@ def test_main_uses_runtime_environment_file(monkeypatch):
 
     run_application.main()
 
-    assert calls["app_args"]["runtime_environment"] == {"image": "image-from-run_time.yml"}
-    assert calls["run_time"] == ["runtime", "image"]
+    assert calls["app_args"] == args
+    assert calls["run_time"] == ["mock", "runtime"]
 
 
-def test_main_ignores_runtime_environment_file_when_requested(monkeypatch):
+def test_main_handles_none_run_time(monkeypatch):
+    """Test that main handles the case where run_time is None."""
     args = {
         "config_file": "config.yml",
-        "ignore_runtime_environment": True,
-        "runtime_environment_file": Path("run_time.yml"),
     }
     calls = {}
 
     monkeypatch.setattr(
         run_application,
         "build_application",
-        lambda **_: SimpleNamespace(args=args),
-    )
-    monkeypatch.setattr(
-        run_application,
-        "prepare_runtime_environment",
-        lambda _: pytest.fail("should not prepare runtime"),
+        lambda **_: SimpleNamespace(args=args, run_time=None),
     )
 
     def _fake_run_applications(app_args, run_time=None):
@@ -83,5 +72,5 @@ def test_main_ignores_runtime_environment_file_when_requested(monkeypatch):
 
     run_application.main()
 
-    assert "runtime_environment" not in calls["app_args"]
+    assert calls["app_args"] == args
     assert calls["run_time"] is None

@@ -70,55 +70,38 @@ def get_resource_generation_directory(test_directory, simtools_version):
     return config_dir
 
 
-def run_configured_applications(
-    config_dir,
-    log_dir,
-    config_file=None,
-    ignore_runtime_environment=True,
-    overwrite_collection_files=False,
-    run_time=None,
-    runtime_environment=None,
-    replacements=None,
-):
+def run_configured_applications(args_dict, config_dir, log_dir, run_time, replacements):
     """Run all resource-generation workflows using one prepared runtime.
 
     Parameters
     ----------
+    args_dict : dict
+        Dictionary containing command line arguments.
     config_dir : str or pathlib.Path
         Directory containing the ``*.config.yml`` workflow files.
     log_dir : str or pathlib.Path
         Destination directory for one log file per workflow.
-    config_file : str or pathlib.Path or None, optional
-        Run only the selected workflow file. Relative paths are resolved either
-        from the working directory or against ``config_dir``.
-    ignore_runtime_environment : bool, optional
-        Run applications in the current environment instead of a configured runtime.
-    overwrite_collection_files : bool, optional
-        Allow collection output files to overwrite existing files.
-    run_time : list[str] or None, optional
-        Prepared runtime command reused for every workflow.
-    runtime_environment : dict or None, optional
-        Runtime-environment configuration recorded in workflow metadata.
-    replacements : dict[str, str] or None, optional
+    run_time : list or None
+        Prepared runtime command. If provided, reuse it instead of preparing
+        the runtime environment from the workflow configuration.
+    replacements : dict[str, str] or None
         Placeholders replaced recursively in each workflow configuration.
     """
     config_dir = Path(config_dir)
     log_dir = Path(log_dir)
-    for workflow_config in _get_selected_config_files(config_dir, config_file):
+    for workflow_config in _get_selected_config_files(config_dir, args_dict.get("config_file")):
         logger.info("Executing applications configured in %s", workflow_config)
-        args_dict = {
+        tmp_args_dict = {
             "config_file": str(workflow_config),
             "log_file": str(log_dir / f"{workflow_config.name.removesuffix('.config.yml')}.log"),
             "steps": None,
-            "ignore_runtime_environment": ignore_runtime_environment,
-            "overwrite_collection_files": overwrite_collection_files,
+            "ignore_runtime_environment": args_dict.get("ignore_runtime_environment", False),
+            "overwrite_collection_files": args_dict.get("overwrite_collection_files", False),
         }
-        if runtime_environment is not None:
-            args_dict["runtime_environment"] = runtime_environment
+        if "runtime_environment" in args_dict:
+            tmp_args_dict["runtime_environment"] = args_dict["runtime_environment"]
         simtools_runner.run_applications(
-            args_dict,
-            run_time=run_time,
-            replacements=replacements,
+            tmp_args_dict, run_time=run_time, replacements=replacements
         )
 
 
@@ -140,6 +123,34 @@ def _get_selected_config_files(config_dir, config_file=None):
     raise FileNotFoundError(
         f"Selected workflow config does not exist in {config_dir}: {requested_path}"
     )
+
+
+def _construct_download_url(base_url_info, base_key, path):
+    """Construct the full download URL from base URL info, base key, and path.
+
+    Parameters
+    ----------
+    base_url_info : dict
+        Dictionary containing 'url' and 'version' keys for the base URL.
+    base_key : str
+        The key identifying the base URL configuration.
+    path : str
+        The path component which may contain version placeholders.
+
+    Returns
+    -------
+    str
+        The fully constructed download URL.
+    """
+    version = base_url_info["version"]
+    placeholder = f"__{base_key.upper()}_VERSION__"
+    if placeholder in path:
+        path = path.replace(placeholder, version)
+    if version and not path.startswith(version + "/"):
+        path_with_version = version + "/" + path.lstrip("/")
+    else:
+        path_with_version = path
+    return base_url_info["url"].rstrip("/") + "/" + path_with_version.lstrip("/")
 
 
 def _validate_download_entry(entry, index):
@@ -212,9 +223,7 @@ def download_files(config_file, target_dir):
             raise ValueError(f"Base URL key '{base_key}' not found in base_urls configuration")
 
         base_url_info = processed_base_urls[base_key]
-        version = base_url_info["version"]
-        path_with_version = version + "/" + entry["path"].lstrip("/") if version else entry["path"]
-        url = base_url_info["url"].rstrip("/") + "/" + path_with_version.lstrip("/")
+        url = _construct_download_url(base_url_info, base_key, entry["path"])
 
         destination = Path(target_dir) / entry["target_path"]
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -324,40 +333,26 @@ def validate_static_files(manifest_file):
     logger.info("Validated %d static files using %s", len(declared_files), manifest_file)
 
 
-def generate_test_resources(
-    test_directory,
-    simtools_version,
-    download_only=False,
-    test_static_files=False,
-    config_file=None,
-    runtime_environment_file=None,
-    ignore_runtime_environment=None,
-    overwrite_collection_files=False,
-):
+def generate_test_resources(args_dict, run_time=None):
     """Download inputs and run resource-generation workflows for a release.
 
     Parameters
     ----------
-    test_directory : str or pathlib.Path
-        Root directory of the ``simtools-tests`` repository.
-    simtools_version : str
-        Version directory to generate, for example ``v0.32.0``.
-    download_only : bool, optional
-        Download external files without running workflows.
-    test_static_files : bool, optional
-        Validate static files against their manifest without downloading or running workflows.
-    config_file : str or pathlib.Path or None, optional
-        Run only the selected workflow file from ``integration_tests/config_files``.
-    runtime_environment_file : str or pathlib.Path or None, optional
-        Standalone runtime-environment YAML reused for all workflows.
-    ignore_runtime_environment : bool or None, optional
-        Run in the current environment. By default, this is true when no standalone runtime is
-        provided and false when one is provided.
-    overwrite_collection_files : bool, optional
-        Allow collected files to overwrite existing files.
+    args_dict : dict
+        Dictionary containing command line arguments.
+        Optional key ``overwrite_collection_files`` (bool) allows collection
+        output files to be overwritten when different source files have the
+        same basename. Defaults to False.
+    run_time : list or None
+        Prepared runtime command. If provided, reuse it instead of preparing
+        the runtime environment from the workflow configuration.
     """
-    integration_test_dir = get_integration_test_directory(test_directory, simtools_version)
-    if test_static_files:
+    test_directory = Path(args_dict["test_directory"])
+    simtools_version = args_dict["simtools_version"]
+    integration_test_dir = get_integration_test_directory(
+        args_dict["test_directory"], args_dict["simtools_version"]
+    )
+    if args_dict.get("test_static_files"):
         validate_static_files(integration_test_dir / "static" / STATIC_MANIFEST)
         return
 
@@ -366,29 +361,18 @@ def generate_test_resources(
         "__TEST_DIRECTORY__": str(test_directory),
         "__SIMTOOLS_VERSION__": simtools_version,
     }
-    downloaded_files = download_files(config_dir / "download_files.yml", integration_test_dir)
-    if download_only:
+    downloaded_files = []
+    if not args_dict.get("config_file"):
+        downloaded_files = download_files(config_dir / "download_files.yml", integration_test_dir)
+    if args_dict.get("download_only"):
         return
-
-    if ignore_runtime_environment is None:
-        ignore_runtime_environment = runtime_environment_file is None
-
-    runtime_environment = None
-    run_time = None
-    if runtime_environment_file is not None and not ignore_runtime_environment:
-        runtime_environment, run_time = simtools_runner.prepare_runtime_environment(
-            runtime_environment_file
-        )
 
     try:
         run_configured_applications(
+            args_dict=args_dict,
             config_dir=config_dir,
             log_dir=integration_test_dir / "log_files",
-            config_file=config_file,
-            ignore_runtime_environment=ignore_runtime_environment,
-            overwrite_collection_files=overwrite_collection_files,
             run_time=run_time,
-            runtime_environment=runtime_environment,
             replacements=replacements,
         )
     finally:
