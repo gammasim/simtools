@@ -62,6 +62,7 @@ class EventDataHistograms:
 
         self.histograms = {}
         self.file_info = {}
+        self.data_ranges = {}
         self._contains_triggered_data = False
         self._filled_data_sets = 0
         self._release_event_data_after_fill = False
@@ -91,6 +92,7 @@ class EventDataHistograms:
         instance.telescope_list = telescope_list
         instance.histograms = {}
         instance.file_info = {}
+        instance.data_ranges = {}
         instance._contains_triggered_data = True
         instance._filled_data_sets = 0
         instance._release_event_data_after_fill = True
@@ -176,6 +178,22 @@ class EventDataHistograms:
         for data in self.histograms.values():
             self._fill_histogram_and_bin_edges(data)
 
+    def _update_data_range(self, name, values):
+        """Accumulate the finite minimum and maximum of an event-data field."""
+        try:
+            values = np.asarray(values, dtype=float)
+        except (TypeError, ValueError):
+            return
+        values = values[np.isfinite(values)]
+        if values.size == 0:
+            return
+
+        current_min, current_max = self.data_ranges.get(name, (np.inf, -np.inf))
+        self.data_ranges[name] = (
+            min(current_min, float(np.min(values))),
+            max(current_max, float(np.max(values))),
+        )
+
     def _release_event_data(self):
         """Release raw event references after their histogram counts have been accumulated."""
         for data in self.histograms.values():
@@ -184,6 +202,7 @@ class EventDataHistograms:
     def accumulate(self, file_info_table, shower_data, event_data, triggered_data):
         """Accumulate one already-read event dataset into all configured histograms."""
         self._update_file_info(file_info_table)
+        self._update_data_range("angular_distance", triggered_data.angular_distance)
         current_histograms = self._define_histograms(event_data, triggered_data, shower_data)
         self._merge_histograms(current_histograms)
         self._fill_current_histograms()

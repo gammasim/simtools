@@ -928,3 +928,16 @@ def test_view_cone_bins_min_equals_max(mock_reader, hdf5_file_name):
     assert len(bins) == 100
     assert bins[0] == pytest.approx(5.0)
     assert bins[-1] == pytest.approx(5.5)
+
+
+def test_accumulate_tracks_angular_distance_range(mock_reader, hdf5_file_name, mocker):
+    """Angular-distance extrema are retained after raw event data is released."""
+    histograms = EventDataHistograms.create_accumulator()
+    triggered_data = mocker.Mock(angular_distance=np.array([0.1, 0.1]))
+    mocker.patch.object(histograms, "_update_file_info")
+    mocker.patch.object(histograms, "_define_histograms", return_value={})
+
+    histograms.accumulate(mocker.Mock(), mocker.Mock(), mocker.Mock(), triggered_data)
+    histograms.accumulate(mocker.Mock(), mocker.Mock(), mocker.Mock(), triggered_data)
+
+    assert histograms.data_ranges["angular_distance"] == pytest.approx((0.1, 0.1))

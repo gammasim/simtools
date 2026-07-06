@@ -22,7 +22,8 @@ Typical outputs are:
 - sim_telarray eventio files and histogram files
 - reduced event-data HDF5 files when `--save_reduced_event_lists` is used
 - output and log file lists when `--save_file_lists` is used
-- registration tarballs when `--pack_for_grid_register` is configured
+- copied grid output files, including logs, histogram files, model archives, moved event files,
+  and `simtools.log.gz`, when `--grid_output_path` is configured
 
 Example command:
 
