@@ -79,8 +79,6 @@ definitions:
         $ref: '#/definitions/ValueSchema'
       validation:
         $ref: '#/definitions/ValidationPolicy'
-      comparison_policy:
-        $ref: '#/definitions/ComparisonPolicy'
     required:
       - source_type
       - source_name
@@ -91,7 +89,6 @@ definitions:
       - description
       - value_schema
       - validation
-      - comparison_policy
 
   ValueSchema:
     type: object
@@ -146,23 +143,3 @@ definitions:
       - mapping_must_match
       - config_value_required
       - emitted_value_must_match
-
-  ComparisonPolicy:
-    type: object
-    additionalProperties: false
-    properties:
-      mode:
-        type: string
-        enum:
-          - exact
-          - numeric_tolerance
-          - unordered_set
-          - ignore
-      absolute_tolerance:
-        type: number
-        minimum: 0.0
-      relative_tolerance:
-        type: number
-        minimum: 0.0
-    required:
-      - mode

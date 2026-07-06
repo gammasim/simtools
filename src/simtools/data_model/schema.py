@@ -167,7 +167,6 @@ def _build_model_parameter_meta_parameter_definition(source_name, emitted_name=N
             "config_value_required": True,
             "emitted_value_must_match": True,
         },
-        "comparison_policy": _derive_sim_telarray_comparison_policy(value_schema),
     }
 
 
@@ -253,26 +252,6 @@ def _derive_sim_telarray_value_schema(model_schema):
         return value_schema
 
     return {"kind": "scalar", "data_type": _derive_scalar_data_type(data_type)}
-
-
-def _derive_sim_telarray_comparison_policy(value_schema):
-    """Infer comparison policy from value schema kind."""
-    if value_schema.get("kind") == "fixed_numeric_tuple":
-        return {
-            "mode": "numeric_tolerance",
-            "absolute_tolerance": 1.0e-12,
-            "relative_tolerance": 1.0e-12,
-        }
-    if value_schema.get("kind") == "scalar" and value_schema.get("data_type") in {
-        "integer",
-        "number",
-    }:
-        return {
-            "mode": "numeric_tolerance",
-            "absolute_tolerance": 1.0e-12,
-            "relative_tolerance": 1.0e-12,
-        }
-    return {"mode": "exact"}
 
 
 def _is_integer_type(data_type):
