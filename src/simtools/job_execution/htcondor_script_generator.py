@@ -33,7 +33,7 @@ _PARAMS_FIELDS = [
     "corsika_le_interaction",
     "corsika_he_interaction",
     "run_number",
-    "pack_for_grid_register",
+    "grid_output_path",
 ]
 
 _PARAMS_JOB_SPEC_FIELDS = {field: field for field in _PARAMS_FIELDS}
@@ -89,7 +89,7 @@ def _format_param_value(value, field_name):
     if value is None:
         raise ValueError(f"Missing required value for field '{field_name}'.")
 
-    if field_name in ("pack_for_grid_register"):
+    if field_name in ("apptainer_label", "grid_output_path"):
         return _sanitize_label_for_params(value)
 
     if field_name == "cores_per_shower":
@@ -277,9 +277,12 @@ def _get_submit_script(args_dict):
         f"{bash_indices['energy_max']}{energy_unit}"
     )
 
-    command_parts = ['--label "$job_label"']
-    for arg_name in ("simulation_software", "site", "log_level"):
-        command_parts.append(f"--{arg_name} {args_dict[arg_name]}")
+    command_parts = [
+        '--label "$job_label"',
+        f"--simulation_software {args_dict['simulation_software']}",
+        f"--site {args_dict['site']}",
+        f"--log_level {args_dict['log_level']}",
+    ]
 
     for field in (
         "model_version",
@@ -291,7 +294,6 @@ def _get_submit_script(args_dict):
         "corsika_le_interaction",
         "corsika_he_interaction",
         "run_number",
-        "pack_for_grid_register",
     ):
         command_parts.append(f'--{field} "{bash_indices[field]}"')
 
@@ -307,6 +309,7 @@ def _get_submit_script(args_dict):
     if args_dict.get("save_file_lists"):
         command_parts.append("--save_file_lists")
     command_parts.append("--output_path /tmp/simtools-output")
+    command_parts.append(f'--grid_output_path "{bash_indices["grid_output_path"]}"')
 
     command_lines = []
     for index, part in enumerate(command_parts):
@@ -353,7 +356,7 @@ def build_job_specs(args_dict, image_labels):
                 {
                     "image_label": str(label),
                     **row,
-                    "pack_for_grid_register": f"{base_pack_dir}/{label!s}",
+                    "grid_output_path": f"{base_pack_dir}/{label!s}",
                 }
             )
     return job_specs, job_grid_metadata

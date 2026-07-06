@@ -939,6 +939,81 @@ def test_compute_limits_with_integral_fallback_curves(mocker):
     assert result["angular_distance_vs_energy_curve"] == {"x": [3.0, 3.0], "y": [1.0, 10.0]}
 
 
+def test_compute_limits_uses_exact_constant_angular_distance(mocker):
+    """A fixed angular distance bypasses histogram limits and their bin-edge offset."""
+    histograms = mocker.MagicMock()
+    histograms.energy_bins = np.array([1.0, 10.0])
+    histograms.core_distance_bins = np.array([0.0, 100.0])
+    histograms.view_cone_bins = np.array([0.0, 0.5])
+    histograms.data_ranges = {"angular_distance": (0.0, 0.0)}
+    histograms.histograms = {
+        "core_distance": {"histogram": np.array([10.0])},
+        "angular_distance": {"histogram": np.array([10.0])},
+    }
+    histograms.file_info = {"viewcone_max": 0.0 * u.deg}
+
+    integral_limits = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._integral_limits",
+        return_value=100.0,
+    )
+
+    result = derive_corsika_limits._compute_limits(histograms, DEFAULT_ALLOWED_LOSSES, 0)
+
+    integral_limits.assert_called_once()
+    assert_quantity_allclose(result["viewcone_radius"], 0.0 * u.deg)
+    assert result["angular_distance_is_constant"] is True
+    assert result["angular_distance_vs_energy_curve"] == {"x": [0.0, 0.0], "y": [1.0, 10.0]}
+
+
+def test_constant_angular_distance_is_not_rounded_in_results_table(mock_results):
+    """Preserve the raw constant value instead of rounding to viewcone increments."""
+    mock_results[0]["viewcone_radius"] = 0.1 * u.deg
+    mock_results[0]["angular_distance_is_constant"] = True
+
+    table = derive_corsika_limits._create_results_table(mock_results, DEFAULT_ALLOWED_LOSSES, 0.1)
+
+    assert table["viewcone_radius"][0] == pytest.approx(0.1)
+
+
+def test_constant_angular_distance_distributions_are_not_plotted(mocker, tmp_test_directory):
+    """Suppress all angular-distance-vs-* plots for fixed-direction simulations."""
+    histograms = mocker.MagicMock()
+    histograms.file_info = {}
+    histograms.histograms = {
+        "energy": {"histogram": np.array([1.0])},
+        "angular_distance_vs_energy": {"histogram": np.array([[1.0]])},
+        "angular_distance_vs_energy_mc": {"histogram": np.array([[1.0]])},
+        "angular_distance_vs_energy_cumulative": {"histogram": np.array([[1.0]])},
+    }
+    mocker.patch(COMPUTE_LOWER_ENERGY_LIMIT_PATH, return_value=1.0 * u.TeV)
+    mocker.patch(
+        COMPUTE_LIMITS_PATH,
+        return_value={
+            "upper_radius_limit": 100.0 * u.m,
+            "viewcone_radius": 0.0 * u.deg,
+            "angular_distance_is_constant": True,
+        },
+    )
+    plot = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.plot_simtel_event_histograms.plot"
+    )
+
+    derive_corsika_limits._derive_limits_from_histograms(
+        histograms,
+        "MockArray",
+        DEFAULT_ALLOWED_LOSSES,
+        0.01,
+        True,
+        tmp_test_directory,
+        0,
+    )
+
+    plotted_histograms = plot.call_args.args[0]
+    assert set(plotted_histograms) == set()
+    assert plot.call_args.kwargs["add_distance_projections"] is True
+    assert plot.call_args.kwargs["use_broad_range_limits"] is True
+
+
 def test_process_file_passes_energy_bins_per_decade_to_histograms(mocker):
     """Test differential binning resolution is forwarded to EventDataHistograms."""
     mock_histograms = mocker.MagicMock()
@@ -1034,6 +1109,7 @@ def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
     mock_histograms = mocker.MagicMock()
     mock_histograms.fill.return_value = None
     mock_histograms.file_info = {}
+    mock_histograms.histograms = {"energy": {}, "core_distance": {}}
 
     mocker.patch(
         SIM_EVENTS_HISTOGRAMS_PATH,
@@ -1073,8 +1149,7 @@ def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
 
     mock_plot.assert_called_once()
     args, kwargs = mock_plot.call_args
-    # First positional argument should be the histograms instance
-    assert args[0] is mock_histograms.histograms
+    assert set(args[0]) == {"core_distance"}
     assert kwargs["output_path"] == tmp_test_directory
     assert kwargs["limits"] == {
         "primary_particle": None,
@@ -1092,6 +1167,8 @@ def test_process_file_with_plot_histograms(mocker, tmp_test_directory):
         "angular_distance_vs_energy_curve": {"x": [2.0, 2.0], "y": [0.1, 1.0]},
     }
     assert kwargs["array_name"] == "MockArray"
+    assert kwargs["add_distance_projections"] is True
+    assert kwargs["use_broad_range_limits"] is True
 
 
 # Tests for multi-production and parallel execution support
@@ -1310,7 +1387,6 @@ def test_process_production_reads_once_and_matches_single_layout_results(
 
     assert read_spy.call_count == 1
     expected_histograms = {
-        "energy",
         "core_distance",
         "angular_distance",
         "x_core_shower_vs_y_core_shower",
@@ -1329,7 +1405,13 @@ def test_process_production_reads_once_and_matches_single_layout_results(
         "angular_distance_cumulative",
     }
     assert plot_mock.call_count == len(telescope_configs)
-    assert all(set(call.args[0]) == expected_histograms for call in plot_mock.call_args_list)
+    for call, result in zip(plot_mock.call_args_list, actual):
+        expected_for_result = expected_histograms
+        if result["angular_distance_is_constant"]:
+            expected_for_result = {
+                name for name in expected_histograms if not name.startswith("angular_distance_vs_")
+            }
+        assert set(call.args[0]) == expected_for_result
     assert len(actual) == len(expected)
     for actual_result, expected_result in zip(actual, expected):
         assert actual_result.keys() == expected_result.keys()

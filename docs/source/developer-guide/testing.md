@@ -150,8 +150,8 @@ Test that a given output file is created by the tool in the provided output dire
 ```text
 integration_tests:
 - test_output_files:
-  - file: proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_check_output.log_hist.tar.gz
-      path_descriptor: pack_for_grid_register
+  - file: proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_check_output.simtel.log.gz
+      path_descriptor: grid_output_path
 ```
 
 Test that output file is of a given type (e.g. json).
@@ -231,7 +231,7 @@ integration_tests:
         - 0
         - 50
       file: proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_check_output.simtel.zst
-      path_descriptor: pack_for_grid_register
+      path_descriptor: grid_output_path
 ```
 
 Test the sim_telarray metadata:
@@ -245,7 +245,7 @@ integration_tests:
         38:
           effective_focal_length: '215.191 0 0 0 0'
       file: gamma_run000020_za62deg_azm180deg_South_beta_6.0.2_test.simtel.zst
-      path_descriptor: pack_for_grid_register
+      path_descriptor: grid_output_path
 ```
 
 Test for required and forbidden patterns in log files:
@@ -259,8 +259,8 @@ integration_tests:
         - "Sim_telarray finished at"
         - "CURVED VERSION WITH SLIDING PLANAR ATMOSPHERE"
         - "CORSIKA was compiled with CURVED option."
-      file: gamma_run000020_za62deg_azm180deg_South_beta_6.0.2_test.log_hist.tar.gz
-      path_descriptor: pack_for_grid_register
+      file: gamma_run000020_za62deg_azm180deg_South_beta_6.0.2_test.simtel.log.gz
+      path_descriptor: grid_output_path
       forbidden_pattern:
       - "Error"
 ```

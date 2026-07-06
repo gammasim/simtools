@@ -250,11 +250,7 @@ def plot_limits(limits_table, output_dir):
             ]
             legend_labels += ["broad-range limits"]
         fig.legend(legend_handles, legend_labels, loc="lower center", ncol=len(legend_labels))
-        plt.suptitle(
-            "CORSIKA Limits: "
-            f"Array Name={array_name}, Azimuth={azimuth_value} deg, "
-            f"Primary Particle={primary_particle}"
-        )
+        plt.suptitle(f"CORSIKA Limits: {array_name}, Az={azimuth_value} deg, {primary_particle}")
         plt.tight_layout()
         plt.subplots_adjust(bottom=0.15)
 
