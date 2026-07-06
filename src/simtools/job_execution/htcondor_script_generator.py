@@ -40,7 +40,7 @@ _PARAMS_FIELDS = [
     "corsika_le_interaction",
     "corsika_he_interaction",
     "run_number",
-    "pack_for_grid_register",
+    "grid_output_path",
 ]
 
 _REQUIRED_JOB_GRID_METADATA = ("site", "simulation_software")
@@ -98,7 +98,7 @@ def _format_param_value(value, field_name):
     if value is None:
         raise ValueError(f"Missing required value for field '{field_name}'.")
 
-    if field_name in ("apptainer_label", "pack_for_grid_register"):
+    if field_name in ("apptainer_label", "grid_output_path"):
         return _sanitize_label_for_params(value)
 
     if field_name == "cores_per_shower":
@@ -186,7 +186,7 @@ def _write_params_file(params_file_path, label_job_specs):
                 _format_param_value(job_spec["corsika_le_interaction"], "corsika_le_interaction"),
                 _format_param_value(job_spec["corsika_he_interaction"], "corsika_he_interaction"),
                 _format_param_value(job_spec["run_number"], "run_number"),
-                _format_param_value(job_spec["pack_for_grid_register"], "pack_for_grid_register"),
+                _format_param_value(job_spec["grid_output_path"], "grid_output_path"),
             ]
             params_file_handle.write(" ".join(row) + "\n")
 
@@ -349,7 +349,7 @@ array_layout_name="{bash_indices["array_layout_name"]}"
 corsika_le_interaction="{bash_indices["corsika_le_interaction"]}"
 corsika_he_interaction="{bash_indices["corsika_he_interaction"]}"
 run_number="{bash_indices["run_number"]}"
-pack_for_grid_register="{bash_indices["pack_for_grid_register"]}"
+grid_output_path="{bash_indices["grid_output_path"]}"
 energy_range_tag="{energy_range_tag}"
 job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
@@ -373,7 +373,7 @@ simtools-simulate-prod \\
     --save_reduced_event_lists \\
     --output_path /tmp/simtools-output \\
     --log_level {args_dict["log_level"]} \\
-    --pack_for_grid_register "$pack_for_grid_register"
+    --grid_output_path "$grid_output_path"
 """
 
 
@@ -402,7 +402,7 @@ def build_job_specs(args_dict, image_labels):
                 {
                     "image_label": str(label),
                     **row,
-                    "pack_for_grid_register": f"{base_pack_dir}/{label!s}",
+                    "grid_output_path": f"{base_pack_dir}/{label!s}",
                 }
             )
     return job_specs, job_grid_metadata

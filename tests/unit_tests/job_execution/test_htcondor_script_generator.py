@@ -164,7 +164,7 @@ array_layout_name="${{20}}"
 corsika_le_interaction="${{21}}"
 corsika_he_interaction="${{22}}"
 run_number="${{23}}"
-pack_for_grid_register="${{24}}"
+grid_output_path="${{24}}"
 energy_range_tag="erange-${{7}}${{8}}-${{9}}${{10}}"
 job_label="{args_dict["label"]}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
 
@@ -188,7 +188,7 @@ simtools-simulate-prod \\
     --save_reduced_event_lists \\
     --output_path /tmp/simtools-output \\
     --log_level {args_dict["log_level"]} \\
-    --pack_for_grid_register "$pack_for_grid_register"
+    --grid_output_path "$grid_output_path"
 """
     generated_script = _get_submit_script(args_dict)
     assert generated_script == expected_script
@@ -322,7 +322,7 @@ def test_build_job_specs_reads_grid_file(args_dict, job_rows, job_grid_metadata)
     mock_read_job_grid.assert_called_once_with(args_dict["job_grid_file"])
     assert metadata == job_grid_metadata
     assert job_specs[0]["image_label"] == "7.0.0"
-    assert job_specs[0]["pack_for_grid_register"] == "simtools-output/7.0.0"
+    assert job_specs[0]["grid_output_path"] == "simtools-output/7.0.0"
     assert job_specs[0]["array_layout_name"] == "CTAO-North-Alpha"
 
 
@@ -357,7 +357,7 @@ def test_write_params_file_keeps_energy_units(tmp_test_directory):
             "corsika_le_interaction": "urqmd",
             "corsika_he_interaction": "epos",
             "run_number": 10,
-            "pack_for_grid_register": "simtools-output/7.0.0",
+            "grid_output_path": "simtools-output/7.0.0",
         }
     ]
 
@@ -389,7 +389,7 @@ def test_write_params_file_replaces_whitespace_in_apptainer_label(tmp_test_direc
             "corsika_le_interaction": "urqmd",
             "corsika_he_interaction": "epos",
             "run_number": 10,
-            "pack_for_grid_register": "simtools-output/grid label 7.0.0",
+            "grid_output_path": "simtools-output/grid label 7.0.0",
         }
     ]
 
