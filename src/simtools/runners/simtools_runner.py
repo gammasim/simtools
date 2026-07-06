@@ -2,6 +2,7 @@
 
 import glob
 import logging
+import os
 import shutil
 from copy import deepcopy
 from datetime import UTC, datetime
@@ -562,7 +563,7 @@ def _set_input_output_directories(path):
     return output_path, setting_workflow
 
 
-def read_runtime_environment(runtime_environment, workdir="/workdir/external/"):
+def read_runtime_environment(runtime_environment):
     """
     Read the runtime environment (e.g. docker runtime) and generate the required command.
 
@@ -582,11 +583,12 @@ def read_runtime_environment(runtime_environment, workdir="/workdir/external/"):
     engine = runtime_environment.get("container_engine", "docker")
     if shutil.which(engine) is None:
         raise RuntimeError(f"Container engine '{engine}' not found.")
-    cmd = [engine, "run", "--rm", "-v", f"{Path.cwd()}:{workdir}", "-w", workdir]
+    cmd = [engine, "run", "--rm"]
 
     if options := runtime_environment.get("options"):
         for opt in options:
-            cmd.extend(opt.split())
+            expanded_opt = os.path.expandvars(opt)
+            cmd.extend(expanded_opt.split())
 
     if env := runtime_environment.get("environment_file"):
         cmd += ["--env-file", env]

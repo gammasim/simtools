@@ -358,7 +358,9 @@ def generate_test_resources(args_dict, run_time=None):
         "__TEST_DIRECTORY__": str(test_directory),
         "__SIMTOOLS_VERSION__": simtools_version,
     }
-    downloaded_files = download_files(config_dir / "download_files.yml", integration_test_dir)
+    downloaded_files = []
+    if not args_dict.get("config_file"):
+        downloaded_files = download_files(config_dir / "download_files.yml", integration_test_dir)
     if args_dict.get("download_only"):
         return
 
