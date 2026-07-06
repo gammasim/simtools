@@ -522,18 +522,25 @@ def test_compare_simtel_cfg_files(tmp_test_directory):
     with open(file1) as f1:
         lines1 = f1.readlines()
 
-    # additional line in file
+    # additional metadata line should be ignored here
     file3 = tmp_test_directory / "file3.cfg"
     with open(file3, "a") as f3:
         f3.write("".join(lines1))
-        f3.write("Additional line\n")
-    assert not validate_output._compare_simtel_cfg_files(file1, file3)
+        f3.write("metaparam telescope set simtools_version = changed\n")
+    assert validate_output._compare_simtel_cfg_files(file1, file3)
 
     # change of values
     file4 = tmp_test_directory / "file4.cfg"
     with open(file4, "a") as f3:
         f3.write("".join(lines1).replace("1", "2"))
     assert not validate_output._compare_simtel_cfg_files(file1, file4)
+
+    # additional control line should still fail
+    file5 = tmp_test_directory / "file5.cfg"
+    with open(file5, "a") as f5:
+        f5.write("".join(lines1))
+        f5.write("# include <Extra.cfg>\n")
+    assert not validate_output._compare_simtel_cfg_files(file1, file5)
 
 
 def test_validate_simtel_cfg_files(mocker, test_path):
