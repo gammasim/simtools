@@ -87,6 +87,8 @@ def run_configured_applications(args_dict, config_dir, log_dir, run_time, replac
     replacements : dict[str, str] or None
         Placeholders replaced recursively in each workflow configuration.
     """
+    config_dir = Path(config_dir)
+    log_dir = Path(log_dir)
     for workflow_config in _get_selected_config_files(config_dir, args_dict.get("config_file")):
         logger.info("Executing applications configured in %s", workflow_config)
         tmp_args_dict = {
