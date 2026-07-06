@@ -13,152 +13,321 @@ description: |-
   sim_telarray mapping declared in the model-parameter schemas.
 generated_meta_parameters:
   array_config_name:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: assign
     category: provenance
     description: Array configuration name.
+    value_schema: &string_scalar {kind: scalar, data_type: string}
+    validation: &generated_assign_validation {source_must_exist: false, mapping_must_match: false, config_value_required: true, emitted_value_must_match: true}
+    comparison_policy: &exact_compare {mode: exact}
   array_config_variant:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: assign
     category: provenance
     description: Array configuration variant.
     value_schema: {kind: scalar, data_type: string, allow_empty: true}
+    validation: *generated_assign_validation
+    comparison_policy: *exact_compare
   array_config_version:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: assign
     category: provenance
     description: Array configuration version.
+    value_schema: *string_scalar
+    validation: *generated_assign_validation
+    comparison_policy: *exact_compare
   camera_config_name:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: telescope
     mode: assign
     category: provenance
     description: Camera configuration name.
+    value_schema: *string_scalar
+    validation: *generated_assign_validation
+    comparison_policy: *exact_compare
   camera_config_variant:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: telescope
     mode: assign
     category: provenance
     description: Camera configuration variant.
+    value_schema: *string_scalar
+    validation: *generated_assign_validation
+    comparison_policy: *exact_compare
   camera_config_version:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: telescope
     mode: assign
     category: provenance
     description: Camera configuration version.
+    value_schema: *string_scalar
+    validation: *generated_assign_validation
+    comparison_policy: *exact_compare
   config_release:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: assign
     category: provenance
     description: Configuration release string.
+    value_schema: *string_scalar
+    validation: *generated_assign_validation
+    comparison_policy: *exact_compare
   config_version:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: assign
     category: provenance
     description: Configuration version.
+    value_schema: *string_scalar
+    validation: *generated_assign_validation
+    comparison_policy: *exact_compare
   nsb_integrated_flux:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: set
     category: site_configuration
     description: Integrated night-sky background flux.
     value_schema: {kind: scalar, data_type: number}
+    validation: &generated_set_validation {source_must_exist: false, mapping_must_match: false, config_value_required: true, emitted_value_must_match: true}
+    comparison_policy: &numeric_compare {mode: numeric_tolerance, absolute_tolerance: 1.0e-12, relative_tolerance: 1.0e-12}
   optics_config_name:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: telescope
     mode: assign
     category: provenance
     description: Optics configuration name.
+    value_schema: *string_scalar
+    validation: *generated_assign_validation
+    comparison_policy: *exact_compare
   optics_config_variant:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: telescope
     mode: assign
     category: provenance
     description: Optics configuration variant.
+    value_schema: *string_scalar
+    validation: *generated_assign_validation
+    comparison_policy: *exact_compare
   optics_config_version:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: telescope
     mode: assign
     category: provenance
     description: Optics configuration version.
+    value_schema: *string_scalar
+    validation: *generated_assign_validation
+    comparison_policy: *exact_compare
   random_seed:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: add
     category: run_parameter
     description: Random seed included in sim_telarray metadata.
     value_schema: {kind: scalar, data_type: integer}
+    validation: &generated_add_validation {source_must_exist: false, mapping_must_match: false, config_value_required: false, emitted_value_must_match: false}
+    comparison_policy: *numeric_compare
   simtools_avx_flag:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: set
     category: software
     description: simtools build AVX flag.
+    value_schema: *string_scalar
+    validation: *generated_set_validation
+    comparison_policy: *exact_compare
   simtools_build_date:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: set
     category: software
     description: simtools build date.
+    value_schema: *string_scalar
+    validation: *generated_set_validation
+    comparison_policy: *exact_compare
   simtools_corsika_config_version:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: set
     category: software
     description: simtools CORSIKA configuration version.
+    value_schema: *string_scalar
+    validation: *generated_set_validation
+    comparison_policy: *exact_compare
   simtools_corsika_exec:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: set
     category: software
     description: CORSIKA executable identifier used by simtools.
+    value_schema: *string_scalar
+    validation: *generated_set_validation
+    comparison_policy: *exact_compare
   simtools_corsika_opt_patch_version:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: set
     category: software
     description: simtools CORSIKA optical patch version.
+    value_schema: *string_scalar
+    validation: *generated_set_validation
+    comparison_policy: *exact_compare
   simtools_corsika_version:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: set
     category: software
     description: CORSIKA version used by simtools.
     value_schema: {kind: scalar, data_type: integer}
+    validation: *generated_set_validation
+    comparison_policy: *numeric_compare
   simtools_extra_defines:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: set
     category: software
     description: Extra compiler defines recorded by simtools.
+    value_schema: *string_scalar
+    validation: *generated_set_validation
+    comparison_policy: *exact_compare
   simtools_hessio_version:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: set
     category: software
     description: HESSIO version used by simtools.
+    value_schema: *string_scalar
+    validation: *generated_set_validation
+    comparison_policy: *exact_compare
   simtools_iact_atmo_version:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: set
     category: software
     description: IACT/atmosphere package version used by simtools.
+    value_schema: *string_scalar
+    validation: *generated_set_validation
+    comparison_policy: *exact_compare
   simtools_model_production_version:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: set
     category: software
     description: Simulation-model production version used by simtools.
+    value_schema: *string_scalar
+    validation: *generated_set_validation
+    comparison_policy: *exact_compare
   simtools_simtel_version:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: set
     category: software
     description: sim_telarray version used by simtools.
+    value_schema: *string_scalar
+    validation: *generated_set_validation
+    comparison_policy: *exact_compare
   simtools_stdtools_version:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: set
     category: software
     description: stdtools version used by simtools.
+    value_schema: *string_scalar
+    validation: *generated_set_validation
+    comparison_policy: *exact_compare
   simtools_version:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: set
     category: software
     description: simtools version.
+    value_schema: *string_scalar
+    validation: *generated_set_validation
+    comparison_policy: *exact_compare
   site_config_name:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: assign
     category: provenance
     description: Site configuration name.
+    value_schema: *string_scalar
+    validation: *generated_assign_validation
+    comparison_policy: *exact_compare
   site_config_variant:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: assign
     category: provenance
     description: Site configuration variant.
     value_schema: {kind: scalar, data_type: string, allow_empty: true}
+    validation: *generated_assign_validation
+    comparison_policy: *exact_compare
   site_config_version:
+    source_type: generated
+    source_name: null
+    unit: null
     scope: global
     mode: assign
     category: provenance
     description: Site configuration version.
+    value_schema: *string_scalar
+    validation: *generated_assign_validation
+    comparison_policy: *exact_compare

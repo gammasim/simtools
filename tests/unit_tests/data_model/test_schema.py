@@ -14,8 +14,8 @@ from simtools.constants import (
     MODEL_PARAMETER_METASCHEMA,
     MODEL_PARAMETER_SCHEMA_PATH,
     SCHEMA_PATH,
-    SIM_TELARRAY_METAPARAMETER_METASCHEMA,
-    SIM_TELARRAY_METAPARAMETER_REGISTRY,
+    SIM_TELARRAY_META_PARAMETER_METASCHEMA,
+    SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
 from simtools.data_model import schema
 from simtools.io import ascii_handler
@@ -142,11 +142,11 @@ def test_get_sim_telarray_meta_parameter_definition():
 
 
 def test_validate_sim_telarray_meta_parameter_registry_schema():
-    registry = ascii_handler.collect_data_from_file(SIM_TELARRAY_METAPARAMETER_REGISTRY)
+    registry = ascii_handler.collect_data_from_file(SIM_TELARRAY_META_PARAMETER_REGISTRY)
 
     schema.validate_dict_using_schema(
         registry,
-        schema_file=SIM_TELARRAY_METAPARAMETER_METASCHEMA,
+        schema_file=SIM_TELARRAY_META_PARAMETER_METASCHEMA,
         offline=True,
         ignore_software_version=True,
     )
@@ -166,7 +166,7 @@ def test_sim_telarray_meta_parameter_registry_uses_generated_or_model_parameter_
     model_parameter_names, _ = schema.get_model_parameter_schema_files()
 
     registry = schema.get_sim_telarray_meta_parameter_registry()["meta_parameters"]
-    registry_source = ascii_handler.collect_data_from_file(SIM_TELARRAY_METAPARAMETER_REGISTRY)
+    registry_source = ascii_handler.collect_data_from_file(SIM_TELARRAY_META_PARAMETER_REGISTRY)
     generated = set(registry_source["generated_meta_parameters"])
 
     for emitted_name, definition in registry.items():

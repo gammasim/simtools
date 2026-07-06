@@ -17,9 +17,9 @@ MODEL_PARAMETER_DESCRIPTION_METASCHEMA = (
     SCHEMA_PATH / "model_parameter_and_data_schema.metaschema.yml"
 )
 # Path to sim_telarray metaparameter metaschema
-SIM_TELARRAY_METAPARAMETER_METASCHEMA = SCHEMA_PATH / "sim_telarray_metaparameter.metaschema.yml"
+SIM_TELARRAY_META_PARAMETER_METASCHEMA = SCHEMA_PATH / "sim_telarray_metaparameter.metaschema.yml"
 # Path to sim_telarray metaparameter registry
-SIM_TELARRAY_METAPARAMETER_REGISTRY = SCHEMA_PATH / "sim_telarray_metaparameters.schema.yml"
+SIM_TELARRAY_META_PARAMETER_REGISTRY = SCHEMA_PATH / "sim_telarray_metaparameters.schema.yml"
 # Path to model parameter schema files
 MODEL_PARAMETER_SCHEMA_PATH = SCHEMA_PATH / "model_parameters"
 # URL to model parameter schema files

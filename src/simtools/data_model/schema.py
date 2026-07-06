@@ -13,8 +13,8 @@ from simtools.constants import (
     MODEL_PARAMETER_METASCHEMA,
     MODEL_PARAMETER_SCHEMA_PATH,
     SCHEMA_PATH,
-    SIM_TELARRAY_METAPARAMETER_METASCHEMA,
-    SIM_TELARRAY_METAPARAMETER_REGISTRY,
+    SIM_TELARRAY_META_PARAMETER_METASCHEMA,
+    SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
 from simtools.data_model import format_checkers
 from simtools.dependencies import get_software_version
@@ -91,7 +91,7 @@ def get_model_parameter_schema(parameter, schema_version=None):
 
 def get_sim_telarray_meta_parameter_registry(schema_version=None, validate=True):
     """
-    Return the sim_telarray meta_parameter registry.
+    Return the sim_telarray meta-parameter registry.
 
     Parameters
     ----------
@@ -103,15 +103,15 @@ def get_sim_telarray_meta_parameter_registry(schema_version=None, validate=True)
     Returns
     -------
     dict
-        sim_telarray meta_parameter registry.
+        sim_telarray meta-parameter registry.
     """
     registry_source = load_schema(
-        SIM_TELARRAY_METAPARAMETER_REGISTRY, schema_version=schema_version or "latest"
+        SIM_TELARRAY_META_PARAMETER_REGISTRY, schema_version=schema_version or "latest"
     )
     if validate:
         validate_dict_using_schema(
             registry_source,
-            schema_file=SIM_TELARRAY_METAPARAMETER_METASCHEMA,
+            schema_file=SIM_TELARRAY_META_PARAMETER_METASCHEMA,
             offline=True,
             ignore_software_version=True,
         )
@@ -215,9 +215,7 @@ def _build_sim_telarray_meta_parameter_registry(registry_source):
     meta_parameters = {}
 
     for emitted_name, definition in registry_source.get("generated_meta_parameters", {}).items():
-        meta_parameters[emitted_name] = _build_generated_sim_telarray_meta_parameter_definition(
-            emitted_name, definition
-        )
+        meta_parameters[emitted_name] = {"name": emitted_name, **definition}
 
     for source_name, model_schema in names.model_parameters().items():
         try:
@@ -231,38 +229,6 @@ def _build_sim_telarray_meta_parameter_registry(registry_source):
 
     registry["meta_parameters"] = meta_parameters
     return registry
-
-
-def _build_generated_sim_telarray_meta_parameter_definition(emitted_name, definition):
-    """Build one generated sim_telarray meta_parameter definition."""
-    value_schema = definition.get("value_schema") or {"kind": "scalar", "data_type": "string"}
-    validation = {
-        "source_must_exist": False,
-        "mapping_must_match": False,
-        "config_value_required": definition.get("mode") != "add",
-        "emitted_value_must_match": definition.get("mode") != "add",
-    }
-    if emitted_name == "random_seed":
-        validation = {
-            "source_must_exist": False,
-            "mapping_must_match": False,
-            "config_value_required": False,
-            "emitted_value_must_match": False,
-        }
-    return {
-        "name": emitted_name,
-        "scope": definition["scope"],
-        "mode": definition["mode"],
-        "category": definition["category"],
-        "source_type": "generated",
-        "source_name": None,
-        "description": definition["description"],
-        "unit": None,
-        "value_schema": value_schema,
-        "validation": validation,
-        "comparison_policy": definition.get("comparison_policy")
-        or _derive_sim_telarray_comparison_policy(value_schema),
-    }
 
 
 def _build_model_parameter_meta_parameter_definition(source_name, emitted_name=None):
