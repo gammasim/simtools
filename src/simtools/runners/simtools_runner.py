@@ -47,11 +47,8 @@ def run_applications(args_dict, run_time=None, replacements=None):
         args_dict.get("activity_id"),
         replacements=replacements,
     )
-    if args_dict.get("log_file") is not None:
-        log_file = args_dict["log_file"]
-
-    if args_dict.get("runtime_environment") is not None:
-        runtime_environment = args_dict["runtime_environment"]
+    log_file = args_dict.get("log_file", log_file)
+    runtime_environment = args_dict.get("runtime_environment", runtime_environment)
 
     workflow_start = datetime.now(UTC)
     associated_activities = []
@@ -555,11 +552,7 @@ def _set_input_output_directories(path):
     try:
         setting_workflow = gen.extract_subdirectories_from_path(path, anchor="input")
     except ValueError:
-        if path.parent != Path():
-            setting_workflow = str(path.parent)
-        else:
-            setting_workflow = path.stem
-
+        setting_workflow = str(path.parent) if path.parent != Path() else path.stem
         logger.info(
             "Could not derive setting workflow from 'input' anchor; "
             f"using fallback '{setting_workflow}'"
