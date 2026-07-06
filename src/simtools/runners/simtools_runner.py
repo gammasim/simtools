@@ -569,8 +569,9 @@ def read_runtime_environment(runtime_environment):
 
     Parameters
     ----------
-    runtime_environment : str or None
-        Path to the runtime environment configuration file.
+    runtime_environment : dict or None
+        Runtime environment configuration.
+    docs/changes/2323.feature.md
 
     Returns
     -------

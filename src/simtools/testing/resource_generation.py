@@ -95,10 +95,11 @@ def run_configured_applications(args_dict, config_dir, log_dir, run_time, replac
             "config_file": str(workflow_config),
             "log_file": str(log_dir / f"{workflow_config.name.removesuffix('.config.yml')}.log"),
             "steps": None,
-            "runtime_environment": args_dict.get("runtime_environment"),
             "ignore_runtime_environment": args_dict.get("ignore_runtime_environment", False),
             "overwrite_collection_files": args_dict.get("overwrite_collection_files", False),
         }
+        if "runtime_environment" in args_dict:
+            tmp_args_dict["runtime_environment"] = args_dict["runtime_environment"]
         simtools_runner.run_applications(
             tmp_args_dict, run_time=run_time, replacements=replacements
         )
