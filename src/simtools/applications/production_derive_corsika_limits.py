@@ -29,6 +29,8 @@ Upper core distance (**CSCAT**) and viewcone radius (**VIEWCONE**)
     either as integrated limits or per-energy-bin
     differential limits (depending on ``--differential_loss_bins_per_decade``).
     Differential limits are preferable, as they are more robust to variations with energy.
+    If every triggered event has the same angular distance, the viewcone radius is set to that
+    exact value and the degenerate angular-distance-vs-energy plots are omitted.
 
 Results are provided as a table with the following columns:
 
