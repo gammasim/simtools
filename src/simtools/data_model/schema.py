@@ -155,9 +155,7 @@ def _build_model_parameter_meta_parameter_definition(source_name, emitted_name=N
         "name": emitted_name,
         "scope": _derive_sim_telarray_scope(model_schema),
         "mode": mode,
-        "category": _derive_sim_telarray_category(source_name, model_schema),
         "source_type": "model_parameter",
-        "source_name": source_name,
         "description": model_schema.get("short_description") or model_schema.get("description", ""),
         "unit": _derive_sim_telarray_unit(model_schema),
         "value_schema": value_schema,
@@ -196,15 +194,6 @@ def _derive_sim_telarray_scope(model_schema):
     if model_schema.get("instrument", {}).get("class") == "Site":
         return "global"
     return "telescope"
-
-
-def _derive_sim_telarray_category(source_name, model_schema):
-    """Infer default sim_telarray metadata category from model parameter schema."""
-    if source_name == "array_triggers":
-        return "array_configuration"
-    if model_schema.get("instrument", {}).get("class") == "Site":
-        return "site_configuration"
-    return "simulation_model"
 
 
 def _derive_sim_telarray_unit(model_schema):

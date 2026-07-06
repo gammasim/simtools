@@ -48,8 +48,6 @@ definitions:
         type: string
         enum:
           - generated
-      source_name:
-        type: "null"
       unit:
         type: "null"
       scope:
@@ -81,11 +79,9 @@ definitions:
         $ref: '#/definitions/ValidationPolicy'
     required:
       - source_type
-      - source_name
       - unit
       - scope
       - mode
-      - category
       - description
       - value_schema
       - validation

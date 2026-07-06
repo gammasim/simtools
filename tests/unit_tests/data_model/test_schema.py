@@ -125,9 +125,6 @@ def test_get_sim_telarray_meta_parameter_registry():
 
     assert registry["name"] == "sim_telarray_meta_parameters"
     assert "camera_config_file" in registry["meta_parameters"]
-    assert (
-        registry["meta_parameters"]["random_mono_prob"]["source_name"] == "random_mono_probability"
-    )
 
 
 def test_validate_sim_telarray_meta_parameter_registry_schema():
@@ -145,8 +142,6 @@ def test_validate_sim_telarray_meta_parameter_registry_schema():
 
 
 def test_sim_telarray_meta_parameter_registry_uses_generated_or_model_parameter_schema():
-    model_parameter_names, _ = schema.get_model_parameter_schema_files()
-
     registry = schema.get_sim_telarray_meta_parameter_registry()["meta_parameters"]
     registry_source = ascii_handler.collect_data_from_file(SIM_TELARRAY_META_PARAMETER_REGISTRY)
     generated = set(registry_source["generated_meta_parameters"])
@@ -155,7 +150,6 @@ def test_sim_telarray_meta_parameter_registry_uses_generated_or_model_parameter_
         if emitted_name in generated:
             continue
         assert definition["source_type"] == "model_parameter"
-        assert definition["source_name"] in model_parameter_names
 
 
 def test_sim_telarray_meta_parameter_registry_covers_emitted_keys():
@@ -245,19 +239,6 @@ def test_sim_telarray_meta_parameter_registry_sample_value_validation():
         site_cfg["assign"]["config_release"],
         registry["config_release"]["value_schema"],
     )
-
-    assert registry["random_seed"]["category"] == "run_parameter"
-
-
-def test_sim_telarray_meta_parameter_registry_categories_support_reference_filters():
-    registry = schema.get_sim_telarray_meta_parameter_registry()["meta_parameters"]
-
-    assert registry["focal_length"]["category"] == "simulation_model"
-    assert registry["simtools_version"]["category"] == "software"
-    assert registry["random_seed"]["category"] == "run_parameter"
-    assert registry["latitude"]["category"] == "site_configuration"
-    assert registry["array_triggers"]["category"] == "array_configuration"
-    assert registry["config_version"]["category"] == "provenance"
 
 
 def test_get_parameter_type_and_unit_from_schema():
