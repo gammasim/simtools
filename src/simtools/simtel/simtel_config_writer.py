@@ -2,7 +2,6 @@
 """Configuration file writer for sim_telarray."""
 
 import logging
-import re
 from copy import deepcopy
 from pathlib import Path
 
@@ -13,8 +12,7 @@ import simtools.utils.general as gen
 import simtools.version
 from simtools import dependencies, settings
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
-from simtools.data_model import schema
-from simtools.simtel import simtel_table_writer
+from simtools.simtel import simtel_table_writer, simtel_validate_metadata
 from simtools.utils import names
 
 logger = logging.getLogger(__name__)
@@ -270,7 +268,7 @@ class SimtelConfigWriter:
                 if value is not None:
                     meta_parameters.append(f"{prefix} set {key}={value}")
 
-        self._validate_sim_telarray_metadata(meta_parameters)
+        simtel_validate_metadata.validate_metadata(meta_parameters)
         return meta_parameters
 
     def _add_model_parameters_to_metadata(self, model_parameters, meta_parameters, prefix):
@@ -479,123 +477,9 @@ class SimtelConfigWriter:
             if not isinstance(value, list):
                 meta_lines.append(f"metaparam global set {key} = {value}")
 
-        self._validate_sim_telarray_metadata(meta_lines)
+        simtel_validate_metadata.validate_metadata(meta_lines)
         for line in meta_lines:
             file.write(f"{self.TAB}{line}\n")
-
-    def _validate_sim_telarray_metadata(self, meta_parameters):
-        """Validate emitted sim_telarray metadata lines against the registry."""
-        registry = schema.get_sim_telarray_meta_parameter_registry(validate=False)[
-            "meta_parameters"
-        ]
-        for line in meta_parameters:
-            parsed = self._parse_sim_telarray_metadata_line(line)
-            definition = registry.get(parsed["name"])
-            if definition is None:
-                raise KeyError(
-                    f"Unknown sim_telarray metadata key emitted by writer: {parsed['name']}"
-                )
-            if definition["mode"] != parsed["mode"]:
-                raise ValueError(
-                    f"sim_telarray metadata mode mismatch for {parsed['name']}: "
-                    f"{parsed['mode']} != {definition['mode']}"
-                )
-            if (
-                parsed["scope"] is not None
-                and definition["source_type"] == "generated"
-                and definition["scope"] != parsed["scope"]
-            ):
-                raise ValueError(
-                    f"sim_telarray metadata scope mismatch for {parsed['name']}: "
-                    f"{parsed['scope']} != {definition['scope']}"
-                )
-            if parsed["value"] is None:
-                if definition["validation"]["config_value_required"]:
-                    raise ValueError(
-                        f"sim_telarray metadata value missing for required key {parsed['name']}"
-                    )
-                continue
-            self._validate_sim_telarray_metadata_value(
-                parsed["name"], parsed["value"], definition["value_schema"]
-            )
-
-    def _parse_sim_telarray_metadata_line(self, line):
-        """Parse one emitted sim_telarray metadata line."""
-        meta_match = re.fullmatch(
-            r"metaparam (global|telescope) (add|set) ([^=\s]+)(?:\s*=\s*(.*))?",
-            line,
-        )
-        if meta_match:
-            return {
-                "scope": meta_match.group(1),
-                "mode": meta_match.group(2),
-                "name": meta_match.group(3),
-                "value": meta_match.group(4),
-            }
-
-        assign_match = re.fullmatch(r"([A-Za-z0-9_]+)\s*=\s*(.*)", line)
-        if assign_match:
-            return {
-                "scope": None,
-                "mode": "assign",
-                "name": assign_match.group(1),
-                "value": assign_match.group(2),
-            }
-
-        raise ValueError(f"Unsupported sim_telarray metadata line: {line}")
-
-    def _validate_sim_telarray_metadata_value(self, name, value, value_schema):
-        """Validate one emitted metadata value against its value schema."""
-        kind = value_schema["kind"]
-
-        if kind == "scalar":
-            self._validate_scalar_metadata_value(name, value, value_schema)
-        elif kind == "file_name":
-            self._validate_file_name_metadata(name, value, value_schema)
-        elif kind == "fixed_numeric_tuple":
-            self._validate_fixed_numeric_tuple(name, value, value_schema)
-        elif kind == "sim_telarray_key_value_string":
-            if not re.fullmatch(value_schema["regex"], value):
-                raise ValueError(f"sim_telarray metadata value for {name} does not match regex")
-        else:
-            raise ValueError(f"Unsupported value schema kind for {name}: {kind}")
-
-    def _validate_file_name_metadata(self, name, value, value_schema):
-        """Validate one emitted file-like metadata value against its value schema."""
-        if value_schema.get("allow_none_literal") and value == "none":
-            return
-        if value == "" and not value_schema.get("allow_empty", False):
-            raise ValueError(f"Empty file-like metadata value for {name}")
-
-    def _validate_fixed_numeric_tuple(self, name, value, value_schema):
-        """Validate one emitted fixed numeric tuple metadata value against its value schema."""
-        parts = value.split()
-        if len(parts) != value_schema["length"]:
-            raise ValueError(
-                f"sim_telarray metadata tuple length mismatch for {name}: "
-                f"{len(parts)} != {value_schema['length']}"
-            )
-        for part in parts:
-            float(part)
-
-    def _validate_scalar_metadata_value(self, name, value, value_schema):
-        """Validate one scalar metadata value."""
-        data_type = value_schema["data_type"]
-        if data_type == "string":
-            if value == "" and not value_schema.get("allow_empty", False):
-                raise ValueError(f"Empty string metadata value for {name}")
-            return
-        if data_type == "integer":
-            int(value)
-            return
-        if data_type == "number":
-            float(value)
-            return
-        if data_type == "boolean":
-            if value not in ("0", "1", "true", "false", "True", "False"):
-                raise ValueError(f"Invalid boolean metadata value for {name}: {value}")
-            return
-        raise ValueError(f"Unsupported scalar metadata data type for {name}: {data_type}")
 
     def _write_site_parameters(
         self, file, site_parameters, model_path, telescope_model, additional_metadata=None

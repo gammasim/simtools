@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import logging
-import re
 from pathlib import Path
 
 import jsonschema
@@ -21,70 +20,6 @@ from simtools.data_model import schema
 from simtools.io import ascii_handler
 
 DUMMY_FILE = "dummy_file.yml"
-
-
-def _parse_sim_telarray_config_metadata(config_file):
-    metadata = {"add": {}, "set": {}, "assign": {}}
-    for line in Path(config_file).read_text(encoding="utf-8").splitlines():
-        stripped = line.strip()
-        match = re.match(r"metaparam (global|telescope) add ([^\s]+)$", stripped)
-        if match:
-            metadata["add"][match.group(2)] = {"scope": match.group(1), "value": None}
-            continue
-
-        match = re.match(r"metaparam (global|telescope) set ([^=\s]+)\s*=\s*(.+)$", stripped)
-        if match:
-            metadata["set"][match.group(2)] = {"scope": match.group(1), "value": match.group(3)}
-            continue
-
-        match = re.match(r"([A-Za-z0-9_]+)\s*=\s*(.*)$", stripped)
-        if match and not stripped.startswith(("%", "#")):
-            metadata["assign"][match.group(1)] = match.group(2)
-
-    return metadata
-
-
-def _assert_value_matches_value_schema(value, value_schema):
-    kind = value_schema["kind"]
-
-    if kind == "file_name":
-        assert isinstance(value, str)
-        if value_schema.get("allow_none_literal") and value == "none":
-            return
-        assert not (not value_schema.get("allow_empty", False) and value == "")
-        return
-
-    if kind == "sim_telarray_key_value_string":
-        assert re.match(value_schema["regex"], value)
-        return
-
-    if kind == "fixed_numeric_tuple":
-        parts = value.split()
-        assert len(parts) == value_schema["length"]
-        for part in parts:
-            float(part)
-        return
-
-    if kind == "scalar":
-        _assert_scalar_value_matches(value, value_schema)
-        return
-
-    raise AssertionError(f"Unsupported value schema for test helper: {value_schema}")
-
-
-def _assert_scalar_value_matches(value, value_schema):
-    data_type = value_schema["data_type"]
-    if data_type == "string":
-        assert isinstance(value, str)
-        assert not (not value_schema.get("allow_empty", False) and value == "")
-    elif data_type == "integer":
-        int(value)
-    elif data_type == "number":
-        float(value)
-    elif data_type == "boolean":
-        assert value in ("0", "1", "true", "false", "True", "False")
-    else:
-        raise AssertionError(f"Unsupported scalar data type: {data_type}")
 
 
 def test_get_model_parameter_schema_files(tmp_test_directory):
@@ -120,13 +55,6 @@ def test_get_model_parameter_schema_returns_independent_copies():
     assert schema_2["data"][0]["unit"] == "cm"
 
 
-def test_get_sim_telarray_meta_parameter_registry():
-    registry = schema.get_sim_telarray_meta_parameter_registry()
-
-    assert registry["name"] == "sim_telarray_meta_parameters"
-    assert "camera_config_file" in registry["meta_parameters"]
-
-
 def test_validate_sim_telarray_meta_parameter_registry_schema():
     registry = ascii_handler.collect_data_from_file(SIM_TELARRAY_META_PARAMETER_REGISTRY)
 
@@ -139,118 +67,6 @@ def test_validate_sim_telarray_meta_parameter_registry_schema():
 
     assert "generated_meta_parameters" in registry
     assert "model_parameters" not in registry
-
-
-def test_sim_telarray_meta_parameter_registry_uses_generated_or_model_parameter_schema():
-    registry = schema.get_sim_telarray_meta_parameter_registry()["meta_parameters"]
-    registry_source = ascii_handler.collect_data_from_file(SIM_TELARRAY_META_PARAMETER_REGISTRY)
-    generated = set(registry_source["generated_meta_parameters"])
-
-    for emitted_name, definition in registry.items():
-        if emitted_name in generated:
-            continue
-        assert definition["source_type"] == "model_parameter"
-
-
-def test_sim_telarray_meta_parameter_registry_uses_add_as_presence_only():
-    registry = schema.get_sim_telarray_meta_parameter_registry()["meta_parameters"]
-
-    assert registry["asum_clipping"]["mode"] == "add"
-    assert registry["asum_clipping"]["validation"]["config_value_required"] is False
-    assert registry["asum_clipping"]["validation"]["emitted_value_must_match"] is False
-
-    assert registry["latitude"]["mode"] == "set"
-    assert registry["latitude"]["validation"]["config_value_required"] is True
-    assert registry["latitude"]["validation"]["emitted_value_must_match"] is True
-
-
-def test_sim_telarray_meta_parameter_registry_covers_emitted_keys():
-    registry = schema.get_sim_telarray_meta_parameter_registry()
-    registry_keys = set(registry["meta_parameters"])
-
-    telescope_cfg = _parse_sim_telarray_config_metadata(
-        Path("simtools-output/model/run000001/6.0.2/CTAO-MSTS-05.cfg")
-    )
-    ssts_cfg = _parse_sim_telarray_config_metadata(
-        Path("simtools-output/model/run000001/6.0.2/CTAO-SSTS-03.cfg")
-    )
-    site_cfg = _parse_sim_telarray_config_metadata(
-        Path("simtools-output/model/run000001/6.0.2/CTAO-South-alpha.cfg")
-    )
-
-    emitted_keys = (
-        set(telescope_cfg["add"])
-        | set(ssts_cfg["add"])
-        | set(site_cfg["add"])
-        | set(site_cfg["set"])
-    )
-    assert emitted_keys.issubset(registry_keys)
-
-    generated_assignment_keys = {
-        "config_release",
-        "config_version",
-        "camera_config_name",
-        "camera_config_variant",
-        "camera_config_version",
-        "optics_config_name",
-        "optics_config_variant",
-        "optics_config_version",
-        "site_config_name",
-        "site_config_variant",
-        "site_config_version",
-        "array_config_name",
-        "array_config_variant",
-        "array_config_version",
-    }
-    assert generated_assignment_keys.issubset(registry_keys)
-
-
-def test_sim_telarray_meta_parameter_registry_sample_value_validation():
-    registry = schema.get_sim_telarray_meta_parameter_registry()["meta_parameters"]
-
-    telescope_cfg = _parse_sim_telarray_config_metadata(
-        Path("simtools-output/model/run000001/6.0.2/CTAO-MSTS-05.cfg")
-    )
-    site_cfg = _parse_sim_telarray_config_metadata(
-        Path("simtools-output/model/run000001/6.0.2/CTAO-South-alpha.cfg")
-    )
-
-    _assert_value_matches_value_schema(
-        telescope_cfg["assign"]["camera_config_file"],
-        registry["camera_config_file"]["value_schema"],
-    )
-    _assert_value_matches_value_schema(
-        telescope_cfg["assign"]["focal_length"],
-        registry["focal_length"]["value_schema"],
-    )
-    _assert_value_matches_value_schema(
-        telescope_cfg["assign"]["effective_focal_length"],
-        registry["effective_focal_length"]["value_schema"],
-    )
-    _assert_value_matches_value_schema(
-        telescope_cfg["assign"]["nightsky_background"],
-        registry["nightsky_background"]["value_schema"],
-    )
-    _assert_value_matches_value_schema(
-        telescope_cfg["assign"]["random_mono_prob"],
-        registry["random_mono_prob"]["value_schema"],
-    )
-    _assert_value_matches_value_schema(
-        site_cfg["set"]["latitude"]["value"],
-        registry["latitude"]["value_schema"],
-    )
-    _assert_value_matches_value_schema(
-        site_cfg["set"]["longitude"]["value"],
-        registry["longitude"]["value_schema"],
-    )
-    _assert_value_matches_value_schema(
-        site_cfg["set"]["simtools_version"]["value"],
-        registry["simtools_version"]["value_schema"],
-    )
-    _assert_value_matches_value_schema(
-        site_cfg["assign"]["config_release"],
-        registry["config_release"]["value_schema"],
-    )
 
 
 def test_get_parameter_type_and_unit_from_schema():

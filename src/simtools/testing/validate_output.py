@@ -8,10 +8,10 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
-from simtools.data_model import schema
 from simtools.db import db_handler
 from simtools.io import ascii_handler
 from simtools.sim_events import file_info
+from simtools.simtel import simtel_validate_metadata
 from simtools.testing import assertions
 
 _logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ cfg_ignore_keys = [
 
 def _get_sim_telarray_assign_metadata_keys():
     """Return sim_telarray metadata keys emitted as plain assignments."""
-    registry = schema.get_sim_telarray_meta_parameter_registry(validate=False)
+    registry = simtel_validate_metadata.get_meta_parameter_registry(validate=False)
     return {
         name
         for name, definition in registry["meta_parameters"].items()
