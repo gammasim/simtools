@@ -6,6 +6,7 @@ from pathlib import Path
 import jsonschema
 import pytest
 import yaml
+from astropy.table import Table
 from packaging.specifiers import InvalidSpecifier
 
 from simtools.constants import (
@@ -678,19 +679,29 @@ def test_extract_schema_url_from_metadata_dict():
     assert result is None
 
 
-def test_extract_schema_from_file(tmp_test_directory):
-    """Test _extract_schema_from_file function."""
+def test_get_schema_file_from_file_metadata(tmp_test_directory):
+    """Test get_schema_file_from_file_metadata function."""
     # Create a test file with schema URL (lowercase cta)
     test_file = Path(tmp_test_directory) / "test_with_schema.yml"
     metadata = {"cta": {"product": {"data": {"model": {"url": "https://schema.example.com"}}}}}
     with open(test_file, "w", encoding="utf-8") as f:
         yaml.dump(metadata, f)
 
-    result = schema._extract_schema_from_file(test_file)
+    result = schema.get_schema_file_from_file_metadata(test_file)
     assert result == "https://schema.example.com"
 
+    ecsv_file = Path(tmp_test_directory) / "test_with_schema.ecsv"
+    Table(
+        rows=[[1]],
+        names=["value"],
+        meta={"cta": {"product": {"data": {"model": {"url": "https://ecsv-schema.example.com"}}}}},
+    ).write(ecsv_file, format="ascii.ecsv")
+
+    result = schema.get_schema_file_from_file_metadata(ecsv_file)
+    assert result == "https://ecsv-schema.example.com"
+
     # Test with non-existent file
-    result = schema._extract_schema_from_file("non_existent_file.yml")
+    result = schema.get_schema_file_from_file_metadata("non_existent_file.yml")
     assert result is None
 
 
