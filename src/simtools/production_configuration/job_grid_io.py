@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 _ECSV_SUFFIX = ".ecsv"
 _ECSV_FORMAT = "ascii.ecsv"
 _JOB_GRID_SCHEMA_FILE = "job_grid_density.schema.yml"
+_JOB_GRID_SCHEMA_URL = SCHEMA_URL + "/" + _JOB_GRID_SCHEMA_FILE
 
 
 @dataclass(frozen=True)
@@ -90,14 +91,40 @@ def _add_job_grid_schema_metadata(metadata):
     """Add schema reference metadata used for validation."""
     metadata.setdefault("cta", {}).setdefault("product", {}).setdefault("data", {}).setdefault(
         "model", {}
-    )["url"] = SCHEMA_URL + "/" + _JOB_GRID_SCHEMA_FILE
+    )["url"] = _JOB_GRID_SCHEMA_URL
     return metadata
+
+
+def _normalize_job_grid_table_dtypes(table):
+    """Restore schema-declared integer dtypes after ECSV deserialization."""
+    normalized_table = table.copy(copy_data=True)
+    for column_name, expected_dtype in JOB_GRID_SCHEMA.column_dtypes.items():
+        if column_name not in normalized_table.colnames:
+            continue
+        if expected_dtype is str or not np.issubdtype(expected_dtype, np.integer):
+            continue
+
+        column = normalized_table[column_name]
+        if np.issubdtype(column.dtype, np.integer):
+            continue
+        if not np.issubdtype(column.dtype, np.floating):
+            continue
+
+        values = np.asarray(column.data)
+        if not np.all(np.isfinite(values)):
+            continue
+        if not np.allclose(values, np.round(values), rtol=0.0, atol=0.0):
+            continue
+
+        normalized_table[column_name] = np.round(values).astype(expected_dtype, copy=False)
+    return normalized_table
 
 
 def _validate_job_grid_table(table):
     """Validate a job-grid table against the job-grid schema."""
     if len(table) == 0:
         return table
+    table = _normalize_job_grid_table_dtypes(table)
     return validate_data.DataValidator(
         schema_file=SCHEMA_PATH / _JOB_GRID_SCHEMA_FILE,
         data_table=table.copy(copy_data=True),

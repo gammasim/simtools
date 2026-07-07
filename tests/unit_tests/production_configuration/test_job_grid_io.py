@@ -151,6 +151,18 @@ def test_read_job_grid_validates_schema_units(tmp_test_directory):
         job_grid_io.read_job_grid(input_file)
 
 
+def test_read_job_grid_rejects_non_integral_integer_columns(tmp_test_directory):
+    input_file = Path(tmp_test_directory) / "job_grid.ecsv"
+    job_grid_io.serialize_job_grid(_job_rows(), input_file, metadata=_metadata())
+
+    table = Table.read(input_file, format="ascii.ecsv")
+    table["run_number"] = [10.5]
+    table.write(input_file, format="ascii.ecsv", overwrite=True)
+
+    with pytest.raises(TypeError):
+        job_grid_io.read_job_grid(input_file)
+
+
 def test_read_job_grid_row_returns_correct_row(tmp_test_directory):
     output_file = Path(tmp_test_directory) / "job_grid.ecsv"
     rows = _job_rows()
