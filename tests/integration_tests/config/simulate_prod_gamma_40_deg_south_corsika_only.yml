@@ -4,13 +4,13 @@ applications:
   configuration:
     corsika_seeds: [534, 220, 1104, 382]
     job_grid_file: tests/resources/generated/production_grid_points_horizontal.ecsv
-    job_grid_row: 1
+    job_grid_row: 3
     label: test
     log_level: DEBUG
     output_path: simtools-output
     sim_telarray_seed: [1745, 290]
   integration_tests:
-  - output_file: sim_telarray/run000001/gamma_diffuse_run000001_za30deg_azm310deg_North_LSTN-01_7.0.0_test.simtel.zst
-  test_name: gamma_30_deg_south_corsika_only
+  - output_file: sim_telarray/run000001/gamma_diffuse_run000001_za40deg_azm310deg_North_LSTN-01_7.0.0_test.simtel.zst
+  test_name: gamma_40_deg_south_corsika_only
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
