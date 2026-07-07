@@ -90,7 +90,7 @@ def _add_job_grid_schema_metadata(metadata):
     """Add schema reference metadata used for validation."""
     metadata.setdefault("cta", {}).setdefault("product", {}).setdefault("data", {}).setdefault(
         "model", {}
-    )["url"] = SCHEMA_URL + _JOB_GRID_SCHEMA_FILE
+    )["url"] = SCHEMA_URL + "/" + _JOB_GRID_SCHEMA_FILE
     return metadata
 
 
