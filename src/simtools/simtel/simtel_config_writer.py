@@ -500,7 +500,11 @@ class SimtelConfigWriter:
                     f"sim_telarray metadata mode mismatch for {parsed['name']}: "
                     f"{parsed['mode']} != {definition['mode']}"
                 )
-            if parsed["scope"] is not None and definition["scope"] != parsed["scope"]:
+            if (
+                parsed["scope"] is not None
+                and definition["source_type"] == "generated"
+                and definition["scope"] != parsed["scope"]
+            ):
                 raise ValueError(
                     f"sim_telarray metadata scope mismatch for {parsed['name']}: "
                     f"{parsed['scope']} != {definition['scope']}"
