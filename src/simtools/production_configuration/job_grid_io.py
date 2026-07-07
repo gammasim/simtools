@@ -8,7 +8,7 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
-from simtools.constants import SCHEMA_PATH
+from simtools.constants import SCHEMA_PATH, SCHEMA_URL
 from simtools.data_model import validate_data
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.production_configuration.job_grid_summary import build_job_grid_summary
@@ -19,10 +19,7 @@ logger = logging.getLogger(__name__)
 _ECSV_SUFFIX = ".ecsv"
 _ECSV_FORMAT = "ascii.ecsv"
 _JOB_GRID_SCHEMA_FILE = SCHEMA_PATH / "job_grid_density.schema.yml"
-_JOB_GRID_SCHEMA_URL = (
-    "https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/"
-    "job_grid_density.schema.yml"
-)
+_JOB_GRID_SCHEMA_URL = SCHEMA_URL + "job_grid_density.schema.yml"
 
 
 @dataclass(frozen=True)

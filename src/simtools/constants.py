@@ -4,6 +4,8 @@ from importlib.resources import files
 
 # Schema path
 SCHEMA_PATH = files("simtools") / "schemas"
+# Schema URL
+SCHEMA_URL = "https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas"
 # Path to metadata jsonschema
 METADATA_JSON_SCHEMA = SCHEMA_PATH / "metadata.metaschema.yml"
 # Path to plotting configuration json schema
@@ -16,17 +18,14 @@ MODEL_PARAMETER_METASCHEMA = SCHEMA_PATH / "model_parameter.metaschema.yml"
 MODEL_PARAMETER_DESCRIPTION_METASCHEMA = (
     SCHEMA_PATH / "model_parameter_and_data_schema.metaschema.yml"
 )
-# Path to sim_telarray metaparameter metaschema
+# Path to sim_telarray meta-parameter metaschema
 SIM_TELARRAY_META_PARAMETER_METASCHEMA = SCHEMA_PATH / "sim_telarray_meta_parameter.metaschema.yml"
-# Path to sim_telarray metaparameter registry
+# Path to sim_telarray meta-parameter registry
 SIM_TELARRAY_META_PARAMETER_REGISTRY = SCHEMA_PATH / "sim_telarray_meta_parameters.schema.yml"
 # Path to model parameter schema files
 MODEL_PARAMETER_SCHEMA_PATH = SCHEMA_PATH / "model_parameters"
 # URL to model parameter schema files
-MODEL_PARAMETER_SCHEMA_URL = (
-    "https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/"
-    "/model_parameters"
-)
+MODEL_PARAMETER_SCHEMA_URL = SCHEMA_URL + "/model_parameters"
 # Path to resource files
 RESOURCE_PATH = files("simtools") / "resources"
 # Paths to test resources
