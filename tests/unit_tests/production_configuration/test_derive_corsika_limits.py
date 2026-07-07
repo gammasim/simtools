@@ -823,6 +823,26 @@ def test_compute_limits_uses_exact_constant_angular_distance(mocker):
     assert result["angular_distance_vs_energy_curve"] == {"x": [0.0, 0.0], "y": [1.0, 10.0]}
 
 
+def test_get_constant_data_value():
+    """Return the constant value only when the stored range is effectively flat."""
+    histograms = type(
+        "HistogramContainer",
+        (),
+        {
+            "data_ranges": {
+                "angular_distance": (1.0, 1.0 + 1.0e-13),
+                "core_distance": (1.0, 2.0),
+            }
+        },
+    )()
+
+    assert derive_corsika_limits._get_constant_data_value(
+        histograms, "angular_distance"
+    ) == pytest.approx(1.0)
+    assert derive_corsika_limits._get_constant_data_value(histograms, "core_distance") is None
+    assert derive_corsika_limits._get_constant_data_value(histograms, "missing") is None
+
+
 def test_constant_angular_distance_is_not_rounded_in_results_table(mock_results):
     """Preserve the raw constant value instead of rounding to viewcone increments."""
     mock_results[0]["viewcone_radius"] = 0.1 * u.deg
