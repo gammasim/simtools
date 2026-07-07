@@ -1319,11 +1319,25 @@ def build_simulation_jobs(args_dict):
                 )
             )
     _log_generated_row_summary(rows)
-    return _renumber_job_rows(rows, args_dict.get("run_number_offset", 0))
+    return rows
 
 
-def _renumber_job_rows(job_rows, run_number_offset):
-    """Set output run numbers continuously."""
+def renumber_job_rows(job_rows, run_number_offset):
+    """
+    Set output run numbers continuously.
+
+    Parameters
+    ----------
+    job_rows : list[dict]
+        List of job rows to renumber.
+    run_number_offset : int
+        Offset to apply to the run numbers (first run number will be offset + 1).
+
+    Returns
+    -------
+    list[dict]
+        List of job rows with updated run numbers.
+    """
     for run_number, job_row in enumerate(job_rows, start=run_number_offset + 1):
         job_row["run_number"] = run_number
     return job_rows
