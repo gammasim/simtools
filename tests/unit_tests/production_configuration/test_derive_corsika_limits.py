@@ -169,7 +169,7 @@ def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict, tm
     args["model_version"] = "v1.2.3"
 
     mock_read_layouts = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits."
+        "simtools.production_configuration.production_event_data_helpers."
         "get_array_elements_from_db_for_layouts"
     )
     mock_read_layouts.return_value = {"LST": [1, 2], "MST": [3, 4]}
@@ -221,7 +221,7 @@ def test_generate_corsika_limits_grid_by_version_layout_resolved(
     args["model_version"] = "1.2.3"
 
     mock_read_layouts = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits."
+        "simtools.production_configuration.production_event_data_helpers."
         "get_array_elements_from_db_for_layouts"
     )
     mock_read_layouts.return_value = {"LST": [1, 2], "MST": [3, 4]}
@@ -1037,23 +1037,22 @@ def test_parse_allowed_losses_invalid_axis_raises():
         )
 
 
-def test_build_production_subdirectories_non_multi_returns_empty(tmp_test_directory):
-    """Test _build_production_subdirectories returns empty dict for single production."""
+def test_build_production_subdirectories_single_production(tmp_test_directory):
+    """Test build_production_subdirectories creates a single directory."""
     result = event_data_helpers.build_production_subdirectories(
         ["pattern_1_*.hdf5"],
         tmp_test_directory,
-        is_multi_production=False,
     )
-    assert result == {}
+    assert set(result.keys()) == {"pattern_1_*.hdf5"}
+    assert result["pattern_1_*.hdf5"].exists()
 
 
 def test_build_production_subdirectories_creates_dirs(tmp_test_directory):
-    """Test _build_production_subdirectories creates per-production directories."""
+    """Test build_production_subdirectories creates per-production directories."""
     patterns = ["pattern_1_*.hdf5", "pattern_2_*.hdf5"]
     result = event_data_helpers.build_production_subdirectories(
         patterns,
         tmp_test_directory,
-        is_multi_production=True,
     )
 
     assert set(result.keys()) == set(patterns)
