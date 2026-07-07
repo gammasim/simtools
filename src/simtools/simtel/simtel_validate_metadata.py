@@ -9,8 +9,10 @@ from simtools.constants import (
 from simtools.data_model import schema
 from simtools.utils import names
 
+META_PARAMETER_SOURCE_TYPES = ("all", "generated", "model_parameter")
 
-def get_meta_parameter_registry(schema_version=None, validate=True):
+
+def get_meta_parameter_registry(schema_version=None, validate=True, source_type="all"):
     """
     Return the expanded sim_telarray meta-parameter registry.
 
@@ -23,6 +25,8 @@ def get_meta_parameter_registry(schema_version=None, validate=True):
         Version of the registry schema to load.
     validate : bool, optional
         Whether to validate the loaded registry against the metaschema.
+    source_type : str, optional
+        Metadata source filter: ``all``, ``generated``, or ``model_parameter``.
     """
     registry_source = schema.load_schema(
         SIM_TELARRAY_META_PARAMETER_REGISTRY, schema_version=schema_version or "latest"
@@ -34,7 +38,9 @@ def get_meta_parameter_registry(schema_version=None, validate=True):
             offline=True,
             ignore_software_version=True,
         )
-    return _build_meta_parameter_registry(registry_source)
+    return _filter_registry_by_source_type(
+        _build_meta_parameter_registry(registry_source), source_type
+    )
 
 
 def validate_metadata(meta_parameters):
@@ -152,6 +158,22 @@ def _build_meta_parameter_registry(registry_source):
 
     registry["meta_parameters"] = meta_parameters
     return registry
+
+
+def _filter_registry_by_source_type(registry, source_type):
+    """Return registry filtered by source type."""
+    if source_type not in META_PARAMETER_SOURCE_TYPES:
+        raise ValueError(f"Unsupported source type: {source_type}")
+    if source_type == "all":
+        return registry
+
+    filtered_registry = {key: value for key, value in registry.items() if key != "meta_parameters"}
+    filtered_registry["meta_parameters"] = {
+        name: definition
+        for name, definition in registry["meta_parameters"].items()
+        if definition["source_type"] == source_type
+    }
+    return filtered_registry
 
 
 def _build_model_parameter_definition(source_name, emitted_name=None):
