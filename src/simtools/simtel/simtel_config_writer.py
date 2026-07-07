@@ -12,7 +12,7 @@ import simtools.utils.general as gen
 import simtools.version
 from simtools import dependencies, settings
 from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
-from simtools.simtel import simtel_table_writer
+from simtools.simtel import simtel_table_writer, simtel_validate_metadata
 from simtools.utils import names
 
 logger = logging.getLogger(__name__)
@@ -268,6 +268,7 @@ class SimtelConfigWriter:
                 if value is not None:
                     meta_parameters.append(f"{prefix} set {key}={value}")
 
+        simtel_validate_metadata.validate_metadata(meta_parameters)
         return meta_parameters
 
     def _add_model_parameters_to_metadata(self, model_parameters, meta_parameters, prefix):
@@ -450,7 +451,7 @@ class SimtelConfigWriter:
         file.write(header)
 
     def _write_simtools_parameters(self, file):
-        """Write simtools-specific parameters."""
+        """Write simtools-specific parameters as metadata."""
         meta_items = {
             "simtools_version": simtools.version.__version__,
             "simtools_model_production_version": self._model_version,
@@ -471,9 +472,14 @@ class SimtelConfigWriter:
             raise AttributeError("CORSIKA executable path is not set in settings.") from exc
 
         file.write(f"{self.TAB}% Simtools parameters\n")
+        meta_lines = []
         for key, value in meta_items.items():
             if not isinstance(value, list):
-                file.write(f"{self.TAB}metaparam global set {key} = {value}\n")
+                meta_lines.append(f"metaparam global set {key} = {value}")
+
+        simtel_validate_metadata.validate_metadata(meta_lines)
+        for line in meta_lines:
+            file.write(f"{self.TAB}{line}\n")
 
     def _write_site_parameters(
         self, file, site_parameters, model_path, telescope_model, additional_metadata=None
