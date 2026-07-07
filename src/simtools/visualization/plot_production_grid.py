@@ -8,14 +8,14 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
-from simtools.production_configuration.job_grid_io import JOB_GRID_QUANTITY_FIELDS
+from simtools.production_configuration.job_grid_io import JOB_GRID_SCHEMA
 
 logger = logging.getLogger(__name__)
 DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
 PLOT_VALUE_KEYS = tuple(
     key
-    for key in JOB_GRID_QUANTITY_FIELDS
-    if key not in ("azimuth_angle", "zenith_angle", "view_cone_min")
+    for key in JOB_GRID_SCHEMA.column_units
+    if key not in ("azimuth_angle", "zenith_angle", "ha", "dec", "view_cone_min", "nsb_rate")
 )
 DEFAULT_OUTPUT_FILE_EXTENSION = "png"
 DEFAULT_MARKER_SIZE = 8
@@ -99,7 +99,7 @@ class ProductionGridPlotter:
     @classmethod
     def _convert_ecsv_table_to_grid_points(cls, grid_table):
         """Convert an ECSV grid-point table to plain dictionaries."""
-        return [cls._convert_ecsv_row_to_grid_point(row, grid_table.colnames) for row in grid_table]
+        return [cls._convert_ecsv_row_to_grid_point(row, grid_table) for row in grid_table]
 
     @staticmethod
     def _plain_table_value(value):
@@ -111,21 +111,14 @@ class ProductionGridPlotter:
         return value
 
     @classmethod
-    def _convert_ecsv_row_to_grid_point(cls, row, column_names):
+    def _convert_ecsv_row_to_grid_point(cls, row, grid_table):
         """Convert one ECSV row and merge split value/unit quantity columns."""
         point = {}
-        for column_name in column_names:
+        for column_name in grid_table.colnames:
             value = cls._plain_table_value(row[column_name])
             if value is not None:
-                point[column_name] = value
-
-        for value_key in PLOT_VALUE_KEYS:
-            value_column, unit_column = JOB_GRID_QUANTITY_FIELDS[value_key]
-            if value_column not in point or unit_column not in point:
-                continue
-            point[value_key] = float(point[value_column]) * u.Unit(point[unit_column])
-            point.pop(value_column)
-            point.pop(unit_column)
+                unit = grid_table[column_name].unit
+                point[column_name] = value * unit if unit is not None else value
 
         return point
 
@@ -184,12 +177,9 @@ class ProductionGridPlotter:
         """
         azimuth = self._extract_first_available_quantity_value(
             point,
-            ("azimuth", "azimuth_angle", "azimuth_angle_value"),
+            ("azimuth", "azimuth_angle"),
         )
-        zenith = self._extract_first_available_quantity_value(
-            point,
-            ("zenith_angle", "zenith_angle_value"),
-        )
+        zenith = self._extract_first_available_quantity_value(point, ("zenith_angle",))
         ra = self._extract_first_available_quantity_value(point, ("ra", "ra_value"))
         dec = self._extract_first_available_quantity_value(point, ("dec", "dec_value"))
         value_data = {value_key: point.get(value_key) for value_key in PLOT_VALUE_KEYS}

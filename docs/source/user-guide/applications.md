@@ -74,6 +74,7 @@ simtools-docs-produce-calibration-reports <applications/simtools-docs-produce-ca
 simtools-docs-produce-model-parameter-reports <applications/simtools-docs-produce-model-parameter-reports>
 simtools-docs-produce-production-summary <applications/simtools-docs-produce-production-summary>
 simtools-docs-produce-simulation-configuration-report <applications/simtools-docs-produce-simulation-configuration-report>
+simtools-export-sim-telarray-metadata-schema <applications/simtools-export-sim-telarray-metadata-schema>
 simtools-generate-array-config <applications/simtools-generate-array-config>
 simtools-generate-corsika-histograms <applications/simtools-generate-corsika-histograms>
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>

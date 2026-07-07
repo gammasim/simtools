@@ -16,7 +16,7 @@ def _job_rows():
             "primary": "gamma",
             "azimuth_angle": 45 * u.deg,
             "zenith_angle": 20 * u.deg,
-            "ra": 123 * u.deg,
+            "ha": 123 * u.deg,
             "dec": -45 * u.deg,
             "energy_min": 30 * u.GeV,
             "energy_max": 10 * u.TeV,
@@ -38,7 +38,7 @@ def _metadata():
     return {
         "site": "North",
         "simulation_software": "corsika_sim_telarray",
-        "coordinate_system": "ra_dec",
+        "coordinate_system": "ha_dec",
     }
 
 
@@ -50,12 +50,19 @@ def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
     output_table = Table.read(output_file, format="ascii.ecsv")
 
     assert metadata["site"] == "North"
+    assert metadata["job_grid_format_version"] == job_grid_io.JOB_GRID_SCHEMA.version
     assert output_table.colnames[0] == "run_number"
+    assert output_table["energy_min"].unit == u.GeV
+    assert output_table["energy_max"].unit == u.GeV
+    assert output_table["core_scatter_max"].unit == u.m
+    assert output_table["azimuth_angle"].unit == u.deg
+    assert output_table["nsb_rate"][0] == pytest.approx(0.24)
     assert rows[0]["energy_min"] == 30 * u.GeV
     assert rows[0]["cores_per_shower"] == 10
     assert rows[0]["array_layout_name"] == "CTAO-North-Alpha"
-    assert rows[0]["ra"] == 123 * u.deg
+    assert rows[0]["ha"] == 123 * u.deg
     assert rows[0]["dec"] == -45 * u.deg
+    assert rows[0]["nsb_rate"].to_value(output_table["nsb_rate"].unit) == pytest.approx(0.24)
     assert metadata["job_grid_summary"]["simulation_rows"] == 1
     assert metadata["job_grid_summary"]["total_showers"] == 1000
     assert metadata["job_grid_summary"]["energy_min_used"] == "30 GeV"
@@ -71,8 +78,9 @@ def test_serialize_job_grid_stream_and_read_job_grid_ecsv(tmp_test_directory):
 
     assert row_count == 1
     assert metadata["site"] == "North"
+    assert metadata["job_grid_format_version"] == job_grid_io.JOB_GRID_SCHEMA.version
     assert rows[0]["energy_min"] == 30 * u.GeV
-    assert rows[0]["ra"] == 123 * u.deg
+    assert rows[0]["ha"] == 123 * u.deg
     assert rows[0]["dec"] == -45 * u.deg
 
 
@@ -95,17 +103,16 @@ def test_serialize_job_grid_stream_appends_astropy_formatted_chunks(
     assert rows[1]["array_layout_name"] == "layout with spaces"
 
 
-def test_serialize_job_grid_stream_skips_empty_optional_radec_columns(tmp_test_directory):
+def test_serialize_job_grid_stream_requires_hadec_columns(tmp_test_directory):
     output_file = Path(tmp_test_directory) / "job_grid.ecsv"
     rows_to_write = _job_rows()
-    rows_to_write[0]["ra"] = None
+    rows_to_write[0]["ha"] = None
     rows_to_write[0]["dec"] = None
 
-    job_grid_io.serialize_job_grid_stream(iter(rows_to_write), output_file, metadata=_metadata())
-    output_table = Table.read(output_file, format="ascii.ecsv")
-
-    assert "ra" not in output_table.colnames
-    assert "dec" not in output_table.colnames
+    with pytest.raises(TypeError):
+        job_grid_io.serialize_job_grid_stream(
+            iter(rows_to_write), output_file, metadata=_metadata()
+        )
 
 
 def test_serialize_job_grid_stream_writes_empty_grid_header(tmp_test_directory):
@@ -115,7 +122,7 @@ def test_serialize_job_grid_stream_writes_empty_grid_header(tmp_test_directory):
     output_table = Table.read(output_file, format="ascii.ecsv")
 
     assert row_count == 0
-    assert output_table.colnames == job_grid_io.JOB_GRID_COLUMNS
+    assert output_table.colnames == list(job_grid_io.JOB_GRID_SCHEMA.columns)
 
 
 def test_job_grid_density_schema_matches_serialized_required_columns():
@@ -125,8 +132,11 @@ def test_job_grid_density_schema_matches_serialized_required_columns():
     table_columns = schema["data"][0]["table_columns"]
     required_columns = [column["name"] for column in table_columns if column.get("required")]
 
-    assert required_columns == job_grid_io.JOB_GRID_COLUMNS
-    assert all("unit" not in column for column in table_columns)
+    assert required_columns == list(job_grid_io.JOB_GRID_SCHEMA.columns)
+    schema_units = {
+        column["name"]: u.Unit(column["unit"]) for column in table_columns if "unit" in column
+    }
+    assert schema_units == job_grid_io.JOB_GRID_SCHEMA.column_units
 
 
 def test_serialize_job_grid_rejects_non_ecsv_output(tmp_test_directory):

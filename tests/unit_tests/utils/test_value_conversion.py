@@ -90,6 +90,7 @@ def test_get_value_unit_type() -> None:
 
 def test_assign_unit_to_quantity():
     assert value_conversion.get_value_as_quantity(10, u.m) == 10 * u.m
+    assert value_conversion.get_value_as_quantity(10, "m") == 10 * u.m
 
     assert value_conversion.get_value_as_quantity(1000 * u.cm, u.m) == 10 * u.m
 
@@ -185,7 +186,10 @@ def test_is_dimensionless_unit():
     assert value_conversion.is_dimensionless_unit("")
     assert value_conversion.is_dimensionless_unit("dimensionless")
     assert value_conversion.is_dimensionless_unit("null")
+    assert value_conversion.is_dimensionless_unit(u.dimensionless_unscaled)
+    assert value_conversion.is_dimensionless_unit(u.UnrecognizedUnit("dimensionless"))
     assert not value_conversion.is_dimensionless_unit("m")
+    assert not value_conversion.is_dimensionless_unit(u.m)
 
 
 def test_normalize_dimensionless_unit():
@@ -193,6 +197,10 @@ def test_normalize_dimensionless_unit():
     assert value_conversion.normalize_dimensionless_unit("") is None
     assert value_conversion.normalize_dimensionless_unit("dimensionless") is None
     assert value_conversion.normalize_dimensionless_unit("null") is None
+    assert value_conversion.normalize_dimensionless_unit(u.dimensionless_unscaled) is None
+    assert (
+        value_conversion.normalize_dimensionless_unit(u.UnrecognizedUnit("dimensionless")) is None
+    )
     assert value_conversion.normalize_dimensionless_unit("m") == "m"
     assert value_conversion.normalize_dimensionless_unit(["m", "dimensionless", "null", None]) == [
         "m",
@@ -213,3 +221,9 @@ def test_get_value_in_unit_accepts_numeric_scalar_with_unit():
 def test_get_value_in_unit_raises_for_non_numeric_with_unit():
     with pytest.raises(TypeError, match="Expected Quantity or numeric scalar"):
         value_conversion.get_value_in_unit("5", "deg")
+
+
+def test_format_quantity():
+    assert float(value_conversion.format_quantity(5 * u.TeV, u.GeV)) == pytest.approx(5000.0)
+    assert float(value_conversion.format_quantity(100 * u.cm, u.m)) == pytest.approx(1.0)
+    assert value_conversion.format_quantity(42, u.GeV) == "42"

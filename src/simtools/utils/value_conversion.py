@@ -19,14 +19,19 @@ def is_dimensionless_unit(unit):
 
     Parameters
     ----------
-    unit: str or None
-        Unit to be checked.
+    unit: str, object, or None
+        Unit string or Astropy unit object to be checked.
 
     Returns
     -------
     bool        True if the unit encodes a dimensionless quantity, False otherwise.
     """
-    return unit in _DIMENSIONLESS_UNITS
+    if unit is None:
+        return True
+    to_string = getattr(unit, "to_string", None)
+    if to_string is not None:
+        unit = to_string()
+    return isinstance(unit, str) and unit in _DIMENSIONLESS_UNITS
 
 
 def normalize_dimensionless_unit(unit):
@@ -35,12 +40,12 @@ def normalize_dimensionless_unit(unit):
 
     Parameters
     ----------
-    unit: str or None
-        Unit to be normalized.
+    unit: str, object, or None
+        Unit string or Astropy unit object to be normalized.
 
     Returns
     -------
-    str or None
+    str, object, or None
         Normalized unit, where dimensionless units are converted to None.
 
     """
@@ -222,7 +227,8 @@ def get_value_as_quantity(value, unit):
     if is_dimensionless_unit(unit):
         return value * u.dimensionless_unscaled
 
-    return value * u.Unit(unit)
+    target_unit = u.Unit(unit) if isinstance(unit, str) else unit
+    return value * target_unit
 
 
 def _unit_as_string(unit):
@@ -264,3 +270,10 @@ def get_value_in_unit(value, unit=None):
         )
 
     return value
+
+
+def format_quantity(value, unit):
+    """Format a scalar or Quantity in the requested unit."""
+    if isinstance(value, u.Quantity):
+        value = value.to_value(unit)
+    return f"{value}"
