@@ -1,13 +1,13 @@
-"""Tests for the production_build_trigger_reference application."""
+"""Tests for the production_build_trigger_histograms application."""
 
 import argparse
 
-from simtools.applications import production_build_trigger_reference
+from simtools.applications import production_build_trigger_histograms
 
 
 def test_add_arguments_accepts_multi_pattern_and_binning_options():
     parser = argparse.ArgumentParser()
-    production_build_trigger_reference._add_arguments(parser)
+    production_build_trigger_histograms._add_arguments(parser)
 
     args = parser.parse_args(
         [

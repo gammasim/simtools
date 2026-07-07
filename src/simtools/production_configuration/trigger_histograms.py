@@ -1,4 +1,4 @@
-"""Build and load trigger-statistics reference products from reduced event data."""
+"""Build and load trigger-histogram products from reduced event data."""
 
 import logging
 
@@ -6,6 +6,7 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table, vstack
 
+import simtools.utils.general as gen
 from simtools.io import io_handler, table_handler
 from simtools.production_configuration.production_event_data_helpers import (
     accumulate_histograms_by_telescope_config,
@@ -14,16 +15,24 @@ from simtools.production_configuration.production_event_data_helpers import (
     normalize_telescope_configs,
     resolve_telescope_configs,
 )
-from simtools.utils.general import get_uuid
 from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
 
-TRIGGER_REFERENCE_METADATA_TABLE = "TRIGGER_REFERENCE_METADATA"
-TRIGGER_REFERENCE_BINS_TABLE = "TRIGGER_REFERENCE_BINS"
+TRIGGER_HISTOGRAM_METADATA_TABLE = "TRIGGER_REFERENCE_METADATA"
+TRIGGER_HISTOGRAM_BINS_TABLE = "TRIGGER_REFERENCE_BINS"
 
 
-def _create_reference_tables(reference_specs):
+def _get_plot_directory_name(array_name, telescope_ids):
+    """Return a readable directory name for plot output."""
+    if array_name != "array_element_list":
+        return array_name
+    if not telescope_ids:
+        return array_name
+    return "_".join(str(telescope_id) for telescope_id in telescope_ids)
+
+
+def _create_histogram_tables(reference_specs):
     """Convert accumulated histogram products into metadata and bin tables."""
     metadata_tables = []
     bin_tables = []
@@ -36,6 +45,7 @@ def _create_reference_tables(reference_specs):
                 reference_id=reference_id,
                 production_index=spec["production_index"],
                 event_data_file=spec["event_data_file"],
+                site=spec["site"],
                 array_name=spec["array_name"],
                 telescope_ids=spec["telescope_ids"],
                 histograms=histograms,
@@ -60,11 +70,12 @@ def _create_metadata_table(
     reference_id,
     production_index,
     event_data_file,
+    site,
     array_name,
     telescope_ids,
     histograms,
 ):
-    """Create the one-row metadata table for a trigger-statistics reference."""
+    """Create the one-row metadata table for trigger histograms."""
     file_info = histograms.file_info
     metadata = Table(
         rows=[
@@ -72,6 +83,7 @@ def _create_metadata_table(
                 "reference_id": reference_id,
                 "production_index": production_index,
                 "event_data_file": event_data_file,
+                "site": site or "",
                 "array_name": array_name,
                 "telescope_ids": ",".join(telescope_ids) if telescope_ids else "",
                 "primary_particle": file_info.get("primary_particle", ""),
@@ -97,12 +109,12 @@ def _create_metadata_table(
             }
         ]
     )
-    metadata.meta["EXTNAME"] = TRIGGER_REFERENCE_METADATA_TABLE
+    metadata.meta["EXTNAME"] = TRIGGER_HISTOGRAM_METADATA_TABLE
     return metadata
 
 
 def _create_bin_table(reference_id, production_index, array_name, histograms):
-    """Create the flattened per-bin reference table."""
+    """Create the flattened per-bin histogram table."""
     triggered_hist = histograms.histograms["angular_distance_vs_energy"]["histogram"]
     simulated_hist = histograms.histograms["angular_distance_vs_energy_mc"]["histogram"]
     efficiency_hist = histograms.histograms["angular_distance_vs_energy_eff"]["histogram"]
@@ -133,7 +145,7 @@ def _create_bin_table(reference_id, production_index, array_name, histograms):
             )
 
     bin_table = Table(rows=rows)
-    bin_table.meta["EXTNAME"] = TRIGGER_REFERENCE_BINS_TABLE
+    bin_table.meta["EXTNAME"] = TRIGGER_HISTOGRAM_BINS_TABLE
     return bin_table
 
 
@@ -144,7 +156,7 @@ def _process_production(
     angular_distance_bin_count,
     skip_invalid_event_data_files=False,
 ):
-    """Read one production once and build trigger references for all telescope configurations."""
+    """Read one production once and build trigger histograms for all telescope configurations."""
     finalized_histograms = accumulate_histograms_by_telescope_config(
         file_path,
         telescope_configs,
@@ -156,13 +168,14 @@ def _process_production(
     return [histograms for _, histograms in finalized_histograms]
 
 
-def _plot_reference_histograms(histograms, output_dir, array_name):
-    """Write diagnostic histograms for one trigger reference."""
+def _plot_histograms(histograms, output_dir, array_name, telescope_ids):
+    """Write diagnostic histograms."""
+    output_dir = output_dir / _get_plot_directory_name(array_name, telescope_ids)
     output_dir.mkdir(parents=True, exist_ok=True)
     histograms_to_plot = {
         name: histogram
         for name, histogram in histograms.histograms.items()
-        if name.startswith("angular_distance")
+        if name.endswith("_eff")
     }
     plot_simtel_event_histograms.plot(
         histograms_to_plot,
@@ -171,9 +184,9 @@ def _plot_reference_histograms(histograms, output_dir, array_name):
     )
 
 
-def build_trigger_statistics_reference(args_dict):
+def build_trigger_histograms(args_dict):
     """
-    Build and write a trigger-statistics reference HDF5 product.
+    Build and write a trigger-histogram HDF5 product.
 
     Parameters
     ----------
@@ -184,7 +197,7 @@ def build_trigger_statistics_reference(args_dict):
     Returns
     -------
     tuple[astropy.table.Table, astropy.table.Table]
-        Metadata and per-bin reference tables written to the HDF5 output file.
+        Metadata and per-bin histogram tables written to the HDF5 output file.
 
     Raises
     ------
@@ -196,19 +209,13 @@ def build_trigger_statistics_reference(args_dict):
     telescope_configs = normalize_telescope_configs(resolve_telescope_configs(args_dict))
     output_dir = io_handler.IOHandler().get_output_directory()
     output_file = io_handler.IOHandler().get_output_file(args_dict["output_file"])
-
-    if output_file.suffix.lower() not in (".hdf5", ".h5"):
-        raise ValueError("output_file must be an HDF5 file with suffix '.hdf5' or '.h5'.")
+    gen.validate_file_type(output_file, expected_suffixes=[".hdf5", ".h5"])
 
     reference_specs = []
     is_multi_production = len(production_patterns) > 1
     production_subdirs = {}
     if is_multi_production and args_dict.get("plot_histograms"):
-        production_subdirs = build_production_subdirectories(
-            production_patterns,
-            output_dir,
-            is_multi_production,
-        )
+        production_subdirs = build_production_subdirectories(production_patterns, output_dir)
 
     for production_index, pattern in enumerate(production_patterns):
         accumulators = _process_production(
@@ -220,55 +227,56 @@ def build_trigger_statistics_reference(args_dict):
         )
         production_subdir = None
         if args_dict.get("plot_histograms"):
-            production_subdir = production_subdirs.get(pattern, output_dir / "trigger_reference")
+            production_subdir = production_subdirs.get(pattern, output_dir / "trigger_histograms")
 
         for config, histograms in zip(telescope_configs, accumulators):
-            reference_id = get_uuid()
+            reference_id = gen.get_uuid()
             reference_specs.append(
                 {
                     "reference_id": reference_id,
                     "production_index": production_index,
                     "event_data_file": pattern,
+                    "site": args_dict.get("site"),
                     "array_name": config["array_name"],
                     "telescope_ids": config["telescope_ids"],
                     "histograms": histograms,
                 }
             )
             if production_subdir is not None:
-                _plot_reference_histograms(
+                _plot_histograms(
                     histograms,
-                    production_subdir / config["array_name"],
+                    production_subdir,
                     config["array_name"],
+                    config["telescope_ids"],
                 )
 
-    metadata_table, bin_table = _create_reference_tables(reference_specs)
+    metadata_table, bin_table = _create_histogram_tables(reference_specs)
     table_handler.write_tables(
         [metadata_table, bin_table],
         output_file,
         overwrite_existing=True,
         file_type="HDF5",
     )
-    _logger.info(f"Wrote trigger-statistics reference to {output_file}")
     return metadata_table, bin_table
 
 
-def load_trigger_statistics_reference(reference_file):
+def load_trigger_histograms(reference_file):
     """
-    Load trigger-statistics reference metadata and bin tables from HDF5.
+    Load trigger-histogram metadata and bin tables from HDF5.
 
     Parameters
     ----------
     reference_file : str or pathlib.Path
-        Path to the trigger-statistics reference HDF5 file.
+        Path to the trigger-histogram HDF5 file.
 
     Returns
     -------
     tuple[astropy.table.Table, astropy.table.Table]
-        Metadata table and per-bin reference table read from the input file.
+        Metadata table and per-bin histogram table read from the input file.
     """
     tables = table_handler.read_tables(
         reference_file,
-        [TRIGGER_REFERENCE_METADATA_TABLE, TRIGGER_REFERENCE_BINS_TABLE],
+        [TRIGGER_HISTOGRAM_METADATA_TABLE, TRIGGER_HISTOGRAM_BINS_TABLE],
         file_type="HDF5",
     )
-    return tables[TRIGGER_REFERENCE_METADATA_TABLE], tables[TRIGGER_REFERENCE_BINS_TABLE]
+    return tables[TRIGGER_HISTOGRAM_METADATA_TABLE], tables[TRIGGER_HISTOGRAM_BINS_TABLE]

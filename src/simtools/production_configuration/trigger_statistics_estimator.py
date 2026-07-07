@@ -1,4 +1,4 @@
-"""Estimate required triggered-event statistics from trigger reference products."""
+"""Estimate required triggered-event statistics from trigger histogram products."""
 
 import logging
 from pathlib import Path
@@ -7,11 +7,34 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
-from simtools.production_configuration.trigger_statistics_reference import (
-    load_trigger_statistics_reference,
+from simtools.production_configuration.trigger_histograms import (
+    load_trigger_histograms,
 )
 
 _logger = logging.getLogger(__name__)
+
+
+def _get_metadata_quantity(metadata_row, column_name, default_unit):
+    """Return a quantity-valued metadata field from an astropy table row.
+
+    Parameters
+    ----------
+    metadata_row : astropy.table.row.Row
+        Metadata row selected from the trigger-histogram metadata table.
+    column_name : str
+        Column name to read from the row.
+    default_unit : astropy.units.UnitBase or str
+        Unit to apply when the source column has no unit metadata.
+
+    Returns
+    -------
+    astropy.units.Quantity
+        Quantity reconstructed from the row scalar and the table-column unit.
+    """
+    value = metadata_row[column_name]
+    column = metadata_row.table[column_name]
+    unit = getattr(column, "unit", None) or default_unit
+    return u.Quantity(value, unit)
 
 
 def _resolve_effective_throw_radius(original_radius, radius_override=None):
@@ -135,7 +158,7 @@ def _select_reference_rows(metadata_table, args_dict):
     if args_dict.get("array_names"):
         selected = selected[np.isin(selected["array_name"], args_dict["array_names"])]
     if len(selected) == 0:
-        raise ValueError("No trigger references matched the requested selection.")
+        raise ValueError("No trigger histograms matched the requested selection.")
     return selected
 
 
@@ -173,11 +196,22 @@ def _estimate_required_events(
 
 
 def _resolve_energy_ranges(metadata_row, args_dict):
-    """Resolve thrown and optimization energy ranges for one reference row."""
-    thrown_energy_min = args_dict.get("thrown_energy_min") or metadata_row["energy_min"]
-    thrown_energy_max = args_dict.get("thrown_energy_max") or metadata_row["energy_max"]
-    optimization_energy_min = args_dict.get("optimization_energy_min") or thrown_energy_min
-    optimization_energy_max = args_dict.get("optimization_energy_max") or thrown_energy_max
+    """Resolve thrown and optimization energy ranges for one histogram row."""
+    thrown_energy_min = args_dict.get("thrown_energy_min")
+    if thrown_energy_min is None:
+        thrown_energy_min = _get_metadata_quantity(metadata_row, "energy_min", u.TeV)
+
+    thrown_energy_max = args_dict.get("thrown_energy_max")
+    if thrown_energy_max is None:
+        thrown_energy_max = _get_metadata_quantity(metadata_row, "energy_max", u.TeV)
+
+    optimization_energy_min = args_dict.get("optimization_energy_min")
+    if optimization_energy_min is None:
+        optimization_energy_min = thrown_energy_min
+
+    optimization_energy_max = args_dict.get("optimization_energy_max")
+    if optimization_energy_max is None:
+        optimization_energy_max = thrown_energy_max
     return (
         thrown_energy_min,
         thrown_energy_max,
@@ -187,7 +221,7 @@ def _resolve_energy_ranges(metadata_row, args_dict):
 
 
 def _build_result_row(metadata_row, bin_table, args_dict):
-    """Build one result row for a selected trigger reference."""
+    """Build one result row for a selected trigger histogram."""
     reference_id = metadata_row["reference_id"]
     trigger_efficiency = _get_reference_matrix(bin_table, reference_id, "trigger_efficiency")
     energy_edges = _get_reference_energy_edges(bin_table, reference_id)
@@ -195,7 +229,7 @@ def _build_result_row(metadata_row, bin_table, args_dict):
     simulated_counts = _get_reference_matrix(bin_table, reference_id, "simulated_count")
 
     effective_radius = _resolve_effective_throw_radius(
-        metadata_row["core_scatter_max"],
+        _get_metadata_quantity(metadata_row, "core_scatter_max", u.m),
         args_dict.get("reduced_core_radius"),
     )
     (
@@ -230,7 +264,7 @@ def _build_result_row(metadata_row, bin_table, args_dict):
     masked_energy_indices = np.flatnonzero(energy_mask)
     limiting_angular_index = limiting_index[0]
     limiting_energy_index = masked_energy_indices[limiting_index[1]]
-    original_radius = u.Quantity(metadata_row["core_scatter_max"]).to(u.m)
+    original_radius = _get_metadata_quantity(metadata_row, "core_scatter_max", u.m).to(u.m)
     effective_area_matrix = _compute_effective_area_matrix(trigger_efficiency, effective_radius)
 
     return {
@@ -269,12 +303,12 @@ def _build_result_row(metadata_row, bin_table, args_dict):
 
 def estimate_trigger_statistics(args_dict):
     """
-    Estimate required total thrown events for one or more trigger references.
+    Estimate required total thrown events for one or more trigger histograms.
 
     Parameters
     ----------
     args_dict : dict
-        Application arguments describing the reference input file, optional
+        Application arguments describing the histogram input file, optional
         reference selectors, spectral assumptions, optimization range, optional
         reduced core radius, and output file.
 
@@ -282,16 +316,16 @@ def estimate_trigger_statistics(args_dict):
     -------
     astropy.table.Table
         Results table containing required thrown-event estimates and limiting-bin
-        diagnostics for each selected trigger reference.
+        diagnostics for each selected trigger histogram.
 
     Raises
     ------
     ValueError
         If the selected references are empty, the requested ranges are invalid,
-        the reduced core radius is inconsistent with the reference metadata, or
+        the reduced core radius is inconsistent with the histogram metadata, or
         the output file does not use the ECSV suffix.
     """
-    metadata_table, bin_table = load_trigger_statistics_reference(args_dict["input"])
+    metadata_table, bin_table = load_trigger_histograms(args_dict["input"])
     selected_references = _select_reference_rows(metadata_table, args_dict)
     output_rows = [
         _build_result_row(metadata_row, bin_table, args_dict)

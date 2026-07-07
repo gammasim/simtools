@@ -64,7 +64,7 @@ def get_production_directory_name(production_pattern, existing_names=None):
     return f"{base_name}_{get_uuid()}"
 
 
-def build_production_subdirectories(production_patterns, output_dir, is_multi_production):
+def build_production_subdirectories(production_patterns, output_dir):
     """
     Build and create per-production output subdirectories when needed.
 
@@ -74,17 +74,12 @@ def build_production_subdirectories(production_patterns, output_dir, is_multi_pr
         Ordered production patterns processed by the workflow.
     output_dir : pathlib.Path
         Root output directory.
-    is_multi_production : bool
-        Whether the current run handles multiple independent productions.
 
     Returns
     -------
     dict[str, pathlib.Path]
         Mapping of production pattern to output subdirectory.
     """
-    if not is_multi_production:
-        return {}
-
     production_subdirs = {}
     used_subdir_names = set()
     for production_pattern in production_patterns:

@@ -208,11 +208,7 @@ def generate_corsika_limits_grid(args_dict):
 
     production_subdirs = {}
     if is_multi_production and args_dict["plot_histograms"]:
-        production_subdirs = build_production_subdirectories(
-            production_patterns,
-            output_dir,
-            is_multi_production,
-        )
+        production_subdirs = build_production_subdirectories(production_patterns, output_dir)
 
     for prod_idx, production_pattern in enumerate(production_patterns):
         normalized_telescope_configs = normalize_telescope_configs(telescope_configs)
