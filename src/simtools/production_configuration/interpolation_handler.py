@@ -215,29 +215,58 @@ class InterpolationHandler:
         np.ndarray
             Reduced production grid points.
         """
+
+        def _fallback_dimension(values, column_name, number_of_rows):
+            unique_values = np.unique(np.asarray(values, dtype=float))
+            if len(unique_values) == 1:
+                self._logger.warning(
+                    "Grid points file has no '%s' column. Reusing the single available "
+                    "interpolation value %.6g for all query rows.",
+                    column_name,
+                    unique_values[0],
+                )
+                return np.full(number_of_rows, unique_values[0], dtype=float)
+
+            raise KeyError(
+                f"Grid points file is missing required column '{column_name}', and the "
+                f"interpolation input is not flat in that dimension."
+            )
+
+        def _extract_table_dimension(column_name, aliases, fallback_values):
+            for candidate in (column_name, *aliases):
+                if candidate in self.grid_points_production.colnames:
+                    return np.asarray(self.grid_points_production[candidate], dtype=float)
+            return _fallback_dimension(
+                fallback_values, column_name, len(self.grid_points_production)
+            )
+
         if isinstance(self.grid_points_production, Table):
             production_grid_points = np.column_stack(
                 (
-                    np.asarray(self.grid_points_production["azimuth"], dtype=float),
-                    np.asarray(self.grid_points_production["zenith_angle"], dtype=float),
-                    np.asarray(self.grid_points_production["nsb_level"], dtype=float),
-                    np.asarray(self.grid_points_production["offset"], dtype=float),
+                    _extract_table_dimension("azimuth", ("azimuth_angle",), self.azimuths),
+                    _extract_table_dimension("zenith_angle", (), self.zeniths),
+                    _extract_table_dimension("nsb_level", ("nsb_rate",), self.nsbs),
+                    _extract_table_dimension("offset", (), self.offsets),
                 )
             )
             return production_grid_points[:, self._non_flat_mask]
 
-        def point_value(point, key):
-            value = point[key]
-            if isinstance(value, dict):
-                return value["value"]
-            return value
+        def point_value(point, keys, fallback_values):
+            for key in keys:
+                if key in point:
+                    value = point[key]
+                    if isinstance(value, dict):
+                        return value["value"]
+                    return value
+
+            return _fallback_dimension(fallback_values, keys[0], 1)[0]
 
         production_grid_points = [
             [
-                point_value(point, "azimuth"),
-                point_value(point, "zenith_angle"),
-                point_value(point, "nsb_level"),
-                point_value(point, "offset"),
+                point_value(point, ("azimuth", "azimuth_angle"), self.azimuths),
+                point_value(point, ("zenith_angle",), self.zeniths),
+                point_value(point, ("nsb_level", "nsb_rate"), self.nsbs),
+                point_value(point, ("offset",), self.offsets),
             ]
             for point in self.grid_points_production
         ]

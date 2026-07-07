@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from astropy.table import Table
 
 from simtools.constants import TEST_RESOURCES_STATIC
 from simtools.io import ascii_handler
@@ -146,6 +147,53 @@ def test_prepare_production_grid_points(handler):
     assert isinstance(production_grid_points, np.ndarray)
     assert production_grid_points.ndim == 2
     assert production_grid_points.shape[0] == len(handler.grid_points_production)
+
+
+def test_prepare_production_grid_points_accepts_current_job_grid_columns():
+    """Current job-grid ECSV columns should be accepted for interpolation queries."""
+    table = Table(
+        rows=[
+            {
+                "azimuth_angle": 310.0,
+                "zenith_angle": 30.0,
+                "nsb_rate": 0.24,
+                "run_number": 1,
+            },
+            {
+                "azimuth_angle": 345.0,
+                "zenith_angle": 40.0,
+                "nsb_rate": 0.24,
+                "run_number": 2,
+            },
+        ]
+    )
+    handler = InterpolationHandler([], metrics={}, grid_points_production=table)
+    handler.azimuths = [180.0]
+    handler.zeniths = [20.0]
+    handler.nsbs = [0.24]
+    handler.offsets = [0.0]
+    handler._non_flat_mask = np.array([True, True, True, True])
+
+    production_grid_points = handler._prepare_production_grid_points()
+
+    assert np.allclose(
+        production_grid_points,
+        np.array([[310.0, 30.0, 0.24, 0.0], [345.0, 40.0, 0.24, 0.0]]),
+    )
+
+
+def test_prepare_production_grid_points_raises_for_missing_non_flat_dimension():
+    """Missing columns should fail when the interpolation input varies in that dimension."""
+    table = Table(rows=[{"azimuth_angle": 310.0, "zenith_angle": 30.0, "nsb_rate": 0.24}])
+    handler = InterpolationHandler([], metrics={}, grid_points_production=table)
+    handler.azimuths = [180.0]
+    handler.zeniths = [20.0]
+    handler.nsbs = [0.24]
+    handler.offsets = [0.0, 1.0]
+    handler._non_flat_mask = np.array([True, True, True, True])
+
+    with pytest.raises(KeyError, match="missing required column 'offset'"):
+        handler._prepare_production_grid_points()
 
 
 def test_perform_interpolation(handler):
