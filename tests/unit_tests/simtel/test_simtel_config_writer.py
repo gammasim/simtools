@@ -458,6 +458,17 @@ def test_get_sim_telarray_metadata_raises_for_invalid_metadata_value(simtel_conf
         )
 
 
+def test_validate_sim_telarray_metadata_allows_model_parameter_scope_mismatch(simtel_config_writer):
+    simtel_config_writer._validate_sim_telarray_metadata(["metaparam telescope add array_triggers"])
+
+
+def test_validate_sim_telarray_metadata_rejects_generated_scope_mismatch(simtel_config_writer):
+    with pytest.raises(ValueError, match=r"scope mismatch for random_seed"):
+        simtel_config_writer._validate_sim_telarray_metadata(
+            ["metaparam telescope add random_seed"]
+        )
+
+
 def test_write_simtools_parameters_validates_metadata_lines(simtel_config_writer):
     file_obj = io.StringIO()
 
