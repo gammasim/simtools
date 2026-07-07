@@ -5,6 +5,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import jsonschema
+from astropy.table import Table
 from referencing import Registry, Resource
 
 import simtools.utils.general as gen
@@ -477,7 +478,7 @@ def _get_schema_file_name(schema_file=None, file_name=None, data_dict=None):
             return url
 
     if file_name:
-        return _extract_schema_from_file(file_name)
+        return get_schema_file_from_file_metadata(file_name)
 
     return None
 
@@ -491,7 +492,7 @@ def _extract_schema_url_from_metadata_dict(metadata, observatory="cta"):
     return None
 
 
-def _extract_schema_from_file(file_name, observatory="cta"):
+def get_schema_file_from_file_metadata(file_name, observatory="cta"):
     """
     Extract schema file name from a metadata or data file.
 
@@ -509,8 +510,11 @@ def _extract_schema_from_file(file_name, observatory="cta"):
 
     """
     try:
-        metadata = ascii_handler.collect_data_from_file(file_name=file_name, yaml_document=0)
-    except FileNotFoundError:
+        if Path(file_name).suffix.lower() == ".ecsv":
+            metadata = Table.read(file_name).meta
+        else:
+            metadata = ascii_handler.collect_data_from_file(file_name=file_name, yaml_document=0)
+    except (FileNotFoundError, OSError):
         return None
 
     return _extract_schema_url_from_metadata_dict(metadata, observatory)

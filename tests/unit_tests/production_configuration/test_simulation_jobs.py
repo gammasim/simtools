@@ -18,6 +18,7 @@ from simtools.production_configuration.simulation_jobs import (
     _normalize_axis_spec_tokens,
     _parse_axis_range_tokens,
     _parse_axis_spec,
+    _renumber_job_rows,
     _resolve_coordinate_system,
     _resolve_energy_max_scaling,
     _resolve_shower_params,
@@ -1498,3 +1499,13 @@ def test_build_rows_for_point_skips_when_effective_total_showers_is_zero():
     )
 
     assert rows == []
+
+
+def test_renumber_job_rows_applies_run_number_offset():
+    job_rows = [{"run_number": 10}, {"run_number": 10}, {"run_number": 11}]
+
+    assert [row["run_number"] for row in _renumber_job_rows(job_rows, run_number_offset=42)] == [
+        43,
+        44,
+        45,
+    ]

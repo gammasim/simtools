@@ -1187,6 +1187,32 @@ def test_validate_data_files_with_schema_file(caplog):
     assert "Validated data file" in caplog.text
 
 
+def test_validate_data_files_reads_schema_from_ecsv_metadata(tmp_test_directory, monkeypatch):
+    """Test validate_data_files resolves schema from ECSV metadata for data files."""
+    test_file = tmp_test_directory / "job_grid.ecsv"
+    Table(
+        rows=[[1]],
+        names=["run_number"],
+        meta={"cta": {"product": {"data": {"model": {"url": "schema-from-ecsv"}}}}},
+    ).write(test_file, format="ascii.ecsv")
+
+    captured = {}
+
+    def _validate_and_transform(self, is_model_parameter=False, lists_as_strings=False):
+        captured["schema_file"] = self.schema_file_name
+        captured["data_file"] = self.data_file_name
+        return
+
+    monkeypatch.setattr(
+        validate_data.DataValidator, "validate_and_transform", _validate_and_transform
+    )
+
+    validate_data.DataValidator.validate_data_files(file_name=test_file, is_model_parameter=False)
+
+    assert captured["schema_file"] == "schema-from-ecsv"
+    assert captured["data_file"] == test_file
+
+
 def test_validate_data_files_no_input():
     """Test validate_data_files with no input."""
     result = validate_data.DataValidator.validate_data_files()
