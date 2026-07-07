@@ -561,15 +561,15 @@ def _compute_limits(histograms, allowed_losses, bins_per_decade):
     }
 
 
-def _get_constant_data_value(histograms, name):
+def _get_constant_data_value(histograms, name, abs_tol=0.01):
     """Return an event-data value when its accumulated range is constant."""
     data_ranges = getattr(histograms, "data_ranges", None)
     if not isinstance(data_ranges, dict) or name not in data_ranges:
         return None
 
     minimum, maximum = data_ranges[name]
-    if np.isclose(minimum, maximum, rtol=1.0e-12, atol=1.0e-12):
-        return float(minimum)
+    if np.isclose(minimum, maximum, rtol=0, atol=abs_tol):
+        return float(minimum) if minimum > abs_tol else 0.0
     return None
 
 
