@@ -18,8 +18,7 @@ logger = logging.getLogger(__name__)
 
 _ECSV_SUFFIX = ".ecsv"
 _ECSV_FORMAT = "ascii.ecsv"
-_JOB_GRID_SCHEMA_FILE = SCHEMA_PATH / "job_grid_density.schema.yml"
-_JOB_GRID_SCHEMA_URL = SCHEMA_URL + "job_grid_density.schema.yml"
+_JOB_GRID_SCHEMA_FILE = "job_grid_density.schema.yml"
 
 
 @dataclass(frozen=True)
@@ -34,7 +33,7 @@ class JobGridSchema:
 
 def _load_job_grid_schema():
     """Load the job-grid format definition from its YAML schema."""
-    schema = collect_data_from_file(_JOB_GRID_SCHEMA_FILE)
+    schema = collect_data_from_file(SCHEMA_URL / _JOB_GRID_SCHEMA_FILE)
     table_definition = next(item for item in schema["data"] if item["type"] == "data_table")
     column_definitions = table_definition["table_columns"]
     column_units = {
@@ -91,7 +90,7 @@ def _add_job_grid_schema_metadata(metadata):
     """Add schema reference metadata used for validation."""
     metadata.setdefault("cta", {}).setdefault("product", {}).setdefault("data", {}).setdefault(
         "model", {}
-    )["url"] = _JOB_GRID_SCHEMA_URL
+    )["url"] = SCHEMA_URL + _JOB_GRID_SCHEMA_FILE
     return metadata
 
 
@@ -100,7 +99,7 @@ def _validate_job_grid_table(table):
     if len(table) == 0:
         return table
     return validate_data.DataValidator(
-        schema_file=_JOB_GRID_SCHEMA_FILE,
+        schema_file=SCHEMA_PATH / _JOB_GRID_SCHEMA_FILE,
         data_table=table.copy(copy_data=True),
     ).validate_and_transform()
 
