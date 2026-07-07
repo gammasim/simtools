@@ -26,3 +26,7 @@ The complete schema can be exported from the simtools package with
 simtools-export-sim-telarray-metadata-schema \
    --output_file sim_telarray_metadata_schema.json
 ```
+
+To add a new metadata value, update the matching model-parameter schema if it is model-derived,
+or add the new generated key to the sim_telarray metadata registry, then run the metadata tests to
+verify that the value is written and read correctly.
