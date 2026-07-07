@@ -152,6 +152,18 @@ def test_sim_telarray_meta_parameter_registry_uses_generated_or_model_parameter_
         assert definition["source_type"] == "model_parameter"
 
 
+def test_sim_telarray_meta_parameter_registry_uses_add_as_presence_only():
+    registry = schema.get_sim_telarray_meta_parameter_registry()["meta_parameters"]
+
+    assert registry["asum_clipping"]["mode"] == "add"
+    assert registry["asum_clipping"]["validation"]["config_value_required"] is False
+    assert registry["asum_clipping"]["validation"]["emitted_value_must_match"] is False
+
+    assert registry["latitude"]["mode"] == "set"
+    assert registry["latitude"]["validation"]["config_value_required"] is True
+    assert registry["latitude"]["validation"]["emitted_value_must_match"] is True
+
+
 def test_sim_telarray_meta_parameter_registry_covers_emitted_keys():
     registry = schema.get_sim_telarray_meta_parameter_registry()
     registry_keys = set(registry["meta_parameters"])

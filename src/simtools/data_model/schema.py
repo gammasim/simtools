@@ -150,6 +150,7 @@ def _build_model_parameter_meta_parameter_definition(source_name, emitted_name=N
     value_schema = _get_sim_telarray_output_value_schema(
         model_schema
     ) or _derive_sim_telarray_value_schema(model_schema)
+    value_required = mode == "set"
 
     return {
         "name": emitted_name,
@@ -162,8 +163,8 @@ def _build_model_parameter_meta_parameter_definition(source_name, emitted_name=N
         "validation": {
             "source_must_exist": True,
             "mapping_must_match": True,
-            "config_value_required": True,
-            "emitted_value_must_match": True,
+            "config_value_required": value_required,
+            "emitted_value_must_match": value_required,
         },
     }
 
