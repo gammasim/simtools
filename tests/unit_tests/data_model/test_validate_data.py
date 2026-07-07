@@ -1222,7 +1222,6 @@ def test_validate_data_files_falls_back_to_model_parameter_schema_when_metadata_
     def _validate_and_transform(self, is_model_parameter=False, lists_as_strings=False):
         captured["schema_file"] = self.schema_file_name
         captured["data_file"] = self.data_file_name
-        return
 
     monkeypatch.setattr(
         validate_data.DataValidator, "validate_and_transform", _validate_and_transform
