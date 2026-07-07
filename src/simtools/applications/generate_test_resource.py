@@ -53,7 +53,6 @@ Runtime environment file example
                 - "-v /path/to/simpipe:/workdir/external/simpipe:ro"
 """
 
-import argparse
 from pathlib import Path
 
 from simtools.application_control import build_application
@@ -71,19 +70,6 @@ def _add_arguments(parser):
         type=Path,
         help="Run only the selected workflow config file from integration_tests/config_files.",
     )
-    parser.add_argument("--runtime_environment_file", type=Path)
-    parser.add_argument(
-        "--ignore_runtime_environment",
-        action=argparse.BooleanOptionalAction,
-        default=None,
-        help="Ignore runtime environments configured in application files.",
-    )
-    parser.add_argument(
-        "--overwrite_collection_files",
-        action=argparse.BooleanOptionalAction,
-        default=False,
-        help="Allow collected files to overwrite existing files with identical names.",
-    )
 
 
 def main():
@@ -92,16 +78,8 @@ def main():
         initialization_kwargs={"db_config": False, "paths": False},
         startup_kwargs={"setup_io_handler": False, "resolve_sim_software_executables": False},
     )
-    resource_generation.generate_test_resources(
-        test_directory=app_context.args["test_directory"],
-        simtools_version=app_context.args["simtools_version"],
-        download_only=app_context.args["download_only"],
-        test_static_files=app_context.args["test_static_files"],
-        config_file=app_context.args["config_file"],
-        runtime_environment_file=app_context.args["runtime_environment_file"],
-        ignore_runtime_environment=app_context.args["ignore_runtime_environment"],
-        overwrite_collection_files=app_context.args["overwrite_collection_files"],
-    )
+
+    resource_generation.generate_test_resources(app_context.args, run_time=app_context.run_time)
 
 
 if __name__ == "__main__":

@@ -18,6 +18,7 @@ from simtools.production_configuration.job_grid_io import (
     job_grid_row_to_simulate_prod_args,
     read_job_grid_row,
 )
+from simtools.runners.simtools_runner import prepare_runtime_environment
 from simtools.settings import config
 
 SECRET_ENV_VAR_NAMES = ["SIMTOOLS_DB_API_PW"]
@@ -169,6 +170,7 @@ class ApplicationContext:
     db_config: dict
     logger: logging.Logger
     io_handler: io_handler.IOHandler | None
+    run_time: list | None = None
 
 
 def build_application(
@@ -337,12 +339,27 @@ def startup_application(
     _resolve_model_version_to_latest_patch(args_dict, logger)
     _version_info(args_dict, io_handler_instance, logger)
 
+    run_time = _prepare_runtime_environment_from_cli(args_dict)
+
     return ApplicationContext(
         args=args_dict,
         db_config=db_config,
         logger=logger,
         io_handler=io_handler_instance,
+        run_time=run_time,
     )
+
+
+def _prepare_runtime_environment_from_cli(args_dict):
+    """Prepare runtime environment from CLI arguments when requested."""
+    runtime_environment_file = args_dict.get("runtime_environment_file")
+    if runtime_environment_file is None or args_dict.get("ignore_runtime_environment"):
+        return None
+
+    runtime_environment, run_time = prepare_runtime_environment(runtime_environment_file)
+    args_dict["runtime_environment"] = runtime_environment
+    args_dict["run_time"] = run_time
+    return run_time
 
 
 def get_application_label(file_path):

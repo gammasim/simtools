@@ -64,6 +64,7 @@ class CommandLineParser(argparse.ArgumentParser):
             self.initialize_output_arguments()
         self.initialize_config_files()
         self.initialize_application_execution_arguments()
+        self.initialize_run_time()
         self.initialize_user_arguments()
 
     def initialize_config_files(self):
@@ -142,6 +143,42 @@ class CommandLineParser(argparse.ArgumentParser):
             action="store_true",
         )
 
+    def initialize_run_time(self):
+        """Initialize run time arguments."""
+        _job_group = self.add_argument_group("run time")
+        _job_group.add_argument(
+            "--runtime_environment_file",
+            type=Path,
+            help=(
+                "Path to a standalone runtime-environment YAML file "
+                "(top-level 'runtime_environment')."
+            ),
+            default=None,
+        )
+        _job_group.add_argument(
+            "--apptainer_image",
+            help="Apptainer image path or a dictionary mapping labels to image paths.",
+            type=CommandLineParser.string_or_dict,
+            default=None,
+        )
+        _job_group.add_argument(
+            "--ignore_runtime_environment",
+            action="store_true",
+            help=(
+                "Ignore the runtime environment and run the application in the current environment."
+            ),
+            default=False,
+        )
+        _job_group.add_argument(
+            "--overwrite_collection_files",
+            action="store_true",
+            help=(
+                "Allow files copied by the workflow collection block to overwrite existing files "
+                "with identical names."
+            ),
+            default=False,
+        )
+
     def initialize_application_execution_arguments(self):
         """Initialize application execution arguments."""
         _job_group = self.add_argument_group("execution")
@@ -188,12 +225,7 @@ class CommandLineParser(argparse.ArgumentParser):
             nargs="+",
             default=["png"],
         )
-        _job_group.add_argument(
-            "--apptainer_image",
-            help="Apptainer image path or a dictionary mapping labels to image paths.",
-            type=CommandLineParser.string_or_dict,
-            default=None,
-        )
+
         _job_group.add_argument(
             "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"
         )

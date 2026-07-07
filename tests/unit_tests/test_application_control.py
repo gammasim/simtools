@@ -371,6 +371,47 @@ def test_startup_application_without_resolving_sim_software_executables():
     )
 
 
+def test_startup_application_prepares_runtime_environment_from_cli():
+    """Test startup_application prepares runtime environment from CLI file argument."""
+    mock_args_dict = {
+        "log_level": "info",
+        "runtime_environment_file": Path("runtime.yml"),
+        "ignore_runtime_environment": False,
+    }
+    mock_db_config = {}
+    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
+
+    with patch(
+        "simtools.application_control.prepare_runtime_environment",
+        return_value=({"image": "test-image"}, ["podman", "run"]),
+    ) as mock_prepare:
+        app_context = startup_application(mock_parse_function, setup_io_handler=False)
+
+    mock_prepare.assert_called_once_with(Path("runtime.yml"))
+    assert app_context.run_time == ["podman", "run"]
+    assert app_context.args["runtime_environment"] == {"image": "test-image"}
+    assert app_context.args["run_time"] == ["podman", "run"]
+
+
+def test_startup_application_runtime_environment_ignored_from_cli():
+    """Test startup_application ignores runtime environment when requested by CLI flag."""
+    mock_args_dict = {
+        "log_level": "info",
+        "runtime_environment_file": Path("runtime.yml"),
+        "ignore_runtime_environment": True,
+    }
+    mock_db_config = {}
+    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
+
+    with patch("simtools.application_control.prepare_runtime_environment") as mock_prepare:
+        app_context = startup_application(mock_parse_function, setup_io_handler=False)
+
+    mock_prepare.assert_not_called()
+    assert app_context.run_time is None
+    assert "runtime_environment" not in app_context.args
+    assert "run_time" not in app_context.args
+
+
 def test_resolve_model_version_to_latest_patch_no_model_version():
     """Test _resolve_model_version_to_latest_patch when model_version is not in args."""
 
