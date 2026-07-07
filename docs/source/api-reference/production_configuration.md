@@ -4,16 +4,7 @@
 
 Modules provide functionality to configure a simulation production.
 This includes the derivation of energy, viewcone radius, and core scatter ranges and
-the calculation of the number of events to be simulated given a pre-determined metric.
-
-(calculate-statistical-errors-grid-point)=
-
-## calculate_statistical_uncertainties_grid_point
-
-```{eval-rst}
-.. automodule:: production_configuration.calculate_statistical_uncertainties_grid_point
-   :members:
-```
+related production-configuration helpers used by the supported workflows.
 
 
 (derive-corsika-limits_grid)=
@@ -22,24 +13,6 @@ the calculation of the number of events to be simulated given a pre-determined m
 
 ```{eval-rst}
 .. automodule:: production_configuration.derive_corsika_limits
-   :members:
-```
-
-(derive-production-statistics)=
-
-## derive_production_statistics
-
-```{eval-rst}
-.. automodule:: production_configuration.derive_production_statistics
-   :members:
-```
-
-(derive-production-statistics-handler)=
-
-## derive_production_statistics_handler
-
-```{eval-rst}
-.. automodule:: production_configuration.derive_production_statistics_handler
    :members:
 ```
 
@@ -62,15 +35,6 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
-
-(interpolation-handler)=
-
-## interpolation_handler
-
-```{eval-rst}
-.. automodule:: production_configuration.interpolation_handler
-   :members:
-```
 
 (job-grid-io)=
 

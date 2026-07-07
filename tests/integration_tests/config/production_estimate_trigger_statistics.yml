@@ -1,0 +1,16 @@
+---
+applications:
+- application: simtools-production-estimate-trigger-statistics
+  configuration:
+    input: tests/resources/generated/trigger_statistics_reference_test.hdf5
+    optimization_energy_max: 10 TeV
+    optimization_energy_min: 0.1 TeV
+    output_file: trigger_statistics_estimate.ecsv
+    output_path: simtools-output
+    target_relative_uncertainty: 0.1
+  integration_tests:
+  - output_file: trigger_statistics_estimate.ecsv
+  test_name: production_estimate_trigger_statistics
+  xfail: "Requires generated trigger reference fixture to be produced before enabling."
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

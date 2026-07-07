@@ -5,6 +5,7 @@ from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 
 import simtools.production_configuration.derive_corsika_limits as derive_corsika_limits
+import simtools.production_configuration.production_event_data_helpers as event_data_helpers
 
 # Constants
 SIM_EVENTS_HISTOGRAMS_PATH = (
@@ -286,40 +287,6 @@ def test_generate_corsika_limits_grid_with_array_element_list(
     assert mock_write.call_count == 1
 
 
-def test_generate_corsika_limits_grid_with_telescope_ids_file(
-    mocker, mock_args_dict, tmp_test_directory
-):
-    """Test generate_corsika_limits_grid resolves telescope configs from file."""
-    args = mock_args_dict.copy()
-    args["array_layout_name"] = None
-    args["array_element_list"] = None
-    args["telescope_ids"] = "telescope_ids.yml"
-
-    mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.ascii_handler.collect_data_from_file",
-        return_value={"telescope_configs": {"LST": ["LSTN-01", "LSTN-02"]}},
-    )
-    mock_pool = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
-    )
-    mock_pool.return_value = [[{"primary_particle": "gamma", "array_name": "LST"}]]
-    mock_io = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
-    )
-    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
-    mock_write = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.write_results"
-    )
-
-    derive_corsika_limits.generate_corsika_limits_grid(args)
-
-    job_spec = mock_pool.call_args[0][1][0]
-    assert job_spec["telescope_configs"] == [
-        {"array_name": "LST", "telescope_ids": ["LSTN-01", "LSTN-02"]}
-    ]
-    assert mock_write.call_count == 1
-
-
 def test_generate_corsika_limits_grid_builds_output_subdirs_for_multiple_productions(
     mocker, mock_args_dict, tmp_test_directory
 ):
@@ -355,7 +322,6 @@ def test_generate_corsika_limits_grid_without_telescope_configuration(mock_args_
     args = mock_args_dict.copy()
     args["array_layout_name"] = None
     args["array_element_list"] = None
-    args["telescope_ids"] = None
 
     with pytest.raises(ValueError, match="No telescope configuration provided"):
         derive_corsika_limits.generate_corsika_limits_grid(args)
@@ -364,15 +330,18 @@ def test_generate_corsika_limits_grid_without_telescope_configuration(mock_args_
 def test_resolve_telescope_configs_wraps_single_layout_result(mocker):
     """Wrap a non-list layout resolution result into a list before DB lookup."""
     mock_resolve = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.resolve_array_layout_name",
+        "simtools.production_configuration.production_event_data_helpers.resolve_array_layout_name",
         return_value="single-layout",
     )
     mock_db_lookup = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.get_array_elements_from_db_for_layouts",
+        (
+            "simtools.production_configuration.production_event_data_helpers."
+            "get_array_elements_from_db_for_layouts"
+        ),
         return_value={"LST": ["LSTN-01"]},
     )
 
-    result = derive_corsika_limits._resolve_telescope_configs(
+    result = event_data_helpers.resolve_telescope_configs(
         {
             "array_layout_name": "layout",
             "model_version": "1.0.0",
@@ -954,7 +923,7 @@ def test_differential_upper_limits_falls_back_to_last_bin_edge(mocker):
 
 def test_normalize_event_data_file_single_string():
     """Test _normalize_event_data_file with single string input."""
-    result = derive_corsika_limits._normalize_event_data_file("pattern_*.hdf5")
+    result = event_data_helpers.normalize_event_data_file("pattern_*.hdf5")
     assert result == ["pattern_*.hdf5"]
     assert isinstance(result, list)
 
@@ -962,7 +931,7 @@ def test_normalize_event_data_file_single_string():
 def test_normalize_event_data_file_list():
     """Test _normalize_event_data_file with list input."""
     patterns = ["pattern_1_*.hdf5", "pattern_2_*.hdf5"]
-    result = derive_corsika_limits._normalize_event_data_file(patterns)
+    result = event_data_helpers.normalize_event_data_file(patterns)
     assert result == patterns
     # Should preserve order
     assert result[0] == "pattern_1_*.hdf5"
@@ -972,18 +941,18 @@ def test_normalize_event_data_file_list():
 def test_normalize_event_data_file_invalid_type():
     """Test _normalize_event_data_file raises on invalid type."""
     with pytest.raises(TypeError):
-        derive_corsika_limits._normalize_event_data_file(123)
+        event_data_helpers.normalize_event_data_file(123)
 
 
 def test_get_production_directory_name_readable_and_deterministic():
     """Test _get_production_directory_name generates readable deterministic names."""
     # Same inputs should produce same output when no collision exists
-    name1 = derive_corsika_limits._get_production_directory_name("pattern_1_*.hdf5")
-    name2 = derive_corsika_limits._get_production_directory_name("pattern_1_*.hdf5")
+    name1 = event_data_helpers.get_production_directory_name("pattern_1_*.hdf5")
+    name2 = event_data_helpers.get_production_directory_name("pattern_1_*.hdf5")
     assert name1 == name2
 
     # Different patterns should produce different readable names
-    name3 = derive_corsika_limits._get_production_directory_name("pattern_2_*.hdf5")
+    name3 = event_data_helpers.get_production_directory_name("pattern_2_*.hdf5")
     assert name1 != name3
 
     # Names should be filesystem-safe (no special chars)
@@ -993,7 +962,7 @@ def test_get_production_directory_name_readable_and_deterministic():
 
 def test_get_production_directory_name_uses_parent_dir_only():
     """Parent directory name is used alone to avoid duplication with the filename stem."""
-    name = derive_corsika_limits._get_production_directory_name(
+    name = event_data_helpers.get_production_directory_name(
         "/data/electron_z20_north_dark10p/electron_20deg_0deg_run00000*hdf5"
     )
     assert name == "production_electron_z20_north_dark10p"
@@ -1004,11 +973,11 @@ def test_get_production_directory_name_uses_parent_dir_only():
 def test_get_production_directory_name_appends_uuid_on_collision(mocker):
     """Test _get_production_directory_name appends UUID when names collide."""
     mock_uuid = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.get_uuid",
+        "simtools.production_configuration.production_event_data_helpers.get_uuid",
         return_value="019d776b-e24c-741d-bc05-e3f6f7ec77c7",
     )
 
-    name = derive_corsika_limits._get_production_directory_name(
+    name = event_data_helpers.get_production_directory_name(
         "pattern_1_*.hdf5",
         existing_names={"production_pattern_1"},
     )
@@ -1070,7 +1039,7 @@ def test_parse_allowed_losses_invalid_axis_raises():
 
 def test_build_production_subdirectories_non_multi_returns_empty(tmp_test_directory):
     """Test _build_production_subdirectories returns empty dict for single production."""
-    result = derive_corsika_limits._build_production_subdirectories(
+    result = event_data_helpers.build_production_subdirectories(
         ["pattern_1_*.hdf5"],
         tmp_test_directory,
         is_multi_production=False,
@@ -1081,7 +1050,7 @@ def test_build_production_subdirectories_non_multi_returns_empty(tmp_test_direct
 def test_build_production_subdirectories_creates_dirs(tmp_test_directory):
     """Test _build_production_subdirectories creates per-production directories."""
     patterns = ["pattern_1_*.hdf5", "pattern_2_*.hdf5"]
-    result = derive_corsika_limits._build_production_subdirectories(
+    result = event_data_helpers.build_production_subdirectories(
         patterns,
         tmp_test_directory,
         is_multi_production=True,
@@ -1126,10 +1095,6 @@ def test_execute_production_job_groups_layouts_and_preserves_result_order(mocker
 
 def test_generate_corsika_limits_grid_multi_production(mocker, tmp_test_directory):
     """Test generate_corsika_limits_grid with multiple event_data_file patterns."""
-    # Mock dependencies
-    mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
-    mock_collect.return_value = {"telescope_configs": {"LST": ["LSTN-01"]}}
-
     mock_pool = mocker.patch(
         "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
     )
@@ -1151,7 +1116,7 @@ def test_generate_corsika_limits_grid_multi_production(mocker, tmp_test_director
         "simtools.production_configuration.derive_corsika_limits.write_results"
     )
     mock_build_subdirs = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits._build_production_subdirectories"
+        "simtools.production_configuration.derive_corsika_limits.build_production_subdirectories"
     )
 
     mock_io = mocker.patch(
@@ -1163,7 +1128,7 @@ def test_generate_corsika_limits_grid_multi_production(mocker, tmp_test_director
     # Multi-production args
     args_dict = {
         "event_data_file": ["pattern_1_*.hdf5", "pattern_2_*.hdf5"],
-        "telescope_ids": "telescope_ids.yml",
+        "array_element_list": ["LSTN-01"],
         "allowed_losses": [
             "core_distance,0.2,10",
             "angular_distance,0.2,10",
@@ -1215,7 +1180,7 @@ def test_generate_corsika_limits_grid_single_production_uses_pool(mocker, tmp_te
 
     args_dict = {
         "event_data_file": "pattern_*.hdf5",  # Single string, not list
-        "telescope_ids": "telescope_ids.yml",
+        "array_element_list": ["LSTN-01"],
         "allowed_losses": [
             "core_distance,0.2,10",
             "angular_distance,0.2,10",
@@ -1283,7 +1248,6 @@ def mock_args_dict():
         "max_workers": 1,
         "array_layout_name": None,
         "array_element_list": ["LSTN-01"],
-        "telescope_ids": None,
     }
 
 

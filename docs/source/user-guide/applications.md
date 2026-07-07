@@ -94,7 +94,6 @@ simtools-plot-tabular-data-for-model-parameter <applications/simtools-plot-tabul
 simtools-plot-simtel-events <applications/simtools-plot-simtel-events>
 simtools-plot-simulated-event-distributions <applications/simtools-plot-simulated-event-distributions>
 simtools-production-derive-corsika-limits <applications/simtools-production-derive-corsika-limits>
-simtools-production-derive-statistics <applications/simtools-production-derive-statistics>
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
 simtools-run-application <applications/simtools-run-application>
 simtools-simulate-flasher <applications/simtools-simulate-flasher>
