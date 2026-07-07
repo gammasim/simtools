@@ -190,7 +190,14 @@ class DataValidator:
 
         for data_file in file_list:
             parameter_name = re.sub(r"-\d+\.\d+\.\d+", "", data_file.stem)
-            schema_path = schema_file or schema.get_model_parameter_schema_file(f"{parameter_name}")
+            schema_path = schema_file or (
+                schema.get_model_parameter_schema_file(f"{parameter_name}")
+                if is_model_parameter
+                else (
+                    schema.get_schema_file_from_file_metadata(data_file)
+                    or schema.get_model_parameter_schema_file(f"{parameter_name}")
+                )
+            )
             data_validator = DataValidator(
                 schema_file=schema_path,
                 data_file=data_file,

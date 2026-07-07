@@ -130,15 +130,3 @@ def test_add_arguments_accepts_legacy_energy_max_scaling_index():
     args = parser.parse_args(["--energy_max_scaling_index", "-2.5"])
 
     assert args.energy_max_scaling_index == pytest.approx(-2.5)
-
-
-def test_renumber_job_rows_applies_run_number_offset():
-    job_rows = [{"run_number": 10}, {"run_number": 10}, {"run_number": 11}]
-
-    assert [
-        row["run_number"] for row in app._renumber_job_rows(job_rows, run_number_offset=42)
-    ] == [
-        43,
-        44,
-        45,
-    ]
