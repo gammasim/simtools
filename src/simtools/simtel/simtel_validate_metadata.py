@@ -16,6 +16,13 @@ def get_meta_parameter_registry(schema_version=None, validate=True):
 
     Generated metadata are read from the registry schema. Model-parameter-derived
     metadata are resolved from the model-parameter schemas.
+
+    Parameters
+    ----------
+    schema_version : str, optional
+        Version of the registry schema to load.
+    validate : bool, optional
+        Whether to validate the loaded registry against the metaschema.
     """
     registry_source = schema.load_schema(
         SIM_TELARRAY_META_PARAMETER_REGISTRY, schema_version=schema_version or "latest"
@@ -31,10 +38,17 @@ def get_meta_parameter_registry(schema_version=None, validate=True):
 
 
 def validate_metadata(meta_parameters):
-    """Validate emitted sim_telarray metadata lines against the registry."""
+    """
+    Validate emitted sim_telarray metadata lines against the registry.
+
+    Parameters
+    ----------
+    meta_parameters : list of str
+        Emitted sim_telarray metadata lines.
+    """
     registry = get_meta_parameter_registry(validate=False)["meta_parameters"]
     for line in meta_parameters:
-        parsed = parse_metadata_line(line)
+        parsed = _parse_metadata_line(line)
         definition = registry.get(parsed["name"])
         if definition is None:
             raise KeyError(f"Unknown sim_telarray metadata key emitted by writer: {parsed['name']}")
@@ -62,7 +76,14 @@ def validate_metadata(meta_parameters):
 
 
 def validate_metadata_values(metadata):
-    """Validate known decoded sim_telarray metadata values against the registry."""
+    """
+    Validate known decoded sim_telarray metadata values against the registry.
+
+    Parameters
+    ----------
+    metadata : dict
+        Decoded sim_telarray metadata values, keyed by emitted name.
+    """
     registry = get_meta_parameter_registry(validate=False)["meta_parameters"]
     for name, value in metadata.items():
         definition = registry.get(name)
@@ -76,27 +97,30 @@ def validate_metadata_values(metadata):
         _validate_metadata_value(name, str(value), definition["value_schema"])
 
 
-def parse_metadata_line(line):
+def _parse_metadata_line(line):
     """Parse one emitted sim_telarray metadata line."""
-    meta_match = re.fullmatch(
-        r"metaparam (global|telescope) (add|set) ([^=\s]+)(?:\s*=\s*(.*))?",
-        line,
-    )
-    if meta_match:
+    parts = line.split(maxsplit=3)
+    if len(parts) == 4 and parts[0] == "metaparam":
+        scope, mode = parts[1], parts[2]
+        if scope not in ("global", "telescope") or mode not in ("add", "set"):
+            raise ValueError(f"Unsupported sim_telarray metadata line: {line}")
+        name, separator, value = parts[3].partition("=")
+        if not name.strip() or any(char.isspace() for char in name.strip()):
+            raise ValueError(f"Unsupported sim_telarray metadata line: {line}")
         return {
-            "scope": meta_match.group(1),
-            "mode": meta_match.group(2),
-            "name": meta_match.group(3),
-            "value": meta_match.group(4),
+            "scope": scope,
+            "mode": mode,
+            "name": name.strip(),
+            "value": value.strip() if separator else None,
         }
 
-    assign_match = re.fullmatch(r"(\w+)\s*=\s*(.*)", line)
-    if assign_match:
+    name, separator, value = line.partition("=")
+    if separator and name.strip().replace("_", "").isalnum():
         return {
             "scope": None,
             "mode": "assign",
-            "name": assign_match.group(1),
-            "value": assign_match.group(2),
+            "name": name.strip(),
+            "value": value.strip(),
         }
 
     raise ValueError(f"Unsupported sim_telarray metadata line: {line}")
@@ -266,15 +290,12 @@ def _validate_scalar_value(name, value, value_schema):
     if data_type == "string":
         if value == "" and not value_schema.get("allow_empty", False):
             raise ValueError(f"Empty string metadata value for {name}")
-        return
-    if data_type == "integer":
+    elif data_type == "integer":
         int(value)
-        return
-    if data_type == "number":
+    elif data_type == "number":
         float(value)
-        return
-    if data_type == "boolean":
+    elif data_type == "boolean":
         if value not in ("0", "1", "true", "false", "True", "False"):
             raise ValueError(f"Invalid boolean metadata value for {name}: {value}")
-        return
-    raise ValueError(f"Unsupported scalar metadata data type for {name}: {data_type}")
+    else:
+        raise ValueError(f"Unsupported scalar metadata data type for {name}: {data_type}")
