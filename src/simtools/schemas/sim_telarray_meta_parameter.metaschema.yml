@@ -44,12 +44,6 @@ definitions:
     type: object
     additionalProperties: false
     properties:
-      source_type:
-        type: string
-        enum:
-          - generated
-      unit:
-        type: "null"
       scope:
         type: string
         enum:
@@ -61,30 +55,12 @@ definitions:
           - add
           - set
           - assign
-      category:
-        type: string
-        enum:
-          - simulation_model
-          - software
-          - run_parameter
-          - site_configuration
-          - array_configuration
-          - provenance
-          - environment
-      description:
-        type: string
       value_schema:
         $ref: '#/definitions/ValueSchema'
-      validation:
-        $ref: '#/definitions/ValidationPolicy'
     required:
-      - source_type
-      - unit
       - scope
       - mode
-      - description
       - value_schema
-      - validation
 
   ValueSchema:
     type: object
@@ -121,21 +97,3 @@ definitions:
         type: boolean
     required:
       - kind
-
-  ValidationPolicy:
-    type: object
-    additionalProperties: false
-    properties:
-      source_must_exist:
-        type: boolean
-      mapping_must_match:
-        type: boolean
-      config_value_required:
-        type: boolean
-      emitted_value_must_match:
-        type: boolean
-    required:
-      - source_must_exist
-      - mapping_must_match
-      - config_value_required
-      - emitted_value_must_match
