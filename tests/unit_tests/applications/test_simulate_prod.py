@@ -8,7 +8,6 @@ from unittest.mock import MagicMock, patch
 
 import astropy.units as u
 import pytest
-import yaml
 
 import simtools.applications.simulate_prod as app
 from simtools.production_configuration import job_grid_io
@@ -57,19 +56,25 @@ def _job_grid_args(job_grid_file, *extra_args):
     return ["--job_grid_file", job_grid_file, *extra_args]
 
 
-def _write_simulate_prod_config(config_file, configuration):
-    with open(config_file, "w", encoding="utf-8") as output:
-        yaml.safe_dump(
-            {
-                "applications": [
-                    {
-                        "application": "simtools-simulate-prod",
-                        "configuration": configuration,
-                    }
-                ]
-            },
-            output,
-        )
+def _parse_with_config_sources(job_grid_file, cli_keys=(), file_keys=()):
+    args = {"job_grid_file": str(job_grid_file), "job_grid_row": 1}
+    app._resolve_job_grid_arguments(
+        args,
+        {"cli": set(cli_keys), "file": set(file_keys)},
+        argparse.ArgumentParser(),
+    )
+    return args
+
+
+def _mock_application_context(mock_build_app, label="test"):
+    mock_build_app.return_value = MagicMock(
+        args={
+            "label": label,
+            "save_reduced_event_lists": False,
+            "save_file_lists": False,
+            "grid_output_path": None,
+        }
+    )
 
 
 def test_add_arguments_registers_job_grid_file_and_row():
@@ -121,74 +126,33 @@ def test_parse_job_grid_row_without_file_fails(monkeypatch, capsys):
     assert "job_grid_file" in stderr
 
 
-def test_parse_job_grid_file_rejects_explicit_cli_production_parameter(
-    monkeypatch, capsys, job_grid_file
-):
+@pytest.mark.parametrize("source", ["cli", "file"])
+def test_job_grid_file_rejects_explicit_production_parameter(capsys, job_grid_file, source):
+    source_kwargs = {f"{source}_keys": {"zenith_angle"}}
+
     with pytest.raises(SystemExit):
-        _parse_with_args(
-            monkeypatch,
-            _job_grid_args(job_grid_file, "--zenith_angle", 20),
-        )
+        _parse_with_config_sources(job_grid_file, **source_kwargs)
 
     assert "zenith_angle" in capsys.readouterr().err
 
 
-def test_parse_job_grid_file_rejects_yaml_production_parameter(
-    monkeypatch, capsys, job_grid_file, tmp_test_directory
-):
-    config_file = tmp_test_directory / "simulate_prod.yml"
-    _write_simulate_prod_config(
-        config_file,
-        {
-            "job_grid_file": str(job_grid_file),
-            "zenith_angle": 20,
-        },
+def test_job_grid_file_allows_operational_parameters(job_grid_file):
+    args = _parse_with_config_sources(
+        job_grid_file,
+        cli_keys={"save_file_lists"},
+        file_keys={"job_grid_file", "label", "log_level", "output_path"},
     )
-
-    with pytest.raises(SystemExit):
-        _parse_with_args(monkeypatch, ["--config", config_file])
-
-    assert "zenith_angle" in capsys.readouterr().err
-
-
-def test_parse_job_grid_file_allows_operational_yaml_and_cli_parameters(
-    monkeypatch, job_grid_file, tmp_test_directory
-):
-    config_file = tmp_test_directory / "simulate_prod.yml"
-    _write_simulate_prod_config(
-        config_file,
-        {
-            "job_grid_file": str(job_grid_file),
-            "label": "grid-test",
-            "log_level": "DEBUG",
-            "output_path": str(tmp_test_directory),
-        },
-    )
-
-    args = _parse_with_args(monkeypatch, ["--config", config_file, "--save_file_lists"])
 
     assert args["run_number"] == 7
-    assert args["label"] == "grid-test"
-    assert args["save_file_lists"] is True
+    assert args["primary"] == "gamma"
 
 
-@pytest.mark.parametrize(
-    "context_args",
-    [
-        {
-            "label": "test",
-            "save_reduced_event_lists": False,
-            "save_file_lists": False,
-            "grid_output_path": None,
-        }
-    ],
-)
 @patch("simtools.applications.simulate_prod.Simulator")
 @patch("simtools.applications.simulate_prod.build_application")
 def test_main_calls_build_application_with_simulate_prod_parse_function(
-    mock_build_app, mock_simulator_class, context_args
+    mock_build_app, mock_simulator_class
 ):
-    mock_build_app.return_value = MagicMock(args=context_args)
+    _mock_application_context(mock_build_app)
     mock_simulator_class.return_value = MagicMock()
 
     app.main()
@@ -201,14 +165,7 @@ def test_main_calls_build_application_with_simulate_prod_parse_function(
 @patch("simtools.applications.simulate_prod.Simulator")
 @patch("simtools.applications.simulate_prod.build_application")
 def test_main_runs_simulator_and_reports(mock_build_app, mock_simulator_class):
-    mock_build_app.return_value = MagicMock(
-        args={
-            "label": "myprod",
-            "save_reduced_event_lists": False,
-            "save_file_lists": False,
-            "grid_output_path": None,
-        }
-    )
+    _mock_application_context(mock_build_app, label="myprod")
     mock_simulator = MagicMock()
     mock_simulator_class.return_value = mock_simulator
 
