@@ -51,6 +51,7 @@ def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
 
     assert metadata["site"] == "North"
     assert metadata["job_grid_format_version"] == job_grid_io.JOB_GRID_SCHEMA.version
+    assert metadata["cta"]["product"]["data"]["model"]["url"] == job_grid_io._JOB_GRID_SCHEMA_URL
     assert output_table.colnames[0] == "run_number"
     assert output_table["energy_min"].unit == u.GeV
     assert output_table["energy_max"].unit == u.GeV
@@ -79,6 +80,7 @@ def test_serialize_job_grid_stream_and_read_job_grid_ecsv(tmp_test_directory):
     assert row_count == 1
     assert metadata["site"] == "North"
     assert metadata["job_grid_format_version"] == job_grid_io.JOB_GRID_SCHEMA.version
+    assert metadata["cta"]["product"]["data"]["model"]["url"] == job_grid_io._JOB_GRID_SCHEMA_URL
     assert rows[0]["energy_min"] == 30 * u.GeV
     assert rows[0]["ha"] == 123 * u.deg
     assert rows[0]["dec"] == -45 * u.deg

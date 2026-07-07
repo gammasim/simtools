@@ -20,6 +20,10 @@ _ECSV_SUFFIX = ".ecsv"
 _ECSV_FORMAT = "ascii.ecsv"
 _STREAM_CHUNK_SIZE = 10_000
 _JOB_GRID_SCHEMA_FILE = SCHEMA_PATH / "job_grid_density.schema.yml"
+_JOB_GRID_SCHEMA_URL = (
+    "https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/"
+    "job_grid_density.schema.yml"
+)
 
 
 @dataclass(frozen=True)
@@ -87,6 +91,14 @@ def _deserialize_job_row(serialized_row, column_units=None):
     }
 
 
+def _add_job_grid_schema_metadata(metadata):
+    """Add schema reference metadata used for validation."""
+    metadata.setdefault("cta", {}).setdefault("product", {}).setdefault("data", {}).setdefault(
+        "model", {}
+    )["url"] = _JOB_GRID_SCHEMA_URL
+    return metadata
+
+
 def serialize_job_grid(job_rows, output_file, metadata=None):
     """
     Serialize executable job rows to ECSV output.
@@ -103,6 +115,7 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     output_path = Path(output_file)
     serialized_rows = [_serialize_job_row(job_row) for job_row in job_rows]
     metadata = metadata.copy() if metadata else {}
+    _add_job_grid_schema_metadata(metadata)
     metadata["job_grid_format_version"] = JOB_GRID_SCHEMA.version
     metadata["job_grid_summary"] = build_job_grid_summary(job_rows)
 
@@ -204,6 +217,7 @@ def serialize_job_grid_stream(job_rows, output_file, metadata=None):
     """
     output_path = Path(output_file)
     metadata = metadata.copy() if metadata else {}
+    _add_job_grid_schema_metadata(metadata)
     metadata["job_grid_format_version"] = JOB_GRID_SCHEMA.version
 
     if output_path.suffix.lower() != _ECSV_SUFFIX:
