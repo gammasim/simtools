@@ -298,6 +298,8 @@ class Configurator:
             if "configuration" in config_dict.get("applications", [{}])[0]:
                 config_dict = config_dict["applications"][0]["configuration"]
             return set(gen.change_dict_keys_case(config_dict).keys())
+        except FileNotFoundError:
+            return set()
         except (TypeError, AttributeError):
             return set()
 
