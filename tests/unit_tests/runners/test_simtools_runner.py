@@ -499,6 +499,34 @@ def test_run_applications_uses_log_file_override(monkeypatch, tmp_test_directory
     assert not default_log.exists()
 
 
+def test_run_applications_keeps_workflow_log_file_when_cli_log_file_is_none(
+    monkeypatch, tmp_test_directory
+):
+    tmp_test_directory = Path(tmp_test_directory)
+    default_log = tmp_test_directory / "tmp_application_output" / "simtools.log"
+    monkeypatch.setattr(
+        simtools_runner,
+        "_read_application_configuration",
+        mock.Mock(return_value=([], None, default_log, "wf-activity-id", None)),
+    )
+    monkeypatch.setattr(
+        simtools_runner.dependencies,
+        "get_version_string",
+        mock.Mock(return_value=""),
+    )
+
+    simtools_runner.run_applications(
+        {
+            "config_file": "workflow.config.yml",
+            "log_file": None,
+            "steps": None,
+            "ignore_runtime_environment": True,
+        }
+    )
+
+    assert default_log.is_file()
+
+
 def test_run_applications_propagates_ignore_existing_parameter_version(
     monkeypatch, tmp_test_directory
 ):
