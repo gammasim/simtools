@@ -99,11 +99,10 @@ def _validate_job_grid_table(table):
     """Validate a job-grid table against the job-grid schema."""
     if len(table) == 0:
         return table
-    validate_data.DataValidator(
+    return validate_data.DataValidator(
         schema_file=_JOB_GRID_SCHEMA_FILE,
         data_table=table.copy(copy_data=True),
     ).validate_and_transform()
-    return table
 
 
 def serialize_job_grid(job_rows, output_file, metadata=None):
@@ -133,9 +132,8 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     output_rows = [
         {column: row.get(column) for column in output_columns} for row in serialized_rows
     ]
-
     output_table = _build_output_table(output_rows, output_columns, metadata)
-    _validate_job_grid_table(output_table)
+    output_table = _validate_job_grid_table(output_table)
     logger.info(f"Writing job grid with {len(job_rows)} rows to '{output_path}'.")
     output_table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
 
