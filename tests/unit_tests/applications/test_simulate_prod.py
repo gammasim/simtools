@@ -3,9 +3,54 @@
 """Tests for the simulate_prod application."""
 
 import argparse
+import sys
 from unittest.mock import MagicMock, patch
 
+import astropy.units as u
+import pytest
+import yaml
+
 import simtools.applications.simulate_prod as app
+from simtools.production_configuration import job_grid_io
+
+pytestmark = pytest.mark.usefixtures("_mock_settings_env_vars")
+
+
+@pytest.fixture
+def job_grid_file(tmp_test_directory):
+    """Return a two-row production job grid file for parser tests."""
+    grid_file = tmp_test_directory / "grid.ecsv"
+    row = {
+        "run_number": 7,
+        "primary": "gamma",
+        "azimuth_angle": 45 * u.deg,
+        "zenith_angle": 20 * u.deg,
+        "ha": 123 * u.deg,
+        "dec": -45 * u.deg,
+        "energy_min": 30 * u.GeV,
+        "energy_max": 10 * u.TeV,
+        "cores_per_shower": 10,
+        "core_scatter_max": 200 * u.m,
+        "view_cone_min": 0 * u.deg,
+        "view_cone_max": 5 * u.deg,
+        "showers_per_run": 1000,
+        "nsb_rate": 0.24,
+        "model_version": "7.0.0",
+        "array_layout_name": "CTAO-North-Alpha",
+        "corsika_le_interaction": "urqmd",
+        "corsika_he_interaction": "epos",
+    }
+    job_grid_io.serialize_job_grid(
+        [row, {**row, "run_number": 11, "zenith_angle": 40 * u.deg}],
+        grid_file,
+        metadata={"site": "North", "simulation_software": "corsika_sim_telarray"},
+    )
+    return grid_file
+
+
+def _parse_with_args(monkeypatch, args):
+    monkeypatch.setattr(sys, "argv", ["simulate_prod.py", *map(str, args)])
+    return app._parse()[0]
 
 
 def test_add_arguments_registers_job_grid_file_and_row():
@@ -28,9 +73,114 @@ def test_add_arguments_job_grid_row_defaults_to_one():
     assert args.job_grid_row == 1
 
 
+def test_parse_job_grid_file_defaults_to_first_row(monkeypatch, job_grid_file, tmp_test_directory):
+    args = _parse_with_args(
+        monkeypatch,
+        ["--job_grid_file", job_grid_file, "--output_path", tmp_test_directory],
+    )
+
+    assert args["run_number"] == 7
+    assert args["primary"] == "gamma"
+    assert args["site"] == "North"
+    assert args["simulation_software"] == "corsika_sim_telarray"
+
+
+def test_parse_job_grid_file_selects_requested_row(monkeypatch, job_grid_file, tmp_test_directory):
+    args = _parse_with_args(
+        monkeypatch,
+        [
+            "--job_grid_file",
+            job_grid_file,
+            "--job_grid_row",
+            2,
+            "--output_path",
+            tmp_test_directory,
+        ],
+    )
+
+    assert args["run_number"] == 11
+    assert args["zenith_angle"] == 40 * u.deg
+
+
+def test_parse_job_grid_row_without_file_fails(monkeypatch, capsys):
+    with pytest.raises(SystemExit):
+        _parse_with_args(monkeypatch, ["--job_grid_row", 2])
+
+    stderr = capsys.readouterr().err
+    assert "job_grid_row" in stderr
+    assert "job_grid_file" in stderr
+
+
+def test_parse_job_grid_file_rejects_explicit_cli_production_parameter(
+    monkeypatch, capsys, job_grid_file
+):
+    with pytest.raises(SystemExit):
+        _parse_with_args(
+            monkeypatch,
+            ["--job_grid_file", job_grid_file, "--zenith_angle", 20],
+        )
+
+    assert "zenith_angle" in capsys.readouterr().err
+
+
+def test_parse_job_grid_file_rejects_yaml_production_parameter(
+    monkeypatch, capsys, job_grid_file, tmp_test_directory
+):
+    config_file = tmp_test_directory / "simulate_prod.yml"
+    with open(config_file, "w", encoding="utf-8") as output:
+        yaml.safe_dump(
+            {
+                "applications": [
+                    {
+                        "application": "simtools-simulate-prod",
+                        "configuration": {
+                            "job_grid_file": str(job_grid_file),
+                            "zenith_angle": 20,
+                        },
+                    }
+                ]
+            },
+            output,
+        )
+
+    with pytest.raises(SystemExit):
+        _parse_with_args(monkeypatch, ["--config", config_file])
+
+    assert "zenith_angle" in capsys.readouterr().err
+
+
+def test_parse_job_grid_file_allows_operational_yaml_and_cli_parameters(
+    monkeypatch, job_grid_file, tmp_test_directory
+):
+    config_file = tmp_test_directory / "simulate_prod.yml"
+    with open(config_file, "w", encoding="utf-8") as output:
+        yaml.safe_dump(
+            {
+                "applications": [
+                    {
+                        "application": "simtools-simulate-prod",
+                        "configuration": {
+                            "job_grid_file": str(job_grid_file),
+                            "label": "grid-test",
+                            "log_level": "DEBUG",
+                            "output_path": str(tmp_test_directory),
+                        },
+                    }
+                ]
+            },
+            output,
+        )
+
+    args = _parse_with_args(monkeypatch, ["--config", config_file, "--save_file_lists"])
+
+    assert args["run_number"] == 7
+    assert args["label"] == "grid-test"
+    assert args["save_file_lists"] is True
+
+
 @patch("simtools.applications.simulate_prod.Simulator")
 @patch("simtools.applications.simulate_prod.build_application")
-def test_main_calls_build_application_with_job_grid_override_flag(
+def test_main_calls_build_application_with_simulate_prod_parse_function(
     mock_build_app, mock_simulator_class
 ):
     mock_context = MagicMock()
@@ -46,8 +196,8 @@ def test_main_calls_build_application_with_job_grid_override_flag(
     app.main()
 
     call_kwargs = mock_build_app.call_args.kwargs
-    assert call_kwargs["startup_kwargs"]["apply_job_grid_override"] is True
     assert call_kwargs["startup_kwargs"]["setup_io_handler"] is False
+    assert call_kwargs["parse_function"] == app._parse
 
 
 @patch("simtools.applications.simulate_prod.Simulator")
