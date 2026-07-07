@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 from astropy.table import Table
 
+from simtools.io import table_handler
 from simtools.production_configuration import trigger_statistics_estimator
 
 
@@ -77,10 +78,7 @@ def test_estimator_radius_override_changes_geometric_normalization_not_required_
 ):
     metadata, bins = _build_reference_tables()
     mocker.patch(
-        (
-            "simtools.production_configuration.trigger_statistics_estimator."
-            "load_trigger_statistics_reference"
-        ),
+        ("simtools.production_configuration.trigger_statistics_estimator.load_trigger_histograms"),
         return_value=(metadata, bins),
     )
 
@@ -112,22 +110,19 @@ def test_estimator_radius_override_changes_geometric_normalization_not_required_
     assert original["required_total_thrown_events"][0] == pytest.approx(
         reduced["required_total_thrown_events"][0]
     )
-    assert reduced["effective_core_scatter_radius"][0].to_value(u.m) == pytest.approx(50.0)
-    assert reduced["effective_scatter_area"][0].to_value(u.m**2) == pytest.approx(
-        original["effective_scatter_area"][0].to_value(u.m**2) / 4.0
+    assert reduced["effective_core_scatter_radius"].quantity[0].to_value(u.m) == pytest.approx(50.0)
+    assert reduced["effective_scatter_area"].quantity[0].to_value(u.m**2) == pytest.approx(
+        original["effective_scatter_area"].quantity[0].to_value(u.m**2) / 4.0
     )
-    assert reduced["limiting_effective_area"][0].to_value(u.m**2) == pytest.approx(
-        original["limiting_effective_area"][0].to_value(u.m**2) / 4.0
+    assert reduced["limiting_effective_area"].quantity[0].to_value(u.m**2) == pytest.approx(
+        original["limiting_effective_area"].quantity[0].to_value(u.m**2) / 4.0
     )
 
 
 def test_estimator_reports_limiting_bin_and_positive_required_events(mocker, tmp_path):
     metadata, bins = _build_reference_tables()
     mocker.patch(
-        (
-            "simtools.production_configuration.trigger_statistics_estimator."
-            "load_trigger_statistics_reference"
-        ),
+        ("simtools.production_configuration.trigger_statistics_estimator.load_trigger_histograms"),
         return_value=(metadata, bins),
     )
 
@@ -150,4 +145,39 @@ def test_estimator_reports_limiting_bin_and_positive_required_events(mocker, tmp
 
     assert result["reference_id"][0] == "ref-1"
     assert result["required_total_thrown_events"][0] > 0.0
-    assert result["limiting_energy_low"][0] in (0.1 * u.TeV, 1.0 * u.TeV)
+    assert result["limiting_energy_low"].quantity[0] in (0.1 * u.TeV, 1.0 * u.TeV)
+
+
+def test_estimator_supports_reference_tables_reloaded_from_hdf5(mocker, tmp_path):
+    metadata, bins = _build_reference_tables()
+    reference_file = tmp_path / "trigger_histograms.hdf5"
+    metadata.meta["EXTNAME"] = "TRIGGER_REFERENCE_METADATA"
+    bins.meta["EXTNAME"] = "TRIGGER_REFERENCE_BINS"
+    table_handler.write_tables([metadata, bins], reference_file, file_type="HDF5")
+    reloaded_metadata, reloaded_bins = trigger_statistics_estimator.load_trigger_histograms(
+        reference_file
+    )
+    mocker.patch(
+        ("simtools.production_configuration.trigger_statistics_estimator.load_trigger_histograms"),
+        return_value=(reloaded_metadata, reloaded_bins),
+    )
+
+    args = {
+        "input": str(reference_file),
+        "reference_ids": None,
+        "production_indices": None,
+        "array_names": None,
+        "spectral_index": -2.0,
+        "target_relative_uncertainty": 0.1,
+        "thrown_energy_min": None,
+        "thrown_energy_max": None,
+        "optimization_energy_min": None,
+        "optimization_energy_max": None,
+        "reduced_core_radius": None,
+        "output_file": str(tmp_path / "estimate.ecsv"),
+    }
+
+    result = trigger_statistics_estimator.estimate_trigger_statistics(args)
+
+    assert result["effective_core_scatter_radius"].quantity[0].to_value(u.m) == pytest.approx(100.0)
+    assert result["required_total_thrown_events"][0] > 0.0

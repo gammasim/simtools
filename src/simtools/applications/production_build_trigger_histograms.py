@@ -1,26 +1,24 @@
 #!/usr/bin/python3
 
 r"""
-Build trigger-statistics reference products from broad-range simulations.
+Build trigger-histogram products from broad-range simulations.
 
-This application reads reduced event-data files produced from broad-range simulations,
+This application reads reduced event-data files from broad-range simulations,
 accumulates triggered and simulated histograms in angular-distance vs energy, and writes
-an HDF5 reference product for later statistics estimation.
+an HDF5 product for later statistics estimation.
 """
 
 from simtools.application_control import build_application
-from simtools.production_configuration.trigger_statistics_reference import (
-    build_trigger_statistics_reference,
-)
+from simtools.production_configuration.trigger_histograms import build_trigger_histograms
 
 
 def _add_arguments(parser):
-    """Register application-specific command line arguments."""
+    """Application-specific command line arguments."""
     parser.add_argument(
         "--event_data_file",
         help=(
             "Event data file or glob pattern. Provide one or more patterns to build "
-            "references for multiple productions."
+            "histograms for multiple productions."
         ),
         nargs="+",
         action="extend",
@@ -40,7 +38,7 @@ def _add_arguments(parser):
     )
     parser.add_argument(
         "--plot_histograms",
-        help="Write diagnostic triggered-event histograms for the built references.",
+        help="Write diagnostic triggered-event histograms for the built histograms.",
         action="store_true",
         default=False,
     )
@@ -56,13 +54,7 @@ def _add_arguments(parser):
 
 
 def main():
-    """
-    Run the trigger-reference builder CLI application.
-
-    Returns
-    -------
-    None
-    """
+    """Run the trigger-histogram builder CLI application."""
     app_context = build_application(
         initialization_kwargs={
             "db_config": True,
@@ -74,7 +66,7 @@ def main():
             ],
         },
     )
-    build_trigger_statistics_reference(app_context.args)
+    build_trigger_histograms(app_context.args)
 
 
 if __name__ == "__main__":

@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 r"""
-Estimate required thrown events from a trigger-statistics reference product.
+Estimate required thrown events from a trigger-histogram product.
 
-This application loads an HDF5 trigger-statistics reference, evaluates a toy thrown-event
+This application loads an HDF5 trigger-histogram product, evaluates a toy thrown-event
 distribution for a configurable power-law spectrum, and computes the total thrown events
 required to meet a target relative statistical uncertainty.
 """
@@ -20,7 +20,7 @@ def _add_arguments(parser):
         "--input",
         required=True,
         type=str,
-        help="Path to the trigger-statistics reference HDF5 file.",
+        help="Path to the trigger-histogram HDF5 file.",
     )
     parser.add_argument(
         "--reference_ids",

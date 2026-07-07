@@ -1075,3 +1075,25 @@ def extract_subdirectories_from_path(path, anchor="input"):
         raise ValueError(f"Could not find subdirectory under '{anchor}'")
 
     return str(Path(*subdirs))
+
+
+def validate_file_type(file_path, expected_suffixes):
+    """Validate that a file has one of the expected suffixes.
+
+    Parameters
+    ----------
+    file_path : str or Path
+        Path to the file to validate.
+    expected_suffixes : list of str
+        List of expected suffixes (e.g., ['.txt', '.csv']).
+
+    Raises
+    ------
+    ValueError
+        If the file does not have one of the expected suffixes.
+    """
+    path = Path(file_path)
+    if path.suffix not in expected_suffixes:
+        raise ValueError(
+            f"File '{file_path}' has suffix '{path.suffix}', expected one of {expected_suffixes}"
+        )

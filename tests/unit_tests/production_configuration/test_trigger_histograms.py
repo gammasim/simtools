@@ -2,11 +2,12 @@ import astropy.units as u
 import numpy as np
 
 from simtools.io import table_handler
-from simtools.production_configuration.trigger_statistics_reference import (
-    TRIGGER_REFERENCE_BINS_TABLE,
-    TRIGGER_REFERENCE_METADATA_TABLE,
-    _create_reference_tables,
-    load_trigger_statistics_reference,
+from simtools.production_configuration.trigger_histograms import (
+    TRIGGER_HISTOGRAM_BINS_TABLE,
+    TRIGGER_HISTOGRAM_METADATA_TABLE,
+    _create_histogram_tables,
+    _get_plot_directory_name,
+    load_trigger_histograms,
 )
 
 
@@ -37,13 +38,14 @@ class _FakeHistograms:
         self.view_cone_bins = np.array([0.0, 1.0, 2.0])
 
 
-def test_create_reference_tables_contains_expected_metadata_and_bins():
-    metadata_table, bin_table = _create_reference_tables(
+def test_create_histogram_tables_contains_expected_metadata_and_bins():
+    metadata_table, bin_table = _create_histogram_tables(
         [
             {
                 "reference_id": "ref-1",
                 "production_index": 0,
                 "event_data_file": "pattern*.hdf5",
+                "site": "North",
                 "array_name": "alpha",
                 "telescope_ids": ["LSTN-01"],
                 "histograms": _FakeHistograms(),
@@ -51,9 +53,10 @@ def test_create_reference_tables_contains_expected_metadata_and_bins():
         ]
     )
 
-    assert metadata_table.meta["EXTNAME"] == TRIGGER_REFERENCE_METADATA_TABLE
-    assert bin_table.meta["EXTNAME"] == TRIGGER_REFERENCE_BINS_TABLE
+    assert metadata_table.meta["EXTNAME"] == TRIGGER_HISTOGRAM_METADATA_TABLE
+    assert bin_table.meta["EXTNAME"] == TRIGGER_HISTOGRAM_BINS_TABLE
     assert metadata_table["reference_id"][0] == "ref-1"
+    assert metadata_table["site"][0] == "North"
     assert metadata_table["total_simulated_events"][0] == 10
     assert metadata_table["total_triggered_events"][0] == 4
     assert len(bin_table) == 4
@@ -61,13 +64,14 @@ def test_create_reference_tables_contains_expected_metadata_and_bins():
     assert np.all(bin_table["effective_area"].quantity.to_value(u.m**2) >= 0.0)
 
 
-def test_reference_tables_round_trip_via_hdf5(tmp_path):
-    metadata_table, bin_table = _create_reference_tables(
+def test_histogram_tables_round_trip_via_hdf5(tmp_path):
+    metadata_table, bin_table = _create_histogram_tables(
         [
             {
                 "reference_id": "ref-1",
                 "production_index": 0,
                 "event_data_file": "pattern*.hdf5",
+                "site": "North",
                 "array_name": "alpha",
                 "telescope_ids": ["LSTN-01"],
                 "histograms": _FakeHistograms(),
@@ -75,7 +79,7 @@ def test_reference_tables_round_trip_via_hdf5(tmp_path):
         ]
     )
 
-    output_file = tmp_path / "trigger_reference.hdf5"
+    output_file = tmp_path / "trigger_histograms.hdf5"
     table_handler.write_tables(
         [metadata_table, bin_table],
         output_file,
@@ -83,8 +87,14 @@ def test_reference_tables_round_trip_via_hdf5(tmp_path):
         file_type="HDF5",
     )
 
-    loaded_metadata, loaded_bins = load_trigger_statistics_reference(output_file)
+    loaded_metadata, loaded_bins = load_trigger_histograms(output_file)
     assert len(loaded_metadata) == 1
     assert len(loaded_bins) == 4
     assert loaded_metadata["array_name"][0] == "alpha"
+    assert loaded_metadata["site"][0] == "North"
     assert loaded_bins["triggered_count"][0] == 2
+
+
+def test_plot_directory_name_uses_telescope_ids_for_inline_lists():
+    assert _get_plot_directory_name("array_element_list", ["MSTS-01"]) == "MSTS-01"
+    assert _get_plot_directory_name("alpha", ["MSTS-01"]) == "alpha"
