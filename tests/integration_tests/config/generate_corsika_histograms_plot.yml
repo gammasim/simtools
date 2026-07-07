@@ -2,13 +2,12 @@
 applications:
 - application: simtools-generate-corsika-histograms
   configuration:
-    input_files: 'tests/resources/static/tel_output_10GeV-2-gamma-20deg-CTAO-South.corsikaio'
+    input_files: tests/resources/generated/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst
     output_path: simtools-output
     pdf_file_name: tel_output_10GeV-2-gamma-20deg-CTAO-South.pdf
     file_labels: 'CORSIKA IO output'
   integration_tests:
   - output_file: tel_output_10GeV-2-gamma-20deg-CTAO-South.pdf
   test_name: plot
-  xfail: "TODO: review test and add input file"
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
