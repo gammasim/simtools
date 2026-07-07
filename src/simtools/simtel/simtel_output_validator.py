@@ -8,7 +8,7 @@ from eventio.simtel.simtelfile import SimTelFile
 
 from simtools.sim_events import file_info
 from simtools.sim_events.file_info import get_corsika_run_number
-from simtools.simtel import simtel_table_reader
+from simtools.simtel import simtel_table_reader, simtel_validate_metadata
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id,
@@ -131,6 +131,9 @@ def assert_sim_telarray_metadata(file, array_model, allow_for_changes=None):
         Metadata checks allows these values to be different than expected from model.
     """
     global_meta, telescope_meta = read_sim_telarray_metadata(file)
+    simtel_validate_metadata.validate_metadata_values(global_meta)
+    for metadata in telescope_meta.values():
+        simtel_validate_metadata.validate_metadata_values(metadata)
     _logger.info(f"Found metadata in sim_telarray file for {len(telescope_meta)} telescopes")
     site_parameter_mismatch = _assert_model_parameters(
         global_meta, array_model.site_model, allow_for_changes

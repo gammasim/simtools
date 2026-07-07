@@ -583,7 +583,7 @@ def _split_simtel_cfg_lines(cfg_lines, file_label):
         if re.match(r"metaparam (global|telescope) (add|set)\b", line):
             continue
 
-        match = re.match(r"([A-Za-z0-9_]+)\s*=\s*(.*)$", line)
+        match = re.match(r"(\w+)\s*=\s*(.*)$", line)
         if match:
             key, value = match.group(1), match.group(2)
             if key in assign_metadata_keys:

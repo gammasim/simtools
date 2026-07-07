@@ -7,7 +7,7 @@ from simtools.constants import (
     SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
 from simtools.data_model import schema
-from simtools.utils import names, value_conversion
+from simtools.utils import names
 
 
 def get_meta_parameter_registry(schema_version=None, validate=True):
@@ -53,12 +53,22 @@ def validate_metadata(meta_parameters):
                 f"{parsed['scope']} != {definition['scope']}"
             )
         if parsed["value"] is None:
-            if definition["validation"]["config_value_required"]:
+            if _value_required(definition):
                 raise ValueError(
                     f"sim_telarray metadata value missing for required key {parsed['name']}"
                 )
             continue
         _validate_metadata_value(parsed["name"], parsed["value"], definition["value_schema"])
+
+
+def validate_metadata_values(metadata):
+    """Validate known decoded sim_telarray metadata values against the registry."""
+    registry = get_meta_parameter_registry(validate=False)["meta_parameters"]
+    for name, value in metadata.items():
+        definition = registry.get(name)
+        if definition is None or value is None:
+            continue
+        _validate_metadata_value(name, str(value), definition["value_schema"])
 
 
 def parse_metadata_line(line):
@@ -75,7 +85,7 @@ def parse_metadata_line(line):
             "value": meta_match.group(4),
         }
 
-    assign_match = re.fullmatch(r"([A-Za-z0-9_]+)\s*=\s*(.*)", line)
+    assign_match = re.fullmatch(r"(\w+)\s*=\s*(.*)", line)
     if assign_match:
         return {
             "scope": None,
@@ -95,7 +105,11 @@ def _build_meta_parameter_registry(registry_source):
     meta_parameters = {}
 
     for emitted_name, definition in registry_source.get("generated_meta_parameters", {}).items():
-        meta_parameters[emitted_name] = {"name": emitted_name, **definition}
+        meta_parameters[emitted_name] = {
+            "name": emitted_name,
+            "source_type": "generated",
+            **definition,
+        }
 
     for source_name, model_schema in names.model_parameters().items():
         try:
@@ -117,22 +131,13 @@ def _build_model_parameter_definition(source_name, emitted_name=None):
     derived_name, mode = _get_emitted_name_and_mode(model_schema)
     emitted_name = emitted_name or derived_name
     value_schema = _get_output_value_schema(model_schema) or _derive_value_schema(model_schema)
-    value_required = mode == "set"
 
     return {
         "name": emitted_name,
         "scope": _derive_scope(model_schema),
         "mode": mode,
         "source_type": "model_parameter",
-        "description": model_schema.get("short_description") or model_schema.get("description", ""),
-        "unit": _derive_unit(model_schema),
         "value_schema": value_schema,
-        "validation": {
-            "source_must_exist": True,
-            "mapping_must_match": True,
-            "config_value_required": value_required,
-            "emitted_value_must_match": value_required,
-        },
     }
 
 
@@ -162,19 +167,6 @@ def _derive_scope(model_schema):
     if model_schema.get("instrument", {}).get("class") == "Site":
         return "global"
     return "telescope"
-
-
-def _derive_unit(model_schema):
-    """Infer a compact unit representation from model parameter schema data."""
-    data = model_schema.get("data", [])
-    if isinstance(data, dict):
-        return value_conversion.normalize_dimensionless_unit(data.get("unit"))
-    if not isinstance(data, list) or len(data) == 0:
-        return None
-    units = [value_conversion.normalize_dimensionless_unit(entry.get("unit")) for entry in data]
-    if len(set(units)) == 1:
-        return units[0]
-    return None
 
 
 def _derive_value_schema(model_schema):
@@ -219,6 +211,11 @@ def _is_integer_type(data_type):
 def _is_numeric_type(data_type):
     """Check whether a schema data type is numeric-like."""
     return _is_integer_type(data_type) or data_type in {"double", "float64", "float32"}
+
+
+def _value_required(definition):
+    """Return whether an emitted metadata line must include a value."""
+    return definition["mode"] in {"set", "assign"}
 
 
 def _validate_metadata_value(name, value, value_schema):
