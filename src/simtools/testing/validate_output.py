@@ -1,6 +1,7 @@
 """Compare application output to reference output."""
 
 import logging
+import re
 from pathlib import Path
 
 import numpy as np
@@ -10,6 +11,7 @@ import simtools.utils.general as gen
 from simtools.db import db_handler
 from simtools.io import ascii_handler
 from simtools.sim_events import file_info
+from simtools.simtel import simtel_validate_metadata
 from simtools.testing import assertions
 
 _logger = logging.getLogger(__name__)
@@ -57,6 +59,16 @@ cfg_ignore_keys = [
     "Label",
     "simtools_",  # ignore all simtools_ keys - version/build info dependence
 ]
+
+
+def _get_sim_telarray_assign_metadata_keys():
+    """Return sim_telarray metadata keys emitted as plain assignments."""
+    registry = simtel_validate_metadata.get_meta_parameter_registry(validate=False)
+    return {
+        name
+        for name, definition in registry["meta_parameters"].items()
+        if definition["mode"] == "assign"
+    }
 
 
 def validate_application_output(config, from_command_line=None, from_config_file=None):
@@ -503,9 +515,9 @@ def _compare_simtel_cfg_files(reference_file, test_file):
     """
     Compare two sim_telarray configuration files.
 
-    Line-by-line string comparison. Requires similar sequence of
-    parameters in the files. Ignore lines listed in cfg_ignore_keys
-    (e.g., simtools package versions or hadronic interaction model strings).
+    Compare model-parameter content and control structure separately.
+    sim_telarray metadata lines are excluded here and should be validated
+    through dedicated metadata expectations.
 
     Parameters
     ----------
@@ -521,36 +533,70 @@ def _compare_simtel_cfg_files(reference_file, test_file):
 
     """
     with open(reference_file, encoding="utf-8") as f1, open(test_file, encoding="utf-8") as f2:
-        reference_cfg = [line.rstrip() for line in f1 if line.strip()]
-        test_cfg = [line.rstrip() for line in f2 if line.strip()]
+        reference_cfg = [line.rstrip() for line in f1]
+        test_cfg = [line.rstrip() for line in f2]
 
-    def filter_ignored(cfg_lines, file_label):
-        filtered = []
-        for line in cfg_lines:
-            ignored_key = next((ignore for ignore in cfg_ignore_keys if ignore in line), None)
-            if ignored_key:
-                _logger.debug(f"Ignoring line in {file_label} due to key '{ignored_key}': {line}")
-                continue
-            filtered.append(line)
-        return filtered
+    reference_parameters, reference_control = _split_simtel_cfg_lines(reference_cfg, reference_file)
+    test_parameters, test_control = _split_simtel_cfg_lines(test_cfg, test_file)
 
-    reference_cfg_filtered = filter_ignored(reference_cfg, "reference file")
-    test_cfg_filtered = filter_ignored(test_cfg, "test file")
-
-    if len(reference_cfg_filtered) != len(test_cfg_filtered):
+    if reference_control != test_control:
         _logger.error(
-            f"Line counts differ after filtering: {reference_file} "
-            f"({len(reference_cfg_filtered)} lines), "
-            f"{test_file} ({len(test_cfg_filtered)} lines)."
+            f"Control lines differ between {reference_file} and {test_file}: "
+            f"{reference_control} != {test_control}"
         )
         return False
 
-    for ref_line, test_line in zip(reference_cfg_filtered, test_cfg_filtered):
-        if ref_line != test_line:
+    if reference_parameters.keys() != test_parameters.keys():
+        _logger.error(
+            f"Configuration parameter keys differ between {reference_file} and {test_file}: "
+            f"{sorted(reference_parameters)} != {sorted(test_parameters)}"
+        )
+        return False
+
+    for key, ref_value in reference_parameters.items():
+        test_value = test_parameters[key]
+        if ref_value != test_value:
             _logger.error(
-                f"Configuration files {reference_file} and {test_file} do not match: "
-                f"'{ref_line}' and '{test_line}'"
+                f"Configuration parameter {key} differs between {reference_file} and {test_file}: "
+                f"{ref_value!r} != {test_value!r}"
             )
             return False
 
     return True
+
+
+def _split_simtel_cfg_lines(cfg_lines, file_label):
+    """Split sim_telarray cfg lines into model-parameter assignments and control lines."""
+    parameters = {}
+    control_lines = []
+    assign_metadata_keys = _get_sim_telarray_assign_metadata_keys()
+
+    for raw_line in cfg_lines:
+        line = raw_line.strip()
+        if not line or line.startswith("%"):
+            continue
+
+        if _is_ignored_cfg_line(line):
+            _logger.debug(f"Ignoring line in {file_label}: {line}")
+            continue
+
+        if re.match(r"metaparam (global|telescope) (add|set)\b", line):
+            continue
+
+        key, separator, value = line.partition("=")
+        key = key.strip()
+        if separator and key.replace("_", "").isalnum():
+            value = value.strip()
+            if key in assign_metadata_keys:
+                continue
+            parameters[key] = value
+            continue
+
+        control_lines.append(line)
+
+    return parameters, control_lines
+
+
+def _is_ignored_cfg_line(line):
+    """Return True for cfg lines that are intentionally ignored in comparisons."""
+    return any(ignore_key in line for ignore_key in cfg_ignore_keys)

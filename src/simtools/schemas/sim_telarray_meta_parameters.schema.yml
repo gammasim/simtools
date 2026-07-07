@@ -1,0 +1,150 @@
+%YAML 1.2
+---
+title: Schema for sim_telarray meta_parameter registry
+schema_version: 0.1.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/sim_telarray_meta_parameter.metaschema.yml
+meta_schema_version: 0.1.0
+name: sim_telarray_meta_parameters
+description: |-
+  Registry of sim_telarray metadata keys emitted by simtools.
+  Generated metadata are described explicitly here.
+  Model-parameter-derived metadata are resolved automatically from the
+  sim_telarray mapping declared in the model-parameter schemas.
+generated_meta_parameters:
+  array_config_name:
+    scope: global
+    mode: assign
+    value_schema: &string_scalar {kind: scalar, data_type: string}
+  array_config_variant:
+    scope: global
+    mode: assign
+    value_schema: {kind: scalar, data_type: string, allow_empty: true}
+  array_config_version:
+    scope: global
+    mode: assign
+    value_schema: *string_scalar
+  camera_config_name:
+    scope: telescope
+    mode: assign
+    value_schema: *string_scalar
+  camera_config_variant:
+    scope: telescope
+    mode: assign
+    value_schema: *string_scalar
+  camera_config_version:
+    scope: telescope
+    mode: assign
+    value_schema: *string_scalar
+  config_release:
+    scope: global
+    mode: assign
+    value_schema: *string_scalar
+  config_version:
+    scope: global
+    mode: assign
+    value_schema: *string_scalar
+  nsb_integrated_flux:
+    scope: global
+    mode: set
+    value_schema: {kind: scalar, data_type: number}
+  primary:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  azimuth_angle:
+    scope: global
+    mode: set
+    value_schema: {kind: scalar, data_type: number}
+  zenith_angle:
+    scope: global
+    mode: set
+    value_schema: {kind: scalar, data_type: number}
+  ha_angle:
+    scope: global
+    mode: set
+    value_schema: {kind: scalar, data_type: number}
+  dec_angle:
+    scope: global
+    mode: set
+    value_schema: {kind: scalar, data_type: number}
+  optics_config_name:
+    scope: telescope
+    mode: assign
+    value_schema: *string_scalar
+  optics_config_variant:
+    scope: telescope
+    mode: assign
+    value_schema: *string_scalar
+  optics_config_version:
+    scope: telescope
+    mode: assign
+    value_schema: *string_scalar
+  random_seed:
+    scope: global
+    mode: add
+    value_schema: {kind: scalar, data_type: integer}
+  simtools_avx_flag:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  simtools_build_date:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  simtools_corsika_config_version:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  simtools_corsika_exec:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  simtools_corsika_opt_patch_version:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  simtools_corsika_version:
+    scope: global
+    mode: set
+    value_schema: {kind: scalar, data_type: integer}
+  simtools_extra_defines:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  simtools_hessio_version:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  simtools_iact_atmo_version:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  simtools_model_production_version:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  simtools_simtel_version:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  simtools_stdtools_version:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  simtools_version:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  site_config_name:
+    scope: global
+    mode: assign
+    value_schema: *string_scalar
+  site_config_variant:
+    scope: global
+    mode: assign
+    value_schema: {kind: scalar, data_type: string, allow_empty: true}
+  site_config_version:
+    scope: global
+    mode: assign
+    value_schema: *string_scalar
