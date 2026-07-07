@@ -23,8 +23,6 @@ Example
 
 """
 
-import yaml
-
 from simtools.application_control import build_application
 from simtools.io import ascii_handler
 from simtools.simtel import simtel_validate_metadata
@@ -34,9 +32,9 @@ def _add_arguments(parser):
     """Register application-specific command line arguments."""
     parser.add_argument(
         "--output_file",
-        help="Output file name (if not given: print to stdout)",
+        help="Output file name",
         type=str,
-        required=False,
+        required=True,
     )
     parser.add_argument(
         "--source_type",
@@ -62,10 +60,6 @@ def main():
         schema_version=app_context.args.get("schema_version"),
         source_type=app_context.args["source_type"],
     )
-
-    if app_context.args.get("output_file") is None:
-        print(yaml.safe_dump(registry, sort_keys=False), end="")
-        return
 
     output_file = app_context.io_handler.get_output_file(app_context.args["output_file"])
     app_context.logger.info(f"Writing sim_telarray metadata schema to {output_file}")
