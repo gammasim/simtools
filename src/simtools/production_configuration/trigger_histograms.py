@@ -212,6 +212,7 @@ def build_trigger_histograms(args_dict):
     gen.validate_file_type(output_file, expected_suffixes=[".hdf5", ".h5"])
 
     reference_specs = []
+    plot_specs = []
     is_multi_production = len(production_patterns) > 1
     production_subdirs = {}
     if is_multi_production and args_dict.get("plot_histograms"):
@@ -243,11 +244,13 @@ def build_trigger_histograms(args_dict):
                 }
             )
             if production_subdir is not None:
-                _plot_histograms(
-                    histograms,
-                    production_subdir,
-                    config["array_name"],
-                    config["telescope_ids"],
+                plot_specs.append(
+                    (
+                        histograms,
+                        production_subdir,
+                        config["array_name"],
+                        config["telescope_ids"],
+                    )
                 )
 
     metadata_table, bin_table = _create_histogram_tables(reference_specs)
@@ -257,6 +260,8 @@ def build_trigger_histograms(args_dict):
         overwrite_existing=True,
         file_type="HDF5",
     )
+    for histograms, production_subdir, array_name, telescope_ids in plot_specs:
+        _plot_histograms(histograms, production_subdir, array_name, telescope_ids)
     return metadata_table, bin_table
 
 
