@@ -47,6 +47,8 @@ class EventDataHistograms:
         array_name=None,
         telescope_list=None,
         energy_bins_per_decade=10,
+        angular_distance_bin_count=100,
+        core_distance_bin_count=100,
         skip_invalid_event_data_files=False,
         require_triggered_data=False,
     ):
@@ -56,6 +58,8 @@ class EventDataHistograms:
         self.event_data_files = self._normalize_event_data_files(event_data_file)
         self.array_name = array_name
         self.energy_bins_per_decade = max(int(energy_bins_per_decade), 1)
+        self.angular_distance_bin_count = max(int(angular_distance_bin_count), 2)
+        self.core_distance_bin_count = max(int(core_distance_bin_count), 2)
         self.skip_invalid_event_data_files = skip_invalid_event_data_files
         self.require_triggered_data = require_triggered_data
         self.telescope_list = telescope_list
@@ -75,7 +79,14 @@ class EventDataHistograms:
             self._contains_triggered_data = self._reader_has_triggered_data(self.reader)
 
     @classmethod
-    def create_accumulator(cls, array_name=None, telescope_list=None, energy_bins_per_decade=10):
+    def create_accumulator(
+        cls,
+        array_name=None,
+        telescope_list=None,
+        energy_bins_per_decade=10,
+        angular_distance_bin_count=100,
+        core_distance_bin_count=100,
+    ):
         """Create an empty histogram accumulator for externally supplied event data.
 
         This avoids opening the same input files for every telescope configuration when
@@ -87,6 +98,8 @@ class EventDataHistograms:
         instance.event_data_files = []
         instance.array_name = array_name
         instance.energy_bins_per_decade = max(int(energy_bins_per_decade), 1)
+        instance.angular_distance_bin_count = max(int(angular_distance_bin_count), 2)
+        instance.core_distance_bin_count = max(int(core_distance_bin_count), 2)
         instance.skip_invalid_event_data_files = False
         instance.require_triggered_data = True
         instance.telescope_list = telescope_list
@@ -503,7 +516,7 @@ class EventDataHistograms:
         return np.linspace(
             self.file_info.get("core_scatter_min", 0.0 * u.m).to("m").value,
             self.file_info.get("core_scatter_max", 1.0e5 * u.m).to("m").value,
-            100,
+            self.core_distance_bin_count,
         )
 
     @property
@@ -519,7 +532,7 @@ class EventDataHistograms:
         if viewcone_min == viewcone_max:
             viewcone_max = viewcone_min + 0.5
 
-        return np.linspace(viewcone_min, viewcone_max, 100)
+        return np.linspace(viewcone_min, viewcone_max, self.angular_distance_bin_count)
 
     def calculate_cumulative_data(self):
         """

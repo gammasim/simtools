@@ -2,8 +2,6 @@
 
 import datetime
 import logging
-import re
-from pathlib import Path
 
 import astropy.units as u
 import numpy as np
@@ -13,13 +11,13 @@ from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler, io_handler
 from simtools.job_execution.process_pool import process_pool_map_ordered
-from simtools.layout.array_layout_utils import (
-    get_array_elements_from_db_for_layouts,
-    resolve_array_layout_name,
+from simtools.production_configuration.production_event_data_helpers import (
+    accumulate_histograms_by_telescope_config,
+    build_production_subdirectories,
+    normalize_event_data_file,
+    normalize_telescope_configs,
+    resolve_telescope_configs,
 )
-from simtools.sim_events.histograms import EventDataHistograms
-from simtools.utils.general import get_uuid
-from simtools.utils.names import normalize_array_element_identifier_container
 from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
@@ -56,62 +54,6 @@ RESULT_COLUMNS, COLUMN_DESCRIPTIONS, FILE_INFO_COLUMNS = (
     _load_output_table_configuration_from_schema(CORSIKA_LIMITS_TABLE_SCHEMA_FILE)
 )
 LOSS_AXES = ("core_distance", "angular_distance")
-
-
-def _normalize_event_data_file(event_data_file):
-    """
-    Normalize event_data_file to an ordered list of production patterns.
-
-    Parameters
-    ----------
-    event_data_file : str or list
-        A single pattern string or list of pattern strings.
-
-    Returns
-    -------
-    list
-        Ordered list of event data file patterns.
-    """
-    if isinstance(event_data_file, str):
-        return [event_data_file]
-    if isinstance(event_data_file, list):
-        return list(event_data_file)
-    raise TypeError(f"event_data_file must be str or list, got {type(event_data_file)}")
-
-
-def _get_production_directory_name(production_pattern, existing_names=None):
-    """
-    Generate a readable, filesystem-safe production directory name.
-
-    The name is derived from the glob pattern and kept human-readable.
-    If a collision is detected with an existing directory name, append
-    a UUID7 suffix.
-
-    Parameters
-    ----------
-    production_pattern : str
-        The glob pattern for this production.
-    existing_names : set[str] or None
-        Existing directory names used in this run.
-
-    Returns
-    -------
-    str
-        Safe directory name (e.g., "production_prod_a_events").
-    """
-
-    def _sanitize(name):
-        name = re.sub(r"[^A-Za-z0-9]+", "_", name)
-        return re.sub(r"_+", "_", name).strip("_")
-
-    pattern_path = Path(production_pattern)
-    parent_name = _sanitize(pattern_path.parent.name) if pattern_path.parent.name != "." else ""
-    readable_name = parent_name or _sanitize(pattern_path.stem) or "production"
-    base_name = f"production_{readable_name}"
-
-    if existing_names is None or base_name not in existing_names:
-        return base_name
-    return f"{base_name}_{get_uuid()}"
 
 
 def _execute_production_job(job_spec):
@@ -169,31 +111,6 @@ def _execute_production_job(job_spec):
         )
 
     return results
-
-
-def _resolve_telescope_configs(args_dict):
-    """Resolve telescope configurations from one of the supported input options."""
-    if args_dict.get("array_layout_name"):
-        layouts = resolve_array_layout_name(
-            args_dict["array_layout_name"],
-            args_dict.get("model_version"),
-        )
-        if not isinstance(layouts, list):
-            layouts = [layouts]
-        return get_array_elements_from_db_for_layouts(
-            layouts,
-            args_dict.get("site"),
-            args_dict.get("model_version"),
-        )
-    if args_dict.get("array_element_list"):
-        return {"array_element_list": args_dict["array_element_list"]}
-    if args_dict.get("telescope_ids"):
-        return ascii_handler.collect_data_from_file(args_dict["telescope_ids"])["telescope_configs"]
-
-    raise ValueError(
-        "No telescope configuration provided. Use one of --array_layout_name, "
-        "--array_element_list, or --telescope_ids."
-    )
 
 
 def _parse_allowed_losses(allowed_losses_args):
@@ -261,23 +178,6 @@ def _parse_allowed_losses(allowed_losses_args):
     return parsed
 
 
-def _build_production_subdirectories(production_patterns, output_dir, is_multi_production):
-    """Build and create per-production output subdirectories when needed."""
-    if not is_multi_production:
-        return {}
-
-    production_subdirs = {}
-    used_subdir_names = set()
-    for production_pattern in production_patterns:
-        subdir_name = _get_production_directory_name(production_pattern, used_subdir_names)
-        used_subdir_names.add(subdir_name)
-        output_subdir = output_dir / subdir_name
-        Path(output_subdir).mkdir(parents=True, exist_ok=True)
-        production_subdirs[production_pattern] = output_subdir
-
-    return production_subdirs
-
-
 def generate_corsika_limits_grid(args_dict):
     """
     Generate CORSIKA limits for one or more production patterns.
@@ -290,7 +190,7 @@ def generate_corsika_limits_grid(args_dict):
     args_dict : dict
         Dictionary containing command line arguments.
     """
-    production_patterns = _normalize_event_data_file(args_dict["event_data_file"])
+    production_patterns = normalize_event_data_file(args_dict["event_data_file"])
     allowed_losses = _parse_allowed_losses(args_dict.get("allowed_losses"))
     energy_threshold_fraction = float(args_dict.get("energy_threshold_fraction", 0.01))
     differential_loss_bins_per_decade = int(args_dict.get("differential_loss_bins_per_decade", 0))
@@ -299,7 +199,7 @@ def generate_corsika_limits_grid(args_dict):
 
     _logger.info(f"Processing {n_productions} production(s)")
 
-    telescope_configs = _resolve_telescope_configs(args_dict)
+    telescope_configs = resolve_telescope_configs(args_dict)
 
     # Build deterministic production jobs. Each worker reads a production once and
     # accumulates the same complete histogram set for every telescope configuration.
@@ -308,20 +208,14 @@ def generate_corsika_limits_grid(args_dict):
 
     production_subdirs = {}
     if is_multi_production and args_dict["plot_histograms"]:
-        production_subdirs = _build_production_subdirectories(
+        production_subdirs = build_production_subdirectories(
             production_patterns,
             output_dir,
             is_multi_production,
         )
 
     for prod_idx, production_pattern in enumerate(production_patterns):
-        normalized_telescope_configs = [
-            {
-                "array_name": array_name,
-                "telescope_ids": normalize_array_element_identifier_container(telescope_ids_raw),
-            }
-            for array_name, telescope_ids_raw in telescope_configs.items()
-        ]
+        normalized_telescope_configs = normalize_telescope_configs(telescope_configs)
         job_specs.append(
             {
                 "production_index": prod_idx,
@@ -362,43 +256,16 @@ def _process_production(
 ):
     """Read one production once and derive limits for all telescope configurations."""
     energy_bins_per_decade = differential_loss_bins_per_decade or 10
-    event_source = EventDataHistograms(
+    finalized_histograms = accumulate_histograms_by_telescope_config(
         file_path,
+        telescope_configs,
         energy_bins_per_decade=energy_bins_per_decade,
         skip_invalid_event_data_files=skip_invalid_event_data_files,
-        require_triggered_data=True,
+        fill_efficiency_histogram=False,
     )
-    accumulators = [
-        EventDataHistograms.create_accumulator(
-            array_name=config["array_name"],
-            telescope_list=config["telescope_ids"],
-            energy_bins_per_decade=energy_bins_per_decade,
-        )
-        for config in telescope_configs
-    ]
-
-    for reader, values in event_source.iter_event_data():
-        file_info_table, shower_data, triggered_shower, triggered_data = values
-        for config, histograms in zip(telescope_configs, accumulators):
-            if config["telescope_ids"]:
-                filtered_triggered_data, filtered_triggered_shower = reader.filter_by_telescopes(
-                    triggered_data,
-                    triggered_shower,
-                    telescope_list=config["telescope_ids"],
-                )
-            else:
-                filtered_triggered_data = triggered_data
-                filtered_triggered_shower = triggered_shower
-            histograms.accumulate(
-                file_info_table,
-                shower_data,
-                filtered_triggered_shower,
-                filtered_triggered_data,
-            )
 
     results = []
-    for config, histograms in zip(telescope_configs, accumulators):
-        histograms.finalize(fill_efficiency_histogram=False)
+    for config, histograms in finalized_histograms:
         results.append(
             _derive_limits_from_histograms(
                 histograms,
