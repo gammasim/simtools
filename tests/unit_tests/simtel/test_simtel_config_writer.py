@@ -399,7 +399,7 @@ def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):
             "simtools.utils.names.get_simulation_software_name_from_parameter_name",
             side_effect=mock_get_name,
         ),
-        mock.patch.object(simtel_config_writer, "_validate_sim_telarray_metadata"),
+        mock.patch("simtools.simtel.simtel_validate_metadata.validate_metadata"),
     ):
         tel_meta = simtel_config_writer._get_sim_telarray_metadata(
             "telescope", model_parameters, "test_telescope"
@@ -455,17 +455,6 @@ def test_get_sim_telarray_metadata_raises_for_invalid_metadata_value(simtel_conf
     with pytest.raises(ValueError, match=r"could not convert string to float"):
         simtel_config_writer._get_sim_telarray_metadata(
             "site", None, None, {"azimuth_angle": "not-a-number"}
-        )
-
-
-def test_validate_sim_telarray_metadata_allows_model_parameter_scope_mismatch(simtel_config_writer):
-    simtel_config_writer._validate_sim_telarray_metadata(["metaparam telescope add array_triggers"])
-
-
-def test_validate_sim_telarray_metadata_rejects_generated_scope_mismatch(simtel_config_writer):
-    with pytest.raises(ValueError, match=r"scope mismatch for random_seed"):
-        simtel_config_writer._validate_sim_telarray_metadata(
-            ["metaparam telescope add random_seed"]
         )
 
 
