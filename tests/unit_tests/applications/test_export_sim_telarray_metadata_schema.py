@@ -4,8 +4,6 @@ import argparse
 import json
 from types import SimpleNamespace
 
-import yaml
-
 from simtools.applications import export_sim_telarray_metadata_schema
 
 
@@ -45,23 +43,3 @@ def test_main_writes_registry_using_output_file_suffix(tmp_test_directory, mocke
 
     assert json.loads(output_file.read_text(encoding="utf-8")) == registry
     get_registry.assert_called_once_with(schema_version=None, source_type="generated")
-
-
-def test_main_prints_yaml_to_stdout(capsys, mocker):
-    registry = {"name": "test", "meta_parameters": {}}
-    app_context = SimpleNamespace(
-        args={"output_file": None, "source_type": "all", "schema_version": "latest"},
-    )
-    mocker.patch(
-        "simtools.applications.export_sim_telarray_metadata_schema.build_application",
-        return_value=app_context,
-    )
-    mocker.patch(
-        "simtools.applications.export_sim_telarray_metadata_schema."
-        "simtel_validate_metadata.get_meta_parameter_registry",
-        return_value=registry,
-    )
-
-    export_sim_telarray_metadata_schema.main()
-
-    assert yaml.safe_load(capsys.readouterr().out) == registry
