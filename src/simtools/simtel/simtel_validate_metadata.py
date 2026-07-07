@@ -66,7 +66,12 @@ def validate_metadata_values(metadata):
     registry = get_meta_parameter_registry(validate=False)["meta_parameters"]
     for name, value in metadata.items():
         definition = registry.get(name)
-        if definition is None or value is None:
+        if (
+            definition is None
+            or value is None
+            or definition["source_type"] != "generated"
+            or definition["mode"] == "add"
+        ):
             continue
         _validate_metadata_value(name, str(value), definition["value_schema"])
 

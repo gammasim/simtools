@@ -39,6 +39,15 @@ def test_validate_metadata_values_checks_known_keys_and_skips_unknown_keys():
         simtel_validate_metadata.validate_metadata_values({"azimuth_angle": "not-a-number"})
 
 
+def test_validate_metadata_values_skips_add_and_model_derived_keys():
+    simtel_validate_metadata.validate_metadata_values(
+        {
+            "random_seed": "1745,290",
+            "discriminator_output_amplitude": "not-a-number",
+        }
+    )
+
+
 def test_validate_metadata_rejects_generated_scope_mismatch():
     with pytest.raises(ValueError, match=r"scope mismatch for random_seed"):
         simtel_validate_metadata.validate_metadata(["metaparam telescope add random_seed"])
