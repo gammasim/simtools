@@ -451,7 +451,7 @@ class SimtelConfigWriter:
         file.write(header)
 
     def _write_simtools_parameters(self, file):
-        """Write simtools-specific parameters."""
+        """Write simtools-specific parameters as metadata."""
         meta_items = {
             "simtools_version": simtools.version.__version__,
             "simtools_model_production_version": self._model_version,
