@@ -236,8 +236,9 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
     """
     Convert an in-memory job grid row to simulate_prod argument format.
 
-    The returned dictionary can be merged into a simulate_prod ``args_dict`` so that
-    values from the job grid row take precedence over previously parsed arguments.
+    The returned dictionary contains the production-defining arguments represented
+    by a job-grid row. Callers are responsible for ensuring that these values are
+    not combined ambiguously with independently supplied production arguments.
 
     Parameters
     ----------
