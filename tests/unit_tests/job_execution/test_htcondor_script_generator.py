@@ -6,7 +6,6 @@ import pytest
 
 from simtools.job_execution.htcondor_script_generator import (
     _format_param_value,
-    _format_quantity,
     _get_submit_file,
     _get_submit_script,
     _resolve_apptainer_images,
@@ -153,45 +152,44 @@ def test_generate_submission_script_raises_for_missing_apptainer_image(
 def test_get_submit_script(args_dict):
     expected_script = f"""#!/usr/bin/env bash
 
-# Process ID used to generate run number
-process_id="$1"
 # Load environment variables (for DB access)
-set -a; source "$2"
-apptainer_label="${{3}}"
-primary="${{4}}"
-model_version="${{19}}"
-array_layout_name="${{20}}"
-corsika_le_interaction="${{21}}"
-corsika_he_interaction="${{22}}"
-run_number="${{23}}"
-grid_output_path="${{24}}"
-energy_range_tag="erange-${{7}}${{8}}-${{9}}${{10}}"
-job_label="{args_dict["label"]}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
+set -a; source "$1"
+job_label="{args_dict["label"]}_${{15}}_${{14}}_${{5}}GeV-${{6}}GeV"
 
 simtools-simulate-prod \\
-    --simulation_software {args_dict["simulation_software"]} \\
     --label "$job_label" \\
-    --model_version "$model_version" \\
+    --simulation_software {args_dict["simulation_software"]} \\
     --site {args_dict["site"]} \\
-    --array_layout_name "$array_layout_name" \\
-    --primary "$primary" \\
-    --azimuth_angle "${{5}}" \\
-    --zenith_angle "${{6}}" \\
-    --showers_per_run "${{18}}" \\
-    --energy_range "${{7}} ${{8}} ${{9}} ${{10}}" \\
-    --core_scatter "${{11}} ${{12}} ${{13}}" \\
-    --view_cone "${{14}} ${{15}} ${{16}} ${{17}}" \\
-    --corsika_le_interaction "$corsika_le_interaction" \\
-    --corsika_he_interaction "$corsika_he_interaction" \\
-    --run_number "$run_number" \\
+    --log_level {args_dict["log_level"]} \\
+    --model_version "${{12}}" \\
+    --array_layout_name "${{13}}" \\
+    --primary "${{2}}" \\
+    --azimuth_angle "${{3}}" \\
+    --zenith_angle "${{4}}" \\
+    --showers_per_run "${{11}}" \\
+    --corsika_le_interaction "${{14}}" \\
+    --corsika_he_interaction "${{15}}" \\
+    --run_number "${{16}}" \\
+    --energy_range "${{5}} GeV ${{6}} GeV" \\
+    --core_scatter "${{7}} ${{8}} m" \\
+    --view_cone "${{9}} deg ${{10}} deg" \\
     --run_number_offset 0 \\
     --save_reduced_event_lists \\
     --output_path /tmp/simtools-output \\
-    --log_level {args_dict["log_level"]} \\
-    --grid_output_path "$grid_output_path"
+    --grid_output_path "${{17}}"
 """
     generated_script = _get_submit_script(args_dict)
     assert generated_script == expected_script
+
+
+def test_get_submit_script_includes_save_file_lists_when_requested(args_dict):
+    args_dict["save_file_lists"] = True
+
+    generated_script = _get_submit_script(args_dict)
+
+    assert "--save_file_lists" in generated_script
+    assert "--save_reduced_event_lists" in generated_script
+    assert "--output_path /tmp/simtools-output" in generated_script
 
 
 def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
@@ -208,14 +206,12 @@ def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
         htcondor_dirs=htcondor_dirs,
     )
 
-    assert "queue apptainer_label,primary" in content
-    assert "cores_per_shower,core_scatter_max_value,core_scatter_max_unit" in content
-    assert (
-        "view_cone_min_value,view_cone_min_unit,view_cone_max_value,view_cone_max_unit" in content
-    )
+    assert "queue primary" in content
+    assert "cores_per_shower,core_scatter_max" in content
+    assert "view_cone_min,view_cone_max" in content
     assert "showers_per_run,model_version,array_layout_name" in content
     assert "from simulate_prod.submit.params.txt" in content
-    assert 'arguments = "$(process) env.txt' in content
+    assert 'arguments = "env.txt' in content
     assert str(log_dir) in content
     assert str(error_dir) in content
     assert str(output_dir) in content
@@ -283,24 +279,6 @@ def test_resolve_apptainer_images_raises_for_missing_file(tmp_test_directory):
         _resolve_apptainer_images(str(missing_path))
 
 
-def test_format_quantity_full_coverage():
-    value, unit = _format_quantity(5 * u.TeV)
-    assert float(value) == pytest.approx(5.0)
-    assert unit == "TeV"
-
-    value, unit = _format_quantity(100 * u.cm, convert_to=u.m)
-    assert float(value) == pytest.approx(1.0)
-    assert unit == "m"
-
-    value, unit = _format_quantity(42, default_unit=u.GeV)
-    assert value == "42"
-    assert unit == "GeV"
-
-    value, unit = _format_quantity("abc")
-    assert value == "abc"
-    assert unit is None
-
-
 def test_format_param_value_raises_for_missing_required_value():
     with pytest.raises(ValueError, match="Missing required value for field 'primary'"):
         _format_param_value(None, "primary")
@@ -337,7 +315,7 @@ def test_build_job_specs_raises_for_missing_required_metadata(args_dict, job_row
             build_job_specs(args_dict, ["7.0.0"])
 
 
-def test_write_params_file_keeps_energy_units(tmp_test_directory):
+def test_write_params_file_uses_canonical_numeric_units(tmp_test_directory):
     params_file_path = Path(tmp_test_directory) / "params.txt"
     label_job_specs = [
         {
@@ -364,16 +342,16 @@ def test_write_params_file_keeps_energy_units(tmp_test_directory):
     _write_params_file(params_file_path, label_job_specs)
 
     assert params_file_path.read_text(encoding="utf-8") == (
-        "7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 10 200.0 m 0.0 deg 5.0 deg "
+        "gamma 0.0 20.0 30.0 10000.0 10 200.0 0.0 5.0 "
         "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/7.0.0\n"
     )
 
 
-def test_write_params_file_replaces_whitespace_in_apptainer_label(tmp_test_directory):
+def test_write_params_file_replaces_whitespace_in_grid_output_path(tmp_test_directory):
     params_file_path = Path(tmp_test_directory) / "params.txt"
     label_job_specs = [
         {
-            "image_label": "grid label 7.0.0",
+            "image_label": "7.0.0",
             "primary": "gamma",
             "azimuth_angle": 0 * u.deg,
             "zenith_angle": 20 * u.deg,
@@ -396,6 +374,6 @@ def test_write_params_file_replaces_whitespace_in_apptainer_label(tmp_test_direc
     _write_params_file(params_file_path, label_job_specs)
 
     assert params_file_path.read_text(encoding="utf-8") == (
-        "grid_label_7.0.0 gamma 0.0 20.0 30.0 GeV 10.0 TeV 10 200.0 m 0.0 deg 5.0 deg "
+        "gamma 0.0 20.0 30.0 10000.0 10 200.0 0.0 5.0 "
         "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/grid_label_7.0.0\n"
     )

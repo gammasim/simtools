@@ -12,28 +12,21 @@ import logging
 import re
 from pathlib import Path
 
-import astropy.units as u
-
-from simtools.production_configuration.job_grid_io import read_job_grid
+from simtools.production_configuration.job_grid_io import JOB_GRID_SCHEMA, read_job_grid
+from simtools.utils.value_conversion import format_quantity
 
 _logger = logging.getLogger(__name__)
 
 _PARAMS_FIELDS = [
-    "apptainer_label",
     "primary",
     "azimuth_angle",
     "zenith_angle",
-    "energy_min_value",
-    "energy_min_unit",
-    "energy_max_value",
-    "energy_max_unit",
+    "energy_min",
+    "energy_max",
     "cores_per_shower",
-    "core_scatter_max_value",
-    "core_scatter_max_unit",
-    "view_cone_min_value",
-    "view_cone_min_unit",
-    "view_cone_max_value",
-    "view_cone_max_unit",
+    "core_scatter_max",
+    "view_cone_min",
+    "view_cone_max",
     "showers_per_run",
     "model_version",
     "array_layout_name",
@@ -42,6 +35,14 @@ _PARAMS_FIELDS = [
     "run_number",
     "grid_output_path",
 ]
+
+_PARAMS_JOB_SPEC_FIELDS = {field: field for field in _PARAMS_FIELDS}
+
+_PARAM_QUANTITY_UNITS = {
+    field: JOB_GRID_SCHEMA.column_units[field]
+    for field in _PARAMS_FIELDS
+    if field in JOB_GRID_SCHEMA.column_units
+}
 
 _REQUIRED_JOB_GRID_METADATA = ("site", "simulation_software")
 
@@ -83,16 +84,6 @@ def _resolve_apptainer_images(apptainer_image_arg):
     return resolved
 
 
-def _format_quantity(value, default_unit=None, convert_to=None):
-    """Format scalar or Quantity value."""
-    if isinstance(value, u.Quantity):
-        if convert_to is not None:
-            value = value.to(convert_to)
-        return f"{value.value}", f"{value.unit}"
-
-    return f"{value}", str(default_unit) if default_unit else None
-
-
 def _format_param_value(value, field_name):
     """Format a value or Quantity for params file output."""
     if value is None:
@@ -104,21 +95,8 @@ def _format_param_value(value, field_name):
     if field_name == "cores_per_shower":
         return f"{int(value)}"
 
-    quantity_fields = {
-        "energy_min_value": (u.GeV, None),
-        "energy_max_value": (u.GeV, None),
-        "core_scatter_max_value": (u.m, u.m),
-        "view_cone_min_value": (u.deg, u.deg),
-        "view_cone_max_value": (u.deg, u.deg),
-    }
-    if field_name in quantity_fields:
-        default_unit, convert_to = quantity_fields[field_name]
-        return _format_quantity(value, default_unit=default_unit, convert_to=convert_to)
-
-    if field_name in ("azimuth_angle", "zenith_angle"):
-        if isinstance(value, u.Quantity):
-            value = value.to(u.deg).value
-        return f"{value}"
+    if field_name in _PARAM_QUANTITY_UNITS:
+        return format_quantity(value, _PARAM_QUANTITY_UNITS[field_name])
 
     return f"{value}"
 
@@ -147,46 +125,9 @@ def _write_params_file(params_file_path, label_job_specs):
     """Write parameter file consumed by HTCondor queue-from syntax."""
     with open(params_file_path, "w", encoding="utf-8") as params_file_handle:
         for job_spec in label_job_specs:
-            energy_min_value, energy_min_unit = _format_param_value(
-                job_spec["energy_min"], "energy_min_value"
-            )
-            energy_max_value, energy_max_unit = _format_param_value(
-                job_spec["energy_max"], "energy_max_value"
-            )
-            cores_per_shower = _format_param_value(job_spec["cores_per_shower"], "cores_per_shower")
-            core_scatter_max_value, core_scatter_max_unit = _format_param_value(
-                job_spec["core_scatter_max"], "core_scatter_max_value"
-            )
-            view_cone_min_value, view_cone_min_unit = _format_param_value(
-                job_spec["view_cone_min"], "view_cone_min_value"
-            )
-            view_cone_max_value, view_cone_max_unit = _format_param_value(
-                job_spec["view_cone_max"], "view_cone_max_value"
-            )
-
             row = [
-                _format_param_value(job_spec["image_label"], "apptainer_label"),
-                _format_param_value(job_spec["primary"], "primary"),
-                _format_param_value(job_spec["azimuth_angle"], "azimuth_angle"),
-                _format_param_value(job_spec["zenith_angle"], "zenith_angle"),
-                energy_min_value,
-                energy_min_unit,
-                energy_max_value,
-                energy_max_unit,
-                cores_per_shower,
-                core_scatter_max_value,
-                core_scatter_max_unit,
-                view_cone_min_value,
-                view_cone_min_unit,
-                view_cone_max_value,
-                view_cone_max_unit,
-                _format_param_value(job_spec["showers_per_run"], "showers_per_run"),
-                _format_param_value(job_spec["model_version"], "model_version"),
-                _format_param_value(job_spec["array_layout_name"], "array_layout_name"),
-                _format_param_value(job_spec["corsika_le_interaction"], "corsika_le_interaction"),
-                _format_param_value(job_spec["corsika_he_interaction"], "corsika_he_interaction"),
-                _format_param_value(job_spec["run_number"], "run_number"),
-                _format_param_value(job_spec["grid_output_path"], "grid_output_path"),
+                _format_param_value(job_spec[_PARAMS_JOB_SPEC_FIELDS[field]], field)
+                for field in _PARAMS_FIELDS
             ]
             params_file_handle.write(" ".join(row) + "\n")
 
@@ -275,7 +216,7 @@ def _get_submit_file(executable, apptainer_image, priority, params_file_name, ht
     str
         HTCondor submit file content.
     """
-    arguments_string = "$(process) env.txt " + " ".join(f"$({field})" for field in _PARAMS_FIELDS)
+    arguments_string = "env.txt " + " ".join(f"$({field})" for field in _PARAMS_FIELDS)
     queue_string = ",".join(_PARAMS_FIELDS)
 
     return f"""universe = container
@@ -308,73 +249,86 @@ def _get_submit_script(args_dict):
     str
         HTCondor submit script content.
     """
-    # Map _PARAMS_FIELDS to bash positional indices ($3, $4, etc.)
-    # Indices 1-2 are reserved for: $1=process_id, $2=env_file
-    bash_indices = {}
-    for i, field in enumerate(_PARAMS_FIELDS):
-        idx = 3 + i
-        bash_indices[field] = f"${{{idx}}}"
+    # Map _PARAMS_FIELDS to bash positional indices ($2, $3, etc.).
+    # Index 1 is reserved for the environment file.
+    bash_indices = {field: f"${{{index}}}" for index, field in enumerate(_PARAMS_FIELDS, start=2)}
 
     label = args_dict["label"] if args_dict["label"] else "simulate-prod"
-    run_number_offset = args_dict.get("run_number_offset", 0)
 
+    energy_unit = _PARAM_QUANTITY_UNITS["energy_min"]
+    core_scatter_unit = _PARAM_QUANTITY_UNITS["core_scatter_max"]
+    view_cone_unit = _PARAM_QUANTITY_UNITS["view_cone_min"]
     energy_range_string = (
-        f'"{bash_indices["energy_min_value"]} {bash_indices["energy_min_unit"]} '
-        f'{bash_indices["energy_max_value"]} {bash_indices["energy_max_unit"]}"'
+        f'"{bash_indices["energy_min"]} {energy_unit} {bash_indices["energy_max"]} {energy_unit}"'
     )
     core_scatter_string = (
-        f'"{bash_indices["cores_per_shower"]} {bash_indices["core_scatter_max_value"]} '
-        f'{bash_indices["core_scatter_max_unit"]}"'
+        f'"{bash_indices["cores_per_shower"]} {bash_indices["core_scatter_max"]} '
+        f'{core_scatter_unit}"'
     )
     view_cone_string = (
-        f'"{bash_indices["view_cone_min_value"]} {bash_indices["view_cone_min_unit"]} '
-        f"{bash_indices['view_cone_max_value']} "
-        f'{bash_indices["view_cone_max_unit"]}"'
-    )
-    energy_range_tag = (
-        f"erange-{bash_indices['energy_min_value']}{bash_indices['energy_min_unit']}-"
-        f"{bash_indices['energy_max_value']}{bash_indices['energy_max_unit']}"
+        f'"{bash_indices["view_cone_min"]} {view_cone_unit} '
+        f'{bash_indices["view_cone_max"]} {view_cone_unit}"'
     )
 
-    return f"""#!/usr/bin/env bash
+    job_label = (
+        f"{label}_{bash_indices['corsika_he_interaction']}_"
+        f"{bash_indices['corsika_le_interaction']}_"
+        f"{bash_indices['energy_min']}{energy_unit}-"
+        f"{bash_indices['energy_max']}{energy_unit}"
+    )
 
-# Process ID used to generate run number
-process_id="$1"
-# Load environment variables (for DB access)
-set -a; source "$2"
-apptainer_label="{bash_indices["apptainer_label"]}"
-primary="{bash_indices["primary"]}"
-model_version="{bash_indices["model_version"]}"
-array_layout_name="{bash_indices["array_layout_name"]}"
-corsika_le_interaction="{bash_indices["corsika_le_interaction"]}"
-corsika_he_interaction="{bash_indices["corsika_he_interaction"]}"
-run_number="{bash_indices["run_number"]}"
-grid_output_path="{bash_indices["grid_output_path"]}"
-energy_range_tag="{energy_range_tag}"
-job_label="{label}_${{corsika_he_interaction}}-${{corsika_le_interaction}}_${{energy_range_tag}}"
+    command_parts = [
+        '--label "$job_label"',
+        f"--simulation_software {args_dict['simulation_software']}",
+        f"--site {args_dict['site']}",
+        f"--log_level {args_dict['log_level']}",
+    ]
 
-simtools-simulate-prod \\
-    --simulation_software {args_dict["simulation_software"]} \\
-    --label "$job_label" \\
-    --model_version "$model_version" \\
-    --site {args_dict["site"]} \\
-    --array_layout_name "$array_layout_name" \\
-    --primary "$primary" \\
-    --azimuth_angle "{bash_indices["azimuth_angle"]}" \\
-    --zenith_angle "{bash_indices["zenith_angle"]}" \\
-    --showers_per_run "{bash_indices["showers_per_run"]}" \\
-    --energy_range {energy_range_string} \\
-    --core_scatter {core_scatter_string} \\
-    --view_cone {view_cone_string} \\
-    --corsika_le_interaction "$corsika_le_interaction" \\
-    --corsika_he_interaction "$corsika_he_interaction" \\
-    --run_number "$run_number" \\
-    --run_number_offset {run_number_offset} \\
-    --save_reduced_event_lists \\
-    --output_path /tmp/simtools-output \\
-    --log_level {args_dict["log_level"]} \\
-    --grid_output_path "$grid_output_path"
-"""
+    for field in (
+        "model_version",
+        "array_layout_name",
+        "primary",
+        "azimuth_angle",
+        "zenith_angle",
+        "showers_per_run",
+        "corsika_le_interaction",
+        "corsika_he_interaction",
+        "run_number",
+    ):
+        command_parts.append(f'--{field} "{bash_indices[field]}"')
+
+    command_parts.extend(
+        [
+            f"--energy_range {energy_range_string}",
+            f"--core_scatter {core_scatter_string}",
+            f"--view_cone {view_cone_string}",
+            f"--run_number_offset {args_dict.get('run_number_offset', 0)}",
+            "--save_reduced_event_lists",
+        ]
+    )
+    if args_dict.get("save_file_lists"):
+        command_parts.append("--save_file_lists")
+    command_parts.append("--output_path /tmp/simtools-output")
+    command_parts.append(f'--grid_output_path "{bash_indices["grid_output_path"]}"')
+
+    command_lines = []
+    for index, part in enumerate(command_parts):
+        line_end = " \\" if index < len(command_parts) - 1 else ""
+        command_lines.append(f"    {part}{line_end}")
+
+    script_lines = [
+        "#!/usr/bin/env bash",
+        "",
+        "# Load environment variables (for DB access)",
+        'set -a; source "$1"',
+        f'job_label="{job_label}"',
+        "",
+        "simtools-simulate-prod \\",
+        *command_lines,
+        "",
+    ]
+
+    return "\n".join(script_lines)
 
 
 def build_job_specs(args_dict, image_labels):

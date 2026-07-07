@@ -1,7 +1,7 @@
 %YAML 1.2
 ---
 title: Schema for production_generate_grid density output
-schema_version: 0.1.0
+schema_version: 0.2.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
@@ -15,75 +15,69 @@ data:
       - name: run_number
         description: Run index within each grid point.
         required: true
-        type: uint32
+        type: int64
       - name: primary
         description: Primary particle type.
         required: true
         type: string
-      - name: azimuth_angle_value
-        description: Azimuth pointing angle value.
+      - name: azimuth_angle
+        description: Azimuth pointing angle.
         required: true
         type: float64
-      - name: azimuth_angle_unit
-        description: Unit of azimuth pointing angle.
-        required: true
-        type: string
-      - name: zenith_angle_value
-        description: Zenith pointing angle value.
+        unit: deg
+      - name: zenith_angle
+        description: Zenith pointing angle.
         required: true
         type: float64
-      - name: zenith_angle_unit
-        description: Unit of zenith pointing angle.
-        required: true
-        type: string
-      - name: energy_min_value
-        description: Minimum primary energy value.
+        unit: deg
+      - name: ha
+        description: Hour angle coordinate value in degrees (positive westward).
         required: true
         type: float64
-      - name: energy_min_unit
-        description: Unit of minimum primary energy.
-        required: true
-        type: string
-      - name: energy_max_value
-        description: Maximum primary energy value.
+        unit: deg
+      - name: dec
+        description: Declination coordinate value in degrees.
         required: true
         type: float64
-      - name: energy_max_unit
-        description: Unit of maximum primary energy.
+        unit: deg
+      - name: energy_min
+        description: Minimum primary energy.
         required: true
-        type: string
+        type: float64
+        unit: GeV
+      - name: energy_max
+        description: Maximum primary energy.
+        required: true
+        type: float64
+        unit: GeV
       - name: cores_per_shower
         description: Number of core scatter samples per shower.
         required: true
-        type: uint32
-      - name: core_scatter_max_value
-        description: Maximum core scatter radius value.
+        type: int64
+      - name: core_scatter_max
+        description: Maximum core scatter radius.
         required: true
         type: float64
-      - name: core_scatter_max_unit
-        description: Unit of maximum core scatter radius.
-        required: true
-        type: string
-      - name: view_cone_min_value
-        description: Minimum view cone radius value.
+        unit: m
+      - name: view_cone_min
+        description: Minimum view cone radius.
         required: true
         type: float64
-      - name: view_cone_min_unit
-        description: Unit of minimum view cone radius.
-        required: true
-        type: string
-      - name: view_cone_max_value
-        description: Maximum view cone radius value.
+        unit: deg
+      - name: view_cone_max
+        description: Maximum view cone radius.
         required: true
         type: float64
-      - name: view_cone_max_unit
-        description: Unit of maximum view cone radius.
-        required: true
-        type: string
+        unit: deg
       - name: showers_per_run
         description: Number of showers simulated per run.
         required: true
-        type: uint32
+        type: int64
+      - name: nsb_rate
+        description: Night-sky-background rate used for this grid point.
+        required: true
+        type: float64
+        unit: 1 / (cm2 ns sr)
       - name: model_version
         description: Simulation model version.
         required: true
@@ -100,11 +94,3 @@ data:
         description: CORSIKA high-energy interaction model.
         required: true
         type: string
-      - name: ra
-        description: Right ascension coordinate value for ra_dec coordinate systems.
-        required: false
-        type: float64
-      - name: dec
-        description: Declination coordinate value for ra_dec coordinate systems.
-        required: false
-        type: float64

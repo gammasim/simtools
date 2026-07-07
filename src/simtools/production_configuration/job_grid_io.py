@@ -1,6 +1,7 @@
 """Read and write executable job grids for production preparation."""
 
 import logging
+from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
 
@@ -8,151 +9,82 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
+from simtools.constants import SCHEMA_PATH
+from simtools.io.ascii_handler import collect_data_from_file
 from simtools.production_configuration.job_grid_summary import build_job_grid_summary
+from simtools.utils.value_conversion import get_value_as_quantity, get_value_in_unit
 
 logger = logging.getLogger(__name__)
 
 _ECSV_SUFFIX = ".ecsv"
 _ECSV_FORMAT = "ascii.ecsv"
 _STREAM_CHUNK_SIZE = 10_000
-
-JOB_GRID_COLUMNS = [
-    "run_number",
-    "primary",
-    "azimuth_angle_value",
-    "azimuth_angle_unit",
-    "zenith_angle_value",
-    "zenith_angle_unit",
-    "energy_min_value",
-    "energy_min_unit",
-    "energy_max_value",
-    "energy_max_unit",
-    "cores_per_shower",
-    "core_scatter_max_value",
-    "core_scatter_max_unit",
-    "view_cone_min_value",
-    "view_cone_min_unit",
-    "view_cone_max_value",
-    "view_cone_max_unit",
-    "showers_per_run",
-    "model_version",
-    "array_layout_name",
-    "corsika_le_interaction",
-    "corsika_he_interaction",
-]
-
-_QUANTITY_FIELDS = {
-    "azimuth_angle": ("azimuth_angle_value", "azimuth_angle_unit"),
-    "zenith_angle": ("zenith_angle_value", "zenith_angle_unit"),
-    "energy_min": ("energy_min_value", "energy_min_unit"),
-    "energy_max": ("energy_max_value", "energy_max_unit"),
-    "core_scatter_max": ("core_scatter_max_value", "core_scatter_max_unit"),
-    "view_cone_min": ("view_cone_min_value", "view_cone_min_unit"),
-    "view_cone_max": ("view_cone_max_value", "view_cone_max_unit"),
-}
-JOB_GRID_QUANTITY_FIELDS = dict(_QUANTITY_FIELDS)
-
-_OPTIONAL_ANGLE_FIELDS = ("ra", "dec")
-
-_JOB_GRID_COLUMN_DTYPES = {
-    "primary": str,
-    "azimuth_angle_value": float,
-    "azimuth_angle_unit": str,
-    "zenith_angle_value": float,
-    "zenith_angle_unit": str,
-    "energy_min_value": float,
-    "energy_min_unit": str,
-    "energy_max_value": float,
-    "energy_max_unit": str,
-    "cores_per_shower": int,
-    "core_scatter_max_value": float,
-    "core_scatter_max_unit": str,
-    "view_cone_min_value": float,
-    "view_cone_min_unit": str,
-    "view_cone_max_value": float,
-    "view_cone_max_unit": str,
-    "showers_per_run": int,
-    "nsb_rate": float,
-    "model_version": str,
-    "array_layout_name": str,
-    "corsika_le_interaction": str,
-    "corsika_he_interaction": str,
-    "run_number": int,
-    "ra": float,
-    "dec": float,
-}
+_JOB_GRID_SCHEMA_FILE = SCHEMA_PATH / "job_grid_density.schema.yml"
 
 
-def _serialize_quantity(value):
-    """Serialize a Quantity to value/unit columns."""
-    return float(value.value), str(value.unit)
+@dataclass(frozen=True)
+class JobGridSchema:
+    """Runtime representation of the job-grid YAML schema."""
+
+    version: str
+    columns: tuple[str, ...]
+    column_units: dict[str, u.Unit]
+    column_dtypes: dict[str, object]
 
 
-def _deserialize_quantity(value, unit):
-    """Deserialize value/unit columns to a Quantity."""
-    return float(value) * u.Unit(unit)
+def _load_job_grid_schema():
+    """Load the job-grid format definition from its YAML schema."""
+    schema = collect_data_from_file(_JOB_GRID_SCHEMA_FILE)
+    table_definition = next(item for item in schema["data"] if item["type"] == "data_table")
+    column_definitions = table_definition["table_columns"]
+    column_units = {
+        column["name"]: u.Unit(column["unit"])
+        for column in column_definitions
+        if column.get("unit")
+    }
+    return JobGridSchema(
+        version=schema["schema_version"],
+        columns=tuple(column["name"] for column in column_definitions),
+        column_units=column_units,
+        column_dtypes={
+            column["name"]: str if column["type"] == "string" else np.dtype(column["type"])
+            for column in column_definitions
+        },
+    )
+
+
+JOB_GRID_SCHEMA = _load_job_grid_schema()
+
+
+def _cast_scalar(value, dtype):
+    """Cast a scalar using its schema dtype and return a Python value."""
+    if dtype is str:
+        return str(value)
+    return dtype.type(value).item()
 
 
 def _serialize_job_row(job_row):
     """Serialize one job row to the on-disk schema."""
-    serialized_row = {
-        "primary": job_row["primary"],
-        "cores_per_shower": int(job_row["cores_per_shower"]),
-        "showers_per_run": int(job_row["showers_per_run"]),
-        "nsb_rate": float(job_row["nsb_rate"]),
-        "model_version": job_row["model_version"],
-        "array_layout_name": job_row["array_layout_name"],
-        "corsika_le_interaction": job_row["corsika_le_interaction"],
-        "corsika_he_interaction": job_row["corsika_he_interaction"],
-        "run_number": int(job_row["run_number"]),
+    return {
+        name: float(get_value_in_unit(job_row[name], JOB_GRID_SCHEMA.column_units[name]))
+        if name in JOB_GRID_SCHEMA.column_units
+        else _cast_scalar(job_row[name], JOB_GRID_SCHEMA.column_dtypes[name])
+        for name in JOB_GRID_SCHEMA.columns
     }
 
-    for quantity_name, (value_key, unit_key) in _QUANTITY_FIELDS.items():
-        serialized_row[value_key], serialized_row[unit_key] = _serialize_quantity(
-            job_row[quantity_name]
-        )
 
-    for angle_name in _OPTIONAL_ANGLE_FIELDS:
-        angle_value = job_row.get(angle_name)
-        if angle_value is None:
-            continue
-        if isinstance(angle_value, u.Quantity):
-            serialized_row[angle_name] = float(angle_value.to_value(u.deg))
-        else:
-            serialized_row[angle_name] = float(angle_value)
-
-    return serialized_row
-
-
-def _deserialize_job_row(serialized_row):
+def _deserialize_job_row(serialized_row, column_units=None):
     """Deserialize one stored row to the in-memory job-row schema."""
-    job_row = {
-        "primary": serialized_row["primary"],
-        "cores_per_shower": int(serialized_row["cores_per_shower"]),
-        "showers_per_run": int(serialized_row["showers_per_run"]),
-        "nsb_rate": float(serialized_row.get("nsb_rate", 1.0)),
-        "model_version": serialized_row["model_version"],
-        "array_layout_name": serialized_row["array_layout_name"],
-        "corsika_le_interaction": serialized_row["corsika_le_interaction"],
-        "corsika_he_interaction": serialized_row["corsika_he_interaction"],
-        "run_number": int(serialized_row["run_number"]),
+    column_units = column_units or {}
+    return {
+        name: get_value_as_quantity(
+            float(serialized_row[name]),
+            column_units.get(name) or JOB_GRID_SCHEMA.column_units[name],
+        ).to(JOB_GRID_SCHEMA.column_units[name])
+        if name in JOB_GRID_SCHEMA.column_units
+        else _cast_scalar(serialized_row[name], JOB_GRID_SCHEMA.column_dtypes[name])
+        for name in JOB_GRID_SCHEMA.columns
     }
-
-    for quantity_name, (value_key, unit_key) in _QUANTITY_FIELDS.items():
-        job_row[quantity_name] = _deserialize_quantity(
-            serialized_row[value_key],
-            serialized_row[unit_key],
-        )
-
-    for angle_name in _OPTIONAL_ANGLE_FIELDS:
-        if angle_name not in serialized_row:
-            continue
-        angle_value = serialized_row[angle_name]
-        if np.ma.is_masked(angle_value) or angle_value is None:
-            continue
-        job_row[angle_name] = float(angle_value) * u.deg
-
-    return job_row
 
 
 def serialize_job_grid(job_rows, output_file, metadata=None):
@@ -171,23 +103,18 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     output_path = Path(output_file)
     serialized_rows = [_serialize_job_row(job_row) for job_row in job_rows]
     metadata = metadata.copy() if metadata else {}
+    metadata["job_grid_format_version"] = JOB_GRID_SCHEMA.version
     metadata["job_grid_summary"] = build_job_grid_summary(job_rows)
 
     if output_path.suffix.lower() != _ECSV_SUFFIX:
         raise ValueError("Job grid output file must use the '.ecsv' extension.")
 
-    optional_columns = [
-        angle_name
-        for angle_name in _OPTIONAL_ANGLE_FIELDS
-        if any(angle_name in row for row in serialized_rows)
-    ]
-    output_columns = [*JOB_GRID_COLUMNS, *optional_columns]
+    output_columns = JOB_GRID_SCHEMA.columns
     output_rows = [
         {column: row.get(column) for column in output_columns} for row in serialized_rows
     ]
 
-    output_table = Table(rows=output_rows, names=output_columns)
-    output_table.meta = metadata
+    output_table = _build_output_table(output_rows, output_columns, metadata)
     logger.info(f"Writing job grid with {len(job_rows)} rows to '{output_path}'.")
     output_table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
 
@@ -195,6 +122,9 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
 def _build_output_table(output_rows, output_columns, metadata=None):
     """Build an Astropy table for serialized output rows."""
     output_table = Table(rows=output_rows, names=output_columns)
+    for column_name, unit in JOB_GRID_SCHEMA.column_units.items():
+        if column_name in output_table.colnames:
+            output_table[column_name].unit = unit
     output_table.meta = metadata or {}
     return output_table
 
@@ -203,8 +133,10 @@ def _write_empty_ecsv_header(output_path, output_columns, metadata):
     """Write an ECSV header using Astropy's schema/metadata handling."""
     empty_table = Table(
         names=output_columns,
-        dtype=[_JOB_GRID_COLUMN_DTYPES[column] for column in output_columns],
+        dtype=[JOB_GRID_SCHEMA.column_dtypes[column] for column in output_columns],
     )
+    for column_name, unit in JOB_GRID_SCHEMA.column_units.items():
+        empty_table[column_name].unit = unit
     empty_table.meta = metadata
     empty_table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
 
@@ -234,12 +166,6 @@ def _write_ecsv_data_rows(output_path, output_rows, output_columns):
             output.write(f"{row}\n")
 
 
-def _serialize_output_row(job_row, output_columns):
-    """Serialize one job row and restrict it to output columns."""
-    serialized_row = _serialize_job_row(job_row)
-    return {column: serialized_row.get(column) for column in output_columns}
-
-
 def _flush_stream_chunk(output_path, output_rows, output_columns, metadata, write_header):
     """Write or append one chunk of serialized output rows."""
     if write_header:
@@ -260,8 +186,7 @@ def serialize_job_grid_stream(job_rows, output_file, metadata=None):
     Stream executable job rows to ECSV output.
 
     This avoids materializing serialized rows and the full Astropy table in memory.
-    Optional RA/Dec columns are determined from the first row, which matches the
-    homogeneous output produced by the production grid generator.
+    All coordinate columns are required so every row carries HA/Dec and Az/Ze.
 
     Parameters
     ----------
@@ -278,7 +203,8 @@ def serialize_job_grid_stream(job_rows, output_file, metadata=None):
         Number of rows written to the output file.
     """
     output_path = Path(output_file)
-    metadata = metadata or {}
+    metadata = metadata.copy() if metadata else {}
+    metadata["job_grid_format_version"] = JOB_GRID_SCHEMA.version
 
     if output_path.suffix.lower() != _ECSV_SUFFIX:
         raise ValueError("Job grid output file must use the '.ecsv' extension.")
@@ -287,15 +213,12 @@ def serialize_job_grid_stream(job_rows, output_file, metadata=None):
     try:
         first_row = next(row_iterator)
     except StopIteration:
-        _write_empty_ecsv_header(output_path, JOB_GRID_COLUMNS, metadata)
+        _write_empty_ecsv_header(output_path, JOB_GRID_SCHEMA.columns, metadata)
         logger.info(f"Writing job grid with 0 rows to '{output_path}'.")
         return 0
 
     serialized_first_row = _serialize_job_row(first_row)
-    optional_columns = [
-        angle_name for angle_name in _OPTIONAL_ANGLE_FIELDS if angle_name in serialized_first_row
-    ]
-    output_columns = [*JOB_GRID_COLUMNS, *optional_columns]
+    output_columns = JOB_GRID_SCHEMA.columns
 
     output_rows = []
     row_count = 0
@@ -349,7 +272,8 @@ def read_job_grid(input_file):
 
     table = Table.read(input_path, format=_ECSV_FORMAT)
     rows = [{column_name: row[column_name] for column_name in table.colnames} for row in table]
-    return [_deserialize_job_row(row) for row in rows], dict(table.meta)
+    column_units = {column_name: table[column_name].unit for column_name in table.colnames}
+    return [_deserialize_job_row(row, column_units) for row in rows], dict(table.meta)
 
 
 def read_job_grid_row(input_file, row_index):

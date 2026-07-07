@@ -13,6 +13,8 @@ from simtools.constants import (
     MODEL_PARAMETER_METASCHEMA,
     MODEL_PARAMETER_SCHEMA_PATH,
     SCHEMA_PATH,
+    SIM_TELARRAY_META_PARAMETER_METASCHEMA,
+    SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
 from simtools.data_model import schema
 from simtools.io import ascii_handler
@@ -51,6 +53,20 @@ def test_get_model_parameter_schema_returns_independent_copies():
     schema_1["data"][0]["unit"] = "m"
 
     assert schema_2["data"][0]["unit"] == "cm"
+
+
+def test_validate_sim_telarray_meta_parameter_registry_schema():
+    registry = ascii_handler.collect_data_from_file(SIM_TELARRAY_META_PARAMETER_REGISTRY)
+
+    schema.validate_dict_using_schema(
+        registry,
+        schema_file=SIM_TELARRAY_META_PARAMETER_METASCHEMA,
+        offline=True,
+        ignore_software_version=True,
+    )
+
+    assert "generated_meta_parameters" in registry
+    assert "model_parameters" not in registry
 
 
 def test_get_parameter_type_and_unit_from_schema():

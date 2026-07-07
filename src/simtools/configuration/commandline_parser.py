@@ -685,7 +685,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
         Parameters
         ----------
-        target_unit : str or astropy.units.UnitBase
+        target_unit : str or astropy.units.Unit
             Unit to convert the parsed quantity to.
 
         Returns

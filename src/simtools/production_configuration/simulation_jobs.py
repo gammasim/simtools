@@ -11,7 +11,6 @@ import shlex
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import EarthLocation
-from astropy.time import Time
 
 from simtools.configuration import defaults
 from simtools.configuration.commandline_parser import CommandLineParser
@@ -62,10 +61,10 @@ GRID_AXIS_ARGUMENTS = {
         "unit": "deg",
         "help": "Zenith angle range (deg)",
     },
-    "ra": {
-        "engine_axis": "ra",
+    "ha": {
+        "engine_axis": "ha",
         "unit": "deg",
-        "help": "Right ascension range (deg)",
+        "help": "Hour angle range (deg; positive westward)",
     },
     "dec": {
         "engine_axis": "dec",
@@ -81,7 +80,7 @@ GRID_AXIS_ARGUMENTS = {
 
 _AXIS_SCALING_CHOICES = ("linear", "log", "1/cos")
 _HORIZONTAL_AXES = ("azimuth", "zenith")
-_RADEC_AXES = ("ra", "dec")
+_HADEC_AXES = ("ha", "dec")
 _REQUIRED_AXES = ("offset",)
 _LOCAL_CONSTRAINT_ARGUMENTS = {
     "local_zenith_range": "deg",
@@ -246,7 +245,7 @@ def _apply_direction_grid_density(axis_configs, direction_axes, density):
 
     density_sqrt = np.sqrt(density)
     longitudinal_axis_scale = 1.0
-    if tuple(direction_axes) == _RADEC_AXES:
+    if tuple(direction_axes) == _HADEC_AXES:
         longitudinal_axis_scale = _mean_cosine_over_dec_span(axis_configs["dec"]["range"])
     elif tuple(direction_axes) == _HORIZONTAL_AXES:
         longitudinal_axis_scale = _mean_sine_over_zenith_span(axis_configs["zenith"]["range"])
@@ -258,7 +257,7 @@ def _apply_direction_grid_density(axis_configs, direction_axes, density):
         else:
             span_degrees = abs(axis_range[1] - axis_range[0])
 
-        if axis_name in ("azimuth", "ra"):
+        if axis_name in ("azimuth", "ha"):
             span_degrees *= longitudinal_axis_scale
 
         axis_configs[axis_name]["binning"] = max(
@@ -270,12 +269,12 @@ def _apply_direction_grid_density(axis_configs, direction_axes, density):
 def _resolve_coordinate_system(axis_configs):
     """Resolve the coordinate system from axis definitions."""
     has_horizontal_axes = all(axis_name in axis_configs for axis_name in _HORIZONTAL_AXES)
-    has_radec_axes = all(axis_name in axis_configs for axis_name in _RADEC_AXES)
+    has_hadec_axes = all(axis_name in axis_configs for axis_name in _HADEC_AXES)
 
-    if has_horizontal_axes and has_radec_axes:
-        raise ValueError("Cannot define both azimuth/zenith and ra/dec axes at the same time.")
-    if has_radec_axes:
-        return "ra_dec"
+    if has_horizontal_axes and has_hadec_axes:
+        raise ValueError("Cannot define both azimuth/zenith and ha/dec axes at the same time.")
+    if has_hadec_axes:
+        return "ha_dec"
     if has_horizontal_axes:
         return "horizontal"
     return None
@@ -284,16 +283,6 @@ def _resolve_coordinate_system(axis_configs):
 def _resolve_coordinate_system_from_args(args_dict):
     """Resolve the coordinate system from raw CLI arguments."""
     return _resolve_coordinate_system(_resolve_axis_configs(args_dict))
-
-
-def resolve_time_of_observation(time_of_observation, args_dict):
-    """Generate Time object for the observing time. Required if RA/Dec axes are present."""
-    coordinate_system = _resolve_coordinate_system_from_args(args_dict)
-    if coordinate_system == "ra_dec":
-        if not time_of_observation:
-            raise ValueError("time_of_observation is required when using RA/Dec axes.")
-        return Time(time_of_observation, scale="utc")
-    return None
 
 
 def resolve_single_model_version(model_version):
@@ -319,7 +308,7 @@ def build_axes_dict_from_cli_args(args_dict):
     coordinate_system = _resolve_coordinate_system(axis_configs)
 
     if coordinate_system is None:
-        raise ValueError("Must provide either both azimuth/zenith or both ra/dec axis definitions.")
+        raise ValueError("Must provide either both azimuth/zenith or both ha/dec axis definitions.")
 
     missing_required_axes = [
         axis_name for axis_name in _REQUIRED_AXES if axis_name not in axis_configs
@@ -329,18 +318,18 @@ def build_axes_dict_from_cli_args(args_dict):
         raise ValueError(f"Missing required shared axis definition(s): {missing_axes}.")
 
     direction_grid_density = _parse_direction_grid_density(args_dict.get("direction_grid_density"))
-    direction_axes = _RADEC_AXES if coordinate_system == "ra_dec" else _HORIZONTAL_AXES
+    direction_axes = _HADEC_AXES if coordinate_system == "ha_dec" else _HORIZONTAL_AXES
     if coordinate_system == "horizontal" and direction_grid_density is not None:
         axis_configs["azimuth"]["direction_grid_density"] = direction_grid_density
-    if coordinate_system == "ra_dec" and direction_grid_density is not None:
-        axis_configs["ra"]["direction_grid_density"] = direction_grid_density
+    if coordinate_system == "ha_dec" and direction_grid_density is not None:
+        axis_configs["ha"]["direction_grid_density"] = direction_grid_density
     _apply_direction_grid_density(
         axis_configs,
         direction_axes,
         direction_grid_density,
     )
 
-    if coordinate_system == "ra_dec":
+    if coordinate_system == "ha_dec":
         local_constraints = {}
         for constraint_argument, default_unit in _LOCAL_CONSTRAINT_ARGUMENTS.items():
             parsed_argument_range = _parse_optional_range_argument(
@@ -350,7 +339,7 @@ def build_axes_dict_from_cli_args(args_dict):
             if parsed_argument_range is not None:
                 local_constraints[constraint_argument] = parsed_argument_range
 
-        axis_configs["ra"].update(local_constraints)
+        axis_configs["ha"].update(local_constraints)
 
     axes_to_export = [*_REQUIRED_AXES, *direction_axes]
 
@@ -398,16 +387,17 @@ def build_production_grid_engine(args_dict, array_layout_name=None, model_versio
     resolved_model_version = model_version or resolve_single_model_version(
         args_dict.get("model_version")
     )
-    if coordinate_system == "ra_dec":
+    observing_location = None
+    if args_dict.get("site") and resolved_model_version:
         observing_location = build_observing_location(
             site=args_dict["site"],
             model_version=resolved_model_version,
         )
-    elif coordinate_system == "horizontal":
-        coordinate_system = "horizontal"
-        observing_location = None
-    else:
-        raise ValueError("Must provide either both azimuth/zenith or both ra/dec axis definitions.")
+    if coordinate_system == "ha_dec":
+        if observing_location is None:
+            raise ValueError("site is required when using HA/Dec axes.")
+    elif coordinate_system != "horizontal":
+        raise ValueError("Must provide either both azimuth/zenith or both ha/dec axis definitions.")
     resolved_layout_name = array_layout_name or resolve_array_layout_name(
         args_dict.get("array_layout_name"),
         resolved_model_version,
@@ -417,10 +407,6 @@ def build_production_grid_engine(args_dict, array_layout_name=None, model_versio
         axes=axes,
         coordinate_system=coordinate_system,
         observing_location=observing_location,
-        time_of_observation=resolve_time_of_observation(
-            args_dict.get("time_of_observation"),
-            args_dict,
-        ),
         lookup_table=args_dict.get("corsika_limits"),
         array_layout_name=resolved_layout_name,
         lookup_nsb_rate=_resolve_nsb_rate(args_dict, resolved_model_version),
@@ -429,22 +415,16 @@ def build_production_grid_engine(args_dict, array_layout_name=None, model_versio
 
 def build_job_grid_metadata(args_dict):
     """Build metadata stored alongside serialized executable job grids."""
-    time_of_observation = resolve_time_of_observation(
-        args_dict.get("time_of_observation"),
-        args_dict,
-    )
     coordinate_system = _resolve_coordinate_system_from_args(args_dict)
     direction_grid_density = _parse_direction_grid_density(args_dict.get("direction_grid_density"))
-    if coordinate_system == "ra_dec" and not args_dict.get("site"):
-        raise ValueError("site is required when using RA/Dec axes.")
+    if coordinate_system == "ha_dec" and not args_dict.get("site"):
+        raise ValueError("site is required when using HA/Dec axes.")
     return {
         "site": args_dict.get("site"),
         "simulation_software": args_dict.get("simulation_software"),
         "coordinate_system": coordinate_system,
         "direction_grid_density": direction_grid_density,
         "direction_grid_density_unit": "1/deg^2" if direction_grid_density is not None else None,
-        "time_of_observation_utc": time_of_observation.isot if time_of_observation else None,
-        "time_of_observation_scale": time_of_observation.scale if time_of_observation else None,
         "corsika_limits": (
             str(args_dict["corsika_limits"]) if args_dict.get("corsika_limits") else None
         ),
@@ -1157,6 +1137,11 @@ def _generate_observation_grids_per_layout(
                 corsika_limits=corsika_limits,
                 nsb_rate=nsb_rate,
             )
+            generated_grid = ProductionGridEngine(
+                axes={},
+                coordinate_system="horizontal",
+                observing_location=build_observing_location(args_dict["site"], model_version),
+            ).convert_coordinates(generated_grid, keep_horizontal_coordinates=True)
 
         observation_grid_cache[cache_key] = generated_grid
         observation_grids_per_model_version[model_version] = generated_grid
@@ -1195,7 +1180,7 @@ def _build_observation_params_for_point(
         "primary": primary,
         "azimuth_angle": point["azimuth"],
         "zenith_angle": point["zenith_angle"],
-        "ra": point.get("ra"),
+        "ha": point.get("ha"),
         "dec": point.get("dec"),
         "model_version": model_version,
         "nsb_rate": float(nsb_rate),

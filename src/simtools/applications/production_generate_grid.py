@@ -13,8 +13,8 @@ submission tools.
 The application supports two pointing-grid modes:
 
 - horizontal grids, configured with ``azimuth`` and ``zenith`` axes;
-- equatorial grids, configured with ``ra`` and ``dec`` axes and converted to
-  local horizontal coordinates using ``site`` and ``time_of_observation``.
+- hour-angle grids, configured with ``ha`` and ``dec`` axes and converted to
+  local horizontal coordinates using ``site``.
 
 Direction axes can be specified explicitly by the number of bins or derived from a
 direction-grid density. If a CORSIKA limits lookup table is supplied, the grid is
@@ -34,7 +34,7 @@ Production context
 ------------------
 site (str)
     Observatory site, for example ``North`` or ``South``. Required for resolving
-    the model-version-dependent NSB rate and for RA/Dec-to-horizontal coordinate
+    the model-version-dependent NSB rate and for HA/Dec-to-horizontal coordinate
     conversion.
 model_version (str or list)
     Simulation model version. Multiple values expand the job grid over all
@@ -85,7 +85,7 @@ Pointing and grid axes
 axis (repeatable)
     Compact axis definition:
     ``--axis <name> <min> <unit> <max> <unit> <binning> [scaling]``.
-    Supported axis names are ``azimuth``, ``zenith``, ``ra``, ``dec``, and
+    Supported axis names are ``azimuth``, ``zenith``, ``ha``, ``dec``, and
     ``offset``. Supported scaling modes are ``linear``, ``log``, and
     ``1/cos``; the default is ``linear``.
 
@@ -102,19 +102,15 @@ axis (repeatable)
 direction_grid_density (float or quantity, optional)
     Target density for direction points, normally in ``1/deg^2``. When set,
     simtools derives the number of horizontal ``azimuth``/``zenith`` or
-    equatorial ``ra``/``dec`` direction points from the axis ranges and this
+    hour-angle ``ha``/``dec`` direction points from the axis ranges and this
     density. Non-direction axes such as ``offset`` still use their explicit
     axis binning.
-time_of_observation (str, optional)
-    UTC observation time in ``YYYY-MM-DD HH:MM:SS`` format. Required when RA/Dec
-    axes are used because the conversion to local azimuth and zenith depends on
-    time and site. Ignored for horizontal grids.
 local_zenith_range (quantity pair, optional)
     Local zenith range used to keep or reject points generated for density-based
-    RA/Dec grids, for example ``--local_zenith_range 0 deg 70 deg``.
+    HA/Dec grids, for example ``--local_zenith_range 0 deg 70 deg``.
 local_azimuth_range (quantity pair, optional)
     Directed local azimuth range used to keep or reject points generated for
-    density-based RA/Dec grids, for example
+    density-based HA/Dec grids, for example
     ``--local_azimuth_range 300 deg 60 deg``. The interval may cross 0 deg.
 
 CORSIKA limits lookup
@@ -195,11 +191,7 @@ energy_max_scaling_index (float, optional)
 Output
 ------
 output_file (str, optional)
-    Output ECSV file for the generated job grid. The path is resolved through
-    the simtools output handler. The output rows include ``nsb_rate`` resolved
-    from the selected ``site`` and ``model_version``. Default is
-    ``job_grid.ecsv``.
-
+    Output ECSV file for the generated job grid.
 
 Example
 -------
@@ -214,33 +206,31 @@ To generate a standard zenith/azimuth grid of simulation points, execute:
             --axis offset 0 deg 10 deg 2 linear \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
 
-To generate an all-sky RA/Dec direction grid and serialize output in RA/Dec,
+To generate an all-sky HA/Dec direction grid,
 execute:
 
 .. code-block:: console
 
         simtools-production-generate-grid --site North --model_version 6.0.2 \
             --array_layout_name alpha \
-            --axis ra 0 deg 360 deg 36 linear \
+            --axis ha 0 deg 360 deg 36 linear \
             --axis dec -90 deg 90 deg 18 linear \
             --axis offset 0 deg 10 deg 2 linear \
-            --time_of_observation "2017-09-16 00:00:00" \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
 
-To generate an RA/Dec density grid constrained to local sky ranges (for example
+To generate an HA/Dec density grid constrained to local sky ranges (for example
 full zenith coverage from 0 to 70 deg and a directed azimuth window), execute:
 
 .. code-block:: console
 
         simtools-production-generate-grid --site North --model_version 6.0.2 \
             --array_layout_name alpha \
-            --axis ra 0 deg 360 deg 1 linear \
+            --axis ha 0 deg 360 deg 1 linear \
             --axis dec -40 deg 80 deg 1 linear \
             --axis offset 0 deg 10 deg 2 linear \
             --direction_grid_density 0.25 1/deg^2 \
             --local_zenith_range 0 deg 70 deg \
             --local_azimuth_range 300 deg 60 deg \
-            --time_of_observation "2017-09-16 00:00:00" \
             --corsika_limits tests/resources/corsika_simulation_limits/merged_corsika_limits.ecsv
 """
 
@@ -266,17 +256,8 @@ def _add_arguments(parser):
         help=(
             "Compact axis definition: --axis <name> <min> <unit> <max> <unit> <binning> "
             "[scaling]. May be repeated. "
-            "Supported axes: azimuth, zenith, ra, dec, offset. "
+            "Supported axes: azimuth, zenith, ha, dec, offset. "
             "Options for scaling are: linear, log, 1/cos"
-        ),
-    )
-    parser.add_argument(
-        "--time_of_observation",
-        type=str,
-        required=False,
-        help=(
-            "Observation time in UTC (format: 'YYYY-MM-DD HH:MM:SS'). "
-            "Used when RA/Dec axes are configured."
         ),
     )
     parser.add_argument(
@@ -286,7 +267,7 @@ def _add_arguments(parser):
         default=None,
         help=(
             "Direction-grid density in 1/deg^2. If set, direction-axis binning is "
-            "derived from axis ranges and this density. With RA/Dec axes, use "
+            "derived from axis ranges and this density. With HA/Dec axes, use "
             "local_zenith_range/local_azimuth_range to filter generated points."
         ),
     )
@@ -296,7 +277,7 @@ def _add_arguments(parser):
         required=False,
         default=None,
         help=(
-            "Local zenith range (quantity pair) used to filter RA/Dec density points, "
+            "Local zenith range (quantity pair) used to filter HA/Dec density points, "
             "for example: --local_zenith_range 0 deg 70 deg"
         ),
     )
@@ -306,7 +287,7 @@ def _add_arguments(parser):
         required=False,
         default=None,
         help=(
-            "Local azimuth range (quantity pair) used to filter RA/Dec density points, "
+            "Local azimuth range (quantity pair) used to filter HA/Dec density points, "
             "for example: --local_azimuth_range 300 deg 60 deg"
         ),
     )

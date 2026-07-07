@@ -1,16 +1,17 @@
 """
 Generate observation sampling grids with direction-dependent CORSIKA physics limits.
 
-Samples observing positions (Alt/Az or RA/Dec) and interpolates physics limits
+Samples observing positions (Alt/Az or HA/Dec) and interpolates physics limits
 (minimum energy, maximum scatter radius, maximum viewcone) from lookup tables.
 Supports linear/log/1/cos binning modes.
 """
 
 import logging
+from types import SimpleNamespace
 
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import AltAz, EarthLocation, SkyCoord
+from astropy.coordinates import EarthLocation
 from astropy.units import Quantity
 
 from simtools.production_configuration.angle_ranges import (
@@ -28,7 +29,7 @@ class ProductionGridEngine:
     Generate observation grids with direction-dependent CORSIKA physics limits.
 
     Samples observing positions per configured axes, interpolates physics limits from
-    lookup tables, and optionally converts between coordinate systems (Alt/Az vs RA/Dec).
+    lookup tables, and optionally converts between coordinate systems (Alt/Az vs HA/Dec).
     Results feed into :func:`production_configuration.simulation_jobs.build_simulation_jobs`
     to expand into full job matrices.
     """
@@ -38,7 +39,6 @@ class ProductionGridEngine:
         axes,
         coordinate_system="horizontal",
         observing_location=None,
-        time_of_observation=None,
         lookup_table=None,
         array_layout_name=None,
         lookup_nsb_rate=None,
@@ -55,8 +55,6 @@ class ProductionGridEngine:
             The coordinate system for the grid generation.
         observing_location : EarthLocation, optional
             The location of the observation (latitude, longitude, height).
-        time_of_observation : Time, optional
-            The time of observation required for RA/Dec transforms.
         lookup_table : str, optional
             Path to the lookup table file (ECSV format).
         array_layout_name : str, optional
@@ -73,7 +71,6 @@ class ProductionGridEngine:
             if observing_location is not None
             else EarthLocation(lat=0.0 * u.deg, lon=0.0 * u.deg, height=0 * u.m)
         )
-        self.time_of_observation = time_of_observation
         self.lookup_table = lookup_table
         self.array_layout_name = array_layout_name
         self.lookup_nsb_rate = lookup_nsb_rate
@@ -86,24 +83,18 @@ class ProductionGridEngine:
             self._prepare_lookup_table_limits_for_point_interpolation()
         self.target_values = self._generate_target_values()
 
-    def _require_time_of_observation(self):
-        """Return observing time if available, else raise a clear error."""
-        if self.time_of_observation is None:
-            raise ValueError("Observing time is required for ra_dec grid generation.")
-        return self.time_of_observation
-
-    def _get_max_zenith_for_radec_mode(self):
-        """Read maximum zenith from axes for RA/Dec direction sampling."""
+    def _get_max_zenith_for_hadec_mode(self):
+        """Read maximum zenith from axes for HA/Dec direction sampling."""
         zenith_axis = self.axes.get("zenith_angle")
         if not zenith_axis or "range" not in zenith_axis or len(zenith_axis["range"]) != 2:
             raise ValueError(
-                "RA/Dec direction sampling requires 'zenith_angle' axis with a valid "
+                "HA/Dec direction sampling requires 'zenith_angle' axis with a valid "
                 "two-element 'range' in the axes definition."
             )
         return float(zenith_axis["range"][1])
 
     def _prepare_lookup_table_limits_for_point_interpolation(self):
-        """Prepare lookup arrays for per-point interpolation in RA/Dec grid mode."""
+        """Prepare lookup arrays for per-point interpolation in HA/Dec grid mode."""
         self._limits_lookup.prepare_point_interpolators()
 
     def _generate_target_values(self):
@@ -141,13 +132,9 @@ class ProductionGridEngine:
 
         return target_values
 
-    def _generate_radec_grid_direction_points(self):
+    def _generate_hadec_grid_direction_points(self):
         """Generate direction points from declination lines and hour-angle spacing."""
-        time_of_observation = self._require_time_of_observation()
-        max_zenith = self._get_max_zenith_for_radec_mode()
-        lst_deg = time_of_observation.sidereal_time(
-            "apparent", longitude=self.observing_location.lon
-        ).deg
+        max_zenith = self._get_max_zenith_for_hadec_mode()
 
         direction_points = []
         for declination in np.arange(-90.0, 91.0, 1.0):
@@ -155,25 +142,18 @@ class ProductionGridEngine:
             step_ha = 1.0 / cos_dec if cos_dec > 1e-6 else 360.0
             n_ha = max(1, int(np.ceil(360.0 / step_ha)))
             hour_angles = np.linspace(-180.0, 180.0, n_ha, endpoint=False)
-            ra_values = (lst_deg - hour_angles) % 360.0
-
-            skycoord = SkyCoord(
-                ra=ra_values * u.deg,
-                dec=np.full_like(ra_values, declination) * u.deg,
-                frame="icrs",
+            zenith_values, azimuth_values = self._hadec_to_horizontal(
+                hour_angles * u.deg,
+                np.full_like(hour_angles, declination) * u.deg,
             )
-            altaz = skycoord.transform_to(
-                AltAz(location=self.observing_location, obstime=time_of_observation)
-            )
-
-            zenith_values = (90.0 * u.deg - altaz.alt).to(u.deg).value
-            mask = (zenith_values >= 0.0) & (zenith_values <= max_zenith)
+            zenith_values_deg = zenith_values.to_value(u.deg)
+            mask = (zenith_values_deg >= 0.0) & (zenith_values_deg <= max_zenith)
 
             for idx in np.nonzero(mask)[0]:
                 direction_points.append(
                     {
-                        "zenith_angle": zenith_values[idx] * u.deg,
-                        "azimuth": altaz.az.deg[idx] * u.deg,
+                        "zenith_angle": zenith_values[idx],
+                        "azimuth": azimuth_values[idx],
                     }
                 )
         return direction_points
@@ -220,12 +200,10 @@ class ProductionGridEngine:
             getattr(self._limits_lookup, "lookup_field_units", None),
         )
 
-    def _generate_grid_from_radec_axes(self, include_horizontal_coordinates=False):
-        """Generate grid points from explicit RA/Dec axes definitions."""
-        if self._is_adaptive_radec_density_enabled():
-            return self._generate_adaptive_radec_grid(include_horizontal_coordinates)
-
-        time_of_observation = self._require_time_of_observation()
+    def _generate_grid_from_hadec_axes(self, include_horizontal_coordinates=False):
+        """Generate grid points from explicit HA/Dec axes definitions."""
+        if self._is_adaptive_hadec_density_enabled():
+            return self._generate_adaptive_hadec_grid(include_horizontal_coordinates)
 
         axis_keys = [key for key in self.target_values if key not in ("zenith_angle", "azimuth")]
         value_arrays = [self.target_values[key].value for key in axis_keys]
@@ -239,16 +217,7 @@ class ProductionGridEngine:
                 key: Quantity(combination[i], units[i]) for i, key in enumerate(axis_keys)
             }
 
-            skycoord = SkyCoord(
-                ra=grid_point["ra"].to(u.deg),
-                dec=grid_point["dec"].to(u.deg),
-                frame="icrs",
-            )
-            altaz = skycoord.transform_to(
-                AltAz(location=self.observing_location, obstime=time_of_observation)
-            )
-            zenith = (90.0 * u.deg - altaz.alt).to(u.deg)
-            azimuth = altaz.az.to(u.deg)
+            zenith, azimuth = self._hadec_to_horizontal(grid_point["ha"], grid_point["dec"])
 
             if include_horizontal_coordinates:
                 grid_point["zenith_angle"] = zenith
@@ -263,14 +232,14 @@ class ProductionGridEngine:
 
         return grid_points
 
-    def _generate_grid_radec_mode(self, include_horizontal_coordinates=False):
-        """Generate grid points for RA/Dec mode."""
-        if "ra" in self.axes and "dec" in self.axes:
-            return self._generate_grid_from_radec_axes(
+    def _generate_grid_hadec_mode(self, include_horizontal_coordinates=False):
+        """Generate grid points for HA/Dec mode."""
+        if "ha" in self.axes and "dec" in self.axes:
+            return self._generate_grid_from_hadec_axes(
                 include_horizontal_coordinates=include_horizontal_coordinates
             )
 
-        direction_points = self._generate_radec_grid_direction_points()
+        direction_points = self._generate_hadec_grid_direction_points()
         extra_keys, extra_units, extra_combinations = self._generate_extra_axis_combinations(
             excluded_keys=("zenith_angle", "azimuth")
         )
@@ -342,17 +311,17 @@ class ProductionGridEngine:
         offsets = (np.asarray(azimuth_values_deg) - start_norm) % 360.0
         return offsets <= (span + 1e-12)
 
-    def _is_adaptive_radec_density_enabled(self):
-        """Return whether RA/Dec grid generation should use per-declination adaptive RA bins."""
+    def _is_adaptive_hadec_density_enabled(self):
+        """Return whether HA/Dec grid generation should use per-declination adaptive HA bins."""
         return (
-            self.coordinate_system == "ra_dec"
-            and "ra" in self.axes
+            self.coordinate_system == "ha_dec"
+            and "ha" in self.axes
             and "dec" in self.axes
-            and self.axes["ra"].get("direction_grid_density") is not None
+            and self.axes["ha"].get("direction_grid_density") is not None
         )
 
-    def _compute_visible_radec_strip(self, dec_deg, spacing, lst_deg, time_of_observation):
-        """Compute visible RA, zenith, and azimuth samples for one declination strip."""
+    def _compute_visible_hadec_strip(self, dec_deg, spacing):
+        """Compute visible HA, zenith, and azimuth samples for one declination strip."""
         cos_dec = np.cos(np.deg2rad(dec_deg))
         if cos_dec <= 0.0:
             return None
@@ -362,24 +331,16 @@ class ProductionGridEngine:
         if len(ha_values) == 0:
             ha_values = np.array([0.0])
 
-        ra_values = ((lst_deg - ha_values) % 360.0) * u.deg
-        skycoord = SkyCoord(
-            ra=ra_values.to(u.deg),
-            dec=np.full(len(ra_values), dec_deg) * u.deg,
-            frame="icrs",
+        hour_angles = ha_values * u.deg
+        zenith_values, azimuth_values = self._hadec_to_horizontal(
+            hour_angles,
+            np.full(len(hour_angles), dec_deg) * u.deg,
         )
-        altaz = skycoord.transform_to(
-            AltAz(location=self.observing_location, obstime=time_of_observation)
-        )
+        visible_mask = zenith_values.to_value(u.deg) <= 90.0
 
-        visible_mask = altaz.alt.to_value(u.deg) >= 0.0
+        ha_axis = self.axes.get("ha", {})
 
-        zenith_values = (90.0 * u.deg - altaz.alt).to(u.deg)
-        azimuth_values = altaz.az.to(u.deg)
-
-        ra_axis = self.axes.get("ra", {})
-
-        zenith_range = ra_axis.get("local_zenith_range")
+        zenith_range = ha_axis.get("local_zenith_range")
         if zenith_range is not None:
             zenith_min, zenith_max = sorted(
                 (
@@ -390,7 +351,7 @@ class ProductionGridEngine:
             zenith_values_deg = zenith_values.to_value(u.deg)
             visible_mask &= (zenith_values_deg >= zenith_min) & (zenith_values_deg <= zenith_max)
 
-        azimuth_range = ra_axis.get("local_azimuth_range")
+        azimuth_range = ha_axis.get("local_azimuth_range")
         if azimuth_range is not None:
             azimuth_values_deg = azimuth_values.to_value(u.deg)
             visible_mask &= self._is_in_directed_azimuth_range(
@@ -403,13 +364,13 @@ class ProductionGridEngine:
 
         return (
             dec_deg * u.deg,
-            ra_values[visible_mask],
+            hour_angles[visible_mask],
             zenith_values[visible_mask],
             azimuth_values[visible_mask],
         )
 
-    def _generate_adaptive_radec_grid(self, include_horizontal_coordinates=False):
-        """Generate RA/Dec grid with Hour-Angle stepping adapted per declination strip.
+    def _generate_adaptive_hadec_grid(self, include_horizontal_coordinates=False):
+        """Generate HA/Dec grid with Hour-Angle stepping adapted per declination strip.
 
         Pointings are arranged along declination lines evenly spaced in declination.
         For each strip the telescope pointings are stepped through Hour Angle (equivalent
@@ -425,48 +386,41 @@ class ProductionGridEngine:
         Returns
         -------
         list of dict
-            Grid points with ra, dec and optionally zenith_angle, azimuth.
+            Grid points with ha, dec and optionally zenith_angle, azimuth.
         """
-        time_of_observation = self._require_time_of_observation()
-        density = float(self.axes["ra"]["direction_grid_density"])
+        density = float(self.axes["ha"]["direction_grid_density"])
         spacing = 1.0 / np.sqrt(density)
         dec_min, dec_max = sorted(
             (float(self.axes["dec"]["range"][0]), float(self.axes["dec"]["range"][1]))
         )
         dec_values_deg = np.arange(dec_min, dec_max + 0.5 * spacing, spacing)
 
-        lst_deg = time_of_observation.sidereal_time(
-            "apparent", longitude=self.observing_location.lon
-        ).deg
-
         extra_keys, extra_units, extra_combinations = self._generate_extra_axis_combinations(
-            excluded_keys=("ra", "dec")
+            excluded_keys=("ha", "dec")
         )
 
         grid_points = []
         for dec_deg in dec_values_deg:
-            strip = self._compute_visible_radec_strip(
+            strip = self._compute_visible_hadec_strip(
                 dec_deg=dec_deg,
                 spacing=spacing,
-                lst_deg=lst_deg,
-                time_of_observation=time_of_observation,
             )
             if strip is None:
                 continue
-            dec, visible_ra_values, visible_zenith_values, visible_azimuth_values = strip
+            dec, visible_ha_values, visible_zenith_values, visible_azimuth_values = strip
 
             for extra_combination in extra_combinations:
                 point_base = {
                     key: Quantity(extra_combination[i], extra_units[i])
                     for i, key in enumerate(extra_keys)
                 }
-                for ra, zenith, azimuth in zip(
-                    visible_ra_values,
+                for ha, zenith, azimuth in zip(
+                    visible_ha_values,
                     visible_zenith_values,
                     visible_azimuth_values,
                     strict=True,
                 ):
-                    point = {**point_base, "ra": ra, "dec": dec}
+                    point = {**point_base, "ha": ha, "dec": dec}
 
                     if include_horizontal_coordinates:
                         point["zenith_angle"] = zenith
@@ -571,14 +525,33 @@ class ProductionGridEngine:
         return grid_points
 
     def generate_simulation_grid(self):
-        """Generate observation grid with CORSIKA limits. Always includes Alt/Az for backends."""
-        if self.coordinate_system == "ra_dec":
-            return self._generate_grid_radec_mode(include_horizontal_coordinates=True)
-        return self._generate_horizontal_grid()
+        """Generate a grid containing both HA/Dec and horizontal coordinates."""
+        if self.coordinate_system == "ha_dec":
+            return self._generate_grid_hadec_mode(include_horizontal_coordinates=True)
+        return self.convert_coordinates(
+            self._generate_horizontal_grid(), keep_horizontal_coordinates=True
+        )
 
-    def convert_altaz_to_radec(self, alt, az):
+    def _hadec_to_horizontal(self, hour_angle, declination):
+        """Convert local HA/Dec coordinates to zenith and azimuth angles."""
+        ha = u.Quantity(hour_angle).to_value(u.rad)
+        dec = u.Quantity(declination).to_value(u.rad)
+        latitude = self.observing_location.lat.to_value(u.rad)
+
+        altitude = np.arcsin(
+            np.sin(latitude) * np.sin(dec) + np.cos(latitude) * np.cos(dec) * np.cos(ha)
+        )
+        azimuth = np.arctan2(
+            -np.sin(ha) * np.cos(dec),
+            np.sin(dec) * np.cos(latitude) - np.cos(dec) * np.sin(latitude) * np.cos(ha),
+        )
+        return (90.0 * u.deg - altitude * u.rad).to(u.deg), (azimuth * u.rad).to(u.deg) % (
+            360.0 * u.deg
+        )
+
+    def convert_altaz_to_hadec(self, alt, az):
         """
-        Convert Altitude/Azimuth (AltAz) coordinates to RA/Dec.
+        Convert Altitude/Azimuth (AltAz) coordinates to HA/Dec.
 
         Parameters
         ----------
@@ -587,26 +560,26 @@ class ProductionGridEngine:
         az : float
             Azimuth angle in degrees.
 
-        Returns
-        -------
-        SkyCoord
-            SkyCoord object containing the RA/Dec coordinates.
+        Returns an object exposing ``ha`` and ``dec`` angle attributes.
         """
-        if self.time_of_observation is None:
-            raise ValueError("Conversion to RA/Dec requires time_of_observation to be set.")
+        altitude = u.Quantity(alt).to_value(u.rad)
+        azimuth = u.Quantity(az).to_value(u.rad)
+        latitude = self.observing_location.lat.to_value(u.rad)
 
-        aa = AltAz(
-            alt=alt.to(u.rad),
-            az=az.to(u.rad),
-            location=self.observing_location,
-            obstime=self.time_of_observation,
+        declination = np.arcsin(
+            np.sin(altitude) * np.sin(latitude)
+            + np.cos(altitude) * np.cos(latitude) * np.cos(azimuth)
         )
-        sky_coord = SkyCoord(aa)
-        return sky_coord.icrs  # Return RA/Dec in ICRS frame
+        hour_angle = np.arctan2(
+            -np.sin(azimuth) * np.cos(altitude),
+            np.sin(altitude) * np.cos(latitude)
+            - np.cos(altitude) * np.sin(latitude) * np.cos(azimuth),
+        )
+        return SimpleNamespace(ha=hour_angle * u.rad, dec=declination * u.rad)
 
     def convert_coordinates(self, grid_points, keep_horizontal_coordinates=False):
         """
-        Convert the grid points RA/Dec coordinates if necessary.
+        Convert the grid points HA/Dec coordinates if necessary.
 
         Parameters
         ----------
@@ -616,17 +589,15 @@ class ProductionGridEngine:
         Returns
         -------
         list of dict
-            The grid points with converted RA/Dec coordinates.
+            The grid points with converted HA/Dec coordinates.
         """
-        if self.coordinate_system == "ra_dec":
-            for point in grid_points:
-                if "zenith_angle" in point and "azimuth" in point:
-                    alt = (90.0 * u.deg) - point["zenith_angle"]
-                    az = point["azimuth"]
-                    radec = self.convert_altaz_to_radec(alt, az)
-                    if not keep_horizontal_coordinates:
-                        point.pop("zenith_angle")
-                        point.pop("azimuth")
-                    point["ra"] = radec.ra.deg * u.deg
-                    point["dec"] = radec.dec.deg * u.deg
+        for point in grid_points:
+            if "zenith_angle" in point and "azimuth" in point:
+                alt = (90.0 * u.deg) - point["zenith_angle"]
+                hadec = self.convert_altaz_to_hadec(alt, point["azimuth"])
+                if not keep_horizontal_coordinates:
+                    point.pop("zenith_angle")
+                    point.pop("azimuth")
+                point["ha"] = hadec.ha.to(u.deg)
+                point["dec"] = hadec.dec.to(u.deg)
         return grid_points

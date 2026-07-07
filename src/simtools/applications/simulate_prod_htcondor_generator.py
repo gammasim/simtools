@@ -53,6 +53,9 @@ simulation_output (str, optional)
     Base directory for simulation output files passed through as ``grid_output_path``.
 job_grid_file (str, required)
     Path to the pre-generated executable job grid file.
+    Quantity values are normalized to the canonical grid units before being
+    written to the HTCondor parameter file; the generated shell script appends
+    the units required by ``simtools-simulate-prod``.
 run_number_offset (int, optional)
     Offset passed to ``simtools-simulate-prod`` and added to each grid
     ``run_number`` at execution time. Keep this at ``0`` for grids generated

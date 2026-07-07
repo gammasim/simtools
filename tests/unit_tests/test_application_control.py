@@ -835,6 +835,8 @@ def test_apply_job_grid_override_updates_args_and_reloads_config(mock_config, tm
                 "primary": "gamma",
                 "azimuth_angle": 45 * u.deg,
                 "zenith_angle": 20 * u.deg,
+                "ha": 123 * u.deg,
+                "dec": -45 * u.deg,
                 "energy_min": 30 * u.GeV,
                 "energy_max": 10 * u.TeV,
                 "cores_per_shower": 10,
