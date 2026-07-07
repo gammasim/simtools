@@ -23,5 +23,5 @@ The complete schema can be exported from the simtools package with
 
 ```console
 simtools-export-sim-telarray-metadata-schema \
-   --output sim_telarray_metadata_schema.json
+   --output_file sim_telarray_metadata_schema.json
 ```
