@@ -1,7 +1,7 @@
 # Metadata written to sim_telarray output
 
 simtools writes metadata including run information, software version, and model parameters into the
-sim_telarray output file. The metadata is written as set of key-value pairs and consist of
+sim_telarray output file. The metadata is written as a set of key-value pairs and consists of
 a general set of values plus one set per array element.
 
 To read the metadata from a sim_telarray output file, do e.g.,
@@ -15,8 +15,9 @@ data = simtel_io_metadata.read_sim_telarray_metadata(
 pprint.pprint(data)
 ```
 
-Metadata is validated against the schema [sim_telarray_metadata.metaschema.yml](src/simtools/schemas/sim_telarray_metadata.metaschema.yml)
-plus the model-parameter schemas. The schema is used to validate the emitted metadata and to
+Metadata is validated against the registry metaschema
+[sim_telarray_meta_parameter.metaschema.yml](https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/sim_telarray_meta_parameter.metaschema.yml)
+plus the model-parameter schemas. The registry is used to validate the emitted metadata and to
 provide a registry of the metadata keys, their expected scope and value shape.
 
 The complete schema can be exported from the simtools package with
