@@ -569,7 +569,8 @@ def _get_constant_data_value(histograms, name, abs_tol=0.01):
 
     minimum, maximum = data_ranges[name]
     if np.isclose(minimum, maximum, rtol=0, atol=abs_tol):
-        return float(minimum) if minimum > abs_tol else 0.0
+        avg_value = (minimum + maximum) / 2.0
+        return float(avg_value) if avg_value > abs_tol else 0.0
     return None
 
 
