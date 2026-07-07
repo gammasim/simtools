@@ -514,7 +514,7 @@ def get_schema_file_from_file_metadata(file_name, observatory="cta"):
             metadata = Table.read(file_name).meta
         else:
             metadata = ascii_handler.collect_data_from_file(file_name=file_name, yaml_document=0)
-    except (FileNotFoundError, OSError):
+    except OSError:
         return None
 
     return _extract_schema_url_from_metadata_dict(metadata, observatory)

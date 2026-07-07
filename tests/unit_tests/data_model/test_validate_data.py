@@ -2,6 +2,7 @@
 
 import logging
 import sys
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -1201,7 +1202,6 @@ def test_validate_data_files_reads_schema_from_ecsv_metadata(tmp_test_directory,
     def _validate_and_transform(self, is_model_parameter=False, lists_as_strings=False):
         captured["schema_file"] = self.schema_file_name
         captured["data_file"] = self.data_file_name
-        return
 
     monkeypatch.setattr(
         validate_data.DataValidator, "validate_and_transform", _validate_and_transform
@@ -1211,6 +1211,30 @@ def test_validate_data_files_reads_schema_from_ecsv_metadata(tmp_test_directory,
 
     assert captured["schema_file"] == "schema-from-ecsv"
     assert captured["data_file"] == test_file
+
+
+def test_validate_data_files_falls_back_to_model_parameter_schema_when_metadata_missing(
+    monkeypatch,
+):
+    """Test validate_data_files falls back to model-parameter schema for JSON data files."""
+    captured = {}
+
+    def _validate_and_transform(self, is_model_parameter=False, lists_as_strings=False):
+        captured["schema_file"] = self.schema_file_name
+        captured["data_file"] = self.data_file_name
+        return
+
+    monkeypatch.setattr(
+        validate_data.DataValidator, "validate_and_transform", _validate_and_transform
+    )
+
+    validate_data.DataValidator.validate_data_files(
+        file_name=num_gains_test_file,
+        is_model_parameter=False,
+    )
+
+    assert captured["schema_file"] == MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
+    assert captured["data_file"] == Path(num_gains_test_file)
 
 
 def test_validate_data_files_no_input():
