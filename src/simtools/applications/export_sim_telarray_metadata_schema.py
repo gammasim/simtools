@@ -8,8 +8,8 @@ model-parameter schemas.
 
 Command line arguments
 ----------------------
-output_file (str, optional)
-    Output file name. If omitted, write to stdout.
+output_file (str)
+    Output file name.
 source_type (str, optional)
     Export all metadata, only generated metadata, or only model-parameter-derived metadata.
 schema_version (str, optional)
@@ -34,7 +34,7 @@ def _add_arguments(parser):
         "--output_file",
         help="Output file name",
         type=str,
-        required=True,
+        required=False,
     )
     parser.add_argument(
         "--source_type",
@@ -61,7 +61,7 @@ def main():
         source_type=app_context.args["source_type"],
     )
 
-    output_file = app_context.io_handler.get_output_file(app_context.args["output_file"])
+    output_file = app_context.io_handler.get_output_file(app_context.args.get("output_file"))
     app_context.logger.info(f"Writing sim_telarray metadata schema to {output_file}")
     ascii_handler.write_data_to_file(registry, output_file, sort_keys=False)
 
