@@ -26,7 +26,6 @@ from simtools.production_configuration.corsika_limits_lookup import (
 )
 from simtools.production_configuration.job_grid_summary import (
     build_job_grid_summary,
-    format_quantity_summary,
 )
 from simtools.production_configuration.observation_grid import ProductionGridEngine
 from simtools.utils.general import ensure_list
@@ -87,6 +86,21 @@ _LOCAL_CONSTRAINT_ARGUMENTS = {
     "local_azimuth_range": "deg",
 }
 _DIRECTION_GRID_DENSITY_UNIT = 1 / u.deg**2
+_SUMMARY_LOG_FIELDS = (
+    ("Minimum energy used by jobs %s.", "energy_min", None),
+    ("Maximum energy used by jobs %s.", "energy_max", None),
+    ("Minimum energy from configuration %s.", "configured_energy_min", None),
+    ("Maximum energy from configuration %s.", "configured_energy_max", None),
+    ("Minimum energy from lookup tables %s.", "energy_min_lookup_limit", u.GeV),
+    ("Core scatter max used by jobs %s.", "core_scatter_max", None),
+    ("Core scatter max from configuration %s.", "configured_core_scatter_max", None),
+    ("Core scatter max from lookup tables %s.", "lookup_core_scatter_max", None),
+    ("Minimum view cone used by jobs %s.", "view_cone_min", None),
+    ("Maximum view cone used by jobs %s.", "view_cone_max", None),
+    ("Minimum view cone from configuration %s.", "configured_view_cone_min", None),
+    ("Maximum view cone from configuration %s.", "configured_view_cone_max", None),
+    ("Maximum view cone from lookup tables %s.", "lookup_view_cone_max", None),
+)
 
 
 def _parse_axis_range_tokens(range_tokens):
@@ -989,11 +1003,6 @@ def _log_energy_scaling_configuration(energy_max_scaling):
     )
 
 
-def _format_quantity_summary(quantity_values):
-    """Format quantity min/max as a single value or range with explicit unit."""
-    return format_quantity_summary(quantity_values)
-
-
 def _format_quantity_value_range(rows, key, summary_unit=None):
     """Format one quantity field as either a fixed value or range across jobs."""
     values = [row[key] for row in rows if row.get(key) is not None]
@@ -1023,58 +1032,11 @@ def _log_generated_row_summary(rows):
         "Generated %d simulation rows.",
         summary["simulation_rows"],
     )
-    logger.info(
-        "Minimum energy used by jobs %s.",
-        _format_quantity_value_range(rows, "energy_min"),
-    )
-    logger.info(
-        "Maximum energy used by jobs %s.",
-        _format_quantity_value_range(rows, "energy_max"),
-    )
-    logger.info(
-        "Minimum energy from configuration %s.",
-        _format_quantity_value_range(rows, "configured_energy_min"),
-    )
-    logger.info(
-        "Maximum energy from configuration %s.",
-        _format_quantity_value_range(rows, "configured_energy_max"),
-    )
-    logger.info(
-        "Minimum energy from lookup tables %s.",
-        _format_quantity_value_range(rows, "energy_min_lookup_limit", summary_unit=u.GeV),
-    )
-    logger.info(
-        "Core scatter max used by jobs %s.",
-        _format_quantity_value_range(rows, "core_scatter_max"),
-    )
-    logger.info(
-        "Core scatter max from configuration %s.",
-        _format_quantity_value_range(rows, "configured_core_scatter_max"),
-    )
-    logger.info(
-        "Core scatter max from lookup tables %s.",
-        _format_quantity_value_range(rows, "lookup_core_scatter_max"),
-    )
-    logger.info(
-        "Minimum view cone used by jobs %s.",
-        _format_quantity_value_range(rows, "view_cone_min"),
-    )
-    logger.info(
-        "Maximum view cone used by jobs %s.",
-        _format_quantity_value_range(rows, "view_cone_max"),
-    )
-    logger.info(
-        "Minimum view cone from configuration %s.",
-        _format_quantity_value_range(rows, "configured_view_cone_min"),
-    )
-    logger.info(
-        "Maximum view cone from configuration %s.",
-        _format_quantity_value_range(rows, "configured_view_cone_max"),
-    )
-    logger.info(
-        "Maximum view cone from lookup tables %s.",
-        _format_quantity_value_range(rows, "lookup_view_cone_max"),
-    )
+    for log_message, field_name, summary_unit in _SUMMARY_LOG_FIELDS:
+        logger.info(
+            log_message,
+            _format_quantity_value_range(rows, field_name, summary_unit=summary_unit),
+        )
     logger.info(
         "Showers per job in generated job grid: minimum %d, maximum %d (configured maximum %d).",
         summary["showers_per_run_min"],
@@ -1114,36 +1076,38 @@ def _generate_observation_grids_per_layout(
         resolved_layout_name = resolved_layout_names[model_version]
         nsb_rate = nsb_rates_per_model_version[model_version]
         cache_key = (resolved_layout_name, nsb_rate, use_shared_axes_definition)
-        if cache_key in observation_grid_cache:
-            observation_grids_per_model_version[model_version] = observation_grid_cache[cache_key]
-            continue
-
-        if use_shared_axes_definition:
-            generated_grid = build_production_grid_engine(
-                args_dict,
-                array_layout_name=resolved_layout_name,
-                model_version=model_version,
-            ).generate_simulation_grid()
-        else:
-            corsika_limits = None
-            if corsika_limits_path is not None:
-                corsika_limits = CorsikaLimitsLookup(
-                    corsika_limits_path,
+        generated_grid = observation_grid_cache.get(cache_key)
+        if generated_grid is None:
+            if use_shared_axes_definition:
+                generated_grid = build_production_grid_engine(
+                    args_dict,
                     array_layout_name=resolved_layout_name,
+                    model_version=model_version,
+                ).generate_simulation_grid()
+            else:
+                corsika_limits = (
+                    CorsikaLimitsLookup(
+                        corsika_limits_path,
+                        array_layout_name=resolved_layout_name,
+                    )
+                    if corsika_limits_path is not None
+                    else None
                 )
-            generated_grid = _generate_observation_points_from_axes(
-                azimuth_values=grid_axes["azimuth_angle"],
-                zenith_values=grid_axes["zenith_angle"],
-                corsika_limits=corsika_limits,
-                nsb_rate=nsb_rate,
-            )
-            generated_grid = ProductionGridEngine(
-                axes={},
-                coordinate_system="horizontal",
-                observing_location=build_observing_location(args_dict["site"], model_version),
-            ).convert_coordinates(generated_grid, keep_horizontal_coordinates=True)
+                generated_grid = ProductionGridEngine(
+                    axes={},
+                    coordinate_system="horizontal",
+                    observing_location=build_observing_location(args_dict["site"], model_version),
+                ).convert_coordinates(
+                    _generate_observation_points_from_axes(
+                        azimuth_values=grid_axes["azimuth_angle"],
+                        zenith_values=grid_axes["zenith_angle"],
+                        corsika_limits=corsika_limits,
+                        nsb_rate=nsb_rate,
+                    ),
+                    keep_horizontal_coordinates=True,
+                )
+            observation_grid_cache[cache_key] = generated_grid
 
-        observation_grid_cache[cache_key] = generated_grid
         observation_grids_per_model_version[model_version] = generated_grid
 
     return observation_grids_per_model_version, resolved_layout_names
