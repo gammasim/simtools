@@ -27,7 +27,7 @@ Support modules for running sim_telarray.
 (simtel-validate-metadata-1)=
 
 ```{eval-rst}
-.. automodule:: simtel_validate_metadata
+.. automodule:: simtel.simtel_validate_metadata
    :members:
 ```
 
