@@ -831,6 +831,8 @@ def test_get_constant_data_value():
         {
             "data_ranges": {
                 "angular_distance": (1.0, 1.0 + 1.0e-13),
+                "angular_distance_near_zero": (0.0, 1.0e-12),
+                "angular_distance_small": (0.009, 0.018),
                 "core_distance": (1.0, 2.0),
             }
         },
@@ -839,6 +841,12 @@ def test_get_constant_data_value():
     assert derive_corsika_limits._get_constant_data_value(
         histograms, "angular_distance"
     ) == pytest.approx(1.0)
+    assert derive_corsika_limits._get_constant_data_value(
+        histograms, "angular_distance_near_zero"
+    ) == pytest.approx(0.0)
+    assert derive_corsika_limits._get_constant_data_value(
+        histograms, "angular_distance_small"
+    ) == pytest.approx(0.0135)
     assert derive_corsika_limits._get_constant_data_value(histograms, "core_distance") is None
     assert derive_corsika_limits._get_constant_data_value(histograms, "missing") is None
 
