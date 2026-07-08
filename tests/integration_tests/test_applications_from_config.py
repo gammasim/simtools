@@ -38,7 +38,7 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize("config", test_parameters)
 
 
-def test_applications_from_config(tmp_test_directory, config, request):
+def test_applications_from_config(tmp_test_directory, config, request, simtools_root_path):
     """
     Test all applications from config files found in the config directory.
 
@@ -88,7 +88,7 @@ def test_applications_from_config(tmp_test_directory, config, request):
         capture_output=True,
         text=True,
         env=env,
-        cwd=request.config.rootpath,
+        cwd=simtools_root_path,
     )
     msg = f"Command {cmd!r} failed. stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     if result.returncode != 0 and config.get("xfail_network_error"):

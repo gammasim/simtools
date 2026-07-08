@@ -297,7 +297,7 @@ def _prepare_test_options(config, output_path, model_version=None, test_resource
     if model_version and "model_version" in config:
         config.update({"model_version": model_version})
 
-    for key in ["output_path", "pack_for_grid_register"]:
+    for key in ["output_path", "grid_output_path"]:
         if key in config:
             config[key] = str(Path(output_path).joinpath(config[key]))
 

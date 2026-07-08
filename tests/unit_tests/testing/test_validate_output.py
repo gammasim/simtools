@@ -514,24 +514,20 @@ def test_validate_application_output_with_file_type(
 
 
 def test_compare_simtel_cfg_files(tmp_test_directory):
-    file1 = Path(
-        f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg"
-    )
-    file2 = Path(
-        f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/6.0.2/CTA-North-LSTN-01_test.cfg"
-    )
+    file1 = Path(f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/6.0.2/CTAO-LSTN-01.cfg")
+    file2 = Path(f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/6.0.2/CTAO-LSTN-01.cfg")
 
     assert validate_output._compare_simtel_cfg_files(file1, file2)
 
     with open(file1) as f1:
         lines1 = f1.readlines()
 
-    # additional line in file
+    # additional metadata line should be ignored here
     file3 = tmp_test_directory / "file3.cfg"
     with open(file3, "a") as f3:
         f3.write("".join(lines1))
-        f3.write("Additional line\n")
-    assert not validate_output._compare_simtel_cfg_files(file1, file3)
+        f3.write("metaparam telescope set simtools_version = changed\n")
+    assert validate_output._compare_simtel_cfg_files(file1, file3)
 
     # change of values
     file4 = tmp_test_directory / "file4.cfg"
@@ -539,9 +535,19 @@ def test_compare_simtel_cfg_files(tmp_test_directory):
         f3.write("".join(lines1).replace("1", "2"))
     assert not validate_output._compare_simtel_cfg_files(file1, file4)
 
+    # additional control line should still fail
+    file5 = tmp_test_directory / "file5.cfg"
+    with open(file5, "a") as f5:
+        f5.write("".join(lines1))
+        f5.write("# include <Extra.cfg>\n")
+    assert not validate_output._compare_simtel_cfg_files(file1, file5)
+
 
 def test_validate_simtel_cfg_files(mocker, test_path):
     """Test validation of simtel cfg files."""
+    mock_run_number = mocker.patch(
+        "simtools.testing.validate_output.file_info.get_corsika_run_number", return_value=7
+    )
     mock_compare = mocker.patch(
         "simtools.testing.validate_output._compare_simtel_cfg_files", return_value=True
     )
@@ -550,12 +556,16 @@ def test_validate_simtel_cfg_files(mocker, test_path):
             "output_path": PATH_TO_OUTPUT,
             "model_version": "3.4.5",
             "label": "label",
+            "run_number": 42,
+            "run_number_offset": 1,
+            "corsika_file": test_path,
         },
         "integration_tests": [{"test_simtel_cfg_files": test_path}],
     }
     validate_output._validate_simtel_cfg_files(config, test_path)
 
-    mock_compare.assert_called()
+    mock_run_number.assert_called_once_with(test_path)
+    assert mock_compare.call_args.args[1].parent == Path(PATH_TO_OUTPUT) / "model/run000007/3.4.5"
 
 
 def test_compare_value_from_parameter_dict():

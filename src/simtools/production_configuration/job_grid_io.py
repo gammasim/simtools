@@ -1,140 +1,180 @@
 """Read and write executable job grids for production preparation."""
 
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
-from simtools.constants import SCHEMA_PATH
-from simtools.io import ascii_handler
+from simtools.constants import SCHEMA_PATH, SCHEMA_URL
+from simtools.data_model import validate_data
+from simtools.io.ascii_handler import collect_data_from_file
 from simtools.production_configuration.job_grid_summary import build_job_grid_summary
+from simtools.utils.value_conversion import get_value_as_quantity, get_value_in_unit
 
 logger = logging.getLogger(__name__)
 
 _ECSV_SUFFIX = ".ecsv"
 _ECSV_FORMAT = "ascii.ecsv"
-_JOB_GRID_SCHEMA_FILE = SCHEMA_PATH / "job_grid_density.schema.yml"
-
-
-def _load_job_grid_schema_columns():
-    """Load job-grid column definitions indexed by column name."""
-    schema = ascii_handler.collect_data_from_file(_JOB_GRID_SCHEMA_FILE)
-    return {column["name"]: column for column in schema["data"][0]["table_columns"]}
-
-
-def _schema_type_to_dtype(schema_type):
-    """Convert a job-grid schema type to an Astropy-compatible dtype."""
-    if schema_type == "string":
-        return str
-    try:
-        return np.dtype(schema_type)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(f"Unsupported job-grid schema type: {schema_type}") from exc
-
-
-_JOB_GRID_SCHEMA_COLUMNS = _load_job_grid_schema_columns()
-JOB_GRID_COLUMNS = [
-    name for name, column in _JOB_GRID_SCHEMA_COLUMNS.items() if column.get("required")
-]
-
-_QUANTITY_FIELDS = {
-    "azimuth_angle": ("azimuth_angle_value", "azimuth_angle_unit"),
-    "zenith_angle": ("zenith_angle_value", "zenith_angle_unit"),
-    "energy_min": ("energy_min_value", "energy_min_unit"),
-    "energy_max": ("energy_max_value", "energy_max_unit"),
-    "core_scatter_max": ("core_scatter_max_value", "core_scatter_max_unit"),
-    "view_cone_min": ("view_cone_min_value", "view_cone_min_unit"),
-    "view_cone_max": ("view_cone_max_value", "view_cone_max_unit"),
-}
-JOB_GRID_QUANTITY_FIELDS = dict(_QUANTITY_FIELDS)
-
-_OPTIONAL_ANGLE_FIELDS = ("ra", "dec")
+_JOB_GRID_SCHEMA_FILE = "job_grid_density.schema.yml"
+_JOB_GRID_SCHEMA_URL = SCHEMA_URL + "/" + _JOB_GRID_SCHEMA_FILE
 _OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label", "telescope")
 
 
-def _serialize_quantity(value):
-    """Serialize a Quantity to value/unit columns."""
-    return float(value.value), str(value.unit)
+@dataclass(frozen=True)
+class JobGridSchema:
+    """Runtime representation of the job-grid YAML schema."""
+
+    version: str
+    columns: tuple[str, ...]
+    column_units: dict[str, u.Unit]
+    column_dtypes: dict[str, object]
 
 
-def _deserialize_quantity(value, unit):
-    """Deserialize value/unit columns to a Quantity."""
-    return float(value) * u.Unit(unit)
+def _load_job_grid_schema():
+    """Load the job-grid format definition from its YAML schema."""
+    schema = collect_data_from_file(SCHEMA_PATH / _JOB_GRID_SCHEMA_FILE)
+    table_definition = next(item for item in schema["data"] if item["type"] == "data_table")
+    column_definitions = table_definition["table_columns"]
+    column_units = {
+        column["name"]: u.Unit(column["unit"])
+        for column in column_definitions
+        if column.get("unit")
+    }
+    return JobGridSchema(
+        version=schema["schema_version"],
+        columns=tuple(column["name"] for column in column_definitions),
+        column_units=column_units,
+        column_dtypes={
+            column["name"]: str if column["type"] == "string" else np.dtype(column["type"])
+            for column in column_definitions
+        },
+    )
+
+
+JOB_GRID_SCHEMA = _load_job_grid_schema()
+JOB_GRID_COLUMNS = [name for name in JOB_GRID_SCHEMA.columns if name not in _OPTIONAL_STRING_FIELDS]
+
+
+def _cast_scalar(value, dtype):
+    """Cast a scalar using its schema dtype and return a Python value."""
+    if dtype is str:
+        return str(value)
+    return dtype.type(value).item()
+
+
+def _get_job_row_value(job_row, name):
+    """Return one serialized field value, validating required schema entries."""
+    if name not in job_row:
+        if name in _OPTIONAL_STRING_FIELDS:
+            return ""
+        raise KeyError(name)
+
+    value = job_row[name]
+    if value is None:
+        if name in _OPTIONAL_STRING_FIELDS:
+            return ""
+        raise TypeError(f"Missing required value for field '{name}'.")
+    return value
+
+
+def _serialize_field_value(name, value):
+    """Serialize one field value according to the job-grid schema."""
+    if name in _OPTIONAL_STRING_FIELDS:
+        return str(value)
+    if name in JOB_GRID_SCHEMA.column_units:
+        return float(get_value_in_unit(value, JOB_GRID_SCHEMA.column_units[name]))
+    return _cast_scalar(value, JOB_GRID_SCHEMA.column_dtypes[name])
 
 
 def _serialize_job_row(job_row):
     """Serialize one job row to the on-disk schema."""
-    serialized_row = {
-        "primary": job_row["primary"],
-        "cores_per_shower": int(job_row["cores_per_shower"]),
-        "showers_per_run": int(job_row["showers_per_run"]),
-        "nsb_rate": float(job_row["nsb_rate"]),
-        "model_version": job_row["model_version"],
-        "array_layout_name": job_row["array_layout_name"],
-        "corsika_le_interaction": job_row["corsika_le_interaction"],
-        "corsika_he_interaction": job_row["corsika_he_interaction"],
-        "run_number": int(job_row["run_number"]),
+    return {
+        name: _serialize_field_value(name, _get_job_row_value(job_row, name))
+        for name in JOB_GRID_SCHEMA.columns
     }
 
-    for quantity_name, (value_key, unit_key) in _QUANTITY_FIELDS.items():
-        serialized_row[value_key], serialized_row[unit_key] = _serialize_quantity(
-            job_row[quantity_name]
-        )
 
-    for angle_name in _OPTIONAL_ANGLE_FIELDS:
-        angle_value = job_row.get(angle_name)
-        if angle_value is None:
-            continue
-        if isinstance(angle_value, u.Quantity):
-            serialized_row[angle_name] = float(angle_value.to_value(u.deg))
-        else:
-            serialized_row[angle_name] = float(angle_value)
-
-    for field in _OPTIONAL_STRING_FIELDS:
-        if job_row.get(field) is not None:
-            serialized_row[field] = str(job_row[field])
-
-    return serialized_row
-
-
-def _deserialize_job_row(serialized_row):
+def _deserialize_job_row(serialized_row, column_units=None):
     """Deserialize one stored row to the in-memory job-row schema."""
-    job_row = {
-        "primary": serialized_row["primary"],
-        "cores_per_shower": int(serialized_row["cores_per_shower"]),
-        "showers_per_run": int(serialized_row["showers_per_run"]),
-        "nsb_rate": float(serialized_row.get("nsb_rate", 1.0)),
-        "model_version": serialized_row["model_version"],
-        "array_layout_name": serialized_row["array_layout_name"],
-        "corsika_le_interaction": serialized_row["corsika_le_interaction"],
-        "corsika_he_interaction": serialized_row["corsika_he_interaction"],
-        "run_number": int(serialized_row["run_number"]),
-    }
-
-    for quantity_name, (value_key, unit_key) in _QUANTITY_FIELDS.items():
-        job_row[quantity_name] = _deserialize_quantity(
-            serialized_row[value_key],
-            serialized_row[unit_key],
-        )
-
-    for angle_name in _OPTIONAL_ANGLE_FIELDS:
-        if angle_name not in serialized_row:
+    column_units = column_units or {}
+    job_row = {}
+    for name in JOB_GRID_SCHEMA.columns:
+        if name not in serialized_row:
             continue
-        angle_value = serialized_row[angle_name]
-        if np.ma.is_masked(angle_value) or angle_value is None:
+        value = serialized_row[name]
+        if np.ma.is_masked(value) or value is None:
             continue
-        job_row[angle_name] = float(angle_value) * u.deg
-
-    for field in _OPTIONAL_STRING_FIELDS:
-        if field not in serialized_row:
+        if JOB_GRID_SCHEMA.column_dtypes[name] is str and not str(value).strip():
             continue
-        value = serialized_row[field]
-        if not np.ma.is_masked(value) and value is not None and str(value).strip():
-            job_row[field] = str(value)
-
+        if name in JOB_GRID_SCHEMA.column_units:
+            job_row[name] = get_value_as_quantity(
+                float(value),
+                column_units.get(name) or JOB_GRID_SCHEMA.column_units[name],
+            ).to(JOB_GRID_SCHEMA.column_units[name])
+        else:
+            job_row[name] = _cast_scalar(value, JOB_GRID_SCHEMA.column_dtypes[name])
     return job_row
+
+
+def _add_job_grid_schema_metadata(metadata):
+    """Add schema reference metadata used for validation."""
+    metadata.setdefault("cta", {}).setdefault("product", {}).setdefault("data", {}).setdefault(
+        "model", {}
+    )["url"] = _JOB_GRID_SCHEMA_URL
+    return metadata
+
+
+def _normalize_job_grid_table_dtypes(table):
+    """Restore schema-declared integer dtypes after ECSV deserialization."""
+    normalized_table = table.copy(copy_data=True)
+    for column_name, expected_dtype in JOB_GRID_SCHEMA.column_dtypes.items():
+        if column_name not in normalized_table.colnames:
+            continue
+        if expected_dtype is str or not np.issubdtype(expected_dtype, np.integer):
+            continue
+
+        column = normalized_table[column_name]
+        if np.issubdtype(column.dtype, np.integer):
+            continue
+        if not np.issubdtype(column.dtype, np.floating):
+            continue
+
+        values = np.asarray(column.data)
+        if not np.all(np.isfinite(values)):
+            continue
+        if not np.allclose(values, np.round(values), rtol=0.0, atol=0.0):
+            continue
+
+        normalized_table[column_name] = np.round(values).astype(expected_dtype, copy=False)
+    return normalized_table
+
+
+def _validate_job_grid_table(table):
+    """Validate a job-grid table against the job-grid schema."""
+    if len(table) == 0:
+        return table
+    table = _normalize_job_grid_table_dtypes(table)
+    return validate_data.DataValidator(
+        schema_file=SCHEMA_PATH / _JOB_GRID_SCHEMA_FILE,
+        data_table=table.copy(copy_data=True),
+    ).validate_and_transform()
+
+
+def _build_output_table(output_rows, output_columns, metadata=None):
+    """Build an Astropy table for serialized output rows."""
+    output_table = Table(
+        rows=[tuple(row[column] for column in output_columns) for row in output_rows],
+        names=output_columns,
+        dtype=[JOB_GRID_SCHEMA.column_dtypes[column] for column in output_columns],
+    )
+    for column_name, unit in JOB_GRID_SCHEMA.column_units.items():
+        if column_name in output_table.colnames:
+            output_table[column_name].unit = unit
+    output_table.meta = metadata or {}
+    return output_table
 
 
 def serialize_job_grid(job_rows, output_file, metadata=None):
@@ -153,33 +193,19 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     output_path = Path(output_file)
     serialized_rows = [_serialize_job_row(job_row) for job_row in job_rows]
     metadata = metadata.copy() if metadata else {}
+    _add_job_grid_schema_metadata(metadata)
+    metadata["job_grid_format_version"] = JOB_GRID_SCHEMA.version
     metadata["job_grid_summary"] = build_job_grid_summary(job_rows)
 
     if output_path.suffix.lower() != _ECSV_SUFFIX:
         raise ValueError("Job grid output file must use the '.ecsv' extension.")
 
-    optional_columns = [
-        angle_name
-        for angle_name in _OPTIONAL_ANGLE_FIELDS
-        if any(angle_name in row for row in serialized_rows)
+    output_columns = JOB_GRID_SCHEMA.columns
+    output_rows = [
+        {column: row.get(column) for column in output_columns} for row in serialized_rows
     ]
-    optional_string_columns = [
-        field for field in _OPTIONAL_STRING_FIELDS if any(field in row for row in serialized_rows)
-    ]
-    output_columns = [*JOB_GRID_COLUMNS, *optional_columns, *optional_string_columns]
-    if serialized_rows:
-        output_table = Table(
-            {column: [row.get(column) for row in serialized_rows] for column in output_columns}
-        )
-    else:
-        output_table = Table(
-            names=output_columns,
-            dtype=[
-                _schema_type_to_dtype(_JOB_GRID_SCHEMA_COLUMNS[column]["type"])
-                for column in output_columns
-            ],
-        )
-    output_table.meta = metadata
+    output_table = _build_output_table(output_rows, output_columns, metadata)
+    output_table = _validate_job_grid_table(output_table)
     logger.info(f"Writing job grid with {len(job_rows)} rows to '{output_path}'.")
     output_table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
 
@@ -203,9 +229,10 @@ def read_job_grid(input_file):
     if input_path.suffix.lower() != _ECSV_SUFFIX:
         raise ValueError("Job grid input file must use the '.ecsv' extension.")
 
-    table = Table.read(input_path, format=_ECSV_FORMAT)
+    table = _validate_job_grid_table(Table.read(input_path, format=_ECSV_FORMAT))
     rows = [{column_name: row[column_name] for column_name in table.colnames} for row in table]
-    return [_deserialize_job_row(row) for row in rows], dict(table.meta)
+    column_units = {column_name: table[column_name].unit for column_name in table.colnames}
+    return [_deserialize_job_row(row, column_units) for row in rows], dict(table.meta)
 
 
 def read_job_grid_row(input_file, row_index):
@@ -241,8 +268,9 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
     """
     Convert an in-memory job grid row to simulate_prod argument format.
 
-    The returned dictionary can be merged into a simulate_prod ``args_dict`` so that
-    values from the job grid row take precedence over previously parsed arguments.
+    The returned dictionary contains the production-defining arguments represented
+    by a job-grid row. Callers are responsible for ensuring that these values are
+    not combined ambiguously with independently supplied production arguments.
 
     Parameters
     ----------

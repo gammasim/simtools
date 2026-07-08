@@ -22,7 +22,8 @@ Typical outputs are:
 - sim_telarray eventio files and histogram files
 - reduced event-data HDF5 files when `--save_reduced_event_lists` is used
 - output and log file lists when `--save_file_lists` is used
-- registration tarballs when `--pack_for_grid_register` is configured
+- copied grid output files, including logs, histogram files, model archives, moved event files,
+  and `simtools.log.gz`, when `--grid_output_path` is configured
 
 Example command:
 
@@ -40,6 +41,20 @@ simtools-simulate-prod \
     --showers_per_run 5 \
     --run_number 1 \
     --save_reduced_event_lists
+```
+
+Alternatively, a single job can be selected from an executable production grid. In this mode,
+the selected row defines the production parameters such as primary, direction, energy range,
+layout, model version, site, run number, and simulation software. Do not combine
+`--job_grid_file` with manual production arguments such as `--zenith_angle`; use only operational
+options such as labels and output paths alongside the grid selection.
+
+```bash
+simtools-simulate-prod \
+    --job_grid_file production_grid_points_horizontal.ecsv \
+    --job_grid_row 1 \
+    --label test \
+    --output_path simtools-output
 ```
 
 Example integration configurations are available in `tests/integration_tests/config`, including
@@ -61,7 +76,7 @@ specified by the production configuration or production release notes:
 
 ```bash
 apptainer pull --force \
-    docker://ghcr.io/gammasim/simtools-prod:v0.27.1-v78010-v2025-11-30-rc-avx2
+  oras://ghcr.io/gammasim/simtools-prod:v0.27.1-v78010-v2025-11-30-rc-avx2-apptainer
 ```
 
 The generator supports either one image for all jobs or a mapping from image labels to image
@@ -97,6 +112,10 @@ The generator writes:
   `simulate_prod.submit.condor` for a single image
 - one matching `simulate_prod.submit.<label>.params.txt` file per submit file
 - HTCondor log, error, and output directories
+
+The generated HTCondor parameter files contain the row-specific production values from the full
+job grid. The wrapper script passes those values to `simtools-simulate-prod` as explicit
+arguments for each queued job; it does not pass `--job_grid_file` or `--job_grid_row`.
 
 Before submission, copy the required environment variables into `env.txt` in the submission
 directory. The file should include database credentials and simulation software paths expected

@@ -136,8 +136,10 @@ def test_run_configured_applications_runs_all_configs(tmp_test_directory, monkey
     )
 
     resource_generation.run_configured_applications(
+        args_dict={},
         config_dir=config_root,
         log_dir=Path(tmp_test_directory) / "log_files",
+        run_time=None,
         replacements={"__SIMTOOLS_VERSION__": "v0.32.0"},
     )
 
@@ -170,18 +172,73 @@ def test_run_configured_applications_reuses_runtime(tmp_test_directory, monkeypa
     )
 
     resource_generation.run_configured_applications(
+        args_dict={
+            "ignore_runtime_environment": False,
+            "overwrite_collection_files": True,
+            "runtime_environment": {"image": "image"},
+        },
         config_dir=config_root,
         log_dir=Path(tmp_test_directory) / "log_files",
-        ignore_runtime_environment=False,
-        overwrite_collection_files=True,
         run_time=["podman", "run", "image"],
-        runtime_environment={"image": "image"},
+        replacements=None,
     )
 
     assert [config[0]["config_file"] for config in called_configs] == [str(model_config)]
     assert called_configs[0][0]["overwrite_collection_files"] is True
     assert called_configs[0][0]["runtime_environment"] == {"image": "image"}
     assert called_configs[0][1]["run_time"] == ["podman", "run", "image"]
+
+
+def test_run_configured_applications_selects_one_config_by_path(tmp_test_directory, monkeypatch):
+    config_root = Path(tmp_test_directory) / "config_files"
+    selected_dir = config_root / "application_config"
+    other_dir = config_root / "model_parameters"
+    selected_dir.mkdir(parents=True)
+    other_dir.mkdir(parents=True)
+
+    selected_config = selected_dir / "simulate_prod.config.yml"
+    other_config = other_dir / "mirror_list.config.yml"
+    selected_config.write_text("steps: []\n", encoding="utf-8")
+    other_config.write_text("steps: []\n", encoding="utf-8")
+
+    called_configs = []
+
+    def _fake_run_applications(config_dict, **kwargs):
+        called_configs.append((config_dict, kwargs))
+
+    monkeypatch.setattr(
+        resource_generation.simtools_runner, "run_applications", _fake_run_applications
+    )
+
+    resource_generation.run_configured_applications(
+        args_dict={
+            "config_file": Path("application_config") / "simulate_prod.config.yml",
+        },
+        config_dir=config_root,
+        log_dir=Path(tmp_test_directory) / "log_files",
+        run_time=None,
+        replacements=None,
+    )
+
+    assert [config[0]["config_file"] for config in called_configs] == [
+        str(selected_config.resolve())
+    ]
+
+
+def test_run_configured_applications_raises_for_missing_selected_config(tmp_test_directory):
+    config_root = Path(tmp_test_directory) / "config_files"
+    config_root.mkdir(parents=True)
+
+    with pytest.raises(FileNotFoundError, match="Selected workflow config does not exist"):
+        resource_generation.run_configured_applications(
+            args_dict={
+                "config_file": Path("missing.config.yml"),
+            },
+            config_dir=config_root,
+            log_dir=Path(tmp_test_directory) / "log_files",
+            run_time=None,
+            replacements=None,
+        )
 
 
 def test_get_resource_generation_directory(tmp_test_directory):
@@ -357,9 +414,11 @@ def test_generate_test_resources_tests_static_files_only(tmp_test_directory, mon
     )
 
     resource_generation.generate_test_resources(
-        test_directory=tmp_test_directory,
-        simtools_version="v0.32.0",
-        test_static_files=True,
+        args_dict={
+            "test_directory": tmp_test_directory,
+            "simtools_version": "v0.32.0",
+            "test_static_files": True,
+        }
     )
 
     assert calls == [manifest]
@@ -385,9 +444,11 @@ def test_generate_test_resources_download_only_does_not_run_applications(
     )
 
     resource_generation.generate_test_resources(
-        test_directory=tmp_test_directory,
-        simtools_version="v0.32.0",
-        download_only=True,
+        args_dict={
+            "test_directory": tmp_test_directory,
+            "simtools_version": "v0.32.0",
+            "download_only": True,
+        }
     )
 
     assert called == []
@@ -403,7 +464,6 @@ def test_generate_test_resources_prepares_shared_runtime_once(tmp_test_directory
     )
     config_dir.mkdir(parents=True)
     (config_dir / "download_files.yml").write_text("files: []\n", encoding="utf-8")
-    runtime_file = Path(tmp_test_directory) / "runtime.yml"
     prepare_mock = []
     run_calls = []
 
@@ -421,15 +481,46 @@ def test_generate_test_resources_prepares_shared_runtime_once(tmp_test_directory
     )
 
     resource_generation.generate_test_resources(
-        test_directory=tmp_test_directory,
-        simtools_version="v0.32.0",
-        runtime_environment_file=runtime_file,
+        args_dict={
+            "test_directory": tmp_test_directory,
+            "simtools_version": "v0.32.0",
+        },
+        run_time=["podman", "run", "image"],
     )
 
-    assert prepare_mock == [runtime_file]
     assert len(run_calls) == 1
-    assert run_calls[0]["ignore_runtime_environment"] is False
     assert run_calls[0]["run_time"] == ["podman", "run", "image"]
+
+
+def test_generate_test_resources_forwards_selected_config_file(tmp_test_directory, monkeypatch):
+    config_dir = (
+        Path(tmp_test_directory)
+        / "simtools-tests"
+        / "v0.32.0"
+        / "integration_tests"
+        / "config_files"
+    )
+    config_dir.mkdir(parents=True)
+    (config_dir / "download_files.yml").write_text("files: []\n", encoding="utf-8")
+    run_calls = []
+    selected_config = Path("application_config") / "simulate_prod.config.yml"
+
+    monkeypatch.setattr(
+        resource_generation,
+        "run_configured_applications",
+        lambda **kwargs: run_calls.append(kwargs),
+    )
+
+    resource_generation.generate_test_resources(
+        args_dict={
+            "test_directory": tmp_test_directory,
+            "simtools_version": "v0.32.0",
+            "config_file": selected_config,
+        }
+    )
+
+    assert len(run_calls) == 1
+    assert run_calls[0]["args_dict"]["config_file"] == selected_config
 
 
 def test_generate_test_resources_ignores_supplied_runtime(tmp_test_directory, monkeypatch):
@@ -455,14 +546,15 @@ def test_generate_test_resources_ignores_supplied_runtime(tmp_test_directory, mo
     )
 
     resource_generation.generate_test_resources(
-        test_directory=tmp_test_directory,
-        simtools_version="v0.32.0",
-        runtime_environment_file=Path(tmp_test_directory) / "runtime.yml",
-        ignore_runtime_environment=True,
+        args_dict={
+            "test_directory": tmp_test_directory,
+            "simtools_version": "v0.32.0",
+            "ignore_runtime_environment": True,
+        }
     )
 
     assert len(run_calls) == 1
-    assert run_calls[0]["ignore_runtime_environment"] is True
+    assert run_calls[0]["args_dict"]["ignore_runtime_environment"] is True
     assert run_calls[0]["run_time"] is None
 
 
@@ -515,8 +607,10 @@ def test_generate_test_resources_removes_empty_download_directory(tmp_test_direc
     )
 
     resource_generation.generate_test_resources(
-        test_directory=tmp_test_directory,
-        simtools_version="v0.32.0",
+        args_dict={
+            "test_directory": tmp_test_directory,
+            "simtools_version": "v0.32.0",
+        }
     )
 
     assert not (integration_test_dir / "folder").exists()

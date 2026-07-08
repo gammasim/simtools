@@ -2,6 +2,7 @@
 
 import glob
 import logging
+import os
 import shutil
 from copy import deepcopy
 from datetime import UTC, datetime
@@ -40,6 +41,7 @@ def run_applications(args_dict, run_time=None, replacements=None):
         runtime_environment,
         log_file,
         workflow_activity_id,
+        collection_config,
     ) = _read_application_configuration(
         args_dict["config_file"],
         args_dict.get("steps"),
@@ -48,17 +50,8 @@ def run_applications(args_dict, run_time=None, replacements=None):
     )
     if args_dict.get("log_file") is not None:
         log_file = args_dict["log_file"]
-
     if args_dict.get("runtime_environment") is not None:
         runtime_environment = args_dict["runtime_environment"]
-
-    collection_config = None
-    try:
-        workflow_config = ascii_handler.collect_data_from_file(args_dict["config_file"])
-        workflow_config = gen.replace_placeholders_recursively(workflow_config, replacements or {})
-        collection_config = workflow_config.get("collection")
-    except (OSError, TypeError):
-        logger.debug("Could not read collection configuration from workflow file.")
 
     workflow_start = datetime.now(UTC)
     associated_activities = []
@@ -198,12 +191,7 @@ def _copy_pattern_files(pattern, source_directories, destination, overwrite_file
 
 
 def _collect_source_directories(configurations, source_directory=None):
-    """Return unique source directories from application configurations.
-
-    ``source_directory`` selects application configuration keys containing
-    directories to search. It can be a string or a list of strings and defaults
-    to ``output_path``.
-    """
+    """Return unique source directories from application configurations."""
     source_directories = []
     source_directory_keys = _normalize_collection_source_directories(source_directory)
     for config in configurations:
@@ -380,14 +368,13 @@ def _read_application_configuration(
 
     Returns
     -------
-    dict
-        Application configuration.
-    dict:
-        Runtime environment configuration.
-    Path
-        Path to the log file.
-    str
-        Workflow activity id.
+    tuple
+        Tuple containing:
+        - configurations: list of application configurations
+        - runtime_environment: dict with runtime environment configuration
+        - log_file: Path to the log file
+        - workflow_activity_id: str with workflow activity id
+        - collection_config: dict or None with collection configuration
 
     """
     job_configuration = ascii_handler.collect_data_from_file(configuration_file)
@@ -426,6 +413,7 @@ def _read_application_configuration(
         job_configuration.get("runtime_environment"),
         log_path / "simtools.log",
         workflow_activity_id,
+        job_configuration.get("collection"),
     )
 
 
@@ -567,28 +555,25 @@ def _set_input_output_directories(path):
     try:
         setting_workflow = gen.extract_subdirectories_from_path(path, anchor="input")
     except ValueError:
-        if path.parent != Path():
-            setting_workflow = str(path.parent)
-        else:
-            setting_workflow = path.stem
-
+        setting_workflow = str(path.parent) if path.parent != Path() else path.stem
         logger.info(
             "Could not derive setting workflow from 'input' anchor; "
             f"using fallback '{setting_workflow}'"
         )
 
-    output_path = Path("output") / Path(setting_workflow)
+    output_path = Path("simtools-output") / Path(setting_workflow)
     return output_path, setting_workflow
 
 
-def read_runtime_environment(runtime_environment, workdir="/workdir/external/"):
+def read_runtime_environment(runtime_environment):
     """
     Read the runtime environment (e.g. docker runtime) and generate the required command.
 
     Parameters
     ----------
-    runtime_environment : str or None
-        Path to the runtime environment configuration file.
+    runtime_environment : dict or None
+        Runtime environment configuration.
+    docs/changes/2323.feature.md
 
     Returns
     -------
@@ -601,11 +586,12 @@ def read_runtime_environment(runtime_environment, workdir="/workdir/external/"):
     engine = runtime_environment.get("container_engine", "docker")
     if shutil.which(engine) is None:
         raise RuntimeError(f"Container engine '{engine}' not found.")
-    cmd = [engine, "run", "--rm", "-v", f"{Path.cwd()}:{workdir}", "-w", workdir]
+    cmd = [engine, "run", "--rm"]
 
     if options := runtime_environment.get("options"):
         for opt in options:
-            cmd.extend(opt.split())
+            expanded_opt = os.path.expandvars(opt)
+            cmd.extend(expanded_opt.split())
 
     if env := runtime_environment.get("environment_file"):
         cmd += ["--env-file", env]

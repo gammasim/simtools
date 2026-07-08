@@ -128,13 +128,11 @@ def _execute_production_job(job_spec):
 
     Returns
     -------
-    dict
-        Result dictionary with limits and production metadata.
+    list[dict]
+        Result dictionaries with limits and production metadata.
     """
     production_index = job_spec["production_index"]
     production_pattern = job_spec["production_pattern"]
-    array_name = job_spec["array_name"]
-    telescope_ids = job_spec["telescope_ids"]
     allowed_losses = job_spec["allowed_losses"]
     energy_threshold_fraction = job_spec["energy_threshold_fraction"]
     plot_histograms = job_spec["plot_histograms"]
@@ -142,15 +140,16 @@ def _execute_production_job(job_spec):
     differential_loss_bins_per_decade = job_spec.get("differential_loss_bins_per_decade", 0)
     skip_invalid_event_data_files = job_spec.get("skip_invalid_event_data_files", False)
 
+    telescope_configs = job_spec["telescope_configs"]
+
     _logger.info(
         f"Processing production {production_index}: pattern={production_pattern}, "
-        f"array={array_name}"
+        f"arrays={len(telescope_configs)}"
     )
 
-    result = _process_file(
+    results = _process_production(
         production_pattern,
-        array_name,
-        telescope_ids,
+        telescope_configs,
         allowed_losses,
         energy_threshold_fraction,
         plot_histograms,
@@ -159,16 +158,17 @@ def _execute_production_job(job_spec):
         skip_invalid_event_data_files=skip_invalid_event_data_files,
     )
 
-    result.update(
-        {
-            "production_index": production_index,
-            "event_data_file": production_pattern,
-            "array_name": array_name,
-            "telescope_ids": telescope_ids,
-        }
-    )
+    for result, telescope_config in zip(results, telescope_configs):
+        result.update(
+            {
+                "production_index": production_index,
+                "event_data_file": production_pattern,
+                "array_name": telescope_config["array_name"],
+                "telescope_ids": telescope_config["telescope_ids"],
+            }
+        )
 
-    return result
+    return results
 
 
 def _resolve_telescope_configs(args_dict):
@@ -301,7 +301,8 @@ def generate_corsika_limits_grid(args_dict):
 
     telescope_configs = _resolve_telescope_configs(args_dict)
 
-    # Build deterministic job specs: Cartesian product of productions and telescope configs
+    # Build deterministic production jobs. Each worker reads a production once and
+    # accumulates the same complete histogram set for every telescope configuration.
     job_specs = []
     output_dir = io_handler.IOHandler().get_output_directory()
 
@@ -314,42 +315,44 @@ def generate_corsika_limits_grid(args_dict):
         )
 
     for prod_idx, production_pattern in enumerate(production_patterns):
-        for array_name, telescope_ids_raw in telescope_configs.items():
-            telescope_ids = normalize_array_element_identifier_container(telescope_ids_raw)
-
-            output_subdir = production_subdirs.get(production_pattern)
-
-            job_spec = {
+        normalized_telescope_configs = [
+            {
+                "array_name": array_name,
+                "telescope_ids": normalize_array_element_identifier_container(telescope_ids_raw),
+            }
+            for array_name, telescope_ids_raw in telescope_configs.items()
+        ]
+        job_specs.append(
+            {
                 "production_index": prod_idx,
                 "production_pattern": production_pattern,
-                "array_name": array_name,
-                "telescope_ids": telescope_ids,
+                "telescope_configs": normalized_telescope_configs,
                 "allowed_losses": allowed_losses,
                 "energy_threshold_fraction": energy_threshold_fraction,
                 "plot_histograms": args_dict["plot_histograms"],
-                "output_subdir": output_subdir,
+                "output_subdir": production_subdirs.get(production_pattern),
                 "differential_loss_bins_per_decade": differential_loss_bins_per_decade,
                 "skip_invalid_event_data_files": args_dict.get(
                     "skip_invalid_event_data_files", False
                 ),
             }
-            job_specs.append(job_spec)
+        )
 
-    n_workers = int(args_dict.get("n_workers", 1))
-    _logger.info(f"Executing {len(job_specs)} jobs with {n_workers or 'auto'} workers")
-    results = process_pool_map_ordered(
+    max_workers = int(args_dict.get("max_workers", 1))
+    _logger.info(f"Executing {len(job_specs)} jobs with {max_workers or 'auto'} workers")
+    production_results = process_pool_map_ordered(
         _execute_production_job,
         job_specs,
-        max_workers=n_workers,
+        max_workers=max_workers,
     )
+    results = [result for production_result in production_results for result in production_result]
 
     write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
 
 
-def _process_file(
+def _process_production(
     file_path,
-    array_name,
-    telescope_ids,
+    telescope_configs,
     allowed_losses,
     energy_threshold_fraction=0.01,
     plot_histograms=False,
@@ -357,48 +360,69 @@ def _process_file(
     differential_loss_bins_per_decade=0,
     skip_invalid_event_data_files=False,
 ):
-    """
-    Compute limits for a given event data file and telescope configuration.
-
-    Compute limits for energy, radial distance, and viewcone.
-
-    Parameters
-    ----------
-    file_path : str or list
-        Path or glob pattern to the event data file, or a list of files.
-    array_name : str
-        Name of the telescope array configuration.
-    telescope_ids : list[str]
-        List of telescope IDs (array-element names) to filter the events.
-    allowed_losses : dict
-        Per-axis loss settings for core_distance/angular_distance.
-    energy_threshold_fraction : float, optional
-        Fraction of the stable energy-peak count used to derive ERANGE.
-    plot_histograms : bool
-        Whether to plot histograms.
-    output_subdir : Path or None, optional
-        Output subdirectory for plots. If None, uses default output directory.
-    differential_loss_bins_per_decade : int, optional
-        Number of energy bins per decade for differential per-bin limits.
-        Set to 0 (default) to use integrated limits.
-    skip_invalid_event_data_files : bool, optional
-        Skip malformed or incomplete reduced event-data files inside the input pattern.
-
-    Returns
-    -------
-    dict
-        Dictionary containing the computed limits and metadata.
-    """
-    histograms = EventDataHistograms(
+    """Read one production once and derive limits for all telescope configurations."""
+    energy_bins_per_decade = differential_loss_bins_per_decade or 10
+    event_source = EventDataHistograms(
         file_path,
-        array_name,
-        telescope_ids,
-        differential_loss_bins_per_decade or 10,
+        energy_bins_per_decade=energy_bins_per_decade,
         skip_invalid_event_data_files=skip_invalid_event_data_files,
         require_triggered_data=True,
     )
-    histograms.fill(fill_efficiency_histogram=False)
+    accumulators = [
+        EventDataHistograms.create_accumulator(
+            array_name=config["array_name"],
+            telescope_list=config["telescope_ids"],
+            energy_bins_per_decade=energy_bins_per_decade,
+        )
+        for config in telescope_configs
+    ]
 
+    for reader, values in event_source.iter_event_data():
+        file_info_table, shower_data, triggered_shower, triggered_data = values
+        for config, histograms in zip(telescope_configs, accumulators):
+            if config["telescope_ids"]:
+                filtered_triggered_data, filtered_triggered_shower = reader.filter_by_telescopes(
+                    triggered_data,
+                    triggered_shower,
+                    telescope_list=config["telescope_ids"],
+                )
+            else:
+                filtered_triggered_data = triggered_data
+                filtered_triggered_shower = triggered_shower
+            histograms.accumulate(
+                file_info_table,
+                shower_data,
+                filtered_triggered_shower,
+                filtered_triggered_data,
+            )
+
+    results = []
+    for config, histograms in zip(telescope_configs, accumulators):
+        histograms.finalize(fill_efficiency_histogram=False)
+        results.append(
+            _derive_limits_from_histograms(
+                histograms,
+                config["array_name"],
+                allowed_losses,
+                energy_threshold_fraction,
+                plot_histograms,
+                output_subdir,
+                differential_loss_bins_per_decade,
+            )
+        )
+    return results
+
+
+def _derive_limits_from_histograms(
+    histograms,
+    array_name,
+    allowed_losses,
+    energy_threshold_fraction,
+    plot_histograms,
+    output_subdir,
+    differential_loss_bins_per_decade,
+):
+    """Compute, optionally plot, and return limits from finalized histograms."""
     limits = {
         "lower_energy_limit": compute_lower_energy_limit(
             histograms,
@@ -421,11 +445,22 @@ def _process_file(
 
     if plot_histograms:
         plot_output_path = output_subdir or io_handler.IOHandler().get_output_directory()
+        histograms_to_plot = {
+            name: histogram for name, histogram in histograms.histograms.items() if name != "energy"
+        }
+        if limits.get("angular_distance_is_constant", False):
+            histograms_to_plot = {
+                name: histogram
+                for name, histogram in histograms_to_plot.items()
+                if not name.startswith("angular_distance_vs_")
+            }
         plot_simtel_event_histograms.plot(
-            histograms.histograms,
+            histograms_to_plot,
             output_path=plot_output_path,
             limits=limits,
             array_name=array_name,
+            add_distance_projections=True,
+            use_broad_range_limits=True,
         )
 
     return limits
@@ -452,6 +487,7 @@ def _compute_limits(histograms, allowed_losses, bins_per_decade):
     }
 
     per_axis_limits = {}
+    constant_angular_distance = _get_constant_data_value(histograms, "angular_distance")
     differential_energy_bins = None
     if bins_per_decade > 0:
         low = int(np.floor(np.log10(np.min(histograms.energy_bins))))
@@ -459,7 +495,15 @@ def _compute_limits(histograms, allowed_losses, bins_per_decade):
         differential_energy_bins = np.logspace(low, high, (high - low) * bins_per_decade + 1)
 
     for axis_name, config in axis_configs.items():
-        if bins_per_decade > 0:
+        if axis_name == "angular_distance" and constant_angular_distance is not None:
+            axis_max = constant_angular_distance
+            curve_x = [axis_max, axis_max]
+            curve_y = energy_range
+            _logger.info(
+                f"All simulated events have angular distance {axis_max} deg; "
+                "using this exact value as the viewcone limit."
+            )
+        elif bins_per_decade > 0:
             axis_max, curve_x, curve_y = _differential_upper_limits(
                 histograms.histograms[f"{axis_name}_vs_energy"]["histogram"],
                 config["x_bins"],
@@ -509,11 +553,25 @@ def _compute_limits(histograms, allowed_losses, bins_per_decade):
     return {
         "upper_radius_limit": upper_radius_limit,
         "viewcone_radius": viewcone_radius,
+        "angular_distance_is_constant": constant_angular_distance is not None,
         per_axis_limits["core_distance"]["curve_key"]: per_axis_limits["core_distance"]["curve"],
         per_axis_limits["angular_distance"]["curve_key"]: per_axis_limits["angular_distance"][
             "curve"
         ],
     }
+
+
+def _get_constant_data_value(histograms, name, abs_tol=0.01):
+    """Return an event-data value when its accumulated range is constant."""
+    data_ranges = getattr(histograms, "data_ranges", None)
+    if not isinstance(data_ranges, dict) or name not in data_ranges:
+        return None
+
+    minimum, maximum = data_ranges[name]
+    if np.isclose(minimum, maximum, rtol=0, atol=abs_tol):
+        avg_value = (minimum + maximum) / 2.0
+        return float(avg_value) if avg_value > abs_tol else 0.0
+    return None
 
 
 def _differential_upper_limits(
@@ -675,6 +733,8 @@ def _round_value(key, val, row=None):
     if key == "upper_radius_limit":
         return np.ceil(val / 25) * 25
     if key == "viewcone_radius":
+        if row is not None and row.get("angular_distance_is_constant", False):
+            return val
         return np.ceil(val / 0.25) * 0.25
     return val
 

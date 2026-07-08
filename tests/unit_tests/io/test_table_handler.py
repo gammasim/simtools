@@ -9,12 +9,14 @@ from simtools.io.table_handler import (
     _merge,
     _read_table_list_fits,
     _read_table_list_hdf5,
+    _write_table_to_hdf5_file,
     copy_metadata_to_hdf5,
     merge_tables,
     read_table_file_type,
     read_table_from_hdf5,
     read_table_list,
     read_tables,
+    write_table_chunks,
     write_table_in_hdf5,
     write_tables,
 )
@@ -316,6 +318,44 @@ def test_write_tables_hdf5(tmp_path, mock_table):
     assert not list(tmp_path.glob(f"{TEST_H5}.incomplete-*"))
 
 
+def test_write_table_chunks_appends_and_widens_strings(tmp_path):
+    """Append chunks without truncating strings that grow in later chunks."""
+    first = Table({"name": ["a"], "value": [1]})
+    second = Table({"name": ["a-longer-name"], "value": [2]})
+    for table in (first, second):
+        table.meta["EXTNAME"] = TEST_TABLE_NAME
+
+    output_file = tmp_path / TEST_H5
+    write_table_chunks([[first], [second]], output_file)
+
+    with h5py.File(output_file) as hdf5_file:
+        dataset = hdf5_file[TEST_TABLE_NAME]
+        assert dataset["name"][:].tolist() == [b"a", b"a-longer-name"]
+        assert dataset["value"][:].tolist() == [1, 2]
+        assert dataset.dtype["name"].itemsize == len("a-longer-name")
+        assert hdf5_file.attrs["simtools_write_status"] == "complete"
+
+
+def test_write_table_chunks_failure_preserves_existing_output(tmp_path, mock_table):
+    """Keep the published output unchanged when chunk generation fails."""
+    output_file = tmp_path / TEST_H5
+    output_file.write_bytes(b"existing output")
+
+    def failing_chunks():
+        yield [mock_table]
+        raise RuntimeError("injected chunk failure")
+
+    with pytest.raises(RuntimeError, match="injected chunk failure"):
+        write_table_chunks(failing_chunks(), output_file)
+
+    assert output_file.read_bytes() == b"existing output"
+    incomplete_files = list(tmp_path.glob(f"{TEST_H5}.incomplete-*"))
+    assert len(incomplete_files) == 1
+    with h5py.File(incomplete_files[0]) as hdf5_file:
+        assert hdf5_file.attrs["simtools_write_status"] == "incomplete"
+        assert TEST_TABLE_NAME in hdf5_file
+
+
 def test_write_tables_dict_input(tmp_path, mock_table):
     """Test writing dictionary of tables."""
     tables_dict = {"table1": mock_table}
@@ -332,18 +372,18 @@ def test_write_tables_hdf5_failure_preserves_existing_output(tmp_path, mock_tabl
     output_file.write_bytes(b"existing output")
     second_table = mock_table.copy()
     second_table.meta["EXTNAME"] = "second_table"
-    original_writer = write_table_in_hdf5
+    original_writer = _write_table_to_hdf5_file
     write_count = 0
 
-    def fail_after_first_table(table, file_name, table_name):
+    def fail_after_first_table(table, hdf5_file, table_name):
         nonlocal write_count
         write_count += 1
         if write_count == 2:
             raise RuntimeError("injected write failure")
-        original_writer(table, file_name, table_name)
+        original_writer(table, hdf5_file, table_name)
 
     mocker.patch(
-        f"{TABLE_HANDLER_PATH}.write_table_in_hdf5",
+        f"{TABLE_HANDLER_PATH}._write_table_to_hdf5_file",
         side_effect=fail_after_first_table,
     )
 
@@ -535,6 +575,7 @@ def test_write_table_in_hdf5_append(mock_h5py_file, mock_table):
     mock_h5py_file.__contains__.return_value = True
     mock_dataset = mock_h5py_file.__getitem__.return_value
     mock_dataset.shape = (2, 2)  # Initial shape
+    mock_dataset.dtype = np.array(mock_table).dtype
 
     write_table_in_hdf5(mock_table, TEST_H5, TEST_TABLE_NAME)
 
@@ -789,6 +830,7 @@ def test_write_table_in_hdf5_unicode_append(mock_h5py_file):
     data = {"unicode_col": ["abc", "def", "ghi"]}
     table = Table(data)
     table.meta["EXTNAME"] = TEST_TABLE_NAME
+    mock_dataset.dtype = np.dtype([("unicode_col", "S3")])
 
     write_table_in_hdf5(table, TEST_H5, TEST_TABLE_NAME)
 

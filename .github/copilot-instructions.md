@@ -224,7 +224,7 @@ Every new **library module** added to `src/simtools/` (outside `applications/`) 
 
 1. **Open a draft PR first** to get the PR number before adding the changelog fragment.
 2. **Add the changelog fragment** using the PR number as the file name:
-   `docs/changes/<pr-number>.<type>.md` (one line, concise description).
+   `docs/changes/<pr-number>.<type>.md` (short concise description; few lines only).
 3. **Commit and push** the changelog fragment to the same branch.
 4. **PR title and body** should be short and clear:
    - Title: imperative mood, under 72 characters (e.g. `Fix mirror PSF calculation`).
@@ -269,7 +269,7 @@ make linkcheck              # Check links
 
 **Changelog:**
 - Add fragments to `docs/changes/<pr-number>.<type>.md` (types: feature, bugfix, api, doc, maintenance, model).
-- Changelogs should not exceed 1 line.
+- Short concise description; few lines only.
 - Use pull request IDs (not issue IDs) as the fragment number.
 
 **API Reference:**

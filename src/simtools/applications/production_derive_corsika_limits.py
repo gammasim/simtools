@@ -29,6 +29,8 @@ Upper core distance (**CSCAT**) and viewcone radius (**VIEWCONE**)
     either as integrated limits or per-energy-bin
     differential limits (depending on ``--differential_loss_bins_per_decade``).
     Differential limits are preferable, as they are more robust to variations with energy.
+    If every triggered event has the same angular distance, the viewcone radius is set to that
+    exact value and the degenerate angular-distance-vs-energy plots are omitted.
 
 Results are provided as a table with the following columns:
 
@@ -65,9 +67,9 @@ Results are provided as a table with the following columns:
 | br_viewcone_max           | float64   | deg    | Viewcone max from broad-range simulations.   |
 +---------------------------+-----------+--------+----------------------------------------------+
 
-The input event data files are generated using the application simtools-generate-simtel-event-data
-and are required for each point in the observational parameter space (e.g., array pointing
-directions, level of night sky background, etc.).
+The input event data files are generated using the application simtools-generate-simtel-event-data.
+These files define most of the sampled observational parameter space (zenith, azimuth, and NSB
+level), and one file entry is required per point in that parameter space.
 
 Distributions of triggered events (e.g., core distance vs energy) can be plotted to verify the
 derived limits using the ``--plot_histograms`` option. Plots are organized into per-production
@@ -76,8 +78,10 @@ subdirectories derived from the input pattern names (for example ``production_pr
 Command line arguments
 ----------------------
 event_data_file (str or list of str, required)
-    Path or glob pattern for reduced event data files. Can be a single pattern or
-    multiple patterns (one per ``--event_data_file`` argument) to enable parallel
+    Path or glob pattern for reduced event data files. The matched files define most
+    of the sampled observational parameter space (zenith, azimuth, and NSB level),
+    with one file entry required per parameter-space point. Can be a single pattern
+    or multiple patterns (one per ``--event_data_file`` argument) to enable parallel
     multi-production processing.
 array_layout_name (str, required)
     Name of the array layout (as defined in array_layouts) for which to derive limits.
@@ -97,7 +101,7 @@ energy_threshold_fraction (float, optional)
 model_version (str, required)
     Simulation model version (e.g., "7.0.0") to retrieve the corresponding
     array layout.
-n_workers (int, optional)
+max_workers (int, optional)
     Number of worker processes to use for execution. Default is 1.
 plot_histograms (bool, optional)
     Plot histograms of the event data.
@@ -137,7 +141,7 @@ Derive limits for multiple independent productions in parallel:
         --allowed_losses all,1e-6,10 \
         --energy_threshold_fraction 0.01 \
         --plot_histograms \\
-        --n_workers 4 \\
+        --max_workers 4 \\
         --output_file corsika_simulation_limits.ecsv
 
 When multiple ``--event_data_file`` patterns are provided, results are merged into a single output
@@ -157,8 +161,9 @@ def _add_arguments(parser):
     parser.add_argument(
         "--event_data_file",
         help=(
-            "Event data file or glob pattern (one or more patterns for "
-            "multi-production processing)."
+            "Event data file or glob pattern. Matched files define most of the sampled "
+            "zenith/azimuth/NSB parameter space (one file entry per point); provide one "
+            "or more patterns for multi-production processing."
         ),
         nargs="+",
         action="extend",
@@ -201,7 +206,7 @@ def _add_arguments(parser):
         default=False,
     )
     parser.add_argument(
-        "--n_workers",
+        "--max_workers",
         help=(
             "Number of worker processes to use for execution "
             "(default: 1; set to 0 for auto-detection of available cores)."

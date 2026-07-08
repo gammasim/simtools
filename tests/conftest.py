@@ -4,11 +4,13 @@ from pathlib import Path
 
 import pytest
 
+SIMTOOLS_ROOT_PATH = Path(__file__).resolve().parent.parent
+
 
 def _configured_test_resources_path(config):
     """Return the absolute path to the configured test resources directory."""
     configured_path = config.getoption("test_resources_path", default=None)
-    path = configured_path or config.rootpath / "tests" / "resources"
+    path = configured_path or SIMTOOLS_ROOT_PATH / "tests" / "resources"
     return Path(path).expanduser().resolve()
 
 
@@ -37,3 +39,9 @@ def pytest_configure(config):
 def test_resources_path(pytestconfig):
     """Return the absolute path to the test resources directory."""
     return _configured_test_resources_path(pytestconfig)
+
+
+@pytest.fixture(scope="session")
+def simtools_root_path():
+    """Return the path to the simtools repository root."""
+    return SIMTOOLS_ROOT_PATH
