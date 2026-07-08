@@ -52,12 +52,6 @@ def _add_arguments(parser):
         default=0.5 * u.deg,
     )
     parser.add_argument(
-        "--plot_histograms",
-        help="Plot diagnostic triggered-event histograms.",
-        action="store_true",
-        default=False,
-    )
-    parser.add_argument(
         "--skip_invalid_event_data_files",
         help=(
             "Skip malformed or incomplete reduced event-data files inside each input pattern. "

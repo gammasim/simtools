@@ -1,7 +1,6 @@
 """Build and load trigger-histogram products from reduced event data."""
 
 import copy
-import logging
 
 import astropy.units as u
 import numpy as np
@@ -11,15 +10,11 @@ import simtools.utils.general as gen
 from simtools.io import io_handler, table_handler
 from simtools.production_configuration.production_event_data_helpers import (
     accumulate_histograms_by_telescope_config,
-    build_production_subdirectories,
     normalize_event_data_file,
     normalize_telescope_configs,
     resolve_telescope_configs,
 )
 from simtools.sim_events.histograms import EventDataHistograms
-from simtools.visualization import plot_simtel_event_histograms
-
-_logger = logging.getLogger(__name__)
 
 TRIGGER_HISTOGRAM_METADATA_TABLE = "TRIGGER_REFERENCE_METADATA"
 TRIGGER_HISTOGRAM_BINS_TABLE = "TRIGGER_REFERENCE_BINS"
@@ -383,31 +378,14 @@ def _process_production(
     return [(histograms, topology) for _, histograms, topology in finalized_histograms]
 
 
-def _plot_histograms(histograms, output_dir, array_name, telescope_ids):
-    """Write diagnostic histograms."""
-    output_dir = output_dir / _get_plot_directory_name(array_name, telescope_ids)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    histograms_to_plot = {
-        name: histogram
-        for name, histogram in histograms.histograms.items()
-        if name.endswith("_eff") and np.ndim(histogram["histogram"]) <= 2
-    }
-    plot_simtel_event_histograms.plot(
-        histograms_to_plot,
-        output_path=output_dir,
-        array_name=array_name,
-    )
-
-
 def write_trigger_histograms(args_dict):
     """
-    Build and write a trigger-histogram HDF5 product.
+    Build trigger histograms and write them to file.
 
     Parameters
     ----------
     args_dict : dict
-        Application arguments describing the reduced event-data inputs, telescope
-        selection, histogram binning, plotting options, and output file.
+        Application arguments.
 
     Returns
     -------
@@ -424,16 +402,12 @@ def write_trigger_histograms(args_dict):
     telescope_configs = _use_readable_inline_array_names(
         normalize_telescope_configs(resolve_telescope_configs(args_dict))
     )
-    output_dir = io_handler.IOHandler().get_output_directory()
-    output_file = io_handler.IOHandler().get_output_file(args_dict["output_file"])
-    gen.validate_file_type(output_file, expected_suffixes=[".hdf5", ".h5"])
+    output_file = gen.validate_file_type(
+        io_handler.IOHandler().get_output_file(args_dict["output_file"]),
+        expected_suffixes=[".hdf5", ".h5"],
+    )
 
     reference_specs = []
-    plot_specs = []
-    is_multi_production = len(production_patterns) > 1
-    production_subdirs = {}
-    if is_multi_production and args_dict.get("plot_histograms"):
-        production_subdirs = build_production_subdirectories(production_patterns, output_dir)
 
     for production_index, pattern in enumerate(production_patterns):
         histogram_topology_pairs = _process_production(
@@ -443,9 +417,6 @@ def write_trigger_histograms(args_dict):
             angular_distance_bin_width=args_dict["angular_distance_bin_width"],
             skip_invalid_event_data_files=args_dict.get("skip_invalid_event_data_files", False),
         )
-        production_subdir = None
-        if args_dict.get("plot_histograms"):
-            production_subdir = production_subdirs.get(pattern, output_dir / "trigger_histograms")
 
         for config, (histograms, trigger_topology) in zip(
             telescope_configs, histogram_topology_pairs
@@ -464,15 +435,6 @@ def write_trigger_histograms(args_dict):
                     "trigger_topology": trigger_topology,
                 }
             )
-            if production_subdir is not None:
-                plot_specs.append(
-                    (
-                        histograms,
-                        production_subdir,
-                        config["array_name"],
-                        config["telescope_ids"],
-                    )
-                )
 
     metadata_table, bin_table = _create_histogram_tables(reference_specs)
     histogram_value_table = _create_histogram_value_table(reference_specs)
@@ -492,8 +454,6 @@ def write_trigger_histograms(args_dict):
         overwrite_existing=True,
         file_type="HDF5",
     )
-    for histograms, production_subdir, array_name, telescope_ids in plot_specs:
-        _plot_histograms(histograms, production_subdir, array_name, telescope_ids)
     return metadata_table, bin_table
 
 
