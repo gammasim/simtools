@@ -1,5 +1,6 @@
 """Build and load trigger-histogram products from reduced event data."""
 
+import copy
 import logging
 
 import astropy.units as u
@@ -15,12 +16,17 @@ from simtools.production_configuration.production_event_data_helpers import (
     normalize_telescope_configs,
     resolve_telescope_configs,
 )
+from simtools.sim_events.histograms import EventDataHistograms
 from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
 
 TRIGGER_HISTOGRAM_METADATA_TABLE = "TRIGGER_REFERENCE_METADATA"
 TRIGGER_HISTOGRAM_BINS_TABLE = "TRIGGER_REFERENCE_BINS"
+TRIGGER_HISTOGRAM_VALUES_TABLE = "TRIGGER_HISTOGRAM_VALUES"
+TRIGGER_HISTOGRAM_EDGES_TABLE = "TRIGGER_HISTOGRAM_EDGES"
+
+_DERIVED_HISTOGRAM_SUFFIXES = ("_eff", "_cumulative")
 
 
 def _get_plot_directory_name(array_name, telescope_ids):
@@ -46,6 +52,21 @@ def _get_angular_distance_bin_width(histograms):
     if histograms.angular_distance_bin_width is not None:
         return histograms.angular_distance_bin_width
     return np.diff(histograms.view_cone_bins)[0] * u.deg
+
+
+def _quantity_value(value, unit):
+    """Return a scalar value converted to unit, preserving missing values."""
+    if hasattr(value, "to"):
+        return value.to(unit)
+    return value
+
+
+def _data_range_value(histograms, name, index):
+    """Return a stored data-range value, or NaN when unavailable."""
+    data_range = getattr(histograms, "data_ranges", {}).get(name)
+    if data_range is None:
+        return np.nan
+    return float(data_range[index])
 
 
 def _create_histogram_tables(reference_specs):
@@ -114,6 +135,10 @@ def _create_metadata_table(
                 "core_scatter_max": file_info.get("core_scatter_max", 0.0 * u.m),
                 "scatter_area": file_info.get("scatter_area", 0.0 * u.cm**2),
                 "solid_angle": file_info.get("solid_angle", 0.0 * u.sr),
+                "angular_distance_min": _data_range_value(histograms, "angular_distance", 0)
+                * u.deg,
+                "angular_distance_max": _data_range_value(histograms, "angular_distance", 1)
+                * u.deg,
                 "energy_bins_per_decade": histograms.energy_bins_per_decade,
                 "angular_distance_bin_width": _get_angular_distance_bin_width(histograms),
                 "angular_distance_bin_count": len(histograms.view_cone_bins) - 1,
@@ -137,6 +162,74 @@ def _create_metadata_table(
     )
     metadata.meta["EXTNAME"] = TRIGGER_HISTOGRAM_METADATA_TABLE
     return metadata
+
+
+def _is_persisted_histogram(name, histogram):
+    """Return True for base histograms that should be serialized."""
+    if name.endswith(_DERIVED_HISTOGRAM_SUFFIXES):
+        return False
+    return isinstance(histogram, dict) and histogram.get("histogram") is not None
+
+
+def _create_histogram_value_table(reference_specs):
+    """Create a flattened table containing all persisted histogram counts."""
+    rows = []
+    for spec in reference_specs:
+        for histogram_name, histogram in spec["histograms"].histograms.items():
+            if not _is_persisted_histogram(histogram_name, histogram):
+                continue
+            values = np.asarray(histogram["histogram"])
+            for flat_index, value in enumerate(values.ravel()):
+                indices = np.unravel_index(flat_index, values.shape)
+                padded_indices = list(indices) + [-1] * (3 - len(indices))
+                rows.append(
+                    {
+                        "reference_id": spec["reference_id"],
+                        "histogram_name": histogram_name,
+                        "dimension": values.ndim,
+                        "index_0": padded_indices[0],
+                        "index_1": padded_indices[1],
+                        "index_2": padded_indices[2],
+                        "value": float(value),
+                    }
+                )
+
+    table = Table(rows=rows)
+    table.meta["EXTNAME"] = TRIGGER_HISTOGRAM_VALUES_TABLE
+    return table
+
+
+def _iter_histogram_edges(histogram):
+    """Yield one bin-edge array per histogram axis."""
+    bin_edges = histogram["bin_edges"]
+    if histogram["1d"]:
+        yield 0, bin_edges
+        return
+    yield from enumerate(bin_edges)
+
+
+def _create_histogram_edge_table(reference_specs):
+    """Create a flattened table containing bin edges for persisted histograms."""
+    rows = []
+    for spec in reference_specs:
+        for histogram_name, histogram in spec["histograms"].histograms.items():
+            if not _is_persisted_histogram(histogram_name, histogram):
+                continue
+            for axis_index, edges in _iter_histogram_edges(histogram):
+                for bin_index, edge in enumerate(np.asarray(edges, dtype=float)):
+                    rows.append(
+                        {
+                            "reference_id": spec["reference_id"],
+                            "histogram_name": histogram_name,
+                            "axis_index": axis_index,
+                            "bin_index": bin_index,
+                            "edge": float(edge),
+                        }
+                    )
+
+    table = Table(rows=rows)
+    table.meta["EXTNAME"] = TRIGGER_HISTOGRAM_EDGES_TABLE
+    return table
 
 
 def _create_bin_table(reference_id, production_index, array_name, histograms):
@@ -297,8 +390,10 @@ def build_trigger_histograms(args_dict):
                 )
 
     metadata_table, bin_table = _create_histogram_tables(reference_specs)
+    histogram_value_table = _create_histogram_value_table(reference_specs)
+    histogram_edge_table = _create_histogram_edge_table(reference_specs)
     table_handler.write_tables(
-        [metadata_table, bin_table],
+        [metadata_table, bin_table, histogram_value_table, histogram_edge_table],
         output_file,
         overwrite_existing=True,
         file_type="HDF5",
@@ -306,6 +401,9 @@ def build_trigger_histograms(args_dict):
     for histograms, production_subdir, array_name, telescope_ids in plot_specs:
         _plot_histograms(histograms, production_subdir, array_name, telescope_ids)
     return metadata_table, bin_table
+
+
+write_trigger_histograms = build_trigger_histograms
 
 
 def load_trigger_histograms(reference_file):
@@ -328,3 +426,193 @@ def load_trigger_histograms(reference_file):
         file_type="HDF5",
     )
     return tables[TRIGGER_HISTOGRAM_METADATA_TABLE], tables[TRIGGER_HISTOGRAM_BINS_TABLE]
+
+
+def _row_value(row, name):
+    """Return a scalar row value, preserving astropy quantities."""
+    value = row[name]
+    unit = getattr(value, "unit", None)
+    table = getattr(row, "_table", None)
+    if unit is None and table is not None and name in table.colnames:
+        unit = getattr(table[name], "unit", None)
+    if unit is not None:
+        return value * unit
+    return value
+
+
+def _metadata_file_info(row):
+    """Build EventDataHistograms.file_info from a metadata row."""
+    return {
+        "primary_particle": row["primary_particle"],
+        "zenith": _row_value(row, "zenith"),
+        "azimuth": _row_value(row, "azimuth"),
+        "nsb_level": row["nsb_level"],
+        "energy_min": _row_value(row, "energy_min"),
+        "energy_max": _row_value(row, "energy_max"),
+        "viewcone_min": _row_value(row, "viewcone_min"),
+        "viewcone_max": _row_value(row, "viewcone_max"),
+        "core_scatter_min": _row_value(row, "core_scatter_min"),
+        "core_scatter_max": _row_value(row, "core_scatter_max"),
+        "scatter_area": _row_value(row, "scatter_area"),
+        "solid_angle": _row_value(row, "solid_angle"),
+    }
+
+
+def _metadata_data_ranges(row):
+    """Build data_ranges from metadata values if present."""
+    if "angular_distance_min" not in row.colnames or "angular_distance_max" not in row.colnames:
+        return {}
+    angular_min = _quantity_value(_row_value(row, "angular_distance_min"), u.deg)
+    angular_max = _quantity_value(_row_value(row, "angular_distance_max"), u.deg)
+    angular_min = angular_min.value if hasattr(angular_min, "value") else float(angular_min)
+    angular_max = angular_max.value if hasattr(angular_max, "value") else float(angular_max)
+    if np.isnan(angular_min) or np.isnan(angular_max):
+        return {}
+    return {"angular_distance": (float(angular_min), float(angular_max))}
+
+
+def _rows_for_reference(table, reference_id):
+    """Return table rows matching a reference id."""
+    return table[table["reference_id"] == reference_id]
+
+
+def _edges_by_histogram(edge_rows):
+    """Return nested histogram edge arrays by histogram name and axis."""
+    edges = {}
+    for histogram_name in sorted(set(edge_rows["histogram_name"])):
+        histogram_rows = edge_rows[edge_rows["histogram_name"] == histogram_name]
+        edges[histogram_name] = {}
+        for axis_index in sorted(set(histogram_rows["axis_index"])):
+            axis_rows = histogram_rows[histogram_rows["axis_index"] == axis_index]
+            axis_rows.sort("bin_index")
+            edges[histogram_name][int(axis_index)] = np.asarray(axis_rows["edge"], dtype=float)
+    return edges
+
+
+def _histogram_values_by_name(value_rows):
+    """Return histogram arrays reconstructed from flattened value rows."""
+    histograms = {}
+    for histogram_name in sorted(set(value_rows["histogram_name"])):
+        histogram_rows = value_rows[value_rows["histogram_name"] == histogram_name]
+        dimension = int(histogram_rows["dimension"][0])
+        shape = tuple(
+            int(np.max(histogram_rows[f"index_{axis_index}"])) + 1
+            for axis_index in range(dimension)
+        )
+        values = np.zeros(shape, dtype=float)
+        for row in histogram_rows:
+            index = tuple(int(row[f"index_{axis_index}"]) for axis_index in range(dimension))
+            values[index] = float(row["value"])
+        histograms[histogram_name] = values
+    return histograms
+
+
+def _template_histograms(histograms):
+    """Create metadata-rich empty histogram definitions for a loaded histogram object."""
+    return histograms.get_empty_histogram_definitions()
+
+
+def _apply_loaded_histograms(histograms, values_by_name, edges_by_name):
+    """Attach loaded histogram arrays and exact bin edges to a histogram object."""
+    templates = _template_histograms(histograms)
+    loaded = {}
+    for histogram_name, values in values_by_name.items():
+        definition = copy.copy(templates.get(histogram_name, {}))
+        definition.setdefault("1d", values.ndim == 1)
+        definition["histogram"] = values
+        definition["event_data"] = (
+            None if definition["1d"] else tuple(None for _ in range(values.ndim))
+        )
+        axis_edges = edges_by_name[histogram_name]
+        definition["bin_edges"] = (
+            axis_edges[0]
+            if values.ndim == 1
+            else tuple(axis_edges[index] for index in range(values.ndim))
+        )
+        loaded[histogram_name] = definition
+
+    histograms.histograms = loaded
+    if "energy" in edges_by_name:
+        histograms.histograms["energy_bin_edges"] = edges_by_name["energy"][0]
+    if "core_distance" in edges_by_name:
+        histograms.histograms["core_distance_bin_edges"] = edges_by_name["core_distance"][0]
+    if "angular_distance" in edges_by_name:
+        histograms.histograms["viewcone_bin_edges"] = edges_by_name["angular_distance"][0]
+
+
+def _histograms_from_reference_row(row, value_rows, edge_rows):
+    """Reconstruct finalized EventDataHistograms for one reference row."""
+    histograms = EventDataHistograms.create_accumulator(
+        array_name=row["array_name"],
+        telescope_list=list(filter(None, str(row["telescope_ids"]).split(","))),
+        energy_bins_per_decade=int(row["energy_bins_per_decade"]),
+        angular_distance_bin_count=int(row["angular_distance_bin_count"]) + 1,
+        angular_distance_bin_width=_row_value(row, "angular_distance_bin_width"),
+        core_distance_bin_count=int(row["core_distance_bin_count"]) + 1,
+    )
+    _apply_loaded_histograms(
+        histograms,
+        _histogram_values_by_name(value_rows),
+        _edges_by_histogram(edge_rows),
+    )
+    histograms.set_loaded_histograms(
+        histograms.histograms,
+        file_info=_metadata_file_info(row),
+        data_ranges=_metadata_data_ranges(row),
+        contains_triggered_data=True,
+    )
+    histograms.calculate_efficiency_data()
+    histograms.calculate_cumulative_data()
+    return histograms
+
+
+def load_event_data_histograms(reference_file, array_names=None, production_indices=None):
+    """
+    Load finalized EventDataHistograms objects from a trigger-histogram HDF5 file.
+
+    Parameters
+    ----------
+    reference_file : str or pathlib.Path
+        Path to the trigger-histogram HDF5 file.
+    array_names : list[str], optional
+        Restrict loaded histograms to these array names.
+    production_indices : list[int], optional
+        Restrict loaded histograms to these production indices.
+
+    Returns
+    -------
+    list[tuple[astropy.table.Row, EventDataHistograms]]
+        Metadata row and reconstructed histogram object for each reference.
+    """
+    tables = table_handler.read_tables(
+        reference_file,
+        [
+            TRIGGER_HISTOGRAM_METADATA_TABLE,
+            TRIGGER_HISTOGRAM_VALUES_TABLE,
+            TRIGGER_HISTOGRAM_EDGES_TABLE,
+        ],
+        file_type="HDF5",
+    )
+    metadata = tables[TRIGGER_HISTOGRAM_METADATA_TABLE]
+    values = tables[TRIGGER_HISTOGRAM_VALUES_TABLE]
+    edges = tables[TRIGGER_HISTOGRAM_EDGES_TABLE]
+
+    if array_names:
+        metadata = metadata[np.isin(metadata["array_name"], array_names)]
+    if production_indices is not None:
+        metadata = metadata[np.isin(metadata["production_index"], production_indices)]
+
+    loaded = []
+    for row in metadata:
+        reference_id = row["reference_id"]
+        loaded.append(
+            (
+                row,
+                _histograms_from_reference_row(
+                    row,
+                    _rows_for_reference(values, reference_id),
+                    _rows_for_reference(edges, reference_id),
+                ),
+            )
+        )
+    return loaded
