@@ -15,10 +15,12 @@ from simtools.production_configuration.trigger_histograms import (
     _create_histogram_value_table,
     _create_trigger_subset_histogram_table,
     _create_trigger_topology_count_table,
+    _execute_production_job,
     _get_plot_directory_name,
     _use_readable_inline_array_names,
     load_event_data_histograms,
     load_trigger_histograms,
+    write_trigger_histograms,
 )
 from simtools.sim_events.histograms import EventDataHistograms
 
@@ -282,3 +284,101 @@ def test_readable_inline_array_names_use_telescope_ids():
     )
 
     assert configs[0]["array_name"] == "MSTS-01"
+
+
+def test_execute_production_job_returns_one_result_per_telescope_config(mocker):
+    histograms = mocker.Mock()
+    topology = {"trigger_multiplicity": {1: 2}}
+    mocker.patch(
+        "simtools.production_configuration.trigger_histograms._process_production",
+        return_value=[(histograms, topology)],
+    )
+
+    result = _execute_production_job(
+        {
+            "production_index": 3,
+            "production_pattern": "prod_a/*.hdf5",
+            "site": "North",
+            "telescope_configs": [{"array_name": "alpha", "telescope_ids": ["LSTN-01"]}],
+            "energy_bins_per_decade": 4,
+            "angular_distance_bin_width": 1.0 * u.deg,
+            "skip_invalid_event_data_files": False,
+        }
+    )
+
+    assert result == [
+        {
+            "production_index": 3,
+            "event_data_file": "prod_a/*.hdf5",
+            "site": "North",
+            "array_name": "alpha",
+            "telescope_ids": ["LSTN-01"],
+            "histograms": histograms,
+            "trigger_topology": topology,
+        }
+    ]
+
+
+def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_path):
+    mocker.patch(
+        "simtools.production_configuration.trigger_histograms.resolve_telescope_configs",
+        return_value={"alpha": ["LSTN-01"]},
+    )
+    mocker.patch(
+        "simtools.production_configuration.trigger_histograms.normalize_telescope_configs",
+        return_value=[{"array_name": "alpha", "telescope_ids": ["LSTN-01"]}],
+    )
+    mocker.patch(
+        "simtools.production_configuration.trigger_histograms.io_handler.IOHandler"
+    ).return_value.get_output_file.return_value = tmp_path / "trigger_histograms.hdf5"
+    mock_process_pool = mocker.patch(
+        "simtools.production_configuration.trigger_histograms.process_pool_map_ordered",
+        return_value=[
+            [
+                {
+                    "production_index": 0,
+                    "event_data_file": "prod_a/*.hdf5",
+                    "site": "North",
+                    "array_name": "alpha",
+                    "telescope_ids": ["LSTN-01"],
+                    "histograms": _full_fake_histograms(),
+                    "trigger_topology": {},
+                }
+            ],
+            [
+                {
+                    "production_index": 1,
+                    "event_data_file": "prod_b/*.hdf5",
+                    "site": "North",
+                    "array_name": "alpha",
+                    "telescope_ids": ["LSTN-01"],
+                    "histograms": _full_fake_histograms(),
+                    "trigger_topology": {},
+                }
+            ],
+        ],
+    )
+
+    metadata_table, _ = write_trigger_histograms(
+        {
+            "event_data_file": ["prod_a/*.hdf5", "prod_b/*.hdf5"],
+            "array_element_list": ["LSTN-01"],
+            "energy_bins_per_decade": 4,
+            "angular_distance_bin_width": 1.0 * u.deg,
+            "skip_invalid_event_data_files": False,
+            "max_workers": 24,
+            "site": "North",
+            "output_file": "trigger_histograms.hdf5",
+        }
+    )
+
+    mock_process_pool.assert_called_once()
+    assert mock_process_pool.call_args.kwargs["max_workers"] == 24
+    job_specs = mock_process_pool.call_args.args[1]
+    assert [job_spec["production_index"] for job_spec in job_specs] == [0, 1]
+    assert [job_spec["production_pattern"] for job_spec in job_specs] == [
+        "prod_a/*.hdf5",
+        "prod_b/*.hdf5",
+    ]
+    assert list(metadata_table["production_index"]) == [0, 1]
+    assert list(metadata_table["event_data_file"]) == ["prod_a/*.hdf5", "prod_b/*.hdf5"]
