@@ -106,11 +106,14 @@ def test_serialize_job_grid_writes_empty_grid_header(tmp_test_directory):
     assert output_table.colnames in (
         list(job_grid_io.JOB_GRID_SCHEMA.columns),
         job_grid_io.JOB_GRID_COLUMNS,
-        job_grid_io.JOB_GRID_COLUMNS + list(job_grid_io._OPTIONAL_COORDINATE_FIELDS),
-        job_grid_io.JOB_GRID_COLUMNS + list(job_grid_io._OPTIONAL_STRING_FIELDS),
-        job_grid_io.JOB_GRID_COLUMNS
-        + list(job_grid_io._OPTIONAL_COORDINATE_FIELDS)
-        + list(job_grid_io._OPTIONAL_STRING_FIELDS),
+        [*job_grid_io.JOB_GRID_COLUMNS, "ha", "dec"],
+        [*job_grid_io.JOB_GRID_COLUMNS, *job_grid_io._OPTIONAL_STRING_FIELDS],
+        [
+            *job_grid_io.JOB_GRID_COLUMNS,
+            "ha",
+            "dec",
+            *job_grid_io._OPTIONAL_STRING_FIELDS,
+        ],
     )
     assert output_table.meta["job_grid_summary"]["simulation_rows"] == 0
 
@@ -146,9 +149,7 @@ def test_job_grid_density_schema_defines_supported_columns():
     optional_columns = [column["name"] for column in table_columns if not column.get("required")]
 
     assert required_columns == job_grid_io.JOB_GRID_COLUMNS
-    assert optional_columns == list(
-        job_grid_io._OPTIONAL_COORDINATE_FIELDS + job_grid_io._OPTIONAL_STRING_FIELDS
-    )
+    assert optional_columns == ["ha", "dec", *job_grid_io._OPTIONAL_STRING_FIELDS]
     schema_units = {
         column["name"]: u.Unit(column["unit"]) for column in table_columns if "unit" in column
     }
