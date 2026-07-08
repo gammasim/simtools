@@ -131,9 +131,9 @@ def _compute_relative_uncertainty(expected_counts):
     )
 
 
-def _get_reference_matrix(bin_table, reference_id, column_name):
+def _get_reference_matrix(reference_rows, column_name):
     """Return one per-bin matrix reconstructed from the flattened table."""
-    rows = bin_table[bin_table["reference_id"] == reference_id]
+    rows = reference_rows.copy()
     if "core_distance_bin_index" in rows.colnames:
         rows.sort(["angular_distance_bin_index", "energy_bin_index", "core_distance_bin_index"])
         angular_indices = np.unique(rows["angular_distance_bin_index"])
@@ -148,13 +148,12 @@ def _get_reference_matrix(bin_table, reference_id, column_name):
     return np.asarray(rows[column_name]).reshape(len(angular_indices), len(energy_indices))
 
 
-def _get_reference_bin_edges(bin_table, reference_id):
+def _get_reference_bin_edges(reference_rows):
     """Return the bin edges for energy and angular distance histograms."""
     axis_units = {
         "energy": u.TeV,
         "angular_distance": u.deg,
     }
-    reference_rows = bin_table[bin_table["reference_id"] == reference_id]
     edges = []
     for axis, unit in axis_units.items():
         rows = reference_rows.copy()
@@ -165,17 +164,17 @@ def _get_reference_bin_edges(bin_table, reference_id):
     return edges[0], edges[1]
 
 
-def _get_reference_core_edges(bin_table, reference_id):
+def _get_reference_core_edges(reference_rows):
     """Return core-distance bin edges for core-distance-binned trigger histograms."""
-    if "core_distance_bin_index" not in bin_table.colnames:
+    if "core_distance_bin_index" not in reference_rows.colnames:
         raise ValueError(
             "Core-distance-binned trigger histograms are required to use reduced_core_radius. "
             "Rebuild trigger histograms with simtools-write-trigger-histograms."
         )
-    reference_rows = bin_table[bin_table["reference_id"] == reference_id]
-    reference_rows.sort("core_distance_bin_index")
-    lows = np.unique(reference_rows["core_distance_low"].quantity.to_value(u.m))
-    highs = np.unique(reference_rows["core_distance_high"].quantity.to_value(u.m))
+    rows = reference_rows.copy()
+    rows.sort("core_distance_bin_index")
+    lows = np.unique(rows["core_distance_low"].quantity.to_value(u.m))
+    highs = np.unique(rows["core_distance_high"].quantity.to_value(u.m))
     return np.concatenate([lows[:1], highs])
 
 
@@ -303,16 +302,17 @@ def _get_diagnostic_output_dir(args_dict):
 def _build_result_row(metadata_row, bin_table, args_dict):
     """Build one result row for a selected trigger histogram."""
     reference_id = metadata_row["reference_id"]
-    energy_edges, angular_edges = _get_reference_bin_edges(bin_table, reference_id)
-    simulated_counts = _get_reference_matrix(bin_table, reference_id, "simulated_count")
-    triggered_counts = _get_reference_matrix(bin_table, reference_id, "triggered_count")
+    reference_rows = bin_table[bin_table["reference_id"] == reference_id]
+    energy_edges, angular_edges = _get_reference_bin_edges(reference_rows)
+    simulated_counts = _get_reference_matrix(reference_rows, "simulated_count")
+    triggered_counts = _get_reference_matrix(reference_rows, "triggered_count")
 
     effective_radius = _resolve_effective_throw_radius(
         _get_metadata_quantity(metadata_row, "core_scatter_max", u.m),
         args_dict.get("reduced_core_radius"),
     )
     if simulated_counts.ndim == 3:
-        core_edges = _get_reference_core_edges(bin_table, reference_id)
+        core_edges = _get_reference_core_edges(reference_rows)
         simulated_counts, triggered_counts = _collapse_core_distance_counts(
             simulated_counts,
             triggered_counts,

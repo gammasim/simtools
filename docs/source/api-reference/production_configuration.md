@@ -43,6 +43,15 @@ related production-configuration helpers used by the supported workflows.
    :members:
 ```
 
+(production-event-data-helpers)=
+
+## production_event_data_helpers
+
+```{eval-rst}
+.. automodule:: production_configuration.production_event_data_helpers
+   :members:
+```
+
 
 (angle-ranges)=
 
