@@ -1141,12 +1141,10 @@ def _build_observation_params_for_point(
     selected_core_scatter_max = _clip_max_quantity(core_scatter[1], lookup_core_scatter_max)
     selected_view_cone_max = _clip_max_quantity(configured_view_cone_max, lookup_view_cone_max)
 
-    return {
+    observation_params = {
         "primary": primary,
         "azimuth_angle": point["azimuth"],
         "zenith_angle": point["zenith_angle"],
-        "ha": point.get("ha"),
-        "dec": point.get("dec"),
         "model_version": model_version,
         "nsb_rate": float(nsb_rate),
         "array_layout_name": resolved_layout_name,
@@ -1162,6 +1160,11 @@ def _build_observation_params_for_point(
         "configured_view_cone_max": configured_view_cone_max,
         "lookup_view_cone_max": lookup_view_cone_max,
     }
+    if point.get("ha") is not None:
+        observation_params["ha"] = point["ha"]
+    if point.get("dec") is not None:
+        observation_params["dec"] = point["dec"]
+    return observation_params
 
 
 def build_simulation_jobs(args_dict):

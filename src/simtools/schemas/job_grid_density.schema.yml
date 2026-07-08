@@ -32,12 +32,12 @@ data:
         unit: deg
       - name: ha
         description: Hour angle coordinate value in degrees (positive westward).
-        required: true
+        required: false
         type: float64
         unit: deg
       - name: dec
         description: Declination coordinate value in degrees.
-        required: true
+        required: false
         type: float64
         unit: deg
       - name: energy_min

@@ -21,6 +21,8 @@ _ECSV_FORMAT = "ascii.ecsv"
 _JOB_GRID_SCHEMA_FILE = "job_grid_density.schema.yml"
 _JOB_GRID_SCHEMA_URL = SCHEMA_URL + "/" + _JOB_GRID_SCHEMA_FILE
 _OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label", "telescope")
+_OPTIONAL_COORDINATE_FIELDS = ("ha", "dec")
+_MISSING = object()
 
 
 @dataclass(frozen=True)
@@ -29,6 +31,7 @@ class JobGridSchema:
 
     version: str
     columns: tuple[str, ...]
+    optional_columns: tuple[str, ...]
     column_units: dict[str, u.Unit]
     column_dtypes: dict[str, object]
 
@@ -46,6 +49,9 @@ def _load_job_grid_schema():
     return JobGridSchema(
         version=schema["schema_version"],
         columns=tuple(column["name"] for column in column_definitions),
+        optional_columns=tuple(
+            column["name"] for column in column_definitions if not column.get("required")
+        ),
         column_units=column_units,
         column_dtypes={
             column["name"]: str if column["type"] == "string" else np.dtype(column["type"])
@@ -55,7 +61,9 @@ def _load_job_grid_schema():
 
 
 JOB_GRID_SCHEMA = _load_job_grid_schema()
-JOB_GRID_COLUMNS = [name for name in JOB_GRID_SCHEMA.columns if name not in _OPTIONAL_STRING_FIELDS]
+JOB_GRID_COLUMNS = [
+    name for name in JOB_GRID_SCHEMA.columns if name not in JOB_GRID_SCHEMA.optional_columns
+]
 
 
 def _cast_scalar(value, dtype):
@@ -68,14 +76,14 @@ def _cast_scalar(value, dtype):
 def _get_job_row_value(job_row, name):
     """Return one serialized field value, validating required schema entries."""
     if name not in job_row:
-        if name in _OPTIONAL_STRING_FIELDS:
-            return ""
+        if name in JOB_GRID_SCHEMA.optional_columns:
+            return _MISSING
         raise KeyError(name)
 
     value = job_row[name]
     if value is None:
-        if name in _OPTIONAL_STRING_FIELDS:
-            return ""
+        if name in JOB_GRID_SCHEMA.optional_columns:
+            return _MISSING
         raise TypeError(f"Missing required value for field '{name}'.")
     return value
 
@@ -91,10 +99,13 @@ def _serialize_field_value(name, value):
 
 def _serialize_job_row(job_row):
     """Serialize one job row to the on-disk schema."""
-    return {
-        name: _serialize_field_value(name, _get_job_row_value(job_row, name))
-        for name in JOB_GRID_SCHEMA.columns
-    }
+    serialized_row = {}
+    for name in JOB_GRID_SCHEMA.columns:
+        value = _get_job_row_value(job_row, name)
+        if value is _MISSING:
+            continue
+        serialized_row[name] = _serialize_field_value(name, value)
+    return serialized_row
 
 
 def _deserialize_job_row(serialized_row, column_units=None):
@@ -200,9 +211,24 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     if output_path.suffix.lower() != _ECSV_SUFFIX:
         raise ValueError("Job grid output file must use the '.ecsv' extension.")
 
-    output_columns = JOB_GRID_SCHEMA.columns
+    optional_columns_to_write = (
+        JOB_GRID_SCHEMA.optional_columns
+        if not serialized_rows
+        else tuple(
+            column
+            for column in JOB_GRID_SCHEMA.optional_columns
+            if any(column in row for row in serialized_rows)
+        )
+    )
+    output_columns = (*JOB_GRID_COLUMNS, *optional_columns_to_write)
     output_rows = [
-        {column: row.get(column) for column in output_columns} for row in serialized_rows
+        {
+            column: (
+                "" if column in _OPTIONAL_STRING_FIELDS and column not in row else row.get(column)
+            )
+            for column in output_columns
+        }
+        for row in serialized_rows
     ]
     output_table = _build_output_table(output_rows, output_columns, metadata)
     output_table = _validate_job_grid_table(output_table)
