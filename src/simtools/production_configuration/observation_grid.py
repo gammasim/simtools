@@ -528,9 +528,7 @@ class ProductionGridEngine:
         """Generate a grid containing both HA/Dec and horizontal coordinates."""
         if self.coordinate_system == "ha_dec":
             return self._generate_grid_hadec_mode(include_horizontal_coordinates=True)
-        return self.convert_coordinates(
-            self._generate_horizontal_grid(), keep_horizontal_coordinates=True
-        )
+        return self._generate_horizontal_grid()
 
     def _hadec_to_horizontal(self, hour_angle, declination):
         """Convert local HA/Dec coordinates to zenith and azimuth angles."""
