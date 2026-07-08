@@ -25,6 +25,8 @@ TRIGGER_HISTOGRAM_METADATA_TABLE = "TRIGGER_REFERENCE_METADATA"
 TRIGGER_HISTOGRAM_BINS_TABLE = "TRIGGER_REFERENCE_BINS"
 TRIGGER_HISTOGRAM_VALUES_TABLE = "TRIGGER_HISTOGRAM_VALUES"
 TRIGGER_HISTOGRAM_EDGES_TABLE = "TRIGGER_HISTOGRAM_EDGES"
+TRIGGER_TOPOLOGY_COUNTS_TABLE = "TRIGGER_TOPOLOGY_COUNTS"
+TRIGGER_SUBSET_HISTOGRAMS_TABLE = "TRIGGER_SUBSET_HISTOGRAMS"
 
 _DERIVED_HISTOGRAM_SUFFIXES = ("_eff", "_cumulative")
 
@@ -101,6 +103,85 @@ def _create_histogram_tables(reference_specs):
         vstack(metadata_tables, metadata_conflicts="silent"),
         vstack(bin_tables, metadata_conflicts="silent"),
     )
+
+
+def _create_trigger_topology_count_table(reference_specs):
+    """Create count table for trigger multiplicities, combinations, and telescope participation."""
+    rows = []
+    for spec in reference_specs:
+        topology = spec.get("trigger_topology") or {}
+        for count_type in (
+            "trigger_multiplicity",
+            "trigger_combinations",
+            "telescope_participation",
+        ):
+            for key, count in topology.get(count_type, {}).items():
+                rows.append(
+                    {
+                        "reference_id": spec["reference_id"],
+                        "count_type": count_type,
+                        "subset": "",
+                        "key": str(key),
+                        "count": int(count),
+                    }
+                )
+        for subset_name, multiplicity_counts in topology.get("subset_multiplicity", {}).items():
+            for multiplicity, count in multiplicity_counts.items():
+                rows.append(
+                    {
+                        "reference_id": spec["reference_id"],
+                        "count_type": "subset_multiplicity",
+                        "subset": str(subset_name),
+                        "key": str(multiplicity),
+                        "count": int(count),
+                    }
+                )
+
+    table = Table(rows=rows, names=["reference_id", "count_type", "subset", "key", "count"])
+    table.meta["EXTNAME"] = TRIGGER_TOPOLOGY_COUNTS_TABLE
+    return table
+
+
+def _quantity_bin_edges(histograms, quantity_name):
+    """Return bin edges for a named event quantity."""
+    if quantity_name == "energy":
+        return histograms.energy_bins
+    if quantity_name == "core_distance":
+        return histograms.core_distance_bins
+    if quantity_name == "angular_distance":
+        return histograms.view_cone_bins
+    raise ValueError(f"Unsupported quantity: {quantity_name}")
+
+
+def _create_trigger_subset_histogram_table(reference_specs):
+    """Create per-trigger-subset histograms for event-production comparisons."""
+    rows = []
+    for spec in reference_specs:
+        topology = spec.get("trigger_topology") or {}
+        subset_values = topology.get("subset_values", {})
+        for quantity_name, values_by_subset in subset_values.items():
+            bin_edges = _quantity_bin_edges(spec["histograms"], quantity_name)
+            for subset_name, values in values_by_subset.items():
+                counts, _ = np.histogram(values, bins=bin_edges)
+                for bin_index, count in enumerate(counts):
+                    rows.append(
+                        {
+                            "reference_id": spec["reference_id"],
+                            "subset": str(subset_name),
+                            "quantity": quantity_name,
+                            "bin_index": bin_index,
+                            "bin_low": float(bin_edges[bin_index]),
+                            "bin_high": float(bin_edges[bin_index + 1]),
+                            "count": int(count),
+                        }
+                    )
+
+    table = Table(
+        rows=rows,
+        names=["reference_id", "subset", "quantity", "bin_index", "bin_low", "bin_high", "count"],
+    )
+    table.meta["EXTNAME"] = TRIGGER_SUBSET_HISTOGRAMS_TABLE
+    return table
 
 
 def _create_metadata_table(
@@ -297,8 +378,9 @@ def _process_production(
         angular_distance_bin_width=angular_distance_bin_width,
         skip_invalid_event_data_files=skip_invalid_event_data_files,
         fill_efficiency_histogram=True,
+        collect_trigger_topology=True,
     )
-    return [histograms for _, histograms in finalized_histograms]
+    return [(histograms, topology) for _, histograms, topology in finalized_histograms]
 
 
 def _plot_histograms(histograms, output_dir, array_name, telescope_ids):
@@ -354,7 +436,7 @@ def write_trigger_histograms(args_dict):
         production_subdirs = build_production_subdirectories(production_patterns, output_dir)
 
     for production_index, pattern in enumerate(production_patterns):
-        accumulators = _process_production(
+        histogram_topology_pairs = _process_production(
             pattern,
             telescope_configs,
             energy_bins_per_decade=args_dict["energy_bins_per_decade"],
@@ -365,7 +447,9 @@ def write_trigger_histograms(args_dict):
         if args_dict.get("plot_histograms"):
             production_subdir = production_subdirs.get(pattern, output_dir / "trigger_histograms")
 
-        for config, histograms in zip(telescope_configs, accumulators):
+        for config, (histograms, trigger_topology) in zip(
+            telescope_configs, histogram_topology_pairs
+        ):
             # reference_id connects metadata and bin tables
             reference_id = gen.get_uuid()
             reference_specs.append(
@@ -377,6 +461,7 @@ def write_trigger_histograms(args_dict):
                     "array_name": config["array_name"],
                     "telescope_ids": config["telescope_ids"],
                     "histograms": histograms,
+                    "trigger_topology": trigger_topology,
                 }
             )
             if production_subdir is not None:
@@ -392,8 +477,17 @@ def write_trigger_histograms(args_dict):
     metadata_table, bin_table = _create_histogram_tables(reference_specs)
     histogram_value_table = _create_histogram_value_table(reference_specs)
     histogram_edge_table = _create_histogram_edge_table(reference_specs)
+    topology_count_table = _create_trigger_topology_count_table(reference_specs)
+    subset_histogram_table = _create_trigger_subset_histogram_table(reference_specs)
     table_handler.write_tables(
-        [metadata_table, bin_table, histogram_value_table, histogram_edge_table],
+        [
+            metadata_table,
+            bin_table,
+            histogram_value_table,
+            histogram_edge_table,
+            topology_count_table,
+            subset_histogram_table,
+        ],
         output_file,
         overwrite_existing=True,
         file_type="HDF5",

@@ -10,7 +10,7 @@ Command line arguments
 production (repeated, required)
     Production descriptor in two fields:
     1) label
-    2) comma-separated event data file patterns
+    2) comma-separated trigger histogram HDF5 file patterns
 comparison_level (str, optional)
     Comparison level selector. Supported values are:
     - events
@@ -35,12 +35,12 @@ def _add_arguments(parser):
         "--production",
         action="append",
         nargs="+",
-        metavar=("LABEL", "EVENT_DATA_FILES"),
+        metavar=("LABEL", "TRIGGER_HISTOGRAM_FILES"),
         required=True,
         help=(
             "Production descriptor. "
             "Use as: --production <label> <comma-separated file patterns>. "
-            "Repeat this argument as needed for multiple productions."
+            "Repeat this argument as needed for multiple trigger histogram files."
         ),
     )
     parser.add_argument(

@@ -1,13 +1,17 @@
 """Shared helpers for production workflows based on reduced event-data files."""
 
 import re
+from collections import Counter, defaultdict
 from pathlib import Path
+
+import numpy as np
 
 from simtools.layout.array_layout_utils import (
     get_array_elements_from_db_for_layouts,
     resolve_array_layout_name,
 )
 from simtools.sim_events.histograms import EventDataHistograms
+from simtools.utils import names
 from simtools.utils.general import get_uuid
 from simtools.utils.names import normalize_array_element_identifier_container
 
@@ -172,6 +176,7 @@ def accumulate_histograms_by_telescope_config(
     angular_distance_bin_width=None,
     skip_invalid_event_data_files=False,
     fill_efficiency_histogram=False,
+    collect_trigger_topology=False,
 ):
     """
     Read one production once and accumulate histograms for all telescope configurations.
@@ -216,10 +221,15 @@ def accumulate_histograms_by_telescope_config(
         )
         for config in telescope_configs
     ]
+    topology_accumulators = (
+        [_initialize_trigger_topology_accumulator() for _ in telescope_configs]
+        if collect_trigger_topology
+        else None
+    )
 
     for reader, values in event_source.iter_event_data():
         file_info_table, shower_data, triggered_shower, triggered_data = values
-        for config, histograms in zip(telescope_configs, accumulators):
+        for config_index, (config, histograms) in enumerate(zip(telescope_configs, accumulators)):
             if config["telescope_ids"]:
                 filtered_triggered_data, filtered_triggered_shower = reader.filter_by_telescopes(
                     triggered_data,
@@ -235,7 +245,72 @@ def accumulate_histograms_by_telescope_config(
                 filtered_triggered_shower,
                 filtered_triggered_data,
             )
+            if collect_trigger_topology:
+                _accumulate_trigger_topology(
+                    filtered_triggered_shower,
+                    filtered_triggered_data,
+                    topology_accumulators[config_index],
+                )
 
     for histograms in accumulators:
         histograms.finalize(fill_efficiency_histogram=fill_efficiency_histogram)
+    if collect_trigger_topology:
+        return list(zip(telescope_configs, accumulators, topology_accumulators))
     return list(zip(telescope_configs, accumulators))
+
+
+def _initialize_trigger_topology_accumulator():
+    """Initialize counters and quantity buffers for trigger topology summaries."""
+    return {
+        "trigger_multiplicity": Counter(),
+        "trigger_combinations": Counter(),
+        "telescope_participation": Counter(),
+        "subset_multiplicity": defaultdict(Counter),
+        "subset_values": {
+            "energy": defaultdict(list),
+            "core_distance": defaultdict(list),
+            "angular_distance": defaultdict(list),
+        },
+    }
+
+
+def _accumulate_trigger_topology(triggered_shower_data, triggered_data, accumulator):
+    """Accumulate trigger topology counters and per-subset triggered quantities."""
+    if triggered_shower_data is None or triggered_data is None:
+        return
+
+    energies = np.asarray(triggered_shower_data.simulated_energy)
+    core_distances = np.asarray(triggered_shower_data.core_distance_shower)
+    angular_distances = np.asarray(triggered_shower_data.angular_distance)
+    for event_index, telescope_list in enumerate(triggered_data.telescope_list):
+        telescopes = tuple(sorted(str(telescope) for telescope in telescope_list))
+        multiplicity = len(telescopes)
+        accumulator["trigger_multiplicity"][multiplicity] += 1
+        accumulator["trigger_combinations"][",".join(telescopes)] += 1
+        for telescope in set(telescopes):
+            accumulator["telescope_participation"][telescope] += 1
+
+        for subset_name, subset_multiplicity in _subset_counts_for_trigger(telescopes).items():
+            accumulator["subset_multiplicity"][subset_name][subset_multiplicity] += 1
+            accumulator["subset_values"]["energy"][subset_name].append(float(energies[event_index]))
+            accumulator["subset_values"]["core_distance"][subset_name].append(
+                float(core_distances[event_index])
+            )
+            accumulator["subset_values"]["angular_distance"][subset_name].append(
+                float(angular_distances[event_index])
+            )
+
+
+def _subset_counts_for_trigger(telescopes):
+    """Return per-type and special subset multiplicities for one trigger."""
+    type_counts = Counter()
+    for telescope in telescopes:
+        tel_type = names.get_array_element_type_from_name(telescope)
+        type_counts[tel_type] += 1
+
+    subset_counts = {tel_type: count for tel_type, count in type_counts.items() if count >= 2}
+    if len(telescopes) == 1:
+        subset_counts["single_telescope"] = 1
+    elif len(type_counts) > 1:
+        subset_counts["mixed_type"] = len(telescopes)
+    return subset_counts
