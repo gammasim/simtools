@@ -1094,11 +1094,6 @@ def _generate_observation_grids_per_layout(
                     if corsika_limits_path is not None
                     else None
                 )
-                generated_grid = ProductionGridEngine(
-                    axes={},
-                    coordinate_system="horizontal",
-                    observing_location=build_observing_location(args_dict["site"], model_version),
-                )
                 generated_grid = _generate_observation_points_from_axes(
                     azimuth_values=grid_axes["azimuth_angle"],
                     zenith_values=grid_axes["zenith_angle"],
