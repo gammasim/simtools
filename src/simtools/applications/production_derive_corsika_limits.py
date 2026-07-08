@@ -81,6 +81,7 @@ trigger_histogram_file (str, required)
     Precomputed trigger-histogram HDF5 file from ``simtools-write-trigger-histograms``.
 array_names (str, optional)
     Optional array names to select from the trigger-histogram file.
+    If omitted, limits are derived for all array names available in the file.
 allowed_losses (str, required, repeatable)
     Per-axis allowed-loss tuple in the form
     ``axis,fraction,min_events``.
@@ -149,7 +150,10 @@ def _add_arguments(parser):
     )
     parser.add_argument(
         "--array_names",
-        help="Optional array names to select from a precomputed trigger-histogram file.",
+        help=(
+            "Optional array names to select from a precomputed trigger-histogram file. "
+            "If omitted, derive limits for all array names available in the file."
+        ),
         nargs="+",
         type=str,
         required=False,

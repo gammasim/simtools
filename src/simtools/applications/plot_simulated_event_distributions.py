@@ -31,6 +31,16 @@ from simtools.production_configuration.trigger_histograms import load_event_data
 from simtools.visualization import plot_simtel_event_histograms
 
 
+def _plottable_histograms(histograms):
+    """Return histogram definitions that can be rendered as 1D or 2D plots."""
+    return {
+        name: histogram
+        for name, histogram in histograms.items()
+        if isinstance(histogram, dict) and histogram.get("histogram") is not None
+        if getattr(histogram["histogram"], "ndim", 0) <= 2
+    }
+
+
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
     parser.add_argument(
@@ -49,7 +59,10 @@ def _plot_histogram_file(trigger_histogram_file, output_dir):
         if len(loaded_histograms) > 1:
             output_path = output_dir / histograms.array_name
             output_path.mkdir(parents=True, exist_ok=True)
-        plot_simtel_event_histograms.plot(histograms.histograms, output_path=output_path)
+        plot_simtel_event_histograms.plot(
+            _plottable_histograms(histograms.histograms),
+            output_path=output_path,
+        )
 
 
 def main():
