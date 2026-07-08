@@ -1,5 +1,6 @@
 import astropy.units as u
 import numpy as np
+import pytest
 
 from simtools.io import table_handler
 from simtools.production_configuration.trigger_histograms import (
@@ -7,6 +8,7 @@ from simtools.production_configuration.trigger_histograms import (
     TRIGGER_HISTOGRAM_METADATA_TABLE,
     _create_histogram_tables,
     _get_plot_directory_name,
+    _use_readable_inline_array_names,
     load_trigger_histograms,
 )
 
@@ -15,6 +17,7 @@ class _FakeHistograms:
     def __init__(self):
         self.energy_bins_per_decade = 4
         self.angular_distance_bin_count = 3
+        self.angular_distance_bin_width = 1.0 * u.deg
         self.file_info = {
             "primary_particle": "gamma",
             "zenith": 20.0 * u.deg,
@@ -57,6 +60,10 @@ def test_create_histogram_tables_contains_expected_metadata_and_bins():
     assert bin_table.meta["EXTNAME"] == TRIGGER_HISTOGRAM_BINS_TABLE
     assert metadata_table["reference_id"][0] == "ref-1"
     assert metadata_table["site"][0] == "North"
+    assert metadata_table["angular_distance_bin_width"].quantity[0].to_value(
+        u.deg
+    ) == pytest.approx(1.0)
+    assert metadata_table["angular_distance_bin_count"][0] == 2
     assert metadata_table["total_simulated_events"][0] == 10
     assert metadata_table["total_triggered_events"][0] == 4
     assert len(bin_table) == 4
@@ -98,3 +105,11 @@ def test_histogram_tables_round_trip_via_hdf5(tmp_path):
 def test_plot_directory_name_uses_telescope_ids_for_inline_lists():
     assert _get_plot_directory_name("array_element_list", ["MSTS-01"]) == "MSTS-01"
     assert _get_plot_directory_name("alpha", ["MSTS-01"]) == "alpha"
+
+
+def test_readable_inline_array_names_use_telescope_ids():
+    configs = _use_readable_inline_array_names(
+        [{"array_name": "array_element_list", "telescope_ids": ["MSTS-01"]}]
+    )
+
+    assert configs[0]["array_name"] == "MSTS-01"

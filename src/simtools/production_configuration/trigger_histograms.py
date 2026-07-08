@@ -32,6 +32,22 @@ def _get_plot_directory_name(array_name, telescope_ids):
     return "_".join(str(telescope_id) for telescope_id in telescope_ids)
 
 
+def _use_readable_inline_array_names(telescope_configs):
+    """Return telescope configs with readable names for inline array-element lists."""
+    readable_configs = []
+    for config in telescope_configs:
+        array_name = _get_plot_directory_name(config["array_name"], config["telescope_ids"])
+        readable_configs.append(config | {"array_name": array_name})
+    return readable_configs
+
+
+def _get_angular_distance_bin_width(histograms):
+    """Return the configured angular-distance bin width for metadata."""
+    if histograms.angular_distance_bin_width is not None:
+        return histograms.angular_distance_bin_width
+    return np.diff(histograms.view_cone_bins)[0] * u.deg
+
+
 def _create_histogram_tables(reference_specs):
     """Convert accumulated histogram products into metadata and bin tables."""
     metadata_tables = []
@@ -99,7 +115,8 @@ def _create_metadata_table(
                 "scatter_area": file_info.get("scatter_area", 0.0 * u.cm**2),
                 "solid_angle": file_info.get("solid_angle", 0.0 * u.sr),
                 "energy_bins_per_decade": histograms.energy_bins_per_decade,
-                "angular_distance_bin_count": histograms.angular_distance_bin_count,
+                "angular_distance_bin_width": _get_angular_distance_bin_width(histograms),
+                "angular_distance_bin_count": len(histograms.view_cone_bins) - 1,
                 "total_simulated_events": int(
                     np.sum(histograms.histograms["angular_distance_vs_energy_mc"]["histogram"])
                 ),
@@ -120,8 +137,6 @@ def _create_bin_table(reference_id, production_index, array_name, histograms):
     efficiency_hist = histograms.histograms["angular_distance_vs_energy_eff"]["histogram"]
     energy_edges = histograms.energy_bins
     angular_edges = histograms.view_cone_bins
-    scatter_area = histograms.file_info["scatter_area"].to(u.m**2).value
-    effective_area = efficiency_hist * scatter_area
 
     rows = []
     for angular_index in range(len(angular_edges) - 1):
@@ -131,7 +146,7 @@ def _create_bin_table(reference_id, production_index, array_name, histograms):
                     "reference_id": reference_id,
                     "production_index": production_index,
                     "array_name": array_name,
-                    "angular_bin_index": angular_index,
+                    "angular_distance_bin_index": angular_index,
                     "energy_bin_index": energy_index,
                     "angular_distance_low": angular_edges[angular_index] * u.deg,
                     "angular_distance_high": angular_edges[angular_index + 1] * u.deg,
@@ -140,7 +155,6 @@ def _create_bin_table(reference_id, production_index, array_name, histograms):
                     "simulated_count": int(simulated_hist[angular_index, energy_index]),
                     "triggered_count": int(triggered_hist[angular_index, energy_index]),
                     "trigger_efficiency": float(efficiency_hist[angular_index, energy_index]),
-                    "effective_area": effective_area[angular_index, energy_index] * u.m**2,
                 }
             )
 
@@ -153,7 +167,7 @@ def _process_production(
     file_path,
     telescope_configs,
     energy_bins_per_decade,
-    angular_distance_bin_count,
+    angular_distance_bin_width,
     skip_invalid_event_data_files=False,
 ):
     """Read one production once and build trigger histograms for all telescope configurations."""
@@ -161,7 +175,7 @@ def _process_production(
         file_path,
         telescope_configs,
         energy_bins_per_decade=energy_bins_per_decade,
-        angular_distance_bin_count=angular_distance_bin_count,
+        angular_distance_bin_width=angular_distance_bin_width,
         skip_invalid_event_data_files=skip_invalid_event_data_files,
         fill_efficiency_histogram=True,
     )
@@ -206,7 +220,9 @@ def build_trigger_histograms(args_dict):
         selection is provided.
     """
     production_patterns = normalize_event_data_file(args_dict["event_data_file"])
-    telescope_configs = normalize_telescope_configs(resolve_telescope_configs(args_dict))
+    telescope_configs = _use_readable_inline_array_names(
+        normalize_telescope_configs(resolve_telescope_configs(args_dict))
+    )
     output_dir = io_handler.IOHandler().get_output_directory()
     output_file = io_handler.IOHandler().get_output_file(args_dict["output_file"])
     gen.validate_file_type(output_file, expected_suffixes=[".hdf5", ".h5"])
@@ -223,7 +239,7 @@ def build_trigger_histograms(args_dict):
             pattern,
             telescope_configs,
             energy_bins_per_decade=args_dict["energy_bins_per_decade"],
-            angular_distance_bin_count=args_dict["angular_distance_bin_count"],
+            angular_distance_bin_width=args_dict["angular_distance_bin_width"],
             skip_invalid_event_data_files=args_dict.get("skip_invalid_event_data_files", False),
         )
         production_subdir = None
@@ -231,6 +247,7 @@ def build_trigger_histograms(args_dict):
             production_subdir = production_subdirs.get(pattern, output_dir / "trigger_histograms")
 
         for config, histograms in zip(telescope_configs, accumulators):
+            # reference_id connects metadata and bin tables
             reference_id = gen.get_uuid()
             reference_specs.append(
                 {

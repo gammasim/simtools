@@ -8,6 +8,8 @@ accumulates triggered and simulated histograms in angular-distance vs energy, an
 an HDF5 product for later statistics estimation.
 """
 
+import astropy.units as u
+
 from simtools.application_control import build_application
 from simtools.production_configuration.trigger_histograms import build_trigger_histograms
 
@@ -31,10 +33,10 @@ def _add_arguments(parser):
         default=10,
     )
     parser.add_argument(
-        "--angular_distance_bin_count",
-        help="Number of angular-distance bins.",
-        type=int,
-        default=100,
+        "--angular_distance_bin_width",
+        help="Angular-distance bin width. The range is taken from broad-range viewcone limits.",
+        type=parser.positive_quantity("deg"),
+        default=0.1 * u.deg,
     )
     parser.add_argument(
         "--plot_histograms",

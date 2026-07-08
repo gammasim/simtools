@@ -48,6 +48,7 @@ class EventDataHistograms:
         telescope_list=None,
         energy_bins_per_decade=10,
         angular_distance_bin_count=100,
+        angular_distance_bin_width=None,
         core_distance_bin_count=100,
         skip_invalid_event_data_files=False,
         require_triggered_data=False,
@@ -59,6 +60,9 @@ class EventDataHistograms:
         self.array_name = array_name
         self.energy_bins_per_decade = max(int(energy_bins_per_decade), 1)
         self.angular_distance_bin_count = max(int(angular_distance_bin_count), 2)
+        self.angular_distance_bin_width = self._validate_angular_distance_bin_width(
+            angular_distance_bin_width
+        )
         self.core_distance_bin_count = max(int(core_distance_bin_count), 2)
         self.skip_invalid_event_data_files = skip_invalid_event_data_files
         self.require_triggered_data = require_triggered_data
@@ -85,6 +89,7 @@ class EventDataHistograms:
         telescope_list=None,
         energy_bins_per_decade=10,
         angular_distance_bin_count=100,
+        angular_distance_bin_width=None,
         core_distance_bin_count=100,
     ):
         """Create an empty histogram accumulator for externally supplied event data.
@@ -99,6 +104,9 @@ class EventDataHistograms:
         instance.array_name = array_name
         instance.energy_bins_per_decade = max(int(energy_bins_per_decade), 1)
         instance.angular_distance_bin_count = max(int(angular_distance_bin_count), 2)
+        instance.angular_distance_bin_width = cls._validate_angular_distance_bin_width(
+            angular_distance_bin_width
+        )
         instance.core_distance_bin_count = max(int(core_distance_bin_count), 2)
         instance.skip_invalid_event_data_files = False
         instance.require_triggered_data = True
@@ -111,6 +119,16 @@ class EventDataHistograms:
         instance._release_event_data_after_fill = True
         instance.reader = None
         return instance
+
+    @staticmethod
+    def _validate_angular_distance_bin_width(angular_distance_bin_width):
+        """Return angular-distance bin width in deg, or None for count-based binning."""
+        if angular_distance_bin_width is None:
+            return None
+        angular_distance_bin_width = _coerce_quantity(angular_distance_bin_width, "deg")
+        if angular_distance_bin_width.value <= 0.0:
+            raise ValueError("angular_distance_bin_width must be positive.")
+        return angular_distance_bin_width
 
     def _normalize_event_data_files(self, event_data_file):
         """Return event-data files as a list of resolved file names."""
@@ -173,6 +191,7 @@ class EventDataHistograms:
             "energy_min": self._get_file_info_value(file_info_table, "energy_min", "TeV"),
             "energy_max": self._get_file_info_value(file_info_table, "energy_max", "TeV"),
             "core_scatter_max": self._get_file_info_value(file_info_table, "core_scatter_max", "m"),
+            "viewcone_min": self._get_file_info_value(file_info_table, "viewcone_min", "deg"),
             "viewcone_max": self._get_file_info_value(file_info_table, "viewcone_max", "deg"),
             "solid_angle": self._get_file_info_value(file_info_table, "solid_angle", "sr"),
             "scatter_area": self._get_file_info_value(file_info_table, "scatter_area", "cm2"),
@@ -532,7 +551,27 @@ class EventDataHistograms:
         if viewcone_min == viewcone_max:
             viewcone_max = viewcone_min + 0.5
 
+        if self.angular_distance_bin_width is not None:
+            return self._fixed_width_bins(
+                viewcone_min,
+                viewcone_max,
+                self.angular_distance_bin_width.to_value(u.deg),
+            )
+
         return np.linspace(viewcone_min, viewcone_max, self.angular_distance_bin_count)
+
+    @staticmethod
+    def _fixed_width_bins(lower_edge, upper_edge, bin_width):
+        """Return bin edges from lower to upper edge using fixed-width bins."""
+        if upper_edge <= lower_edge:
+            upper_edge = lower_edge + bin_width
+        bin_count = int(np.floor((upper_edge - lower_edge) / bin_width))
+        edges = lower_edge + np.arange(bin_count + 1) * bin_width
+        if np.isclose(edges[-1], upper_edge):
+            edges[-1] = upper_edge
+        elif edges[-1] < upper_edge:
+            edges = np.append(edges, upper_edge)
+        return edges
 
     def calculate_cumulative_data(self):
         """

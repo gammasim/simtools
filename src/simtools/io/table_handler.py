@@ -38,6 +38,19 @@ def read_table_list(input_file, table_names, include_indexed_tables=False):
     If table_counter is True, search for tables with the same name
     but with different suffixes (e.g., "_0", "_1", etc.).
 
+    Parameters
+    ----------
+    input_file : str or Path
+        Path to the input file (HDF5 or FITS).
+    table_names : list of str
+        List of table names to search for in the input file.
+    include_indexed_tables : bool, optional
+        If True, include tables with indexed suffixes (e.g., "_0", "_1", etc.) in the search.
+
+    Returns
+    -------
+    dict
+        Dictionary with table names as keys and lists of found table names as values.
     """
     file_type = read_table_file_type(input_file)
     if file_type == "HDF5":
@@ -368,7 +381,7 @@ def write_table_chunks(table_chunks, output_file, overwrite_existing=True):
             hdf5_file.attrs["simtools_write_status"] = "complete"
             hdf5_file.flush()
         incomplete_file.replace(output_file)
-        _logger.info(f"Published complete HDF5 output file {output_file}")
+        _logger.info(f"Finished writing verified HDF5 output file {output_file}")
     except Exception:
         _logger.exception(
             f"Failed to publish HDF5 output file '{output_file}'. "

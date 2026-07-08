@@ -1,12 +1,12 @@
-"""Estimate required triggered-event statistics from trigger histogram products."""
+"""Estimate required Monte Carlo statistics from trigger histogram products."""
 
 import logging
-from pathlib import Path
 
 import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
+import simtools.utils.general as gen
 from simtools.production_configuration.trigger_histograms import (
     load_trigger_histograms,
 )
@@ -37,6 +37,7 @@ def _get_metadata_quantity(metadata_row, column_name, default_unit):
     return u.Quantity(value, unit)
 
 
+# TODO - not used!!
 def _resolve_effective_throw_radius(original_radius, radius_override=None):
     """Return the effective throw radius, validating optional overrides."""
     original_radius = u.Quantity(original_radius).to(u.m)
@@ -96,13 +97,6 @@ def _compute_energy_bin_probabilities(
     return weights / total
 
 
-def _compute_effective_area_matrix(trigger_efficiency, effective_radius):
-    """Return the effective area matrix for the chosen throw radius."""
-    return np.asarray(trigger_efficiency, dtype=float) * (
-        np.pi * u.Quantity(effective_radius).to_value(u.m) ** 2
-    )
-
-
 def _compute_expected_trigger_matrix(simulated_counts, trigger_efficiency, energy_probabilities):
     """Return the expected triggered counts per one thrown event."""
     simulated_counts = np.asarray(simulated_counts, dtype=float)
@@ -122,41 +116,34 @@ def _compute_expected_trigger_matrix(simulated_counts, trigger_efficiency, energ
 def _get_reference_matrix(bin_table, reference_id, column_name):
     """Return one per-bin matrix reconstructed from the flattened table."""
     rows = bin_table[bin_table["reference_id"] == reference_id]
-    rows.sort(["angular_bin_index", "energy_bin_index"])
-    angular_indices = np.unique(rows["angular_bin_index"])
+    rows.sort(["angular_distance_bin_index", "energy_bin_index"])
+    angular_indices = np.unique(rows["angular_distance_bin_index"])
     energy_indices = np.unique(rows["energy_bin_index"])
     return np.asarray(rows[column_name]).reshape(len(angular_indices), len(energy_indices))
 
 
-def _get_reference_energy_edges(bin_table, reference_id):
-    """Return energy bin edges in TeV for one reference."""
-    rows = bin_table[bin_table["reference_id"] == reference_id]
-    rows.sort("energy_bin_index")
-    lows = np.unique(rows["energy_low"].quantity.to_value(u.TeV))
-    highs = np.unique(rows["energy_high"].quantity.to_value(u.TeV))
-    return np.concatenate([lows[:1], highs])
+def _get_reference_bin_edges(bin_table, reference_id):
+    """Return the bin edges for energy and angular distance histograms."""
+    axis_units = {
+        "energy": u.TeV,
+        "angular_distance": u.deg,
+    }
+    reference_rows = bin_table[bin_table["reference_id"] == reference_id]
+    edges = []
+    for axis, unit in axis_units.items():
+        rows = reference_rows.copy()
+        rows.sort(f"{axis}_bin_index")
+        lows = np.unique(rows[f"{axis}_low"].quantity.to_value(unit))
+        highs = np.unique(rows[f"{axis}_high"].quantity.to_value(unit))
+        edges.append(np.concatenate([lows[:1], highs]))
+    return edges[0], edges[1]
 
 
-def _get_reference_angular_edges(bin_table, reference_id):
-    """Return angular-distance bin edges in deg for one reference."""
-    rows = bin_table[bin_table["reference_id"] == reference_id]
-    rows.sort("angular_bin_index")
-    lows = np.unique(rows["angular_distance_low"].quantity.to_value(u.deg))
-    highs = np.unique(rows["angular_distance_high"].quantity.to_value(u.deg))
-    return np.concatenate([lows[:1], highs])
-
-
-def _select_reference_rows(metadata_table, args_dict):
-    """Filter reference metadata rows according to optional CLI selectors."""
+def _select_reference_rows(metadata_table, array_names):
+    """Filter reference metadata rows according to optional user-facing selectors."""
     selected = metadata_table
-    if args_dict.get("reference_ids"):
-        selected = selected[np.isin(selected["reference_id"], args_dict["reference_ids"])]
-    if args_dict.get("production_indices") is not None:
-        selected = selected[
-            np.isin(selected["production_index"], np.asarray(args_dict["production_indices"]))
-        ]
-    if args_dict.get("array_names"):
-        selected = selected[np.isin(selected["array_name"], args_dict["array_names"])]
+    if array_names:
+        selected = selected[np.isin(selected["array_name"], array_names)]
     if len(selected) == 0:
         raise ValueError("No trigger histograms matched the requested selection.")
     return selected
@@ -224,8 +211,7 @@ def _build_result_row(metadata_row, bin_table, args_dict):
     """Build one result row for a selected trigger histogram."""
     reference_id = metadata_row["reference_id"]
     trigger_efficiency = _get_reference_matrix(bin_table, reference_id, "trigger_efficiency")
-    energy_edges = _get_reference_energy_edges(bin_table, reference_id)
-    angular_edges = _get_reference_angular_edges(bin_table, reference_id)
+    energy_edges, angular_edges = _get_reference_bin_edges(bin_table, reference_id)
     simulated_counts = _get_reference_matrix(bin_table, reference_id, "simulated_count")
 
     effective_radius = _resolve_effective_throw_radius(
@@ -265,11 +251,8 @@ def _build_result_row(metadata_row, bin_table, args_dict):
     limiting_angular_index = limiting_index[0]
     limiting_energy_index = masked_energy_indices[limiting_index[1]]
     original_radius = _get_metadata_quantity(metadata_row, "core_scatter_max", u.m).to(u.m)
-    effective_area_matrix = _compute_effective_area_matrix(trigger_efficiency, effective_radius)
 
     return {
-        "reference_id": reference_id,
-        "production_index": metadata_row["production_index"],
         "array_name": metadata_row["array_name"],
         "spectral_index": args_dict["spectral_index"],
         "target_relative_uncertainty": args_dict["target_relative_uncertainty"],
@@ -286,31 +269,25 @@ def _build_result_row(metadata_row, bin_table, args_dict):
         "limiting_trigger_efficiency": trigger_efficiency[
             limiting_angular_index, limiting_energy_index
         ],
-        "limiting_effective_area": effective_area_matrix[
-            limiting_angular_index, limiting_energy_index
-        ]
-        * u.m**2,
         "original_core_scatter_radius": original_radius,
         "effective_core_scatter_radius": effective_radius,
-        "original_scatter_area": (np.pi * original_radius**2).to(u.m**2),
-        "effective_scatter_area": (np.pi * effective_radius**2).to(u.m**2),
-        "thrown_energy_min": u.Quantity(thrown_energy_min).to(u.TeV),
-        "thrown_energy_max": u.Quantity(thrown_energy_max).to(u.TeV),
+        "br_energy_min": u.Quantity(thrown_energy_min).to(u.TeV),
+        "br_energy_max": u.Quantity(thrown_energy_max).to(u.TeV),
         "optimization_energy_min": u.Quantity(optimization_energy_min).to(u.TeV),
         "optimization_energy_max": u.Quantity(optimization_energy_max).to(u.TeV),
     }
 
 
-def estimate_trigger_statistics(args_dict):
+def estimate_monte_carlo_statistics(args_dict):
     """
     Estimate required total thrown events for one or more trigger histograms.
 
     Parameters
     ----------
     args_dict : dict
-        Application arguments describing the histogram input file, optional
-        reference selectors, spectral assumptions, optimization range, optional
-        reduced core radius, and output file.
+        Application arguments describing the histogram input file, optional array-name
+        selector, spectral assumptions, optimization range, optional reduced core radius,
+        and output file.
 
     Returns
     -------
@@ -326,16 +303,15 @@ def estimate_trigger_statistics(args_dict):
         the output file does not use the ECSV suffix.
     """
     metadata_table, bin_table = load_trigger_histograms(args_dict["input"])
-    selected_references = _select_reference_rows(metadata_table, args_dict)
+    print("AAAAA", metadata_table)
+    print("BBBB", bin_table)
+    selected_references = _select_reference_rows(metadata_table, args_dict.get("array_names"))
     output_rows = [
         _build_result_row(metadata_row, bin_table, args_dict)
         for metadata_row in selected_references
     ]
-
     results = Table(rows=output_rows)
-    output_file = Path(args_dict["output_file"])
-    if output_file.suffix.lower() != ".ecsv":
-        raise ValueError("output_file must be an ECSV file.")
+    output_file = gen.validate_file_type(args_dict["output_file"], ".ecsv")
     results.write(output_file, format="ascii.ecsv", overwrite=True)
-    _logger.info(f"Wrote trigger-statistics estimates to {output_file}")
+    _logger.info(f"Wrote Monte Carlo statistics estimates to {output_file}")
     return results
