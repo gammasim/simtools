@@ -250,6 +250,7 @@ def accumulate_histograms_by_telescope_config(
                     filtered_triggered_shower,
                     filtered_triggered_data,
                     topology_accumulators[config_index],
+                    allowed_telescopes=config["telescope_ids"],
                 )
 
     for histograms in accumulators:
@@ -274,16 +275,21 @@ def _initialize_trigger_topology_accumulator():
     }
 
 
-def _accumulate_trigger_topology(triggered_shower_data, triggered_data, accumulator):
+def _accumulate_trigger_topology(
+    triggered_shower_data, triggered_data, accumulator, allowed_telescopes=None
+):
     """Accumulate trigger topology counters and per-subset triggered quantities."""
     if triggered_shower_data is None or triggered_data is None:
         return
 
+    allowed_telescope_set = set(allowed_telescopes or [])
     energies = np.asarray(triggered_shower_data.simulated_energy)
     core_distances = np.asarray(triggered_shower_data.core_distance_shower)
     angular_distances = np.asarray(triggered_shower_data.angular_distance)
     for event_index, telescope_list in enumerate(triggered_data.telescope_list):
-        telescopes = tuple(sorted(str(telescope) for telescope in telescope_list))
+        telescopes = _normalize_trigger_telescopes(telescope_list, allowed_telescope_set)
+        if not telescopes:
+            continue
         multiplicity = len(telescopes)
         accumulator["trigger_multiplicity"][multiplicity] += 1
         accumulator["trigger_combinations"][",".join(telescopes)] += 1
@@ -314,3 +320,19 @@ def _subset_counts_for_trigger(telescopes):
     elif len(type_counts) > 1:
         subset_counts["mixed_type"] = len(telescopes)
     return subset_counts
+
+
+def _normalize_trigger_telescopes(telescope_list, allowed_telescope_set=None):
+    """Return sorted valid telescope names for topology summaries."""
+    allowed_telescope_set = allowed_telescope_set or set()
+    normalized = []
+    for telescope in telescope_list:
+        telescope_name = str(telescope)
+        if allowed_telescope_set and telescope_name not in allowed_telescope_set:
+            continue
+        try:
+            names.get_array_element_type_from_name(telescope_name)
+        except ValueError:
+            continue
+        normalized.append(telescope_name)
+    return tuple(sorted(normalized))

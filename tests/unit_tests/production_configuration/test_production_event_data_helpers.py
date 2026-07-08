@@ -162,7 +162,7 @@ def test_accumulate_histograms_by_telescope_config_collects_trigger_topology(moc
     )
 
     mock_init.assert_called_once_with()
-    mock_accumulate.assert_called_once_with(None, None, topology)
+    mock_accumulate.assert_called_once_with(None, None, topology, allowed_telescopes=[])
     assert result == [({"array_name": "alpha", "telescope_ids": []}, accumulator, topology)]
 
 
@@ -190,3 +190,45 @@ def test_trigger_topology_helpers_track_counts_and_subsets(mocker):
     assert accumulator["subset_values"]["energy"]["mixed_type"] == pytest.approx([0.5])
     assert helpers._subset_counts_for_trigger(("LST-1", "LST-2")) == {"LST": 2}
     helpers._accumulate_trigger_topology(None, triggered_data, accumulator)
+
+
+def test_normalize_trigger_telescopes_filters_unknown_and_non_selected(mocker):
+    mocker.patch(
+        "simtools.production_configuration.production_event_data_helpers."
+        "names.get_array_element_type_from_name",
+        side_effect=lambda telescope: {"LST-1": "LST", "MST-1": "MST"}[telescope],
+    )
+
+    normalized = helpers._normalize_trigger_telescopes(
+        ["Unknown_30", "MST-1", "LST-1"],
+        {"LST-1", "MST-1"},
+    )
+
+    assert normalized == ("LST-1", "MST-1")
+
+
+def test_accumulate_trigger_topology_ignores_unknown_and_non_selected_telescopes(mocker):
+    mocker.patch(
+        "simtools.production_configuration.production_event_data_helpers."
+        "names.get_array_element_type_from_name",
+        side_effect=lambda telescope: {"LST-1": "LST", "MST-1": "MST"}[telescope],
+    )
+    accumulator = helpers._initialize_trigger_topology_accumulator()
+    shower_data = SimpleNamespace(
+        simulated_energy=[0.2, 0.5],
+        core_distance_shower=[10.0, 20.0],
+        angular_distance=[0.1, 0.2],
+    )
+    triggered_data = SimpleNamespace(
+        telescope_list=[["LST-1", "Unknown_30"], ["LST-1", "MST-1", "Unknown_30"]]
+    )
+
+    helpers._accumulate_trigger_topology(
+        shower_data,
+        triggered_data,
+        accumulator,
+        allowed_telescopes=["LST-1", "MST-1"],
+    )
+
+    assert accumulator["trigger_multiplicity"] == {1: 1, 2: 1}
+    assert accumulator["trigger_combinations"] == {"LST-1": 1, "LST-1,MST-1": 1}
