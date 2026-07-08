@@ -1305,7 +1305,18 @@ def renumber_job_rows(job_rows, run_number_offset):
 
 
 def generate_job_grid(args_dict, output_file):
-    """Generate and serialize a production job grid."""
+    """
+    Generate and serialize a production job grid.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Production job-grid configuration arguments. The accepted keys match
+        the arguments consumed by :func:`build_simulation_jobs` and
+        :func:`build_job_grid_metadata`.
+    output_file : str or Path
+        Path to the ECSV file to write.
+    """
     job_rows = renumber_job_rows(
         build_simulation_jobs(args_dict),
         run_number_offset=int(args_dict.get("run_number_offset", 0)),

@@ -103,18 +103,10 @@ def test_serialize_job_grid_writes_empty_grid_header(tmp_test_directory):
     job_grid_io.serialize_job_grid([], output_file, metadata=_metadata())
     output_table = Table.read(output_file, format="ascii.ecsv")
 
-    assert output_table.colnames in (
-        list(job_grid_io.JOB_GRID_SCHEMA.columns),
-        job_grid_io.JOB_GRID_COLUMNS,
-        [*job_grid_io.JOB_GRID_COLUMNS, "ha", "dec"],
-        [*job_grid_io.JOB_GRID_COLUMNS, *job_grid_io._OPTIONAL_STRING_FIELDS],
-        [
-            *job_grid_io.JOB_GRID_COLUMNS,
-            "ha",
-            "dec",
-            *job_grid_io._OPTIONAL_STRING_FIELDS,
-        ],
-    )
+    assert output_table.colnames == [
+        *job_grid_io.JOB_GRID_COLUMNS,
+        *job_grid_io.JOB_GRID_SCHEMA.optional_columns,
+    ]
     assert output_table.meta["job_grid_summary"]["simulation_rows"] == 0
 
 

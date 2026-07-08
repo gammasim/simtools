@@ -525,7 +525,7 @@ class ProductionGridEngine:
         return grid_points
 
     def generate_simulation_grid(self):
-        """Generate a grid containing both HA/Dec and horizontal coordinates."""
+        """Generate a grid for the configured coordinate system."""
         if self.coordinate_system == "ha_dec":
             return self._generate_grid_hadec_mode(include_horizontal_coordinates=True)
         return self._generate_horizontal_grid()
