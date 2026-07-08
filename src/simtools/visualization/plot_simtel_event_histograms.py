@@ -7,10 +7,10 @@ import matplotlib as mpl
 import numpy as np
 from matplotlib.colors import LogNorm
 
-_logger = logging.getLogger(__name__)
-
 mpl.use("Agg")
-from matplotlib import pyplot as plt  # noqa: E402
+from matplotlib import pyplot as plt  # pylint: disable=wrong-import-position
+
+_logger = logging.getLogger(__name__)
 
 # Maps histogram dictionary keys to output plot filenames where the key alone
 # is ambiguous (e.g. the triggered 2-D vs-energy histograms share a prefix

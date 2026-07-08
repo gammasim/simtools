@@ -24,6 +24,45 @@ def _build_reference_tables():
             }
         ]
     )
+    rows = []
+    for energy_index, (energy_low, energy_high) in enumerate([(0.1, 1.0), (1.0, 10.0)]):
+        for core_index, (core_low, core_high, simulated, triggered) in enumerate(
+            [(0.0, 50.0, 50, 40), (50.0, 100.0, 50, 10)]
+        ):
+            rows.append(
+                {
+                    "reference_id": "ref-1",
+                    "angular_distance_bin_index": 0,
+                    "energy_bin_index": energy_index,
+                    "core_distance_bin_index": core_index,
+                    "angular_distance_low": 0.0 * u.deg,
+                    "angular_distance_high": 1.0 * u.deg,
+                    "energy_low": energy_low * u.TeV,
+                    "energy_high": energy_high * u.TeV,
+                    "core_distance_low": core_low * u.m,
+                    "core_distance_high": core_high * u.m,
+                    "simulated_count": simulated,
+                    "triggered_count": triggered if energy_index == 0 else triggered / 2,
+                    "trigger_efficiency": 0.0,
+                }
+            )
+    bins = Table(rows=rows)
+    return metadata, bins
+
+
+def _build_legacy_reference_tables():
+    metadata = Table(
+        rows=[
+            {
+                "reference_id": "ref-1",
+                "production_index": 0,
+                "array_name": "alpha",
+                "core_scatter_max": 100.0 * u.m,
+                "energy_min": 0.1 * u.TeV,
+                "energy_max": 10.0 * u.TeV,
+            }
+        ]
+    )
     bins = Table(
         rows=[
             {
@@ -35,19 +74,9 @@ def _build_reference_tables():
                 "energy_low": 0.1 * u.TeV,
                 "energy_high": 1.0 * u.TeV,
                 "simulated_count": 100,
+                "triggered_count": 50,
                 "trigger_efficiency": 0.5,
-            },
-            {
-                "reference_id": "ref-1",
-                "angular_distance_bin_index": 0,
-                "energy_bin_index": 1,
-                "angular_distance_low": 0.0 * u.deg,
-                "angular_distance_high": 1.0 * u.deg,
-                "energy_low": 1.0 * u.TeV,
-                "energy_high": 10.0 * u.TeV,
-                "simulated_count": 100,
-                "trigger_efficiency": 0.25,
-            },
+            }
         ]
     )
     return metadata, bins
@@ -69,12 +98,31 @@ def test_resolve_effective_throw_radius_rejects_invalid_override():
         monte_carlo_statistics_estimator._resolve_effective_throw_radius(100.0 * u.m, 120.0 * u.m)
 
 
-def test_compute_effective_area_matrix_scales_with_radius():
-    matrix = np.array([[0.5, 0.25]])
-    original = monte_carlo_statistics_estimator._compute_effective_area_matrix(matrix, 100.0 * u.m)
-    reduced = monte_carlo_statistics_estimator._compute_effective_area_matrix(matrix, 50.0 * u.m)
+def test_compute_core_distance_weights_uses_area_fraction():
+    edges = np.array([0.0, 50.0, 100.0])
 
-    np.testing.assert_allclose(reduced, original / 4.0)
+    full = monte_carlo_statistics_estimator._compute_core_distance_weights(edges, 100.0 * u.m)
+    reduced = monte_carlo_statistics_estimator._compute_core_distance_weights(edges, 75.0 * u.m)
+
+    np.testing.assert_allclose(full, [1.0, 1.0])
+    np.testing.assert_allclose(reduced, [1.0, (75.0**2 - 50.0**2) / (100.0**2 - 50.0**2)])
+
+
+def test_collapse_core_distance_counts_applies_radial_weights():
+    simulated = np.array([[[10.0, 30.0]]])
+    triggered = np.array([[[5.0, 15.0]]])
+
+    simulated_reduced, triggered_reduced = (
+        monte_carlo_statistics_estimator._collapse_core_distance_counts(
+            simulated,
+            triggered,
+            np.array([0.0, 50.0, 100.0]),
+            50.0 * u.m,
+        )
+    )
+
+    np.testing.assert_allclose(simulated_reduced, [[10.0]])
+    np.testing.assert_allclose(triggered_reduced, [[5.0]])
 
 
 def test_estimate_required_events_skips_empty_bins():
@@ -95,9 +143,7 @@ def test_estimate_required_events_skips_empty_bins():
     assert skipped_bins == 2
 
 
-def test_estimator_radius_override_changes_geometric_normalization_not_required_events(
-    mocker, tmp_path
-):
+def test_estimator_radius_override_changes_required_events(mocker, tmp_path):
     metadata, bins = _build_reference_tables()
     mocker.patch(
         _LOAD_HISTOGRAMS,
@@ -127,16 +173,10 @@ def test_estimator_radius_override_changes_geometric_normalization_not_required_
     original = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args_original)
     reduced = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args_reduced)
 
-    assert original["estimated_total_events"][0] == pytest.approx(
+    assert original["estimated_total_events"][0] != pytest.approx(
         reduced["estimated_total_events"][0]
     )
     assert reduced["effective_core_scatter_radius"].quantity[0].to_value(u.m) == pytest.approx(50.0)
-    assert reduced["effective_scatter_area"].quantity[0].to_value(u.m**2) == pytest.approx(
-        original["effective_scatter_area"].quantity[0].to_value(u.m**2) / 4.0
-    )
-    assert reduced["limiting_effective_area"].quantity[0].to_value(u.m**2) == pytest.approx(
-        original["limiting_effective_area"].quantity[0].to_value(u.m**2) / 4.0
-    )
     assert reduced["optimization_bins_used"][0] == 2
     assert reduced["optimization_bins_skipped"][0] == 0
 
@@ -196,6 +236,28 @@ def test_estimator_reports_limiting_bin_and_positive_required_events(mocker, tmp
     assert result["array_name"][0] == "alpha"
     assert result["estimated_total_events"][0] > 0.0
     assert result["limiting_energy_low"].quantity[0] in (0.1 * u.TeV, 1.0 * u.TeV)
+
+
+def test_estimator_rejects_reduced_radius_for_legacy_2d_histograms(mocker, tmp_path):
+    metadata, bins = _build_legacy_reference_tables()
+    mocker.patch(
+        _LOAD_HISTOGRAMS,
+        return_value=(metadata, bins),
+    )
+
+    with pytest.raises(ValueError, match="Core-distance-binned trigger histograms are required"):
+        monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
+            {
+                "input": "unused.hdf5",
+                "array_names": None,
+                "spectral_index": -2.0,
+                "target_relative_uncertainty": 0.1,
+                "optimization_energy_min": 0.1 * u.TeV,
+                "optimization_energy_max": 1.0 * u.TeV,
+                "reduced_core_radius": 50.0 * u.m,
+                "output_file": str(tmp_path / "estimate.ecsv"),
+            }
+        )
 
 
 def test_estimator_supports_reference_tables_reloaded_from_hdf5(mocker, tmp_path):

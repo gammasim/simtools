@@ -117,11 +117,20 @@ def _create_metadata_table(
                 "energy_bins_per_decade": histograms.energy_bins_per_decade,
                 "angular_distance_bin_width": _get_angular_distance_bin_width(histograms),
                 "angular_distance_bin_count": len(histograms.view_cone_bins) - 1,
+                "core_distance_bin_count": len(histograms.core_distance_bins) - 1,
                 "total_simulated_events": int(
-                    np.sum(histograms.histograms["angular_distance_vs_energy_mc"]["histogram"])
+                    np.sum(
+                        histograms.histograms["angular_distance_vs_energy_vs_core_distance_mc"][
+                            "histogram"
+                        ]
+                    )
                 ),
                 "total_triggered_events": int(
-                    np.sum(histograms.histograms["angular_distance_vs_energy"]["histogram"])
+                    np.sum(
+                        histograms.histograms["angular_distance_vs_energy_vs_core_distance"][
+                            "histogram"
+                        ]
+                    )
                 ),
             }
         ]
@@ -132,31 +141,48 @@ def _create_metadata_table(
 
 def _create_bin_table(reference_id, production_index, array_name, histograms):
     """Create the flattened per-bin histogram table."""
-    triggered_hist = histograms.histograms["angular_distance_vs_energy"]["histogram"]
-    simulated_hist = histograms.histograms["angular_distance_vs_energy_mc"]["histogram"]
-    efficiency_hist = histograms.histograms["angular_distance_vs_energy_eff"]["histogram"]
+    triggered_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance"][
+        "histogram"
+    ]
+    simulated_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance_mc"][
+        "histogram"
+    ]
+    efficiency_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance_eff"][
+        "histogram"
+    ]
     energy_edges = histograms.energy_bins
     angular_edges = histograms.view_cone_bins
+    core_edges = histograms.core_distance_bins
 
     rows = []
     for angular_index in range(len(angular_edges) - 1):
         for energy_index in range(len(energy_edges) - 1):
-            rows.append(
-                {
-                    "reference_id": reference_id,
-                    "production_index": production_index,
-                    "array_name": array_name,
-                    "angular_distance_bin_index": angular_index,
-                    "energy_bin_index": energy_index,
-                    "angular_distance_low": angular_edges[angular_index] * u.deg,
-                    "angular_distance_high": angular_edges[angular_index + 1] * u.deg,
-                    "energy_low": energy_edges[energy_index] * u.TeV,
-                    "energy_high": energy_edges[energy_index + 1] * u.TeV,
-                    "simulated_count": int(simulated_hist[angular_index, energy_index]),
-                    "triggered_count": int(triggered_hist[angular_index, energy_index]),
-                    "trigger_efficiency": float(efficiency_hist[angular_index, energy_index]),
-                }
-            )
+            for core_index in range(len(core_edges) - 1):
+                rows.append(
+                    {
+                        "reference_id": reference_id,
+                        "production_index": production_index,
+                        "array_name": array_name,
+                        "angular_distance_bin_index": angular_index,
+                        "energy_bin_index": energy_index,
+                        "core_distance_bin_index": core_index,
+                        "angular_distance_low": angular_edges[angular_index] * u.deg,
+                        "angular_distance_high": angular_edges[angular_index + 1] * u.deg,
+                        "energy_low": energy_edges[energy_index] * u.TeV,
+                        "energy_high": energy_edges[energy_index + 1] * u.TeV,
+                        "core_distance_low": core_edges[core_index] * u.m,
+                        "core_distance_high": core_edges[core_index + 1] * u.m,
+                        "simulated_count": int(
+                            simulated_hist[angular_index, energy_index, core_index]
+                        ),
+                        "triggered_count": int(
+                            triggered_hist[angular_index, energy_index, core_index]
+                        ),
+                        "trigger_efficiency": float(
+                            efficiency_hist[angular_index, energy_index, core_index]
+                        ),
+                    }
+                )
 
     bin_table = Table(rows=rows)
     bin_table.meta["EXTNAME"] = TRIGGER_HISTOGRAM_BINS_TABLE
@@ -189,7 +215,7 @@ def _plot_histograms(histograms, output_dir, array_name, telescope_ids):
     histograms_to_plot = {
         name: histogram
         for name, histogram in histograms.histograms.items()
-        if name.endswith("_eff")
+        if name.endswith("_eff") and np.ndim(histogram["histogram"]) <= 2
     }
     plot_simtel_event_histograms.plot(
         histograms_to_plot,
