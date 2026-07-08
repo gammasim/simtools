@@ -120,6 +120,31 @@ class EventDataHistograms:
         instance.reader = None
         return instance
 
+    def get_empty_histogram_definitions(self):
+        """Return empty histogram definitions without attached event-data arrays."""
+        histograms = self._define_histograms(None, None, None)
+        for histogram in histograms.values():
+            histogram["event_data"] = (
+                None if histogram["1d"] else tuple(None for _ in histogram["event_data_column"])
+            )
+        return histograms
+
+    def set_loaded_histograms(
+        self,
+        histograms,
+        file_info=None,
+        data_ranges=None,
+        contains_triggered_data=True,
+    ):
+        """Install histogram data loaded from a serialized histogram product."""
+        self.histograms = histograms
+        if file_info is not None:
+            self.file_info = file_info
+        if data_ranges is not None:
+            self.data_ranges = data_ranges
+        self._filled_data_sets = 1
+        self._contains_triggered_data = contains_triggered_data
+
     @staticmethod
     def _validate_angular_distance_bin_width(angular_distance_bin_width):
         """Return angular-distance bin width in deg, or None for count-based binning."""

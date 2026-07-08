@@ -1,6 +1,6 @@
 ---
 applications:
-- application: simtools-production-build-trigger-histograms
+- application: simtools-write-trigger-histograms
   configuration:
     array_element_list:
     - MSTS-01
@@ -14,6 +14,6 @@ applications:
     plot_histograms: true
   integration_tests:
   - output_file: trigger_histograms.hdf5
-  test_name: production_build_trigger_histograms
+  test_name: write_trigger_histograms
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

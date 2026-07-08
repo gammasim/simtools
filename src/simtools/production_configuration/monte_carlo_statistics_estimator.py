@@ -170,7 +170,7 @@ def _get_reference_core_edges(bin_table, reference_id):
     if "core_distance_bin_index" not in bin_table.colnames:
         raise ValueError(
             "Core-distance-binned trigger histograms are required to use reduced_core_radius. "
-            "Rebuild trigger histograms with the current production_build_trigger_histograms."
+            "Rebuild trigger histograms with simtools-write-trigger-histograms."
         )
     reference_rows = bin_table[bin_table["reference_id"] == reference_id]
     reference_rows.sort("core_distance_bin_index")
@@ -322,7 +322,7 @@ def _build_result_row(metadata_row, bin_table, args_dict):
     elif args_dict.get("reduced_core_radius") is not None:
         raise ValueError(
             "Core-distance-binned trigger histograms are required to use reduced_core_radius. "
-            "Rebuild trigger histograms with the current production_build_trigger_histograms."
+            "Rebuild trigger histograms with simtools-write-trigger-histograms."
         )
     trigger_efficiency = _compute_trigger_efficiency(triggered_counts, simulated_counts)
     (

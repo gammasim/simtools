@@ -1,14 +1,14 @@
-"""Tests for the production_build_trigger_histograms application."""
+"""Tests for the write_trigger_histograms application."""
 
 import pytest
 
-from simtools.applications import production_build_trigger_histograms
+from simtools.applications import write_trigger_histograms
 from simtools.configuration.commandline_parser import CommandLineParser
 
 
 def test_add_arguments_accepts_multi_pattern_and_binning_options():
     parser = CommandLineParser()
-    production_build_trigger_histograms._add_arguments(parser)
+    write_trigger_histograms._add_arguments(parser)
 
     args = parser.parse_args(
         [
@@ -29,7 +29,7 @@ def test_add_arguments_accepts_multi_pattern_and_binning_options():
 
 def test_add_arguments_uses_default_angular_distance_bin_width():
     parser = CommandLineParser()
-    production_build_trigger_histograms._add_arguments(parser)
+    write_trigger_histograms._add_arguments(parser)
 
     args = parser.parse_args(["--event_data_file", "a*.hdf5"])
 

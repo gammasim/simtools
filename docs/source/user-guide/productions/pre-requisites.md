@@ -16,13 +16,11 @@ the lower CORSIKA energy limit, the maximum core scatter radius, and the maximum
 All these limits depend on observation parameters like zenith angle and the integrated NSB rate.
 Limits are derived for each array layout from distributions of triggered events.
 
-Input for the derivation are reduced event-data files from broad-range simulations generated
-typically during productions using the
-[simtools-generate-simtel-event-data](../applications/simtools-generate-simtel-event-data)
-application.
+Input for the derivation is a trigger-histogram HDF5 file generated with
+[simtools-write-trigger-histograms][build-trigger-histograms] from reduced event-data files.
 
-[simtools-production-derive-corsika-limits][derive-corsika-limits] reads the reduced event-data
-files and derives the limits used by production grids:
+[simtools-production-derive-corsika-limits][derive-corsika-limits] reads the trigger-histogram
+file and derives the limits used by production grids:
 
 - the lower CORSIKA energy limit from the triggered-energy distribution
 - the maximum core scatter radius from the accepted loss in triggered events
@@ -40,9 +38,8 @@ Example command:
 
 ```bash
 simtools-production-derive-corsika-limits \
-    --event_data_file "reduced_event_data/gamma_20deg_0deg_run*.hdf5" \
-    --array_layout_name LSTN-01 \
-    --model_version 7.0.0 \
+    --trigger_histogram_file trigger_histograms.hdf5 \
+    --array_names LSTN-01 \
     --allowed_losses core_distance,1e-3,10 \
     --allowed_losses angular_distance,1e-3,10 \
     --energy_threshold_fraction 0.01 \
@@ -55,7 +52,7 @@ Required Monte Carlo event statistics are estimated from triggered-event histogr
 broad-range reduced event-data files. This workflow optimizes trigger statistics only. It does
 not estimate post-cut reconstruction or DL2 analysis statistics.
 
-[simtools-production-build-trigger-histograms][build-trigger-histograms] reads the same reduced
+[simtools-write-trigger-histograms][build-trigger-histograms] reads the same reduced
 event-data input model as the CORSIKA-limit derivation and writes an HDF5 trigger-histogram
 product. The product stores simulated and triggered counts in bins of energy, angular distance to
 the camera center, and shower-core distance. The original broad-range simulation geometry is kept
@@ -65,7 +62,7 @@ area.
 Example command:
 
 ```bash
-simtools-production-build-trigger-histograms \
+simtools-write-trigger-histograms \
     --event_data_file "reduced_event_data/gamma_20deg_0deg_run*.hdf5" \
     --array_layout_name LSTN-01 \
     --site North \
@@ -91,7 +88,7 @@ Example command:
 
 ```bash
 simtools-production-estimate-monte-carlo-statistics \
-    --input trigger_histograms.hdf5 \
+    --trigger_histogram_file trigger_histograms.hdf5 \
     --target_relative_uncertainty 0.1 \
     --optimization_energy_min "0.1 TeV" \
     --optimization_energy_max "10 TeV" \
@@ -122,6 +119,6 @@ simtools-plot-corsika-limits \
 The command writes one plot per array-layout and azimuth combination to `simtools-output`.
 
 [derive-corsika-limits]: ../applications/simtools-production-derive-corsika-limits
-[build-trigger-histograms]: ../applications/simtools-production-build-trigger-histograms
+[build-trigger-histograms]: ../applications/simtools-write-trigger-histograms
 [estimate-monte-carlo-statistics]: ../applications/simtools-production-estimate-monte-carlo-statistics
 [production-configuration]: https://gitlab.cta-observatory.org/cta-science/simulations/productions/production-configuration

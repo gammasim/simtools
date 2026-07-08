@@ -14,7 +14,7 @@ Estimate Monte Carlo statistics from a trigger-histogram file:
 .. code-block:: console
 
     simtools-production-estimate-monte-carlo-statistics \
-        --input trigger_histograms.hdf5 \
+        --trigger_histogram_file trigger_histograms.hdf5 \
         --spectral_index -2.0 \
         --target_relative_uncertainty 0.1 \
         --plot_diagnostics
@@ -30,9 +30,10 @@ from simtools.production_configuration.monte_carlo_statistics_estimator import (
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
     parser.add_argument(
-        "--input",
+        "--trigger_histogram_file",
         required=True,
         type=str,
+        dest="trigger_histogram_file",
         help="Path to the trigger-histogram file.",
     )
     parser.add_argument(
@@ -92,6 +93,7 @@ def main():
     app_context = build_application(
         initialization_kwargs={"db_config": False, "output": True},
     )
+    app_context.args["input"] = app_context.args["trigger_histogram_file"]
     app_context.args["output_file"] = str(
         app_context.io_handler.get_output_file(app_context.args["output_file"])
     )

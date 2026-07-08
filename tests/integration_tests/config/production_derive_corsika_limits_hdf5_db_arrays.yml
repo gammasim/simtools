@@ -2,24 +2,16 @@
 applications:
 - application: simtools-production-derive-corsika-limits
   configuration:
-    array_layout_name:
-      by_version:
-        "<7.0.0":
-        - LSTN-01
-        - alpha
-        ">=7.0.0":
-        - LSTN-01
-        - CTAO-North-Alpha
-    event_data_file: tests/resources/generated/proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_test.*hdf5
+    trigger_histogram_file: simtools-output/trigger_histograms.hdf5
+    array_names:
+    - MSTS-01
     allowed_losses:
     - core_distance,0.001,10
     - angular_distance,0.001,10
     energy_threshold_fraction: 0.01
-    model_version: 6.0.2
     output_file: corsika_simulation_limits.ecsv
     output_path: simtools-output
     plot_histograms: true
-    site: North
     differential_loss_bins_per_decade: 5
   integration_tests:
   - output_file: corsika_simulation_limits.ecsv

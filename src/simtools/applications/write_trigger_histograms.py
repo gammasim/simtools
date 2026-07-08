@@ -1,19 +1,19 @@
 #!/usr/bin/python3
 
 r"""
-Build trigger-histogram products from broad-range simulations.
+Write trigger-histogram products from reduced event lists.
 
-This application reads reduced event-data files from broad-range simulations,
-accumulates triggered and simulated histograms in angular-distance vs energy, and writes
-an HDF5 file for later statistics estimation.
+This application reads reduced event-data files, accumulates the common simulated and
+triggered-event histogram set, and writes a HDF5 histogram file for e.g.,
+plotting, CORSIKA-limit derivation, and Monte Carlo statistics estimation.
 
 Example
 -------
-Fill triggered-event histograms from reduced event-data files:
+Fill trigger histograms from reduced event-data files:
 
 .. code-block:: console
 
-    simtools-production-build-trigger-histograms \
+    simtools-write-trigger-histograms \
         --event_data_file simtools-output/reduced_event_data_*.hdf5 \
         --energy_bins_per_decade 10 \
         --angular_distance_bin_width 0.5 deg \
@@ -24,7 +24,7 @@ Fill triggered-event histograms from reduced event-data files:
 import astropy.units as u
 
 from simtools.application_control import build_application
-from simtools.production_configuration.trigger_histograms import build_trigger_histograms
+from simtools.production_configuration.trigger_histograms import write_trigger_histograms
 
 
 def _add_arguments(parser):
@@ -32,7 +32,7 @@ def _add_arguments(parser):
     parser.add_argument(
         "--event_data_file",
         help=(
-            "Event data file or glob pattern. Provide one or more patterns to build "
+            "Reduced event-data file or glob pattern. Provide one or more patterns to build "
             "histograms for multiple productions."
         ),
         nargs="+",
@@ -69,7 +69,7 @@ def _add_arguments(parser):
 
 
 def main():
-    """Run the trigger-histogram builder CLI application."""
+    """Run the trigger-histogram writer CLI application."""
     app_context = build_application(
         initialization_kwargs={
             "db_config": True,
@@ -77,7 +77,7 @@ def main():
             "simulation_model": ["site", "model_version", "layout"],
         },
     )
-    build_trigger_histograms(app_context.args)
+    write_trigger_histograms(app_context.args)
 
 
 if __name__ == "__main__":

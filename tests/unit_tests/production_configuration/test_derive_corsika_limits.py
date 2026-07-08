@@ -160,171 +160,57 @@ def test_round_value():
     assert derive_corsika_limits._round_value("unknown", "string_value") == "string_value"
 
 
-def test_generate_corsika_limits_grid_with_db_layouts(mocker, mock_args_dict, tmp_test_directory):
-    """Test generate_corsika_limits_grid using get_array_elements_from_db_for_layouts."""
-    # Prepare args_dict to use array_layout_name
+def test_generate_corsika_limits_grid_requires_trigger_histogram_file(mock_args_dict):
+    """Require a precomputed trigger-histogram file."""
     args = mock_args_dict.copy()
-    args["array_layout_name"] = ["LST", "MST"]
-    args["site"] = "North"
-    args["model_version"] = "v1.2.3"
+    args["trigger_histogram_file"] = None
 
-    mock_read_layouts = mocker.patch(
-        "simtools.production_configuration.production_event_data_helpers."
-        "get_array_elements_from_db_for_layouts"
-    )
-    mock_read_layouts.return_value = {"LST": [1, 2], "MST": [3, 4]}
-
-    mock_pool = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
-    )
-    mock_pool.return_value = [
-        [
-            {"primary_particle": "gamma", "array_name": "LST", "telescope_ids": [1, 2]},
-            {"primary_particle": "gamma", "array_name": "MST", "telescope_ids": [3, 4]},
-        ]
-    ]
-
-    mock_io = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
-    )
-    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
-
-    mock_write = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.write_results"
-    )
-
-    derive_corsika_limits.generate_corsika_limits_grid(args)
-
-    mock_read_layouts.assert_called_once_with(
-        args["array_layout_name"], args["site"], args["model_version"]
-    )
-    job_specs = mock_pool.call_args[0][1]
-    assert len(job_specs) == 1  # one production containing both layouts
-    assert job_specs[0]["telescope_configs"] == [
-        {"array_name": "LST", "telescope_ids": ["LSTN-01", "LSTN-02"]},
-        {"array_name": "MST", "telescope_ids": ["LSTN-03", "LSTN-04"]},
-    ]
-    assert mock_write.call_count == 1
-
-
-def test_generate_corsika_limits_grid_by_version_layout_resolved(
-    mocker, mock_args_dict, tmp_test_directory
-):
-    """Test that a by_version dict string for array_layout_name is resolved before DB lookup.
-
-    This covers the case where run_application serializes the by_version dict as a Python
-    dict string when passing it as a CLI argument to the subprocess.
-    """
-    args = mock_args_dict.copy()
-    args["array_layout_name"] = ["{'by_version': {'>=1.0.0': ['LST', 'MST']}}"]
-    args["site"] = "North"
-    args["model_version"] = "1.2.3"
-
-    mock_read_layouts = mocker.patch(
-        "simtools.production_configuration.production_event_data_helpers."
-        "get_array_elements_from_db_for_layouts"
-    )
-    mock_read_layouts.return_value = {"LST": [1, 2], "MST": [3, 4]}
-
-    mock_pool = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
-    )
-    mock_pool.return_value = [
-        [
-            {"primary_particle": "gamma", "array_name": "LST", "telescope_ids": [1, 2]},
-            {"primary_particle": "gamma", "array_name": "MST", "telescope_ids": [3, 4]},
-        ]
-    ]
-
-    mock_io = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
-    )
-    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
-
-    mocker.patch("simtools.production_configuration.derive_corsika_limits.write_results")
-
-    derive_corsika_limits.generate_corsika_limits_grid(args)
-
-    # by_version must be resolved to the actual list before calling DB lookup
-    mock_read_layouts.assert_called_once_with(["LST", "MST"], "North", "1.2.3")
-
-
-def test_generate_corsika_limits_grid_with_array_element_list(
-    mocker, mock_args_dict, tmp_test_directory
-):
-    """Test generate_corsika_limits_grid using inline array_element_list."""
-    args = mock_args_dict.copy()
-    args["array_element_list"] = ["LSTN-01", "LSTN-02", "MSTN-03"]
-    args["telescope_ids"] = None
-
-    mock_pool = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
-    )
-    mock_pool.return_value = [
-        [{"primary_particle": "gamma", "array_name": "array_element_list"}],
-    ]
-
-    mock_io = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
-    )
-    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
-
-    mock_write = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.write_results"
-    )
-
-    derive_corsika_limits.generate_corsika_limits_grid(args)
-
-    job_specs = mock_pool.call_args[0][1]
-    assert len(job_specs) == 1
-    job_spec = job_specs[0]
-    assert job_spec["telescope_configs"] == [
-        {
-            "array_name": "array_element_list",
-            "telescope_ids": ["LSTN-01", "LSTN-02", "MSTN-03"],
-        }
-    ]
-    assert mock_write.call_count == 1
-
-
-def test_generate_corsika_limits_grid_builds_output_subdirs_for_multiple_productions(
-    mocker, mock_args_dict, tmp_test_directory
-):
-    """Assign per-production output_subdir when plotting multiple productions."""
-    args = mock_args_dict.copy()
-    args["event_data_file"] = ["prod_a/*.h5", "prod_b/*.h5"]
-    args["plot_histograms"] = True
-    args["array_layout_name"] = None
-    args["array_element_list"] = ["LSTN-01"]
-    args["telescope_ids"] = None
-
-    mock_pool = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
-    )
-    mock_pool.return_value = [[_pool_result(event_data_file="prod_a/*.h5")]]
-    mock_io = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
-    )
-    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
-    mocker.patch("simtools.production_configuration.derive_corsika_limits.write_results")
-
-    derive_corsika_limits.generate_corsika_limits_grid(args)
-
-    job_specs = mock_pool.call_args[0][1]
-    assert len(job_specs) == 2
-    assert job_specs[0]["output_subdir"] is not None
-    assert job_specs[1]["output_subdir"] is not None
-    assert job_specs[0]["output_subdir"] != job_specs[1]["output_subdir"]
-
-
-def test_generate_corsika_limits_grid_without_telescope_configuration(mock_args_dict):
-    """Test generate_corsika_limits_grid raises if no telescope input is provided."""
-    args = mock_args_dict.copy()
-    args["array_layout_name"] = None
-    args["array_element_list"] = None
-
-    with pytest.raises(ValueError, match="No telescope configuration provided"):
+    with pytest.raises(ValueError, match="Use --trigger_histogram_file"):
         derive_corsika_limits.generate_corsika_limits_grid(args)
+
+
+def test_generate_corsika_limits_grid_from_trigger_histogram_file(
+    mocker, mock_args_dict, tmp_test_directory
+):
+    """Use precomputed trigger histograms without resolving telescope configuration."""
+    args = mock_args_dict.copy()
+    args["trigger_histogram_file"] = "trigger_histograms.hdf5"
+    args["array_names"] = ["alpha"]
+
+    metadata = Table(
+        rows=[
+            {
+                "production_index": 0,
+                "event_data_file": "prod/*.hdf5",
+                "array_name": "alpha",
+                "telescope_ids": "LSTN-01",
+            }
+        ]
+    )
+    histograms = mocker.Mock()
+    mock_load = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.load_event_data_histograms",
+        return_value=[(metadata[0], histograms)],
+    )
+    mock_derive = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._derive_limits_from_histograms",
+        return_value=_pool_result(array_name="alpha"),
+    )
+    mock_write = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.write_results"
+    )
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    ).return_value.get_output_directory.return_value = tmp_test_directory
+
+    derive_corsika_limits.generate_corsika_limits_grid(args)
+
+    mock_load.assert_called_once_with("trigger_histograms.hdf5", array_names=["alpha"])
+    mock_derive.assert_called_once()
+    result = mock_write.call_args[0][0][0]
+    assert result["event_data_file"] == "prod/*.hdf5"
+    assert result["array_name"] == "alpha"
+    assert result["telescope_ids"] == ["LSTN-01"]
 
 
 def test_resolve_telescope_configs_wraps_single_layout_result(mocker):
@@ -1061,142 +947,6 @@ def test_build_production_subdirectories_creates_dirs(tmp_test_directory):
         assert output_subdir.isdir()
 
 
-def test_execute_production_job_groups_layouts_and_preserves_result_order(mocker):
-    """A production job returns layout results in configuration order."""
-    process_production = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits._process_production",
-        return_value=[{"lower_energy_limit": 1.0}, {"lower_energy_limit": 2.0}],
-    )
-    telescope_configs = [
-        {"array_name": "LST", "telescope_ids": ["LSTN-01"]},
-        {"array_name": "MST", "telescope_ids": ["MSTN-03"]},
-    ]
-    job_spec = {
-        "production_index": 3,
-        "production_pattern": "pattern_*.hdf5",
-        "telescope_configs": telescope_configs,
-        "allowed_losses": DEFAULT_ALLOWED_LOSSES,
-        "energy_threshold_fraction": 0.1,
-        "plot_histograms": False,
-        "output_subdir": None,
-    }
-
-    results = derive_corsika_limits._execute_production_job(job_spec)
-
-    process_production.assert_called_once()
-    assert [result["array_name"] for result in results] == ["LST", "MST"]
-    assert [result["telescope_ids"] for result in results] == [
-        ["LSTN-01"],
-        ["MSTN-03"],
-    ]
-    assert all(result["production_index"] == 3 for result in results)
-
-
-def test_generate_corsika_limits_grid_multi_production(mocker, tmp_test_directory):
-    """Test generate_corsika_limits_grid with multiple event_data_file patterns."""
-    mock_pool = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
-    )
-    # Mock process_pool_map_ordered to return results directly
-    mock_pool.return_value = [
-        [_pool_result(production_index=0, event_data_file="pattern_1_*.hdf5")],
-        [
-            _pool_result(
-                production_index=1,
-                event_data_file="pattern_2_*.hdf5",
-                lower_energy_limit=0.6 * u.TeV,
-                upper_radius_limit=450.0 * u.m,
-                viewcone_radius=5.5 * u.deg,
-            )
-        ],
-    ]
-
-    mock_write = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.write_results"
-    )
-    mock_build_subdirs = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.build_production_subdirectories"
-    )
-
-    mock_io = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
-    )
-    # Use actual tmp_test_directory to allow directory creation
-    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
-
-    # Multi-production args
-    args_dict = {
-        "event_data_file": ["pattern_1_*.hdf5", "pattern_2_*.hdf5"],
-        "array_element_list": ["LSTN-01"],
-        "allowed_losses": [
-            "core_distance,0.2,10",
-            "angular_distance,0.2,10",
-        ],
-        "plot_histograms": False,
-        "output_file": "test_output.ecsv",
-        "max_workers": 2,
-    }
-
-    derive_corsika_limits.generate_corsika_limits_grid(args_dict)
-
-    # Verify process_pool_map_ordered was called with correct max_workers
-    mock_pool.assert_called_once()
-    call_kwargs = mock_pool.call_args[1]
-    assert call_kwargs["max_workers"] == 2
-
-    # For non-plotting runs, no production subdirectories should be built/passed
-    mock_build_subdirs.assert_not_called()
-    job_specs = mock_pool.call_args[0][1]
-    assert all(job_spec["output_subdir"] is None for job_spec in job_specs)
-
-    # Verify write_results was called with merged results
-    mock_write.assert_called_once()
-    written_results = mock_write.call_args[0][0]
-    assert len(written_results) == 2  # Both productions merged
-
-
-def test_generate_corsika_limits_grid_single_production_uses_pool(mocker, tmp_test_directory):
-    """Test generate_corsika_limits_grid with single production uses process pool."""
-    mock_collect = mocker.patch("simtools.io.ascii_handler.collect_data_from_file")
-    mock_collect.return_value = {"telescope_configs": {"LST": ["LSTN-01"]}}
-
-    mock_pool = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.process_pool_map_ordered"
-    )
-    mock_pool.return_value = [[_pool_result()]]
-
-    mock_execute_job = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits._execute_production_job"
-    )
-    mock_execute_job.return_value = {}
-
-    mocker.patch("simtools.production_configuration.derive_corsika_limits.write_results")
-
-    mock_io = mocker.patch(
-        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
-    )
-    mock_io.return_value.get_output_directory.return_value = tmp_test_directory
-
-    args_dict = {
-        "event_data_file": "pattern_*.hdf5",  # Single string, not list
-        "array_element_list": ["LSTN-01"],
-        "allowed_losses": [
-            "core_distance,0.2,10",
-            "angular_distance,0.2,10",
-        ],
-        "plot_histograms": False,
-        "output_file": "test_output.ecsv",
-        "max_workers": 0,
-    }
-
-    derive_corsika_limits.generate_corsika_limits_grid(args_dict)
-
-    mock_pool.assert_called_once()
-    call_kwargs = mock_pool.call_args[1]
-    assert call_kwargs["max_workers"] == 0
-    mock_execute_job.assert_not_called()
-
-
 def test_create_results_table_with_production_columns(mock_results):
     """Test _create_results_table includes production-origin columns for multi-production."""
     # Add production metadata to mock results
@@ -1236,7 +986,8 @@ def mock_args_dict():
         "config_file": "dummy_config.yml",
         "steps": None,
         "ignore_runtime_environment": False,
-        "event_data_file": "dummy_event_data.h5",
+        "trigger_histogram_file": "trigger_histograms.hdf5",
+        "array_names": None,
         "output_file": "corsika_limits.ecsv",
         "allowed_losses": [
             "core_distance,0.2,10",
@@ -1244,9 +995,6 @@ def mock_args_dict():
         ],
         "energy_threshold_fraction": 0.1,
         "plot_histograms": False,
-        "max_workers": 1,
-        "array_layout_name": None,
-        "array_element_list": ["LSTN-01"],
     }
 
 
