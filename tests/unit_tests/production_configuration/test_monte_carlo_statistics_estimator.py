@@ -4,7 +4,11 @@ import pytest
 from astropy.table import Table
 
 from simtools.io import table_handler
-from simtools.production_configuration import trigger_statistics_estimator
+from simtools.production_configuration import monte_carlo_statistics_estimator
+
+_LOAD_HISTOGRAMS = (
+    "simtools.production_configuration.monte_carlo_statistics_estimator.load_trigger_histograms"
+)
 
 
 def _build_reference_tables():
@@ -24,7 +28,7 @@ def _build_reference_tables():
         rows=[
             {
                 "reference_id": "ref-1",
-                "angular_bin_index": 0,
+                "angular_distance_bin_index": 0,
                 "energy_bin_index": 0,
                 "angular_distance_low": 0.0 * u.deg,
                 "angular_distance_high": 1.0 * u.deg,
@@ -35,7 +39,7 @@ def _build_reference_tables():
             },
             {
                 "reference_id": "ref-1",
-                "angular_bin_index": 0,
+                "angular_distance_bin_index": 0,
                 "energy_bin_index": 1,
                 "angular_distance_low": 0.0 * u.deg,
                 "angular_distance_high": 1.0 * u.deg,
@@ -50,25 +54,25 @@ def _build_reference_tables():
 
 
 def test_resolve_effective_throw_radius_accepts_original_or_smaller_radius():
-    assert trigger_statistics_estimator._resolve_effective_throw_radius(100.0 * u.m).to_value(
+    assert monte_carlo_statistics_estimator._resolve_effective_throw_radius(100.0 * u.m).to_value(
         u.m
     ) == pytest.approx(100.0)
-    assert trigger_statistics_estimator._resolve_effective_throw_radius(
+    assert monte_carlo_statistics_estimator._resolve_effective_throw_radius(
         100.0 * u.m, 80.0 * u.m
     ).to_value(u.m) == pytest.approx(80.0)
 
 
 def test_resolve_effective_throw_radius_rejects_invalid_override():
     with pytest.raises(ValueError, match="positive"):
-        trigger_statistics_estimator._resolve_effective_throw_radius(100.0 * u.m, 0.0 * u.m)
+        monte_carlo_statistics_estimator._resolve_effective_throw_radius(100.0 * u.m, 0.0 * u.m)
     with pytest.raises(ValueError, match="cannot exceed"):
-        trigger_statistics_estimator._resolve_effective_throw_radius(100.0 * u.m, 120.0 * u.m)
+        monte_carlo_statistics_estimator._resolve_effective_throw_radius(100.0 * u.m, 120.0 * u.m)
 
 
 def test_compute_effective_area_matrix_scales_with_radius():
     matrix = np.array([[0.5, 0.25]])
-    original = trigger_statistics_estimator._compute_effective_area_matrix(matrix, 100.0 * u.m)
-    reduced = trigger_statistics_estimator._compute_effective_area_matrix(matrix, 50.0 * u.m)
+    original = monte_carlo_statistics_estimator._compute_effective_area_matrix(matrix, 100.0 * u.m)
+    reduced = monte_carlo_statistics_estimator._compute_effective_area_matrix(matrix, 50.0 * u.m)
 
     np.testing.assert_allclose(reduced, original / 4.0)
 
@@ -78,14 +82,12 @@ def test_estimator_radius_override_changes_geometric_normalization_not_required_
 ):
     metadata, bins = _build_reference_tables()
     mocker.patch(
-        ("simtools.production_configuration.trigger_statistics_estimator.load_trigger_histograms"),
+        _LOAD_HISTOGRAMS,
         return_value=(metadata, bins),
     )
 
     common_args = {
         "input": "unused.hdf5",
-        "reference_ids": None,
-        "production_indices": None,
         "array_names": None,
         "spectral_index": -2.0,
         "target_relative_uncertainty": 0.1,
@@ -104,8 +106,8 @@ def test_estimator_radius_override_changes_geometric_normalization_not_required_
         "output_file": str(tmp_path / "b.ecsv"),
     }
 
-    original = trigger_statistics_estimator.estimate_trigger_statistics(args_original)
-    reduced = trigger_statistics_estimator.estimate_trigger_statistics(args_reduced)
+    original = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args_original)
+    reduced = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args_reduced)
 
     assert original["required_total_thrown_events"][0] == pytest.approx(
         reduced["required_total_thrown_events"][0]
@@ -122,14 +124,12 @@ def test_estimator_radius_override_changes_geometric_normalization_not_required_
 def test_estimator_reports_limiting_bin_and_positive_required_events(mocker, tmp_path):
     metadata, bins = _build_reference_tables()
     mocker.patch(
-        ("simtools.production_configuration.trigger_statistics_estimator.load_trigger_histograms"),
+        _LOAD_HISTOGRAMS,
         return_value=(metadata, bins),
     )
 
     args = {
         "input": "unused.hdf5",
-        "reference_ids": None,
-        "production_indices": None,
         "array_names": None,
         "spectral_index": -2.0,
         "target_relative_uncertainty": 0.1,
@@ -141,9 +141,9 @@ def test_estimator_reports_limiting_bin_and_positive_required_events(mocker, tmp
         "output_file": str(tmp_path / "estimate.ecsv"),
     }
 
-    result = trigger_statistics_estimator.estimate_trigger_statistics(args)
+    result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args)
 
-    assert result["reference_id"][0] == "ref-1"
+    assert result["array_name"][0] == "alpha"
     assert result["required_total_thrown_events"][0] > 0.0
     assert result["limiting_energy_low"].quantity[0] in (0.1 * u.TeV, 1.0 * u.TeV)
 
@@ -154,18 +154,16 @@ def test_estimator_supports_reference_tables_reloaded_from_hdf5(mocker, tmp_path
     metadata.meta["EXTNAME"] = "TRIGGER_REFERENCE_METADATA"
     bins.meta["EXTNAME"] = "TRIGGER_REFERENCE_BINS"
     table_handler.write_tables([metadata, bins], reference_file, file_type="HDF5")
-    reloaded_metadata, reloaded_bins = trigger_statistics_estimator.load_trigger_histograms(
+    reloaded_metadata, reloaded_bins = monte_carlo_statistics_estimator.load_trigger_histograms(
         reference_file
     )
     mocker.patch(
-        ("simtools.production_configuration.trigger_statistics_estimator.load_trigger_histograms"),
+        _LOAD_HISTOGRAMS,
         return_value=(reloaded_metadata, reloaded_bins),
     )
 
     args = {
         "input": str(reference_file),
-        "reference_ids": None,
-        "production_indices": None,
         "array_names": None,
         "spectral_index": -2.0,
         "target_relative_uncertainty": 0.1,
@@ -177,7 +175,7 @@ def test_estimator_supports_reference_tables_reloaded_from_hdf5(mocker, tmp_path
         "output_file": str(tmp_path / "estimate.ecsv"),
     }
 
-    result = trigger_statistics_estimator.estimate_trigger_statistics(args)
+    result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args)
 
     assert result["effective_core_scatter_radius"].quantity[0].to_value(u.m) == pytest.approx(100.0)
     assert result["required_total_thrown_events"][0] > 0.0

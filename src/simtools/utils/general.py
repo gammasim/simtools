@@ -1084,7 +1084,7 @@ def validate_file_type(file_path, expected_suffixes):
     ----------
     file_path : str or Path
         Path to the file to validate.
-    expected_suffixes : list of str
+    expected_suffixes : str, list of str
         List of expected suffixes (e.g., ['.txt', '.csv']).
 
     Raises
@@ -1093,7 +1093,8 @@ def validate_file_type(file_path, expected_suffixes):
         If the file does not have one of the expected suffixes.
     """
     path = Path(file_path)
-    if path.suffix not in expected_suffixes:
+    if path.suffix not in ensure_list(expected_suffixes):
         raise ValueError(
             f"File '{file_path}' has suffix '{path.suffix}', expected one of {expected_suffixes}"
         )
+    return path

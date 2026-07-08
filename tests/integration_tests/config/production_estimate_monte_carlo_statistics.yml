@@ -1,6 +1,6 @@
 ---
 applications:
-- application: simtools-production-estimate-trigger-statistics
+- application: simtools-production-estimate-monte-carlo-statistics
   configuration:
     input: simtools-output/trigger_histograms.hdf5
     optimization_energy_max: 10 TeV
@@ -10,7 +10,7 @@ applications:
     target_relative_uncertainty: 0.1
   integration_tests:
   - output_file: trigger_histograms_estimate.ecsv
-  test_name: production_estimate_trigger_statistics
+  test_name: production_estimate_monte_carlo_statistics
   xfail: "Requires generated trigger histogram fixture to be produced before enabling."
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
