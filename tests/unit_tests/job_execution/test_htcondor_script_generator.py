@@ -462,6 +462,7 @@ def test_get_submit_script_with_optional_queue_fields():
     assert "telescope_args=()" in script
     assert 'telescope_args+=(--telescope "$telescope")' in script
     assert '    "${telescope_args[@]}" \\' in script
+    assert '    "${telescope_args[@]}" \\\n    "${overwrite_model_parameters_args[@]}" \\' in script
 
 
 @mock.patch("simtools.job_execution.htcondor_script_generator.read_job_grid")

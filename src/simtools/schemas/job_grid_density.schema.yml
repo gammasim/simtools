@@ -74,7 +74,7 @@ data:
         required: true
         type: int64
       - name: nsb_rate
-        description: Night-sky-background rate used for this grid point.
+        description: Integrated night-sky-background flux from the site model.
         required: true
         type: float64
         unit: 1 / (cm2 ns sr)

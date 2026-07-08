@@ -322,7 +322,7 @@ def _get_submit_script(args_dict, params_fields=None):
             '"$overwrite_model_parameters")\n'
             "fi\n"
         )
-        overwrite_parameters_argument = '    "${overwrite_model_parameters_args[@]}" \\\n'
+        overwrite_parameters_argument = '"${overwrite_model_parameters_args[@]}"'
 
     telescope_block = ""
     telescope_argument = ""
@@ -334,7 +334,7 @@ def _get_submit_script(args_dict, params_fields=None):
             '    telescope_args+=(--telescope "$telescope")\n'
             "fi\n"
         )
-        telescope_argument = '    "${telescope_args[@]}" \\\n'
+        telescope_argument = '"${telescope_args[@]}"'
 
     job_label = (
         f"{label}_{bash_indices['corsika_he_interaction']}_"
