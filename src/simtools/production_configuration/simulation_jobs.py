@@ -24,6 +24,7 @@ from simtools.production_configuration.corsika_limits_lookup import (
     CorsikaLimitsLookup,
     attach_lookup_limits_to_point,
 )
+from simtools.production_configuration.job_grid_io import serialize_job_grid
 from simtools.production_configuration.job_grid_summary import (
     build_job_grid_summary,
 )
@@ -1305,3 +1306,16 @@ def renumber_job_rows(job_rows, run_number_offset):
     for run_number, job_row in enumerate(job_rows, start=run_number_offset + 1):
         job_row["run_number"] = run_number
     return job_rows
+
+
+def generate_job_grid(args_dict, output_file):
+    """Generate and serialize a production job grid."""
+    job_rows = renumber_job_rows(
+        build_simulation_jobs(args_dict),
+        run_number_offset=int(args_dict.get("run_number_offset", 0)),
+    )
+    serialize_job_grid(
+        job_rows=job_rows,
+        output_file=output_file,
+        metadata=build_job_grid_metadata(args_dict),
+    )
