@@ -8,9 +8,13 @@ from simtools.production_configuration.trigger_histograms import (
     TRIGGER_HISTOGRAM_EDGES_TABLE,
     TRIGGER_HISTOGRAM_METADATA_TABLE,
     TRIGGER_HISTOGRAM_VALUES_TABLE,
+    TRIGGER_SUBSET_HISTOGRAMS_TABLE,
+    TRIGGER_TOPOLOGY_COUNTS_TABLE,
     _create_histogram_edge_table,
     _create_histogram_tables,
     _create_histogram_value_table,
+    _create_trigger_subset_histogram_table,
+    _create_trigger_topology_count_table,
     _get_plot_directory_name,
     _use_readable_inline_array_names,
     load_event_data_histograms,
@@ -198,6 +202,41 @@ def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
     )
     assert "angular_distance_vs_energy_vs_core_distance_eff" in loaded_histograms.histograms
     assert "energy_cumulative" in loaded_histograms.histograms
+
+
+def test_trigger_topology_tables_are_created_from_reference_specs():
+    histograms = _full_fake_histograms()
+    reference_specs = [
+        {
+            "reference_id": "ref-1",
+            "production_index": 0,
+            "event_data_file": "pattern*.hdf5",
+            "site": "North",
+            "array_name": "alpha",
+            "telescope_ids": ["LSTN-01"],
+            "histograms": histograms,
+            "trigger_topology": {
+                "trigger_multiplicity": {2: 3},
+                "trigger_combinations": {"LSTN-01,MSTN-01": 2},
+                "telescope_participation": {"LSTN-01": 2, "MSTN-01": 2},
+                "subset_multiplicity": {"mixed_type": {2: 2}},
+                "subset_values": {
+                    "energy": {"mixed_type": [0.2, 2.0]},
+                    "core_distance": {"mixed_type": [10.0, 80.0]},
+                    "angular_distance": {"mixed_type": [0.2, 1.2]},
+                },
+            },
+        }
+    ]
+
+    topology_table = _create_trigger_topology_count_table(reference_specs)
+    subset_histogram_table = _create_trigger_subset_histogram_table(reference_specs)
+
+    assert topology_table.meta["EXTNAME"] == TRIGGER_TOPOLOGY_COUNTS_TABLE
+    assert subset_histogram_table.meta["EXTNAME"] == TRIGGER_SUBSET_HISTOGRAMS_TABLE
+    assert "trigger_combinations" in set(topology_table["count_type"])
+    assert "mixed_type" in set(subset_histogram_table["subset"])
+    assert np.sum(subset_histogram_table["count"]) == 6
 
 
 def test_event_data_histograms_hdf5_filter_by_array_name(tmp_path):
