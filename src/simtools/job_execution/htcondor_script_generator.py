@@ -144,6 +144,15 @@ def _write_params_file(params_file_path, label_job_specs, params_fields):
             params_file_handle.write(" ".join(row) + "\n")
 
 
+def _format_multiline_command(command_parts):
+    """Return a shell command body with line continuations."""
+    command_lines = []
+    for index, part in enumerate(command_parts):
+        line_end = " \\" if index < len(command_parts) - 1 else ""
+        command_lines.append(f"    {part}{line_end}")
+    return command_lines
+
+
 def generate_submission_script(args_dict):
     """
     Generate the HT Condor submission script.
@@ -365,13 +374,16 @@ def _get_submit_script(args_dict, params_fields=None):
     )
     if args_dict.get("save_file_lists"):
         command_parts.append("--save_file_lists")
-    command_parts.append("--output_path /tmp/simtools-output")
-    command_parts.append(f'--grid_output_path "{bash_indices["grid_output_path"]}"')
-
-    command_lines = []
-    for index, part in enumerate(command_parts):
-        line_end = " \\" if index < len(command_parts) - 1 else ""
-        command_lines.append(f"    {part}{line_end}")
+    if telescope_argument:
+        command_parts.append(telescope_argument.rstrip())
+    if overwrite_parameters_argument:
+        command_parts.append(overwrite_parameters_argument.rstrip())
+    command_parts.extend(
+        [
+            "--output_path /tmp/simtools-output",
+            f'--grid_output_path "{bash_indices["grid_output_path"]}"',
+        ]
+    )
 
     script_lines = [
         "#!/usr/bin/env bash",
@@ -384,14 +396,8 @@ def _get_submit_script(args_dict, params_fields=None):
         telescope_block.rstrip(),
         "",
         "simtools-simulate-prod \\",
-        *command_lines[:-2],
+        *_format_multiline_command(command_parts),
     ]
-
-    if telescope_argument:
-        script_lines.append(telescope_argument.rstrip())
-    if overwrite_parameters_argument:
-        script_lines.append(overwrite_parameters_argument.rstrip())
-    script_lines.extend(command_lines[-2:])
     script_lines.append("")
 
     return "\n".join(line for line in script_lines if line != "")

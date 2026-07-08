@@ -34,6 +34,8 @@ _PRODUCTION_GRID_ARGS = [
     "corsika_le_interaction",
     "corsika_he_interaction",
 ]
+_DEFAULT_ASUM_THRESHOLDS = [*range(220, 310, 10), *range(320, 361, 20)]
+_DEFAULT_DSUM_THRESHOLDS = list(range(22, 31))
 
 
 def _threshold_param_name(args):
@@ -49,7 +51,7 @@ def _threshold_param_name(args):
 
 
 def _threshold_values(threshold_param, trigger_thresholds=None):
-    """Return thresholds expanded from a scan specification, or defaults."""
+    """Return trigger thresholds expanded from ``(minimum, count, step)`` or defaults."""
     if trigger_thresholds is not None:
         if len(trigger_thresholds) != 3:
             raise ValueError(
@@ -65,9 +67,11 @@ def _threshold_values(threshold_param, trigger_thresholds=None):
 
         return [minimum + index * step_size for index in range(int(number))]
 
-    if threshold_param == "asum_threshold":
-        return [*range(220, 310, 10), *range(320, 361, 20)]
-    return list(range(22, 31))
+    return (
+        _DEFAULT_ASUM_THRESHOLDS
+        if threshold_param == "asum_threshold"
+        else _DEFAULT_DSUM_THRESHOLDS
+    )
 
 
 def _parameter_scan_entry(telescope, threshold_param, trigger_thresholds=None):
