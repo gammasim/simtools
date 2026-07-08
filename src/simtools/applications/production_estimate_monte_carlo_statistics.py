@@ -74,7 +74,10 @@ def _add_arguments(parser):
         required=False,
         type=parser.positive_quantity("m"),
         default=None,
-        help="Optional reduced core scatter radius used for effective-area reporting.",
+        help=(
+            "Optional reduced core scatter radius used for effective-area reporting ",
+            "(e.g., as derived from simtools-production-derive-corsika-limits)",
+        ),
     )
     parser.add_argument(
         "--plot_diagnostics",

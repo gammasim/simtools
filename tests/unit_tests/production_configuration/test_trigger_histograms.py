@@ -33,12 +33,19 @@ class _FakeHistograms:
             "solid_angle": 0.1 * u.sr,
         }
         self.histograms = {
-            "angular_distance_vs_energy": {"histogram": np.array([[2, 1], [1, 0]])},
-            "angular_distance_vs_energy_mc": {"histogram": np.array([[4, 2], [2, 2]])},
-            "angular_distance_vs_energy_eff": {"histogram": np.array([[0.5, 0.5], [0.5, 0.0]])},
+            "angular_distance_vs_energy_vs_core_distance": {
+                "histogram": np.array([[[1, 1], [1, 0]], [[0, 1], [0, 0]]])
+            },
+            "angular_distance_vs_energy_vs_core_distance_mc": {
+                "histogram": np.array([[[2, 2], [1, 1]], [[1, 1], [1, 1]]])
+            },
+            "angular_distance_vs_energy_vs_core_distance_eff": {
+                "histogram": np.array([[[0.5, 0.5], [1.0, 0.0]], [[0.0, 1.0], [0.0, 0.0]]])
+            },
         }
         self.energy_bins = np.array([0.1, 1.0, 10.0])
         self.view_cone_bins = np.array([0.0, 1.0, 2.0])
+        self.core_distance_bins = np.array([0.0, 60.0, 120.0])
 
 
 def test_create_histogram_tables_contains_expected_metadata_and_bins():
@@ -66,9 +73,11 @@ def test_create_histogram_tables_contains_expected_metadata_and_bins():
     assert metadata_table["angular_distance_bin_count"][0] == 2
     assert metadata_table["total_simulated_events"][0] == 10
     assert metadata_table["total_triggered_events"][0] == 4
-    assert len(bin_table) == 4
+    assert metadata_table["core_distance_bin_count"][0] == 2
+    assert len(bin_table) == 8
     assert np.all(bin_table["reference_id"] == "ref-1")
-    assert np.all(bin_table["effective_area"].quantity.to_value(u.m**2) >= 0.0)
+    assert np.all(bin_table["core_distance_low"].quantity.to_value(u.m) >= 0.0)
+    assert np.all(bin_table["trigger_efficiency"] >= 0.0)
 
 
 def test_histogram_tables_round_trip_via_hdf5(tmp_path):
@@ -96,10 +105,10 @@ def test_histogram_tables_round_trip_via_hdf5(tmp_path):
 
     loaded_metadata, loaded_bins = load_trigger_histograms(output_file)
     assert len(loaded_metadata) == 1
-    assert len(loaded_bins) == 4
+    assert len(loaded_bins) == 8
     assert loaded_metadata["array_name"][0] == "alpha"
     assert loaded_metadata["site"][0] == "North"
-    assert loaded_bins["triggered_count"][0] == 2
+    assert loaded_bins["triggered_count"][0] == 1
 
 
 def test_plot_directory_name_uses_telescope_ids_for_inline_lists():

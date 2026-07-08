@@ -97,20 +97,20 @@ def _compute_energy_bin_probabilities(energy_edges, spectral_index, br_energy_mi
     return weights / total
 
 
-def _compute_expected_trigger_matrix(simulated_counts, trigger_efficiency, energy_probabilities):
+def _compute_expected_trigger_matrix(simulated_counts, triggered_counts, energy_probabilities):
     """Return the expected triggered counts per one thrown event."""
     simulated_counts = np.asarray(simulated_counts, dtype=float)
-    trigger_efficiency = np.asarray(trigger_efficiency, dtype=float)
+    triggered_counts = np.asarray(triggered_counts, dtype=float)
     energy_probabilities = np.asarray(energy_probabilities, dtype=float)
 
     energy_totals = simulated_counts.sum(axis=0)
-    angular_conditionals = np.divide(
-        simulated_counts,
+    trigger_probabilities = np.divide(
+        triggered_counts,
         energy_totals[np.newaxis, :],
         out=np.zeros_like(simulated_counts, dtype=float),
         where=energy_totals[np.newaxis, :] > 0,
     )
-    return angular_conditionals * energy_probabilities[np.newaxis, :] * trigger_efficiency
+    return trigger_probabilities * energy_probabilities[np.newaxis, :]
 
 
 def _compute_expected_counts(expected_triggers_per_event, required_total_events):
@@ -134,6 +134,14 @@ def _compute_relative_uncertainty(expected_counts):
 def _get_reference_matrix(bin_table, reference_id, column_name):
     """Return one per-bin matrix reconstructed from the flattened table."""
     rows = bin_table[bin_table["reference_id"] == reference_id]
+    if "core_distance_bin_index" in rows.colnames:
+        rows.sort(["angular_distance_bin_index", "energy_bin_index", "core_distance_bin_index"])
+        angular_indices = np.unique(rows["angular_distance_bin_index"])
+        energy_indices = np.unique(rows["energy_bin_index"])
+        core_indices = np.unique(rows["core_distance_bin_index"])
+        return np.asarray(rows[column_name]).reshape(
+            len(angular_indices), len(energy_indices), len(core_indices)
+        )
     rows.sort(["angular_distance_bin_index", "energy_bin_index"])
     angular_indices = np.unique(rows["angular_distance_bin_index"])
     energy_indices = np.unique(rows["energy_bin_index"])
@@ -155,6 +163,65 @@ def _get_reference_bin_edges(bin_table, reference_id):
         highs = np.unique(rows[f"{axis}_high"].quantity.to_value(unit))
         edges.append(np.concatenate([lows[:1], highs]))
     return edges[0], edges[1]
+
+
+def _get_reference_core_edges(bin_table, reference_id):
+    """Return core-distance bin edges for core-distance-binned trigger histograms."""
+    if "core_distance_bin_index" not in bin_table.colnames:
+        raise ValueError(
+            "Core-distance-binned trigger histograms are required to use reduced_core_radius. "
+            "Rebuild trigger histograms with the current production_build_trigger_histograms."
+        )
+    reference_rows = bin_table[bin_table["reference_id"] == reference_id]
+    reference_rows.sort("core_distance_bin_index")
+    lows = np.unique(reference_rows["core_distance_low"].quantity.to_value(u.m))
+    highs = np.unique(reference_rows["core_distance_high"].quantity.to_value(u.m))
+    return np.concatenate([lows[:1], highs])
+
+
+def _compute_core_distance_weights(core_edges, effective_radius):
+    """Return area-fraction weights for integrating core-distance bins."""
+    effective_radius = u.Quantity(effective_radius).to_value(u.m)
+    if effective_radius <= 0.0:
+        raise ValueError("Effective core scatter radius must be positive.")
+
+    core_edges = np.asarray(core_edges, dtype=float)
+    lows = core_edges[:-1]
+    highs = core_edges[1:]
+    denominator = highs**2 - lows**2
+    clipped_highs = np.minimum(highs, effective_radius)
+    numerator = np.maximum(clipped_highs**2 - lows**2, 0.0)
+    return np.divide(
+        numerator,
+        denominator,
+        out=np.zeros_like(numerator, dtype=float),
+        where=denominator > 0.0,
+    ).clip(0.0, 1.0)
+
+
+def _collapse_core_distance_counts(
+    simulated_counts, triggered_counts, core_edges, effective_radius
+):
+    """Collapse 3D count matrices over core distance using area-fraction weights."""
+    weights = _compute_core_distance_weights(core_edges, effective_radius)
+    simulated_counts = np.asarray(simulated_counts, dtype=float)
+    triggered_counts = np.asarray(triggered_counts, dtype=float)
+    return (
+        np.sum(simulated_counts * weights[np.newaxis, np.newaxis, :], axis=2),
+        np.sum(triggered_counts * weights[np.newaxis, np.newaxis, :], axis=2),
+    )
+
+
+def _compute_trigger_efficiency(triggered_counts, simulated_counts):
+    """Return trigger efficiency from triggered and simulated counts."""
+    triggered_counts = np.asarray(triggered_counts, dtype=float)
+    simulated_counts = np.asarray(simulated_counts, dtype=float)
+    return np.divide(
+        triggered_counts,
+        simulated_counts,
+        out=np.zeros_like(triggered_counts, dtype=float),
+        where=simulated_counts > 0.0,
+    )
 
 
 def _select_reference_rows(metadata_table, array_names):
@@ -236,14 +303,28 @@ def _get_diagnostic_output_dir(args_dict):
 def _build_result_row(metadata_row, bin_table, args_dict):
     """Build one result row for a selected trigger histogram."""
     reference_id = metadata_row["reference_id"]
-    trigger_efficiency = _get_reference_matrix(bin_table, reference_id, "trigger_efficiency")
     energy_edges, angular_edges = _get_reference_bin_edges(bin_table, reference_id)
     simulated_counts = _get_reference_matrix(bin_table, reference_id, "simulated_count")
+    triggered_counts = _get_reference_matrix(bin_table, reference_id, "triggered_count")
 
     effective_radius = _resolve_effective_throw_radius(
         _get_metadata_quantity(metadata_row, "core_scatter_max", u.m),
         args_dict.get("reduced_core_radius"),
     )
+    if simulated_counts.ndim == 3:
+        core_edges = _get_reference_core_edges(bin_table, reference_id)
+        simulated_counts, triggered_counts = _collapse_core_distance_counts(
+            simulated_counts,
+            triggered_counts,
+            core_edges,
+            effective_radius,
+        )
+    elif args_dict.get("reduced_core_radius") is not None:
+        raise ValueError(
+            "Core-distance-binned trigger histograms are required to use reduced_core_radius. "
+            "Rebuild trigger histograms with the current production_build_trigger_histograms."
+        )
+    trigger_efficiency = _compute_trigger_efficiency(triggered_counts, simulated_counts)
     (
         br_energy_min,
         br_energy_max,
@@ -259,7 +340,7 @@ def _build_result_row(metadata_row, bin_table, args_dict):
     )
     expected_triggers_per_event = _compute_expected_trigger_matrix(
         simulated_counts,
-        trigger_efficiency,
+        triggered_counts,
         energy_probabilities,
     )
     energy_mask = _optimization_energy_mask(

@@ -229,7 +229,7 @@ class EventDataHistograms:
     def _release_event_data(self):
         """Release raw event references after their histogram counts have been accumulated."""
         for data in self.histograms.values():
-            data["event_data"] = None if data["1d"] else (None, None)
+            data["event_data"] = None if data["1d"] else tuple(None for _ in data["event_data"])
 
     def accumulate(self, file_info_table, shower_data, event_data, triggered_data):
         """Accumulate one already-read event dataset into all configured histograms."""
@@ -370,6 +370,23 @@ class EventDataHistograms:
                 ],
                 "plot_scales": {"y": "log"},
             },
+            "angular_distance_vs_energy_vs_core_distance": {
+                "event_data_column": (
+                    "angular_distance",
+                    "simulated_energy",
+                    "core_distance_shower",
+                ),
+                "event_data": (triggered_data, event_data, event_data),
+                "bin_edges": (self.view_cone_bins, self.energy_bins, self.core_distance_bins),
+                "is_1d": False,
+                "axis_titles": [
+                    "Angular Distance (deg)",
+                    energy_axis_title,
+                    "Core Distance (m)",
+                    event_count_axis_title,
+                ],
+                "plot_scales": {"y": "log"},
+            },
         }
 
         hists = {
@@ -384,7 +401,7 @@ class EventDataHistograms:
             hists_mc[key_mc]["suffix"] = "_mc"
             hists_mc[key_mc]["title"] = "Simulated Events"
             hists_mc[key_mc]["event_data"] = (
-                shower_data if hist["1d"] else (shower_data, shower_data)
+                shower_data if hist["1d"] else tuple(shower_data for _ in hist["event_data_column"])
             )
 
         hists.update(hists_mc)
@@ -429,13 +446,23 @@ class EventDataHistograms:
                 getattr(data["event_data"], data["event_data_column"]), bins=data["bin_edges"]
             )
         else:
-            if data["event_data"][0] is None or data["event_data"][1] is None:
+            if any(event_data is None for event_data in data["event_data"]):
                 return
-            hist, _, _ = np.histogram2d(
-                getattr(data["event_data"][0], data["event_data_column"][0]),
-                getattr(data["event_data"][1], data["event_data_column"][1]),
-                bins=[data["bin_edges"][0], data["bin_edges"][1]],
-            )
+            values = [
+                getattr(event_data, column_name)
+                for event_data, column_name in zip(data["event_data"], data["event_data_column"])
+            ]
+            if len(values) == 2:
+                hist, _, _ = np.histogram2d(
+                    values[0],
+                    values[1],
+                    bins=[data["bin_edges"][0], data["bin_edges"][1]],
+                )
+            else:
+                hist, _ = np.histogramdd(
+                    np.column_stack(values),
+                    bins=data["bin_edges"],
+                )
 
         data["histogram"] = hist if data["histogram"] is None else data["histogram"] + hist
 
