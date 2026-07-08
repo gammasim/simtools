@@ -3,11 +3,13 @@ applications:
 - application: simtools-production-estimate-monte-carlo-statistics
   configuration:
     input: simtools-output/trigger_histograms.hdf5
-    optimization_energy_max: 10 TeV
+    optimization_energy_max: 100 TeV
     optimization_energy_min: 0.1 TeV
+    spectral_index: -1.5
     output_file: trigger_histograms_estimate.ecsv
     output_path: simtools-output
     target_relative_uncertainty: 0.1
+    plot_diagnostics: true
   integration_tests:
   - output_file: trigger_histograms_estimate.ecsv
   test_name: production_estimate_monte_carlo_statistics

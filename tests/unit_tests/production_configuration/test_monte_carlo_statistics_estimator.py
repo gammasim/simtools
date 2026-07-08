@@ -77,6 +77,24 @@ def test_compute_effective_area_matrix_scales_with_radius():
     np.testing.assert_allclose(reduced, original / 4.0)
 
 
+def test_estimate_required_events_skips_empty_bins():
+    expected_triggers_per_event = np.array([[0.0, 0.2], [0.1, 0.0]])
+
+    required, limiting_expected_per_event, limiting_index, used_bins, skipped_bins = (
+        monte_carlo_statistics_estimator._estimate_required_events(
+            expected_triggers_per_event,
+            np.array([True, True]),
+            0.1,
+        )
+    )
+
+    assert required == pytest.approx(1000.0)
+    assert limiting_expected_per_event == pytest.approx(0.1)
+    assert limiting_index == (1, 0)
+    assert used_bins == 2
+    assert skipped_bins == 2
+
+
 def test_estimator_radius_override_changes_geometric_normalization_not_required_events(
     mocker, tmp_path
 ):
@@ -91,8 +109,8 @@ def test_estimator_radius_override_changes_geometric_normalization_not_required_
         "array_names": None,
         "spectral_index": -2.0,
         "target_relative_uncertainty": 0.1,
-        "thrown_energy_min": 0.1 * u.TeV,
-        "thrown_energy_max": 10.0 * u.TeV,
+        "br_energy_min": 0.1 * u.TeV,
+        "br_energy_max": 10.0 * u.TeV,
         "optimization_energy_min": 0.1 * u.TeV,
         "optimization_energy_max": 10.0 * u.TeV,
     }
@@ -109,8 +127,8 @@ def test_estimator_radius_override_changes_geometric_normalization_not_required_
     original = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args_original)
     reduced = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args_reduced)
 
-    assert original["required_total_thrown_events"][0] == pytest.approx(
-        reduced["required_total_thrown_events"][0]
+    assert original["estimated_total_events"][0] == pytest.approx(
+        reduced["estimated_total_events"][0]
     )
     assert reduced["effective_core_scatter_radius"].quantity[0].to_value(u.m) == pytest.approx(50.0)
     assert reduced["effective_scatter_area"].quantity[0].to_value(u.m**2) == pytest.approx(
@@ -119,6 +137,38 @@ def test_estimator_radius_override_changes_geometric_normalization_not_required_
     assert reduced["limiting_effective_area"].quantity[0].to_value(u.m**2) == pytest.approx(
         original["limiting_effective_area"].quantity[0].to_value(u.m**2) / 4.0
     )
+    assert reduced["optimization_bins_used"][0] == 2
+    assert reduced["optimization_bins_skipped"][0] == 0
+
+
+def test_estimator_writes_diagnostic_plots(mocker, tmp_path):
+    metadata, bins = _build_reference_tables()
+    mocker.patch(
+        _LOAD_HISTOGRAMS,
+        return_value=(metadata, bins),
+    )
+    mock_plot = mocker.patch(
+        "simtools.production_configuration.monte_carlo_statistics_estimator."
+        "plot_monte_carlo_statistics_diagnostics"
+    )
+
+    monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
+        {
+            "input": "unused.hdf5",
+            "array_names": None,
+            "spectral_index": -2.0,
+            "target_relative_uncertainty": 0.1,
+            "br_energy_min": 0.1 * u.TeV,
+            "br_energy_max": 10.0 * u.TeV,
+            "optimization_energy_min": 0.1 * u.TeV,
+            "optimization_energy_max": 10.0 * u.TeV,
+            "reduced_core_radius": None,
+            "plot_diagnostics": True,
+            "output_file": str(tmp_path / "estimate.ecsv"),
+        }
+    )
+
+    mock_plot.assert_called_once()
 
 
 def test_estimator_reports_limiting_bin_and_positive_required_events(mocker, tmp_path):
@@ -133,8 +183,8 @@ def test_estimator_reports_limiting_bin_and_positive_required_events(mocker, tmp
         "array_names": None,
         "spectral_index": -2.0,
         "target_relative_uncertainty": 0.1,
-        "thrown_energy_min": 0.1 * u.TeV,
-        "thrown_energy_max": 10.0 * u.TeV,
+        "br_energy_min": 0.1 * u.TeV,
+        "br_energy_max": 10.0 * u.TeV,
         "optimization_energy_min": 0.1 * u.TeV,
         "optimization_energy_max": 10.0 * u.TeV,
         "reduced_core_radius": None,
@@ -144,7 +194,7 @@ def test_estimator_reports_limiting_bin_and_positive_required_events(mocker, tmp
     result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args)
 
     assert result["array_name"][0] == "alpha"
-    assert result["required_total_thrown_events"][0] > 0.0
+    assert result["estimated_total_events"][0] > 0.0
     assert result["limiting_energy_low"].quantity[0] in (0.1 * u.TeV, 1.0 * u.TeV)
 
 
@@ -167,8 +217,8 @@ def test_estimator_supports_reference_tables_reloaded_from_hdf5(mocker, tmp_path
         "array_names": None,
         "spectral_index": -2.0,
         "target_relative_uncertainty": 0.1,
-        "thrown_energy_min": None,
-        "thrown_energy_max": None,
+        "br_energy_min": None,
+        "br_energy_max": None,
         "optimization_energy_min": None,
         "optimization_energy_max": None,
         "reduced_core_radius": None,
@@ -178,4 +228,4 @@ def test_estimator_supports_reference_tables_reloaded_from_hdf5(mocker, tmp_path
     result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args)
 
     assert result["effective_core_scatter_radius"].quantity[0].to_value(u.m) == pytest.approx(100.0)
-    assert result["required_total_thrown_events"][0] > 0.0
+    assert result["estimated_total_events"][0] > 0.0

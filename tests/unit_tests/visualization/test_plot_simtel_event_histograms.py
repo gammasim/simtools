@@ -16,7 +16,9 @@ from simtools.visualization.plot_simtel_event_histograms import (
     _extract_file_info_from_limits,
     _format_file_info_suffix,
     _get_limits,
+    _plot_monte_carlo_statistics_matrix,
     plot,
+    plot_monte_carlo_statistics_diagnostics,
 )
 
 # Suppress tight layout warnings for all tests in this file
@@ -61,6 +63,48 @@ def test_create_2d_histogram_plot_linear(sample_data):
     assert pcm is not None
     assert pcm.get_cmap().name == "viridis"
     plt.close(fig)
+
+
+def test_plot_monte_carlo_statistics_diagnostics_writes_expected_plots(tmp_path, mocker):
+    mock_plot = mocker.patch(f"{MOD}._plot_monte_carlo_statistics_matrix")
+
+    plot_monte_carlo_statistics_diagnostics(
+        tmp_path,
+        "MSTS-01",
+        np.array([0.1, 1.0, 10.0]),
+        np.array([0.0, 0.5]),
+        np.array([[10.0, 20.0]]),
+        np.array([[0.3, 0.2]]),
+    )
+
+    assert mock_plot.call_count == 2
+    output_files = [call.args[3] for call in mock_plot.call_args_list]
+    assert tmp_path / "MSTS-01_expected_events.png" in output_files
+    assert tmp_path / "MSTS-01_relative_uncertainty.png" in output_files
+
+
+def test_plot_monte_carlo_statistics_matrix_can_mask_zero_bins(tmp_path, mocker):
+    mock_mesh = mocker.MagicMock()
+    fig, ax = plt.subplots()
+    ax.pcolormesh = mocker.MagicMock(return_value=mock_mesh)
+    mocker.patch(f"{MOD}.plt.subplots", return_value=(fig, ax))
+
+    _plot_monte_carlo_statistics_matrix(
+        np.array([[0.0, 2.0]]),
+        np.array([0.1, 1.0, 10.0]),
+        np.array([0.0, 0.5]),
+        tmp_path / "matrix.png",
+        "title",
+        "label",
+        mask_zero=True,
+    )
+
+    plotted_array = ax.pcolormesh.call_args.args[2]
+    cmap = ax.pcolormesh.call_args.kwargs["cmap"]
+    assert np.ma.isMaskedArray(plotted_array)
+    assert np.any(np.ma.getmaskarray(plotted_array))
+    assert cmap.get_bad()[:3] == pytest.approx((1.0, 1.0, 1.0))
+    assert (tmp_path / "matrix.png").exists()
 
 
 def test_create_2d_histogram_plot_log(sample_data):

@@ -10,6 +10,9 @@ import simtools.utils.general as gen
 from simtools.production_configuration.trigger_histograms import (
     load_trigger_histograms,
 )
+from simtools.visualization.plot_simtel_event_histograms import (
+    plot_monte_carlo_statistics_diagnostics,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -37,7 +40,6 @@ def _get_metadata_quantity(metadata_row, column_name, default_unit):
     return u.Quantity(value, unit)
 
 
-# TODO - not used!!
 def _resolve_effective_throw_radius(original_radius, radius_override=None):
     """Return the effective throw radius, validating optional overrides."""
     original_radius = u.Quantity(original_radius).to(u.m)
@@ -66,22 +68,20 @@ def _power_law_bin_integrals(bin_lows, bin_highs, spectral_index):
     return (np.power(bin_highs, exponent) - np.power(bin_lows, exponent)) / exponent
 
 
-def _compute_energy_bin_probabilities(
-    energy_edges, spectral_index, thrown_energy_min, thrown_energy_max
-):
+def _compute_energy_bin_probabilities(energy_edges, spectral_index, br_energy_min, br_energy_max):
     """Return the normalized thrown-event probability per energy bin."""
     energy_edges = np.asarray(energy_edges, dtype=float)
-    thrown_energy_min = u.Quantity(thrown_energy_min).to_value(u.TeV)
-    thrown_energy_max = u.Quantity(thrown_energy_max).to_value(u.TeV)
-    if thrown_energy_min <= 0.0 or thrown_energy_max <= 0.0:
+    br_energy_min = u.Quantity(br_energy_min).to_value(u.TeV)
+    br_energy_max = u.Quantity(br_energy_max).to_value(u.TeV)
+    if br_energy_min <= 0.0 or br_energy_max <= 0.0:
         raise ValueError("Thrown energy bounds must be positive.")
-    if thrown_energy_min >= thrown_energy_max:
+    if br_energy_min >= br_energy_max:
         raise ValueError("Thrown energy minimum must be smaller than the maximum.")
 
     lows = energy_edges[:-1]
     highs = energy_edges[1:]
-    clipped_lows = np.maximum(lows, thrown_energy_min)
-    clipped_highs = np.minimum(highs, thrown_energy_max)
+    clipped_lows = np.maximum(lows, br_energy_min)
+    clipped_highs = np.minimum(highs, br_energy_max)
     overlaps = clipped_highs > clipped_lows
 
     weights = np.zeros_like(lows, dtype=float)
@@ -111,6 +111,24 @@ def _compute_expected_trigger_matrix(simulated_counts, trigger_efficiency, energ
         where=energy_totals[np.newaxis, :] > 0,
     )
     return angular_conditionals * energy_probabilities[np.newaxis, :] * trigger_efficiency
+
+
+def _compute_expected_counts(expected_triggers_per_event, required_total_events):
+    """Return expected triggered counts for the solved total thrown events."""
+    if not np.isfinite(required_total_events):
+        return np.full_like(expected_triggers_per_event, np.nan, dtype=float)
+    return np.asarray(expected_triggers_per_event, dtype=float) * float(required_total_events)
+
+
+def _compute_relative_uncertainty(expected_counts):
+    """Return Poisson relative uncertainty for expected counts."""
+    expected_counts = np.asarray(expected_counts, dtype=float)
+    return np.divide(
+        1.0,
+        np.sqrt(expected_counts),
+        out=np.full_like(expected_counts, np.inf, dtype=float),
+        where=expected_counts > 0.0,
+    )
 
 
 def _get_reference_matrix(bin_table, reference_id, column_name):
@@ -165,46 +183,54 @@ def _optimization_energy_mask(energy_edges, optimization_energy_min, optimizatio
 def _estimate_required_events(
     expected_triggers_per_event, energy_mask, target_relative_uncertainty
 ):
-    """Solve for the required total thrown events from the limiting predicted trigger bin."""
+    """Solve for required total thrown events from estimable trigger bins."""
     if target_relative_uncertainty <= 0.0:
         raise ValueError("Target relative uncertainty must be positive.")
 
     required_trigger_count = 1.0 / float(target_relative_uncertainty) ** 2
     candidate_matrix = np.asarray(expected_triggers_per_event, dtype=float)[:, energy_mask]
-    required_totals = np.divide(
-        required_trigger_count,
-        candidate_matrix,
-        out=np.full_like(candidate_matrix, np.inf, dtype=float),
-        where=candidate_matrix > 0.0,
-    )
+    positive_mask = np.isfinite(candidate_matrix) & (candidate_matrix > 0.0)
+    skipped_bins = int(candidate_matrix.size - np.count_nonzero(positive_mask))
+    if not np.any(positive_mask):
+        return np.inf, 0.0, (0, 0), 0, skipped_bins
+
+    required_totals = np.full_like(candidate_matrix, -np.inf, dtype=float)
+    required_totals[positive_mask] = required_trigger_count / candidate_matrix[positive_mask]
     limiting_flat_index = int(np.argmax(required_totals))
     limiting_index = np.unravel_index(limiting_flat_index, required_totals.shape)
-    return required_totals[limiting_index], candidate_matrix[limiting_index], limiting_index
+    return (
+        required_totals[limiting_index],
+        candidate_matrix[limiting_index],
+        limiting_index,
+        int(np.count_nonzero(positive_mask)),
+        skipped_bins,
+    )
 
 
 def _resolve_energy_ranges(metadata_row, args_dict):
     """Resolve thrown and optimization energy ranges for one histogram row."""
-    thrown_energy_min = args_dict.get("thrown_energy_min")
-    if thrown_energy_min is None:
-        thrown_energy_min = _get_metadata_quantity(metadata_row, "energy_min", u.TeV)
-
-    thrown_energy_max = args_dict.get("thrown_energy_max")
-    if thrown_energy_max is None:
-        thrown_energy_max = _get_metadata_quantity(metadata_row, "energy_max", u.TeV)
+    br_energy_min = _get_metadata_quantity(metadata_row, "energy_min", u.TeV)
+    br_energy_max = _get_metadata_quantity(metadata_row, "energy_max", u.TeV)
 
     optimization_energy_min = args_dict.get("optimization_energy_min")
     if optimization_energy_min is None:
-        optimization_energy_min = thrown_energy_min
+        optimization_energy_min = br_energy_min
 
     optimization_energy_max = args_dict.get("optimization_energy_max")
     if optimization_energy_max is None:
-        optimization_energy_max = thrown_energy_max
+        optimization_energy_max = br_energy_max
     return (
-        thrown_energy_min,
-        thrown_energy_max,
+        br_energy_min,
+        br_energy_max,
         optimization_energy_min,
         optimization_energy_max,
     )
+
+
+def _get_diagnostic_output_dir(args_dict):
+    """Return diagnostic plot output directory."""
+    output_file = gen.validate_file_type(args_dict["output_file"], ".ecsv")
+    return output_file.parent / f"{output_file.stem}_plots"
 
 
 def _build_result_row(metadata_row, bin_table, args_dict):
@@ -219,8 +245,8 @@ def _build_result_row(metadata_row, bin_table, args_dict):
         args_dict.get("reduced_core_radius"),
     )
     (
-        thrown_energy_min,
-        thrown_energy_max,
+        br_energy_min,
+        br_energy_max,
         optimization_energy_min,
         optimization_energy_max,
     ) = _resolve_energy_ranges(metadata_row, args_dict)
@@ -228,8 +254,8 @@ def _build_result_row(metadata_row, bin_table, args_dict):
     energy_probabilities = _compute_energy_bin_probabilities(
         energy_edges,
         args_dict["spectral_index"],
-        thrown_energy_min,
-        thrown_energy_max,
+        br_energy_min,
+        br_energy_max,
     )
     expected_triggers_per_event = _compute_expected_trigger_matrix(
         simulated_counts,
@@ -241,22 +267,40 @@ def _build_result_row(metadata_row, bin_table, args_dict):
         optimization_energy_min,
         optimization_energy_max,
     )
-    required_total_events, limiting_expected_per_event, limiting_index = _estimate_required_events(
+    (
+        required_total_events,
+        limiting_expected_per_event,
+        limiting_index,
+        optimization_bins_used,
+        optimization_bins_skipped,
+    ) = _estimate_required_events(
         expected_triggers_per_event,
         energy_mask,
         args_dict["target_relative_uncertainty"],
     )
+    expected_counts = _compute_expected_counts(expected_triggers_per_event, required_total_events)
+    relative_uncertainty = _compute_relative_uncertainty(expected_counts)
 
     masked_energy_indices = np.flatnonzero(energy_mask)
     limiting_angular_index = limiting_index[0]
     limiting_energy_index = masked_energy_indices[limiting_index[1]]
     original_radius = _get_metadata_quantity(metadata_row, "core_scatter_max", u.m).to(u.m)
 
+    if args_dict.get("plot_diagnostics"):
+        plot_monte_carlo_statistics_diagnostics(
+            _get_diagnostic_output_dir(args_dict),
+            metadata_row["array_name"],
+            energy_edges,
+            angular_edges,
+            expected_counts,
+            relative_uncertainty,
+        )
+
     return {
         "array_name": metadata_row["array_name"],
         "spectral_index": args_dict["spectral_index"],
         "target_relative_uncertainty": args_dict["target_relative_uncertainty"],
-        "required_total_thrown_events": required_total_events,
+        "estimated_total_events": required_total_events,
         "limiting_energy_low": energy_edges[limiting_energy_index] * u.TeV,
         "limiting_energy_high": energy_edges[limiting_energy_index + 1] * u.TeV,
         "limiting_angular_distance_low": angular_edges[limiting_angular_index] * u.deg,
@@ -269,10 +313,12 @@ def _build_result_row(metadata_row, bin_table, args_dict):
         "limiting_trigger_efficiency": trigger_efficiency[
             limiting_angular_index, limiting_energy_index
         ],
+        "optimization_bins_used": optimization_bins_used,
+        "optimization_bins_skipped": optimization_bins_skipped,
         "original_core_scatter_radius": original_radius,
         "effective_core_scatter_radius": effective_radius,
-        "br_energy_min": u.Quantity(thrown_energy_min).to(u.TeV),
-        "br_energy_max": u.Quantity(thrown_energy_max).to(u.TeV),
+        "br_energy_min": u.Quantity(br_energy_min).to(u.TeV),
+        "br_energy_max": u.Quantity(br_energy_max).to(u.TeV),
         "optimization_energy_min": u.Quantity(optimization_energy_min).to(u.TeV),
         "optimization_energy_max": u.Quantity(optimization_energy_max).to(u.TeV),
     }
@@ -303,8 +349,6 @@ def estimate_monte_carlo_statistics(args_dict):
         the output file does not use the ECSV suffix.
     """
     metadata_table, bin_table = load_trigger_histograms(args_dict["input"])
-    print("AAAAA", metadata_table)
-    print("BBBB", bin_table)
     selected_references = _select_reference_rows(metadata_table, args_dict.get("array_names"))
     output_rows = [
         _build_result_row(metadata_row, bin_table, args_dict)
@@ -313,5 +357,5 @@ def estimate_monte_carlo_statistics(args_dict):
     results = Table(rows=output_rows)
     output_file = gen.validate_file_type(args_dict["output_file"], ".ecsv")
     results.write(output_file, format="ascii.ecsv", overwrite=True)
-    _logger.info(f"Wrote Monte Carlo statistics estimates to {output_file}")
+    _logger.info(f"Writing Monte Carlo statistics estimates to {output_file}")
     return results
