@@ -1,12 +1,16 @@
 """Plot simtel event histograms filled with EventDataHistograms."""
 
 import logging
+from pathlib import Path
 
-import matplotlib.pyplot as plt
+import matplotlib as mpl
 import numpy as np
 from matplotlib.colors import LogNorm
 
 _logger = logging.getLogger(__name__)
+
+mpl.use("Agg")
+from matplotlib import pyplot as plt  # noqa: E402
 
 # Maps histogram dictionary keys to output plot filenames where the key alone
 # is ambiguous (e.g. the triggered 2-D vs-energy histograms share a prefix
@@ -67,6 +71,100 @@ def plot(
         use_broad_range_limits=use_broad_range_limits,
     )
     _execute_plotting_loop(plots, output_path, array_name, file_info)
+
+
+def plot_monte_carlo_statistics_diagnostics(
+    output_dir,
+    array_name,
+    energy_edges,
+    angular_edges,
+    expected_counts,
+    relative_uncertainty,
+):
+    """
+    Write Monte Carlo statistics diagnostic plots.
+
+    Parameters
+    ----------
+    output_dir : str or pathlib.Path
+        Directory to write plot files.
+    array_name : str
+        Array or telescope-selection name used in plot titles and filenames.
+    energy_edges : array-like
+        Energy bin edges in TeV.
+    angular_edges : array-like
+        Angular-distance bin edges in deg.
+    expected_counts : numpy.ndarray
+        Expected triggered events per angular-distance and energy bin.
+    relative_uncertainty : numpy.ndarray
+        Poisson relative uncertainty per angular-distance and energy bin.
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    _logger.info(f"Writing Monte Carlo statistics diagnostic plots to {output_dir}")
+    file_prefix = _sanitize_filename_part(array_name)
+    plot_specs = (
+        (
+            expected_counts,
+            output_dir / f"{file_prefix}_expected_events.png",
+            f"Expected triggered events ({array_name})",
+            "Expected events",
+            True,
+        ),
+        (
+            relative_uncertainty,
+            output_dir / f"{file_prefix}_relative_uncertainty.png",
+            f"Expected relative uncertainty ({array_name})",
+            "Relative uncertainty",
+            False,
+        ),
+    )
+    for matrix, output_file, title, colorbar_label, mask_zero in plot_specs:
+        _plot_monte_carlo_statistics_matrix(
+            matrix,
+            energy_edges,
+            angular_edges,
+            output_file,
+            title,
+            colorbar_label,
+            mask_zero=mask_zero,
+        )
+
+
+def _sanitize_filename_part(value):
+    """Return a filesystem-safe filename component."""
+    return "".join(
+        character if character.isalnum() or character in "-_" else "_" for character in str(value)
+    )
+
+
+def _plot_monte_carlo_statistics_matrix(
+    matrix,
+    energy_edges,
+    angular_edges,
+    output_file,
+    title,
+    colorbar_label,
+    mask_zero=False,
+):
+    """Plot a 2D diagnostic matrix in log10 energy and angular distance."""
+    matrix = np.asarray(matrix, dtype=float)
+    plot_matrix = np.ma.masked_invalid(matrix)
+    if mask_zero:
+        plot_matrix = np.ma.masked_less_equal(plot_matrix, 0.0)
+    log_energy_edges = np.log10(np.asarray(energy_edges, dtype=float))
+
+    cmap = plt.get_cmap("viridis").with_extremes(bad="white")
+    fig, ax = plt.subplots(figsize=(8, 6))
+    mesh = ax.pcolormesh(log_energy_edges, angular_edges, plot_matrix, shading="auto", cmap=cmap)
+    fig.colorbar(mesh, ax=ax, label=colorbar_label)
+    ax.set(
+        xlabel="log10(E / TeV)",
+        ylabel="Angular distance (deg)",
+        title=title,
+    )
+    fig.savefig(output_file, dpi=150, bbox_inches="tight")
+    plt.close(fig)
 
 
 def _get_limits(name, limits):

@@ -6,6 +6,19 @@ Estimate requited Monte Carlo statistics (thrown events) from a histograms of tr
 This application loads a trigger-histogram file, evaluates a toy thrown-event
 distribution for a configurable power-law spectrum, and computes the total Monte Carlo event
 statistics required to meet a target relative statistical uncertainty.
+
+Example
+-------
+Estimate Monte Carlo statistics from a trigger-histogram file:
+
+.. code-block:: console
+
+    simtools-production-estimate-monte-carlo-statistics \
+        --input trigger_histograms.hdf5 \
+        --spectral_index -2.0 \
+        --target_relative_uncertainty 0.1 \
+        --plot_diagnostics
+
 """
 
 from simtools.application_control import build_application
@@ -43,20 +56,6 @@ def _add_arguments(parser):
         help="Target relative statistical uncertainty per relevant bin.",
     )
     parser.add_argument(
-        "--thrown_energy_min",
-        required=False,
-        type=parser.positive_quantity("TeV"),
-        default=None,
-        help="Optional lower bound of the toy thrown spectrum.",
-    )
-    parser.add_argument(
-        "--thrown_energy_max",
-        required=False,
-        type=parser.positive_quantity("TeV"),
-        default=None,
-        help="Optional upper bound of the toy thrown spectrum.",
-    )
-    parser.add_argument(
         "--optimization_energy_min",
         required=False,
         type=parser.positive_quantity("TeV"),
@@ -76,6 +75,12 @@ def _add_arguments(parser):
         type=parser.positive_quantity("m"),
         default=None,
         help="Optional reduced core scatter radius used for effective-area reporting.",
+    )
+    parser.add_argument(
+        "--plot_diagnostics",
+        help="Write 2D diagnostic plots for expected events and relative uncertainty.",
+        action="store_true",
+        default=False,
     )
 
 

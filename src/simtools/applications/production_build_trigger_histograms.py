@@ -5,7 +5,20 @@ Build trigger-histogram products from broad-range simulations.
 
 This application reads reduced event-data files from broad-range simulations,
 accumulates triggered and simulated histograms in angular-distance vs energy, and writes
-an HDF5 product for later statistics estimation.
+an HDF5 file for later statistics estimation.
+
+Example
+-------
+Fill triggered-event histograms from reduced event-data files:
+
+.. code-block:: console
+
+    simtools-production-build-trigger-histograms \
+        --event_data_file simtools-output/reduced_event_data_*.hdf5 \
+        --energy_bins_per_decade 10 \
+        --angular_distance_bin_width 0.5 deg \
+        --plot_histograms
+
 """
 
 import astropy.units as u
@@ -36,11 +49,11 @@ def _add_arguments(parser):
         "--angular_distance_bin_width",
         help="Angular-distance bin width. The range is taken from broad-range viewcone limits.",
         type=parser.positive_quantity("deg"),
-        default=0.1 * u.deg,
+        default=0.5 * u.deg,
     )
     parser.add_argument(
         "--plot_histograms",
-        help="Write diagnostic triggered-event histograms for the built histograms.",
+        help="Plot diagnostic triggered-event histograms.",
         action="store_true",
         default=False,
     )
@@ -61,11 +74,7 @@ def main():
         initialization_kwargs={
             "db_config": True,
             "output": True,
-            "simulation_model": [
-                "site",
-                "model_version",
-                "layout",
-            ],
+            "simulation_model": ["site", "model_version", "layout"],
         },
     )
     build_trigger_histograms(app_context.args)
