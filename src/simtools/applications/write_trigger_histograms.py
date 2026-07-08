@@ -60,6 +60,15 @@ def _add_arguments(parser):
         action="store_true",
         default=False,
     )
+    parser.add_argument(
+        "--max_workers",
+        help=(
+            "Number of worker processes to use for execution "
+            "(default: 1; set to 0 for auto-detection of available cores)."
+        ),
+        type=int,
+        default=1,
+    )
 
 
 def main():

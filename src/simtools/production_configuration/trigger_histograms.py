@@ -1,6 +1,7 @@
 """Build and load trigger-histogram products from reduced event data."""
 
 import copy
+import logging
 
 import astropy.units as u
 import numpy as np
@@ -8,6 +9,7 @@ from astropy.table import Table, vstack
 
 import simtools.utils.general as gen
 from simtools.io import io_handler, table_handler
+from simtools.job_execution.process_pool import process_pool_map_ordered
 from simtools.production_configuration.production_event_data_helpers import (
     accumulate_histograms_by_telescope_config,
     normalize_event_data_file,
@@ -15,6 +17,8 @@ from simtools.production_configuration.production_event_data_helpers import (
     resolve_telescope_configs,
 )
 from simtools.sim_events.histograms import EventDataHistograms
+
+_logger = logging.getLogger(__name__)
 
 TRIGGER_HISTOGRAM_METADATA_TABLE = "TRIGGER_REFERENCE_METADATA"
 TRIGGER_HISTOGRAM_BINS_TABLE = "TRIGGER_REFERENCE_BINS"
@@ -374,6 +378,31 @@ def _process_production(
     return [(histograms, topology) for _, histograms, topology in finalized_histograms]
 
 
+def _execute_production_job(job_spec):
+    """Execute one production-pattern histogram job in a worker process."""
+    histogram_topology_pairs = _process_production(
+        job_spec["production_pattern"],
+        job_spec["telescope_configs"],
+        energy_bins_per_decade=job_spec["energy_bins_per_decade"],
+        angular_distance_bin_width=job_spec["angular_distance_bin_width"],
+        skip_invalid_event_data_files=job_spec["skip_invalid_event_data_files"],
+    )
+    return [
+        {
+            "production_index": job_spec["production_index"],
+            "event_data_file": job_spec["production_pattern"],
+            "site": job_spec["site"],
+            "array_name": config["array_name"],
+            "telescope_ids": config["telescope_ids"],
+            "histograms": histograms,
+            "trigger_topology": trigger_topology,
+        }
+        for config, (histograms, trigger_topology) in zip(
+            job_spec["telescope_configs"], histogram_topology_pairs
+        )
+    ]
+
+
 def write_trigger_histograms(args_dict):
     """
     Build trigger histograms and write them to file.
@@ -404,33 +433,30 @@ def write_trigger_histograms(args_dict):
     )
 
     reference_specs = []
-
-    for production_index, pattern in enumerate(production_patterns):
-        histogram_topology_pairs = _process_production(
-            pattern,
-            telescope_configs,
-            energy_bins_per_decade=args_dict["energy_bins_per_decade"],
-            angular_distance_bin_width=args_dict["angular_distance_bin_width"],
-            skip_invalid_event_data_files=args_dict.get("skip_invalid_event_data_files", False),
-        )
-
-        for config, (histograms, trigger_topology) in zip(
-            telescope_configs, histogram_topology_pairs
-        ):
-            # reference_id connects metadata and bin tables
-            reference_id = gen.get_uuid()
-            reference_specs.append(
-                {
-                    "reference_id": reference_id,
-                    "production_index": production_index,
-                    "event_data_file": pattern,
-                    "site": args_dict.get("site"),
-                    "array_name": config["array_name"],
-                    "telescope_ids": config["telescope_ids"],
-                    "histograms": histograms,
-                    "trigger_topology": trigger_topology,
-                }
-            )
+    job_specs = [
+        {
+            "production_index": production_index,
+            "production_pattern": pattern,
+            "site": args_dict.get("site"),
+            "telescope_configs": telescope_configs,
+            "energy_bins_per_decade": args_dict["energy_bins_per_decade"],
+            "angular_distance_bin_width": args_dict["angular_distance_bin_width"],
+            "skip_invalid_event_data_files": args_dict.get("skip_invalid_event_data_files", False),
+        }
+        for production_index, pattern in enumerate(production_patterns)
+    ]
+    _logger.info(
+        "Processing %d trigger-histogram production pattern(s) with max_workers=%s",
+        len(job_specs),
+        args_dict.get("max_workers", 1),
+    )
+    for production_result in process_pool_map_ordered(
+        _execute_production_job,
+        job_specs,
+        max_workers=args_dict.get("max_workers", 1),
+    ):
+        for spec in production_result:
+            reference_specs.append(spec | {"reference_id": gen.get_uuid()})
 
     metadata_table, bin_table = _create_histogram_tables(reference_specs)
     histogram_value_table = _create_histogram_value_table(reference_specs)
