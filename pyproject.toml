@@ -100,6 +100,7 @@ scripts.simtools-docs-produce-calibration-reports = "simtools.applications.docs_
 scripts.simtools-docs-produce-model-parameter-reports = "simtools.applications.docs_produce_model_parameter_reports:main"
 scripts.simtools-docs-produce-production-summary = "simtools.applications.docs_produce_production_summary:main"
 scripts.simtools-docs-produce-simulation-configuration-report = "simtools.applications.docs_produce_simulation_configuration_report:main"
+scripts.simtools-export-sim-telarray-metadata-schema = "simtools.applications.export_sim_telarray_metadata_schema:main"
 scripts.simtools-generate-array-config = "simtools.applications.generate_array_config:main"
 scripts.simtools-generate-bias-curve-submissions = "simtools.applications.generate_bias_curve_submissions:main"
 scripts.simtools-generate-corsika-histograms = "simtools.applications.generate_corsika_histograms:main"

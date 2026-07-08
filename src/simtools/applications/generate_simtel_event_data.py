@@ -90,8 +90,8 @@ prefix (str, required)
     Path prefix for the input files.
 output_file (str, required)
     Output file path.
-max_files (int, optional, default=100)
-    Maximum number of input files to process.
+max_files (int, optional)
+    Maximum number of input files to process. By default, process all input files.
 print_dataset_information (int, optional, default=0)
     Print information about the datasets in the generated reduced event dataset.
 
@@ -141,7 +141,10 @@ def _add_arguments(parser):
         help="Input file path (wildcards allowed; e.g., '/data_path/gamma_*dark*.simtel.zst')",
     )
     parser.add_argument(
-        "--max_files", type=int, default=100, help="Maximum number of input files to process."
+        "--max_files",
+        type=int,
+        default=None,
+        help="Maximum number of input files to process (default: all).",
     )
     parser.add_argument(
         "--print_dataset_information",

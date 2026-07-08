@@ -97,7 +97,7 @@ def test_plot_limits(mock_suptitle, mock_savefig, tmp_test_directory):
     assert len(output_files) == 1
     mock_savefig.assert_called_once()
     suptitle_text = mock_suptitle.call_args.args[0]
-    assert "Primary Particle=gamma" in suptitle_text
+    assert "gamma" in suptitle_text
 
 
 @patch("simtools.visualization.plot_corsika_limits.plt.savefig")

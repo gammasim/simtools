@@ -30,13 +30,16 @@ def _write_grid_file(tmp_test_directory, file_name, grid_points):
     table = Table(rows=rows)
     unit_mapping = {
         "azimuth": "deg",
+        "azimuth_angle": "deg",
         "zenith_angle": "deg",
         "ra": "deg",
         "dec": "deg",
         "nsb_level": "MHz",
         "offset": "deg",
-        "core_scatter_max_value": "m",
-        "view_cone_max_value": "deg",
+        "energy_min": "GeV",
+        "energy_max": "GeV",
+        "core_scatter_max": "m",
+        "view_cone_max": "deg",
     }
     for col, unit_val in unit_mapping.items():
         if col in table.colnames:
@@ -77,17 +80,15 @@ def test_normalize_altaz_point(tmp_test_directory):
     assert normalized_points[0]["dec"] is None
 
 
-def test_normalize_flattened_job_grid_altaz_columns(tmp_test_directory):
-    """Handle job-grid style flattened coordinate columns."""
+def test_normalize_job_grid_altaz_columns(tmp_test_directory):
+    """Handle semantic job-grid coordinate columns."""
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_altaz_flattened.ecsv",
         [
             {
-                "azimuth_angle_value": 0.0,
-                "azimuth_angle_unit": "deg",
-                "zenith_angle_value": 70.0,
-                "zenith_angle_unit": "deg",
+                "azimuth_angle": 0.0,
+                "zenith_angle": 70.0,
                 "primary": "gamma",
             }
         ],
@@ -113,10 +114,8 @@ def test_normalize_altaz_keeps_explicit_radec_columns(tmp_test_directory):
         "grid_altaz_with_radec.ecsv",
         [
             {
-                "azimuth_angle_value": 10.0,
-                "azimuth_angle_unit": "deg",
-                "zenith_angle_value": 20.0,
-                "zenith_angle_unit": "deg",
+                "azimuth_angle": 10.0,
+                "zenith_angle": 20.0,
                 "ra": 120.0,
                 "dec": -20.0,
             }
@@ -204,32 +203,20 @@ def test_plot_altaz_projection_with_limits_creates_outputs(tmp_test_directory):
         "grid_energy_flattened.ecsv",
         [
             {
-                "azimuth_angle_value": 0.0,
-                "azimuth_angle_unit": "deg",
-                "zenith_angle_value": 20.0,
-                "zenith_angle_unit": "deg",
-                "energy_min_value": 0.03,
-                "energy_min_unit": "TeV",
-                "energy_max_value": 150.0,
-                "energy_max_unit": "TeV",
-                "core_scatter_max_value": 1200.0,
-                "core_scatter_max_unit": "m",
-                "view_cone_max_value": 10.0,
-                "view_cone_max_unit": "deg",
+                "azimuth_angle": 0.0,
+                "zenith_angle": 20.0,
+                "energy_min": 30.0,
+                "energy_max": 150000.0,
+                "core_scatter_max": 1200.0,
+                "view_cone_max": 10.0,
             },
             {
-                "azimuth_angle_value": 180.0,
-                "azimuth_angle_unit": "deg",
-                "zenith_angle_value": 40.0,
-                "zenith_angle_unit": "deg",
-                "energy_min_value": 0.06,
-                "energy_min_unit": "TeV",
-                "energy_max_value": 200.0,
-                "energy_max_unit": "TeV",
-                "core_scatter_max_value": 1800.0,
-                "core_scatter_max_unit": "m",
-                "view_cone_max_value": 12.0,
-                "view_cone_max_unit": "deg",
+                "azimuth_angle": 180.0,
+                "zenith_angle": 40.0,
+                "energy_min": 60.0,
+                "energy_max": 200000.0,
+                "core_scatter_max": 1800.0,
+                "view_cone_max": 12.0,
             },
         ],
     )
@@ -243,8 +230,8 @@ def test_plot_altaz_projection_with_limits_creates_outputs(tmp_test_directory):
     from astropy.tests.helper import assert_quantity_allclose
 
     normalized_points = plotter.normalize_grid_points()
-    assert_quantity_allclose(normalized_points[0]["energy_min"], 0.03 * u.TeV)
-    assert_quantity_allclose(normalized_points[0]["energy_max"], 150.0 * u.TeV)
+    assert_quantity_allclose(normalized_points[0]["energy_min"], 30 * u.GeV)
+    assert_quantity_allclose(normalized_points[0]["energy_max"], 150000 * u.GeV)
     assert_quantity_allclose(normalized_points[0]["core_scatter_max"], 1200.0 * u.m)
     assert_quantity_allclose(normalized_points[0]["view_cone_max"], 10.0 * u.deg)
 

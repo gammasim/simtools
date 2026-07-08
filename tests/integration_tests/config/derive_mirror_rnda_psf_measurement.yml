@@ -10,7 +10,7 @@ applications:
     site: North
     telescope: LSTN-01
     psf_hist: true
-    n_workers: 1
+    max_workers: 1
     number_of_mirrors_to_test: 1
     test: true
   integration_tests:

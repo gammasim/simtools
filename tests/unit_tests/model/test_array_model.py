@@ -9,6 +9,7 @@ import pytest
 from astropy import units as u
 from astropy.table import QTable
 
+from simtools import settings
 from simtools.data_model import schema
 from simtools.model.array_model import ArrayModel
 
@@ -33,6 +34,21 @@ def test_array_model_north_from_file(model_version, get_test_data_file):
         array_elements=get_test_data_file("telescope_positions", "North"),
     )
     assert am.number_of_telescopes == 13
+
+
+def test_array_model_run_specific_config_directory(model_version, io_handler):
+    am = ArrayModel(
+        site="North",
+        model_version=model_version,
+        array_elements=["LSTN-01"],
+        model_directory_subdir="run000010",
+    )
+
+    expected = io_handler.get_model_configuration_directory(model_version, "run000010")
+    assert am.get_config_directory() == expected
+    assert am.site_model.config_file_directory == expected
+    assert am.telescope_models["LSTN-01"].config_file_directory == expected
+    assert am.telescope_models["LSTN-01"].config_file_path.parent == expected
 
 
 def test_array_model_north_init_without_layout_or_telescope_list(model_version):
@@ -81,7 +97,7 @@ def test_get_telescope_position_parameter(array_model_north):
 
 def test_get_config_file(array_model_north):
     am = array_model_north
-    assert am.config_file_path.name == "CTA-test_layout-North_test-lst-array.cfg"
+    assert am.config_file_path.name == "CTAO-North-test_layout.cfg"
 
 
 def test_get_config_directory(array_model_north):
@@ -226,8 +242,26 @@ def test_get_additional_simtel_metadata(array_model_north, mocker):
     mocker.patch.object(
         array_model_north_cp.site_model, "get_nsb_integrated_flux", return_value=42.0
     )
+    mocker.patch.object(
+        settings.config,
+        "_args",
+        {
+            "primary": "gamma",
+            "azimuth_angle": 180.0 * u.deg,
+            "zenith_angle": 20.0 * u.deg,
+            "ha": 0.0 * u.deg,
+            "dec": 30.0 * u.deg,
+        },
+    )
 
-    assert "nsb_integrated_flux" in array_model_north_cp._get_additional_simtel_metadata()
+    metadata = array_model_north_cp._get_additional_simtel_metadata()
+
+    assert metadata["nsb_integrated_flux"] == pytest.approx(42.0)
+    assert metadata["primary"] == "gamma"
+    assert metadata["azimuth_angle"] == pytest.approx(180.0)
+    assert metadata["zenith_angle"] == pytest.approx(20.0)
+    assert metadata["ha_angle"] == pytest.approx(0.0)
+    assert metadata["dec_angle"] == pytest.approx(30.0)
 
 
 def test_build_calibration_models():

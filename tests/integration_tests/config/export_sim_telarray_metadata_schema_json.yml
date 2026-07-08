@@ -1,0 +1,12 @@
+---
+applications:
+- application: simtools-export-sim-telarray-metadata-schema
+  configuration:
+    output_file: sim_telarray_metadata_schema.json
+    output_path: simtools-output
+    source_type: all
+  integration_tests:
+  - output_file: sim_telarray_metadata_schema.json
+  test_name: json
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

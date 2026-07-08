@@ -269,6 +269,7 @@ def test_initialize_default_arguments():
             "configuration",
             "execution",
             "user",
+            "run time",
         ]
 
     _parser_2 = parser.CommandLineParser()
