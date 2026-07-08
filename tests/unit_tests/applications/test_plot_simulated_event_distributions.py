@@ -15,6 +15,12 @@ def test_main_loads_precomputed_trigger_histograms_and_plots(tmp_test_directory)
     )
     app_context.io_handler.get_output_directory.return_value = output_dir
     histogram_instance = MagicMock()
+    histogram_instance.histograms = {
+        "energy": {"histogram": MagicMock(ndim=1)},
+        "energy_vs_core": {"histogram": MagicMock(ndim=2)},
+        "energy_vs_core_vs_angle": {"histogram": MagicMock(ndim=3)},
+        "raw_edges": MagicMock(),
+    }
 
     with (
         patch(
@@ -32,4 +38,10 @@ def test_main_loads_precomputed_trigger_histograms_and_plots(tmp_test_directory)
         app.main()
 
     mock_load.assert_called_once_with("trigger_histograms.hdf5")
-    mock_plot.assert_called_once_with(histogram_instance.histograms, output_path=output_dir)
+    mock_plot.assert_called_once_with(
+        {
+            "energy": histogram_instance.histograms["energy"],
+            "energy_vs_core": histogram_instance.histograms["energy_vs_core"],
+        },
+        output_path=output_dir,
+    )

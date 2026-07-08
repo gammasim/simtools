@@ -221,6 +221,9 @@ def _generate_plot_configurations(
     for name, hist in histograms.items():
         if hist["histogram"] is None:
             continue
+        if np.ndim(hist["histogram"]) > 2:
+            _logger.warning(f"Skipping plot {name} - plotting supports only 1D and 2D histograms")
+            continue
         plots[name] = _build_plot_configuration(
             hist,
             name,

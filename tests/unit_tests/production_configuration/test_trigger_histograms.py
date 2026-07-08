@@ -190,12 +190,46 @@ def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
     assert loaded_histograms.array_name == "alpha"
     assert loaded_histograms.file_info["primary_particle"] == "gamma"
     assert loaded_histograms.data_ranges["angular_distance"] == pytest.approx((0.5, 1.5))
+    assert all(isinstance(histogram, dict) for histogram in loaded_histograms.histograms.values())
+    np.testing.assert_allclose(loaded_histograms.energy_bins, histograms.energy_bins)
     np.testing.assert_allclose(
         loaded_histograms.histograms["angular_distance_vs_energy_vs_core_distance"]["histogram"],
         histograms.histograms["angular_distance_vs_energy_vs_core_distance"]["histogram"],
     )
     assert "angular_distance_vs_energy_vs_core_distance_eff" in loaded_histograms.histograms
     assert "energy_cumulative" in loaded_histograms.histograms
+
+
+def test_event_data_histograms_hdf5_filter_by_array_name(tmp_path):
+    histograms = _full_fake_histograms()
+    reference_specs = [
+        {
+            "reference_id": "ref-1",
+            "production_index": 0,
+            "event_data_file": "pattern*.hdf5",
+            "site": "North",
+            "array_name": "MSTS-01",
+            "telescope_ids": ["MSTS-01"],
+            "histograms": histograms,
+        }
+    ]
+    metadata_table, bin_table = _create_histogram_tables(reference_specs)
+    value_table = _create_histogram_value_table(reference_specs)
+    edge_table = _create_histogram_edge_table(reference_specs)
+    output_file = tmp_path / "trigger_histograms.hdf5"
+    table_handler.write_tables(
+        [metadata_table, bin_table, value_table, edge_table],
+        output_file,
+        overwrite_existing=True,
+        file_type="HDF5",
+    )
+
+    loaded = load_event_data_histograms(output_file, array_names=["MSTS-01"])
+
+    assert len(loaded) == 1
+    row, loaded_histograms = loaded[0]
+    assert row["array_name"] == "MSTS-01"
+    assert loaded_histograms.array_name == "MSTS-01"
 
 
 def test_plot_directory_name_uses_telescope_ids_for_inline_lists():

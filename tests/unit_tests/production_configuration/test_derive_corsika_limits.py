@@ -213,6 +213,57 @@ def test_generate_corsika_limits_grid_from_trigger_histogram_file(
     assert result["telescope_ids"] == ["LSTN-01"]
 
 
+def test_generate_corsika_limits_grid_uses_all_arrays_when_array_names_not_given(
+    mocker, mock_args_dict, tmp_test_directory
+):
+    """Load all array names from the trigger-histogram file when no filter is given."""
+    args = mock_args_dict.copy()
+    args["trigger_histogram_file"] = "trigger_histograms.hdf5"
+    args["array_names"] = None
+
+    metadata = Table(
+        rows=[
+            {
+                "production_index": 0,
+                "event_data_file": "prod/*.hdf5",
+                "array_name": "alpha",
+                "telescope_ids": "LSTN-01",
+            },
+            {
+                "production_index": 0,
+                "event_data_file": "prod/*.hdf5",
+                "array_name": "beta",
+                "telescope_ids": "MSTS-01",
+            },
+        ]
+    )
+    histograms_alpha = mocker.Mock()
+    histograms_beta = mocker.Mock()
+    mock_load = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.load_event_data_histograms",
+        return_value=[(metadata[0], histograms_alpha), (metadata[1], histograms_beta)],
+    )
+    mock_derive = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits._derive_limits_from_histograms",
+        side_effect=[_pool_result(array_name="alpha"), _pool_result(array_name="beta")],
+    )
+    mock_write = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.write_results"
+    )
+    mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.io_handler.IOHandler"
+    ).return_value.get_output_directory.return_value = tmp_test_directory
+
+    derive_corsika_limits.generate_corsika_limits_grid(args)
+
+    mock_load.assert_called_once_with("trigger_histograms.hdf5", array_names=None)
+    assert mock_derive.call_count == 2
+    results = mock_write.call_args[0][0]
+    assert [result["array_name"] for result in results] == ["alpha", "beta"]
+    assert results[0]["telescope_ids"] == ["LSTN-01"]
+    assert results[1]["telescope_ids"] == ["MSTS-01"]
+
+
 def test_resolve_telescope_configs_wraps_single_layout_result(mocker):
     """Wrap a non-list layout resolution result into a list before DB lookup."""
     mock_resolve = mocker.patch(

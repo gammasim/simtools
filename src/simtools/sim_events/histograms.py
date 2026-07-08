@@ -71,6 +71,7 @@ class EventDataHistograms:
         self.histograms = {}
         self.file_info = {}
         self.data_ranges = {}
+        self.loaded_bin_edges = {}
         self._contains_triggered_data = False
         self._filled_data_sets = 0
         self._release_event_data_after_fill = False
@@ -114,6 +115,7 @@ class EventDataHistograms:
         instance.histograms = {}
         instance.file_info = {}
         instance.data_ranges = {}
+        instance.loaded_bin_edges = {}
         instance._contains_triggered_data = True
         instance._filled_data_sets = 0
         instance._release_event_data_after_fill = True
@@ -134,6 +136,7 @@ class EventDataHistograms:
         histograms,
         file_info=None,
         data_ranges=None,
+        loaded_bin_edges=None,
         contains_triggered_data=True,
     ):
         """Install histogram data loaded from a serialized histogram product."""
@@ -142,6 +145,8 @@ class EventDataHistograms:
             self.file_info = file_info
         if data_ranges is not None:
             self.data_ranges = data_ranges
+        if loaded_bin_edges is not None:
+            self.loaded_bin_edges = loaded_bin_edges
         self._filled_data_sets = 1
         self._contains_triggered_data = contains_triggered_data
 
@@ -558,6 +563,8 @@ class EventDataHistograms:
         -------
         np.ndarray            Array of energy bin edges in TeV.
         """
+        if "energy" in self.loaded_bin_edges:
+            return self.loaded_bin_edges["energy"]
         if "energy_bin_edges" in self.histograms:
             return self.histograms["energy_bin_edges"]
 
@@ -581,6 +588,8 @@ class EventDataHistograms:
 
         CORSIKA CSCAT ('core_scatter_max') is defined in the shower plane.
         """
+        if "core_distance" in self.loaded_bin_edges:
+            return self.loaded_bin_edges["core_distance"]
         if "core_distance_bin_edges" in self.histograms:
             return self.histograms["core_distance_bin_edges"]
 
@@ -593,6 +602,8 @@ class EventDataHistograms:
     @property
     def view_cone_bins(self):
         """Return bins for the viewcone histogram."""
+        if "viewcone" in self.loaded_bin_edges:
+            return self.loaded_bin_edges["viewcone"]
         if "viewcone_bin_edges" in self.histograms:
             return self.histograms["viewcone_bin_edges"]
 

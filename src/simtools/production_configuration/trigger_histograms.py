@@ -317,7 +317,7 @@ def _plot_histograms(histograms, output_dir, array_name, telescope_ids):
     )
 
 
-def build_trigger_histograms(args_dict):
+def write_trigger_histograms(args_dict):
     """
     Build and write a trigger-histogram HDF5 product.
 
@@ -401,9 +401,6 @@ def build_trigger_histograms(args_dict):
     for histograms, production_subdir, array_name, telescope_ids in plot_specs:
         _plot_histograms(histograms, production_subdir, array_name, telescope_ids)
     return metadata_table, bin_table
-
-
-write_trigger_histograms = build_trigger_histograms
 
 
 def load_trigger_histograms(reference_file):
@@ -516,6 +513,7 @@ def _apply_loaded_histograms(histograms, values_by_name, edges_by_name):
     """Attach loaded histogram arrays and exact bin edges to a histogram object."""
     templates = _template_histograms(histograms)
     loaded = {}
+    loaded_bin_edges = {}
     for histogram_name, values in values_by_name.items():
         definition = copy.copy(templates.get(histogram_name, {}))
         definition.setdefault("1d", values.ndim == 1)
@@ -531,13 +529,14 @@ def _apply_loaded_histograms(histograms, values_by_name, edges_by_name):
         )
         loaded[histogram_name] = definition
 
-    histograms.histograms = loaded
     if "energy" in edges_by_name:
-        histograms.histograms["energy_bin_edges"] = edges_by_name["energy"][0]
+        loaded_bin_edges["energy"] = edges_by_name["energy"][0]
     if "core_distance" in edges_by_name:
-        histograms.histograms["core_distance_bin_edges"] = edges_by_name["core_distance"][0]
+        loaded_bin_edges["core_distance"] = edges_by_name["core_distance"][0]
     if "angular_distance" in edges_by_name:
-        histograms.histograms["viewcone_bin_edges"] = edges_by_name["angular_distance"][0]
+        loaded_bin_edges["viewcone"] = edges_by_name["angular_distance"][0]
+
+    return loaded, loaded_bin_edges
 
 
 def _histograms_from_reference_row(row, value_rows, edge_rows):
@@ -550,15 +549,16 @@ def _histograms_from_reference_row(row, value_rows, edge_rows):
         angular_distance_bin_width=_row_value(row, "angular_distance_bin_width"),
         core_distance_bin_count=int(row["core_distance_bin_count"]) + 1,
     )
-    _apply_loaded_histograms(
+    loaded_histograms, loaded_bin_edges = _apply_loaded_histograms(
         histograms,
         _histogram_values_by_name(value_rows),
         _edges_by_histogram(edge_rows),
     )
     histograms.set_loaded_histograms(
-        histograms.histograms,
+        loaded_histograms,
         file_info=_metadata_file_info(row),
         data_ranges=_metadata_data_ranges(row),
+        loaded_bin_edges=loaded_bin_edges,
         contains_triggered_data=True,
     )
     histograms.calculate_efficiency_data()
@@ -598,7 +598,7 @@ def load_event_data_histograms(reference_file, array_names=None, production_indi
     edges = tables[TRIGGER_HISTOGRAM_EDGES_TABLE]
 
     if array_names:
-        metadata = metadata[np.isin(metadata["array_name"], array_names)]
+        metadata = metadata[np.isin(metadata["array_name"].astype(str), array_names)]
     if production_indices is not None:
         metadata = metadata[np.isin(metadata["production_index"], production_indices)]
 

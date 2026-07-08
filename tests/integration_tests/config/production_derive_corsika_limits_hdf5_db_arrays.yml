@@ -3,8 +3,6 @@ applications:
 - application: simtools-production-derive-corsika-limits
   configuration:
     trigger_histogram_file: simtools-output/trigger_histograms.hdf5
-    array_names:
-    - MSTS-01
     allowed_losses:
     - core_distance,0.001,10
     - angular_distance,0.001,10
