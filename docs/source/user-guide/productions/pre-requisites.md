@@ -49,6 +49,63 @@ simtools-production-derive-corsika-limits \
     --output_file corsika_limits_north.ecsv
 ```
 
+## Trigger Histograms for Monte Carlo Statistics
+
+Required Monte Carlo event statistics are estimated from triggered-event histograms built from
+broad-range reduced event-data files. This workflow optimizes trigger statistics only. It does
+not estimate post-cut reconstruction or DL2 analysis statistics.
+
+[simtools-production-build-trigger-histograms][build-trigger-histograms] reads the same reduced
+event-data input model as the CORSIKA-limit derivation and writes an HDF5 trigger-histogram
+product. The product stores simulated and triggered counts in bins of energy, angular distance to
+the camera center, and shower-core distance. The original broad-range simulation geometry is kept
+in the metadata, including the energy range, view-cone range, core-scatter range, and scatter
+area.
+
+Example command:
+
+```bash
+simtools-production-build-trigger-histograms \
+    --event_data_file "reduced_event_data/gamma_20deg_0deg_run*.hdf5" \
+    --array_layout_name LSTN-01 \
+    --site North \
+    --model_version 7.0.0 \
+    --energy_bins_per_decade 10 \
+    --angular_distance_bin_width "0.5 deg" \
+    --output_file trigger_histograms.hdf5
+```
+
+[simtools-production-estimate-monte-carlo-statistics][estimate-monte-carlo-statistics] reads this
+HDF5 product and solves for the total number of thrown events needed to reach a requested
+relative Poisson uncertainty in every estimable bin of the optimization energy range.
+
+The estimator supports an optional `reduced_core_radius`. The builder always writes histograms
+for the original broad-range core-scatter radius. At estimation time, the estimator integrates
+the core-distance-binned simulated and triggered counts up to the selected radius, recomputes the
+trigger efficiency, and then derives the required event count. The reduced-radius calculation
+therefore uses the core-radius-dependent trigger efficiency; it is not a pure geometric
+`r^2 / R^2` rescaling. Radius overrides larger than the original broad-range core-scatter radius
+are rejected.
+
+Example command:
+
+```bash
+simtools-production-estimate-monte-carlo-statistics \
+    --input trigger_histograms.hdf5 \
+    --target_relative_uncertainty 0.1 \
+    --optimization_energy_min "0.1 TeV" \
+    --optimization_energy_max "10 TeV" \
+    --reduced_core_radius "1000 m" \
+    --plot_diagnostics \
+    --output_file trigger_histograms_estimate.ecsv
+```
+
+The ECSV output reports the estimated total number of events, the limiting energy and angular
+distance bin, the limiting-bin trigger efficiency, the original core-scatter radius, and the
+effective core-scatter radius used by the estimate. Diagnostic plots show the expected triggered
+events and relative uncertainty in energy and angular distance after applying the selected core
+radius.
+
 ## Plot CORSIKA Limits
 
 Use [simtools-plot-corsika-limits](../applications/simtools-plot-corsika-limits) to inspect a
@@ -65,4 +122,6 @@ simtools-plot-corsika-limits \
 The command writes one plot per array-layout and azimuth combination to `simtools-output`.
 
 [derive-corsika-limits]: ../applications/simtools-production-derive-corsika-limits
+[build-trigger-histograms]: ../applications/simtools-production-build-trigger-histograms
+[estimate-monte-carlo-statistics]: ../applications/simtools-production-estimate-monte-carlo-statistics
 [production-configuration]: https://gitlab.cta-observatory.org/cta-science/simulations/productions/production-configuration

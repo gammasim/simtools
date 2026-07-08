@@ -25,6 +25,24 @@ related production-configuration helpers used by the supported workflows.
    :members:
 ```
 
+(trigger-histograms)=
+
+## trigger_histograms
+
+```{eval-rst}
+.. automodule:: production_configuration.trigger_histograms
+   :members:
+```
+
+(monte-carlo-statistics-estimator)=
+
+## monte_carlo_statistics_estimator
+
+```{eval-rst}
+.. automodule:: production_configuration.monte_carlo_statistics_estimator
+   :members:
+```
+
 
 (angle-ranges)=
 
