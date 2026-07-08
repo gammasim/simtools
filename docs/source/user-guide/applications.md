@@ -93,7 +93,9 @@ simtools-plot-tabular-data <applications/simtools-plot-tabular-data>
 simtools-plot-tabular-data-for-model-parameter <applications/simtools-plot-tabular-data-for-model-parameter>
 simtools-plot-simtel-events <applications/simtools-plot-simtel-events>
 simtools-plot-simulated-event-distributions <applications/simtools-plot-simulated-event-distributions>
+simtools-production-build-trigger-histograms <applications/simtools-production-build-trigger-histograms>
 simtools-production-derive-corsika-limits <applications/simtools-production-derive-corsika-limits>
+simtools-production-estimate-monte-carlo-statistics <applications/simtools-production-estimate-monte-carlo-statistics>
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
 simtools-run-application <applications/simtools-run-application>
 simtools-simulate-flasher <applications/simtools-simulate-flasher>
