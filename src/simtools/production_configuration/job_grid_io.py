@@ -23,6 +23,25 @@ _JOB_GRID_SCHEMA_URL = SCHEMA_URL + "/" + _JOB_GRID_SCHEMA_FILE
 _OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label", "telescope")
 _OPTIONAL_COORDINATE_FIELDS = ("ha", "dec")
 _MISSING = object()
+SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS = frozenset(
+    {
+        "primary",
+        "azimuth_angle",
+        "zenith_angle",
+        "energy_range",
+        "core_scatter",
+        "view_cone",
+        "showers_per_run",
+        "model_version",
+        "array_layout_name",
+        "corsika_le_interaction",
+        "corsika_he_interaction",
+        "run_number",
+        "run_number_offset",
+        "site",
+        "simulation_software",
+    }
+)
 
 
 @dataclass(frozen=True)
