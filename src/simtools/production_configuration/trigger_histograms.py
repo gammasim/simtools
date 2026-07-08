@@ -68,31 +68,27 @@ def _data_range_value(histograms, name, index):
 
 def _create_histogram_tables(reference_specs):
     """Convert accumulated histogram products into metadata and bin tables."""
-    metadata_tables = []
-    bin_tables = []
-
-    for spec in reference_specs:
-        histograms = spec["histograms"]
-        reference_id = spec["reference_id"]
-        metadata_tables.append(
-            _create_metadata_table(
-                reference_id=reference_id,
-                production_index=spec["production_index"],
-                event_data_file=spec["event_data_file"],
-                site=spec["site"],
-                array_name=spec["array_name"],
-                telescope_ids=spec["telescope_ids"],
-                histograms=histograms,
-            )
+    metadata_tables = [
+        _create_metadata_table(
+            reference_id=spec["reference_id"],
+            production_index=spec["production_index"],
+            event_data_file=spec["event_data_file"],
+            site=spec["site"],
+            array_name=spec["array_name"],
+            telescope_ids=spec["telescope_ids"],
+            histograms=spec["histograms"],
         )
-        bin_tables.append(
-            _create_bin_table(
-                reference_id=reference_id,
-                production_index=spec["production_index"],
-                array_name=spec["array_name"],
-                histograms=histograms,
-            )
+        for spec in reference_specs
+    ]
+    bin_tables = [
+        _create_bin_table(
+            reference_id=spec["reference_id"],
+            production_index=spec["production_index"],
+            array_name=spec["array_name"],
+            histograms=spec["histograms"],
         )
+        for spec in reference_specs
+    ]
 
     return (
         vstack(metadata_tables, metadata_conflicts="silent"),
@@ -522,19 +518,16 @@ def _metadata_data_ranges(row):
     return {"angular_distance": (float(angular_min), float(angular_max))}
 
 
-def _rows_for_reference(table, reference_id):
-    """Return table rows matching a reference id."""
-    return table[table["reference_id"] == reference_id]
-
-
 def _edges_by_histogram(edge_rows):
     """Return nested histogram edge arrays by histogram name and axis."""
     edges = {}
-    for histogram_name in sorted(set(edge_rows["histogram_name"])):
-        histogram_rows = edge_rows[edge_rows["histogram_name"] == histogram_name]
+    for histogram_name, histogram_rows in table_handler.group_table_rows(
+        edge_rows, "histogram_name"
+    ).items():
         edges[histogram_name] = {}
-        for axis_index in sorted(set(histogram_rows["axis_index"])):
-            axis_rows = histogram_rows[histogram_rows["axis_index"] == axis_index]
+        for axis_index, axis_rows in table_handler.group_table_rows(
+            histogram_rows, "axis_index"
+        ).items():
             axis_rows.sort("bin_index")
             edges[histogram_name][int(axis_index)] = np.asarray(axis_rows["edge"], dtype=float)
     return edges
@@ -543,8 +536,9 @@ def _edges_by_histogram(edge_rows):
 def _histogram_values_by_name(value_rows):
     """Return histogram arrays reconstructed from flattened value rows."""
     histograms = {}
-    for histogram_name in sorted(set(value_rows["histogram_name"])):
-        histogram_rows = value_rows[value_rows["histogram_name"] == histogram_name]
+    for histogram_name, histogram_rows in table_handler.group_table_rows(
+        value_rows, "histogram_name"
+    ).items():
         dimension = int(histogram_rows["dimension"][0])
         shape = tuple(
             int(np.max(histogram_rows[f"index_{axis_index}"])) + 1
@@ -656,6 +650,8 @@ def load_event_data_histograms(reference_file, array_names=None, production_indi
     if production_indices is not None:
         metadata = metadata[np.isin(metadata["production_index"], production_indices)]
 
+    value_rows_by_reference = table_handler.group_table_rows(values, "reference_id")
+    edge_rows_by_reference = table_handler.group_table_rows(edges, "reference_id")
     loaded = []
     for row in metadata:
         reference_id = row["reference_id"]
@@ -664,8 +660,8 @@ def load_event_data_histograms(reference_file, array_names=None, production_indi
                 row,
                 _histograms_from_reference_row(
                     row,
-                    _rows_for_reference(values, reference_id),
-                    _rows_for_reference(edges, reference_id),
+                    value_rows_by_reference[reference_id],
+                    edge_rows_by_reference[reference_id],
                 ),
             )
         )

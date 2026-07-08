@@ -228,20 +228,24 @@ def _collect_metrics_from_trigger_histogram_file(trigger_histogram_file, accumul
     edges = tables[TRIGGER_HISTOGRAM_EDGES_TABLE]
     topology_counts = tables[TRIGGER_TOPOLOGY_COUNTS_TABLE]
     subset_histograms = tables[TRIGGER_SUBSET_HISTOGRAMS_TABLE]
+    value_rows_by_reference = table_handler.group_table_rows(values, "reference_id")
+    edge_rows_by_reference = table_handler.group_table_rows(edges, "reference_id")
+    topology_rows_by_reference = table_handler.group_table_rows(topology_counts, "reference_id")
+    subset_rows_by_reference = table_handler.group_table_rows(subset_histograms, "reference_id")
 
     for row in metadata:
         reference_id = row["reference_id"]
         _accumulate_quantity_histograms_for_reference(
-            values[values["reference_id"] == reference_id],
-            edges[edges["reference_id"] == reference_id],
+            value_rows_by_reference.get(reference_id, values[:0]),
+            edge_rows_by_reference.get(reference_id, edges[:0]),
             accumulators,
         )
         _accumulate_topology_counts_for_reference(
-            topology_counts[topology_counts["reference_id"] == reference_id],
+            topology_rows_by_reference.get(reference_id, topology_counts[:0]),
             accumulators,
         )
         _accumulate_subset_histograms_for_reference(
-            subset_histograms[subset_histograms["reference_id"] == reference_id],
+            subset_rows_by_reference.get(reference_id, subset_histograms[:0]),
             accumulators,
         )
         accumulators["simulated_event_count"] += int(row["total_simulated_events"])
@@ -313,10 +317,10 @@ def _accumulate_topology_counts_for_reference(topology_rows, accumulators):
 
 def _accumulate_subset_histograms_for_reference(subset_rows, accumulators):
     """Accumulate per-subset triggered quantity histograms."""
-    for subset_name in sorted(set(subset_rows["subset"])):
-        subset_selected = subset_rows[subset_rows["subset"] == subset_name]
-        for quantity in sorted(set(subset_selected["quantity"])):
-            rows = subset_selected[subset_selected["quantity"] == quantity]
+    for subset_name, subset_selected in table_handler.group_table_rows(
+        subset_rows, "subset"
+    ).items():
+        for quantity, rows in table_handler.group_table_rows(subset_selected, "quantity").items():
             rows.sort("bin_index")
             counts = np.asarray(rows["count"], dtype=float)
             bin_edges = np.concatenate(

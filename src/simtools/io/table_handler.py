@@ -31,6 +31,40 @@ def _decode_hdf5_string_column(column):
     return column
 
 
+def group_table_rows(table, column_names):
+    """Group astropy table rows by one or more columns.
+
+    Parameters
+    ----------
+    table : astropy.table.Table
+        Table to group.
+    column_names : str or sequence[str]
+        Column name or names used for grouping.
+
+    Returns
+    -------
+    dict
+        Mapping from group key to grouped sub-table. Single-column grouping returns
+        scalar keys, multi-column grouping returns tuple keys.
+    """
+    column_names = general.ensure_list(column_names)
+    if len(table) == 0:
+        return {}
+
+    grouped = table.group_by(column_names)
+    grouped_rows = {}
+    group_indices = grouped.groups.indices
+    for group_index, start in enumerate(group_indices[:-1]):
+        stop = group_indices[group_index + 1]
+        key_row = grouped.groups.keys[group_index]
+        if len(column_names) == 1:
+            key = key_row[column_names[0]]
+        else:
+            key = tuple(key_row[name] for name in column_names)
+        grouped_rows[key] = grouped[start:stop]
+    return grouped_rows
+
+
 def read_table_list(input_file, table_names, include_indexed_tables=False):
     """
     Read available tables found in the input file.
