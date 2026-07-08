@@ -21,7 +21,6 @@ _ECSV_FORMAT = "ascii.ecsv"
 _JOB_GRID_SCHEMA_FILE = "job_grid_density.schema.yml"
 _JOB_GRID_SCHEMA_URL = SCHEMA_URL + "/" + _JOB_GRID_SCHEMA_FILE
 _OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label", "telescope")
-_OPTIONAL_COORDINATE_FIELDS = ("ha", "dec")
 _MISSING = object()
 SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS = frozenset(
     {
