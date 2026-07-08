@@ -51,6 +51,7 @@ class Configurator:
         self.config_class_init = config
         self.label = label
         self.config = {}
+        self.config_sources = {"cli": set(), "env": set(), "file": set()}
         self.parser = argparser.CommandLineParser(
             prog=self.label,
             usage=usage,
@@ -97,6 +98,7 @@ class Configurator:
         simulation_configuration=None,
         db_config=False,
         preserve_by_version_keys=None,
+        relax_required_options=None,
     ):
         """
         Initialize application configuration.
@@ -123,6 +125,9 @@ class Configurator:
         preserve_by_version_keys: list
             Top-level configuration keys whose ``by_version`` dictionaries should be preserved
             during initial YAML loading.
+        relax_required_options: list
+            CLI options that allow required parser arguments to be relaxed before reading
+            full configuration. Defaults to ``["--config"]``.
 
         Returns
         -------
@@ -140,14 +145,23 @@ class Configurator:
             db_config=db_config,
         )
 
-        _cli_arglist = self._get_cli_arglist(require_command_line=require_command_line)
+        cli_arglist_kwargs = {"require_command_line": require_command_line}
+        if relax_required_options is not None:
+            cli_arglist_kwargs["relax_required_options"] = relax_required_options
+        _cli_arglist = self._get_cli_arglist(**cli_arglist_kwargs)
         _cli_config = vars(self.parser.parse_args(_cli_arglist))
         _config_file = _cli_config.get("config") or (self.config_class_init or {}).get("config")
         _env_file = _cli_config.get("env_file") or (self.config_class_init or {}).get("env_file")
 
         self._reset_required_arguments()
         self.config = vars(self.parser.parse_args([]))
-        self.config.update(self._config_from_env(_env_file))
+        env_config = self._config_from_env(_env_file)
+        self.config_sources = {
+            "cli": self._explicit_cli_keys(_cli_arglist),
+            "env": set(env_config),
+            "file": self._config_keys_from_file(_config_file),
+        }
+        self.config.update(env_config)
         self.config.update(gen.change_dict_keys_case(self.config_class_init or {}))
         if preserve_by_version_keys:
             self.config.update(
@@ -174,7 +188,12 @@ class Configurator:
         self.config["application_label"] = self.config.get("application_label") or self.label
         return self.config, _db_dict
 
-    def _get_cli_arglist(self, arg_list=None, require_command_line=True):
+    def _get_cli_arglist(
+        self,
+        arg_list=None,
+        require_command_line=True,
+        relax_required_options=None,
+    ):
         """
         Return CLI arguments as a list without modifying the configuration.
 
@@ -184,6 +203,8 @@ class Configurator:
             List of arguments.
         require_command_line: bool
             Require at least one command line argument.
+        relax_required_options: list
+            CLI options that allow required parser arguments to be relaxed.
 
         Returns
         -------
@@ -198,7 +219,9 @@ class Configurator:
             self._logger.debug("No command line arguments given, printing help.")
             arg_list = ["--help"]
 
-        if "--config" in arg_list:
+        relax_required_options = relax_required_options or ["--config"]
+        cli_options = {arg.split("=", maxsplit=1)[0] for arg in arg_list}
+        if any(option in cli_options for option in relax_required_options):
             self._reset_required_arguments()
 
         return arg_list
@@ -266,6 +289,29 @@ class Configurator:
         except FileNotFoundError:
             self._logger.error(f"Configuration file not found: {config_file}")
             raise
+
+    @staticmethod
+    def _config_keys_from_file(config_file):
+        """Return top-level configuration keys explicitly set in a YAML configuration file."""
+        try:
+            config_dict = ascii_handler.collect_data_from_file(file_name=config_file)
+            if "configuration" in config_dict.get("applications", [{}])[0]:
+                config_dict = config_dict["applications"][0]["configuration"]
+            return set(gen.change_dict_keys_case(config_dict).keys())
+        except FileNotFoundError:
+            return set()
+        except (TypeError, AttributeError):
+            return set()
+
+    def _explicit_cli_keys(self, arg_list):
+        """Return parser destination names explicitly present in a CLI argument list."""
+        explicit_keys = set()
+        for arg in arg_list:
+            option = arg.split("=", maxsplit=1)[0]
+            action = self.parser._option_string_actions.get(option)  # pylint: disable=protected-access
+            if action is not None:
+                explicit_keys.add(action.dest)
+        return explicit_keys
 
     def _config_from_env(self, env_file=None):
         """

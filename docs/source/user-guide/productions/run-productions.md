@@ -43,6 +43,20 @@ simtools-simulate-prod \
     --save_reduced_event_lists
 ```
 
+Alternatively, a single job can be selected from an executable production grid. In this mode,
+the selected row defines the production parameters such as primary, direction, energy range,
+layout, model version, site, run number, and simulation software. Do not combine
+`--job_grid_file` with manual production arguments such as `--zenith_angle`; use only operational
+options such as labels and output paths alongside the grid selection.
+
+```bash
+simtools-simulate-prod \
+    --job_grid_file production_grid_points_horizontal.ecsv \
+    --job_grid_row 1 \
+    --label test \
+    --output_path simtools-output
+```
+
 Example integration configurations are available in `tests/integration_tests/config`, including
 `simulate_prod_gamma_40_deg_south_corsika_only.yml`,
 `simulate_prod_gamma_40_deg_south_sim_telarray_only.yml`,
@@ -98,6 +112,10 @@ The generator writes:
   `simulate_prod.submit.condor` for a single image
 - one matching `simulate_prod.submit.<label>.params.txt` file per submit file
 - HTCondor log, error, and output directories
+
+The generated HTCondor parameter files contain the row-specific production values from the full
+job grid. The wrapper script passes those values to `simtools-simulate-prod` as explicit
+arguments for each queued job; it does not pass `--job_grid_file` or `--job_grid_row`.
 
 Before submission, copy the required environment variables into `env.txt` in the submission
 directory. The file should include database credentials and simulation software paths expected
