@@ -13,16 +13,17 @@ FILE_TYPE_SUFFIXES = {
 
 
 def validate_file_type(file_path, expected_suffixes):
-    """Validate that a file has one of the expected terminal suffixes."""
+    """Validate that a file has one of the expected suffixes."""
     path = Path(file_path)
-    if path.suffix not in gen.ensure_list(expected_suffixes):
+    expected_suffixes = gen.ensure_list(expected_suffixes)
+    if not matches_suffix(path, expected_suffixes):
         raise ValueError(
-            f"File '{file_path}' has suffix '{path.suffix}', expected one of {expected_suffixes}"
+            f"File '{file_path}' has unsupported suffix, expected one of {expected_suffixes}"
         )
     return path
 
 
-def suffixes_for_file_type(file_type):
+def _suffixes_for_file_type(file_type):
     """Return registered suffixes for a named file type."""
     try:
         return FILE_TYPE_SUFFIXES[file_type]
@@ -40,21 +41,9 @@ def matches_suffix(file_path, expected_suffixes):
 
 def is_path_type(file_path, file_type):
     """Return whether the path matches one registered file type."""
-    return matches_suffix(file_path, suffixes_for_file_type(file_type))
-
-
-def validate_expected_suffixes(file_path, expected_suffixes):
-    """Validate one file path against simple or compound suffixes."""
-    path = Path(file_path)
-    for suffix in expected_suffixes:
-        if path.name.lower().endswith(suffix):
-            terminal_suffix = Path(f"placeholder{suffix}").suffix
-            return validate_file_type(path, [terminal_suffix])
-    raise ValueError(
-        f"File '{file_path}' has unsupported suffix, expected one of {expected_suffixes}"
-    )
+    return matches_suffix(file_path, _suffixes_for_file_type(file_type))
 
 
 def validate_path_type(file_path, file_type):
     """Validate one file path against a registered file type."""
-    return validate_expected_suffixes(file_path, suffixes_for_file_type(file_type))
+    return validate_file_type(file_path, _suffixes_for_file_type(file_type))
