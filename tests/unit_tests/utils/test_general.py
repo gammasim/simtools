@@ -2,7 +2,6 @@
 
 import datetime
 import logging
-import os
 import time
 from copy import copy
 from pathlib import Path
@@ -860,8 +859,7 @@ def test_ensure_list():
     assert gen.ensure_list(False) == [False]
     assert gen.ensure_list("abc") == ["abc"]
     # json list
-    os.environ["ALLOWED_USERS"] = '["alice", "bob", "charlie"]'
-    raw_value = os.environ.get("ALLOWED_USERS")
+    raw_value = '["alice", "bob", "charlie"]'
     assert gen.ensure_list(raw_value) == ["alice", "bob", "charlie"]
 
 

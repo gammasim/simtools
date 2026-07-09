@@ -68,11 +68,11 @@ def test_create_2d_histogram_plot_linear(sample_data):
     plt.close(fig)
 
 
-def test_plot_monte_carlo_statistics_diagnostics_writes_expected_plots(tmp_path, mocker):
+def test_plot_monte_carlo_statistics_diagnostics_writes_expected_plots(tmp_test_directory, mocker):
     mock_plot = mocker.patch(f"{MOD}._plot_monte_carlo_statistics_matrix")
 
     plot_monte_carlo_statistics_diagnostics(
-        tmp_path,
+        tmp_test_directory,
         "MSTS-01",
         np.array([0.1, 1.0, 10.0]),
         np.array([0.0, 0.5]),
@@ -82,11 +82,11 @@ def test_plot_monte_carlo_statistics_diagnostics_writes_expected_plots(tmp_path,
 
     assert mock_plot.call_count == 2
     output_files = [call.args[3] for call in mock_plot.call_args_list]
-    assert tmp_path / "MSTS-01_expected_events.png" in output_files
-    assert tmp_path / "MSTS-01_relative_uncertainty.png" in output_files
+    assert tmp_test_directory / "MSTS-01_expected_events.png" in output_files
+    assert tmp_test_directory / "MSTS-01_relative_uncertainty.png" in output_files
 
 
-def test_plot_monte_carlo_statistics_matrix_can_mask_zero_bins(tmp_path, mocker):
+def test_plot_monte_carlo_statistics_matrix_can_mask_zero_bins(tmp_test_directory, mocker):
     mock_mesh = mocker.MagicMock()
     fig, ax = plt.subplots()
     ax.pcolormesh = mocker.MagicMock(return_value=mock_mesh)
@@ -96,7 +96,7 @@ def test_plot_monte_carlo_statistics_matrix_can_mask_zero_bins(tmp_path, mocker)
         np.array([[0.0, 2.0]]),
         np.array([0.1, 1.0, 10.0]),
         np.array([0.0, 0.5]),
-        tmp_path / "matrix.png",
+        tmp_test_directory / "matrix.png",
         "title",
         "label",
         mask_zero=True,
@@ -107,7 +107,7 @@ def test_plot_monte_carlo_statistics_matrix_can_mask_zero_bins(tmp_path, mocker)
     assert np.ma.isMaskedArray(plotted_array)
     assert np.any(np.ma.getmaskarray(plotted_array))
     assert cmap.get_bad()[:3] == pytest.approx((1.0, 1.0, 1.0))
-    assert (tmp_path / "matrix.png").exists()
+    assert (tmp_test_directory / "matrix.png").exists()
 
 
 def test_selected_array_names_normalizes_string_input():
@@ -131,7 +131,7 @@ def test_plottable_histograms_filters_non_plotable_entries():
     }
 
 
-def test_plot_trigger_histogram_file_loads_selected_array_and_plots(tmp_path, mocker):
+def test_plot_trigger_histogram_file_loads_selected_array_and_plots(tmp_test_directory, mocker):
     histogram_instance = MagicMock()
     histogram_instance.histograms = {
         "energy": {"histogram": MagicMock(ndim=1)},
@@ -144,7 +144,7 @@ def test_plot_trigger_histogram_file_loads_selected_array_and_plots(tmp_path, mo
     )
     mock_plot = mocker.patch(f"{MOD}.plot")
 
-    plot_trigger_histogram_file("trigger_histograms.hdf5", tmp_path, "alpha")
+    plot_trigger_histogram_file("trigger_histograms.hdf5", tmp_test_directory, "alpha")
 
     mock_load.assert_called_once_with("trigger_histograms.hdf5", array_names=["alpha"])
     mock_plot.assert_called_once_with(
@@ -152,21 +152,21 @@ def test_plot_trigger_histogram_file_loads_selected_array_and_plots(tmp_path, mo
             "energy": histogram_instance.histograms["energy"],
             "energy_vs_core": histogram_instance.histograms["energy_vs_core"],
         },
-        output_path=tmp_path,
+        output_path=tmp_test_directory,
     )
 
 
-def test_plot_trigger_histogram_file_raises_for_missing_array_layout(tmp_path, mocker):
+def test_plot_trigger_histogram_file_raises_for_missing_array_layout(tmp_test_directory, mocker):
     mocker.patch(f"{MOD}.load_event_data_histograms", return_value=[])
 
     with pytest.raises(
         ValueError,
         match=r"Array layout 'missing_layout' not found in histogram file 'trigger_histograms\.hdf5'",
     ):
-        plot_trigger_histogram_file("trigger_histograms.hdf5", tmp_path, "missing_layout")
+        plot_trigger_histogram_file("trigger_histograms.hdf5", tmp_test_directory, "missing_layout")
 
 
-def test_plot_trigger_histogram_file_splits_outputs_by_array_name(tmp_path, mocker):
+def test_plot_trigger_histogram_file_splits_outputs_by_array_name(tmp_test_directory, mocker):
     first = MagicMock()
     first.array_name = "alpha"
     first.histograms = {"energy": {"histogram": MagicMock(ndim=1)}}
@@ -179,15 +179,15 @@ def test_plot_trigger_histogram_file_splits_outputs_by_array_name(tmp_path, mock
     )
     mock_plot = mocker.patch(f"{MOD}.plot")
 
-    plot_trigger_histogram_file("trigger_histograms.hdf5", tmp_path)
+    plot_trigger_histogram_file("trigger_histograms.hdf5", tmp_test_directory)
 
     assert mock_plot.call_count == 2
     first_call = mock_plot.call_args_list[0]
     second_call = mock_plot.call_args_list[1]
-    assert first_call.kwargs["output_path"] == tmp_path / "alpha"
-    assert second_call.kwargs["output_path"] == tmp_path / "beta"
-    assert (tmp_path / "alpha").is_dir()
-    assert (tmp_path / "beta").is_dir()
+    assert first_call.kwargs["output_path"] == tmp_test_directory / "alpha"
+    assert second_call.kwargs["output_path"] == tmp_test_directory / "beta"
+    assert (tmp_test_directory / "alpha").isdir()
+    assert (tmp_test_directory / "beta").isdir()
 
 
 def test_create_2d_histogram_plot_log(sample_data):
@@ -409,13 +409,13 @@ def test_create_plot():
         mock_show.assert_called_once()
 
 
-def test_create_plot_with_output_file(tmp_path):
+def test_create_plot_with_output_file(tmp_test_directory):
     data = np.array([1, 2, 3])
     bins = np.array([0, 1, 2, 3])
     plot_params = {"color": "blue"}
     labels = {"x": "X-axis", "y": "Y-axis", "title": "Save Plot"}
     scales = {"x": "linear", "y": "linear"}
-    output_file = tmp_path / "saved_plot.png"
+    output_file = tmp_test_directory / "saved_plot.png"
 
     with (
         patch(PATCH_SUBPLOTS) as mock_subplots,
@@ -997,9 +997,9 @@ def test_projection_slice_coordinates():
     assert [value for value, _ in angular_slices] == [0.0, 1.0, 2.0, 3.0, 4.0]
 
 
-def test_create_2d_plot_with_distance_projections(tmp_path):
+def test_create_2d_plot_with_distance_projections(tmp_test_directory):
     """Render overall and sliced projections in two right-hand panels."""
-    output_file = tmp_path / "projected.png"
+    output_file = tmp_test_directory / "projected.png"
     data = np.arange(1.0, 21.0).reshape(4, 5)
     bins = [np.linspace(0.0, 2000.0, 5), np.logspace(-2, 3, 6)]
 

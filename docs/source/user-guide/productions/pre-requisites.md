@@ -60,7 +60,7 @@ Example command:
 ```bash
 simtools-production-derive-corsika-limits \
     --trigger_histogram_file trigger_histograms.hdf5 \
-    --array_names LSTN-01 \
+    --array_layout_name LSTN-01 \
     --allowed_losses core_distance,1e-3,10 \
     --allowed_losses angular_distance,1e-3,10 \
     --energy_threshold_fraction 0.01 \
