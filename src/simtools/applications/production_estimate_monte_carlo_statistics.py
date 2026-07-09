@@ -13,7 +13,7 @@ Estimate Monte Carlo statistics from a trigger-histogram file:
 
 .. code-block:: console
 
-    simtools-production-estimate-monte-carlo-statistics \
+    simtools-production-derive-monte-carlo-statistics \
         --trigger_histogram_file trigger_histograms.hdf5 \
         --spectral_index -2.0 \
         --target_relative_uncertainty 0.1 \
