@@ -2,6 +2,7 @@ import astropy.units as u
 import h5py
 import numpy as np
 import pytest
+from astropy.table import Table
 
 from simtools.io import table_handler
 from simtools.production_configuration.trigger_histograms import (
@@ -14,9 +15,11 @@ from simtools.production_configuration.trigger_histograms import (
     _create_trigger_subset_histogram_table,
     _create_trigger_topology_count_table,
     _execute_production_job,
+    _format_trigger_histogram_inspection,
     _get_plot_directory_name,
     _use_readable_inline_array_names,
     _write_dense_histogram_payload,
+    inspect_trigger_histogram_file,
     load_event_data_histograms,
     load_trigger_histograms,
     write_trigger_histograms,
@@ -380,3 +383,30 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
     ]
     assert list(metadata_table["production_index"]) == [0, 1]
     assert list(metadata_table["event_data_file"]) == ["prod_a/*.hdf5", "prod_b/*.hdf5"]
+
+
+def test_inspect_trigger_histogram_file_reports_reference_mismatches(tmp_path):
+    file_path = tmp_path / "trigger_histograms.hdf5"
+    metadata = Table(rows=[{"reference_id": "ref-1"}, {"reference_id": "ref-2"}])
+    metadata.meta["EXTNAME"] = TRIGGER_HISTOGRAM_METADATA_TABLE
+    table_handler.write_tables([metadata], file_path, file_type="HDF5")
+    with h5py.File(file_path, "a") as hdf5_file:
+        dense_group = hdf5_file.create_group(TRIGGER_HISTOGRAM_DENSE_GROUP)
+        dense_group.create_group("ref-1")
+        dense_group.create_group("ref-3")
+
+    report = inspect_trigger_histogram_file(file_path, format_report=False)
+    formatted = _format_trigger_histogram_inspection(report)
+
+    assert report["missing_dense_reference_ids"] == ["ref-2"]
+    assert report["orphan_dense_reference_ids"] == ["ref-3"]
+    assert "missing dense payloads for metadata ids: ref-2" in formatted
+    assert "orphan dense payload ids without metadata rows: ref-3" in formatted
+
+
+def test_inspect_trigger_histogram_file_returns_none_for_generic_hdf5(tmp_path):
+    file_path = tmp_path / "generic.hdf5"
+    with h5py.File(file_path, "w") as hdf5_file:
+        hdf5_file.create_dataset("values", data=[1, 2, 3])
+
+    assert inspect_trigger_histogram_file(file_path) is None

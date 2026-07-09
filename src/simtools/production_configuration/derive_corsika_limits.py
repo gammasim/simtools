@@ -150,7 +150,8 @@ def generate_corsika_limits_grid(args_dict=None):
     and writes results to an ECSV file.
     """
     args_dict = args_dict or settings.config.args
-    if not args_dict.get("trigger_histogram_file"):
+    trigger_histogram_file = args_dict.get("trigger_histogram_file")
+    if trigger_histogram_file is None:
         raise ValueError("Use --trigger_histogram_file to provide a trigger-histogram file.")
 
     allowed_losses = _parse_allowed_losses(args_dict.get("allowed_losses"))
