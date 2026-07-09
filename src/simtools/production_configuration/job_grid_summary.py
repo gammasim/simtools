@@ -2,7 +2,7 @@
 
 from astropy import units as u
 
-from simtools.production_configuration.summary_formatting import (
+from simtools.production_configuration.job_generation_summary import (
     format_integer_summary,
     format_quantity_summary,
 )
