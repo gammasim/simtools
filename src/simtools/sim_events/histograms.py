@@ -8,14 +8,10 @@ import numpy as np
 
 from simtools.sim_events.reader import EventDataReader
 from simtools.utils.general import resolve_file_patterns
+from simtools.utils.value_conversion import get_value_as_quantity
 
-
-def _coerce_quantity(value, unit):
-    """Return a quantity converted to the requested unit."""
-    unit = u.Unit(unit)
-    if hasattr(value, "to"):
-        return value.to(unit)
-    return u.Quantity(value, unit)
+_ANGULAR_DISTANCE = "Angular Distance (deg)"
+_CORE_DISTANCE = "Core Distance (m)"
 
 
 class EventDataHistograms:
@@ -155,7 +151,7 @@ class EventDataHistograms:
         """Return angular-distance bin width in deg, or None for count-based binning."""
         if angular_distance_bin_width is None:
             return None
-        angular_distance_bin_width = _coerce_quantity(angular_distance_bin_width, "deg")
+        angular_distance_bin_width = get_value_as_quantity(angular_distance_bin_width, "deg")
         if angular_distance_bin_width.value <= 0.0:
             raise ValueError("angular_distance_bin_width must be positive.")
         return angular_distance_bin_width
@@ -209,7 +205,7 @@ class EventDataHistograms:
         value = file_info_table.get(key)
         if value is None or unit is None:
             return value
-        return _coerce_quantity(value, unit)
+        return get_value_as_quantity(value, unit)
 
     def _update_file_info(self, file_info_table):
         """Store normalized metadata from the reduced file-info table."""
@@ -363,14 +359,14 @@ class EventDataHistograms:
                 "event_data_column": "core_distance_shower",
                 "event_data": event_data,
                 "bin_edges": self.core_distance_bins,
-                "axis_titles": ["Core Distance (m)", event_count_axis_title],
+                "axis_titles": [_CORE_DISTANCE, event_count_axis_title],
                 "plot_scales": {"y": "log"},
             },
             "angular_distance": {
                 "event_data_column": "angular_distance",
                 "event_data": triggered_data,
                 "bin_edges": self.view_cone_bins,
-                "axis_titles": ["Angular Distance (deg)", event_count_axis_title],
+                "axis_titles": [_ANGULAR_DISTANCE, event_count_axis_title],
                 "plot_scales": {"y": "log"},
             },
             "x_core_shower_vs_y_core_shower": {
@@ -385,7 +381,7 @@ class EventDataHistograms:
                 "event_data": (event_data, event_data),
                 "bin_edges": (self.core_distance_bins, self.energy_bins),
                 "is_1d": False,
-                "axis_titles": ["Core Distance (m)", energy_axis_title, event_count_axis_title],
+                "axis_titles": [_CORE_DISTANCE, energy_axis_title, event_count_axis_title],
                 "plot_scales": {"y": "log"},
             },
             "angular_distance_vs_energy": {
@@ -394,7 +390,7 @@ class EventDataHistograms:
                 "bin_edges": (self.view_cone_bins, self.energy_bins),
                 "is_1d": False,
                 "axis_titles": [
-                    "Angular Distance (deg)",
+                    _ANGULAR_DISTANCE,
                     energy_axis_title,
                     event_count_axis_title,
                 ],
@@ -410,9 +406,9 @@ class EventDataHistograms:
                 "bin_edges": (self.view_cone_bins, self.energy_bins, self.core_distance_bins),
                 "is_1d": False,
                 "axis_titles": [
-                    "Angular Distance (deg)",
+                    _ANGULAR_DISTANCE,
                     energy_axis_title,
-                    "Core Distance (m)",
+                    _CORE_DISTANCE,
                     event_count_axis_title,
                 ],
                 "plot_scales": {"y": "log"},
