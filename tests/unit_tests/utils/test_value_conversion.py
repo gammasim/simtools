@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import re
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -96,7 +98,8 @@ def test_assign_unit_to_quantity():
     assert value_conversion.get_value_as_quantity(1000 * u.cm, u.m) == 10 * u.m
 
     with pytest.raises(
-        ValueError, match=r"'TeV' (energy/torque/work) and 'm' (length) are not convertible"
+        ValueError,
+        match=re.escape("'TeV' (energy/torque/work) and 'm' (length) are not convertible"),
     ):
         value_conversion.get_value_as_quantity(1000 * u.TeV, u.m)
 
