@@ -12,6 +12,7 @@ from simtools.application_control import (
     _resolve_model_version_to_latest_patch,
     _version_info,
     build_application,
+    build_application_parser,
     get_application_label,
     get_log_file,
     get_module_description_line,
@@ -269,6 +270,37 @@ def test_build_application_infers_caller_metadata(mocker):
     )
     add_arguments.assert_called_once_with(configurator_instance.parser)
     configurator_instance.initialize.assert_called_once_with(output=True)
+
+
+def test_build_application_parser(mocker, tmp_test_directory):
+    """Test build_application_parser initializes only the parser shape."""
+    configurator_class = mocker.patch("simtools.application_control.configurator.Configurator")
+    configurator_instance = configurator_class.return_value
+    add_arguments = MagicMock()
+
+    parser = build_application_parser(
+        str(tmp_test_directory / "test_application.py"),
+        description="Test description",
+        add_arguments_function=add_arguments,
+        initialization_kwargs={"output": True, "db_config": True},
+        usage="simtools-test",
+    )
+
+    assert parser == configurator_instance.parser
+    configurator_class.assert_called_once_with(
+        label="test_application",
+        usage="simtools-test",
+        description="Test description",
+        epilog=None,
+    )
+    add_arguments.assert_called_once_with(configurator_instance.parser)
+    configurator_instance.parser.initialize_default_arguments.assert_called_once_with(
+        paths=True,
+        output=True,
+        simulation_model=None,
+        simulation_configuration=None,
+        db_config=True,
+    )
 
 
 def test_build_application_missing_metadata_raises(mocker, tmp_test_directory):
