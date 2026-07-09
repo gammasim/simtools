@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-import numpy as np
+from simtools.production_configuration.summary_formatting import format_quantity_range
 
 
 @dataclass
@@ -210,12 +210,7 @@ def format_quantity_bounds(bounds):
         Compact value or range string with unit.
     """
     quantity_min, quantity_max = bounds
-    summary_unit = quantity_max.unit
-    min_value = quantity_min.to_value(summary_unit)
-    max_value = quantity_max.to_value(summary_unit)
-    if np.isclose(min_value, max_value):
-        return f"{max_value:.6g} {summary_unit}"
-    return f"[{min_value:.6g}, {max_value:.6g}] {summary_unit}"
+    return format_quantity_range(quantity_min, quantity_max, summary_unit=quantity_max.unit)
 
 
 def log_streamed_row_summary(summary, logger):

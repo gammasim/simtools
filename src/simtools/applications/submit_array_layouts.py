@@ -37,7 +37,10 @@ r"""
 from simtools.application_control import build_application
 from simtools.db import db_handler
 from simtools.io import ascii_handler
-from simtools.layout.array_layout_utils import validate_array_layouts_with_db, write_array_layouts
+from simtools.layout.array_layout_utils import (
+    validate_array_layouts_with_db,
+    write_array_layouts,
+)
 
 
 def _add_arguments(parser):
@@ -47,12 +50,6 @@ def _add_arguments(parser):
         type=str,
         required=True,
         help="Array layout dictionary file.",
-    )
-    parser.add_argument(
-        "--updated_parameter_version",
-        help="Updated parameter version.",
-        type=str,
-        required=False,
     )
     parser.add_argument(
         "--input_meta",
@@ -69,7 +66,7 @@ def main():
         initialization_kwargs={
             "output": True,
             "db_config": True,
-            "simulation_model": ["model_version"],
+            "simulation_model": ["model_version", "updated_parameter_version"],
         },
     )
 
