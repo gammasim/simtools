@@ -24,10 +24,7 @@ def _output_directory_for_array_layout_selection(output_directory, array_layout_
     if isinstance(array_layout_name, str):
         array_layout_name = [array_layout_name]
 
-    selection_name = "__".join(
-        names.sanitize_name(layout_name) for layout_name in array_layout_name
-    )
-    output_path = output_directory / selection_name
+    output_path = output_directory.joinpath(*array_layout_name)
     output_path.mkdir(parents=True, exist_ok=True)
     return output_path
 
