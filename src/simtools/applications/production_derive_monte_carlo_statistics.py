@@ -1,11 +1,17 @@
 #!/usr/bin/python3
 
 r"""
-Estimate requited Monte Carlo statistics (thrown events) from a histograms of triggered events.
+Estimate required Monte Carlo statistics (thrown events) from histograms of triggered events.
 
-This application loads a trigger-histogram file, evaluates a toy thrown-event
+This application loads a trigger-histogram file, evaluates a toy MC-event
 distribution for a configurable power-law spectrum, and computes the total Monte Carlo event
 statistics required to meet a target relative statistical uncertainty.
+
+Statistical uncertainties are estimated from the expected number of triggered events per bin
+in the histogram, using the axes: energy vs. angular distance.
+The derived Monte Carlo statistics is reported when all bins in the energy range
+`--optimization_energy_min` to `--optimization_energy_max` have a relative uncertainty
+below the target value.
 
 Example
 -------
@@ -86,7 +92,7 @@ def _add_arguments(parser):
     )
     parser.add_argument(
         "--plot_diagnostics",
-        help="Write 2D diagnostic plots for expected events and relative uncertainty.",
+        help="Write diagnostic plots for expected events and relative uncertainty.",
         action="store_true",
         default=False,
     )

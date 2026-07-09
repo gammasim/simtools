@@ -58,25 +58,6 @@ RESULT_COLUMNS, COLUMN_DESCRIPTIONS, FILE_INFO_COLUMNS = (
 LOSS_AXES = ("core_distance", "angular_distance")
 
 
-def _resolve_selected_array_names(args_dict):
-    """Return the requested HDF5 array-name filter from CLI arguments."""
-    array_names = args_dict.get("array_names")
-    array_layout_name = args_dict.get("array_layout_name")
-
-    if isinstance(array_names, str):
-        array_names = [array_names]
-    if isinstance(array_layout_name, str):
-        array_layout_name = [array_layout_name]
-
-    if array_names and array_layout_name and set(array_names) != set(array_layout_name):
-        raise ValueError(
-            "Use either --array_names or --array_layout_name for HDF5 layout selection, "
-            "or provide the same values to both."
-        )
-
-    return array_layout_name or array_names
-
-
 def _parse_allowed_losses(allowed_losses_args):
     """
     Parse repeatable --allowed_losses values for core/viewcone axes.
@@ -150,9 +131,9 @@ def generate_corsika_limits_grid(args_dict=None):
     and writes results to an ECSV file.
     """
     args_dict = args_dict or settings.config.args
-    trigger_histogram_file = args_dict.get("trigger_histogram_file")
-    if trigger_histogram_file is None:
-        raise ValueError("Use --trigger_histogram_file to provide a trigger-histogram file.")
+
+    if not args_dict.get("trigger_histogram_file"):
+        raise ValueError("Use --trigger_histogram_file to provide a precomputed histogram file.")
 
     allowed_losses = _parse_allowed_losses(args_dict.get("allowed_losses"))
     energy_threshold_fraction = float(args_dict.get("energy_threshold_fraction", 0.01))
@@ -174,7 +155,7 @@ def _generate_corsika_limits_from_histogram_file(
     differential_loss_bins_per_decade,
 ):
     """Derive CORSIKA limits from a precomputed trigger-histogram file."""
-    selected_array_names = _resolve_selected_array_names(args_dict)
+    selected_array_names = _selected_array_names(args_dict)
     loaded_histograms = load_event_data_histograms(
         args_dict["trigger_histogram_file"],
         array_names=selected_array_names,
@@ -218,6 +199,15 @@ def _generate_corsika_limits_from_histogram_file(
         )
         results.append(result)
     return results
+
+
+def _selected_array_names(args_dict):
+    """Return selected array-layout names from singular or plural argument keys."""
+    return (
+        args_dict.get("array_layout_name")
+        or args_dict.get("array_layout_names")
+        or args_dict.get("array_names")
+    )
 
 
 def _derive_limits_from_histograms(

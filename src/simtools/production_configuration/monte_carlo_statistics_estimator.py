@@ -446,12 +446,7 @@ def estimate_monte_carlo_statistics(args_dict=None):
         diagnostics for each selected trigger histogram.
     """
     args_dict = args_dict or settings.config.args
-    trigger_histogram_file = args_dict.get("trigger_histogram_file") or args_dict.get("input")
-
-    if trigger_histogram_file is None:
-        raise ValueError("Use --trigger_histogram_file to provide a trigger-histogram file.")
-
-    metadata_table, bin_table = load_trigger_histograms(trigger_histogram_file)
+    metadata_table, bin_table = load_trigger_histograms(args_dict.get("trigger_histogram_file"))
 
     selected_references = _select_reference_rows(
         metadata_table,
