@@ -7,6 +7,7 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Column, Table
 
+from simtools import settings
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler, io_handler
@@ -50,6 +51,25 @@ RESULT_COLUMNS, COLUMN_DESCRIPTIONS, FILE_INFO_COLUMNS = (
     _load_output_table_configuration_from_schema(CORSIKA_LIMITS_TABLE_SCHEMA_FILE)
 )
 LOSS_AXES = ("core_distance", "angular_distance")
+
+
+def _resolve_selected_array_names(args_dict):
+    """Return the requested HDF5 array-name filter from CLI arguments."""
+    array_names = args_dict.get("array_names")
+    array_layout_name = args_dict.get("array_layout_name")
+
+    if isinstance(array_names, str):
+        array_names = [array_names]
+    if isinstance(array_layout_name, str):
+        array_layout_name = [array_layout_name]
+
+    if array_names and array_layout_name and set(array_names) != set(array_layout_name):
+        raise ValueError(
+            "Use either --array_names or --array_layout_name for HDF5 layout selection, "
+            "or provide the same values to both."
+        )
+
+    return array_layout_name or array_names
 
 
 def _parse_allowed_losses(allowed_losses_args):
@@ -117,45 +137,39 @@ def _parse_allowed_losses(allowed_losses_args):
     return parsed
 
 
-def generate_corsika_limits_grid(args_dict):
-    """
-    Generate CORSIKA limits from a precomputed trigger-histogram file.
-
-    Parameters
-    ----------
-    args_dict : dict
-        Dictionary containing command line arguments.
-    """
-    allowed_losses = _parse_allowed_losses(args_dict.get("allowed_losses"))
-    energy_threshold_fraction = float(args_dict.get("energy_threshold_fraction", 0.01))
-    differential_loss_bins_per_decade = int(args_dict.get("differential_loss_bins_per_decade", 0))
-    if not args_dict.get("trigger_histogram_file"):
+def generate_corsika_limits_grid():
+    """Generate CORSIKA limits from a precomputed trigger-histogram file."""
+    allowed_losses = _parse_allowed_losses(settings.config.args.get("allowed_losses"))
+    energy_threshold_fraction = float(settings.config.args.get("energy_threshold_fraction", 0.01))
+    differential_loss_bins_per_decade = int(
+        settings.config.args.get("differential_loss_bins_per_decade", 0)
+    )
+    if not settings.config.args.get("trigger_histogram_file"):
         raise ValueError("Use --trigger_histogram_file.")
 
     results = _generate_corsika_limits_from_histogram_file(
-        args_dict,
         allowed_losses,
         energy_threshold_fraction,
         differential_loss_bins_per_decade,
     )
-    write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
+    write_results(results, allowed_losses, energy_threshold_fraction)
 
 
 def _generate_corsika_limits_from_histogram_file(
-    args_dict,
     allowed_losses,
     energy_threshold_fraction,
     differential_loss_bins_per_decade,
 ):
     """Derive CORSIKA limits from a precomputed trigger-histogram file."""
+    selected_array_names = _resolve_selected_array_names(settings.config.args)
     loaded_histograms = load_event_data_histograms(
-        args_dict["trigger_histogram_file"],
-        array_names=args_dict.get("array_names"),
+        settings.config.args["trigger_histogram_file"],
+        array_names=selected_array_names,
     )
     output_dir = io_handler.IOHandler().get_output_directory()
     production_indices = sorted({int(row["production_index"]) for row, _ in loaded_histograms})
     production_subdirs = {}
-    if args_dict.get("plot_histograms") and len(production_indices) > 1:
+    if settings.config.args.get("plot_histograms") and len(production_indices) > 1:
         production_patterns = {
             int(row["production_index"]): row["event_data_file"] for row, _ in loaded_histograms
         }
@@ -166,6 +180,9 @@ def _generate_corsika_limits_from_histogram_file(
 
     results = []
     for row, histograms in loaded_histograms:
+        _logger.info(
+            f"Processing production index {row['production_index']} for array {row['array_name']}"
+        )
         output_subdir = None
         if production_subdirs:
             output_subdir = production_subdirs.get(row["event_data_file"])
@@ -174,7 +191,7 @@ def _generate_corsika_limits_from_histogram_file(
             row["array_name"],
             allowed_losses,
             energy_threshold_fraction,
-            args_dict.get("plot_histograms", False),
+            settings.config.args.get("plot_histograms", False),
             output_subdir,
             differential_loss_bins_per_decade,
         )
@@ -391,7 +408,7 @@ def _differential_upper_limits(
     )
 
 
-def write_results(results, args_dict, allowed_losses, energy_threshold_fraction):
+def write_results(results, allowed_losses, energy_threshold_fraction):
     """
     Write the computed limits as astropy table to file.
 
@@ -399,8 +416,6 @@ def write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
     ----------
     results : list[dict]
         List of computed limits.
-    args_dict : dict
-        Dictionary containing command line arguments.
     allowed_losses : dict
         Per-axis loss settings for core_distance/angular_distance.
     energy_threshold_fraction : float
@@ -412,13 +427,12 @@ def write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
         energy_threshold_fraction,
     )
 
-    output_dir = io_handler.IOHandler().get_output_directory()
-    output_file = output_dir / args_dict["output_file"]
+    output_file = io_handler.IOHandler().get_output_file(settings.config.args.get("output_file"))
 
     table.write(output_file, format="ascii.ecsv", overwrite=True)
     _logger.info(f"Results saved to {output_file}")
 
-    MetadataCollector.dump(args_dict, output_file)
+    MetadataCollector.dump(settings.config.args, output_file)
 
 
 def _create_results_table(results, allowed_losses, energy_threshold_fraction):

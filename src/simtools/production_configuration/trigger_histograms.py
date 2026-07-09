@@ -658,6 +658,7 @@ def load_event_data_histograms(reference_file, array_names=None, production_indi
     list[tuple[astropy.table.Row, EventDataHistograms]]
         Metadata row and reconstructed histogram object for each reference.
     """
+    print("A")
     tables = table_handler.read_tables(
         reference_file,
         [
@@ -667,6 +668,7 @@ def load_event_data_histograms(reference_file, array_names=None, production_indi
         ],
         file_type="HDF5",
     )
+    print("B")
     metadata = tables[TRIGGER_HISTOGRAM_METADATA_TABLE]
     values = tables[TRIGGER_HISTOGRAM_VALUES_TABLE]
     edges = tables[TRIGGER_HISTOGRAM_EDGES_TABLE]

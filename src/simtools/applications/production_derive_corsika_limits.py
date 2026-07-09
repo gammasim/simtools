@@ -41,7 +41,7 @@ Results are provided as a table with the following columns:
 +---------------------------+-----------+--------+----------------------------------------------+
 | primary_particle          | string    |        | Particle type (e.g., gamma, proton).         |
 +---------------------------+-----------+--------+----------------------------------------------+
-| array_name                | string    |        | Array name (custom or as defined in          |
+| array_layout_name         | string    |        | Array name (custom or as defined in          |
 |                           |           |        | array_layouts).                              |
 +---------------------------+-----------+--------+----------------------------------------------+
 | zenith                    | float64   | deg    | Direction of array pointing zenith.          |
@@ -79,9 +79,9 @@ Command line arguments
 ----------------------
 trigger_histogram_file (str, required)
     Precomputed trigger-histogram HDF5 file from ``simtools-write-trigger-histograms``.
-array_names (str, optional)
-    Optional array names to select from the trigger-histogram file.
-    If omitted, limits are derived for all array names available in the file.
+array_layout_name (str, optional)
+    Optional array layout name(s) to select from the trigger-histogram file.
+    If omitted, limits are derived for all layouts available in the file.
 allowed_losses (str, required, repeatable)
     Per-axis allowed-loss tuple in the form
     ``axis,fraction,min_events``.
@@ -111,7 +111,7 @@ Derive limits for a single production with a list of array layouts:
 
     simtools-production-derive-corsika-limits \\
         --trigger_histogram_file trigger_histograms.hdf5 \\
-        --array_names alpha beta \\
+        --array_layout_name alpha beta \\
         --allowed_losses core_distance,1e-6,10 \
         --allowed_losses angular_distance,1e-6,10 \
         --energy_threshold_fraction 0.01 \
@@ -149,10 +149,10 @@ def _add_arguments(parser):
         required=True,
     )
     parser.add_argument(
-        "--array_names",
+        "--array_layout_name",
         help=(
-            "Optional array names to select from a precomputed trigger-histogram file. "
-            "If omitted, derive limits for all array names available in the file."
+            "Optional array layout name(s) to select from a precomputed trigger-histogram "
+            "file. If omitted, derive limits for all layouts available in the file."
         ),
         nargs="+",
         type=str,
@@ -200,14 +200,8 @@ def _add_arguments(parser):
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": False,
-            "output": True,
-        },
-    )
-
-    generate_corsika_limits_grid(app_context.args)
+    build_application(initialization_kwargs={"db_config": False, "output": True})
+    generate_corsika_limits_grid()
 
 
 if __name__ == "__main__":
