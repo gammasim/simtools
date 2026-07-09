@@ -43,6 +43,15 @@ related production-configuration helpers used by the supported workflows.
    :members:
 ```
 
+(histogram-output-metadata)=
+
+## histogram_output_metadata
+
+```{eval-rst}
+.. automodule:: production_configuration.histogram_output_metadata
+   :members:
+```
+
 (production-event-data-helpers)=
 
 ## production_event_data_helpers

@@ -7,6 +7,12 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
+from simtools import settings
+from simtools.io import io_handler
+from simtools.production_configuration.derive_corsika_limits import FILE_INFO_COLUMNS
+from simtools.production_configuration.histogram_output_metadata import (
+    extract_histogram_output_metadata,
+)
 from simtools.production_configuration.trigger_histograms import (
     load_trigger_histograms,
 )
@@ -68,11 +74,11 @@ def _power_law_bin_integrals(bin_lows, bin_highs, spectral_index):
     return (np.power(bin_highs, exponent) - np.power(bin_lows, exponent)) / exponent
 
 
-def _compute_energy_bin_probabilities(energy_edges, spectral_index, br_energy_min, br_energy_max):
+def _compute_energy_bin_probabilities(energy_edges, spectral_index, br_energy):
     """Return the normalized thrown-event probability per energy bin."""
     energy_edges = np.asarray(energy_edges, dtype=float)
-    br_energy_min = u.Quantity(br_energy_min).to_value(u.TeV)
-    br_energy_max = u.Quantity(br_energy_max).to_value(u.TeV)
+    br_energy_min = u.Quantity(br_energy[0]).to_value(u.TeV)
+    br_energy_max = u.Quantity(br_energy[1]).to_value(u.TeV)
     if br_energy_min <= 0.0 or br_energy_max <= 0.0:
         raise ValueError("Thrown energy bounds must be positive.")
     if br_energy_min >= br_energy_max:
@@ -227,17 +233,17 @@ def _select_reference_rows(metadata_table, array_names):
     """Filter reference metadata rows according to optional user-facing selectors."""
     selected = metadata_table
     if array_names:
-        selected = selected[np.isin(selected["array_name"], array_names)]
+        selected = selected[np.isin(selected["array_name"].astype(str), array_names)]
     if len(selected) == 0:
         raise ValueError("No trigger histograms matched the requested selection.")
     return selected
 
 
-def _optimization_energy_mask(energy_edges, optimization_energy_min, optimization_energy_max):
+def _optimization_energy_mask(energy_edges, optimization_energy):
     """Return the energy-bin mask used for the optimization criterion."""
     centers = 0.5 * (np.asarray(energy_edges[:-1]) + np.asarray(energy_edges[1:]))
-    optimization_energy_min = u.Quantity(optimization_energy_min).to_value(u.TeV)
-    optimization_energy_max = u.Quantity(optimization_energy_max).to_value(u.TeV)
+    optimization_energy_min = u.Quantity(optimization_energy[0]).to_value(u.TeV)
+    optimization_energy_max = u.Quantity(optimization_energy[1]).to_value(u.TeV)
     if optimization_energy_min >= optimization_energy_max:
         raise ValueError("Optimization energy minimum must be smaller than the maximum.")
     mask = (centers >= optimization_energy_min) & (centers <= optimization_energy_max)
@@ -273,33 +279,64 @@ def _estimate_required_events(
     )
 
 
-def _resolve_energy_ranges(metadata_row, args_dict):
-    """Resolve thrown and optimization energy ranges for one histogram row."""
-    br_energy_min = _get_metadata_quantity(metadata_row, "energy_min", u.TeV)
-    br_energy_max = _get_metadata_quantity(metadata_row, "energy_max", u.TeV)
+def _resolve_energy_ranges(metadata_row, optimization_energy):
+    """
+    Resolve thrown and optimization energy ranges for one histogram row.
 
-    optimization_energy_min = args_dict.get("optimization_energy_min")
-    if optimization_energy_min is None:
-        optimization_energy_min = br_energy_min
+    Parameters
+    ----------
+    metadata_row : astropy.table.row.Row
+        Metadata row selected from the trigger-histogram metadata table.
+    optimization_energy : tuple of astropy.units.Quantity or None
+        Optional user-specified optimization energy range.
 
-    optimization_energy_max = args_dict.get("optimization_energy_max")
-    if optimization_energy_max is None:
-        optimization_energy_max = br_energy_max
-    return (
-        br_energy_min,
-        br_energy_max,
-        optimization_energy_min,
-        optimization_energy_max,
+    """
+    br_energy = (
+        _get_metadata_quantity(metadata_row, "energy_min", u.TeV),
+        _get_metadata_quantity(metadata_row, "energy_max", u.TeV),
     )
+    optimization_energy_min = None
+    optimization_energy_max = None
+    if optimization_energy is not None:
+        optimization_energy_min, optimization_energy_max = optimization_energy
+    resolved_optimization_energy = (
+        br_energy[0] if optimization_energy_min is None else optimization_energy_min,
+        br_energy[1] if optimization_energy_max is None else optimization_energy_max,
+    )
+    return br_energy, resolved_optimization_energy
 
 
-def _get_diagnostic_output_dir(args_dict):
-    """Return diagnostic plot output directory."""
-    output_file = gen.validate_file_type(args_dict["output_file"], ".ecsv")
-    return output_file.parent / f"{output_file.stem}_plots"
+def _resolve_limiting_indices(energy_mask, limiting_index):
+    """Map limiting indices from the masked matrix back to the original energy bins."""
+    masked_energy_indices = np.flatnonzero(energy_mask)
+    return limiting_index[0], masked_energy_indices[limiting_index[1]]
 
 
-def _build_result_row(metadata_row, bin_table, args_dict):
+def _build_result_metadata(
+    metadata_row,
+    spectral_index,
+    target_relative_uncertainty,
+):
+    """Build the metadata fields shared by all estimator result rows."""
+    return extract_histogram_output_metadata(
+        metadata_row,
+        FILE_INFO_COLUMNS,
+        include_array_name=True,
+    ) | {
+        "spectral_index": spectral_index,
+        "target_relative_uncertainty": target_relative_uncertainty,
+    }
+
+
+def _build_result_row(
+    metadata_row,
+    bin_table,
+    target_relative_uncertainty,
+    spectral_index,
+    reduced_core_radius,
+    optimization_energy,
+    plot_diagnostics,
+):
     """Build one result row for a selected trigger histogram."""
     reference_id = metadata_row["reference_id"]
     reference_rows = bin_table[bin_table["reference_id"] == reference_id]
@@ -309,7 +346,7 @@ def _build_result_row(metadata_row, bin_table, args_dict):
 
     effective_radius = _resolve_effective_throw_radius(
         _get_metadata_quantity(metadata_row, "core_scatter_max", u.m),
-        args_dict.get("reduced_core_radius"),
+        reduced_core_radius,
     )
     if simulated_counts.ndim == 3:
         core_edges = _get_reference_core_edges(reference_rows)
@@ -319,35 +356,23 @@ def _build_result_row(metadata_row, bin_table, args_dict):
             core_edges,
             effective_radius,
         )
-    elif args_dict.get("reduced_core_radius") is not None:
+    elif reduced_core_radius is not None:
         raise ValueError(
             "Core-distance-binned trigger histograms are required to use reduced_core_radius. "
             "Rebuild trigger histograms with simtools-write-trigger-histograms."
         )
     trigger_efficiency = _compute_trigger_efficiency(triggered_counts, simulated_counts)
-    (
-        br_energy_min,
-        br_energy_max,
-        optimization_energy_min,
-        optimization_energy_max,
-    ) = _resolve_energy_ranges(metadata_row, args_dict)
+    br_energy, optimization_energy = _resolve_energy_ranges(metadata_row, optimization_energy)
 
     energy_probabilities = _compute_energy_bin_probabilities(
-        energy_edges,
-        args_dict["spectral_index"],
-        br_energy_min,
-        br_energy_max,
+        energy_edges, spectral_index, br_energy
     )
     expected_triggers_per_event = _compute_expected_trigger_matrix(
         simulated_counts,
         triggered_counts,
         energy_probabilities,
     )
-    energy_mask = _optimization_energy_mask(
-        energy_edges,
-        optimization_energy_min,
-        optimization_energy_max,
-    )
+    energy_mask = _optimization_energy_mask(energy_edges, optimization_energy)
     (
         required_total_events,
         limiting_expected_per_event,
@@ -357,19 +382,19 @@ def _build_result_row(metadata_row, bin_table, args_dict):
     ) = _estimate_required_events(
         expected_triggers_per_event,
         energy_mask,
-        args_dict["target_relative_uncertainty"],
+        target_relative_uncertainty,
     )
     expected_counts = _compute_expected_counts(expected_triggers_per_event, required_total_events)
     relative_uncertainty = _compute_relative_uncertainty(expected_counts)
 
-    masked_energy_indices = np.flatnonzero(energy_mask)
-    limiting_angular_index = limiting_index[0]
-    limiting_energy_index = masked_energy_indices[limiting_index[1]]
+    limiting_angular_index, limiting_energy_index = _resolve_limiting_indices(
+        energy_mask, limiting_index
+    )
     original_radius = _get_metadata_quantity(metadata_row, "core_scatter_max", u.m).to(u.m)
 
-    if args_dict.get("plot_diagnostics"):
+    if plot_diagnostics:
         plot_monte_carlo_statistics_diagnostics(
-            _get_diagnostic_output_dir(args_dict),
+            io_handler.IOHandler().get_output_directory(),
             metadata_row["array_name"],
             energy_edges,
             angular_edges,
@@ -377,10 +402,7 @@ def _build_result_row(metadata_row, bin_table, args_dict):
             relative_uncertainty,
         )
 
-    return {
-        "array_name": metadata_row["array_name"],
-        "spectral_index": args_dict["spectral_index"],
-        "target_relative_uncertainty": args_dict["target_relative_uncertainty"],
+    return _build_result_metadata(metadata_row, spectral_index, target_relative_uncertainty) | {
         "estimated_total_events": required_total_events,
         "limiting_energy_low": energy_edges[limiting_energy_index] * u.TeV,
         "limiting_energy_high": energy_edges[limiting_energy_index + 1] * u.TeV,
@@ -398,45 +420,55 @@ def _build_result_row(metadata_row, bin_table, args_dict):
         "optimization_bins_skipped": optimization_bins_skipped,
         "original_core_scatter_radius": original_radius,
         "effective_core_scatter_radius": effective_radius,
-        "br_energy_min": u.Quantity(br_energy_min).to(u.TeV),
-        "br_energy_max": u.Quantity(br_energy_max).to(u.TeV),
-        "optimization_energy_min": u.Quantity(optimization_energy_min).to(u.TeV),
-        "optimization_energy_max": u.Quantity(optimization_energy_max).to(u.TeV),
+        "br_energy_min": u.Quantity(br_energy[0]).to(u.TeV),
+        "br_energy_max": u.Quantity(br_energy[1]).to(u.TeV),
+        "optimization_energy_min": u.Quantity(optimization_energy[0]).to(u.TeV),
+        "optimization_energy_max": u.Quantity(optimization_energy[1]).to(u.TeV),
     }
 
 
-def estimate_monte_carlo_statistics(args_dict):
+def estimate_monte_carlo_statistics(args_dict=None):
     """
     Estimate required total thrown events for one or more trigger histograms.
-
-    Parameters
-    ----------
-    args_dict : dict
-        Application arguments describing the histogram input file, optional array-name
-        selector, spectral assumptions, optimization range, optional reduced core radius,
-        and output file.
 
     Returns
     -------
     astropy.table.Table
         Results table containing required thrown-event estimates and limiting-bin
         diagnostics for each selected trigger histogram.
-
-    Raises
-    ------
-    ValueError
-        If the selected references are empty, the requested ranges are invalid,
-        the reduced core radius is inconsistent with the histogram metadata, or
-        the output file does not use the ECSV suffix.
     """
-    metadata_table, bin_table = load_trigger_histograms(args_dict["input"])
-    selected_references = _select_reference_rows(metadata_table, args_dict.get("array_names"))
+    args_dict = args_dict or settings.config.args
+    trigger_histogram_file = args_dict.get("trigger_histogram_file") or args_dict.get("input")
+
+    if trigger_histogram_file is None:
+        raise ValueError("Use --trigger_histogram_file to provide a trigger-histogram file.")
+
+    metadata_table, bin_table = load_trigger_histograms(trigger_histogram_file)
+
+    selected_references = _select_reference_rows(
+        metadata_table,
+        args_dict.get("array_layout_name") or args_dict.get("array_names"),
+    )
+
     output_rows = [
-        _build_result_row(metadata_row, bin_table, args_dict)
+        _build_result_row(
+            metadata_row,
+            bin_table,
+            args_dict.get("target_relative_uncertainty"),
+            args_dict.get("spectral_index"),
+            args_dict.get("reduced_core_radius"),
+            (
+                args_dict.get("optimization_energy_min"),
+                args_dict.get("optimization_energy_max"),
+            ),
+            args_dict.get("plot_diagnostics"),
+        )
         for metadata_row in selected_references
     ]
     results = Table(rows=output_rows)
-    output_file = gen.validate_file_type(args_dict["output_file"], ".ecsv")
+    output_file = gen.validate_file_type(
+        io_handler.IOHandler().get_output_file(args_dict.get("output_file")), ".ecsv"
+    )
     results.write(output_file, format="ascii.ecsv", overwrite=True)
     _logger.info(f"Writing Monte Carlo statistics estimates to {output_file}")
     return results

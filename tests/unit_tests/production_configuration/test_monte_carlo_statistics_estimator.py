@@ -18,7 +18,12 @@ def _build_reference_tables():
                 "reference_id": "ref-1",
                 "production_index": 0,
                 "array_name": "alpha",
+                "primary_particle": "gamma",
+                "zenith": 20.0 * u.deg,
+                "azimuth": 180.0 * u.deg,
+                "nsb_level": 1.0,
                 "core_scatter_max": 100.0 * u.m,
+                "viewcone_max": 10.0 * u.deg,
                 "energy_min": 0.1 * u.TeV,
                 "energy_max": 10.0 * u.TeV,
             }
@@ -57,7 +62,12 @@ def _build_legacy_reference_tables():
                 "reference_id": "ref-1",
                 "production_index": 0,
                 "array_name": "alpha",
+                "primary_particle": "gamma",
+                "zenith": 20.0 * u.deg,
+                "azimuth": 180.0 * u.deg,
+                "nsb_level": 1.0,
                 "core_scatter_max": 100.0 * u.m,
+                "viewcone_max": 10.0 * u.deg,
                 "energy_min": 0.1 * u.TeV,
                 "energy_max": 10.0 * u.TeV,
             }
@@ -234,6 +244,10 @@ def test_estimator_reports_limiting_bin_and_positive_required_events(mocker, tmp
     result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args)
 
     assert result["array_name"][0] == "alpha"
+    assert result["primary_particle"][0] == "gamma"
+    assert result["zenith"].quantity[0].to_value(u.deg) == pytest.approx(20.0)
+    assert result["azimuth"].quantity[0].to_value(u.deg) == pytest.approx(180.0)
+    assert result["nsb_level"][0] == pytest.approx(1.0)
     assert result["estimated_total_events"][0] > 0.0
     assert result["limiting_energy_low"].quantity[0] in (0.1 * u.TeV, 1.0 * u.TeV)
 
@@ -291,3 +305,36 @@ def test_estimator_supports_reference_tables_reloaded_from_hdf5(mocker, tmp_path
 
     assert result["effective_core_scatter_radius"].quantity[0].to_value(u.m) == pytest.approx(100.0)
     assert result["estimated_total_events"][0] > 0.0
+
+
+def test_estimator_selects_reloaded_hdf5_rows_by_array_layout_name(mocker, tmp_path):
+    metadata, bins = _build_reference_tables()
+    metadata["array_name"] = ["CTAO-North-Alpha"]
+    reference_file = tmp_path / "trigger_histograms.hdf5"
+    metadata.meta["EXTNAME"] = "TRIGGER_REFERENCE_METADATA"
+    bins.meta["EXTNAME"] = "TRIGGER_REFERENCE_BINS"
+    table_handler.write_tables([metadata, bins], reference_file, file_type="HDF5")
+    reloaded_metadata, reloaded_bins = monte_carlo_statistics_estimator.load_trigger_histograms(
+        reference_file
+    )
+    mocker.patch(
+        _LOAD_HISTOGRAMS,
+        return_value=(reloaded_metadata, reloaded_bins),
+    )
+
+    result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
+        {
+            "input": str(reference_file),
+            "array_layout_name": ["CTAO-North-Alpha"],
+            "spectral_index": -2.0,
+            "target_relative_uncertainty": 0.1,
+            "br_energy_min": None,
+            "br_energy_max": None,
+            "optimization_energy_min": None,
+            "optimization_energy_max": None,
+            "reduced_core_radius": None,
+            "output_file": str(tmp_path / "estimate.ecsv"),
+        }
+    )
+
+    assert result["array_name"][0] == "CTAO-North-Alpha"
