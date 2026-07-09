@@ -1,13 +1,13 @@
 """Inspect simtools-related files and return structured summaries."""
 
+from importlib import import_module
 from pathlib import Path
 
 import h5py
 from astropy.table import Table
 
-import simtools.utils.general as gen
 from simtools.io import ascii_handler
-from simtools.production_configuration.trigger_histograms import inspect_trigger_histogram_file
+from simtools.io.file_type import is_path_type, validate_path_type
 from simtools.simtel import simtel_io_metadata
 
 
@@ -35,8 +35,8 @@ def inspect_file(file_path, max_entries=50, format_report=True):
     inspector = _select_inspector(file_path)
     reports = [inspector(file_path, max_entries=max_entries, format_report=format_report)]
 
-    if _is_hdf5_path(file_path):
-        trigger_histogram_report = inspect_trigger_histogram_file(
+    if is_path_type(file_path, "hdf5"):
+        trigger_histogram_report = _inspect_trigger_histogram_file(
             file_path,
             format_report=format_report,
         )
@@ -47,7 +47,7 @@ def inspect_file(file_path, max_entries=50, format_report=True):
 
 def inspect_hdf5_file(file_path, max_entries=50, format_report=True):
     """Inspect one HDF5 file and return a report."""
-    file_path = gen.validate_file_type(file_path, [".hdf5", ".h5"])
+    file_path = validate_path_type(file_path, "hdf5")
     if not h5py.is_hdf5(file_path):
         raise ValueError(f"File '{file_path}' is not a valid HDF5 container.")
 
@@ -72,7 +72,7 @@ def inspect_json_or_yaml_file(file_path, max_entries=50, format_report=True):
     """Inspect one JSON or YAML file and return a report."""
     del max_entries
     suffix = Path(file_path).suffix.lower()
-    file_path = gen.validate_file_type(file_path, [".json", ".yml", ".yaml"])
+    file_path = validate_path_type(file_path, "json_or_yaml")
     data = ascii_handler.collect_data_from_file(file_path)
     report = {
         "file_path": Path(file_path),
@@ -86,7 +86,7 @@ def inspect_json_or_yaml_file(file_path, max_entries=50, format_report=True):
 
 def inspect_table_file(file_path, max_entries=50, format_report=True):
     """Inspect one tabular file and return a report."""
-    file_path = _validate_expected_suffixes(file_path, [".ecsv", ".fits", ".fits.gz"])
+    file_path = validate_path_type(file_path, "table")
     table = Table.read(file_path)
     report = {
         "file_path": Path(file_path),
@@ -101,8 +101,8 @@ def inspect_table_file(file_path, max_entries=50, format_report=True):
 
 def inspect_sim_telarray_file(file_path, max_entries=50, format_report=True):
     """Inspect one sim_telarray file and return a report."""
-    file_path = _validate_expected_suffixes(file_path, [".simtel", ".simtel.gz", ".simtel.zst"])
-    if not _is_simtel_path(file_path):
+    file_path = validate_path_type(file_path, "sim_telarray")
+    if not is_path_type(file_path, "sim_telarray"):
         raise ValueError(f"File '{file_path}' has unsupported suffix for sim_telarray inspection.")
     global_meta, telescope_meta = simtel_io_metadata.read_sim_telarray_metadata(file_path)
     sorted_global_items = sorted(global_meta.items()) if global_meta is not None else []
@@ -138,50 +138,23 @@ def inspect_text_file(file_path, max_entries=50, format_report=True):
 
 def _select_inspector(file_path):
     """Return the inspector function appropriate for the file path."""
-    if _is_hdf5_path(file_path):
+    if is_path_type(file_path, "hdf5"):
         return inspect_hdf5_file
-    if file_path.suffix.lower() in {".json", ".yml", ".yaml"}:
+    if is_path_type(file_path, "json_or_yaml"):
         return inspect_json_or_yaml_file
-    if _is_table_path(file_path):
+    if is_path_type(file_path, "table"):
         return inspect_table_file
-    if _is_simtel_path(file_path):
+    if is_path_type(file_path, "sim_telarray"):
         return inspect_sim_telarray_file
     if _looks_like_text_file(file_path):
         return inspect_text_file
     raise ValueError(f"Unsupported file type for inspection: {file_path.suffix or '<no suffix>'}.")
 
 
-def _is_hdf5_path(file_path):
-    """Return whether the path is intended to be an HDF5 file."""
-    return file_path.suffix.lower() in {".hdf5", ".h5"}
-
-
-def _is_table_path(file_path):
-    """Return whether the path is intended to be a supported table file."""
-    return _matches_suffix(file_path, [".ecsv", ".fits", ".fits.gz"])
-
-
-def _is_simtel_path(file_path):
-    """Return whether the path is intended to be a sim_telarray event file."""
-    return _matches_suffix(file_path, [".simtel", ".simtel.gz", ".simtel.zst"])
-
-
-def _matches_suffix(file_path, expected_suffixes):
-    """Return whether the path ends with one of the expected suffix patterns."""
-    name = Path(file_path).name.lower()
-    return any(name.endswith(suffix) for suffix in expected_suffixes)
-
-
-def _validate_expected_suffixes(file_path, expected_suffixes):
-    """Validate one file path against simple or compound suffixes."""
-    path = Path(file_path)
-    for suffix in expected_suffixes:
-        if path.name.lower().endswith(suffix):
-            terminal_suffix = Path(f"placeholder{suffix}").suffix
-            return gen.validate_file_type(path, [terminal_suffix])
-    raise ValueError(
-        f"File '{file_path}' has unsupported suffix, expected one of {expected_suffixes}"
-    )
+def _inspect_trigger_histogram_file(file_path, format_report=True):
+    """Import and run trigger-histogram inspection lazily to avoid import cycles."""
+    module = import_module("simtools.production_configuration.trigger_histograms")
+    return module.inspect_trigger_histogram_file(file_path, format_report=format_report)
 
 
 def _looks_like_text_file(file_path, sample_size=4096):

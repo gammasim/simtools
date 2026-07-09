@@ -6,9 +6,9 @@ import astropy.units as u
 import numpy as np
 from astropy.table import Table
 
-import simtools.utils.general as gen
 from simtools import settings
 from simtools.io import io_handler
+from simtools.io.file_type import validate_file_type
 from simtools.production_configuration.derive_corsika_limits import FILE_INFO_COLUMNS
 from simtools.production_configuration.histogram_output_metadata import (
     extract_histogram_output_metadata,
@@ -474,7 +474,7 @@ def estimate_monte_carlo_statistics(args_dict=None):
         for metadata_row in selected_references
     ]
     results = Table(rows=output_rows)
-    output_file = gen.validate_file_type(
+    output_file = validate_file_type(
         io_handler.IOHandler().get_output_file(args_dict.get("output_file")), ".ecsv"
     )
     results.write(output_file, format="ascii.ecsv", overwrite=True)

@@ -10,6 +10,7 @@ from astropy.table import Table, vstack
 
 import simtools.utils.general as gen
 from simtools.io import io_handler, table_handler
+from simtools.io.file_type import validate_file_type
 from simtools.job_execution.process_pool import process_pool_map_ordered
 from simtools.production_configuration.production_event_data_helpers import (
     accumulate_histograms_by_telescope_config,
@@ -515,7 +516,7 @@ def write_trigger_histograms(args_dict):
     telescope_configs = _use_readable_inline_array_names(
         normalize_telescope_configs(resolve_telescope_configs(args_dict))
     )
-    output_file = gen.validate_file_type(
+    output_file = validate_file_type(
         io_handler.IOHandler().get_output_file(args_dict["output_file"]),
         expected_suffixes=[".hdf5", ".h5"],
     )

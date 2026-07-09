@@ -1,5 +1,6 @@
 """Tests for the inspect_file application."""
 
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -13,7 +14,7 @@ def test_add_arguments_parses_required_input_and_default_limit():
 
     args = parser.parse_args(["--input_file", "test.hdf5"])
 
-    assert args.input_file == "test.hdf5"
+    assert args.input_file == Path("test.hdf5")
     assert args.max_entries == 50
 
 
