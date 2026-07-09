@@ -333,7 +333,7 @@ def test_write_tables_hdf5(tmp_path, mock_table):
         assert hdf5_file.attrs["simtools_write_status"] == "complete"
         assert len(hdf5_file[TEST_TABLE_NAME]) == 2
         assert hdf5_file[TEST_TABLE_NAME].compression == "gzip"
-        assert hdf5_file[TEST_TABLE_NAME].compression_opts == 4
+        assert hdf5_file[TEST_TABLE_NAME].compression_opts == 6
     assert not list(tmp_path.glob(f"{TEST_H5}.incomplete-*"))
 
 
@@ -581,7 +581,7 @@ def test_write_table_in_hdf5_new_table(mocker, mock_h5py_file, mock_table):
     mock_h5py_file.create_dataset.assert_called_once()
     call_args = mock_h5py_file.create_dataset.call_args[1]
     assert call_args["compression"] == "gzip"
-    assert call_args["compression_opts"] == 4
+    assert call_args["compression_opts"] == 6
     assert call_args["chunks"] is True
 
     # Verify metadata was written

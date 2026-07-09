@@ -49,4 +49,4 @@ def test_main_builds_application_and_generates_limits():
             "output": True,
         }
     )
-    mock_generate.assert_called_once_with(app_context.args)
+    mock_generate.assert_called_once_with()
