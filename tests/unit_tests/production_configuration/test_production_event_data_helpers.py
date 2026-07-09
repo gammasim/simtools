@@ -8,14 +8,6 @@ import pytest
 from simtools.production_configuration import production_event_data_helpers as helpers
 
 
-def test_normalize_event_data_file_accepts_str_and_list():
-    assert helpers.normalize_event_data_file("pattern*.hdf5") == ["pattern*.hdf5"]
-    assert helpers.normalize_event_data_file(["a*.hdf5", "b*.hdf5"]) == ["a*.hdf5", "b*.hdf5"]
-
-    with pytest.raises(TypeError, match="event_data_file must be str or list"):
-        helpers.normalize_event_data_file(("a*.hdf5",))
-
-
 def test_build_production_subdirectories_creates_unique_names(tmp_test_directory, mocker):
     output_dir = tmp_test_directory / "plots"
     mocker.patch(

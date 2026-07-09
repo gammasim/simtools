@@ -1,11 +1,14 @@
 #!/usr/bin/python3
 
 r"""
-Write trigger-histogram products from reduced event lists.
+Fill and write trigger-histogram products from reduced event lists.
 
 This application reads reduced event-data files, accumulates the common simulated and
 triggered-event histogram set, and writes a HDF5 histogram file for e.g.,
 plotting, CORSIKA-limit derivation, and Monte Carlo statistics estimation.
+
+Typical histograms include triggered event counts as a function of energy, core distance,
+and angular distance from the source position or trigger multiplicity for each trigger type.
 
 Example
 -------

@@ -2,7 +2,7 @@
 applications:
 - application: simtools-plot-simulated-event-distributions
   configuration:
-    trigger_histogram_file: ./tests/resources/generated/trigger_histograms.hdf5
+    trigger_histogram_file: ${generated:trigger_histograms.hdf5}
     output_path: simtools-output
   integration_tests:
   - output_file: CTAO-North-Alpha/core_distance_vs_energy_triggered.png
