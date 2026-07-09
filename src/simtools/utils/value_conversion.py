@@ -218,7 +218,16 @@ def get_value_as_quantity(value, unit):
         If the value cannot be converted to the given unit.
     """
     unit = u.dimensionless_unscaled if is_dimensionless_unit(unit) else u.Unit(unit)
-    if isinstance(value, collections.abc.Iterable) and not hasattr(value, "to"):
+    if isinstance(value, str):
+        if unit == u.dimensionless_unscaled:
+            return value
+        return u.Quantity(value).to(unit)
+
+    if (
+        isinstance(value, collections.abc.Iterable)
+        and not isinstance(value, str)
+        and not hasattr(value, "to")
+    ):
         return [get_value_as_quantity(v, unit) for v in value]
 
     if hasattr(value, "to"):
