@@ -203,17 +203,8 @@ lint.pydocstyle.convention = "numpy"
 lint.preview = true
 
 [tool.pylint]
-# See discussion in issue 521
-# Agreed to not have module docstring (missing-module-docstring)
-# Pylint cannot handle overload (used in pyproj; unpacking-non-sequence)
 main.disable = [
-  "fixme",
-  "logging-format-interpolation",
   "logging-fstring-interpolation",
-  "missing-function-docstring",
-  "missing-module-docstring",
-  "R0801",                         # duplications
-  "unpacking-non-sequence",
 ]
 # see https://github.com/pylint-dev/pylint/issues/2289
 main.generated-members = [
