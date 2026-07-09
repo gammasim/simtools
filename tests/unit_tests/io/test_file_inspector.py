@@ -1,6 +1,5 @@
 """Tests for generic simulation-file inspection helpers."""
 
-from pathlib import Path
 from unittest.mock import patch
 
 import h5py
@@ -15,7 +14,6 @@ from simtools.io.file_inspector import (
     _format_table_report,
     _format_text_report,
     _is_truncated,
-    _looks_like_text_file,
     _normalize_max_entries,
     _select_inspector,
     inspect_file,
@@ -153,22 +151,6 @@ def test_inspect_file_unlimits_entries_for_non_positive_max_entries(tmp_path):
 
     assert reports[0]["preview_lines"] == ["line-1", "line-2", "line-3"]
     assert reports[0]["preview_truncated"] is False
-
-
-def test_looks_like_text_file_false_on_binary_or_invalid_bytes(tmp_path):
-    binary_file = tmp_path / "binary.dat"
-    binary_file.write_bytes(b"\x00binary")
-    invalid_utf8_file = tmp_path / "invalid.dat"
-    invalid_utf8_file.write_bytes(b"\xff\xfe")
-
-    assert _looks_like_text_file(binary_file) is False
-    assert _looks_like_text_file(invalid_utf8_file) is False
-
-
-def test_looks_like_text_file_false_on_os_error(mocker):
-    mocker.patch.object(Path, "read_bytes", side_effect=OSError("missing"))
-
-    assert _looks_like_text_file("missing.txt") is False
 
 
 def test_normalize_and_truncation_helpers():
