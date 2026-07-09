@@ -1,11 +1,7 @@
 #!/usr/bin/python3
 
 """
-Inspect simulation-related files.
-
-This application currently supports HDF5 files and is intended as a generic
-inspection entry point that can later be extended to additional simulation
-file types.
+Inspect simulation-related files and prints out a structured report of their contents.
 
 For known simulation products, the application can append specialized
 inspection sections on top of the generic file-structure report.
@@ -15,15 +11,11 @@ Command line arguments
 input_file (str, required)
     Simulation-related file to inspect.
 max_entries (int, optional)
-    Maximum number of HDF5 groups and datasets to print.
+    Maximum number of entries or preview lines to print. Use 0 for no limit.
 """
 
 from simtools.application_control import build_application
-from simtools.io.file_inspector import format_inspection_report, inspect_file
-from simtools.production_configuration.trigger_histograms import (
-    format_trigger_histogram_inspection,
-    inspect_trigger_histogram_file,
-)
+from simtools.io.file_inspector import inspect_file
 
 
 def _add_arguments(parser):
@@ -36,7 +28,7 @@ def _add_arguments(parser):
     )
     parser.add_argument(
         "--max_entries",
-        help="Maximum number of HDF5 entries to print.",
+        help="Maximum number of entries or preview lines to print; use 0 for no limit.",
         required=False,
         default=50,
         type=int,
@@ -49,15 +41,12 @@ def main():
         initialization_kwargs={"db_config": False},
         startup_kwargs={"setup_io_handler": False},
     )
-    report = inspect_file(
+    reports = inspect_file(
         app_context.args["input_file"],
         max_entries=app_context.args["max_entries"],
+        format_report=True,
     )
-    output_sections = [format_inspection_report(report)]
-    trigger_histogram_report = inspect_trigger_histogram_file(app_context.args["input_file"])
-    if trigger_histogram_report is not None:
-        output_sections.append(format_trigger_histogram_inspection(trigger_histogram_report))
-    print("\n".join(output_sections))
+    print("\n".join(reports))
 
 
 if __name__ == "__main__":

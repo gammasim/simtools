@@ -12,7 +12,7 @@ from simtools.production_configuration.trigger_histograms import (
     TRIGGER_TOPOLOGY_COUNTS_TABLE,
     _load_dense_histogram_payloads,
 )
-from simtools.utils.general import resolve_file_patterns
+from simtools.utils.general import ensure_string_lists, resolve_file_patterns
 
 
 @dataclass
@@ -134,13 +134,15 @@ def _raise_invalid_production_arguments():
     raise ValueError("Production arguments must be provided as label/file pairs.")
 
 
-def collect_production_metrics(production_descriptors):
+def collect_production_metrics(production_descriptors, array_names=None):
     """Collect comparison metrics from trigger histogram files for each production.
 
     Parameters
     ----------
     production_descriptors : list[ProductionDescriptor]
         Input descriptor for each production.
+    array_names : list[str] or str, optional
+        Restrict loaded histogram references to these array layout names.
 
     Returns
     -------
@@ -148,16 +150,27 @@ def collect_production_metrics(production_descriptors):
         Aggregated metrics per production.
     """
     return [
-        _collect_single_production_histogram_metrics(descriptor)
+        _collect_single_production_histogram_metrics(descriptor, array_names=array_names)
         for descriptor in production_descriptors
     ]
 
 
-def _collect_single_production_histogram_metrics(production_descriptor):
+def _collect_single_production_histogram_metrics(production_descriptor, array_names=None):
     """Collect comparison metrics for one trigger-histogram production descriptor."""
+    selected_array_names = ensure_string_lists(array_names)
     accumulators = _initialize_histogram_metric_accumulators()
+    matched_references = 0
     for trigger_histogram_file in production_descriptor.trigger_histogram_files:
-        _collect_metrics_from_trigger_histogram_file(trigger_histogram_file, accumulators)
+        matched_references += _collect_metrics_from_trigger_histogram_file(
+            trigger_histogram_file,
+            accumulators,
+            array_names=selected_array_names,
+        )
+    if selected_array_names and matched_references == 0:
+        raise ValueError(
+            "Array layout selection did not match any trigger-histogram references for "
+            f"production '{production_descriptor.label}'."
+        )
 
     simulated_histograms = accumulators["quantity_histograms"]["simulated"]
     triggered_histograms = accumulators["quantity_histograms"]["triggered"]
@@ -209,7 +222,9 @@ def _initialize_histogram_metric_accumulators():
     }
 
 
-def _collect_metrics_from_trigger_histogram_file(trigger_histogram_file, accumulators):
+def _collect_metrics_from_trigger_histogram_file(
+    trigger_histogram_file, accumulators, array_names=None
+):
     """Collect metrics from one trigger-histogram HDF5 file."""
     dense_payloads = _load_dense_histogram_payloads(trigger_histogram_file)
     tables = table_handler.read_tables(
@@ -227,7 +242,11 @@ def _collect_metrics_from_trigger_histogram_file(trigger_histogram_file, accumul
     topology_rows_by_reference = table_handler.group_table_rows(topology_counts, "reference_id")
     subset_rows_by_reference = table_handler.group_table_rows(subset_histograms, "reference_id")
 
+    matched_references = 0
     for row in metadata:
+        if array_names and str(row["array_name"]) not in array_names:
+            continue
+        matched_references += 1
         reference_id = str(row["reference_id"])
         values_by_name, edges_by_name = dense_payloads.get(reference_id, ({}, {}))
         _accumulate_quantity_histograms_from_dense_payload(
@@ -243,6 +262,7 @@ def _collect_metrics_from_trigger_histogram_file(trigger_histogram_file, accumul
         )
         accumulators["simulated_event_count"] += int(row["total_simulated_events"])
         accumulators["triggered_event_count"] += int(row["total_triggered_events"])
+    return matched_references
 
 
 def _accumulate_quantity_histograms_from_dense_payload(values_by_name, edges_by_name, accumulators):
@@ -274,9 +294,26 @@ def _add_histogram(target, quantity, counts, bin_edges):
         target[quantity] = (np.asarray(counts, dtype=float), np.asarray(bin_edges, dtype=float))
         return
     existing_counts, existing_edges = target[quantity]
-    if not np.array_equal(existing_edges, bin_edges):
+    bin_edges = np.asarray(bin_edges, dtype=float)
+    if np.array_equal(existing_edges, bin_edges):
+        target[quantity] = (existing_counts + counts, existing_edges)
+        return
+
+    merged_edges = np.union1d(existing_edges, bin_edges)
+    if merged_edges.size < 2:
         raise ValueError(f"Inconsistent bin edges for quantity '{quantity}'.")
-    target[quantity] = (existing_counts + counts, existing_edges)
+    target[quantity] = (
+        _rebin_histogram(existing_counts, existing_edges, merged_edges)
+        + _rebin_histogram(np.asarray(counts, dtype=float), bin_edges, merged_edges),
+        merged_edges,
+    )
+
+
+def _rebin_histogram(counts, source_edges, target_edges):
+    """Approximate histogram rebinning by projecting source-bin centers onto target edges."""
+    centers = 0.5 * (source_edges[:-1] + source_edges[1:])
+    rebinned, _ = np.histogram(centers, bins=target_edges, weights=counts)
+    return rebinned
 
 
 def _accumulate_topology_counts_for_reference(topology_rows, accumulators):
@@ -320,7 +357,7 @@ def _accumulate_subset_histograms_for_reference(subset_rows, accumulators):
 def _counter_to_histogram(counter):
     """Convert integer-key count data to histogram counts and bin edges."""
     if not counter:
-        return ()
+        return np.array([], dtype=float), np.array([], dtype=float)
     max_key = max(int(key) for key in counter)
     bin_edges = np.arange(1, max_key + 2)
     counts = np.array([counter.get(index, 0) for index in range(1, max_key + 1)], dtype=float)

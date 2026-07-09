@@ -1,41 +1,218 @@
-"""Inspect simulation-related files, starting with HDF5 containers."""
+"""Inspect simtools-related files and return structured summaries."""
 
 from pathlib import Path
 
 import h5py
+from astropy.table import Table
 
 import simtools.utils.general as gen
+from simtools.io import ascii_handler
+from simtools.production_configuration.trigger_histograms import inspect_trigger_histogram_file
+from simtools.simtel import simtel_io_metadata
 
 
-def inspect_file(file_path, max_entries=50):
-    """Inspect one supported file and return a structured report."""
+def inspect_file(file_path, max_entries=50, format_report=True):
+    """
+    Inspect one supported file and return one or more reports.
+
+    Parameters
+    ----------
+    file_path : str or Path
+        Path to the file to inspect.
+    max_entries : int, optional
+        Maximum number of entries to include in collection-style summaries.
+    format_report : bool, optional
+        Return formatted strings instead of raw dictionaries.
+
+    Returns
+    -------
+    list[str] or list[dict]
+        Inspection reports. HDF5 trigger-histogram files may yield both a generic
+        HDF5 report and a trigger-histogram-specific consistency report.
+    """
+    file_path = Path(file_path)
+    max_entries = _normalize_max_entries(max_entries)
+    inspector = _select_inspector(file_path)
+    reports = [inspector(file_path, max_entries=max_entries, format_report=format_report)]
+
+    if _is_hdf5_path(file_path):
+        trigger_histogram_report = inspect_trigger_histogram_file(
+            file_path,
+            format_report=format_report,
+        )
+        if trigger_histogram_report is not None:
+            reports.append(trigger_histogram_report)
+    return reports
+
+
+def inspect_hdf5_file(file_path, max_entries=50, format_report=True):
+    """Inspect one HDF5 file and return a report."""
     file_path = gen.validate_file_type(file_path, [".hdf5", ".h5"])
     if not h5py.is_hdf5(file_path):
         raise ValueError(f"File '{file_path}' is not a valid HDF5 container.")
-    return inspect_hdf5_file(file_path, max_entries=max_entries)
 
-
-def inspect_hdf5_file(file_path, max_entries=50):
-    """Inspect one HDF5 file and return a structured report."""
-    file_path = Path(file_path)
     with h5py.File(file_path, "r") as hdf5_file:
         entries = _collect_hdf5_entries(hdf5_file)
         root_entries = sorted(hdf5_file.keys())
 
-    return {
-        "file_path": file_path,
+    report = {
+        "file_path": Path(file_path),
         "file_type": "hdf5",
         "root_entries": root_entries,
         "group_count": sum(1 for entry in entries if entry["kind"] == "group"),
         "dataset_count": sum(1 for entry in entries if entry["kind"] == "dataset"),
         "entries": entries[:max_entries],
-        "entries_truncated": len(entries) > max_entries,
+        "entries_truncated": _is_truncated(entries, max_entries),
         "total_entries": len(entries),
     }
+    return _format_hdf5_report(report) if format_report else report
 
 
-def format_inspection_report(report):
-    """Format a structured report as human-readable text."""
+def inspect_json_or_yaml_file(file_path, max_entries=50, format_report=True):
+    """Inspect one JSON or YAML file and return a report."""
+    del max_entries
+    suffix = Path(file_path).suffix.lower()
+    file_path = gen.validate_file_type(file_path, [".json", ".yml", ".yaml"])
+    data = ascii_handler.collect_data_from_file(file_path)
+    report = {
+        "file_path": Path(file_path),
+        "file_type": "json" if suffix == ".json" else "yaml",
+        "top_level_type": type(data).__name__,
+        "top_level_keys": list(data.keys()) if isinstance(data, dict) else None,
+        "item_count": len(data) if hasattr(data, "__len__") else None,
+    }
+    return _format_key_value_report(report) if format_report else report
+
+
+def inspect_table_file(file_path, max_entries=50, format_report=True):
+    """Inspect one tabular file and return a report."""
+    file_path = _validate_expected_suffixes(file_path, [".ecsv", ".fits", ".fits.gz"])
+    table = Table.read(file_path)
+    report = {
+        "file_path": Path(file_path),
+        "file_type": "fits" if str(file_path).lower().endswith((".fits", ".fits.gz")) else "ecsv",
+        "row_count": len(table),
+        "column_count": len(table.colnames),
+        "columns": table.colnames[:max_entries],
+        "columns_truncated": _is_truncated(table.colnames, max_entries),
+    }
+    return _format_table_report(report) if format_report else report
+
+
+def inspect_sim_telarray_file(file_path, max_entries=50, format_report=True):
+    """Inspect one sim_telarray file and return a report."""
+    file_path = _validate_expected_suffixes(file_path, [".simtel", ".simtel.gz", ".simtel.zst"])
+    if not _is_simtel_path(file_path):
+        raise ValueError(f"File '{file_path}' has unsupported suffix for sim_telarray inspection.")
+    global_meta, telescope_meta = simtel_io_metadata.read_sim_telarray_metadata(file_path)
+    sorted_global_items = sorted(global_meta.items()) if global_meta is not None else []
+    telescope_ids = sorted(telescope_meta.keys())
+    preview_telescope_ids = telescope_ids[:max_entries]
+    report = {
+        "file_path": file_path,
+        "file_type": "sim_telarray",
+        "file_size_bytes": file_path.stat().st_size,
+        "global_metadata": dict(sorted_global_items[:max_entries]),
+        "global_metadata_truncated": _is_truncated(sorted_global_items, max_entries),
+        "telescope_count": len(telescope_ids),
+        "telescope_ids": preview_telescope_ids,
+        "telescope_ids_truncated": _is_truncated(telescope_ids, max_entries),
+    }
+    return _format_simtel_report(report) if format_report else report
+
+
+def inspect_text_file(file_path, max_entries=50, format_report=True):
+    """Inspect one plain-text file and return a report."""
+    file_path = Path(file_path)
+    text = file_path.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    report = {
+        "file_path": file_path,
+        "file_type": "text",
+        "line_count": len(lines),
+        "preview_lines": lines[:max_entries],
+        "preview_truncated": _is_truncated(lines, max_entries),
+    }
+    return _format_text_report(report) if format_report else report
+
+
+def _select_inspector(file_path):
+    """Return the inspector function appropriate for the file path."""
+    if _is_hdf5_path(file_path):
+        return inspect_hdf5_file
+    if file_path.suffix.lower() in {".json", ".yml", ".yaml"}:
+        return inspect_json_or_yaml_file
+    if _is_table_path(file_path):
+        return inspect_table_file
+    if _is_simtel_path(file_path):
+        return inspect_sim_telarray_file
+    if _looks_like_text_file(file_path):
+        return inspect_text_file
+    raise ValueError(f"Unsupported file type for inspection: {file_path.suffix or '<no suffix>'}.")
+
+
+def _is_hdf5_path(file_path):
+    """Return whether the path is intended to be an HDF5 file."""
+    return file_path.suffix.lower() in {".hdf5", ".h5"}
+
+
+def _is_table_path(file_path):
+    """Return whether the path is intended to be a supported table file."""
+    return _matches_suffix(file_path, [".ecsv", ".fits", ".fits.gz"])
+
+
+def _is_simtel_path(file_path):
+    """Return whether the path is intended to be a sim_telarray event file."""
+    return _matches_suffix(file_path, [".simtel", ".simtel.gz", ".simtel.zst"])
+
+
+def _matches_suffix(file_path, expected_suffixes):
+    """Return whether the path ends with one of the expected suffix patterns."""
+    name = Path(file_path).name.lower()
+    return any(name.endswith(suffix) for suffix in expected_suffixes)
+
+
+def _validate_expected_suffixes(file_path, expected_suffixes):
+    """Validate one file path against simple or compound suffixes."""
+    path = Path(file_path)
+    for suffix in expected_suffixes:
+        if path.name.lower().endswith(suffix):
+            terminal_suffix = Path(f"placeholder{suffix}").suffix
+            return gen.validate_file_type(path, [terminal_suffix])
+    raise ValueError(
+        f"File '{file_path}' has unsupported suffix, expected one of {expected_suffixes}"
+    )
+
+
+def _looks_like_text_file(file_path, sample_size=4096):
+    """Return whether the file appears to be UTF-8 text."""
+    try:
+        sample = Path(file_path).read_bytes()[:sample_size]
+    except OSError:
+        return False
+    if b"\x00" in sample:
+        return False
+    try:
+        sample.decode("utf-8")
+    except UnicodeDecodeError:
+        return False
+    return True
+
+
+def _normalize_max_entries(max_entries):
+    """Normalize max_entries so non-positive values disable truncation."""
+    if max_entries is None or max_entries <= 0:
+        return None
+    return max_entries
+
+
+def _is_truncated(values, max_entries):
+    """Return whether a collection exceeds the configured preview limit."""
+    return max_entries is not None and len(values) > max_entries
+
+
+def _format_hdf5_report(report):
+    """Format an HDF5 inspection report."""
     lines = [
         f"File: {report['file_path']}",
         f"Detected file type: {report['file_type']}",
@@ -53,7 +230,69 @@ def format_inspection_report(report):
         lines.append(line)
     if report["entries_truncated"]:
         lines.append("- ... output truncated ...")
+    return "\n".join(lines)
 
+
+def _format_key_value_report(report):
+    """Format a generic key-value inspection report."""
+    lines = [
+        f"File: {report['file_path']}",
+        f"Detected file type: {report['file_type']}",
+    ]
+    for key, value in report.items():
+        if key in {"file_path", "file_type"}:
+            continue
+        if value is None:
+            continue
+        lines.append(f"{key}: {value}")
+    return "\n".join(lines)
+
+
+def _format_table_report(report):
+    """Format a tabular-file inspection report."""
+    lines = [
+        f"File: {report['file_path']}",
+        f"Detected file type: {report['file_type']}",
+        f"Rows: {report['row_count']}",
+        f"Columns ({report['column_count']}): {', '.join(report['columns'])}",
+    ]
+    if report["columns_truncated"]:
+        lines.append("Column list truncated.")
+    return "\n".join(lines)
+
+
+def _format_text_report(report):
+    """Format a plain-text inspection report."""
+    lines = [
+        f"File: {report['file_path']}",
+        f"Detected file type: {report['file_type']}",
+        f"Lines: {report['line_count']}",
+        f"Preview ({len(report['preview_lines'])} lines):",
+    ]
+    lines.extend(f"- {line}" for line in report["preview_lines"])
+    if report["preview_truncated"]:
+        lines.append("- ... output truncated ...")
+    return "\n".join(lines)
+
+
+def _format_simtel_report(report):
+    """Format a sim_telarray inspection report."""
+    lines = [
+        f"File: {report['file_path']}",
+        f"Detected file type: {report['file_type']}",
+        f"file_size_bytes: {report['file_size_bytes']}",
+        f"telescope_count: {report['telescope_count']}",
+        f"telescope_ids: {report['telescope_ids']}",
+        "global_metadata:",
+    ]
+    if report["global_metadata"]:
+        lines.extend(f"- {key}: {value}" for key, value in report["global_metadata"].items())
+    else:
+        lines.append("- none")
+    if report["global_metadata_truncated"]:
+        lines.append("- ... metadata truncated ...")
+    if report["telescope_ids_truncated"]:
+        lines.append("telescope_ids_truncated: True")
     return "\n".join(lines)
 
 

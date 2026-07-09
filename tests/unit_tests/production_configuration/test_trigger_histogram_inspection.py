@@ -7,7 +7,7 @@ from simtools.io import table_handler
 from simtools.production_configuration.trigger_histograms import (
     TRIGGER_HISTOGRAM_DENSE_GROUP,
     TRIGGER_HISTOGRAM_METADATA_TABLE,
-    format_trigger_histogram_inspection,
+    _format_trigger_histogram_inspection,
     inspect_trigger_histogram_file,
 )
 
@@ -22,8 +22,8 @@ def test_inspect_trigger_histogram_file_reports_reference_mismatches(tmp_path):
         dense_group.create_group("ref-1")
         dense_group.create_group("ref-3")
 
-    report = inspect_trigger_histogram_file(file_path)
-    formatted = format_trigger_histogram_inspection(report)
+    report = inspect_trigger_histogram_file(file_path, format_report=False)
+    formatted = _format_trigger_histogram_inspection(report)
 
     assert report["missing_dense_reference_ids"] == ["ref-2"]
     assert report["orphan_dense_reference_ids"] == ["ref-3"]

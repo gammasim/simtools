@@ -126,6 +126,13 @@ def _compute_expected_counts(expected_triggers_per_event, required_total_events)
     return np.asarray(expected_triggers_per_event, dtype=float) * float(required_total_events)
 
 
+def _ceil_required_total_events(required_total_events):
+    """Round the required total number of events up to the next integer."""
+    if not np.isfinite(required_total_events):
+        return required_total_events
+    return int(np.ceil(required_total_events))
+
+
 def _compute_relative_uncertainty(expected_counts):
     """Return Poisson relative uncertainty for expected counts."""
     expected_counts = np.asarray(expected_counts, dtype=float)
@@ -384,6 +391,7 @@ def _build_result_row(
         energy_mask,
         target_relative_uncertainty,
     )
+    required_total_events = _ceil_required_total_events(required_total_events)
     expected_counts = _compute_expected_counts(expected_triggers_per_event, required_total_events)
     relative_uncertainty = _compute_relative_uncertainty(expected_counts)
 
