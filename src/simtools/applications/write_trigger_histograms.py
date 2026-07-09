@@ -19,8 +19,7 @@ Fill trigger histograms from reduced event-data files:
     simtools-write-trigger-histograms \
         --event_data_file simtools-output/reduced_event_data_*.hdf5 \
         --energy_bins_per_decade 10 \
-        --angular_distance_bin_width 0.5 deg \
-        --plot_histograms
+        --angular_distance_bin_width 0.5 deg
 
 """
 
