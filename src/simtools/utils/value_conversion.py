@@ -1,5 +1,6 @@
 """Value and quantity conversion."""
 
+import collections.abc
 import logging
 import re
 
@@ -54,7 +55,7 @@ def normalize_dimensionless_unit(unit):
     return None if is_dimensionless_unit(unit) else unit
 
 
-def extract_type_of_value(value) -> str:
+def extract_type_of_value(value):
     """
     Extract the string representation of the the type of a value.
 
@@ -216,19 +217,13 @@ def get_value_as_quantity(value, unit):
     ValueError
         If the value cannot be converted to the given unit.
     """
-    if isinstance(value, u.Quantity):
-        try:
-            return value.to(unit)
-        except u.UnitConversionError as exc:
-            raise ValueError(f"Cannot convert {value} with unit {value.unit} to {unit}.") from exc
-    elif not isinstance(value, int | float):
-        return value
+    unit = u.dimensionless_unscaled if is_dimensionless_unit(unit) else u.Unit(unit)
+    if isinstance(value, collections.abc.Iterable) and not hasattr(value, "to"):
+        return [get_value_as_quantity(v, unit) for v in value]
 
-    if is_dimensionless_unit(unit):
-        return value * u.dimensionless_unscaled
-
-    target_unit = u.Unit(unit) if isinstance(unit, str) else unit
-    return value * target_unit
+    if hasattr(value, "to"):
+        return value.to(unit)
+    return u.Quantity(value, unit)
 
 
 def _unit_as_string(unit):
