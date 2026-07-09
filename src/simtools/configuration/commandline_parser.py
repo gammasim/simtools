@@ -280,7 +280,8 @@ class CommandLineParser(argparse.ArgumentParser):
         Parameters
         ----------
         model_options: list
-            Options to be set: "telescope", "site", "layout", "layout_file"
+            Options to be set: "telescope", "site", "layout", "layout_file",
+            "updated_parameter_version"
         """
         if model_options is None:
             return
@@ -300,6 +301,13 @@ class CommandLineParser(argparse.ArgumentParser):
                 help="model parameter version",
                 type=str,
                 default=None,
+            )
+        if "updated_parameter_version" in model_options:
+            _job_group.add_argument(
+                "--updated_parameter_version",
+                help="Updated parameter version.",
+                type=str,
+                required=False,
             )
         _job_group.add_argument(
             "--overwrite_model_parameters",
