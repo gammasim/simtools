@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-simulate-prod
+  docs:
+    title: Run a small proton production (North)
+    summary: Reduced-runtime example for Alpha array layout.
   configuration:
     array_layout_name:
       by_version:

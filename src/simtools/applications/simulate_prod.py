@@ -45,8 +45,12 @@ r"""
     log_level (str, optional)
         Log level to print.
 
-    Example
-    -------
+    Examples
+    --------
+    .. simtools-integration-example::
+        :file: simulate_prod_proton_20_deg_north_check_output.yml
+        :show-command:
+
     Run the application:
 
     .. code-block:: console
