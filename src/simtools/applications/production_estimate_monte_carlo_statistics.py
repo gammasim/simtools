@@ -37,11 +37,15 @@ def _add_arguments(parser):
         help="Path to the trigger-histogram file.",
     )
     parser.add_argument(
-        "--array_names",
+        "--array_layout_name",
+        help=(
+            "Optional array layout name(s) to select from a precomputed trigger-histogram "
+            "file. If omitted, derive limits for all layouts available in the file."
+        ),
         nargs="+",
-        default=None,
         type=str,
-        help="Optional list of array names to estimate.",
+        required=False,
+        default=None,
     )
     parser.add_argument(
         "--spectral_index",
@@ -76,8 +80,8 @@ def _add_arguments(parser):
         type=parser.positive_quantity("m"),
         default=None,
         help=(
-            "Optional reduced core scatter radius used for effective-area reporting ",
-            "(e.g., as derived from simtools-production-derive-corsika-limits)",
+            "Optional reduced core scatter radius used for effective-area reporting "
+            "(e.g., as derived from simtools-production-derive-corsika-limits)."
         ),
     )
     parser.add_argument(
@@ -90,14 +94,8 @@ def _add_arguments(parser):
 
 def main():
     """Run the Monte Carlo statistics estimator CLI application."""
-    app_context = build_application(
-        initialization_kwargs={"db_config": False, "output": True},
-    )
-    app_context.args["input"] = app_context.args["trigger_histogram_file"]
-    app_context.args["output_file"] = str(
-        app_context.io_handler.get_output_file(app_context.args["output_file"])
-    )
-    estimate_monte_carlo_statistics(app_context.args)
+    build_application(initialization_kwargs={"db_config": False, "output": True})
+    estimate_monte_carlo_statistics()
 
 
 if __name__ == "__main__":
