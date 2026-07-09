@@ -10,6 +10,10 @@ from matplotlib.colors import LogNorm
 mpl.use("Agg")
 from matplotlib import pyplot as plt  # pylint: disable=wrong-import-position
 
+from simtools.production_configuration.trigger_histograms import (  # pylint: disable=wrong-import-position
+    load_event_data_histograms,
+)
+
 _logger = logging.getLogger(__name__)
 
 # Maps histogram dictionary keys to output plot filenames where the key alone
@@ -71,6 +75,59 @@ def plot(
         use_broad_range_limits=use_broad_range_limits,
     )
     _execute_plotting_loop(plots, output_path, array_name, file_info)
+
+
+def plot_trigger_histogram_file(trigger_histogram_file, output_dir, array_layout_name=None):
+    """
+    Plot all plot-table histograms stored in a trigger-histogram HDF5 file.
+
+    Parameters
+    ----------
+    trigger_histogram_file : str or pathlib.Path
+        Path to the precomputed trigger-histogram HDF5 file.
+    output_dir : str or pathlib.Path
+        Base directory where plot files will be written.
+    array_layout_name : str, optional
+        Restrict plotting to one array layout. If omitted, all layouts in the file
+        are plotted.
+    """
+    selected_array_names = _selected_array_names(array_layout_name)
+    loaded_histograms = load_event_data_histograms(
+        trigger_histogram_file,
+        array_names=selected_array_names,
+    )
+    if selected_array_names and not loaded_histograms:
+        raise ValueError(
+            f"Array layout '{array_layout_name}' not found in histogram file "
+            f"'{trigger_histogram_file}'."
+        )
+
+    output_dir = Path(output_dir)
+    for _, histograms in loaded_histograms:
+        output_path = output_dir
+        if len(loaded_histograms) > 1:
+            output_path = output_dir / histograms.array_name
+            output_path.mkdir(parents=True, exist_ok=True)
+        plot(_plottable_histograms(histograms.histograms), output_path=output_path)
+
+
+def _selected_array_names(array_layout_name):
+    """Return normalized array-name selection for the histogram loader."""
+    if array_layout_name is None:
+        return None
+    if isinstance(array_layout_name, str):
+        return [array_layout_name]
+    return array_layout_name
+
+
+def _plottable_histograms(histograms):
+    """Return histogram definitions that can be rendered as 1D or 2D plots."""
+    return {
+        name: histogram
+        for name, histogram in histograms.items()
+        if isinstance(histogram, dict) and histogram.get("histogram") is not None
+        if getattr(histogram["histogram"], "ndim", 0) <= 2
+    }
 
 
 def plot_monte_carlo_statistics_diagnostics(

@@ -25,23 +25,10 @@ Generate plots from a precomputed trigger-histogram file:
         --trigger_histogram_file trigger_histograms.hdf5 \
         --array_layout_name alpha \
         --output_path simtools_output
-
-
 """
 
 from simtools.application_control import build_application
-from simtools.production_configuration.trigger_histograms import load_event_data_histograms
 from simtools.visualization import plot_simtel_event_histograms
-
-
-def _plottable_histograms(histograms):
-    """Return histogram definitions that can be rendered as 1D or 2D plots."""
-    return {
-        name: histogram
-        for name, histogram in histograms.items()
-        if isinstance(histogram, dict) and histogram.get("histogram") is not None
-        if getattr(histogram["histogram"], "ndim", 0) <= 2
-    }
 
 
 def _add_arguments(parser):
@@ -64,38 +51,6 @@ def _add_arguments(parser):
     )
 
 
-def _selected_array_names(array_layout_name):
-    """Return normalized array-name selection for the histogram loader."""
-    if array_layout_name is None:
-        return None
-    if isinstance(array_layout_name, str):
-        return [array_layout_name]
-    return array_layout_name
-
-
-def _plot_histogram_file(trigger_histogram_file, output_dir, array_layout_name=None):
-    """Plot all histogram references from a trigger-histogram HDF5 file."""
-    selected_array_names = _selected_array_names(array_layout_name)
-    loaded_histograms = load_event_data_histograms(
-        trigger_histogram_file,
-        array_names=selected_array_names,
-    )
-    if selected_array_names and not loaded_histograms:
-        raise ValueError(
-            f"Array layout '{array_layout_name}' not found in histogram file "
-            f"'{trigger_histogram_file}'."
-        )
-    for _, histograms in loaded_histograms:
-        output_path = output_dir
-        if len(loaded_histograms) > 1:
-            output_path = output_dir / histograms.array_name
-            output_path.mkdir(parents=True, exist_ok=True)
-        plot_simtel_event_histograms.plot(
-            _plottable_histograms(histograms.histograms),
-            output_path=output_path,
-        )
-
-
 def main():
     """See CLI description."""
     app_context = build_application(
@@ -106,7 +61,7 @@ def main():
     app_context.logger.info(
         f"Loading trigger histogram file from: {app_context.args['trigger_histogram_file']}"
     )
-    _plot_histogram_file(
+    plot_simtel_event_histograms.plot_trigger_histogram_file(
         app_context.args["trigger_histogram_file"],
         output_dir,
         app_context.args.get("array_layout_name"),
