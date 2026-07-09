@@ -4,10 +4,9 @@ import pytest
 
 from simtools.io.file_type import (
     FILE_TYPE_SUFFIXES,
+    _suffixes_for_file_type,
     is_path_type,
     matches_suffix,
-    suffixes_for_file_type,
-    validate_expected_suffixes,
     validate_file_type,
     validate_path_type,
 )
@@ -26,7 +25,7 @@ def test_is_path_type_supports_compound_suffixes(tmp_path):
 
 def test_suffixes_for_file_type_rejects_unknown_type():
     with pytest.raises(ValueError, match="Unsupported file type 'unknown'"):
-        suffixes_for_file_type("unknown")
+        _suffixes_for_file_type("unknown")
 
 
 def test_validate_path_type_returns_path_for_registered_type(tmp_path):
@@ -38,11 +37,6 @@ def test_validate_path_type_returns_path_for_registered_type(tmp_path):
 def test_validate_file_type_rejects_invalid_terminal_suffix(tmp_path):
     with pytest.raises(ValueError, match="expected one of"):
         validate_file_type(tmp_path / "file.txt", [".json"])
-
-
-def test_validate_expected_suffixes_rejects_unsupported_suffix(tmp_path):
-    with pytest.raises(ValueError, match="unsupported suffix"):
-        validate_expected_suffixes(tmp_path / "file.txt", [".json", ".yaml"])
 
 
 def test_matches_suffix_is_case_insensitive_and_supports_compound_suffixes():
