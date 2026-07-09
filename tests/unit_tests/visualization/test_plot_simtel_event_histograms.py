@@ -17,8 +17,11 @@ from simtools.visualization.plot_simtel_event_histograms import (
     _format_file_info_suffix,
     _get_limits,
     _plot_monte_carlo_statistics_matrix,
+    _plottable_histograms,
+    _selected_array_names,
     plot,
     plot_monte_carlo_statistics_diagnostics,
+    plot_trigger_histogram_file,
 )
 
 # Suppress tight layout warnings for all tests in this file
@@ -105,6 +108,86 @@ def test_plot_monte_carlo_statistics_matrix_can_mask_zero_bins(tmp_path, mocker)
     assert np.any(np.ma.getmaskarray(plotted_array))
     assert cmap.get_bad()[:3] == pytest.approx((1.0, 1.0, 1.0))
     assert (tmp_path / "matrix.png").exists()
+
+
+def test_selected_array_names_normalizes_string_input():
+    assert _selected_array_names(None) is None
+    assert _selected_array_names("alpha") == ["alpha"]
+    assert _selected_array_names(["alpha", "beta"]) == ["alpha", "beta"]
+
+
+def test_plottable_histograms_filters_non_plotable_entries():
+    histograms = {
+        "energy": {"histogram": MagicMock(ndim=1)},
+        "energy_vs_core": {"histogram": MagicMock(ndim=2)},
+        "cube": {"histogram": MagicMock(ndim=3)},
+        "missing": {"histogram": None},
+        "raw_edges": MagicMock(),
+    }
+
+    assert _plottable_histograms(histograms) == {
+        "energy": histograms["energy"],
+        "energy_vs_core": histograms["energy_vs_core"],
+    }
+
+
+def test_plot_trigger_histogram_file_loads_selected_array_and_plots(tmp_path, mocker):
+    histogram_instance = MagicMock()
+    histogram_instance.histograms = {
+        "energy": {"histogram": MagicMock(ndim=1)},
+        "energy_vs_core": {"histogram": MagicMock(ndim=2)},
+        "cube": {"histogram": MagicMock(ndim=3)},
+    }
+    mock_load = mocker.patch(
+        f"{MOD}.load_event_data_histograms",
+        return_value=[(MagicMock(), histogram_instance)],
+    )
+    mock_plot = mocker.patch(f"{MOD}.plot")
+
+    plot_trigger_histogram_file("trigger_histograms.hdf5", tmp_path, "alpha")
+
+    mock_load.assert_called_once_with("trigger_histograms.hdf5", array_names=["alpha"])
+    mock_plot.assert_called_once_with(
+        {
+            "energy": histogram_instance.histograms["energy"],
+            "energy_vs_core": histogram_instance.histograms["energy_vs_core"],
+        },
+        output_path=tmp_path,
+    )
+
+
+def test_plot_trigger_histogram_file_raises_for_missing_array_layout(tmp_path, mocker):
+    mocker.patch(f"{MOD}.load_event_data_histograms", return_value=[])
+
+    with pytest.raises(
+        ValueError,
+        match=r"Array layout 'missing_layout' not found in histogram file 'trigger_histograms\.hdf5'",
+    ):
+        plot_trigger_histogram_file("trigger_histograms.hdf5", tmp_path, "missing_layout")
+
+
+def test_plot_trigger_histogram_file_splits_outputs_by_array_name(tmp_path, mocker):
+    first = MagicMock()
+    first.array_name = "alpha"
+    first.histograms = {"energy": {"histogram": MagicMock(ndim=1)}}
+    second = MagicMock()
+    second.array_name = "beta"
+    second.histograms = {"energy": {"histogram": MagicMock(ndim=1)}}
+    mocker.patch(
+        f"{MOD}.load_event_data_histograms",
+        return_value=[(MagicMock(), first), (MagicMock(), second)],
+    )
+    mock_plot = mocker.patch(f"{MOD}.plot")
+
+    plot_trigger_histogram_file("trigger_histograms.hdf5", tmp_path)
+
+    assert mock_plot.call_count == 2
+    first_call = mock_plot.call_args_list[0]
+    second_call = mock_plot.call_args_list[1]
+    assert first_call.kwargs["output_path"] == tmp_path / "alpha"
+    assert second_call.kwargs["output_path"] == tmp_path / "beta"
+    assert (tmp_path / "alpha").is_dir()
+    assert (tmp_path / "beta").is_dir()
 
 
 def test_create_2d_histogram_plot_log(sample_data):
