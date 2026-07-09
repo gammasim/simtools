@@ -79,6 +79,7 @@ extensions = [
     "numpydoc",
     "sphinx_design",
     "sphinx.ext.mathjax",
+    "simtools_cli_help",
     "simtools_integration_example",
 ]
 

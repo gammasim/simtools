@@ -1,4 +1,23 @@
-"""Render integration-test configs as documentation examples."""
+"""
+Render integration-test configs as documentation examples.
+
+Example
+-------
+Render both the equivalent command and the tested YAML configuration:
+
+.. code-block:: rst
+
+    .. simtools-integration-example::
+       :file: docs_produce_production_summary_run.yml
+
+Render only the command block for an example:
+
+.. code-block:: rst
+
+    .. simtools-integration-example::
+       :file: docs_produce_array_element_report_run.yml
+       :show-command:
+"""
 
 from __future__ import annotations
 

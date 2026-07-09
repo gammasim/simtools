@@ -169,6 +169,48 @@ class ApplicationContext:
     run_time: list | None = None
 
 
+def _resolve_application_metadata(
+    application_path,
+    description,
+    add_arguments_function,
+    caller_globals=None,
+):
+    """Resolve missing application metadata from the caller module when available."""
+    if application_path is None or description is None or add_arguments_function is None:
+        caller_globals = caller_globals or inspect.currentframe().f_back.f_globals
+        if application_path is None:
+            application_path = caller_globals.get("__file__")
+        if description is None:
+            description = caller_globals.get("__doc__")
+        if add_arguments_function is None:
+            add_arguments_function = caller_globals.get("_add_arguments")
+
+    if application_path is None:
+        raise ValueError("Missing application path; provide application_path explicitly.")
+    if description is None:
+        raise ValueError("Missing description; provide description explicitly.")
+    return application_path, description, add_arguments_function
+
+
+def _build_application_configurator(
+    application_path,
+    description,
+    add_arguments_function,
+    usage=None,
+    epilog=None,
+):
+    """Create a configurator populated with application-specific arguments."""
+    config_builder = configurator.Configurator(
+        label=get_application_label(application_path),
+        usage=usage,
+        description=get_module_description_line(description),
+        epilog=epilog,
+    )
+    if add_arguments_function is not None:
+        add_arguments_function(config_builder.parser)
+    return config_builder
+
+
 def build_application(
     application_path=None,
     description=None,
@@ -215,35 +257,84 @@ def build_application(
     initialization_kwargs = initialization_kwargs or {}
     startup_kwargs = startup_kwargs or {}
 
-    if application_path is None or description is None or add_arguments_function is None:
-        caller_globals = inspect.currentframe().f_back.f_globals
-        if application_path is None:
-            application_path = caller_globals.get("__file__")
-        if description is None:
-            description = caller_globals.get("__doc__")
-        if add_arguments_function is None:
-            add_arguments_function = caller_globals.get("_add_arguments")
-
-    if application_path is None:
-        raise ValueError("Missing application path; provide application_path explicitly.")
-    if description is None:
-        raise ValueError("Missing description; provide description explicitly.")
+    application_path, description, add_arguments_function = _resolve_application_metadata(
+        application_path,
+        description,
+        add_arguments_function,
+        caller_globals=inspect.currentframe().f_back.f_globals,
+    )
 
     if parse_function is not None:
         return startup_application(parse_function, **startup_kwargs)
 
     def _parse():
-        config_builder = configurator.Configurator(
-            label=get_application_label(application_path),
+        config_builder = _build_application_configurator(
+            application_path=application_path,
+            description=description,
+            add_arguments_function=add_arguments_function,
             usage=usage,
-            description=get_module_description_line(description),
             epilog=epilog,
         )
-        if add_arguments_function is not None:
-            add_arguments_function(config_builder.parser)
         return config_builder.initialize(**initialization_kwargs)
 
     return startup_application(_parse, **startup_kwargs)
+
+
+def build_application_parser(
+    application_path=None,
+    description=None,
+    add_arguments_function=None,
+    initialization_kwargs=None,
+    usage=None,
+    epilog=None,
+):
+    """
+    Build an application parser without parsing command-line arguments.
+
+    This is intended for documentation and inspection tooling that should reuse the
+    real CLI definition without triggering application startup side effects.
+
+    Parameters
+    ----------
+    application_path : str, optional
+        Application file path, typically ``__file__``.
+    description : str, optional
+        Application description shown in the CLI help (reduced to first line).
+    add_arguments_function : callable, optional
+        Function receiving the application's ``CommandLineParser`` instance to register
+        application-specific arguments.
+    initialization_kwargs : dict, optional
+        Keyword arguments that control which default-argument groups are initialized.
+        Only parser-shape-related keys are used.
+    usage : str, optional
+        CLI usage string.
+    epilog : str, optional
+        CLI epilog.
+
+    Returns
+    -------
+    CommandLineParser
+        Fully initialized parser.
+    """
+    initialization_kwargs = initialization_kwargs or {}
+    application_path, description, add_arguments_function = _resolve_application_metadata(
+        application_path, description, add_arguments_function
+    )
+    config_builder = _build_application_configurator(
+        application_path=application_path,
+        description=description,
+        add_arguments_function=add_arguments_function,
+        usage=usage,
+        epilog=epilog,
+    )
+    config_builder.parser.initialize_default_arguments(
+        paths=initialization_kwargs.get("paths", True),
+        output=initialization_kwargs.get("output", False),
+        simulation_model=initialization_kwargs.get("simulation_model"),
+        simulation_configuration=initialization_kwargs.get("simulation_configuration"),
+        db_config=initialization_kwargs.get("db_config", False),
+    )
+    return config_builder.parser
 
 
 def startup_application(
