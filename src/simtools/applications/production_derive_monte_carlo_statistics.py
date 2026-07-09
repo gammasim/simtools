@@ -10,7 +10,7 @@ statistics required to meet a target relative statistical uncertainty.
 Statistical uncertainties are estimated from the expected number of triggered events per bin
 in the histogram, using the axes: energy vs. angular distance.
 The derived Monte Carlo statistics is reported when all bins in the energy range
-`--optimization_energy_min` to `--optimization_energy_max` have a relative uncertainty
+``--optimization_energy_min`` to ``--optimization_energy_max`` have a relative uncertainty
 below the target value.
 
 Example
