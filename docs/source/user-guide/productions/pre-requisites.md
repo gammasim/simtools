@@ -72,7 +72,7 @@ simtools-write-trigger-histograms \
     --output_file trigger_histograms.hdf5
 ```
 
-[simtools-production-estimate-monte-carlo-statistics][estimate-monte-carlo-statistics] reads this
+[simtools-production-derive-monte-carlo-statistics][estimate-monte-carlo-statistics] reads this
 HDF5 product and solves for the total number of thrown events needed to reach a requested
 relative Poisson uncertainty in every estimable bin of the optimization energy range.
 
@@ -87,7 +87,7 @@ are rejected.
 Example command:
 
 ```bash
-simtools-production-estimate-monte-carlo-statistics \
+simtools-production-derive-monte-carlo-statistics \
     --trigger_histogram_file trigger_histograms.hdf5 \
     --target_relative_uncertainty 0.1 \
     --optimization_energy_min "0.1 TeV" \
@@ -120,5 +120,5 @@ The command writes one plot per array-layout and azimuth combination to `simtool
 
 [derive-corsika-limits]: ../applications/simtools-production-derive-corsika-limits
 [build-trigger-histograms]: ../applications/simtools-write-trigger-histograms
-[estimate-monte-carlo-statistics]: ../applications/simtools-production-estimate-monte-carlo-statistics
+[estimate-monte-carlo-statistics]: ../applications/simtools-production-derive-monte-carlo-statistics
 [production-configuration]: https://gitlab.cta-observatory.org/cta-science/simulations/productions/production-configuration

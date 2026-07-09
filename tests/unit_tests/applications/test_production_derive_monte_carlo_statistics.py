@@ -1,14 +1,14 @@
-"""Tests for the production_estimate_monte_carlo_statistics application."""
+"""Tests for the production_derive_monte_carlo_statistics application."""
 
 import pytest
 
-from simtools.applications import production_estimate_monte_carlo_statistics
+from simtools.applications import production_derive_monte_carlo_statistics
 from simtools.configuration.commandline_parser import CommandLineParser
 
 
 def test_add_arguments_accepts_radius_override_and_energy_ranges():
     parser = CommandLineParser()
-    production_estimate_monte_carlo_statistics._add_arguments(parser)
+    production_derive_monte_carlo_statistics._add_arguments(parser)
 
     args = parser.parse_args(
         [
