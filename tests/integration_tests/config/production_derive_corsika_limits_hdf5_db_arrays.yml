@@ -2,14 +2,14 @@
 applications:
 - application: simtools-production-derive-corsika-limits
   configuration:
-    trigger_histogram_file: ../test_files/trigger_histograms.hdf5
+    trigger_histogram_file: ./tests/resources/generated/trigger_histograms.hdf5
     allowed_losses:
     - core_distance,0.001,10
     - angular_distance,0.001,10
     energy_threshold_fraction: 0.01
     output_file: corsika_simulation_limits.ecsv
     output_path: simtools-output
-    plot_histograms: true
+    plot_histograms: false
     differential_loss_bins_per_decade: 5
   integration_tests:
   - output_file: corsika_simulation_limits.ecsv

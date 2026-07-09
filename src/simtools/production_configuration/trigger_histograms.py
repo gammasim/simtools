@@ -321,8 +321,23 @@ def _load_dense_histogram_payloads(reference_file):
         return payloads
 
 
-def inspect_trigger_histogram_file(file_path):
-    """Return trigger-histogram-specific consistency checks when applicable."""
+def inspect_trigger_histogram_file(file_path, format_report=True):
+    """
+    Return trigger-histogram-specific consistency checks when applicable.
+
+    Parameters
+    ----------
+    file_path : str or Path
+        Path to the file to inspect.
+    format_report : bool, optional
+        Whether to format the report as human-readable text. Default is True.
+
+    Returns
+    -------
+    str or dict or None
+        Formatted report string, structured report dictionary, or None if the file
+        does not contain trigger-histogram products.
+    """
     with h5py.File(file_path, "r") as hdf5_file:
         has_metadata = TRIGGER_HISTOGRAM_METADATA_TABLE in hdf5_file
         has_dense_group = TRIGGER_HISTOGRAM_DENSE_GROUP in hdf5_file
@@ -349,16 +364,17 @@ def inspect_trigger_histogram_file(file_path):
 
     metadata_reference_id_set = set(metadata_reference_ids)
     dense_reference_id_set = set(dense_reference_ids)
-    return {
+    report = {
         "inspector": "trigger_histogram",
         "metadata_reference_count": len(metadata_reference_ids),
         "dense_reference_count": len(dense_reference_ids),
         "missing_dense_reference_ids": sorted(metadata_reference_id_set - dense_reference_id_set),
         "orphan_dense_reference_ids": sorted(dense_reference_id_set - metadata_reference_id_set),
     }
+    return _format_trigger_histogram_inspection(report) if format_report else report
 
 
-def format_trigger_histogram_inspection(report):
+def _format_trigger_histogram_inspection(report):
     """Format trigger-histogram inspection results for console output."""
     lines = ["Trigger histogram consistency:"]
     lines.append(f"- metadata reference ids: {report['metadata_reference_count']}")

@@ -7,6 +7,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 
+from simtools.io import io_handler
 from simtools.statistics import (
     compare_samples_with_statistics,
 )
@@ -15,19 +16,42 @@ from simtools.utils import names
 _logger = logging.getLogger(__name__)
 
 
-def plot(metrics_per_production, output_path, bins=40):
+def _output_directory_for_array_layout_selection(output_directory, array_layout_name):
+    """Return a plot output directory for an optional array-layout selection."""
+    if not array_layout_name:
+        return output_directory
+
+    if isinstance(array_layout_name, str):
+        array_layout_name = [array_layout_name]
+
+    selection_name = "__".join(
+        names.sanitize_name(layout_name) for layout_name in array_layout_name
+    )
+    output_path = output_directory / selection_name
+    output_path.mkdir(parents=True, exist_ok=True)
+    return output_path
+
+
+def plot(metrics_per_production, output_path=None, array_layout_name=None, bins=40):
     """Create all event-level production comparison plots.
 
     Parameters
     ----------
     metrics_per_production : list[ProductionEventMetrics]
         Aggregated metrics per production.
-    output_path : pathlib.Path
-        Output directory for generated figures.
+    output_path : pathlib.Path, optional
+        Output directory for the generated plots. Falls back to the current
+        application output directory when omitted.
+    array_layout_name : list[str] or str, optional
+        Array-layout selection used to collect the metrics. When set, plots are
+        written into a subdirectory derived from that selection.
     bins : int, optional
         Number of bins for 1D histograms.
     """
     comparison_statistics = _initialize_comparison_statistics(metrics_per_production)
+    output_path = output_path or io_handler.IOHandler().get_output_directory()
+    output_path = _output_directory_for_array_layout_selection(output_path, array_layout_name)
+    output_path.mkdir(parents=True, exist_ok=True)
 
     for plot_name, plot_function in _TOP_LEVEL_STAT_PLOTS:
         _record_plot_statistics(

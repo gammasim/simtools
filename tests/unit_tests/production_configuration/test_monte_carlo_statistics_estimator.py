@@ -153,6 +153,12 @@ def test_estimate_required_events_skips_empty_bins():
     assert skipped_bins == 2
 
 
+def test_ceil_required_total_events_rounds_up_to_integer():
+    assert monte_carlo_statistics_estimator._ceil_required_total_events(1000.0) == 1000
+    assert monte_carlo_statistics_estimator._ceil_required_total_events(1000.1) == 1001
+    assert np.isinf(monte_carlo_statistics_estimator._ceil_required_total_events(np.inf))
+
+
 def test_estimator_radius_override_changes_required_events(mocker, tmp_path):
     metadata, bins = _build_reference_tables()
     mocker.patch(
@@ -249,6 +255,7 @@ def test_estimator_reports_limiting_bin_and_positive_required_events(mocker, tmp
     assert result["azimuth"].quantity[0].to_value(u.deg) == pytest.approx(180.0)
     assert result["nsb_level"][0] == pytest.approx(1.0)
     assert result["estimated_total_events"][0] > 0.0
+    assert float(result["estimated_total_events"][0]).is_integer()
     assert result["limiting_energy_low"].quantity[0] in (0.1 * u.TeV, 1.0 * u.TeV)
 
 
