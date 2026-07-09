@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import simtools.utils.general as gen
-
 FILE_TYPE_SUFFIXES = {
     "hdf5": (".hdf5", ".h5"),
     "json_or_yaml": (".json", ".yml", ".yaml"),
@@ -12,10 +10,19 @@ FILE_TYPE_SUFFIXES = {
 }
 
 
-def validate_file_type(file_path, expected_suffixes):
-    """Validate that a file has one of the expected suffixes."""
+def validate_file_type(file_path, file_type):
+    """
+    Validate that a file has one of the expected suffixes.
+
+    Parameters
+    ----------
+    file_path : str or Path
+        Path to the file to validate.
+    file_type : str
+        Registered file type name, e.g., "hdf5", "json_or_yaml",
+    """
     path = Path(file_path)
-    expected_suffixes = gen.ensure_list(expected_suffixes)
+    expected_suffixes = _suffixes_for_file_type(file_type)
     if not matches_suffix(path, expected_suffixes):
         raise ValueError(
             f"File '{file_path}' has unsupported suffix, expected one of {expected_suffixes}"
@@ -39,14 +46,9 @@ def matches_suffix(file_path, expected_suffixes):
     return any(name.endswith(suffix) for suffix in expected_suffixes)
 
 
-def is_path_type(file_path, file_type):
+def is_file_type(file_path, file_type):
     """Return whether the path matches one registered file type."""
     return matches_suffix(file_path, _suffixes_for_file_type(file_type))
-
-
-def validate_path_type(file_path, file_type):
-    """Validate one file path against a registered file type."""
-    return validate_file_type(file_path, _suffixes_for_file_type(file_type))
 
 
 def looks_like_text_file(file_path, sample_size=4096):

@@ -14,7 +14,6 @@ from simtools.io.file_type import validate_file_type
 from simtools.job_execution.process_pool import process_pool_map_ordered
 from simtools.production_configuration.production_event_data_helpers import (
     accumulate_histograms_by_telescope_config,
-    normalize_event_data_file,
     normalize_telescope_configs,
     resolve_telescope_configs,
 )
@@ -512,13 +511,13 @@ def write_trigger_histograms(args_dict):
         If the output file does not use an HDF5 suffix or no supported telescope
         selection is provided.
     """
-    production_patterns = normalize_event_data_file(args_dict["event_data_file"])
+    production_patterns = gen.ensure_string_lists(args_dict["event_data_file"])
     telescope_configs = _use_readable_inline_array_names(
         normalize_telescope_configs(resolve_telescope_configs(args_dict))
     )
     output_file = validate_file_type(
         io_handler.IOHandler().get_output_file(args_dict["output_file"]),
-        expected_suffixes=[".hdf5", ".h5"],
+        file_type="hdf5",
     )
 
     reference_specs = []

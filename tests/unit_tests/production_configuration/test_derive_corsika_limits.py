@@ -889,29 +889,6 @@ def test_differential_upper_limits_falls_back_to_last_bin_edge(mocker):
     mock_log.assert_not_called()
 
 
-def test_normalize_event_data_file_single_string():
-    """Test _normalize_event_data_file with single string input."""
-    result = event_data_helpers.normalize_event_data_file("pattern_*.hdf5")
-    assert result == ["pattern_*.hdf5"]
-    assert isinstance(result, list)
-
-
-def test_normalize_event_data_file_list():
-    """Test _normalize_event_data_file with list input."""
-    patterns = ["pattern_1_*.hdf5", "pattern_2_*.hdf5"]
-    result = event_data_helpers.normalize_event_data_file(patterns)
-    assert result == patterns
-    # Should preserve order
-    assert result[0] == "pattern_1_*.hdf5"
-    assert result[1] == "pattern_2_*.hdf5"
-
-
-def test_normalize_event_data_file_invalid_type():
-    """Test _normalize_event_data_file raises on invalid type."""
-    with pytest.raises(TypeError):
-        event_data_helpers.normalize_event_data_file(123)
-
-
 def test_get_production_directory_name_readable_and_deterministic():
     """Test _get_production_directory_name generates readable deterministic names."""
     # Same inputs should produce same output when no collision exists

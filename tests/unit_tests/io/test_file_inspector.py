@@ -23,7 +23,7 @@ from simtools.io.file_inspector import (
     inspect_table_file,
     inspect_text_file,
 )
-from simtools.io.file_type import is_path_type
+from simtools.io.file_type import is_file_type
 
 
 def test_inspect_file_reports_generic_hdf5_structure(tmp_path):
@@ -219,7 +219,7 @@ def test_inspect_table_file_formats_truncated_columns(tmp_path):
 def test_inspect_sim_telarray_file_rejects_when_suffix_check_is_overridden_false(tmp_path, mocker):
     file_path = tmp_path / "run.simtel.zst"
     file_path.write_bytes(b"simtel")
-    mocker.patch("simtools.io.file_inspector.is_path_type", return_value=False)
+    mocker.patch("simtools.io.file_inspector.is_file_type", return_value=False)
 
     with pytest.raises(ValueError, match="unsupported suffix for sim_telarray inspection"):
         inspect_sim_telarray_file(file_path)
@@ -227,7 +227,7 @@ def test_inspect_sim_telarray_file_rejects_when_suffix_check_is_overridden_false
 
 def test_select_inspector_uses_generic_file_type_helper(tmp_path, mocker):
     file_path = tmp_path / "run.hdf5"
-    mocker.patch("simtools.io.file_inspector.is_path_type", side_effect=[True])
+    mocker.patch("simtools.io.file_inspector.is_file_type", side_effect=[True])
 
     inspector = _select_inspector(file_path)
 
@@ -235,7 +235,7 @@ def test_select_inspector_uses_generic_file_type_helper(tmp_path, mocker):
 
 
 def test_generic_file_type_helper_is_imported_for_path_checks(tmp_path):
-    assert is_path_type(tmp_path / "file.h5", "hdf5") is True
+    assert is_file_type(tmp_path / "file.h5", "hdf5") is True
 
 
 def test_inspect_sim_telarray_file_formats_empty_metadata(tmp_path):

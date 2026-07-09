@@ -7,7 +7,7 @@ import h5py
 from astropy.table import Table
 
 from simtools.io import ascii_handler
-from simtools.io.file_type import is_path_type, looks_like_text_file, validate_path_type
+from simtools.io.file_type import is_file_type, looks_like_text_file, validate_file_type
 from simtools.simtel import simtel_io_metadata
 
 
@@ -35,7 +35,7 @@ def inspect_file(file_path, max_entries=50, format_report=True):
     inspector = _select_inspector(file_path)
     reports = [inspector(file_path, max_entries=max_entries, format_report=format_report)]
 
-    if is_path_type(file_path, "hdf5"):
+    if is_file_type(file_path, "hdf5"):
         trigger_histogram_report = _inspect_trigger_histogram_file(
             file_path,
             format_report=format_report,
@@ -47,7 +47,7 @@ def inspect_file(file_path, max_entries=50, format_report=True):
 
 def inspect_hdf5_file(file_path, max_entries=50, format_report=True):
     """Inspect one HDF5 file and return a report."""
-    file_path = validate_path_type(file_path, "hdf5")
+    file_path = validate_file_type(file_path, "hdf5")
     if not h5py.is_hdf5(file_path):
         raise ValueError(f"File '{file_path}' is not a valid HDF5 container.")
 
@@ -72,7 +72,7 @@ def inspect_json_or_yaml_file(file_path, max_entries=50, format_report=True):
     """Inspect one JSON or YAML file and return a report."""
     del max_entries
     suffix = Path(file_path).suffix.lower()
-    file_path = validate_path_type(file_path, "json_or_yaml")
+    file_path = validate_file_type(file_path, "json_or_yaml")
     data = ascii_handler.collect_data_from_file(file_path)
     report = {
         "file_path": Path(file_path),
@@ -86,7 +86,7 @@ def inspect_json_or_yaml_file(file_path, max_entries=50, format_report=True):
 
 def inspect_table_file(file_path, max_entries=50, format_report=True):
     """Inspect one tabular file and return a report."""
-    file_path = validate_path_type(file_path, "table")
+    file_path = validate_file_type(file_path, "table")
     table = Table.read(file_path)
     report = {
         "file_path": Path(file_path),
@@ -101,8 +101,8 @@ def inspect_table_file(file_path, max_entries=50, format_report=True):
 
 def inspect_sim_telarray_file(file_path, max_entries=50, format_report=True):
     """Inspect one sim_telarray file and return a report."""
-    file_path = validate_path_type(file_path, "sim_telarray")
-    if not is_path_type(file_path, "sim_telarray"):
+    file_path = validate_file_type(file_path, "sim_telarray")
+    if not is_file_type(file_path, "sim_telarray"):
         raise ValueError(f"File '{file_path}' has unsupported suffix for sim_telarray inspection.")
     global_meta, telescope_meta = simtel_io_metadata.read_sim_telarray_metadata(file_path)
     sorted_global_items = sorted(global_meta.items()) if global_meta is not None else []
@@ -138,13 +138,13 @@ def inspect_text_file(file_path, max_entries=50, format_report=True):
 
 def _select_inspector(file_path):
     """Return the inspector function appropriate for the file path."""
-    if is_path_type(file_path, "hdf5"):
+    if is_file_type(file_path, "hdf5"):
         return inspect_hdf5_file
-    if is_path_type(file_path, "json_or_yaml"):
+    if is_file_type(file_path, "json_or_yaml"):
         return inspect_json_or_yaml_file
-    if is_path_type(file_path, "table"):
+    if is_file_type(file_path, "table"):
         return inspect_table_file
-    if is_path_type(file_path, "sim_telarray"):
+    if is_file_type(file_path, "sim_telarray"):
         return inspect_sim_telarray_file
     if looks_like_text_file(file_path):
         return inspect_text_file

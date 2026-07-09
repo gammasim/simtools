@@ -16,27 +16,6 @@ from simtools.utils.general import get_uuid
 from simtools.utils.names import normalize_array_element_identifier_container
 
 
-def normalize_event_data_file(event_data_file):
-    """
-    Normalize event_data_file to an ordered list of production patterns.
-
-    Parameters
-    ----------
-    event_data_file : str or list
-        A single pattern string or list of pattern strings.
-
-    Returns
-    -------
-    list
-        Ordered list of event data-file patterns.
-    """
-    if isinstance(event_data_file, str):
-        return [event_data_file]
-    if isinstance(event_data_file, list):
-        return list(event_data_file)
-    raise TypeError(f"event_data_file must be str or list, got {type(event_data_file)}")
-
-
 def get_production_directory_name(production_pattern, existing_names=None):
     """
     Generate a readable, filesystem-safe production directory name.

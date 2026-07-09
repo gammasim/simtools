@@ -475,7 +475,7 @@ def estimate_monte_carlo_statistics(args_dict=None):
     ]
     results = Table(rows=output_rows)
     output_file = validate_file_type(
-        io_handler.IOHandler().get_output_file(args_dict.get("output_file")), ".ecsv"
+        io_handler.IOHandler().get_output_file(args_dict.get("output_file")), file_type="table"
     )
     results.write(output_file, format="ascii.ecsv", overwrite=True)
     _logger.info(f"Writing Monte Carlo statistics estimates to {output_file}")

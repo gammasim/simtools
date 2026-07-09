@@ -7,11 +7,10 @@ import pytest
 from simtools.io.file_type import (
     FILE_TYPE_SUFFIXES,
     _suffixes_for_file_type,
-    is_path_type,
+    is_file_type,
     looks_like_text_file,
     matches_suffix,
     validate_file_type,
-    validate_path_type,
 )
 
 
@@ -20,10 +19,10 @@ def test_file_type_suffixes_registry_contains_supported_types():
     assert ".simtel.zst" in FILE_TYPE_SUFFIXES["sim_telarray"]
 
 
-def test_is_path_type_supports_compound_suffixes(tmp_path):
-    assert is_path_type(tmp_path / "table.fits.gz", "table") is True
-    assert is_path_type(tmp_path / "run.simtel.zst", "sim_telarray") is True
-    assert is_path_type(tmp_path / "run.simtel.zst", "table") is False
+def test_is_file_type_supports_compound_suffixes(tmp_path):
+    assert is_file_type(tmp_path / "table.fits.gz", "table") is True
+    assert is_file_type(tmp_path / "run.simtel.zst", "sim_telarray") is True
+    assert is_file_type(tmp_path / "run.simtel.zst", "table") is False
 
 
 def test_suffixes_for_file_type_rejects_unknown_type():
@@ -31,15 +30,15 @@ def test_suffixes_for_file_type_rejects_unknown_type():
         _suffixes_for_file_type("unknown")
 
 
-def test_validate_path_type_returns_path_for_registered_type(tmp_path):
+def test_validate_file_type_returns_path_for_registered_type(tmp_path):
     file_path = tmp_path / "table.fits.gz"
 
-    assert validate_path_type(file_path, "table") == file_path
+    assert validate_file_type(file_path, "table") == file_path
 
 
 def test_validate_file_type_rejects_invalid_terminal_suffix(tmp_path):
     with pytest.raises(ValueError, match="expected one of"):
-        validate_file_type(tmp_path / "file.txt", [".json"])
+        validate_file_type(tmp_path / "file.txt", "json_or_yaml")
 
 
 def test_matches_suffix_is_case_insensitive_and_supports_compound_suffixes():
