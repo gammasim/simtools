@@ -47,3 +47,18 @@ def is_path_type(file_path, file_type):
 def validate_path_type(file_path, file_type):
     """Validate one file path against a registered file type."""
     return validate_file_type(file_path, _suffixes_for_file_type(file_type))
+
+
+def looks_like_text_file(file_path, sample_size=4096):
+    """Return whether the file appears to be UTF-8 text."""
+    try:
+        sample = Path(file_path).read_bytes()[:sample_size]
+    except OSError:
+        return False
+    if b"\x00" in sample:
+        return False
+    try:
+        sample.decode("utf-8")
+    except UnicodeDecodeError:
+        return False
+    return True

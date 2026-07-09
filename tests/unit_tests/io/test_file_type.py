@@ -1,11 +1,14 @@
 """Tests for generic file-type helpers."""
 
+from pathlib import Path
+
 import pytest
 
 from simtools.io.file_type import (
     FILE_TYPE_SUFFIXES,
     _suffixes_for_file_type,
     is_path_type,
+    looks_like_text_file,
     matches_suffix,
     validate_file_type,
     validate_path_type,
@@ -43,3 +46,19 @@ def test_matches_suffix_is_case_insensitive_and_supports_compound_suffixes():
     assert matches_suffix("DATA.FITS.GZ", [".fits.gz"]) is True
     assert matches_suffix("run.SIMTEL.ZST", [".simtel.zst"]) is True
     assert matches_suffix("file.txt", [".json"]) is False
+
+
+def test_looks_like_text_file_false_on_binary_or_invalid_bytes(tmp_path):
+    binary_file = tmp_path / "binary.dat"
+    binary_file.write_bytes(b"\x00binary")
+    invalid_utf8_file = tmp_path / "invalid.dat"
+    invalid_utf8_file.write_bytes(b"\xff\xfe")
+
+    assert looks_like_text_file(binary_file) is False
+    assert looks_like_text_file(invalid_utf8_file) is False
+
+
+def test_looks_like_text_file_false_on_os_error(mocker):
+    mocker.patch.object(Path, "read_bytes", side_effect=OSError("missing"))
+
+    assert looks_like_text_file("missing.txt") is False

@@ -7,7 +7,7 @@ import h5py
 from astropy.table import Table
 
 from simtools.io import ascii_handler
-from simtools.io.file_type import is_path_type, validate_path_type
+from simtools.io.file_type import is_path_type, looks_like_text_file, validate_path_type
 from simtools.simtel import simtel_io_metadata
 
 
@@ -146,7 +146,7 @@ def _select_inspector(file_path):
         return inspect_table_file
     if is_path_type(file_path, "sim_telarray"):
         return inspect_sim_telarray_file
-    if _looks_like_text_file(file_path):
+    if looks_like_text_file(file_path):
         return inspect_text_file
     raise ValueError(f"Unsupported file type for inspection: {file_path.suffix or '<no suffix>'}.")
 
@@ -155,21 +155,6 @@ def _inspect_trigger_histogram_file(file_path, format_report=True):
     """Import and run trigger-histogram inspection lazily to avoid import cycles."""
     module = import_module("simtools.production_configuration.trigger_histograms")
     return module.inspect_trigger_histogram_file(file_path, format_report=format_report)
-
-
-def _looks_like_text_file(file_path, sample_size=4096):
-    """Return whether the file appears to be UTF-8 text."""
-    try:
-        sample = Path(file_path).read_bytes()[:sample_size]
-    except OSError:
-        return False
-    if b"\x00" in sample:
-        return False
-    try:
-        sample.decode("utf-8")
-    except UnicodeDecodeError:
-        return False
-    return True
 
 
 def _normalize_max_entries(max_entries):
