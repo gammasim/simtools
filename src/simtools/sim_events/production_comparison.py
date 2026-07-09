@@ -7,11 +7,10 @@ import numpy as np
 
 from simtools.io import table_handler
 from simtools.production_configuration.trigger_histograms import (
-    TRIGGER_HISTOGRAM_EDGES_TABLE,
     TRIGGER_HISTOGRAM_METADATA_TABLE,
-    TRIGGER_HISTOGRAM_VALUES_TABLE,
     TRIGGER_SUBSET_HISTOGRAMS_TABLE,
     TRIGGER_TOPOLOGY_COUNTS_TABLE,
+    _load_dense_histogram_payloads,
 )
 from simtools.utils.general import resolve_file_patterns
 
@@ -212,48 +211,42 @@ def _initialize_histogram_metric_accumulators():
 
 def _collect_metrics_from_trigger_histogram_file(trigger_histogram_file, accumulators):
     """Collect metrics from one trigger-histogram HDF5 file."""
+    dense_payloads = _load_dense_histogram_payloads(trigger_histogram_file)
     tables = table_handler.read_tables(
         trigger_histogram_file,
         [
             TRIGGER_HISTOGRAM_METADATA_TABLE,
-            TRIGGER_HISTOGRAM_VALUES_TABLE,
-            TRIGGER_HISTOGRAM_EDGES_TABLE,
             TRIGGER_TOPOLOGY_COUNTS_TABLE,
             TRIGGER_SUBSET_HISTOGRAMS_TABLE,
         ],
         file_type="HDF5",
     )
     metadata = tables[TRIGGER_HISTOGRAM_METADATA_TABLE]
-    values = tables[TRIGGER_HISTOGRAM_VALUES_TABLE]
-    edges = tables[TRIGGER_HISTOGRAM_EDGES_TABLE]
     topology_counts = tables[TRIGGER_TOPOLOGY_COUNTS_TABLE]
     subset_histograms = tables[TRIGGER_SUBSET_HISTOGRAMS_TABLE]
-    value_rows_by_reference = table_handler.group_table_rows(values, "reference_id")
-    edge_rows_by_reference = table_handler.group_table_rows(edges, "reference_id")
     topology_rows_by_reference = table_handler.group_table_rows(topology_counts, "reference_id")
     subset_rows_by_reference = table_handler.group_table_rows(subset_histograms, "reference_id")
 
     for row in metadata:
-        reference_id = row["reference_id"]
-        _accumulate_quantity_histograms_for_reference(
-            value_rows_by_reference.get(reference_id, values[:0]),
-            edge_rows_by_reference.get(reference_id, edges[:0]),
-            accumulators,
+        reference_id = str(row["reference_id"])
+        values_by_name, edges_by_name = dense_payloads.get(reference_id, ({}, {}))
+        _accumulate_quantity_histograms_from_dense_payload(
+            values_by_name, edges_by_name, accumulators
         )
         _accumulate_topology_counts_for_reference(
-            topology_rows_by_reference.get(reference_id, topology_counts[:0]),
+            topology_rows_by_reference.get(row["reference_id"], topology_counts[:0]),
             accumulators,
         )
         _accumulate_subset_histograms_for_reference(
-            subset_rows_by_reference.get(reference_id, subset_histograms[:0]),
+            subset_rows_by_reference.get(row["reference_id"], subset_histograms[:0]),
             accumulators,
         )
         accumulators["simulated_event_count"] += int(row["total_simulated_events"])
         accumulators["triggered_event_count"] += int(row["total_triggered_events"])
 
 
-def _accumulate_quantity_histograms_for_reference(value_rows, edge_rows, accumulators):
-    """Accumulate base simulated and triggered histograms for comparable quantities."""
+def _accumulate_quantity_histograms_from_dense_payload(values_by_name, edges_by_name, accumulators):
+    """Accumulate base simulated and triggered histograms from dense payloads."""
     histogram_map = {
         "energy_mc": ("energy", "simulated"),
         "energy": ("energy", "triggered"),
@@ -263,29 +256,16 @@ def _accumulate_quantity_histograms_for_reference(value_rows, edge_rows, accumul
         "angular_distance": ("angular_distance", "triggered"),
     }
     for histogram_name, (quantity, event_kind) in histogram_map.items():
-        counts, bin_edges = _histogram_counts_and_edges(value_rows, edge_rows, histogram_name)
-        if counts is None:
+        counts = values_by_name.get(histogram_name)
+        axis_edges = edges_by_name.get(histogram_name, {})
+        if counts is None or counts.ndim != 1 or 0 not in axis_edges:
             continue
         _add_histogram(
             accumulators["quantity_histograms"][event_kind],
             quantity,
-            counts,
-            bin_edges,
+            np.asarray(counts, dtype=float),
+            np.asarray(axis_edges[0], dtype=float),
         )
-
-
-def _histogram_counts_and_edges(value_rows, edge_rows, histogram_name):
-    """Return 1D histogram counts and bin edges for one persisted histogram."""
-    selected_values = value_rows[value_rows["histogram_name"] == histogram_name]
-    if len(selected_values) == 0:
-        return None, None
-    selected_values.sort("index_0")
-    selected_edges = edge_rows[edge_rows["histogram_name"] == histogram_name]
-    selected_edges.sort("bin_index")
-    return (
-        np.asarray(selected_values["value"], dtype=float),
-        np.asarray(selected_edges["edge"], dtype=float),
-    )
 
 
 def _add_histogram(target, quantity, counts, bin_edges):

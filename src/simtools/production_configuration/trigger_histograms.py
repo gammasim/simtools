@@ -4,6 +4,7 @@ import copy
 import logging
 
 import astropy.units as u
+import h5py
 import numpy as np
 from astropy.table import Table, vstack
 
@@ -22,10 +23,9 @@ _logger = logging.getLogger(__name__)
 
 TRIGGER_HISTOGRAM_METADATA_TABLE = "TRIGGER_REFERENCE_METADATA"
 TRIGGER_HISTOGRAM_BINS_TABLE = "TRIGGER_REFERENCE_BINS"
-TRIGGER_HISTOGRAM_VALUES_TABLE = "TRIGGER_HISTOGRAM_VALUES"
-TRIGGER_HISTOGRAM_EDGES_TABLE = "TRIGGER_HISTOGRAM_EDGES"
 TRIGGER_TOPOLOGY_COUNTS_TABLE = "TRIGGER_TOPOLOGY_COUNTS"
 TRIGGER_SUBSET_HISTOGRAMS_TABLE = "TRIGGER_SUBSET_HISTOGRAMS"
+TRIGGER_HISTOGRAM_DENSE_GROUP = "TRIGGER_HISTOGRAM_DENSE"
 
 _DERIVED_HISTOGRAM_SUFFIXES = ("_eff", "_cumulative")
 
@@ -98,6 +98,13 @@ def _create_histogram_tables(reference_specs):
         vstack(metadata_tables, metadata_conflicts="silent"),
         vstack(bin_tables, metadata_conflicts="silent"),
     )
+
+
+def _iter_persisted_histograms(histograms):
+    """Yield persisted histogram names and definitions."""
+    for histogram_name, histogram in histograms.histograms.items():
+        if _is_persisted_histogram(histogram_name, histogram):
+            yield histogram_name, histogram
 
 
 def _create_trigger_topology_count_table(reference_specs):
@@ -247,34 +254,6 @@ def _is_persisted_histogram(name, histogram):
     return isinstance(histogram, dict) and histogram.get("histogram") is not None
 
 
-def _create_histogram_value_table(reference_specs):
-    """Create a flattened table containing all persisted histogram counts."""
-    rows = []
-    for spec in reference_specs:
-        for histogram_name, histogram in spec["histograms"].histograms.items():
-            if not _is_persisted_histogram(histogram_name, histogram):
-                continue
-            values = np.asarray(histogram["histogram"])
-            for flat_index, value in enumerate(values.ravel()):
-                indices = np.unravel_index(flat_index, values.shape)
-                padded_indices = list(indices) + [-1] * (3 - len(indices))
-                rows.append(
-                    {
-                        "reference_id": spec["reference_id"],
-                        "histogram_name": histogram_name,
-                        "dimension": values.ndim,
-                        "index_0": padded_indices[0],
-                        "index_1": padded_indices[1],
-                        "index_2": padded_indices[2],
-                        "value": float(value),
-                    }
-                )
-
-    table = Table(rows=rows)
-    table.meta["EXTNAME"] = TRIGGER_HISTOGRAM_VALUES_TABLE
-    return table
-
-
 def _iter_histogram_edges(histogram):
     """Yield one bin-edge array per histogram axis."""
     bin_edges = histogram["bin_edges"]
@@ -284,28 +263,62 @@ def _iter_histogram_edges(histogram):
     yield from enumerate(bin_edges)
 
 
-def _create_histogram_edge_table(reference_specs):
-    """Create a flattened table containing bin edges for persisted histograms."""
-    rows = []
-    for spec in reference_specs:
-        for histogram_name, histogram in spec["histograms"].histograms.items():
-            if not _is_persisted_histogram(histogram_name, histogram):
-                continue
-            for axis_index, edges in _iter_histogram_edges(histogram):
-                for bin_index, edge in enumerate(np.asarray(edges, dtype=float)):
-                    rows.append(
-                        {
-                            "reference_id": spec["reference_id"],
-                            "histogram_name": histogram_name,
-                            "axis_index": axis_index,
-                            "bin_index": bin_index,
-                            "edge": float(edge),
-                        }
+def _write_dense_histogram_payload(reference_specs, output_file):
+    """Write persisted histogram arrays and bin edges as dense HDF5 datasets."""
+    with h5py.File(output_file, "a") as hdf5_file:
+        dense_group = hdf5_file.require_group(TRIGGER_HISTOGRAM_DENSE_GROUP)
+        dense_group.attrs["format_version"] = 1
+        for spec in reference_specs:
+            reference_group = dense_group.create_group(str(spec["reference_id"]))
+            for histogram_name, histogram in _iter_persisted_histograms(spec["histograms"]):
+                histogram_group = reference_group.create_group(str(histogram_name))
+                _create_dense_histogram_dataset(
+                    histogram_group,
+                    "values",
+                    data=np.asarray(histogram["histogram"]),
+                )
+                for axis_index, edges in _iter_histogram_edges(histogram):
+                    _create_dense_histogram_dataset(
+                        histogram_group,
+                        f"edges_{axis_index}",
+                        data=np.asarray(edges, dtype=float),
                     )
 
-    table = Table(rows=rows)
-    table.meta["EXTNAME"] = TRIGGER_HISTOGRAM_EDGES_TABLE
-    return table
+
+def _create_dense_histogram_dataset(hdf5_group, dataset_name, data):
+    """Create one compressed dataset for dense trigger-histogram payloads."""
+    return hdf5_group.create_dataset(
+        dataset_name,
+        data=data,
+        chunks=True,
+        compression="gzip",
+        compression_opts=6,
+        shuffle=True,
+    )
+
+
+def _load_dense_histogram_payloads(reference_file):
+    """Load dense histogram arrays and edges grouped by reference id."""
+    with h5py.File(reference_file, "r") as hdf5_file:
+        if TRIGGER_HISTOGRAM_DENSE_GROUP not in hdf5_file:
+            return {}
+
+        dense_group = hdf5_file[TRIGGER_HISTOGRAM_DENSE_GROUP]
+        payloads = {}
+        for reference_id, reference_group in dense_group.items():
+            values_by_name = {}
+            edges_by_name = {}
+            for histogram_name, histogram_group in reference_group.items():
+                values_by_name[histogram_name] = np.asarray(histogram_group["values"])
+                axis_edges = {}
+                for dataset_name, dataset in histogram_group.items():
+                    if not dataset_name.startswith("edges_"):
+                        continue
+                    axis_index = int(dataset_name.split("_", maxsplit=1)[1])
+                    axis_edges[axis_index] = np.asarray(dataset, dtype=float)
+                edges_by_name[histogram_name] = axis_edges
+            payloads[reference_id] = (values_by_name, edges_by_name)
+        return payloads
 
 
 def _create_bin_table(reference_id, production_index, array_name, histograms):
@@ -459,16 +472,12 @@ def write_trigger_histograms(args_dict):
             reference_specs.append(spec | {"reference_id": gen.get_uuid()})
 
     metadata_table, bin_table = _create_histogram_tables(reference_specs)
-    histogram_value_table = _create_histogram_value_table(reference_specs)
-    histogram_edge_table = _create_histogram_edge_table(reference_specs)
     topology_count_table = _create_trigger_topology_count_table(reference_specs)
     subset_histogram_table = _create_trigger_subset_histogram_table(reference_specs)
     table_handler.write_tables(
         [
             metadata_table,
             bin_table,
-            histogram_value_table,
-            histogram_edge_table,
             topology_count_table,
             subset_histogram_table,
         ],
@@ -476,6 +485,7 @@ def write_trigger_histograms(args_dict):
         overwrite_existing=True,
         file_type="HDF5",
     )
+    _write_dense_histogram_payload(reference_specs, output_file)
     return metadata_table, bin_table
 
 
@@ -544,40 +554,6 @@ def _metadata_data_ranges(row):
     return {"angular_distance": (float(angular_min), float(angular_max))}
 
 
-def _edges_by_histogram(edge_rows):
-    """Return nested histogram edge arrays by histogram name and axis."""
-    edges = {}
-    for histogram_name, histogram_rows in table_handler.group_table_rows(
-        edge_rows, "histogram_name"
-    ).items():
-        edges[histogram_name] = {}
-        for axis_index, axis_rows in table_handler.group_table_rows(
-            histogram_rows, "axis_index"
-        ).items():
-            axis_rows.sort("bin_index")
-            edges[histogram_name][int(axis_index)] = np.asarray(axis_rows["edge"], dtype=float)
-    return edges
-
-
-def _histogram_values_by_name(value_rows):
-    """Return histogram arrays reconstructed from flattened value rows."""
-    histograms = {}
-    for histogram_name, histogram_rows in table_handler.group_table_rows(
-        value_rows, "histogram_name"
-    ).items():
-        dimension = int(histogram_rows["dimension"][0])
-        shape = tuple(
-            int(np.max(histogram_rows[f"index_{axis_index}"])) + 1
-            for axis_index in range(dimension)
-        )
-        values = np.zeros(shape, dtype=float)
-        for row in histogram_rows:
-            index = tuple(int(row[f"index_{axis_index}"]) for axis_index in range(dimension))
-            values[index] = float(row["value"])
-        histograms[histogram_name] = values
-    return histograms
-
-
 def _template_histograms(histograms):
     """Create metadata-rich empty histogram definitions for a loaded histogram object."""
     return histograms.get_empty_histogram_definitions()
@@ -613,8 +589,8 @@ def _apply_loaded_histograms(histograms, values_by_name, edges_by_name):
     return loaded, loaded_bin_edges
 
 
-def _histograms_from_reference_row(row, value_rows, edge_rows):
-    """Reconstruct finalized EventDataHistograms for one reference row."""
+def _histograms_from_reference_row_dense(row, values_by_name, edges_by_name):
+    """Reconstruct finalized EventDataHistograms from dense HDF5 payloads."""
     histograms = EventDataHistograms.create_accumulator(
         array_name=row["array_name"],
         telescope_list=list(filter(None, str(row["telescope_ids"]).split(","))),
@@ -624,9 +600,7 @@ def _histograms_from_reference_row(row, value_rows, edge_rows):
         core_distance_bin_count=int(row["core_distance_bin_count"]) + 1,
     )
     loaded_histograms, loaded_bin_edges = _apply_loaded_histograms(
-        histograms,
-        _histogram_values_by_name(value_rows),
-        _edges_by_histogram(edge_rows),
+        histograms, values_by_name, edges_by_name
     )
     histograms.set_loaded_histograms(
         loaded_histograms,
@@ -658,39 +632,26 @@ def load_event_data_histograms(reference_file, array_names=None, production_indi
     list[tuple[astropy.table.Row, EventDataHistograms]]
         Metadata row and reconstructed histogram object for each reference.
     """
-    print("A")
-    tables = table_handler.read_tables(
+    dense_payloads = _load_dense_histogram_payloads(reference_file)
+    metadata = table_handler.read_tables(
         reference_file,
-        [
-            TRIGGER_HISTOGRAM_METADATA_TABLE,
-            TRIGGER_HISTOGRAM_VALUES_TABLE,
-            TRIGGER_HISTOGRAM_EDGES_TABLE,
-        ],
+        [TRIGGER_HISTOGRAM_METADATA_TABLE],
         file_type="HDF5",
-    )
-    print("B")
-    metadata = tables[TRIGGER_HISTOGRAM_METADATA_TABLE]
-    values = tables[TRIGGER_HISTOGRAM_VALUES_TABLE]
-    edges = tables[TRIGGER_HISTOGRAM_EDGES_TABLE]
+    )[TRIGGER_HISTOGRAM_METADATA_TABLE]
 
     if array_names:
         metadata = metadata[np.isin(metadata["array_name"].astype(str), array_names)]
     if production_indices is not None:
         metadata = metadata[np.isin(metadata["production_index"], production_indices)]
 
-    value_rows_by_reference = table_handler.group_table_rows(values, "reference_id")
-    edge_rows_by_reference = table_handler.group_table_rows(edges, "reference_id")
     loaded = []
     for row in metadata:
-        reference_id = row["reference_id"]
+        reference_id = str(row["reference_id"])
+        values_by_name, edges_by_name = dense_payloads[reference_id]
         loaded.append(
             (
                 row,
-                _histograms_from_reference_row(
-                    row,
-                    value_rows_by_reference[reference_id],
-                    edge_rows_by_reference[reference_id],
-                ),
+                _histograms_from_reference_row_dense(row, values_by_name, edges_by_name),
             )
         )
     return loaded

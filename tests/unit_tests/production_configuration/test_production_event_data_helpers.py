@@ -20,7 +20,7 @@ def test_build_production_subdirectories_creates_unique_names(tmp_test_directory
     output_dir = tmp_test_directory / "plots"
     mocker.patch(
         "simtools.production_configuration.production_event_data_helpers.get_uuid",
-        return_value="uuid-1",
+        side_effect=["uuid-1", "uuid-2"],
     )
 
     subdirs = helpers.build_production_subdirectories(
@@ -28,13 +28,17 @@ def test_build_production_subdirectories_creates_unique_names(tmp_test_directory
     )
 
     assert [Path(path).name for path in subdirs.values()] == [
-        "production_a",
-        "production_b",
-        "production_c",
+        "production_output",
+        "production_output_uuid-1",
+        "production_output_uuid-2",
     ]
     assert all(Path(path).is_dir() for path in subdirs.values())
-    assert helpers.get_production_directory_name("a/output.hdf5", {"production_a"}) == (
-        "production_a_uuid-1"
+    mocker.patch(
+        "simtools.production_configuration.production_event_data_helpers.get_uuid",
+        return_value="uuid-1",
+    )
+    assert helpers.get_production_directory_name("a/output.hdf5", {"production_output"}) == (
+        "production_output_uuid-1"
     )
 
 

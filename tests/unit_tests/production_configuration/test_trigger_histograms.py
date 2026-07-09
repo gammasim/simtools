@@ -1,23 +1,22 @@
 import astropy.units as u
+import h5py
 import numpy as np
 import pytest
 
 from simtools.io import table_handler
 from simtools.production_configuration.trigger_histograms import (
     TRIGGER_HISTOGRAM_BINS_TABLE,
-    TRIGGER_HISTOGRAM_EDGES_TABLE,
+    TRIGGER_HISTOGRAM_DENSE_GROUP,
     TRIGGER_HISTOGRAM_METADATA_TABLE,
-    TRIGGER_HISTOGRAM_VALUES_TABLE,
     TRIGGER_SUBSET_HISTOGRAMS_TABLE,
     TRIGGER_TOPOLOGY_COUNTS_TABLE,
-    _create_histogram_edge_table,
     _create_histogram_tables,
-    _create_histogram_value_table,
     _create_trigger_subset_histogram_table,
     _create_trigger_topology_count_table,
     _execute_production_job,
     _get_plot_directory_name,
     _use_readable_inline_array_names,
+    _write_dense_histogram_payload,
     load_event_data_histograms,
     load_trigger_histograms,
     write_trigger_histograms,
@@ -176,20 +175,17 @@ def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
         }
     ]
     metadata_table, bin_table = _create_histogram_tables(reference_specs)
-    value_table = _create_histogram_value_table(reference_specs)
-    edge_table = _create_histogram_edge_table(reference_specs)
     output_file = tmp_path / "trigger_histograms.hdf5"
     table_handler.write_tables(
-        [metadata_table, bin_table, value_table, edge_table],
+        [metadata_table, bin_table],
         output_file,
         overwrite_existing=True,
         file_type="HDF5",
     )
+    _write_dense_histogram_payload(reference_specs, output_file)
 
     loaded = load_event_data_histograms(output_file)
 
-    assert value_table.meta["EXTNAME"] == TRIGGER_HISTOGRAM_VALUES_TABLE
-    assert edge_table.meta["EXTNAME"] == TRIGGER_HISTOGRAM_EDGES_TABLE
     assert len(loaded) == 1
     row, loaded_histograms = loaded[0]
     assert row["array_name"] == "alpha"
@@ -204,6 +200,9 @@ def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
     )
     assert "angular_distance_vs_energy_vs_core_distance_eff" in loaded_histograms.histograms
     assert "energy_cumulative" in loaded_histograms.histograms
+
+    with h5py.File(output_file, "r") as hdf5_file:
+        assert TRIGGER_HISTOGRAM_DENSE_GROUP in hdf5_file
 
 
 def test_trigger_topology_tables_are_created_from_reference_specs():
@@ -255,15 +254,14 @@ def test_event_data_histograms_hdf5_filter_by_array_name(tmp_path):
         }
     ]
     metadata_table, bin_table = _create_histogram_tables(reference_specs)
-    value_table = _create_histogram_value_table(reference_specs)
-    edge_table = _create_histogram_edge_table(reference_specs)
     output_file = tmp_path / "trigger_histograms.hdf5"
     table_handler.write_tables(
-        [metadata_table, bin_table, value_table, edge_table],
+        [metadata_table, bin_table],
         output_file,
         overwrite_existing=True,
         file_type="HDF5",
     )
+    _write_dense_histogram_payload(reference_specs, output_file)
 
     loaded = load_event_data_histograms(output_file, array_names=["MSTS-01"])
 

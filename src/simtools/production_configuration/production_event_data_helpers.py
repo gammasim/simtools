@@ -59,13 +59,20 @@ def get_production_directory_name(production_pattern, existing_names=None):
         return re.sub(r"_+", "_", name).strip("_")
 
     pattern_path = Path(production_pattern)
+    stem_name = _sanitize(pattern_path.stem)
     parent_name = _sanitize(pattern_path.parent.name) if pattern_path.parent.name != "." else ""
-    readable_name = parent_name or _sanitize(pattern_path.stem) or "production"
+    readable_name = stem_name or parent_name or "production"
     base_name = f"production_{readable_name}"
 
-    if existing_names is None or base_name not in existing_names:
+    if existing_names is None:
         return base_name
-    return f"{base_name}_{get_uuid()}"
+    if base_name not in existing_names:
+        return base_name
+
+    candidate_name = f"{base_name}_{get_uuid()}"
+    while candidate_name in existing_names:
+        candidate_name = f"{base_name}_{get_uuid()}"
+    return candidate_name
 
 
 def build_production_subdirectories(production_patterns, output_dir):
