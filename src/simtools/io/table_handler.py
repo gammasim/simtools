@@ -368,7 +368,7 @@ def write_tables(tables, output_file, overwrite_existing=True, file_type=None):
     if isinstance(tables, dict):
         tables = list(tables.values())
     if file_type == "HDF5":
-        _write_tables_atomically_to_hdf5(tables, output_file)
+        write_table_chunks(tables, output_file)
         return
     for table in tables:
         _table_name = table.meta.get("EXTNAME")
@@ -382,11 +382,6 @@ def write_tables(tables, output_file, overwrite_existing=True, file_type=None):
         fits.HDUList(hdus).writeto(output_file, checksum=False)
 
 
-def _write_tables_atomically_to_hdf5(tables, output_file):
-    """Write and validate an HDF5 file before publishing it atomically."""
-    write_table_chunks([tables], output_file)
-
-
 def write_table_chunks(table_chunks, output_file, overwrite_existing=True):
     """Write table chunks to an atomic HDF5 output with bounded memory use."""
     output_file = Path(output_file)
@@ -398,7 +393,7 @@ def write_table_chunks(table_chunks, output_file, overwrite_existing=True):
     try:
         with h5py.File(incomplete_file, "w") as hdf5_file:
             hdf5_file.attrs["simtools_write_status"] = "incomplete"
-            for tables in table_chunks:
+            for tables in _iter_table_chunks(table_chunks):
                 chunk_table_names = set()
                 for table in tables:
                     table_name = table.meta.get("EXTNAME")
@@ -422,6 +417,15 @@ def write_table_chunks(table_chunks, output_file, overwrite_existing=True):
             f"Incomplete output, if created, is stored at '{incomplete_file}'."
         )
         raise
+
+
+def _iter_table_chunks(table_chunks):
+    """Yield normalized chunks of astropy tables."""
+    for chunk in table_chunks:
+        if isinstance(chunk, Table):
+            yield [chunk]
+            continue
+        yield chunk
 
 
 def _validate_written_hdf5(output_file, expected_tables):
@@ -525,7 +529,8 @@ def _create_hdf5_dataset(hdf5_file, table_name, data=None, dtype=None, shape=Non
         "maxshape": (None, *dataset_shape[1:]),
         "chunks": True,
         "compression": "gzip",
-        "compression_opts": 4,
+        "compression_opts": 6,
+        "shuffle": True,
     }
     if data is not None:
         kwargs["data"] = data

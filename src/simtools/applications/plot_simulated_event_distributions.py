@@ -10,6 +10,8 @@ Command line arguments
 ----------------------
 trigger_histogram_file (str, required)
     Precomputed trigger-histogram HDF5 file from ``simtools-write-trigger-histograms``.
+array_layout_name (str, optional)
+    Optional array layout name to select from a precomputed trigger-histogram HDF5 file.
 output_path (str, required)
     Output directory for the generated plots.
 
@@ -21,6 +23,7 @@ Generate plots from a precomputed trigger-histogram file:
 
     simtools-plot-simulated-event-distributions \
         --trigger_histogram_file trigger_histograms.hdf5 \
+        --array_layout_name alpha \
         --output_path simtools_output
 
 
@@ -49,11 +52,39 @@ def _add_arguments(parser):
         type=str,
         required=True,
     )
+    parser.add_argument(
+        "--array_layout_name",
+        help=(
+            "Optional array layout name to select from a precomputed trigger-histogram "
+            "file. If omitted, plot all layouts available in the file."
+        ),
+        type=str,
+        required=False,
+        default=None,
+    )
 
 
-def _plot_histogram_file(trigger_histogram_file, output_dir):
+def _selected_array_names(array_layout_name):
+    """Return normalized array-name selection for the histogram loader."""
+    if array_layout_name is None:
+        return None
+    if isinstance(array_layout_name, str):
+        return [array_layout_name]
+    return array_layout_name
+
+
+def _plot_histogram_file(trigger_histogram_file, output_dir, array_layout_name=None):
     """Plot all histogram references from a trigger-histogram HDF5 file."""
-    loaded_histograms = load_event_data_histograms(trigger_histogram_file)
+    selected_array_names = _selected_array_names(array_layout_name)
+    loaded_histograms = load_event_data_histograms(
+        trigger_histogram_file,
+        array_names=selected_array_names,
+    )
+    if selected_array_names and not loaded_histograms:
+        raise ValueError(
+            f"Array layout '{array_layout_name}' not found in histogram file "
+            f"'{trigger_histogram_file}'."
+        )
     for _, histograms in loaded_histograms:
         output_path = output_dir
         if len(loaded_histograms) > 1:
@@ -75,7 +106,11 @@ def main():
     app_context.logger.info(
         f"Loading trigger histogram file from: {app_context.args['trigger_histogram_file']}"
     )
-    _plot_histogram_file(app_context.args["trigger_histogram_file"], output_dir)
+    _plot_histogram_file(
+        app_context.args["trigger_histogram_file"],
+        output_dir,
+        app_context.args.get("array_layout_name"),
+    )
 
 
 if __name__ == "__main__":

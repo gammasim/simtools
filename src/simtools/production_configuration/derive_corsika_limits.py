@@ -138,14 +138,17 @@ def _parse_allowed_losses(allowed_losses_args):
 
 
 def generate_corsika_limits_grid():
-    """Generate CORSIKA limits from a precomputed trigger-histogram file."""
+    """
+    Generate CORSIKA limits from a precomputed trigger-histogram file.
+
+    Reads histograms, computes limits, optionally plots histograms,
+    and writes results to an ECSV file.
+    """
     allowed_losses = _parse_allowed_losses(settings.config.args.get("allowed_losses"))
     energy_threshold_fraction = float(settings.config.args.get("energy_threshold_fraction", 0.01))
     differential_loss_bins_per_decade = int(
         settings.config.args.get("differential_loss_bins_per_decade", 0)
     )
-    if not settings.config.args.get("trigger_histogram_file"):
-        raise ValueError("Use --trigger_histogram_file.")
 
     results = _generate_corsika_limits_from_histogram_file(
         allowed_losses,
