@@ -29,11 +29,16 @@ from pathlib import Path
 import yaml
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
+from docutils.statemachine import StringList
 
 try:
     from sphinx.util.docutils import SphinxDirective
+    from sphinx.util.nodes import nested_parse_with_titles
 except ModuleNotFoundError:  # pragma: no cover - fallback for non-Sphinx imports
     SphinxDirective = Directive
+    NESTED_PARSE_WITH_TITLES = None
+else:
+    NESTED_PARSE_WITH_TITLES = nested_parse_with_titles
 
 _GITHUB_BLOB_BASE = "https://github.com/gammasim/simtools/blob/main/"
 
@@ -160,17 +165,45 @@ class SimtoolsIntegrationExampleDirective(SphinxDirective):
             raise self.error(str(error)) from error
 
         rendered_nodes = []
+        content_parent = self._render_title(example, rendered_nodes)
+        self._append_summary(example, rendered_nodes, content_parent)
+        self._append_application_info(example, rendered_nodes, content_parent)
+        self._append_visibility_blocks(example, rendered_nodes, content_parent)
+        return rendered_nodes
 
-        if example.title:
-            rendered_nodes.append(nodes.rubric(text=example.title))
+    def _render_title(self, example, rendered_nodes):
+        """Render the example title as a nested section heading when present."""
+        if not example.title:
+            return None
 
+        section_container = nodes.container()
+        title_lines = StringList([example.title, "~" * len(example.title), ""])
+        if NESTED_PARSE_WITH_TITLES is None:
+            self.state.nested_parse(title_lines, self.content_offset, section_container)
+        else:
+            NESTED_PARSE_WITH_TITLES(self.state, title_lines, section_container)
+        rendered_nodes.extend(section_container.children)
+        return rendered_nodes[-1] if rendered_nodes else None
+
+    @staticmethod
+    def _append_node(rendered_nodes, content_parent, node):
+        """Append a node either to the current titled section or to the top level."""
+        if content_parent is not None:
+            content_parent += node
+        else:
+            rendered_nodes.append(node)
+
+    def _append_summary(self, example, rendered_nodes, content_parent):
+        """Append the optional summary paragraph."""
         if example.summary:
-            rendered_nodes.append(nodes.paragraph(text=example.summary))
+            self._append_node(rendered_nodes, content_parent, nodes.paragraph(text=example.summary))
 
+    def _append_application_info(self, example, rendered_nodes, content_parent):
+        """Append application and integration-test metadata."""
         application_paragraph = nodes.paragraph()
         application_paragraph += nodes.strong(text="Application: ")
         application_paragraph += nodes.literal(text=example.application)
-        rendered_nodes.append(application_paragraph)
+        self._append_node(rendered_nodes, content_parent, application_paragraph)
 
         integration_test_paragraph = nodes.paragraph()
         integration_test_paragraph += nodes.strong(text="Integration test: ")
@@ -178,23 +211,34 @@ class SimtoolsIntegrationExampleDirective(SphinxDirective):
             text=example.file_name,
             refuri=get_integration_config_source_url(example.file_name),
         )
-        rendered_nodes.append(integration_test_paragraph)
+        self._append_node(rendered_nodes, content_parent, integration_test_paragraph)
 
+    def _append_visibility_blocks(self, example, rendered_nodes, content_parent):
+        """Append the requested command/configuration blocks."""
         show_command, show_config = self._get_visibility_options()
-
         if show_command:
-            rendered_nodes.append(nodes.rubric(text="Command"))
-            command_block = nodes.literal_block(text=render_command(example))
-            command_block["language"] = "console"
-            rendered_nodes.append(command_block)
-
+            self._append_block(
+                rendered_nodes,
+                content_parent,
+                "Command",
+                render_command(example),
+                "console",
+            )
         if show_config:
-            rendered_nodes.append(nodes.rubric(text="Configuration"))
-            config_block = nodes.literal_block(text=render_configuration_yaml(example))
-            config_block["language"] = "yaml"
-            rendered_nodes.append(config_block)
+            self._append_block(
+                rendered_nodes,
+                content_parent,
+                "Configuration",
+                render_configuration_yaml(example),
+                "yaml",
+            )
 
-        return rendered_nodes
+    def _append_block(self, rendered_nodes, content_parent, title, text, language):
+        """Append a titled literal block."""
+        self._append_node(rendered_nodes, content_parent, nodes.rubric(text=title))
+        literal_block = nodes.literal_block(text=text)
+        literal_block["language"] = language
+        self._append_node(rendered_nodes, content_parent, literal_block)
 
     def _get_visibility_options(self):
         """Resolve which content blocks to render.
