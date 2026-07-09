@@ -81,6 +81,7 @@ simtools-generate-default-metadata <applications/simtools-generate-default-metad
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-simtel-event-data <applications/simtools-generate-simtel-event-data>
 simtools-generate-test-resources <applications/simtools-generate-test-resources>
+simtools-inspect-file <applications/simtools-inspect-file>
 simtools-maintain-simulation-model-add-production <applications/simtools-maintain-simulation-model-add-production>
 simtools-maintain-simulation-model-compare-productions <applications/simtools-maintain-simulation-model-compare-productions>
 simtools-maintain-simulation-model-verify-production-tables <applications/simtools-maintain-simulation-model-verify-production-tables>

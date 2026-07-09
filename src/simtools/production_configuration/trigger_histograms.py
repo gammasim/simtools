@@ -321,6 +321,65 @@ def _load_dense_histogram_payloads(reference_file):
         return payloads
 
 
+def inspect_trigger_histogram_file(file_path):
+    """Return trigger-histogram-specific consistency checks when applicable."""
+    with h5py.File(file_path, "r") as hdf5_file:
+        has_metadata = TRIGGER_HISTOGRAM_METADATA_TABLE in hdf5_file
+        has_dense_group = TRIGGER_HISTOGRAM_DENSE_GROUP in hdf5_file
+        if not has_metadata and not has_dense_group:
+            return None
+
+        dense_reference_ids = (
+            sorted(
+                str(reference_id)
+                for reference_id in hdf5_file[TRIGGER_HISTOGRAM_DENSE_GROUP].keys()
+            )
+            if has_dense_group
+            else []
+        )
+
+    metadata_reference_ids = []
+    if has_metadata:
+        metadata = table_handler.read_tables(
+            file_path,
+            [TRIGGER_HISTOGRAM_METADATA_TABLE],
+            file_type="HDF5",
+        )[TRIGGER_HISTOGRAM_METADATA_TABLE]
+        metadata_reference_ids = sorted(str(row["reference_id"]) for row in metadata)
+
+    metadata_reference_id_set = set(metadata_reference_ids)
+    dense_reference_id_set = set(dense_reference_ids)
+    return {
+        "inspector": "trigger_histogram",
+        "metadata_reference_count": len(metadata_reference_ids),
+        "dense_reference_count": len(dense_reference_ids),
+        "missing_dense_reference_ids": sorted(metadata_reference_id_set - dense_reference_id_set),
+        "orphan_dense_reference_ids": sorted(dense_reference_id_set - metadata_reference_id_set),
+    }
+
+
+def format_trigger_histogram_inspection(report):
+    """Format trigger-histogram inspection results for console output."""
+    lines = ["Trigger histogram consistency:"]
+    lines.append(f"- metadata reference ids: {report['metadata_reference_count']}")
+    lines.append(f"- dense payload reference ids: {report['dense_reference_count']}")
+    if report["missing_dense_reference_ids"]:
+        lines.append(
+            "- missing dense payloads for metadata ids: "
+            + ", ".join(report["missing_dense_reference_ids"])
+        )
+    else:
+        lines.append("- missing dense payloads for metadata ids: none")
+    if report["orphan_dense_reference_ids"]:
+        lines.append(
+            "- orphan dense payload ids without metadata rows: "
+            + ", ".join(report["orphan_dense_reference_ids"])
+        )
+    else:
+        lines.append("- orphan dense payload ids without metadata rows: none")
+    return "\n".join(lines)
+
+
 def _create_bin_table(reference_id, production_index, array_name, histograms):
     """Create the flattened per-bin histogram table."""
     triggered_hist = histograms.histograms["angular_distance_vs_energy_vs_core_distance"][
