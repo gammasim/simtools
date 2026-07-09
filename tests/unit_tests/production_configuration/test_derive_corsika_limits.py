@@ -312,6 +312,37 @@ def test_parse_allowed_losses_raises_when_not_provided():
         derive_corsika_limits._parse_allowed_losses(None)
 
 
+def test_resolve_selected_array_names_prefers_array_layout_name():
+    """Use array_layout_name as the HDF5 layout selector."""
+    assert derive_corsika_limits._resolve_selected_array_names(
+        {
+            "array_names": None,
+            "array_layout_name": ["CTAO-North-4-LSTs-1-MSTs"],
+        }
+    ) == ["CTAO-North-4-LSTs-1-MSTs"]
+
+
+def test_resolve_selected_array_names_accepts_matching_alias_values():
+    """Allow both selectors when they contain the same values."""
+    assert derive_corsika_limits._resolve_selected_array_names(
+        {
+            "array_names": ["alpha", "beta"],
+            "array_layout_name": ["beta", "alpha"],
+        }
+    ) == ["beta", "alpha"]
+
+
+def test_resolve_selected_array_names_rejects_conflicting_filters():
+    """Reject conflicting layout selectors."""
+    with pytest.raises(ValueError, match="Use either --array_names or --array_layout_name"):
+        derive_corsika_limits._resolve_selected_array_names(
+            {
+                "array_names": ["alpha"],
+                "array_layout_name": ["beta"],
+            }
+        )
+
+
 def test_compute_limits_lower():
     hist = np.array([1, 2, 3, 4, 5])
     bin_edges = np.array([0, 1, 2, 3, 4, 5])
@@ -1039,6 +1070,7 @@ def mock_args_dict():
         "ignore_runtime_environment": False,
         "trigger_histogram_file": "trigger_histograms.hdf5",
         "array_names": None,
+        "array_layout_name": None,
         "output_file": "corsika_limits.ecsv",
         "allowed_losses": [
             "core_distance,0.2,10",
