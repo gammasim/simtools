@@ -14,6 +14,8 @@ max_entries (int, optional)
     Maximum number of entries or preview lines to print. Use 0 for no limit.
 """
 
+from pathlib import Path
+
 from simtools.application_control import build_application
 from simtools.io.file_inspector import inspect_file
 
@@ -24,7 +26,7 @@ def _add_arguments(parser):
         "--input_file",
         help="Simulation-related file to inspect.",
         required=True,
-        type=str,
+        type=Path,
     )
     parser.add_argument(
         "--max_entries",
