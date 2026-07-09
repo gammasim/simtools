@@ -2,7 +2,7 @@
 applications:
 - application: simtools-production-derive-monte-carlo-statistics
   configuration:
-    trigger_histogram_file: ./tests/resources/generated/trigger_histograms.hdf5
+    trigger_histogram_file: ${generated:trigger_histograms.hdf5}
     optimization_energy_max: 100 TeV
     optimization_energy_min: 0.1 TeV
     reduced_core_radius: 200 m
