@@ -245,6 +245,10 @@ class CommandLineParser(argparse.ArgumentParser):
         action.simtools_scopes = doc_metadata["scopes"]
         return action
 
+    def initialize_application_argument_group(self, selected_parameters, available_parameters=None):
+        """Initialize application-specific arguments."""
+        self.initialize_argument_group("application", selected_parameters, available_parameters)
+
     def initialize_argument_group(self, group_name, selected_parameters, available_parameters=None):
         """Initialize a group of arguments from a parameter-definition dictionary."""
         if available_parameters is None:

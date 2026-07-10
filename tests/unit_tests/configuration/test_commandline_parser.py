@@ -93,8 +93,7 @@ def test_initialize_default_arguments_accepts_apptainer_image_dict(tmp_test_dire
 
 def test_initialize_argument_group():
     app_parser = parser.CommandLineParser()
-    app_parser.initialize_argument_group(
-        "application",
+    app_parser.initialize_application_argument_group(
         [
             "source_distance",
             "zenith_angle",
@@ -392,9 +391,7 @@ def test_initialize_db_config_arguments_strip_string():
 
 def _parser(*params):
     p = parser.CommandLineParser()
-    p.initialize_argument_group(
-        "application", list(params), PARAMETER_DEFINITIONS["APPLICATION_ARGS"]
-    )
+    p.initialize_application_argument_group(list(params), PARAMETER_DEFINITIONS["APPLICATION_ARGS"])
     return p
 
 
