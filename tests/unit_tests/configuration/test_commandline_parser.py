@@ -676,7 +676,9 @@ def test_get_dictionary_with_corsika_configuration(mocker):
 
     # Test the "showers_per_run" key
     assert "showers_per_run" in corsika_config
-    assert corsika_config["showers_per_run"]["help"] == "Number of showers per run to simulate."
+    assert (
+        corsika_config["showers_per_run"]["help"] == "Baseline number of CORSIKA showers per run."
+    )
     assert corsika_config["showers_per_run"]["type"] is int
 
     # Test the "run_number_offset" key
