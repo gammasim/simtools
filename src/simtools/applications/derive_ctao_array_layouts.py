@@ -67,12 +67,6 @@ def _add_arguments(parser):
         default="main",
         required=False,
     )
-    parser.add_argument(
-        "--updated_parameter_version",
-        help="Updated parameter version.",
-        type=str,
-        required=False,
-    )
 
 
 def main():
@@ -81,7 +75,12 @@ def main():
         initialization_kwargs={
             "db_config": True,
             "output": True,
-            "simulation_model": ["site", "parameter_version", "model_version"],
+            "simulation_model": [
+                "site",
+                "parameter_version",
+                "updated_parameter_version",
+                "model_version",
+            ],
         },
     )
 
