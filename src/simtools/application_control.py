@@ -117,6 +117,23 @@ def get_log_file(args_dict):
     return Path(log_file_path) / log_file
 
 
+def add_input_meta_argument(parser, nargs=None):
+    """Register the common ``--input_meta`` command line argument."""
+    help_text = "meta data file associated to input data"
+    if nargs is not None:
+        help_text = (
+            "meta data file(s) associated to input data (wildcards or list of files allowed)"
+        )
+
+    parser.add_argument(
+        "--input_meta",
+        help=help_text,
+        type=str,
+        nargs=nargs,
+        required=False,
+    )
+
+
 class RedactFilter(logging.Filter):
     """
     Filter to redact sensitive information from log messages.

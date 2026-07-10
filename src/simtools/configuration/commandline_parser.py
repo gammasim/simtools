@@ -115,7 +115,8 @@ class CommandLineParser(argparse.ArgumentParser):
         Parameters
         ----------
         model_options: list
-            Options to be set: "telescope", "site", "layout", "layout_file"
+            Options to be set: "telescope", "site", "layout", "layout_file",
+            "updated_parameter_version"
         """
         if model_options is None:
             return
@@ -135,6 +136,14 @@ class CommandLineParser(argparse.ArgumentParser):
                 "parameter_version",
                 commandline_parameters.PARAMETER_DEFINITIONS["SIMULATION_MODEL_ARGS"][
                     "parameter_version"
+                ],
+            )
+        if "updated_parameter_version" in model_options:
+            self.add_parameter_from_definition(
+                _job_group,
+                "updated_parameter_version",
+                commandline_parameters.PARAMETER_DEFINITIONS["SIMULATION_MODEL_ARGS"][
+                    "updated_parameter_version"
                 ],
             )
         self.add_parameter_from_definition(
