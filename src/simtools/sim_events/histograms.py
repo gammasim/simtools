@@ -12,6 +12,11 @@ from simtools.utils.value_conversion import get_value_as_quantity
 
 _ANGULAR_DISTANCE = "Angular Distance (deg)"
 _CORE_DISTANCE = "Core Distance (m)"
+_REUSE_STAT_LABELS = {
+    "mean": "Mean Reuse",
+    "max": "Max Reuse",
+    "std": "Reuse Std Dev",
+}
 
 
 class EventDataHistograms:
@@ -71,6 +76,7 @@ class EventDataHistograms:
         self._contains_triggered_data = False
         self._filled_data_sets = 0
         self._release_event_data_after_fill = False
+        self._reuse_stat_accumulators = {}
 
         self.reader = None
         if not self.skip_invalid_event_data_files:
@@ -115,6 +121,7 @@ class EventDataHistograms:
         instance._contains_triggered_data = True
         instance._filled_data_sets = 0
         instance._release_event_data_after_fill = True
+        instance._reuse_stat_accumulators = {}
         instance.reader = None
         return instance
 
@@ -145,6 +152,7 @@ class EventDataHistograms:
             self.loaded_bin_edges = loaded_bin_edges
         self._filled_data_sets = 1
         self._contains_triggered_data = contains_triggered_data
+        self._reuse_stat_accumulators = {}
 
     @staticmethod
     def _validate_angular_distance_bin_width(angular_distance_bin_width):
@@ -255,7 +263,10 @@ class EventDataHistograms:
     def _release_event_data(self):
         """Release raw event references after their histogram counts have been accumulated."""
         for data in self.histograms.values():
-            data["event_data"] = None if data["1d"] else tuple(None for _ in data["event_data"])
+            if data["1d"] or data["event_data"] is None:
+                data["event_data"] = None
+            else:
+                data["event_data"] = tuple(None for _ in data["event_data"])
 
     def accumulate(self, file_info_table, shower_data, event_data, triggered_data):
         """Accumulate one already-read event dataset into all configured histograms."""
@@ -264,6 +275,7 @@ class EventDataHistograms:
         current_histograms = self._define_histograms(event_data, triggered_data, shower_data)
         self._merge_histograms(current_histograms)
         self._fill_current_histograms()
+        self._accumulate_reuse_histograms(event_data, triggered_data)
         if self._release_event_data_after_fill:
             self._release_event_data()
         self._filled_data_sets += 1
@@ -431,7 +443,229 @@ class EventDataHistograms:
             )
 
         hists.update(hists_mc)
+        hists.update(self._define_reuse_histograms())
         return hists
+
+    def _define_reuse_histograms(self):
+        """Return definitions for reuse summary histograms."""
+        energy_axis_title = "Energy (TeV)"
+        reuse_histograms = {}
+        definitions = (
+            (
+                "energy",
+                self.energy_bins,
+                [energy_axis_title],
+                {"x": "log", "y": "linear"},
+            ),
+            (
+                "core_distance",
+                self.core_distance_bins,
+                [_CORE_DISTANCE],
+                {"x": "linear", "y": "linear"},
+            ),
+            (
+                "angular_distance",
+                self.view_cone_bins,
+                [_ANGULAR_DISTANCE],
+                {"x": "linear", "y": "linear"},
+            ),
+            (
+                "core_distance_vs_energy",
+                (self.core_distance_bins, self.energy_bins),
+                [_CORE_DISTANCE, energy_axis_title],
+                {"x": "linear", "y": "log"},
+            ),
+            (
+                "angular_distance_vs_energy",
+                (self.view_cone_bins, self.energy_bins),
+                [_ANGULAR_DISTANCE, energy_axis_title],
+                {"x": "linear", "y": "log"},
+            ),
+        )
+
+        for statistic, label in _REUSE_STAT_LABELS.items():
+            for base_name, bin_edges, axis_titles, plot_scales in definitions:
+                reuse_histograms[f"reuse_{statistic}_vs_{base_name}"] = (
+                    self.get_histogram_definition(
+                        event_data_column=() if isinstance(bin_edges, tuple) else None,
+                        histogram=None,
+                        bin_edges=bin_edges,
+                        title=f"Triggered reuse {statistic}",
+                        axis_titles=[*axis_titles, label],
+                        suffix="",
+                        is_1d=not isinstance(bin_edges, tuple),
+                        plot_scales=plot_scales,
+                    )
+                )
+        return reuse_histograms
+
+    def _accumulate_reuse_histograms(self, event_data, triggered_data):
+        """Accumulate reuse summary statistics into their histogram definitions."""
+        if not self._can_accumulate_reuse_histograms(event_data, triggered_data):
+            return
+
+        try:
+            reuse_counts = self._triggered_reuse_counts(triggered_data)
+            coordinates = {
+                "energy": np.asarray(event_data.simulated_energy, dtype=float),
+                "core_distance": np.asarray(event_data.core_distance_shower, dtype=float),
+                "angular_distance": np.asarray(triggered_data.angular_distance, dtype=float),
+            }
+        except (AttributeError, TypeError, ValueError):
+            return
+        histogram_specs = {
+            "energy": (coordinates["energy"], self.energy_bins),
+            "core_distance": (coordinates["core_distance"], self.core_distance_bins),
+            "angular_distance": (coordinates["angular_distance"], self.view_cone_bins),
+            "core_distance_vs_energy": (
+                (coordinates["core_distance"], coordinates["energy"]),
+                (self.core_distance_bins, self.energy_bins),
+            ),
+            "angular_distance_vs_energy": (
+                (coordinates["angular_distance"], coordinates["energy"]),
+                (self.view_cone_bins, self.energy_bins),
+            ),
+        }
+
+        for statistic in _REUSE_STAT_LABELS:
+            for name, (values, bin_edges) in histogram_specs.items():
+                histogram_name = f"reuse_{statistic}_vs_{name}"
+                histogram = self.histograms.get(histogram_name)
+                if histogram is None:
+                    continue
+                accumulator = self._reuse_stat_accumulators.setdefault(
+                    histogram_name,
+                    self._create_reuse_stat_accumulator(bin_edges),
+                )
+                self._update_reuse_stat_accumulator(accumulator, values, reuse_counts, bin_edges)
+                histogram["histogram"] = self._finalize_reuse_statistic(accumulator, statistic)
+
+    @staticmethod
+    def _can_accumulate_reuse_histograms(event_data, triggered_data):
+        """Return whether the required inputs for reuse summaries are available."""
+        required_event_attrs = (
+            "file_id",
+            "shower_id",
+            "simulated_energy",
+            "core_distance_shower",
+        )
+        required_triggered_attrs = ("file_id", "shower_id", "angular_distance")
+        return (
+            event_data is not None
+            and triggered_data is not None
+            and all(hasattr(event_data, attr) for attr in required_event_attrs)
+            and all(hasattr(triggered_data, attr) for attr in required_triggered_attrs)
+        )
+
+    @staticmethod
+    def _triggered_reuse_counts(triggered_data):
+        """Return triggered reuse count per triggered event row."""
+        triggered_keys = np.column_stack(
+            (
+                np.asarray(triggered_data.file_id, dtype=np.int64),
+                np.asarray(triggered_data.shower_id, dtype=np.int64),
+            )
+        )
+        counts = {}
+        for key in map(tuple, triggered_keys):
+            counts[key] = counts.get(key, 0) + 1
+        return np.array([counts[tuple(key)] for key in triggered_keys], dtype=float)
+
+    def _create_reuse_stat_accumulator(self, bin_edges):
+        """Return empty accumulation arrays for one reuse-statistic histogram."""
+        shape = (
+            tuple(len(edges) - 1 for edges in bin_edges)
+            if isinstance(bin_edges, tuple)
+            else (len(bin_edges) - 1,)
+        )
+        return {
+            "count": np.zeros(shape, dtype=int),
+            "sum": np.zeros(shape, dtype=float),
+            "sum_sq": np.zeros(shape, dtype=float),
+            "max": np.full(shape, np.nan, dtype=float),
+        }
+
+    def _update_reuse_stat_accumulator(self, accumulator, values, reuse_counts, bin_edges):
+        """Update one reuse-statistic accumulator with one dataset."""
+        if isinstance(values, tuple):
+            x_values, y_values = values
+            shape = accumulator["count"].shape
+            x_indices = np.digitize(x_values, bin_edges[0]) - 1
+            y_indices = np.digitize(y_values, bin_edges[1]) - 1
+            valid = (
+                np.isfinite(reuse_counts)
+                & np.isfinite(x_values)
+                & np.isfinite(y_values)
+                & (x_indices >= 0)
+                & (x_indices < shape[0])
+                & (y_indices >= 0)
+                & (y_indices < shape[1])
+            )
+            self._accumulate_reuse_bin_values(
+                accumulator,
+                np.column_stack((x_indices[valid], y_indices[valid])),
+                reuse_counts[valid],
+            )
+            return
+
+        indices = np.digitize(values, bin_edges) - 1
+        valid = (
+            np.isfinite(reuse_counts)
+            & np.isfinite(values)
+            & (indices >= 0)
+            & (indices < accumulator["count"].shape[0])
+        )
+        self._accumulate_reuse_bin_values(accumulator, indices[valid], reuse_counts[valid])
+
+    @staticmethod
+    def _accumulate_reuse_bin_values(accumulator, indices, reuse_counts):
+        """Update count, sum, sum-of-squares, and max for addressed bins."""
+        grouped_values = {}
+        if np.ndim(indices) == 1:
+            for index, reuse_count in zip(indices, reuse_counts, strict=False):
+                grouped_values.setdefault(int(index), []).append(float(reuse_count))
+        else:
+            for index_pair, reuse_count in zip(indices, reuse_counts, strict=False):
+                grouped_values.setdefault(tuple(map(int, index_pair)), []).append(
+                    float(reuse_count)
+                )
+
+        for index, bin_values in grouped_values.items():
+            values = np.asarray(bin_values, dtype=float)
+            values = values[values > 0.0]
+            if values.size == 0:
+                continue
+            accumulator["count"][index] += len(values)
+            accumulator["sum"][index] += float(np.sum(values))
+            accumulator["sum_sq"][index] += float(np.sum(values**2))
+            current_max = accumulator["max"][index]
+            value_max = float(np.max(values))
+            accumulator["max"][index] = (
+                value_max if np.isnan(current_max) else max(current_max, value_max)
+            )
+
+    @staticmethod
+    def _finalize_reuse_statistic(accumulator, statistic):
+        """Return finalized reuse statistic values from accumulation arrays."""
+        count = accumulator["count"]
+        result = np.full(count.shape, np.nan, dtype=float)
+        valid = count > 0
+
+        if statistic == "mean":
+            result[valid] = accumulator["sum"][valid] / count[valid]
+            return result
+        if statistic == "max":
+            result[valid] = accumulator["max"][valid]
+            return result
+        if statistic == "std":
+            mean = np.zeros(count.shape, dtype=float)
+            mean[valid] = accumulator["sum"][valid] / count[valid]
+            variance = np.zeros(count.shape, dtype=float)
+            variance[valid] = accumulator["sum_sq"][valid] / count[valid] - mean[valid] ** 2
+            result[valid] = np.sqrt(np.maximum(variance[valid], 0.0))
+            return result
+
+        raise ValueError(f"Unsupported reuse statistic: {statistic}")
 
     def get_histogram_definition(
         self,
@@ -472,6 +706,8 @@ class EventDataHistograms:
                 getattr(data["event_data"], data["event_data_column"]), bins=data["bin_edges"]
             )
         else:
+            if data["event_data"] is None:
+                return
             if any(event_data is None for event_data in data["event_data"]):
                 return
             values = [
@@ -662,7 +898,11 @@ class EventDataHistograms:
 
         # 2D histograms vs energy
         for name, hist in self.histograms.items():
-            if name.endswith("_vs_energy") and not name.endswith("_mc"):
+            if (
+                name.endswith("_vs_energy")
+                and not name.endswith("_mc")
+                and not name.startswith("reuse_")
+            ):
                 add_cumulative(name, hist, axis=0, normalize=True)
 
         # 1D histograms
