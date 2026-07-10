@@ -207,6 +207,7 @@ lint.preview = true
 [tool.pylint]
 main.disable = [
   "logging-fstring-interpolation",
+  "R0801",                         # duplications
 ]
 # see https://github.com/pylint-dev/pylint/issues/2289
 main.generated-members = [
