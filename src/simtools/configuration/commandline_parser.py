@@ -305,8 +305,9 @@ class CommandLineParser(argparse.ArgumentParser):
         if "updated_parameter_version" in model_options:
             _job_group.add_argument(
                 "--updated_parameter_version",
-                help="Updated parameter version.",
+                help="updated parameter version",
                 type=str,
+                default=None,
                 required=False,
             )
         _job_group.add_argument(
