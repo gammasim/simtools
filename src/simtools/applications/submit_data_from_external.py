@@ -37,19 +37,14 @@ r"""
 """
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import build_application
+from simtools.application_control import add_input_meta_argument, build_application
 from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--input_meta",
-        help="meta data file associated to input data",
-        type=str,
-        required=False,
-    )
+    add_input_meta_argument(parser)
     parser.add_argument(
         "--input",
         help="input data file",
