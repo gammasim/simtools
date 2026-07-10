@@ -29,7 +29,8 @@ from simtools.application_control import (
     get_application_label,
     get_module_description_line,
 )
-from simtools.configuration import commandline_parser, configurator
+from simtools.configuration import configurator
+from simtools.configuration.commandline_argument_helpers import bounded_int
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.production_configuration.job_grid_io import (
     job_grid_row_to_simulate_prod_args,
@@ -105,7 +106,7 @@ def _add_arguments(parser):
         "--corsika_seeds",
         help="Use fixed random seeds for CORSIKA for testing purposes.",
         nargs=4,
-        type=commandline_parser.CommandLineParser.bounded_int(1, CORSIKA_MAX_SEED),
+        type=bounded_int(1, CORSIKA_MAX_SEED),
         metavar=("S1", "S2", "S3", "S4"),
     )
     parser.add_argument(

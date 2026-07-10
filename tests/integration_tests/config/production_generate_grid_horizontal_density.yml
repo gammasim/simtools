@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-production-generate-grid
+  docs:
+    title: Production grid defined by grid density on horizontal axes.
+    summary: Typical production grid densities are below 1 /deg^2.
   configuration:
     array_layout_name:
       by_version:

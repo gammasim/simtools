@@ -13,7 +13,7 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation
 
 from simtools.configuration import defaults
-from simtools.configuration.commandline_parser import CommandLineParser
+from simtools.configuration.commandline_argument_helpers import parse_quantity_pair
 from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.model.site_model import SiteModel
 from simtools.production_configuration.angle_ranges import (
@@ -106,7 +106,7 @@ _SUMMARY_LOG_FIELDS = (
 def _parse_axis_range_tokens(range_tokens):
     """Parse a quantity pair from CLI axis range tokens."""
     if len(range_tokens) == 1:
-        return CommandLineParser.parse_quantity_pair(range_tokens[0])
+        return parse_quantity_pair(range_tokens[0])
     if len(range_tokens) == 2:
         return tuple(u.Quantity(value) for value in range_tokens)
     if len(range_tokens) == 4:

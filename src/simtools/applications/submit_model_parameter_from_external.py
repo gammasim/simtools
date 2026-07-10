@@ -44,6 +44,7 @@ from pathlib import Path
 
 import simtools.data_model.model_data_writer as writer
 from simtools.application_control import build_application
+from simtools.configuration.commandline_argument_helpers import instrument
 from simtools.simtel import simtel_table_reader
 
 
@@ -52,9 +53,7 @@ def _add_arguments(parser):
     parser.add_argument(
         "--parameter", type=str, required=True, help="Parameter for simulation model"
     )
-    parser.add_argument(
-        "--instrument", type=parser.instrument, required=True, help="Instrument name"
-    )
+    parser.add_argument("--instrument", type=instrument, required=True, help="Instrument name")
     parser.add_argument("--site", type=str, required=True, help="Site location")
     parser.add_argument("--parameter_version", type=str, required=True, help="Parameter version")
     parser.add_argument(
