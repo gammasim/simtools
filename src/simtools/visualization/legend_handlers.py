@@ -331,7 +331,8 @@ class MeanRadiusOuterEdgeHandler:
     """Legend handler class to plot the mean radius outer edge of the dish."""
 
     @staticmethod
-    def legend_artist(_, __, ___, handlebox):  # noqa: D102
+    def legend_artist(_, __, ___, handlebox):
+        """Create a circle patch representing the mean radius outer edge."""
         x0, y0 = calculate_center(handlebox, 4, 4)
         radius = handlebox.height
         patch = mpatches.Circle(

@@ -634,6 +634,7 @@ def update_legend(ax, telescopes, grayed_out_elements=None, legend_location="bes
                     self.tel_type = tel_type
 
                 def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+                    """Create legend artist for telescope type."""
                     handler = leg_h.BaseLegendHandler(self.tel_type)
                     return handler.legend_artist(legend, orig_handle, fontsize, handlebox)
 
