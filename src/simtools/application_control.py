@@ -173,29 +173,36 @@ def _resolve_application_metadata(
     application_path,
     description,
     add_arguments_function,
+    application_argument_definitions=None,
     caller_globals=None,
 ):
     """Resolve missing application metadata from the caller module when available."""
-    if application_path is None or description is None or add_arguments_function is None:
+    if (
+        application_path is None
+        or description is None
+        or (add_arguments_function is None and application_argument_definitions is None)
+    ):
         caller_globals = caller_globals or inspect.currentframe().f_back.f_globals
         if application_path is None:
             application_path = caller_globals.get("__file__")
         if description is None:
             description = caller_globals.get("__doc__")
-        if add_arguments_function is None:
+        if add_arguments_function is None and application_argument_definitions is None:
             add_arguments_function = caller_globals.get("_add_arguments")
+            application_argument_definitions = caller_globals.get("_APPLICATION_ARG_DEFINITIONS")
 
     if application_path is None:
         raise ValueError("Missing application path; provide application_path explicitly.")
     if description is None:
         raise ValueError("Missing description; provide description explicitly.")
-    return application_path, description, add_arguments_function
+    return application_path, description, add_arguments_function, application_argument_definitions
 
 
 def _build_application_configurator(
     application_path,
     description,
     add_arguments_function,
+    application_argument_definitions=None,
     usage=None,
     epilog=None,
 ):
@@ -208,6 +215,11 @@ def _build_application_configurator(
     )
     if add_arguments_function is not None:
         add_arguments_function(config_builder.parser)
+    elif application_argument_definitions is not None:
+        for parameter, definition in application_argument_definitions.items():
+            config_builder.parser.add_parameter_from_definition(
+                config_builder.parser, parameter, definition, "application"
+            )
     return config_builder
 
 
@@ -215,6 +227,7 @@ def build_application(
     application_path=None,
     description=None,
     add_arguments_function=None,
+    application_argument_definitions=None,
     initialization_kwargs=None,
     startup_kwargs=None,
     usage=None,
@@ -236,6 +249,11 @@ def build_application(
         Function receiving the application's ``CommandLineParser`` instance to register
         application-specific arguments. If not provided, ``_add_arguments`` from the
         caller module is used when available.
+    application_argument_definitions : dict, optional
+        Dictionary of application-specific argument definitions. If provided, or if
+        ``_APPLICATION_ARG_DEFINITIONS`` exists in the caller module, simtools registers
+        those arguments directly without requiring an application-local wrapper
+        function.
     initialization_kwargs : dict, optional
         Keyword arguments forwarded to ``Configurator.initialize``.
     startup_kwargs : dict, optional
@@ -257,11 +275,14 @@ def build_application(
     initialization_kwargs = initialization_kwargs or {}
     startup_kwargs = startup_kwargs or {}
 
-    application_path, description, add_arguments_function = _resolve_application_metadata(
-        application_path,
-        description,
-        add_arguments_function,
-        caller_globals=inspect.currentframe().f_back.f_globals,
+    application_path, description, add_arguments_function, application_argument_definitions = (
+        _resolve_application_metadata(
+            application_path,
+            description,
+            add_arguments_function,
+            application_argument_definitions=application_argument_definitions,
+            caller_globals=inspect.currentframe().f_back.f_globals,
+        )
     )
 
     if parse_function is not None:
@@ -272,6 +293,7 @@ def build_application(
             application_path=application_path,
             description=description,
             add_arguments_function=add_arguments_function,
+            application_argument_definitions=application_argument_definitions,
             usage=usage,
             epilog=epilog,
         )
@@ -284,6 +306,7 @@ def build_application_parser(
     application_path=None,
     description=None,
     add_arguments_function=None,
+    application_argument_definitions=None,
     initialization_kwargs=None,
     usage=None,
     epilog=None,
@@ -303,6 +326,8 @@ def build_application_parser(
     add_arguments_function : callable, optional
         Function receiving the application's ``CommandLineParser`` instance to register
         application-specific arguments.
+    application_argument_definitions : dict, optional
+        Dictionary of application-specific argument definitions to register directly.
     initialization_kwargs : dict, optional
         Keyword arguments that control which default-argument groups are initialized.
         Only parser-shape-related keys are used.
@@ -317,13 +342,19 @@ def build_application_parser(
         Fully initialized parser.
     """
     initialization_kwargs = initialization_kwargs or {}
-    application_path, description, add_arguments_function = _resolve_application_metadata(
-        application_path, description, add_arguments_function
+    application_path, description, add_arguments_function, application_argument_definitions = (
+        _resolve_application_metadata(
+            application_path,
+            description,
+            add_arguments_function,
+            application_argument_definitions=application_argument_definitions,
+        )
     )
     config_builder = _build_application_configurator(
         application_path=application_path,
         description=description,
         add_arguments_function=add_arguments_function,
+        application_argument_definitions=application_argument_definitions,
         usage=usage,
         epilog=epilog,
     )

@@ -303,6 +303,23 @@ def test_build_application_parser(mocker, tmp_test_directory):
     )
 
 
+def test_build_application_parser_attaches_doc_metadata_for_default_arguments():
+    """Test parser actions registered from metadata carry documentation attributes."""
+    parser = build_application_parser(
+        application_path="test_application.py",
+        description="Test description",
+        add_arguments_function=None,
+        initialization_kwargs={"output": True, "db_config": True},
+    )
+
+    actions = {action.dest: action for action in parser._actions}  # pylint: disable=protected-access
+
+    assert actions["config"].simtools_doc == "simtools configuration file"
+    assert actions["config"].simtools_doc_group == "configuration"
+    assert actions["output_file"].simtools_doc_group == "output"
+    assert actions["db_api_user"].simtools_doc_group == "database configuration"
+
+
 def test_build_application_missing_metadata_raises(mocker, tmp_test_directory):
     """Test build_application raises if inference and explicit metadata are unavailable."""
     startup_mock = mocker.patch("simtools.application_control.startup_application")

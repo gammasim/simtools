@@ -135,6 +135,7 @@ histogram file.
 """
 
 from simtools.application_control import build_application
+from simtools.configuration.commandline_argument_helpers import efficiency_interval
 from simtools.production_configuration.derive_corsika_limits import (
     generate_corsika_limits_grid,
 )
@@ -176,7 +177,7 @@ def _add_arguments(parser):
     parser.add_argument(
         "--energy_threshold_fraction",
         help="Fraction of the stable energy-peak count used to derive ERANGE ",
-        type=parser.efficiency_interval,
+        type=efficiency_interval,
         required=False,
         default=0.01,
     )

@@ -33,7 +33,7 @@ from simtools.visualization import plot_event_level_production_comparison
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.initialize_application_arguments(["output_path"])
+    parser.initialize_argument_group("application", ["output_path"])
     parser.add_argument(
         "--production",
         action="append",
