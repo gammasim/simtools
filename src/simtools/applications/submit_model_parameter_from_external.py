@@ -43,7 +43,7 @@ r"""
 from pathlib import Path
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import build_application
+from simtools.application_control import add_input_meta_argument, build_application
 from simtools.configuration.commandline_argument_helpers import instrument
 from simtools.simtel import simtel_table_reader
 
@@ -72,13 +72,7 @@ def _add_arguments(parser):
             'Examples: "--value=5", "--value=\'5 km\'", "--value=\'5 cm, 0.5 deg\'"'
         ),
     )
-    parser.add_argument(
-        "--input_meta",
-        help="meta data file(s) associated to input data (wildcards or list of files allowed)",
-        type=str,
-        nargs="+",
-        required=False,
-    )
+    add_input_meta_argument(parser, nargs="+")
     parser.add_argument(
         "--check_parameter_version",
         help="Check if the parameter version exists in the database",

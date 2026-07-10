@@ -32,19 +32,9 @@ def main():
 
     db = db_handler.DatabaseHandler()
     # databases without internal databases we don't have rights to modify
-    databases = [
-        d
-        for d in db.mongo_db_handler.db_client.list_database_names()
-        if d not in ("config", "admin", "local")
-    ]
+    databases = db.mongo_db_handler.get_accessible_database_names()
     requested = app_context.args["db_name"]
-    if requested != "all" and requested not in databases:
-        raise ValueError(
-            f"Requested database '{requested}' not found. "
-            f"Following databases are available: {', '.join(databases)}"
-        )
-
-    databases = databases if requested == "all" else [requested]
+    databases = db.mongo_db_handler.resolve_requested_databases(requested, databases)
 
     for db_name in databases:
         print("Database:", db_name)

@@ -203,6 +203,11 @@ def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
     )
     assert "angular_distance_vs_energy_vs_core_distance_eff" in loaded_histograms.histograms
     assert "energy_cumulative" in loaded_histograms.histograms
+    assert "reuse_mean_vs_energy" in loaded_histograms.histograms
+    np.testing.assert_allclose(
+        loaded_histograms.histograms["reuse_mean_vs_energy"]["histogram"],
+        histograms.histograms["reuse_mean_vs_energy"]["histogram"],
+    )
 
     with h5py.File(output_file, "r") as hdf5_file:
         assert TRIGGER_HISTOGRAM_DENSE_GROUP in hdf5_file

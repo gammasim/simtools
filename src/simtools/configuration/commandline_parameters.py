@@ -304,6 +304,11 @@ PARAMETER_DEFINITIONS = {
             "type": str,
             "default": None,
         },
+        "updated_parameter_version": {
+            "help": "updated parameter version",
+            "type": str,
+            "default": None,
+        },
         "overwrite_model_parameters": {
             "help": "File name to overwrite model parameters from DB with provided values",
             "type": str,
