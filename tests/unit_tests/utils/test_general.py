@@ -850,6 +850,7 @@ def test_find_differences_in_json_objects():
 def test_ensure_list():
     assert gen.ensure_list(None) == []
     assert gen.ensure_list([1, 2, 3]) == [1, 2, 3]
+    assert gen.ensure_list((1, 2, 3)) == [1, 2, 3]
     assert gen.ensure_list(5) == [5]
     # Test falsy values are correctly wrapped (not treated as None)
     assert gen.ensure_list(0) == [0]
@@ -857,6 +858,9 @@ def test_ensure_list():
     assert gen.ensure_list("") == [""]
     assert gen.ensure_list(False) == [False]
     assert gen.ensure_list("abc") == ["abc"]
+    # json list
+    raw_value = '["alice", "bob", "charlie"]'
+    assert gen.ensure_list(raw_value) == ["alice", "bob", "charlie"]
 
 
 def test_parse_typed_sequence():
@@ -1082,3 +1086,13 @@ def test_get_simtools_log_file_with_parent_logger_file_handler(tmp_test_director
     finally:
         parent_logger.removeHandler(file_handler)
         file_handler.close()
+
+
+def test_ensure_string_lists():
+    assert gen.ensure_string_lists(None) is None
+    assert gen.ensure_string_lists("hello") == ["hello"]
+    assert gen.ensure_string_lists(["a", "b", "c"]) == ["a", "b", "c"]
+    assert gen.ensure_string_lists(("x", "y")) == ["x", "y"]
+    # Tests that integers (non-iterable) raise a TypeError, as per list() behavior
+    with pytest.raises(TypeError):
+        gen.ensure_string_lists(123)

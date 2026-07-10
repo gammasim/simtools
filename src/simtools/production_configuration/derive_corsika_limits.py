@@ -1,25 +1,25 @@
-"""Derive CORSIKA limits from a reduced event data file."""
+"""Derive CORSIKA limits from trigger histograms."""
 
 import datetime
 import logging
-import re
+import os
 from pathlib import Path
 
 import astropy.units as u
 import numpy as np
 from astropy.table import Column, Table
 
+from simtools import settings
 from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler, io_handler
-from simtools.job_execution.process_pool import process_pool_map_ordered
-from simtools.layout.array_layout_utils import (
-    get_array_elements_from_db_for_layouts,
-    resolve_array_layout_name,
+from simtools.production_configuration.histogram_output_metadata import (
+    extract_histogram_output_metadata,
 )
-from simtools.sim_events.histograms import EventDataHistograms
-from simtools.utils.general import get_uuid
-from simtools.utils.names import normalize_array_element_identifier_container
+from simtools.production_configuration.production_event_data_helpers import (
+    build_production_subdirectories,
+)
+from simtools.production_configuration.trigger_histograms import load_event_data_histograms
 from simtools.visualization import plot_simtel_event_histograms
 
 _logger = logging.getLogger(__name__)
@@ -56,144 +56,6 @@ RESULT_COLUMNS, COLUMN_DESCRIPTIONS, FILE_INFO_COLUMNS = (
     _load_output_table_configuration_from_schema(CORSIKA_LIMITS_TABLE_SCHEMA_FILE)
 )
 LOSS_AXES = ("core_distance", "angular_distance")
-
-
-def _normalize_event_data_file(event_data_file):
-    """
-    Normalize event_data_file to an ordered list of production patterns.
-
-    Parameters
-    ----------
-    event_data_file : str or list
-        A single pattern string or list of pattern strings.
-
-    Returns
-    -------
-    list
-        Ordered list of event data file patterns.
-    """
-    if isinstance(event_data_file, str):
-        return [event_data_file]
-    if isinstance(event_data_file, list):
-        return list(event_data_file)
-    raise TypeError(f"event_data_file must be str or list, got {type(event_data_file)}")
-
-
-def _get_production_directory_name(production_pattern, existing_names=None):
-    """
-    Generate a readable, filesystem-safe production directory name.
-
-    The name is derived from the glob pattern and kept human-readable.
-    If a collision is detected with an existing directory name, append
-    a UUID7 suffix.
-
-    Parameters
-    ----------
-    production_pattern : str
-        The glob pattern for this production.
-    existing_names : set[str] or None
-        Existing directory names used in this run.
-
-    Returns
-    -------
-    str
-        Safe directory name (e.g., "production_prod_a_events").
-    """
-
-    def _sanitize(name):
-        name = re.sub(r"[^A-Za-z0-9]+", "_", name)
-        return re.sub(r"_+", "_", name).strip("_")
-
-    pattern_path = Path(production_pattern)
-    parent_name = _sanitize(pattern_path.parent.name) if pattern_path.parent.name != "." else ""
-    readable_name = parent_name or _sanitize(pattern_path.stem) or "production"
-    base_name = f"production_{readable_name}"
-
-    if existing_names is None or base_name not in existing_names:
-        return base_name
-    return f"{base_name}_{get_uuid()}"
-
-
-def _execute_production_job(job_spec):
-    """
-    Execute a single production job (top-level picklable worker).
-
-    This function is called by process_pool_map_ordered and must be
-    picklable (top-level defined).
-
-    Parameters
-    ----------
-    job_spec : dict
-        Dictionary containing with job specifications
-
-    Returns
-    -------
-    list[dict]
-        Result dictionaries with limits and production metadata.
-    """
-    production_index = job_spec["production_index"]
-    production_pattern = job_spec["production_pattern"]
-    allowed_losses = job_spec["allowed_losses"]
-    energy_threshold_fraction = job_spec["energy_threshold_fraction"]
-    plot_histograms = job_spec["plot_histograms"]
-    output_subdir = job_spec.get("output_subdir")
-    differential_loss_bins_per_decade = job_spec.get("differential_loss_bins_per_decade", 0)
-    skip_invalid_event_data_files = job_spec.get("skip_invalid_event_data_files", False)
-
-    telescope_configs = job_spec["telescope_configs"]
-
-    _logger.info(
-        f"Processing production {production_index}: pattern={production_pattern}, "
-        f"arrays={len(telescope_configs)}"
-    )
-
-    results = _process_production(
-        production_pattern,
-        telescope_configs,
-        allowed_losses,
-        energy_threshold_fraction,
-        plot_histograms,
-        output_subdir=output_subdir,
-        differential_loss_bins_per_decade=differential_loss_bins_per_decade,
-        skip_invalid_event_data_files=skip_invalid_event_data_files,
-    )
-
-    for result, telescope_config in zip(results, telescope_configs):
-        result.update(
-            {
-                "production_index": production_index,
-                "event_data_file": production_pattern,
-                "array_name": telescope_config["array_name"],
-                "telescope_ids": telescope_config["telescope_ids"],
-            }
-        )
-
-    return results
-
-
-def _resolve_telescope_configs(args_dict):
-    """Resolve telescope configurations from one of the supported input options."""
-    if args_dict.get("array_layout_name"):
-        layouts = resolve_array_layout_name(
-            args_dict["array_layout_name"],
-            args_dict.get("model_version"),
-        )
-        if not isinstance(layouts, list):
-            layouts = [layouts]
-        return get_array_elements_from_db_for_layouts(
-            layouts,
-            args_dict.get("site"),
-            args_dict.get("model_version"),
-        )
-    if args_dict.get("array_element_list"):
-        return {"array_element_list": args_dict["array_element_list"]}
-    if args_dict.get("telescope_ids"):
-        return ascii_handler.collect_data_from_file(args_dict["telescope_ids"])["telescope_configs"]
-
-    raise ValueError(
-        "No telescope configuration provided. Use one of --array_layout_name, "
-        "--array_element_list, or --telescope_ids."
-    )
 
 
 def _parse_allowed_losses(allowed_losses_args):
@@ -261,156 +123,91 @@ def _parse_allowed_losses(allowed_losses_args):
     return parsed
 
 
-def _build_production_subdirectories(production_patterns, output_dir, is_multi_production):
-    """Build and create per-production output subdirectories when needed."""
-    if not is_multi_production:
-        return {}
-
-    production_subdirs = {}
-    used_subdir_names = set()
-    for production_pattern in production_patterns:
-        subdir_name = _get_production_directory_name(production_pattern, used_subdir_names)
-        used_subdir_names.add(subdir_name)
-        output_subdir = output_dir / subdir_name
-        Path(output_subdir).mkdir(parents=True, exist_ok=True)
-        production_subdirs[production_pattern] = output_subdir
-
-    return production_subdirs
-
-
-def generate_corsika_limits_grid(args_dict):
+def generate_corsika_limits_grid(args_dict=None):
     """
-    Generate CORSIKA limits for one or more production patterns.
+    Generate CORSIKA limits from a precomputed trigger-histogram file.
 
-    Single- and multi-production runs share the same dispatch path using
-    process_pool_map_ordered.
-
-    Parameters
-    ----------
-    args_dict : dict
-        Dictionary containing command line arguments.
+    Reads histograms, computes limits, optionally plots histograms,
+    and writes results to an ECSV file.
     """
-    production_patterns = _normalize_event_data_file(args_dict["event_data_file"])
+    args_dict = args_dict or settings.config.args
+
+    if not args_dict.get("trigger_histogram_file"):
+        raise ValueError("Use --trigger_histogram_file to provide a precomputed histogram file.")
+
     allowed_losses = _parse_allowed_losses(args_dict.get("allowed_losses"))
     energy_threshold_fraction = float(args_dict.get("energy_threshold_fraction", 0.01))
     differential_loss_bins_per_decade = int(args_dict.get("differential_loss_bins_per_decade", 0))
-    n_productions = len(production_patterns)
-    is_multi_production = n_productions > 1
 
-    _logger.info(f"Processing {n_productions} production(s)")
-
-    telescope_configs = _resolve_telescope_configs(args_dict)
-
-    # Build deterministic production jobs. Each worker reads a production once and
-    # accumulates the same complete histogram set for every telescope configuration.
-    job_specs = []
-    output_dir = io_handler.IOHandler().get_output_directory()
-
-    production_subdirs = {}
-    if is_multi_production and args_dict["plot_histograms"]:
-        production_subdirs = _build_production_subdirectories(
-            production_patterns,
-            output_dir,
-            is_multi_production,
-        )
-
-    for prod_idx, production_pattern in enumerate(production_patterns):
-        normalized_telescope_configs = [
-            {
-                "array_name": array_name,
-                "telescope_ids": normalize_array_element_identifier_container(telescope_ids_raw),
-            }
-            for array_name, telescope_ids_raw in telescope_configs.items()
-        ]
-        job_specs.append(
-            {
-                "production_index": prod_idx,
-                "production_pattern": production_pattern,
-                "telescope_configs": normalized_telescope_configs,
-                "allowed_losses": allowed_losses,
-                "energy_threshold_fraction": energy_threshold_fraction,
-                "plot_histograms": args_dict["plot_histograms"],
-                "output_subdir": production_subdirs.get(production_pattern),
-                "differential_loss_bins_per_decade": differential_loss_bins_per_decade,
-                "skip_invalid_event_data_files": args_dict.get(
-                    "skip_invalid_event_data_files", False
-                ),
-            }
-        )
-
-    max_workers = int(args_dict.get("max_workers", 1))
-    _logger.info(f"Executing {len(job_specs)} jobs with {max_workers or 'auto'} workers")
-    production_results = process_pool_map_ordered(
-        _execute_production_job,
-        job_specs,
-        max_workers=max_workers,
+    results = _generate_corsika_limits_from_histogram_file(
+        args_dict,
+        allowed_losses,
+        energy_threshold_fraction,
+        differential_loss_bins_per_decade,
     )
-    results = [result for production_result in production_results for result in production_result]
-
     write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
 
 
-def _process_production(
-    file_path,
-    telescope_configs,
+def _generate_corsika_limits_from_histogram_file(
+    args_dict,
     allowed_losses,
-    energy_threshold_fraction=0.01,
-    plot_histograms=False,
-    output_subdir=None,
-    differential_loss_bins_per_decade=0,
-    skip_invalid_event_data_files=False,
+    energy_threshold_fraction,
+    differential_loss_bins_per_decade,
 ):
-    """Read one production once and derive limits for all telescope configurations."""
-    energy_bins_per_decade = differential_loss_bins_per_decade or 10
-    event_source = EventDataHistograms(
-        file_path,
-        energy_bins_per_decade=energy_bins_per_decade,
-        skip_invalid_event_data_files=skip_invalid_event_data_files,
-        require_triggered_data=True,
+    """Derive CORSIKA limits from a precomputed trigger-histogram file."""
+    selected_array_names = _selected_array_names(args_dict)
+    loaded_histograms = load_event_data_histograms(
+        args_dict["trigger_histogram_file"],
+        array_names=selected_array_names,
     )
-    accumulators = [
-        EventDataHistograms.create_accumulator(
-            array_name=config["array_name"],
-            telescope_list=config["telescope_ids"],
-            energy_bins_per_decade=energy_bins_per_decade,
+    output_dir = io_handler.IOHandler().get_output_directory()
+    production_indices = sorted({int(row["production_index"]) for row, _ in loaded_histograms})
+    production_subdirs = {}
+    if args_dict.get("plot_histograms") and len(production_indices) > 1:
+        production_patterns = {
+            int(row["production_index"]): row["event_data_file"] for row, _ in loaded_histograms
+        }
+        production_subdirs = build_production_subdirectories(
+            [production_patterns[index] for index in production_indices],
+            output_dir,
         )
-        for config in telescope_configs
-    ]
-
-    for reader, values in event_source.iter_event_data():
-        file_info_table, shower_data, triggered_shower, triggered_data = values
-        for config, histograms in zip(telescope_configs, accumulators):
-            if config["telescope_ids"]:
-                filtered_triggered_data, filtered_triggered_shower = reader.filter_by_telescopes(
-                    triggered_data,
-                    triggered_shower,
-                    telescope_list=config["telescope_ids"],
-                )
-            else:
-                filtered_triggered_data = triggered_data
-                filtered_triggered_shower = triggered_shower
-            histograms.accumulate(
-                file_info_table,
-                shower_data,
-                filtered_triggered_shower,
-                filtered_triggered_data,
-            )
 
     results = []
-    for config, histograms in zip(telescope_configs, accumulators):
-        histograms.finalize(fill_efficiency_histogram=False)
-        results.append(
-            _derive_limits_from_histograms(
-                histograms,
-                config["array_name"],
-                allowed_losses,
-                energy_threshold_fraction,
-                plot_histograms,
-                output_subdir,
-                differential_loss_bins_per_decade,
-            )
+    for row, histograms in loaded_histograms:
+        _logger.info(
+            f"Processing production index {row['production_index']} for array {row['array_name']}"
         )
+        output_subdir = None
+        if production_subdirs:
+            output_subdir = production_subdirs.get(row["event_data_file"])
+        result = _derive_limits_from_histograms(
+            histograms,
+            row["array_name"],
+            allowed_losses,
+            energy_threshold_fraction,
+            args_dict.get("plot_histograms", False),
+            output_subdir,
+            differential_loss_bins_per_decade,
+        )
+        result.update(
+            {
+                "production_index": int(row["production_index"]),
+                "event_data_file": row["event_data_file"],
+                "array_name": row["array_name"],
+                "telescope_ids": list(filter(None, str(row["telescope_ids"]).split(","))),
+            }
+        )
+        results.append(result)
     return results
+
+
+def _selected_array_names(args_dict):
+    """Return selected array-layout names from singular or plural argument keys."""
+    return (
+        args_dict.get("array_layout_name")
+        or args_dict.get("array_layout_names")
+        or args_dict.get("array_names")
+    )
 
 
 def _derive_limits_from_histograms(
@@ -437,10 +234,11 @@ def _derive_limits_from_histograms(
         )
     )
     limits.update(
-        {
-            column_name: histograms.file_info.get(file_info_key)
-            for column_name, file_info_key in FILE_INFO_COLUMNS.items()
-        }
+        extract_histogram_output_metadata(
+            histograms.file_info,
+            FILE_INFO_COLUMNS,
+            include_array_name=False,
+        )
     )
 
     if plot_histograms:
@@ -622,8 +420,6 @@ def write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
     ----------
     results : list[dict]
         List of computed limits.
-    args_dict : dict
-        Dictionary containing command line arguments.
     allowed_losses : dict
         Per-axis loss settings for core_distance/angular_distance.
     energy_threshold_fraction : float
@@ -635,8 +431,14 @@ def write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
         energy_threshold_fraction,
     )
 
-    output_dir = io_handler.IOHandler().get_output_directory()
-    output_file = output_dir / args_dict["output_file"]
+    io = io_handler.IOHandler()
+    output_file_arg = args_dict.get("output_file")
+    if isinstance(output_file_arg, str | os.PathLike):
+        output_file = Path(output_file_arg)
+        if not output_file.is_absolute():
+            output_file = io.get_output_directory() / output_file
+    else:
+        output_file = io.get_output_directory() / "corsika_limits.ecsv"
 
     table.write(output_file, format="ascii.ecsv", overwrite=True)
     _logger.info(f"Results saved to {output_file}")

@@ -704,6 +704,17 @@ def test_view_cone_bins_default(mock_reader, hdf5_file_name):
     assert bins[-1] == pytest.approx(10.0)
 
 
+def test_view_cone_bins_from_bin_width(mock_reader, hdf5_file_name):
+    """Test view_cone_bins from broad-range limits and fixed angular bin width."""
+    histograms = EventDataHistograms(hdf5_file_name, angular_distance_bin_width=0.5 * u.deg)
+    histograms.file_info = {
+        "viewcone_min": 0.25 * u.deg,
+        "viewcone_max": 1.5 * u.deg,
+    }
+
+    np.testing.assert_allclose(histograms.view_cone_bins, [0.25, 0.75, 1.25, 1.5])
+
+
 def test_view_cone_bins_with_histogram_data(mock_reader, hdf5_file_name):
     """Test view_cone_bins when histogram data is already present."""
     histograms = EventDataHistograms(hdf5_file_name)
