@@ -8,31 +8,47 @@ core distance distributions.
 
 Command line arguments
 ----------------------
-event_data_file (str, required)
-    Input file path.
+trigger_histogram_file (str, required)
+    Precomputed trigger-histogram HDF5 file from ``simtools-write-trigger-histograms``.
+array_layout_name (str, optional)
+    Optional array layout name to select from a precomputed trigger-histogram HDF5 file.
 output_path (str, required)
     Output directory for the generated plots.
 
 Examples
 --------
-Generate plots from a given input file:
+Generate plots from a precomputed trigger-histogram file:
 
 .. code-block:: console
 
-    simtools-plot-simulated-event-distributions --event_data_file path/to/simtel_file.hdf5 \
-                                                --output_path simtools_output/
-
-
+    simtools-plot-simulated-event-distributions \
+        --trigger_histogram_file trigger_histograms.hdf5 \
+        --array_layout_name alpha \
+        --output_path simtools_output
 """
 
 from simtools.application_control import build_application
-from simtools.sim_events.histograms import EventDataHistograms
 from simtools.visualization import plot_simtel_event_histograms
 
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.initialize_application_arguments(["event_data_file"])
+    parser.add_argument(
+        "--trigger_histogram_file",
+        help="Precomputed trigger-histogram HDF5 file from simtools-write-trigger-histograms.",
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
+        "--array_layout_name",
+        help=(
+            "Optional array layout name to select from a precomputed trigger-histogram "
+            "file. If omitted, plot all layouts available in the file."
+        ),
+        type=str,
+        required=False,
+        default=None,
+    )
 
 
 def main():
@@ -40,12 +56,15 @@ def main():
     app_context = build_application(
         initialization_kwargs={"db_config": False, "output": True},
     )
-    app_context.logger.info(f"Loading event data file from: {app_context.args['event_data_file']}")
+    output_dir = app_context.io_handler.get_output_directory()
 
-    histograms = EventDataHistograms(app_context.args["event_data_file"])
-    histograms.fill()
-    plot_simtel_event_histograms.plot(
-        histograms.histograms, output_path=app_context.io_handler.get_output_directory()
+    app_context.logger.info(
+        f"Loading trigger histogram file from: {app_context.args['trigger_histogram_file']}"
+    )
+    plot_simtel_event_histograms.plot_trigger_histogram_file(
+        app_context.args["trigger_histogram_file"],
+        output_dir,
+        app_context.args.get("array_layout_name"),
     )
 
 
