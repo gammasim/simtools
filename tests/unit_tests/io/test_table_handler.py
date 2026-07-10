@@ -11,6 +11,7 @@ from simtools.io.table_handler import (
     _read_table_list_hdf5,
     _write_table_to_hdf5_file,
     copy_metadata_to_hdf5,
+    group_table_rows,
     merge_tables,
     read_table_file_type,
     read_table_from_hdf5,
@@ -121,6 +122,24 @@ def test_read_table_file_type_unsupported():
     input_files = ["test.txt"]
     with pytest.raises(ValueError, match="Unsupported file type"):
         read_table_file_type(input_files)
+
+
+def test_group_table_rows():
+    table = Table(
+        rows=[
+            {"reference_id": "ref-1", "axis_index": 0, "value": 1},
+            {"reference_id": "ref-1", "axis_index": 1, "value": 2},
+            {"reference_id": "ref-2", "axis_index": 0, "value": 3},
+        ]
+    )
+
+    grouped_by_reference = group_table_rows(table, "reference_id")
+    grouped_by_reference_axis = group_table_rows(table, ["reference_id", "axis_index"])
+
+    assert set(grouped_by_reference) == {"ref-1", "ref-2"}
+    assert list(grouped_by_reference["ref-1"]["value"]) == [1, 2]
+    assert set(grouped_by_reference_axis) == {("ref-1", 0), ("ref-1", 1), ("ref-2", 0)}
+    assert grouped_by_reference_axis[("ref-1", 1)]["value"][0] == 2
 
 
 def test_merge_single_table(mocker, tmp_path):
@@ -314,7 +333,7 @@ def test_write_tables_hdf5(tmp_path, mock_table):
         assert hdf5_file.attrs["simtools_write_status"] == "complete"
         assert len(hdf5_file[TEST_TABLE_NAME]) == 2
         assert hdf5_file[TEST_TABLE_NAME].compression == "gzip"
-        assert hdf5_file[TEST_TABLE_NAME].compression_opts == 4
+        assert hdf5_file[TEST_TABLE_NAME].compression_opts == 6
     assert not list(tmp_path.glob(f"{TEST_H5}.incomplete-*"))
 
 
@@ -562,7 +581,7 @@ def test_write_table_in_hdf5_new_table(mocker, mock_h5py_file, mock_table):
     mock_h5py_file.create_dataset.assert_called_once()
     call_args = mock_h5py_file.create_dataset.call_args[1]
     assert call_args["compression"] == "gzip"
-    assert call_args["compression_opts"] == 4
+    assert call_args["compression_opts"] == 6
     assert call_args["chunks"] is True
 
     # Verify metadata was written

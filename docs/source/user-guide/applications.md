@@ -81,6 +81,7 @@ simtools-generate-default-metadata <applications/simtools-generate-default-metad
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-simtel-event-data <applications/simtools-generate-simtel-event-data>
 simtools-generate-test-resources <applications/simtools-generate-test-resources>
+simtools-inspect-file <applications/simtools-inspect-file>
 simtools-maintain-simulation-model-add-production <applications/simtools-maintain-simulation-model-add-production>
 simtools-maintain-simulation-model-compare-productions <applications/simtools-maintain-simulation-model-compare-productions>
 simtools-maintain-simulation-model-verify-production-tables <applications/simtools-maintain-simulation-model-verify-production-tables>
@@ -94,7 +95,7 @@ simtools-plot-tabular-data-for-model-parameter <applications/simtools-plot-tabul
 simtools-plot-simtel-events <applications/simtools-plot-simtel-events>
 simtools-plot-simulated-event-distributions <applications/simtools-plot-simulated-event-distributions>
 simtools-production-derive-corsika-limits <applications/simtools-production-derive-corsika-limits>
-simtools-production-derive-statistics <applications/simtools-production-derive-statistics>
+simtools-production-derive-monte-carlo-statistics <applications/simtools-production-derive-monte-carlo-statistics>
 simtools-production-generate-grid <applications/simtools-production-generate-grid>
 simtools-run-application <applications/simtools-run-application>
 simtools-simulate-flasher <applications/simtools-simulate-flasher>
@@ -111,3 +112,4 @@ simtools-validate-cumulative-psf <applications/simtools-validate-cumulative-psf>
 simtools-validate-file-using-schema <applications/simtools-validate-file-using-schema>
 simtools-validate-optics <applications/simtools-validate-optics>
 simtools-write-reduced-event-lists <applications/simtools-write-reduced-event-lists>
+simtools-write-trigger-histograms <applications/simtools-write-trigger-histograms>

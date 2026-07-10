@@ -1,10 +1,18 @@
 """Plot simtel event histograms filled with EventDataHistograms."""
 
 import logging
+from pathlib import Path
 
-import matplotlib.pyplot as plt
+import matplotlib as mpl
 import numpy as np
 from matplotlib.colors import LogNorm
+
+mpl.use("Agg")
+from matplotlib import pyplot as plt  # pylint: disable=wrong-import-position
+
+from simtools.production_configuration.trigger_histograms import (  # pylint: disable=wrong-import-position
+    load_event_data_histograms,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -69,6 +77,153 @@ def plot(
     _execute_plotting_loop(plots, output_path, array_name, file_info)
 
 
+def plot_trigger_histogram_file(trigger_histogram_file, output_dir, array_layout_name=None):
+    """
+    Plot all plot-table histograms stored in a trigger-histogram HDF5 file.
+
+    Parameters
+    ----------
+    trigger_histogram_file : str or pathlib.Path
+        Path to the precomputed trigger-histogram HDF5 file.
+    output_dir : str or pathlib.Path
+        Base directory where plot files will be written.
+    array_layout_name : str, optional
+        Restrict plotting to one array layout. If omitted, all layouts in the file
+        are plotted.
+    """
+    selected_array_names = _selected_array_names(array_layout_name)
+    loaded_histograms = load_event_data_histograms(
+        trigger_histogram_file,
+        array_names=selected_array_names,
+    )
+    if selected_array_names and not loaded_histograms:
+        raise ValueError(
+            f"Array layout '{array_layout_name}' not found in histogram file "
+            f"'{trigger_histogram_file}'."
+        )
+
+    output_dir = Path(output_dir)
+    for _, histograms in loaded_histograms:
+        output_path = output_dir
+        if len(loaded_histograms) > 1:
+            output_path = output_dir / histograms.array_name
+            output_path.mkdir(parents=True, exist_ok=True)
+        plot(_plottable_histograms(histograms.histograms), output_path=output_path)
+
+
+def _selected_array_names(array_layout_name):
+    """Return normalized array-name selection for the histogram loader."""
+    if array_layout_name is None:
+        return None
+    if isinstance(array_layout_name, str):
+        return [array_layout_name]
+    return array_layout_name
+
+
+def _plottable_histograms(histograms):
+    """Return histogram definitions that can be rendered as 1D or 2D plots."""
+    return {
+        name: histogram
+        for name, histogram in histograms.items()
+        if isinstance(histogram, dict) and histogram.get("histogram") is not None
+        if getattr(histogram["histogram"], "ndim", 0) <= 2
+    }
+
+
+def plot_monte_carlo_statistics_diagnostics(
+    output_dir,
+    array_name,
+    energy_edges,
+    angular_edges,
+    expected_counts,
+    relative_uncertainty,
+):
+    """
+    Write Monte Carlo statistics diagnostic plots.
+
+    Parameters
+    ----------
+    output_dir : str or pathlib.Path
+        Directory to write plot files.
+    array_name : str
+        Array or telescope-selection name used in plot titles and filenames.
+    energy_edges : array-like
+        Energy bin edges in TeV.
+    angular_edges : array-like
+        Angular-distance bin edges in deg.
+    expected_counts : numpy.ndarray
+        Expected triggered events per angular-distance and energy bin.
+    relative_uncertainty : numpy.ndarray
+        Poisson relative uncertainty per angular-distance and energy bin.
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    _logger.info(f"Writing Monte Carlo statistics diagnostic plots to {output_dir}")
+    file_prefix = _sanitize_filename_part(array_name)
+    plot_specs = (
+        (
+            expected_counts,
+            output_dir / f"{file_prefix}_expected_events.png",
+            f"Expected triggered events ({array_name})",
+            "Expected events",
+            True,
+        ),
+        (
+            relative_uncertainty,
+            output_dir / f"{file_prefix}_relative_uncertainty.png",
+            f"Expected relative uncertainty ({array_name})",
+            "Relative uncertainty",
+            False,
+        ),
+    )
+    for matrix, output_file, title, colorbar_label, mask_zero in plot_specs:
+        _plot_monte_carlo_statistics_matrix(
+            matrix,
+            energy_edges,
+            angular_edges,
+            output_file,
+            title,
+            colorbar_label,
+            mask_zero=mask_zero,
+        )
+
+
+def _sanitize_filename_part(value):
+    """Return a filesystem-safe filename component."""
+    return "".join(
+        character if character.isalnum() or character in "-_" else "_" for character in str(value)
+    )
+
+
+def _plot_monte_carlo_statistics_matrix(
+    matrix,
+    energy_edges,
+    angular_edges,
+    output_file,
+    title,
+    colorbar_label,
+    mask_zero=False,
+):
+    """Plot a 2D diagnostic matrix in log10 energy and angular distance."""
+    matrix = np.asarray(matrix, dtype=float)
+    plot_matrix = np.ma.masked_invalid(matrix)
+    if mask_zero:
+        plot_matrix = np.ma.masked_less_equal(plot_matrix, 0.0)
+    log_energy_edges = np.log10(np.asarray(energy_edges, dtype=float))
+
+    cmap = plt.get_cmap("viridis").with_extremes(bad="white")
+    fig, ax = plt.subplots(figsize=(8, 6))
+    mesh = ax.pcolormesh(log_energy_edges, angular_edges, plot_matrix, shading="auto", cmap=cmap)
+    fig.colorbar(mesh, ax=ax, label=colorbar_label)
+    ax.set(
+        xlabel="log10(E / TeV)",
+        ylabel="Angular distance (deg)",
+        title=title,
+    )
+    fig.savefig(output_file, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
 def _get_limits(name, limits):
     """
     Extract limits from the provided dictionary for plotting.
@@ -122,6 +277,9 @@ def _generate_plot_configurations(
     plots = {}
     for name, hist in histograms.items():
         if hist["histogram"] is None:
+            continue
+        if np.ndim(hist["histogram"]) > 2:
+            _logger.warning(f"Skipping plot {name} - plotting supports only 1D and 2D histograms")
             continue
         plots[name] = _build_plot_configuration(
             hist,

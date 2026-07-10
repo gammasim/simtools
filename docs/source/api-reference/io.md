@@ -31,6 +31,24 @@ This module include I/O related functionality.
    :members:
 ```
 
+(io_file_inspector)=
+
+## file_inspector
+
+```{eval-rst}
+.. automodule:: simtools.io.file_inspector
+   :members:
+```
+
+(io_file_type)=
+
+## file_type
+
+```{eval-rst}
+.. automodule:: simtools.io.file_type
+   :members:
+```
+
 (legacy-data-handler)=
 
 ## legacy_data_handler
