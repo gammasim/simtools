@@ -7,6 +7,8 @@ from types import SimpleNamespace
 
 import pytest
 
+pytest.importorskip("docutils")
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "docs" / "source" / "_ext"))
 
 import simtools_cli_help
