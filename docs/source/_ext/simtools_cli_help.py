@@ -1,5 +1,5 @@
 """
-Render filtered application CLI help from the real simtools parsers.
+Render filtered application CLI help from simtools parsers.
 
 Example
 -------
@@ -8,7 +8,7 @@ Render the CLI reference for an application while hiding the default repeated gr
 .. code-block:: rst
 
     .. simtools-cli-help::
-       :module: plot_array_layout
+       :module: simtools.applications.plot_array_layout
 
 Render the CLI reference while keeping the ``paths`` group visible:
 
