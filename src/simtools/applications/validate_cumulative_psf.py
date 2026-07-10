@@ -75,7 +75,7 @@ from simtools.ray_tracing.optics_validation import validate_cumulative_psf
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.initialize_argument_group("application", ["source_distance", "zenith_angle", "data"])
+    parser.initialize_application_argument_group(["source_distance", "zenith_angle", "data"])
 
 
 def main():
