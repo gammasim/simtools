@@ -566,10 +566,10 @@ class EventDataHistograms:
                 np.asarray(triggered_data.shower_id, dtype=np.int64),
             )
         )
-        counts = {}
-        for key in map(tuple, triggered_keys):
-            counts[key] = counts.get(key, 0) + 1
-        return np.array([counts[tuple(key)] for key in triggered_keys], dtype=float)
+        _, inverse, counts = np.unique(
+            triggered_keys, axis=0, return_inverse=True, return_counts=True
+        )
+        return counts[inverse].astype(float)
 
     def _create_reuse_stat_accumulator(self, bin_edges):
         """Return empty accumulation arrays for one reuse-statistic histogram."""
