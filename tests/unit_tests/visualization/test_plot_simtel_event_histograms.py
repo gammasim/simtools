@@ -203,7 +203,7 @@ def test_create_2d_histogram_plot_log(sample_data):
     plt.close(fig)
 
 
-def test_create_2d_histogram_plot_masks_zero_bins():
+def test_create_2d_histogram_plot_keeps_zero_bins_visible():
     data = np.array([[0, 2], [3, 0]])
     bins = (np.array([0, 1, 2]), np.array([0, 1, 2]))
     plot_params = {"norm": "linear", "cmap": "viridis", "show_contour": False}

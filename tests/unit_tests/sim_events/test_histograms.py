@@ -505,6 +505,46 @@ def test_triggered_reuse_counts_repeat_per_triggered_event(mock_reader, hdf5_fil
     np.testing.assert_array_equal(reuse_counts, np.array([2.0, 2.0, 1.0]))
 
 
+def test_accumulate_reuse_bin_values_vectorized_1d_and_2d():
+    accumulator_1d = {
+        "count": np.zeros(3, dtype=int),
+        "sum": np.zeros(3, dtype=float),
+        "sum_sq": np.zeros(3, dtype=float),
+        "max": np.full(3, np.nan, dtype=float),
+    }
+    EventDataHistograms._accumulate_reuse_bin_values(
+        accumulator_1d,
+        np.array([0, 0, 1, 2, 2]),
+        np.array([2.0, 0.0, -1.0, 1.0, 3.0]),
+    )
+    np.testing.assert_array_equal(accumulator_1d["count"], np.array([1, 0, 2]))
+    np.testing.assert_allclose(accumulator_1d["sum"], np.array([2.0, 0.0, 4.0]))
+    np.testing.assert_allclose(accumulator_1d["sum_sq"], np.array([4.0, 0.0, 10.0]))
+    np.testing.assert_allclose(accumulator_1d["max"], np.array([2.0, np.nan, 3.0]), equal_nan=True)
+
+    accumulator_2d = {
+        "count": np.zeros((2, 3), dtype=int),
+        "sum": np.zeros((2, 3), dtype=float),
+        "sum_sq": np.zeros((2, 3), dtype=float),
+        "max": np.full((2, 3), np.nan, dtype=float),
+    }
+    EventDataHistograms._accumulate_reuse_bin_values(
+        accumulator_2d,
+        np.array([[0, 0], [0, 0], [0, 1], [1, 2], [1, 2], [1, 0]]),
+        np.array([1.0, 4.0, 0.0, -2.0, 5.0, 3.0]),
+    )
+    np.testing.assert_array_equal(accumulator_2d["count"], np.array([[2, 0, 0], [1, 0, 1]]))
+    np.testing.assert_allclose(accumulator_2d["sum"], np.array([[5.0, 0.0, 0.0], [3.0, 0.0, 5.0]]))
+    np.testing.assert_allclose(
+        accumulator_2d["sum_sq"], np.array([[17.0, 0.0, 0.0], [9.0, 0.0, 25.0]])
+    )
+    np.testing.assert_allclose(
+        accumulator_2d["max"],
+        np.array([[4.0, np.nan, np.nan], [3.0, np.nan, 5.0]]),
+        equal_nan=True,
+    )
+
+
 def test_accumulate_reuse_histograms_match_triggered_event_phase_space(
     mock_reader, hdf5_file_name, mocker
 ):

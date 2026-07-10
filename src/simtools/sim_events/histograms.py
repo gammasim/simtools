@@ -620,29 +620,29 @@ class EventDataHistograms:
     @staticmethod
     def _accumulate_reuse_bin_values(accumulator, indices, reuse_counts):
         """Update count, sum, sum-of-squares, and max for addressed bins."""
-        grouped_values = {}
-        if np.ndim(indices) == 1:
-            for index, reuse_count in zip(indices, reuse_counts, strict=False):
-                grouped_values.setdefault(int(index), []).append(float(reuse_count))
-        else:
-            for index_pair, reuse_count in zip(indices, reuse_counts, strict=False):
-                grouped_values.setdefault(tuple(map(int, index_pair)), []).append(
-                    float(reuse_count)
-                )
+        reuse_counts = np.asarray(reuse_counts, dtype=float)
+        positive = reuse_counts > 0.0
+        if not np.any(positive):
+            return
 
-        for index, bin_values in grouped_values.items():
-            values = np.asarray(bin_values, dtype=float)
-            values = values[values > 0.0]
-            if values.size == 0:
-                continue
-            accumulator["count"][index] += len(values)
-            accumulator["sum"][index] += float(np.sum(values))
-            accumulator["sum_sq"][index] += float(np.sum(values**2))
-            current_max = accumulator["max"][index]
-            value_max = float(np.max(values))
-            accumulator["max"][index] = (
-                value_max if np.isnan(current_max) else max(current_max, value_max)
-            )
+        indices = np.asarray(indices, dtype=np.int64)
+        shape = accumulator["count"].shape
+        if indices.ndim == 1:
+            flat_indices = indices[positive]
+        else:
+            flat_indices = np.ravel_multi_index(indices[positive].T, shape)
+
+        values = reuse_counts[positive]
+        flat_size = int(np.prod(shape, dtype=np.int64))
+
+        count = np.bincount(flat_indices, minlength=flat_size).reshape(shape)
+        sum_ = np.bincount(flat_indices, weights=values, minlength=flat_size).reshape(shape)
+        sum_sq = np.bincount(flat_indices, weights=values**2, minlength=flat_size).reshape(shape)
+
+        accumulator["count"] += count
+        accumulator["sum"] += sum_
+        accumulator["sum_sq"] += sum_sq
+        np.fmax.at(accumulator["max"].reshape(-1), flat_indices, values)
 
     @staticmethod
     def _finalize_reuse_statistic(accumulator, statistic):
