@@ -1,6 +1,10 @@
 import sys
 from pathlib import Path
 
+import pytest
+
+pytest.importorskip("docutils")
+
 from docutils.parsers.rst import directives
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "docs" / "source" / "_ext"))
