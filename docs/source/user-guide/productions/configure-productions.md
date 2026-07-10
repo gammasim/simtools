@@ -172,46 +172,6 @@ Several integration-test configurations are useful starting points:
 
 - `tests/integration_tests/config/production_generate_grid_horizontal.yml`
 - `tests/integration_tests/config/production_generate_grid_ha_dec.yml`
-- `tests/integration_tests/config/production_derive_statistics.yml`
-
-## Derive Required Event Statistics
-
-The number of required events can be derived before finalizing the production grid when suitable
-DL2 event files and a metrics definition are available.
-[simtools-production-derive-statistics](../applications/simtools-production-derive-statistics)
-interpolates statistical requirements from existing event files onto requested production grid
-points.
-
-```{warning}
-The required-statistics workflow is production-policy dependent. Fixed `number_of_runs` or
-`total_showers` values are appropriate when no approved metrics file and input event sample are
-available.
-```
-
-Example configuration from `tests/integration_tests/config/production_derive_statistics.yml`:
-
-The `nsb` values in this statistics example describe the coordinates of the input event samples
-used for interpolation. They do not configure an NSB axis in
-`simtools-production-generate-grid`; production-grid rows use the model-version-dependent
-`nsb_rate` described above.
-
-```yaml
-grid_points_production_file: tests/resources/production_grid_points_horizontal.ecsv
-metrics_file: tests/resources/production_simulation_config_metrics.yml
-base_path: tests/resources/production_dl2_fits/
-file_name_template: prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits
-zeniths:
-- 20
-- 40
-- 52
-- 60
-azimuths:
-- 180
-nsb:
-- 1
-off_axis_angles:
-- 0
-```
 
 ## Production Grid Plotting
 

@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import re
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -91,10 +93,17 @@ def test_get_value_unit_type() -> None:
 def test_assign_unit_to_quantity():
     assert value_conversion.get_value_as_quantity(10, u.m) == 10 * u.m
     assert value_conversion.get_value_as_quantity(10, "m") == 10 * u.m
+    assert value_conversion.get_value_as_quantity(10, None) == 10 * u.dimensionless_unscaled
 
     assert value_conversion.get_value_as_quantity(1000 * u.cm, u.m) == 10 * u.m
+    assert value_conversion.get_value_as_quantity("primary_mirror_frame", None) == (
+        "primary_mirror_frame"
+    )
 
-    with pytest.raises(ValueError, match=r"Cannot convert 1000.0 TeV with unit TeV to m."):
+    with pytest.raises(
+        ValueError,
+        match=re.escape("'TeV' (energy/torque/work) and 'm' (length) are not convertible"),
+    ):
         value_conversion.get_value_as_quantity(1000 * u.TeV, u.m)
 
 
