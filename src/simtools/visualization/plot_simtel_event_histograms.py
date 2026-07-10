@@ -36,6 +36,11 @@ _BROAD_RANGE_KEY_GROUPS = (
 )
 
 
+def _is_reuse_histogram(name):
+    """Return whether the histogram contains reuse summary statistics."""
+    return str(name).startswith("reuse_")
+
+
 def plot(
     histograms,
     output_path=None,
@@ -321,6 +326,8 @@ def _build_plot_configuration(
 def _get_2d_plot_params(name, hist_2d_params, hist_2d_normalized_params):
     """Select the plotting style for a 2D histogram."""
     histogram_name = name.lower()
+    if _is_reuse_histogram(histogram_name):
+        return hist_2d_normalized_params
     if (
         "cumulative" in histogram_name
         or "efficiency" in histogram_name
@@ -831,13 +838,18 @@ def _create_2d_histogram_plot(data, bins, plot_params, ax=None):
 
     plotter = ax if ax is not None else plt
     if plot_params.get("norm") == "linear":
-        masked_data = np.ma.masked_equal(data.T, 0)
+        finite_values = np.asarray(data, dtype=float)[np.isfinite(data)]
+        masked_data = np.ma.masked_invalid(data.T)
+        data_min = float(np.min(finite_values)) if finite_values.size else 0.0
+        data_max = float(np.max(finite_values)) if finite_values.size else 1.0
+        if data_max <= data_min:
+            data_max = data_min + 1.0
         pcm = plotter.pcolormesh(
             bins[0],
             bins[1],
             masked_data,
-            vmin=0,
-            vmax=1,
+            vmin=data_min,
+            vmax=data_max,
             cmap=cmap,
         )
     else:
