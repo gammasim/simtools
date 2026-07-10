@@ -1,0 +1,9 @@
+---
+applications:
+- application: simtools-inspect-file
+  configuration:
+    input_file: ${generated:proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_test.simtel.zst}
+    max_entries: 5
+  test_name: inspect_simtel
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
