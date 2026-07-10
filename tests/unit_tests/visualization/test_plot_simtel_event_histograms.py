@@ -65,6 +65,7 @@ def test_create_2d_histogram_plot_linear(sample_data):
 
     assert pcm is not None
     assert pcm.get_cmap().name == "viridis"
+    assert pcm.get_clim() == pytest.approx((1.0, 9.0))
     plt.close(fig)
 
 
@@ -212,8 +213,25 @@ def test_create_2d_histogram_plot_masks_zero_bins():
 
     plotted_array = pcm.get_array()
     assert np.ma.isMaskedArray(plotted_array)
-    assert np.any(np.ma.getmaskarray(plotted_array))
+    assert not np.any(np.ma.getmaskarray(plotted_array))
     assert pcm.cmap.get_bad()[-1] == pytest.approx(0.0)
+    assert pcm.get_clim() == pytest.approx((0.0, 3.0))
+    plt.close(fig)
+
+
+def test_create_2d_histogram_plot_masks_nan_bins_but_keeps_zero_values():
+    data = np.array([[0.0, np.nan], [3.0, 1.0]])
+    bins = (np.array([0, 1, 2]), np.array([0, 1, 2]))
+    plot_params = {"norm": "linear", "cmap": "viridis"}
+
+    fig, _ = plt.subplots()
+    pcm = _create_2d_histogram_plot(data, bins, plot_params)
+
+    plotted_array = pcm.get_array()
+    assert np.ma.isMaskedArray(plotted_array)
+    mask = np.ma.getmaskarray(plotted_array)
+    assert np.count_nonzero(mask) == 1
+    assert pcm.get_clim() == pytest.approx((0.0, 3.0))
     plt.close(fig)
 
 
@@ -930,6 +948,25 @@ def test_generate_plot_configurations():
         _, kwargs = mock_create_2d.call_args
         assert "plot_params" in kwargs
         assert kwargs["plot_params"]["norm"] == "linear"
+
+    histos = {"reuse_mean_vs_core_distance_vs_energy": {"histogram": "abc", "1d": False}}
+    with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
+        plot_simtel_event_histograms._generate_plot_configurations(histos, None)
+        _, kwargs = mock_create_2d.call_args
+        assert kwargs["plot_params"]["norm"] == "linear"
+
+    histos = {
+        "reuse_mean_vs_energy": {
+            "histogram": "abc",
+            "1d": True,
+            "axis_titles": ["Energy [TeV]", "Mean Reuse"],
+            "title": "Triggered reuse mean",
+            "bin_edges": np.array([0.1, 1.0, 10.0]),
+            "plot_scales": {"x": "log", "y": "linear"},
+        }
+    }
+    result = plot_simtel_event_histograms._generate_plot_configurations(histos, None)
+    assert result["reuse_mean_vs_energy"]["scales"]["y"] == "linear"
 
 
 def test_broad_range_axis_limits_are_used_for_distance_histograms():
