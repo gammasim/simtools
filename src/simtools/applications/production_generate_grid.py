@@ -95,7 +95,7 @@ _APPLICATION_ARG_DEFINITIONS = {
         "help": "Path to the lookup table for simulation limits.",
     },
     "number_of_runs": {
-        "help": "Number of runs to be simulated for each production grid point and energy range..",
+        "help": "Number of runs to be simulated for each production grid point and energy range.",
         "type": scientific_int,
         "default": None,
     },
