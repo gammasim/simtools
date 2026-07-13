@@ -54,12 +54,40 @@ r"""
         simtools-simulate-prod \\
         --model_version 5.0.0 --site north --primary gamma --azimuth_angle north \\
         --zenith_angle 20 --start_run 0 --run 1
+
+    Run a single row from a production job grid:
+
+    .. code-block:: console
+
+        simtools-simulate-prod \\
+        --job_grid_file production_grid_points_horizontal.ecsv --job_grid_row 1 \\
+        --label test --output_path simtools-output
 """
 
-from simtools.application_control import build_application
-from simtools.configuration import commandline_parser
+from simtools.application_control import (
+    build_application,
+    get_application_label,
+    get_module_description_line,
+)
+from simtools.configuration import commandline_parser, configurator
 from simtools.constants import CORSIKA_MAX_SEED
+from simtools.production_configuration.job_grid_io import (
+    SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS,
+    job_grid_row_to_simulate_prod_args,
+    read_job_grid_row,
+)
 from simtools.simulator import Simulator
+
+_INITIALIZATION_KWARGS = {
+    "db_config": True,
+    "simulation_model": ["site", "layout", "telescope", "model_version"],
+    "simulation_configuration": {
+        "software": None,
+        "corsika_configuration": ["all"],
+        "sim_telarray_configuration": ["all"],
+    },
+    "relax_required_options": ["--config", "--job_grid_file", "--job_grid_row"],
+}
 
 
 def _add_arguments(parser):
@@ -116,8 +144,8 @@ def _add_arguments(parser):
         "--job_grid_file",
         help=(
             "Path to an ECSV job grid file produced by simtools-production-generate-grid. "
-            "When provided together with '--job_grid_row', the parameters of the selected row "
-            "override all other simulation arguments."
+            "When provided, the selected row defines production parameters and must not be "
+            "combined with manual production arguments such as '--zenith_angle'."
         ),
         type=str,
         required=False,
@@ -135,22 +163,46 @@ def _add_arguments(parser):
     )
 
 
+def _parse():
+    """Parse simulate_prod arguments and resolve unambiguous job-grid row configuration."""
+    config_builder = configurator.Configurator(
+        label=get_application_label(__file__),
+        description=get_module_description_line(__doc__),
+    )
+    _add_arguments(config_builder.parser)
+    args_dict, db_config = config_builder.initialize(**_INITIALIZATION_KWARGS)
+    _resolve_job_grid_arguments(args_dict, config_builder.config_sources, config_builder.parser)
+    return args_dict, db_config
+
+
+def _resolve_job_grid_arguments(args_dict, config_sources, parser):
+    """Merge selected job-grid row values into args after rejecting ambiguous input."""
+    explicit_keys = set(config_sources["cli"]) | set(config_sources["file"])
+    job_grid_row_is_explicit = "job_grid_row" in explicit_keys
+
+    if not args_dict.get("job_grid_file"):
+        if job_grid_row_is_explicit:
+            parser.error("'--job_grid_row' requires '--job_grid_file'.")
+        return
+
+    conflicting_keys = sorted(explicit_keys & SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS)
+    if conflicting_keys:
+        parser.error(
+            "'--job_grid_file' cannot be combined with explicit production parameter(s): "
+            + ", ".join(conflicting_keys)
+        )
+
+    job_row, metadata = read_job_grid_row(args_dict["job_grid_file"], args_dict["job_grid_row"])
+    args_dict.update(job_grid_row_to_simulate_prod_args(job_row, metadata))
+
+
 def main():
     """See CLI description."""
     app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": ["site", "layout", "telescope", "model_version"],
-            "simulation_configuration": {
-                "software": None,
-                "corsika_configuration": ["all"],
-                "sim_telarray_configuration": ["all"],
-            },
-        },
         startup_kwargs={
             "setup_io_handler": False,
-            "apply_job_grid_override": True,
         },
+        parse_function=_parse,
     )
 
     simulator = Simulator(label=app_context.args.get("label"))

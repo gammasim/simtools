@@ -15,6 +15,7 @@ def test_main_collects_metrics_and_plots(tmp_test_directory):
         args={
             "production": [["baseline", "base_*.h5"], ["candidate", "cand_*.h5"]],
             "comparison_level": "events",
+            "array_layout_name": ["alpha"],
         },
         io_handler=MagicMock(),
     )
@@ -43,8 +44,12 @@ def test_main_collects_metrics_and_plots(tmp_test_directory):
         app.main()
 
     mock_parse.assert_called_once_with(app_context.args["production"])
-    mock_collect.assert_called_once_with(parsed_productions)
-    mock_plot.assert_called_once_with(collected_metrics, output_path=output_dir)
+    mock_collect.assert_called_once_with(parsed_productions, array_names=["alpha"])
+    mock_plot.assert_called_once_with(
+        collected_metrics,
+        output_path=output_dir,
+        array_layout_name=["alpha"],
+    )
 
 
 def test_parse_production_arguments_accepts_single_production(mocker):
@@ -58,7 +63,7 @@ def test_parse_production_arguments_accepts_single_production(mocker):
 
     assert len(descriptors) == 1
     assert descriptors[0].label == "baseline"
-    assert descriptors[0].event_data_files == ["base.h5"]
+    assert descriptors[0].trigger_histogram_files == ["base.h5"]
 
 
 def test_parse_production_arguments_resolves_flattened_pairs(mocker):
@@ -73,8 +78,8 @@ def test_parse_production_arguments_resolves_flattened_pairs(mocker):
     )
 
     assert [descriptor.label for descriptor in descriptors] == ["baseline", "candidate"]
-    assert descriptors[0].event_data_files == ["base_*.h5"]
-    assert descriptors[1].event_data_files == ["cand_*.h5"]
+    assert descriptors[0].trigger_histogram_files == ["base_*.h5"]
+    assert descriptors[1].trigger_histogram_files == ["cand_*.h5"]
 
 
 def test_parse_production_arguments_rejects_duplicate_labels(mocker):
@@ -93,7 +98,7 @@ def test_parse_production_arguments_rejects_duplicate_labels(mocker):
     [
         ([], "At least one production is required"),
         (["baseline", "base.h5", "dangling"], "label/file pairs"),
-        ([["baseline", "  ,   "]], "has no event_data_file pattern"),
+        ([["baseline", "  ,   "]], "has no trigger_histogram_file pattern"),
         ([["baseline", "a.h5"], ["candidate", 1]], "label/file pairs"),
     ],
 )

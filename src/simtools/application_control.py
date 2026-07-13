@@ -14,10 +14,6 @@ from simtools import dependencies, version
 from simtools.configuration import configurator
 from simtools.db import db_handler
 from simtools.io import io_handler
-from simtools.production_configuration.job_grid_io import (
-    job_grid_row_to_simulate_prod_args,
-    read_job_grid_row,
-)
 from simtools.runners.simtools_runner import prepare_runtime_environment
 from simtools.settings import config
 
@@ -119,6 +115,23 @@ def get_log_file(args_dict):
     log_file = f"{args_dict['application_label']}_{config.activity_id}.log"
     Path(log_file_path).mkdir(parents=True, exist_ok=True)
     return Path(log_file_path) / log_file
+
+
+def add_input_meta_argument(parser, nargs=None):
+    """Register the common ``--input_meta`` command line argument."""
+    help_text = "meta data file associated to input data"
+    if nargs is not None:
+        help_text = (
+            "meta data file(s) associated to input data (wildcards or list of files allowed)"
+        )
+
+    parser.add_argument(
+        "--input_meta",
+        help=help_text,
+        type=str,
+        nargs=nargs,
+        required=False,
+    )
 
 
 class RedactFilter(logging.Filter):
@@ -255,7 +268,6 @@ def startup_application(
     setup_io_handler=True,
     logger_name=None,
     resolve_sim_software_executables=True,
-    apply_job_grid_override=False,
 ):
     """
     Initialize common application startup tasks.
@@ -278,11 +290,6 @@ def startup_application(
     resolve_sim_software_executables : bool, optional
         Resolve simulation software executable paths during settings load.
         Set to False for applications that only orchestrate other applications.
-    apply_job_grid_override : bool, optional
-        When True and ``args_dict`` contains a ``job_grid_file`` key, read the row
-        specified by ``job_grid_row`` (default 1) and merge the resulting simulation
-        parameters into ``args_dict``, giving the grid row highest priority.
-        Set to True for ``simulate_prod``. Default is False.
 
     Returns
     -------
@@ -330,11 +337,6 @@ def startup_application(
     )
 
     io_handler_instance = io_handler.IOHandler() if setup_io_handler else None
-
-    if apply_job_grid_override:
-        _apply_job_grid_override(
-            args_dict, db_config, resolve_sim_software_executables=resolve_sim_software_executables
-        )
 
     _resolve_model_version_to_latest_patch(args_dict, logger)
     _version_info(args_dict, io_handler_instance, logger)
@@ -415,39 +417,6 @@ def get_module_description_line(docstring):
             return line.strip()
 
     raise ValueError("Empty docstring (only whitespace)")
-
-
-def _apply_job_grid_override(args_dict, db_config, resolve_sim_software_executables=True):
-    """
-    Apply job grid row overrides to the args dictionary.
-
-    When ``args_dict`` contains a ``job_grid_file`` key, reads the row at
-    ``job_grid_row`` (default 1) from the ECSV file and merges the resulting
-    simulation parameters into ``args_dict``.  The merged values take the
-    highest priority, overriding any previously parsed arguments.  After
-    merging, ``settings.config`` is reloaded so the updated args are visible
-    to all downstream components.
-
-    Parameters
-    ----------
-    args_dict : dict
-        Parsed command line arguments and configuration. Modified in-place.
-    db_config : dict
-        Database configuration forwarded to ``settings.config.load``.
-    resolve_sim_software_executables : bool, optional
-        Whether to resolve simulation software executables. Default is True.
-    """
-    if not args_dict.get("job_grid_file"):
-        return
-
-    job_row, metadata = read_job_grid_row(
-        args_dict["job_grid_file"],
-        args_dict.get("job_grid_row", 1),
-    )
-    args_dict.update(job_grid_row_to_simulate_prod_args(job_row, metadata))
-    config.load(
-        args_dict, db_config, resolve_sim_software_executables=resolve_sim_software_executables
-    )
 
 
 def _resolve_model_version_to_latest_patch(args_dict, logger):
