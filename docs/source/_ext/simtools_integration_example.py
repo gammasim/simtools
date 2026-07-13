@@ -28,16 +28,12 @@ import yaml
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
 
+from simtools import constants
+
 try:
     from sphinx.util.docutils import SphinxDirective
 except ModuleNotFoundError:  # pragma: no cover - fallback for non-Sphinx imports
     SphinxDirective = Directive
-
-_GITHUB_BLOB_BASE = "https://github.com/gammasim/simtools/blob/main/"
-
-
-class IntegrationExampleError(ValueError):
-    """Raised when an integration config cannot be rendered as a docs example."""
 
 
 @dataclass(frozen=True)
@@ -64,13 +60,13 @@ def get_integration_config_dir(repo_root: Path | None = None) -> Path:
 def _resolve_example_file(file_name: str, config_dir: Path) -> Path:
     file_path = (config_dir / file_name).resolve()
     if not file_path.is_file() or not file_path.is_relative_to(config_dir.resolve()):
-        raise IntegrationExampleError(f"Integration config not found: {file_name}")
+        raise ValueError(f"Integration config not found: {file_name}")
     return file_path
 
 
 def get_integration_config_source_url(file_name: str) -> str:
     """Return the GitHub source URL for an integration-config file."""
-    return f"{_GITHUB_BLOB_BASE}tests/integration_tests/config/{file_name}"
+    return f"{constants.GITHUB_BLOB_BASE}tests/integration_tests/config/{file_name}"
 
 
 def load_integration_example(file_name: str, config_dir: Path | None = None) -> IntegrationExample:
@@ -83,28 +79,22 @@ def load_integration_example(file_name: str, config_dir: Path | None = None) -> 
 
     applications = data.get("applications")
     if not isinstance(applications, list) or not applications:
-        raise IntegrationExampleError(f"Integration config has no applications entry: {file_name}")
+        raise ValueError(f"Integration config has no applications entry: {file_name}")
 
     application_entry = applications[0]
     if not isinstance(application_entry, dict):
-        raise IntegrationExampleError(
-            f"Invalid application entry in integration config: {file_name}"
-        )
+        raise ValueError(f"Invalid application entry in integration config: {file_name}")
 
     application = application_entry.get("application")
     configuration = application_entry.get("configuration")
     docs_metadata = application_entry.get("docs") or {}
 
     if not isinstance(application, str) or not application:
-        raise IntegrationExampleError(
-            f"Missing application name in integration config: {file_name}"
-        )
+        raise ValueError(f"Missing application name in integration config: {file_name}")
     if not isinstance(configuration, dict):
-        raise IntegrationExampleError(
-            f"Missing configuration block in integration config: {file_name}"
-        )
+        raise ValueError(f"Missing configuration block in integration config: {file_name}")
     if not isinstance(docs_metadata, dict):
-        raise IntegrationExampleError(f"Invalid docs metadata in integration config: {file_name}")
+        raise ValueError(f"Invalid docs metadata in integration config: {file_name}")
 
     return IntegrationExample(
         file_name=file_name,
@@ -139,7 +129,7 @@ class SimtoolsIntegrationExampleDirective(SphinxDirective):
         """Render the directive content."""
         try:
             example = load_integration_example(self.options["file"])
-        except IntegrationExampleError as error:
+        except ValueError as error:
             raise self.error(str(error)) from error
 
         rendered_nodes = []
