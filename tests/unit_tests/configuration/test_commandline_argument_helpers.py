@@ -140,11 +140,13 @@ def test_parse_quantity_pair():
     with pytest.raises(ValueError, match=r"Input string does not contain exactly two quantities."):
         helpers.parse_quantity_pair("100 GeV 5 TeV 20 PeV")
     with pytest.raises(
-        ValueError, match=r"^Could not parse quantities: 'abc' did not parse as unit"
+        ValueError,
+        match=r'^Could not parse quantities: Cannot parse "abc" as a Quantity.',
     ):
         helpers.parse_quantity_pair("100 GeV 5 abc")
     with pytest.raises(
-        ValueError, match=r'^Could not parse quantities: Cannot parse "eV" as a Quantity.'
+        ValueError,
+        match=r'^Could not parse quantities: Cannot parse "a GeV 5" as a Quantity.',
     ):
         helpers.parse_quantity_pair("a GeV 5 TeV")
 

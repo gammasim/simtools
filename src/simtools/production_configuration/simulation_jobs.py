@@ -107,6 +107,10 @@ _SUMMARY_LOG_FIELDS = (
 def _parse_axis_range_tokens(range_tokens):
     """Parse a quantity pair from CLI axis range tokens."""
     if len(range_tokens) == 1:
+        if ".." in range_tokens[0]:
+            return tuple(
+                u.Quantity(value.strip()) for value in range_tokens[0].split("..", maxsplit=1)
+            )
         return parse_quantity_pair(range_tokens[0])
     if len(range_tokens) == 2:
         return tuple(u.Quantity(value) for value in range_tokens)
