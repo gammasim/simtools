@@ -228,7 +228,6 @@ PARAMETER_DEFINITIONS = {
         "disable_log_file": {
             "action": "store_true",
             "help": argparse.SUPPRESS,
-            "doc_hidden": True,
         },
         "figure_format": {
             "help": "output figure format(s)",
@@ -248,7 +247,6 @@ PARAMETER_DEFINITIONS = {
             "action": "version",
             "version": f"%(prog)s {simtools.version.__version__}",
             "help": argparse.SUPPRESS,
-            "doc_hidden": True,
         },
         "build_info": {
             "action": helpers.BuildInfoAction,

@@ -303,8 +303,8 @@ def test_build_application_parser(mocker, tmp_test_directory):
     )
 
 
-def test_build_application_parser_attaches_doc_metadata_for_default_arguments():
-    """Test parser actions registered from metadata carry documentation attributes."""
+def test_build_application_parser_uses_definition_help_for_default_arguments():
+    """Test parser actions registered from metadata retain their help text."""
     parser = build_application_parser(
         application_path="test_application.py",
         description="Test description",
@@ -314,10 +314,10 @@ def test_build_application_parser_attaches_doc_metadata_for_default_arguments():
 
     actions = {action.dest: action for action in parser._actions}  # pylint: disable=protected-access
 
-    assert actions["config"].simtools_doc == "simtools configuration file"
-    assert not hasattr(actions["config"], "simtools_doc_group")
-    assert not hasattr(actions["output_file"], "simtools_doc_group")
-    assert not hasattr(actions["db_api_user"], "simtools_doc_group")
+    assert actions["config"].help == "simtools configuration file"
+    assert not hasattr(actions["config"], "simtools_doc")
+    assert not hasattr(actions["output_file"], "simtools_doc")
+    assert not hasattr(actions["db_api_user"], "simtools_doc")
 
 
 def test_build_application_missing_metadata_raises(mocker, tmp_test_directory):

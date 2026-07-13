@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 import importlib
-from collections import OrderedDict
 from dataclasses import dataclass
 
 from docutils import nodes
@@ -70,7 +69,6 @@ class CliHelpOptions:
 class CliInspection:
     """Captured CLI construction context for one application module."""
 
-    module: object
     parser: argparse.ArgumentParser
 
 
@@ -103,6 +101,10 @@ def _capture_parser_from_main(module, prog: str | None):
             application_path=getattr(module, "__file__", None),
             description=getattr(module, "__doc__", None),
             add_arguments_function=getattr(module, "_add_arguments", None),
+            application_argument_definitions=kwargs.get(
+                "application_argument_definitions",
+                getattr(module, "_APPLICATION_ARG_DEFINITIONS", None),
+            ),
             initialization_kwargs=initialization_kwargs,
             usage=kwargs.get("usage"),
             epilog=kwargs.get("epilog"),
@@ -115,7 +117,7 @@ def _capture_parser_from_main(module, prog: str | None):
     try:
         module.main()
     except _ParserCapturedError as error:
-        return CliInspection(module=module, parser=error.parser)
+        return CliInspection(parser=error.parser)
     finally:
         module.build_application = original_build_application
 
@@ -132,14 +134,14 @@ def _iter_visible_group_actions(parser):
     """Yield `(group_title, action)` pairs for doc-visible parser actions."""
     for group in parser._action_groups:  # pylint: disable=protected-access
         for action in group._group_actions:  # pylint: disable=protected-access
-            if action.help is argparse.SUPPRESS or getattr(action, "simtools_doc_hidden", False):
+            if action.help is argparse.SUPPRESS:
                 continue
             yield group.title, action
 
 
 def _group_actions_for_docs(parser, hidden_groups):
     """Group visible parser actions by documentation section title."""
-    grouped_actions = OrderedDict()
+    grouped_actions = {}
     for group_title, action in _iter_visible_group_actions(parser):
         if group_title in hidden_groups:
             continue
@@ -164,7 +166,7 @@ def _format_default(action):
 
 def _build_description(action):
     """Build paragraph nodes for one CLI parameter description."""
-    content = [nodes.paragraph(text=getattr(action, "simtools_doc", action.help))]
+    content = [nodes.paragraph(text=action.help)]
     notes = []
     if getattr(action, "required", False):
         notes.append("Required.")

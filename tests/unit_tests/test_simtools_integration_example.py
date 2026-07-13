@@ -13,6 +13,7 @@ from simtools_integration_example import (
     SimtoolsIntegrationExampleDirective,
     get_integration_config_source_url,
     load_integration_example,
+    render_command,
 )
 
 
@@ -41,7 +42,16 @@ def test_existing_docs_example_requests_both_blocks():
     doc_file = Path("src/simtools/applications/simulate_prod.py")
     content = doc_file.read_text(encoding="utf-8")
 
-    assert ":show-command:" in content
+    assert ":show-command:" not in content
+
+
+def test_render_command_runs_the_integration_config():
+    example = load_integration_example("simulate_prod_proton_20_deg_north_check_output.yml")
+
+    assert render_command(example) == (
+        "simtools-simulate-prod --config "
+        "tests/integration_tests/config/simulate_prod_proton_20_deg_north_check_output.yml"
+    )
 
 
 def test_load_example_keeps_source_file_name():
