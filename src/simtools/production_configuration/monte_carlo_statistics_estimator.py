@@ -462,6 +462,11 @@ def estimate_monte_carlo_statistics(args_dict=None):
         metadata_table,
         args_dict.get("array_layout_name") or args_dict.get("array_names"),
     )
+    if args_dict.get("plot_diagnostics") and len(selected_references) > 0:
+        _logger.info(
+            "Writing Monte Carlo statistics diagnostic plots to %s",
+            io_handler.IOHandler().get_output_directory(),
+        )
 
     output_rows = [
         _build_result_row(
