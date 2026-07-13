@@ -32,6 +32,7 @@ from simtools.configuration import configurator
 from simtools.configuration.commandline_argument_helpers import bounded_int
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.production_configuration.job_grid_io import (
+    SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS,
     job_grid_row_to_simulate_prod_args,
     read_job_grid_row,
 )
@@ -46,24 +47,6 @@ _INITIALIZATION_KWARGS = {
         "sim_telarray_configuration": ["all"],
     },
     "relax_required_options": ["--config", "--job_grid_file", "--job_grid_row"],
-}
-
-_JOB_GRID_EXCLUSIVE_FIELDS = {
-    "primary",
-    "azimuth_angle",
-    "zenith_angle",
-    "energy_range",
-    "core_scatter",
-    "view_cone",
-    "showers_per_run",
-    "model_version",
-    "array_layout_name",
-    "corsika_le_interaction",
-    "corsika_he_interaction",
-    "run_number",
-    "run_number_offset",
-    "site",
-    "simulation_software",
 }
 
 
@@ -162,7 +145,7 @@ def _resolve_job_grid_arguments(args_dict, config_sources, parser):
             parser.error("'--job_grid_row' requires '--job_grid_file'.")
         return
 
-    conflicting_keys = sorted(explicit_keys & _JOB_GRID_EXCLUSIVE_FIELDS)
+    conflicting_keys = sorted(explicit_keys & SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS)
     if conflicting_keys:
         parser.error(
             "'--job_grid_file' cannot be combined with explicit production parameter(s): "
