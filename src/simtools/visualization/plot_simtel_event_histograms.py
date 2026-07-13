@@ -167,7 +167,6 @@ def plot_monte_carlo_statistics_diagnostics(
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    _logger.info(f"Writing Monte Carlo statistics diagnostic plots to {output_dir}")
     file_prefix = _sanitize_filename_part(array_name)
     file_info_suffix = _format_file_info_suffix(file_info or {})
     if file_info_suffix:
