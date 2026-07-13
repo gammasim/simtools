@@ -238,12 +238,9 @@ import argparse
 
 from simtools.application_control import build_application
 from simtools.configuration import defaults
-from simtools.production_configuration.job_grid_io import serialize_job_grid
 from simtools.production_configuration.simulation_jobs import (
     TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
-    build_job_grid_metadata,
-    build_simulation_jobs,
-    renumber_job_rows,
+    generate_job_grid,
 )
 
 
@@ -406,11 +403,9 @@ def main():
         },
     )
 
-    job_rows = build_simulation_jobs(app_context.args)
-    serialize_job_grid(
-        job_rows=renumber_job_rows(job_rows, app_context.args.get("run_number_offset", 0)),
-        output_file=app_context.io_handler.get_output_file(app_context.args["output_file"]),
-        metadata=build_job_grid_metadata(app_context.args),
+    generate_job_grid(
+        app_context.args,
+        app_context.io_handler.get_output_file(app_context.args["output_file"]),
     )
 
 

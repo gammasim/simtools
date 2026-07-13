@@ -24,6 +24,7 @@ from simtools.production_configuration.corsika_limits_lookup import (
     CorsikaLimitsLookup,
     attach_lookup_limits_to_point,
 )
+from simtools.production_configuration.job_grid_io import serialize_job_grid
 from simtools.production_configuration.job_grid_summary import (
     build_job_grid_summary,
 )
@@ -1093,18 +1094,11 @@ def _generate_observation_grids_per_layout(
                     if corsika_limits_path is not None
                     else None
                 )
-                generated_grid = ProductionGridEngine(
-                    axes={},
-                    coordinate_system="horizontal",
-                    observing_location=build_observing_location(args_dict["site"], model_version),
-                ).convert_coordinates(
-                    _generate_observation_points_from_axes(
-                        azimuth_values=grid_axes["azimuth_angle"],
-                        zenith_values=grid_axes["zenith_angle"],
-                        corsika_limits=corsika_limits,
-                        nsb_rate=nsb_rate,
-                    ),
-                    keep_horizontal_coordinates=True,
+                generated_grid = _generate_observation_points_from_axes(
+                    azimuth_values=grid_axes["azimuth_angle"],
+                    zenith_values=grid_axes["zenith_angle"],
+                    corsika_limits=corsika_limits,
+                    nsb_rate=nsb_rate,
                 )
             observation_grid_cache[cache_key] = generated_grid
 
@@ -1140,12 +1134,10 @@ def _build_observation_params_for_point(
     selected_core_scatter_max = _clip_max_quantity(core_scatter[1], lookup_core_scatter_max)
     selected_view_cone_max = _clip_max_quantity(configured_view_cone_max, lookup_view_cone_max)
 
-    return {
+    observation_params = {
         "primary": primary,
         "azimuth_angle": point["azimuth"],
         "zenith_angle": point["zenith_angle"],
-        "ha": point.get("ha"),
-        "dec": point.get("dec"),
         "model_version": model_version,
         "nsb_rate": float(nsb_rate),
         "array_layout_name": resolved_layout_name,
@@ -1161,6 +1153,11 @@ def _build_observation_params_for_point(
         "configured_view_cone_max": configured_view_cone_max,
         "lookup_view_cone_max": lookup_view_cone_max,
     }
+    if point.get("ha") is not None:
+        observation_params["ha"] = point["ha"]
+    if point.get("dec") is not None:
+        observation_params["dec"] = point["dec"]
+    return observation_params
 
 
 def build_simulation_jobs(args_dict):
@@ -1305,3 +1302,27 @@ def renumber_job_rows(job_rows, run_number_offset):
     for run_number, job_row in enumerate(job_rows, start=run_number_offset + 1):
         job_row["run_number"] = run_number
     return job_rows
+
+
+def generate_job_grid(args_dict, output_file):
+    """
+    Generate and serialize a production job grid.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Production job-grid configuration arguments. The accepted keys match
+        the arguments consumed by :func:`build_simulation_jobs` and
+        :func:`build_job_grid_metadata`.
+    output_file : str or Path
+        Path to the ECSV file to write.
+    """
+    job_rows = renumber_job_rows(
+        build_simulation_jobs(args_dict),
+        run_number_offset=int(args_dict.get("run_number_offset", 0)),
+    )
+    serialize_job_grid(
+        job_rows=job_rows,
+        output_file=output_file,
+        metadata=build_job_grid_metadata(args_dict),
+    )

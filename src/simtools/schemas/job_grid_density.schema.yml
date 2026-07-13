@@ -32,12 +32,12 @@ data:
         unit: deg
       - name: ha
         description: Hour angle coordinate value in degrees (positive westward).
-        required: true
+        required: false
         type: float64
         unit: deg
       - name: dec
         description: Declination coordinate value in degrees.
-        required: true
+        required: false
         type: float64
         unit: deg
       - name: energy_min
@@ -74,7 +74,7 @@ data:
         required: true
         type: int64
       - name: nsb_rate
-        description: Night-sky-background rate used for this grid point.
+        description: Integrated night-sky-background flux from the site model.
         required: true
         type: float64
         unit: 1 / (cm2 ns sr)
@@ -93,4 +93,16 @@ data:
       - name: corsika_he_interaction
         description: CORSIKA high-energy interaction model.
         required: true
+        type: string
+      - name: overwrite_model_parameters
+        description: File containing model parameter values that overwrite production defaults.
+        required: false
+        type: string
+      - name: scan_label
+        description: Label identifying a parameter-scan grid point.
+        required: false
+        type: string
+      - name: telescope
+        description: Telescope for which model parameters are overwritten.
+        required: false
         type: string

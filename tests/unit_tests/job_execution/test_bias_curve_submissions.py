@@ -1,0 +1,288 @@
+from pathlib import Path
+from unittest.mock import Mock, patch
+
+import pytest
+import yaml
+
+from simtools.io.io_handler import IOHandler
+from simtools.job_execution import bias_curve_submissions
+
+
+def _base_args(tmp_test_directory):
+    return {
+        "site": "North",
+        "model_version": "7.0.0",
+        "telescope": "LSTN-01",
+        "threshold_parameter": "asum_threshold",
+        "simulation_software": "corsika_sim_telarray",
+        "azimuth_angle": 0.0,
+        "zenith_angle": 20.0,
+        "showers_per_run": 10000,
+        "core_scatter": "20 1900 m",
+        "view_cone": "0 deg 5 deg",
+        "number_of_runs": 10,
+        "corsika_le_interaction": "urqmd",
+        "corsika_he_interaction": "epos",
+        "nsb_energy_range": "20 MeV 25 MeV",
+        "proton_energy_range": "2 GeV 2000 GeV",
+        "nsb_scaling_factor": 2,
+        "trigger_thresholds": None,
+        "output_path": str(Path(tmp_test_directory) / "bias_curves"),
+    }
+
+
+@patch("simtools.job_execution.bias_curve_submissions._generate_scan_grid")
+@patch(
+    "simtools.job_execution.bias_curve_submissions._threshold_param_name",
+    return_value="asum_threshold",
+)
+def test_generate_scan_grids_uses_configured_curve_definitions_without_mutating_args(
+    mock_threshold_param_name,
+    mock_generate_scan_grid,
+    tmp_test_directory,
+):
+    args = _base_args(tmp_test_directory)
+    original_args = dict(args)
+
+    io_handler = Mock()
+    bias_curve_submissions.generate_scan_grids(args, io_handler)
+
+    assert args == original_args
+    mock_threshold_param_name.assert_called_once_with(args)
+    assert [item.kwargs["curve_name"] for item in mock_generate_scan_grid.call_args_list] == [
+        "nsb",
+        "proton",
+    ]
+    assert all(
+        item.kwargs["args"]["telescope"] == "LSTN-01"
+        for item in mock_generate_scan_grid.call_args_list
+    )
+    assert (
+        mock_generate_scan_grid.call_args_list[0].kwargs["curve_definition"]
+        == bias_curve_submissions._curve_definitions(args)["nsb"]
+    )
+
+
+@pytest.mark.parametrize(
+    ("default_trigger", "expected_param"),
+    [
+        ("AnalogSum", "asum_threshold"),
+        ("DigitalSum", "dsum_threshold"),
+        ("Majority", "dsum_threshold"),
+    ],
+)
+def test_threshold_parameter_is_chosen_from_telescope_model(
+    default_trigger, expected_param, tmp_test_directory
+):
+    args = _base_args(tmp_test_directory)
+
+    with patch("simtools.job_execution.bias_curve_submissions.TelescopeModel") as model:
+        model.return_value.get_parameter_value.return_value = default_trigger
+
+        assert bias_curve_submissions._threshold_param_name(args) == expected_param
+
+    model.assert_called_once_with(site="North", telescope_name="LSTN-01", model_version="7.0.0")
+    model.return_value.get_parameter_value.assert_called_once_with("default_trigger")
+
+
+@pytest.mark.parametrize(
+    ("threshold_param", "expected_values"),
+    [
+        (
+            "asum_threshold",
+            [220, 230, 240, 250, 260, 270, 280, 290, 300, 320, 340, 360],
+        ),
+        ("dsum_threshold", [22, 23, 24, 25, 26, 27, 28, 29, 30]),
+    ],
+)
+def test_threshold_values_use_parameter_defaults(threshold_param, expected_values):
+    assert bias_curve_submissions._threshold_values(threshold_param) == expected_values
+
+
+def test_parameter_scan_entry_uses_compact_threshold_label(tmp_test_directory):
+    entry = bias_curve_submissions._parameter_scan_entry("LSTN-01", "asum_threshold")
+
+    assert entry == {
+        "name": "asum_threshold",
+        "path": "changes.LSTN-01.asum_threshold",
+        "values": [220, 230, 240, 250, 260, 270, 280, 290, 300, 320, 340, 360],
+        "label": "asum",
+        "label_separator": "",
+    }
+
+
+def test_parameter_scan_entry_expands_configured_thresholds():
+    assert bias_curve_submissions._parameter_scan_entry("LSTN-01", "asum_threshold", [225, 3, 10])[
+        "values"
+    ] == [225, 235, 245]
+
+
+@pytest.mark.parametrize(
+    ("trigger_thresholds", "error"),
+    [
+        ([225, 2], "must contain minimum threshold"),
+        ([225, 0, 10], "positive integer"),
+        ([225, 2.5, 10], "positive integer"),
+        ([225, 2, 0], "step size must be positive"),
+    ],
+)
+def test_invalid_configured_thresholds_are_rejected(trigger_thresholds, error):
+    with pytest.raises(ValueError, match=error):
+        bias_curve_submissions._threshold_values("asum_threshold", trigger_thresholds)
+
+
+def test_scan_config_contains_nsb_base_overwrite_and_trigger_scan(tmp_test_directory):
+    args = _base_args(tmp_test_directory)
+
+    scan_config = bias_curve_submissions._scan_config("nsb", "LSTN-01", args)
+
+    assert scan_config["label"] == "nsb"
+    overwrite = scan_config["parameter_scan"]["overwrite"]
+    assert overwrite["model_version"] == args["model_version"]
+    assert overwrite["description"] == "Tune for NSB telescope trigger scan"
+
+    telescope_changes = overwrite["changes"]["LSTN-01"]
+    assert telescope_changes["min_photons"]["value"] == 0
+    assert telescope_changes["min_photoelectrons"]["value"] == 0
+    assert "asum_threshold" not in telescope_changes
+
+    assert overwrite["changes"]["OBS-North"]["nsb_scaling_factor"]["value"] == 2
+    assert scan_config["parameter_scan"]["parameters"] == [
+        bias_curve_submissions._parameter_scan_entry("LSTN-01", "asum_threshold")
+    ]
+    assert scan_config["parameter_scan"]["job_grid_updates"] == {"telescope": "LSTN-01"}
+
+
+def test_scan_config_contains_proton_base_overwrite_and_trigger_scan(tmp_test_directory):
+    args = _base_args(tmp_test_directory)
+
+    scan_config = bias_curve_submissions._scan_config("proton", "LSTN-01", args)
+
+    assert scan_config["label"] == "proton"
+    overwrite = scan_config["parameter_scan"]["overwrite"]
+    assert overwrite["model_version"] == args["model_version"]
+    assert overwrite["description"] == "Tune for proton telescope trigger scan"
+    assert overwrite["changes"] == {
+        "LSTN-01": {},
+        "OBS-North": {
+            "nsb_scaling_factor": {
+                "value": 2,
+            }
+        },
+    }
+    assert scan_config["parameter_scan"]["parameters"] == [
+        bias_curve_submissions._parameter_scan_entry("LSTN-01", "asum_threshold")
+    ]
+
+
+@pytest.mark.parametrize("curve_name", ["nsb", "proton"])
+def test_scan_config_uses_configured_scaling_and_thresholds(curve_name, tmp_test_directory):
+    args = _base_args(tmp_test_directory)
+    args["nsb_scaling_factor"] = 3.5
+    args["trigger_thresholds"] = [225, 2, 10]
+
+    scan_config = bias_curve_submissions._scan_config(curve_name, "LSTN-01", args)
+
+    assert scan_config["parameter_scan"]["overwrite"]["changes"]["OBS-North"]["nsb_scaling_factor"][
+        "value"
+    ] == pytest.approx(3.5)
+    assert scan_config["parameter_scan"]["parameters"][0]["values"] == [225, 235]
+
+
+def test_base_overwrite_rejects_unknown_curve(tmp_test_directory):
+    args = _base_args(tmp_test_directory)
+
+    with pytest.raises(ValueError, match="Unsupported curve name"):
+        bias_curve_submissions._base_overwrite("unknown", "LSTN-01", args)
+
+
+@pytest.mark.parametrize(
+    ("curve_name", "expected_primary", "expected_energy_range"),
+    [
+        ("nsb", "gamma", "20 MeV 25 MeV"),
+        ("proton", "proton", "2 GeV 2000 GeV"),
+    ],
+)
+def test_production_grid_configuration_uses_curve_specific_primary_and_energy_range(
+    curve_name,
+    expected_primary,
+    expected_energy_range,
+    tmp_test_directory,
+):
+    args = _base_args(tmp_test_directory)
+    curve_definition = bias_curve_submissions._curve_definitions(args)[curve_name]
+    configuration = bias_curve_submissions._production_grid_configuration(
+        args,
+        curve_definition,
+        curve_name,
+    )
+
+    assert configuration["primary"] == expected_primary
+    assert configuration["energy_range"] == expected_energy_range
+    assert configuration["label"] == curve_name
+    assert configuration["array_layout_name"] == "LSTN-01"
+    assert "telescope" not in configuration
+
+
+def test_curve_definitions_use_configured_energy_ranges(tmp_test_directory):
+    args = _base_args(tmp_test_directory)
+    args["nsb_energy_range"] = "10 MeV 30 MeV"
+    args["proton_energy_range"] = "5 GeV 500 GeV"
+
+    definitions = bias_curve_submissions._curve_definitions(args)
+
+    assert definitions["nsb"]["energy_range"] == "10 MeV 30 MeV"
+    assert definitions["proton"]["energy_range"] == "5 GeV 500 GeV"
+
+
+def test_generate_scan_grid_generates_and_expands_grid(tmp_test_directory):
+    args = _base_args(tmp_test_directory)
+    output_root = Path(args["output_path"]).expanduser().resolve()
+    curve_directory = output_root / "nsb"
+    io_handler = IOHandler()
+    io_handler.set_paths(output_path=output_root)
+
+    with (
+        patch(
+            "simtools.job_execution.bias_curve_submissions.generate_job_grid"
+        ) as mock_generate_job_grid,
+        patch(
+            "simtools.job_execution.bias_curve_submissions."
+            "parameter_scan_generator.expand_job_grid_with_scan"
+        ) as mock_expand_job_grid,
+    ):
+        bias_curve_submissions._generate_scan_grid(
+            curve_name="nsb",
+            curve_definition=bias_curve_submissions._curve_definitions(args)["nsb"],
+            args=args,
+            io_handler=io_handler,
+        )
+
+    scan_config_file = curve_directory / "scan_config.yaml"
+    base_grid_file = curve_directory / "base_grid.ecsv"
+    scan_grid_file = curve_directory / "scan_grid.ecsv"
+
+    assert scan_config_file.exists()
+    assert not (curve_directory / "workflow.yaml").exists()
+
+    scan_config = yaml.safe_load(scan_config_file.read_text(encoding="utf-8"))
+    assert scan_config["label"] == "nsb"
+    assert scan_config["parameter_scan"]["parameters"][0]["label"] == "asum"
+    assert scan_config["parameter_scan"]["parameters"][0]["label_separator"] == ""
+    assert scan_config["parameter_scan"]["job_grid_updates"] == {"telescope": "LSTN-01"}
+
+    mock_generate_job_grid.assert_called_once_with(
+        bias_curve_submissions._production_grid_configuration(
+            args, bias_curve_submissions._curve_definitions(args)["nsb"], "nsb"
+        ),
+        base_grid_file,
+    )
+    mock_expand_job_grid.assert_called_once_with(base_grid_file, scan_config_file, scan_grid_file)
+
+
+def test_validate_required_args_rejects_missing_required_argument(tmp_test_directory):
+    args = _base_args(tmp_test_directory)
+    args["site"] = ""
+
+    with pytest.raises(ValueError, match="Missing required argument: --site"):
+        bias_curve_submissions._validate_required_args(args)
