@@ -2,7 +2,7 @@
 applications:
 - application: simtools-generate-corsika-histograms
   configuration:
-    input_files: tests/resources/generated/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst
+    input_files: ${generated:gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst}
     output_path: simtools-output
     pdf_file_name: tel_output_10GeV-2-gamma-20deg-CTAO-South.pdf
     file_labels: 'CORSIKA IO output'
