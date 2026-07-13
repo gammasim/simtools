@@ -157,12 +157,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
     def add_parameter_from_definition(self, container, name, definition):
         """Add one argument from a parameter-definition dictionary."""
-        argparse_kwargs, doc_metadata = _split_argument_metadata(definition)
-        action = container.add_argument(f"--{name}", **argparse_kwargs)
-        action.simtools_doc = doc_metadata["doc"]
-        action.simtools_doc_hidden = doc_metadata["doc_hidden"]
-        action.simtools_scopes = doc_metadata["scopes"]
-        return action
+        return container.add_argument(f"--{name}", **definition)
 
     def initialize_named_argument_group(self, group_name):
         """Initialize one predefined argument group by its display name."""
@@ -225,14 +220,3 @@ class CommandLineParser(argparse.ArgumentParser):
         for option_name, parameter_names in SIMULATION_MODEL_LAYOUT_POST_PARAMETERS.items():
             if option_name in requested:
                 self._add_parameters(group, parameter_names, definitions)
-
-
-def _split_argument_metadata(definition):
-    """Split a parameter definition into argparse kwargs and documentation metadata."""
-    doc_metadata = {
-        "doc": definition.get("doc", definition.get("help")),
-        "doc_hidden": definition.get("doc_hidden", definition.get("help") is argparse.SUPPRESS),
-        "scopes": definition.get("scopes"),
-    }
-    argparse_kwargs = {k: v for k, v in definition.items() if k not in doc_metadata}
-    return argparse_kwargs, doc_metadata

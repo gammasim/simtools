@@ -21,24 +21,17 @@ Render only the command block for an example:
 
 from __future__ import annotations
 
-import json
-import shlex
 from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
-from docutils.statemachine import StringList
 
 try:
     from sphinx.util.docutils import SphinxDirective
-    from sphinx.util.nodes import nested_parse_with_titles
 except ModuleNotFoundError:  # pragma: no cover - fallback for non-Sphinx imports
     SphinxDirective = Directive
-    NESTED_PARSE_WITH_TITLES = None
-else:
-    NESTED_PARSE_WITH_TITLES = nested_parse_with_titles
 
 _GITHUB_BLOB_BASE = "https://github.com/gammasim/simtools/blob/main/"
 
@@ -127,24 +120,9 @@ def render_configuration_yaml(example: IntegrationExample) -> str:
     return yaml.safe_dump(example.configuration, sort_keys=False).rstrip()
 
 
-def _stringify_cli_value(value) -> str:
-    if isinstance(value, (dict, list)):
-        return json.dumps(value, separators=(",", ":"))
-    if isinstance(value, bool):
-        return str(value).lower()
-    return str(value)
-
-
 def render_command(example: IntegrationExample) -> str:
-    """Render a shell command equivalent for the loaded configuration."""
-    command_lines = [f"{example.application} \\"]
-    rendered_items = list(example.configuration.items())
-
-    for index, (key, value) in enumerate(rendered_items):
-        suffix = " \\" if index < len(rendered_items) - 1 else ""
-        command_lines.append(f"  --{key} {shlex.quote(_stringify_cli_value(value))}{suffix}")
-
-    return "\n".join(command_lines)
+    """Render the executable command for the integration configuration."""
+    return f"{example.application} --config tests/integration_tests/config/{example.file_name}"
 
 
 class SimtoolsIntegrationExampleDirective(SphinxDirective):
@@ -176,14 +154,10 @@ class SimtoolsIntegrationExampleDirective(SphinxDirective):
         if not example.title:
             return None
 
-        section_container = nodes.container()
-        title_lines = StringList([example.title, "~" * len(example.title), ""])
-        if NESTED_PARSE_WITH_TITLES is None:
-            self.state.nested_parse(title_lines, self.content_offset, section_container)
-        else:
-            NESTED_PARSE_WITH_TITLES(self.state, title_lines, section_container)
-        rendered_nodes.extend(section_container.children)
-        return rendered_nodes[-1] if rendered_nodes else None
+        section = nodes.section(ids=[nodes.make_id(example.title)])
+        section += nodes.title(text=example.title)
+        rendered_nodes.append(section)
+        return section
 
     @staticmethod
     def _append_node(rendered_nodes, content_parent, node):

@@ -25,7 +25,6 @@ def test_render_native_cli_docs_hides_selected_groups():
     app_group.add_argument("--figure_name", help="figure name")
 
     inspection = simtools_cli_help.CliInspection(
-        module=SimpleNamespace(__name__="simtools.applications.fake_app"),
         parser=parser,
     )
     rendered_nodes = render_native_cli_docs(inspection, {"paths"})
@@ -67,6 +66,7 @@ def test_load_application_parser_captures_main_build_application(mocker):
         application_path="/tmp/fake_app.py",
         description="Fake application.",
         add_arguments_function=fake_module._add_arguments,
+        application_argument_definitions=None,
         initialization_kwargs={"output": True},
         usage="simtools-fake",
         epilog=None,
@@ -81,3 +81,11 @@ def test_load_application_parser_requires_build_application():
         monkeypatch.setattr(simtools_cli_help.importlib, "import_module", lambda *_: fake_module)
         with pytest.raises(ValueError, match="has no build_application import"):
             load_application_parser("fake_app")
+
+
+def test_load_application_parser_includes_definition_based_arguments():
+    """Test CLI help keeps application arguments defined as dictionaries."""
+    inspection = load_application_parser("simtools.applications.production_generate_grid")
+
+    actions = {action.dest for action in inspection.parser._actions}  # pylint: disable=protected-access
+    assert {"axis", "direction_grid_density", "corsika_limits"} <= actions

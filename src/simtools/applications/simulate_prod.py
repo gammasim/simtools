@@ -20,7 +20,6 @@ Examples
 
 .. simtools-integration-example::
     :file: simulate_prod_proton_20_deg_north_check_output.yml
-    :show-command:
 
 """
 

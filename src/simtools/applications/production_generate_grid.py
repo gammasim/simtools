@@ -27,19 +27,15 @@ Examples
 
 .. simtools-integration-example::
     :file: production_generate_grid_horizontal_explicit.yml
-    :show-command:
 
 .. simtools-integration-example::
     :file: production_generate_grid_horizontal.yml
-    :show-command:
 
 .. simtools-integration-example::
     :file: production_generate_grid_horizontal_density.yml
-    :show-command:
 
 .. simtools-integration-example::
     :file: production_generate_grid_ha_dec_density.yml
-    :show-command:
 
 """
 
@@ -58,7 +54,6 @@ _APPLICATION_ARG_DEFINITIONS = {
     "axis": {
         "action": "append",
         "nargs": "+",
-        "required": False,
         "help": (
             "Compact axis definition: --axis <name> <min> <unit> <max> <unit> <binning> "
             "[scaling]. May be repeated. Supported axes: azimuth, zenith, ha, dec, offset. "
@@ -67,7 +62,6 @@ _APPLICATION_ARG_DEFINITIONS = {
     },
     "direction_grid_density": {
         "nargs": "+",
-        "required": False,
         "default": None,
         "help": (
             "Direction-grid density in 1/deg^2. If set, direction-axis binning is "
@@ -77,7 +71,6 @@ _APPLICATION_ARG_DEFINITIONS = {
     },
     "local_zenith_range": {
         "nargs": "+",
-        "required": False,
         "default": None,
         "help": (
             "Local zenith range (quantity pair) used to filter HA/Dec density points, "
@@ -86,7 +79,6 @@ _APPLICATION_ARG_DEFINITIONS = {
     },
     "local_azimuth_range": {
         "nargs": "+",
-        "required": False,
         "default": None,
         "help": (
             "Local azimuth range (quantity pair) used to filter HA/Dec density points, "
@@ -100,26 +92,22 @@ _APPLICATION_ARG_DEFINITIONS = {
     },
     "corsika_limits": {
         "type": str,
-        "required": False,
         "help": "Path to the lookup table for simulation limits.",
     },
     "number_of_runs": {
         "help": "Number of runs to be simulated for each production grid point and energy range..",
         "type": scientific_int,
-        "required": False,
         "default": None,
     },
     "total_showers": {
         "help": "Total number of showers to simulate per production grid point and energy range.",
         "type": scientific_int,
-        "required": False,
         "default": None,
     },
     "total_showers_scaling": {
         "help": "Scaling mode for total showers.",
         "type": str,
         "choices": ["fixed", "zenith_scaled"],
-        "required": False,
         "default": "fixed",
     },
     "zenith_angle_scaling_factor": {
@@ -128,7 +116,6 @@ _APPLICATION_ARG_DEFINITIONS = {
             "Used only when --total_showers_scaling is 'zenith_scaled'."
         ),
         "type": float,
-        "required": False,
         "default": defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
     },
     "max_total_showers_rounding_warnings": {
@@ -137,7 +124,6 @@ _APPLICATION_ARG_DEFINITIONS = {
             "rounded up to keep equal showers per run."
         ),
         "type": scientific_int,
-        "required": False,
         "default": TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
     },
     "showers_per_run_power_law": {
@@ -149,7 +135,6 @@ _APPLICATION_ARG_DEFINITIONS = {
         "nargs": 3,
         "type": str,
         "metavar": ("POWER_INDEX", "REFERENCE_ENERGY_VALUE", "REFERENCE_ENERGY_UNIT"),
-        "required": False,
         "default": None,
     },
     "showers_per_run_scaling": {
@@ -160,7 +145,6 @@ _APPLICATION_ARG_DEFINITIONS = {
         ),
         "type": str,
         "choices": ["fixed", "cosine_zenith"],
-        "required": False,
         "default": "fixed",
     },
     "energy_max_scaling": {
@@ -174,7 +158,6 @@ _APPLICATION_ARG_DEFINITIONS = {
         "nargs": 3,
         "type": str,
         "metavar": ("POWER_INDEX", "REFERENCE_ENERGY_VALUE", "REFERENCE_ENERGY_UNIT"),
-        "required": False,
         "default": None,
     },
 }
