@@ -4,8 +4,10 @@ import argparse
 import ast
 import logging
 import re
+from typing import NoReturn
 
 import astropy.units as u
+from astropy.units import UnitsError
 
 from simtools.utils import general, names
 
@@ -318,6 +320,46 @@ def azimuth_angle(angle):
     )
 
 
+def _raise_quantity_pair_error(exc) -> NoReturn:
+    """Raise a uniform quantity-pair parsing error."""
+    raise ValueError(f"Could not parse quantities: {exc}") from exc
+
+
+def _parse_serialized_quantity_pair(string):
+    """Parse ``(<Quantity ...>, <Quantity ...>)`` representations.
+
+    Example
+    -------
+    ``"(<Quantity 200. GeV>, <Quantity 500. GeV>)"``
+    """
+    match = re.fullmatch(r"\(\s*<Quantity\s+([^>]+)>\s*,\s*<Quantity\s+([^>]+)>\s*\)", string)
+    if match is None:
+        return None
+    try:
+        return tuple(u.Quantity(quantity_repr) for quantity_repr in match.groups())
+    except (TypeError, ValueError, UnitsError) as exc:
+        _raise_quantity_pair_error(exc)
+
+
+def _parse_tokenized_quantity_pair(tokens):
+    """Parse quantity pairs from 2-4 whitespace-separated tokens.
+
+    Example
+    -------
+    ``["100", "GeV", "5", "TeV"]`` or ``["100GeV", "5TeV"]``
+    """
+    split_indices = {2: (1,), 3: (1, 2), 4: (2, 1, 3)}[len(tokens)]
+    last_error = None
+    for split_index in split_indices:
+        left = " ".join(tokens[:split_index])
+        right = " ".join(tokens[split_index:])
+        try:
+            return (u.Quantity(left), u.Quantity(right)), None
+        except (TypeError, ValueError, UnitsError) as exc:
+            last_error = exc
+    return None, last_error
+
+
 def parse_quantity_pair(string):
     """Parse a string representing a pair of astropy quantities.
 
@@ -336,14 +378,21 @@ def parse_quantity_pair(string):
     ValueError
         If string does not contain exactly two quantities.
     """
-    pattern = r"[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\s*[A-Za-z]+"
-    matches = re.findall(pattern, string)
-    if len(matches) != 2:
+    stripped = string.strip()
+
+    serialized_pair = _parse_serialized_quantity_pair(stripped)
+    if serialized_pair is not None:
+        return serialized_pair
+
+    tokens = stripped.split()
+    if len(tokens) < 2 or len(tokens) > 4:
         raise ValueError("Input string does not contain exactly two quantities.")
-    try:
-        return tuple(u.Quantity(match) for match in matches)
-    except Exception as exc:
-        raise ValueError(f"Could not parse quantities: {exc}") from exc
+
+    parsed_pair, last_error = _parse_tokenized_quantity_pair(tokens)
+    if parsed_pair is not None:
+        return parsed_pair
+
+    _raise_quantity_pair_error(last_error)
 
 
 def parse_integer_and_quantity(input_string):
