@@ -44,10 +44,6 @@ DEFAULT_HIDDEN_GROUPS = {
 }
 
 
-class CliHelpError(ValueError):
-    """Raised when CLI help cannot be rendered for an application module."""
-
-
 class _ParserCapturedError(RuntimeError):
     """Internal exception used to short-circuit application main functions."""
 
@@ -90,7 +86,7 @@ def _capture_parser_from_main(module, prog: str | None):
     """Execute module.main() with a patched build_application that captures the parser."""
     original_build_application = getattr(module, "build_application", None)
     if original_build_application is None:
-        raise CliHelpError(f"Application module has no build_application import: {module.__name__}")
+        raise ValueError(f"Application module has no build_application import: {module.__name__}")
 
     def _fake_build_application(*_args, **kwargs):
         initialization_kwargs = kwargs.get("initialization_kwargs")
@@ -121,7 +117,7 @@ def _capture_parser_from_main(module, prog: str | None):
     finally:
         module.build_application = original_build_application
 
-    raise CliHelpError(f"Failed to capture parser from application main(): {module.__name__}")
+    raise ValueError(f"Failed to capture parser from application main(): {module.__name__}")
 
 
 def load_application_parser(module_name: str, prog: str | None = None):
@@ -220,7 +216,7 @@ class SimtoolsCliHelpDirective(SphinxDirective):
         options = self._parse_options()
         try:
             inspection = load_application_parser(options.module_name, prog=options.prog)
-        except (CliHelpError, ImportError, ValueError) as error:
+        except (ValueError, ImportError) as error:
             raise self.error(str(error)) from error
 
         return render_native_cli_docs(inspection, options.hidden_groups)
