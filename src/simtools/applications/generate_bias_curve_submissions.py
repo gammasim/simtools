@@ -208,7 +208,7 @@ def main():
         add_arguments_function=_add_arguments,
         initialization_kwargs={"db_config": True, "output": False},
     )
-    bias_curve_submissions.generate_bias_curve_submissions(app_context.args, app_context.io_handler)
+    bias_curve_submissions.generate_scan_grids(app_context.args, app_context.io_handler)
 
 
 if __name__ == "__main__":
