@@ -31,6 +31,40 @@ def _decode_hdf5_string_column(column):
     return column
 
 
+def group_table_rows(table, column_names):
+    """Group astropy table rows by one or more columns.
+
+    Parameters
+    ----------
+    table : astropy.table.Table
+        Table to group.
+    column_names : str or sequence[str]
+        Column name or names used for grouping.
+
+    Returns
+    -------
+    dict
+        Mapping from group key to grouped sub-table. Single-column grouping returns
+        scalar keys, multi-column grouping returns tuple keys.
+    """
+    column_names = general.ensure_list(column_names)
+    if len(table) == 0:
+        return {}
+
+    grouped = table.group_by(column_names)
+    grouped_rows = {}
+    group_indices = grouped.groups.indices
+    for group_index, start in enumerate(group_indices[:-1]):
+        stop = group_indices[group_index + 1]
+        key_row = grouped.groups.keys[group_index]
+        if len(column_names) == 1:
+            key = key_row[column_names[0]]
+        else:
+            key = tuple(key_row[name] for name in column_names)
+        grouped_rows[key] = grouped[start:stop]
+    return grouped_rows
+
+
 def read_table_list(input_file, table_names, include_indexed_tables=False):
     """
     Read available tables found in the input file.
@@ -38,6 +72,19 @@ def read_table_list(input_file, table_names, include_indexed_tables=False):
     If table_counter is True, search for tables with the same name
     but with different suffixes (e.g., "_0", "_1", etc.).
 
+    Parameters
+    ----------
+    input_file : str or Path
+        Path to the input file (HDF5 or FITS).
+    table_names : list of str
+        List of table names to search for in the input file.
+    include_indexed_tables : bool, optional
+        If True, include tables with indexed suffixes (e.g., "_0", "_1", etc.) in the search.
+
+    Returns
+    -------
+    dict
+        Dictionary with table names as keys and lists of found table names as values.
     """
     file_type = read_table_file_type(input_file)
     if file_type == "HDF5":
@@ -321,7 +368,7 @@ def write_tables(tables, output_file, overwrite_existing=True, file_type=None):
     if isinstance(tables, dict):
         tables = list(tables.values())
     if file_type == "HDF5":
-        _write_tables_atomically_to_hdf5(tables, output_file)
+        write_table_chunks(tables, output_file)
         return
     for table in tables:
         _table_name = table.meta.get("EXTNAME")
@@ -335,11 +382,6 @@ def write_tables(tables, output_file, overwrite_existing=True, file_type=None):
         fits.HDUList(hdus).writeto(output_file, checksum=False)
 
 
-def _write_tables_atomically_to_hdf5(tables, output_file):
-    """Write and validate an HDF5 file before publishing it atomically."""
-    write_table_chunks([tables], output_file)
-
-
 def write_table_chunks(table_chunks, output_file, overwrite_existing=True):
     """Write table chunks to an atomic HDF5 output with bounded memory use."""
     output_file = Path(output_file)
@@ -351,7 +393,7 @@ def write_table_chunks(table_chunks, output_file, overwrite_existing=True):
     try:
         with h5py.File(incomplete_file, "w") as hdf5_file:
             hdf5_file.attrs["simtools_write_status"] = "incomplete"
-            for tables in table_chunks:
+            for tables in _iter_table_chunks(table_chunks):
                 chunk_table_names = set()
                 for table in tables:
                     table_name = table.meta.get("EXTNAME")
@@ -368,13 +410,22 @@ def write_table_chunks(table_chunks, output_file, overwrite_existing=True):
             hdf5_file.attrs["simtools_write_status"] = "complete"
             hdf5_file.flush()
         incomplete_file.replace(output_file)
-        _logger.info(f"Published complete HDF5 output file {output_file}")
+        _logger.info(f"Finished writing verified HDF5 output file {output_file}")
     except Exception:
         _logger.exception(
             f"Failed to publish HDF5 output file '{output_file}'. "
             f"Incomplete output, if created, is stored at '{incomplete_file}'."
         )
         raise
+
+
+def _iter_table_chunks(table_chunks):
+    """Yield normalized chunks of astropy tables."""
+    for chunk in table_chunks:
+        if isinstance(chunk, Table):
+            yield [chunk]
+            continue
+        yield chunk
 
 
 def _validate_written_hdf5(output_file, expected_tables):
@@ -478,7 +529,8 @@ def _create_hdf5_dataset(hdf5_file, table_name, data=None, dtype=None, shape=Non
         "maxshape": (None, *dataset_shape[1:]),
         "chunks": True,
         "compression": "gzip",
-        "compression_opts": 4,
+        "compression_opts": 6,
+        "shuffle": True,
     }
     if data is not None:
         kwargs["data"] = data
