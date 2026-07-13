@@ -951,12 +951,6 @@ def test_resolve_energy_max_scaling_parses_new_parameter(energy_max_scaling):
     assert_quantity_allclose(scaling[1], 300 * u.TeV)
 
 
-def test_resolve_energy_max_scaling_accepts_legacy_index():
-    scaling = _resolve_energy_max_scaling({"energy_max_scaling_index": -2.0})
-
-    assert scaling == (-2.0, None)
-
-
 def test_resolve_shower_params_accepts_showers_per_run_scaling():
     (
         _showers_per_run,

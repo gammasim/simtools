@@ -43,8 +43,6 @@ Examples
 
 """
 
-import argparse
-
 from simtools.application_control import build_application
 from simtools.configuration import defaults
 from simtools.configuration.commandline_argument_helpers import scientific_int
@@ -66,7 +64,6 @@ _APPLICATION_ARG_DEFINITIONS = {
             "[scaling]. May be repeated. Supported axes: azimuth, zenith, ha, dec, offset. "
             "Options for scaling are: linear, log, 1/cos"
         ),
-        "doc_group": "Pointing and grid axes",
     },
     "direction_grid_density": {
         "nargs": "+",
@@ -77,7 +74,6 @@ _APPLICATION_ARG_DEFINITIONS = {
             "derived from axis ranges and this density. With HA/Dec axes, use "
             "local_zenith_range/local_azimuth_range to filter generated points."
         ),
-        "doc_group": "Pointing and grid axes",
     },
     "local_zenith_range": {
         "nargs": "+",
@@ -87,7 +83,6 @@ _APPLICATION_ARG_DEFINITIONS = {
             "Local zenith range (quantity pair) used to filter HA/Dec density points, "
             "for example: --local_zenith_range 0 deg 70 deg"
         ),
-        "doc_group": "Pointing and grid axes",
     },
     "local_azimuth_range": {
         "nargs": "+",
@@ -97,33 +92,28 @@ _APPLICATION_ARG_DEFINITIONS = {
             "Local azimuth range (quantity pair) used to filter HA/Dec density points, "
             "for example: --local_azimuth_range 300 deg 60 deg"
         ),
-        "doc_group": "Pointing and grid axes",
     },
     "output_file": {
         "type": str,
         "default": "job_grid.ecsv",
         "help": "Output file for the generated executable job grid.",
-        "doc_group": "Output",
     },
     "corsika_limits": {
         "type": str,
         "required": False,
         "help": "Path to the lookup table for simulation limits.",
-        "doc_group": "CORSIKA limits lookup",
     },
     "number_of_runs": {
         "help": "Number of runs to be simulated for each production grid point and energy range..",
         "type": scientific_int,
         "required": False,
         "default": None,
-        "doc_group": "Run statistics",
     },
     "total_showers": {
         "help": "Total number of showers to simulate per production grid point and energy range.",
         "type": scientific_int,
         "required": False,
         "default": None,
-        "doc_group": "Run statistics",
     },
     "total_showers_scaling": {
         "help": "Scaling mode for total showers.",
@@ -131,7 +121,6 @@ _APPLICATION_ARG_DEFINITIONS = {
         "choices": ["fixed", "zenith_scaled"],
         "required": False,
         "default": "fixed",
-        "doc_group": "Run statistics",
     },
     "zenith_angle_scaling_factor": {
         "help": (
@@ -141,7 +130,6 @@ _APPLICATION_ARG_DEFINITIONS = {
         "type": float,
         "required": False,
         "default": defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
-        "doc_group": "Run statistics",
     },
     "max_total_showers_rounding_warnings": {
         "help": (
@@ -151,7 +139,6 @@ _APPLICATION_ARG_DEFINITIONS = {
         "type": scientific_int,
         "required": False,
         "default": TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
-        "doc_group": "Run statistics",
     },
     "showers_per_run_power_law": {
         "help": (
@@ -164,7 +151,6 @@ _APPLICATION_ARG_DEFINITIONS = {
         "metavar": ("POWER_INDEX", "REFERENCE_ENERGY_VALUE", "REFERENCE_ENERGY_UNIT"),
         "required": False,
         "default": None,
-        "doc_group": "Run statistics",
     },
     "showers_per_run_scaling": {
         "help": (
@@ -176,7 +162,6 @@ _APPLICATION_ARG_DEFINITIONS = {
         "choices": ["fixed", "cosine_zenith"],
         "required": False,
         "default": "fixed",
-        "doc_group": "Run statistics",
     },
     "energy_max_scaling": {
         "help": (
@@ -191,15 +176,6 @@ _APPLICATION_ARG_DEFINITIONS = {
         "metavar": ("POWER_INDEX", "REFERENCE_ENERGY_VALUE", "REFERENCE_ENERGY_UNIT"),
         "required": False,
         "default": None,
-        "doc_group": "Energy scaling",
-    },
-    "energy_max_scaling_index": {
-        "help": argparse.SUPPRESS,
-        "type": float,
-        "required": False,
-        "default": None,
-        "doc_hidden": True,
-        "doc_group": "Energy scaling",
     },
 }
 

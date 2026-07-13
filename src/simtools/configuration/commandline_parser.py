@@ -4,6 +4,25 @@ import argparse
 
 from simtools.configuration import commandline_parameters
 
+_DEFAULT_ARGUMENT_GROUPS = {
+    "configuration": "CONFIGURATION_ARGS",
+    "paths": "PATH_ARGS",
+    "output": "OUTPUT_ARGS",
+    "run time": "RUN_TIME_ARGS",
+    "execution": "EXECUTION_ARGS",
+    "user": "USER_ARGS",
+    "database configuration": "DB_CONFIG_ARGS",
+}
+
+_SIMULATION_CONFIGURATION_GROUPS = (
+    ("simulation configuration", commandline_parameters.get_corsika_configuration_args),
+    ("shower parameters", lambda: commandline_parameters.PARAMETER_DEFINITIONS["SHOWER_ARGS"]),
+    (
+        "corsika configuration",
+        lambda: commandline_parameters.PARAMETER_DEFINITIONS["CORSIKA_ARGS"],
+    ),
+)
+
 
 class CommandLineParser(argparse.ArgumentParser):
     """
@@ -48,63 +67,21 @@ class CommandLineParser(argparse.ArgumentParser):
         self.initialize_simulation_model_arguments(simulation_model)
         self.initialize_simulation_configuration_arguments(simulation_configuration)
 
-        if db_config:
-            self.initialize_db_config_arguments()
-        if paths:
-            self.initialize_path_arguments()
-        if output:
-            self.initialize_output_arguments()
-
-        self.initialize_config_files()
-        self.initialize_application_execution_arguments()
-        self.initialize_run_time()
-        self.initialize_user_arguments()
-
-    def initialize_config_files(self):
-        """Initialize configuration files."""
-        self.initialize_argument_group(
-            "configuration",
-            ["all"],
-            commandline_parameters.PARAMETER_DEFINITIONS["CONFIGURATION_ARGS"],
-        )
-
-    def initialize_path_arguments(self):
-        """Initialize paths."""
-        self.initialize_argument_group(
-            "paths", ["all"], commandline_parameters.PARAMETER_DEFINITIONS["PATH_ARGS"]
-        )
-
-    def initialize_output_arguments(self):
-        """Initialize application output files(s)."""
-        self.initialize_argument_group(
-            "output", ["all"], commandline_parameters.PARAMETER_DEFINITIONS["OUTPUT_ARGS"]
-        )
-
-    def initialize_run_time(self):
-        """Initialize run time arguments."""
-        self.initialize_argument_group(
-            "run time", ["all"], commandline_parameters.PARAMETER_DEFINITIONS["RUN_TIME_ARGS"]
-        )
-
-    def initialize_application_execution_arguments(self):
-        """Initialize application execution arguments."""
-        self.initialize_argument_group(
-            "execution", ["all"], commandline_parameters.PARAMETER_DEFINITIONS["EXECUTION_ARGS"]
-        )
-
-    def initialize_user_arguments(self):
-        """Initialize user arguments."""
-        self.initialize_argument_group(
-            "user", ["all"], commandline_parameters.PARAMETER_DEFINITIONS["USER_ARGS"]
-        )
+        for enabled, group_name in (
+            (db_config, "database configuration"),
+            (paths, "paths"),
+            (output, "output"),
+            (True, "configuration"),
+            (True, "execution"),
+            (True, "run time"),
+            (True, "user"),
+        ):
+            if enabled:
+                self.initialize_named_argument_group(group_name)
 
     def initialize_db_config_arguments(self):
         """Initialize DB configuration parameters."""
-        self.initialize_argument_group(
-            "database configuration",
-            ["all"],
-            commandline_parameters.PARAMETER_DEFINITIONS["DB_CONFIG_ARGS"],
-        )
+        self.initialize_named_argument_group("database configuration")
 
     def initialize_simulation_model_arguments(self, model_options):
         """
@@ -209,24 +186,15 @@ class CommandLineParser(argparse.ArgumentParser):
                 commandline_parameters.PARAMETER_DEFINITIONS["SIMULATION_SOFTWARE_ARGS"][
                     "simulation_software"
                 ],
-                group_name="simulation software",
             )
         if "corsika_configuration" in simulation_configuration:
-            self.initialize_argument_group(
-                "simulation configuration",
-                simulation_configuration["corsika_configuration"],
-                commandline_parameters.get_corsika_configuration_args(),
-            )
-            self.initialize_argument_group(
-                "shower parameters",
-                simulation_configuration["corsika_configuration"],
-                commandline_parameters.PARAMETER_DEFINITIONS["SHOWER_ARGS"],
-            )
-            self.initialize_argument_group(
-                "corsika configuration",
-                simulation_configuration["corsika_configuration"],
-                commandline_parameters.PARAMETER_DEFINITIONS["CORSIKA_ARGS"],
-            )
+            selected_parameters = simulation_configuration["corsika_configuration"]
+            for group_name, definitions_factory in _SIMULATION_CONFIGURATION_GROUPS:
+                self.initialize_argument_group(
+                    group_name,
+                    selected_parameters,
+                    definitions_factory(),
+                )
         if "sim_telarray_configuration" in simulation_configuration:
             self.initialize_argument_group(
                 "sim_telarray configuration",
@@ -234,13 +202,11 @@ class CommandLineParser(argparse.ArgumentParser):
                 commandline_parameters.PARAMETER_DEFINITIONS["SIMTEL_ARGS"],
             )
 
-    def add_parameter_from_definition(self, container, name, definition, group_name=None):
+    def add_parameter_from_definition(self, container, name, definition):
         """Add one argument from a parameter-definition dictionary."""
         argparse_kwargs, doc_metadata = _split_argument_metadata(definition)
         action = container.add_argument(f"--{name}", **argparse_kwargs)
         action.simtools_doc = doc_metadata["doc"]
-        action.simtools_doc_group = doc_metadata["doc_group"] or group_name
-        action.simtools_doc_groups = doc_metadata["doc_groups"]
         action.simtools_doc_hidden = doc_metadata["doc_hidden"]
         action.simtools_scopes = doc_metadata["scopes"]
         return action
@@ -248,6 +214,14 @@ class CommandLineParser(argparse.ArgumentParser):
     def initialize_application_argument_group(self, selected_parameters, available_parameters=None):
         """Initialize application-specific arguments."""
         self.initialize_argument_group("application", selected_parameters, available_parameters)
+
+    def initialize_named_argument_group(self, group_name):
+        """Initialize one predefined argument group by its display name."""
+        self.initialize_argument_group(
+            group_name,
+            ["all"],
+            commandline_parameters.PARAMETER_DEFINITIONS[_DEFAULT_ARGUMENT_GROUPS[group_name]],
+        )
 
     def initialize_argument_group(self, group_name, selected_parameters, available_parameters=None):
         """Initialize a group of arguments from a parameter-definition dictionary."""
@@ -265,7 +239,6 @@ class CommandLineParser(argparse.ArgumentParser):
                     configuration_group,
                     param,
                     available_parameters[param],
-                    group_name=group_name,
                 )
             except KeyError:
                 pass
@@ -292,7 +265,6 @@ class CommandLineParser(argparse.ArgumentParser):
             commandline_parameters.PARAMETER_DEFINITIONS["SIMULATION_MODEL_ARGS"][
                 "array_layout_name"
             ],
-            group_name="simulation model",
         )
         self.add_parameter_from_definition(
             _layout_group,
@@ -300,7 +272,6 @@ class CommandLineParser(argparse.ArgumentParser):
             commandline_parameters.PARAMETER_DEFINITIONS["SIMULATION_MODEL_ARGS"][
                 "array_element_list"
             ],
-            group_name="simulation model",
         )
         if "layout_file" in model_options:
             self.add_parameter_from_definition(
@@ -309,7 +280,6 @@ class CommandLineParser(argparse.ArgumentParser):
                 commandline_parameters.PARAMETER_DEFINITIONS["SIMULATION_MODEL_ARGS"][
                     "array_layout_file"
                 ],
-                group_name="simulation model",
             )
         if "layout_parameter_file" in model_options:
             self.add_parameter_from_definition(
@@ -318,7 +288,6 @@ class CommandLineParser(argparse.ArgumentParser):
                 commandline_parameters.PARAMETER_DEFINITIONS["SIMULATION_MODEL_ARGS"][
                     "array_layout_parameter_file"
                 ],
-                group_name="simulation model",
             )
         if "plot_all_layouts" in model_options:
             self.add_parameter_from_definition(
@@ -327,7 +296,6 @@ class CommandLineParser(argparse.ArgumentParser):
                 commandline_parameters.PARAMETER_DEFINITIONS["SIMULATION_MODEL_ARGS"][
                     "plot_all_layouts"
                 ],
-                group_name="simulation model",
             )
         return job_group
 
@@ -356,18 +324,8 @@ def _split_argument_metadata(definition):
     """Split a parameter definition into argparse kwargs and documentation metadata."""
     doc_metadata = {
         "doc": definition.get("doc", definition.get("help")),
-        "doc_group": definition.get("doc_group"),
-        "doc_groups": definition.get("doc_groups", {}),
         "doc_hidden": definition.get("doc_hidden", definition.get("help") is argparse.SUPPRESS),
         "scopes": definition.get("scopes"),
     }
     argparse_kwargs = {k: v for k, v in definition.items() if k not in doc_metadata}
     return argparse_kwargs, doc_metadata
-
-
-def resolve_doc_group_for_scope(action, scope=None, fallback=None):
-    """Resolve a documentation group from action metadata for a specific application scope."""
-    doc_groups = getattr(action, "simtools_doc_groups", {}) or {}
-    if scope and scope in doc_groups:
-        return doc_groups[scope]
-    return getattr(action, "simtools_doc_group", None) or fallback

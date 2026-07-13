@@ -26,14 +26,12 @@ def get_corsika_configuration_args():
             "action": helpers.OneOrManyAction,
             "nargs": "+",
             "required": True,
-            "doc_groups": {"production_generate_grid": "Production context"},
         },
         "primary_id_type": {
             "help": "Primary particle ID type",
             "type": str,
             "choices": ["common_name", "corsika7_id", "pdg_id"],
             "default": "common_name",
-            "doc_groups": {"production_generate_grid": "Production context"},
         },
         "azimuth_angle": {
             "help": (
@@ -56,13 +54,11 @@ def get_corsika_configuration_args():
         "showers_per_run": {
             "help": "Baseline number of CORSIKA showers per run.",
             "type": int,
-            "doc_groups": {"production_generate_grid": "Run statistics"},
         },
         "run_number_offset": {
             "help": "Offset added to run number when executing a simulation.",
             "type": int,
             "default": 0,
-            "doc_groups": {"production_generate_grid": "Run statistics"},
         },
         "run_number": {
             "help": "Run number to be simulated.",
@@ -83,14 +79,8 @@ def get_corsika_configuration_args():
             "help": "Minimum zenith angle (deg) for using curved-atmosphere CORSIKA binaries. ",
             "type": helpers.zenith_angle,
             "default": defaults.CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG * u.deg,
-            "doc_groups": {"production_generate_grid": "Shower and CORSIKA parameters"},
         },
     }
-
-
-def get_parameter_definitions():
-    """Return dictionaries with shared command-line parameter definitions."""
-    return PARAMETER_DEFINITIONS
 
 
 PARAMETER_DEFINITIONS = {
@@ -99,14 +89,12 @@ PARAMETER_DEFINITIONS = {
             "help": "Slope of the energy spectrum.",
             "type": float,
             "default": -2.0,
-            "doc_groups": {"production_generate_grid": "Shower and CORSIKA parameters"},
         },
         "energy_range": {
             "help": ("Energy range of the primary particle (min/max value, e'g', '10 GeV 5 TeV')."),
             "action": helpers.QuantityPairAction,
             "nargs": "+",
             "default": (3 * u.GeV, 330 * u.TeV),
-            "doc_groups": {"production_generate_grid": "Shower and CORSIKA parameters"},
         },
         "view_cone": {
             "help": (
@@ -115,13 +103,11 @@ PARAMETER_DEFINITIONS = {
             ),
             "type": helpers.parse_quantity_pair,
             "default": ["0 deg 0 deg"],
-            "doc_groups": {"production_generate_grid": "Shower and CORSIKA parameters"},
         },
         "core_scatter": {
             "help": "Scatter radius for shower cores (number of use; scatter radius).",
             "type": helpers.parse_integer_and_quantity,
             "default": ["10 10000 m"],
-            "doc_groups": {"production_generate_grid": "Shower and CORSIKA parameters"},
         },
     },
     "CONFIGURATION_ARGS": {
@@ -297,7 +283,6 @@ PARAMETER_DEFINITIONS = {
             "type": str,
             "default": None,
             "nargs": "+",
-            "doc_groups": {"production_generate_grid": "Production context"},
         },
         "parameter_version": {
             "help": "model parameter version",
@@ -316,7 +301,6 @@ PARAMETER_DEFINITIONS = {
         "site": {
             "help": "Observatory site (e.g., North, South)",
             "type": helpers.site,
-            "doc_groups": {"production_generate_grid": "Production context"},
         },
         "telescope": {
             "help": "telescope model name (e.g., LSTN-01, SSTS-design, ...)",
@@ -334,7 +318,6 @@ PARAMETER_DEFINITIONS = {
             ),
             "nargs": "+",
             "type": str,
-            "doc_groups": {"production_generate_grid": "Production context"},
         },
         "array_element_list": {
             "help": "list of array elements (e.g., LSTN-01, LSTN-02, MSTN).",
@@ -393,7 +376,6 @@ PARAMETER_DEFINITIONS = {
             "type": str,
             "choices": list(defaults.SIMULATION_SOFTWARE_CHOICES),
             "default": defaults.SIMULATION_SOFTWARE_DEFAULT,
-            "doc_groups": {"production_generate_grid": "Production context"},
         }
     },
     "CORSIKA_ARGS": {
@@ -406,7 +388,6 @@ PARAMETER_DEFINITIONS = {
             "action": helpers.OneOrManyAction,
             "nargs": "+",
             "default": None,
-            "doc_groups": {"production_generate_grid": "Production context"},
         },
         "corsika_le_interaction": {
             "help": (
@@ -417,7 +398,6 @@ PARAMETER_DEFINITIONS = {
             "action": helpers.OneOrManyAction,
             "nargs": "+",
             "default": None,
-            "doc_groups": {"production_generate_grid": "Production context"},
         },
     },
     "APPLICATION_ARGS": {

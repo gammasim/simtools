@@ -81,23 +81,3 @@ def test_load_application_parser_requires_build_application():
         monkeypatch.setattr(simtools_cli_help.importlib, "import_module", lambda *_: fake_module)
         with pytest.raises(ValueError, match="has no build_application import"):
             load_application_parser("fake_app")
-
-
-def test_render_native_cli_docs_uses_scoped_doc_groups():
-    """Test application-specific doc groups are read from parser metadata."""
-    parser = argparse.ArgumentParser(prog="simtools-test")
-    app_group = parser.add_argument_group("simulation model")
-    action = app_group.add_argument("--site", help="site")
-    action.simtools_doc = "site"
-    action.simtools_doc_group = "simulation model"
-    action.simtools_doc_groups = {"production_generate_grid": "Production context"}
-    action.simtools_doc_hidden = False
-
-    inspection = simtools_cli_help.CliInspection(
-        module=SimpleNamespace(__name__="simtools.applications.production_generate_grid"),
-        parser=parser,
-    )
-    rendered_text = render_native_cli_docs(inspection, set())[0].astext()
-
-    assert "Production context" in rendered_text
-    assert "simulation model" not in rendered_text
