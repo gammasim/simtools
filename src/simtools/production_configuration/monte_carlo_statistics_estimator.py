@@ -319,6 +319,15 @@ def _resolve_limiting_indices(energy_mask, limiting_index):
     return limiting_index[0], masked_energy_indices[limiting_index[1]]
 
 
+def _extract_diagnostic_file_info(metadata_row):
+    """Return observational metadata used to disambiguate diagnostic plot filenames."""
+    return {
+        "zenith": _get_metadata_quantity(metadata_row, "zenith", u.deg),
+        "azimuth": _get_metadata_quantity(metadata_row, "azimuth", u.deg),
+        "nsb_level": metadata_row["nsb_level"],
+    }
+
+
 def _build_result_metadata(
     metadata_row,
     spectral_index,
@@ -404,6 +413,7 @@ def _build_result_row(
         plot_monte_carlo_statistics_diagnostics(
             io_handler.IOHandler().get_output_directory(),
             metadata_row["array_name"],
+            _extract_diagnostic_file_info(metadata_row),
             energy_edges,
             angular_edges,
             expected_counts,
