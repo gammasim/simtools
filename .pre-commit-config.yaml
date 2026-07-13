@@ -65,6 +65,12 @@ repos:
       "--skip=tests/resources/example_non_utf-8_file.lis",
       "--ignore-words-list=als,hel",
     ]
+- repo: https://github.com/numpy/numpydoc
+  rev: v1.8.0
+  hooks:
+  - id: numpydoc-validation
+    exclude: ^tests/
+
 # markdownlint
 - repo: https://github.com/igorshubovych/markdownlint-cli
   rev: v0.49.0

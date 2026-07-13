@@ -341,3 +341,15 @@ fragment.maintenance.name = "Maintenance"
 fragment.maintenance.showcontent = true
 fragment.model.name = "Simulation model"
 fragment.model.showcontent = true
+
+[tool.numpydoc_validation]
+checks = [
+  "all",  # Enable all default validation checks...
+  "ES01", # no extended summary found
+  "EX01", # no examples section
+  "SA01", # no see also section
+]
+exclude = [
+  '\._[^/]*$', # Matches private methods/functions (e.g., package.module._func)
+  "^_[^/]*$",  # Matches private top-level modules or classes starting with _
+]
