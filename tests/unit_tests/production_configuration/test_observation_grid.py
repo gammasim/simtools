@@ -80,6 +80,30 @@ def test_generate_simulation_grid_keeps_horizontal_coordinates_for_hadec_axes():
     assert "dec" in simulation_grid[0]
 
 
+def test_generate_simulation_grid_keeps_horizontal_grid_horizontal():
+    engine = _make_engine(
+        axes={
+            "azimuth": {"range": [180, 180], "binning": 1, "scaling": "linear", "units": "deg"},
+            "zenith_angle": {
+                "range": [20, 20],
+                "binning": 1,
+                "scaling": "linear",
+                "units": "deg",
+            },
+        },
+        coordinate_system="horizontal",
+        observing_location=DEFAULT_OBSERVING_LOCATION,
+        lookup_table=None,
+    )
+
+    simulation_grid = engine.generate_simulation_grid()
+
+    assert "zenith_angle" in simulation_grid[0]
+    assert "azimuth" in simulation_grid[0]
+    assert "ha" not in simulation_grid[0]
+    assert "dec" not in simulation_grid[0]
+
+
 def test_get_max_zenith_for_hadec_mode_reads_axis_range():
     engine = _make_engine(axes={"zenith_angle": {"range": [10, 60], "binning": 2, "units": "deg"}})
 

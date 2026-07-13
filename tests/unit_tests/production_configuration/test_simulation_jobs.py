@@ -1274,6 +1274,25 @@ def test_build_simulation_jobs_expands_runs_from_observation_grid(
     assert rows[0]["dec"] == -45 * u.deg
 
 
+@patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")
+def test_build_simulation_jobs_from_horizontal_grid_does_not_add_hadec(
+    mock_generate_observation_grids_per_layout,
+):
+    mock_generate_observation_grids_per_layout.return_value = _observation_grid_return(
+        {
+            "azimuth": 180 * u.deg,
+            "zenith_angle": 20 * u.deg,
+            "lower_energy_limit": 40 * u.GeV,
+            "upper_radius_limit": 100 * u.m,
+            "viewcone_radius": 2 * u.deg,
+        }
+    )
+    rows = build_simulation_jobs(_base_simulation_jobs_args())
+
+    assert "ha" not in rows[0]
+    assert "dec" not in rows[0]
+
+
 @patch("simtools.production_configuration.simulation_jobs.SiteModel")
 @patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")
 def test_build_simulation_jobs_sets_nsb_rate_from_site_model(

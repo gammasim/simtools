@@ -76,6 +76,7 @@ simtools-docs-produce-production-summary <applications/simtools-docs-produce-pro
 simtools-docs-produce-simulation-configuration-report <applications/simtools-docs-produce-simulation-configuration-report>
 simtools-export-sim-telarray-metadata-schema <applications/simtools-export-sim-telarray-metadata-schema>
 simtools-generate-array-config <applications/simtools-generate-array-config>
+simtools-generate-bias-curve-submissions <applications/simtools-generate-bias-curve-submissions>
 simtools-generate-corsika-histograms <applications/simtools-generate-corsika-histograms>
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
