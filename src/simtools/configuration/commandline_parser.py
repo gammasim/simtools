@@ -79,10 +79,6 @@ class CommandLineParser(argparse.ArgumentParser):
             if enabled:
                 self.initialize_named_argument_group(group_name)
 
-    def initialize_db_config_arguments(self):
-        """Initialize DB configuration parameters."""
-        self.initialize_named_argument_group("database configuration")
-
     def initialize_simulation_model_arguments(self, model_options):
         """
         Initialize default arguments for simulation model definition.
@@ -210,10 +206,6 @@ class CommandLineParser(argparse.ArgumentParser):
         action.simtools_doc_hidden = doc_metadata["doc_hidden"]
         action.simtools_scopes = doc_metadata["scopes"]
         return action
-
-    def initialize_application_argument_group(self, selected_parameters, available_parameters=None):
-        """Initialize application-specific arguments."""
-        self.initialize_argument_group("application", selected_parameters, available_parameters)
 
     def initialize_named_argument_group(self, group_name):
         """Initialize one predefined argument group by its display name."""
