@@ -153,9 +153,10 @@ def plot_monte_carlo_statistics_diagnostics(
         Directory to write plot files.
     array_name : str
         Array or telescope-selection name used in plot titles and filenames.
-    file_info : dict
+    file_info : dict, optional
         Dictionary with simulation metadata (zenith, azimuth, nsb_level) used
-        to make filenames unique per observational setup.
+        to make filenames unique per observational setup. If omitted, filenames are based on
+        `array_name` only.
     energy_edges : array-like
         Energy bin edges in TeV.
     angular_edges : array-like
