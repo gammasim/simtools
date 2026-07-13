@@ -65,6 +65,19 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
     assert "trigger_multiplicity" in stats_payload["plot_statistics"]
 
 
+def test_output_directory_for_array_layout_selection_joins_list_values(tmp_test_directory):
+    output_dir = Path(tmp_test_directory) / "plots"
+    array_layout_names = ["CTAO-North Alpha", "MSTN-01"]
+
+    selected = plot_event_level_production_comparison._output_directory_for_array_layout_selection(
+        output_dir,
+        array_layout_names,
+    )
+
+    assert selected == output_dir.joinpath(*array_layout_names)
+    assert selected.exists()
+
+
 def test_plot_writes_per_type_comparison_figures(tmp_test_directory):
     """Test per-array-element-type comparison plots are written for each type."""
     output_path = Path(tmp_test_directory)

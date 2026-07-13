@@ -1,11 +1,14 @@
 #!/usr/bin/python3
 
+import sys
 from pathlib import Path
 
 import pytest
 import yaml
 
 import simtools.testing.configuration as configuration
+
+PYTHON_APP_PREFIX = f"{sys.executable} src/simtools/applications"
 
 
 @pytest.fixture
@@ -179,7 +182,7 @@ def test_create_tmp_output_path(tmp_test_directory):
 def test_get_application_command_with_config_file():
     app = "test_app"
     config_file = "test_config.yml"
-    expected_command = "python simtools/applications/test_app.py --config test_config.yml"
+    expected_command = f"{PYTHON_APP_PREFIX}/test_app.py --config test_config.yml"
 
     command = configuration.get_application_command(app, config_file=config_file)
 
@@ -189,17 +192,20 @@ def test_get_application_command_with_config_file():
 def test_get_application_command_with_config_string():
     app = "test_app"
     config_string = "--version"
-    expected_command = "python simtools/applications/test_app.py --version"
+    expected_command = f"{PYTHON_APP_PREFIX}/test_app.py --version"
 
     command = configuration.get_application_command(app, config_string=config_string)
 
     assert command == expected_command
 
 
-def test_get_application_command_with_simtools_app():
+def test_get_application_command_with_simtools_app(mocker):
     app = "simtools-test_app"
     config_file = "test_config.yml"
     expected_command = "simtools-test_app --config test_config.yml"
+    mocker.patch(
+        "simtools.testing.configuration.shutil.which", return_value="/usr/bin/simtools-test_app"
+    )
 
     command = configuration.get_application_command(app, config_file=config_file)
 
@@ -208,7 +214,7 @@ def test_get_application_command_with_simtools_app():
 
 def test_get_application_command_with_no_config():
     app = "test_app"
-    expected_command = "python simtools/applications/test_app.py"
+    expected_command = f"{PYTHON_APP_PREFIX}/test_app.py"
 
     command = configuration.get_application_command(app)
 
@@ -341,7 +347,7 @@ def test_configure_with_model_version_use_current(tmp_test_directory, mocker, tm
 
     cmd, config_file_model_version = configuration.configure(config, tmp_test_directory, request)
 
-    expected_cmd = "python simtools/applications/test_app.py --config " + str(
+    expected_cmd = f"{PYTHON_APP_PREFIX}/test_app.py --config " + str(
         tmp_test_directory / "test_app-test_name" / tmp_config_string
     )
     assert cmd == expected_cmd
@@ -355,7 +361,7 @@ def test_configure_without_configuration(tmp_test_directory, mocker):
 
     cmd, config_file_model_version = configuration.configure(config, tmp_test_directory, request)
 
-    expected_cmd = "python simtools/applications/test_app.py"
+    expected_cmd = f"{PYTHON_APP_PREFIX}/test_app.py"
     assert cmd == expected_cmd
     assert config_file_model_version is None
 
@@ -371,7 +377,7 @@ def test_configure_with_configuration(tmp_test_directory, mocker, tmp_config_str
 
     cmd, config_file_model_version = configuration.configure(config, tmp_test_directory, request)
 
-    expected_cmd = "python simtools/applications/test_app.py --config " + str(
+    expected_cmd = f"{PYTHON_APP_PREFIX}/test_app.py --config " + str(
         tmp_test_directory / "test_app-test_name" / tmp_config_string
     )
     assert cmd == expected_cmd

@@ -3,6 +3,8 @@
 import logging
 import os
 import re
+import shutil
+import sys
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -327,7 +329,13 @@ def get_application_command(app, config_file=None, config_string=None):
     str: command to run the application test.
 
     """
-    cmd = app if "simtools-" in app else f"python simtools/applications/{app}.py"
+    if "simtools-" in app:
+        cmd = app
+        if shutil.which(app) is None:
+            module_name = app.removeprefix("simtools-").replace("-", "_")
+            cmd = f"{sys.executable} src/simtools/applications/{module_name}.py"
+    else:
+        cmd = f"{sys.executable} src/simtools/applications/{app}.py"
     if config_string:
         return f"{cmd} {config_string}"
     if config_file is not None:

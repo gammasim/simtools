@@ -20,6 +20,27 @@ _ECSV_SUFFIX = ".ecsv"
 _ECSV_FORMAT = "ascii.ecsv"
 _JOB_GRID_SCHEMA_FILE = "job_grid_density.schema.yml"
 _JOB_GRID_SCHEMA_URL = SCHEMA_URL + "/" + _JOB_GRID_SCHEMA_FILE
+_OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label", "telescope")
+_MISSING = object()
+SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS = frozenset(
+    {
+        "primary",
+        "azimuth_angle",
+        "zenith_angle",
+        "energy_range",
+        "core_scatter",
+        "view_cone",
+        "showers_per_run",
+        "model_version",
+        "array_layout_name",
+        "corsika_le_interaction",
+        "corsika_he_interaction",
+        "run_number",
+        "run_number_offset",
+        "site",
+        "simulation_software",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -28,6 +49,7 @@ class JobGridSchema:
 
     version: str
     columns: tuple[str, ...]
+    optional_columns: tuple[str, ...]
     column_units: dict[str, u.Unit]
     column_dtypes: dict[str, object]
 
@@ -45,6 +67,9 @@ def _load_job_grid_schema():
     return JobGridSchema(
         version=schema["schema_version"],
         columns=tuple(column["name"] for column in column_definitions),
+        optional_columns=tuple(
+            column["name"] for column in column_definitions if not column.get("required")
+        ),
         column_units=column_units,
         column_dtypes={
             column["name"]: str if column["type"] == "string" else np.dtype(column["type"])
@@ -54,6 +79,9 @@ def _load_job_grid_schema():
 
 
 JOB_GRID_SCHEMA = _load_job_grid_schema()
+JOB_GRID_COLUMNS = [
+    name for name in JOB_GRID_SCHEMA.columns if name not in JOB_GRID_SCHEMA.optional_columns
+]
 
 
 def _cast_scalar(value, dtype):
@@ -63,28 +91,61 @@ def _cast_scalar(value, dtype):
     return dtype.type(value).item()
 
 
+def _get_job_row_value(job_row, name):
+    """Return one serialized field value, validating required schema entries."""
+    if name not in job_row:
+        if name in JOB_GRID_SCHEMA.optional_columns:
+            return _MISSING
+        raise KeyError(name)
+
+    value = job_row[name]
+    if value is None:
+        if name in JOB_GRID_SCHEMA.optional_columns:
+            return _MISSING
+        raise TypeError(f"Missing required value for field '{name}'.")
+    return value
+
+
+def _serialize_field_value(name, value):
+    """Serialize one field value according to the job-grid schema."""
+    if name in _OPTIONAL_STRING_FIELDS:
+        return str(value)
+    if name in JOB_GRID_SCHEMA.column_units:
+        return float(get_value_in_unit(value, JOB_GRID_SCHEMA.column_units[name]))
+    return _cast_scalar(value, JOB_GRID_SCHEMA.column_dtypes[name])
+
+
 def _serialize_job_row(job_row):
     """Serialize one job row to the on-disk schema."""
-    return {
-        name: float(get_value_in_unit(job_row[name], JOB_GRID_SCHEMA.column_units[name]))
-        if name in JOB_GRID_SCHEMA.column_units
-        else _cast_scalar(job_row[name], JOB_GRID_SCHEMA.column_dtypes[name])
-        for name in JOB_GRID_SCHEMA.columns
-    }
+    serialized_row = {}
+    for name in JOB_GRID_SCHEMA.columns:
+        value = _get_job_row_value(job_row, name)
+        if value is _MISSING:
+            continue
+        serialized_row[name] = _serialize_field_value(name, value)
+    return serialized_row
 
 
 def _deserialize_job_row(serialized_row, column_units=None):
     """Deserialize one stored row to the in-memory job-row schema."""
     column_units = column_units or {}
-    return {
-        name: get_value_as_quantity(
-            float(serialized_row[name]),
-            column_units.get(name) or JOB_GRID_SCHEMA.column_units[name],
-        ).to(JOB_GRID_SCHEMA.column_units[name])
-        if name in JOB_GRID_SCHEMA.column_units
-        else _cast_scalar(serialized_row[name], JOB_GRID_SCHEMA.column_dtypes[name])
-        for name in JOB_GRID_SCHEMA.columns
-    }
+    job_row = {}
+    for name in JOB_GRID_SCHEMA.columns:
+        if name not in serialized_row:
+            continue
+        value = serialized_row[name]
+        if np.ma.is_masked(value) or value is None:
+            continue
+        if JOB_GRID_SCHEMA.column_dtypes[name] is str and not str(value).strip():
+            continue
+        if name in JOB_GRID_SCHEMA.column_units:
+            job_row[name] = get_value_as_quantity(
+                float(value),
+                column_units.get(name) or JOB_GRID_SCHEMA.column_units[name],
+            ).to(JOB_GRID_SCHEMA.column_units[name])
+        else:
+            job_row[name] = _cast_scalar(value, JOB_GRID_SCHEMA.column_dtypes[name])
+    return job_row
 
 
 def _add_job_grid_schema_metadata(metadata):
@@ -131,6 +192,20 @@ def _validate_job_grid_table(table):
     ).validate_and_transform()
 
 
+def _build_output_table(output_rows, output_columns, metadata=None):
+    """Build an Astropy table for serialized output rows."""
+    output_table = Table(
+        rows=[tuple(row[column] for column in output_columns) for row in output_rows],
+        names=output_columns,
+        dtype=[JOB_GRID_SCHEMA.column_dtypes[column] for column in output_columns],
+    )
+    for column_name, unit in JOB_GRID_SCHEMA.column_units.items():
+        if column_name in output_table.colnames:
+            output_table[column_name].unit = unit
+    output_table.meta = metadata or {}
+    return output_table
+
+
 def serialize_job_grid(job_rows, output_file, metadata=None):
     """
     Serialize executable job rows to ECSV output.
@@ -154,28 +229,29 @@ def serialize_job_grid(job_rows, output_file, metadata=None):
     if output_path.suffix.lower() != _ECSV_SUFFIX:
         raise ValueError("Job grid output file must use the '.ecsv' extension.")
 
-    output_columns = JOB_GRID_SCHEMA.columns
+    optional_columns_to_write = (
+        JOB_GRID_SCHEMA.optional_columns
+        if not serialized_rows
+        else tuple(
+            column
+            for column in JOB_GRID_SCHEMA.optional_columns
+            if any(column in row for row in serialized_rows)
+        )
+    )
+    output_columns = (*JOB_GRID_COLUMNS, *optional_columns_to_write)
     output_rows = [
-        {column: row.get(column) for column in output_columns} for row in serialized_rows
+        {
+            column: (
+                "" if column in _OPTIONAL_STRING_FIELDS and column not in row else row.get(column)
+            )
+            for column in output_columns
+        }
+        for row in serialized_rows
     ]
     output_table = _build_output_table(output_rows, output_columns, metadata)
     output_table = _validate_job_grid_table(output_table)
     logger.info(f"Writing job grid with {len(job_rows)} rows to '{output_path}'.")
     output_table.write(output_path, format=_ECSV_FORMAT, overwrite=True)
-
-
-def _build_output_table(output_rows, output_columns, metadata=None):
-    """Build an Astropy table for serialized output rows."""
-    output_table = Table(
-        rows=[tuple(row[column] for column in output_columns) for row in output_rows],
-        names=output_columns,
-        dtype=[JOB_GRID_SCHEMA.column_dtypes[column] for column in output_columns],
-    )
-    for column_name, unit in JOB_GRID_SCHEMA.column_units.items():
-        if column_name in output_table.colnames:
-            output_table[column_name].unit = unit
-    output_table.meta = metadata or {}
-    return output_table
 
 
 def read_job_grid(input_file):
@@ -236,8 +312,9 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
     """
     Convert an in-memory job grid row to simulate_prod argument format.
 
-    The returned dictionary can be merged into a simulate_prod ``args_dict`` so that
-    values from the job grid row take precedence over previously parsed arguments.
+    The returned dictionary contains the production-defining arguments represented
+    by a job-grid row. Callers are responsible for ensuring that these values are
+    not combined ambiguously with independently supplied production arguments.
 
     Parameters
     ----------

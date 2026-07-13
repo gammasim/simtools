@@ -7,6 +7,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 
+from simtools.io import io_handler
 from simtools.statistics import (
     compare_samples_with_statistics,
 )
@@ -15,19 +16,39 @@ from simtools.utils import names
 _logger = logging.getLogger(__name__)
 
 
-def plot(metrics_per_production, output_path, bins=40):
+def _output_directory_for_array_layout_selection(output_directory, array_layout_name):
+    """Return a plot output directory for an optional array-layout selection."""
+    if not array_layout_name:
+        return output_directory
+
+    if isinstance(array_layout_name, str):
+        array_layout_name = [array_layout_name]
+
+    output_path = output_directory.joinpath(*array_layout_name)
+    output_path.mkdir(parents=True, exist_ok=True)
+    return output_path
+
+
+def plot(metrics_per_production, output_path=None, array_layout_name=None, bins=40):
     """Create all event-level production comparison plots.
 
     Parameters
     ----------
     metrics_per_production : list[ProductionEventMetrics]
         Aggregated metrics per production.
-    output_path : pathlib.Path
-        Output directory for generated figures.
+    output_path : pathlib.Path, optional
+        Output directory for the generated plots. Falls back to the current
+        application output directory when omitted.
+    array_layout_name : list[str] or str, optional
+        Array-layout selection used to collect the metrics. When set, plots are
+        written into a subdirectory derived from that selection.
     bins : int, optional
         Number of bins for 1D histograms.
     """
     comparison_statistics = _initialize_comparison_statistics(metrics_per_production)
+    output_path = output_path or io_handler.IOHandler().get_output_directory()
+    output_path = _output_directory_for_array_layout_selection(output_path, array_layout_name)
+    output_path.mkdir(parents=True, exist_ok=True)
 
     for plot_name, plot_function in _TOP_LEVEL_STAT_PLOTS:
         _record_plot_statistics(
@@ -112,9 +133,11 @@ def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", b
 
     global_max = 0
     for metrics in metrics_per_production:
-        if metrics.trigger_multiplicity.size == 0:
-            continue
-        global_max = max(global_max, int(np.max(metrics.trigger_multiplicity)))
+        if metrics.trigger_multiplicity_histogram:
+            _, bin_edges = metrics.trigger_multiplicity_histogram
+            global_max = max(global_max, int(bin_edges[-1] - 1))
+        elif metrics.trigger_multiplicity.size > 0:
+            global_max = max(global_max, int(np.max(metrics.trigger_multiplicity)))
 
     if global_max == 0:
         _logger.warning("Skipping trigger multiplicity plot, no triggered events available.")
@@ -124,9 +147,9 @@ def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", b
     bin_edges = np.arange(1, global_max + 2)
     counts_per_label = {}
     for metrics in metrics_per_production:
-        if metrics.trigger_multiplicity.size == 0:
+        counts = _get_trigger_multiplicity_counts(metrics, bin_edges)
+        if counts is None:
             continue
-        counts, _ = np.histogram(metrics.trigger_multiplicity, bins=bin_edges)
         counts_per_label[metrics.label] = counts
         fractions, errors = _fraction_with_poisson_errors(counts)
         stairs_artist = ax.stairs(fractions, bin_edges, linewidth=1.5, label=metrics.label)
@@ -156,6 +179,21 @@ def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", b
     _save_figure(fig, output_path, f"trigger_multiplicity{suffix}.png")
     statistics["plot_name"] = f"trigger_multiplicity{suffix}"
     return statistics
+
+
+def _get_trigger_multiplicity_counts(metrics, bin_edges):
+    """Return trigger multiplicity counts for the requested bin edges."""
+    if metrics.trigger_multiplicity_histogram:
+        counts, source_edges = metrics.trigger_multiplicity_histogram
+        if np.array_equal(source_edges, bin_edges):
+            return np.asarray(counts, dtype=float)
+        centers = 0.5 * (source_edges[:-1] + source_edges[1:])
+        rebinned, _ = np.histogram(centers, bins=bin_edges, weights=counts)
+        return rebinned
+    if metrics.trigger_multiplicity.size == 0:
+        return None
+    counts, _ = np.histogram(metrics.trigger_multiplicity, bins=bin_edges)
+    return counts
 
 
 def _plot_trigger_combinations(metrics_per_production, output_path, top_n=12):
@@ -381,12 +419,15 @@ def _plot_triggered_vs_quantity(
     plotted = False
     for metrics in metrics_per_production:
         simulated, triggered = _get_quantity_arrays(metrics, quantity_name)
-        if simulated.size == 0:
+        sim_counts, _ = _get_quantity_counts(metrics, quantity_name, bin_edges, "simulated")
+        trig_counts, _ = _get_quantity_counts(metrics, quantity_name, bin_edges, "triggered")
+        if sim_counts is None and simulated.size == 0:
             continue
         plotted = True
-
-        sim_counts, _ = np.histogram(simulated, bins=bin_edges)
-        trig_counts, _ = np.histogram(triggered, bins=bin_edges)
+        if sim_counts is None:
+            sim_counts, _ = np.histogram(simulated, bins=bin_edges)
+        if trig_counts is None:
+            trig_counts, _ = np.histogram(triggered, bins=bin_edges)
         with np.errstate(divide="ignore", invalid="ignore"):
             efficiency = np.divide(
                 trig_counts,
@@ -492,17 +533,27 @@ def _plot_quantity_distribution(
     counts_by_label = {}
     for metrics in metrics_per_production:
         simulated, triggered = _get_quantity_arrays(metrics, quantity_name)
-        if simulated.size == 0:
+        sim_counts, simulated_samples = _get_quantity_counts(
+            metrics, quantity_name, bin_edges, "simulated"
+        )
+        trig_counts, triggered_samples = _get_quantity_counts(
+            metrics, quantity_name, bin_edges, "triggered"
+        )
+        if sim_counts is None and simulated.size == 0:
             continue
         plotted = True
 
-        sim_counts, _ = np.histogram(simulated, bins=bin_edges)
-        trig_counts, _ = np.histogram(triggered, bins=bin_edges)
+        if sim_counts is None:
+            sim_counts, _ = np.histogram(simulated, bins=bin_edges)
+            simulated_samples = simulated
+        if trig_counts is None:
+            trig_counts, _ = np.histogram(triggered, bins=bin_edges)
+            triggered_samples = triggered
         counts_by_label[metrics.label] = {
             "simulated": sim_counts,
             "triggered": trig_counts,
-            "simulated_samples": simulated,
-            "triggered_samples": triggered,
+            "simulated_samples": simulated_samples,
+            "triggered_samples": triggered_samples,
         }
         _plot_distribution_series(
             ax,
@@ -554,6 +605,17 @@ def _plot_quantity_distribution(
 
 def _get_global_quantity_bin_edges(metrics_per_production, quantity_name, x_scale, bins):
     """Return one shared set of bin edges for a quantity across productions."""
+    histogram_edges = [
+        metrics.quantity_histograms[quantity_name]["simulated"][1]
+        for metrics in metrics_per_production
+        if quantity_name in metrics.quantity_histograms
+        and "simulated" in metrics.quantity_histograms[quantity_name]
+    ]
+    if histogram_edges and all(
+        np.array_equal(histogram_edges[0], edges) for edges in histogram_edges
+    ):
+        return histogram_edges[0]
+
     all_simulated_values = []
     for metrics in metrics_per_production:
         simulated, _ = _get_quantity_arrays(metrics, quantity_name)
@@ -564,6 +626,23 @@ def _get_global_quantity_bin_edges(metrics_per_production, quantity_name, x_scal
     if len(all_simulated_values) == 0:
         return _get_bin_edges(np.array([]), x_scale=x_scale, bins=bins)
     return _get_bin_edges(np.concatenate(all_simulated_values), x_scale=x_scale, bins=bins)
+
+
+def _get_quantity_counts(metrics, quantity_name, bin_edges, event_kind):
+    """Return counts for a quantity and event kind from histogram-backed or raw metrics."""
+    if quantity_name not in metrics.quantity_histograms:
+        return None, None
+    histogram_by_kind = metrics.quantity_histograms[quantity_name]
+    if event_kind not in histogram_by_kind:
+        return None, None
+    counts, source_edges = histogram_by_kind[event_kind]
+    counts = np.asarray(counts, dtype=float)
+    source_edges = np.asarray(source_edges, dtype=float)
+    if np.array_equal(source_edges, bin_edges):
+        return counts, None
+    centers = 0.5 * (source_edges[:-1] + source_edges[1:])
+    rebinned, _ = np.histogram(centers, bins=bin_edges, weights=counts)
+    return rebinned, None
 
 
 def _plot_telescope_participation(metrics_per_production, output_path):
@@ -652,14 +731,16 @@ def _build_quantity_distribution_statistics(
             continue
         candidate_data = counts_by_label[metrics.label]
 
-        sim_stats = compare_samples_with_statistics(
-            baseline_data["simulated_samples"],
-            candidate_data["simulated_samples"],
+        sim_stats = _compare_distribution_data(
+            baseline_data,
+            candidate_data,
+            "simulated",
             baseline_bin_edges,
         )
-        trig_stats = compare_samples_with_statistics(
-            baseline_data["triggered_samples"],
-            candidate_data["triggered_samples"],
+        trig_stats = _compare_distribution_data(
+            baseline_data,
+            candidate_data,
+            "triggered",
             baseline_bin_edges,
         )
 
@@ -671,6 +752,21 @@ def _build_quantity_distribution_statistics(
         }
         stats_summary["comparisons"].append(comparison_record)
     return stats_summary
+
+
+def _compare_distribution_data(baseline_data, candidate_data, event_kind, baseline_bin_edges):
+    """Compare either raw sample arrays or pre-binned count arrays."""
+    sample_key = f"{event_kind}_samples"
+    if baseline_data[sample_key] is not None and candidate_data[sample_key] is not None:
+        return compare_samples_with_statistics(
+            baseline_data[sample_key],
+            candidate_data[sample_key],
+            baseline_bin_edges,
+        )
+    return {
+        "baseline_counts": np.asarray(baseline_data[event_kind], dtype=int).tolist(),
+        "candidate_counts": np.asarray(candidate_data[event_kind], dtype=int).tolist(),
+    }
 
 
 def _annotate_ks_statistics(ax, statistics):
