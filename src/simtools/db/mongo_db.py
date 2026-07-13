@@ -369,6 +369,24 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         """
         return MongoDBHandler.db_client.list_database_names()
 
+    def get_accessible_database_names(self):
+        """Return database names excluding internal databases."""
+        return [
+            db_name
+            for db_name in self.list_database_names()
+            if db_name not in ("config", "admin", "local")
+        ]
+
+    @staticmethod
+    def resolve_requested_databases(requested, databases):
+        """Validate and resolve the requested database selection."""
+        if requested != "all" and requested not in databases:
+            raise ValueError(
+                f"Requested database '{requested}' not found. "
+                f"Following databases are available: {', '.join(databases)}"
+            )
+        return databases if requested == "all" else [requested]
+
     def generate_compound_indexes_for_databases(
         self, db_name, db_simulation_model, db_simulation_model_version
     ):
@@ -389,23 +407,13 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         ValueError
             If the requested database is not found.
         """
-        databases = [
-            d
-            for d in MongoDBHandler.db_client.list_database_names()
-            if d not in ("config", "admin", "local")
-        ]
+        databases = self.get_accessible_database_names()
         requested = self.get_db_name(
             db_name=db_name,
             db_simulation_model_version=db_simulation_model_version,
             model_name=db_simulation_model,
         )
-        if requested != "all" and requested not in databases:
-            raise ValueError(
-                f"Requested database '{requested}' not found. "
-                f"Following databases are available: {', '.join(databases)}"
-            )
-
-        databases = databases if requested == "all" else [requested]
+        databases = self.resolve_requested_databases(requested, databases)
         for dbs in databases:
             self._logger.info(f"Generating compound indexes for database: {dbs}")
             self.generate_compound_indexes(db_name=dbs)

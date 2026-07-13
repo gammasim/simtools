@@ -1,30 +1,11 @@
 """Build summaries for generated production job grids."""
 
-import numpy as np
 from astropy import units as u
 
-
-def format_quantity_summary(quantity_values, summary_unit=None):
-    """Format quantity min/max as a single value or range with explicit unit."""
-    quantity_min = quantity_values.min()
-    quantity_max = quantity_values.max()
-
-    summary_unit = summary_unit or quantity_max.unit
-    min_value = quantity_min.to_value(summary_unit)
-    max_value = quantity_max.to_value(summary_unit)
-
-    if np.isclose(min_value, max_value):
-        return f"{max_value:.6g} {summary_unit}"
-    return f"[{min_value:.6g}, {max_value:.6g}] {summary_unit}"
-
-
-def _format_integer_summary(values):
-    """Format integer min/max as a single value or compact range."""
-    min_value = min(values)
-    max_value = max(values)
-    if min_value == max_value:
-        return f"{max_value:d}"
-    return f"[{min_value:d}, {max_value:d}]"
+from simtools.production_configuration.job_generation_summary import (
+    format_integer_summary,
+    format_quantity_summary,
+)
 
 
 def _get_quantity_summary(rows, key, summary_unit=None):
@@ -66,8 +47,8 @@ def build_job_grid_summary(rows):
         "view_cone_max_lookup_limit": _get_quantity_summary(rows, "lookup_view_cone_max"),
         "showers_per_run_min": min(showers_per_run_values),
         "showers_per_run_max": max(showers_per_run_values),
-        "showers_per_run_used": _format_integer_summary(showers_per_run_values),
+        "showers_per_run_used": format_integer_summary(showers_per_run_values),
         "showers_per_run_configured_max": max(configured_showers_per_run_values),
-        "showers_per_run_configured": _format_integer_summary(configured_showers_per_run_values),
+        "showers_per_run_configured": format_integer_summary(configured_showers_per_run_values),
         "total_showers": int(sum(showers_per_run_values)),
     }
