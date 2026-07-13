@@ -4,7 +4,6 @@ import argparse
 import ast
 import logging
 import re
-from typing import NoReturn
 
 import astropy.units as u
 from astropy.units import UnitsError
@@ -320,11 +319,6 @@ def azimuth_angle(angle):
     )
 
 
-def _raise_quantity_pair_error(exc) -> NoReturn:
-    """Raise a uniform quantity-pair parsing error."""
-    raise ValueError(f"Could not parse quantities: {exc}") from exc
-
-
 def _parse_serialized_quantity_pair(string):
     """Parse ``(<Quantity ...>, <Quantity ...>)`` representations.
 
@@ -338,7 +332,7 @@ def _parse_serialized_quantity_pair(string):
     try:
         return tuple(u.Quantity(quantity_repr) for quantity_repr in match.groups())
     except (TypeError, ValueError, UnitsError) as exc:
-        _raise_quantity_pair_error(exc)
+        raise ValueError(f"Could not parse quantities: {exc}") from exc
 
 
 def _parse_tokenized_quantity_pair(tokens):
@@ -392,7 +386,7 @@ def parse_quantity_pair(string):
     if parsed_pair is not None:
         return parsed_pair
 
-    _raise_quantity_pair_error(last_error)
+    raise ValueError(f"Could not parse quantities: {last_error}") from last_error
 
 
 def parse_integer_and_quantity(input_string):
