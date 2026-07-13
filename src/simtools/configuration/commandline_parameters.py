@@ -20,7 +20,7 @@ def get_corsika_configuration_args():
                 "Primary particle to simulate. "
                 "(choices for common names: "
                 f"{', '.join(PrimaryParticle.particle_names().keys())}; "
-                "use '--primary_ID_type' to use other particle ID types)."
+                "use '--primary_id_type' to use other particle ID types)."
             ),
             "type": str.lower,
             "action": helpers.OneOrManyAction,
@@ -91,7 +91,7 @@ PARAMETER_DEFINITIONS = {
             "default": -2.0,
         },
         "energy_range": {
-            "help": ("Energy range of the primary particle (min/max value, e'g', '10 GeV 5 TeV')."),
+            "help": ("Energy range of the primary particle (min/max, e.g., '10 GeV 5 TeV')."),
             "action": helpers.QuantityPairAction,
             "nargs": "+",
             "default": (3 * u.GeV, 330 * u.TeV),

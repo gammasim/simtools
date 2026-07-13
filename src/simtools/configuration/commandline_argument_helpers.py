@@ -336,7 +336,7 @@ def parse_quantity_pair(string):
     ValueError
         If string does not contain exactly two quantities.
     """
-    pattern = r"(?>[\d\.eE+-]+)\s*(?>[A-Za-z]+)"
+    pattern = r"[\d\.eE+-]++\s*[A-Za-z]++"
     matches = re.findall(pattern, string)
     if len(matches) != 2:
         raise ValueError("Input string does not contain exactly two quantities.")
