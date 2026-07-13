@@ -30,7 +30,6 @@ from docutils import nodes
 from docutils.parsers.rst import Directive, directives
 
 from simtools.application_control import build_application_parser
-from simtools.configuration.commandline_parser import resolve_doc_group_for_scope
 
 try:
     from sphinx.util.docutils import SphinxDirective
@@ -138,20 +137,13 @@ def _iter_visible_group_actions(parser):
             yield group.title, action
 
 
-def _resolve_doc_group(group_title, action, module):
-    """Resolve the documentation group for an argparse action."""
-    scope = module.__name__.rsplit(".", maxsplit=1)[-1]
-    return resolve_doc_group_for_scope(action, scope=scope, fallback=group_title)
-
-
-def _group_actions_for_docs(parser, hidden_groups, module):
+def _group_actions_for_docs(parser, hidden_groups):
     """Group visible parser actions by documentation section title."""
     grouped_actions = OrderedDict()
     for group_title, action in _iter_visible_group_actions(parser):
-        doc_group = _resolve_doc_group(group_title, action, module)
-        if doc_group in hidden_groups:
+        if group_title in hidden_groups:
             continue
-        grouped_actions.setdefault(doc_group, []).append(action)
+        grouped_actions.setdefault(group_title, []).append(action)
     return grouped_actions
 
 
@@ -192,7 +184,7 @@ def render_native_cli_docs(inspection: CliInspection, hidden_groups: set[str]):
     section = nodes.section(ids=[nodes.make_id("command-line-arguments")])
     section += nodes.title(text="Command line arguments")
 
-    grouped_actions = _group_actions_for_docs(inspection.parser, hidden_groups, inspection.module)
+    grouped_actions = _group_actions_for_docs(inspection.parser, hidden_groups)
     for group_title, actions in grouped_actions.items():
         subgroup = nodes.section(ids=[nodes.make_id(group_title)])
         subgroup += nodes.title(text=group_title)

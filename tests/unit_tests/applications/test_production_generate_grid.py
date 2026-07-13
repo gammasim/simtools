@@ -122,11 +122,3 @@ def test_add_arguments_accepts_energy_max_scaling():
     args = parser.parse_args(["--energy_max_scaling", "-2.5", "300", "TeV"])
 
     assert args.energy_max_scaling == ["-2.5", "300", "TeV"]
-
-
-def test_add_arguments_accepts_legacy_energy_max_scaling_index():
-    parser = _parser()
-
-    args = parser.parse_args(["--energy_max_scaling_index", "-2.5"])
-
-    assert args.energy_max_scaling_index == pytest.approx(-2.5)

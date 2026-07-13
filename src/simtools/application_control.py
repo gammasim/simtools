@@ -235,7 +235,7 @@ def _build_application_configurator(
     elif application_argument_definitions is not None:
         for parameter, definition in application_argument_definitions.items():
             config_builder.parser.add_parameter_from_definition(
-                config_builder.parser, parameter, definition, "application"
+                config_builder.parser, parameter, definition
             )
     return config_builder
 

@@ -315,9 +315,9 @@ def test_build_application_parser_attaches_doc_metadata_for_default_arguments():
     actions = {action.dest: action for action in parser._actions}  # pylint: disable=protected-access
 
     assert actions["config"].simtools_doc == "simtools configuration file"
-    assert actions["config"].simtools_doc_group == "configuration"
-    assert actions["output_file"].simtools_doc_group == "output"
-    assert actions["db_api_user"].simtools_doc_group == "database configuration"
+    assert not hasattr(actions["config"], "simtools_doc_group")
+    assert not hasattr(actions["output_file"], "simtools_doc_group")
+    assert not hasattr(actions["db_api_user"], "simtools_doc_group")
 
 
 def test_build_application_missing_metadata_raises(mocker, tmp_test_directory):
