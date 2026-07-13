@@ -31,36 +31,34 @@ def _base_args(tmp_test_directory):
     }
 
 
-@patch("simtools.job_execution.bias_curve_submissions._generate_curve_submissions")
+@patch("simtools.job_execution.bias_curve_submissions._generate_scan_grid")
 @patch(
     "simtools.job_execution.bias_curve_submissions._threshold_param_name",
     return_value="asum_threshold",
 )
-def test_generate_bias_curve_submissions_uses_configured_curve_definitions_without_mutating_args(
+def test_generate_scan_grids_uses_configured_curve_definitions_without_mutating_args(
     mock_threshold_param_name,
-    mock_generate_curve_submissions,
+    mock_generate_scan_grid,
     tmp_test_directory,
 ):
     args = _base_args(tmp_test_directory)
     original_args = dict(args)
 
     io_handler = Mock()
-    bias_curve_submissions.generate_bias_curve_submissions(args, io_handler)
+    bias_curve_submissions.generate_scan_grids(args, io_handler)
 
     assert args == original_args
     mock_threshold_param_name.assert_called_once_with(args)
-    assert [
-        item.kwargs["curve_name"] for item in mock_generate_curve_submissions.call_args_list
-    ] == [
+    assert [item.kwargs["curve_name"] for item in mock_generate_scan_grid.call_args_list] == [
         "nsb",
         "proton",
     ]
     assert all(
         item.kwargs["args"]["telescope"] == "LSTN-01"
-        for item in mock_generate_curve_submissions.call_args_list
+        for item in mock_generate_scan_grid.call_args_list
     )
     assert (
-        mock_generate_curve_submissions.call_args_list[0].kwargs["curve_definition"]
+        mock_generate_scan_grid.call_args_list[0].kwargs["curve_definition"]
         == bias_curve_submissions._curve_definitions(args)["nsb"]
     )
 
@@ -237,7 +235,7 @@ def test_curve_definitions_use_configured_energy_ranges(tmp_test_directory):
     assert definitions["proton"]["energy_range"] == "5 GeV 500 GeV"
 
 
-def test_generate_curve_submissions_generates_and_expands_grid(tmp_test_directory):
+def test_generate_scan_grid_generates_and_expands_grid(tmp_test_directory):
     args = _base_args(tmp_test_directory)
     output_root = Path(args["output_path"]).expanduser().resolve()
     curve_directory = output_root / "nsb"
@@ -253,7 +251,7 @@ def test_generate_curve_submissions_generates_and_expands_grid(tmp_test_director
             "parameter_scan_generator.expand_job_grid_with_scan"
         ) as mock_expand_job_grid,
     ):
-        bias_curve_submissions._generate_curve_submissions(
+        bias_curve_submissions._generate_scan_grid(
             curve_name="nsb",
             curve_definition=bias_curve_submissions._curve_definitions(args)["nsb"],
             args=args,

@@ -146,7 +146,7 @@ def _production_grid_configuration(args, curve_definition, curve_label):
     return configuration
 
 
-def _generate_curve_submissions(curve_name, curve_definition, args, io_handler):
+def _generate_scan_grid(curve_name, curve_definition, args, io_handler):
     """Generate base grid, scan config, and scan grid for one curve."""
     curve_directory = io_handler.get_output_directory(sub_dir=curve_name)
 
@@ -202,7 +202,7 @@ def _curve_definitions(args):
     }
 
 
-def generate_bias_curve_submissions(args, io_handler):
+def generate_scan_grids(args, io_handler):
     """Generate NSB and proton bias-curve scan grids.
 
     Parameters
@@ -217,7 +217,7 @@ def generate_bias_curve_submissions(args, io_handler):
     generation_args = {**args, "threshold_parameter": _threshold_param_name(args)}
 
     for curve_name, curve_definition in _curve_definitions(args).items():
-        _generate_curve_submissions(
+        _generate_scan_grid(
             curve_name=curve_name,
             curve_definition=curve_definition,
             args=generation_args,

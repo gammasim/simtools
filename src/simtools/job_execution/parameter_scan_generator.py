@@ -197,15 +197,6 @@ def expand_job_grid_with_scan(base_grid_file, scan_config_path, output_file):
     -------
     None
         Writes the expanded grid to the specified output file.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the base grid file or scan configuration file does not exist.
-    KeyError
-        If the scan configuration is missing required fields (e.g., 'overwrite').
-    TypeError
-        If the scan configuration fields are not of the expected type.
     """
     scan_config_path = Path(scan_config_path)
     output_file = Path(output_file)
