@@ -4,6 +4,9 @@ name: build-simtools-dev
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*-rc*'
   pull_request:
     paths:
       - docker/Dockerfile-simtools-dev
@@ -60,11 +63,12 @@ jobs:
         with:
           tags: |
             type=ref,event=pr
-            type=semver,pattern=v{{major}}.{{minor}}.{{patch}}
+            type=semver,pattern=v{{version}}
             type=schedule,pattern={{date 'YYYYMMDD'}}
             type=raw,value={{date 'YYYYMMDD'}}
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
-          flavor: latest=true
+          flavor: |
+            latest=${{ !(startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
 
       - name: Build and push
         uses: docker/build-push-action@v7
@@ -76,7 +80,7 @@ jobs:
             CORSIKA_IMAGE_VERSION=${{ env.CORSIKA_IMAGE_VERSION }}
             SIMTEL_IMAGE_VERSION=${{ env.SIMTEL_IMAGE_VERSION }}
             AVX_FLAG=${{ env.AVX_FLAG }}
-          push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+          push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
           file: ./docker/Dockerfile-simtools-dev
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
