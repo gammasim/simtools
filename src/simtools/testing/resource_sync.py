@@ -21,10 +21,12 @@ def get_destination_directories(resources_path=None):
         return {
             "static": root / "static",
             "generated": root / "generated",
+            "downloaded": root / "downloaded",
         }
     return {
         "static": Path(constants.TEST_RESOURCES_STATIC).expanduser().resolve(),
         "generated": Path(constants.TEST_RESOURCES_GENERATED).expanduser().resolve(),
+        "downloaded": Path(constants.TEST_RESOURCES_DOWNLOADED).expanduser().resolve(),
     }
 
 
@@ -40,6 +42,8 @@ def _selected_resource_directories(args_dict):
         selected.append("static")
     if args_dict.get("include_generated", True):
         selected.append("generated")
+    if args_dict.get("include_downloaded", True):
+        selected.append("downloaded")
     if not selected:
         raise ValueError("Select at least one resource class to compare.")
     return tuple(selected)

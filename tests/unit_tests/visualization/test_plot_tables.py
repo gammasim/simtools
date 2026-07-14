@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from astropy.table import Table
 
-from simtools.constants import TEST_RESOURCES_GENERATED
+from simtools.constants import TEST_RESOURCES_DOWNLOADED, TEST_RESOURCES_GENERATED
 from simtools.visualization import plot_tables
 
 
@@ -269,7 +269,7 @@ def test_read_table_and_normalize():
         "tables": [
             {
                 "file_name": (
-                    f"{TEST_RESOURCES_GENERATED}/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv"
+                    f"{TEST_RESOURCES_DOWNLOADED}/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv"
                 ),
                 "type": "legacy_lst_single_pe",
                 "label": "test_table",
