@@ -13,7 +13,7 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation
 
 from simtools.configuration import defaults
-from simtools.configuration.commandline_parser import CommandLineParser
+from simtools.configuration.commandline_argument_helpers import parse_quantity_pair
 from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.model.site_model import SiteModel
 from simtools.production_configuration.angle_ranges import (
@@ -107,7 +107,11 @@ _SUMMARY_LOG_FIELDS = (
 def _parse_axis_range_tokens(range_tokens):
     """Parse a quantity pair from CLI axis range tokens."""
     if len(range_tokens) == 1:
-        return CommandLineParser.parse_quantity_pair(range_tokens[0])
+        if ".." in range_tokens[0]:
+            return tuple(
+                u.Quantity(value.strip()) for value in range_tokens[0].split("..", maxsplit=1)
+            )
+        return parse_quantity_pair(range_tokens[0])
     if len(range_tokens) == 2:
         return tuple(u.Quantity(value) for value in range_tokens)
     if len(range_tokens) == 4:
@@ -779,21 +783,11 @@ def _resolve_shower_params(args_dict):
 
 
 def _resolve_energy_max_scaling(args_dict):
-    """Resolve energy-max zenith scaling from CLI/config, including legacy options."""
+    """Resolve energy-max zenith scaling from CLI/config."""
     energy_max_scaling = args_dict.get("energy_max_scaling")
-    legacy_energy_max_scaling_index = args_dict.get("energy_max_scaling_index")
 
     if energy_max_scaling is not None:
-        if legacy_energy_max_scaling_index is not None:
-            logger.warning(
-                "Both energy_max_scaling and legacy energy_max_scaling_index were provided; "
-                "energy_max_scaling takes precedence."
-            )
-
         return _parse_power_index_quantity(energy_max_scaling, "energy_max_scaling")
-
-    if legacy_energy_max_scaling_index is not None:
-        return (float(legacy_energy_max_scaling_index), None)
 
     return None
 

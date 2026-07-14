@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-production-generate-grid
+  docs:
+    title: Explicit definition of all grid parameters.
+    summary: Includes number of events scaled by energy and zenith.
   configuration:
     array_layout_name:
       by_version:

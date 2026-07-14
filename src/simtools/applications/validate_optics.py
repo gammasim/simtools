@@ -71,8 +71,8 @@ from simtools.ray_tracing.optics_validation import validate_optics
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.initialize_application_arguments(
-        ["source_distance", "zenith_angle", "max_offset", "offset_step"]
+    parser.initialize_argument_group(
+        "application", ["source_distance", "zenith_angle", "max_offset", "offset_step"]
     )
     parser.add_argument(
         "--offset_file",
