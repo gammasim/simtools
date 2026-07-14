@@ -40,7 +40,7 @@ applications:
       "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-MSTN-01.cfg}
   - test_simtel_cfg_files:
       "5.0.0": ${generated:sim_telarray_configurations/5.0.0/CTAO-North-alpha.cfg}
-      "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-North-alpha.cfg}
+      "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-North-CTAO-North-Alpha.cfg}
   - test_output_files:
     - file: proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.simtel.log.gz
       path_descriptor: grid_output_path
