@@ -1,27 +1,17 @@
 ---
-name: doc-writing
+name: documentation
 description: >-
   Write or update simtools documentation using repository conventions,
   including docstrings, Sphinx pages, API reference entries, and changelog
-  fragments.
+  fragments. Use for changes in docs/source, docs/changes, application
+  documentation pages, API reference pages, and NumPy-style docstrings in
+  src/simtools.
 ---
 
 # Documentation Writing for simtools
 
-Use this skill when writing or updating documentation in `docs/`, adding or
-fixing docstrings in `src/simtools/`, creating user-guide application pages,
-or updating API reference pages.
-
-Follow `.github/copilot-instructions.md` for repository-wide rules. This skill
+Follow `AGENTS.md` for repository-wide rules. This skill
 adds a focused documentation workflow and completion checklist.
-
-## When to use this skill
-
-Use this skill for:
-
-1. Writing or updating documentation in `docs/source/`.
-2. Improving NumPy-style docstrings in library code under `src/simtools/`.
-3. Adding changelog fragments in `docs/changes/` for pull requests.
 
 ## Core requirements
 
