@@ -14,17 +14,23 @@ logger = logging.getLogger(__name__)
 _IGNORED_DIRECTORIES = {"config_files", "log_files", "tmp_application_output"}
 
 
-def get_destination_directories():
+def get_destination_directories(resources_path=None):
     """Return the configured local test-resource directories by resource class."""
+    if resources_path is not None:
+        root = Path(resources_path).expanduser().resolve()
+        return {
+            "static": root / "static",
+            "generated": root / "generated",
+        }
     return {
         "static": Path(constants.TEST_RESOURCES_STATIC).expanduser().resolve(),
         "generated": Path(constants.TEST_RESOURCES_GENERATED).expanduser().resolve(),
     }
 
 
-def get_destination_directory():
+def get_destination_directory(resources_path=None):
     """Return the common local test-resources root directory."""
-    return get_destination_directories()["static"].parent
+    return get_destination_directories(resources_path)["static"].parent
 
 
 def _selected_resource_directories(args_dict):
@@ -65,6 +71,13 @@ def _collect_files(directory):
     return files
 
 
+def _validate_source_directory(directory):
+    """Raise if a selected source resource directory does not exist."""
+    directory = Path(directory)
+    if not directory.is_dir():
+        raise FileNotFoundError(f"Source resource directory does not exist: {directory}")
+
+
 def compare_resource_directories(source_dir, destination_dir):
     """Compare two resource directories and classify their files."""
     source_files = _collect_files(source_dir)
@@ -99,22 +112,25 @@ def compare_resource_directories(source_dir, destination_dir):
     }
 
 
-def build_sync_report(test_directory, simtools_version, selected_directories):
+def build_sync_report(test_directory, simtools_version, selected_directories, resources_path=None):
     """Build a sync report for the selected resource directories."""
     source_root = resource_generation.get_integration_test_directory(
         test_directory, simtools_version
     )
-    destination_directories = get_destination_directories()
+    if not source_root.is_dir():
+        raise FileNotFoundError(f"Source integration-test directory does not exist: {source_root}")
+    destination_directories = get_destination_directories(resources_path)
 
     report = {
         "source_root": source_root,
-        "destination_root": get_destination_directory(),
+        "destination_root": get_destination_directory(resources_path),
         "destination_directories": destination_directories,
         "directories": {},
         "summary": {"new": 0, "changed": 0, "unchanged": 0, "obsolete": 0},
     }
 
     for resource_dir in selected_directories:
+        _validate_source_directory(source_root / resource_dir)
         comparison = compare_resource_directories(
             source_root / resource_dir,
             destination_directories[resource_dir],
@@ -206,6 +222,7 @@ def sync_test_resources(args_dict):
         args_dict["test_directory"],
         args_dict["simtools_version"],
         selected_directories,
+        resources_path=args_dict.get("resources_path"),
     )
     report_text = render_sync_report(report)
     if report_text:

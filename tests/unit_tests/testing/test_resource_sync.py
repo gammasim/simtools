@@ -80,11 +80,43 @@ def test_apply_sync_actions_deletes_obsolete_and_empty_directories(resource_root
     assert actions["deleted"] == ["generated/nested/obsolete.txt"]
 
 
+def test_build_sync_report_uses_configured_resources_path(resource_roots):
+    root, source_root, _ = resource_roots
+    custom_destination = root / "custom-resources"
+    _write(source_root / "static" / "input.txt", "new")
+
+    report = resource_sync.build_sync_report(
+        root / "simtools-tests",
+        "v0.35.0",
+        ("static",),
+        resources_path=custom_destination,
+    )
+
+    assert report["destination_root"] == custom_destination.resolve()
+    assert report["destination_directories"]["static"] == custom_destination.resolve() / "static"
+    assert report["directories"]["static"]["new"] == ["input.txt"]
+
+
 def test_selected_resource_directories_requires_one_choice():
     with pytest.raises(ValueError, match="Select at least one"):
         resource_sync._selected_resource_directories(
             {"include_static": False, "include_generated": False}
         )
+
+
+def test_build_sync_report_requires_existing_source_integration_directory(resource_roots):
+    root, _, _ = resource_roots
+
+    with pytest.raises(FileNotFoundError, match="Source integration-test directory does not exist"):
+        resource_sync.build_sync_report(root / "simtools-tests", "v0.36.0", ("static",))
+
+
+def test_build_sync_report_requires_existing_source_resource_directory(resource_roots):
+    root, source_root, _ = resource_roots
+    (source_root / "static").rmdir()
+
+    with pytest.raises(FileNotFoundError, match="Source resource directory does not exist"):
+        resource_sync.build_sync_report(root / "simtools-tests", "v0.35.0", ("static",))
 
 
 def test_render_sync_report_includes_obsolete(resource_roots):

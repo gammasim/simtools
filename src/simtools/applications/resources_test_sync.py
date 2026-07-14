@@ -44,6 +44,11 @@ _APPLICATION_ARG_DEFINITIONS = {
         "action": "store_true",
         "help": "Delete obsolete test resources.",
     },
+    "resources_path": {
+        "type": Path,
+        "default": Path("tests/resources"),
+        "help": "Destination test-resources directory.",
+    },
     "include_static": {
         "action": "store_true",
         "default": True,
