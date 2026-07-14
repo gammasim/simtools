@@ -197,11 +197,15 @@ def calculate_statistics(grouped_data, time_window):
             triggers = run_info["triggers"]
             events = run_info["events"]
 
+            if events is None:
+                _logger.warning(
+                    f"Skipping run {run_num} for threshold {threshold}: missing event count"
+                )
+                continue
+
             runs_dict[run_num] = triggers
             run_triggers.append(triggers)
-
-            if events is not None:
-                run_events.append(events)
+            run_events.append(events)
 
         total_triggers = np.sum(run_triggers)
         total_events = np.sum(run_events) if run_events else 0
@@ -320,7 +324,7 @@ def derive_nsb_triggers(args):
         - root_dir: Root directory to search for log files
         - pattern: Glob pattern for log files, default: ``**/*.simtel.log.gz``
         - output: Output ECSV file path (optional, if None, no file is written)
-        - time_window: Time window per event in seconds (default: 66.4e-9)
+        - time_window: Time window per event in seconds (required; telescope-dependent)
         - verbose: Enable verbose logging (optional)
 
     Returns
@@ -338,10 +342,24 @@ def derive_nsb_triggers(args):
     FileNotFoundError
         If root directory doesn't exist or no log files found.
     ValueError
-        If no log files could be parsed successfully.
+        If time_window is missing/invalid or if no log files could be parsed successfully.
     """
     pattern = args.get("pattern", "**/*.simtel.log.gz")
     time_window = args.get("time_window")
+
+    if time_window is None:
+        raise ValueError(
+            "Missing required argument 'time_window'. "
+            "Provide telescope-specific time window in seconds."
+        )
+
+    try:
+        time_window = float(time_window)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Argument 'time_window' must be a positive number.") from exc
+
+    if time_window <= 0:
+        raise ValueError("Argument 'time_window' must be > 0.")
 
     _logger.info("NSB Trigger Rate Calculator")
     _logger.info(f"Root directory: {args['root_dir']}")

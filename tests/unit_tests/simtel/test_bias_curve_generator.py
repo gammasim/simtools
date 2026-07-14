@@ -148,6 +148,25 @@ def test_extract_simtel_logs_from_archive_returns_zero_for_bad_archive(tmp_path)
     assert bias_curve_generator._extract_simtel_logs_from_archive(archive, tmp_path) == 0
 
 
+def test_extract_simtel_logs_from_archive_skips_oversized_member(tmp_path, monkeypatch):
+    archive = tmp_path / "logs.log_hist.tar.gz"
+    member_name = "gamma_run000001_asum220.simtel.log.gz"
+
+    monkeypatch.setattr(
+        bias_curve_generator,
+        "DEFAULT_MAX_TAR_MEMBER_SIZE_BYTES",
+        10,
+    )
+
+    with tarfile.open(archive, "w:gz") as tar_handle:
+        data = b"0123456789ABCDEF"
+        tar_info = tarfile.TarInfo(member_name)
+        tar_info.size = len(data)
+        tar_handle.addfile(tar_info, io.BytesIO(data))
+
+    assert bias_curve_generator._extract_simtel_logs_from_archive(archive, tmp_path) == 0
+
+
 def test_group_hdf5_files_by_threshold_and_run(tmp_path):
     valid = tmp_path / "proton_run000001_asum220.reduced_event_data.hdf5"
     valid.touch()
@@ -314,3 +333,24 @@ def test_generate_bias_curves_runs_full_pipeline(tmp_path):
     mock_write_proton.assert_called_once()
     mock_plot.assert_called_once()
     mock_write_bias.assert_called_once()
+
+
+def test_generate_bias_curves_does_not_log_nsb_output_when_file_missing(tmp_path, caplog):
+    args = _base_args(tmp_path)
+    args["nsb_output"] = tmp_path / "nsb.ecsv"
+
+    with (
+        patch("simtools.simtel.bias_curve_generator._calculate_time_window", return_value=0.001),
+        patch("simtools.simtel.bias_curve_generator._extract_nsb_rates", return_value={}),
+        patch("simtools.simtel.bias_curve_generator._extract_proton_rates", return_value={}),
+        patch(
+            "simtools.simtel.bias_curve_generator.plot_tables.resolve_plot_output_path",
+            return_value=tmp_path / "bias.png",
+        ),
+        patch("simtools.simtel.bias_curve_generator.plot_tables.plot_bias_curves"),
+        patch("simtools.simtel.bias_curve_generator._write_bias_curve_ecsv"),
+    ):
+        with caplog.at_level("INFO"):
+            bias_curve_generator.generate_bias_curves(args)
+
+    assert f"NSB table written to {args['nsb_output']}" not in caplog.text

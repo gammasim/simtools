@@ -18,6 +18,7 @@ from simtools.simtel.nsb_trigger_calculator import (
 )
 from simtools.simtel.simtel_log_reader import extract_run_number
 from simtools.telescope_trigger_rates import telescope_trigger_rates
+from simtools.utils.general import DEFAULT_MAX_TAR_MEMBER_SIZE_BYTES, iter_safe_tar_members
 from simtools.visualization import plot_tables
 
 _logger = logging.getLogger(__name__)
@@ -65,8 +66,9 @@ def generate_bias_curves(args):
 
     _logger.info(f"Bias curve plot written to {plot_output_path}")
     _logger.info(f"Bias curve table written to {bias_curve_table_output}")
-    if args.get("nsb_output"):
-        _logger.info(f"NSB table written to {args['nsb_output']}")
+    nsb_output = args.get("nsb_output")
+    if nsb_output and Path(nsb_output).exists():
+        _logger.info(f"NSB table written to {nsb_output}")
 
 
 def _calculate_time_window(args):
@@ -182,11 +184,8 @@ def _extract_nsb_rates(args, time_window):
 
 
 def _extract_archived_nsb_rates(args, data_dir, log_hist_archives, time_window):
-    """Extract archived sim_telarray logs to /tmp and derive NSB rates from them."""
-    with tempfile.TemporaryDirectory(
-        prefix="simtools-nsb-logs-",
-        dir="/tmp",
-    ) as tmp_dir:
+    """Extract archived sim_telarray logs to a temporary directory and derive NSB rates."""
+    with tempfile.TemporaryDirectory(prefix="simtools-nsb-logs-") as tmp_dir:
         tmp_dir = Path(tmp_dir)
         n_extracted = _extract_simtel_logs_from_archives(log_hist_archives, tmp_dir)
 
@@ -229,9 +228,13 @@ def _extract_simtel_logs_from_archive(archive, output_dir):
     """Extract ``*.simtel.log.gz`` files from one ``*.log_hist.tar.gz`` archive."""
     try:
         with tarfile.open(archive, "r:gz") as tar:
-            return sum(
-                _extract_simtel_log_member(tar, member, output_dir) for member in tar.getmembers()
-            )
+            n_extracted = 0
+            for member in iter_safe_tar_members(
+                tar,
+                max_member_size=DEFAULT_MAX_TAR_MEMBER_SIZE_BYTES,
+            ):
+                n_extracted += _extract_simtel_log_member(tar, member, output_dir)
+            return n_extracted
 
     except tarfile.TarError as e:
         _logger.warning(f"Could not read archive {archive}: {e}")

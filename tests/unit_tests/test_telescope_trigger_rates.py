@@ -80,6 +80,35 @@ def test_telescope_trigger_rates_without_array_layout_name():
         )
 
 
+def test_telescope_trigger_rates_forwards_cr_spectrum():
+    args_dict = {
+        "array_layout_name": "test_layout",
+        "site": "test_site",
+        "model_version": "1.0.0",
+        "event_data_file": FILE_SIMTEL,
+        "plot_histograms": False,
+        "cr_spectrum": Path("custom_spectrum.yml"),
+    }
+
+    with (
+        patch(
+            "simtools.telescope_trigger_rates.get_array_elements_from_db_for_layouts"
+        ) as mock_get_array_elements,
+        patch("simtools.telescope_trigger_rates.EventDataHistograms") as mock_histograms,
+        patch("simtools.telescope_trigger_rates._calculate_trigger_rates") as mock_calculate,
+    ):
+        mock_get_array_elements.return_value = {"array1": [1, 2, 3]}
+        mock_histograms_instance = MagicMock()
+        mock_histograms.return_value = mock_histograms_instance
+        mock_calculate.return_value = (None, None, 1 * u.Hz)
+
+        telescope_trigger_rates(args_dict)
+
+        mock_calculate.assert_called_once_with(
+            mock_histograms_instance, "array1", Path("custom_spectrum.yml")
+        )
+
+
 def test_get_cosmic_ray_spectrum_default():
     """No arguments: should return the proton spectrum."""
     assert get_cosmic_ray_spectrum() is IRFDOC_PROTON_SPECTRUM

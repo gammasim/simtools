@@ -62,6 +62,7 @@ simtools-db-get-parameter-from-db <applications/simtools-db-get-parameter-from-d
 simtools-db-generate-compound-indexes <applications/simtools-db-generate-compound-indexes>
 simtools-db-inspect-databases <applications/simtools-db-inspect-databases>
 simtools-db-upload-model-repository <applications/simtools-db-upload-model-repository>
+simtools-derive-bias-curves <applications/simtools-derive-bias-curves>
 simtools-derive-ctao-array-layouts <applications/simtools-derive-ctao-array-layouts>
 simtools-derive-incident-angle <applications/simtools-derive-incident-angle>
 simtools-derive-mirror-rnda <applications/simtools-derive-mirror-rnda>
@@ -69,7 +70,6 @@ simtools-derive-photon-electron-spectrum <applications/simtools-derive-photon-el
 simtools-derive-pulse-shape-parameters <applications/simtools-derive-pulse-shape-parameters>
 simtools-derive-psf-parameters <applications/simtools-derive-psf-parameters>
 simtools-derive-trigger-rates <applications/simtools-derive-trigger-rates>
-simtools-derive-bias-curves <applications/simtools-derive-bias-curves>
 simtools-docs-produce-array-element-report <applications/simtools-docs-produce-array-element-report>
 simtools-docs-produce-calibration-reports <applications/simtools-docs-produce-calibration-reports>
 simtools-docs-produce-model-parameter-reports <applications/simtools-docs-produce-model-parameter-reports>
