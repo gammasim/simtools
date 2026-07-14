@@ -17,8 +17,8 @@ directory (dry run, no files are copied or deleted):
         --test_directory ../simtools-tests \\
         --simtools_version v0.34.0
 
-To sync the test resources, add the ``--sync`` option. To delete obsolete
-files, add the ``--delete_missing`` option.
+To sync the test resources, add the ``--sync`` option. To list obsolete
+files that should be removed manually, add the ``--delete_missing`` option.
 """
 
 from pathlib import Path
@@ -42,7 +42,7 @@ _APPLICATION_ARG_DEFINITIONS = {
     },
     "delete_missing": {
         "action": "store_true",
-        "help": "Delete obsolete test resources.",
+        "help": "List obsolete test resources that should be removed manually.",
     },
     "resources_path": {
         "type": Path,
