@@ -26,7 +26,7 @@ directory (dry run, no files are copied or deleted):
 
 .. code-block:: console
 
-    simtools-sync-test-resources \
+    simtools-resources-test-sync \
         --test_directory ../simtools-tests \
         --simtools_version v0.35.0
 """

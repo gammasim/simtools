@@ -34,7 +34,7 @@ Example
 
 .. code-block:: console
 
-    simtools-generate-test-resources \
+    simtools-resources-test-generate \
         --test_directory ../simtools-tests \
         --simtools_version v0.32.0
 
