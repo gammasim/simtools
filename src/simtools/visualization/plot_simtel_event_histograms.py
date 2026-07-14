@@ -109,10 +109,8 @@ def plot_trigger_histogram_file(trigger_histogram_file, output_dir, array_layout
 
     output_dir = Path(output_dir)
     for _, histograms in loaded_histograms:
-        output_path = output_dir
-        if len(loaded_histograms) > 1:
-            output_path = output_dir / histograms.array_name
-            output_path.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / histograms.array_name
+        output_path.mkdir(parents=True, exist_ok=True)
         plot(_plottable_histograms(histograms.histograms), output_path=output_path)
 
 
