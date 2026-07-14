@@ -69,7 +69,9 @@ def telescope_trigger_rates(args_dict):
         )
         histograms.fill()
 
-        _, _, trigger_rate = _calculate_trigger_rates(histograms, array_name)
+        _, _, trigger_rate = _calculate_trigger_rates(
+            histograms, array_name, args_dict.get("cr_spectrum")
+        )
         results[array_name] = trigger_rate
 
         if args_dict.get("plot_histograms"):

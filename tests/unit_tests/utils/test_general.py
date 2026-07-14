@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 
 import datetime
+import io
 import logging
+import tarfile
 import time
 from copy import copy
 from pathlib import Path
@@ -1033,6 +1035,53 @@ def test_is_safe_tar_member_benign_double_dot() -> None:
     assert gen.is_safe_tar_member("foo..bar.txt")
     assert gen.is_safe_tar_member("file..name..with..dots.log")
     assert gen.is_safe_tar_member("version1..0.tar.gz")
+
+
+def test_is_safe_tar_member_size_within_limits() -> None:
+    """Test that valid member sizes are accepted."""
+    assert gen.is_safe_tar_member_size(1024, 2048)
+    assert gen.is_safe_tar_member_size(2048, 2048)
+
+
+def test_is_safe_tar_member_size_invalid_or_too_large() -> None:
+    """Test that invalid and oversized member sizes are rejected."""
+    assert not gen.is_safe_tar_member_size(-1, 2048)
+    assert not gen.is_safe_tar_member_size(2049, 2048)
+    assert not gen.is_safe_tar_member_size("abc", 2048)
+    assert not gen.is_safe_tar_member_size(100, 0)
+
+
+def test_iter_safe_tar_members_filters_by_suffix_and_safety(
+    tmp_test_directory, safe_tar_open
+) -> None:
+    """Test shared tar member iterator applies suffix, path, and size checks."""
+    tar_path = tmp_test_directory / "members.tar.gz"
+
+    safe_content = b"ok"
+    unsafe_path_content = b"bad"
+    large_content = b"0123456789ABCDEF"
+
+    with safe_tar_open(tar_path, "w:gz") as tar:
+        safe_info = tarfile.TarInfo("good.log.gz")
+        safe_info.size = len(safe_content)
+        tar.addfile(safe_info, io.BytesIO(safe_content))
+
+        unsafe_info = tarfile.TarInfo("../escape.log.gz")
+        unsafe_info.size = len(unsafe_path_content)
+        tar.addfile(unsafe_info, io.BytesIO(unsafe_path_content))
+
+        large_info = tarfile.TarInfo("large.log.gz")
+        large_info.size = len(large_content)
+        tar.addfile(large_info, io.BytesIO(large_content))
+
+        txt_info = tarfile.TarInfo("ignore.txt")
+        txt_info.size = len(safe_content)
+        tar.addfile(txt_info, io.BytesIO(safe_content))
+
+    with safe_tar_open(tar_path, "r:gz") as tar:
+        members = list(gen.iter_safe_tar_members(tar, member_suffix=".log.gz", max_member_size=10))
+
+    assert [member.name for member in members] == ["good.log.gz"]
 
 
 def test_get_simtools_log_file_with_file_handler(tmp_test_directory) -> None:

@@ -151,10 +151,32 @@ def test_calculate_statistics_with_no_events_returns_zero_rate():
         time_window=0.001,
     )
 
+    assert stats[220]["runs"] == {}
+    assert stats[220]["total_triggers"] == 0
     assert stats[220]["total_events"] == 0
     assert stats[220]["time_s"] == 0
     assert stats[220]["rate_hz"] == 0
     assert stats[220]["error_hz"] == 0
+    assert stats[220]["num_runs"] == 0
+
+
+def test_calculate_statistics_skips_runs_with_missing_events():
+    stats = nsb_trigger_calculator.calculate_statistics(
+        {
+            220: {
+                1: {"triggers": 10, "events": 100},
+                2: {"triggers": 20, "events": None},
+            }
+        },
+        time_window=0.001,
+    )
+
+    assert stats[220]["runs"] == {1: 10}
+    assert stats[220]["total_triggers"] == 10
+    assert stats[220]["total_events"] == 100
+    assert stats[220]["time_s"] == pytest.approx(0.1)
+    assert stats[220]["rate_hz"] == pytest.approx(100.0)
+    assert stats[220]["num_runs"] == 1
 
 
 def test_generate_ecsv_output_writes_table(tmp_path):
@@ -261,3 +283,23 @@ def test_derive_nsb_triggers_writes_output_when_requested(tmp_path):
         )
 
     mock_generate.assert_called_once()
+
+
+def test_derive_nsb_triggers_raises_for_missing_time_window(tmp_path):
+    with pytest.raises(ValueError, match="Missing required argument 'time_window'"):
+        nsb_trigger_calculator.derive_nsb_triggers({"root_dir": tmp_path})
+
+
+@pytest.mark.parametrize("time_window", [0, -1e-9])
+def test_derive_nsb_triggers_raises_for_non_positive_time_window(tmp_path, time_window):
+    with pytest.raises(ValueError, match="Argument 'time_window' must be > 0"):
+        nsb_trigger_calculator.derive_nsb_triggers(
+            {"root_dir": tmp_path, "time_window": time_window}
+        )
+
+
+def test_derive_nsb_triggers_raises_for_non_numeric_time_window(tmp_path):
+    with pytest.raises(ValueError, match="must be a positive number"):
+        nsb_trigger_calculator.derive_nsb_triggers(
+            {"root_dir": tmp_path, "time_window": "not-a-number"}
+        )
