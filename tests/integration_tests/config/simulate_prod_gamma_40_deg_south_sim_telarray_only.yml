@@ -17,7 +17,7 @@ applications:
   integration_tests:
   - output_file: sim_telarray/run000007/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_7.0.0_test.simtel.zst
   - test_simtel_cfg_files:
-      "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-LSTS-01.cfg}
+      "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-LSTS-02.cfg}
   - test_output_files:
     - expected_sim_telarray_output:
         pe_sum:

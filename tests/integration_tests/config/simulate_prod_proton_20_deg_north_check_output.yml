@@ -17,7 +17,7 @@ applications:
     energy_range: 200 GeV 500 GeV
     label: test
     log_level: DEBUG
-    model_version: 6.0.2
+    model_version: 7.0.0
     showers_per_run: 5
     output_path: simtools-output
     grid_output_path: simtools-grid-output
@@ -31,16 +31,16 @@ applications:
   integration_tests:
   - test_simtel_cfg_files:
       "5.0.0": ${generated:sim_telarray_configurations/5.0.0/CTAO-LSTN-01.cfg}
-      "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTAO-LSTN-01.cfg}
+      "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-LSTN-01.cfg}
   - test_simtel_cfg_files:
       "5.0.0": ${generated:sim_telarray_configurations/5.0.0/CTAO-LSTN-02.cfg}
-      "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTAO-LSTN-02.cfg}
+      "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-LSTN-02.cfg}
   - test_simtel_cfg_files:
       "5.0.0": ${generated:sim_telarray_configurations/5.0.0/CTAO-MSTN-01.cfg}
-      "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTAO-MSTN-01.cfg}
+      "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-MSTN-01.cfg}
   - test_simtel_cfg_files:
       "5.0.0": ${generated:sim_telarray_configurations/5.0.0/CTAO-North-alpha.cfg}
-      "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTAO-North-alpha.cfg}
+      "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-North-alpha.cfg}
   - test_output_files:
     - file: proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.simtel.log.gz
       path_descriptor: grid_output_path

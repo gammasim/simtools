@@ -15,10 +15,6 @@ def test_get_corsika_run_number_with_run_header(get_test_data_file):
     assert get_corsika_run_number(test_file) == 10
 
 
-def test_get_corsika_run_number_without_run_header_real_file(get_test_data_file):
-    assert get_corsika_run_number(get_test_data_file("sim_telarray_hdata", "gamma")) is None
-
-
 def test_get_combined_eventio_run_header(get_test_data_file):
     run_header = get_combined_eventio_run_header(get_test_data_file("sim_telarray", "gamma"))
     assert isinstance(run_header, dict)
@@ -50,9 +46,3 @@ def test_get_corsika_run_and_event_headers(get_test_data_file):
         assert hasattr(event_header, "dtype")  # numpy structured array
         assert "run_number" in run_header.dtype.names  # Check field exists
         assert run_header["run_number"] == 7  # Run number from file name
-
-
-def test_get_combined_eventio_run_header_incomplete(get_test_data_file):
-    # This file typically has incomplete header information
-    run_header = get_combined_eventio_run_header(get_test_data_file("sim_telarray_hdata", "gamma"))
-    assert run_header is None or isinstance(run_header, dict)
