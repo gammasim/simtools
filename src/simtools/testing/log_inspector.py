@@ -6,7 +6,6 @@ import re
 import tarfile
 
 from simtools.utils import general as gen
-from simtools.utils.general import iter_safe_tar_members
 
 _logger = logging.getLogger(__name__)
 
@@ -93,13 +92,30 @@ def check_tar_logs(tar_file, file_test):
     found_wanted = set()
     found_forbidden = set()
     with tarfile.open(tar_file, "r:*") as tar:
-        for member in iter_safe_tar_members(tar, member_suffix=".log.gz"):
+        for member in tar.getmembers():
+            if not _is_valid_log_member(member):
+                continue
             _logger.info(f"Scanning {member.name}")
             text = _read_log(member, tar)
             found_wanted |= _find_patterns(text, wanted)
             found_forbidden |= _find_patterns(text, forbidden)
 
     return _validate_patterns(found_wanted, found_forbidden, wanted)
+
+
+def _is_valid_log_member(member):
+    """Validate member suffix for tar log scanning."""
+    return member.name.endswith(".log.gz")
+
+
+def _read_log(member, tar):
+    """Read and decode a gzipped tar member, or return None if extraction fails."""
+    source = tar.extractfile(member)
+    if source is None:
+        return None
+
+    with source, gzip.open(source, "rb") as f:
+        return f.read().decode("utf-8", "ignore")
 
 
 def check_plain_logs(log_files, file_test):
@@ -194,9 +210,3 @@ def _find_patterns(text, patterns):
 
     text_n = _normalize(text)
     return {p for p in patterns if p and _normalize(p) in text_n}
-
-
-def _read_log(member, tar):
-    """Read and decode a gzipped log file from a tar archive."""
-    with tar.extractfile(member) as gz, gzip.open(gz, "rb") as f:
-        return f.read().decode("utf-8", "ignore")

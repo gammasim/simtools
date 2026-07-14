@@ -1,7 +1,5 @@
 """Unit tests for bias_curve_generator."""
 
-import io
-import tarfile
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -98,73 +96,10 @@ def test_extract_nsb_rates_uses_direct_logs(tmp_path):
     mock_run.assert_called_once_with(tmp_path, args, 0.001)
 
 
-def test_extract_nsb_rates_returns_empty_when_no_logs_or_archives(tmp_path):
+def test_extract_nsb_rates_returns_empty_when_no_logs(tmp_path):
     args = _base_args(tmp_path)
 
     assert bias_curve_generator._extract_nsb_rates(args, time_window=0.001) == {}
-
-
-def test_extract_archived_nsb_rates_extracts_logs_and_runs_derivation(tmp_path):
-    args = _base_args(tmp_path)
-    archive = tmp_path / "logs.log_hist.tar.gz"
-    member_name = "gamma_run000001_asum220.simtel.log.gz"
-
-    with tarfile.open(archive, "w:gz") as tar_handle:
-        data = b"Tel. triggered: 1\n"
-        tar_info = tarfile.TarInfo(member_name)
-        tar_info.size = len(data)
-        tar_handle.addfile(tar_info, io.BytesIO(data))
-
-    with patch(
-        "simtools.simtel.bias_curve_generator._run_nsb_trigger_derivation",
-        return_value={220: {"rate_hz": 1.0}},
-    ) as mock_run:
-        result = bias_curve_generator._extract_archived_nsb_rates(
-            args, tmp_path, [archive], time_window=0.001
-        )
-
-    assert result == {220: {"rate_hz": 1.0}}
-    assert mock_run.call_args.args[1:] == (args, 0.001)
-
-
-def test_extract_archived_nsb_rates_raises_when_archive_contains_no_logs(tmp_path):
-    args = _base_args(tmp_path)
-    archive = tmp_path / "logs.log_hist.tar.gz"
-
-    with tarfile.open(archive, "w:gz") as tar_handle:
-        data = b"not a log"
-        tar_info = tarfile.TarInfo("readme.txt")
-        tar_info.size = len(data)
-        tar_handle.addfile(tar_info, io.BytesIO(data))
-
-    with pytest.raises(FileNotFoundError, match=r"No \*\.simtel\.log\.gz files found"):
-        bias_curve_generator._extract_archived_nsb_rates(args, tmp_path, [archive], 0.001)
-
-
-def test_extract_simtel_logs_from_archive_returns_zero_for_bad_archive(tmp_path):
-    archive = tmp_path / "bad.log_hist.tar.gz"
-    archive.write_text("not a tar", encoding="utf-8")
-
-    assert bias_curve_generator._extract_simtel_logs_from_archive(archive, tmp_path) == 0
-
-
-def test_extract_simtel_logs_from_archive_skips_oversized_member(tmp_path, monkeypatch):
-    archive = tmp_path / "logs.log_hist.tar.gz"
-    member_name = "gamma_run000001_asum220.simtel.log.gz"
-
-    monkeypatch.setattr(
-        bias_curve_generator,
-        "DEFAULT_MAX_TAR_MEMBER_SIZE_BYTES",
-        10,
-    )
-
-    with tarfile.open(archive, "w:gz") as tar_handle:
-        data = b"0123456789ABCDEF"
-        tar_info = tarfile.TarInfo(member_name)
-        tar_info.size = len(data)
-        tar_handle.addfile(tar_info, io.BytesIO(data))
-
-    assert bias_curve_generator._extract_simtel_logs_from_archive(archive, tmp_path) == 0
 
 
 def test_group_hdf5_files_by_threshold_and_run(tmp_path):
