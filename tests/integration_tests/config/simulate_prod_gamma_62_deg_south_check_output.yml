@@ -30,7 +30,7 @@ applications:
   - test_simtel_cfg_files:
       "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-MSTS-01.cfg}
   - test_simtel_cfg_files:
-      "6.0.2": ${generated:sim_telarray_configurations/7.0.0/CTAO-South-CTAO-South-Beta.cfg}
+      "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-South-CTAO-South-Beta.cfg}
   - test_output_files:
     - file: gamma_run000020_za62deg_azm180deg_South_CTAO-South-Beta_7.0.0_test.simtel.log.gz
       path_descriptor: grid_output_path

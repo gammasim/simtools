@@ -19,7 +19,7 @@ applications:
     energy_range: 3 GeV 500 TeV
     energy_max_scaling: -2.5 200 TeV
     core_scatter: 10 2500 m
-    corsika_limits: ${downloaded:corsika_limits/corsika_limits.ecsv}
+    corsika_limits: ${downloaded:corsika_limits.ecsv}
     model_version: 7.0.0
     showers_per_run: 5
     showers_per_run_power_law: 0.0 1 TeV
