@@ -93,7 +93,7 @@ def _add_arguments(parser):
         help="Output ECSV table file for proton rates. If not specified, no table is written.",
     )
 
-    parser.initialize_application_arguments(["telescope_ids"])
+    parser.initialize_application_argument_group(["telescope_ids"])
 
     parser.add_argument(
         "--title",
