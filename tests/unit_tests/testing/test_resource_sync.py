@@ -71,21 +71,21 @@ def test_apply_sync_actions_copies_new_and_changed(resource_roots):
     assert (destination_root / "static" / "new.txt").read_text(encoding="utf-8") == "new"
     assert (destination_root / "generated" / "changed.txt").read_text(encoding="utf-8") == "source"
     assert sorted(actions["copied"]) == ["generated/changed.txt", "static/new.txt"]
-    assert actions["deleted"] == []
+    assert actions["remove_candidates"] == []
 
 
-def test_apply_sync_actions_deletes_obsolete_and_empty_directories(resource_roots):
+def test_apply_sync_actions_reports_obsolete_files_without_deleting(resource_roots):
     root, _, destination_root = resource_roots
     _write(destination_root / "generated" / "nested" / "obsolete.txt", "obsolete")
 
     report = resource_sync.build_sync_report(root / "simtools-tests", "v0.35.0", ("generated",))
     actions = resource_sync.apply_sync_actions(report, sync=False, delete_missing=True)
 
-    assert not (destination_root / "generated" / "nested" / "obsolete.txt").exists()
-    assert not (destination_root / "generated" / "nested").exists()
+    assert (destination_root / "generated" / "nested" / "obsolete.txt").exists()
+    assert (destination_root / "generated" / "nested").exists()
     assert (destination_root / "generated").exists()
     assert actions["copied"] == []
-    assert actions["deleted"] == ["generated/nested/obsolete.txt"]
+    assert actions["remove_candidates"] == ["generated/nested/obsolete.txt"]
 
 
 def test_apply_sync_actions_preflights_delete_targets(resource_roots):
@@ -224,5 +224,27 @@ def test_sync_test_resources_report_only(resource_roots, caplog):
     )
 
     assert report["summary"] == {"new": 1, "changed": 0, "unchanged": 0, "obsolete": 1}
-    assert actions == {"copied": [], "deleted": []}
+    assert actions == {"copied": [], "remove_candidates": []}
     assert "obsolete (generated):" in caplog.text
+
+
+def test_sync_test_resources_logs_manual_removal_candidates(resource_roots, caplog):
+    root, _, destination_root = resource_roots
+    _write(destination_root / "generated" / "obsolete.txt", "old")
+
+    caplog.set_level("INFO", logger="simtools.testing.resource_sync")
+    _, actions = resource_sync.sync_test_resources(
+        {
+            "test_directory": root / "simtools-tests",
+            "simtools_version": "v0.35.0",
+            "include_static": False,
+            "include_generated": True,
+            "include_downloaded": False,
+            "sync": False,
+            "delete_missing": True,
+        }
+    )
+
+    assert actions == {"copied": [], "remove_candidates": ["generated/obsolete.txt"]}
+    assert "Obsolete test resources were not removed automatically." in caplog.text
+    assert "generated/obsolete.txt" in caplog.text
