@@ -1,6 +1,3 @@
-#!/usr/bin/python3
-
-import argparse
 import logging
 from pathlib import Path
 
@@ -9,250 +6,21 @@ import pytest
 from astropy.tests.helper import assert_quantity_allclose
 
 import simtools.configuration.commandline_parser as parser
+from simtools.configuration.commandline_parameters import PARAMETER_DEFINITIONS
 
 logger = logging.getLogger()
 SIMULATION_MODEL_STRING = "simulation model"
 
 
-def test_scientific_int():
-    # Test regular integers as strings
-    assert parser.CommandLineParser.scientific_int("100") == 100
-    assert parser.CommandLineParser.scientific_int("0") == 0
-    assert parser.CommandLineParser.scientific_int("42") == 42
-
-    # Test regular integers as integers
-    assert parser.CommandLineParser.scientific_int(100) == 100
-    assert parser.CommandLineParser.scientific_int(0) == 0
-
-    # Test regular integers as floats
-    assert parser.CommandLineParser.scientific_int(100.0) == 100
-
-    # Test scientific notation
-    assert parser.CommandLineParser.scientific_int("1e3") == 1000
-    assert parser.CommandLineParser.scientific_int("1E3") == 1000
-    assert parser.CommandLineParser.scientific_int("2.5e3") == 2500
-    assert parser.CommandLineParser.scientific_int("1e7") == 10000000
-    assert parser.CommandLineParser.scientific_int("5.5e6") == 5500000
-    assert parser.CommandLineParser.scientific_int("1.23e4") == 12300
-
-    # Test negative numbers
-    assert parser.CommandLineParser.scientific_int("-100") == -100
-    assert parser.CommandLineParser.scientific_int("-1e3") == -1000
-
-    # Test floats that represent integers (should be accepted)
-    assert parser.CommandLineParser.scientific_int("123.0") == 123
-    assert parser.CommandLineParser.scientific_int("42.0") == 42
-    assert parser.CommandLineParser.scientific_int(100.0) == 100
-    assert parser.CommandLineParser.scientific_int(0.0) == 0
-    assert parser.CommandLineParser.scientific_int("-10.0") == -10
-
-    # Test scientific notation that results in integers
-    assert parser.CommandLineParser.scientific_int("1.5e1") == 15  # 15.0
-    assert parser.CommandLineParser.scientific_int("2.0e3") == 2000  # 2000.0
-
-    # Test non-integer floats that should raise errors
-    with pytest.raises(argparse.ArgumentTypeError, match=r"Invalid integer value: '1.9'"):
-        parser.CommandLineParser.scientific_int("1.9")
-
-    with pytest.raises(argparse.ArgumentTypeError, match=r"Invalid integer value: '42.5'"):
-        parser.CommandLineParser.scientific_int("42.5")
-
-    with pytest.raises(argparse.ArgumentTypeError):
-        parser.CommandLineParser.scientific_int(42.9)
-
-    with pytest.raises(argparse.ArgumentTypeError):
-        parser.CommandLineParser.scientific_int(3.14)
-
-    # Test scientific notation that results in non-integers
-    with pytest.raises(argparse.ArgumentTypeError, match=r"Invalid integer value: '1.23e1'"):
-        parser.CommandLineParser.scientific_int("1.23e1")  # 12.3 is not an integer
-
-    # Test error cases
-    with pytest.raises(argparse.ArgumentTypeError, match=r"Invalid integer value: 'abc'"):
-        parser.CommandLineParser.scientific_int("abc")
-
-    with pytest.raises(argparse.ArgumentTypeError, match=r"Invalid integer value: 'not_a_number'"):
-        parser.CommandLineParser.scientific_int("not_a_number")
-
-    with pytest.raises(argparse.ArgumentTypeError, match=r"Invalid integer value: 'None'"):
-        parser.CommandLineParser.scientific_int(None)
-
-
-def test_site():
-    assert parser.CommandLineParser.site("North") == "North"
-    assert parser.CommandLineParser.site("South") == "South"
-
-    with pytest.raises(ValueError, match=r"Invalid name East"):
-        parser.CommandLineParser.site("East")
-
-
 def test_ignore_existing_parameter_version_argument():
     commandline_parser = parser.CommandLineParser()
-    commandline_parser.initialize_application_execution_arguments()
+    commandline_parser.initialize_argument_group(
+        "execution", ["all"], PARAMETER_DEFINITIONS["EXECUTION_ARGS"]
+    )
 
     args = commandline_parser.parse_args(["--ignore_existing_parameter_version"])
 
     assert args.ignore_existing_parameter_version is True
-
-
-def test_telescope():
-    assert parser.CommandLineParser.telescope("LSTN-01") == "LSTN-01"
-    assert parser.CommandLineParser.telescope("MSTx-NectarCam") == "MSTx-NectarCam"
-
-    with pytest.raises(ValueError, match=r"Invalid name Whipple"):
-        parser.CommandLineParser.telescope("Whipple")
-
-    with pytest.raises(ValueError, match=r"Invalid name LST"):
-        parser.CommandLineParser.telescope("LST")
-
-
-def test_instrument():
-    assert parser.CommandLineParser.instrument("OBS-North") == "OBS-North"
-    assert parser.CommandLineParser.instrument("OBS-South") == "OBS-South"
-    assert parser.CommandLineParser.instrument("LSTN-01") == "LSTN-01"
-    assert parser.CommandLineParser.instrument("LSTN-design") == "LSTN-design"
-    assert parser.CommandLineParser.instrument("MSTS-FlashCam") == "MSTS-FlashCam"
-
-    with pytest.raises(ValueError, match=r"Invalid name North"):
-        parser.CommandLineParser.instrument("North")
-
-    with pytest.raises(ValueError, match=r"Invalid name South"):
-        parser.CommandLineParser.instrument("South")
-
-    with pytest.raises(ValueError, match=r"Invalid name InvalidName"):
-        parser.CommandLineParser.instrument("InvalidName")
-
-
-def test_efficiency_interval():
-    assert parser.CommandLineParser.efficiency_interval(0.5) == pytest.approx(0.5)
-    assert parser.CommandLineParser.efficiency_interval(0.0) == pytest.approx(0.0)
-    assert parser.CommandLineParser.efficiency_interval(1.0) == pytest.approx(1.0)
-
-    with pytest.raises(
-        argparse.ArgumentTypeError, match=r"1.5 outside of allowed \[0,1\] interval"
-    ):
-        parser.CommandLineParser.efficiency_interval(1.5)
-    with pytest.raises(
-        argparse.ArgumentTypeError, match=r"-8.5 outside of allowed \[0,1\] interval"
-    ):
-        parser.CommandLineParser.efficiency_interval(-8.5)
-
-
-def test_zenith_angle(caplog):
-    assert parser.CommandLineParser.zenith_angle(0).value == pytest.approx(0.0)
-    assert parser.CommandLineParser.zenith_angle(45).value == pytest.approx(45.0)
-    assert parser.CommandLineParser.zenith_angle(90).value == pytest.approx(90.0)
-    assert isinstance(parser.CommandLineParser.zenith_angle(0), u.Quantity)
-    assert parser.CommandLineParser.zenith_angle("0 deg").value == pytest.approx(0.0)
-    assert parser.CommandLineParser.zenith_angle("45 deg").value == pytest.approx(45.0)
-    assert parser.CommandLineParser.zenith_angle("90 deg").value == pytest.approx(90.0)
-
-    with pytest.raises(
-        argparse.ArgumentTypeError,
-        match=r"The provided zenith angle, -1.0, is outside of the allowed \[0, 180\] interval",
-    ):
-        parser.CommandLineParser.zenith_angle(-1)
-    with pytest.raises(
-        argparse.ArgumentTypeError,
-        match=r"The provided zenith angle, 190.0, is outside of the allowed \[0, 180\] interval",
-    ):
-        parser.CommandLineParser.zenith_angle(190)
-
-    with caplog.at_level("WARNING"):
-        with pytest.raises(TypeError):
-            parser.CommandLineParser.zenith_angle("North")
-    assert "The zenith angle provided is not a valid numeric" in caplog.text
-
-
-def test_parse_quantity_pair():
-    for test_string in ["100 GeV 5 TeV", "100GeV 5TeV", "100 GeV 5 TeV", "100GeV 5 TeV"]:
-        e_pair = parser.CommandLineParser.parse_quantity_pair(test_string)
-        assert e_pair[0].value == pytest.approx(100.0)
-        assert e_pair[0].unit == u.GeV
-        assert e_pair[1].value == pytest.approx(5.0)
-        assert e_pair[1].unit == u.TeV
-
-    q1, q2 = parser.CommandLineParser.parse_quantity_pair(
-        "(<Quantity 200. GeV>, <Quantity 500. GeV>)"
-    )
-    assert q1 == 200 * u.GeV
-    assert q2 == 500 * u.GeV
-
-    with pytest.raises(ValueError, match=r"Input string does not contain exactly two quantities."):
-        parser.CommandLineParser.parse_quantity_pair("100 GeV 5 TeV 20 PeV")
-
-    with pytest.raises(
-        ValueError, match=r"^Could not parse quantities: 'abc' did not parse as unit"
-    ):
-        parser.CommandLineParser.parse_quantity_pair("100 GeV 5 abc")
-
-    with pytest.raises(
-        ValueError, match=r'^Could not parse quantities: Cannot parse "eV" as a Quantity.'
-    ):
-        parser.CommandLineParser.parse_quantity_pair("a GeV 5 TeV")
-
-
-def test_parse_integer_and_quantity():
-    for test_string in ["5 1500 m", "5 1500m", "5 1500.0 m", "(5, <Quantity 1500 m>)"]:
-        c_pair = parser.CommandLineParser.parse_integer_and_quantity(test_string)
-        assert c_pair[0] == 5
-        assert c_pair[1].value == pytest.approx(1500.0)
-        assert c_pair[1].unit == u.m
-
-    with pytest.raises(ValueError, match=r"^'abc' did not parse as unit:"):
-        parser.CommandLineParser.parse_integer_and_quantity("5 5 abc")
-    with pytest.raises(
-        ValueError, match=r"Input string does not contain an integer and a astropy quantity."
-    ):
-        parser.CommandLineParser.parse_integer_and_quantity("0 m 5 m")
-
-
-def test_azimuth_angle(caplog):
-    assert parser.CommandLineParser.azimuth_angle(0).value == pytest.approx(0.0)
-    assert parser.CommandLineParser.azimuth_angle(45).value == pytest.approx(45.0)
-    assert parser.CommandLineParser.azimuth_angle(90).value == pytest.approx(90.0)
-    assert isinstance(parser.CommandLineParser.azimuth_angle(0), u.Quantity)
-    assert parser.CommandLineParser.azimuth_angle("0 deg").value == pytest.approx(0.0)
-    assert parser.CommandLineParser.azimuth_angle("45 deg").value == pytest.approx(45.0)
-    assert parser.CommandLineParser.azimuth_angle("90 deg").value == pytest.approx(90.0)
-
-    assert parser.CommandLineParser.azimuth_angle("North").value == pytest.approx(0.0)
-    assert parser.CommandLineParser.azimuth_angle("South").value == pytest.approx(180.0)
-    assert parser.CommandLineParser.azimuth_angle("East").value == pytest.approx(90.0)
-    assert parser.CommandLineParser.azimuth_angle("West").value == pytest.approx(270.0)
-
-    with pytest.raises(
-        argparse.ArgumentTypeError,
-        match=r"The provided azimuth angle, -1.0, is outside of the allowed \[0, 360\] interval",
-    ):
-        parser.CommandLineParser.azimuth_angle(-1)
-    with pytest.raises(
-        argparse.ArgumentTypeError,
-        match=r"The provided azimuth angle, 370.0, is outside of the allowed \[0, 360\] interval",
-    ):
-        parser.CommandLineParser.azimuth_angle(370)
-    caplog.clear()
-    with pytest.raises(
-        argparse.ArgumentTypeError, match=r"^The azimuth angle given as string can only be one of"
-    ):
-        parser.CommandLineParser.azimuth_angle("TEST")
-    with caplog.at_level("ERROR"):
-        with pytest.raises(TypeError):
-            parser.CommandLineParser.azimuth_angle([0, 10])
-    assert "The azimuth angle provided is not a valid numerical or string value." in caplog.text
-
-
-def test_quantity():
-    quantity_parser = parser.CommandLineParser.quantity("km")
-
-    assert quantity_parser("10") == 10 * u.km
-    assert_quantity_allclose(quantity_parser("1500 m"), 1.5 * u.km)
-
-    with pytest.raises(
-        argparse.ArgumentTypeError,
-        match=r"Invalid quantity value: 'invalid'. Expected a value convertible to km.",
-    ):
-        quantity_parser("invalid")
 
 
 def test_initialize_default_arguments():
@@ -323,9 +91,10 @@ def test_initialize_default_arguments_accepts_apptainer_image_dict(tmp_test_dire
     assert args.apptainer_image == {"7.0.0": str(image_v7), "6.3.0": str(image_v63)}
 
 
-def test_initialize_application_arguments():
+def test_initialize_argument_group():
     app_parser = parser.CommandLineParser()
-    app_parser.initialize_application_arguments(
+    app_parser.initialize_argument_group(
+        "application",
         [
             "source_distance",
             "zenith_angle",
@@ -335,7 +104,8 @@ def test_initialize_application_arguments():
             "data",
             "event_data_file",
             "telescope_ids",
-        ]
+        ],
+        PARAMETER_DEFINITIONS["APPLICATION_ARGS"],
     )
 
     args = app_parser.parse_args(
@@ -612,233 +382,19 @@ def test_simulation_configuration_accepts_energy_range_list_of_pairs():
 
 def test_initialize_db_config_arguments_strip_string():
     parser_10 = parser.CommandLineParser()
-    parser_10.initialize_db_config_arguments()
+    parser_10.initialize_argument_group(
+        "database configuration", ["all"], PARAMETER_DEFINITIONS["DB_CONFIG_ARGS"]
+    )
     for test_string in ["test", " test", "test ", " test "]:
         args = parser_10.parse_args(["--db_simulation_model", test_string])
         assert args.db_simulation_model == "test"
 
 
-def test_get_dictionary_with_corsika_configuration(mocker):
-    # Mock PrimaryParticle.particle_names to return a predefined dictionary
-    mock_particle_names = {"proton": 1, "helium": 2, "iron": 3}
-    mocker.patch(
-        "simtools.corsika.primary_particle.PrimaryParticle.particle_names",
-        return_value=mock_particle_names,
-    )
-
-    # Call the method to get the dictionary
-    corsika_config = parser.CommandLineParser._get_dictionary_with_corsika_configuration()
-
-    # Test the "primary" key
-    assert "primary" in corsika_config
-    assert corsika_config["primary"]["help"].startswith("Primary particle to simulate.")
-    assert "proton" in corsika_config["primary"]["help"]
-    assert "helium" in corsika_config["primary"]["help"]
-    assert "iron" in corsika_config["primary"]["help"]
-    assert corsika_config["primary"]["type"] is str.lower
-    assert corsika_config["primary"]["action"] is parser.OneOrManyAction
-    assert corsika_config["primary"]["nargs"] == "+"
-    assert corsika_config["primary"]["required"] is True
-
-    # Test the "primary_id_type" key
-    assert "primary_id_type" in corsika_config
-    assert corsika_config["primary_id_type"]["help"] == "Primary particle ID type"
-    assert corsika_config["primary_id_type"]["type"] is str
-    assert corsika_config["primary_id_type"]["choices"] == ["common_name", "corsika7_id", "pdg_id"]
-    assert corsika_config["primary_id_type"]["default"] == "common_name"
-
-    # Test the "azimuth_angle" key
-    assert "azimuth_angle" in corsika_config
-    assert corsika_config["azimuth_angle"]["help"].startswith(
-        "Telescope pointing direction in azimuth."
-    )
-    assert corsika_config["azimuth_angle"]["type"] == parser.CommandLineParser.azimuth_angle
-    assert corsika_config["azimuth_angle"]["action"] is parser.OneOrManyAction
-    assert corsika_config["azimuth_angle"]["nargs"] == "+"
-    assert corsika_config["azimuth_angle"]["default"] == 0 * u.deg
-
-    # Test the "zenith_angle" key
-    assert "zenith_angle" in corsika_config
-    assert corsika_config["zenith_angle"]["help"] == "Zenith angle in degrees (between 0 and 180)."
-    assert corsika_config["zenith_angle"]["type"] == parser.CommandLineParser.zenith_angle
-    assert corsika_config["zenith_angle"]["action"] is parser.OneOrManyAction
-    assert corsika_config["zenith_angle"]["nargs"] == "+"
-    assert corsika_config["zenith_angle"]["default"] == 20 * u.deg
-
-    # Test the "showers_per_run" key
-    assert "showers_per_run" in corsika_config
-    assert corsika_config["showers_per_run"]["help"] == "Number of showers per run to simulate."
-    assert corsika_config["showers_per_run"]["type"] is int
-
-    # Test the "run_number_offset" key
-    assert "run_number_offset" in corsika_config
-    assert "Offset added to run number" in corsika_config["run_number_offset"]["help"]
-    assert corsika_config["run_number_offset"]["type"] is int
-    assert corsika_config["run_number_offset"]["default"] == 0
-
-    # Test the "run_number" key
-    assert "run_number" in corsika_config
-    assert corsika_config["run_number"]["help"] == "Run number to be simulated."
-    assert corsika_config["run_number"]["type"] is int
-    assert corsika_config["run_number"]["default"] == 1
-
-    # Test the "event_number_first_shower" key
-    assert "event_number_first_shower" in corsika_config
-    assert corsika_config["event_number_first_shower"]["help"] == "Event number of first shower"
-    assert corsika_config["event_number_first_shower"]["type"] is int
-    assert corsika_config["event_number_first_shower"]["default"] == 1
-
-    # Test the "correct_for_b_field_alignment" key
-    assert "correct_for_b_field_alignment" in corsika_config
-    assert (
-        corsika_config["correct_for_b_field_alignment"]["help"] == "Correct for B-field alignment"
-    )
-    assert corsika_config["correct_for_b_field_alignment"]["action"] == "store_true"
-    assert corsika_config["correct_for_b_field_alignment"]["default"] is True
-
-
-def test_build_info_action(mocker):
-    mock_get_build_options = mocker.patch(
-        "simtools.dependencies.get_build_options",
-        return_value={"version": "1.0.0", "python": "3.9"},
-    )
-    mock_print = mocker.patch("builtins.print")
-    mock_exit = mocker.patch.object(argparse.ArgumentParser, "exit")
-
-    action = parser.BuildInfoAction(option_strings=["--build_info"], build_info="Test build info")
-    test_parser = parser.CommandLineParser()
-    action(test_parser, None, None, "--build_info")
-
-    assert mock_get_build_options.called
-    assert mock_print.called
-    assert mock_exit.called
-    assert mock_print.call_args_list[0][0][0] == "Test build info"
-
-
-def test_bounded_int():
-    bounded_int_checker = parser.CommandLineParser.bounded_int(1, 10)
-
-    assert bounded_int_checker(1) == 1
-    assert bounded_int_checker(5) == 5
-    assert bounded_int_checker(10) == 10
-
-    assert bounded_int_checker("1") == 1
-    assert bounded_int_checker("5") == 5
-    assert bounded_int_checker("10") == 10
-
-    with pytest.raises(ValueError, match=r"0 not in \[1,10\]"):
-        bounded_int_checker(0)
-
-    with pytest.raises(ValueError, match=r"11 not in \[1,10\]"):
-        bounded_int_checker(11)
-
-    with pytest.raises(ValueError, match=r"-5 not in \[1,10\]"):
-        bounded_int_checker(-5)
-
-    bounded_int_checker_large = parser.CommandLineParser.bounded_int(100, 1000)
-    assert bounded_int_checker_large(100) == 100
-    assert bounded_int_checker_large(500) == 500
-    assert bounded_int_checker_large(1000) == 1000
-
-    with pytest.raises(ValueError, match=r"99 not in \[100,1000\]"):
-        bounded_int_checker_large(99)
-
-    with pytest.raises(ValueError, match=r"1001 not in \[100,1000\]"):
-        bounded_int_checker_large(1001)
-
-
-def test_string_or_dict():
-    """Test CommandLineParser.string_or_dict parsing."""
-    # Test plain string
-    assert parser.CommandLineParser.string_or_dict("plain_string") == "plain_string"
-
-    # Test string that looks like a dict but is invalid
-    assert parser.CommandLineParser.string_or_dict("{invalid}") == "{invalid}"
-
-    # Test valid dict string
-    dict_str = "{'key1': 'value1', 'key2': 'value2'}"
-    result = parser.CommandLineParser.string_or_dict(dict_str)
-    assert isinstance(result, dict)
-    assert result == {"key1": "value1", "key2": "value2"}
-
-    # Test valid dict string with numbers
-    dict_str_nums = "{'1.0': '/path/v1.sif', '2.0': '/path/v2.sif'}"
-    result = parser.CommandLineParser.string_or_dict(dict_str_nums)
-    assert isinstance(result, dict)
-    assert result == {"1.0": "/path/v1.sif", "2.0": "/path/v2.sif"}
-
-    # Test non-string input (should return as-is)
-    test_dict = {"already": "dict"}
-    assert parser.CommandLineParser.string_or_dict(test_dict) == test_dict
-
-    # Test whitespace handling
-    dict_str_spaces = "  {'a': 'b'}  "
-    result = parser.CommandLineParser.string_or_dict(dict_str_spaces)
-    assert isinstance(result, dict)
-    assert result == {"a": "b"}
-
-
-def test_one_or_many_action():
-    """Test OneOrManyAction stores single value as scalar and multiple as list."""
-    test_parser = parser.CommandLineParser()
-    test_parser.initialize_default_arguments(
-        simulation_configuration={
-            "software": None,
-            "corsika_configuration": ["primary"],
-        }
-    )
-
-    # Test single value (should be scalar, not list)
-    args = test_parser.parse_args(["--primary", "gamma"])
-    assert args.primary == "gamma"
-    assert isinstance(args.primary, str)
-
-    # Test multiple values (should be list)
-    args = test_parser.parse_args(["--primary", "gamma", "proton"])
-    assert args.primary == ["gamma", "proton"]
-    assert isinstance(args.primary, list)
-
-
-def test_quantity_pair_action():
-    """Test QuantityPairAction parses energy ranges correctly."""
-    test_parser = parser.CommandLineParser()
-    test_parser.initialize_default_arguments(
-        simulation_configuration={
-            "software": None,
-            "corsika_configuration": ["energy_range"],
-        }
-    )
-
-    # Test single pair string (two quantities with units in one string)
-    args = test_parser.parse_args(["--energy_range", "30 GeV 300 GeV"])
-    assert len(args.energy_range) == 2
-    assert_quantity_allclose(args.energy_range[0], 30 * u.GeV)
-    assert_quantity_allclose(args.energy_range[1], 300 * u.GeV)
-
-    # Test two separate quantity values
-    args = test_parser.parse_args(["--energy_range", "50 GeV", "5 TeV"])
-    assert len(args.energy_range) == 2
-    assert_quantity_allclose(args.energy_range[0], 50 * u.GeV)
-    assert_quantity_allclose(args.energy_range[1], 5 * u.TeV)
-
-    # Test unquoted token stream from the shell
-    args = test_parser.parse_args(["--energy_range", "30", "GeV", "300", "GeV"])
-    assert len(args.energy_range) == 2
-    assert_quantity_allclose(args.energy_range[0], 30 * u.GeV)
-    assert_quantity_allclose(args.energy_range[1], 300 * u.GeV)
-
-    # Test multiple pair strings (list of pairs)
-    args = test_parser.parse_args(["--energy_range", "30 GeV 30 GeV", "300 GeV 300 GeV"])
-    assert len(args.energy_range) == 2
-    assert_quantity_allclose(args.energy_range[0][0], 30 * u.GeV)
-    assert_quantity_allclose(args.energy_range[0][1], 30 * u.GeV)
-    assert_quantity_allclose(args.energy_range[1][0], 300 * u.GeV)
-    assert_quantity_allclose(args.energy_range[1][1], 300 * u.GeV)
-
-
 def _parser(*params):
     p = parser.CommandLineParser()
-    p.initialize_application_arguments(list(params))
+    p.initialize_argument_group(
+        "application", list(params), PARAMETER_DEFINITIONS["APPLICATION_ARGS"]
+    )
     return p
 
 

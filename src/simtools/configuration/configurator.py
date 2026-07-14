@@ -84,7 +84,7 @@ class Configurator:
             simulation_model = ["site", "telescope"]
         self.parser.initialize_simulation_model_arguments(simulation_model)
         if add_db_config:
-            self.parser.initialize_db_config_arguments()
+            self.parser.initialize_named_argument_group("database configuration")
 
         self._fill_config(arg_list)
         return self.config

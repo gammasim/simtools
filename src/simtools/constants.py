@@ -6,6 +6,8 @@ from importlib.resources import files
 SCHEMA_PATH = files("simtools") / "schemas"
 # Schema URL
 SCHEMA_URL = "https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas"
+# URL for files in the main branch of the GitHub repository
+GITHUB_BLOB_BASE = "https://github.com/gammasim/simtools/blob/main/"
 # Path to metadata jsonschema
 METADATA_JSON_SCHEMA = SCHEMA_PATH / "metadata.metaschema.yml"
 # Path to plotting configuration json schema
