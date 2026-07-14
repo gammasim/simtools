@@ -179,6 +179,28 @@ def test_runtime_environment_definition_is_reused_by_workflow_schema():
         )
 
 
+def test_application_workflow_schema_accepts_optional_docs_metadata():
+    workflow_config = {
+        "schema_version": "0.4.0",
+        "schema_name": "application_workflow.metaschema",
+        "applications": [
+            {
+                "application": "simtools-test",
+                "docs": {
+                    "title": "Example title",
+                    "summary": "Example summary.",
+                },
+                "configuration": {},
+            }
+        ],
+    }
+
+    schema.validate_dict_using_schema(
+        workflow_config,
+        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+    )
+
+
 def test_validate_dict_using_schema_remote(tmp_test_directory, mocker):
     sample_schema = {
         "type": "object",

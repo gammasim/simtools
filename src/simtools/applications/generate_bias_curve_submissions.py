@@ -92,6 +92,12 @@ example:
 """
 
 from simtools.application_control import build_application
+from simtools.configuration.commandline_argument_helpers import (
+    azimuth_angle,
+    parse_integer_and_quantity,
+    parse_quantity_pair,
+    zenith_angle,
+)
 from simtools.job_execution import bias_curve_submissions
 
 
@@ -124,13 +130,13 @@ def _add_arguments(parser):
     parser.add_argument(
         "--azimuth_angle",
         help="Azimuth angle in degrees.",
-        type=parser.azimuth_angle,
+        type=azimuth_angle,
         required=True,
     )
     parser.add_argument(
         "--zenith_angle",
         help="Zenith angle in degrees.",
-        type=parser.zenith_angle,
+        type=zenith_angle,
         required=True,
     )
     parser.add_argument(
@@ -142,13 +148,13 @@ def _add_arguments(parser):
     parser.add_argument(
         "--core_scatter",
         help="Core scatter, e.g. '20 1900 m'.",
-        type=parser.parse_integer_and_quantity,
+        type=parse_integer_and_quantity,
         required=True,
     )
     parser.add_argument(
         "--view_cone",
         help="View cone, e.g. '0 deg 5 deg'.",
-        type=parser.parse_quantity_pair,
+        type=parse_quantity_pair,
         required=True,
     )
     parser.add_argument(
@@ -172,14 +178,14 @@ def _add_arguments(parser):
     parser.add_argument(
         "--nsb_energy_range",
         help="Energy range for the NSB gamma curve.",
-        type=parser.parse_quantity_pair,
-        default=parser.parse_quantity_pair("20 MeV 25 MeV"),
+        type=parse_quantity_pair,
+        default=parse_quantity_pair("20 MeV 25 MeV"),
     )
     parser.add_argument(
         "--proton_energy_range",
         help="Energy range for the proton curve.",
-        type=parser.parse_quantity_pair,
-        default=parser.parse_quantity_pair("2 GeV 2000 GeV"),
+        type=parse_quantity_pair,
+        default=parse_quantity_pair("2 GeV 2000 GeV"),
     )
     parser.add_argument(
         "--nsb_scaling_factor",

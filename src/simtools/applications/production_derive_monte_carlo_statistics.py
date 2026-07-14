@@ -28,6 +28,7 @@ Estimate Monte Carlo statistics from a trigger-histogram file:
 """
 
 from simtools.application_control import build_application
+from simtools.configuration.commandline_argument_helpers import positive_quantity
 from simtools.production_configuration.monte_carlo_statistics_estimator import (
     estimate_monte_carlo_statistics,
 )
@@ -69,21 +70,21 @@ def _add_arguments(parser):
     parser.add_argument(
         "--optimization_energy_min",
         required=False,
-        type=parser.positive_quantity("TeV"),
+        type=positive_quantity("TeV"),
         default=None,
         help="Optional lower bound of the optimization range.",
     )
     parser.add_argument(
         "--optimization_energy_max",
         required=False,
-        type=parser.positive_quantity("TeV"),
+        type=positive_quantity("TeV"),
         default=None,
         help="Optional upper bound of the optimization range.",
     )
     parser.add_argument(
         "--reduced_core_radius",
         required=False,
-        type=parser.positive_quantity("m"),
+        type=positive_quantity("m"),
         default=None,
         help=(
             "Optional reduced core scatter radius used for effective-area reporting "

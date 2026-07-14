@@ -5,3 +5,4 @@ simtools-db-inspect-databases
 
 .. automodule:: db_inspect_databases
    :members:
+   :exclude-members: main

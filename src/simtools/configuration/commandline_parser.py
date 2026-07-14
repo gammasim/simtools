@@ -1,17 +1,40 @@
 """Command line parser for applications."""
 
 import argparse
-import ast
-import logging
-import re
-from pathlib import Path
 
-import astropy.units as u
+from simtools.configuration import commandline_parameters
 
-import simtools.version
-from simtools import constants
-from simtools.configuration import defaults
-from simtools.utils import general, names
+DEFAULT_ARGUMENT_GROUPS = {
+    "configuration": "CONFIGURATION_ARGS",
+    "database configuration": "DB_CONFIG_ARGS",
+    "execution": "EXECUTION_ARGS",
+    "output": "OUTPUT_ARGS",
+    "paths": "PATH_ARGS",
+    "run time": "RUN_TIME_ARGS",
+    "user": "USER_ARGS",
+}
+
+SIMULATION_CONFIGURATION_GROUPS = (
+    ("simulation configuration", commandline_parameters.get_corsika_configuration_args),
+    ("shower parameters", lambda: commandline_parameters.PARAMETER_DEFINITIONS["SHOWER_ARGS"]),
+    ("corsika configuration", lambda: commandline_parameters.PARAMETER_DEFINITIONS["CORSIKA_ARGS"]),
+)
+
+SIMULATION_MODEL_BASE_PARAMETERS = (
+    "model_version",
+    "parameter_version",
+    "updated_parameter_version",
+)
+SIMULATION_MODEL_SITE_DEPENDENCIES = {"layout", "layout_file", "telescope", "telescopes"}
+SIMULATION_MODEL_LAYOUT_OPTIONS = {"layout", "layout_file"}
+SIMULATION_MODEL_LAYOUT_BASE_PARAMETERS = ("array_layout_name", "array_element_list")
+SIMULATION_MODEL_LAYOUT_OPTIONAL_PARAMETERS = {
+    "layout_file": ("array_layout_file",),
+    "plot_all_layouts": ("plot_all_layouts",),
+}
+SIMULATION_MODEL_LAYOUT_POST_PARAMETERS = {
+    "layout_parameter_file": ("array_layout_parameter_file",),
+}
 
 
 class CommandLineParser(argparse.ArgumentParser):
@@ -56,220 +79,16 @@ class CommandLineParser(argparse.ArgumentParser):
         """
         self.initialize_simulation_model_arguments(simulation_model)
         self.initialize_simulation_configuration_arguments(simulation_configuration)
+
         if db_config:
-            self.initialize_db_config_arguments()
+            self.initialize_named_argument_group("database configuration")
         if paths:
-            self.initialize_path_arguments()
+            self.initialize_named_argument_group("paths")
         if output:
-            self.initialize_output_arguments()
-        self.initialize_config_files()
-        self.initialize_application_execution_arguments()
-        self.initialize_run_time()
-        self.initialize_user_arguments()
+            self.initialize_named_argument_group("output")
 
-    def initialize_config_files(self):
-        """Initialize configuration files."""
-        _job_group = self.add_argument_group("configuration")
-        _job_group.add_argument(
-            "--config",
-            help="simtools configuration file",
-            default=None,
-            type=str,
-        )
-        _job_group.add_argument(
-            "--env_file",
-            help="file with environment variables",
-            default=".env",
-            type=str,
-        )
-
-    def initialize_path_arguments(self):
-        """Initialize paths."""
-        _job_group = self.add_argument_group("paths")
-        _job_group.add_argument(
-            "--data_path",
-            help="path pointing towards data directory",
-            type=Path,
-            default="./data/",
-        )
-        _job_group.add_argument(
-            "--output_path",
-            help="path pointing towards output directory",
-            type=Path,
-            default="./simtools-output/",
-        )
-        _job_group.add_argument(
-            "--model_path",
-            help="path pointing towards simulation model file directory",
-            type=Path,
-            default="./",
-        )
-        _job_group.add_argument(
-            "--sim_telarray_path",
-            help="path pointing to sim_telarray installation",
-            type=Path,
-        )
-        _job_group.add_argument(
-            "--corsika_path",
-            help=f"path pointing to CORSIKA installation (default: {defaults.CORSIKA_PATH})",
-            type=Path,
-        )
-        _job_group.add_argument(
-            "--corsika_interaction_table_path",
-            help=(
-                "path pointing to CORSIKA interaction tables "
-                f"(default: {defaults.CORSIKA_INTERACTION_TABLE_PATH})"
-            ),
-            type=Path,
-        )
-
-    def initialize_output_arguments(self):
-        """Initialize application output files(s)."""
-        _job_group = self.add_argument_group("output")
-        _job_group.add_argument(
-            "--output_file",
-            help="output data file",
-            type=str,
-        )
-        _job_group.add_argument(
-            "--output_file_format",
-            help="file format of output data",
-            type=str,
-            default="ecsv",
-        )
-        _job_group.add_argument(
-            "--skip_output_validation",
-            help="skip output data validation against schema",
-            action="store_true",
-        )
-
-    def initialize_run_time(self):
-        """Initialize run time arguments."""
-        _job_group = self.add_argument_group("run time")
-        _job_group.add_argument(
-            "--runtime_environment_file",
-            type=Path,
-            help=(
-                "Path to a standalone runtime-environment YAML file "
-                "(top-level 'runtime_environment')."
-            ),
-            default=None,
-        )
-        _job_group.add_argument(
-            "--apptainer_image",
-            help="Apptainer image path or a dictionary mapping labels to image paths.",
-            type=CommandLineParser.string_or_dict,
-            default=None,
-        )
-        _job_group.add_argument(
-            "--ignore_runtime_environment",
-            action="store_true",
-            help=(
-                "Ignore the runtime environment and run the application in the current environment."
-            ),
-            default=False,
-        )
-        _job_group.add_argument(
-            "--overwrite_collection_files",
-            action="store_true",
-            help=(
-                "Allow files copied by the workflow collection block to overwrite existing files "
-                "with identical names."
-            ),
-            default=False,
-        )
-
-    def initialize_application_execution_arguments(self):
-        """Initialize application execution arguments."""
-        _job_group = self.add_argument_group("execution")
-        _job_group.add_argument(
-            "--activity_id",
-            help="activity identifier",
-            type=str,
-            default=None,
-        )
-        _job_group.add_argument(
-            "--test",
-            help="test option for faster execution during development",
-            action="store_true",
-        )
-        _job_group.add_argument(
-            "--label",
-            help="job label",
-        )
-        _job_group.add_argument(
-            "--log_level",
-            action="store",
-            default="info",
-            help="log level to print",
-        )
-        _job_group.add_argument(
-            "--log_file",
-            help="log file path",
-            type=Path,
-        )
-        _job_group.add_argument(
-            "--log_file_path",
-            help="path pointing towards log directory",
-            type=Path,
-        )
-        _job_group.add_argument(
-            "--disable_log_file",
-            action="store_true",
-            help=argparse.SUPPRESS,
-        )
-        _job_group.add_argument(
-            "--figure_format",
-            help="output figure format(s)",
-            type=str,
-            nargs="+",
-            default=["png"],
-        )
-
-        _job_group.add_argument(
-            "--version", action="version", version=f"%(prog)s {simtools.version.__version__}"
-        )
-        _job_group.add_argument(
-            "--build_info",
-            action=BuildInfoAction,
-            build_info=f"%(prog)s {simtools.version.__version__}",
-            help="show build information and exit",
-        )
-        _job_group.add_argument(
-            "--export_build_info",
-            help="export build information to file",
-            type=str,
-        )
-        _job_group.add_argument(
-            "--ignore_existing_parameter_version",
-            action="store_true",
-            help="skip checking for an existing model parameter version in the database",
-        )
-
-    def initialize_user_arguments(self):
-        """Initialize user arguments."""
-        _job_group = self.add_argument_group("user")
-        for flag, help_text in [
-            ("user_name", "user name"),
-            ("user_organization", "user organization"),
-            ("user_email", "user email"),
-            ("user_orcid", "user ORCID"),
-        ]:
-            _job_group.add_argument(f"--{flag}", help=help_text, type=str)
-
-    def initialize_db_config_arguments(self):
-        """Initialize DB configuration parameters."""
-        _job_group = self.add_argument_group("database configuration")
-        for flag, help_text, arg_type in [
-            ("db_api_user", "database user", str),
-            ("db_api_pw", "database password", str),
-            ("db_api_port", "database port", int),
-            ("db_server", "database server address", str),
-            ("db_api_authentication_database", "database with user info (optional)", str),
-            ("db_simulation_model", "name of simulation model database", str.strip),
-            ("db_simulation_model_version", "version of simulation model database", str.strip),
-        ]:
-            _job_group.add_argument(f"--{flag}", help=help_text, type=arg_type)
+        for group_name in ("configuration", "execution", "run time", "user"):
+            self.initialize_named_argument_group(group_name)
 
     def initialize_simulation_model_arguments(self, model_options):
         """
@@ -286,69 +105,20 @@ class CommandLineParser(argparse.ArgumentParser):
         if model_options is None:
             return
 
-        _job_group = self.add_argument_group("simulation model")
-        if "model_version" in model_options:
-            _job_group.add_argument(
-                "--model_version",
-                help="production model version",
-                type=str,
-                default=None,
-                nargs="+",
-            )
-        if "parameter_version" in model_options:
-            _job_group.add_argument(
-                "--parameter_version",
-                help="model parameter version",
-                type=str,
-                default=None,
-            )
-        if "updated_parameter_version" in model_options:
-            _job_group.add_argument(
-                "--updated_parameter_version",
-                help="updated parameter version",
-                type=str,
-                default=None,
-                required=False,
-            )
-        _job_group.add_argument(
-            "--overwrite_model_parameters",
-            help="File name to overwrite model parameters from DB with provided values",
-            type=str,
+        requested = set(model_options)
+        definitions = commandline_parameters.PARAMETER_DEFINITIONS["SIMULATION_MODEL_ARGS"]
+        group = self.add_argument_group("simulation model")
+
+        self._add_parameters(
+            group,
+            self._simulation_model_direct_parameters(requested),
+            definitions,
         )
 
-        if any(
-            option in model_options
-            for option in ["site", "telescope", "telescopes", "layout", "layout_file"]
-        ):
-            self._add_model_option_site(_job_group)
+        if requested & SIMULATION_MODEL_LAYOUT_OPTIONS:
+            self._add_simulation_model_layout_parameters(group, requested, definitions)
 
-        if "telescope" in model_options:
-            _job_group.add_argument(
-                "--telescope",
-                help="telescope model name (e.g., LSTN-01, SSTS-design, ...)",
-                type=self.telescope,
-            )
-        if "telescopes" in model_options:
-            _job_group.add_argument(
-                "--telescopes",
-                help="list of telescopes (e.g., LSTN-01, SSTS-design, ...)",
-                type=self.telescope,
-                nargs="+",
-            )
-        if "layout" in model_options or "layout_file" in model_options:
-            self._add_model_option_layout(
-                job_group=_job_group,
-                model_options=model_options,
-                # layout info is always required for layout related tasks with the exception
-                # of listing the available layouts in the DB
-                required="--list_available_layouts" not in self._option_string_actions,
-            )
-
-        _job_group.add_argument(
-            "--ignore_missing_design_model",
-            help="Ignore missing design model definition of DB",
-            action="store_true",
-        )
+        self._add_parameters(group, ["ignore_missing_design_model"], definitions)
 
     def initialize_simulation_configuration_arguments(self, simulation_configuration):
         """
@@ -363,769 +133,90 @@ class CommandLineParser(argparse.ArgumentParser):
             return
 
         if "software" in simulation_configuration:
-            _grp = self.add_argument_group("simulation software")
-            _grp.add_argument(
-                "--simulation_software",
-                help="Simulation software steps.",
-                type=str,
-                choices=list(defaults.SIMULATION_SOFTWARE_CHOICES),
-                default=defaults.SIMULATION_SOFTWARE_DEFAULT,
+            self._initialize_named_parameters_group(
+                "simulation software",
+                ["simulation_software"],
+                commandline_parameters.PARAMETER_DEFINITIONS["SIMULATION_SOFTWARE_ARGS"],
             )
+
         if "corsika_configuration" in simulation_configuration:
-            self._initialize_argument_group(
-                "simulation configuration",
-                simulation_configuration["corsika_configuration"],
-                self._get_dictionary_with_corsika_configuration(),
-            )
-            self._initialize_argument_group(
-                "shower parameters",
-                simulation_configuration["corsika_configuration"],
-                _SHOWER_ARGS,
-            )
-            self._initialize_argument_group(
-                "corsika configuration",
-                simulation_configuration["corsika_configuration"],
-                _CORSIKA_ARGS,
-            )
+            selected = simulation_configuration["corsika_configuration"]
+            for group_name, definitions_factory in SIMULATION_CONFIGURATION_GROUPS:
+                self._initialize_named_parameters_group(
+                    group_name,
+                    selected,
+                    definitions_factory(),
+                )
+
         if "sim_telarray_configuration" in simulation_configuration:
-            self._initialize_argument_group(
+            self._initialize_named_parameters_group(
                 "sim_telarray configuration",
                 simulation_configuration["sim_telarray_configuration"],
-                _SIMTEL_ARGS,
+                commandline_parameters.PARAMETER_DEFINITIONS["SIMTEL_ARGS"],
             )
 
-    def initialize_application_arguments(self, selected_parameters, group_name="application"):
-        """
-        Initialize reusable application-specific arguments.
+    def add_parameter_from_definition(self, container, name, definition):
+        """Add one argument from a parameter-definition dictionary."""
+        return container.add_argument(f"--{name}", **definition)
 
-        Parameters
-        ----------
-        selected_parameters : list
-            List of application argument names to initialize.
-        group_name : str, optional
-            Name of the argument group.
-        """
-        if selected_parameters is None:
-            return
+    def initialize_named_argument_group(self, group_name):
+        """Initialize one predefined argument group by its display name."""
+        self._initialize_named_parameters_group(
+            group_name,
+            ["all"],
+            commandline_parameters.PARAMETER_DEFINITIONS[DEFAULT_ARGUMENT_GROUPS[group_name]],
+        )
 
-        self._initialize_argument_group(group_name, selected_parameters, _APPLICATION_ARGS)
+    def initialize_application_argument_group(self, selected_parameters, available_parameters=None):
+        """Initialize application-specific arguments."""
+        self.initialize_argument_group("application", selected_parameters, available_parameters)
 
-    @staticmethod
-    def _get_dictionary_with_corsika_configuration():
-        """Return dictionary with CORSIKA configuration parameters."""
-        from simtools.corsika.primary_particle import PrimaryParticle  # pylint: disable=C0415
-
-        return {
-            "primary": {
-                "help": (
-                    "Primary particle to simulate. "
-                    "(choices for common names: "
-                    f"{', '.join(PrimaryParticle.particle_names().keys())}; "
-                    "use '--primary_ID_type' to use other particle ID types)."
-                ),
-                "type": str.lower,
-                "action": OneOrManyAction,
-                "nargs": "+",
-                "required": True,
-            },
-            "primary_id_type": {
-                "help": "Primary particle ID type",
-                "type": str,
-                "choices": ["common_name", "corsika7_id", "pdg_id"],
-                "default": "common_name",
-            },
-            "azimuth_angle": {
-                "help": (
-                    "Telescope pointing direction in azimuth. "
-                    "It can be in degrees between 0 and 360 or one of north, south, east or west. "
-                    "North is 0 degrees and the azimuth grows clockwise (East is 90 degrees)."
-                ),
-                "type": CommandLineParser.azimuth_angle,
-                "action": OneOrManyAction,
-                "nargs": "+",
-                "default": 0 * u.deg,
-            },
-            "zenith_angle": {
-                "help": "Zenith angle in degrees (between 0 and 180).",
-                "type": CommandLineParser.zenith_angle,
-                "action": OneOrManyAction,
-                "nargs": "+",
-                "default": 20 * u.deg,
-            },
-            "showers_per_run": {
-                "help": "Number of showers per run to simulate.",
-                "type": int,
-            },
-            "run_number_offset": {
-                "help": ("Offset added to run number when executing a simulation."),
-                "type": int,
-                "default": 0,
-            },
-            "run_number": {
-                "help": "Run number to be simulated.",
-                "type": int,
-                "default": 1,
-            },
-            "event_number_first_shower": {
-                "help": "Event number of first shower",
-                "type": int,
-                "default": 1,
-            },
-            "correct_for_b_field_alignment": {
-                "help": "Correct for B-field alignment",
-                "action": "store_true",
-                "default": True,
-            },
-            "curved_atmosphere_min_zenith_angle": {
-                "help": (
-                    "Minimum zenith angle (deg) for using curved-atmosphere CORSIKA binaries. "
-                ),
-                "type": CommandLineParser.zenith_angle,
-                "default": defaults.CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG * u.deg,
-            },
-        }
-
-    def _initialize_argument_group(self, group_name, selected_parameters, available_parameters):
+    def initialize_argument_group(self, group_name, selected_parameters, available_parameters=None):
         """Initialize a group of arguments from a parameter-definition dictionary."""
-        configuration_group = self.add_argument_group(group_name)
-
-        if "all" in selected_parameters:
-            selected_parameters = available_parameters.keys()
-
-        for param in selected_parameters:
-            try:
-                configuration_group.add_argument(f"--{param}", **available_parameters[param])
-            except KeyError:
-                pass
-
-    @staticmethod
-    def _add_model_option_layout(job_group, model_options, required=True):
-        """
-        Add layout option to the job group.
-
-        Parameters
-        ----------
-        job_group: argparse.ArgumentParser
-            Job group
-        model_options: list
-            List of model options.
-
-        Returns
-        -------
-        argparse.ArgumentParser
-        """
-        _layout_group = job_group.add_mutually_exclusive_group(required=required)
-        _layout_group.add_argument(
-            "--array_layout_name",
-            help="array layout name(s) (e.g., alpha, subsystem_msts)",
-            nargs="+",
-            type=str,
+        definitions = (
+            available_parameters or commandline_parameters.PARAMETER_DEFINITIONS["APPLICATION_ARGS"]
         )
-        _layout_group.add_argument(
-            "--array_element_list",
-            help="list of array elements (e.g., LSTN-01, LSTN-02, MSTN).",
-            nargs="+",
-            type=str,
-            default=None,
+        self._initialize_named_parameters_group(group_name, selected_parameters, definitions)
+
+    def _initialize_named_parameters_group(self, group_name, selected_parameters, definitions):
+        """Create one argparse group and add the selected parameters to it."""
+        group = self.add_argument_group(group_name)
+        self._add_parameters(group, selected_parameters, definitions)
+        return group
+
+    def _add_parameters(self, container, selected_parameters, definitions):
+        """Add selected parameters to an argparse container."""
+        parameter_names = (
+            definitions.keys() if "all" in selected_parameters else selected_parameters
         )
-        if "layout_file" in model_options:
-            _layout_group.add_argument(
-                "--array_layout_file",
-                help="file(s) with the list of array elements (astropy table format).",
-                nargs="+",
-                type=str,
-                default=None,
-            )
-        if "layout_parameter_file" in model_options:
-            job_group.add_argument(
-                "--array_layout_parameter_file",
-                help="Array layout model parameter file (typically in JSON format).",
-                type=str,
-                default=None,
-            )
-        if "plot_all_layouts" in model_options:
-            _layout_group.add_argument(
-                "--plot_all_layouts",
-                help="plot all available layouts",
-                action="store_true",
-            )
-        return job_group
+        for parameter_name in parameter_names:
+            definition = definitions.get(parameter_name)
+            if definition is not None:
+                self.add_parameter_from_definition(container, parameter_name, definition)
 
-    def _add_model_option_site(self, job_group):
-        """
-        Add site option to the job group.
+    def _simulation_model_direct_parameters(self, requested):
+        """Return the ordered direct simulation-model parameters to add."""
+        direct_parameters = [name for name in SIMULATION_MODEL_BASE_PARAMETERS if name in requested]
+        direct_parameters.append("overwrite_model_parameters")
+        if requested & SIMULATION_MODEL_SITE_DEPENDENCIES or "site" in requested:
+            direct_parameters.append("site")
+        if "telescope" in requested:
+            direct_parameters.append("telescope")
+        if "telescopes" in requested:
+            direct_parameters.append("telescopes")
+        return direct_parameters
 
-        Parameters
-        ----------
-        job_group: argparse.ArgumentParser
-            Job group
-
-        Returns
-        -------
-        argparse.ArgumentParser
-        """
-        job_group.add_argument("--site", help="site (e.g., North, South)", type=self.site)
-        return job_group
-
-    @staticmethod
-    def scientific_int(value):
-        """
-        Convert string (including scientific notation) to integer.
-
-        Parameters
-        ----------
-        value: str or int or float
-            Value to convert to integer. Can be a regular integer,
-            float, or string in scientific notation (e.g., '1e7').
-
-        Returns
-        -------
-        int
-            Converted integer value
-
-        Raises
-        ------
-        argparse.ArgumentTypeError
-            If the value cannot be converted to an integer
-        """
-        try:
-            f = float(value)
-            if not f.is_integer():
-                raise ValueError
-            return int(f)
-        except (ValueError, TypeError) as exc:
-            raise argparse.ArgumentTypeError(
-                f"Invalid integer value: '{value}'. "
-                "Expected an integer or scientific notation like '1e7'."
-            ) from exc
-
-    @staticmethod
-    def site(value):
-        """
-        Argument parser type to check that a valid site name is given.
-
-        Parameters
-        ----------
-        value: str
-            site name
-
-        Returns
-        -------
-        str
-            Validated site name
-
-        Raises
-        ------
-        argparse.ArgumentTypeError
-            for invalid sites
-        """
-        names.validate_site_name(str(value))
-        return str(value)
-
-    @staticmethod
-    def telescope(value):
-        """
-        Argument parser type to check that valid telescope names are given.
-
-        Parameters
-        ----------
-        value: str, list of str
-            telescope name(s)
-
-        Returns
-        -------
-        str or list of str
-            Validated telescope name(s)
-        """
-        values = general.ensure_list(value)
-        for v in values:
-            names.validate_array_element_name(str(v))
-        return values if len(values) > 1 else values[0]
-
-    @staticmethod
-    def instrument(value):
-        """
-        Argument parser type to check that a valid instrument name is given.
-
-        Parameters
-        ----------
-        value: str
-            Instrument name. Plain site names are not valid; use OBS-North/OBS-South
-            for site parameters.
-
-        Returns
-        -------
-        str
-            Validated instrument name.
-        """
-        names.validate_array_element_name(str(value))
-        return str(value)
-
-    @staticmethod
-    def efficiency_interval(value):
-        """
-        Argument parser type to check that value is an efficiency in the interval [0,1].
-
-        Parameters
-        ----------
-        value: float
-            value provided through the command line
-
-        Returns
-        -------
-        float
-            Validated efficiency interval
-
-        Raises
-        ------
-        argparse.ArgumentTypeError
-            When value is outside of the interval [0,1]
-        """
-        fvalue = float(value)
-        if fvalue < 0.0 or fvalue > 1.0:
-            raise argparse.ArgumentTypeError(f"{value} outside of allowed [0,1] interval")
-
-        return fvalue
-
-    @staticmethod
-    def quantity(target_unit):
-        """
-        Build an argument parser type for quantities convertible to a target unit.
-
-        Parameters
-        ----------
-        target_unit : str or astropy.units.Unit
-            Unit to convert the parsed quantity to.
-
-        Returns
-        -------
-        callable
-            Parser callable returning an ``astropy.units.Quantity``.
-        """
-        target = u.Unit(target_unit)
-
-        def quantity_type(value):
-            try:
-                try:
-                    return float(value) * target
-                except (TypeError, ValueError):
-                    return u.Quantity(value).to(target)
-            except (TypeError, ValueError, u.UnitConversionError) as exc:
-                raise argparse.ArgumentTypeError(
-                    f"Invalid quantity value: '{value}'. Expected a value convertible to {target}."
-                ) from exc
-
-        return quantity_type
-
-    @staticmethod
-    def nonnegative_quantity(target_unit):
-        """Return a parser that parses a quantity and enforces >= 0."""
-        base = CommandLineParser.quantity(target_unit)
-
-        def qtype(value):
-            q = base(value)
-            if q.to(target_unit).value < 0.0:
-                raise argparse.ArgumentTypeError(f"Value must be >= 0 {target_unit}")
-            return q
-
-        return qtype
-
-    @staticmethod
-    def positive_quantity(target_unit):
-        """Return a parser that parses a quantity and enforces > 0."""
-        base = CommandLineParser.quantity(target_unit)
-
-        def qtype(value):
-            q = base(value)
-            if q.to(target_unit).value <= 0.0:
-                raise argparse.ArgumentTypeError(f"Value must be > 0 {target_unit}")
-            return q
-
-        return qtype
-
-    @staticmethod
-    def zenith_angle(angle):
-        """
-        Argument parser type to check that the zenith angle provided is in the interval [0, 180].
-
-        We allow here zenith angles larger than 90 degrees in the improbable case
-        such simulations are requested. It is not guaranteed that the actual simulation software
-        supports such angles!.
-
-        Parameters
-        ----------
-        angle: float, str, astropy.Quantity
-            zenith angle to verify
-
-        Returns
-        -------
-        Astropy.Quantity
-            Validated zenith angle in degrees
-
-        Raises
-        ------
-        argparse.ArgumentTypeError
-            When angle is outside of the interval [0, 180]
-        """
-        logger = logging.getLogger(__name__)
-
-        try:
-            try:
-                fangle = float(angle) * u.deg
-            except ValueError:
-                fangle = u.Quantity(angle).to("deg")
-        except TypeError as exc:
-            logger.error(
-                "The zenith angle provided is not a valid numerical or astropy.Quantity value."
-            )
-            raise exc
-        if fangle < 0.0 * u.deg or fangle > 180.0 * u.deg:
-            raise argparse.ArgumentTypeError(
-                f"The provided zenith angle, {angle:.1f}, "
-                "is outside of the allowed [0, 180] interval"
-            )
-        return fangle
-
-    @staticmethod
-    def azimuth_angle(angle):
-        """
-        Argument parser type to check that the azimuth angle provided is in the interval [0, 360].
-
-        Other allowed options are north, south, east or west which will be translated to an angle
-        where north corresponds to zero.
-
-        Parameters
-        ----------
-        angle: float or str
-            azimuth angle to verify or convert
-
-        Returns
-        -------
-        Astropy.Quantity
-            Validated/Converted azimuth angle in degrees
-
-        Raises
-        ------
-        argparse.ArgumentTypeError
-            When angle is outside of the interval [0, 360] or not in (north, south, east, west)
-        """
-        logger = logging.getLogger(__name__)
-        try:
-            fangle = float(angle)
-            if fangle < 0.0 or fangle > 360.0:
-                raise argparse.ArgumentTypeError(
-                    f"The provided azimuth angle, {angle:.1f}, "
-                    "is outside of the allowed [0, 360] interval"
-                )
-
-            return fangle * u.deg
-        except ValueError:
-            logger.debug(
-                "The azimuth angle provided is not a valid numeric value. "
-                "Will check if it is an astropy.Quantity instead"
-            )
-        except TypeError as exc:
-            logger.error("The azimuth angle provided is not a valid numerical or string value.")
-            raise exc
-        try:
-            return u.Quantity(angle).to("deg")
-        except TypeError:
-            logger.debug(
-                "The azimuth angle provided is not a valid astropy.Quantity. "
-                "Will check if it is (north, south, east, west) instead"
-            )
-        azimuth_map = {
-            "north": 0 * u.deg,
-            "south": 180 * u.deg,
-            "east": 90 * u.deg,
-            "west": 270 * u.deg,
-        }
-        azimuth_angle = angle.lower()
-        if azimuth_angle in azimuth_map:
-            return azimuth_map[azimuth_angle]
-        raise argparse.ArgumentTypeError(
-            "The azimuth angle given as string can only be one of "
-            f"(north, south, east, west), not {angle}. Otherwise use numerical values."
+    def _add_simulation_model_layout_parameters(self, group, requested, definitions):
+        """Add the layout-selection arguments to the simulation-model group."""
+        layout_group = group.add_mutually_exclusive_group(
+            required="--list_available_layouts" not in self._option_string_actions
         )
+        layout_parameters = list(SIMULATION_MODEL_LAYOUT_BASE_PARAMETERS)
+        for option_name, parameter_names in SIMULATION_MODEL_LAYOUT_OPTIONAL_PARAMETERS.items():
+            if option_name in requested:
+                layout_parameters.extend(parameter_names)
+        self._add_parameters(layout_group, layout_parameters, definitions)
 
-    @staticmethod
-    def parse_quantity_pair(string):
-        """
-        Parse a string representing a pair of astropy quantities.
-
-        Returns
-        -------
-        tuple
-            A tuple of two astropy.units.Quantity objects.
-
-        Raises
-        ------
-        ValueError
-            If the string cannot be parsed into exactly two quantities.
-        """
-        pattern = r"(?>[\d\.eE+-]+)\s*(?>[A-Za-z]+)"
-        matches = re.findall(pattern, string)
-        if len(matches) != 2:
-            raise ValueError("Input string does not contain exactly two quantities.")
-
-        try:
-            return tuple(u.Quantity(m) for m in matches)
-        except Exception as exc:
-            raise ValueError(f"Could not parse quantities: {exc}") from exc
-
-    @staticmethod
-    def parse_integer_and_quantity(input_string):
-        """
-        Parse a string representing an integer and a quantity with units.
-
-        This is e.g., used for the 'core_scatter' argument.
-
-        Parameters
-        ----------
-        input_string: str
-            The input string (e.g., "5 1500 m") or
-            a tuple converted to string (e.g., "(5, <Quantity 1500 m>)").
-
-        Returns
-        -------
-        tuple: A tuple containing an integer and an astropy.units.Quantity object.
-
-        Raises
-        ------
-        ValueError: If the input string does not match the required format.
-        """
-        # tuple converted to string: "(5, <Quantity 1500 m>)"
-        if all(char in input_string for char in ["(", ")", ","]):
-            pattern = r"\((\d+), <Quantity ([\d.]+) (.+)>\)"
-            match = re.match(pattern, input_string)
-        # string with integer and quantity: "5 1500 m"
-        else:
-            pattern = r"(\d+)\s+(\d+\.?\d*)\s*([a-zA-Z]+)"
-            match = re.match(pattern, input_string.strip())
-
-        if not match:
-            raise ValueError("Input string does not contain an integer and a astropy quantity.")
-
-        return (int(match.group(1)), u.Quantity(float(match.group(2)), match.group(3)))
-
-    @staticmethod
-    def bounded_int(min_value, max_value):
-        """Argument parser type to check that an integer is within a given interval."""
-
-        def bounded_int_type(value):
-            try:
-                int_value = int(value)
-            except ValueError as exc:
-                raise ValueError(f"expected an integer in [{min_value},{max_value}]") from exc
-
-            if min_value <= int_value <= max_value:
-                return int_value
-            raise ValueError(f"{int_value} not in [{min_value},{max_value}]")
-
-        return bounded_int_type
-
-    @staticmethod
-    def string_or_dict(value):
-        """Parse argument as plain string or dictionary literal."""
-        if not isinstance(value, str):
-            return value
-
-        stripped = value.strip()
-        if stripped.startswith("{") and stripped.endswith("}"):
-            try:
-                parsed = ast.literal_eval(stripped)
-            except (ValueError, SyntaxError):
-                return value
-            if isinstance(parsed, dict):
-                return parsed
-        return value
-
-
-class OneOrManyAction(argparse.Action):
-    """Store one value as scalar and multiple values as list."""
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        """Store parsed values as scalar (single) or list (multiple)."""
-        if isinstance(values, list) and len(values) == 1:
-            setattr(namespace, self.dest, values[0])
-            return
-        setattr(namespace, self.dest, values)
-
-
-class QuantityPairAction(argparse.Action):
-    """Parse either one quantity-pair string or two quantity values."""
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        """Parse quantity-pair inputs and store tuple or list of tuples."""
-        try:
-            if len(values) == 1:
-                parsed = CommandLineParser.parse_quantity_pair(values[0])
-            elif all(
-                isinstance(item, str) and len(re.findall(r"[A-Za-z]+", item)) >= 2
-                for item in values
-            ):
-                parsed = [CommandLineParser.parse_quantity_pair(item) for item in values]
-            elif len(values) > 2 and len(values) % 2 == 0:
-                parsed = tuple(
-                    u.Quantity(f"{values[index]} {values[index + 1]}")
-                    for index in range(0, len(values), 2)
-                )
-            elif len(values) == 2:
-                parsed = (u.Quantity(values[0]), u.Quantity(values[1]))
-            else:
-                raise argparse.ArgumentTypeError("Expected one pair string or exactly two values.")
-        except Exception as exc:
-            raise argparse.ArgumentError(self, f"Invalid quantity pair: {exc}") from exc
-        setattr(namespace, self.dest, parsed)
-
-
-_SHOWER_ARGS = {
-    "eslope": {
-        "help": "Slope of the energy spectrum.",
-        "type": float,
-        "default": -2.0,
-    },
-    "energy_range": {
-        "help": "Energy range of the primary particle (min/max value, e'g', '10 GeV 5 TeV').",
-        "action": QuantityPairAction,
-        "nargs": "+",
-        "default": (3 * u.GeV, 330 * u.TeV),
-    },
-    "view_cone": {
-        "help": (
-            "View cone radius for primary arrival directions (min/max value, e.g. '0 deg 10 deg')."
-        ),
-        "type": CommandLineParser.parse_quantity_pair,
-        "default": ["0 deg 0 deg"],
-    },
-    "core_scatter": {
-        "help": "Scatter radius for shower cores (number of use; scatter radius).",
-        "type": CommandLineParser.parse_integer_and_quantity,
-        "default": ["10 10000 m"],
-    },
-}
-
-_SIMTEL_ARGS = {
-    "sim_telarray_instrument_seed": {
-        "help": "Random seed used for sim_telarray instrument setup.",
-        "type": CommandLineParser.bounded_int(1, constants.SIMTEL_MAX_SEED),
-    },
-    "sim_telarray_random_instrument_instances": {
-        "help": "Number of random instrument instances initialized in sim_telarray.",
-        "type": CommandLineParser.bounded_int(1, 1024),
-        "default": 1,
-    },
-    "sim_telarray_seed": {
-        "help": (
-            "Random seed used for sim_telarray simulation. "
-            "Single value: seed for event simulation. "
-            "Two values: [instrument_seed, simulation_seed] (use for testing only)."
-        ),
-        "type": CommandLineParser.bounded_int(1, constants.SIMTEL_MAX_SEED),
-        "nargs": "+",
-    },
-    # hidden argument to specify the sim_telarray seeds file name
-    # (defined it here for convenience)
-    "sim_telarray_seed_file": {
-        "help": argparse.SUPPRESS,
-        "type": str,
-        "default": "sim_telarray_instrument_seeds.txt",
-    },
-}
-
-_CORSIKA_ARGS = {
-    "corsika_he_interaction": {
-        "help": (
-            "High-energy interaction model for CORSIKA "
-            f"(default fallback: {defaults.CORSIKA_HE_INTERACTION})."
-        ),
-        "type": str,
-        "action": OneOrManyAction,
-        "nargs": "+",
-        "default": None,
-    },
-    "corsika_le_interaction": {
-        "help": (
-            "Low-energy interaction model for CORSIKA "
-            f"(default fallback: {defaults.CORSIKA_LE_INTERACTION})."
-        ),
-        "type": str,
-        "action": OneOrManyAction,
-        "nargs": "+",
-        "default": None,
-    },
-}
-
-_APPLICATION_ARGS = {
-    "source_distance": {
-        "help": "Source distance in km (unitless values are interpreted as km).",
-        "type": CommandLineParser.quantity("km"),
-        "default": 10 * u.km,
-    },
-    "zenith_angle": {
-        "help": "Zenith angle in degrees (between 0 and 180).",
-        "type": CommandLineParser.zenith_angle,
-        "default": 20 * u.deg,
-    },
-    "off_axis_angles": {
-        "help": (
-            "One or more off-axis angles in degrees (unitless values are interpreted as degrees)."
-        ),
-        "type": CommandLineParser.quantity("deg"),
-        "nargs": "+",
-        "default": [0.0 * u.deg],
-    },
-    "number_of_photons": {
-        "help": "Number of star photons to trace (per run).",
-        "type": CommandLineParser.scientific_int,
-        "default": 10000,
-    },
-    "max_offset": {
-        "help": "Maximum offset angle in degrees (unitless values are interpreted as deg).",
-        "type": CommandLineParser.nonnegative_quantity("deg"),
-        "default": 4 * u.deg,
-    },
-    "offset_step": {
-        "help": "Offset angle step size in degrees (unitless values are interpreted as deg).",
-        "type": CommandLineParser.positive_quantity("deg"),
-        "default": 0.25 * u.deg,
-    },
-    "all_model_versions": {
-        "help": "Produce reports for all model versions.",
-        "action": "store_true",
-    },
-    "data": {
-        "help": "Data file name.",
-        "type": str,
-    },
-    "event_data_file": {
-        "help": "Event data file or glob pattern containing reduced event data.",
-        "type": str,
-        "required": True,
-    },
-    "telescope_ids": {
-        "help": "Path to a file containing telescope configurations.",
-        "type": str,
-    },
-}
-
-
-class BuildInfoAction(argparse.Action):
-    """Custom argparse action to display build information."""
-
-    def __init__(self, option_strings, dest=argparse.SUPPRESS, default=argparse.SUPPRESS, **kwargs):
-        """Initialize BuildInfoAction."""
-        self.build_info = kwargs.pop("build_info", "Build information")
-        kwargs.pop("nargs", None)
-        super().__init__(option_strings, dest=dest, default=default, nargs=0, **kwargs)
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        """Display build information and exit."""
-        # for efficiency reason, allow import here
-        from simtools import dependencies  # pylint: disable=C0415
-
-        build_options = dependencies.get_build_options()
-        print(f"{self.build_info}")
-        for key, value in build_options.items():
-            print(f"{key}: {value}")
-        parser.exit()
+        for option_name, parameter_names in SIMULATION_MODEL_LAYOUT_POST_PARAMETERS.items():
+            if option_name in requested:
+                self._add_parameters(group, parameter_names, definitions)
