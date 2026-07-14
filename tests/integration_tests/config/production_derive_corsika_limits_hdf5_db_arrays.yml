@@ -2,7 +2,7 @@
 applications:
 - application: simtools-production-derive-corsika-limits
   configuration:
-    trigger_histogram_file: ${generated:trigger_histograms.hdf5}
+    trigger_histogram_file: ${generated:gamma_diffuse_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test.trigger_histograms.hdf5}
     allowed_losses:
     - core_distance,0.001,10
     - angular_distance,0.001,10
