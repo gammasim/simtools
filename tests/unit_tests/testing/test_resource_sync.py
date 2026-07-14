@@ -10,7 +10,7 @@ def resource_roots(tmp_test_directory, monkeypatch):
     root = Path(tmp_test_directory)
     source_root = root / "simtools-tests" / "v0.35.0" / "integration_tests"
     destination_root = root / "simtools" / "tests" / "resources"
-    for resource_dir in ("static", "generated"):
+    for resource_dir in ("static", "generated", "downloaded"):
         (source_root / resource_dir).mkdir(parents=True, exist_ok=True)
         (destination_root / resource_dir).mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(
@@ -20,6 +20,11 @@ def resource_roots(tmp_test_directory, monkeypatch):
         resource_sync.constants,
         "TEST_RESOURCES_GENERATED",
         str(destination_root / "generated"),
+    )
+    monkeypatch.setattr(
+        resource_sync.constants,
+        "TEST_RESOURCES_DOWNLOADED",
+        str(destination_root / "downloaded"),
     )
     return root, source_root, destination_root
 
@@ -37,17 +42,19 @@ def test_build_sync_report_classifies_files(resource_roots):
     _write(source_root / "generated" / "nested" / "changed.txt", "source")
     _write(destination_root / "generated" / "nested" / "changed.txt", "dest")
     _write(destination_root / "generated" / "obsolete.txt", "old")
+    _write(source_root / "downloaded" / "input.txt", "input")
     _write(source_root / "log_files" / "ignored.log", "ignore")
 
     report = resource_sync.build_sync_report(
-        root / "simtools-tests", "v0.35.0", ("static", "generated")
+        root / "simtools-tests", "v0.35.0", ("static", "generated", "downloaded")
     )
 
     assert report["directories"]["static"]["new"] == ["only_source.txt"]
     assert report["directories"]["static"]["unchanged"] == ["same.txt"]
     assert report["directories"]["generated"]["changed"] == ["nested/changed.txt"]
     assert report["directories"]["generated"]["obsolete"] == ["obsolete.txt"]
-    assert report["summary"] == {"new": 1, "changed": 1, "unchanged": 1, "obsolete": 1}
+    assert report["directories"]["downloaded"]["new"] == ["input.txt"]
+    assert report["summary"] == {"new": 2, "changed": 1, "unchanged": 1, "obsolete": 1}
 
 
 def test_apply_sync_actions_copies_new_and_changed(resource_roots):
@@ -150,13 +157,21 @@ def test_build_sync_report_uses_configured_resources_path(resource_roots):
 
     assert report["destination_root"] == custom_destination.resolve()
     assert report["destination_directories"]["static"] == custom_destination.resolve() / "static"
+    assert (
+        report["destination_directories"]["downloaded"]
+        == custom_destination.resolve() / "downloaded"
+    )
     assert report["directories"]["static"]["new"] == ["input.txt"]
 
 
 def test_selected_resource_directories_requires_one_choice():
     with pytest.raises(ValueError, match="Select at least one"):
         resource_sync._selected_resource_directories(
-            {"include_static": False, "include_generated": False}
+            {
+                "include_static": False,
+                "include_generated": False,
+                "include_downloaded": False,
+            }
         )
 
 
@@ -202,6 +217,7 @@ def test_sync_test_resources_report_only(resource_roots, caplog):
             "simtools_version": "v0.35.0",
             "include_static": True,
             "include_generated": True,
+            "include_downloaded": False,
             "sync": False,
             "delete_missing": False,
         }

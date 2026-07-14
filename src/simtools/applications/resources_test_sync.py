@@ -59,6 +59,11 @@ _APPLICATION_ARG_DEFINITIONS = {
         "dest": "include_generated",
         "help": "Skip generated resources.",
     },
+    "exclude_downloaded": {
+        "action": "store_false",
+        "dest": "include_downloaded",
+        "help": "Skip downloaded resources.",
+    },
 }
 
 
