@@ -93,7 +93,9 @@ def compare_resource_directories(source_dir, destination_dir):
         if destination_path is None:
             new_files.append(relative_path)
             continue
-        if _calculate_sha256(source_path) == _calculate_sha256(destination_path):
+        source_hash = _calculate_sha256(source_path)
+        destination_hash = _calculate_sha256(destination_path)
+        if source_hash == destination_hash:
             unchanged_files.append(relative_path)
         else:
             changed_files.append(relative_path)
