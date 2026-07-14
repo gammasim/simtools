@@ -360,6 +360,7 @@ def generate_test_resources(args_dict, run_time=None):
     replacements = {
         "__TEST_DIRECTORY__": str(test_directory),
         "__SIMTOOLS_VERSION__": simtools_version,
+        "__INTEGRATION_TESTS_DIRECTORY__": str(integration_test_dir),
     }
     downloaded_files = []
     if not args_dict.get("config_file"):
