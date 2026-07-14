@@ -2,22 +2,22 @@
 applications:
 - application: simtools-simulate-prod
   configuration:
-    corsika_file: tests/resources/generated/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst
+    corsika_file: ${generated:gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_7.0.0_test.corsika.zst}
     array_layout_name: subsystem_lsts
     corsika_he_interaction: epos
     corsika_le_interaction: urqmd
     label: test
     log_level: DEBUG
-    model_version: 6.0.2
+    model_version: 7.0.0
     output_path: simtools-output
     sim_telarray_instrument_seed: 1745
     sim_telarray_seed: [290]
     simulation_software: sim_telarray
     site: South
   integration_tests:
-  - output_file: sim_telarray/run000007/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.simtel.zst
+  - output_file: sim_telarray/run000007/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_7.0.0_test.simtel.zst
   - test_simtel_cfg_files:
-      "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTAO-LSTS-01.cfg}
+      "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-LSTS-01.cfg}
   - test_output_files:
     - expected_sim_telarray_output:
         pe_sum:
@@ -29,7 +29,7 @@ applications:
         trigger_time:
         - 0
         - 50
-      file: gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.simtel.zst
+      file: gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_7.0.0_test.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray/run000007
   test_name: gamma_40_deg_south_sim_telarray_only

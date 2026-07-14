@@ -2,13 +2,13 @@
 applications:
 - application: simtools-plot-corsika-limits
   configuration:
-    input: tests/resources/generated/corsika_simulation_limits/corsika_limits_north.ecsv
+    input: ${downloaded:corsika_limits/corsika_limits.ecsv}
     output_path: simtools-output
   integration_tests:
   - output_file: limits_LSTN-01_azimuth0.0.png
   - output_file: limits_LSTN-01_azimuth180.0.png
-  - output_file: limits_1mst_azimuth0.0.png
-  - output_file: limits_1mst_azimuth180.0.png
+  - output_file: limits_CTAO-North-4-LSTs-1-MSTs_azimuth0.0.png
+  - output_file: limits_CTAO-North-4-LSTs-1-MSTs_azimuth180.0.png
   test_name: plot_corsika_limits
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
