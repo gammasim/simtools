@@ -872,10 +872,6 @@ _TEST_DATA_FILES = {
         "gamma",
     ): "generated/gamma_diffuse_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test.simtel.zst",
     (
-        "sim_telarray_hdata",
-        "gamma",
-    ): "generated/gamma_diffuse_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test.hdata.zst",
-    (
         "production_dl2_fits",
         "20deg",
     ): "static/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",

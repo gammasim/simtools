@@ -13,7 +13,7 @@ from simtools.io import ascii_handler
 
 _logger = logging.getLogger(__name__)
 
-_TEST_RESOURCE_PATTERN = re.compile(r"\$\{(static|generated):([^}]+)\}")
+_TEST_RESOURCE_PATTERN = re.compile(r"\$\{(static|generated|downloaded):([^}]+)\}")
 _TEST_RESOURCE_PATH_PATTERN = re.compile(r"(?<![\w/])(?:\./)?tests/resources(?=/|$)")
 
 
@@ -37,7 +37,8 @@ def get_list_of_test_configurations(config_files, test_resources_path=None):
     config_files: list
         List of integration test configuration files.
     test_resources_path: str or pathlib.Path, optional
-        Base directory containing the ``static`` and ``generated`` resource directories.
+        Base directory containing the ``static``, ``generated``, and ``downloaded``
+        resource directories.
 
     Returns
     -------
@@ -95,7 +96,7 @@ def _read_configs_from_files(config_files, test_resources_path=None):
 def resolve_test_resource_paths(value, test_resources_path=None):
     """Resolve all test-resource references recursively.
 
-    Both ``${static:...}`` / ``${generated:...}`` macros and existing
+    ``${static:...}``, ``${generated:...}``, and ``${downloaded:...}`` macros and existing
     ``tests/resources/...`` paths are resolved against ``test_resources_path``.
 
     Parameters
