@@ -50,10 +50,10 @@ def test_get_output_file(args_dict, io_handler):
     ) == Path(f"{args_dict['output_path']}/output/test-io-handler/{test_file}")
 
 
-def test_get_test_data_file(args_dict, io_handler):
+def test_get_test_data_file(io_handler, test_resources_path):
     assert (
         io_handler.get_test_data_file(file_name=test_file)
-        == Path(f"tests/resources/{test_file}").absolute()
+        == (test_resources_path / test_file).resolve()
     )
 
 
@@ -62,7 +62,7 @@ def test_get_model_configuration_directory(args_dict, io_handler):
     label = "test-io-handler"
 
     # Test directory creation
-    expected_path = Path(f"{args_dict['output_path']}/output/{label}/model/{model_version}")
+    expected_path = Path(f"{args_dict['output_path']}/output/model/{label}/{model_version}")
     assert (
         io_handler.get_model_configuration_directory(sub_dir=label, model_version=model_version)
         == expected_path

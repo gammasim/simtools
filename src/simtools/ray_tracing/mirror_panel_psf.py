@@ -381,14 +381,14 @@ class MirrorPanelPSF:
                 self.optimize_single_mirror(i, self.measured_data[i]) for i in range(n_mirrors)
             ]
         else:
-            n_workers = int(self.args_dict.get("n_workers") or os.cpu_count())
+            max_workers = int(self.args_dict.get("max_workers") or os.cpu_count())
             parent = MirrorPanelPSF(self.label, dict(self.args_dict))
             worker_args = [(parent, i, parent.measured_data[i]) for i in range(n_mirrors)]
 
             self.per_mirror_results = process_pool_map_ordered(
                 _optimize_single_mirror_worker,
                 worker_args,
-                max_workers=n_workers,
+                max_workers=max_workers,
                 mp_start_method="fork",
             )
 

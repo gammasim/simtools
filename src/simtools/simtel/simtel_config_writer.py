@@ -11,7 +11,8 @@ import numpy as np
 import simtools.utils.general as gen
 import simtools.version
 from simtools import dependencies, settings
-from simtools.simtel import simtel_table_writer
+from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
+from simtools.simtel import simtel_table_writer, simtel_validate_metadata
 from simtools.utils import names
 
 logger = logging.getLogger(__name__)
@@ -264,9 +265,10 @@ class SimtelConfigWriter:
 
         if additional_metadata:
             for key, value in additional_metadata.items():
-                if value:
+                if value is not None:
                     meta_parameters.append(f"{prefix} set {key}={value}")
 
+        simtel_validate_metadata.validate_metadata(meta_parameters)
         return meta_parameters
 
     def _add_model_parameters_to_metadata(self, model_parameters, meta_parameters, prefix):
@@ -302,8 +304,17 @@ class SimtelConfigWriter:
             Site model.
         additional_metadata: dict
             Dictionary with additional metadata to include.
+
+        Raises
+        ------
+        FileExistsError
+            If the config file already exists.
         """
         config_file_directory = Path(config_file_path).parent
+        config_file_path = Path(config_file_path)
+        if config_file_path.exists():
+            raise FileExistsError(f"Array config file {config_file_path} already exists.")
+
         with open(config_file_path, "w", encoding="utf-8") as file:
             self._write_header(file, "ARRAY CONFIGURATION FILE")
 
@@ -334,7 +345,9 @@ class SimtelConfigWriter:
             # Default telescope in sim_telarray - 0th tel in telescope list
             _, first_telescope = next(iter(telescope_model.items()))
             invalid_telescope_name = "InvalidTelescope"
-            file.write(f"# include <{invalid_telescope_name}.cfg>\n\n")
+            invalid_telescope_config = f"{invalid_telescope_name}.cfg"
+            self._validate_include_file_name_length(invalid_telescope_config)
+            file.write(f"# include <{invalid_telescope_config}>\n\n")
             self.write_dummy_telescope_configuration_file(
                 deepcopy(first_telescope.parameters),
                 config_file_directory / f"{invalid_telescope_name}.cfg",
@@ -343,10 +356,19 @@ class SimtelConfigWriter:
 
             for count, (tel_name, tel_model) in enumerate(telescope_model.items()):
                 tel_config_file = tel_model.config_file_path.name
+                self._validate_include_file_name_length(tel_config_file)
                 file.write(f"% {tel_name}\n")
                 file.write(f"#elif TELESCOPE == {count + 1}\n\n")
                 file.write(f"# include <{tel_config_file}>\n\n")
             file.write("#endif \n\n")  # configuration files need to end with \n\n
+
+    def _validate_include_file_name_length(self, file_name):
+        """Validate include-file names against the sim_telarray parser word-length limit."""
+        if len(file_name) > SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH:
+            raise ValueError(
+                "sim_telarray include filename exceeds parser limit "
+                f"({len(file_name)}>{SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH}): {file_name}"
+            )
 
     def write_single_mirror_list_file(
         self, mirror_number, mirrors, single_mirror_list_file, set_focal_length_to_zero=False
@@ -429,7 +451,7 @@ class SimtelConfigWriter:
         file.write(header)
 
     def _write_simtools_parameters(self, file):
-        """Write simtools-specific parameters."""
+        """Write simtools-specific parameters as metadata."""
         meta_items = {
             "simtools_version": simtools.version.__version__,
             "simtools_model_production_version": self._model_version,
@@ -450,9 +472,14 @@ class SimtelConfigWriter:
             raise AttributeError("CORSIKA executable path is not set in settings.") from exc
 
         file.write(f"{self.TAB}% Simtools parameters\n")
+        meta_lines = []
         for key, value in meta_items.items():
             if not isinstance(value, list):
-                file.write(f"{self.TAB}metaparam global set {key} = {value}\n")
+                meta_lines.append(f"metaparam global set {key} = {value}")
+
+        simtel_validate_metadata.validate_metadata(meta_lines)
+        for line in meta_lines:
+            file.write(f"{self.TAB}{line}\n")
 
     def _write_site_parameters(
         self, file, site_parameters, model_path, telescope_model, additional_metadata=None

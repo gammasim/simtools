@@ -49,6 +49,16 @@ Support modules for running sim_telarray.
    :members:
 ```
 
+## simtel_validate_metadata
+
+(simtel-validate-metadata-1)=
+
+```{eval-rst}
+.. automodule:: simtel.simtel_validate_metadata
+   :members:
+```
+
+
 ## simtel_seeds
 
 (simtel-seeds-1)=

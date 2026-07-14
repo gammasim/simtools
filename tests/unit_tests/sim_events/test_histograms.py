@@ -216,6 +216,39 @@ def test_fill_histogram_and_bin_edges_2d_existing(mock_reader, hdf5_file_name):
     assert np.array_equal(data["histogram"], expected_total_hist)
 
 
+def test_fill_histogram_and_bin_edges_2d_event_data_none(mock_reader, hdf5_file_name):
+    histograms = EventDataHistograms(hdf5_file_name)
+    data = {
+        "1d": False,
+        "event_data": None,
+        "event_data_column": ("simulated_energy", "core_distance_shower"),
+        "bin_edges": [np.array([0, 2, 4]), np.array([3, 5, 7])],
+        "histogram": None,
+    }
+
+    histograms._fill_histogram_and_bin_edges(data)
+
+    assert data["histogram"] is None
+
+
+def test_release_event_data_handles_non_1d_none_event_data(mock_reader, hdf5_file_name):
+    histograms = EventDataHistograms(hdf5_file_name)
+    histograms.histograms = {
+        "energy": {"1d": True, "event_data": mock_reader.return_value},
+        "reuse_mean_vs_core_distance_vs_energy": {"1d": False, "event_data": None},
+        "core_distance_vs_energy": {
+            "1d": False,
+            "event_data": (mock_reader.return_value, mock_reader.return_value),
+        },
+    }
+
+    histograms._release_event_data()
+
+    assert histograms.histograms["energy"]["event_data"] is None
+    assert histograms.histograms["reuse_mean_vs_core_distance_vs_energy"]["event_data"] is None
+    assert histograms.histograms["core_distance_vs_energy"]["event_data"] == (None, None)
+
+
 def test_fill(mock_reader, hdf5_file_name, mocker):
     histograms = EventDataHistograms(hdf5_file_name)
 
@@ -338,6 +371,38 @@ def test_fill_reads_multiple_files_sequentially(mock_reader, mocker):
     assert all(call.kwargs.get("table_name_map") == "test_dataset" for call in read_calls)
 
 
+@pytest.mark.parametrize("exception", [OSError("bad file"), KeyError("missing dataset")])
+def test_iter_readers_skips_unreadable_files_when_enabled(mocker, exception):
+    """Test unreadable files are skipped when creating readers."""
+    mocker.patch(
+        "simtools.sim_events.histograms.resolve_file_patterns",
+        return_value=["bad_file.h5"],
+    )
+    mocker.patch("simtools.sim_events.histograms.EventDataReader", side_effect=exception)
+
+    histograms = EventDataHistograms("*.h5", skip_invalid_event_data_files=True)
+
+    assert list(histograms._iter_readers()) == []
+
+
+@pytest.mark.parametrize("exception", [OSError("bad file"), KeyError("missing dataset")])
+def test_fill_skips_read_errors_when_enabled(mock_reader, mocker, hdf5_file_name, exception):
+    """Test read errors are skipped while filling histograms."""
+    histograms = EventDataHistograms(hdf5_file_name, skip_invalid_event_data_files=True)
+    mock_reader.return_value.data_sets = ["test_dataset"]
+    mock_reader.return_value.read_event_data.side_effect = exception
+    mocker.patch.object(histograms, "print_summary")
+    mocker.patch.object(histograms, "calculate_efficiency_data")
+    mocker.patch.object(histograms, "calculate_cumulative_data")
+
+    with pytest.raises(ValueError, match="No readable event data files or datasets found"):
+        histograms.fill()
+
+    mock_reader.return_value.read_event_data.assert_called_once_with(
+        hdf5_file_name, table_name_map="test_dataset"
+    )
+
+
 def test_fill_accumulates_histograms_across_data_sets(
     mock_reader, hdf5_file_name, mocker, reduced_file_info
 ):
@@ -426,6 +491,144 @@ def test_fill_coerces_unitless_file_info_values(mock_reader, hdf5_file_name, moc
     assert_quantity_allclose(histograms.file_info["viewcone_max"], 2.0 * u.deg)
     assert_quantity_allclose(histograms.file_info["solid_angle"], 1.0 * u.sr)
     assert_quantity_allclose(histograms.file_info["scatter_area"], 1.0 * (u.cm**2))
+
+
+def test_triggered_reuse_counts_repeat_per_triggered_event(mock_reader, hdf5_file_name, mocker):
+    histograms = EventDataHistograms(hdf5_file_name)
+    triggered_data = mocker.Mock(
+        file_id=np.array([0, 0, 0]),
+        shower_id=np.array([1, 1, 2]),
+    )
+
+    reuse_counts = histograms._triggered_reuse_counts(triggered_data)
+
+    np.testing.assert_array_equal(reuse_counts, np.array([2.0, 2.0, 1.0]))
+
+
+def test_accumulate_reuse_bin_values_vectorized_1d_and_2d():
+    accumulator_1d = {
+        "count": np.zeros(3, dtype=int),
+        "sum": np.zeros(3, dtype=float),
+        "sum_sq": np.zeros(3, dtype=float),
+        "max": np.full(3, np.nan, dtype=float),
+    }
+    EventDataHistograms._accumulate_reuse_bin_values(
+        accumulator_1d,
+        np.array([0, 0, 1, 2, 2]),
+        np.array([2.0, 0.0, -1.0, 1.0, 3.0]),
+    )
+    np.testing.assert_array_equal(accumulator_1d["count"], np.array([1, 0, 2]))
+    np.testing.assert_allclose(accumulator_1d["sum"], np.array([2.0, 0.0, 4.0]))
+    np.testing.assert_allclose(accumulator_1d["sum_sq"], np.array([4.0, 0.0, 10.0]))
+    np.testing.assert_allclose(accumulator_1d["max"], np.array([2.0, np.nan, 3.0]), equal_nan=True)
+
+    accumulator_2d = {
+        "count": np.zeros((2, 3), dtype=int),
+        "sum": np.zeros((2, 3), dtype=float),
+        "sum_sq": np.zeros((2, 3), dtype=float),
+        "max": np.full((2, 3), np.nan, dtype=float),
+    }
+    EventDataHistograms._accumulate_reuse_bin_values(
+        accumulator_2d,
+        np.array([[0, 0], [0, 0], [0, 1], [1, 2], [1, 2], [1, 0]]),
+        np.array([1.0, 4.0, 0.0, -2.0, 5.0, 3.0]),
+    )
+    np.testing.assert_array_equal(accumulator_2d["count"], np.array([[2, 0, 0], [1, 0, 1]]))
+    np.testing.assert_allclose(accumulator_2d["sum"], np.array([[5.0, 0.0, 0.0], [3.0, 0.0, 5.0]]))
+    np.testing.assert_allclose(
+        accumulator_2d["sum_sq"], np.array([[17.0, 0.0, 0.0], [9.0, 0.0, 25.0]])
+    )
+    np.testing.assert_allclose(
+        accumulator_2d["max"],
+        np.array([[4.0, np.nan, np.nan], [3.0, np.nan, 5.0]]),
+        equal_nan=True,
+    )
+
+
+def test_accumulate_reuse_histograms_match_triggered_event_phase_space(
+    mock_reader, hdf5_file_name, mocker
+):
+    histograms = EventDataHistograms.create_accumulator(
+        energy_bins_per_decade=1,
+        angular_distance_bin_count=3,
+        core_distance_bin_count=3,
+    )
+    histograms.file_info = {
+        "energy_min": 0.1 * u.TeV,
+        "energy_max": 100.0 * u.TeV,
+        "core_scatter_min": 0.0 * u.m,
+        "core_scatter_max": 60.0 * u.m,
+        "viewcone_min": 0.0 * u.deg,
+        "viewcone_max": 0.6 * u.deg,
+    }
+    histograms.histograms = histograms._define_histograms(None, None, None)
+
+    event_data = mocker.Mock(
+        file_id=np.array([0, 0, 0]),
+        shower_id=np.array([1, 1, 2]),
+        simulated_energy=np.array([0.2, 0.2, 2.0]),
+        core_distance_shower=np.array([10.0, 20.0, 10.0]),
+    )
+    triggered_data = mocker.Mock(
+        file_id=np.array([0, 0, 0]),
+        shower_id=np.array([1, 1, 2]),
+        angular_distance=np.array([0.1, 0.2, 0.1]),
+    )
+
+    histograms._accumulate_reuse_histograms(event_data, triggered_data)
+
+    np.testing.assert_allclose(
+        histograms.histograms["reuse_mean_vs_energy"]["histogram"],
+        np.array([2.0, 1.0, np.nan]),
+        equal_nan=True,
+    )
+    np.testing.assert_allclose(
+        histograms.histograms["reuse_max_vs_energy"]["histogram"],
+        np.array([2.0, 1.0, np.nan]),
+        equal_nan=True,
+    )
+    np.testing.assert_allclose(
+        histograms.histograms["reuse_std_vs_energy"]["histogram"],
+        np.array([0.0, 0.0, np.nan]),
+        equal_nan=True,
+    )
+    np.testing.assert_allclose(
+        histograms.histograms["reuse_mean_vs_core_distance"]["histogram"],
+        np.array([5.0 / 3.0, np.nan]),
+        equal_nan=True,
+    )
+    np.testing.assert_allclose(
+        histograms.histograms["reuse_max_vs_core_distance"]["histogram"],
+        np.array([2.0, np.nan]),
+        equal_nan=True,
+    )
+    np.testing.assert_allclose(
+        histograms.histograms["reuse_std_vs_core_distance"]["histogram"],
+        np.array([np.sqrt(2.0 / 9.0), np.nan]),
+        equal_nan=True,
+    )
+    np.testing.assert_allclose(
+        histograms.histograms["reuse_mean_vs_angular_distance"]["histogram"],
+        np.array([5.0 / 3.0, np.nan]),
+        equal_nan=True,
+    )
+    expected_2d_mean = np.array([[2.0, 1.0, np.nan], [np.nan, np.nan, np.nan]])
+    expected_2d_std = np.array([[0.0, 0.0, np.nan], [np.nan, np.nan, np.nan]])
+    np.testing.assert_allclose(
+        histograms.histograms["reuse_mean_vs_core_distance_vs_energy"]["histogram"],
+        expected_2d_mean,
+        equal_nan=True,
+    )
+    np.testing.assert_allclose(
+        histograms.histograms["reuse_std_vs_core_distance_vs_energy"]["histogram"],
+        expected_2d_std,
+        equal_nan=True,
+    )
+    np.testing.assert_allclose(
+        histograms.histograms["reuse_max_vs_angular_distance_vs_energy"]["histogram"],
+        np.array([[2.0, 1.0, np.nan], [np.nan, np.nan, np.nan]]),
+        equal_nan=True,
+    )
 
 
 def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
@@ -672,6 +875,17 @@ def test_view_cone_bins_default(mock_reader, hdf5_file_name):
     assert bins[-1] == pytest.approx(10.0)
 
 
+def test_view_cone_bins_from_bin_width(mock_reader, hdf5_file_name):
+    """Test view_cone_bins from broad-range limits and fixed angular bin width."""
+    histograms = EventDataHistograms(hdf5_file_name, angular_distance_bin_width=0.5 * u.deg)
+    histograms.file_info = {
+        "viewcone_min": 0.25 * u.deg,
+        "viewcone_max": 1.5 * u.deg,
+    }
+
+    np.testing.assert_allclose(histograms.view_cone_bins, [0.25, 0.75, 1.25, 1.5])
+
+
 def test_view_cone_bins_with_histogram_data(mock_reader, hdf5_file_name):
     """Test view_cone_bins when histogram data is already present."""
     histograms = EventDataHistograms(hdf5_file_name)
@@ -896,3 +1110,16 @@ def test_view_cone_bins_min_equals_max(mock_reader, hdf5_file_name):
     assert len(bins) == 100
     assert bins[0] == pytest.approx(5.0)
     assert bins[-1] == pytest.approx(5.5)
+
+
+def test_accumulate_tracks_angular_distance_range(mock_reader, hdf5_file_name, mocker):
+    """Angular-distance extrema are retained after raw event data is released."""
+    histograms = EventDataHistograms.create_accumulator()
+    triggered_data = mocker.Mock(angular_distance=np.array([0.1, 0.1]))
+    mocker.patch.object(histograms, "_update_file_info")
+    mocker.patch.object(histograms, "_define_histograms", return_value={})
+
+    histograms.accumulate(mocker.Mock(), mocker.Mock(), mocker.Mock(), triggered_data)
+    histograms.accumulate(mocker.Mock(), mocker.Mock(), mocker.Mock(), triggered_data)
+
+    assert histograms.data_ranges["angular_distance"] == pytest.approx((0.1, 0.1))

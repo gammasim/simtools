@@ -2,11 +2,11 @@
 applications:
 - application: simtools-plot-simulated-event-distributions
   configuration:
-    event_data_file: tests/resources/proton_za20deg_azm000deg_North_alpha_6.0.0_reduced_event_data.hdf5
+    trigger_histogram_file: ${generated:trigger_histograms.hdf5}
     output_path: simtools-output
   integration_tests:
-  - output_file: core_distance_vs_energy_triggered.png
-  - output_file: energy_mc.png
+  - output_file: CTAO-North-Alpha/core_distance_vs_energy_triggered.png
+  - output_file: CTAO-North-Alpha/energy_mc.png
   test_name: sim_telarray_input
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

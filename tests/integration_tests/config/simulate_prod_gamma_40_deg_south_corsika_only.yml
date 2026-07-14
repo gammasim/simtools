@@ -2,29 +2,15 @@
 applications:
 - application: simtools-simulate-prod
   configuration:
-    array_layout_name:
-      by_version:
-        "<7.0.0": beta
-        ">=7.0.0": CTAO-South-Beta
-    azimuth_angle: South
-    core_scatter: 1 840 m
     corsika_seeds: [534, 220, 1104, 382]
-    corsika_he_interaction: epos
-    corsika_le_interaction: urqmd
-    energy_range: 10 GeV 11 GeV
+    job_grid_file: tests/resources/generated/production_grid_points_horizontal.ecsv
+    job_grid_row: 3
     label: test
     log_level: DEBUG
-    model_version: 6.0.2
-    showers_per_run: 10
     output_path: simtools-output
-    primary: gamma
-    run_number: 7
     sim_telarray_seed: [1745, 290]
-    simulation_software: corsika
-    site: South
-    zenith_angle: 40
   integration_tests:
-  - output_file: corsika/run000007/gamma_run000007_za40deg_azm180deg_South_beta_6.0.2_test.corsika.zst
+  - output_file: sim_telarray/run000001/gamma_diffuse_run000001_za40deg_azm310deg_North_LSTN-01_7.0.0_test.simtel.zst
   test_name: gamma_40_deg_south_corsika_only
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

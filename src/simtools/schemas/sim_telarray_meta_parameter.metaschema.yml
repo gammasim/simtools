@@ -1,0 +1,99 @@
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/SimTelarrayMetaParameterRegistrySource'
+title: sim_telarray Meta-Parameter Registry Metaschema
+description: |
+  YAML representation of the sim_telarray meta_parameter registry metaschema.
+schema_version: 0.1.0
+schema_name: sim_telarray_meta_parameter.metaschema
+type: object
+additionalProperties: false
+
+definitions:
+  SimTelarrayMetaParameterRegistrySource:
+    type: object
+    additionalProperties: false
+    properties:
+      title:
+        type: string
+      schema_version:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_version_field'
+      meta_schema:
+        type: string
+      meta_schema_url:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_url_field'
+      meta_schema_version:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_version_field'
+      name:
+        type: string
+      description:
+        type: string
+      generated_meta_parameters:
+        type: object
+        description: Writer-generated sim_telarray metadata fields keyed by emitted name.
+        additionalProperties:
+          $ref: '#/definitions/GeneratedSimTelarrayMetaParameterDefinition'
+    required:
+      - schema_version
+      - meta_schema
+      - meta_schema_version
+      - name
+      - generated_meta_parameters
+
+  GeneratedSimTelarrayMetaParameterDefinition:
+    type: object
+    additionalProperties: false
+    properties:
+      scope:
+        type: string
+        enum:
+          - telescope
+          - global
+      mode:
+        type: string
+        enum:
+          - add
+          - set
+          - assign
+      value_schema:
+        $ref: '#/definitions/ValueSchema'
+    required:
+      - scope
+      - mode
+      - value_schema
+
+  ValueSchema:
+    type: object
+    additionalProperties: false
+    properties:
+      kind:
+        type: string
+        enum:
+          - scalar
+          - file_name
+          - fixed_numeric_tuple
+          - sim_telarray_key_value_string
+      data_type:
+        type: string
+        enum:
+          - string
+          - number
+          - integer
+          - boolean
+      item_type:
+        type: string
+        enum:
+          - string
+          - number
+          - integer
+      length:
+        type: integer
+        minimum: 1
+      regex:
+        type: string
+      allow_empty:
+        type: boolean
+      allow_none_literal:
+        type: boolean
+    required:
+      - kind

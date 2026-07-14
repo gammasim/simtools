@@ -135,6 +135,7 @@ import logging
 import sys
 
 from simtools.application_control import build_application
+from simtools.configuration.commandline_argument_helpers import positive_quantity, scientific_int
 from simtools.simtel.multi_illuminator_simulator import MultiIlluminatorSimulator
 from simtools.utils import general
 
@@ -199,7 +200,7 @@ def _add_arguments(parser):
             "Override flasher photon yield. "
             "Accepts integers including scientific notation, e.g. 1e8."
         ),
-        type=parser.scientific_int,
+        type=scientific_int,
         required=False,
     )
     parser.add_argument(
@@ -213,7 +214,7 @@ def _add_arguments(parser):
             "If not specified, all model wavelengths will be simulated. "
             "Will be validated against the model's allowed wavelengths."
         ),
-        type=parser.positive_quantity("nm"),
+        type=positive_quantity("nm"),
         nargs="+",
         required=False,
     )

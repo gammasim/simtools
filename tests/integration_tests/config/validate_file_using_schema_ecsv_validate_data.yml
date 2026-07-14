@@ -2,7 +2,7 @@
 applications:
 - application: simtools-validate-file-using-schema
   configuration:
-    file_name: tests/resources/MLTdata-preproduction.ecsv
+    file_name: tests/resources/static/MLTdata-preproduction.ecsv
     schema: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml
   test_name: ecsv_validate_data
 schema_name: application_workflow.metaschema

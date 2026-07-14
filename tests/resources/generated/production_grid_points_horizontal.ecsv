@@ -1,0 +1,60 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: run_number, datatype: int64}
+# - {name: primary, datatype: string}
+# - {name: azimuth_angle, unit: deg, datatype: float64}
+# - {name: zenith_angle, unit: deg, datatype: float64}
+# - {name: ha, unit: deg, datatype: float64}
+# - {name: dec, unit: deg, datatype: float64}
+# - {name: energy_min, unit: GeV, datatype: float64}
+# - {name: energy_max, unit: GeV, datatype: float64}
+# - {name: cores_per_shower, datatype: int64}
+# - {name: core_scatter_max, unit: m, datatype: float64}
+# - {name: view_cone_min, unit: deg, datatype: float64}
+# - {name: view_cone_max, unit: deg, datatype: float64}
+# - {name: showers_per_run, datatype: int64}
+# - {name: nsb_rate, unit: 1 / (ns sr cm2), datatype: float64}
+# - {name: model_version, datatype: string}
+# - {name: array_layout_name, datatype: string}
+# - {name: corsika_le_interaction, datatype: string}
+# - {name: corsika_he_interaction, datatype: string}
+# meta: !!omap
+# - {site: North}
+# - {simulation_software: corsika_sim_telarray}
+# - {coordinate_system: horizontal}
+# - {direction_grid_density: null}
+# - {direction_grid_density_unit: null}
+# - {corsika_limits: ./simtools-tests/v0.33.0/integration_tests/generated/corsika_simulation_limits/corsika_limits_north.ecsv}
+# - job_grid_summary: {core_scatter_max_configured: 500 m, core_scatter_max_lookup_limit: '[1466.6, 1743.71] m', core_scatter_max_used: 500
+#       m, energy_max_configured: 300 GeV, energy_max_used: 300 GeV, energy_min_configured: 30 GeV, energy_min_lookup_limit: '[4.5, 6.00359]
+#       GeV', energy_min_used: 30 GeV, showers_per_run_configured: '5', showers_per_run_configured_max: 5, showers_per_run_max: 5, showers_per_run_min: 5,
+#     showers_per_run_used: '5', simulation_rows: 24, total_showers: 120, view_cone_max_configured: 10 deg, view_cone_max_lookup_limit: 10
+#       deg, view_cone_max_used: 10 deg, view_cone_min_configured: 0 deg, view_cone_min_used: 0 deg}
+# - {job_grid_format_version: 0.2.0}
+# schema: astropy-2.0
+run_number primary azimuth_angle zenith_angle ha dec energy_min energy_max cores_per_shower core_scatter_max view_cone_min view_cone_max showers_per_run nsb_rate model_version array_layout_name corsika_le_interaction corsika_he_interaction
+1 gamma 310.0 30.0 32.35708908820454 44.30190799330197 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+2 gamma 310.0 30.0 32.35708908820454 44.30190799330197 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+1 gamma 310.0 40.0 46.16728210699056 46.95282485278497 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+2 gamma 310.0 40.0 46.16728210699056 46.95282485278497 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+1 gamma 345.0 30.0 13.80137475910274 57.148162367486776 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+2 gamma 345.0 30.0 13.80137475910274 57.148162367486776 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+1 gamma 345.0 40.0 24.04942486221114 65.9060078368553 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+2 gamma 345.0 40.0 24.04942486221114 65.9060078368553 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+1 gamma 20.0 30.0 -17.784865784237372 55.952908476290375 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+2 gamma 20.0 30.0 -17.784865784237372 55.952908476290375 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+1 gamma 20.0 40.0 -29.991786412916635 63.908762417708324 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+2 gamma 20.0 40.0 -29.991786412916635 63.908762417708324 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+1 gamma 310.0 30.0 32.35708908820454 44.30190799330197 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+2 gamma 310.0 30.0 32.35708908820454 44.30190799330197 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+1 gamma 310.0 40.0 46.16728210699056 46.95282485278497 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+2 gamma 310.0 40.0 46.16728210699056 46.95282485278497 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+1 gamma 345.0 30.0 13.80137475910274 57.148162367486776 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+2 gamma 345.0 30.0 13.80137475910274 57.148162367486776 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+1 gamma 345.0 40.0 24.04942486221114 65.9060078368553 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+2 gamma 345.0 40.0 24.04942486221114 65.9060078368553 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+1 gamma 20.0 30.0 -17.784865784237372 55.952908476290375 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+2 gamma 20.0 30.0 -17.784865784237372 55.952908476290375 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+1 gamma 20.0 40.0 -29.991786412916635 63.908762417708324 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos
+2 gamma 20.0 40.0 -29.991786412916635 63.908762417708324 30.0 300.0 10 500.0 0.0 10.0 5 0.24 7.0.0 LSTN-01 urqmd epos

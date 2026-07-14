@@ -12,6 +12,7 @@ from simtools.application_control import (
     _resolve_model_version_to_latest_patch,
     _version_info,
     build_application,
+    build_application_parser,
     get_application_label,
     get_log_file,
     get_module_description_line,
@@ -271,6 +272,54 @@ def test_build_application_infers_caller_metadata(mocker):
     configurator_instance.initialize.assert_called_once_with(output=True)
 
 
+def test_build_application_parser(mocker, tmp_test_directory):
+    """Test build_application_parser initializes only the parser shape."""
+    configurator_class = mocker.patch("simtools.application_control.configurator.Configurator")
+    configurator_instance = configurator_class.return_value
+    add_arguments = MagicMock()
+
+    parser = build_application_parser(
+        str(tmp_test_directory / "test_application.py"),
+        description="Test description",
+        add_arguments_function=add_arguments,
+        initialization_kwargs={"output": True, "db_config": True},
+        usage="simtools-test",
+    )
+
+    assert parser == configurator_instance.parser
+    configurator_class.assert_called_once_with(
+        label="test_application",
+        usage="simtools-test",
+        description="Test description",
+        epilog=None,
+    )
+    add_arguments.assert_called_once_with(configurator_instance.parser)
+    configurator_instance.parser.initialize_default_arguments.assert_called_once_with(
+        paths=True,
+        output=True,
+        simulation_model=None,
+        simulation_configuration=None,
+        db_config=True,
+    )
+
+
+def test_build_application_parser_uses_definition_help_for_default_arguments():
+    """Test parser actions registered from metadata retain their help text."""
+    parser = build_application_parser(
+        application_path="test_application.py",
+        description="Test description",
+        add_arguments_function=None,
+        initialization_kwargs={"output": True, "db_config": True},
+    )
+
+    actions = {action.dest: action for action in parser._actions}  # pylint: disable=protected-access
+
+    assert actions["config"].help == "simtools configuration file"
+    assert not hasattr(actions["config"], "simtools_doc")
+    assert not hasattr(actions["output_file"], "simtools_doc")
+    assert not hasattr(actions["db_api_user"], "simtools_doc")
+
+
 def test_build_application_missing_metadata_raises(mocker, tmp_test_directory):
     """Test build_application raises if inference and explicit metadata are unavailable."""
     startup_mock = mocker.patch("simtools.application_control.startup_application")
@@ -368,6 +417,47 @@ def test_startup_application_without_resolving_sim_software_executables():
         mock_db_config,
         resolve_sim_software_executables=False,
     )
+
+
+def test_startup_application_prepares_runtime_environment_from_cli():
+    """Test startup_application prepares runtime environment from CLI file argument."""
+    mock_args_dict = {
+        "log_level": "info",
+        "runtime_environment_file": Path("runtime.yml"),
+        "ignore_runtime_environment": False,
+    }
+    mock_db_config = {}
+    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
+
+    with patch(
+        "simtools.application_control.prepare_runtime_environment",
+        return_value=({"image": "test-image"}, ["podman", "run"]),
+    ) as mock_prepare:
+        app_context = startup_application(mock_parse_function, setup_io_handler=False)
+
+    mock_prepare.assert_called_once_with(Path("runtime.yml"))
+    assert app_context.run_time == ["podman", "run"]
+    assert app_context.args["runtime_environment"] == {"image": "test-image"}
+    assert app_context.args["run_time"] == ["podman", "run"]
+
+
+def test_startup_application_runtime_environment_ignored_from_cli():
+    """Test startup_application ignores runtime environment when requested by CLI flag."""
+    mock_args_dict = {
+        "log_level": "info",
+        "runtime_environment_file": Path("runtime.yml"),
+        "ignore_runtime_environment": True,
+    }
+    mock_db_config = {}
+    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
+
+    with patch("simtools.application_control.prepare_runtime_environment") as mock_prepare:
+        app_context = startup_application(mock_parse_function, setup_io_handler=False)
+
+    mock_prepare.assert_not_called()
+    assert app_context.run_time is None
+    assert "runtime_environment" not in app_context.args
+    assert "run_time" not in app_context.args
 
 
 def test_resolve_model_version_to_latest_patch_no_model_version():
@@ -665,6 +755,25 @@ def test_get_log_file_with_output_path(tmp_test_directory):
     assert result.name.startswith("test_app_")
     assert result.name.endswith(".log")
     assert output_path.exists()
+
+
+def test_get_log_file_with_log_file_path_preferred_over_output_path(tmp_test_directory):
+    """Test get_log_file uses log_file_path when provided."""
+    tmp_path = Path(tmp_test_directory)
+    output_path = tmp_path / "output"
+    log_path = tmp_path / "logs"
+    args_dict = {
+        "application_label": "test_app",
+        "output_path": str(output_path),
+        "log_file_path": str(log_path),
+    }
+    result = get_log_file(args_dict)
+
+    assert isinstance(result, Path)
+    assert result.parent == log_path
+    assert result.name.startswith("test_app_")
+    assert result.name.endswith(".log")
+    assert log_path.exists()
 
 
 @pytest.mark.parametrize(

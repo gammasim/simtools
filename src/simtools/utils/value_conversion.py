@@ -1,5 +1,6 @@
 """Value and quantity conversion."""
 
+import collections.abc
 import logging
 import re
 
@@ -19,14 +20,19 @@ def is_dimensionless_unit(unit):
 
     Parameters
     ----------
-    unit: str or None
-        Unit to be checked.
+    unit: str, object, or None
+        Unit string or Astropy unit object to be checked.
 
     Returns
     -------
     bool        True if the unit encodes a dimensionless quantity, False otherwise.
     """
-    return unit in _DIMENSIONLESS_UNITS
+    if unit is None:
+        return True
+    to_string = getattr(unit, "to_string", None)
+    if to_string is not None:
+        unit = to_string()
+    return isinstance(unit, str) and unit in _DIMENSIONLESS_UNITS
 
 
 def normalize_dimensionless_unit(unit):
@@ -35,12 +41,12 @@ def normalize_dimensionless_unit(unit):
 
     Parameters
     ----------
-    unit: str or None
-        Unit to be normalized.
+    unit: str, object, or None
+        Unit string or Astropy unit object to be normalized.
 
     Returns
     -------
-    str or None
+    str, object, or None
         Normalized unit, where dimensionless units are converted to None.
 
     """
@@ -49,7 +55,7 @@ def normalize_dimensionless_unit(unit):
     return None if is_dimensionless_unit(unit) else unit
 
 
-def extract_type_of_value(value) -> str:
+def extract_type_of_value(value):
     """
     Extract the string representation of the the type of a value.
 
@@ -211,18 +217,22 @@ def get_value_as_quantity(value, unit):
     ValueError
         If the value cannot be converted to the given unit.
     """
-    if isinstance(value, u.Quantity):
-        try:
-            return value.to(unit)
-        except u.UnitConversionError as exc:
-            raise ValueError(f"Cannot convert {value} with unit {value.unit} to {unit}.") from exc
-    elif not isinstance(value, int | float):
-        return value
+    unit = u.dimensionless_unscaled if is_dimensionless_unit(unit) else u.Unit(unit)
+    if isinstance(value, str):
+        if unit == u.dimensionless_unscaled:
+            return value
+        return u.Quantity(value).to(unit)
 
-    if is_dimensionless_unit(unit):
-        return value * u.dimensionless_unscaled
+    if (
+        isinstance(value, collections.abc.Iterable)
+        and not isinstance(value, str)
+        and not hasattr(value, "to")
+    ):
+        return [get_value_as_quantity(v, unit) for v in value]
 
-    return value * u.Unit(unit)
+    if hasattr(value, "to"):
+        return value.to(unit)
+    return u.Quantity(value, unit)
 
 
 def _unit_as_string(unit):
@@ -264,3 +274,10 @@ def get_value_in_unit(value, unit=None):
         )
 
     return value
+
+
+def format_quantity(value, unit):
+    """Format a scalar or Quantity in the requested unit."""
+    if isinstance(value, u.Quantity):
+        value = value.to_value(unit)
+    return f"{value}"

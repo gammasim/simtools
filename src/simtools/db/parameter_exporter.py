@@ -156,15 +156,12 @@ def _export_file_backed_parameter(
     output_file,
     par_info,
     parameters,
+    export_model_file,
     export_model_file_as_table,
     parameter_version=None,
     model_version=None,
 ):
-    """
-    Export file-backed parameter to disk.
-
-    Exports the file and optionally also as an ECSV table.
-    """
+    """Export file-backed parameter as original file and/or ECSV table."""
     table = export_single_model_file(
         db=db,
         parameter=parameter,
@@ -177,15 +174,23 @@ def _export_file_backed_parameter(
         par_info=par_info,
     )
     source_file = db.io_handler.get_output_file(par_info["value"])
-    table_file = db.io_handler.get_output_file(output_file) if output_file else source_file
-    if table_file != source_file:
-        source_file.rename(table_file)
-    output_files = [table_file]
+    model_output_file = db.io_handler.get_output_file(output_file) if output_file else source_file
+    output_files = []
 
-    if table and table_file.suffix != ECSV_SUFFIX:
-        table_output_file = table_file.with_suffix(ECSV_SUFFIX)
+    if export_model_file:
+        if model_output_file != source_file:
+            source_file.rename(model_output_file)
+        output_files.append(model_output_file)
+
+    if export_model_file_as_table:
+        table_output_file = model_output_file.with_suffix(ECSV_SUFFIX)
         table.write(table_output_file, format="ascii.ecsv", overwrite=True)
-        output_files.append(table_output_file)
+
+        if table_output_file not in output_files:
+            output_files.append(table_output_file)
+
+        if not export_model_file and source_file != table_output_file and source_file.exists():
+            source_file.unlink()
 
     return output_files
 
@@ -300,9 +305,6 @@ def export_parameter_data(
     ValueError
         If an incompatible combination of options is provided.
     """
-    if export_model_file_as_table and not export_model_file:
-        raise ValueError("Use --export_model_file together with --export_model_file_as_table.")
-
     if not (export_model_file or export_model_file_as_table):
         return []
 
@@ -337,6 +339,7 @@ def export_parameter_data(
         output_file=output_file,
         par_info=par_info,
         parameters=parameters,
+        export_model_file=export_model_file,
         export_model_file_as_table=export_model_file_as_table,
         parameter_version=parameter_version,
         model_version=model_version,

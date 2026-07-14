@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 
 import simtools.simtel.simtel_table_writer as simtel_table_writer
+from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
 from simtools.simtel.simtel_config_writer import SimtelConfigWriter
 
 logger = logging.getLogger()
@@ -200,6 +201,31 @@ def test_write_array_config_file(
         assert lines[-1] == "\n"
 
 
+def test_write_array_config_file_raises_for_too_long_include_filename(
+    simtel_config_writer, io_handler, site_model_north, telescope_model_lst
+):
+    output_file = io_handler.get_output_file(file_name="simtel-config-writer_array-long-name.txt")
+    too_long_name = "a" * (SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH - 3) + ".cfg"
+    telescope_model = {
+        "LSTN-01": mock.Mock(
+            config_file_path=Path(too_long_name),
+            parameters=telescope_model_lst.parameters,
+        )
+    }
+
+    with pytest.raises(ValueError, match=r"^sim_telarray include filename exceeds parser limit"):
+        simtel_config_writer.write_array_config_file(
+            config_file_path=output_file,
+            telescope_model=telescope_model,
+            site_model=site_model_north,
+        )
+
+
+def test_validate_include_file_name_length_accepts_boundary(simtel_config_writer):
+    max_len = SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
+    simtel_config_writer._validate_include_file_name_length("a" * (max_len - 4) + ".cfg")
+
+
 def test_write_tel_config_file(simtel_config_writer, io_handler, file_has_text):
     _file = io_handler.get_output_file(file_name="simtel-config-writer_telescope.txt")
     simtel_config_writer.write_telescope_config_file(
@@ -368,9 +394,12 @@ def test_get_sim_telarray_metadata_with_model_parameters(simtel_config_writer):
             return "test_add_param"
         return None
 
-    with mock.patch(
-        "simtools.utils.names.get_simulation_software_name_from_parameter_name",
-        side_effect=mock_get_name,
+    with (
+        mock.patch(
+            "simtools.utils.names.get_simulation_software_name_from_parameter_name",
+            side_effect=mock_get_name,
+        ),
+        mock.patch("simtools.simtel.simtel_validate_metadata.validate_metadata"),
     ):
         tel_meta = simtel_config_writer._get_sim_telarray_metadata(
             "telescope", model_parameters, "test_telescope"
@@ -400,6 +429,46 @@ def test_get_sim_telarray_metadata_without_model_parameters(simtel_config_writer
 
     with pytest.raises(ValueError, match=r"^Unknown metadata type"):
         simtel_config_writer._get_sim_telarray_metadata("unknown", None, None)
+
+
+def test_get_sim_telarray_metadata_includes_falsey_additional_metadata(simtel_config_writer):
+    metadata = simtel_config_writer._get_sim_telarray_metadata(
+        "site",
+        None,
+        None,
+        {"primary": "gamma", "azimuth_angle": 0.0, "ha_angle": 0.0},
+    )
+
+    assert "metaparam global set primary=gamma" in metadata
+    assert "metaparam global set azimuth_angle=0.0" in metadata
+    assert "metaparam global set ha_angle=0.0" in metadata
+
+
+def test_get_sim_telarray_metadata_raises_for_unknown_additional_metadata(simtel_config_writer):
+    with pytest.raises(KeyError, match=r"Unknown sim_telarray metadata key emitted by writer"):
+        simtel_config_writer._get_sim_telarray_metadata(
+            "site", None, None, {"unknown_metadata_key": 1}
+        )
+
+
+def test_get_sim_telarray_metadata_raises_for_invalid_metadata_value(simtel_config_writer):
+    with pytest.raises(ValueError, match=r"could not convert string to float"):
+        simtel_config_writer._get_sim_telarray_metadata(
+            "site", None, None, {"azimuth_angle": "not-a-number"}
+        )
+
+
+def test_write_simtools_parameters_validates_metadata_lines(simtel_config_writer):
+    file_obj = io.StringIO()
+
+    with (
+        mock.patch(
+            "simtools.simtel.simtel_config_writer.dependencies.get_build_options",
+            return_value={"corsika_version": "invalid-int"},
+        ),
+        pytest.raises(ValueError, match=r"invalid literal for int"),
+    ):
+        simtel_config_writer._write_simtools_parameters(file_obj)
 
 
 def test_write_dummy_telescope_configuration_file(

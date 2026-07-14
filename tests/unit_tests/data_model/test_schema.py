@@ -6,12 +6,16 @@ from pathlib import Path
 import jsonschema
 import pytest
 import yaml
+from astropy.table import Table
 from packaging.specifiers import InvalidSpecifier
 
 from simtools.constants import (
     MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
     MODEL_PARAMETER_METASCHEMA,
     MODEL_PARAMETER_SCHEMA_PATH,
+    SCHEMA_PATH,
+    SIM_TELARRAY_META_PARAMETER_METASCHEMA,
+    SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
 from simtools.data_model import schema
 from simtools.io import ascii_handler
@@ -50,6 +54,20 @@ def test_get_model_parameter_schema_returns_independent_copies():
     schema_1["data"][0]["unit"] = "m"
 
     assert schema_2["data"][0]["unit"] == "cm"
+
+
+def test_validate_sim_telarray_meta_parameter_registry_schema():
+    registry = ascii_handler.collect_data_from_file(SIM_TELARRAY_META_PARAMETER_REGISTRY)
+
+    schema.validate_dict_using_schema(
+        registry,
+        schema_file=SIM_TELARRAY_META_PARAMETER_METASCHEMA,
+        offline=True,
+        ignore_software_version=True,
+    )
+
+    assert "generated_meta_parameters" in registry
+    assert "model_parameters" not in registry
 
 
 def test_get_parameter_type_and_unit_from_schema():
@@ -129,6 +147,58 @@ def test_validate_dict_using_schema(tmp_test_directory, caplog):
     invalid_data = {"name": "Alice", "age": "Thirty"}
     with pytest.raises(jsonschema.exceptions.ValidationError):
         schema.validate_dict_using_schema(invalid_data, schema_file)
+
+
+def test_runtime_environment_definition_is_reused_by_workflow_schema():
+    workflow_config = {
+        "schema_version": "0.4.0",
+        "schema_name": "application_workflow.metaschema",
+        "runtime_environment": {
+            "container_engine": "podman",
+            "image": "test-image",
+            "network": "simtools-mongo-network",
+            "environment_file": ".env",
+            "options": ["--arch amd64"],
+        },
+        "applications": [
+            {
+                "application": "simtools-test",
+                "configuration": {},
+            }
+        ],
+    }
+
+    schema.validate_dict_using_schema(
+        workflow_config, schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml"
+    )
+
+    workflow_config["runtime_environment"]["unknown"] = "value"
+    with pytest.raises(jsonschema.ValidationError):
+        schema.validate_dict_using_schema(
+            workflow_config, schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml"
+        )
+
+
+def test_application_workflow_schema_accepts_optional_docs_metadata():
+    workflow_config = {
+        "schema_version": "0.4.0",
+        "schema_name": "application_workflow.metaschema",
+        "applications": [
+            {
+                "application": "simtools-test",
+                "docs": {
+                    "title": "Example title",
+                    "summary": "Example summary.",
+                },
+                "configuration": {},
+            }
+        ],
+    }
+
+    schema.validate_dict_using_schema(
+        workflow_config,
+        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+    )
 
 
 def test_validate_dict_using_schema_remote(tmp_test_directory, mocker):
@@ -631,19 +701,29 @@ def test_extract_schema_url_from_metadata_dict():
     assert result is None
 
 
-def test_extract_schema_from_file(tmp_test_directory):
-    """Test _extract_schema_from_file function."""
+def test_get_schema_file_from_file_metadata(tmp_test_directory):
+    """Test get_schema_file_from_file_metadata function."""
     # Create a test file with schema URL (lowercase cta)
     test_file = Path(tmp_test_directory) / "test_with_schema.yml"
     metadata = {"cta": {"product": {"data": {"model": {"url": "https://schema.example.com"}}}}}
     with open(test_file, "w", encoding="utf-8") as f:
         yaml.dump(metadata, f)
 
-    result = schema._extract_schema_from_file(test_file)
+    result = schema.get_schema_file_from_file_metadata(test_file)
     assert result == "https://schema.example.com"
 
+    ecsv_file = Path(tmp_test_directory) / "test_with_schema.ecsv"
+    Table(
+        rows=[[1]],
+        names=["value"],
+        meta={"cta": {"product": {"data": {"model": {"url": "https://ecsv-schema.example.com"}}}}},
+    ).write(ecsv_file, format="ascii.ecsv")
+
+    result = schema.get_schema_file_from_file_metadata(ecsv_file)
+    assert result == "https://ecsv-schema.example.com"
+
     # Test with non-existent file
-    result = schema._extract_schema_from_file("non_existent_file.yml")
+    result = schema.get_schema_file_from_file_metadata("non_existent_file.yml")
     assert result is None
 
 

@@ -3,6 +3,8 @@
 import logging
 from pathlib import Path
 
+import simtools.utils.general as gen
+
 
 class IOHandlerSingleton(type):
     """Singleton base class."""
@@ -24,6 +26,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         self.logger = logging.getLogger(__name__)
         self.output_path = {}
         self.model_path = None
+        self.test_resources_path = Path("tests/resources").resolve()
 
     def set_paths(self, output_path=None, model_path=None, output_path_label="default"):
         """
@@ -102,20 +105,34 @@ class IOHandler(metaclass=IOHandlerSingleton):
             .absolute()
         )
 
-    def get_test_data_file(self, file_name=None):
+    def get_test_data_file(self, file_name=None, sub_dir=("static", "generated")):
         """
         Get path of a data file in the test resources directory.
 
         Parameters
         ----------
-        files_name: str
+        file_name: str
             File name.
+        sub_dir: str or list or tuple of str
+            Fallback resource subdirectory name(s) to search under tests/resources.
 
         Returns
         -------
         Path
         """
-        return Path("tests/resources", file_name).resolve()
+        base_path = self.test_resources_path
+        file_path = (base_path / file_name).resolve()
+
+        if file_path.exists():
+            return file_path
+
+        fallback_dirs = gen.ensure_list(sub_dir)
+        for folder in fallback_dirs:
+            candidate = (base_path / folder / file_name).resolve()
+            if candidate.exists():
+                return candidate
+
+        return file_path
 
     def get_model_configuration_directory(self, model_version, sub_dir=None):
         """
@@ -135,5 +152,5 @@ class IOHandler(metaclass=IOHandlerSingleton):
         Path
         """
         return self.get_output_directory(
-            sub_dir=[sub_dir, "model", model_version] if sub_dir else ["model", model_version]
+            sub_dir=["model", sub_dir, model_version] if sub_dir else ["model", model_version]
         )

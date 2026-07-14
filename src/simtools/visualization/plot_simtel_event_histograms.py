@@ -1,10 +1,18 @@
 """Plot simtel event histograms filled with EventDataHistograms."""
 
 import logging
+from pathlib import Path
 
-import matplotlib.pyplot as plt
+import matplotlib as mpl
 import numpy as np
 from matplotlib.colors import LogNorm
+
+mpl.use("Agg")
+from matplotlib import pyplot as plt  # pylint: disable=wrong-import-position
+
+from simtools.production_configuration.trigger_histograms import (  # pylint: disable=wrong-import-position
+    load_event_data_histograms,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -18,8 +26,29 @@ _PLOT_FILENAME_OVERRIDES = {
     "energy": "energy_triggered",
 }
 
+_BROAD_RANGE_KEY_GROUPS = (
+    ("energy", ("energy",)),
+    ("core_distance_vs_energy", ("core_distance_vs_energy",)),
+    ("angular_distance_vs_energy", ("angular_distance_vs_energy",)),
+    ("core_distance", ("core_distance",)),
+    ("angular_distance", ("angular_distance",)),
+    ("x_core_shower_vs_y_core_shower", ("x_core_shower_vs_y_core_shower",)),
+)
 
-def plot(histograms, output_path=None, limits=None, array_name=None):
+
+def _is_reuse_histogram(name):
+    """Return whether the histogram contains reuse summary statistics."""
+    return str(name).startswith("reuse_")
+
+
+def plot(
+    histograms,
+    output_path=None,
+    limits=None,
+    array_name=None,
+    add_distance_projections=False,
+    use_broad_range_limits=False,
+):
     """
     Plot simtel event histograms.
 
@@ -36,12 +65,175 @@ def plot(histograms, output_path=None, limits=None, array_name=None):
         - "viewcone_radius": Radius for the viewcone
     array_name: str, optional
         Name of the telescope array configuration.
+    add_distance_projections: bool, optional
+        Add overall and sliced x/y projections to raw distance-vs-energy plots.
+    use_broad_range_limits: bool, optional
+        Restrict plot axes to the broad-range simulation limits in ``limits``.
     """
     _logger.info(f"Plotting histograms written to {output_path}")
 
     file_info = _extract_file_info_from_limits(limits)
-    plots = _generate_plot_configurations(histograms, limits)
+    plots = _generate_plot_configurations(
+        histograms,
+        limits,
+        add_distance_projections=add_distance_projections,
+        use_broad_range_limits=use_broad_range_limits,
+    )
     _execute_plotting_loop(plots, output_path, array_name, file_info)
+
+
+def plot_trigger_histogram_file(trigger_histogram_file, output_dir, array_layout_name=None):
+    """
+    Plot all plot-table histograms stored in a trigger-histogram HDF5 file.
+
+    Parameters
+    ----------
+    trigger_histogram_file : str or pathlib.Path
+        Path to the precomputed trigger-histogram HDF5 file.
+    output_dir : str or pathlib.Path
+        Base directory where plot files will be written.
+    array_layout_name : str, optional
+        Restrict plotting to one array layout. If omitted, all layouts in the file
+        are plotted.
+    """
+    selected_array_names = _selected_array_names(array_layout_name)
+    loaded_histograms = load_event_data_histograms(
+        trigger_histogram_file,
+        array_names=selected_array_names,
+    )
+    if selected_array_names and not loaded_histograms:
+        raise ValueError(
+            f"Array layout '{array_layout_name}' not found in histogram file "
+            f"'{trigger_histogram_file}'."
+        )
+
+    output_dir = Path(output_dir)
+    for _, histograms in loaded_histograms:
+        output_path = output_dir
+        if len(loaded_histograms) > 1:
+            output_path = output_dir / histograms.array_name
+            output_path.mkdir(parents=True, exist_ok=True)
+        plot(_plottable_histograms(histograms.histograms), output_path=output_path)
+
+
+def _selected_array_names(array_layout_name):
+    """Return normalized array-name selection for the histogram loader."""
+    if array_layout_name is None:
+        return None
+    if isinstance(array_layout_name, str):
+        return [array_layout_name]
+    return array_layout_name
+
+
+def _plottable_histograms(histograms):
+    """Return histogram definitions that can be rendered as 1D or 2D plots."""
+    return {
+        name: histogram
+        for name, histogram in histograms.items()
+        if isinstance(histogram, dict) and histogram.get("histogram") is not None
+        if getattr(histogram["histogram"], "ndim", 0) <= 2
+    }
+
+
+def plot_monte_carlo_statistics_diagnostics(
+    output_dir,
+    array_name,
+    file_info,
+    energy_edges,
+    angular_edges,
+    expected_counts,
+    relative_uncertainty,
+):
+    """
+    Write Monte Carlo statistics diagnostic plots.
+
+    Parameters
+    ----------
+    output_dir : str or pathlib.Path
+        Directory to write plot files.
+    array_name : str
+        Array or telescope-selection name used in plot titles and filenames.
+    file_info : dict, optional
+        Dictionary with simulation metadata (zenith, azimuth, nsb_level) used
+        to make filenames unique per observational setup. If omitted, filenames are based on
+        ``array_name`` only.
+    energy_edges : array-like
+        Energy bin edges in TeV.
+    angular_edges : array-like
+        Angular-distance bin edges in deg.
+    expected_counts : numpy.ndarray
+        Expected triggered events per angular-distance and energy bin.
+    relative_uncertainty : numpy.ndarray
+        Poisson relative uncertainty per angular-distance and energy bin.
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    file_prefix = _sanitize_filename_part(array_name)
+    file_info_suffix = _format_file_info_suffix(file_info or {})
+    if file_info_suffix:
+        file_prefix = f"{file_prefix}_{file_info_suffix}"
+    plot_specs = (
+        (
+            expected_counts,
+            output_dir / f"{file_prefix}_expected_events.png",
+            f"Expected triggered events ({array_name})",
+            "Expected events",
+            True,
+        ),
+        (
+            relative_uncertainty,
+            output_dir / f"{file_prefix}_relative_uncertainty.png",
+            f"Expected relative uncertainty ({array_name})",
+            "Relative uncertainty",
+            False,
+        ),
+    )
+    for matrix, output_file, title, colorbar_label, mask_zero in plot_specs:
+        _plot_monte_carlo_statistics_matrix(
+            matrix,
+            energy_edges,
+            angular_edges,
+            output_file,
+            title,
+            colorbar_label,
+            mask_zero=mask_zero,
+        )
+
+
+def _sanitize_filename_part(value):
+    """Return a filesystem-safe filename component."""
+    return "".join(
+        character if character.isalnum() or character in "-_" else "_" for character in str(value)
+    )
+
+
+def _plot_monte_carlo_statistics_matrix(
+    matrix,
+    energy_edges,
+    angular_edges,
+    output_file,
+    title,
+    colorbar_label,
+    mask_zero=False,
+):
+    """Plot a 2D diagnostic matrix in log10 energy and angular distance."""
+    matrix = np.asarray(matrix, dtype=float)
+    plot_matrix = np.ma.masked_invalid(matrix)
+    if mask_zero:
+        plot_matrix = np.ma.masked_less_equal(plot_matrix, 0.0)
+    log_energy_edges = np.log10(np.asarray(energy_edges, dtype=float))
+
+    cmap = plt.get_cmap("viridis").with_extremes(bad="white")
+    fig, ax = plt.subplots(figsize=(8, 6))
+    mesh = ax.pcolormesh(log_energy_edges, angular_edges, plot_matrix, shading="auto", cmap=cmap)
+    fig.colorbar(mesh, ax=ax, label=colorbar_label)
+    ax.set(
+        xlabel="log10(E / TeV)",
+        ylabel="Angular distance (deg)",
+        title=title,
+    )
+    fig.savefig(output_file, dpi=150, bbox_inches="tight")
+    plt.close(fig)
 
 
 def _get_limits(name, limits):
@@ -84,7 +276,12 @@ def _get_limits(name, limits):
     return mapping.get(name)
 
 
-def _generate_plot_configurations(histograms, limits):
+def _generate_plot_configurations(
+    histograms,
+    limits,
+    add_distance_projections=False,
+    use_broad_range_limits=False,
+):
     """Generate plot configurations for all histogram types."""
     hist_1d_params = {"color": "tab:green", "edgecolor": "tab:green", "lw": 1}
     hist_2d_params = {"norm": "log", "cmap": "viridis"}
@@ -93,25 +290,164 @@ def _generate_plot_configurations(histograms, limits):
     for name, hist in histograms.items():
         if hist["histogram"] is None:
             continue
-        if hist["1d"]:
-            plots[name] = _create_1d_plot_config(
-                hist, name=name, plot_params=hist_1d_params, limits=limits
-            )
-        else:
-            histogram_name = name.lower()
-            if (
-                "cumulative" in histogram_name
-                or "efficiency" in histogram_name
-                or histogram_name.endswith("_eff")
-            ):
-                plot_params = hist_2d_normalized_params
-            else:
-                plot_params = hist_2d_params
-
-            plots[name] = _create_2d_plot_config(
-                hist, name=name, plot_params=plot_params, limits=limits
-            )
+        if np.ndim(hist["histogram"]) > 2:
+            _logger.warning(f"Skipping plot {name} - plotting supports only 1D and 2D histograms")
+            continue
+        plots[name] = _build_plot_configuration(
+            hist,
+            name,
+            limits,
+            hist_1d_params,
+            hist_2d_params,
+            hist_2d_normalized_params,
+        )
+        _add_plot_overrides(
+            plots[name],
+            name,
+            limits,
+            add_distance_projections=add_distance_projections,
+            use_broad_range_limits=use_broad_range_limits,
+        )
     return plots
+
+
+def _build_plot_configuration(
+    hist,
+    name,
+    limits,
+    hist_1d_params,
+    hist_2d_params,
+    hist_2d_normalized_params,
+):
+    """Build a base plot configuration for one histogram."""
+    if hist["1d"]:
+        return _create_1d_plot_config(hist, name=name, plot_params=hist_1d_params, limits=limits)
+    return _create_2d_plot_config(
+        hist,
+        name=name,
+        plot_params=_get_2d_plot_params(name, hist_2d_params, hist_2d_normalized_params),
+        limits=limits,
+    )
+
+
+def _get_2d_plot_params(name, hist_2d_params, hist_2d_normalized_params):
+    """Select the plotting style for a 2D histogram."""
+    histogram_name = name.lower()
+    if _is_reuse_histogram(histogram_name):
+        return hist_2d_normalized_params
+    if (
+        "cumulative" in histogram_name
+        or "efficiency" in histogram_name
+        or histogram_name.endswith("_eff")
+    ):
+        return hist_2d_normalized_params
+    return hist_2d_params
+
+
+def _add_plot_overrides(
+    plot_config,
+    name,
+    limits,
+    add_distance_projections=False,
+    use_broad_range_limits=False,
+):
+    """Add optional broad-range limits and projection metadata."""
+    if use_broad_range_limits:
+        plot_config["axis_limits"] = _get_broad_range_axis_limits(name, limits)
+    if add_distance_projections and _supports_distance_projections(name):
+        plot_config["projection_kind"] = (
+            "core_distance" if name.startswith("core_distance") else "angular_distance"
+        )
+
+
+def _supports_distance_projections(name):
+    """Return whether a raw distance-vs-energy histogram supports sliced projections."""
+    return name in {
+        "core_distance_vs_energy",
+        "core_distance_vs_energy_mc",
+        "angular_distance_vs_energy",
+        "angular_distance_vs_energy_mc",
+    }
+
+
+def _get_broad_range_axis_limits(name, limits):
+    """Return axis limits from broad-range simulation metadata."""
+    if not limits:
+        return {}
+    broad_range_values = _extract_broad_range_values(limits)
+    axis_limits_by_group = {
+        "energy": {"x": broad_range_values["energy_limits"]},
+        "core_distance_vs_energy": {
+            "x": (0.0, broad_range_values["core_max"]),
+            "y": broad_range_values["energy_limits"],
+        },
+        "angular_distance_vs_energy": {
+            "x": (0.0, broad_range_values["viewcone_max"]),
+            "y": broad_range_values["energy_limits"],
+        },
+        "core_distance": {"x": (0.0, broad_range_values["core_max"])},
+        "angular_distance": {"x": (0.0, broad_range_values["viewcone_max"])},
+        "x_core_shower_vs_y_core_shower": {
+            "x": _get_symmetric_limits(broad_range_values["core_max"]),
+            "y": _get_symmetric_limits(broad_range_values["core_max"]),
+        },
+    }
+    return axis_limits_by_group.get(_get_broad_range_key_group(name), {})
+
+
+def _get_broad_range_plot_lines(name, limits):
+    """Return reference lines using only broad-range output-table columns."""
+    if not limits:
+        return {}
+    broad_range_values = _extract_broad_range_values(limits)
+    plot_lines_by_group = {
+        "energy": {"x": list(broad_range_values["energy_limits"])},
+        "core_distance_vs_energy": {
+            "x": broad_range_values["core_max"],
+            "y": list(broad_range_values["energy_limits"]),
+        },
+        "angular_distance_vs_energy": {
+            "x": broad_range_values["viewcone_max"],
+            "y": list(broad_range_values["energy_limits"]),
+        },
+        "core_distance": {"x": broad_range_values["core_max"]},
+        "angular_distance": {"x": broad_range_values["viewcone_max"]},
+        "x_core_shower_vs_y_core_shower": {"r": broad_range_values["core_max"]},
+    }
+    return plot_lines_by_group.get(_get_broad_range_key_group(name), {})
+
+
+def _extract_broad_range_values(limits):
+    """Extract scalar broad-range values from the limits dictionary."""
+    return {
+        "energy_limits": (
+            _get_limit_value(limits, "br_energy_min"),
+            _get_limit_value(limits, "br_energy_max"),
+        ),
+        "core_max": _get_limit_value(limits, "br_core_scatter_max"),
+        "viewcone_max": _get_limit_value(limits, "br_viewcone_max"),
+    }
+
+
+def _get_limit_value(limits, key):
+    """Return a plain scalar for one limits entry."""
+    item = limits.get(key)
+    return getattr(item, "value", item)
+
+
+def _get_broad_range_key_group(name):
+    """Return the histogram-family key used for broad-range plotting metadata."""
+    for group_name, prefixes in _BROAD_RANGE_KEY_GROUPS:
+        if name.startswith(prefixes):
+            return group_name
+    return None
+
+
+def _get_symmetric_limits(limit):
+    """Return symmetric lower and upper bounds around zero."""
+    if limit is None:
+        return (None, None)
+    return (-limit, limit)
 
 
 def _get_axis_title(axis_titles, axis):
@@ -176,7 +512,7 @@ def _execute_plotting_loop(plots, output_path, array_name, file_info=None):
             continue
 
         if array_name and plot_args.get("labels", {}).get("title"):
-            plot_args["labels"]["title"] += f" ({array_name} array)"
+            plot_args["labels"]["title"] += f" ({array_name})"
 
         filename = _build_plot_filename(plot_filename, array_name, file_info)
         output_file = output_path / filename if output_path else None
@@ -275,15 +611,32 @@ def _create_plot(
     colorbar_label=None,
     output_file=None,
     lines=None,
+    axis_limits=None,
+    projection_kind=None,
 ):
     """Create and save a plot with the given parameters."""
     plot_params = plot_params or {}
     labels = labels or {}
     scales = scales or {}
     lines = lines or {}
+    axis_limits = axis_limits or {}
 
     if not _has_data(data):
         return None
+
+    if plot_type == "histogram2d" and projection_kind:
+        fig, _ = _create_2d_plot_with_projections(
+            data,
+            bins,
+            plot_params,
+            labels,
+            scales,
+            colorbar_label,
+            lines,
+            axis_limits,
+            projection_kind,
+        )
+        return _finalize_figure(fig, output_file)
 
     fig, ax = plt.subplots(figsize=(8, 6))
     _plot_data(ax, data, bins, plot_type, plot_params, colorbar_label)
@@ -295,6 +648,12 @@ def _create_plot(
         xscale=scales.get("x", "linear"),
         yscale=scales.get("y", "linear"),
     )
+    _apply_axis_limits(ax, axis_limits)
+    return _finalize_figure(fig, output_file)
+
+
+def _finalize_figure(fig, output_file):
+    """Save, show, and return a completed figure."""
     if output_file:
         _logger.info(f"Saving plot to {output_file}")
         fig.savefig(output_file, dpi=300, bbox_inches="tight")
@@ -304,6 +663,127 @@ def _create_plot(
         plt.show()
 
     return fig
+
+
+def _apply_axis_limits(ax, axis_limits):
+    """Apply finite, non-degenerate axis limits."""
+    for axis_name, setter in (("x", ax.set_xlim), ("y", ax.set_ylim)):
+        bounds = axis_limits.get(axis_name)
+        if (
+            bounds
+            and bounds[0] is not None
+            and bounds[1] is not None
+            and np.isfinite(bounds).all()
+            and bounds[1] > bounds[0]
+        ):
+            setter(*bounds)
+
+
+def _create_2d_plot_with_projections(
+    data,
+    bins,
+    plot_params,
+    labels,
+    scales,
+    colorbar_label,
+    lines,
+    axis_limits,
+    projection_kind,
+):
+    """Create a 2D histogram with x/y projection panels on its right."""
+    fig = plt.figure(figsize=(10.4, 6), constrained_layout=True)
+    grid = fig.add_gridspec(4, 2, width_ratios=(3.6, 2.1), wspace=0.08, hspace=0.08)
+    ax = fig.add_subplot(grid[:, 0])
+    ax_x = fig.add_subplot(grid[:2, 1])
+    ax_y = fig.add_subplot(grid[2:, 1])
+
+    pcm = _create_2d_histogram_plot(data, bins, plot_params, ax=ax)
+    fig.colorbar(pcm, ax=ax, label=colorbar_label, pad=0.01)
+    _add_lines(ax, lines)
+    ax.set(
+        xlabel=labels.get("x", ""),
+        ylabel=labels.get("y", ""),
+        title=labels.get("title", ""),
+        xscale=scales.get("x", "linear"),
+        yscale=scales.get("y", "linear"),
+    )
+    _apply_axis_limits(ax, axis_limits)
+    _plot_distance_projections(ax_x, ax_y, data, bins, labels, axis_limits, projection_kind)
+    return fig, ax
+
+
+def _plot_distance_projections(ax_x, ax_y, data, bins, labels, axis_limits, projection_kind):
+    """Plot overall projections and fixed-coordinate slices of a 2D histogram."""
+    x_centers = 0.5 * (bins[0][:-1] + bins[0][1:])
+    y_centers = 0.5 * (bins[1][:-1] + bins[1][1:])
+    ax_x.step(x_centers, np.sum(data, axis=1), where="mid", color="black", label="overall")
+    ax_y.step(y_centers, np.sum(data, axis=0), where="mid", color="black", label="overall")
+
+    for value, label in _energy_slice_values(bins[1], axis_limits.get("y")):
+        index = _bin_index(bins[1], value)
+        slice_data = data[:, index]
+        if np.any(slice_data > 0):
+            ax_x.step(x_centers, slice_data, where="mid", label=label)
+
+    for value, label in _distance_slice_values(bins[0], axis_limits.get("x"), projection_kind):
+        index = _bin_index(bins[0], value)
+        slice_data = data[index, :]
+        if np.any(slice_data > 0):
+            ax_y.step(y_centers, slice_data, where="mid", label=label)
+
+    ax_x.set(
+        xlabel=labels.get("x", ""),
+        ylabel="Event count",
+        title="Projection distance axis",
+        yscale="log",
+    )
+    ax_y.set(
+        xlabel=labels.get("y", ""),
+        ylabel="Event count",
+        title="Projection energy axis",
+        xscale="log",
+        yscale="log",
+    )
+    _apply_axis_limits(ax_x, {"x": axis_limits.get("x")})
+    _apply_axis_limits(ax_y, {"x": axis_limits.get("y")})
+    _add_projection_legend(ax_x)
+    _add_projection_legend(ax_y)
+
+
+def _add_projection_legend(ax):
+    """Add a compact legend in a stable location if labeled artists exist."""
+    handles, legend_labels = ax.get_legend_handles_labels()
+    if handles:
+        ax.legend(handles, legend_labels, fontsize="x-small", loc="upper right")
+
+
+def _bin_index(bin_edges, value):
+    """Return the histogram-bin index containing a coordinate value."""
+    return int(np.clip(np.searchsorted(bin_edges, value, side="right") - 1, 0, len(bin_edges) - 2))
+
+
+def _energy_slice_values(bin_edges, plot_limits=None):
+    """Return fixed half-decade-offset energy slice coordinates and labels."""
+    lower = plot_limits[0] if plot_limits and plot_limits[0] is not None else bin_edges[0]
+    upper = plot_limits[1] if plot_limits and plot_limits[1] is not None else bin_edges[-1]
+    if lower <= 0 or upper <= 0:
+        return []
+    exponents = np.arange(-1.5, np.log10(upper) + 1.0e-12, 1.0)
+    return [
+        (10.0**exponent, f"log10(E/TeV)={exponent:g}")
+        for exponent in exponents
+        if lower <= 10.0**exponent <= upper
+    ]
+
+
+def _distance_slice_values(bin_edges, plot_limits, projection_kind):
+    """Return fixed angular- or core-distance slice coordinates and labels."""
+    lower = plot_limits[0] if plot_limits and plot_limits[0] is not None else bin_edges[0]
+    upper = plot_limits[1] if plot_limits and plot_limits[1] is not None else bin_edges[-1]
+    step = 500.0 if projection_kind == "core_distance" else 1.0
+    unit = "m" if projection_kind == "core_distance" else "deg"
+    values = np.arange(0.0, upper + 1.0e-12, step)
+    return [(value, f"{value:g} {unit}") for value in values if lower <= value <= upper]
 
 
 def _has_data(data):
@@ -331,17 +811,19 @@ def _add_lines(ax, lines):
         )
 
     for x_value in np.atleast_1d(lines.get("x", [])):
-        ax.axvline(x_value, color="r", linestyle="--", linewidth=0.5)
+        if x_value is not None:
+            ax.axvline(x_value, color="r", linestyle="--", linewidth=0.5)
 
     for y_value in np.atleast_1d(lines.get("y", [])):
-        ax.axhline(y_value, color="r", linestyle="--", linewidth=0.5)
+        if y_value is not None:
+            ax.axhline(y_value, color="r", linestyle="--", linewidth=0.5)
 
     curve = lines.get("curve")
     if curve and curve.get("x") and curve.get("y"):
-        ax.plot(curve["x"], curve["y"], color="tab:orange", linestyle="-", linewidth=1.0)
+        ax.plot(curve["x"], curve["y"], color="r", linestyle="--", linewidth=1.0)
 
 
-def _create_2d_histogram_plot(data, bins, plot_params):
+def _create_2d_histogram_plot(data, bins, plot_params, ax=None):
     """
     Create a 2D histogram plot with the given parameters.
 
@@ -361,14 +843,20 @@ def _create_2d_histogram_plot(data, bins, plot_params):
     """
     cmap = plt.get_cmap(plot_params.get("cmap", "viridis")).with_extremes(bad=(1.0, 1.0, 1.0, 0.0))
 
+    plotter = ax if ax is not None else plt
     if plot_params.get("norm") == "linear":
-        masked_data = np.ma.masked_equal(data.T, 0)
-        pcm = plt.pcolormesh(
+        finite_values = np.asarray(data, dtype=float)[np.isfinite(data)]
+        masked_data = np.ma.masked_invalid(data.T)
+        data_min = float(np.min(finite_values)) if finite_values.size else 0.0
+        data_max = float(np.max(finite_values)) if finite_values.size else 1.0
+        if data_max <= data_min:
+            data_max = data_min + 1.0
+        pcm = plotter.pcolormesh(
             bins[0],
             bins[1],
             masked_data,
-            vmin=0,
-            vmax=1,
+            vmin=data_min,
+            vmax=data_max,
             cmap=cmap,
         )
     else:
@@ -377,14 +865,14 @@ def _create_2d_histogram_plot(data, bins, plot_params):
         data_max = data.max()
         if data_max <= 0:
             _logger.warning("No positive data found for logarithmic scaling, using linear scale")
-            pcm = plt.pcolormesh(
+            pcm = plotter.pcolormesh(
                 bins[0], bins[1], masked_data, vmin=0, vmax=max(1, data_max), cmap=cmap
             )
         else:
             # Ensure vmin is less than vmax for LogNorm
             vmin = max(1, data[data > 0].min()) if np.any(data > 0) else 1
             vmax = max(vmin + 1, data_max)
-            pcm = plt.pcolormesh(
+            pcm = plotter.pcolormesh(
                 bins[0], bins[1], masked_data, norm=LogNorm(vmin=vmin, vmax=vmax), cmap=cmap
             )
 

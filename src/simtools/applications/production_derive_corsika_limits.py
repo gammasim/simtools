@@ -29,6 +29,8 @@ Upper core distance (**CSCAT**) and viewcone radius (**VIEWCONE**)
     either as integrated limits or per-energy-bin
     differential limits (depending on ``--differential_loss_bins_per_decade``).
     Differential limits are preferable, as they are more robust to variations with energy.
+    If every triggered event has the same angular distance, the viewcone radius is set to that
+    exact value and the degenerate angular-distance-vs-energy plots are omitted.
 
 Results are provided as a table with the following columns:
 
@@ -39,7 +41,7 @@ Results are provided as a table with the following columns:
 +---------------------------+-----------+--------+----------------------------------------------+
 | primary_particle          | string    |        | Particle type (e.g., gamma, proton).         |
 +---------------------------+-----------+--------+----------------------------------------------+
-| array_name                | string    |        | Array name (custom or as defined in          |
+| array_layout_name         | string    |        | Array name (custom or as defined in          |
 |                           |           |        | array_layouts).                              |
 +---------------------------+-----------+--------+----------------------------------------------+
 | zenith                    | float64   | deg    | Direction of array pointing zenith.          |
@@ -65,9 +67,9 @@ Results are provided as a table with the following columns:
 | br_viewcone_max           | float64   | deg    | Viewcone max from broad-range simulations.   |
 +---------------------------+-----------+--------+----------------------------------------------+
 
-The input event data files are generated using the application simtools-generate-simtel-event-data
-and are required for each point in the observational parameter space (e.g., array pointing
-directions, level of night sky background, etc.).
+The input trigger-histogram file is generated using ``simtools-write-trigger-histograms``.
+It defines the sampled observational parameter space (zenith, azimuth, NSB level),
+production index, and array names.
 
 Distributions of triggered events (e.g., core distance vs energy) can be plotted to verify the
 derived limits using the ``--plot_histograms`` option. Plots are organized into per-production
@@ -75,14 +77,11 @@ subdirectories derived from the input pattern names (for example ``production_pr
 
 Command line arguments
 ----------------------
-event_data_file (str or list of str, required)
-    Path or glob pattern for reduced event data files. Can be a single pattern or
-    multiple patterns (one per ``--event_data_file`` argument) to enable parallel
-    multi-production processing.
-array_layout_name (str, required)
-    Name of the array layout (as defined in array_layouts) for which to derive limits.
-    Single-telescope layouts can be defined using the telescope ID as array name
-    (e.g. "MSTN-05").
+trigger_histogram_file (str, required)
+    Precomputed trigger-histogram HDF5 file from ``simtools-write-trigger-histograms``.
+array_layout_name (str, optional)
+    Optional array layout name(s) to select from the trigger-histogram file.
+    If omitted, limits are derived for all layouts available in the file.
 allowed_losses (str, required, repeatable)
     Per-axis allowed-loss tuple in the form
     ``axis,fraction,min_events``.
@@ -94,11 +93,6 @@ differential_loss_bins_per_decade (int, optional)
     Set to 0 (default) to use integrated limits.
 energy_threshold_fraction (float, optional)
     Fraction of the stable energy-peak count used to derive ERANGE (default: 0.01).
-model_version (str, required)
-    Simulation model version (e.g., "7.0.0") to retrieve the corresponding
-    array layout.
-n_workers (int, optional)
-    Number of worker processes to use for execution. Default is 1.
 plot_histograms (bool, optional)
     Plot histograms of the event data.
 output_file (str, optional)
@@ -116,34 +110,32 @@ Derive limits for a single production with a list of array layouts:
 .. code-block:: console
 
     simtools-production-derive-corsika-limits \\
-        --event_data_file event_dat_file.hdf5 \\
-        --array_layout_name alpha,beta \\
+        --trigger_histogram_file trigger_histograms.hdf5 \\
+        --array_layout_name alpha beta \\
         --allowed_losses core_distance,1e-6,10 \
         --allowed_losses angular_distance,1e-6,10 \
         --energy_threshold_fraction 0.01 \
         --plot_histograms \\
         --output_file corsika_simulation_limits.ecsv
 
-Derive limits for multiple independent productions in parallel:
+Derive limits for all arrays and productions in a trigger-histogram file:
 
 .. code-block:: console
 
     simtools-production-derive-corsika-limits \\
-        --event_data_file pattern_1_*.hdf5 \\
-        --event_data_file pattern_2_*.hdf5 \\
-        --array_layout_name alpha \\
+        --trigger_histogram_file trigger_histograms.hdf5 \\
         --allowed_losses all,1e-6,10 \
         --energy_threshold_fraction 0.01 \
         --plot_histograms \\
-        --n_workers 4 \\
         --output_file corsika_simulation_limits.ecsv
 
-When multiple ``--event_data_file`` patterns are provided, results are merged into a single output
-ECSV with a ``production_index`` column, and plot files are organized into per-production
-subdirectories derived from the input pattern names (for example ``production_production_a/``).
+Results are merged into a single output ECSV with a ``production_index`` column, and plot files
+are organized into per-production subdirectories when several productions are stored in the
+histogram file.
 """
 
 from simtools.application_control import build_application
+from simtools.configuration.commandline_argument_helpers import efficiency_interval
 from simtools.production_configuration.derive_corsika_limits import (
     generate_corsika_limits_grid,
 )
@@ -151,16 +143,22 @@ from simtools.production_configuration.derive_corsika_limits import (
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    # Override event_data_file to allow multiple patterns for multi-production support
     parser.add_argument(
-        "--event_data_file",
+        "--trigger_histogram_file",
+        help=("Precomputed trigger-histogram HDF5 file from simtools-write-trigger-histograms. "),
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
+        "--array_layout_name",
         help=(
-            "Event data file or glob pattern (one or more patterns for "
-            "multi-production processing)."
+            "Optional array layout name(s) to select from a precomputed trigger-histogram "
+            "file. If omitted, derive limits for all layouts available in the file."
         ),
         nargs="+",
-        action="extend",
-        required=True,
+        type=str,
+        required=False,
+        default=None,
     )
     parser.add_argument(
         "--allowed_losses",
@@ -179,7 +177,7 @@ def _add_arguments(parser):
     parser.add_argument(
         "--energy_threshold_fraction",
         help="Fraction of the stable energy-peak count used to derive ERANGE ",
-        type=parser.efficiency_interval,
+        type=efficiency_interval,
         required=False,
         default=0.01,
     )
@@ -188,16 +186,6 @@ def _add_arguments(parser):
         help="Plot histograms of the event data.",
         action="store_true",
         default=False,
-    )
-    parser.add_argument(
-        "--n_workers",
-        help=(
-            "Number of worker processes to use for execution "
-            "(default: 1; set to 0 for auto-detection of available cores)."
-        ),
-        type=int,
-        required=False,
-        default=1,
     )
     parser.add_argument(
         "--differential_loss_bins_per_decade",
@@ -213,19 +201,8 @@ def _add_arguments(parser):
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "output": True,
-            "simulation_model": [
-                "site",
-                "model_version",
-                "layout",
-            ],
-        },
-    )
-
-    generate_corsika_limits_grid(app_context.args)
+    build_application(initialization_kwargs={"db_config": False, "output": True})
+    generate_corsika_limits_grid()
 
 
 if __name__ == "__main__":

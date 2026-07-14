@@ -24,6 +24,7 @@ from simtools.constants import (
     MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
     MODEL_PARAMETER_SCHEMA_PATH,
     RESOURCE_PATH,
+    SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH,
 )
 
 _logger = logging.getLogger(__name__)
@@ -708,7 +709,7 @@ def get_simulation_software_name_from_parameter_name(
     Get the name used in the given simulation software from the model parameter name.
 
     Name convention is expected to be defined in the model parameter schema.
-    Returns the parameter name if no simulation software name is found.
+    Returns ``None`` if no matching simulation software entry is found.
 
     Parameters
     ----------
@@ -738,39 +739,38 @@ def get_simulation_software_name_from_parameter_name(
     return None
 
 
-def simtel_config_file_name(
-    site,
-    array_name=None,
-    telescope_model_name=None,
-    label=None,
-    extra_label=None,
-):
+def sim_telarray_config_file_name(site, array_name=None, telescope_model_name=None):
     """
-    sim_telarray config file name for a telescope.
+    sim_telarray configuration file name for an array or a telescope.
 
     Parameters
     ----------
     site: str
         South or North.
+    array_name: str
+        Array name (e.g., CTAO-North-4-LSTs-1-MSTs)
     telescope_model_name: str
-        LST-1, MST-FlashCam, ...
-    label: str
-        Instance label.
-    extra_label: str
-        Extra label in case of multiple telescope config files.
+        Telescope name (e.g., LSTN-01, MSTS-05)
 
     Returns
     -------
     str
-        File name.
+        Configuration file name.
     """
-    name = "CTA"
-    name += f"-{array_name}" if array_name is not None else ""
-    name += f"-{site}"
-    name += f"-{telescope_model_name}" if telescope_model_name is not None else ""
-    name += f"_{label}" if label is not None else ""
-    name += f"_{extra_label}" if extra_label is not None else ""
+    name = "CTAO"
+    if array_name:
+        name += f"-{site}-{array_name}"
+    if telescope_model_name:
+        name += f"-{telescope_model_name}"
     name += ".cfg"
+
+    # Telescope config files are included by the array config and parsed by sim_telarray
+    # through a fixed-size getword buffer.
+    if telescope_model_name is not None and len(name) > SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH:
+        raise ValueError(
+            f"Generated configuration file name {name} exceeds the maximum length of "
+            f"{SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH} characters."
+        )
     return name
 
 
