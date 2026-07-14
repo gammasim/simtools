@@ -3,7 +3,8 @@ name: integration-testing
 description: >-
   Create, update, or debug simtools integration test YAML configs for
   application workflows in tests/integration_tests/config, including MongoDB
-  prerequisites, model-version handling, and output validation blocks.
+  prerequisites, model-version handling, test-resource macros, documentation
+  metadata, and output validation blocks.
 ---
 
 # Integration Testing for simtools
@@ -12,10 +13,12 @@ Use this skill for integration test configuration files under
 `tests/integration_tests/config/`. These tests run full `simtools-*`
 applications from YAML and validate their outputs.
 
-Follow `.github/copilot-instructions.md` and
+Follow `AGENTS.md` and
 `docs/source/developer-guide/testing.md`. For exact mechanics, inspect
 `tests/integration_tests/test_applications_from_config.py`,
-`tests/integration_tests/conftest.py`, and `src/simtools/testing/`.
+`tests/integration_tests/conftest.py`, `tests/conftest.py`,
+`src/simtools/testing/`, and
+`src/simtools/schemas/application_workflow.metaschema.yml`.
 
 ## Prerequisite
 
@@ -33,6 +36,9 @@ applications:
     model_version: 6.0.2
     output_path: simtools-output
     # application CLI options as YAML keys
+  docs:
+    title: Optional short title for rendered examples
+    summary: Optional short summary for rendered examples
   integration_tests:
   - output_file: relative/file/from/output_path.ext
   test_name: short_descriptive_case
@@ -45,8 +51,9 @@ Rules:
 1. Put one focused workflow per file unless existing patterns justify more.
 2. Use installed command names like `simtools-validate-optics`.
 3. Keep `test_name` stable, short, and unique for the application.
-4. Keep `output_path` and `pack_for_grid_register` relative; the harness
-   rewrites them into a temporary test directory.
+4. Keep generated path settings such as `output_path`, `grid_output_path`, and
+   `pack_for_grid_register` relative; the harness rewrites them into a
+   temporary test directory.
 5. Use realistic CTAO names and conventions: `North`/`South`, `LSTN-01`,
    `MSTS-05`, semantic model versions without a leading `v`.
 6. Add `test: true`, small event counts, `n_workers: 1`, or short ranges when
@@ -64,6 +71,8 @@ Optional keys beside `application`, `configuration`, `integration_tests`, and
 - `test_use_case: UC-...`: add use-case pytest marker.
 - `test_requirement: REQ-...`: add requirement pytest marker.
 - `xfail_network_error: true`: xfail only recognized network failures.
+- `docs.title` / `docs.summary`: metadata for generated documentation
+  examples.
 
 Use `configuration.<option>.by_version` for version-dependent CLI values:
 
@@ -73,6 +82,13 @@ array_layout_name:
     "<7.0.0": alpha
     ">=7.0.0": CTAO-South-Alpha
 ```
+
+## Test Resources
+
+Use `${static:path/to/file}` for maintained resources and
+`${generated:path/to/file}` for generated resources. Pytest resolves these
+against `--test_resources_path` / `--test-resources-path`, defaulting to
+`tests/resources`.
 
 ## `integration_tests` Blocks
 
@@ -92,6 +108,7 @@ integration_tests:
       pe_sum: [20, 1000]
       photons: [90, 1000]
       trigger_time: [0, 50]
+      event_type: shower
 - reference_output_file: tests/resources/reference.ecsv
   test_output_file: results/output.ecsv
   tolerance: 1.e-2
@@ -108,8 +125,9 @@ Validation keys:
 
 - `output_file`: file under `configuration.output_path`.
 - `test_output_files`: list or single mapping with `file`, `path_descriptor`,
-  optional `output_sub_path`, and optional sim_telarray/log expectations.
-- `file_type`: checks JSON/YAML parsing of `configuration.output_file`; other types check suffix only.
+  optional `output_sub_path`, and optional sim_telarray or log expectations.
+- `file_type`: checks JSON/YAML parsing of `configuration.output_file`;
+  other types check suffix only.
 - `reference_output_file`: compare ECSV, JSON, YAML, or YML; uses `test_output_file` or
   falls back to `configuration.output_file`; optional `tolerance` and ECSV `test_columns`.
 - `model_parameter_validation`: compare generated parameter JSON to MongoDB.
@@ -118,7 +136,7 @@ Validation keys:
 
 For log files, use `expected_log_output.pattern` and `forbidden_pattern`.
 For sim_telarray files, use `expected_sim_telarray_output` and
-`expected_sim_telarray_metadata`.
+`expected_sim_telarray_metadata` directly on the `test_output_files` entry.
 
 ## Commands
 
@@ -128,6 +146,8 @@ pytest -v -k "simtools-<app-name>" tests/integration_tests/test_applications_fro
 pytest -v -k "simtools-<app-name>_<test_name>" \
   tests/integration_tests/test_applications_from_config.py
 pytest -v --model_version 6.0.2 -k "<test_name>" \
+  tests/integration_tests/test_applications_from_config.py
+pytest -v --test-resources-path /full/path/to/resources \
   tests/integration_tests/test_applications_from_config.py
 ```
 
