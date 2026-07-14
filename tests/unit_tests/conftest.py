@@ -890,7 +890,7 @@ _TEST_DATA_FILES = {
     (
         "corsika_limits",
         "North",
-    ): "downloaded/corsika_limits/corsika_limits.ecsv",
+    ): "downloaded/corsika_limits.ecsv",
 }
 
 
