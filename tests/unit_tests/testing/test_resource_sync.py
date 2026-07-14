@@ -76,8 +76,64 @@ def test_apply_sync_actions_deletes_obsolete_and_empty_directories(resource_root
 
     assert not (destination_root / "generated" / "nested" / "obsolete.txt").exists()
     assert not (destination_root / "generated" / "nested").exists()
+    assert (destination_root / "generated").exists()
     assert actions["copied"] == []
     assert actions["deleted"] == ["generated/nested/obsolete.txt"]
+
+
+def test_apply_sync_actions_preflights_delete_targets(resource_roots):
+    root, _, destination_root = resource_roots
+    safe_file = destination_root / "static" / "obsolete.txt"
+    outside_file = root / "outside.txt"
+    _write(safe_file, "obsolete")
+    _write(outside_file, "outside")
+    report = {
+        "destination_directories": {"static": destination_root / "static"},
+        "directories": {
+            "static": {
+                "new": [],
+                "changed": [],
+                "obsolete": ["obsolete.txt", "outside.txt"],
+                "source_files": {},
+                "destination_files": {
+                    "obsolete.txt": safe_file,
+                    "outside.txt": outside_file,
+                },
+            }
+        },
+    }
+
+    with pytest.raises(ValueError, match="Refusing to delete file outside test resources"):
+        resource_sync.apply_sync_actions(report, sync=False, delete_missing=True)
+
+    assert safe_file.exists()
+    assert outside_file.exists()
+
+
+def test_apply_sync_actions_refuses_symlink_to_outside_resource_root(resource_roots):
+    root, _, destination_root = resource_roots
+    outside_file = root / "outside.txt"
+    symlink = destination_root / "static" / "outside-link.txt"
+    _write(outside_file, "outside")
+    symlink.symlink_to(outside_file)
+    report = {
+        "destination_directories": {"static": destination_root / "static"},
+        "directories": {
+            "static": {
+                "new": [],
+                "changed": [],
+                "obsolete": ["outside-link.txt"],
+                "source_files": {},
+                "destination_files": {"outside-link.txt": symlink},
+            }
+        },
+    }
+
+    with pytest.raises(ValueError, match="Refusing to delete file outside test resources"):
+        resource_sync.apply_sync_actions(report, sync=False, delete_missing=True)
+
+    assert symlink.exists()
+    assert outside_file.exists()
 
 
 def test_build_sync_report_uses_configured_resources_path(resource_roots):

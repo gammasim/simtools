@@ -178,9 +178,41 @@ def _copy_file(source_path, destination_path):
     logger.info("Synced %s", destination_path)
 
 
-def _remove_file(path, stop_root):
+def _resolve_delete_target(path, root):
+    """Return a validated delete target below the given root directory."""
     path = Path(path)
-    stop_root = Path(stop_root).resolve()
+    root = Path(root).resolve(strict=True)
+    resolved_path = path.resolve(strict=True)
+    try:
+        resolved_path.relative_to(root)
+    except ValueError as exc:
+        raise ValueError(f"Refusing to delete file outside test resources: {path}") from exc
+    if not resolved_path.is_file():
+        raise ValueError(f"Refusing to delete non-file path: {path}")
+    return path
+
+
+def _deletion_plan(report):
+    """Return validated obsolete-file delete actions without modifying files."""
+    plan = []
+    for directory_name, comparison in report["directories"].items():
+        destination_root = report["destination_directories"][directory_name]
+        for relative_path in comparison["obsolete"]:
+            destination_path = comparison["destination_files"][relative_path]
+            plan.append(
+                (
+                    directory_name,
+                    relative_path,
+                    _resolve_delete_target(destination_path, destination_root),
+                    destination_root,
+                )
+            )
+    return plan
+
+
+def _remove_file(path, stop_root):
+    path = _resolve_delete_target(path, stop_root)
+    stop_root = Path(stop_root).resolve(strict=True)
     path.unlink()
     logger.info("Removed obsolete file %s", path)
     for parent in path.parents:
@@ -200,6 +232,7 @@ def apply_sync_actions(report, sync=False, delete_missing=False):
     copied = []
     deleted = []
     destination_directories = report["destination_directories"]
+    delete_plan = _deletion_plan(report) if delete_missing else []
 
     for directory_name, comparison in report["directories"].items():
         if sync:
@@ -208,11 +241,10 @@ def apply_sync_actions(report, sync=False, delete_missing=False):
                 destination_path = destination_directories[directory_name] / relative_path
                 _copy_file(source_path, destination_path)
                 copied.append(f"{directory_name}/{relative_path}")
-        if delete_missing:
-            for relative_path in comparison["obsolete"]:
-                destination_path = comparison["destination_files"][relative_path]
-                _remove_file(destination_path, destination_directories[directory_name])
-                deleted.append(f"{directory_name}/{relative_path}")
+
+    for directory_name, relative_path, destination_path, destination_root in delete_plan:
+        _remove_file(destination_path, destination_root)
+        deleted.append(f"{directory_name}/{relative_path}")
 
     return {"copied": copied, "deleted": deleted}
 
