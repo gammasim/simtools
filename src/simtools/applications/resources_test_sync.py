@@ -49,16 +49,6 @@ _APPLICATION_ARG_DEFINITIONS = {
         "default": Path("tests/resources"),
         "help": "Destination test-resources directory.",
     },
-    "include_static": {
-        "action": "store_true",
-        "default": True,
-        "help": "Include static resources.",
-    },
-    "include_generated": {
-        "action": "store_true",
-        "default": True,
-        "help": "Include generated resources.",
-    },
     "exclude_static": {
         "action": "store_false",
         "dest": "include_static",
