@@ -178,11 +178,13 @@ def _copy_file(source_path, destination_path):
     logger.info("Synced %s", destination_path)
 
 
-def _remove_file(path):
+def _remove_file(path, stop_root):
+    path = Path(path)
+    stop_root = Path(stop_root).resolve()
     path.unlink()
     logger.info("Removed obsolete file %s", path)
     for parent in path.parents:
-        if parent == get_destination_directory():
+        if parent == stop_root:
             break
         if any(parent.iterdir()):
             break
@@ -209,7 +211,7 @@ def apply_sync_actions(report, sync=False, delete_missing=False):
         if delete_missing:
             for relative_path in comparison["obsolete"]:
                 destination_path = comparison["destination_files"][relative_path]
-                _remove_file(destination_path)
+                _remove_file(destination_path, destination_directories[directory_name])
                 deleted.append(f"{directory_name}/{relative_path}")
 
     return {"copied": copied, "deleted": deleted}

@@ -35,11 +35,11 @@ Config files for generating test files are located in `config_files/*yml` and ca
 
 For a new simtools release, the workflow is:
 
-1. Define a release candidate in `simtools` (e.g., `v0.34.0-rc`). The simtools CI workflow builds and published release-candidate containers for this release candidate.
-2. Define a new test resource version in `simtools-tests` (e.g., `v0.34.0`), update the workflow definitions with above container version and generate the new resource set with the release-candidate container.
+1. Define a release candidate in `simtools` (e.g., `v0.34.0-rc`). The simtools CI workflow builds and publishes release-candidate containers for this release candidate.
+2. Define a new test resource version in `simtools-tests` (e.g., `v0.34.0`), update the workflow definitions with the above container version, and generate the new resource set with the release-candidate container.
 3. Run the relevant integration tests locally against the new resources.
 4. On failure, fix the resource generation workflow or the simtools code and repeat steps 1-3.
-5. On success , sync the new resource set into `tests/resources`, and run integration and unit tests again.
+5. On success, sync the new resource set into `tests/resources`, and run integration and unit tests again.
 6. Release both `simtools` and `simtools-tests`.
 
 This keeps the archived resource set aligned with the released software and
