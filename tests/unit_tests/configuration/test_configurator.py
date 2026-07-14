@@ -10,6 +10,7 @@ import pytest
 import yaml
 
 from simtools import settings
+from simtools.configuration.commandline_parameters import PARAMETER_DEFINITIONS
 from simtools.configuration.configurator import Configurator
 from simtools.io import io_handler
 
@@ -200,7 +201,9 @@ def test_convert_string_none_to_none():
 
 
 def test_get_db_parameters_from_env(configurator, args_dict):
-    configurator.parser.initialize_db_config_arguments()
+    configurator.parser.initialize_argument_group(
+        "database configuration", ["all"], PARAMETER_DEFINITIONS["DB_CONFIG_ARGS"]
+    )
     configurator._fill_config([])
     configurator.config["env_file"] = "this_file_does_not_exist.env"
     _env_config = configurator._config_from_env(configurator.config["env_file"])
@@ -225,7 +228,9 @@ def test_get_db_parameters_from_env(configurator, args_dict):
 
 
 def test_initialize_output(configurator):
-    configurator.parser.initialize_output_arguments()
+    configurator.parser.initialize_argument_group(
+        "output", ["all"], PARAMETER_DEFINITIONS["OUTPUT_ARGS"]
+    )
     configurator._fill_config([])
 
     # output file for testing

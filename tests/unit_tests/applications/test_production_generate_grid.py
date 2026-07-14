@@ -5,7 +5,15 @@ from unittest.mock import Mock, patch
 import pytest
 
 import simtools.applications.production_generate_grid as app
-from simtools.configuration.commandline_parser import CommandLineParser
+from simtools.application_control import build_application_parser
+
+
+def _parser():
+    return build_application_parser(
+        application_path=app.__file__,
+        description=app.__doc__,
+        application_argument_definitions=app._APPLICATION_ARG_DEFINITIONS,
+    )
 
 
 @patch("simtools.applications.production_generate_grid.generate_job_grid")
@@ -24,8 +32,7 @@ def test_main_generates_job_grid(mock_build_application, mock_generate_job_grid)
 
 
 def test_add_arguments_accepts_compact_axis_definitions():
-    parser = CommandLineParser()
-    app._add_arguments(parser)
+    parser = _parser()
 
     args = parser.parse_args(
         [
@@ -54,8 +61,7 @@ def test_add_arguments_accepts_compact_axis_definitions():
 
 
 def test_add_arguments_accepts_zenith_angle_scaling_factor():
-    parser = CommandLineParser()
-    app._add_arguments(parser)
+    parser = _parser()
 
     args = parser.parse_args(["--zenith_angle_scaling_factor", "2.5"])
 
@@ -63,8 +69,7 @@ def test_add_arguments_accepts_zenith_angle_scaling_factor():
 
 
 def test_add_arguments_accepts_max_total_showers_rounding_warnings():
-    parser = CommandLineParser()
-    app._add_arguments(parser)
+    parser = _parser()
 
     args = parser.parse_args(["--max_total_showers_rounding_warnings", "7"])
 
@@ -72,8 +77,7 @@ def test_add_arguments_accepts_max_total_showers_rounding_warnings():
 
 
 def test_add_arguments_accepts_direction_grid_density():
-    parser = CommandLineParser()
-    app._add_arguments(parser)
+    parser = _parser()
 
     args = parser.parse_args(["--direction_grid_density", "1.5"])
 
@@ -81,8 +85,7 @@ def test_add_arguments_accepts_direction_grid_density():
 
 
 def test_add_arguments_accepts_direction_grid_density_with_unit():
-    parser = CommandLineParser()
-    app._add_arguments(parser)
+    parser = _parser()
 
     args = parser.parse_args(["--direction_grid_density", "0.25", "1/deg^2"])
 
@@ -90,8 +93,7 @@ def test_add_arguments_accepts_direction_grid_density_with_unit():
 
 
 def test_add_arguments_accepts_showers_per_run_scaling():
-    parser = CommandLineParser()
-    app._add_arguments(parser)
+    parser = _parser()
 
     args = parser.parse_args(["--showers_per_run_scaling", "cosine_zenith"])
 
@@ -99,18 +101,8 @@ def test_add_arguments_accepts_showers_per_run_scaling():
 
 
 def test_add_arguments_accepts_energy_max_scaling():
-    parser = CommandLineParser()
-    app._add_arguments(parser)
+    parser = _parser()
 
     args = parser.parse_args(["--energy_max_scaling", "-2.5", "300", "TeV"])
 
     assert args.energy_max_scaling == ["-2.5", "300", "TeV"]
-
-
-def test_add_arguments_accepts_legacy_energy_max_scaling_index():
-    parser = CommandLineParser()
-    app._add_arguments(parser)
-
-    args = parser.parse_args(["--energy_max_scaling_index", "-2.5"])
-
-    assert args.energy_max_scaling_index == pytest.approx(-2.5)

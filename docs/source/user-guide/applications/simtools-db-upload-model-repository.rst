@@ -5,3 +5,4 @@ simtools-db-upload-model-repository
 
 .. automodule:: db_upload_model_repository
    :members:
+   :exclude-members: main

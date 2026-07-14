@@ -78,6 +78,7 @@ run_number (int, optional)
 """
 
 from simtools.application_control import build_application
+from simtools.configuration.commandline_argument_helpers import scientific_int, telescope
 from simtools.model.model_utils import get_array_elements_for_layout
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.simulator import Simulator
@@ -109,7 +110,7 @@ def _add_arguments(parser):
     target_group.add_argument(
         "--telescopes",
         help="One or more telescopes (e.g. LSTN-01, MSTN-04, SSTS-04)",
-        type=parser.telescope,
+        type=telescope,
         nargs="+",
     )
     target_group.add_argument(
@@ -132,7 +133,7 @@ def _add_arguments(parser):
             "Override flasher photon yield (single value for all telescopes). "
             "Accepts integers including scientific notation, e.g. 1e6."
         ),
-        type=parser.scientific_int,
+        type=scientific_int,
         nargs="+",
         required=False,
     )
@@ -170,10 +171,10 @@ def main():
             if app_context.args.get("array_layout_name") is not None
             else general.ensure_list(app_context.args["telescopes"])
         )
-        for telescope in telescopes:
+        for tel in telescopes:
             light_source = SimulatorLightEmission(
                 light_emission_config=app_context.args,
-                telescope=telescope,
+                telescope=tel,
                 label=app_context.args.get("label"),
             )
             light_source.simulate()
