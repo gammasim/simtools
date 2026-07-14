@@ -1,6 +1,5 @@
 import gzip
 import logging
-import tarfile
 from pathlib import Path
 
 import pytest
@@ -348,19 +347,3 @@ def test_check_tar_logs_no_patterns_without_file():
     file_test = {}
     result = log_inspector.check_tar_logs(Path("dummy.tar.gz"), file_test)
     assert result
-
-
-def test_check_tar_logs_skips_oversized_member(tmp_test_directory, monkeypatch):
-    tar_path = Path(str(tmp_test_directory)) / "test_logs.tar.gz"
-    member_name = "test.log.gz"
-
-    monkeypatch.setattr(log_inspector.gen, "DEFAULT_MAX_TAR_MEMBER_SIZE_BYTES", 10)
-
-    with tarfile.open(tar_path, "w:gz") as tar_handle:
-        log_gz = Path(str(tmp_test_directory)) / member_name
-        with gzip.open(log_gz, "wb") as gz:
-            gz.write(b"This is a compressed log body that is larger than ten bytes")
-        tar_handle.add(log_gz, arcname=member_name)
-
-    file_test = {"expected_log_output": {"pattern": ["compressed"]}}
-    assert log_inspector.check_tar_logs(tar_path, file_test) is False

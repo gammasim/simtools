@@ -9,7 +9,7 @@ import tarfile
 import time
 import urllib.error
 import urllib.request
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from urllib.parse import urlparse
 
 import dotenv
@@ -17,8 +17,6 @@ import numpy as np
 import uuid6
 
 _logger = logging.getLogger(__name__)
-
-DEFAULT_MAX_TAR_MEMBER_SIZE_BYTES = 128 * 1024 * 1024
 
 
 def is_url(url):
@@ -397,113 +395,6 @@ def resolve_file_patterns(file_names):
     if not _files:
         raise FileNotFoundError(f"No files found: {file_names}")
     return _files
-
-
-def is_safe_tar_member(member_name):
-    """
-    Validate that a tar member path is safe and doesn't contain path traversal sequences.
-
-    Parameters
-    ----------
-    member_name : str
-        The path of the tar member to validate.
-
-    Returns
-    -------
-    bool
-        True if the path is safe, False otherwise.
-    """
-    # Check for null bytes
-    if "\0" in member_name:
-        return False
-
-    # Check for absolute paths
-    if Path(member_name).is_absolute():
-        return False
-
-    # Normalize path and validate components
-    try:
-        parts = PurePosixPath(member_name).parts
-    except ValueError:
-        return False
-
-    # Reject if any component is ".." or if path becomes absolute
-    if ".." in parts:
-        return False
-
-    # Verify the normalized path is still relative
-    normalized = PurePosixPath(*parts) if parts else PurePosixPath()
-    if normalized.is_absolute():
-        return False
-
-    return True
-
-
-def is_safe_tar_member_size(member_size, max_member_size):
-    """
-    Validate that a tar member size is within configured bounds.
-
-    Parameters
-    ----------
-    member_size : int
-        Tar member size in bytes.
-    max_member_size : int
-        Maximum allowed member size in bytes.
-
-    Returns
-    -------
-    bool
-        True if the member size is valid and within limit, False otherwise.
-    """
-    try:
-        size = int(member_size)
-        max_size = int(max_member_size)
-    except (TypeError, ValueError):
-        return False
-
-    if size < 0 or max_size <= 0:
-        return False
-
-    return size <= max_size
-
-
-def iter_safe_tar_members(tar_handle, member_suffix=None, max_member_size=None):
-    """
-    Yield tar members that pass path and size safety checks.
-
-    Parameters
-    ----------
-    tar_handle : tarfile.TarFile
-        Open tar file handle.
-    member_suffix : str, optional
-        If given, only members ending with this suffix are yielded.
-    max_member_size : int, optional
-        Maximum allowed member size in bytes. Uses DEFAULT_MAX_TAR_MEMBER_SIZE_BYTES when None.
-
-    Yields
-    ------
-    tarfile.TarInfo
-        Safe tar members that match the optional suffix.
-    """
-    max_size = (
-        DEFAULT_MAX_TAR_MEMBER_SIZE_BYTES if max_member_size is None else int(max_member_size)
-    )
-
-    for member in tar_handle:
-        if member_suffix and not member.name.endswith(member_suffix):
-            continue
-
-        if not is_safe_tar_member(member.name):
-            _logger.warning(f"Skipping potentially unsafe tar member path: {member.name}")
-            continue
-
-        if not is_safe_tar_member_size(member.size, max_size):
-            _logger.warning(
-                f"Skipping tar member {member.name} larger than allowed {max_size} bytes"
-            )
-            continue
-
-        yield member
 
 
 def pack_tar_file(tar_file_name, file_list, sub_dir=None):
