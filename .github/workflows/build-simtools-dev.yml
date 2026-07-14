@@ -80,7 +80,7 @@ jobs:
             CORSIKA_IMAGE_VERSION=${{ env.CORSIKA_IMAGE_VERSION }}
             SIMTEL_IMAGE_VERSION=${{ env.SIMTEL_IMAGE_VERSION }}
             AVX_FLAG=${{ env.AVX_FLAG }}
-          push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
+          push: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
           file: ./docker/Dockerfile-simtools-dev
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
