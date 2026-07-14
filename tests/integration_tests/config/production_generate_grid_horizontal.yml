@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-production-generate-grid
+  docs:
+    title: Production grid defined by horizontal coordinate axes.
+    summary: Includes number of events scaled by energy and zenith.
   configuration:
     array_layout_name: LSTN-01
     axis:

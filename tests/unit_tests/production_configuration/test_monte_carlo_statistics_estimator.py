@@ -225,6 +225,11 @@ def test_estimator_writes_diagnostic_plots(mocker, tmp_path):
     )
 
     mock_plot.assert_called_once()
+    assert mock_plot.call_args.args[2] == {
+        "zenith": 20.0 * u.deg,
+        "azimuth": 180.0 * u.deg,
+        "nsb_level": 1.0,
+    }
 
 
 def test_estimator_reports_limiting_bin_and_positive_required_events(mocker, tmp_path):
