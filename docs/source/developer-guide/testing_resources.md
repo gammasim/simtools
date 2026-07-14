@@ -10,7 +10,7 @@ Resource files require updates, e.g., when file formats change or new features a
 
 The examples in the description of the
 [`simtools-resources-test-generate`](../user-guide/applications/simtools-resources-test-generate.rst) application provide guidance on
-how to testa and generate the different types of resource files.
+how to test and generate the different types of resource files.
 
 ### Static test files
 
@@ -48,7 +48,7 @@ avoids generating release resources from an unpinned development environment.
 ## Applications
 
 - [`simtools-resources-test-generate`](../user-guide/applications/simtools-resources-test-generate.rst)
-generates a versioned resource set from workflow definitions in
+  generates a versioned resource set from workflow definitions.
 - [`simtools-resources-test-sync`](../user-guide/applications/simtools-resources-test-sync.rst)
-compares a versioned resource set with `tests/resources` and optionally syncs
-it into the repository.
+  compares a versioned resource set with `tests/resources` and optionally syncs
+  it into the repository.
