@@ -2,7 +2,9 @@
 name: unit-testing
 description: >-
   Add or improve simtools unit tests by using the repo conventions
-  plus an annotated coverage workflow.
+  plus an annotated coverage workflow. Use for tests under tests/unit_tests,
+  fixture work in tests/unit_tests/conftest.py, and coverage-driven testing of
+  library code under src/simtools.
 ---
 
 # Unit Testing for simtools
@@ -10,7 +12,7 @@ description: >-
 Use this skill for unit tests in `tests/unit_tests/` and for coverage work
 on library code in `src/simtools/`.
 
-Follow `.github/copilot-instructions.md` for the repository rules. This file
+Follow `AGENTS.md` for the repository rules. This file
 adds the unit-test workflow, with coverage guidance first.
 
 ## Unit test quality
@@ -19,7 +21,9 @@ Each method or function should have a well-defined, focused, fast, and
 readable unit test.
 Keep tests short, avoid duplication, and stick to the patterns and fixtures
 already in place. If you need to add new helpers, add them to
-`tests/unit_tests/conftest.py` and reuse them across tests.
+the local test module first, or to `tests/unit_tests/conftest.py` when they are
+reused across unit-test modules. Generic repository fixtures live in
+`tests/conftest.py`.
 
 
 ## Coverage
@@ -50,7 +54,7 @@ covered and should drive the next tests you add.
 2. Reuse existing local patterns and fixtures before adding new helpers.
 3. Add small tests that cover the missing lines and the relevant success,
    error, and branch paths.
-4. Re-run the focused test, then run broader unit tests only if the change
+4. Re-run the focused test, then run broader unit tests when the change
    affects shared behavior.
 
 ## Test rules
@@ -59,7 +63,8 @@ covered and should drive the next tests you add.
 2. Use plain pytest test functions, not test classes.
 3. Cover every changed function or method, including success paths, error
    paths, and branches.
-4. Reuse fixtures from `tests/unit_tests/conftest.py` before adding new helpers.
+4. Reuse fixtures from the local test module, `tests/unit_tests/conftest.py`,
+   or `tests/conftest.py` before adding new helpers.
 5. Use `tmp_test_directory` for file I/O. Do not use `tmp_path`, `/tmp`, or
    hardcoded absolute temp paths.
 6. Mock external dependencies such as databases, network calls, file I/O,
@@ -72,6 +77,8 @@ covered and should drive the next tests you add.
 
 - Shared fixtures in `tests/unit_tests/conftest.py` already mock simulator
   paths for most unit tests.
+- Shared fixtures in `tests/conftest.py` provide `test_resources_path` and
+  `simtools_root_path`.
 - Relevant markers:
   - `uses_model_database`
   - `db_unit_test`
