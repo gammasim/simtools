@@ -81,7 +81,8 @@ simtools-generate-corsika-histograms <applications/simtools-generate-corsika-his
 simtools-generate-default-metadata <applications/simtools-generate-default-metadata>
 simtools-generate-regular-arrays <applications/simtools-generate-regular-arrays>
 simtools-generate-simtel-event-data <applications/simtools-generate-simtel-event-data>
-simtools-generate-test-resources <applications/simtools-generate-test-resources>
+simtools-resources-test-generate <applications/simtools-resources-test-generate>
+simtools-resources-test-sync <applications/simtools-resources-test-sync>
 simtools-inspect-file <applications/simtools-inspect-file>
 simtools-maintain-simulation-model-add-production <applications/simtools-maintain-simulation-model-add-production>
 simtools-maintain-simulation-model-compare-productions <applications/simtools-maintain-simulation-model-compare-productions>
