@@ -100,6 +100,21 @@ def test_inspect_ignore_patterns(mock_logger):
     result = log_inspector.inspect(log_text)
     assert result is True
 
+    log_text = (
+        "DEBUG: Setting environment variables for job execution: "
+        "{'GITHUB_HEAD_REF': 'corsika-limits-error'}"
+    )
+    result = log_inspector.inspect(log_text)
+    assert result is True
+
+    log_text = (
+        "DEBUG: Loading schema from "
+        "/workdir/external/simtools/src/simtools/schemas/model_parameters/"
+        "transit_time_error.schema.yml for schema version latest"
+    )
+    result = log_inspector.inspect(log_text)
+    assert result is True
+
 
 def test_check_plain_logs_skip_non_log_files(tmp_test_directory, safe_tar_open):
     tar_path = Path(str(tmp_test_directory)) / "test_logs.tar.gz"

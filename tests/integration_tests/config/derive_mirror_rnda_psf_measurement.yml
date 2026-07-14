@@ -6,11 +6,11 @@ applications:
     model_version: 7.0.0
     parameter_version: 1.0.0
     output_path: simtools-output
-    data: tests/resources/MLTdata-preproduction.ecsv
+    data: tests/resources/static/MLTdata-preproduction.ecsv
     site: North
     telescope: LSTN-01
     psf_hist: true
-    n_workers: 1
+    max_workers: 1
     number_of_mirrors_to_test: 1
     test: true
   integration_tests:

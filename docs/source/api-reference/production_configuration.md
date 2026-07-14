@@ -4,16 +4,7 @@
 
 Modules provide functionality to configure a simulation production.
 This includes the derivation of energy, viewcone radius, and core scatter ranges and
-the calculation of the number of events to be simulated given a pre-determined metric.
-
-(calculate-statistical-errors-grid-point)=
-
-## calculate_statistical_uncertainties_grid_point
-
-```{eval-rst}
-.. automodule:: production_configuration.calculate_statistical_uncertainties_grid_point
-   :members:
-```
+related production-configuration helpers used by the supported workflows.
 
 
 (derive-corsika-limits_grid)=
@@ -25,30 +16,48 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
-(derive-production-statistics)=
-
-## derive_production_statistics
-
-```{eval-rst}
-.. automodule:: production_configuration.derive_production_statistics
-   :members:
-```
-
-(derive-production-statistics-handler)=
-
-## derive_production_statistics_handler
-
-```{eval-rst}
-.. automodule:: production_configuration.derive_production_statistics_handler
-   :members:
-```
-
 (corsika-limits-lookup)=
 
 ## corsika_limits_lookup
 
 ```{eval-rst}
 .. automodule:: production_configuration.corsika_limits_lookup
+   :members:
+```
+
+(trigger-histograms)=
+
+## trigger_histograms
+
+```{eval-rst}
+.. automodule:: production_configuration.trigger_histograms
+   :members:
+```
+
+(monte-carlo-statistics-estimator)=
+
+## monte_carlo_statistics_estimator
+
+```{eval-rst}
+.. automodule:: production_configuration.monte_carlo_statistics_estimator
+   :members:
+```
+
+(histogram-output-metadata)=
+
+## histogram_output_metadata
+
+```{eval-rst}
+.. automodule:: production_configuration.histogram_output_metadata
+   :members:
+```
+
+(production-event-data-helpers)=
+
+## production_event_data_helpers
+
+```{eval-rst}
+.. automodule:: production_configuration.production_event_data_helpers
    :members:
 ```
 
@@ -62,15 +71,6 @@ the calculation of the number of events to be simulated given a pre-determined m
    :members:
 ```
 
-
-(interpolation-handler)=
-
-## interpolation_handler
-
-```{eval-rst}
-.. automodule:: production_configuration.interpolation_handler
-   :members:
-```
 
 (job-grid-io)=
 

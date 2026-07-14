@@ -55,7 +55,7 @@ Expected output is a ecsv file in the directory printed to the screen.
 """
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import build_application
+from simtools.application_control import add_input_meta_argument, build_application
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.layout import array_layout
 
@@ -67,12 +67,7 @@ def _add_arguments(parser):
         help="list of array element positions",
         required=True,
     )
-    parser.add_argument(
-        "--input_meta",
-        help="meta data file associated to input data",
-        type=str,
-        required=False,
-    )
+    add_input_meta_argument(parser)
     parser.add_argument(
         "--print",
         help="print list of positions in requested coordinate system",

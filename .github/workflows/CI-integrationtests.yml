@@ -60,7 +60,7 @@ jobs:
         shell: bash -leo pipefail {0}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Build package
         run: |
@@ -77,7 +77,7 @@ jobs:
     steps:
       - name: Restore cached CORSIKA interaction tables
         id: restore_interaction_tables
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: ${{ env.IT_NAME }}
           key: corsika-interaction-tables-${{ env.CORSIKA_TABLES }}
@@ -132,7 +132,7 @@ jobs:
 
       - name: Save cached CORSIKA interaction tables
         if: steps.restore_interaction_tables.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         with:
           path: ${{ env.IT_NAME }}
           key: corsika-interaction-tables-${{ env.CORSIKA_TABLES }}
@@ -156,7 +156,7 @@ jobs:
         shell: bash -leo pipefail {0}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Determine simulation model branch
         id: simulation_model_branch
@@ -188,7 +188,7 @@ jobs:
       - name: Restore cached simulation models repository
         # if: github.event_name != 'schedule'
         id: restore_simulation_models
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: simulation-models
           key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}
@@ -236,7 +236,7 @@ jobs:
 
       - name: Save cached simulation models repository
         if: steps.restore_simulation_models.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         with:
           path: simulation-models
           key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}
@@ -284,9 +284,10 @@ jobs:
         shell: bash -leo pipefail {0}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          lfs: true
 
       - name: Create runtime environment (.env)
         run: |

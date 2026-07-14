@@ -16,7 +16,7 @@ from simtools.reporting.docs_read_parameters import ReadParameters
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.initialize_application_arguments(["all_model_versions"])
+    parser.initialize_application_argument_group(["all_model_versions"])
     parser.add_argument(
         "--all_telescopes",
         action="store_true",

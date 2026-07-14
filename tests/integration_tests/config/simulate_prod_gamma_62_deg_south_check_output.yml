@@ -17,7 +17,7 @@ applications:
     model_version: 6.0.2
     showers_per_run: 5
     output_path: simtools-output
-    pack_for_grid_register: simtools-grid-output
+    grid_output_path: simtools-grid-output
     primary: gamma
     run_number: 20
     sim_telarray_seed: [1745, 290]
@@ -25,15 +25,17 @@ applications:
     site: South
     zenith_angle: 62.
     curved_atmosphere_min_zenith_angle: 60. deg
-    overwrite_model_parameters: tests/resources/info_test_model_parameter_changes.yml
+    overwrite_model_parameters: tests/resources/static/info_test_model_parameter_changes.yml
   integration_tests:
   - test_simtel_cfg_files:
-      "6.0.2": tests/resources/sim_telarray_configurations/6.0.2/CTA-South-MSTS-01_test.cfg
+      "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTAO-MSTS-01.cfg}
   - test_simtel_cfg_files:
-      "6.0.2": tests/resources/sim_telarray_configurations/6.0.2/CTA-beta-South_test.cfg
+      "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTAO-South-beta.cfg}
   - test_output_files:
-    - file: gamma_run000020_za62deg_azm180deg_South_beta_6.0.2_test.log_hist.tar.gz
-      path_descriptor: pack_for_grid_register
+    - file: gamma_run000020_za62deg_azm180deg_South_beta_6.0.2_test.simtel.log.gz
+      path_descriptor: grid_output_path
+    - file: gamma_run000020_za62deg_azm180deg_South_beta_6.0.2_test.hdata.zst
+      path_descriptor: grid_output_path
     - expected_sim_telarray_output:
         pe_sum:
         - 20
@@ -45,7 +47,7 @@ applications:
         - 0
         - 50
       file: gamma_run000020_za62deg_azm180deg_South_beta_6.0.2_test.simtel.zst
-      path_descriptor: pack_for_grid_register
+      path_descriptor: grid_output_path
     - expected_sim_telarray_metadata:
         site_config_name: South
         1:
@@ -60,7 +62,7 @@ applications:
         38:
           effective_focal_length: '215.191 0 0 0 0'
       file: gamma_run000020_za62deg_azm180deg_South_beta_6.0.2_test.simtel.zst
-      path_descriptor: pack_for_grid_register
+      path_descriptor: grid_output_path
   test_name: gamma_62_deg_south_check_output
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

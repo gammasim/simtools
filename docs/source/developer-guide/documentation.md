@@ -15,6 +15,11 @@ Each application requires a small RST file (e.g., [simtools-simulate-prod.rst](h
 to avoid Sphinx warnings regarding duplicated labels (sphinx generates those pages using the sphinx.autodoc extension)
 ```
 
+Application pages can render their CLI reference directly from the parser using the
+`simtools-cli-help` directive. By default it hides the repetitive common argparse groups
+(`configuration`, `paths`, `execution`, `run time`, `user`) while keeping application-specific
+groups visible. Use `:hide-groups:` or `:show-groups:` on the directive to adjust this per page.
+
 ## Building
 
 For writing and testing documentation locally:

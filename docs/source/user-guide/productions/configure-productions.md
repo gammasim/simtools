@@ -21,7 +21,7 @@ The production context includes:
 - the site, model version, and array layout;
 - the primary particles and CORSIKA interaction models;
 - the simulation energy range, core scatter, and view cone;
-- whether the pointing grid is horizontal (`azimuth`/`zenith`) or equatorial (`ra`/`dec`);
+- whether the pointing grid is horizontal (`azimuth`/`zenith`) or hour-angle (`ha`/`dec`);
 - the source-offset grid points;
 - the model version, which determines the NSB rate used by the production grid;
 - whether the number of runs is fixed or derived from a total shower target;
@@ -63,16 +63,15 @@ maximum azimuth and zenith values, plus a single offset point.
 Directed azimuth ranges may cross the 0 deg boundary. For example, `310 deg` to `20 deg` covers
 the interval through North.
 
-An equatorial grid is used when the production is defined in sky coordinates. simtools converts
-each RA/Dec point to local azimuth and zenith using the site and `time_of_observation`, because
+An hour-angle grid is used when the production is defined by local hour angle and declination.
+simtools converts each HA/Dec point to local azimuth and zenith using the site latitude, because
 CORSIKA and sim_telarray still need local horizontal coordinates:
 
 ```yaml
 axis:
-- ra 0 deg 360 deg 36 linear
+- ha 0 deg 360 deg 36 linear
 - dec -90 deg 90 deg 18 linear
 - offset 0 deg 10 deg 2 linear
-time_of_observation: '2017-09-16 00:00:00'
 ```
 
 For either coordinate system, `direction_grid_density` can be used instead of an explicit number
@@ -88,18 +87,17 @@ axis:
 direction_grid_density: 0.25 1/deg^2
 ```
 
-For density-based RA/Dec grids, local-sky filters restrict the generated points to the observable
+For density-based HA/Dec grids, local-sky filters restrict the generated points to the observable
 region needed for the production:
 
 ```yaml
 axis:
-- ra 0 deg 360 deg 1 linear
+- ha 0 deg 360 deg 1 linear
 - dec -40 deg 80 deg 1 linear
 - offset 0 deg 10 deg 2 linear
 direction_grid_density: 0.25 1/deg^2
 local_zenith_range: 0 deg 70 deg
 local_azimuth_range: 300 deg 60 deg
-time_of_observation: '2017-09-16 00:00:00'
 ```
 
 ## Energy and CORSIKA Limits
@@ -173,47 +171,7 @@ simtools-production-generate-grid --config path/to/production_generate_grid.yml
 Several integration-test configurations are useful starting points:
 
 - `tests/integration_tests/config/production_generate_grid_horizontal.yml`
-- `tests/integration_tests/config/production_generate_grid_ra_dec.yml`
-- `tests/integration_tests/config/production_derive_statistics.yml`
-
-## Derive Required Event Statistics
-
-The number of required events can be derived before finalizing the production grid when suitable
-DL2 event files and a metrics definition are available.
-[simtools-production-derive-statistics](../applications/simtools-production-derive-statistics)
-interpolates statistical requirements from existing event files onto requested production grid
-points.
-
-```{warning}
-The required-statistics workflow is production-policy dependent. Fixed `number_of_runs` or
-`total_showers` values are appropriate when no approved metrics file and input event sample are
-available.
-```
-
-Example configuration from `tests/integration_tests/config/production_derive_statistics.yml`:
-
-The `nsb` values in this statistics example describe the coordinates of the input event samples
-used for interpolation. They do not configure an NSB axis in
-`simtools-production-generate-grid`; production-grid rows use the model-version-dependent
-`nsb_rate` described above.
-
-```yaml
-grid_points_production_file: tests/resources/production_grid_points_horizontal.ecsv
-metrics_file: tests/resources/production_simulation_config_metrics.yml
-base_path: tests/resources/production_dl2_fits/
-file_name_template: prod6_LaPalma-{zenith}deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits
-zeniths:
-- 20
-- 40
-- 52
-- 60
-azimuths:
-- 180
-nsb:
-- 1
-off_axis_angles:
-- 0
-```
+- `tests/integration_tests/config/production_generate_grid_ha_dec.yml`
 
 ## Production Grid Plotting
 
@@ -235,14 +193,5 @@ coverage:
 ```bash
 simtools-plot-production-grid \
     --grid_points_file tests/resources/production_job_grid_horizontal.ecsv \
-    --output_path simtools-output
-```
-
-For RA/Dec grids, guide tracks can be included:
-
-```bash
-simtools-plot-production-grid \
-    --grid_points_file path/to/job_grid_ra_dec.ecsv \
-    --plot_ra_dec_tracks \
     --output_path simtools-output
 ```

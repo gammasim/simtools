@@ -65,7 +65,7 @@ podman run --rm -it \
 
   ```bash
   apptainer pull simtools-prod.sif \
-    oras://ghcr.io/gammasim/simtools-prod:v0.27.0-v78010-v2025-11-30-rc-generic-amd64
+    oras://ghcr.io/gammasim/simtools-prod:v0.27.0-v78010-v2025-11-30-rc-generic-amd64-apptainer
 
   apptainer shell \
     --env-file .env \
@@ -86,7 +86,7 @@ podman run --rm -it \
     --output_path /workdir/external/
   ```
 
-  Use the `generic-amd64` Apptainer image on x86_64 systems, or replace the tag with `avx2`, `avx512f`, or `sse4` to match the corresponding optimized x86_64 image.
+  Use the `generic-amd64-apptainer` image on x86_64 systems, or replace the tag with `avx2-apptainer`, `avx512f-apptainer`, or `sse4-apptainer` to match the corresponding optimized x86_64 image.
 
 ### Pip Installation
 

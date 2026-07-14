@@ -15,7 +15,7 @@ with ``--htcondor_log_path``. The generator creates the ``log``, ``error``, and 
 subdirectories there and points the submit file at those locations.
 
 The ``--simulation_output`` option controls the base directory that is passed to the simulation
-production as ``pack_for_grid_register``. Each image label gets its own subdirectory under that
+production as ``grid_output_path``. Each image label gets its own subdirectory under that
 base path, allowing different grids or images to keep their output packages separate.
 
 Requirements for the 'simtools-simulate-prod-htcondor-generator' application:
@@ -50,9 +50,17 @@ apptainer_image (str or dict, required)
 htcondor_log_path (str, optional)
     Directory for HTCondor log files. Defaults to ``output_path/htcondor_logs``.
 simulation_output (str, optional)
-    Base directory for simulation output packages passed through as ``pack_for_grid_register``.
+    Base directory for simulation output files passed through as ``grid_output_path``.
 job_grid_file (str, required)
     Path to the pre-generated executable job grid file.
+    Quantity values are normalized to the canonical grid units before being
+    written to the HTCondor parameter file; the generated shell script appends
+    the units required by ``simtools-simulate-prod``.
+run_number_offset (int, optional)
+    Offset passed to ``simtools-simulate-prod`` and added to each grid
+    ``run_number`` at execution time. Keep this at ``0`` for grids generated
+    with ``simtools-production-generate-grid --run_number_offset``, because
+    those grids already contain absolute run numbers.
 priority (int, optional)
     Job priority (default: 1).
 

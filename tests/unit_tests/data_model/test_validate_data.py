@@ -2,6 +2,7 @@
 
 import logging
 import sys
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -10,15 +11,16 @@ from astropy import units as u
 from astropy.table import Column, Table
 from astropy.utils.diff import report_diff_values
 
-from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH, TEST_RESOURCES_STATIC
 from simtools.data_model import schema, validate_data
 from simtools.io import ascii_handler
 
 logger = logging.getLogger()
 
 
-mirror_file = "tests/resources/MLTdata-preproduction.ecsv"
+mirror_file = f"{TEST_RESOURCES_STATIC}/MLTdata-preproduction.ecsv"
 mirror_2f_schema_file = SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
+num_gains_test_file = f"{TEST_RESOURCES_STATIC}/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
 
 
 @pytest.fixture
@@ -108,9 +110,7 @@ def test_validate_and_transform(caplog, mocker):
         assert isinstance(_table, Table)
     assert "Validating tabled data from:" in caplog.text
 
-    data_validator.data_file_name = (
-        "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
-    )
+    data_validator.data_file_name = num_gains_test_file
     data_validator.schema_file_name = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
     mock_prepare_model_parameter = mocker.patch(
         "simtools.data_model.validate_data.DataValidator._prepare_model_parameter"
@@ -122,7 +122,7 @@ def test_validate_and_transform(caplog, mocker):
     mock_prepare_model_parameter.assert_called_once()
 
 
-def test_validate_data_file(caplog):
+def test_validate_data_file(caplog, model_parameter_json):
     data_validator = validate_data.DataValidator()
     # no input file defined, should pass
     data_validator.validate_data_file()
@@ -132,14 +132,14 @@ def test_validate_data_file(caplog):
         data_validator.validate_data_file()
     assert "Validating tabled data from:" in caplog.text
 
-    data_validator.data_file_name = "tests/resources/reference_point_altitude.json"
+    data_validator.data_file_name = model_parameter_json
     with caplog.at_level(logging.INFO):
         data_validator.validate_data_file()
     assert "Validating data from:" in caplog.text
 
 
 def test_validate_parameter_and_file_name(caplog):
-    num_gain_file = "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
+    num_gain_file = num_gains_test_file
     parameter = "num_gains"
     parameter_version = "1.0.0"
 
@@ -1166,7 +1166,7 @@ def test_validate_data_files_directory(tmp_test_directory, caplog):
 
 def test_validate_data_files_single_file(caplog):
     """Test validate_data_files with a single file."""
-    test_file = "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
+    test_file = num_gains_test_file
 
     with caplog.at_level(logging.INFO):
         validate_data.DataValidator.validate_data_files(file_name=test_file)
@@ -1177,7 +1177,7 @@ def test_validate_data_files_single_file(caplog):
 
 def test_validate_data_files_with_schema_file(caplog):
     """Test validate_data_files with explicit schema file."""
-    test_file = "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
+    test_file = num_gains_test_file
     schema_file = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
 
     with caplog.at_level(logging.INFO):
@@ -1188,6 +1188,54 @@ def test_validate_data_files_with_schema_file(caplog):
     assert "Validated data file" in caplog.text
 
 
+def test_validate_data_files_reads_schema_from_ecsv_metadata(tmp_test_directory, monkeypatch):
+    """Test validate_data_files resolves schema from ECSV metadata for data files."""
+    test_file = tmp_test_directory / "job_grid.ecsv"
+    Table(
+        rows=[[1]],
+        names=["run_number"],
+        meta={"cta": {"product": {"data": {"model": {"url": "schema-from-ecsv"}}}}},
+    ).write(test_file, format="ascii.ecsv")
+
+    captured = {}
+
+    def _validate_and_transform(self, is_model_parameter=False, lists_as_strings=False):
+        captured["schema_file"] = self.schema_file_name
+        captured["data_file"] = self.data_file_name
+
+    monkeypatch.setattr(
+        validate_data.DataValidator, "validate_and_transform", _validate_and_transform
+    )
+
+    validate_data.DataValidator.validate_data_files(file_name=test_file, is_model_parameter=False)
+
+    assert captured["schema_file"] == "schema-from-ecsv"
+    assert captured["data_file"] == test_file
+
+
+def test_validate_data_files_falls_back_to_model_parameter_schema_when_metadata_missing(
+    monkeypatch,
+):
+    """Test validate_data_files falls back to model-parameter schema for JSON data files."""
+    captured = {}
+
+    def _validate_and_transform(self, is_model_parameter=False, lists_as_strings=False):
+        captured["schema_file"] = self.schema_file_name
+        captured["data_file"] = self.data_file_name
+
+    monkeypatch.setattr(
+        validate_data.DataValidator, "validate_and_transform", _validate_and_transform
+    )
+
+    validate_data.DataValidator.validate_data_files(
+        file_name=num_gains_test_file,
+        is_model_parameter=False,
+    )
+
+    assert captured["schema_file"] == MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
+    assert captured["data_file"] == Path(num_gains_test_file)
+
+
 def test_validate_data_files_no_input():
     """Test validate_data_files with no input."""
     result = validate_data.DataValidator.validate_data_files()
@@ -1196,7 +1244,7 @@ def test_validate_data_files_no_input():
 
 def test_validate_data_files_check_exact_data_type(caplog):
     """Test validate_data_files with check_exact_data_type flag."""
-    test_file = "tests/resources/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
+    test_file = num_gains_test_file
 
     with caplog.at_level(logging.INFO):
         validate_data.DataValidator.validate_data_files(

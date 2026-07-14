@@ -16,7 +16,12 @@ from simtools.visualization.plot_simtel_event_histograms import (
     _extract_file_info_from_limits,
     _format_file_info_suffix,
     _get_limits,
+    _plot_monte_carlo_statistics_matrix,
+    _plottable_histograms,
+    _selected_array_names,
     plot,
+    plot_monte_carlo_statistics_diagnostics,
+    plot_trigger_histogram_file,
 )
 
 # Suppress tight layout warnings for all tests in this file
@@ -60,7 +65,131 @@ def test_create_2d_histogram_plot_linear(sample_data):
 
     assert pcm is not None
     assert pcm.get_cmap().name == "viridis"
+    assert pcm.get_clim() == pytest.approx((1.0, 9.0))
     plt.close(fig)
+
+
+def test_plot_monte_carlo_statistics_diagnostics_writes_expected_plots(tmp_test_directory, mocker):
+    mock_plot = mocker.patch(f"{MOD}._plot_monte_carlo_statistics_matrix")
+
+    plot_monte_carlo_statistics_diagnostics(
+        tmp_test_directory,
+        "MSTS-01",
+        {"zenith": 20.0 * u.deg, "azimuth": 180.0 * u.deg, "nsb_level": 1.0},
+        np.array([0.1, 1.0, 10.0]),
+        np.array([0.0, 0.5]),
+        np.array([[10.0, 20.0]]),
+        np.array([[0.3, 0.2]]),
+    )
+
+    assert mock_plot.call_count == 2
+    output_files = [call.args[3] for call in mock_plot.call_args_list]
+    assert tmp_test_directory / "MSTS-01_z20_az180_nsb1_expected_events.png" in output_files
+    assert tmp_test_directory / "MSTS-01_z20_az180_nsb1_relative_uncertainty.png" in output_files
+
+
+def test_plot_monte_carlo_statistics_matrix_can_mask_zero_bins(tmp_test_directory, mocker):
+    mock_mesh = mocker.MagicMock()
+    fig, ax = plt.subplots()
+    ax.pcolormesh = mocker.MagicMock(return_value=mock_mesh)
+    mocker.patch(f"{MOD}.plt.subplots", return_value=(fig, ax))
+
+    _plot_monte_carlo_statistics_matrix(
+        np.array([[0.0, 2.0]]),
+        np.array([0.1, 1.0, 10.0]),
+        np.array([0.0, 0.5]),
+        tmp_test_directory / "matrix.png",
+        "title",
+        "label",
+        mask_zero=True,
+    )
+
+    plotted_array = ax.pcolormesh.call_args.args[2]
+    cmap = ax.pcolormesh.call_args.kwargs["cmap"]
+    assert np.ma.isMaskedArray(plotted_array)
+    assert np.any(np.ma.getmaskarray(plotted_array))
+    assert cmap.get_bad()[:3] == pytest.approx((1.0, 1.0, 1.0))
+    assert (tmp_test_directory / "matrix.png").exists()
+
+
+def test_selected_array_names_normalizes_string_input():
+    assert _selected_array_names(None) is None
+    assert _selected_array_names("alpha") == ["alpha"]
+    assert _selected_array_names(["alpha", "beta"]) == ["alpha", "beta"]
+
+
+def test_plottable_histograms_filters_non_plotable_entries():
+    histograms = {
+        "energy": {"histogram": MagicMock(ndim=1)},
+        "energy_vs_core": {"histogram": MagicMock(ndim=2)},
+        "cube": {"histogram": MagicMock(ndim=3)},
+        "missing": {"histogram": None},
+        "raw_edges": MagicMock(),
+    }
+
+    assert _plottable_histograms(histograms) == {
+        "energy": histograms["energy"],
+        "energy_vs_core": histograms["energy_vs_core"],
+    }
+
+
+def test_plot_trigger_histogram_file_loads_selected_array_and_plots(tmp_test_directory, mocker):
+    histogram_instance = MagicMock()
+    histogram_instance.histograms = {
+        "energy": {"histogram": MagicMock(ndim=1)},
+        "energy_vs_core": {"histogram": MagicMock(ndim=2)},
+        "cube": {"histogram": MagicMock(ndim=3)},
+    }
+    mock_load = mocker.patch(
+        f"{MOD}.load_event_data_histograms",
+        return_value=[(MagicMock(), histogram_instance)],
+    )
+    mock_plot = mocker.patch(f"{MOD}.plot")
+
+    plot_trigger_histogram_file("trigger_histograms.hdf5", tmp_test_directory, "alpha")
+
+    mock_load.assert_called_once_with("trigger_histograms.hdf5", array_names=["alpha"])
+    mock_plot.assert_called_once_with(
+        {
+            "energy": histogram_instance.histograms["energy"],
+            "energy_vs_core": histogram_instance.histograms["energy_vs_core"],
+        },
+        output_path=tmp_test_directory,
+    )
+
+
+def test_plot_trigger_histogram_file_raises_for_missing_array_layout(tmp_test_directory, mocker):
+    mocker.patch(f"{MOD}.load_event_data_histograms", return_value=[])
+
+    with pytest.raises(
+        ValueError,
+        match=r"Array layout 'missing_layout' not found in histogram file 'trigger_histograms\.hdf5'",
+    ):
+        plot_trigger_histogram_file("trigger_histograms.hdf5", tmp_test_directory, "missing_layout")
+
+
+def test_plot_trigger_histogram_file_splits_outputs_by_array_name(tmp_test_directory, mocker):
+    first = MagicMock()
+    first.array_name = "alpha"
+    first.histograms = {"energy": {"histogram": MagicMock(ndim=1)}}
+    second = MagicMock()
+    second.array_name = "beta"
+    second.histograms = {"energy": {"histogram": MagicMock(ndim=1)}}
+    mocker.patch(
+        f"{MOD}.load_event_data_histograms",
+        return_value=[(MagicMock(), first), (MagicMock(), second)],
+    )
+    mock_plot = mocker.patch(f"{MOD}.plot")
+
+    plot_trigger_histogram_file("trigger_histograms.hdf5", tmp_test_directory)
+
+    assert mock_plot.call_count == 2
+    first_call = mock_plot.call_args_list[0]
+    second_call = mock_plot.call_args_list[1]
+    assert first_call.kwargs["output_path"] == tmp_test_directory / "alpha"
+    assert second_call.kwargs["output_path"] == tmp_test_directory / "beta"
+    assert (tmp_test_directory / "alpha").isdir()
+    assert (tmp_test_directory / "beta").isdir()
 
 
 def test_create_2d_histogram_plot_log(sample_data):
@@ -75,7 +204,7 @@ def test_create_2d_histogram_plot_log(sample_data):
     plt.close(fig)
 
 
-def test_create_2d_histogram_plot_masks_zero_bins():
+def test_create_2d_histogram_plot_keeps_zero_bins_visible():
     data = np.array([[0, 2], [3, 0]])
     bins = (np.array([0, 1, 2]), np.array([0, 1, 2]))
     plot_params = {"norm": "linear", "cmap": "viridis", "show_contour": False}
@@ -85,8 +214,25 @@ def test_create_2d_histogram_plot_masks_zero_bins():
 
     plotted_array = pcm.get_array()
     assert np.ma.isMaskedArray(plotted_array)
-    assert np.any(np.ma.getmaskarray(plotted_array))
+    assert not np.any(np.ma.getmaskarray(plotted_array))
     assert pcm.cmap.get_bad()[-1] == pytest.approx(0.0)
+    assert pcm.get_clim() == pytest.approx((0.0, 3.0))
+    plt.close(fig)
+
+
+def test_create_2d_histogram_plot_masks_nan_bins_but_keeps_zero_values():
+    data = np.array([[0.0, np.nan], [3.0, 1.0]])
+    bins = (np.array([0, 1, 2]), np.array([0, 1, 2]))
+    plot_params = {"norm": "linear", "cmap": "viridis"}
+
+    fig, _ = plt.subplots()
+    pcm = _create_2d_histogram_plot(data, bins, plot_params)
+
+    plotted_array = pcm.get_array()
+    assert np.ma.isMaskedArray(plotted_array)
+    mask = np.ma.getmaskarray(plotted_array)
+    assert np.count_nonzero(mask) == 1
+    assert pcm.get_clim() == pytest.approx((0.0, 3.0))
     plt.close(fig)
 
 
@@ -122,6 +268,8 @@ def test_add_lines(lines, expect_lines, expect_circles):
             plotted = ax.get_lines()[-1]
             np.testing.assert_array_equal(plotted.get_xdata(), np.array([1, 2]))
             np.testing.assert_array_equal(plotted.get_ydata(), np.array([3, 4]))
+            assert plotted.get_color() == "r"
+            assert plotted.get_linestyle() == "--"
     else:
         if not lines or ("x" not in lines and "y" not in lines):
             remaining = [ln for ln in ax.get_lines() if ln.get_label() == "_nolegend_"]
@@ -280,13 +428,13 @@ def test_create_plot():
         mock_show.assert_called_once()
 
 
-def test_create_plot_with_output_file(tmp_path):
+def test_create_plot_with_output_file(tmp_test_directory):
     data = np.array([1, 2, 3])
     bins = np.array([0, 1, 2, 3])
     plot_params = {"color": "blue"}
     labels = {"x": "X-axis", "y": "Y-axis", "title": "Save Plot"}
     scales = {"x": "linear", "y": "linear"}
-    output_file = tmp_path / "saved_plot.png"
+    output_file = tmp_test_directory / "saved_plot.png"
 
     with (
         patch(PATCH_SUBPLOTS) as mock_subplots,
@@ -465,7 +613,7 @@ def test_execute_plotting_loop():
     np.testing.assert_array_equal(call_kwargs["bins"], np.array([0, 1, 2, 3]))
     assert call_kwargs["plot_type"] == "histogram"
     assert call_kwargs["plot_params"] == {"color": "blue"}
-    assert call_kwargs["labels"]["title"] == "Test Plot (test_array array)"
+    assert call_kwargs["labels"]["title"] == "Test Plot (test_array)"
     assert call_kwargs["scales"] == {"x": "linear", "y": "log"}
     # Optional parameters not provided should not appear explicitly
     assert "colorbar_label" not in call_kwargs
@@ -715,7 +863,12 @@ def test_plot_with_output_path(mock_histograms):
             array_name=array_name,
         )
 
-        mock_generate_configs.assert_called_once_with(mock_histograms, limits)
+        mock_generate_configs.assert_called_once_with(
+            mock_histograms,
+            limits,
+            add_distance_projections=False,
+            use_broad_range_limits=False,
+        )
         mock_execute_loop.assert_called_once_with(
             {"mock_plot": "mock_config"}, output_path, array_name, {}
         )
@@ -738,7 +891,12 @@ def test_plot_without_output_path(mock_histograms):
             array_name=array_name,
         )
 
-        mock_generate_configs.assert_called_once_with(mock_histograms, limits)
+        mock_generate_configs.assert_called_once_with(
+            mock_histograms,
+            limits,
+            add_distance_projections=False,
+            use_broad_range_limits=False,
+        )
         mock_execute_loop.assert_called_once_with(
             {"mock_plot": "mock_config"}, None, array_name, {}
         )
@@ -791,3 +949,144 @@ def test_generate_plot_configurations():
         _, kwargs = mock_create_2d.call_args
         assert "plot_params" in kwargs
         assert kwargs["plot_params"]["norm"] == "linear"
+
+    histos = {"reuse_mean_vs_core_distance_vs_energy": {"histogram": "abc", "1d": False}}
+    with patch(f"{MOD}._create_2d_plot_config") as mock_create_2d:
+        plot_simtel_event_histograms._generate_plot_configurations(histos, None)
+        _, kwargs = mock_create_2d.call_args
+        assert kwargs["plot_params"]["norm"] == "linear"
+
+    histos = {
+        "reuse_mean_vs_energy": {
+            "histogram": "abc",
+            "1d": True,
+            "axis_titles": ["Energy [TeV]", "Mean Reuse"],
+            "title": "Triggered reuse mean",
+            "bin_edges": np.array([0.1, 1.0, 10.0]),
+            "plot_scales": {"x": "log", "y": "linear"},
+        }
+    }
+    result = plot_simtel_event_histograms._generate_plot_configurations(histos, None)
+    assert result["reuse_mean_vs_energy"]["scales"]["y"] == "linear"
+
+
+def test_broad_range_axis_limits_are_used_for_distance_histograms():
+    """Plot ranges come from broad-range metadata rather than derived limits."""
+    limits = {
+        "br_energy_min": 0.02 * u.TeV,
+        "br_energy_max": 200.0 * u.TeV,
+        "br_core_scatter_max": 1800.0 * u.m,
+        "br_viewcone_max": 4.0 * u.deg,
+    }
+
+    core_limits = plot_simtel_event_histograms._get_broad_range_axis_limits(
+        "core_distance_vs_energy", limits
+    )
+    angular_limits = plot_simtel_event_histograms._get_broad_range_axis_limits(
+        "angular_distance_vs_energy_mc", limits
+    )
+
+    assert core_limits == {"x": (0.0, 1800.0), "y": (0.02, 200.0)}
+    assert angular_limits == {"x": (0.0, 4.0), "y": (0.02, 200.0)}
+
+
+def test_broad_range_axis_limits_do_not_replace_derived_limits():
+    """Broad-range view limits keep the derived limit overlays intact."""
+    limits = {
+        "lower_energy_limit": 0.1 * u.TeV,
+        "upper_radius_limit": 1200.0 * u.m,
+        "viewcone_radius": 2.5 * u.deg,
+        "br_energy_min": 0.02 * u.TeV,
+        "br_energy_max": 200.0 * u.TeV,
+        "br_core_scatter_max": 1800.0 * u.m,
+        "br_viewcone_max": 4.0 * u.deg,
+    }
+
+    plot_config = {"lines": _get_limits("core_distance_vs_energy", limits)}
+    plot_simtel_event_histograms._add_plot_overrides(
+        plot_config,
+        "core_distance_vs_energy",
+        limits,
+        use_broad_range_limits=True,
+    )
+
+    assert plot_config["axis_limits"] == {"x": (0.0, 1800.0), "y": (0.02, 200.0)}
+    assert plot_config["lines"] == {
+        "x": 1200.0,
+        "y": 0.1,
+        "curve": None,
+    }
+
+
+def test_projection_slice_coordinates():
+    """Generate the requested fixed energy and distance slice sequences."""
+    energy_slices = plot_simtel_event_histograms._energy_slice_values(
+        np.logspace(-2, 3, 6), (0.02, 200.0)
+    )
+    core_slices = plot_simtel_event_histograms._distance_slice_values(
+        np.linspace(0.0, 2000.0, 5), (0.0, 1800.0), "core_distance"
+    )
+    angular_slices = plot_simtel_event_histograms._distance_slice_values(
+        np.linspace(0.0, 5.0, 6), (0.0, 4.0), "angular_distance"
+    )
+
+    assert [np.log10(value) for value, _ in energy_slices] == pytest.approx([-1.5, -0.5, 0.5, 1.5])
+    assert [value for value, _ in core_slices] == [0.0, 500.0, 1000.0, 1500.0]
+    assert [value for value, _ in angular_slices] == [0.0, 1.0, 2.0, 3.0, 4.0]
+
+
+def test_create_2d_plot_with_distance_projections(tmp_test_directory):
+    """Render overall and sliced projections in two right-hand panels."""
+    output_file = tmp_test_directory / "projected.png"
+    data = np.arange(1.0, 21.0).reshape(4, 5)
+    bins = [np.linspace(0.0, 2000.0, 5), np.logspace(-2, 3, 6)]
+
+    fig = _create_plot(
+        data=data,
+        bins=bins,
+        plot_type="histogram2d",
+        plot_params={"norm": "log", "cmap": "viridis"},
+        labels={"x": "Core distance (m)", "y": "Energy (TeV)", "title": "Triggered"},
+        scales={"y": "log"},
+        colorbar_label="Event count",
+        output_file=output_file,
+        lines={},
+        axis_limits={"x": (0.0, 1800.0), "y": (0.02, 200.0)},
+        projection_kind="core_distance",
+    )
+
+    assert output_file.exists()
+    assert len(fig.axes) >= 3
+    assert fig.axes[0].get_xlim() == pytest.approx((0.0, 1800.0))
+    assert fig.axes[0].get_ylim() == pytest.approx((0.02, 200.0))
+    assert [line.get_label() for line in fig.axes[1].lines] == [
+        "overall",
+        "log10(E/TeV)=-1.5",
+        "log10(E/TeV)=-0.5",
+        "log10(E/TeV)=0.5",
+        "log10(E/TeV)=1.5",
+    ]
+    assert [line.get_label() for line in fig.axes[2].lines] == [
+        "overall",
+        "0 m",
+        "500 m",
+        "1000 m",
+        "1500 m",
+    ]
+    assert fig.axes[1].get_legend()._loc == 1
+    assert fig.axes[2].get_legend()._loc == 1
+
+
+def test_execute_plotting_loop_removes_array_suffix_word():
+    plots = {
+        "plot": {
+            "data": np.array([1.0]),
+            "labels": {"title": "Triggered"},
+            "filename": "test",
+        }
+    }
+
+    with patch(f"{MOD}._create_plot") as mock_create_plot:
+        _execute_plotting_loop(plots, None, "CTAO-Test")
+
+    assert mock_create_plot.call_args.kwargs["labels"]["title"] == "Triggered (CTAO-Test)"

@@ -21,7 +21,9 @@ Production verification should include:
 
 Use [simtools-compare-productions](../applications/simtools-compare-productions) to compare a
 production with a baseline production. This is the main simtools application for production
-comparison until a more complete production verification workflow is documented.
+comparison until a more complete production verification workflow is documented. Event-level
+comparison uses trigger histogram HDF5 files produced with
+[simtools-write-trigger-histograms](../applications/simtools-write-trigger-histograms).
 
 Example:
 

@@ -648,7 +648,6 @@ class SimulatorLightEmission(SimtelRunner):
         parts = [
             simtel_bin,
             f"-I{self.telescope_model.config_file_directory}",
-            f"-I{simtel_bin}",
             f"-c {self.telescope_model.config_file_path}",
             "-DNUM_TELESCOPES=1",
         ]

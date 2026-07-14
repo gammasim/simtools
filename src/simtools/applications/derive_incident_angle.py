@@ -80,8 +80,8 @@ from simtools.visualization.plot_incident_angles import plot_incident_angles
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
-    parser.initialize_application_arguments(
-        ["off_axis_angles", "source_distance", "number_of_photons"]
+    parser.initialize_argument_group(
+        "application", ["off_axis_angles", "source_distance", "number_of_photons"]
     )
     parser.add_argument(
         "--perfect_mirror",

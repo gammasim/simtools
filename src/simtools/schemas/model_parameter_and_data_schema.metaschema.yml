@@ -294,9 +294,49 @@ definitions:
         type: boolean
         description: |-
           "Add this parameter as sim_telarray meta parameter using option 'set'"
+      output_value_schema:
+        $ref: '#/definitions/SimulationSoftwareOutputValueSchema'
+        description: |-
+          "Optional emitted-value schema for software-specific serialized output"
     required:
       - name
     title: SimulationSoftware
+  SimulationSoftwareOutputValueSchema:
+    type: object
+    additionalProperties: false
+    properties:
+      kind:
+        type: string
+        enum:
+          - scalar
+          - file_name
+          - fixed_numeric_tuple
+          - sim_telarray_key_value_string
+      data_type:
+        type: string
+        enum:
+          - string
+          - number
+          - integer
+          - boolean
+      item_type:
+        type: string
+        enum:
+          - string
+          - number
+          - integer
+      length:
+        type: integer
+        minimum: 1
+      regex:
+        type: string
+      allow_empty:
+        type: boolean
+      allow_none_literal:
+        type: boolean
+    required:
+      - kind
+    title: SimulationSoftwareOutputValueSchema
   DataUnion:
     anyOf:
       - type: array

@@ -230,6 +230,27 @@ def ensure_list(value):
     return [value]
 
 
+def ensure_string_lists(value):
+    """
+    Ensure the input value is returned as a list of strings.
+
+    Parameters
+    ----------
+    value : any
+        Input value to convert to a list of strings.
+
+    Returns
+    -------
+    list or None
+        List of strings or None if the input is None.
+    """
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return [value]
+    return list(value)
+
+
 def parse_typed_sequence(value, cast=float):
     """Parse scalar or sequence input into a list of typed values.
 
@@ -409,7 +430,7 @@ def is_safe_tar_member(member_name):
         return False
 
     # Verify the normalized path is still relative
-    normalized = PurePosixPath(*parts) if parts else PurePosixPath(".")
+    normalized = PurePosixPath(*parts) if parts else PurePosixPath()
     if normalized.is_absolute():
         return False
 

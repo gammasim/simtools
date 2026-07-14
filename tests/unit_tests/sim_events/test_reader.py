@@ -256,6 +256,30 @@ def test_get_triggered_shower_data_no_matches(mock_hdf5_file, caplog):
         assert "Found 0 matches" in caplog.text
 
 
+def test_get_triggered_shower_data_numpy_matching_preserves_order_and_duplicates(
+    mock_hdf5_file, caplog
+):
+    """NumPy matching keeps trigger order and rejects ambiguous shower keys."""
+    reader = EventDataReader(mock_hdf5_file)
+    _, shower_data, _, _ = reader.read_event_data(mock_hdf5_file)
+
+    for attribute, values in vars(shower_data).items():
+        if not attribute.endswith("_unit") and isinstance(values, np.ndarray):
+            setattr(shower_data, attribute, np.concatenate([values, values[:1]]))
+
+    with caplog.at_level(logging.WARNING):
+        triggered_shower = reader._get_triggered_shower_data(
+            shower_data,
+            [0, 0, 999],
+            [2, 1, 999],
+            [2, 1, 999],
+        )
+
+    np.testing.assert_array_equal(triggered_shower.shower_id, np.array([2]))
+    assert "Found multiple matches for shower 1 event 1 file 0" in caplog.text
+    assert "Found 0 matches for shower 999 event 999 file 999" in caplog.text
+
+
 def test_read_event_data_returns_expected_types_and_values(mock_hdf5_file):
     """Test that read_event_data returns expected types and values."""
     reader = EventDataReader(mock_hdf5_file)
@@ -272,6 +296,35 @@ def test_read_event_data_returns_expected_types_and_values(mock_hdf5_file):
     assert len(triggered_data.shower_id) > 0
 
 
+def test_read_event_data_rejects_string_encoded_shower_numeric_columns(
+    tmp_test_directory, mock_tables
+):
+    """Test rejection of numeric SHOWERS columns stored as strings."""
+    test_file = tmp_test_directory / "test_string_encoded_showers.hdf5"
+    shower_table, trigger_table, file_info_table = mock_tables
+    shower_table["event_id"] = ["100", "101"]
+    shower_table["x_core"] = ["100.0", "200.0"]
+    shower_table["y_core"] = ["150.0", "250.0"]
+    shower_table["area_weight"] = ["1.0", "1.0"]
+
+    write_tables(
+        [shower_table, trigger_table, file_info_table],
+        test_file,
+        file_type="HDF5",
+    )
+
+    reader = EventDataReader(str(test_file))
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "table 'SHOWERS' has non-numeric dtype for required numeric column\\(s\\): "
+            "event_id, x_core, y_core, area_weight"
+        ),
+    ):
+        reader.read_event_data(str(test_file))
+
+
 def test_read_event_data_with_missing_triggers(tmp_test_directory, mock_tables):
     """Test read_event_data when TRIGGERS table is missing."""
 
@@ -281,6 +334,10 @@ def test_read_event_data_with_missing_triggers(tmp_test_directory, mock_tables):
     write_tables([shower_table, file_info_table], test_file, file_type="HDF5")
 
     reader = EventDataReader(str(test_file))
+
+    with pytest.raises(ValueError, match="missing a required table or column"):
+        reader.read_event_data(str(test_file))
+
     file_info, shower_data, triggered_shower, triggered_data = reader.read_event_data(
         str(test_file),
         table_name_map={"SHOWERS": "SHOWERS", "FILE_INFO": "FILE_INFO"},
@@ -290,6 +347,24 @@ def test_read_event_data_with_missing_triggers(tmp_test_directory, mock_tables):
     assert triggered_data is None
     assert hasattr(file_info, "colnames")
     assert hasattr(shower_data, "shower_id")
+
+
+def test_read_event_data_rejects_empty_required_table(tmp_test_directory, mock_tables):
+    """Test read_event_data rejects empty required tables."""
+    test_file = tmp_test_directory / "test_empty_triggers.hdf5"
+    shower_table, trigger_table, file_info_table = mock_tables
+    trigger_table = trigger_table[:0]
+
+    write_tables(
+        [shower_table, trigger_table, file_info_table],
+        test_file,
+        file_type="HDF5",
+    )
+
+    reader = EventDataReader(str(test_file))
+
+    with pytest.raises(ValueError, match="empty required table\\(s\\): TRIGGERS"):
+        reader.read_event_data(str(test_file))
 
 
 def test_read_event_data_hdf5_with_selected_columns_and_telescope_filter(

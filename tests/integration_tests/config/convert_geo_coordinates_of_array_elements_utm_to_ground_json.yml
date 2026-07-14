@@ -3,7 +3,7 @@ applications:
 - application: simtools-convert-geo-coordinates-of-array-elements
   configuration:
     export: ground
-    input: tests/resources/model_parameters/array_element_position_utm-2.0.0.json
+    input: tests/resources/generated/model_parameters/array_element_position_utm-2.0.0.json
     log_level: DEBUG
     model_version: 6.0.2
     output_file: test.json
@@ -12,7 +12,7 @@ applications:
     site: North
   integration_tests:
   - reference_output_file: |
-     tests/resources/model_parameters/array_element_position_ground-2.0.0.json
+     ${generated:model_parameters/array_element_position_ground-2.0.0.json}
     tolerance: 0.01
   test_name: utm_to_ground_json
 schema_name: application_workflow.metaschema

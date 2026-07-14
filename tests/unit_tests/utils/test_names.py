@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from simtools.constants import SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
 from simtools.utils import names
 
 logging.getLogger().setLevel(logging.DEBUG)
@@ -369,36 +370,22 @@ def test_generate_file_name_camera_efficiency():
     )
 
 
-def test_simtel_telescope_config_file_name():
+def test_simtel_config_file_name():
     assert (
-        names.simtel_config_file_name(
-            "South", telescope_model_name="LSTS-01", label=None, extra_label=None
-        )
-        == "CTA-South-LSTS-01.cfg"
+        names.sim_telarray_config_file_name("South", telescope_model_name="LSTS-01")
+        == "CTAO-LSTS-01.cfg"
     )
     assert (
-        names.simtel_config_file_name(
-            "South", telescope_model_name="LSTS-01", label="A", extra_label=None
-        )
-        == "CTA-South-LSTS-01_A.cfg"
-    )
-    assert (
-        names.simtel_config_file_name(
-            "South", telescope_model_name="LSTS-01", label="A", extra_label="B"
-        )
-        == "CTA-South-LSTS-01_A_B.cfg"
+        names.sim_telarray_config_file_name(array_name="4LSTs", site="South")
+        == "CTAO-South-4LSTs.cfg"
     )
 
 
-def test_sim_telarray_config_file_name():
-    assert (
-        names.simtel_config_file_name(array_name="4LSTs", site="South", label=None)
-        == "CTA-4LSTs-South.cfg"
-    )
-    assert (
-        names.simtel_config_file_name(array_name="4LSTs", site="South", label="A")
-        == "CTA-4LSTs-South_A.cfg"
-    )
+def test_simtel_config_file_name_too_long():
+    too_long_telescope_name = "A" * SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH
+
+    with pytest.raises(ValueError, match="exceeds the maximum length"):
+        names.sim_telarray_config_file_name("South", telescope_model_name=too_long_telescope_name)
 
 
 def test_simtel_single_mirror_list_file_name(model_version):

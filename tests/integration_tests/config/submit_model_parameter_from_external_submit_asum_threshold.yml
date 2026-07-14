@@ -1,0 +1,15 @@
+---
+applications:
+- application: simtools-submit-model-parameter-from-external
+  configuration:
+    instrument: LSTN-design
+    input_meta: tests/resources/generated/asum_threshold.meta.yml
+    output_path: simtools-output
+    parameter: asum_threshold
+    parameter_version: 0.1.0
+    site: North
+    value: 200 mV
+  test_name: submit_asum_threshold
+  test_use_case: UC-150-2.1.1
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

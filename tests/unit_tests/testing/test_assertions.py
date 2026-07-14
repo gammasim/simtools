@@ -11,11 +11,6 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 
 @pytest.fixture
-def test_json_file():
-    return Path("tests/resources/reference_point_altitude.json")
-
-
-@pytest.fixture
 def test_yaml_file():
     return MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
 
@@ -37,15 +32,15 @@ def tar_with_log(tmp_test_directory, safe_tar_open):
     return _create_tar
 
 
-def test_assert_file_type_json(test_json_file, test_yaml_file):
-    assert assertions.assert_file_type("json", test_json_file)
+def test_assert_file_type_json(model_parameter_json, test_yaml_file):
+    assert assertions.assert_file_type("json", Path(model_parameter_json))
     assert not assertions.assert_file_type("json", "tests/resources/does_not_exist.json")
     assert not assertions.assert_file_type("json", test_yaml_file)
 
-    assert assertions.assert_file_type("json", Path(test_json_file))
+    assert assertions.assert_file_type("json", Path(model_parameter_json))
 
 
-def test_assert_file_type_yaml(test_json_file, test_yaml_file, caplog):
+def test_assert_file_type_yaml(test_yaml_file):
     assert assertions.assert_file_type("yaml", test_yaml_file)
     assert assertions.assert_file_type("yml", test_yaml_file)
     assert not assertions.assert_file_type("yml", "tests/resources/does_not_exit.schema.yml")

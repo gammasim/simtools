@@ -5,22 +5,20 @@ from dataclasses import dataclass
 
 import astropy.units as u
 import numpy as np
-from astropy.table import Table
+from astropy.table import Table, vstack
 from eventio import EventIOFile, iact
 from eventio.simtel import (
     ArrayEvent,
     MCEvent,
     MCRunHeader,
     MCShower,
+    RunHeader,
     TrackingPosition,
     TriggerInformation,
 )
 
 from simtools.corsika.primary_particle import PrimaryParticle
-from simtools.sim_events.file_info import (
-    get_combined_eventio_run_header,
-    get_corsika_run_and_event_headers,
-)
+from simtools.sim_events.file_info import get_corsika_run_and_event_headers
 from simtools.simtel.simtel_io_metadata import (
     get_sim_telarray_telescope_id_to_telescope_name_mapping,
     read_sim_telarray_metadata,
@@ -70,6 +68,12 @@ class TableSchemas:
         "nsb_level": (np.float64, None),
     }
 
+    schemas = {
+        "SHOWERS": shower_schema,
+        "TRIGGERS": trigger_schema,
+        "FILE_INFO": file_info_schema,
+    }
+
 
 class EventDataWriter:
     """
@@ -86,19 +90,32 @@ class EventDataWriter:
     input_files : list
         List of input file paths to process.
     max_files : int, optional
-        Maximum number of files to process.
+        Maximum number of files to process. By default, process all input files.
     """
 
-    def __init__(self, input_files, max_files=100):
+    def __init__(self, input_files, max_files=None):
         """Initialize class."""
         self._logger = logging.getLogger(__name__)
         self.input_files = input_files
         try:
-            self.max_files = max_files if max_files < len(input_files) else len(input_files)
+            number_of_input_files = len(input_files)
         except TypeError as exc:
             raise TypeError("No input files provided.") from exc
+        if max_files is not None and max_files < 0:
+            raise ValueError("max_files must be non-negative.")
+        self.max_files = (
+            number_of_input_files if max_files is None else min(max_files, number_of_input_files)
+        )
 
         self.n_use = None
+        self.shower_data = []
+        self.trigger_data = []
+        self.file_info = []
+        self.telescope_id_to_name = {}
+        self._reset_data()
+
+    def _reset_data(self):
+        """Reset accumulated event records and per-file telescope metadata."""
         self.shower_data = []
         self.trigger_data = []
         self.file_info = []
@@ -113,27 +130,141 @@ class EventDataWriter:
         list
             List of tables containing processed data.
         """
-        for i, file in enumerate(self.input_files[: self.max_files]):
-            self._logger.info(f"Processing file {i + 1}/{self.max_files}: {file}")
-            self._process_file(i, file)
+        tables_by_name = {name: [] for name in TableSchemas.schemas}
+        for tables in self.iter_table_chunks():
+            for table in tables:
+                tables_by_name[table.meta["EXTNAME"]].append(table)
+        return [vstack(tables_by_name[name]) for name in TableSchemas.schemas]
 
-        return self.create_tables()
+    def iter_table_chunks(self, chunk_size=100_000):
+        """Yield bounded table chunks while processing input files."""
+        if chunk_size < 1:
+            raise ValueError("chunk_size must be greater than zero.")
+
+        yield self.create_tables()  # initialize all output tables, including empty ones
+        for file_id, file in enumerate(self.input_files[: self.max_files]):
+            self._logger.info(f"Processing file {file_id + 1}/{self.max_files}: {file}")
+            self._reset_data()
+            run_info = {}
+            shower_rows = trigger_rows = 0
+
+            with EventIOFile(file) as eventio_file:
+                for eventio_object in eventio_file:
+                    shower_table, flushed_shower_rows = self._flush_shower_chunk_if_full(
+                        eventio_object, chunk_size
+                    )
+                    if shower_table is not None:
+                        shower_rows += flushed_shower_rows
+                        yield [shower_table]
+
+                    self._process_eventio_object(eventio_object, file_id, file, run_info)
+
+                    trigger_table, flushed_trigger_rows = self._flush_trigger_chunk_if_full(
+                        chunk_size
+                    )
+                    if trigger_table is not None:
+                        trigger_rows += flushed_trigger_rows
+                        yield [trigger_table]
+
+            tables = self._finalize_file_chunk_tables(
+                file_id=file_id,
+                file_name=file,
+                run_info=run_info,
+                shower_rows=shower_rows,
+                trigger_rows=trigger_rows,
+            )
+            self._reset_data()
+            yield tables
+
+    def _flush_shower_chunk_if_full(self, eventio_object, chunk_size):
+        """Flush shower rows when the chunk-size boundary is reached."""
+        if not isinstance(eventio_object, MCShower | iact.EventHeader):
+            return None, 0
+        if len(self.shower_data) < chunk_size:
+            return None, 0
+
+        n_rows = len(self.shower_data)
+        table = self._create_chunk("SHOWERS", self.shower_data)
+        self.shower_data = []
+        return table, n_rows
+
+    def _flush_trigger_chunk_if_full(self, chunk_size):
+        """Flush trigger rows when the chunk-size boundary is reached."""
+        if len(self.trigger_data) < chunk_size:
+            return None, 0
+
+        n_rows = len(self.trigger_data)
+        table = self._create_chunk("TRIGGERS", self.trigger_data, allow_empty=True)
+        self.trigger_data = []
+        return table, n_rows
+
+    def _finalize_file_chunk_tables(self, file_id, file_name, run_info, shower_rows, trigger_rows):
+        """Finalize one file and return output tables for remaining records."""
+        self._process_file_info(file_id, file_name, run_info or None)
+        shower_rows += len(self.shower_data)
+        trigger_rows += len(self.trigger_data)
+        self._validate_file_chunk_data(file_name, shower_rows, trigger_rows)
+
+        tables = [self._create_chunk("SHOWERS", self.shower_data)]
+        if self.trigger_data:
+            tables.append(self._create_chunk("TRIGGERS", self.trigger_data, allow_empty=True))
+        tables.append(self._create_chunk("FILE_INFO", self.file_info))
+        return tables
+
+    def _validate_file_chunk_data(self, file_name, shower_rows, trigger_rows):
+        """Validate per-file row counts before writing final chunk tables."""
+        if shower_rows == 0:
+            raise ValueError(
+                f"Incomplete reduced event data for '{file_name}': "
+                f"table 'SHOWERS' contains no rows."
+            )
+        if trigger_rows == 0:
+            self._logger.warning(f"No triggered events found in input file '{file_name}'.")
+        if len(self.file_info) != 1:
+            raise ValueError(
+                f"Incomplete reduced event data for '{file_name}': expected exactly one "
+                f"FILE_INFO row, found {len(self.file_info)}."
+            )
+
+    def _create_chunk(self, table_name, data, allow_empty=False):
+        """Validate records and create one typed output-table chunk."""
+        schema = TableSchemas.schemas[table_name]
+        self._validate_records("chunk", table_name, data, schema, allow_empty=allow_empty)
+        return self._create_table(data, table_name)
 
     def create_tables(self):
         """Create tables from collected data."""
-        tables = []
-        for data, schema, name in [
-            (self.shower_data, TableSchemas.shower_schema, "SHOWERS"),
-            (self.trigger_data, TableSchemas.trigger_schema, "TRIGGERS"),
-            (self.file_info, TableSchemas.file_info_schema, "FILE_INFO"),
-        ]:
-            if len(data) == 0:
-                continue
-            table = Table(rows=data, names=schema.keys())
-            table.meta["EXTNAME"] = name
-            self._add_units_to_table(table, schema)
-            tables.append(table)
-        return tables
+        return [
+            self._create_table(data, name)
+            for name, data in (
+                ("SHOWERS", self.shower_data),
+                ("TRIGGERS", self.trigger_data),
+                ("FILE_INFO", self.file_info),
+            )
+        ]
+
+    def _create_table(self, data, table_name):
+        """Create one typed table and attach its metadata and units."""
+        schema = TableSchemas.schemas[table_name]
+        table = self._create_typed_table(data, schema, table_name)
+        table.meta["EXTNAME"] = table_name
+        self._add_units_to_table(table, schema)
+        return table
+
+    @staticmethod
+    def _create_typed_table(data, schema, table_name):
+        """Create a table using the declared schema instead of inferred dtypes."""
+        try:
+            return Table(
+                rows=data,
+                names=list(schema),
+                dtype=[column_type for column_type, _ in schema.values()],
+            )
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Failed to create reduced event data table '{table_name}' using its "
+                "declared schema."
+            ) from exc
 
     def _add_units_to_table(self, table, schema):
         """Add units to a single table's columns."""
@@ -141,35 +272,69 @@ class EventDataWriter:
             if unit is not None:
                 table[col].unit = unit
 
-    def _process_file(self, file_id, file):
-        """Process a single file and update data lists."""
-        self._process_file_info(file_id, file)
-        with EventIOFile(file) as f:
-            for eventio_object in f:
-                if isinstance(eventio_object, MCRunHeader):
-                    self._process_mc_run_header(eventio_object)
-                elif isinstance(eventio_object, MCShower):
-                    self._process_mc_shower(eventio_object, file_id)
-                elif isinstance(eventio_object, MCEvent):
-                    self._process_mc_event(eventio_object)
-                elif isinstance(eventio_object, ArrayEvent):
-                    self._process_array_event(eventio_object, file_id)
-                elif isinstance(eventio_object, iact.EventHeader):
-                    self._process_mc_shower_from_iact(eventio_object, file_id)
+    def _process_eventio_object(self, eventio_object, file_id, file, run_info):
+        """Process one EventIO object and update accumulated records."""
+        if isinstance(eventio_object, RunHeader):
+            run_info.update(eventio_object.parse())
+            self.telescope_id_to_name = get_sim_telarray_telescope_id_to_telescope_name_mapping(
+                file
+            )
+        elif isinstance(eventio_object, MCRunHeader):
+            run_info.update(self._process_mc_run_header(eventio_object))
+            if not self.telescope_id_to_name:
+                self.telescope_id_to_name = get_sim_telarray_telescope_id_to_telescope_name_mapping(
+                    file
+                )
+        elif isinstance(eventio_object, MCShower):
+            shower = self._process_mc_shower(eventio_object, file_id)
+            if shower.get("primary_id") is not None:
+                run_info.setdefault("primary_id", shower["primary_id"])
+        elif isinstance(eventio_object, MCEvent):
+            self._process_mc_event(eventio_object)
+        elif isinstance(eventio_object, ArrayEvent):
+            self._process_array_event(eventio_object, file_id)
+        elif isinstance(eventio_object, iact.EventHeader):
+            self._process_mc_shower_from_iact(eventio_object, file_id)
+
+    @staticmethod
+    def _validate_records(file, table_name, records, schema, allow_empty=False):
+        """Validate row presence and required values for one output table."""
+        if not records and not allow_empty:
+            raise ValueError(
+                f"Incomplete reduced event data for '{file}': table '{table_name}' "
+                "contains no rows."
+            )
+
+        incomplete = []
+        for row_index, record in enumerate(records):
+            missing = [name for name in schema if record.get(name) is None]
+            if missing:
+                incomplete.append(
+                    (row_index, missing, record.get("shower_id"), record.get("event_id"))
+                )
+
+        if incomplete:
+            fields = sorted({field for _, missing, _, _ in incomplete for field in missing})
+            examples = ", ".join(
+                f"row={index}, shower_id={shower_id}, event_id={event_id}"
+                for index, _, shower_id, event_id in incomplete[:5]
+            )
+            raise ValueError(
+                f"Incomplete reduced event data for '{file}': table '{table_name}' has "
+                f"{len(incomplete)} row(s) with unset required field(s) "
+                f"{', '.join(fields)}. Examples: {examples}."
+            )
 
     def _process_mc_run_header(self, eventio_object):
         """Process MC run header (sim_telarray file)."""
         mc_head = eventio_object.parse()
         self.n_use = mc_head["n_use"]  # reuse factor n_use needed to extend the values below
         self._logger.info(f"Shower reuse factor: {self.n_use} (viewcone: {mc_head['viewcone']})")
+        return mc_head
 
-    def _process_file_info(self, file_id, file):
+    def _process_file_info(self, file_id, file, run_info=None):
         """Process file information and append to file info list."""
-        run_info = get_combined_eventio_run_header(file)
         if run_info:  # sim_telarray file
-            self.telescope_id_to_name = get_sim_telarray_telescope_id_to_telescope_name_mapping(
-                file
-            )
             corsika7_id = PrimaryParticle(
                 particle_id_type="eventio_id",
                 particle_id=run_info.get("primary_id", 1),
@@ -237,6 +402,7 @@ class EventDataWriter:
             }
             for _ in range(self.n_use)
         )
+        return shower
 
     def _process_mc_shower_from_iact(self, eventio_object, file_id):
         """
@@ -292,7 +458,8 @@ class EventDataWriter:
 
     def _process_array_event(self, eventio_object, file_id):
         """Process array event and update triggered event list."""
-        tracking_positions = []
+        altitudes = []
+        azimuths = []
         telescopes = []
 
         for obj in eventio_object:
@@ -305,26 +472,20 @@ class EventDataWriter:
                 )
             if isinstance(obj, TrackingPosition):
                 tracking_position = obj.parse()
-                tracking_positions.append(
-                    {
-                        "altitude": np.degrees(tracking_position["altitude_raw"]),
-                        "azimuth": np.degrees(tracking_position["azimuth_raw"]),
-                    }
-                )
+                altitudes.append(np.degrees(tracking_position["altitude_raw"]))
+                azimuths.append(np.degrees(tracking_position["azimuth_raw"]))
 
-        if len(telescopes) > 0 and tracking_positions:
+        if len(telescopes) > 0 and altitudes:
             self._fill_array_event(
                 self._map_telescope_names(telescopes),
-                tracking_positions,
+                altitudes,
+                azimuths,
                 eventio_object.event_id,
                 file_id,
             )
 
-    def _fill_array_event(self, telescopes, tracking_positions, event_id, file_id):
+    def _fill_array_event(self, telescopes, altitudes, azimuths, event_id, file_id):
         """Add array event triggered events with tracking positions."""
-        altitudes = [pos["altitude"] for pos in tracking_positions]
-        azimuths = [pos["azimuth"] for pos in tracking_positions]
-
         self.trigger_data.append(
             {
                 "shower_id": self.shower_data[-1]["shower_id"],

@@ -15,7 +15,7 @@ import simtools.version
 
 path[:0] = [
     str(Path(p).resolve())
-    for p in ["../../src/simtools", "../../src/simtools/applications", "../.."]
+    for p in ["../../src/simtools", "../../src/simtools/applications", "../..", "./_ext"]
 ]
 
 
@@ -79,11 +79,14 @@ extensions = [
     "numpydoc",
     "sphinx_design",
     "sphinx.ext.mathjax",
+    "simtools_cli_help",
+    "simtools_integration_example",
 ]
 
 nitpicky = True
 nitpick_ignore = [
     ("py:class", "astropy.table.table.Table"),
+    ("py:class", "astropy.units.core.Unit"),
     ("py:class", "astropy.units.quantity.Quantity"),
     ("py:class", "collections.Counter"),
     ("py:class", "logging.Logger"),

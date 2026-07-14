@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 import copy
+import gzip
 import logging
 import shutil
-import tarfile
 from pathlib import Path
 from unittest import mock
 from unittest.mock import call
@@ -224,44 +224,76 @@ def test_simulation_software(array_simulator, shower_simulator, shower_array_sim
         test_array_simulator.simulation_software = "this_simulator_is_not_there"
 
 
+def test_get_files_returns_empty_list_for_unknown_type(array_simulator):
+    assert array_simulator.get_files("unknown_file_type") == []
+
+
 def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_test_directory):
+    source_dir = Path(str(tmp_test_directory)) / "source"
+    source_dir.mkdir(parents=True, exist_ok=True)
+    output_file = source_dir / f"output_file_{model_version}_simtel.zst"
+    output_file.write_text("output", encoding="utf-8")
+    log_file = source_dir / f"log_file_{model_version}_simtel.log.gz"
+    with gzip.open(log_file, "wt", encoding="utf-8") as handle:
+        handle.write("log")
+    histogram_file = source_dir / f"hist_file_{model_version}_hist_log.zst"
+    histogram_file.write_text("hist", encoding="utf-8")
+    corsika_log_file = source_dir / f"corsika_{model_version}.log.gz"
+    with gzip.open(corsika_log_file, "wt", encoding="utf-8") as handle:
+        handle.write("corsika")
+    model_archive = source_dir / f"model_files_{model_version}.tar.gz"
+    model_archive.write_text("model", encoding="utf-8")
+    simtools_log_file = source_dir / "simtools.log"
+    simtools_log_file.write_text("simtools", encoding="utf-8")
+
+    files_by_type = {
+        "sim_telarray_output": [str(output_file)],
+        "sim_telarray_log": [str(log_file)],
+        "sim_telarray_histogram": [str(histogram_file)],
+        "corsika_log": [str(corsika_log_file)],
+        "sim_telarray_event_data": [],
+    }
     mocker.patch.object(
         array_simulator,
         "get_files",
-        side_effect=[
-            [f"output_file_{model_version}_simtel.zst"],
-            [f"log_file_{model_version}_simtel.log.gz"],
-            [f"log_file_corsika_{model_version}.log.gz"],
-            [f"hist_file_{model_version}_hist_log.zst"],
-        ],
+        side_effect=lambda file_type: files_by_type.get(file_type, []),
     )
-    mocker.patch("shutil.move")
-    mocker.patch("tarfile.open")  # NOSONAR
-    mocker.patch("pathlib.Path.exists", return_value=True)
-    mocker.patch("pathlib.Path.is_file", return_value=True)
+    array_simulator.array_models = [mocker.Mock(model_version=model_version)]
+    array_simulator.array_models[0].pack_model_files.return_value = str(model_archive)
+    mocker.patch(
+        "simtools.utils.general.get_simtools_log_file", return_value=str(simtools_log_file)
+    )
 
     directory_for_grid_upload = tmp_test_directory / "directory_for_grid_upload"
     with caplog.at_level(logging.INFO):
         array_simulator.pack_for_register(str(directory_for_grid_upload))
 
-    assert "Overwriting existing file" in caplog.text
     assert "Packing output files for registering on the grid" in caplog.text
     assert "Grid output files grid placed in" in caplog.text
-    tarfile.open.assert_called_once()  # NOSONAR
-    shutil.move.assert_any_call(
-        f"output_file_{model_version}_simtel.zst",
-        directory_for_grid_upload / Path(f"output_file_{model_version}_simtel.zst"),
-    )
+    with gzip.open(directory_for_grid_upload / log_file.name, "rt", encoding="utf-8") as handle:
+        assert handle.read() == "log"
+    assert (directory_for_grid_upload / histogram_file.name).read_text(encoding="utf-8") == "hist"
+    with gzip.open(
+        directory_for_grid_upload / corsika_log_file.name, "rt", encoding="utf-8"
+    ) as handle:
+        assert handle.read() == "corsika"
+    assert (directory_for_grid_upload / model_archive.name).read_text(encoding="utf-8") == "model"
+    assert not output_file.exists()
+    assert (directory_for_grid_upload / output_file.name).read_text(encoding="utf-8") == "output"
+    with gzip.open(directory_for_grid_upload / "simtools.log.gz", "rt", encoding="utf-8") as handle:
+        assert handle.read() == "simtools"
 
 
 def test_initialize_array_models_with_single_version(
-    shower_simulator, model_version, mock_array_model
+    shower_simulator, model_version, mock_array_model, mocker
 ):
     """Test array models initialization with a single model version."""
+    array_model_cls = mocker.patch("simtools.simulator.ArrayModel", return_value=mock_array_model)
     array_models, corsika_configurations = shower_simulator._initialize_array_models()
     assert len(array_models) == 1
     assert array_models[0] == mock_array_model
     assert corsika_configurations is not None
+    assert array_model_cls.call_args.kwargs["model_directory_subdir"] == "run000001"
 
 
 def test_initialize_from_tool_configuration_with_corsika_file(shower_simulator, mocker):
@@ -363,9 +395,10 @@ def test_pack_for_register_with_multiple_versions(
 
     mocker.patch.object(local_shower_array_simulator, "get_files", side_effect=mock_get_files)
     mocker.patch("shutil.move")
+    mocker.patch("shutil.copy2")
     mocker.patch("pathlib.Path.is_file", return_value=True)
     mocker.patch("pathlib.Path.exists", return_value=True)
-    mocker.patch("simtools.utils.general.pack_tar_file")
+    mocker.patch("simtools.utils.general.get_simtools_log_file", return_value=None)
 
     directory_for_grid_upload = tmp_test_directory / "directory_for_grid_upload"
     with caplog.at_level(logging.INFO):
@@ -379,6 +412,10 @@ def test_pack_for_register_with_multiple_versions(
         shutil.move.assert_any_call(
             output_file,
             directory_for_grid_upload / Path(output_file),
+        )
+        shutil.copy2.assert_any_call(
+            file_patterns["log"].format(version),
+            directory_for_grid_upload / Path(file_patterns["log"].format(version)),
         )
 
 
@@ -431,14 +468,14 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
     mock_simtel_io_writer.assert_any_call(["output_file1.simtel.zst"])
     mock_simtel_io_writer.assert_any_call(["output_file2.simtel.zst"])
 
-    assert mock_table_handler.write_tables.call_count == 2
-    mock_table_handler.write_tables.assert_any_call(
-        tables=mock_generator.process_files.return_value,
+    assert mock_table_handler.write_table_chunks.call_count == 2
+    mock_table_handler.write_table_chunks.assert_any_call(
+        table_chunks=mock_generator.iter_table_chunks.return_value,
         output_file=Path("output_file1.reduced_event_data.hdf5"),
         overwrite_existing=True,
     )
-    mock_table_handler.write_tables.assert_any_call(
-        tables=mock_generator.process_files.return_value,
+    mock_table_handler.write_table_chunks.assert_any_call(
+        table_chunks=mock_generator.iter_table_chunks.return_value,
         output_file=Path("output_file2.reduced_event_data.hdf5"),
         overwrite_existing=True,
     )
@@ -454,7 +491,7 @@ def test_save_reduced_event_lists_no_output_files(array_simulator, mocker, caplo
         array_simulator.save_reduced_event_lists()
 
     mock_simtel_io_writer.assert_not_called()
-    mock_io_table_handler.write_tables.assert_not_called()
+    mock_io_table_handler.write_table_chunks.assert_not_called()
     assert "No sim_telarray output files found" in caplog.text or caplog.text == ""
 
 
@@ -481,14 +518,14 @@ def test_write_reduced_event_lists_derives_output_files(mocker, tmp_test_directo
     mock_simtel_io_writer.assert_any_call([str(data_dir / "output_file1.simtel.zst")])
     mock_simtel_io_writer.assert_any_call([str(data_dir / "output_file2.simtel.gz")])
 
-    assert mock_table_handler.write_tables.call_count == 2
-    mock_table_handler.write_tables.assert_any_call(
-        tables=mock_generator.process_files.return_value,
+    assert mock_table_handler.write_table_chunks.call_count == 2
+    mock_table_handler.write_table_chunks.assert_any_call(
+        table_chunks=mock_generator.iter_table_chunks.return_value,
         output_file=output_dir / "output_file1.reduced_event_data.hdf5",
         overwrite_existing=True,
     )
-    mock_table_handler.write_tables.assert_any_call(
-        tables=mock_generator.process_files.return_value,
+    mock_table_handler.write_table_chunks.assert_any_call(
+        table_chunks=mock_generator.iter_table_chunks.return_value,
         output_file=output_dir / "output_file2.reduced_event_data.hdf5",
         overwrite_existing=True,
     )
@@ -508,8 +545,8 @@ def test_write_reduced_event_lists_derives_output_to_input_directory(mocker, tmp
     Simulator.write_reduced_event_lists(input_files=[input_file])
 
     mock_simtel_io_writer.assert_called_once_with([input_file])
-    mock_table_handler.write_tables.assert_called_once_with(
-        tables=mock_generator.process_files.return_value,
+    mock_table_handler.write_table_chunks.assert_called_once_with(
+        table_chunks=mock_generator.iter_table_chunks.return_value,
         output_file=data_dir / "output_file3.reduced_event_data.hdf5",
         overwrite_existing=True,
     )
@@ -527,7 +564,68 @@ def test_write_reduced_event_lists_raises_for_mismatched_explicit_output_files(m
         Simulator.write_reduced_event_lists(input_files=input_files, output_files=output_files)
 
     mock_simtel_io_writer.assert_not_called()
-    mock_table_handler.write_tables.assert_not_called()
+    mock_table_handler.write_table_chunks.assert_not_called()
+
+
+def test_write_reduced_event_lists_from_file_list_in_batches(mocker, tmp_test_directory):
+    """Read input paths from a text file and combine them in batches."""
+    tmp_base = Path(str(tmp_test_directory))
+    input_file_list = tmp_base / "simtel_files.txt"
+    input_files = [f"input_file{index}.simtel.zst" for index in range(1, 6)]
+    input_file_list.write_text("\n".join(input_files) + "\n", encoding="utf-8")
+    output_dir = tmp_base / "reduced"
+
+    mock_generator = mocker.MagicMock()
+    mock_simtel_io_writer = mocker.patch(
+        "simtools.sim_events.writer.EventDataWriter", return_value=mock_generator
+    )
+    mock_table_handler = mocker.patch("simtools.simulator.table_handler")
+
+    Simulator.write_reduced_event_lists(
+        input_file_list=input_file_list,
+        files_per_reduced_event_file=2,
+        output_path=output_dir,
+    )
+
+    assert mock_simtel_io_writer.call_args_list == [
+        mocker.call(input_files[0:2]),
+        mocker.call(input_files[2:4]),
+        mocker.call(input_files[4:5]),
+    ]
+    assert mock_table_handler.write_table_chunks.call_args_list == [
+        mocker.call(
+            table_chunks=mock_generator.iter_table_chunks.return_value,
+            output_file=output_dir / f"simtel_files.part{index:04d}.reduced_event_data.hdf5",
+            overwrite_existing=True,
+        )
+        for index in range(1, 4)
+    ]
+
+
+def test_write_reduced_event_lists_parallelizes_output_batches(mocker):
+    """Execute independent output batches through the shared process-pool helper."""
+    mock_pool = mocker.patch("simtools.simulator.process_pool_map_ordered")
+
+    Simulator.write_reduced_event_lists(
+        input_files=["input1.simtel.zst", "input2.simtel.zst"],
+        max_workers=2,
+    )
+
+    mock_pool.assert_called_once()
+    assert mock_pool.call_args.kwargs["max_workers"] == 2
+    assert len(mock_pool.call_args.args[1]) == 2
+
+
+@pytest.mark.parametrize("files_per_reduced_event_file", [0, -1])
+def test_write_reduced_event_lists_rejects_invalid_batch_size(
+    files_per_reduced_event_file,
+):
+    """Reject non-positive input batch sizes."""
+    with pytest.raises(ValueError, match="must be greater than zero"):
+        Simulator.write_reduced_event_lists(
+            input_files=["input.simtel.zst"],
+            files_per_reduced_event_file=files_per_reduced_event_file,
+        )
 
 
 @pytest.mark.parametrize(
