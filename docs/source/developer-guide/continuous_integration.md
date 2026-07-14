@@ -20,9 +20,10 @@ The simtools continuous integration tests, lints, and builds code, documentation
 
 All workflows can be triggered manually (`workflow_dispatch`).
 
-## Units tests
+## Unit tests
 
-Unit tests are testing the code on a module and function level, see the [unit tests](testing.md#unit-tests) documentation for more details.
+Unit tests are testing the code on a module and function level, see the
+[unit tests](testing_unit.md) documentation for more details.
 
 Unit tests are implemented in the CI in the [CI-unittests.yml](.github/workflows/CI-unittests.yml) workflow.
 Unit tests are running for different python versions and installation types (mamba, pip).
@@ -35,8 +36,10 @@ See the [simtools sonar project page](https://sonar-ctao.zeuthen.desy.de/dashboa
 
 ## Integration tests
 
-Integrations tests are testing the main functionality of simtools applications. Every application should have
-integration tests covering the most common and important use cases. See the [integration tests](testing.md#integration-tests) documentation for more details.
+Integration tests are testing the main functionality of simtools applications.
+Every application should have integration tests covering the most common and
+important use cases. See the [integration tests](testing_integration.md)
+documentation for more details.
 
 The CI Integration tests is defined in the [CI-integrationtests.yml](.github/workflows/CI-integrationtests.yml) workflow.  Integration tests are running for two different model versions.
 
