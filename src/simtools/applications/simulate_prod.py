@@ -1,67 +1,26 @@
 #!/usr/bin/python3
 
 r"""
-    Generate simulation configuration and run simulations.
+Generate simulation configuration and run simulations.
 
-    Multipipe scripts will be produced as part of this application.
-    Allows to run array layout simulation including shower and detector simulations
+Multipipe scripts will be produced as part of this application.
+Allows to run array layout simulation including shower and detector simulations
 
-    The entire simulation chain, parts of it, or nothing is executed:
+The entire simulation chain, parts of it, or nothing is executed:
 
-    - shower simulations with CORSIKA only
-    - shower simulations with CORSIKA which are piped directly to sim_telarray using
-      the sim_telarray multipipe mechanism.
+- shower simulations with CORSIKA only
+- shower simulations with CORSIKA which are piped directly to sim_telarray using
+  the sim_telarray multipipe mechanism.
 
-    Command line arguments
-    ----------------------
-    model_version (str, required)
-        The telescope model version to use (e.g., 5.0.0).
-    site (str, required)
-        North or South (case insensitive).
-    primary (str, required)
-        Name or ID of the primary particle to simulate. Allowed are common names like gamma, proton,
-        or IDs for CORSIKA7 (e.g. 14 for proton) and PDG (e.g. 2212 for proton). Use the
-        'primary_id_type' option to specify the type of ID.
-    azimuth_angle (str or float, required)
-        Telescope pointing direction in azimuth.
-        It can be in degrees between 0 and 360 or one of north, south, east or west
-        (case insensitive). Note that North is 0 degrees and the azimuth grows clockwise,
-        so East is 90 degrees.
-    zenith_angle (float, required)
-        Zenith angle in degrees.
-    showers_per_run (int, optional)
-        Number of showers to simulate per run.
-        The Number of simulated events depends on the number of times a shower is reused in the
-        telescope simulation. The number provided here is before any reuse factors.
-    start_run (int, required)
-        Start run number such that the actual run number will be 'start_run' + 'run'.
-        This is useful in case a new transform is submitted for the same production.
-        It allows the transformation system to keep using sequential run numbers without repetition.
-    run (int, required)
-        Run number (actual run number will be 'start_run' + 'run').
-    grid_output_path (str, optional)
-        Set whether to prepare output files for registering on the grid.
-        The files are written to the specified directory.
-    log_level (str, optional)
-        Log level to print.
+.. simtools-cli-help::
+   :module: simtools.applications.simulate_prod
 
-    Example
-    -------
-    Run the application:
+Examples
+--------
 
-    .. code-block:: console
+.. simtools-integration-example::
+    :file: simulate_prod_proton_20_deg_north_check_output.yml
 
-        simtools-simulate-prod \\
-        --model_version 5.0.0 --site north --primary gamma --azimuth_angle north \\
-        --zenith_angle 20 --start_run 0 --run 1
-
-    Run a single row from a production job grid:
-
-    .. code-block:: console
-
-        simtools-simulate-prod \\
-        --job_grid_file production_grid_points_horizontal.ecsv --job_grid_row 1 \\
-        --label test --output_path simtools-output
 """
 
 from simtools.application_control import (
@@ -69,9 +28,11 @@ from simtools.application_control import (
     get_application_label,
     get_module_description_line,
 )
-from simtools.configuration import commandline_parser, configurator
+from simtools.configuration import configurator
+from simtools.configuration.commandline_argument_helpers import bounded_int
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.production_configuration.job_grid_io import (
+    SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS,
     job_grid_row_to_simulate_prod_args,
     read_job_grid_row,
 )
@@ -86,24 +47,6 @@ _INITIALIZATION_KWARGS = {
         "sim_telarray_configuration": ["all"],
     },
     "relax_required_options": ["--config", "--job_grid_file", "--job_grid_row"],
-}
-
-_JOB_GRID_EXCLUSIVE_FIELDS = {
-    "primary",
-    "azimuth_angle",
-    "zenith_angle",
-    "energy_range",
-    "core_scatter",
-    "view_cone",
-    "showers_per_run",
-    "model_version",
-    "array_layout_name",
-    "corsika_le_interaction",
-    "corsika_he_interaction",
-    "run_number",
-    "run_number_offset",
-    "site",
-    "simulation_software",
 }
 
 
@@ -145,7 +88,7 @@ def _add_arguments(parser):
         "--corsika_seeds",
         help="Use fixed random seeds for CORSIKA for testing purposes.",
         nargs=4,
-        type=commandline_parser.CommandLineParser.bounded_int(1, CORSIKA_MAX_SEED),
+        type=bounded_int(1, CORSIKA_MAX_SEED),
         metavar=("S1", "S2", "S3", "S4"),
     )
     parser.add_argument(
@@ -202,7 +145,7 @@ def _resolve_job_grid_arguments(args_dict, config_sources, parser):
             parser.error("'--job_grid_row' requires '--job_grid_file'.")
         return
 
-    conflicting_keys = sorted(explicit_keys & _JOB_GRID_EXCLUSIVE_FIELDS)
+    conflicting_keys = sorted(explicit_keys & SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS)
     if conflicting_keys:
         parser.error(
             "'--job_grid_file' cannot be combined with explicit production parameter(s): "
