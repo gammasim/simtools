@@ -140,7 +140,10 @@ def test_run_configured_applications_runs_all_configs(tmp_test_directory, monkey
         config_dir=config_root,
         log_dir=Path(tmp_test_directory) / "log_files",
         run_time=None,
-        replacements={"__SIMTOOLS_VERSION__": "v0.32.0"},
+        replacements={
+            "__SIMTOOLS_VERSION__": "v0.32.0",
+            "__INTEGRATION_TESTS_DIRECTORY__": str(Path(tmp_test_directory) / "integration_tests"),
+        },
     )
 
     assert [config[0]["config_file"] for config in called_configs] == [
@@ -151,7 +154,10 @@ def test_run_configured_applications_runs_all_configs(tmp_test_directory, monkey
     assert called_configs[0][0]["log_file"] == str(
         Path(tmp_test_directory) / "log_files" / "simulate_prod.log"
     )
-    assert called_configs[0][1]["replacements"] == {"__SIMTOOLS_VERSION__": "v0.32.0"}
+    assert called_configs[0][1]["replacements"] == {
+        "__SIMTOOLS_VERSION__": "v0.32.0",
+        "__INTEGRATION_TESTS_DIRECTORY__": str(Path(tmp_test_directory) / "integration_tests"),
+    }
 
 
 def test_run_configured_applications_reuses_runtime(tmp_test_directory, monkeypatch):
