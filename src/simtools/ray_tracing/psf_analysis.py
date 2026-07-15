@@ -19,6 +19,7 @@ import numpy as np
 from simtools import settings
 from simtools.job_execution import job_manager
 from simtools.utils.general import collect_kwargs, set_default_kwargs
+from simtools.visualization import plot_ray_tracing_psf
 
 
 class PSFImage:
@@ -535,24 +536,20 @@ class PSFImage:
         kwargs_for_image = collect_kwargs("image", kwargs)
         kwargs_for_psf = collect_kwargs("psf", kwargs)
 
-        ax = plt.gca()
-        ax.set_xlabel("X Position (cm)")
-        ax.set_ylabel("Y Position (cm)")
-        ax.hist2d(data["X"], data["Y"], **kwargs_for_image)
-        ax.set_aspect("equal", "box")
-
-        # PSF circle (containment fraction)
         fraction = self._containment_fraction if self._containment_fraction is not None else 0.8
         center = (0, 0) if centralized else (self.centroid_x, self.centroid_y)
-        circle = plt.Circle(center, self.get_psf(fraction) / 2, **kwargs_for_psf)
-        ax.add_artist(circle)
-
-        ax.axhline(0, color="k", linestyle="--", zorder=3, linewidth=0.5)
-        ax.axvline(0, color="k", linestyle="--", zorder=3, linewidth=0.5)
+        fig, _ = plot_ray_tracing_psf.create_psf_image_figure(
+            data,
+            containment_radius_cm=self.get_psf(fraction) / 2,
+            center=center,
+            ax=plt.gca(),
+            psf_kwargs=kwargs_for_psf,
+            **kwargs_for_image,
+        )
 
         if file_name is not None:
-            plt.savefig(file_name)
-            plt.close()
+            fig.savefig(file_name)
+            plt.close(fig)
 
     def get_cumulative_data(self, radius=None):
         """
@@ -602,14 +599,15 @@ class PSFImage:
             Customization of line plot (e.g., color, linestyle, linewidth).
         """
         data = self.get_cumulative_data()
-        fig, ax = plt.subplots(constrained_layout=True)
-        ax.set_xlabel("Radius (cm)")
-        ax.set_ylabel("Contained light %")
-        ax.plot(data[self.__PSF_RADIUS], data[self.__PSF_CUMULATIVE], **kwargs)
         fraction = self._containment_fraction if self._containment_fraction is not None else 0.8
-        ax.axvline(x=self.get_psf(fraction) / 2, color="b", linestyle="--", linewidth=1)
-        if psf_diameter_cm is not None:
-            ax.axvline(x=psf_diameter_cm / 2.0, color="r", linestyle="--", linewidth=1)
+        fig, _ = plot_ray_tracing_psf.create_cumulative_psf_figure(
+            data,
+            radius_key=self.__PSF_RADIUS,
+            cumulative_key=self.__PSF_CUMULATIVE,
+            containment_radius_cm=self.get_psf(fraction) / 2,
+            psf_diameter_cm=psf_diameter_cm,
+            **kwargs,
+        )
         if file_name is not None:
             fig.savefig(file_name)
             plt.close(fig)

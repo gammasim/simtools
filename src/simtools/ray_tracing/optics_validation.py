@@ -12,7 +12,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import simtools.utils.general as gen
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
-from simtools.visualization import visualize
+from simtools.visualization import plot_ray_tracing_psf, visualize
 
 logger = logging.getLogger(__name__)
 
@@ -103,10 +103,14 @@ def validate_cumulative_psf(app_context):
     visualize.save_figure(fig, plot_file)
 
     data_to_plot = image.get_image_data()
-    fig = visualize.plot_hist_2d(data_to_plot, bins=80)
-    circle = plt.Circle((0, 0), image.get_psf(0.8) / 2, color="k", fill=False, lw=2, ls="--")
-    fig.gca().add_artist(circle)
-    fig.gca().set_aspect("equal")
+    fig, _ = plot_ray_tracing_psf.create_psf_image_figure(
+        data_to_plot,
+        containment_radius_cm=image.get_psf(0.8) / 2,
+        center=(0, 0),
+        bins=80,
+        cmap=plt.cm.gist_heat_r,
+        psf_kwargs={"color": "k", "fill": False, "lw": 2, "ls": "--"},
+    )
 
     plot_file_name = label + "_" + tel_model.name + "_image"
     plot_file = io_handler.get_output_file(plot_file_name)
@@ -192,11 +196,18 @@ def validate_optics(app_context):
 
         for (off_x, off_y), image in images_dict.items():
             fig = plt.figure(figsize=(8, 6), tight_layout=True)
-            image.plot_image(
+            plot_ray_tracing_psf.create_psf_image_figure(
+                image.get_image_data(centralized=True),
+                containment_radius_cm=image.get_psf(0.8, unit="cm") / 2,
+                center=(0, 0),
+                ax=plt.gca(),
                 image_range=[
                     [-max_extent_rounded, max_extent_rounded],
                     [-max_extent_rounded, max_extent_rounded],
-                ]
+                ],
+                bins=150,
+                cmap=plt.cm.gist_heat_r,
+                psf_kwargs={"color": "k", "fill": False, "lw": 2, "ls": "--"},
             )
 
             psf_cm = image.get_psf(fraction=0.8, unit="cm")
