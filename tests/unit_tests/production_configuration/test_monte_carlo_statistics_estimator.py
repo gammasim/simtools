@@ -92,6 +92,31 @@ def _build_legacy_reference_tables():
     return metadata, bins
 
 
+def _build_reference_tables_with_multiple_angular_bins():
+    metadata, _ = _build_reference_tables()
+    bins = Table(
+        rows=[
+            {
+                "reference_id": "ref-1",
+                "angular_distance_bin_index": angular_index,
+                "energy_bin_index": energy_index,
+                "angular_distance_low": angular_low * u.deg,
+                "angular_distance_high": angular_high * u.deg,
+                "energy_low": energy_low * u.TeV,
+                "energy_high": energy_high * u.TeV,
+                "simulated_count": simulated,
+                "triggered_count": triggered,
+                "trigger_efficiency": 0.0,
+            }
+            for angular_index, (angular_low, angular_high, simulated, triggered) in enumerate(
+                [(0.0, 5.0, 70, 35), (5.0, 10.0, 30, 3)]
+            )
+            for energy_index, (energy_low, energy_high) in enumerate([(0.1, 1.0), (1.0, 10.0)])
+        ]
+    )
+    return metadata, bins
+
+
 def test_resolve_effective_throw_radius_accepts_original_or_smaller_radius():
     assert monte_carlo_statistics_estimator._resolve_effective_throw_radius(100.0 * u.m).to_value(
         u.m
@@ -101,11 +126,31 @@ def test_resolve_effective_throw_radius_accepts_original_or_smaller_radius():
     ).to_value(u.m) == pytest.approx(80.0)
 
 
+def test_resolve_effective_view_cone_radius_accepts_original_or_smaller_radius():
+    assert monte_carlo_statistics_estimator._resolve_effective_view_cone_radius(
+        10.0 * u.deg
+    ).to_value(u.deg) == pytest.approx(10.0)
+    assert monte_carlo_statistics_estimator._resolve_effective_view_cone_radius(
+        10.0 * u.deg, 2.0 * u.deg
+    ).to_value(u.deg) == pytest.approx(2.0)
+
+
 def test_resolve_effective_throw_radius_rejects_invalid_override():
     with pytest.raises(ValueError, match="positive"):
         monte_carlo_statistics_estimator._resolve_effective_throw_radius(100.0 * u.m, 0.0 * u.m)
     with pytest.raises(ValueError, match="cannot exceed"):
         monte_carlo_statistics_estimator._resolve_effective_throw_radius(100.0 * u.m, 120.0 * u.m)
+
+
+def test_resolve_effective_view_cone_radius_rejects_invalid_override():
+    with pytest.raises(ValueError, match="positive"):
+        monte_carlo_statistics_estimator._resolve_effective_view_cone_radius(
+            10.0 * u.deg, 0.0 * u.deg
+        )
+    with pytest.raises(ValueError, match="cannot exceed"):
+        monte_carlo_statistics_estimator._resolve_effective_view_cone_radius(
+            10.0 * u.deg, 12.0 * u.deg
+        )
 
 
 def test_compute_core_distance_weights_uses_area_fraction():
@@ -116,6 +161,23 @@ def test_compute_core_distance_weights_uses_area_fraction():
 
     np.testing.assert_allclose(full, [1.0, 1.0])
     np.testing.assert_allclose(reduced, [1.0, (75.0**2 - 50.0**2) / (100.0**2 - 50.0**2)])
+
+
+def test_compute_view_cone_weights_uses_solid_angle_fraction():
+    edges = np.array([0.0, 5.0, 10.0])
+
+    full = monte_carlo_statistics_estimator._compute_view_cone_weights(edges, 10.0 * u.deg)
+    reduced = monte_carlo_statistics_estimator._compute_view_cone_weights(edges, 7.5 * u.deg)
+
+    np.testing.assert_allclose(full, [1.0, 1.0])
+    np.testing.assert_allclose(
+        reduced,
+        [
+            1.0,
+            (np.cos(np.deg2rad(5.0)) - np.cos(np.deg2rad(7.5)))
+            / (np.cos(np.deg2rad(5.0)) - np.cos(np.deg2rad(10.0))),
+        ],
+    )
 
 
 def test_collapse_core_distance_counts_applies_radial_weights():
@@ -135,6 +197,23 @@ def test_collapse_core_distance_counts_applies_radial_weights():
     np.testing.assert_allclose(triggered_reduced, [[5.0]])
 
 
+def test_restrict_view_cone_counts_applies_angular_weights():
+    simulated = np.array([[10.0], [30.0]])
+    triggered = np.array([[5.0], [15.0]])
+
+    simulated_reduced, triggered_reduced = (
+        monte_carlo_statistics_estimator._restrict_view_cone_counts(
+            simulated,
+            triggered,
+            np.array([0.0, 5.0, 10.0]),
+            5.0 * u.deg,
+        )
+    )
+
+    np.testing.assert_allclose(simulated_reduced, [[10.0], [0.0]])
+    np.testing.assert_allclose(triggered_reduced, [[5.0], [0.0]])
+
+
 def test_estimate_required_events_skips_empty_bins():
     expected_triggers_per_event = np.array([[0.0, 0.2], [0.1, 0.0]])
 
@@ -149,6 +228,25 @@ def test_estimate_required_events_skips_empty_bins():
     assert required == pytest.approx(1000.0)
     assert limiting_expected_per_event == pytest.approx(0.1)
     assert limiting_index == (1, 0)
+    assert used_bins == 2
+    assert skipped_bins == 2
+
+
+def test_estimate_required_events_supports_target_triggered_events():
+    expected_triggers_per_event = np.array([[0.0, 0.2], [0.1, 0.0]])
+
+    required, limiting_expected_per_event, limiting_index, used_bins, skipped_bins = (
+        monte_carlo_statistics_estimator._estimate_required_events(
+            expected_triggers_per_event,
+            np.array([True, True]),
+            target_triggered_events=25,
+            overall_trigger_probability=0.15,
+        )
+    )
+
+    assert required == pytest.approx(25.0 / 0.15)
+    assert limiting_expected_per_event == pytest.approx(0.2)
+    assert limiting_index == (0, 1)
     assert used_bins == 2
     assert skipped_bins == 2
 
@@ -171,10 +269,12 @@ def test_estimator_radius_override_changes_required_events(mocker, tmp_path):
         "array_names": None,
         "spectral_index": -2.0,
         "target_relative_uncertainty": 0.1,
+        "target_triggered_events": None,
         "br_energy_min": 0.1 * u.TeV,
         "br_energy_max": 10.0 * u.TeV,
         "optimization_energy_min": 0.1 * u.TeV,
         "optimization_energy_max": 10.0 * u.TeV,
+        "reduced_view_cone_radius": None,
     }
 
     args_original = common_args | {
@@ -214,11 +314,13 @@ def test_estimator_writes_diagnostic_plots(mocker, tmp_path):
             "array_names": None,
             "spectral_index": -2.0,
             "target_relative_uncertainty": 0.1,
+            "target_triggered_events": None,
             "br_energy_min": 0.1 * u.TeV,
             "br_energy_max": 10.0 * u.TeV,
             "optimization_energy_min": 0.1 * u.TeV,
             "optimization_energy_max": 10.0 * u.TeV,
             "reduced_core_radius": None,
+            "reduced_view_cone_radius": None,
             "plot_diagnostics": True,
             "output_file": str(tmp_path / "estimate.ecsv"),
         }
@@ -244,11 +346,13 @@ def test_estimator_reports_limiting_bin_and_positive_required_events(mocker, tmp
         "array_names": None,
         "spectral_index": -2.0,
         "target_relative_uncertainty": 0.1,
+        "target_triggered_events": None,
         "br_energy_min": 0.1 * u.TeV,
         "br_energy_max": 10.0 * u.TeV,
         "optimization_energy_min": 0.1 * u.TeV,
         "optimization_energy_max": 10.0 * u.TeV,
         "reduced_core_radius": None,
+        "reduced_view_cone_radius": None,
         "output_file": str(tmp_path / "estimate.ecsv"),
     }
 
@@ -262,6 +366,67 @@ def test_estimator_reports_limiting_bin_and_positive_required_events(mocker, tmp
     assert result["estimated_total_events"][0] > 0.0
     assert float(result["estimated_total_events"][0]).is_integer()
     assert result["limiting_energy_low"].quantity[0] in (0.1 * u.TeV, 1.0 * u.TeV)
+
+
+def test_estimator_logs_reference_validation_summary(mocker, tmp_path, caplog):
+    metadata, bins = _build_reference_tables()
+    mocker.patch(
+        _LOAD_HISTOGRAMS,
+        return_value=(metadata, bins),
+    )
+    caplog.set_level("INFO")
+
+    monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
+        {
+            "input": "unused.hdf5",
+            "array_names": None,
+            "spectral_index": -2.0,
+            "target_relative_uncertainty": 0.1,
+            "target_triggered_events": None,
+            "optimization_energy_min": 0.1 * u.TeV,
+            "optimization_energy_max": 10.0 * u.TeV,
+            "reduced_core_radius": None,
+            "reduced_view_cone_radius": None,
+            "output_file": str(tmp_path / "estimate.ecsv"),
+        }
+    )
+
+    assert (
+        "Using trigger histogram for array_layout=alpha "
+        "(zenith=20.000 deg, azimuth=180.000 deg, nsb_level=1.0): "
+        "simulated_events=200 triggered_events=75 overall_trigger_efficiency=0.375"
+    ) in caplog.text
+
+
+def test_estimator_logs_overall_trigger_probability_for_target_triggered_events(
+    mocker, tmp_path, caplog
+):
+    metadata, bins = _build_reference_tables()
+    mocker.patch(
+        _LOAD_HISTOGRAMS,
+        return_value=(metadata, bins),
+    )
+    caplog.set_level("INFO")
+
+    monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
+        {
+            "input": "unused.hdf5",
+            "array_names": None,
+            "spectral_index": -2.0,
+            "target_relative_uncertainty": None,
+            "target_triggered_events": 25,
+            "optimization_energy_min": 0.1 * u.TeV,
+            "optimization_energy_max": 10.0 * u.TeV,
+            "reduced_core_radius": None,
+            "reduced_view_cone_radius": None,
+            "output_file": str(tmp_path / "estimate.ecsv"),
+        }
+    )
+
+    assert (
+        "Overall trigger probability in selected optimization range for array_layout=alpha "
+        "(zenith=20.000 deg, azimuth=180.000 deg, nsb_level=1.0): 0.375"
+    ) in caplog.text
 
 
 def test_estimator_rejects_reduced_radius_for_legacy_2d_histograms(mocker, tmp_path):
@@ -278,9 +443,11 @@ def test_estimator_rejects_reduced_radius_for_legacy_2d_histograms(mocker, tmp_p
                 "array_names": None,
                 "spectral_index": -2.0,
                 "target_relative_uncertainty": 0.1,
+                "target_triggered_events": None,
                 "optimization_energy_min": 0.1 * u.TeV,
                 "optimization_energy_max": 1.0 * u.TeV,
                 "reduced_core_radius": 50.0 * u.m,
+                "reduced_view_cone_radius": None,
                 "output_file": str(tmp_path / "estimate.ecsv"),
             }
         )
@@ -305,11 +472,13 @@ def test_estimator_supports_reference_tables_reloaded_from_hdf5(mocker, tmp_path
         "array_names": None,
         "spectral_index": -2.0,
         "target_relative_uncertainty": 0.1,
+        "target_triggered_events": None,
         "br_energy_min": None,
         "br_energy_max": None,
         "optimization_energy_min": None,
         "optimization_energy_max": None,
         "reduced_core_radius": None,
+        "reduced_view_cone_radius": None,
         "output_file": str(tmp_path / "estimate.ecsv"),
     }
 
@@ -340,13 +509,80 @@ def test_estimator_selects_reloaded_hdf5_rows_by_array_layout_name(mocker, tmp_p
             "array_layout_name": ["CTAO-North-Alpha"],
             "spectral_index": -2.0,
             "target_relative_uncertainty": 0.1,
+            "target_triggered_events": None,
             "br_energy_min": None,
             "br_energy_max": None,
             "optimization_energy_min": None,
             "optimization_energy_max": None,
             "reduced_core_radius": None,
+            "reduced_view_cone_radius": None,
             "output_file": str(tmp_path / "estimate.ecsv"),
         }
     )
 
     assert result["array_name"][0] == "CTAO-North-Alpha"
+
+
+def test_estimator_view_cone_override_changes_required_events(mocker, tmp_path):
+    metadata, bins = _build_reference_tables_with_multiple_angular_bins()
+    mocker.patch(
+        _LOAD_HISTOGRAMS,
+        return_value=(metadata, bins),
+    )
+
+    common_args = {
+        "input": "unused.hdf5",
+        "array_names": None,
+        "spectral_index": -2.0,
+        "target_relative_uncertainty": 0.1,
+        "target_triggered_events": None,
+        "optimization_energy_min": 0.1 * u.TeV,
+        "optimization_energy_max": 10.0 * u.TeV,
+        "reduced_core_radius": None,
+    }
+
+    original = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
+        common_args
+        | {
+            "reduced_view_cone_radius": None,
+            "output_file": str(tmp_path / "full.ecsv"),
+        }
+    )
+    reduced = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
+        common_args
+        | {
+            "reduced_view_cone_radius": 5.0 * u.deg,
+            "output_file": str(tmp_path / "reduced.ecsv"),
+        }
+    )
+
+    assert original["estimated_total_events"][0] != pytest.approx(
+        reduced["estimated_total_events"][0]
+    )
+    assert reduced["effective_view_cone_radius"].quantity[0].to_value(u.deg) == pytest.approx(5.0)
+
+
+def test_estimator_supports_target_triggered_events(mocker, tmp_path):
+    metadata, bins = _build_reference_tables()
+    mocker.patch(
+        _LOAD_HISTOGRAMS,
+        return_value=(metadata, bins),
+    )
+
+    result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
+        {
+            "input": "unused.hdf5",
+            "array_names": None,
+            "spectral_index": -2.0,
+            "target_relative_uncertainty": None,
+            "target_triggered_events": 25,
+            "optimization_energy_min": 0.1 * u.TeV,
+            "optimization_energy_max": 10.0 * u.TeV,
+            "reduced_core_radius": None,
+            "reduced_view_cone_radius": None,
+            "output_file": str(tmp_path / "estimate.ecsv"),
+        }
+    )
+
+    assert result["target_triggered_events"][0] == 25
+    assert result["estimated_total_events"][0] == 67
