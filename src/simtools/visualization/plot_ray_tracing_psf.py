@@ -108,3 +108,68 @@ def create_psf_image_figure(
         ax.axvline(0, color="k", linestyle="--", zorder=3, linewidth=0.5)
 
     return fig, ax
+
+
+def create_annotated_psf_image_figure(
+    data,
+    containment_radius_cm,
+    off_x,
+    off_y,
+    psf_cm,
+    image_range,
+    bins=150,
+    cmap=None,
+    psf_kwargs=None,
+):
+    """
+    Create a PSF image figure annotated with offset and PSF information.
+
+    Parameters
+    ----------
+    data : numpy.ndarray
+        Structured array with ``X`` and ``Y`` columns.
+    containment_radius_cm : float
+        Radius of the containment circle in cm.
+    off_x : float
+        Off-axis x component in degrees.
+    off_y : float
+        Off-axis y component in degrees.
+    psf_cm : float
+        PSF diameter in cm.
+    image_range : list
+        Range passed to ``Axes.hist2d``.
+    bins : int
+        Number of histogram bins.
+    cmap : matplotlib colormap, optional
+        Colormap passed to ``Axes.hist2d``.
+    psf_kwargs : dict, optional
+        Keyword arguments passed to ``matplotlib.patches.Circle``.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Created figure.
+    """
+    fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
+    create_psf_image_figure(
+        data,
+        containment_radius_cm=containment_radius_cm,
+        center=(0, 0),
+        ax=ax,
+        image_range=image_range,
+        bins=bins,
+        cmap=cmap,
+        psf_kwargs=psf_kwargs,
+    )
+    text_str = f"Offset: ({off_x:+.2f} deg, {off_y:+.2f} deg)\nPSF: {psf_cm:.2f} cm"
+    ax.text(
+        0.02,
+        0.98,
+        text_str,
+        transform=ax.transAxes,
+        verticalalignment="top",
+        bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.8},
+        fontsize=10,
+        family="monospace",
+    )
+    return fig

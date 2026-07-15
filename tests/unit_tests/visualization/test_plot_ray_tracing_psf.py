@@ -56,3 +56,25 @@ def test_create_psf_image_figure_draws_histogram_circle_and_axes():
     mock_ax.add_artist.assert_called_once()
     mock_ax.axhline.assert_called_once()
     mock_ax.axvline.assert_called_once()
+
+
+def test_create_annotated_psf_image_figure_adds_text():
+    """Test annotated PSF image helper adds the offset/PSF label."""
+    data = np.array([(0.0, 0.0), (1.0, -1.0)], dtype=[("X", "f8"), ("Y", "f8")])
+    mock_fig = MagicMock()
+    mock_ax = MagicMock()
+
+    with patch("simtools.visualization.plot_ray_tracing_psf.plt.subplots") as mock_subplots:
+        mock_subplots.return_value = (mock_fig, mock_ax)
+        fig = plot_ray_tracing_psf.create_annotated_psf_image_figure(
+            data,
+            containment_radius_cm=2.0,
+            off_x=0.5,
+            off_y=-0.5,
+            psf_cm=4.2,
+            image_range=[[-1.0, 1.0], [-1.0, 1.0]],
+            cmap="gist_heat_r",
+        )
+
+    assert fig == mock_fig
+    mock_ax.text.assert_called_once()

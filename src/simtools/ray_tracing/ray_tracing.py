@@ -726,6 +726,11 @@ class RayTracing:
         ------
         KeyError
             If key is not among the valid options.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            Figure containing the requested plot.
         """
         self._logger.info(f"Plotting {key} vs off-axis angle")
 
@@ -773,6 +778,7 @@ class RayTracing:
                 image.plot_cumulative(
                     file_name=image_cumulative_file, psf_diameter_cm=psf_diameter_cm
                 )
+        return plot
 
     def plot_histogram(self, key, **kwargs):
         """

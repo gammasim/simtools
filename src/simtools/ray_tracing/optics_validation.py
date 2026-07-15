@@ -5,9 +5,7 @@ from collections import OrderedDict
 from pathlib import Path
 
 import astropy.units as u
-import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.backends.backend_pdf import PdfPages
 
 import simtools.utils.general as gen
 from simtools.model.model_utils import initialize_simulation_models
@@ -108,7 +106,7 @@ def validate_cumulative_psf(app_context):
         containment_radius_cm=image.get_psf(0.8) / 2,
         center=(0, 0),
         bins=80,
-        cmap=plt.cm.gist_heat_r,
+        cmap="gist_heat_r",
         psf_kwargs={"color": "k", "fill": False, "lw": 2, "ls": "--"},
     )
 
@@ -163,17 +161,14 @@ def validate_optics(app_context):
     ray.analyze(force=True)
 
     for key in ["psf_deg", "psf_cm", "eff_area", "eff_flen"]:
-        plt.figure(figsize=(8, 6), tight_layout=True)
-        ray.plot(key, marker="o", linestyle="none", color="k")
+        fig = ray.plot(key, marker="o", linestyle="none", color="k")
         plot_file_name = "_".join((label, tel_model.name, key))
         plot_file = io_handler.get_output_file(plot_file_name)
-        visualize.save_figure(plt, plot_file)
-        plt.close()
+        visualize.save_figure(fig, plot_file)
 
     if args_dict["plot_images"]:
         plot_file_name = "_".join((label, tel_model.name, "images.pdf"))
         plot_file = io_handler.get_output_file(plot_file_name)
-        pdf_pages = PdfPages(plot_file)
 
         logger.info(f"Plotting images into {plot_file}")
 
@@ -194,37 +189,23 @@ def validate_optics(app_context):
 
         logger.info(f"Setting consistent image axes: x,y range = +-{max_extent_rounded} cm")
 
+        figures = []
         for (off_x, off_y), image in images_dict.items():
-            fig = plt.figure(figsize=(8, 6), tight_layout=True)
-            plot_ray_tracing_psf.create_psf_image_figure(
-                image.get_image_data(centralized=True),
-                containment_radius_cm=image.get_psf(0.8, unit="cm") / 2,
-                center=(0, 0),
-                ax=plt.gca(),
-                image_range=[
-                    [-max_extent_rounded, max_extent_rounded],
-                    [-max_extent_rounded, max_extent_rounded],
-                ],
-                bins=150,
-                cmap=plt.cm.gist_heat_r,
-                psf_kwargs={"color": "k", "fill": False, "lw": 2, "ls": "--"},
-            )
-
             psf_cm = image.get_psf(fraction=0.8, unit="cm")
-
-            ax = plt.gca()
-            text_str = f"Offset: ({off_x:+.2f} deg, {off_y:+.2f} deg)\nPSF: {psf_cm:.2f} cm"
-            ax.text(
-                0.02,
-                0.98,
-                text_str,
-                transform=ax.transAxes,
-                verticalalignment="top",
-                bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.8},
-                fontsize=10,
-                family="monospace",
+            figures.append(
+                plot_ray_tracing_psf.create_annotated_psf_image_figure(
+                    image.get_image_data(centralized=True),
+                    containment_radius_cm=psf_cm / 2,
+                    off_x=off_x,
+                    off_y=off_y,
+                    psf_cm=psf_cm,
+                    image_range=[
+                        [-max_extent_rounded, max_extent_rounded],
+                        [-max_extent_rounded, max_extent_rounded],
+                    ],
+                    bins=150,
+                    cmap="gist_heat_r",
+                    psf_kwargs={"color": "k", "fill": False, "lw": 2, "ls": "--"},
+                )
             )
-
-            pdf_pages.savefig(fig)
-            plt.close(fig)
-        pdf_pages.close()
+        visualize.save_figures_to_single_document(figures, plot_file)
