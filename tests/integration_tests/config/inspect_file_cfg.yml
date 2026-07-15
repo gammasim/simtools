@@ -2,7 +2,7 @@
 applications:
 - application: simtools-inspect-file
   configuration:
-    input_file: ${generated:sim_telarray_configurations/6.0.2/CTAO-North-alpha.cfg}
+    input_file: ${generated:sim_telarray_configurations/7.0.0/CTAO-North-CTAO-North-Alpha.cfg}
     max_entries: 5
   test_name: inspect_cfg
 schema_name: application_workflow.metaschema

@@ -9,9 +9,6 @@ files:
   - file_name: dummy_apptainer_image.sif
     sha256: 3238f87efc48cf3ffa8a1aaafe38e9362515191ecf2395de4fcf8227d5747644
     description: Dummy Apptainer image file for testing.
-  - file_name: grid_definition.yaml
-    sha256: 60e405d000c216af64da38f2e8ab2d4a487c54cca69798ccc8d537a75a3c545b
-    description: Example grid definition file for simulations.
   - file_name: info_test_camera_efficiency_change_LSTN-02.yml
     sha256: 3f6c60e7f9715043c67932c38dcac5341e871dc7f5d5f1e51dd011d7f98ce798
     description: Configuration for testing camera-efficiency changes.
@@ -37,17 +34,8 @@ files:
     sha256: 7d26916413ae437cbfdb49f1c244ed04b6596a0127d0edabc5832428cd8a4360
     description: Plotting configuration for legacy CSV input.
   - file_name: plot_single_pe_config_from_ecsv_file.yml
-    sha256: e62aefa73df361b8fc47607855e54096aeb39b432f29b0d1db72b532cb02f16e
+    sha256: 3a5c11fa076e560733b0f52461537bf1a96ff27bd890b5c865a5a53130c3614f
     description: Plotting configuration for ECSV input.
-  - file_name: production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz
-    sha256: 5edc9be42c5c15caf46933ac4314b3039a023f615b7a79ba491c7cfadcc0f183
-    description: Reduced DL2 gamma-ray production data at 20-degree zenith angle.
-  - file_name: production_dl2_fits/prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz
-    sha256: 8ddb9215fb53fbcdffaeb4d6f73c544da5c5dc7a392b448f0069f6c04ad98090
-    description: Reduced DL2 gamma-ray production data at 40-degree zenith angle.
-  - file_name: production_simulation_config_metrics.yml
-    sha256: 21e4dce5da3b7bafedb2e5707f78a59aa41aa0eb3880ae04ffc16051d79910bb
-    description: Example production-simulation metrics configuration.
   - file_name: ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv
     sha256: 5e6c648779ad90650c900f0af94e0696916fe4064a1001961fd72467a639bb9b
     description: Example ray-tracing result in ECSV format.
@@ -58,7 +46,7 @@ files:
     sha256: 4f0a55dcb0cd2110c04111844efc9e4a5c343449879ad107525003a981bfc959
     description: Configuration exported from sim_telarray.
   - file_name: telescope_positions-North-ground.ecsv
-    sha256: 5c33111d3687e29ffe6ead424f980aa67dcce12e61b41a163f42106d1355a29a
+    sha256: 552b1f52f771d3bb06acc10925cb831a0ad6e6b58f645f59f11d6ccd0f34e2d2
     description: North-site telescope positions in ground coordinates.
   - file_name: telescope_positions-North-mercator.ecsv
     sha256: 13095c9ffd84f2568fb74940e48953a6c22bd68aae37de1c2ada429d807a2498
@@ -73,10 +61,10 @@ files:
     sha256: 939d09020eae061d4480f1cdb758a42fb1222d806e399389e108c51da4e08816
     description: Metadata for North-site UTM telescope positions.
   - file_name: telescope_positions-North-with-calibration-devices-ground.ecsv
-    sha256: 77ad18c2ad9cd50b2c0684dd2026821abedee5a132d4f6ec8ca4029a1fb1a054
+    sha256: ad4630190880ab77d5a7be7d4b88de69b917e984794b4b48c37c7ee2488cf8d5
     description: North-site ground positions including calibration devices.
   - file_name: telescope_positions-South-ground.ecsv
-    sha256: 038942162efded1fd4b73d9da1db4625843090e805a05241da7de4b2caf23c15
+    sha256: 265447136436d258d8f3fd9902532d0f11ac0790cb1ff7a47da88b7cf2d35bda
     description: South-site telescope positions in ground coordinates.
   - file_name: trigger_rates_user_spectrum_powerlaw.yml
     sha256: fdda243645c38b738e003ba4afec2abd76d0b0ac5407dcc05dda3e5805e4e783

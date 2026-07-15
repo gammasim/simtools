@@ -8,8 +8,8 @@ r"""Compare, sync, and prune test resources from a versioned simtools-tests bund
 Example
 -------
 
-Generate a list of new, changed, unchanged, and obsolete files in the ``tests/resources``
-directory (dry run, no files are copied or deleted):
+Generate a dry-run report of new, changed, and obsolete files in the
+``tests/resources`` directory (no files are copied or deleted):
 
 .. code-block:: console
 
@@ -17,8 +17,8 @@ directory (dry run, no files are copied or deleted):
         --test_directory ../simtools-tests \\
         --simtools_version v0.34.0
 
-To sync the test resources, add the ``--sync`` option. To delete obsolete
-files, add the ``--delete_missing`` option.
+To sync the test resources, add the ``--sync`` option. To list obsolete
+files that should be removed manually, add the ``--delete_missing`` option.
 """
 
 from pathlib import Path
@@ -42,7 +42,7 @@ _APPLICATION_ARG_DEFINITIONS = {
     },
     "delete_missing": {
         "action": "store_true",
-        "help": "Delete obsolete test resources.",
+        "help": "List obsolete test resources that should be removed manually.",
     },
     "resources_path": {
         "type": Path,
@@ -50,14 +50,19 @@ _APPLICATION_ARG_DEFINITIONS = {
         "help": "Destination test-resources directory.",
     },
     "exclude_static": {
-        "action": "store_false",
-        "dest": "include_static",
+        "action": "store_true",
+        "default": False,
         "help": "Skip static resources.",
     },
     "exclude_generated": {
-        "action": "store_false",
-        "dest": "include_generated",
+        "action": "store_true",
+        "default": False,
         "help": "Skip generated resources.",
+    },
+    "exclude_downloaded": {
+        "action": "store_true",
+        "default": False,
+        "help": "Skip downloaded resources.",
     },
 }
 

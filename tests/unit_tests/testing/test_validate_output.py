@@ -231,16 +231,19 @@ def test_compare_json_files_nested_dicts_with_values(create_json_file, file_name
     assert validate_output.compare_json_or_yaml_files(file1, file3, tolerance=0.05)
 
 
-def test_compare_json_files_resource_paths(create_json_file, file_name, tmp_test_directory):
+@pytest.mark.parametrize("resource_dir", ["generated", "downloaded"])
+def test_compare_json_files_resource_paths(
+    create_json_file, file_name, tmp_test_directory, resource_dir
+):
     """Test comparison of equivalent resource paths with different roots."""
-    resource_file = Path("generated") / "model_parameters" / "file.lis"
+    resource_file = Path(resource_dir) / "model_parameters" / "file.lis"
     configured_resource_root = tmp_test_directory / "configured-resources"
 
     content = {"meta": {"nsb": str(resource_file)}}
     content_absolute = {"meta": {"nsb": str(configured_resource_root / resource_file)}}
     content_other = {
         "meta": {
-            "nsb": str(configured_resource_root / "generated" / "model_parameters" / "other.lis")
+            "nsb": str(configured_resource_root / resource_dir / "model_parameters" / "other.lis")
         }
     }
 
@@ -514,8 +517,8 @@ def test_validate_application_output_with_file_type(
 
 
 def test_compare_simtel_cfg_files(tmp_test_directory):
-    file1 = Path(f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/6.0.2/CTAO-LSTN-01.cfg")
-    file2 = Path(f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/6.0.2/CTAO-LSTN-01.cfg")
+    file1 = Path(f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/7.0.0/CTAO-LSTN-01.cfg")
+    file2 = Path(f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/7.0.0/CTAO-LSTN-01.cfg")
 
     assert validate_output._compare_simtel_cfg_files(file1, file2)
 

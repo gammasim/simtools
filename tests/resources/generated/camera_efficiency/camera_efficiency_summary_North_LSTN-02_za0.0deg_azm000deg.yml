@@ -1,7 +1,7 @@
 ---
 meta:
   tel: LSTN-02
-  model_version: 6.0.2
+  model_version: 7.0.0
   zen: 0.0
   az: 0.0
   nsb: default sim_telarray spectrum

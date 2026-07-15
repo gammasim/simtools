@@ -10,11 +10,11 @@ plot:
   ylim: [1.e-11, null]
   error_type: fill_between
   tables:
-    - file_name: tests/resources/generated/spe_LSTN_01_2025-04-03.ecsv
+    - file_name: tests/resources/downloaded/spe_LSTN_01_2025-04-03.ecsv
       label: 'LST-ecsv'
       column_x: 'amplitude'
       column_y: 'frequency (prompt+afterpulsing)'
-    - file_name: tests/resources/generated/Afterpulsing-probability_LST1-11PMTs_2023Oct_differential_used_pmts.ecsv
+    - file_name: tests/resources/downloaded/Afterpulsing-probability_LST1-11PMTs_2023Oct_differential_used_pmts.ecsv
       label: 'LST-Afterpulsing-with-Uncertainties'
       column_x: 'amplitude'
       column_y: 'frequency (afterpulsing)'

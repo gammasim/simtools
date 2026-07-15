@@ -2,8 +2,8 @@
 applications:
 - application: simtools-derive-photon-electron-spectrum
   configuration:
-    input_spectrum: tests/resources/generated/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv
-    afterpulse_spectrum: tests/resources/generated/Afterpulsing-probability_LST1-11PMTs_2023Oct_differential_used_pmts.ecsv
+    input_spectrum: ${downloaded:SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv}
+    afterpulse_spectrum: ${downloaded:Afterpulsing-probability_LST1-11PMTs_2023Oct_differential_used_pmts.ecsv}
     step_size: 0.02
     scale_afterpulse_spectrum: 1.0
     fit_afterpulse: true
@@ -20,7 +20,7 @@ applications:
   integration_tests:
   - output_file: test_single_pe_lst.dat
   - output_file: test_single_pe_lst.ecsv
-  - reference_output_file: ${generated:spe_LSTN_01_2025-04-03.ecsv}
+  - reference_output_file: ${downloaded:spe_LSTN_01_2025-04-03.ecsv}
     tolerance: 0.01
   test_name: LST_ecsv
   test_use_case: UC-150-2.1.2
