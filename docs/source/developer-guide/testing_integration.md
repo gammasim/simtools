@@ -67,11 +67,13 @@ By default, tests resolve resources from `tests/resources`:
 tests/resources/
   static/
   generated/
+  downloaded/
 ```
 
 Use `${static:path/to/file}` for maintained inputs and
-`${generated:path/to/file}` for generated reference products. To run against a
-different resource set:
+`${generated:path/to/file}` for generated reference products.
+Use `${downloaded:path/to/file}` for externally downloaded resources.
+To run against a different resource set:
 
 ```bash
 pytest --test-resources-path /full/path/to/resources \

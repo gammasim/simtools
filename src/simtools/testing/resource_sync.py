@@ -1,4 +1,4 @@
-"""Compare, sync, and prune versioned integration-test resources."""
+"""Compare, sync, and report obsolete versioned integration-test resources."""
 
 from __future__ import annotations
 
@@ -21,10 +21,12 @@ def get_destination_directories(resources_path=None):
         return {
             "static": root / "static",
             "generated": root / "generated",
+            "downloaded": root / "downloaded",
         }
     return {
         "static": Path(constants.TEST_RESOURCES_STATIC).expanduser().resolve(),
         "generated": Path(constants.TEST_RESOURCES_GENERATED).expanduser().resolve(),
+        "downloaded": Path(constants.TEST_RESOURCES_DOWNLOADED).expanduser().resolve(),
     }
 
 
@@ -36,10 +38,16 @@ def get_destination_directory(resources_path=None):
 def _selected_resource_directories(args_dict):
     """Return the selected resource classes to compare or sync."""
     selected = []
-    if args_dict.get("include_static", True):
+
+    def _is_selected(resource_name):
+        return not args_dict.get(f"exclude_{resource_name}", False)
+
+    if _is_selected("static"):
         selected.append("static")
-    if args_dict.get("include_generated", True):
+    if _is_selected("generated"):
         selected.append("generated")
+    if _is_selected("downloaded"):
+        selected.append("downloaded")
     if not selected:
         raise ValueError("Select at least one resource class to compare.")
     return tuple(selected)
@@ -154,7 +162,7 @@ def _format_file_group(directory_name, group_name, relative_paths):
 
 
 def render_sync_report(report):
-    """Render a human-readable sync report."""
+    """Render a human-readable sync report with actionable differences only."""
     lines = [
         f"Source: {report['source_root']}",
         f"Destination: {report['destination_root']}",
@@ -162,8 +170,7 @@ def render_sync_report(report):
     summary = report["summary"]
     lines.append(
         "Summary: "
-        f"new={summary['new']}, changed={summary['changed']}, "
-        f"unchanged={summary['unchanged']}, obsolete={summary['obsolete']}"
+        f"new={summary['new']}, changed={summary['changed']}, obsolete={summary['obsolete']}"
     )
 
     for directory_name, comparison in report["directories"].items():
@@ -212,27 +219,13 @@ def _deletion_plan(report):
     return plan
 
 
-def _remove_file(path, stop_root):
-    path = _resolve_delete_target(path, stop_root)
-    stop_root = Path(stop_root).resolve(strict=True)
-    path.unlink()
-    logger.info("Removed obsolete file %s", path)
-    for parent in path.parents:
-        if parent == stop_root:
-            break
-        if any(parent.iterdir()):
-            break
-        parent.rmdir()
-        logger.info("Removed empty directory %s", parent)
-
-
 def apply_sync_actions(report, sync=False, delete_missing=False):
-    """Apply sync and prune actions described by a sync report."""
+    """Apply sync actions and collect obsolete files for manual removal."""
     if not sync and not delete_missing:
-        return {"copied": [], "deleted": []}
+        return {"copied": [], "remove_candidates": []}
 
     copied = []
-    deleted = []
+    remove_candidates = []
     destination_directories = report["destination_directories"]
     delete_plan = _deletion_plan(report) if delete_missing else []
 
@@ -244,15 +237,14 @@ def apply_sync_actions(report, sync=False, delete_missing=False):
                 _copy_file(source_path, destination_path)
                 copied.append(f"{directory_name}/{relative_path}")
 
-    for directory_name, relative_path, destination_path, destination_root in delete_plan:
-        _remove_file(destination_path, destination_root)
-        deleted.append(f"{directory_name}/{relative_path}")
+    for directory_name, relative_path, _, _ in delete_plan:
+        remove_candidates.append(f"{directory_name}/{relative_path}")
 
-    return {"copied": copied, "deleted": deleted}
+    return {"copied": copied, "remove_candidates": remove_candidates}
 
 
 def sync_test_resources(args_dict):
-    """Compare, optionally sync, and optionally prune test resources."""
+    """Compare, optionally sync, and optionally report obsolete test resources."""
     selected_directories = _selected_resource_directories(args_dict)
     report = build_sync_report(
         args_dict["test_directory"],
@@ -271,6 +263,11 @@ def sync_test_resources(args_dict):
     )
     if actions["copied"]:
         logger.info("Copied %d file(s).", len(actions["copied"]))
-    if actions["deleted"]:
-        logger.info("Deleted %d obsolete file(s).", len(actions["deleted"]))
+    if actions["remove_candidates"]:
+        logger.info(
+            "Obsolete test resources were not removed automatically. Remove these file(s) "
+            "manually if they should be deleted:"
+        )
+        for relative_path in actions["remove_candidates"]:
+            logger.info("  %s", relative_path)
     return report, actions

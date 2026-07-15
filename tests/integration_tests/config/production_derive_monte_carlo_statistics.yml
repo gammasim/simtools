@@ -2,7 +2,7 @@
 applications:
 - application: simtools-production-derive-monte-carlo-statistics
   configuration:
-    trigger_histogram_file: ${generated:trigger_histograms.hdf5}
+    trigger_histogram_file: ${generated:gamma_diffuse_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test.trigger_histograms.hdf5}
     optimization_energy_max: 100 TeV
     optimization_energy_min: 0.1 TeV
     reduced_core_radius: 200 m
@@ -14,6 +14,5 @@ applications:
   integration_tests:
   - output_file: trigger_histograms_estimate.ecsv
   test_name: production_derive_monte_carlo_statistics
-  xfail: "Requires generated trigger histogram fixture to be produced before enabling."
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

@@ -33,6 +33,7 @@ RESOURCE_PATH = files("simtools") / "resources"
 # Paths to test resources
 TEST_RESOURCES_STATIC = "tests/resources/static"
 TEST_RESOURCES_GENERATED = "tests/resources/generated"
+TEST_RESOURCES_DOWNLOADED = "tests/resources/downloaded"
 
 # Maximum value allowed for random seeds in sim_telarray
 SIMTEL_MAX_SEED = 2147483647

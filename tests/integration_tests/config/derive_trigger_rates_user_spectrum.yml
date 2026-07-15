@@ -10,9 +10,9 @@ applications:
         ">=7.0.0":
         - LSTN-01
         - CTAO-North-Alpha
-    event_data_file: tests/resources/generated/proton_run000001_za20deg_azm180deg_North_alpha_6.0.2_test.reduced_event_data.hdf5
-    model_version: 6.0.2
-    cr_spectrum: tests/resources/static/trigger_rates_user_spectrum_powerlaw.yml
+    event_data_file: ${generated:proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.reduced_event_data.hdf5}
+    model_version: 7.0.0
+    cr_spectrum: ${static:trigger_rates_user_spectrum_powerlaw.yml}
     output_path: simtools-output
     plot_histograms: false
     site: North
