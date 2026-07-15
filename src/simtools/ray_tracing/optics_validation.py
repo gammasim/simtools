@@ -7,6 +7,7 @@ from pathlib import Path
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
+from astropy.table import Table
 from matplotlib.backends.backend_pdf import PdfPages
 
 import simtools.utils.general as gen
@@ -15,6 +16,25 @@ from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.visualization import visualize
 
 logger = logging.getLogger(__name__)
+
+
+def _find_psf_data_column(table, column_name, fallback_index):
+    """Find a PSF data column by name, falling back to legacy column position."""
+    matched_column = next((col for col in table.colnames if column_name in col.lower()), None)
+    if matched_column is not None:
+        return matched_column
+    try:
+        return table.colnames[fallback_index]
+    except IndexError as exc:
+        msg = f"Could not find required PSF data column '{column_name}' in {table.colnames}."
+        raise ValueError(msg) from exc
+
+
+def _radius_values_in_cm(radius_column):
+    """Return radius values in centimeters, using table units when available."""
+    if getattr(radius_column, "unit", None) is not None:
+        return radius_column.to(u.cm).value
+    return np.asarray(radius_column, dtype=float) * 0.1
 
 
 def load_data(datafile):
@@ -35,9 +55,14 @@ def load_data(datafile):
     radius_cm = "Radius [cm]"
     relative_intensity = "Relative intensity"
 
+    table = Table.read(datafile, format="ascii")
+    radius_column = _find_psf_data_column(table, "radius", 0)
+    integral_psf_column = _find_psf_data_column(table, "integral", 2)
+
     d_type = {"names": (radius_cm, relative_intensity), "formats": ("f8", "f8")}
-    data = np.loadtxt(datafile, dtype=d_type, usecols=(0, 2))
-    data[radius_cm] *= 0.1
+    data = np.zeros(len(table), dtype=d_type)
+    data[radius_cm] = _radius_values_in_cm(table[radius_column])
+    data[relative_intensity] = np.asarray(table[integral_psf_column], dtype=float)
     data[relative_intensity] /= np.max(np.abs(data[relative_intensity]))
     return data
 
