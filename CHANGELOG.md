@@ -65,7 +65,9 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
     options:
       - "--arch amd64"
       - "-v /<whatever path>/simpipe:/workdir/external/simpipe:ro"
-  ``` ([#2284](https://github.com/gammasim/simtools/pull/2284))
+  ```
+
+  ([#2284](https://github.com/gammasim/simtools/pull/2284))
 - Add support for running `simtools-simulate-prod` with parameters sourced directly from a production job grid ECSV file.
   Allows to use `--job_grid_file` / `--job_grid_row` to select a specific row from a job grid file to run a simulation with the parameters defined in that row. ([#2291](https://github.com/gammasim/simtools/pull/2291))
 - Added backend-neutral parameter-scan grids for NSB and proton bias-curve simulations, with optional scan fields supported by the HTCondor submission generator. ([#2298](https://github.com/gammasim/simtools/pull/2298))
