@@ -45,6 +45,16 @@ The Testing module provides tools for testing the code. This might be part of th
 
 ```
 
+(resourcesyncmodule)=
+
+## resource_sync
+
+```{eval-rst}
+.. automodule:: testing.resource_sync
+   :members:
+
+```
+
 (validate_outputmodule)=
 
 ## validate_output
