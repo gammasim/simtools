@@ -101,7 +101,8 @@ def create_psf_image_figure(
 
     fig = visualize.plot_hist_2d(data, ax=ax, **hist_kwargs)
     ax = fig.gca() if ax is None else ax
-
+    ax.set_xlabel("X Position (cm)")
+    ax.set_ylabel("Y Position (cm)")
     circle = plt.Circle(center, containment_radius_cm, **(psf_kwargs or {}))
     ax.add_artist(circle)
 
