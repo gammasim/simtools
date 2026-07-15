@@ -26,6 +26,7 @@ Fill trigger histograms from reduced event-data files:
 import astropy.units as u
 
 from simtools.application_control import build_application
+from simtools.configuration.commandline_argument_helpers import positive_quantity
 from simtools.production_configuration.trigger_histograms import write_trigger_histograms
 
 
@@ -50,7 +51,7 @@ def _add_arguments(parser):
     parser.add_argument(
         "--angular_distance_bin_width",
         help="Angular-distance bin width. The range is taken from broad-range viewcone limits.",
-        type=parser.positive_quantity("deg"),
+        type=positive_quantity("deg"),
         default=0.5 * u.deg,
     )
     parser.add_argument(

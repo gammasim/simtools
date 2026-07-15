@@ -7,22 +7,47 @@ from unittest.mock import MagicMock, patch
 import astropy.units as u
 import numpy as np
 import pytest
+from astropy.table import Table
 
 from simtools.ray_tracing import optics_validation
 
 
-def test_load_data_normalizes_and_converts_radius():
-    """Test loading/scaling of cumulative PSF data."""
-    input_data = np.array(
-        [(10.0, 2.0), (20.0, -4.0)],
-        dtype=[("Radius [cm]", "f8"), ("Relative intensity", "f8")],
+def test_load_data_normalizes_and_converts_ecsv_radius(tmp_test_directory):
+    """Test loading/scaling of cumulative PSF data from ECSV."""
+    data_file = Path(str(tmp_test_directory)) / "measured.ecsv"
+    table = Table(
+        {
+            "radius": [10.0, 20.0] * u.mm,
+            "differential_value": [1.0, 2.0],
+            "integral_value": [2.0, -4.0],
+        }
     )
+    table.write(data_file, format="ascii.ecsv")
 
-    with patch("simtools.ray_tracing.optics_validation.np.loadtxt", return_value=input_data):
-        data = optics_validation.load_data("dummy.dat")
+    data = optics_validation.load_data(data_file)
 
     np.testing.assert_allclose(data["Radius [cm]"], [1.0, 2.0])
     np.testing.assert_allclose(data["Relative intensity"], [0.5, -1.0])
+
+
+def test_load_data_normalizes_legacy_ascii_data(tmp_test_directory):
+    """Test loading/scaling of legacy cumulative PSF data without a header."""
+    data_file = Path(str(tmp_test_directory)) / "measured.dat"
+    data_file.write_text("10.0 1.0 2.0\n20.0 2.0 -4.0\n", encoding="utf-8")
+
+    data = optics_validation.load_data(data_file)
+
+    np.testing.assert_allclose(data["Radius [cm]"], [1.0, 2.0])
+    np.testing.assert_allclose(data["Relative intensity"], [0.5, -1.0])
+
+
+def test_load_data_raises_for_missing_integral_column(tmp_test_directory):
+    """Test loading cumulative PSF data fails if integral data are missing."""
+    data_file = Path(str(tmp_test_directory)) / "measured.dat"
+    data_file.write_text("radius differential_value\n10.0 1.0\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Could not find required PSF data column 'integral'"):
+        optics_validation.load_data(data_file)
 
 
 def test_validate_cumulative_psf_raises_without_radius_data():
@@ -94,7 +119,6 @@ def test_validate_cumulative_psf_saves_cumulative_and_image_plots(tmp_test_direc
     fig_1d = MagicMock()
     fig_1d.gca.return_value = MagicMock()
     fig_2d = MagicMock()
-    fig_2d.gca.return_value = MagicMock()
 
     with (
         patch(
@@ -105,15 +129,19 @@ def test_validate_cumulative_psf_saves_cumulative_and_image_plots(tmp_test_direc
         patch("simtools.ray_tracing.optics_validation.gen.find_file", return_value="measured.dat"),
         patch("simtools.ray_tracing.optics_validation.load_data", return_value=measured),
         patch("simtools.ray_tracing.optics_validation.visualize.plot_1d", return_value=fig_1d),
-        patch("simtools.ray_tracing.optics_validation.visualize.plot_hist_2d", return_value=fig_2d),
-        patch("simtools.ray_tracing.optics_validation.plt.Circle", return_value=MagicMock()),
+        patch(
+            "simtools.ray_tracing.optics_validation.plot_ray_tracing_psf.create_psf_image_figure",
+            return_value=(fig_2d, MagicMock()),
+        ) as mock_plot_image,
         patch("simtools.ray_tracing.optics_validation.visualize.save_figure") as mock_save,
     ):
         optics_validation.validate_cumulative_psf(app_context)
 
     assert mock_ray.simulate.call_count == 1
     assert mock_ray.analyze.call_count == 1
+    assert mock_plot_image.call_count == 1
     assert mock_save.call_count == 2
+    assert all(call.kwargs["close"] is True for call in mock_save.call_args_list)
 
 
 def test_validate_optics_no_images(tmp_test_directory):
@@ -147,11 +175,8 @@ def test_validate_optics_no_images(tmp_test_directory):
             return_value=(mock_tel_model, mock_site_model, None),
         ),
         patch("simtools.ray_tracing.optics_validation.RayTracing", return_value=mock_ray),
-        patch("simtools.ray_tracing.optics_validation.plt") as mock_plt,
         patch("simtools.ray_tracing.optics_validation.visualize.save_figure"),
     ):
-        mock_plt.figure.return_value = MagicMock()
-
         optics_validation.validate_optics(app_context)
 
         mock_ray.simulate.assert_called_once_with(test=True, force=False)
@@ -196,9 +221,6 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
 
     mock_ray.psf_images = {(0.0, 0.0): image_non_empty, (0.5, 0.0): image_empty}
 
-    mock_pdf = MagicMock()
-    ax = MagicMock()
-
     with (
         patch(
             "simtools.ray_tracing.optics_validation.initialize_simulation_models",
@@ -207,10 +229,14 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
         patch(
             "simtools.ray_tracing.optics_validation.RayTracing", return_value=mock_ray
         ) as mock_rt,
-        patch("simtools.ray_tracing.optics_validation.PdfPages", return_value=mock_pdf),
-        patch("simtools.ray_tracing.optics_validation.plt.figure", return_value=MagicMock()),
-        patch("simtools.ray_tracing.optics_validation.plt.gca", return_value=ax),
-        patch("simtools.ray_tracing.optics_validation.plt.close"),
+        patch(
+            "simtools.ray_tracing.optics_validation.plot_ray_tracing_psf."
+            "create_annotated_psf_image_figure",
+            return_value=MagicMock(),
+        ) as mock_create_figure,
+        patch(
+            "simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document"
+        ) as mock_save_pdf,
         patch("simtools.ray_tracing.optics_validation.visualize.save_figure") as mock_save,
     ):
         optics_validation.validate_optics(app_context)
@@ -221,5 +247,6 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
     assert len(rt_kwargs["off_axis_angle"]) == 3
 
     assert mock_save.call_count == 4
-    assert mock_pdf.savefig.call_count == 2
-    mock_pdf.close.assert_called_once()
+    assert all(call.kwargs["close"] is True for call in mock_save.call_args_list)
+    assert mock_create_figure.call_count == 2
+    assert mock_save_pdf.call_args.kwargs["close"] is True

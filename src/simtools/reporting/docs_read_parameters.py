@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from itertools import groupby
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools.constants import DEFAULT_SIMULATIONS_REPO
@@ -422,7 +421,6 @@ class ReadParameters:
                     config=plot_config,
                     output_file=image_output_file,
                 )
-                plt.close("all")
 
         return plot_names
 

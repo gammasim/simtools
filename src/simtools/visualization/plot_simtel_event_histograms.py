@@ -109,10 +109,8 @@ def plot_trigger_histogram_file(trigger_histogram_file, output_dir, array_layout
 
     output_dir = Path(output_dir)
     for _, histograms in loaded_histograms:
-        output_path = output_dir
-        if len(loaded_histograms) > 1:
-            output_path = output_dir / histograms.array_name
-            output_path.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / histograms.array_name
+        output_path.mkdir(parents=True, exist_ok=True)
         plot(_plottable_histograms(histograms.histograms), output_path=output_path)
 
 
@@ -138,6 +136,7 @@ def _plottable_histograms(histograms):
 def plot_monte_carlo_statistics_diagnostics(
     output_dir,
     array_name,
+    file_info,
     energy_edges,
     angular_edges,
     expected_counts,
@@ -152,6 +151,10 @@ def plot_monte_carlo_statistics_diagnostics(
         Directory to write plot files.
     array_name : str
         Array or telescope-selection name used in plot titles and filenames.
+    file_info : dict, optional
+        Dictionary with simulation metadata (zenith, azimuth, nsb_level) used
+        to make filenames unique per observational setup. If omitted, filenames are based on
+        ``array_name`` only.
     energy_edges : array-like
         Energy bin edges in TeV.
     angular_edges : array-like
@@ -163,8 +166,10 @@ def plot_monte_carlo_statistics_diagnostics(
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    _logger.info(f"Writing Monte Carlo statistics diagnostic plots to {output_dir}")
     file_prefix = _sanitize_filename_part(array_name)
+    file_info_suffix = _format_file_info_suffix(file_info or {})
+    if file_info_suffix:
+        file_prefix = f"{file_prefix}_{file_info_suffix}"
     plot_specs = (
         (
             expected_counts,

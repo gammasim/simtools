@@ -6,6 +6,8 @@ from importlib.resources import files
 SCHEMA_PATH = files("simtools") / "schemas"
 # Schema URL
 SCHEMA_URL = "https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas"
+# URL for files in the main branch of the GitHub repository
+GITHUB_BLOB_BASE = "https://github.com/gammasim/simtools/blob/main/"
 # Path to metadata jsonschema
 METADATA_JSON_SCHEMA = SCHEMA_PATH / "metadata.metaschema.yml"
 # Path to plotting configuration json schema
@@ -31,6 +33,7 @@ RESOURCE_PATH = files("simtools") / "resources"
 # Paths to test resources
 TEST_RESOURCES_STATIC = "tests/resources/static"
 TEST_RESOURCES_GENERATED = "tests/resources/generated"
+TEST_RESOURCES_DOWNLOADED = "tests/resources/downloaded"
 
 # Maximum value allowed for random seeds in sim_telarray
 SIMTEL_MAX_SEED = 2147483647

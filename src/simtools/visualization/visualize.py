@@ -566,7 +566,7 @@ def plot_table(table, y_title, **kwargs):
     return plot_1d(data_dict, **kwargs)
 
 
-def plot_hist_2d(data, **kwargs):
+def plot_hist_2d(data, ax=None, **kwargs):
     """
     Produce a two dimensional histogram plot.
 
@@ -577,8 +577,11 @@ def plot_hist_2d(data, **kwargs):
     ----------
     data: numpy structured array
           The columns of the structured array are used as the x-axis and y-axis titles.
+    ax: matplotlib.axes.Axes, optional
+        Existing axes to draw on. If not provided, a new figure is created.
     **kwargs:
         * title: set a plot title.
+        * cmap: colormap passed to ``hist2d``.
         * Any additional kwargs for plt.hist2d
 
     Returns
@@ -587,40 +590,67 @@ def plot_hist_2d(data, **kwargs):
         Instance of pyplot.figure in which the plot was produced.
 
     """
-    cmap = plt.cm.gist_heat_r
+    cmap = kwargs.pop("cmap", plt.cm.gist_heat_r)
     if "title" in kwargs:
         title = kwargs["title"]
         kwargs.pop("title", None)
     else:
         title = ""
 
-    # Set default style since the usual options do not affect 2d plots (for now).
-    set_style()
+    created_figure = ax is None
+    if created_figure:
+        # Set default style since the usual options do not affect 2d plots (for now).
+        set_style()
+        gs = gridspec.GridSpec(1, 1)
+        fig = plt.figure(figsize=(8, 6))
+        ax = fig.add_subplot(gs[0])
+    else:
+        fig = ax.figure
 
-    gs = gridspec.GridSpec(1, 1)
-    fig = plt.figure(figsize=(8, 6))
-
-    plt.subplot(gs[0])
     assert len(data.dtype.names) == 2, "Input array must have two columns with titles."
     x_title, y_title = data.dtype.names[0], data.dtype.names[1]
     x_title_unit = _add_unit(x_title, data[x_title])
     y_title_unit = _add_unit(y_title, data[y_title])
-    plt.hist2d(data[x_title], data[y_title], cmap=cmap, **kwargs)
+    ax.hist2d(data[x_title], data[y_title], cmap=cmap, **kwargs)
 
-    plt.xlabel(x_title_unit)
-    plt.ylabel(y_title_unit)
+    ax.set_xlabel(x_title_unit)
+    ax.set_ylabel(y_title_unit)
 
-    plt.gca().set_aspect("equal", adjustable="box")
+    ax.set_aspect("equal", adjustable="box")
 
     if len(title) > 0:
-        plt.title(title, y=1.02)
+        ax.set_title(title, y=1.02)
 
-    fig.tight_layout()
+    if created_figure:
+        fig.tight_layout()
 
     return fig
 
 
-def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"):
+def plot_histogram(data, ax=None, **kwargs):
+    """Plot a one-dimensional histogram on the provided or current axes.
+
+    Parameters
+    ----------
+    data : array-like
+        Values to plot.
+    ax : matplotlib.axes.Axes, optional
+        Existing axes to draw on. If not provided, the current axes are used.
+    **kwargs
+        Keyword arguments passed to ``Axes.hist``.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Figure containing the histogram.
+    """
+    if ax is None:
+        ax = plt.gca()
+    ax.hist(data, **kwargs)
+    return ax.figure
+
+
+def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure", close=False):
     """
     Save figure to output file(s).
 
@@ -637,6 +667,8 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
         Title of the figure to be added to the log message.
     dpi : str or int, optional
         DPI passed to ``fig.savefig``. Defaults to ``"figure"``.
+    close : bool, optional
+        Close the figure after saving. Defaults to False.
     """
     configured_formats = config.args.get("figure_format")
 
@@ -648,9 +680,11 @@ def save_figure(fig, output_file, figure_format=None, log_title="", dpi="figure"
         logging.info(f"Saved plot {log_title} to {_file}")
 
     fig.clf()
+    if close:
+        plt.close(fig)
 
 
-def save_figures_to_single_document(figs, output_file_name):
+def save_figures_to_single_document(figs, output_file_name, close=False):
     """
     Save multiple figures to a single PDF document.
 
@@ -660,11 +694,15 @@ def save_figures_to_single_document(figs, output_file_name):
         List of plt.figure instances to save.
     output_file_name: Path, str
         PDF file name
+    close : bool, optional
+        Close each figure after saving. Defaults to False.
     """
     _logger.info(f"Saving {len(figs)} figures to {output_file_name}")
     pdf_pages = PdfPages(Path(output_file_name).absolute().as_posix())
     for fig in figs:
-        plt.tight_layout()
+        fig.tight_layout()
         pdf_pages.savefig(fig)
+        if close:
+            plt.close(fig)
 
     pdf_pages.close()

@@ -5,16 +5,34 @@ from collections import OrderedDict
 from pathlib import Path
 
 import astropy.units as u
-import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.backends.backend_pdf import PdfPages
+from astropy.table import Table
 
 import simtools.utils.general as gen
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
-from simtools.visualization import visualize
+from simtools.visualization import plot_ray_tracing_psf, visualize
 
 logger = logging.getLogger(__name__)
+
+
+def _find_psf_data_column(table, column_name, fallback_index):
+    """Find a PSF data column by name, falling back to legacy column position."""
+    matched_column = next((col for col in table.colnames if column_name in col.lower()), None)
+    if matched_column is not None:
+        return matched_column
+    try:
+        return table.colnames[fallback_index]
+    except IndexError as exc:
+        msg = f"Could not find required PSF data column '{column_name}' in {table.colnames}."
+        raise ValueError(msg) from exc
+
+
+def _radius_values_in_cm(radius_column):
+    """Return radius values in centimeters, using table units when available."""
+    if getattr(radius_column, "unit", None) is not None:
+        return radius_column.to(u.cm).value
+    return np.asarray(radius_column, dtype=float) * 0.1
 
 
 def load_data(datafile):
@@ -35,9 +53,14 @@ def load_data(datafile):
     radius_cm = "Radius [cm]"
     relative_intensity = "Relative intensity"
 
+    table = Table.read(datafile, format="ascii")
+    radius_column = _find_psf_data_column(table, "radius", 0)
+    integral_psf_column = _find_psf_data_column(table, "integral", 2)
+
     d_type = {"names": (radius_cm, relative_intensity), "formats": ("f8", "f8")}
-    data = np.loadtxt(datafile, dtype=d_type, usecols=(0, 2))
-    data[radius_cm] *= 0.1
+    data = np.zeros(len(table), dtype=d_type)
+    data[radius_cm] = _radius_values_in_cm(table[radius_column])
+    data[relative_intensity] = np.asarray(table[integral_psf_column], dtype=float)
     data[relative_intensity] /= np.max(np.abs(data[relative_intensity]))
     return data
 
@@ -100,17 +123,21 @@ def validate_cumulative_psf(app_context):
 
     plot_file_name = label + "_" + tel_model.name + "_cumulative_PSF"
     plot_file = io_handler.get_output_file(plot_file_name)
-    visualize.save_figure(fig, plot_file)
+    visualize.save_figure(fig, plot_file, close=True)
 
     data_to_plot = image.get_image_data()
-    fig = visualize.plot_hist_2d(data_to_plot, bins=80)
-    circle = plt.Circle((0, 0), image.get_psf(0.8) / 2, color="k", fill=False, lw=2, ls="--")
-    fig.gca().add_artist(circle)
-    fig.gca().set_aspect("equal")
+    fig, _ = plot_ray_tracing_psf.create_psf_image_figure(
+        data_to_plot,
+        containment_radius_cm=image.get_psf(0.8) / 2,
+        center=(0, 0),
+        bins=80,
+        cmap="gist_heat_r",
+        psf_kwargs={"color": "k", "fill": False, "lw": 2, "ls": "--"},
+    )
 
     plot_file_name = label + "_" + tel_model.name + "_image"
     plot_file = io_handler.get_output_file(plot_file_name)
-    visualize.save_figure(fig, plot_file)
+    visualize.save_figure(fig, plot_file, close=True)
 
 
 def validate_optics(app_context):
@@ -159,17 +186,14 @@ def validate_optics(app_context):
     ray.analyze(force=True)
 
     for key in ["psf_deg", "psf_cm", "eff_area", "eff_flen"]:
-        plt.figure(figsize=(8, 6), tight_layout=True)
-        ray.plot(key, marker="o", linestyle="none", color="k")
+        fig = ray.plot(key, marker="o", linestyle="none", color="k")
         plot_file_name = "_".join((label, tel_model.name, key))
         plot_file = io_handler.get_output_file(plot_file_name)
-        visualize.save_figure(plt, plot_file)
-        plt.close()
+        visualize.save_figure(fig, plot_file, close=True)
 
     if args_dict["plot_images"]:
         plot_file_name = "_".join((label, tel_model.name, "images.pdf"))
         plot_file = io_handler.get_output_file(plot_file_name)
-        pdf_pages = PdfPages(plot_file)
 
         logger.info(f"Plotting images into {plot_file}")
 
@@ -190,30 +214,22 @@ def validate_optics(app_context):
 
         logger.info(f"Setting consistent image axes: x,y range = +-{max_extent_rounded} cm")
 
+        figures = []
         for (off_x, off_y), image in images_dict.items():
-            fig = plt.figure(figsize=(8, 6), tight_layout=True)
-            image.plot_image(
-                image_range=[
-                    [-max_extent_rounded, max_extent_rounded],
-                    [-max_extent_rounded, max_extent_rounded],
-                ]
-            )
-
             psf_cm = image.get_psf(fraction=0.8, unit="cm")
-
-            ax = plt.gca()
-            text_str = f"Offset: ({off_x:+.2f} deg, {off_y:+.2f} deg)\nPSF: {psf_cm:.2f} cm"
-            ax.text(
-                0.02,
-                0.98,
-                text_str,
-                transform=ax.transAxes,
-                verticalalignment="top",
-                bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.8},
-                fontsize=10,
-                family="monospace",
+            figures.append(
+                plot_ray_tracing_psf.create_annotated_psf_image_figure(
+                    image.get_image_data(centralized=True),
+                    off_x=off_x,
+                    off_y=off_y,
+                    psf_cm=psf_cm,
+                    image_range=[
+                        [-max_extent_rounded, max_extent_rounded],
+                        [-max_extent_rounded, max_extent_rounded],
+                    ],
+                    bins=150,
+                    cmap="gist_heat_r",
+                    psf_kwargs={"color": "k", "fill": False, "lw": 2, "ls": "--"},
+                )
             )
-
-            pdf_pages.savefig(fig)
-            plt.close(fig)
-        pdf_pages.close()
+        visualize.save_figures_to_single_document(figures, plot_file, close=True)

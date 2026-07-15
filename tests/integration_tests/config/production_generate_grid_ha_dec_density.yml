@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-production-generate-grid
+  docs:
+    title: Production grid defined on Ha/Dec axes.
+    summary: Example with full zenith coverage from 0 to 70 deg and a directed azimuth window.
   configuration:
     array_layout_name:
       by_version:
@@ -21,7 +24,7 @@ applications:
     corsika_he_interaction: epos
     corsika_le_interaction: urqmd
     energy_range: 30 GeV 300 GeV
-    corsika_limits: tests/resources/generated/corsika_simulation_limits/corsika_limits_north.ecsv
+    corsika_limits: ${downloaded:corsika_limits.ecsv}
     model_version: 7.0.0
     showers_per_run: 5
     showers_per_run_power_law: 0.0 1 TeV

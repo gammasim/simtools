@@ -75,6 +75,7 @@ def test_plot_monte_carlo_statistics_diagnostics_writes_expected_plots(tmp_test_
     plot_monte_carlo_statistics_diagnostics(
         tmp_test_directory,
         "MSTS-01",
+        {"zenith": 20.0 * u.deg, "azimuth": 180.0 * u.deg, "nsb_level": 1.0},
         np.array([0.1, 1.0, 10.0]),
         np.array([0.0, 0.5]),
         np.array([[10.0, 20.0]]),
@@ -83,8 +84,8 @@ def test_plot_monte_carlo_statistics_diagnostics_writes_expected_plots(tmp_test_
 
     assert mock_plot.call_count == 2
     output_files = [call.args[3] for call in mock_plot.call_args_list]
-    assert tmp_test_directory / "MSTS-01_expected_events.png" in output_files
-    assert tmp_test_directory / "MSTS-01_relative_uncertainty.png" in output_files
+    assert tmp_test_directory / "MSTS-01_z20_az180_nsb1_expected_events.png" in output_files
+    assert tmp_test_directory / "MSTS-01_z20_az180_nsb1_relative_uncertainty.png" in output_files
 
 
 def test_plot_monte_carlo_statistics_matrix_can_mask_zero_bins(tmp_test_directory, mocker):
@@ -134,6 +135,7 @@ def test_plottable_histograms_filters_non_plotable_entries():
 
 def test_plot_trigger_histogram_file_loads_selected_array_and_plots(tmp_test_directory, mocker):
     histogram_instance = MagicMock()
+    histogram_instance.array_name = "alpha"
     histogram_instance.histograms = {
         "energy": {"histogram": MagicMock(ndim=1)},
         "energy_vs_core": {"histogram": MagicMock(ndim=2)},
@@ -153,8 +155,9 @@ def test_plot_trigger_histogram_file_loads_selected_array_and_plots(tmp_test_dir
             "energy": histogram_instance.histograms["energy"],
             "energy_vs_core": histogram_instance.histograms["energy_vs_core"],
         },
-        output_path=tmp_test_directory,
+        output_path=Path(tmp_test_directory) / "alpha",
     )
+    assert (tmp_test_directory / "alpha").isdir()
 
 
 def test_plot_trigger_histogram_file_raises_for_missing_array_layout(tmp_test_directory, mocker):

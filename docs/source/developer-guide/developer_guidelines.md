@@ -33,7 +33,7 @@ The following steps outline how to contribute code to simtools:
 01. Set up your coding environment as outlined in the [getting started](getting_started_as_developer.md) section.
 02. Start a new feature branch from the main branch (`git checkout -b new-branch-name`).
 03. Implement your code changes.
-04. Add unit tests for new modules and functions (see [unit test section](testing.md#unit-tests)).
+04. Add unit tests for new modules and functions (see [unit tests](testing_unit.md)).
 05. Commit your code changes (use meaningful commit messages) and push them to GitHub.
 06. Create a draft pull request on GitHub when all features are implemented.
 07. Wait for the CI tests to finish and address any issues that arise.

@@ -3,7 +3,7 @@ applications:
 - application: simtools-submit-model-parameter-from-external
   configuration:
     instrument: LSTN-design
-    input_meta: tests/resources/generated/asum_threshold.meta.yml
+    input_meta: ${downloaded:asum_threshold.meta.yml}
     output_path: simtools-output
     parameter: asum_threshold
     parameter_version: 0.1.0

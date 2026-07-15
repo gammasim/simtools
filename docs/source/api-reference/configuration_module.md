@@ -22,6 +22,25 @@ Reference documentation for the configuration of simtools applications.
    :members:
 ```
 
+(configurationcommandline-parameters)=
+
+## commandline_parameters
+
+```{eval-rst}
+.. automodule:: configuration.commandline_parameters
+   :members:
+```
+
+(configurationcommandline-argument-helpers)=
+
+## commandline_argument_helpers
+
+```{eval-rst}
+.. automodule:: configuration.commandline_argument_helpers
+   :members:
+```
+
+
 (configurationdefaults)=
 
 ## defaults

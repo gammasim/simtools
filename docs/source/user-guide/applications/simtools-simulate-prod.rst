@@ -6,3 +6,4 @@ simtools-simulate-prod
 
 .. automodule:: simulate_prod
    :members:
+   :exclude-members: main

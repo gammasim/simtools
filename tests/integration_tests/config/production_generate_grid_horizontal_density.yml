@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-production-generate-grid
+  docs:
+    title: Production grid defined by grid density on horizontal axes.
+    summary: Typical production grid densities are below 1 /deg^2.
   configuration:
     array_layout_name:
       by_version:
@@ -16,7 +19,7 @@ applications:
     energy_range: 3 GeV 500 TeV
     energy_max_scaling: -2.5 200 TeV
     core_scatter: 10 2500 m
-    corsika_limits: tests/resources/generated/corsika_simulation_limits/corsika_limits_north.ecsv
+    corsika_limits: ${downloaded:corsika_limits.ecsv}
     model_version: 7.0.0
     showers_per_run: 5
     showers_per_run_power_law: 0.0 1 TeV
@@ -30,6 +33,6 @@ applications:
   integration_tests:
   - output_file: job_grid_horizontal_grid_density.ecsv
   model_version_use_current: true
-  test_name: production_generate_grid_horizontal
+  test_name: production_generate_grid_horizontal_density
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
