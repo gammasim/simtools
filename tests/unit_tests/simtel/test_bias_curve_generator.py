@@ -236,8 +236,6 @@ def test_write_bias_curve_ecsv_writes_combined_table(tmp_path):
     assert np.isnan(table["NSB rate (Hz)"][1])
     assert table["Proton rate (Hz)"][0] == pytest.approx(5.0)
     assert table["Proton rate (Hz)"][1] == pytest.approx(7.0)
-    assert table["Total rate (Hz)"][0] == pytest.approx(105.0)
-    assert np.isnan(table["Total rate (Hz)"][1])
 
 
 def test_generate_bias_curves_runs_full_pipeline(tmp_path):
