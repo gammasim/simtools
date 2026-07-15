@@ -379,8 +379,11 @@ def _write_bias_curve_ecsv(nsb_stats, proton_stats, output_file):
         }
     )
 
+    table["Total rate (Hz)"] = table["NSB rate (Hz)"] + table["Proton rate (Hz)"]
+
     table["NSB rate (Hz)"].format = ".2f"
     table["Proton rate (Hz)"].format = ".2f"
+    table["Total rate (Hz)"].format = ".2f"
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
     table.write(output_file, format="ascii.ecsv", overwrite=True)

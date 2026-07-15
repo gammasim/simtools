@@ -226,7 +226,7 @@ def test_write_bias_curve_ecsv_writes_combined_table(tmp_path):
 
     bias_curve_generator._write_bias_curve_ecsv(
         nsb_stats={220: {"rate_hz": 100.0}},
-        proton_stats={240: {"rate_hz": 5.0}},
+        proton_stats={220: {"rate_hz": 5.0}, 240: {"rate_hz": 7.0}},
         output_file=output_file,
     )
 
@@ -234,8 +234,10 @@ def test_write_bias_curve_ecsv_writes_combined_table(tmp_path):
     assert list(table["threshold"]) == [220, 240]
     assert table["NSB rate (Hz)"][0] == pytest.approx(100.0)
     assert np.isnan(table["NSB rate (Hz)"][1])
-    assert np.isnan(table["Proton rate (Hz)"][0])
-    assert table["Proton rate (Hz)"][1] == pytest.approx(5.0)
+    assert table["Proton rate (Hz)"][0] == pytest.approx(5.0)
+    assert table["Proton rate (Hz)"][1] == pytest.approx(7.0)
+    assert table["Total rate (Hz)"][0] == pytest.approx(105.0)
+    assert np.isnan(table["Total rate (Hz)"][1])
 
 
 def test_generate_bias_curves_runs_full_pipeline(tmp_path):
