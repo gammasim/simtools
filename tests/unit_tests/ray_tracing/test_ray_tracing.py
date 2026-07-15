@@ -706,9 +706,7 @@ def test_plot_histogram_valid_key(ray_tracing_lst, mocker):
     """
     Test the plot_histogram method of the RayTracing class with a valid key.
     """
-    mock_gca = mocker.patch("matplotlib.pyplot.gca")
-    mock_ax = mock_gca.return_value
-    mock_hist = mocker.patch.object(mock_ax, "hist")
+    mock_plot_histogram = mocker.patch("simtools.ray_tracing.ray_tracing.visualize.plot_histogram")
 
     ray_tracing_lst._results = QTable(
         {
@@ -721,8 +719,7 @@ def test_plot_histogram_valid_key(ray_tracing_lst, mocker):
 
     ray_tracing_lst.plot_histogram(key="psf_cm", bins=10)
 
-    mock_gca.assert_called_once()
-    mock_hist.assert_called_once_with(ray_tracing_lst._results["psf_cm"], bins=10)
+    mock_plot_histogram.assert_called_once_with(ray_tracing_lst._results["psf_cm"], bins=10)
 
 
 def test_plot_histogram_invalid_key(ray_tracing_lst):

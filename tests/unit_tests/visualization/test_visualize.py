@@ -150,6 +150,42 @@ def test_save_figure_defaults_to_png(io_handler):
     plt.close(fig)
 
 
+def test_save_figure_closes_when_requested(io_handler, mocker):
+    """Test optional figure closing after saving."""
+    fig = mocker.Mock()
+    mock_close = mocker.patch("simtools.visualization.visualize.plt.close")
+    output_file = io_handler.get_output_file(file_name="test_save_figure_close", sub_dir="plots")
+
+    visualize.save_figure(fig, output_file, close=True)
+
+    fig.savefig.assert_called_once()
+    fig.clf.assert_called_once()
+    mock_close.assert_called_once_with(fig)
+
+
+def test_plot_hist_2d_uses_existing_axes():
+    """Test drawing a 2D histogram on caller-provided axes."""
+    data = np.array([(0.0, 0.0), (1.0, -1.0)], dtype=[("X", "f8"), ("Y", "f8")])
+    fig, ax = plt.subplots()
+
+    assert visualize.plot_hist_2d(data, ax=ax, bins=2) is fig
+    assert ax.get_xlabel() == "X"
+    assert ax.get_ylabel() == "Y"
+
+    plt.close(fig)
+
+
+def test_plot_histogram_uses_existing_axes():
+    """Test drawing a one-dimensional histogram on caller-provided axes."""
+    data = np.array([0.0, 1.0, 1.0])
+    fig, ax = plt.subplots()
+
+    assert visualize.plot_histogram(data, ax=ax, bins=2) is fig
+    assert len(ax.patches) == 2
+
+    plt.close(fig)
+
+
 def test_plot_error_plots():
     """Test the _plot_error_plots function for both error types."""
     x = np.array([1, 2, 3])
@@ -303,14 +339,14 @@ def test_plot_ratio_difference():
     plt.close(fig4)
 
 
-def test_save_figures_to_single_document(tmp_path):
+def test_save_figures_to_single_document(tmp_test_directory):
     fig1, ax1 = plt.subplots()
     ax1.plot([0, 1], [0, 1])
     fig2, ax2 = plt.subplots()
     ax2.plot([1, 0], [0, 1])
-    output_pdf = tmp_path / "test_multi_fig.pdf"
-    visualize.save_figures_to_single_document([fig1, fig2], output_pdf)
+    output_pdf = tmp_test_directory / "test_multi_fig.pdf"
+    visualize.save_figures_to_single_document([fig1, fig2], output_pdf, close=True)
     assert output_pdf.exists()
-    plt.close(fig1)
-    plt.close(fig2)
+    assert not plt.fignum_exists(fig1.number)
+    assert not plt.fignum_exists(fig2.number)
     plt.close("all")

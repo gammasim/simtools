@@ -9,7 +9,7 @@ applications:
         ">=7.0.0": CTAO-North-Alpha
     label: test-pedestal-production-North
     log_level: DEBUG
-    model_version: 6.0.2
+    model_version: 7.0.0
     number_of_events: 3
     output_path: simtools-output
     run_number: 10
@@ -20,11 +20,11 @@ applications:
     stars: null
     nsb_scaling_factor: 2.
   integration_tests:
-  - output_file: sim_telarray/run000010/pedestals_run000010_za20deg_azm000deg_North_alpha_6.0.2_test-pedestal-production-North.simtel.zst
+  - output_file: sim_telarray/run000010/pedestals_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test-pedestal-production-North.simtel.zst
   - test_output_files:
     - expected_sim_telarray_output:
         event_type: pedestal
-      file: pedestals_run000010_za20deg_azm000deg_North_alpha_6.0.2_test-pedestal-production-North.simtel.zst
+      file: pedestals_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test-pedestal-production-North.simtel.zst
       path_descriptor: output_path
       output_sub_path: sim_telarray/run000010
   test_name: pedestals_20_deg_north
