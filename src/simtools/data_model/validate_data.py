@@ -484,8 +484,18 @@ class DataValidator:
                 col_name=col_name,
             )
             self.data_table[col_name] = converted_col
-            self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "allowed_range")
-            self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "required_range")
+            self._check_range(
+                col_name,
+                np.nanmin(converted_col.data),
+                np.nanmax(converted_col.data),
+                "allowed_range",
+            )
+            self._check_range(
+                col_name,
+                np.nanmin(converted_col.data),
+                np.nanmax(converted_col.data),
+                "required_range",
+            )
 
     def _check_required_columns(self):
         """
