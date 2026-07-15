@@ -38,11 +38,15 @@ def get_destination_directory(resources_path=None):
 def _selected_resource_directories(args_dict):
     """Return the selected resource classes to compare or sync."""
     selected = []
-    if args_dict.get("include_static", True):
+
+    def _is_selected(resource_name):
+        return not args_dict.get(f"exclude_{resource_name}", False)
+
+    if _is_selected("static"):
         selected.append("static")
-    if args_dict.get("include_generated", True):
+    if _is_selected("generated"):
         selected.append("generated")
-    if args_dict.get("include_downloaded", True):
+    if _is_selected("downloaded"):
         selected.append("downloaded")
     if not selected:
         raise ValueError("Select at least one resource class to compare.")
@@ -158,7 +162,7 @@ def _format_file_group(directory_name, group_name, relative_paths):
 
 
 def render_sync_report(report):
-    """Render a human-readable sync report."""
+    """Render a human-readable sync report with actionable differences only."""
     lines = [
         f"Source: {report['source_root']}",
         f"Destination: {report['destination_root']}",
@@ -166,8 +170,7 @@ def render_sync_report(report):
     summary = report["summary"]
     lines.append(
         "Summary: "
-        f"new={summary['new']}, changed={summary['changed']}, "
-        f"unchanged={summary['unchanged']}, obsolete={summary['obsolete']}"
+        f"new={summary['new']}, changed={summary['changed']}, obsolete={summary['obsolete']}"
     )
 
     for directory_name, comparison in report["directories"].items():
