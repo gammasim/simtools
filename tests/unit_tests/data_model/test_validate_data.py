@@ -246,6 +246,34 @@ def test_validate_data_columns(tmp_test_directory, caplog):
     assert "Error reading validation schema from" in caplog.text
 
 
+def test_validate_data_columns_preserves_dimensionless_integer_dtype():
+    data_validator = validate_data.DataValidator()
+    data_validator._data_description = [
+        {
+            "name": "run_number",
+            "required": True,
+            "type": "int64",
+        },
+        {
+            "name": "showers_per_run",
+            "required": True,
+            "unit": "dimensionless",
+            "type": "int64",
+        },
+    ]
+    data_validator.data_table = Table(
+        {
+            "run_number": np.array([1, 2], dtype=np.int64),
+            "showers_per_run": Column([10, 20], dtype=np.int64, unit="dimensionless"),
+        }
+    )
+
+    data_validator._validate_data_columns()
+
+    assert data_validator.data_table["run_number"].dtype == np.dtype("int64")
+    assert data_validator.data_table["showers_per_run"].dtype == np.dtype("int64")
+
+
 def test_sort_data(reference_columns, caplog):
     data_validator = validate_data.DataValidator()
     data_validator._data_description = reference_columns
