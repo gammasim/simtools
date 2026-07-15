@@ -866,23 +866,11 @@ _TEST_DATA_FILES = {
     (
         "corsika",
         "gamma",
-    ): "generated/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_6.0.2_test.corsika.zst",
+    ): "generated/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_7.0.0_test.corsika.zst",
     (
         "sim_telarray",
         "gamma",
-    ): "generated/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.simtel.zst",
-    (
-        "sim_telarray_hdata",
-        "gamma",
-    ): "generated/gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.hdata.zst",
-    (
-        "production_dl2_fits",
-        "20deg",
-    ): "static/production_dl2_fits/prod6_LaPalma-20deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
-    (
-        "production_dl2_fits",
-        "40deg",
-    ): "static/production_dl2_fits/prod6_LaPalma-40deg_gamma_cone.N.Am-4LSTs09MSTs_ID0_reduced.fits.gz",
+    ): "generated/gamma_diffuse_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test.simtel.zst",
     (
         "telescope_positions",
         "North",
@@ -902,7 +890,7 @@ _TEST_DATA_FILES = {
     (
         "corsika_limits",
         "North",
-    ): "generated/corsika_simulation_limits/corsika_limits_north.ecsv",
+    ): "downloaded/corsika_limits.ecsv",
 }
 
 

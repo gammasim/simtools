@@ -78,6 +78,7 @@ def test_resolve_test_resource_paths(tmp_test_directory):
         "integration_tests": [
             {"reference_output_file": "${static:reference.ecsv}"},
             {"reference_output_file": "${generated:model/parameter.json}"},
+            {"reference_output_file": "${downloaded:asum_threshold.meta.yml}"},
         ],
     }
 
@@ -90,6 +91,7 @@ def test_resolve_test_resource_paths(tmp_test_directory):
     assert resolved["integration_tests"] == [
         {"reference_output_file": str(resources_path / "static/reference.ecsv")},
         {"reference_output_file": str(resources_path / "generated/model/parameter.json")},
+        {"reference_output_file": str(resources_path / "downloaded/asum_threshold.meta.yml")},
     ]
 
 
@@ -103,6 +105,7 @@ applications:
   test_name: resource_macros
   configuration:
     input: ${static:input.ecsv}
+    input_meta: ${downloaded:asum_threshold.meta.yml}
     existing_path: tests/resources/static/existing.ecsv
   integration_tests:
   - reference_output_file: ${generated:reference.ecsv}
@@ -118,6 +121,9 @@ applications:
     )
 
     assert configs[0]["configuration"]["input"] == str(resources_path / "static/input.ecsv")
+    assert configs[0]["configuration"]["input_meta"] == str(
+        resources_path / "downloaded/asum_threshold.meta.yml"
+    )
     assert configs[0]["configuration"]["existing_path"] == str(
         resources_path / "static/existing.ecsv"
     )
@@ -140,6 +146,7 @@ def test_resolve_test_resource_path_macros_nested_structures(tmp_test_directory)
                     "items": [
                         "${static:layout/array.ecsv}",
                         "${generated:plots/summary.png}",
+                        "${downloaded:metadata/asum_threshold.meta.yml}",
                     ],
                     "keep_number": 7,
                     "keep_bool": True,
@@ -158,6 +165,9 @@ def test_resolve_test_resource_path_macros_nested_structures(tmp_test_directory)
     )
     assert resolved["config"]["groups"][1]["items"][1] == str(
         resources_path / "generated/plots/summary.png"
+    )
+    assert resolved["config"]["groups"][1]["items"][2] == str(
+        resources_path / "downloaded/metadata/asum_threshold.meta.yml"
     )
     assert resolved["config"]["groups"][1]["keep_number"] == 7
     assert resolved["config"]["groups"][1]["keep_bool"] is True

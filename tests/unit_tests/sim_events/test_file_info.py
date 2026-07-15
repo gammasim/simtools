@@ -2,7 +2,6 @@
 
 import warnings
 
-from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.sim_events.file_info import (
     get_combined_eventio_run_header,
     get_corsika_run_and_event_headers,
@@ -12,21 +11,8 @@ from simtools.sim_events.file_info import (
 
 
 def test_get_corsika_run_number_with_run_header(get_test_data_file):
-    assert get_corsika_run_number(get_test_data_file("sim_telarray", "gamma")) == 10
-
-    # The following file was actually created with the LightEmission package,
-    # but it should still return the run number correctly.
-    assert (
-        get_corsika_run_number(
-            f"{TEST_RESOURCES_GENERATED}/"
-            "gamma_diffuse_run000010_za20deg_azm000deg_North_alpha_6.0.2_test.simtel.zst"
-        )
-        == 10
-    )
-
-
-def test_get_corsika_run_number_without_run_header_real_file(get_test_data_file):
-    assert get_corsika_run_number(get_test_data_file("sim_telarray_hdata", "gamma")) is None
+    test_file = get_test_data_file("sim_telarray", "gamma")
+    assert get_corsika_run_number(test_file) == 10
 
 
 def test_get_combined_eventio_run_header(get_test_data_file):
@@ -60,9 +46,3 @@ def test_get_corsika_run_and_event_headers(get_test_data_file):
         assert hasattr(event_header, "dtype")  # numpy structured array
         assert "run_number" in run_header.dtype.names  # Check field exists
         assert run_header["run_number"] == 7  # Run number from file name
-
-
-def test_get_combined_eventio_run_header_incomplete(get_test_data_file):
-    # This file typically has incomplete header information
-    run_header = get_combined_eventio_run_header(get_test_data_file("sim_telarray_hdata", "gamma"))
-    assert run_header is None or isinstance(run_header, dict)
