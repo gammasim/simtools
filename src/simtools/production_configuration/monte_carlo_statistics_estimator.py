@@ -230,7 +230,12 @@ def _compute_core_distance_weights(core_edges, effective_radius):
 
 
 def _compute_view_cone_weights(angular_edges, effective_radius):
-    """Return solid-angle-fraction weights for integrating angular-distance bins."""
+    """Return solid-angle-fraction weights for integrating angular-distance bins.
+
+    Weights are computed from the spherical solid angle covered by each bin, not from
+    the linear angular width. Bins intersected by the reduced view-cone radius receive
+    a partial weight corresponding to the clipped solid-angle fraction.
+    """
     effective_radius = u.Quantity(effective_radius).to_value(u.deg)
     if effective_radius <= 0.0:
         raise ValueError("Effective view cone radius must be positive.")
@@ -366,49 +371,90 @@ def _estimate_required_events(
         raise ValueError(
             "Target relative uncertainty and target triggered events are mutually exclusive."
         )
-    candidate_matrix = np.asarray(expected_triggers_per_event, dtype=float)[:, energy_mask]
-    positive_mask = np.isfinite(candidate_matrix) & (candidate_matrix > 0.0)
-    skipped_bins = int(candidate_matrix.size - np.count_nonzero(positive_mask))
+    candidate_matrix, positive_mask, skipped_bins = _prepare_estimation_candidates(
+        expected_triggers_per_event,
+        energy_mask,
+    )
 
     if target_relative_uncertainty is not None:
-        if target_relative_uncertainty <= 0.0:
-            raise ValueError("Target relative uncertainty must be positive.")
-        required_trigger_count = 1.0 / float(target_relative_uncertainty) ** 2
-        if not np.any(positive_mask):
-            return np.inf, 0.0, (0, 0), 0, skipped_bins
-
-        required_totals = np.full_like(candidate_matrix, -np.inf, dtype=float)
-        required_totals[positive_mask] = required_trigger_count / candidate_matrix[positive_mask]
-        limiting_flat_index = int(np.argmax(required_totals))
-        limiting_index = np.unravel_index(limiting_flat_index, required_totals.shape)
-        return (
-            required_totals[limiting_index],
-            candidate_matrix[limiting_index],
-            limiting_index,
-            int(np.count_nonzero(positive_mask)),
+        return _estimate_required_events_from_uncertainty(
+            candidate_matrix,
+            positive_mask,
             skipped_bins,
+            target_relative_uncertainty,
         )
 
     if target_triggered_events is not None:
-        if target_triggered_events <= 0:
-            raise ValueError("Target triggered events must be positive.")
-        if overall_trigger_probability is None:
-            raise ValueError("Overall trigger probability must be provided.")
-        if overall_trigger_probability <= 0.0:
-            return np.inf, 0.0, (0, 0), 0, skipped_bins
-
-        representative_flat_index = int(np.argmax(candidate_matrix))
-        representative_index = np.unravel_index(representative_flat_index, candidate_matrix.shape)
-        return (
-            float(target_triggered_events) / float(overall_trigger_probability),
-            candidate_matrix[representative_index],
-            representative_index,
-            int(np.count_nonzero(positive_mask)),
+        return _estimate_required_events_from_total_trigger_target(
+            candidate_matrix,
+            positive_mask,
             skipped_bins,
+            target_triggered_events,
+            overall_trigger_probability,
         )
 
     raise ValueError(
         "Either target relative uncertainty or target triggered events must be provided."
+    )
+
+
+def _prepare_estimation_candidates(expected_triggers_per_event, energy_mask):
+    """Return candidate bins and masks restricted to the optimization energy range."""
+    candidate_matrix = np.asarray(expected_triggers_per_event, dtype=float)[:, energy_mask]
+    positive_mask = np.isfinite(candidate_matrix) & (candidate_matrix > 0.0)
+    skipped_bins = int(candidate_matrix.size - np.count_nonzero(positive_mask))
+    return candidate_matrix, positive_mask, skipped_bins
+
+
+def _estimate_required_events_from_uncertainty(
+    candidate_matrix,
+    positive_mask,
+    skipped_bins,
+    target_relative_uncertainty,
+):
+    """Solve the per-bin uncertainty target using the worst relevant bin."""
+    if target_relative_uncertainty <= 0.0:
+        raise ValueError("Target relative uncertainty must be positive.")
+    if not np.any(positive_mask):
+        return np.inf, 0.0, (0, 0), 0, skipped_bins
+
+    required_trigger_count = 1.0 / float(target_relative_uncertainty) ** 2
+    required_totals = np.full_like(candidate_matrix, -np.inf, dtype=float)
+    required_totals[positive_mask] = required_trigger_count / candidate_matrix[positive_mask]
+    limiting_flat_index = int(np.argmax(required_totals))
+    limiting_index = np.unravel_index(limiting_flat_index, required_totals.shape)
+    return (
+        required_totals[limiting_index],
+        candidate_matrix[limiting_index],
+        limiting_index,
+        int(np.count_nonzero(positive_mask)),
+        skipped_bins,
+    )
+
+
+def _estimate_required_events_from_total_trigger_target(
+    candidate_matrix,
+    positive_mask,
+    skipped_bins,
+    target_triggered_events,
+    overall_trigger_probability,
+):
+    """Solve the overall triggered-event target using the selected-range trigger probability."""
+    if target_triggered_events <= 0:
+        raise ValueError("Target triggered events must be positive.")
+    if overall_trigger_probability is None:
+        raise ValueError("Overall trigger probability must be provided.")
+    if overall_trigger_probability <= 0.0:
+        return np.inf, 0.0, (0, 0), 0, skipped_bins
+
+    representative_flat_index = int(np.argmax(candidate_matrix))
+    representative_index = np.unravel_index(representative_flat_index, candidate_matrix.shape)
+    return (
+        float(target_triggered_events) / float(overall_trigger_probability),
+        candidate_matrix[representative_index],
+        representative_index,
+        int(np.count_nonzero(positive_mask)),
+        skipped_bins,
     )
 
 
