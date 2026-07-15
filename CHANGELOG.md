@@ -7,6 +7,149 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.34.0](https://github.com/gammasim/simtools/releases/tag/v0.34.0) - 2026-07-15
+
+### API Changes
+
+- Changed `simtools-simulate-prod` grid-registration output handling.
+
+  The command-line option was renamed from `--pack_for_grid_register` to
+  `--grid_output_path`.
+
+  When `--grid_output_path` is configured, simulation products are now written as
+  plain files into that directory instead of creating a registration tarball.
+  This includes copied sim_telarray logs, CORSIKA logs, histogram (`.hdata`)
+  files, existing model archives, moved event output files, and a gzipped
+  `simtools.log.gz`. ([#2320](https://github.com/gammasim/simtools/pull/2320))
+
+### Bugfixes
+
+- Allow integration tests to run from working directories containing a pytest configuration
+  (see simpipe issue [#34](https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simpipe/-/work_items/34)). ([#2312](https://github.com/gammasim/simtools/pull/2312))
+- Fixes `simtools-simulate-prod` job-grid precedence by rejecting ambiguous mixes of `--job_grid_file/--job_grid_row` with explicit production parameters.
+  - Job-grid row resolution now happens inside `simulate_prod` before settings are loaded; the generic post-load override path was removed.
+  - Added parser/source tracking so CLI/YAML conflicts fail clearly while argparse defaults remain valid.
+  - Updated tests, docs, and the integration config to cover direct single-row job-grid execution.
+
+  ([#2328](https://github.com/gammasim/simtools/pull/2328))
+- Resolve reading of ecsv-style tables for `simtools-validate-cumulative-psf`. ([#2342](https://github.com/gammasim/simtools/pull/2342))
+- Fixed schema validation so dimensionless integer columns in generated job grids stay integer-typed instead of being written to ECSV as floats. ([#2343](https://github.com/gammasim/simtools/pull/2343))
+
+### Documentation
+
+- Improve documentation on Apptainer ORAS image tags (suffix `-apptainer`). ([#2317](https://github.com/gammasim/simtools/pull/2317))
+- Add dedicated documentation pages on unit, integration and science tests plus a description on how to generate test resources. ([#2338](https://github.com/gammasim/simtools/pull/2338))
+
+### New Features
+
+- Add application to generate and validate integration test resources: `simtools-resources-test-generate`.
+  Used for [simtools-tests](https://github.com/gammasim/simtools-tests) test generation. ([#2279](https://github.com/gammasim/simtools/pull/2279))
+- Allow to run integration and unit tests with resources from a configurable path (`--test_resources_path`).
+  Example:
+
+  ```console
+   pytest -n auto --no-cov --model_version=7.0.0 \\
+       --test-resources-path=../simtools-tests/simtools-tests/v0.33.0/integration_tests \\
+       tests/integration_tests
+   ``` ([#2283](https://github.com/gammasim/simtools/pull/2283))
+- Add generic runtime environment file option to `simtools-run-application` and `simtools-resources-test-generate`.
+
+  Use `--runtime_environment_file` pointing to e.g.
+
+  ```yaml
+  runtime_environment:
+    container_engine: podman
+    image: ghcr.io/gammasim/simtools-prod:20260622-v78010-v2025-11-30-rc-generic
+    network: simtools-mongo-network
+    environment_file: .env
+    options:
+      - "--arch amd64"
+      - "-v /<whatever path>/simpipe:/workdir/external/simpipe:ro"
+  ``` ([#2284](https://github.com/gammasim/simtools/pull/2284))
+- Add support for running `simtools-simulate-prod` with parameters sourced directly from a production job grid ECSV file.
+  Allows to use `--job_grid_file` / `--job_grid_row` to select a specific row from a job grid file to run a simulation with the parameters defined in that row. ([#2291](https://github.com/gammasim/simtools/pull/2291))
+- Added backend-neutral parameter-scan grids for NSB and proton bias-curve simulations, with optional scan fields supported by the HTCondor submission generator. ([#2298](https://github.com/gammasim/simtools/pull/2298))
+- Change simulation production grid from RA/Dec based to HA/Dec based.
+  Simplify production grid table with less columns and more descriptive column names.
+  Update sim_telarray metadata to include array Az/Ze and HA/Dec information. ([#2313](https://github.com/gammasim/simtools/pull/2313))
+- Improve `simtools-plot-corsika-limits`:
+  - correctly handle viewcone limits for cases of point-like simulations
+  - improve plotting by adding projections of distance and energy axes to 2D distribution panels
+  - set consistent limits to the axes when plotting: always use the broad-range simulation limits
+
+  ([#2319](https://github.com/gammasim/simtools/pull/2319))
+- Add functionality to `simtools-resources-test-generate` to run a single test generation config file using the `--config_file` option.
+
+  Example:
+
+  ```
+   simtools-resources-test-generate --test_directory . --simtools_version v0.34.0 --overwrite_collection_files \
+           --config_file simtools-tests/v0.34.0/integration_tests/config_files/generate_array_config_alpha_north_5.0.0.config.yml
+   ``` ([#2321](https://github.com/gammasim/simtools/pull/2321))
+- Enable `---runtime_environment_file` setting of run time environment (e.g., a container environment) with correct path settings for test resource generation and generic application running. ([#2323](https://github.com/gammasim/simtools/pull/2323))
+- Introduce schema-validation for `sim_telarray` metaparameters.
+  To export the full metadata description including all model parameters, use application `simtools-export-sim-telarray-metadata-schema`. ([#2324](https://github.com/gammasim/simtools/pull/2324))
+- Add schema URL to metadata of job grid table. Add functionality to `simtools-validate-file-using-schema` to read this schema from the header file. ([#2327](https://github.com/gammasim/simtools/pull/2327))
+- Generalize the creation and use of trigger-event histograms with several major improvements:
+
+  Add a generic application, `simtools-write-trigger-histograms`, to build and write trigger-event
+  histograms from reduced event-data files. The following applications were updated to use these
+  generic histograms:
+
+  - `simtools-compare-productions`
+  - `simtools-production-derive-corsika-limits`
+  - `simtools-plot-simulated-event-distributions`
+  - `simtools-production-derive-monte-carlo-statistics`
+
+  Improve the estimation of required Monte Carlo statistics in
+  `simtools-production-derive-monte-carlo-statistics` by using the generic histograms and by
+  providing a more robust estimate of the relative statistical uncertainty.
+
+  Improve file-type related utilities:
+
+  - add a utility application, `simtools-inspect-file`, to print the main structure and metadata of a
+    simtools-generated file.
+  - add the new modules `simtools.io.file_type` and `simtools.io.file_inspector` with helper
+    functions to identify and inspect files.
+
+  ([#2329](https://github.com/gammasim/simtools/pull/2329))
+- Calculate mean, max, and stdev of shower-reuse as function of energy, core, and angular distance:
+
+  - filled and saved with `simtools-write-trigger-histograms`
+  - plotted with `simtools-plot-simtel-events`
+
+  ([#2331](https://github.com/gammasim/simtools/pull/2331))
+
+### Maintenance
+
+- Improve robustness when writing reduced event-data HDF5 files with `simtools-write-reduced-event-lists`. ([#2296](https://github.com/gammasim/simtools/pull/2296))
+- Increase performance and efficiency of `simtools-write-reduced-event-lists`. ([#2310](https://github.com/gammasim/simtools/pull/2310))
+- Add flake8-cognitive-complexity to pre-commit stage. ([#2311](https://github.com/gammasim/simtools/pull/2311))
+- Improve efficiency and memory footprint for reading of reduced event data and histogram filling
+  for `simtools-production-derive-corsika-limits`. ([#2316](https://github.com/gammasim/simtools/pull/2316))
+- Simplify naming of sim_telarray configuration files written to disk for simulation production:
+  - telescope configuration files are now of type `CTAO-LSTS-01.cfg`, `CTAO-SSTS-25.cfg`
+  - array configuration files are of type `CTAO-South-beta.cfg`
+  - raises an exception if existing configuration files are overwritten by an application.
+  - add a run-number level to the model sub directory to avoid overwriting for applications using several models.
+
+  ([#2318](https://github.com/gammasim/simtools/pull/2318))
+- Review and improve pylint options with less disabled messages. ([#2330](https://github.com/gammasim/simtools/pull/2330))
+- Major refactor of application documentation generation:
+
+  - read command line parameters from their definition in the configuration module (instead of repeating the help messages in the docstring)
+  - allow to read the integration test configuration file and use them as use-case examples in the application documentation
+
+  ([#2333](https://github.com/gammasim/simtools/pull/2333))
+- Improve guidance for coding agents and generalize (so they can now be used with Copilot, Claude, and Codex):
+  - add a generic `AGENTS.md` (replaces `.github/copilot-instructions.md`)
+  - move skills to `.agents/skills` and add a documentation skill.
+
+  ([#2337](https://github.com/gammasim/simtools/pull/2337))
+- Change trigger for simtools-prod and simtools-dev container generation. Don't push when running on main. Push for tags of type `vXX.YY.ZZ-rc` (release candidates). ([#2339](https://github.com/gammasim/simtools/pull/2339))
+- Update of tests/resources with re-generated files. General update to model version v7.0.0. ([#2340](https://github.com/gammasim/simtools/pull/2340))
+
+
 ## [v0.33.0](https://github.com/gammasim/simtools/releases/tag/v0.33.0) - 2026-06-30
 
 ### API Changes
