@@ -478,9 +478,24 @@ class DataValidator:
                 continue
             self._check_for_not_a_number(col.data, col_name)
             self._check_data_type(col.dtype, col_name)
-            self.data_table[col_name] = col.to(u.Unit(self._get_reference_unit(col_name)))
-            self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "allowed_range")
-            self._check_range(col_name, np.nanmin(col.data), np.nanmax(col.data), "required_range")
+            converted_col, _ = self._check_and_convert_units(
+                col,
+                unit=getattr(col, "unit", None),
+                col_name=col_name,
+            )
+            self.data_table[col_name] = converted_col
+            self._check_range(
+                col_name,
+                np.nanmin(converted_col.data),
+                np.nanmax(converted_col.data),
+                "allowed_range",
+            )
+            self._check_range(
+                col_name,
+                np.nanmin(converted_col.data),
+                np.nanmax(converted_col.data),
+                "required_range",
+            )
 
     def _check_required_columns(self):
         """
@@ -770,7 +785,7 @@ class DataValidator:
                 f"Invalid unit in data column '{col_name}'. "
                 f"Expected type '{reference_unit}', found '{column_unit}'"
             )
-            raise u.core.UnitConversionError from exc
+            raise u.core.UnitConversionError(str(exc)) from exc
 
     def _check_and_convert_units_for_list(self, data, column_unit, reference_unit):
         """

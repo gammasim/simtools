@@ -246,6 +246,48 @@ def test_validate_data_columns(tmp_test_directory, caplog):
     assert "Error reading validation schema from" in caplog.text
 
 
+def test_validate_data_columns_preserves_dimensionless_integer_dtype():
+    data_validator = validate_data.DataValidator()
+    data_validator._data_description = [
+        {
+            "name": "run_number",
+            "required": True,
+            "type": "int64",
+        },
+        {
+            "name": "showers_per_run",
+            "required": True,
+            "unit": "dimensionless",
+            "type": "int64",
+        },
+    ]
+    data_validator.data_table = Table(
+        {
+            "run_number": np.array([1, 2], dtype=np.int64),
+            "showers_per_run": Column([10, 20], dtype=np.int64, unit="dimensionless"),
+        }
+    )
+
+    data_validator._validate_data_columns()
+
+    assert data_validator.data_table["run_number"].dtype == np.dtype("int64")
+    assert data_validator.data_table["showers_per_run"].dtype == np.dtype("int64")
+
+
+def test_validate_data_columns_checks_range_after_unit_conversion(reference_columns):
+    data_validator = validate_data.DataValidator()
+    data_validator._data_description = reference_columns
+    data_validator.data_table = Table()
+    data_validator.data_table["wavelength"] = Column([300.0, 700.0], unit="nm", dtype="float64")
+    data_validator.data_table["qe"] = Column([0.1, 0.5], dtype="float64")
+    data_validator.data_table["position_x"] = Column([0.0004, 0.0006], unit="km", dtype="float64")
+
+    data_validator._validate_data_columns()
+
+    assert data_validator.data_table["position_x"].unit == u.m
+    assert data_validator.data_table["position_x"].value[0] == pytest.approx(0.4)
+
+
 def test_sort_data(reference_columns, caplog):
     data_validator = validate_data.DataValidator()
     data_validator._data_description = reference_columns
