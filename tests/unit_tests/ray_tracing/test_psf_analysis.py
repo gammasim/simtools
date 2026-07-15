@@ -452,38 +452,41 @@ def test_find_psf_brute_force(psf_image, mocker, caplog):
 
 def test_plot_cumulative(psf_image, mocker):
     image = psf_image
-    mock_subplot = mocker.patch("matplotlib.pyplot.subplots")
-    mock_ax = mocker.Mock()
-    mock_subplot.return_value = (mocker.Mock(), mock_ax)
+    mock_create = mocker.patch(
+        "simtools.ray_tracing.psf_analysis.plot_ray_tracing_psf.create_cumulative_psf_figure"
+    )
+    mock_create.return_value = (mocker.Mock(), mocker.Mock())
 
     image.plot_cumulative(color="blue", linestyle="--")
 
-    mock_ax.plot.assert_called_once()
-    args, kwargs = mock_ax.plot.call_args
-    assert np.array_equal(args[0], image.get_cumulative_data()[image._PSFImage__PSF_RADIUS])
-    assert np.array_equal(args[1], image.get_cumulative_data()[image._PSFImage__PSF_CUMULATIVE])
+    mock_create.assert_called_once()
+    args = mock_create.call_args.args
+    kwargs = mock_create.call_args.kwargs
+    assert np.array_equal(args[0], image.get_cumulative_data())
+    assert kwargs["radius_key"] == image._PSFImage__PSF_RADIUS
+    assert kwargs["cumulative_key"] == image._PSFImage__PSF_CUMULATIVE
     assert kwargs["color"] == "blue"
     assert kwargs["linestyle"] == "--"
 
 
-def test_plot_cumulative_writes_file_and_marks_psf_diameter(psf_image, mocker, tmp_path):
+def test_plot_cumulative_writes_file_and_marks_psf_diameter(psf_image, mocker, tmp_test_directory):
     image = psf_image
-    mock_subplot = mocker.patch("matplotlib.pyplot.subplots")
     mock_fig = mocker.Mock()
-    mock_ax = mocker.Mock()
-    mock_subplot.return_value = (mock_fig, mock_ax)
+    mock_create = mocker.patch(
+        "simtools.ray_tracing.psf_analysis.plot_ray_tracing_psf.create_cumulative_psf_figure"
+    )
+    mock_create.return_value = (mock_fig, mocker.Mock())
     mock_close = mocker.patch("matplotlib.pyplot.close")
 
-    out_file = tmp_path / "cum.png"
+    out_file = tmp_test_directory / "cum.png"
     image.plot_cumulative(file_name=str(out_file), psf_diameter_cm=4.0, color="k")
 
-    # One axvline for default containment fraction PSF, one for provided marker.
-    assert mock_ax.axvline.call_count == 2
+    assert mock_create.call_args.kwargs["psf_diameter_cm"] == pytest.approx(4.0)
     mock_fig.savefig.assert_called_once_with(str(out_file))
     mock_close.assert_called_once_with(mock_fig)
 
 
-def test_plot_image_writes_file(monkeypatch, tmp_path):
+def test_plot_image_writes_file(monkeypatch, tmp_test_directory):
     # Keep this test isolated from other matplotlib tests.
     image = PSFImage(focal_length=2800.0)
     image.photon_pos_x = [0.0, 1.0, 2.0]
@@ -497,6 +500,6 @@ def test_plot_image_writes_file(monkeypatch, tmp_path):
 
     mpl.use("Agg", force=True)
 
-    out_file = tmp_path / "img.png"
+    out_file = tmp_test_directory / "img.png"
     image.plot_image(centralized=False, file_name=str(out_file))
     assert out_file.exists()

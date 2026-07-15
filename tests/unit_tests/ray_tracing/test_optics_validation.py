@@ -94,7 +94,6 @@ def test_validate_cumulative_psf_saves_cumulative_and_image_plots(tmp_test_direc
     fig_1d = MagicMock()
     fig_1d.gca.return_value = MagicMock()
     fig_2d = MagicMock()
-    fig_2d.gca.return_value = MagicMock()
 
     with (
         patch(
@@ -105,14 +104,17 @@ def test_validate_cumulative_psf_saves_cumulative_and_image_plots(tmp_test_direc
         patch("simtools.ray_tracing.optics_validation.gen.find_file", return_value="measured.dat"),
         patch("simtools.ray_tracing.optics_validation.load_data", return_value=measured),
         patch("simtools.ray_tracing.optics_validation.visualize.plot_1d", return_value=fig_1d),
-        patch("simtools.ray_tracing.optics_validation.visualize.plot_hist_2d", return_value=fig_2d),
-        patch("simtools.ray_tracing.optics_validation.plt.Circle", return_value=MagicMock()),
+        patch(
+            "simtools.ray_tracing.optics_validation.plot_ray_tracing_psf.create_psf_image_figure",
+            return_value=(fig_2d, MagicMock()),
+        ) as mock_plot_image,
         patch("simtools.ray_tracing.optics_validation.visualize.save_figure") as mock_save,
     ):
         optics_validation.validate_cumulative_psf(app_context)
 
     assert mock_ray.simulate.call_count == 1
     assert mock_ray.analyze.call_count == 1
+    assert mock_plot_image.call_count == 1
     assert mock_save.call_count == 2
 
 
@@ -211,6 +213,10 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
         patch("simtools.ray_tracing.optics_validation.plt.figure", return_value=MagicMock()),
         patch("simtools.ray_tracing.optics_validation.plt.gca", return_value=ax),
         patch("simtools.ray_tracing.optics_validation.plt.close"),
+        patch(
+            "simtools.ray_tracing.optics_validation.plot_ray_tracing_psf.create_psf_image_figure",
+            return_value=(MagicMock(), ax),
+        ) as mock_plot_image,
         patch("simtools.ray_tracing.optics_validation.visualize.save_figure") as mock_save,
     ):
         optics_validation.validate_optics(app_context)
@@ -221,5 +227,6 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
     assert len(rt_kwargs["off_axis_angle"]) == 3
 
     assert mock_save.call_count == 4
+    assert mock_plot_image.call_count == 2
     assert mock_pdf.savefig.call_count == 2
     mock_pdf.close.assert_called_once()
