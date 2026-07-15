@@ -4,6 +4,9 @@ name: build-simtools-prod
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*-rc*'
   pull_request:
     paths:
       - docker/Dockerfile-simtools-prod
@@ -67,7 +70,7 @@ jobs:
             suffix=-${{ matrix.corsika }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
           tags: |
             type=ref,event=pr
-            type=semver,pattern=v{{major}}.{{minor}}.{{patch}}
+            type=semver,pattern=v{{version}}
             type=schedule,pattern={{date 'YYYYMMDD'}}
             type=raw,value={{date 'YYYYMMDD'}}
 
@@ -90,13 +93,13 @@ jobs:
             SIMTEL_IMAGE_VERSION=${{ matrix.sim_telarray }}
             AVX_FLAG=${{ matrix.avx_flag }}
             SIMTOOLS_BRANCH=${{ env.SIMTOOLS_BRANCH }}
-          push: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+          push: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
           file: ./docker/Dockerfile-simtools-prod
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Install Apptainer
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+        if: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
         env:
           APPTAINER_VERSION: v1.5.0
           GH_TOKEN: ${{ github.token }}
@@ -108,7 +111,7 @@ jobs:
           apptainer --version
 
       - name: Generate and push Apptainer images
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+        if: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
         env:
           APPTAINER_DOCKER_USERNAME: ${{ github.actor }}
           APPTAINER_DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
@@ -135,7 +138,7 @@ jobs:
     permissions:
       contents: read
     needs: build-simtools-prod
-    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
     uses: ./.github/workflows/CI-integrationtests.yml
     secrets: inherit
     with:
