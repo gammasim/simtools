@@ -238,7 +238,7 @@ def _resource_path_suffixes(value):
 
     parts = [part for part in Path(value).as_posix().split("/") if part not in ("", ".")]
     suffixes = set()
-    markers = ("integration_tests", "tests", "static", "generated")
+    markers = ("integration_tests", "tests", "static", "generated", "downloaded")
     for idx, part in enumerate(parts):
         if part in markers:
             suffixes.add(tuple(parts[idx:]))
