@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import astropy.units as u
+import numpy as np
 import pytest
 from astropy.table import Table
 
@@ -67,6 +68,17 @@ def test_serialize_and_read_job_grid_ecsv(tmp_test_directory):
     assert metadata["job_grid_summary"]["simulation_rows"] == 1
     assert metadata["job_grid_summary"]["total_showers"] == 1000
     assert metadata["job_grid_summary"]["energy_min_used"] == "30 GeV"
+
+
+def test_serialize_job_grid_preserves_integer_dtypes_on_disk(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "job_grid.ecsv"
+
+    job_grid_io.serialize_job_grid(_job_rows(), output_file, metadata=_metadata())
+    output_table = Table.read(output_file, format="ascii.ecsv")
+
+    assert np.issubdtype(output_table["run_number"].dtype, np.integer)
+    assert np.issubdtype(output_table["cores_per_shower"].dtype, np.integer)
+    assert np.issubdtype(output_table["showers_per_run"].dtype, np.integer)
 
 
 def test_serialize_job_grid_and_read_multiple_rows(tmp_test_directory):
