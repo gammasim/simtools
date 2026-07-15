@@ -1,6 +1,6 @@
-simtools-generate-test-resources
+simtools-resources-test-generate
 ================================
 
-.. automodule:: generate_test_resource
+.. automodule:: resources_test_generate
    :members:
    :exclude-members: main
