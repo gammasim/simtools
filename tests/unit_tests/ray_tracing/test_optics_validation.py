@@ -7,22 +7,47 @@ from unittest.mock import MagicMock, patch
 import astropy.units as u
 import numpy as np
 import pytest
+from astropy.table import Table
 
 from simtools.ray_tracing import optics_validation
 
 
-def test_load_data_normalizes_and_converts_radius():
-    """Test loading/scaling of cumulative PSF data."""
-    input_data = np.array(
-        [(10.0, 2.0), (20.0, -4.0)],
-        dtype=[("Radius [cm]", "f8"), ("Relative intensity", "f8")],
+def test_load_data_normalizes_and_converts_ecsv_radius(tmp_test_directory):
+    """Test loading/scaling of cumulative PSF data from ECSV."""
+    data_file = Path(str(tmp_test_directory)) / "measured.ecsv"
+    table = Table(
+        {
+            "radius": [10.0, 20.0] * u.mm,
+            "differential_value": [1.0, 2.0],
+            "integral_value": [2.0, -4.0],
+        }
     )
+    table.write(data_file, format="ascii.ecsv")
 
-    with patch("simtools.ray_tracing.optics_validation.np.loadtxt", return_value=input_data):
-        data = optics_validation.load_data("dummy.dat")
+    data = optics_validation.load_data(data_file)
 
     np.testing.assert_allclose(data["Radius [cm]"], [1.0, 2.0])
     np.testing.assert_allclose(data["Relative intensity"], [0.5, -1.0])
+
+
+def test_load_data_normalizes_legacy_ascii_data(tmp_test_directory):
+    """Test loading/scaling of legacy cumulative PSF data without a header."""
+    data_file = Path(str(tmp_test_directory)) / "measured.dat"
+    data_file.write_text("10.0 1.0 2.0\n20.0 2.0 -4.0\n", encoding="utf-8")
+
+    data = optics_validation.load_data(data_file)
+
+    np.testing.assert_allclose(data["Radius [cm]"], [1.0, 2.0])
+    np.testing.assert_allclose(data["Relative intensity"], [0.5, -1.0])
+
+
+def test_load_data_raises_for_missing_integral_column(tmp_test_directory):
+    """Test loading cumulative PSF data fails if integral data are missing."""
+    data_file = Path(str(tmp_test_directory)) / "measured.dat"
+    data_file.write_text("radius differential_value\n10.0 1.0\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Could not find required PSF data column 'integral'"):
+        optics_validation.load_data(data_file)
 
 
 def test_validate_cumulative_psf_raises_without_radius_data():
