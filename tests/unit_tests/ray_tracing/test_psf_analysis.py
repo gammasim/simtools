@@ -476,14 +476,15 @@ def test_plot_cumulative_writes_file_and_marks_psf_diameter(psf_image, mocker, t
         "simtools.ray_tracing.psf_analysis.plot_ray_tracing_psf.create_cumulative_psf_figure"
     )
     mock_create.return_value = (mock_fig, mocker.Mock())
-    mock_close = mocker.patch("matplotlib.pyplot.close")
+    mock_save = mocker.patch(
+        "simtools.ray_tracing.psf_analysis.plot_ray_tracing_psf.save_and_close_figure"
+    )
 
     out_file = tmp_test_directory / "cum.png"
     image.plot_cumulative(file_name=str(out_file), psf_diameter_cm=4.0, color="k")
 
     assert mock_create.call_args.kwargs["psf_diameter_cm"] == pytest.approx(4.0)
-    mock_fig.savefig.assert_called_once_with(str(out_file))
-    mock_close.assert_called_once_with(mock_fig)
+    mock_save.assert_called_once_with(mock_fig, str(out_file))
 
 
 def test_plot_image_writes_file(monkeypatch, tmp_test_directory):
