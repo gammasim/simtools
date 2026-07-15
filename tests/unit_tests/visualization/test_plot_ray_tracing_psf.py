@@ -50,12 +50,18 @@ def test_create_psf_image_figure_draws_histogram_circle_and_axes():
             containment_radius_cm=2.0,
             center=(0.0, 0.0),
             bins=80,
+            image_range=[[-1.0, 1.0], [-1.0, 1.0]],
             psf_kwargs={"color": "k", "fill": False},
         )
 
     assert fig == mock_fig
     assert ax == mock_ax
-    mock_plot_hist.assert_called_once()
+    mock_plot_hist.assert_called_once_with(
+        data,
+        ax=None,
+        bins=80,
+        range=[[-1.0, 1.0], [-1.0, 1.0]],
+    )
     mock_ax.add_artist.assert_called_once()
     mock_ax.axhline.assert_called_once()
     mock_ax.axvline.assert_called_once()

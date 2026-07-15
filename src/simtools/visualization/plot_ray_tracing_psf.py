@@ -96,6 +96,9 @@ def create_psf_image_figure(
     if ax is None and use_current_axes:
         ax = plt.gca()
 
+    if "image_range" in hist_kwargs:
+        hist_kwargs["range"] = hist_kwargs.pop("image_range")
+
     fig = visualize.plot_hist_2d(data, ax=ax, **hist_kwargs)
     ax = fig.gca() if ax is None else ax
 
