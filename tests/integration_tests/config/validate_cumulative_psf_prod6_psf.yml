@@ -2,7 +2,7 @@
 applications:
 - application: simtools-validate-cumulative-psf
   configuration:
-    data: ${generated/PSFcurve_data_v2.ecsv}
+    data: tests/resources/generated/PSFcurve_data_v2.ecsv
     model_version: 6.0.2
     output_path: simtools-output
     site: North
