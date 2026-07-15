@@ -1,0 +1,902 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>testing.resource_generation &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../_static/documentation_options.js?v=bbce7252"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/testing/resource_generation';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.20.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.34.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">testing.resource_generation</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for testing.resource_generation</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Generate and collect versioned resources used by simtools integration tests.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">urllib.error</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">urllib.request</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.runners</span><span class="w"> </span><span class="kn">import</span> <span class="n">simtools_runner</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">STATIC_MANIFEST</span> <span class="o">=</span> <span class="s2">&quot;static_manifest.yml&quot;</span>
+<span class="n">_PRESERVED_INTEGRATION_TEST_DIRECTORIES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;config_files&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;generated&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;log_files&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;static&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tmp_application_output&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="get_integration_test_directory">
+<a class="viewcode-back" href="../../api-reference/testing.html#testing.resource_generation.get_integration_test_directory">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_integration_test_directory</span><span class="p">(</span><span class="n">test_directory</span><span class="p">,</span> <span class="n">simtools_version</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the integration-test directory for a simtools release.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    test_directory : str or pathlib.Path</span>
+<span class="sd">        Root directory of the ``simtools-tests`` repository (or a directory containing it).</span>
+<span class="sd">    simtools_version : str</span>
+<span class="sd">        Version directory to use, for example ``v0.32.0``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pathlib.Path</span>
+<span class="sd">        Path to the release-specific ``integration_tests`` directory.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">test_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">test_directory</span><span class="p">)</span>
+    <span class="n">repo_root</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">test_directory</span> <span class="o">/</span> <span class="s2">&quot;simtools-tests&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">test_directory</span> <span class="o">/</span> <span class="s2">&quot;simtools-tests&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span>
+        <span class="k">else</span> <span class="n">test_directory</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="n">simtools_version</span> <span class="o">/</span> <span class="s2">&quot;integration_tests&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="get_resource_generation_directory">
+<a class="viewcode-back" href="../../api-reference/testing.html#testing.resource_generation.get_resource_generation_directory">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_resource_generation_directory</span><span class="p">(</span><span class="n">test_directory</span><span class="p">,</span> <span class="n">simtools_version</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the configuration directory for resource generation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    test_directory : str or pathlib.Path</span>
+<span class="sd">        Root directory of the ``simtools-tests`` repository.</span>
+<span class="sd">    simtools_version : str</span>
+<span class="sd">        Version directory to use, for example ``v0.32.0``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pathlib.Path</span>
+<span class="sd">        Existing release-specific ``config_files`` directory.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    FileNotFoundError</span>
+<span class="sd">        If the configuration directory does not exist.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config_dir</span> <span class="o">=</span> <span class="n">get_integration_test_directory</span><span class="p">(</span><span class="n">test_directory</span><span class="p">,</span> <span class="n">simtools_version</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;config_files&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">config_dir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Resource-generation directory does not exist: </span><span class="si">{</span><span class="n">config_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">config_dir</span></div>
+
+
+
+<div class="viewcode-block" id="run_configured_applications">
+<a class="viewcode-back" href="../../api-reference/testing.html#testing.resource_generation.run_configured_applications">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_configured_applications</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">config_dir</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span> <span class="n">run_time</span><span class="p">,</span> <span class="n">replacements</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run all resource-generation workflows using one prepared runtime.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary containing command line arguments.</span>
+<span class="sd">    config_dir : str or pathlib.Path</span>
+<span class="sd">        Directory containing the ``*.config.yml`` workflow files.</span>
+<span class="sd">    log_dir : str or pathlib.Path</span>
+<span class="sd">        Destination directory for one log file per workflow.</span>
+<span class="sd">    run_time : list or None</span>
+<span class="sd">        Prepared runtime command. If provided, reuse it instead of preparing</span>
+<span class="sd">        the runtime environment from the workflow configuration.</span>
+<span class="sd">    replacements : dict[str, str] or None</span>
+<span class="sd">        Placeholders replaced recursively in each workflow configuration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_dir</span><span class="p">)</span>
+    <span class="n">log_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">log_dir</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">workflow_config</span> <span class="ow">in</span> <span class="n">_get_selected_config_files</span><span class="p">(</span><span class="n">config_dir</span><span class="p">,</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;config_file&quot;</span><span class="p">)):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Executing applications configured in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">workflow_config</span><span class="p">)</span>
+        <span class="n">tmp_args_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;config_file&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">workflow_config</span><span class="p">),</span>
+            <span class="s2">&quot;log_file&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">log_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">workflow_config</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">removesuffix</span><span class="p">(</span><span class="s1">&#39;.config.yml&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">.log&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;steps&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;ignore_runtime_environment&quot;</span><span class="p">:</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ignore_runtime_environment&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+            <span class="s2">&quot;overwrite_collection_files&quot;</span><span class="p">:</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;overwrite_collection_files&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="s2">&quot;runtime_environment&quot;</span> <span class="ow">in</span> <span class="n">args_dict</span><span class="p">:</span>
+            <span class="n">tmp_args_dict</span><span class="p">[</span><span class="s2">&quot;runtime_environment&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;runtime_environment&quot;</span><span class="p">]</span>
+        <span class="n">simtools_runner</span><span class="o">.</span><span class="n">run_applications</span><span class="p">(</span>
+            <span class="n">tmp_args_dict</span><span class="p">,</span> <span class="n">run_time</span><span class="o">=</span><span class="n">run_time</span><span class="p">,</span> <span class="n">replacements</span><span class="o">=</span><span class="n">replacements</span>
+        <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_selected_config_files</span><span class="p">(</span><span class="n">config_dir</span><span class="p">,</span> <span class="n">config_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the workflow config files to execute.&quot;&quot;&quot;</span>
+    <span class="n">config_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_dir</span><span class="p">)</span>
+    <span class="n">available_configs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">config_dir</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.config.yml&quot;</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">config_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">available_configs</span>
+
+    <span class="n">resolved_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">path</span><span class="o">.</span><span class="n">resolve</span><span class="p">():</span> <span class="n">path</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">available_configs</span><span class="p">}</span>
+    <span class="n">requested_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="p">(</span><span class="n">requested_path</span><span class="p">,</span> <span class="n">config_dir</span> <span class="o">/</span> <span class="n">requested_path</span><span class="p">):</span>
+        <span class="n">resolved_candidate</span> <span class="o">=</span> <span class="n">candidate</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">resolved_candidate</span> <span class="ow">in</span> <span class="n">resolved_map</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">resolved_map</span><span class="p">[</span><span class="n">resolved_candidate</span><span class="p">]]</span>
+
+    <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Selected workflow config does not exist in </span><span class="si">{</span><span class="n">config_dir</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">requested_path</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_construct_download_url</span><span class="p">(</span><span class="n">base_url_info</span><span class="p">,</span> <span class="n">base_key</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct the full download URL from base URL info, base key, and path.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    base_url_info : dict</span>
+<span class="sd">        Dictionary containing &#39;url&#39; and &#39;version&#39; keys for the base URL.</span>
+<span class="sd">    base_key : str</span>
+<span class="sd">        The key identifying the base URL configuration.</span>
+<span class="sd">    path : str</span>
+<span class="sd">        The path component which may contain version placeholders.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The fully constructed download URL.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">base_url_info</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">]</span>
+    <span class="n">placeholder</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;__</span><span class="si">{</span><span class="n">base_key</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">_VERSION__&quot;</span>
+    <span class="k">if</span> <span class="n">placeholder</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">placeholder</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">version</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span><span class="p">):</span>
+        <span class="n">path_with_version</span> <span class="o">=</span> <span class="n">version</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">path</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">path_with_version</span> <span class="o">=</span> <span class="n">path</span>
+    <span class="k">return</span> <span class="n">base_url_info</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">path_with_version</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_download_entry</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate a download entry from YAML configuration.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Download entry </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> must be a dictionary.&quot;</span><span class="p">)</span>
+
+    <span class="n">required_keys</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;base_url_key&quot;</span><span class="p">,</span> <span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;target_path&quot;</span><span class="p">)</span>
+    <span class="n">missing_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">required_keys</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">missing_keys</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Download entry </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> missing required keys: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing_keys</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">target_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;target_path&quot;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">target_path</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;..&quot;</span> <span class="ow">in</span> <span class="n">target_path</span><span class="o">.</span><span class="n">parts</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Download entry </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> has invalid target_path: </span><span class="si">{</span><span class="n">target_path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="download_files">
+<a class="viewcode-back" href="../../api-reference/testing.html#testing.resource_generation.download_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">download_files</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">target_dir</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Download external files listed in a resource-generation configuration.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config_file : str or pathlib.Path</span>
+<span class="sd">        YAML file containing ``base_urls`` and ``files`` entries.</span>
+<span class="sd">    target_dir : str or pathlib.Path</span>
+<span class="sd">        Base directory for each entry&#39;s relative ``target_path``.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    FileNotFoundError</span>
+<span class="sd">        If the configuration or a remote file does not exist.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the configuration structure is invalid or a version placeholder is unresolved.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[pathlib.Path]</span>
+<span class="sd">        Downloaded file paths.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Download configuration file does not exist: </span><span class="si">{</span><span class="n">config_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">download_config</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">download_config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Download configuration must be a YAML mapping.&quot;</span><span class="p">)</span>
+
+    <span class="n">file_entries</span> <span class="o">=</span> <span class="n">download_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;files&quot;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file_entries</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Download configuration key &#39;files&#39; must be a list.&quot;</span><span class="p">)</span>
+
+    <span class="n">base_urls</span> <span class="o">=</span> <span class="n">download_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;base_urls&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_urls</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Download configuration key &#39;base_urls&#39; must be a dictionary.&quot;</span><span class="p">)</span>
+
+    <span class="n">processed_base_urls</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">base_key</span><span class="p">,</span> <span class="n">base_info</span> <span class="ow">in</span> <span class="n">base_urls</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_info</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="n">base_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;url&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="n">base_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">processed_base_urls</span><span class="p">[</span><span class="n">base_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">version</span><span class="p">}</span>
+
+    <span class="n">downloaded_files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">entry</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">file_entries</span><span class="p">):</span>
+        <span class="n">_validate_download_entry</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+
+        <span class="n">base_key</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;base_url_key&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">base_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">processed_base_urls</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Base URL key &#39;</span><span class="si">{</span><span class="n">base_key</span><span class="si">}</span><span class="s2">&#39; not found in base_urls configuration&quot;</span><span class="p">)</span>
+
+        <span class="n">base_url_info</span> <span class="o">=</span> <span class="n">processed_base_urls</span><span class="p">[</span><span class="n">base_key</span><span class="p">]</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">_construct_download_url</span><span class="p">(</span><span class="n">base_url_info</span><span class="p">,</span> <span class="n">base_key</span><span class="p">,</span> <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">])</span>
+
+        <span class="n">destination</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">target_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;target_path&quot;</span><span class="p">]</span>
+        <span class="n">destination</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Downloading </span><span class="si">%s</span><span class="s2"> from </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">],</span> <span class="n">url</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">urllib</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">HTTPError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">exc</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to download &#39;</span><span class="si">{</span><span class="n">entry</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39; from </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="n">downloaded_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">downloaded_files</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_remove_empty_download_directories</span><span class="p">(</span><span class="n">downloaded_files</span><span class="p">,</span> <span class="n">target_dir</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove empty nonstandard top-level directories created for downloads.&quot;&quot;&quot;</span>
+    <span class="n">target_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">target_dir</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">candidate_directories</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">downloaded_file</span> <span class="ow">in</span> <span class="n">downloaded_files</span> <span class="ow">or</span> <span class="p">[]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">relative_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">downloaded_file</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">target_dir</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">relative_path</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">candidate_directories</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">target_dir</span> <span class="o">/</span> <span class="n">relative_path</span><span class="o">.</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">directory</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">candidate_directories</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">directory</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">_PRESERVED_INTEGRATION_TEST_DIRECTORIES</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">directory</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">directory</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()):</span>
+            <span class="n">directory</span><span class="o">.</span><span class="n">rmdir</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Removed empty download directory </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">directory</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_calculate_sha256</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the SHA-256 checksum of a file.&quot;&quot;&quot;</span>
+    <span class="n">checksum</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
+    <span class="k">with</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">),</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+            <span class="n">checksum</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">checksum</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_static_manifest_entry</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">static_dir</span><span class="p">,</span> <span class="n">declared_files</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate one static-file manifest entry and return discovered errors.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file_name&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sha256&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Manifest entry </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> requires file_name and sha256 values.&quot;</span><span class="p">]</span>
+
+    <span class="n">relative_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">])</span>
+    <span class="n">file_name</span> <span class="o">=</span> <span class="n">relative_path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">relative_path</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;..&quot;</span> <span class="ow">in</span> <span class="n">relative_path</span><span class="o">.</span><span class="n">parts</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Invalid manifest path: </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">declared_files</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Duplicate manifest entry: </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+
+    <span class="n">declared_files</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+    <span class="n">static_file</span> <span class="o">=</span> <span class="n">static_dir</span> <span class="o">/</span> <span class="n">relative_path</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">static_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Missing static file: </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">_calculate_sha256</span><span class="p">(</span><span class="n">static_file</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;sha256&quot;</span><span class="p">]):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Checksum mismatch: </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[]</span>
+
+
+<div class="viewcode-block" id="validate_static_files">
+<a class="viewcode-back" href="../../api-reference/testing.html#testing.resource_generation.validate_static_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_static_files</span><span class="p">(</span><span class="n">manifest_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate static integration-test files against their manifest.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    manifest_file : str or pathlib.Path</span>
+<span class="sd">        YAML manifest containing relative ``file_name`` and ``sha256`` values.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    FileNotFoundError</span>
+<span class="sd">        If the manifest does not exist.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If entries are invalid, files are missing or unlisted, or checksums differ.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">manifest_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">manifest_file</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">manifest_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Static-file manifest does not exist: </span><span class="si">{</span><span class="n">manifest_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">manifest</span> <span class="o">=</span> <span class="n">ascii_handler</span><span class="o">.</span><span class="n">collect_data_from_file</span><span class="p">(</span><span class="n">manifest_file</span><span class="p">)</span>
+    <span class="n">entries</span> <span class="o">=</span> <span class="n">manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;files&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Static-file manifest key &#39;files&#39; must be a list.&quot;</span><span class="p">)</span>
+
+    <span class="n">static_dir</span> <span class="o">=</span> <span class="n">manifest_file</span><span class="o">.</span><span class="n">parent</span>
+    <span class="n">declared_files</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">entry</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">entries</span><span class="p">):</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_validate_static_manifest_entry</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">static_dir</span><span class="p">,</span> <span class="n">declared_files</span><span class="p">))</span>
+
+    <span class="n">actual_files</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">static_dir</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">static_dir</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">path</span> <span class="o">!=</span> <span class="n">manifest_file</span>
+    <span class="p">}</span>
+    <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;File not listed in manifest: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">actual_files</span> <span class="o">-</span> <span class="n">declared_files</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">errors</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Static-file validation failed:</span><span class="se">\n</span><span class="s2">- &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">- &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">errors</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Validated </span><span class="si">%d</span><span class="s2"> static files using </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">declared_files</span><span class="p">),</span> <span class="n">manifest_file</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="generate_test_resources">
+<a class="viewcode-back" href="../../api-reference/testing.html#testing.resource_generation.generate_test_resources">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_test_resources</span><span class="p">(</span><span class="n">args_dict</span><span class="p">,</span> <span class="n">run_time</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Download inputs and run resource-generation workflows for a release.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Dictionary containing command line arguments.</span>
+<span class="sd">        Optional key ``overwrite_collection_files`` (bool) allows collection</span>
+<span class="sd">        output files to be overwritten when different source files have the</span>
+<span class="sd">        same basename. Defaults to False.</span>
+<span class="sd">    run_time : list or None</span>
+<span class="sd">        Prepared runtime command. If provided, reuse it instead of preparing</span>
+<span class="sd">        the runtime environment from the workflow configuration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">test_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;test_directory&quot;</span><span class="p">])</span>
+    <span class="n">simtools_version</span> <span class="o">=</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;simtools_version&quot;</span><span class="p">]</span>
+    <span class="n">integration_test_dir</span> <span class="o">=</span> <span class="n">get_integration_test_directory</span><span class="p">(</span>
+        <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;test_directory&quot;</span><span class="p">],</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;simtools_version&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_static_files&quot;</span><span class="p">):</span>
+        <span class="n">validate_static_files</span><span class="p">(</span><span class="n">integration_test_dir</span> <span class="o">/</span> <span class="s2">&quot;static&quot;</span> <span class="o">/</span> <span class="n">STATIC_MANIFEST</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">config_dir</span> <span class="o">=</span> <span class="n">get_resource_generation_directory</span><span class="p">(</span><span class="n">test_directory</span><span class="p">,</span> <span class="n">simtools_version</span><span class="p">)</span>
+    <span class="n">replacements</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;__TEST_DIRECTORY__&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">test_directory</span><span class="p">),</span>
+        <span class="s2">&quot;__SIMTOOLS_VERSION__&quot;</span><span class="p">:</span> <span class="n">simtools_version</span><span class="p">,</span>
+        <span class="s2">&quot;__INTEGRATION_TESTS_DIRECTORY__&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">integration_test_dir</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="n">downloaded_files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;config_file&quot;</span><span class="p">):</span>
+        <span class="n">downloaded_files</span> <span class="o">=</span> <span class="n">download_files</span><span class="p">(</span><span class="n">config_dir</span> <span class="o">/</span> <span class="s2">&quot;download_files.yml&quot;</span><span class="p">,</span> <span class="n">integration_test_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;download_only&quot;</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">run_configured_applications</span><span class="p">(</span>
+            <span class="n">args_dict</span><span class="o">=</span><span class="n">args_dict</span><span class="p">,</span>
+            <span class="n">config_dir</span><span class="o">=</span><span class="n">config_dir</span><span class="p">,</span>
+            <span class="n">log_dir</span><span class="o">=</span><span class="n">integration_test_dir</span> <span class="o">/</span> <span class="s2">&quot;log_files&quot;</span><span class="p">,</span>
+            <span class="n">run_time</span><span class="o">=</span><span class="n">run_time</span><span class="p">,</span>
+            <span class="n">replacements</span><span class="o">=</span><span class="n">replacements</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">_remove_empty_download_directories</span><span class="p">(</span><span class="n">downloaded_files</span><span class="p">,</span> <span class="n">integration_test_dir</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

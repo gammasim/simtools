@@ -1,0 +1,1116 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simtools.io.table_handler &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../../_static/documentation_options.js?v=bbce7252"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtools/io/table_handler';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.20.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.34.0" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools.io.table_handler</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for simtools.io.table_handler</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;IO operations on astropy tables.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">h5py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">fits</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span><span class="p">,</span> <span class="n">vstack</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">general</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_decode_hdf5_string_column</span><span class="p">(</span><span class="n">column</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decode HDF5 byte-string columns to unicode.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">column</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;S&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">column</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">column</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;O&quot;</span> <span class="ow">and</span> <span class="n">column</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="n">sample</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">flat</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bytes_</span><span class="p">)):</span>
+            <span class="n">decoded</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bytes_</span><span class="p">))</span> <span class="k">else</span> <span class="n">item</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">column</span>
+            <span class="p">]</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">decoded</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">column</span>
+
+
+<div class="viewcode-block" id="group_table_rows">
+<a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.table_handler.group_table_rows">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">group_table_rows</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">column_names</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Group astropy table rows by one or more columns.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    table : astropy.table.Table</span>
+<span class="sd">        Table to group.</span>
+<span class="sd">    column_names : str or sequence[str]</span>
+<span class="sd">        Column name or names used for grouping.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Mapping from group key to grouped sub-table. Single-column grouping returns</span>
+<span class="sd">        scalar keys, multi-column grouping returns tuple keys.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">column_names</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">ensure_list</span><span class="p">(</span><span class="n">column_names</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="n">grouped</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="n">column_names</span><span class="p">)</span>
+    <span class="n">grouped_rows</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">group_indices</span> <span class="o">=</span> <span class="n">grouped</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">indices</span>
+    <span class="k">for</span> <span class="n">group_index</span><span class="p">,</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">group_indices</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="n">group_indices</span><span class="p">[</span><span class="n">group_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">key_row</span> <span class="o">=</span> <span class="n">grouped</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">keys</span><span class="p">[</span><span class="n">group_index</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">column_names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">key_row</span><span class="p">[</span><span class="n">column_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">key_row</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">column_names</span><span class="p">)</span>
+        <span class="n">grouped_rows</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">grouped</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">grouped_rows</span></div>
+
+
+
+<div class="viewcode-block" id="read_table_list">
+<a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.table_handler.read_table_list">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_table_list</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="n">table_names</span><span class="p">,</span> <span class="n">include_indexed_tables</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read available tables found in the input file.</span>
+
+<span class="sd">    If table_counter is True, search for tables with the same name</span>
+<span class="sd">    but with different suffixes (e.g., &quot;_0&quot;, &quot;_1&quot;, etc.).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_file : str or Path</span>
+<span class="sd">        Path to the input file (HDF5 or FITS).</span>
+<span class="sd">    table_names : list of str</span>
+<span class="sd">        List of table names to search for in the input file.</span>
+<span class="sd">    include_indexed_tables : bool, optional</span>
+<span class="sd">        If True, include tables with indexed suffixes (e.g., &quot;_0&quot;, &quot;_1&quot;, etc.) in the search.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary with table names as keys and lists of found table names as values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_type</span> <span class="o">=</span> <span class="n">read_table_file_type</span><span class="p">(</span><span class="n">input_file</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;HDF5&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_read_table_list_hdf5</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="n">table_names</span><span class="p">,</span> <span class="n">include_indexed_tables</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;FITS&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_read_table_list_fits</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="n">table_names</span><span class="p">,</span> <span class="n">include_indexed_tables</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_table_list_hdf5</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="n">table_names</span><span class="p">,</span> <span class="n">include_indexed_tables</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read available tables from HDF5 file.&quot;&quot;&quot;</span>
+    <span class="n">datasets</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">table_names</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_indexed_variant</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2">_&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+        <span class="k">return</span> <span class="n">suffix</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">visitor</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">datasets</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="n">base</span> <span class="ow">or</span> <span class="p">(</span><span class="n">include_indexed_tables</span> <span class="ow">and</span> <span class="n">is_indexed_variant</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">base</span><span class="p">)):</span>
+                <span class="n">datasets</span><span class="p">[</span><span class="n">base</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">visititems</span><span class="p">(</span><span class="n">visitor</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">datasets</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_table_list_fits</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="n">table_names</span><span class="p">,</span> <span class="n">include_indexed_tables</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read available tables from FITS file.&quot;&quot;&quot;</span>
+    <span class="n">datasets</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">table_names</span><span class="p">}</span>
+
+    <span class="k">with</span> <span class="n">fits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">input_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">hdul</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">hdu</span> <span class="ow">in</span> <span class="n">hdul</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span> <span class="n">fits</span><span class="o">.</span><span class="n">BinTableHDU</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">hdu</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">table_names</span><span class="p">:</span>
+                <span class="n">datasets</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">include_indexed_tables</span> <span class="ow">or</span> <span class="s2">&quot;_&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">base</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">suffix</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">table_names</span> <span class="ow">and</span> <span class="n">suffix</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+                <span class="n">datasets</span><span class="p">[</span><span class="n">base</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">datasets</span>
+
+
+<div class="viewcode-block" id="merge_tables">
+<a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.table_handler.merge_tables">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_tables</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">input_table_names</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Merge multiple astropy tables from different files into a single file.</span>
+
+<span class="sd">    Handles multiple tables per file and supports both HDF5 and FITS formats.</span>
+<span class="sd">    Updates &#39;file_id&#39; column if present to maintain file origin tracking.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_files : list of str</span>
+<span class="sd">        List of input file paths to be merged.</span>
+<span class="sd">    input_table_names : list of str</span>
+<span class="sd">        List of table names to be merged from each input file.</span>
+<span class="sd">    output_file : str</span>
+<span class="sd">        Path to the output file where the merged data will be saved.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Merging </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">input_files</span><span class="p">)</span><span class="si">}</span><span class="s2"> files into </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">file_type</span> <span class="o">=</span> <span class="n">read_table_file_type</span><span class="p">(</span><span class="n">input_files</span><span class="p">)</span>
+    <span class="n">merged_tables</span> <span class="o">=</span> <span class="n">_merge</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">input_table_names</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">file_type</span> <span class="o">!=</span> <span class="s2">&quot;HDF5&quot;</span><span class="p">:</span>
+        <span class="n">write_tables</span><span class="p">(</span><span class="n">merged_tables</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">file_type</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="read_table_file_type">
+<a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.table_handler.read_table_file_type">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_table_file_type</span><span class="p">(</span><span class="n">input_files</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine the file type of the input files.</span>
+
+<span class="sd">    All input files must be of the same type (either all HDF5 or all FITS).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_files : list of str</span>
+<span class="sd">        List of input file paths.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        File type (&#39;HDF5&#39; or &#39;FITS&#39;).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">input_files</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No input files provided.&quot;</span><span class="p">)</span>
+    <span class="n">input_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">input_files</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="k">else</span> <span class="n">input_files</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_type</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.hdf5&quot;</span><span class="p">,</span> <span class="s2">&quot;.h5&quot;</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="s2">&quot;HDF5&quot;</span>
+        <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.fits&quot;</span><span class="p">,</span> <span class="s2">&quot;.fits.gz&quot;</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="s2">&quot;FITS&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported file type: </span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">file_types</span> <span class="o">=</span> <span class="p">{</span><span class="n">get_type</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">input_files</span><span class="p">}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_types</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All input files must be of the same type (either all HDF5 or all FITS)&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">file_types</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_merge</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">table_names</span><span class="p">,</span> <span class="n">file_type</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">add_file_id_to_table_name</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Merge tables from multiple input files into single tables.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_files : list of str</span>
+<span class="sd">        List of input file paths to be merged.</span>
+<span class="sd">    table_names : list of str</span>
+<span class="sd">        List of table names to be merged from each input file.</span>
+<span class="sd">    file_type : str</span>
+<span class="sd">        Type of the input files (&#39;HDF5&#39; or &#39;FITS&#39;).</span>
+<span class="sd">    add_file_id_to_table_name : bool, optional</span>
+<span class="sd">        If True, appends the file index to the table name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary with table names as keys and merged astropy tables as values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">merged</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">table_names</span><span class="p">}</span>
+    <span class="n">is_hdf5</span> <span class="o">=</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;HDF5&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_file_id</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;file_id&quot;</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+            <span class="n">table</span><span class="p">[</span><span class="s2">&quot;file_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">idx</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="n">table_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">add_file_id_to_table_name</span> <span class="k">else</span> <span class="n">key</span>
+        <span class="n">update_file_id</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_hdf5</span><span class="p">:</span>
+            <span class="n">write_table_in_hdf5</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">table_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">copy_metadata_to_hdf5</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">table_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">merged</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">input_files</span><span class="p">):</span>
+        <span class="n">tables</span> <span class="o">=</span> <span class="n">read_tables</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">table_names</span><span class="p">,</span> <span class="n">file_type</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">tables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">process_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">file_type</span> <span class="o">!=</span> <span class="s2">&quot;HDF5&quot;</span><span class="p">:</span>
+        <span class="n">merged</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">vstack</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">metadata_conflicts</span><span class="o">=</span><span class="s2">&quot;silent&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">merged</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+    <span class="k">return</span> <span class="n">merged</span>
+
+
+<div class="viewcode-block" id="read_tables">
+<a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.table_handler.read_tables">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_tables</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">table_names</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">table_columns</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read tables from a file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file : str</span>
+<span class="sd">        Path to the input file.</span>
+<span class="sd">    table_names : list of str</span>
+<span class="sd">        List of table names to read.</span>
+<span class="sd">    file_type : str</span>
+<span class="sd">        Type of the input file (&#39;HDF5&#39; or &#39;FITS&#39;).</span>
+<span class="sd">    table_columns : dict, optional</span>
+<span class="sd">        Mapping of table name to list of columns to read. Used for HDF5 only.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary with table names as keys and astropy tables as values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_type</span> <span class="o">=</span> <span class="n">file_type</span> <span class="ow">or</span> <span class="n">read_table_file_type</span><span class="p">([</span><span class="n">file</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;HDF5&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">read_table_from_hdf5</span><span class="p">(</span>
+                <span class="n">file</span><span class="p">,</span>
+                <span class="n">name</span><span class="p">,</span>
+                <span class="n">columns</span><span class="o">=</span><span class="p">(</span><span class="n">table_columns</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">table_names</span>
+        <span class="p">}</span>
+    <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;FITS&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">table_names</span><span class="p">}</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported file format: </span><span class="si">{</span><span class="n">file_type</span><span class="si">}</span><span class="s2">. Supported formats are HDF5 and FITS.&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="read_table_from_hdf5">
+<a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.table_handler.read_table_from_hdf5">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_table_from_hdf5</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read a single astropy table from an HDF5 file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file : str or Path</span>
+<span class="sd">        Path to the input HDF5 file.</span>
+<span class="sd">    table_name : str</span>
+<span class="sd">        Name of the table to read.</span>
+<span class="sd">    columns : list[str], optional</span>
+<span class="sd">        List of columns to read from a compound HDF5 dataset. If None, all columns are read.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astropy.table.Table</span>
+<span class="sd">        The requested astropy table.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">table_name</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">dset</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dset</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Table &#39;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&#39; does not use a compound dtype and &quot;</span>
+                    <span class="s2">&quot;cannot be column-filtered.&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">missing_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">columns</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dset</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">missing_columns</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Columns </span><span class="si">{</span><span class="n">missing_columns</span><span class="si">}</span><span class="s2"> not found in table &#39;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dset</span><span class="p">,</span> <span class="s2">&quot;fields&quot;</span><span class="p">):</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">dset</span><span class="o">.</span><span class="n">fields</span><span class="p">(</span><span class="n">columns</span><span class="p">)[:]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">dset</span><span class="p">[:][</span><span class="n">columns</span><span class="p">]</span>
+
+            <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">({</span><span class="n">col</span><span class="p">:</span> <span class="n">_decode_hdf5_string_column</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">col</span><span class="p">])</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">})</span>
+            <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;EXTNAME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">table_name</span>
+
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+            <span class="n">unit_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s2">_unit&quot;</span>
+            <span class="k">if</span> <span class="n">unit_key</span> <span class="ow">in</span> <span class="n">dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+                <span class="n">table</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">unit_key</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">table</span></div>
+
+
+
+<div class="viewcode-block" id="write_tables">
+<a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.table_handler.write_tables">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_tables</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">overwrite_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write tables to file (overwriting if exists).</span>
+
+<span class="sd">    HDF5 files are written to a sibling ``.incomplete-&lt;uuid&gt;`` file, validated,</span>
+<span class="sd">    and atomically moved to the requested output path. If writing fails, the</span>
+<span class="sd">    incomplete file is retained for diagnosis and any existing output remains</span>
+<span class="sd">    unchanged.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tables : list or dict</span>
+<span class="sd">        List or Dictionary with astropy tables as values.</span>
+<span class="sd">    output_file : str or Path</span>
+<span class="sd">        Path to the output file.</span>
+<span class="sd">    overwrite_existing : bool</span>
+<span class="sd">        If True, overwrite the output file if it exists.</span>
+<span class="sd">    file_type : str</span>
+<span class="sd">        Type of the output file (&#39;HDF5&#39; or &#39;FITS&#39;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+    <span class="n">file_type</span> <span class="o">=</span> <span class="n">file_type</span> <span class="ow">or</span> <span class="n">read_table_file_type</span><span class="p">([</span><span class="n">output_file</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">output_file</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">overwrite_existing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output file </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2"> already exists.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">output_file</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">file_type</span> <span class="o">!=</span> <span class="s2">&quot;HDF5&quot;</span><span class="p">:</span>
+        <span class="n">output_file</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+    <span class="n">hdus</span> <span class="o">=</span> <span class="p">[</span><span class="n">fits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">()]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">tables</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tables</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;HDF5&quot;</span><span class="p">:</span>
+        <span class="n">write_table_chunks</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">:</span>
+        <span class="n">_table_name</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;EXTNAME&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;FITS&quot;</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing table </span><span class="si">{</span><span class="n">_table_name</span><span class="si">}</span><span class="s2"> of length </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">)</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">table_to_hdu</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+            <span class="n">hdu</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">_table_name</span>
+            <span class="n">hdus</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hdu</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s2">&quot;FITS&quot;</span><span class="p">:</span>
+        <span class="n">fits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="p">)</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">checksum</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="write_table_chunks">
+<a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.table_handler.write_table_chunks">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_table_chunks</span><span class="p">(</span><span class="n">table_chunks</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">overwrite_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write table chunks to an atomic HDF5 output with bounded memory use.&quot;&quot;&quot;</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">output_file</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">overwrite_existing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output file </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2"> already exists.&quot;</span><span class="p">)</span>
+    <span class="n">incomplete_file</span> <span class="o">=</span> <span class="n">output_file</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_file</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.incomplete-</span><span class="si">{</span><span class="n">general</span><span class="o">.</span><span class="n">get_uuid</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">expected_tables</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">incomplete_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hdf5_file</span><span class="p">:</span>
+            <span class="n">hdf5_file</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;simtools_write_status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;incomplete&quot;</span>
+            <span class="k">for</span> <span class="n">tables</span> <span class="ow">in</span> <span class="n">_iter_table_chunks</span><span class="p">(</span><span class="n">table_chunks</span><span class="p">):</span>
+                <span class="n">chunk_table_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">:</span>
+                    <span class="n">table_name</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;EXTNAME&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">table_name</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot write table without an &#39;EXTNAME&#39; metadata value.&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">chunk_table_names</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Duplicate output table name &#39;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+                    <span class="n">chunk_table_names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+                    <span class="n">expected_tables</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">expected_tables</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+                    <span class="n">_write_table_to_hdf5_file</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">hdf5_file</span><span class="p">,</span> <span class="n">table_name</span><span class="p">)</span>
+
+        <span class="n">_validate_written_hdf5</span><span class="p">(</span><span class="n">incomplete_file</span><span class="p">,</span> <span class="n">expected_tables</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">incomplete_file</span><span class="p">,</span> <span class="s2">&quot;r+&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hdf5_file</span><span class="p">:</span>
+            <span class="n">hdf5_file</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;simtools_write_status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;complete&quot;</span>
+            <span class="n">hdf5_file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="n">incomplete_file</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Finished writing verified HDF5 output file </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Failed to publish HDF5 output file &#39;</span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Incomplete output, if created, is stored at &#39;</span><span class="si">{</span><span class="n">incomplete_file</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_iter_table_chunks</span><span class="p">(</span><span class="n">table_chunks</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Yield normalized chunks of astropy tables.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">table_chunks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">Table</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="p">[</span><span class="n">chunk</span><span class="p">]</span>
+            <span class="k">continue</span>
+        <span class="k">yield</span> <span class="n">chunk</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_written_hdf5</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">expected_tables</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify that all requested tables were persisted with the expected row counts.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">expected_tables</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot publish an HDF5 file without tables.&quot;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hdf5_file</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">expected_rows</span> <span class="ow">in</span> <span class="n">expected_tables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">table_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hdf5_file</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output table &#39;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&#39; was not written.&quot;</span><span class="p">)</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">hdf5_file</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output object &#39;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&#39; is not an HDF5 dataset.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dataset</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output table &#39;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&#39; has no compound dtype.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span> <span class="o">!=</span> <span class="n">expected_rows</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Output table &#39;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&#39; has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="si">}</span><span class="s2"> row(s), &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;expected </span><span class="si">{</span><span class="n">expected_rows</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_prepare_string_columns_for_hdf5</span><span class="p">(</span><span class="n">table</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert supported string columns to the byte strings required by HDF5.&quot;&quot;&quot;</span>
+    <span class="n">string_columns</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">column_name</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+        <span class="n">column</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">column</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;U&quot;</span><span class="p">:</span>  <span class="c1"># hdf5 does not support unicode</span>
+            <span class="n">string_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">column</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;O&quot;</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">str_</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bytes_</span><span class="p">))</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">flat</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Object-dtype column &#39;</span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s2">&#39; contains non-string or missing values; &quot;</span>
+                    <span class="s2">&quot;refusing to serialize it as strings.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">string_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">string_columns</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">table</span>
+
+    <span class="n">table</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">copy_data</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">column_name</span> <span class="ow">in</span> <span class="n">string_columns</span><span class="p">:</span>
+        <span class="n">table</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;S&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">table</span>
+
+
+<div class="viewcode-block" id="write_table_in_hdf5">
+<a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.table_handler.write_table_in_hdf5">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_table_in_hdf5</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">table_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write or append a single astropy table to an HDF5 file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    table : astropy.table.Table</span>
+<span class="sd">        The astropy table to write.</span>
+<span class="sd">    output_file : str or Path</span>
+<span class="sd">        Path to the output HDF5 file.</span>
+<span class="sd">    table_name : str</span>
+<span class="sd">        Name of the table in the HDF5 file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">_write_table_to_hdf5_file</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">table_name</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_table_to_hdf5_file</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">hdf5_file</span><span class="p">,</span> <span class="n">table_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write or append one table using an already open HDF5 file.&quot;&quot;&quot;</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">_prepare_string_columns_for_hdf5</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">table_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hdf5_file</span><span class="p">:</span>
+        <span class="n">dset</span> <span class="o">=</span> <span class="n">_create_hdf5_dataset</span><span class="p">(</span><span class="n">hdf5_file</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="s2">&quot;unit&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s2">_unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="n">dset</span> <span class="o">=</span> <span class="n">hdf5_file</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
+    <span class="n">promoted_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">promote_types</span><span class="p">(</span><span class="n">dset</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">promoted_dtype</span> <span class="o">!=</span> <span class="n">dset</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+        <span class="n">dset</span> <span class="o">=</span> <span class="n">_replace_dataset_with_promoted_dtype</span><span class="p">(</span><span class="n">hdf5_file</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">promoted_dtype</span><span class="p">)</span>
+    <span class="n">old_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dset</span><span class="p">)</span>
+    <span class="n">dset</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">old_length</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">dset</span><span class="p">[</span><span class="n">old_length</span><span class="p">:]</span> <span class="o">=</span> <span class="n">data</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_hdf5_dataset</span><span class="p">(</span><span class="n">hdf5_file</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a compressed, extensible HDF5 dataset.&quot;&quot;&quot;</span>
+    <span class="n">dataset_shape</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span> <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">shape</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;maxshape&quot;</span><span class="p">:</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">dataset_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span>
+        <span class="s2">&quot;chunks&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;compression&quot;</span><span class="p">:</span> <span class="s2">&quot;gzip&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;compression_opts&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+        <span class="s2">&quot;shuffle&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="n">shape</span><span class="p">,</span> <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="n">dtype</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">hdf5_file</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_replace_dataset_with_promoted_dtype</span><span class="p">(</span><span class="n">hdf5_file</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Replace a dataset while widening fields such as fixed-length strings.&quot;&quot;&quot;</span>
+    <span class="n">old_dataset</span> <span class="o">=</span> <span class="n">hdf5_file</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
+    <span class="n">temporary_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">.__promoted__&quot;</span>
+    <span class="n">new_dataset</span> <span class="o">=</span> <span class="n">_create_hdf5_dataset</span><span class="p">(</span>
+        <span class="n">hdf5_file</span><span class="p">,</span>
+        <span class="n">temporary_name</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+        <span class="n">shape</span><span class="o">=</span><span class="n">old_dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">old_dataset</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">new_dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="n">rows_per_chunk</span> <span class="o">=</span> <span class="n">old_dataset</span><span class="o">.</span><span class="n">chunks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">old_dataset</span><span class="o">.</span><span class="n">chunks</span> <span class="k">else</span> <span class="mi">100_000</span>
+    <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">old_dataset</span><span class="p">),</span> <span class="n">rows_per_chunk</span><span class="p">):</span>
+        <span class="n">new_dataset</span><span class="p">[</span><span class="n">start</span> <span class="p">:</span> <span class="n">start</span> <span class="o">+</span> <span class="n">rows_per_chunk</span><span class="p">]</span> <span class="o">=</span> <span class="n">old_dataset</span><span class="p">[</span><span class="n">start</span> <span class="p">:</span> <span class="n">start</span> <span class="o">+</span> <span class="n">rows_per_chunk</span><span class="p">]</span>
+    <span class="k">del</span> <span class="n">hdf5_file</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
+    <span class="n">hdf5_file</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">temporary_name</span><span class="p">,</span> <span class="n">table_name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">hdf5_file</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="copy_metadata_to_hdf5">
+<a class="viewcode-back" href="../../../api-reference/io.html#simtools.io.table_handler.copy_metadata_to_hdf5">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">copy_metadata_to_hdf5</span><span class="p">(</span><span class="n">src_file</span><span class="p">,</span> <span class="n">dst_file</span><span class="p">,</span> <span class="n">table_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Copy metadata (table column meta) from one HDF5 file to another.</span>
+
+<span class="sd">    For merging tables, this function ensures that the metadata is preserved.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    src_file : str or Path</span>
+<span class="sd">        Path to the source HDF5 file.</span>
+<span class="sd">    dst_file : str or Path</span>
+<span class="sd">        Path to the destination HDF5 file.</span>
+<span class="sd">    table_name : str</span>
+<span class="sd">        Name of the table whose metadata is to be copied.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">src_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">dst_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+        <span class="n">meta_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">.__table_column_meta__&quot;</span>
+        <span class="k">if</span> <span class="n">meta_name</span> <span class="ow">in</span> <span class="n">src</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">meta_name</span> <span class="ow">in</span> <span class="n">dst</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">dst</span><span class="p">[</span><span class="n">meta_name</span><span class="p">]</span>  <span class="c1"># overwrite if exists</span>
+            <span class="n">src</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">meta_name</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">meta_name</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

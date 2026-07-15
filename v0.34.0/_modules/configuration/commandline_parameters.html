@@ -1,0 +1,961 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>configuration.commandline_parameters &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../_static/documentation_options.js?v=bbce7252"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/configuration/commandline_parameters';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.20.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.34.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">configuration.commandline_parameters</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for configuration.commandline_parameters</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Shared command-line parameter definitions for simtools applications.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.configuration.commandline_argument_helpers</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">helpers</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.version</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools</span><span class="w"> </span><span class="kn">import</span> <span class="n">constants</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaults</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.corsika.primary_particle</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrimaryParticle</span>
+
+
+<div class="viewcode-block" id="get_corsika_configuration_args">
+<a class="viewcode-back" href="../../api-reference/configuration_module.html#configuration.commandline_parameters.get_corsika_configuration_args">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_corsika_configuration_args</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return dictionary with CORSIKA configuration parameters.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;primary&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;Primary particle to simulate. &quot;</span>
+                <span class="s2">&quot;(choices for common names: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PrimaryParticle</span><span class="o">.</span><span class="n">particle_names</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">; &quot;</span>
+                <span class="s2">&quot;use &#39;--primary_id_type&#39; to use other particle ID types).&quot;</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">OneOrManyAction</span><span class="p">,</span>
+            <span class="s2">&quot;nargs&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;primary_id_type&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Primary particle ID type&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s2">&quot;choices&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;common_name&quot;</span><span class="p">,</span> <span class="s2">&quot;corsika7_id&quot;</span><span class="p">,</span> <span class="s2">&quot;pdg_id&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;common_name&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;azimuth_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;Telescope pointing direction in azimuth. &quot;</span>
+                <span class="s2">&quot;It can be in degrees between 0 and 360 or one of north, south, east or west. &quot;</span>
+                <span class="s2">&quot;North is 0 degrees and the azimuth grows clockwise (East is 90 degrees).&quot;</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="p">,</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">OneOrManyAction</span><span class="p">,</span>
+            <span class="s2">&quot;nargs&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;zenith_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Zenith angle in degrees (between 0 and 180).&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">OneOrManyAction</span><span class="p">,</span>
+            <span class="s2">&quot;nargs&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;showers_per_run&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Baseline number of CORSIKA showers per run.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;run_number_offset&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Offset added to run number when executing a simulation.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;run_number&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Run number to be simulated.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;event_number_first_shower&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Event number of first shower&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;correct_for_b_field_alignment&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Correct for B-field alignment&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;curved_atmosphere_min_zenith_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Minimum zenith angle (deg) for using curved-atmosphere CORSIKA binaries. &quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="n">defaults</span><span class="o">.</span><span class="n">CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="n">PARAMETER_DEFINITIONS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;SHOWER_ARGS&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;eslope&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Slope of the energy spectrum.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;energy_range&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Energy range of the primary particle (min/max, e.g., &#39;10 GeV 5 TeV&#39;).&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">QuantityPairAction</span><span class="p">,</span>
+            <span class="s2">&quot;nargs&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">330</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;view_cone&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;View cone radius for primary arrival directions &quot;</span>
+                <span class="s2">&quot;(min/max value, e.g. &#39;0 deg 10 deg&#39;).&quot;</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">parse_quantity_pair</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;0 deg 0 deg&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;core_scatter&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Scatter radius for shower cores (number of use; scatter radius).&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">parse_integer_and_quantity</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;10 10000 m&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;CONFIGURATION_ARGS&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;simtools configuration file&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;env_file&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;file with environment variables&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;.env&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;PATH_ARGS&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;data_path&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;path pointing towards data directory&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;./data/&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;output_path&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;path pointing towards output directory&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;./simtools-output/&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;model_path&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;path pointing towards simulation model file directory&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;./&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;sim_telarray_path&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;path pointing to sim_telarray installation&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;corsika_path&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;path pointing to CORSIKA installation (default: </span><span class="si">{</span><span class="n">defaults</span><span class="o">.</span><span class="n">CORSIKA_PATH</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;corsika_interaction_table_path&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;path pointing to CORSIKA interaction tables &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(default: </span><span class="si">{</span><span class="n">defaults</span><span class="o">.</span><span class="n">CORSIKA_INTERACTION_TABLE_PATH</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;OUTPUT_ARGS&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;output_file&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;output data file&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;output_file_format&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;file format of output data&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;ecsv&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;skip_output_validation&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;skip output data validation against schema&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;RUN_TIME_ARGS&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;runtime_environment_file&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;Path to a standalone runtime-environment YAML file &quot;</span>
+                <span class="s2">&quot;(top-level &#39;runtime_environment&#39;).&quot;</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;apptainer_image&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Apptainer image path or a dictionary mapping labels to image paths.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">string_or_dict</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;ignore_runtime_environment&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;Ignore the runtime environment and run the application in the current environment.&quot;</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;overwrite_collection_files&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;Allow files copied by the workflow collection block to overwrite existing &quot;</span>
+                <span class="s2">&quot;files with identical names.&quot;</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;EXECUTION_ARGS&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;activity_id&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;activity identifier&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;test option for faster execution during development&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;job label&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;log_level&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;store&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;info&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;log level to print&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;log_file&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;log file path&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;log_file_path&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;path pointing towards log directory&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;disable_log_file&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;figure_format&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;output figure format(s)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s2">&quot;nargs&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;png&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;export_build_info&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;export build information to file&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;ignore_existing_parameter_version&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;skip checking for an existing model parameter version in the database&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;version&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;%(prog)s </span><span class="si">{</span><span class="n">simtools</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;build_info&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">BuildInfoAction</span><span class="p">,</span>
+            <span class="s2">&quot;build_info&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;%(prog)s </span><span class="si">{</span><span class="n">simtools</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;show build information and exit&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;USER_ARGS&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;user_name&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;user name&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">},</span>
+        <span class="s2">&quot;user_organization&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;user organization&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">},</span>
+        <span class="s2">&quot;user_email&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;user email&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">},</span>
+        <span class="s2">&quot;user_orcid&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;user ORCID&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;DB_CONFIG_ARGS&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;db_api_user&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;database user&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">},</span>
+        <span class="s2">&quot;db_api_pw&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;database password&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">},</span>
+        <span class="s2">&quot;db_api_port&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;database port&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">},</span>
+        <span class="s2">&quot;db_server&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;database server address&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">},</span>
+        <span class="s2">&quot;db_api_authentication_database&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;database with user info (optional)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;db_simulation_model&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;name of simulation model database&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="o">.</span><span class="n">strip</span><span class="p">},</span>
+        <span class="s2">&quot;db_simulation_model_version&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;version of simulation model database&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="o">.</span><span class="n">strip</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;SIMULATION_MODEL_ARGS&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;model_version&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Simulation production model version&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;nargs&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;parameter_version&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;model parameter version&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;updated_parameter_version&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;updated parameter version&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;overwrite_model_parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;File name to overwrite model parameters from DB with provided values&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Observatory site (e.g., North, South)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;telescope&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;telescope model name (e.g., LSTN-01, SSTS-design, ...)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">telescope</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;telescopes&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;list of telescopes (e.g., LSTN-01, SSTS-design, ...)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">telescope</span><span class="p">,</span>
+            <span class="s2">&quot;nargs&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;array_layout_name&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;Array layout name(s) (e.g., CTAO-North-Alpha, LSTN-01). &quot;</span>
+                <span class="s2">&quot;Telescope names are assumed as single-telescope layouts.&quot;</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;nargs&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;array_element_list&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;list of array elements (e.g., LSTN-01, LSTN-02, MSTN).&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;nargs&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;array_layout_file&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;file(s) with the list of array elements (astropy table format).&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;nargs&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;array_layout_parameter_file&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Array layout model parameter file (typically in JSON format).&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;plot_all_layouts&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;plot all available layouts&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;ignore_missing_design_model&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Ignore missing design model definition of DB&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;SIMTEL_ARGS&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;sim_telarray_instrument_seed&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Random seed used for sim_telarray instrument setup.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">bounded_int</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">constants</span><span class="o">.</span><span class="n">SIMTEL_MAX_SEED</span><span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;sim_telarray_random_instrument_instances&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Number of random instrument instances initialized in sim_telarray.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">bounded_int</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1024</span><span class="p">),</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;sim_telarray_seed&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;Random seed used for sim_telarray simulation. &quot;</span>
+                <span class="s2">&quot;Single value: seed for event simulation. &quot;</span>
+                <span class="s2">&quot;Two values: [instrument_seed, simulation_seed] (use for testing only).&quot;</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">bounded_int</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">constants</span><span class="o">.</span><span class="n">SIMTEL_MAX_SEED</span><span class="p">),</span>
+            <span class="s2">&quot;nargs&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;sim_telarray_seed_file&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;sim_telarray_instrument_seeds.txt&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;SIMULATION_SOFTWARE_ARGS&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;simulation_software&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Simulation software steps.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s2">&quot;choices&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">defaults</span><span class="o">.</span><span class="n">SIMULATION_SOFTWARE_CHOICES</span><span class="p">),</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="n">defaults</span><span class="o">.</span><span class="n">SIMULATION_SOFTWARE_DEFAULT</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;CORSIKA_ARGS&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;corsika_he_interaction&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;High-energy interaction model for CORSIKA &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(default fallback: </span><span class="si">{</span><span class="n">defaults</span><span class="o">.</span><span class="n">CORSIKA_HE_INTERACTION</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">OneOrManyAction</span><span class="p">,</span>
+            <span class="s2">&quot;nargs&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;corsika_le_interaction&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;Low-energy interaction model for CORSIKA &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(default fallback: </span><span class="si">{</span><span class="n">defaults</span><span class="o">.</span><span class="n">CORSIKA_LE_INTERACTION</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">OneOrManyAction</span><span class="p">,</span>
+            <span class="s2">&quot;nargs&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;APPLICATION_ARGS&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;source_distance&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Source distance in km (unitless values are interpreted as km).&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">quantity</span><span class="p">(</span><span class="s2">&quot;km&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;zenith_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Zenith angle in degrees (between 0 and 180).&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">20</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;off_axis_angles&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;One or more off-axis angles in degrees &quot;</span>
+                <span class="s2">&quot;(unitless values are interpreted as degrees).&quot;</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">quantity</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;nargs&quot;</span><span class="p">:</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;number_of_photons&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Number of star photons to trace (per run).&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">scientific_int</span><span class="p">,</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;max_offset&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Maximum offset angle in degrees (unitless values are interpreted as deg).&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">nonnegative_quantity</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;offset_step&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Offset angle step size in degrees (unitless values are interpreted as deg).&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">helpers</span><span class="o">.</span><span class="n">positive_quantity</span><span class="p">(</span><span class="s2">&quot;deg&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;all_model_versions&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Produce reports for all model versions.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Data file name.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;event_data_file&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Event data file or glob pattern containing reduced event data.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;telescope_ids&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;Path to a file containing telescope configurations.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

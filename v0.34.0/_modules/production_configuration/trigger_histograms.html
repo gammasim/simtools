@@ -1,0 +1,1248 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>production_configuration.trigger_histograms &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../_static/documentation_options.js?v=bbce7252"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_configuration/trigger_histograms';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.20.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.34.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">production_configuration.trigger_histograms</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for production_configuration.trigger_histograms</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Build and load trigger-histogram products from reduced event data.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">h5py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span><span class="p">,</span> <span class="n">vstack</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.utils.general</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span><span class="p">,</span> <span class="n">table_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io.file_type</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_file_type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.job_execution.process_pool</span><span class="w"> </span><span class="kn">import</span> <span class="n">process_pool_map_ordered</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.production_event_data_helpers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">accumulate_histograms_by_telescope_config</span><span class="p">,</span>
+    <span class="n">normalize_telescope_configs</span><span class="p">,</span>
+    <span class="n">resolve_telescope_configs</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.sim_events.histograms</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventDataHistograms</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">TRIGGER_HISTOGRAM_METADATA_TABLE</span> <span class="o">=</span> <span class="s2">&quot;TRIGGER_REFERENCE_METADATA&quot;</span>
+<span class="n">TRIGGER_HISTOGRAM_BINS_TABLE</span> <span class="o">=</span> <span class="s2">&quot;TRIGGER_REFERENCE_BINS&quot;</span>
+<span class="n">TRIGGER_TOPOLOGY_COUNTS_TABLE</span> <span class="o">=</span> <span class="s2">&quot;TRIGGER_TOPOLOGY_COUNTS&quot;</span>
+<span class="n">TRIGGER_SUBSET_HISTOGRAMS_TABLE</span> <span class="o">=</span> <span class="s2">&quot;TRIGGER_SUBSET_HISTOGRAMS&quot;</span>
+<span class="n">TRIGGER_HISTOGRAM_DENSE_GROUP</span> <span class="o">=</span> <span class="s2">&quot;TRIGGER_HISTOGRAM_DENSE&quot;</span>
+
+<span class="n">_DERIVED_HISTOGRAM_SUFFIXES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;_eff&quot;</span><span class="p">,</span> <span class="s2">&quot;_cumulative&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_plot_directory_name</span><span class="p">(</span><span class="n">array_name</span><span class="p">,</span> <span class="n">telescope_ids</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a readable directory name for plot output.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">array_name</span> <span class="o">!=</span> <span class="s2">&quot;array_element_list&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">array_name</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">telescope_ids</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">array_name</span>
+    <span class="k">return</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">telescope_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">telescope_id</span> <span class="ow">in</span> <span class="n">telescope_ids</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_use_readable_inline_array_names</span><span class="p">(</span><span class="n">telescope_configs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return telescope configs with readable names for inline array-element lists.&quot;&quot;&quot;</span>
+    <span class="n">readable_configs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">telescope_configs</span><span class="p">:</span>
+        <span class="n">array_name</span> <span class="o">=</span> <span class="n">_get_plot_directory_name</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;array_name&quot;</span><span class="p">],</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;telescope_ids&quot;</span><span class="p">])</span>
+        <span class="n">readable_configs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">config</span> <span class="o">|</span> <span class="p">{</span><span class="s2">&quot;array_name&quot;</span><span class="p">:</span> <span class="n">array_name</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">readable_configs</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_angular_distance_bin_width</span><span class="p">(</span><span class="n">histograms</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the configured angular-distance bin width for metadata.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">histograms</span><span class="o">.</span><span class="n">angular_distance_bin_width</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">histograms</span><span class="o">.</span><span class="n">angular_distance_bin_width</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">histograms</span><span class="o">.</span><span class="n">view_cone_bins</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_quantity_value</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a scalar value converted to unit, preserving missing values.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;to&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_data_range_value</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a stored data-range value, or NaN when unavailable.&quot;&quot;&quot;</span>
+    <span class="n">data_range</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="s2">&quot;data_ranges&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">data_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">data_range</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_histogram_tables</span><span class="p">(</span><span class="n">reference_specs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert accumulated histogram products into metadata and bin tables.&quot;&quot;&quot;</span>
+    <span class="n">metadata_tables</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_create_metadata_table</span><span class="p">(</span>
+            <span class="n">reference_id</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;reference_id&quot;</span><span class="p">],</span>
+            <span class="n">production_index</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;production_index&quot;</span><span class="p">],</span>
+            <span class="n">event_data_file</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;event_data_file&quot;</span><span class="p">],</span>
+            <span class="n">site</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
+            <span class="n">array_name</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;array_name&quot;</span><span class="p">],</span>
+            <span class="n">telescope_ids</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;telescope_ids&quot;</span><span class="p">],</span>
+            <span class="n">histograms</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;histograms&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">reference_specs</span>
+    <span class="p">]</span>
+    <span class="n">bin_tables</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_create_bin_table</span><span class="p">(</span>
+            <span class="n">reference_id</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;reference_id&quot;</span><span class="p">],</span>
+            <span class="n">production_index</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;production_index&quot;</span><span class="p">],</span>
+            <span class="n">array_name</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;array_name&quot;</span><span class="p">],</span>
+            <span class="n">histograms</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;histograms&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">reference_specs</span>
+    <span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">vstack</span><span class="p">(</span><span class="n">metadata_tables</span><span class="p">,</span> <span class="n">metadata_conflicts</span><span class="o">=</span><span class="s2">&quot;silent&quot;</span><span class="p">),</span>
+        <span class="n">vstack</span><span class="p">(</span><span class="n">bin_tables</span><span class="p">,</span> <span class="n">metadata_conflicts</span><span class="o">=</span><span class="s2">&quot;silent&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_iter_persisted_histograms</span><span class="p">(</span><span class="n">histograms</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Yield persisted histogram names and definitions.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">histogram_name</span><span class="p">,</span> <span class="n">histogram</span> <span class="ow">in</span> <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">_is_persisted_histogram</span><span class="p">(</span><span class="n">histogram_name</span><span class="p">,</span> <span class="n">histogram</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">histogram_name</span><span class="p">,</span> <span class="n">histogram</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_trigger_topology_count_table</span><span class="p">(</span><span class="n">reference_specs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create count table for trigger multiplicities, combinations, and telescope participation.&quot;&quot;&quot;</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">reference_specs</span><span class="p">:</span>
+        <span class="n">topology</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;trigger_topology&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">count_type</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="s2">&quot;trigger_multiplicity&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;trigger_combinations&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;telescope_participation&quot;</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">topology</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">count_type</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;reference_id&quot;</span><span class="p">:</span> <span class="n">spec</span><span class="p">[</span><span class="s2">&quot;reference_id&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;count_type&quot;</span><span class="p">:</span> <span class="n">count_type</span><span class="p">,</span>
+                        <span class="s2">&quot;subset&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">),</span>
+                        <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">count</span><span class="p">),</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+        <span class="k">for</span> <span class="n">subset_name</span><span class="p">,</span> <span class="n">multiplicity_counts</span> <span class="ow">in</span> <span class="n">topology</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;subset_multiplicity&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">multiplicity</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">multiplicity_counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;reference_id&quot;</span><span class="p">:</span> <span class="n">spec</span><span class="p">[</span><span class="s2">&quot;reference_id&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;count_type&quot;</span><span class="p">:</span> <span class="s2">&quot;subset_multiplicity&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;subset&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">subset_name</span><span class="p">),</span>
+                        <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">multiplicity</span><span class="p">),</span>
+                        <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">count</span><span class="p">),</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+
+    <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">rows</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;reference_id&quot;</span><span class="p">,</span> <span class="s2">&quot;count_type&quot;</span><span class="p">,</span> <span class="s2">&quot;subset&quot;</span><span class="p">,</span> <span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="s2">&quot;count&quot;</span><span class="p">])</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;EXTNAME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TRIGGER_TOPOLOGY_COUNTS_TABLE</span>
+    <span class="k">return</span> <span class="n">table</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_quantity_bin_edges</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">quantity_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return bin edges for a named event quantity.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">quantity_name</span> <span class="o">==</span> <span class="s2">&quot;energy&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">histograms</span><span class="o">.</span><span class="n">energy_bins</span>
+    <span class="k">if</span> <span class="n">quantity_name</span> <span class="o">==</span> <span class="s2">&quot;core_distance&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">histograms</span><span class="o">.</span><span class="n">core_distance_bins</span>
+    <span class="k">if</span> <span class="n">quantity_name</span> <span class="o">==</span> <span class="s2">&quot;angular_distance&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">histograms</span><span class="o">.</span><span class="n">view_cone_bins</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported quantity: </span><span class="si">{</span><span class="n">quantity_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_trigger_subset_histogram_table</span><span class="p">(</span><span class="n">reference_specs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create per-trigger-subset histograms for event-production comparisons.&quot;&quot;&quot;</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">reference_specs</span><span class="p">:</span>
+        <span class="n">topology</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;trigger_topology&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">subset_values</span> <span class="o">=</span> <span class="n">topology</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;subset_values&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">for</span> <span class="n">quantity_name</span><span class="p">,</span> <span class="n">values_by_subset</span> <span class="ow">in</span> <span class="n">subset_values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">bin_edges</span> <span class="o">=</span> <span class="n">_quantity_bin_edges</span><span class="p">(</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;histograms&quot;</span><span class="p">],</span> <span class="n">quantity_name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">subset_name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">values_by_subset</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">counts</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bin_edges</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">bin_index</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">counts</span><span class="p">):</span>
+                    <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;reference_id&quot;</span><span class="p">:</span> <span class="n">spec</span><span class="p">[</span><span class="s2">&quot;reference_id&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;subset&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">subset_name</span><span class="p">),</span>
+                            <span class="s2">&quot;quantity&quot;</span><span class="p">:</span> <span class="n">quantity_name</span><span class="p">,</span>
+                            <span class="s2">&quot;bin_index&quot;</span><span class="p">:</span> <span class="n">bin_index</span><span class="p">,</span>
+                            <span class="s2">&quot;bin_low&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">[</span><span class="n">bin_index</span><span class="p">]),</span>
+                            <span class="s2">&quot;bin_high&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">[</span><span class="n">bin_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]),</span>
+                            <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">count</span><span class="p">),</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+
+    <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
+        <span class="n">rows</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span>
+        <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;reference_id&quot;</span><span class="p">,</span> <span class="s2">&quot;subset&quot;</span><span class="p">,</span> <span class="s2">&quot;quantity&quot;</span><span class="p">,</span> <span class="s2">&quot;bin_index&quot;</span><span class="p">,</span> <span class="s2">&quot;bin_low&quot;</span><span class="p">,</span> <span class="s2">&quot;bin_high&quot;</span><span class="p">,</span> <span class="s2">&quot;count&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;EXTNAME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TRIGGER_SUBSET_HISTOGRAMS_TABLE</span>
+    <span class="k">return</span> <span class="n">table</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_metadata_table</span><span class="p">(</span>
+    <span class="n">reference_id</span><span class="p">,</span>
+    <span class="n">production_index</span><span class="p">,</span>
+    <span class="n">event_data_file</span><span class="p">,</span>
+    <span class="n">site</span><span class="p">,</span>
+    <span class="n">array_name</span><span class="p">,</span>
+    <span class="n">telescope_ids</span><span class="p">,</span>
+    <span class="n">histograms</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create the one-row metadata table for trigger histograms.&quot;&quot;&quot;</span>
+    <span class="n">file_info</span> <span class="o">=</span> <span class="n">histograms</span><span class="o">.</span><span class="n">file_info</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span>
+        <span class="n">rows</span><span class="o">=</span><span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;reference_id&quot;</span><span class="p">:</span> <span class="n">reference_id</span><span class="p">,</span>
+                <span class="s2">&quot;production_index&quot;</span><span class="p">:</span> <span class="n">production_index</span><span class="p">,</span>
+                <span class="s2">&quot;event_data_file&quot;</span><span class="p">:</span> <span class="n">event_data_file</span><span class="p">,</span>
+                <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="n">site</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;array_name&quot;</span><span class="p">:</span> <span class="n">array_name</span><span class="p">,</span>
+                <span class="s2">&quot;telescope_ids&quot;</span><span class="p">:</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">telescope_ids</span><span class="p">)</span> <span class="k">if</span> <span class="n">telescope_ids</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;primary_particle&quot;</span><span class="p">:</span> <span class="n">file_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;primary_particle&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;zenith&quot;</span><span class="p">:</span> <span class="n">file_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;zenith&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+                <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span> <span class="n">file_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;azimuth&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+                <span class="s2">&quot;nsb_level&quot;</span><span class="p">:</span> <span class="n">file_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nsb_level&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                <span class="s2">&quot;energy_min&quot;</span><span class="p">:</span> <span class="n">file_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy_min&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">),</span>
+                <span class="s2">&quot;energy_max&quot;</span><span class="p">:</span> <span class="n">file_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;energy_max&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">),</span>
+                <span class="s2">&quot;viewcone_min&quot;</span><span class="p">:</span> <span class="n">file_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;viewcone_min&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+                <span class="s2">&quot;viewcone_max&quot;</span><span class="p">:</span> <span class="n">file_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;viewcone_max&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+                <span class="s2">&quot;core_scatter_min&quot;</span><span class="p">:</span> <span class="n">file_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_scatter_min&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+                <span class="s2">&quot;core_scatter_max&quot;</span><span class="p">:</span> <span class="n">file_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;core_scatter_max&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+                <span class="s2">&quot;scatter_area&quot;</span><span class="p">:</span> <span class="n">file_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scatter_area&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">cm</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span>
+                <span class="s2">&quot;solid_angle&quot;</span><span class="p">:</span> <span class="n">file_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;solid_angle&quot;</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">sr</span><span class="p">),</span>
+                <span class="s2">&quot;angular_distance_min&quot;</span><span class="p">:</span> <span class="n">_data_range_value</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="s2">&quot;angular_distance&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+                <span class="s2">&quot;angular_distance_max&quot;</span><span class="p">:</span> <span class="n">_data_range_value</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="s2">&quot;angular_distance&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+                <span class="s2">&quot;energy_bins_per_decade&quot;</span><span class="p">:</span> <span class="n">histograms</span><span class="o">.</span><span class="n">energy_bins_per_decade</span><span class="p">,</span>
+                <span class="s2">&quot;angular_distance_bin_width&quot;</span><span class="p">:</span> <span class="n">_get_angular_distance_bin_width</span><span class="p">(</span><span class="n">histograms</span><span class="p">),</span>
+                <span class="s2">&quot;angular_distance_bin_count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">histograms</span><span class="o">.</span><span class="n">view_cone_bins</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s2">&quot;core_distance_bin_count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">histograms</span><span class="o">.</span><span class="n">core_distance_bins</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s2">&quot;total_simulated_events&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                        <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="s2">&quot;angular_distance_vs_energy_vs_core_distance_mc&quot;</span><span class="p">][</span>
+                            <span class="s2">&quot;histogram&quot;</span>
+                        <span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;total_triggered_events&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                        <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="s2">&quot;angular_distance_vs_energy_vs_core_distance&quot;</span><span class="p">][</span>
+                            <span class="s2">&quot;histogram&quot;</span>
+                        <span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="p">),</span>
+            <span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">metadata</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;EXTNAME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TRIGGER_HISTOGRAM_METADATA_TABLE</span>
+    <span class="k">return</span> <span class="n">metadata</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_persisted_histogram</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">histogram</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True for base histograms that should be serialized.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">_DERIVED_HISTOGRAM_SUFFIXES</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">histogram</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">histogram</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;histogram&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_iter_histogram_edges</span><span class="p">(</span><span class="n">histogram</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Yield one bin-edge array per histogram axis.&quot;&quot;&quot;</span>
+    <span class="n">bin_edges</span> <span class="o">=</span> <span class="n">histogram</span><span class="p">[</span><span class="s2">&quot;bin_edges&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">histogram</span><span class="p">[</span><span class="s2">&quot;1d&quot;</span><span class="p">]:</span>
+        <span class="k">yield</span> <span class="mi">0</span><span class="p">,</span> <span class="n">bin_edges</span>
+        <span class="k">return</span>
+    <span class="k">yield from</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_dense_histogram_payload</span><span class="p">(</span><span class="n">reference_specs</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write persisted histogram arrays and bin edges as dense HDF5 datasets.&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hdf5_file</span><span class="p">:</span>
+        <span class="n">dense_group</span> <span class="o">=</span> <span class="n">hdf5_file</span><span class="o">.</span><span class="n">require_group</span><span class="p">(</span><span class="n">TRIGGER_HISTOGRAM_DENSE_GROUP</span><span class="p">)</span>
+        <span class="n">dense_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;format_version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">reference_specs</span><span class="p">:</span>
+            <span class="n">reference_group</span> <span class="o">=</span> <span class="n">dense_group</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;reference_id&quot;</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">histogram_name</span><span class="p">,</span> <span class="n">histogram</span> <span class="ow">in</span> <span class="n">_iter_persisted_histograms</span><span class="p">(</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;histograms&quot;</span><span class="p">]):</span>
+                <span class="n">histogram_group</span> <span class="o">=</span> <span class="n">reference_group</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">histogram_name</span><span class="p">))</span>
+                <span class="n">_create_dense_histogram_dataset</span><span class="p">(</span>
+                    <span class="n">histogram_group</span><span class="p">,</span>
+                    <span class="s2">&quot;values&quot;</span><span class="p">,</span>
+                    <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">histogram</span><span class="p">[</span><span class="s2">&quot;histogram&quot;</span><span class="p">]),</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">axis_index</span><span class="p">,</span> <span class="n">edges</span> <span class="ow">in</span> <span class="n">_iter_histogram_edges</span><span class="p">(</span><span class="n">histogram</span><span class="p">):</span>
+                    <span class="n">_create_dense_histogram_dataset</span><span class="p">(</span>
+                        <span class="n">histogram_group</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s2">&quot;edges_</span><span class="si">{</span><span class="n">axis_index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+                    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_dense_histogram_dataset</span><span class="p">(</span><span class="n">hdf5_group</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create one compressed dataset for dense trigger-histogram payloads.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">hdf5_group</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+        <span class="n">dataset_name</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+        <span class="n">chunks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;gzip&quot;</span><span class="p">,</span>
+        <span class="n">compression_opts</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_dense_histogram_payloads</span><span class="p">(</span><span class="n">reference_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load dense histogram arrays and edges grouped by reference id.&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">reference_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hdf5_file</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">TRIGGER_HISTOGRAM_DENSE_GROUP</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hdf5_file</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+        <span class="n">dense_group</span> <span class="o">=</span> <span class="n">hdf5_file</span><span class="p">[</span><span class="n">TRIGGER_HISTOGRAM_DENSE_GROUP</span><span class="p">]</span>
+        <span class="n">payloads</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">reference_id</span><span class="p">,</span> <span class="n">reference_group</span> <span class="ow">in</span> <span class="n">dense_group</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">values_by_name</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">edges_by_name</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">histogram_name</span><span class="p">,</span> <span class="n">histogram_group</span> <span class="ow">in</span> <span class="n">reference_group</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">values_by_name</span><span class="p">[</span><span class="n">histogram_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">histogram_group</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">])</span>
+                <span class="n">axis_edges</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">dataset_name</span><span class="p">,</span> <span class="n">dataset</span> <span class="ow">in</span> <span class="n">histogram_group</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">dataset_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;edges_&quot;</span><span class="p">):</span>
+                        <span class="k">continue</span>
+                    <span class="n">axis_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dataset_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">axis_edges</span><span class="p">[</span><span class="n">axis_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+                <span class="n">edges_by_name</span><span class="p">[</span><span class="n">histogram_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">axis_edges</span>
+            <span class="n">payloads</span><span class="p">[</span><span class="n">reference_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">values_by_name</span><span class="p">,</span> <span class="n">edges_by_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">payloads</span>
+
+
+<div class="viewcode-block" id="inspect_trigger_histogram_file">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.trigger_histograms.inspect_trigger_histogram_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">inspect_trigger_histogram_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">format_report</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return trigger-histogram-specific consistency checks when applicable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_path : str or Path</span>
+<span class="sd">        Path to the file to inspect.</span>
+<span class="sd">    format_report : bool, optional</span>
+<span class="sd">        Whether to format the report as human-readable text. Default is True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or dict or None</span>
+<span class="sd">        Formatted report string, structured report dictionary, or None if the file</span>
+<span class="sd">        does not contain trigger-histogram products.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hdf5_file</span><span class="p">:</span>
+        <span class="n">has_metadata</span> <span class="o">=</span> <span class="n">TRIGGER_HISTOGRAM_METADATA_TABLE</span> <span class="ow">in</span> <span class="n">hdf5_file</span>
+        <span class="n">has_dense_group</span> <span class="o">=</span> <span class="n">TRIGGER_HISTOGRAM_DENSE_GROUP</span> <span class="ow">in</span> <span class="n">hdf5_file</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_metadata</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_dense_group</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">dense_reference_ids</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">sorted</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">reference_id</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">reference_id</span> <span class="ow">in</span> <span class="n">hdf5_file</span><span class="p">[</span><span class="n">TRIGGER_HISTOGRAM_DENSE_GROUP</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">has_dense_group</span>
+            <span class="k">else</span> <span class="p">[]</span>
+        <span class="p">)</span>
+
+    <span class="n">metadata_reference_ids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">has_metadata</span><span class="p">:</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">table_handler</span><span class="o">.</span><span class="n">read_tables</span><span class="p">(</span>
+            <span class="n">file_path</span><span class="p">,</span>
+            <span class="p">[</span><span class="n">TRIGGER_HISTOGRAM_METADATA_TABLE</span><span class="p">],</span>
+            <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;HDF5&quot;</span><span class="p">,</span>
+        <span class="p">)[</span><span class="n">TRIGGER_HISTOGRAM_METADATA_TABLE</span><span class="p">]</span>
+        <span class="n">metadata_reference_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;reference_id&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">metadata</span><span class="p">)</span>
+
+    <span class="n">metadata_reference_id_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">metadata_reference_ids</span><span class="p">)</span>
+    <span class="n">dense_reference_id_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dense_reference_ids</span><span class="p">)</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;inspector&quot;</span><span class="p">:</span> <span class="s2">&quot;trigger_histogram&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;metadata_reference_count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">metadata_reference_ids</span><span class="p">),</span>
+        <span class="s2">&quot;dense_reference_count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">dense_reference_ids</span><span class="p">),</span>
+        <span class="s2">&quot;missing_dense_reference_ids&quot;</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">metadata_reference_id_set</span> <span class="o">-</span> <span class="n">dense_reference_id_set</span><span class="p">),</span>
+        <span class="s2">&quot;orphan_dense_reference_ids&quot;</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">dense_reference_id_set</span> <span class="o">-</span> <span class="n">metadata_reference_id_set</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">_format_trigger_histogram_inspection</span><span class="p">(</span><span class="n">report</span><span class="p">)</span> <span class="k">if</span> <span class="n">format_report</span> <span class="k">else</span> <span class="n">report</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_format_trigger_histogram_inspection</span><span class="p">(</span><span class="n">report</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Format trigger-histogram inspection results for console output.&quot;&quot;&quot;</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Trigger histogram consistency:&quot;</span><span class="p">]</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- metadata reference ids: </span><span class="si">{</span><span class="n">report</span><span class="p">[</span><span class="s1">&#39;metadata_reference_count&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- dense payload reference ids: </span><span class="si">{</span><span class="n">report</span><span class="p">[</span><span class="s1">&#39;dense_reference_count&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">report</span><span class="p">[</span><span class="s2">&quot;missing_dense_reference_ids&quot;</span><span class="p">]:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">&quot;- missing dense payloads for metadata ids: &quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">report</span><span class="p">[</span><span class="s2">&quot;missing_dense_reference_ids&quot;</span><span class="p">])</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;- missing dense payloads for metadata ids: none&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">report</span><span class="p">[</span><span class="s2">&quot;orphan_dense_reference_ids&quot;</span><span class="p">]:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">&quot;- orphan dense payload ids without metadata rows: &quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">report</span><span class="p">[</span><span class="s2">&quot;orphan_dense_reference_ids&quot;</span><span class="p">])</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;- orphan dense payload ids without metadata rows: none&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_bin_table</span><span class="p">(</span><span class="n">reference_id</span><span class="p">,</span> <span class="n">production_index</span><span class="p">,</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">histograms</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create the flattened per-bin histogram table.&quot;&quot;&quot;</span>
+    <span class="n">triggered_hist</span> <span class="o">=</span> <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="s2">&quot;angular_distance_vs_energy_vs_core_distance&quot;</span><span class="p">][</span>
+        <span class="s2">&quot;histogram&quot;</span>
+    <span class="p">]</span>
+    <span class="n">simulated_hist</span> <span class="o">=</span> <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="s2">&quot;angular_distance_vs_energy_vs_core_distance_mc&quot;</span><span class="p">][</span>
+        <span class="s2">&quot;histogram&quot;</span>
+    <span class="p">]</span>
+    <span class="n">efficiency_hist</span> <span class="o">=</span> <span class="n">histograms</span><span class="o">.</span><span class="n">histograms</span><span class="p">[</span><span class="s2">&quot;angular_distance_vs_energy_vs_core_distance_eff&quot;</span><span class="p">][</span>
+        <span class="s2">&quot;histogram&quot;</span>
+    <span class="p">]</span>
+    <span class="n">energy_edges</span> <span class="o">=</span> <span class="n">histograms</span><span class="o">.</span><span class="n">energy_bins</span>
+    <span class="n">angular_edges</span> <span class="o">=</span> <span class="n">histograms</span><span class="o">.</span><span class="n">view_cone_bins</span>
+    <span class="n">core_edges</span> <span class="o">=</span> <span class="n">histograms</span><span class="o">.</span><span class="n">core_distance_bins</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">angular_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">angular_edges</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">energy_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">energy_edges</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">core_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">core_edges</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;reference_id&quot;</span><span class="p">:</span> <span class="n">reference_id</span><span class="p">,</span>
+                        <span class="s2">&quot;production_index&quot;</span><span class="p">:</span> <span class="n">production_index</span><span class="p">,</span>
+                        <span class="s2">&quot;array_name&quot;</span><span class="p">:</span> <span class="n">array_name</span><span class="p">,</span>
+                        <span class="s2">&quot;angular_distance_bin_index&quot;</span><span class="p">:</span> <span class="n">angular_index</span><span class="p">,</span>
+                        <span class="s2">&quot;energy_bin_index&quot;</span><span class="p">:</span> <span class="n">energy_index</span><span class="p">,</span>
+                        <span class="s2">&quot;core_distance_bin_index&quot;</span><span class="p">:</span> <span class="n">core_index</span><span class="p">,</span>
+                        <span class="s2">&quot;angular_distance_low&quot;</span><span class="p">:</span> <span class="n">angular_edges</span><span class="p">[</span><span class="n">angular_index</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+                        <span class="s2">&quot;angular_distance_high&quot;</span><span class="p">:</span> <span class="n">angular_edges</span><span class="p">[</span><span class="n">angular_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+                        <span class="s2">&quot;energy_low&quot;</span><span class="p">:</span> <span class="n">energy_edges</span><span class="p">[</span><span class="n">energy_index</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">,</span>
+                        <span class="s2">&quot;energy_high&quot;</span><span class="p">:</span> <span class="n">energy_edges</span><span class="p">[</span><span class="n">energy_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">,</span>
+                        <span class="s2">&quot;core_distance_low&quot;</span><span class="p">:</span> <span class="n">core_edges</span><span class="p">[</span><span class="n">core_index</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span>
+                        <span class="s2">&quot;core_distance_high&quot;</span><span class="p">:</span> <span class="n">core_edges</span><span class="p">[</span><span class="n">core_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">,</span>
+                        <span class="s2">&quot;simulated_count&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span>
+                            <span class="n">simulated_hist</span><span class="p">[</span><span class="n">angular_index</span><span class="p">,</span> <span class="n">energy_index</span><span class="p">,</span> <span class="n">core_index</span><span class="p">]</span>
+                        <span class="p">),</span>
+                        <span class="s2">&quot;triggered_count&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span>
+                            <span class="n">triggered_hist</span><span class="p">[</span><span class="n">angular_index</span><span class="p">,</span> <span class="n">energy_index</span><span class="p">,</span> <span class="n">core_index</span><span class="p">]</span>
+                        <span class="p">),</span>
+                        <span class="s2">&quot;trigger_efficiency&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+                            <span class="n">efficiency_hist</span><span class="p">[</span><span class="n">angular_index</span><span class="p">,</span> <span class="n">energy_index</span><span class="p">,</span> <span class="n">core_index</span><span class="p">]</span>
+                        <span class="p">),</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+
+    <span class="n">bin_table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">rows</span><span class="o">=</span><span class="n">rows</span><span class="p">)</span>
+    <span class="n">bin_table</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;EXTNAME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">TRIGGER_HISTOGRAM_BINS_TABLE</span>
+    <span class="k">return</span> <span class="n">bin_table</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_process_production</span><span class="p">(</span>
+    <span class="n">file_path</span><span class="p">,</span>
+    <span class="n">telescope_configs</span><span class="p">,</span>
+    <span class="n">energy_bins_per_decade</span><span class="p">,</span>
+    <span class="n">angular_distance_bin_width</span><span class="p">,</span>
+    <span class="n">skip_invalid_event_data_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read one production once and build trigger histograms for all telescope configurations.&quot;&quot;&quot;</span>
+    <span class="n">finalized_histograms</span> <span class="o">=</span> <span class="n">accumulate_histograms_by_telescope_config</span><span class="p">(</span>
+        <span class="n">file_path</span><span class="p">,</span>
+        <span class="n">telescope_configs</span><span class="p">,</span>
+        <span class="n">energy_bins_per_decade</span><span class="o">=</span><span class="n">energy_bins_per_decade</span><span class="p">,</span>
+        <span class="n">angular_distance_bin_width</span><span class="o">=</span><span class="n">angular_distance_bin_width</span><span class="p">,</span>
+        <span class="n">skip_invalid_event_data_files</span><span class="o">=</span><span class="n">skip_invalid_event_data_files</span><span class="p">,</span>
+        <span class="n">fill_efficiency_histogram</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">collect_trigger_topology</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">[(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">topology</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">histograms</span><span class="p">,</span> <span class="n">topology</span> <span class="ow">in</span> <span class="n">finalized_histograms</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_execute_production_job</span><span class="p">(</span><span class="n">job_spec</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Execute one production-pattern histogram job in a worker process.&quot;&quot;&quot;</span>
+    <span class="n">histogram_topology_pairs</span> <span class="o">=</span> <span class="n">_process_production</span><span class="p">(</span>
+        <span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;production_pattern&quot;</span><span class="p">],</span>
+        <span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;telescope_configs&quot;</span><span class="p">],</span>
+        <span class="n">energy_bins_per_decade</span><span class="o">=</span><span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;energy_bins_per_decade&quot;</span><span class="p">],</span>
+        <span class="n">angular_distance_bin_width</span><span class="o">=</span><span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;angular_distance_bin_width&quot;</span><span class="p">],</span>
+        <span class="n">skip_invalid_event_data_files</span><span class="o">=</span><span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;skip_invalid_event_data_files&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;production_index&quot;</span><span class="p">:</span> <span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;production_index&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;event_data_file&quot;</span><span class="p">:</span> <span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;production_pattern&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;array_name&quot;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;array_name&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;telescope_ids&quot;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;telescope_ids&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;histograms&quot;</span><span class="p">:</span> <span class="n">histograms</span><span class="p">,</span>
+            <span class="s2">&quot;trigger_topology&quot;</span><span class="p">:</span> <span class="n">trigger_topology</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">config</span><span class="p">,</span> <span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">trigger_topology</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">job_spec</span><span class="p">[</span><span class="s2">&quot;telescope_configs&quot;</span><span class="p">],</span> <span class="n">histogram_topology_pairs</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
+
+
+<div class="viewcode-block" id="write_trigger_histograms">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.trigger_histograms.write_trigger_histograms">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_trigger_histograms</span><span class="p">(</span><span class="n">args_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build trigger histograms and write them to file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    args_dict : dict</span>
+<span class="sd">        Application arguments.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[astropy.table.Table, astropy.table.Table]</span>
+<span class="sd">        Metadata and per-bin histogram tables written to the HDF5 output file.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the output file does not use an HDF5 suffix or no supported telescope</span>
+<span class="sd">        selection is provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">production_patterns</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">ensure_string_lists</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;event_data_file&quot;</span><span class="p">])</span>
+    <span class="n">telescope_configs</span> <span class="o">=</span> <span class="n">_use_readable_inline_array_names</span><span class="p">(</span>
+        <span class="n">normalize_telescope_configs</span><span class="p">(</span><span class="n">resolve_telescope_configs</span><span class="p">(</span><span class="n">args_dict</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="n">validate_file_type</span><span class="p">(</span>
+        <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_file</span><span class="p">(</span><span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;output_file&quot;</span><span class="p">]),</span>
+        <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;hdf5&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">reference_specs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">job_specs</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;production_index&quot;</span><span class="p">:</span> <span class="n">production_index</span><span class="p">,</span>
+            <span class="s2">&quot;production_pattern&quot;</span><span class="p">:</span> <span class="n">pattern</span><span class="p">,</span>
+            <span class="s2">&quot;site&quot;</span><span class="p">:</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;site&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;telescope_configs&quot;</span><span class="p">:</span> <span class="n">telescope_configs</span><span class="p">,</span>
+            <span class="s2">&quot;energy_bins_per_decade&quot;</span><span class="p">:</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;energy_bins_per_decade&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;angular_distance_bin_width&quot;</span><span class="p">:</span> <span class="n">args_dict</span><span class="p">[</span><span class="s2">&quot;angular_distance_bin_width&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;skip_invalid_event_data_files&quot;</span><span class="p">:</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;skip_invalid_event_data_files&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">production_index</span><span class="p">,</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">production_patterns</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">&quot;Processing </span><span class="si">%d</span><span class="s2"> trigger-histogram production pattern(s) with max_workers=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">job_specs</span><span class="p">),</span>
+        <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_workers&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">production_result</span> <span class="ow">in</span> <span class="n">process_pool_map_ordered</span><span class="p">(</span>
+        <span class="n">_execute_production_job</span><span class="p">,</span>
+        <span class="n">job_specs</span><span class="p">,</span>
+        <span class="n">max_workers</span><span class="o">=</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_workers&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="p">):</span>
+        <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">production_result</span><span class="p">:</span>
+            <span class="n">reference_specs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spec</span> <span class="o">|</span> <span class="p">{</span><span class="s2">&quot;reference_id&quot;</span><span class="p">:</span> <span class="n">gen</span><span class="o">.</span><span class="n">get_uuid</span><span class="p">()})</span>
+
+    <span class="n">metadata_table</span><span class="p">,</span> <span class="n">bin_table</span> <span class="o">=</span> <span class="n">_create_histogram_tables</span><span class="p">(</span><span class="n">reference_specs</span><span class="p">)</span>
+    <span class="n">topology_count_table</span> <span class="o">=</span> <span class="n">_create_trigger_topology_count_table</span><span class="p">(</span><span class="n">reference_specs</span><span class="p">)</span>
+    <span class="n">subset_histogram_table</span> <span class="o">=</span> <span class="n">_create_trigger_subset_histogram_table</span><span class="p">(</span><span class="n">reference_specs</span><span class="p">)</span>
+    <span class="n">table_handler</span><span class="o">.</span><span class="n">write_tables</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">metadata_table</span><span class="p">,</span>
+            <span class="n">bin_table</span><span class="p">,</span>
+            <span class="n">topology_count_table</span><span class="p">,</span>
+            <span class="n">subset_histogram_table</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="n">output_file</span><span class="p">,</span>
+        <span class="n">overwrite_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;HDF5&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">_write_dense_histogram_payload</span><span class="p">(</span><span class="n">reference_specs</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">metadata_table</span><span class="p">,</span> <span class="n">bin_table</span></div>
+
+
+
+<div class="viewcode-block" id="load_trigger_histograms">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.trigger_histograms.load_trigger_histograms">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_trigger_histograms</span><span class="p">(</span><span class="n">reference_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load trigger-histogram metadata and bin tables from HDF5.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reference_file : str or pathlib.Path</span>
+<span class="sd">        Path to the trigger-histogram HDF5 file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[astropy.table.Table, astropy.table.Table]</span>
+<span class="sd">        Metadata table and per-bin histogram table read from the input file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="n">table_handler</span><span class="o">.</span><span class="n">read_tables</span><span class="p">(</span>
+        <span class="n">reference_file</span><span class="p">,</span>
+        <span class="p">[</span><span class="n">TRIGGER_HISTOGRAM_METADATA_TABLE</span><span class="p">,</span> <span class="n">TRIGGER_HISTOGRAM_BINS_TABLE</span><span class="p">],</span>
+        <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;HDF5&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">tables</span><span class="p">[</span><span class="n">TRIGGER_HISTOGRAM_METADATA_TABLE</span><span class="p">],</span> <span class="n">tables</span><span class="p">[</span><span class="n">TRIGGER_HISTOGRAM_BINS_TABLE</span><span class="p">]</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_row_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a scalar row value, preserving astropy quantities.&quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="n">unit</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;_table&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">table</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="s2">&quot;unit&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="o">*</span> <span class="n">unit</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_metadata_file_info</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build EventDataHistograms.file_info from a metadata row.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;primary_particle&quot;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;primary_particle&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;zenith&quot;</span><span class="p">:</span> <span class="n">_row_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;zenith&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span> <span class="n">_row_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;azimuth&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;nsb_level&quot;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;nsb_level&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;energy_min&quot;</span><span class="p">:</span> <span class="n">_row_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;energy_min&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;energy_max&quot;</span><span class="p">:</span> <span class="n">_row_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;energy_max&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;viewcone_min&quot;</span><span class="p">:</span> <span class="n">_row_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;viewcone_min&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;viewcone_max&quot;</span><span class="p">:</span> <span class="n">_row_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;viewcone_max&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;core_scatter_min&quot;</span><span class="p">:</span> <span class="n">_row_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;core_scatter_min&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;core_scatter_max&quot;</span><span class="p">:</span> <span class="n">_row_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;core_scatter_max&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;scatter_area&quot;</span><span class="p">:</span> <span class="n">_row_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;scatter_area&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;solid_angle&quot;</span><span class="p">:</span> <span class="n">_row_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;solid_angle&quot;</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_metadata_data_ranges</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build data_ranges from metadata values if present.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;angular_distance_min&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">colnames</span> <span class="ow">or</span> <span class="s2">&quot;angular_distance_max&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="n">angular_min</span> <span class="o">=</span> <span class="n">_quantity_value</span><span class="p">(</span><span class="n">_row_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;angular_distance_min&quot;</span><span class="p">),</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
+    <span class="n">angular_max</span> <span class="o">=</span> <span class="n">_quantity_value</span><span class="p">(</span><span class="n">_row_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;angular_distance_max&quot;</span><span class="p">),</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
+    <span class="n">angular_min</span> <span class="o">=</span> <span class="n">angular_min</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">angular_min</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">angular_min</span><span class="p">)</span>
+    <span class="n">angular_max</span> <span class="o">=</span> <span class="n">angular_max</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">angular_max</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">angular_max</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">angular_min</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">angular_max</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;angular_distance&quot;</span><span class="p">:</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">angular_min</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">angular_max</span><span class="p">))}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_template_histograms</span><span class="p">(</span><span class="n">histograms</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create metadata-rich empty histogram definitions for a loaded histogram object.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">histograms</span><span class="o">.</span><span class="n">get_empty_histogram_definitions</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_apply_loaded_histograms</span><span class="p">(</span><span class="n">histograms</span><span class="p">,</span> <span class="n">values_by_name</span><span class="p">,</span> <span class="n">edges_by_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Attach loaded histogram arrays and exact bin edges to a histogram object.&quot;&quot;&quot;</span>
+    <span class="n">templates</span> <span class="o">=</span> <span class="n">_template_histograms</span><span class="p">(</span><span class="n">histograms</span><span class="p">)</span>
+    <span class="n">loaded</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">loaded_bin_edges</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">histogram_name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">values_by_name</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">definition</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">templates</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">histogram_name</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">definition</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;1d&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">definition</span><span class="p">[</span><span class="s2">&quot;histogram&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+        <span class="n">definition</span><span class="p">[</span><span class="s2">&quot;event_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="kc">None</span> <span class="k">if</span> <span class="n">definition</span><span class="p">[</span><span class="s2">&quot;1d&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">(</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">axis_edges</span> <span class="o">=</span> <span class="n">edges_by_name</span><span class="p">[</span><span class="n">histogram_name</span><span class="p">]</span>
+        <span class="n">definition</span><span class="p">[</span><span class="s2">&quot;bin_edges&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">axis_edges</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span>
+            <span class="k">else</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">axis_edges</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">loaded</span><span class="p">[</span><span class="n">histogram_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">definition</span>
+
+    <span class="k">if</span> <span class="s2">&quot;energy&quot;</span> <span class="ow">in</span> <span class="n">edges_by_name</span><span class="p">:</span>
+        <span class="n">loaded_bin_edges</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">edges_by_name</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s2">&quot;core_distance&quot;</span> <span class="ow">in</span> <span class="n">edges_by_name</span><span class="p">:</span>
+        <span class="n">loaded_bin_edges</span><span class="p">[</span><span class="s2">&quot;core_distance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">edges_by_name</span><span class="p">[</span><span class="s2">&quot;core_distance&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s2">&quot;angular_distance&quot;</span> <span class="ow">in</span> <span class="n">edges_by_name</span><span class="p">:</span>
+        <span class="n">loaded_bin_edges</span><span class="p">[</span><span class="s2">&quot;viewcone&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">edges_by_name</span><span class="p">[</span><span class="s2">&quot;angular_distance&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">loaded</span><span class="p">,</span> <span class="n">loaded_bin_edges</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_histograms_from_reference_row_dense</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">values_by_name</span><span class="p">,</span> <span class="n">edges_by_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reconstruct finalized EventDataHistograms from dense HDF5 payloads.&quot;&quot;&quot;</span>
+    <span class="n">histograms</span> <span class="o">=</span> <span class="n">EventDataHistograms</span><span class="o">.</span><span class="n">create_accumulator</span><span class="p">(</span>
+        <span class="n">array_name</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;array_name&quot;</span><span class="p">],</span>
+        <span class="n">telescope_list</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;telescope_ids&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">))),</span>
+        <span class="n">energy_bins_per_decade</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;energy_bins_per_decade&quot;</span><span class="p">]),</span>
+        <span class="n">angular_distance_bin_count</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;angular_distance_bin_count&quot;</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">angular_distance_bin_width</span><span class="o">=</span><span class="n">_row_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;angular_distance_bin_width&quot;</span><span class="p">),</span>
+        <span class="n">core_distance_bin_count</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;core_distance_bin_count&quot;</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">loaded_histograms</span><span class="p">,</span> <span class="n">loaded_bin_edges</span> <span class="o">=</span> <span class="n">_apply_loaded_histograms</span><span class="p">(</span>
+        <span class="n">histograms</span><span class="p">,</span> <span class="n">values_by_name</span><span class="p">,</span> <span class="n">edges_by_name</span>
+    <span class="p">)</span>
+    <span class="n">histograms</span><span class="o">.</span><span class="n">set_loaded_histograms</span><span class="p">(</span>
+        <span class="n">loaded_histograms</span><span class="p">,</span>
+        <span class="n">file_info</span><span class="o">=</span><span class="n">_metadata_file_info</span><span class="p">(</span><span class="n">row</span><span class="p">),</span>
+        <span class="n">data_ranges</span><span class="o">=</span><span class="n">_metadata_data_ranges</span><span class="p">(</span><span class="n">row</span><span class="p">),</span>
+        <span class="n">loaded_bin_edges</span><span class="o">=</span><span class="n">loaded_bin_edges</span><span class="p">,</span>
+        <span class="n">contains_triggered_data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">histograms</span><span class="o">.</span><span class="n">calculate_efficiency_data</span><span class="p">()</span>
+    <span class="n">histograms</span><span class="o">.</span><span class="n">calculate_cumulative_data</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">histograms</span>
+
+
+<div class="viewcode-block" id="load_event_data_histograms">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.trigger_histograms.load_event_data_histograms">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_event_data_histograms</span><span class="p">(</span><span class="n">reference_file</span><span class="p">,</span> <span class="n">array_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">production_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load finalized EventDataHistograms objects from a trigger-histogram HDF5 file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reference_file : str or pathlib.Path</span>
+<span class="sd">        Path to the trigger-histogram HDF5 file.</span>
+<span class="sd">    array_names : list[str], optional</span>
+<span class="sd">        Restrict loaded histograms to these array names.</span>
+<span class="sd">    production_indices : list[int], optional</span>
+<span class="sd">        Restrict loaded histograms to these production indices.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[tuple[astropy.table.Row, EventDataHistograms]]</span>
+<span class="sd">        Metadata row and reconstructed histogram object for each reference.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dense_payloads</span> <span class="o">=</span> <span class="n">_load_dense_histogram_payloads</span><span class="p">(</span><span class="n">reference_file</span><span class="p">)</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">table_handler</span><span class="o">.</span><span class="n">read_tables</span><span class="p">(</span>
+        <span class="n">reference_file</span><span class="p">,</span>
+        <span class="p">[</span><span class="n">TRIGGER_HISTOGRAM_METADATA_TABLE</span><span class="p">],</span>
+        <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;HDF5&quot;</span><span class="p">,</span>
+    <span class="p">)[</span><span class="n">TRIGGER_HISTOGRAM_METADATA_TABLE</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">array_names</span><span class="p">:</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;array_name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span> <span class="n">array_names</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">production_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;production_index&quot;</span><span class="p">],</span> <span class="n">production_indices</span><span class="p">)]</span>
+
+    <span class="n">loaded</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">metadata</span><span class="p">:</span>
+        <span class="n">reference_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;reference_id&quot;</span><span class="p">])</span>
+        <span class="n">values_by_name</span><span class="p">,</span> <span class="n">edges_by_name</span> <span class="o">=</span> <span class="n">dense_payloads</span><span class="p">[</span><span class="n">reference_id</span><span class="p">]</span>
+        <span class="n">loaded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">row</span><span class="p">,</span>
+                <span class="n">_histograms_from_reference_row_dense</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">values_by_name</span><span class="p">,</span> <span class="n">edges_by_name</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">loaded</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,999 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>production_configuration.monte_carlo_statistics_estimator &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../_static/documentation_options.js?v=bbce7252"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/production_configuration/monte_carlo_statistics_estimator';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.20.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.34.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">production_configuration.monte_carlo_statistics_estimator</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for production_configuration.monte_carlo_statistics_estimator</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Estimate required Monte Carlo statistics from trigger histogram products.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">astropy.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools</span><span class="w"> </span><span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">io_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.io.file_type</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_file_type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.derive_corsika_limits</span><span class="w"> </span><span class="kn">import</span> <span class="n">FILE_INFO_COLUMNS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.histogram_output_metadata</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">extract_histogram_output_metadata</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.production_configuration.trigger_histograms</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">load_trigger_histograms</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.visualization.plot_simtel_event_histograms</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">plot_monte_carlo_statistics_diagnostics</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_metadata_quantity</span><span class="p">(</span><span class="n">metadata_row</span><span class="p">,</span> <span class="n">column_name</span><span class="p">,</span> <span class="n">default_unit</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a quantity-valued metadata field from an astropy table row.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    metadata_row : astropy.table.row.Row</span>
+<span class="sd">        Metadata row selected from the trigger-histogram metadata table.</span>
+<span class="sd">    column_name : str</span>
+<span class="sd">        Column name to read from the row.</span>
+<span class="sd">    default_unit : astropy.units.UnitBase or str</span>
+<span class="sd">        Unit to apply when the source column has no unit metadata.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astropy.units.Quantity</span>
+<span class="sd">        Quantity reconstructed from the row scalar and the table-column unit.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">metadata_row</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span>
+    <span class="n">column</span> <span class="o">=</span> <span class="n">metadata_row</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span>
+    <span class="n">unit</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">default_unit</span>
+    <span class="k">return</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_effective_throw_radius</span><span class="p">(</span><span class="n">original_radius</span><span class="p">,</span> <span class="n">radius_override</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the effective throw radius, validating optional overrides.&quot;&quot;&quot;</span>
+    <span class="n">original_radius</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">original_radius</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">original_radius</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Original core scatter radius must be positive.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">radius_override</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">original_radius</span>
+
+    <span class="n">radius_override</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">radius_override</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">radius_override</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Reduced core scatter radius must be positive.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">radius_override</span> <span class="o">&gt;</span> <span class="n">original_radius</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Reduced core scatter radius cannot exceed the original simulated core scatter radius.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">radius_override</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_power_law_bin_integrals</span><span class="p">(</span><span class="n">bin_lows</span><span class="p">,</span> <span class="n">bin_highs</span><span class="p">,</span> <span class="n">spectral_index</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Integrate a power law across energy bins.&quot;&quot;&quot;</span>
+    <span class="n">exponent</span> <span class="o">=</span> <span class="n">spectral_index</span> <span class="o">+</span> <span class="mf">1.0</span>
+    <span class="n">bin_lows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">bin_lows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">bin_highs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">bin_highs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">exponent</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">bin_highs</span> <span class="o">/</span> <span class="n">bin_lows</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">bin_highs</span><span class="p">,</span> <span class="n">exponent</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">bin_lows</span><span class="p">,</span> <span class="n">exponent</span><span class="p">))</span> <span class="o">/</span> <span class="n">exponent</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_energy_bin_probabilities</span><span class="p">(</span><span class="n">energy_edges</span><span class="p">,</span> <span class="n">spectral_index</span><span class="p">,</span> <span class="n">br_energy</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the normalized thrown-event probability per energy bin.&quot;&quot;&quot;</span>
+    <span class="n">energy_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">energy_edges</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">br_energy_min</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">br_energy</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">)</span>
+    <span class="n">br_energy_max</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">br_energy</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">br_energy_min</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">br_energy_max</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Thrown energy bounds must be positive.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">br_energy_min</span> <span class="o">&gt;=</span> <span class="n">br_energy_max</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Thrown energy minimum must be smaller than the maximum.&quot;</span><span class="p">)</span>
+
+    <span class="n">lows</span> <span class="o">=</span> <span class="n">energy_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">highs</span> <span class="o">=</span> <span class="n">energy_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">clipped_lows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">lows</span><span class="p">,</span> <span class="n">br_energy_min</span><span class="p">)</span>
+    <span class="n">clipped_highs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">highs</span><span class="p">,</span> <span class="n">br_energy_max</span><span class="p">)</span>
+    <span class="n">overlaps</span> <span class="o">=</span> <span class="n">clipped_highs</span> <span class="o">&gt;</span> <span class="n">clipped_lows</span>
+
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">lows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">overlaps</span><span class="p">):</span>
+        <span class="n">weights</span><span class="p">[</span><span class="n">overlaps</span><span class="p">]</span> <span class="o">=</span> <span class="n">_power_law_bin_integrals</span><span class="p">(</span>
+            <span class="n">clipped_lows</span><span class="p">[</span><span class="n">overlaps</span><span class="p">],</span>
+            <span class="n">clipped_highs</span><span class="p">[</span><span class="n">overlaps</span><span class="p">],</span>
+            <span class="n">spectral_index</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">total</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Thrown energy range does not overlap any reference energy bins.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">weights</span> <span class="o">/</span> <span class="n">total</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_expected_trigger_matrix</span><span class="p">(</span><span class="n">simulated_counts</span><span class="p">,</span> <span class="n">triggered_counts</span><span class="p">,</span> <span class="n">energy_probabilities</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the expected triggered counts per one thrown event.&quot;&quot;&quot;</span>
+    <span class="n">simulated_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">simulated_counts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">triggered_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">triggered_counts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">energy_probabilities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">energy_probabilities</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="n">energy_totals</span> <span class="o">=</span> <span class="n">simulated_counts</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">trigger_probabilities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+        <span class="n">triggered_counts</span><span class="p">,</span>
+        <span class="n">energy_totals</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:],</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">simulated_counts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+        <span class="n">where</span><span class="o">=</span><span class="n">energy_totals</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">trigger_probabilities</span> <span class="o">*</span> <span class="n">energy_probabilities</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_expected_counts</span><span class="p">(</span><span class="n">expected_triggers_per_event</span><span class="p">,</span> <span class="n">required_total_events</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return expected triggered counts for the solved total thrown events.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">required_total_events</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">expected_triggers_per_event</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">expected_triggers_per_event</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">required_total_events</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ceil_required_total_events</span><span class="p">(</span><span class="n">required_total_events</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Round the required total number of events up to the next integer.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">required_total_events</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">required_total_events</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">required_total_events</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_relative_uncertainty</span><span class="p">(</span><span class="n">expected_counts</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return Poisson relative uncertainty for expected counts.&quot;&quot;&quot;</span>
+    <span class="n">expected_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">expected_counts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+        <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">expected_counts</span><span class="p">),</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">expected_counts</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+        <span class="n">where</span><span class="o">=</span><span class="n">expected_counts</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_reference_matrix</span><span class="p">(</span><span class="n">reference_rows</span><span class="p">,</span> <span class="n">column_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return one per-bin matrix reconstructed from the flattened table.&quot;&quot;&quot;</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">reference_rows</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s2">&quot;core_distance_bin_index&quot;</span> <span class="ow">in</span> <span class="n">rows</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">sort</span><span class="p">([</span><span class="s2">&quot;angular_distance_bin_index&quot;</span><span class="p">,</span> <span class="s2">&quot;energy_bin_index&quot;</span><span class="p">,</span> <span class="s2">&quot;core_distance_bin_index&quot;</span><span class="p">])</span>
+        <span class="n">angular_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="s2">&quot;angular_distance_bin_index&quot;</span><span class="p">])</span>
+        <span class="n">energy_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="s2">&quot;energy_bin_index&quot;</span><span class="p">])</span>
+        <span class="n">core_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="s2">&quot;core_distance_bin_index&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="n">column_name</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">angular_indices</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">energy_indices</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">core_indices</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">rows</span><span class="o">.</span><span class="n">sort</span><span class="p">([</span><span class="s2">&quot;angular_distance_bin_index&quot;</span><span class="p">,</span> <span class="s2">&quot;energy_bin_index&quot;</span><span class="p">])</span>
+    <span class="n">angular_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="s2">&quot;angular_distance_bin_index&quot;</span><span class="p">])</span>
+    <span class="n">energy_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="s2">&quot;energy_bin_index&quot;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="n">column_name</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">angular_indices</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">energy_indices</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_reference_bin_edges</span><span class="p">(</span><span class="n">reference_rows</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the bin edges for energy and angular distance histograms.&quot;&quot;&quot;</span>
+    <span class="n">axis_units</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;energy&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">,</span>
+        <span class="s2">&quot;angular_distance&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">axis_units</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">reference_rows</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2">_bin_index&quot;</span><span class="p">)</span>
+        <span class="n">lows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2">_low&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">unit</span><span class="p">))</span>
+        <span class="n">highs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2">_high&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">unit</span><span class="p">))</span>
+        <span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">lows</span><span class="p">[:</span><span class="mi">1</span><span class="p">],</span> <span class="n">highs</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">edges</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">edges</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_reference_core_edges</span><span class="p">(</span><span class="n">reference_rows</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return core-distance bin edges for core-distance-binned trigger histograms.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;core_distance_bin_index&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">reference_rows</span><span class="o">.</span><span class="n">colnames</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Core-distance-binned trigger histograms are required to use reduced_core_radius. &quot;</span>
+            <span class="s2">&quot;Rebuild trigger histograms with simtools-write-trigger-histograms.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">reference_rows</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">rows</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;core_distance_bin_index&quot;</span><span class="p">)</span>
+    <span class="n">lows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="s2">&quot;core_distance_low&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">))</span>
+    <span class="n">highs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="s2">&quot;core_distance_high&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">quantity</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">lows</span><span class="p">[:</span><span class="mi">1</span><span class="p">],</span> <span class="n">highs</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_core_distance_weights</span><span class="p">(</span><span class="n">core_edges</span><span class="p">,</span> <span class="n">effective_radius</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return area-fraction weights for integrating core-distance bins.&quot;&quot;&quot;</span>
+    <span class="n">effective_radius</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">effective_radius</span><span class="p">)</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">effective_radius</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Effective core scatter radius must be positive.&quot;</span><span class="p">)</span>
+
+    <span class="n">core_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">core_edges</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">lows</span> <span class="o">=</span> <span class="n">core_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">highs</span> <span class="o">=</span> <span class="n">core_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">denominator</span> <span class="o">=</span> <span class="n">highs</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">lows</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">clipped_highs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">highs</span><span class="p">,</span> <span class="n">effective_radius</span><span class="p">)</span>
+    <span class="n">numerator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">clipped_highs</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">lows</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+        <span class="n">numerator</span><span class="p">,</span>
+        <span class="n">denominator</span><span class="p">,</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">numerator</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+        <span class="n">where</span><span class="o">=</span><span class="n">denominator</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_collapse_core_distance_counts</span><span class="p">(</span>
+    <span class="n">simulated_counts</span><span class="p">,</span> <span class="n">triggered_counts</span><span class="p">,</span> <span class="n">core_edges</span><span class="p">,</span> <span class="n">effective_radius</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Collapse 3D count matrices over core distance using area-fraction weights.&quot;&quot;&quot;</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">_compute_core_distance_weights</span><span class="p">(</span><span class="n">core_edges</span><span class="p">,</span> <span class="n">effective_radius</span><span class="p">)</span>
+    <span class="n">simulated_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">simulated_counts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">triggered_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">triggered_counts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">simulated_counts</span> <span class="o">*</span> <span class="n">weights</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">triggered_counts</span> <span class="o">*</span> <span class="n">weights</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_trigger_efficiency</span><span class="p">(</span><span class="n">triggered_counts</span><span class="p">,</span> <span class="n">simulated_counts</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return trigger efficiency from triggered and simulated counts.&quot;&quot;&quot;</span>
+    <span class="n">triggered_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">triggered_counts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">simulated_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">simulated_counts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+        <span class="n">triggered_counts</span><span class="p">,</span>
+        <span class="n">simulated_counts</span><span class="p">,</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">triggered_counts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+        <span class="n">where</span><span class="o">=</span><span class="n">simulated_counts</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_select_reference_rows</span><span class="p">(</span><span class="n">metadata_table</span><span class="p">,</span> <span class="n">array_names</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Filter reference metadata rows according to optional user-facing selectors.&quot;&quot;&quot;</span>
+    <span class="n">selected</span> <span class="o">=</span> <span class="n">metadata_table</span>
+    <span class="k">if</span> <span class="n">array_names</span><span class="p">:</span>
+        <span class="n">selected</span> <span class="o">=</span> <span class="n">selected</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">selected</span><span class="p">[</span><span class="s2">&quot;array_name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span> <span class="n">array_names</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No trigger histograms matched the requested selection.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">selected</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_optimization_energy_mask</span><span class="p">(</span><span class="n">energy_edges</span><span class="p">,</span> <span class="n">optimization_energy</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the energy-bin mask used for the optimization criterion.&quot;&quot;&quot;</span>
+    <span class="n">centers</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">energy_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">energy_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+    <span class="n">optimization_energy_min</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">optimization_energy</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">)</span>
+    <span class="n">optimization_energy_max</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">optimization_energy</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">to_value</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">optimization_energy_min</span> <span class="o">&gt;=</span> <span class="n">optimization_energy_max</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Optimization energy minimum must be smaller than the maximum.&quot;</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">centers</span> <span class="o">&gt;=</span> <span class="n">optimization_energy_min</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">centers</span> <span class="o">&lt;=</span> <span class="n">optimization_energy_max</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Optimization energy range does not overlap any reference energy bins.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mask</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_estimate_required_events</span><span class="p">(</span>
+    <span class="n">expected_triggers_per_event</span><span class="p">,</span> <span class="n">energy_mask</span><span class="p">,</span> <span class="n">target_relative_uncertainty</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve for required total thrown events from estimable trigger bins.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">target_relative_uncertainty</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Target relative uncertainty must be positive.&quot;</span><span class="p">)</span>
+
+    <span class="n">required_trigger_count</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">target_relative_uncertainty</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">candidate_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">expected_triggers_per_event</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)[:,</span> <span class="n">energy_mask</span><span class="p">]</span>
+    <span class="n">positive_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">candidate_matrix</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">candidate_matrix</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">skipped_bins</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">candidate_matrix</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">positive_mask</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">positive_mask</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">skipped_bins</span>
+
+    <span class="n">required_totals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">candidate_matrix</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">required_totals</span><span class="p">[</span><span class="n">positive_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">required_trigger_count</span> <span class="o">/</span> <span class="n">candidate_matrix</span><span class="p">[</span><span class="n">positive_mask</span><span class="p">]</span>
+    <span class="n">limiting_flat_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">required_totals</span><span class="p">))</span>
+    <span class="n">limiting_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">limiting_flat_index</span><span class="p">,</span> <span class="n">required_totals</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">required_totals</span><span class="p">[</span><span class="n">limiting_index</span><span class="p">],</span>
+        <span class="n">candidate_matrix</span><span class="p">[</span><span class="n">limiting_index</span><span class="p">],</span>
+        <span class="n">limiting_index</span><span class="p">,</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">positive_mask</span><span class="p">)),</span>
+        <span class="n">skipped_bins</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_energy_ranges</span><span class="p">(</span><span class="n">metadata_row</span><span class="p">,</span> <span class="n">optimization_energy</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resolve thrown and optimization energy ranges for one histogram row.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    metadata_row : astropy.table.row.Row</span>
+<span class="sd">        Metadata row selected from the trigger-histogram metadata table.</span>
+<span class="sd">    optimization_energy : tuple of astropy.units.Quantity or None</span>
+<span class="sd">        Optional user-specified optimization energy range.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">br_energy</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_get_metadata_quantity</span><span class="p">(</span><span class="n">metadata_row</span><span class="p">,</span> <span class="s2">&quot;energy_min&quot;</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">),</span>
+        <span class="n">_get_metadata_quantity</span><span class="p">(</span><span class="n">metadata_row</span><span class="p">,</span> <span class="s2">&quot;energy_max&quot;</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">optimization_energy_min</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">optimization_energy_max</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">optimization_energy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">optimization_energy_min</span><span class="p">,</span> <span class="n">optimization_energy_max</span> <span class="o">=</span> <span class="n">optimization_energy</span>
+    <span class="n">resolved_optimization_energy</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">br_energy</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">optimization_energy_min</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">optimization_energy_min</span><span class="p">,</span>
+        <span class="n">br_energy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">optimization_energy_max</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">optimization_energy_max</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">br_energy</span><span class="p">,</span> <span class="n">resolved_optimization_energy</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_limiting_indices</span><span class="p">(</span><span class="n">energy_mask</span><span class="p">,</span> <span class="n">limiting_index</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Map limiting indices from the masked matrix back to the original energy bins.&quot;&quot;&quot;</span>
+    <span class="n">masked_energy_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">energy_mask</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">limiting_index</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">masked_energy_indices</span><span class="p">[</span><span class="n">limiting_index</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_extract_diagnostic_file_info</span><span class="p">(</span><span class="n">metadata_row</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return observational metadata used to disambiguate diagnostic plot filenames.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;zenith&quot;</span><span class="p">:</span> <span class="n">_get_metadata_quantity</span><span class="p">(</span><span class="n">metadata_row</span><span class="p">,</span> <span class="s2">&quot;zenith&quot;</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+        <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span> <span class="n">_get_metadata_quantity</span><span class="p">(</span><span class="n">metadata_row</span><span class="p">,</span> <span class="s2">&quot;azimuth&quot;</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">),</span>
+        <span class="s2">&quot;nsb_level&quot;</span><span class="p">:</span> <span class="n">metadata_row</span><span class="p">[</span><span class="s2">&quot;nsb_level&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_result_metadata</span><span class="p">(</span>
+    <span class="n">metadata_row</span><span class="p">,</span>
+    <span class="n">spectral_index</span><span class="p">,</span>
+    <span class="n">target_relative_uncertainty</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the metadata fields shared by all estimator result rows.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">extract_histogram_output_metadata</span><span class="p">(</span>
+        <span class="n">metadata_row</span><span class="p">,</span>
+        <span class="n">FILE_INFO_COLUMNS</span><span class="p">,</span>
+        <span class="n">include_array_name</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">|</span> <span class="p">{</span>
+        <span class="s2">&quot;spectral_index&quot;</span><span class="p">:</span> <span class="n">spectral_index</span><span class="p">,</span>
+        <span class="s2">&quot;target_relative_uncertainty&quot;</span><span class="p">:</span> <span class="n">target_relative_uncertainty</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_result_row</span><span class="p">(</span>
+    <span class="n">metadata_row</span><span class="p">,</span>
+    <span class="n">bin_table</span><span class="p">,</span>
+    <span class="n">target_relative_uncertainty</span><span class="p">,</span>
+    <span class="n">spectral_index</span><span class="p">,</span>
+    <span class="n">reduced_core_radius</span><span class="p">,</span>
+    <span class="n">optimization_energy</span><span class="p">,</span>
+    <span class="n">plot_diagnostics</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build one result row for a selected trigger histogram.&quot;&quot;&quot;</span>
+    <span class="n">reference_id</span> <span class="o">=</span> <span class="n">metadata_row</span><span class="p">[</span><span class="s2">&quot;reference_id&quot;</span><span class="p">]</span>
+    <span class="n">reference_rows</span> <span class="o">=</span> <span class="n">bin_table</span><span class="p">[</span><span class="n">bin_table</span><span class="p">[</span><span class="s2">&quot;reference_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">reference_id</span><span class="p">]</span>
+    <span class="n">energy_edges</span><span class="p">,</span> <span class="n">angular_edges</span> <span class="o">=</span> <span class="n">_get_reference_bin_edges</span><span class="p">(</span><span class="n">reference_rows</span><span class="p">)</span>
+    <span class="n">simulated_counts</span> <span class="o">=</span> <span class="n">_get_reference_matrix</span><span class="p">(</span><span class="n">reference_rows</span><span class="p">,</span> <span class="s2">&quot;simulated_count&quot;</span><span class="p">)</span>
+    <span class="n">triggered_counts</span> <span class="o">=</span> <span class="n">_get_reference_matrix</span><span class="p">(</span><span class="n">reference_rows</span><span class="p">,</span> <span class="s2">&quot;triggered_count&quot;</span><span class="p">)</span>
+
+    <span class="n">effective_radius</span> <span class="o">=</span> <span class="n">_resolve_effective_throw_radius</span><span class="p">(</span>
+        <span class="n">_get_metadata_quantity</span><span class="p">(</span><span class="n">metadata_row</span><span class="p">,</span> <span class="s2">&quot;core_scatter_max&quot;</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">),</span>
+        <span class="n">reduced_core_radius</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">simulated_counts</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">core_edges</span> <span class="o">=</span> <span class="n">_get_reference_core_edges</span><span class="p">(</span><span class="n">reference_rows</span><span class="p">)</span>
+        <span class="n">simulated_counts</span><span class="p">,</span> <span class="n">triggered_counts</span> <span class="o">=</span> <span class="n">_collapse_core_distance_counts</span><span class="p">(</span>
+            <span class="n">simulated_counts</span><span class="p">,</span>
+            <span class="n">triggered_counts</span><span class="p">,</span>
+            <span class="n">core_edges</span><span class="p">,</span>
+            <span class="n">effective_radius</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">reduced_core_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Core-distance-binned trigger histograms are required to use reduced_core_radius. &quot;</span>
+            <span class="s2">&quot;Rebuild trigger histograms with simtools-write-trigger-histograms.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">trigger_efficiency</span> <span class="o">=</span> <span class="n">_compute_trigger_efficiency</span><span class="p">(</span><span class="n">triggered_counts</span><span class="p">,</span> <span class="n">simulated_counts</span><span class="p">)</span>
+    <span class="n">br_energy</span><span class="p">,</span> <span class="n">optimization_energy</span> <span class="o">=</span> <span class="n">_resolve_energy_ranges</span><span class="p">(</span><span class="n">metadata_row</span><span class="p">,</span> <span class="n">optimization_energy</span><span class="p">)</span>
+
+    <span class="n">energy_probabilities</span> <span class="o">=</span> <span class="n">_compute_energy_bin_probabilities</span><span class="p">(</span>
+        <span class="n">energy_edges</span><span class="p">,</span> <span class="n">spectral_index</span><span class="p">,</span> <span class="n">br_energy</span>
+    <span class="p">)</span>
+    <span class="n">expected_triggers_per_event</span> <span class="o">=</span> <span class="n">_compute_expected_trigger_matrix</span><span class="p">(</span>
+        <span class="n">simulated_counts</span><span class="p">,</span>
+        <span class="n">triggered_counts</span><span class="p">,</span>
+        <span class="n">energy_probabilities</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">energy_mask</span> <span class="o">=</span> <span class="n">_optimization_energy_mask</span><span class="p">(</span><span class="n">energy_edges</span><span class="p">,</span> <span class="n">optimization_energy</span><span class="p">)</span>
+    <span class="p">(</span>
+        <span class="n">required_total_events</span><span class="p">,</span>
+        <span class="n">limiting_expected_per_event</span><span class="p">,</span>
+        <span class="n">limiting_index</span><span class="p">,</span>
+        <span class="n">optimization_bins_used</span><span class="p">,</span>
+        <span class="n">optimization_bins_skipped</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="n">_estimate_required_events</span><span class="p">(</span>
+        <span class="n">expected_triggers_per_event</span><span class="p">,</span>
+        <span class="n">energy_mask</span><span class="p">,</span>
+        <span class="n">target_relative_uncertainty</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">required_total_events</span> <span class="o">=</span> <span class="n">_ceil_required_total_events</span><span class="p">(</span><span class="n">required_total_events</span><span class="p">)</span>
+    <span class="n">expected_counts</span> <span class="o">=</span> <span class="n">_compute_expected_counts</span><span class="p">(</span><span class="n">expected_triggers_per_event</span><span class="p">,</span> <span class="n">required_total_events</span><span class="p">)</span>
+    <span class="n">relative_uncertainty</span> <span class="o">=</span> <span class="n">_compute_relative_uncertainty</span><span class="p">(</span><span class="n">expected_counts</span><span class="p">)</span>
+
+    <span class="n">limiting_angular_index</span><span class="p">,</span> <span class="n">limiting_energy_index</span> <span class="o">=</span> <span class="n">_resolve_limiting_indices</span><span class="p">(</span>
+        <span class="n">energy_mask</span><span class="p">,</span> <span class="n">limiting_index</span>
+    <span class="p">)</span>
+    <span class="n">original_radius</span> <span class="o">=</span> <span class="n">_get_metadata_quantity</span><span class="p">(</span><span class="n">metadata_row</span><span class="p">,</span> <span class="s2">&quot;core_scatter_max&quot;</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">plot_diagnostics</span><span class="p">:</span>
+        <span class="n">plot_monte_carlo_statistics_diagnostics</span><span class="p">(</span>
+            <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span>
+            <span class="n">metadata_row</span><span class="p">[</span><span class="s2">&quot;array_name&quot;</span><span class="p">],</span>
+            <span class="n">_extract_diagnostic_file_info</span><span class="p">(</span><span class="n">metadata_row</span><span class="p">),</span>
+            <span class="n">energy_edges</span><span class="p">,</span>
+            <span class="n">angular_edges</span><span class="p">,</span>
+            <span class="n">expected_counts</span><span class="p">,</span>
+            <span class="n">relative_uncertainty</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_build_result_metadata</span><span class="p">(</span><span class="n">metadata_row</span><span class="p">,</span> <span class="n">spectral_index</span><span class="p">,</span> <span class="n">target_relative_uncertainty</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span>
+        <span class="s2">&quot;estimated_total_events&quot;</span><span class="p">:</span> <span class="n">required_total_events</span><span class="p">,</span>
+        <span class="s2">&quot;limiting_energy_low&quot;</span><span class="p">:</span> <span class="n">energy_edges</span><span class="p">[</span><span class="n">limiting_energy_index</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">,</span>
+        <span class="s2">&quot;limiting_energy_high&quot;</span><span class="p">:</span> <span class="n">energy_edges</span><span class="p">[</span><span class="n">limiting_energy_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">,</span>
+        <span class="s2">&quot;limiting_angular_distance_low&quot;</span><span class="p">:</span> <span class="n">angular_edges</span><span class="p">[</span><span class="n">limiting_angular_index</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="s2">&quot;limiting_angular_distance_high&quot;</span><span class="p">:</span> <span class="n">angular_edges</span><span class="p">[</span><span class="n">limiting_angular_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+        <span class="s2">&quot;limiting_expected_trigger_count&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">limiting_expected_per_event</span> <span class="o">*</span> <span class="n">required_total_events</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">required_total_events</span><span class="p">)</span>
+            <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;limiting_trigger_efficiency&quot;</span><span class="p">:</span> <span class="n">trigger_efficiency</span><span class="p">[</span>
+            <span class="n">limiting_angular_index</span><span class="p">,</span> <span class="n">limiting_energy_index</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;optimization_bins_used&quot;</span><span class="p">:</span> <span class="n">optimization_bins_used</span><span class="p">,</span>
+        <span class="s2">&quot;optimization_bins_skipped&quot;</span><span class="p">:</span> <span class="n">optimization_bins_skipped</span><span class="p">,</span>
+        <span class="s2">&quot;original_core_scatter_radius&quot;</span><span class="p">:</span> <span class="n">original_radius</span><span class="p">,</span>
+        <span class="s2">&quot;effective_core_scatter_radius&quot;</span><span class="p">:</span> <span class="n">effective_radius</span><span class="p">,</span>
+        <span class="s2">&quot;br_energy_min&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">br_energy</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">),</span>
+        <span class="s2">&quot;br_energy_max&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">br_energy</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">),</span>
+        <span class="s2">&quot;optimization_energy_min&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">optimization_energy</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">),</span>
+        <span class="s2">&quot;optimization_energy_max&quot;</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">optimization_energy</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<div class="viewcode-block" id="estimate_monte_carlo_statistics">
+<a class="viewcode-back" href="../../api-reference/production_configuration.html#production_configuration.monte_carlo_statistics_estimator.estimate_monte_carlo_statistics">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">estimate_monte_carlo_statistics</span><span class="p">(</span><span class="n">args_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Estimate required total thrown events for one or more trigger histograms.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    astropy.table.Table</span>
+<span class="sd">        Results table containing required thrown-event estimates and limiting-bin</span>
+<span class="sd">        diagnostics for each selected trigger histogram.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">args_dict</span> <span class="o">=</span> <span class="n">args_dict</span> <span class="ow">or</span> <span class="n">settings</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">args</span>
+    <span class="n">metadata_table</span><span class="p">,</span> <span class="n">bin_table</span> <span class="o">=</span> <span class="n">load_trigger_histograms</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;trigger_histogram_file&quot;</span><span class="p">))</span>
+
+    <span class="n">selected_references</span> <span class="o">=</span> <span class="n">_select_reference_rows</span><span class="p">(</span>
+        <span class="n">metadata_table</span><span class="p">,</span>
+        <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_layout_name&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;array_names&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_diagnostics&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected_references</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Writing Monte Carlo statistics diagnostic plots to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_directory</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+    <span class="n">output_rows</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_build_result_row</span><span class="p">(</span>
+            <span class="n">metadata_row</span><span class="p">,</span>
+            <span class="n">bin_table</span><span class="p">,</span>
+            <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;target_relative_uncertainty&quot;</span><span class="p">),</span>
+            <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;spectral_index&quot;</span><span class="p">),</span>
+            <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reduced_core_radius&quot;</span><span class="p">),</span>
+            <span class="p">(</span>
+                <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optimization_energy_min&quot;</span><span class="p">),</span>
+                <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optimization_energy_max&quot;</span><span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;plot_diagnostics&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">metadata_row</span> <span class="ow">in</span> <span class="n">selected_references</span>
+    <span class="p">]</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">rows</span><span class="o">=</span><span class="n">output_rows</span><span class="p">)</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="n">validate_file_type</span><span class="p">(</span>
+        <span class="n">io_handler</span><span class="o">.</span><span class="n">IOHandler</span><span class="p">()</span><span class="o">.</span><span class="n">get_output_file</span><span class="p">(</span><span class="n">args_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_file&quot;</span><span class="p">)),</span> <span class="n">file_type</span><span class="o">=</span><span class="s2">&quot;table&quot;</span>
+    <span class="p">)</span>
+    <span class="n">results</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;ascii.ecsv&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing Monte Carlo statistics estimates to </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">results</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
