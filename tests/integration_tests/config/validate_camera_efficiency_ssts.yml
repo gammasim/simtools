@@ -29,5 +29,6 @@ applications:
     test_output_file: camera_efficiency_summary_South_SSTS-design_za0.0deg_azm000deg.yml
   model_version_use_current: true
   test_name: SSTS
+  xfail: simulation-models-issue-#62
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
