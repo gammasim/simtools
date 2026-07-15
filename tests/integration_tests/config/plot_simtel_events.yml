@@ -2,8 +2,7 @@
 applications:
 - application: simtools-plot-simtel-events
   configuration:
-    simtel_file: |-
-      tests/resources/generated/full_simulation_run000010_North_7.0.0_simtools-simulate-flasher_LSTN-04.simtel.zst
+    simtel_file: ${generated:full_simulation_run000010_North_7.0.0_simtools-simulate-flasher_LSTN-04.simtel.zst}
     plots: all
     max_events: 1
     telescope: LSTN-04

@@ -135,6 +135,7 @@ def test_plottable_histograms_filters_non_plotable_entries():
 
 def test_plot_trigger_histogram_file_loads_selected_array_and_plots(tmp_test_directory, mocker):
     histogram_instance = MagicMock()
+    histogram_instance.array_name = "alpha"
     histogram_instance.histograms = {
         "energy": {"histogram": MagicMock(ndim=1)},
         "energy_vs_core": {"histogram": MagicMock(ndim=2)},
@@ -154,8 +155,9 @@ def test_plot_trigger_histogram_file_loads_selected_array_and_plots(tmp_test_dir
             "energy": histogram_instance.histograms["energy"],
             "energy_vs_core": histogram_instance.histograms["energy_vs_core"],
         },
-        output_path=tmp_test_directory,
+        output_path=Path(tmp_test_directory) / "alpha",
     )
+    assert (tmp_test_directory / "alpha").isdir()
 
 
 def test_plot_trigger_histogram_file_raises_for_missing_array_layout(tmp_test_directory, mocker):

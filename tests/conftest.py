@@ -33,6 +33,7 @@ def pytest_configure(config):
     test_resources_path = _configured_test_resources_path(config)
     simtools.constants.TEST_RESOURCES_STATIC = str(test_resources_path / "static")
     simtools.constants.TEST_RESOURCES_GENERATED = str(test_resources_path / "generated")
+    simtools.constants.TEST_RESOURCES_DOWNLOADED = str(test_resources_path / "downloaded")
 
 
 @pytest.fixture(scope="session")
