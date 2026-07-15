@@ -86,7 +86,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
    simtools-resources-test-generate --test_directory . --simtools_version v0.34.0 --overwrite_collection_files \
            --config_file simtools-tests/v0.34.0/integration_tests/config_files/generate_array_config_alpha_north_5.0.0.config.yml
    ``` ([#2321](https://github.com/gammasim/simtools/pull/2321))
-- Enable `---runtime_environment_file` setting of run time environment (e.g., a container environment) with correct path settings for test resource generation and generic application running. ([#2323](https://github.com/gammasim/simtools/pull/2323))
+- Enable `--runtime_environment_file` setting of run time environment (e.g., a container environment) with correct path settings for test resource generation and generic application running. ([#2323](https://github.com/gammasim/simtools/pull/2323))
 - Introduce schema-validation for `sim_telarray` metaparameters.
   To export the full metadata description including all model parameters, use application `simtools-export-sim-telarray-metadata-schema`. ([#2324](https://github.com/gammasim/simtools/pull/2324))
 - Add schema URL to metadata of job grid table. Add functionality to `simtools-validate-file-using-schema` to read this schema from the header file. ([#2327](https://github.com/gammasim/simtools/pull/2327))
