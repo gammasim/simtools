@@ -36,7 +36,7 @@ def plot(config, output_file, data_path=None):
         data,
         **config,
     )
-    visualize.save_figure(fig, output_file)
+    visualize.save_figure(fig, output_file, close=True)
 
     return output_file
 

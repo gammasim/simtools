@@ -40,8 +40,11 @@ def test_create_psf_image_figure_draws_histogram_circle_and_axes():
     mock_ax = MagicMock()
     mock_ax.figure = mock_fig
 
-    with patch("simtools.visualization.plot_ray_tracing_psf.plt.subplots") as mock_subplots:
-        mock_subplots.return_value = (mock_fig, mock_ax)
+    mock_fig.gca.return_value = mock_ax
+    with patch(
+        "simtools.visualization.plot_ray_tracing_psf.visualize.plot_hist_2d",
+        return_value=mock_fig,
+    ) as mock_plot_hist:
         fig, ax = plot_ray_tracing_psf.create_psf_image_figure(
             data,
             containment_radius_cm=2.0,
@@ -52,7 +55,7 @@ def test_create_psf_image_figure_draws_histogram_circle_and_axes():
 
     assert fig == mock_fig
     assert ax == mock_ax
-    mock_ax.hist2d.assert_called_once()
+    mock_plot_hist.assert_called_once()
     mock_ax.add_artist.assert_called_once()
     mock_ax.axhline.assert_called_once()
     mock_ax.axvline.assert_called_once()
@@ -66,15 +69,30 @@ def test_create_annotated_psf_image_figure_adds_text():
 
     with patch("simtools.visualization.plot_ray_tracing_psf.plt.subplots") as mock_subplots:
         mock_subplots.return_value = (mock_fig, mock_ax)
-        fig = plot_ray_tracing_psf.create_annotated_psf_image_figure(
-            data,
-            containment_radius_cm=2.0,
-            off_x=0.5,
-            off_y=-0.5,
-            psf_cm=4.2,
-            image_range=[[-1.0, 1.0], [-1.0, 1.0]],
-            cmap="gist_heat_r",
-        )
+        with patch(
+            "simtools.visualization.plot_ray_tracing_psf.visualize.plot_hist_2d",
+            return_value=mock_fig,
+        ):
+            fig = plot_ray_tracing_psf.create_annotated_psf_image_figure(
+                data,
+                off_x=0.5,
+                off_y=-0.5,
+                psf_cm=4.2,
+                image_range=[[-1.0, 1.0], [-1.0, 1.0]],
+                cmap="gist_heat_r",
+            )
 
     assert fig == mock_fig
     mock_ax.text.assert_called_once()
+
+
+def test_save_and_close_figure(mocker, tmp_test_directory):
+    """Test saving and closing a PSF figure."""
+    fig = mocker.Mock()
+    mock_close = mocker.patch("simtools.visualization.plot_ray_tracing_psf.plt.close")
+    file_name = tmp_test_directory / "plot.pdf"
+
+    plot_ray_tracing_psf.save_and_close_figure(fig, file_name)
+
+    fig.savefig.assert_called_once_with(file_name)
+    mock_close.assert_called_once_with(fig)

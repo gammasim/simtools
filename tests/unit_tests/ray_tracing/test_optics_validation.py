@@ -116,6 +116,7 @@ def test_validate_cumulative_psf_saves_cumulative_and_image_plots(tmp_test_direc
     assert mock_ray.analyze.call_count == 1
     assert mock_plot_image.call_count == 1
     assert mock_save.call_count == 2
+    assert all(call.kwargs["close"] is True for call in mock_save.call_args_list)
 
 
 def test_validate_optics_no_images(tmp_test_directory):
@@ -204,7 +205,8 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
             "simtools.ray_tracing.optics_validation.RayTracing", return_value=mock_ray
         ) as mock_rt,
         patch(
-            "simtools.ray_tracing.optics_validation.plot_ray_tracing_psf.create_annotated_psf_image_figure",
+            "simtools.ray_tracing.optics_validation.plot_ray_tracing_psf."
+            "create_annotated_psf_image_figure",
             return_value=MagicMock(),
         ) as mock_create_figure,
         patch(
@@ -220,5 +222,6 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
     assert len(rt_kwargs["off_axis_angle"]) == 3
 
     assert mock_save.call_count == 4
+    assert all(call.kwargs["close"] is True for call in mock_save.call_args_list)
     assert mock_create_figure.call_count == 2
-    mock_save_pdf.assert_called_once()
+    assert mock_save_pdf.call_args.kwargs["close"] is True

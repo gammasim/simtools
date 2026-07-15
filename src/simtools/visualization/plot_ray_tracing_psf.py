@@ -2,10 +2,10 @@
 
 import matplotlib.pyplot as plt
 
+from simtools.visualization import visualize
+
 RADIUS_LABEL = "Radius (cm)"
 CONTAINED_LIGHT_LABEL = "Contained light %"
-X_POSITION_LABEL = "X Position (cm)"
-Y_POSITION_LABEL = "Y Position (cm)"
 
 
 def create_cumulative_psf_figure(
@@ -63,6 +63,7 @@ def create_psf_image_figure(
     ax=None,
     psf_kwargs=None,
     show_reference_axes=True,
+    use_current_axes=False,
     **hist_kwargs,
 ):
     """
@@ -82,6 +83,8 @@ def create_psf_image_figure(
         Keyword arguments passed to ``matplotlib.patches.Circle``.
     show_reference_axes : bool
         Draw dashed x/y reference axes if True.
+    use_current_axes : bool
+        Draw on the current axes when ``ax`` is not provided.
     **hist_kwargs
         Keyword arguments passed to ``Axes.hist2d``.
 
@@ -90,15 +93,11 @@ def create_psf_image_figure(
     tuple
         Matplotlib figure and axes objects.
     """
-    if ax is None:
-        fig, ax = plt.subplots()
-    else:
-        fig = ax.figure
+    if ax is None and use_current_axes:
+        ax = plt.gca()
 
-    ax.set_xlabel(X_POSITION_LABEL)
-    ax.set_ylabel(Y_POSITION_LABEL)
-    ax.hist2d(data["X"], data["Y"], **hist_kwargs)
-    ax.set_aspect("equal", "box")
+    fig = visualize.plot_hist_2d(data, ax=ax, **hist_kwargs)
+    ax = fig.gca() if ax is None else ax
 
     circle = plt.Circle(center, containment_radius_cm, **(psf_kwargs or {}))
     ax.add_artist(circle)
@@ -112,7 +111,6 @@ def create_psf_image_figure(
 
 def create_annotated_psf_image_figure(
     data,
-    containment_radius_cm,
     off_x,
     off_y,
     psf_cm,
@@ -128,8 +126,6 @@ def create_annotated_psf_image_figure(
     ----------
     data : numpy.ndarray
         Structured array with ``X`` and ``Y`` columns.
-    containment_radius_cm : float
-        Radius of the containment circle in cm.
     off_x : float
         Off-axis x component in degrees.
     off_y : float
@@ -153,7 +149,7 @@ def create_annotated_psf_image_figure(
     fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
     create_psf_image_figure(
         data,
-        containment_radius_cm=containment_radius_cm,
+        containment_radius_cm=psf_cm / 2,
         center=(0, 0),
         ax=ax,
         image_range=image_range,
@@ -173,3 +169,17 @@ def create_annotated_psf_image_figure(
         family="monospace",
     )
     return fig
+
+
+def save_and_close_figure(fig, file_name):
+    """Save a figure to an exact path and close it.
+
+    Parameters
+    ----------
+    fig : matplotlib.figure.Figure
+        Figure to save.
+    file_name : str or pathlib.Path
+        Exact output path.
+    """
+    fig.savefig(file_name)
+    plt.close(fig)

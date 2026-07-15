@@ -13,7 +13,6 @@ from math import fabs, pi, sqrt
 from pathlib import Path
 
 import astropy.units as u
-import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools import settings
@@ -527,7 +526,7 @@ class PSFImage:
         kwargs = set_default_kwargs(
             kwargs,
             image_bins=150,
-            image_cmap=plt.cm.gist_heat_r,
+            image_cmap="gist_heat_r",
             psf_color="k",
             psf_fill=False,
             psf_lw=2,
@@ -542,14 +541,13 @@ class PSFImage:
             data,
             containment_radius_cm=self.get_psf(fraction) / 2,
             center=center,
-            ax=plt.gca(),
             psf_kwargs=kwargs_for_psf,
+            use_current_axes=True,
             **kwargs_for_image,
         )
 
         if file_name is not None:
-            fig.savefig(file_name)
-            plt.close(fig)
+            plot_ray_tracing_psf.save_and_close_figure(fig, file_name)
 
     def get_cumulative_data(self, radius=None):
         """
@@ -609,5 +607,4 @@ class PSFImage:
             **kwargs,
         )
         if file_name is not None:
-            fig.savefig(file_name)
-            plt.close(fig)
+            plot_ray_tracing_psf.save_and_close_figure(fig, file_name)

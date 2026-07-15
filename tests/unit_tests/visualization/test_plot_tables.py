@@ -35,7 +35,7 @@ def test_plot(mock_read_table_data, mock_visualize):
 
     mock_read_table_data.assert_called_once_with(config, None)
     mock_visualize.plot_1d.assert_called_once_with(mock_data, **config)
-    mock_visualize.save_figure.assert_called_once_with(mock_fig, output_file)
+    mock_visualize.save_figure.assert_called_once_with(mock_fig, output_file, close=True)
 
 
 @mock.patch("simtools.visualization.plot_tables.read_simtel_table")

@@ -91,6 +91,13 @@ the visualization module.
    :members:
 ```
 
+## plot_ray_tracing_psf
+
+```{eval-rst}
+.. automodule:: visualization.plot_ray_tracing_psf
+   :members:
+```
+
 ## plot_mirrors
 
 ```{eval-rst}

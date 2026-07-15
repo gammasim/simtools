@@ -98,7 +98,7 @@ def validate_cumulative_psf(app_context):
 
     plot_file_name = label + "_" + tel_model.name + "_cumulative_PSF"
     plot_file = io_handler.get_output_file(plot_file_name)
-    visualize.save_figure(fig, plot_file)
+    visualize.save_figure(fig, plot_file, close=True)
 
     data_to_plot = image.get_image_data()
     fig, _ = plot_ray_tracing_psf.create_psf_image_figure(
@@ -112,7 +112,7 @@ def validate_cumulative_psf(app_context):
 
     plot_file_name = label + "_" + tel_model.name + "_image"
     plot_file = io_handler.get_output_file(plot_file_name)
-    visualize.save_figure(fig, plot_file)
+    visualize.save_figure(fig, plot_file, close=True)
 
 
 def validate_optics(app_context):
@@ -164,7 +164,7 @@ def validate_optics(app_context):
         fig = ray.plot(key, marker="o", linestyle="none", color="k")
         plot_file_name = "_".join((label, tel_model.name, key))
         plot_file = io_handler.get_output_file(plot_file_name)
-        visualize.save_figure(fig, plot_file)
+        visualize.save_figure(fig, plot_file, close=True)
 
     if args_dict["plot_images"]:
         plot_file_name = "_".join((label, tel_model.name, "images.pdf"))
@@ -195,7 +195,6 @@ def validate_optics(app_context):
             figures.append(
                 plot_ray_tracing_psf.create_annotated_psf_image_figure(
                     image.get_image_data(centralized=True),
-                    containment_radius_cm=psf_cm / 2,
                     off_x=off_x,
                     off_y=off_y,
                     psf_cm=psf_cm,
@@ -208,4 +207,4 @@ def validate_optics(app_context):
                     psf_kwargs={"color": "k", "fill": False, "lw": 2, "ls": "--"},
                 )
             )
-        visualize.save_figures_to_single_document(figures, plot_file)
+        visualize.save_figures_to_single_document(figures, plot_file, close=True)

@@ -15,7 +15,6 @@ from pathlib import Path
 
 import astropy.io.ascii
 import astropy.units as u
-import matplotlib.pyplot as plt
 import numpy as np
 from astropy.table import QTable
 
@@ -720,7 +719,7 @@ class RayTracing:
         psf_diameter_cm: float
             PSF diameter value to be marked in the cumulative PSF plot (in cm).
         **kwargs:
-            kwargs for plt.plot
+            kwargs for the plot
 
         Raises
         ------
@@ -789,7 +788,7 @@ class RayTracing:
         key: str
             psf_cm, psf_deg, eff_area or eff_flen
         **kwargs:
-            kwargs for plt.hist
+            kwargs for the histogram plot
 
         Raises
         ------
@@ -797,8 +796,7 @@ class RayTracing:
             If key is not among the valid options.
         """
         try:
-            ax = plt.gca()
-            ax.hist(self._results[key], **kwargs)
+            visualize.plot_histogram(self._results[key], **kwargs)
         except KeyError as exc:
             raise KeyError(INVALID_KEY_TO_PLOT) from exc
 
