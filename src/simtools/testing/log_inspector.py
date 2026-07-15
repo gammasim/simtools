@@ -6,6 +6,7 @@ import re
 import tarfile
 
 from simtools.utils import general as gen
+from simtools.utils.general import is_safe_tar_member
 
 _logger = logging.getLogger(__name__)
 
@@ -93,7 +94,10 @@ def check_tar_logs(tar_file, file_test):
     found_forbidden = set()
     with tarfile.open(tar_file, "r:*") as tar:
         for member in tar.getmembers():
-            if not _is_valid_log_member(member):
+            if not member.name.endswith(".log.gz"):
+                continue
+            if not is_safe_tar_member(member.name):
+                _logger.warning(f"Skipping potentially unsafe tar member: {member.name}")
                 continue
             _logger.info(f"Scanning {member.name}")
             text = _read_log(member, tar)
