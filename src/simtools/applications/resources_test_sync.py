@@ -8,8 +8,8 @@ r"""Compare, sync, and prune test resources from a versioned simtools-tests bund
 Example
 -------
 
-Generate a list of new, changed, unchanged, and obsolete files in the ``tests/resources``
-directory (dry run, no files are copied or deleted):
+Generate a dry-run report of new, changed, and obsolete files in the
+``tests/resources`` directory (no files are copied or deleted):
 
 .. code-block:: console
 
@@ -50,18 +50,18 @@ _APPLICATION_ARG_DEFINITIONS = {
         "help": "Destination test-resources directory.",
     },
     "exclude_static": {
-        "action": "store_false",
-        "dest": "include_static",
+        "action": "store_true",
+        "default": False,
         "help": "Skip static resources.",
     },
     "exclude_generated": {
-        "action": "store_false",
-        "dest": "include_generated",
+        "action": "store_true",
+        "default": False,
         "help": "Skip generated resources.",
     },
     "exclude_downloaded": {
-        "action": "store_false",
-        "dest": "include_downloaded",
+        "action": "store_true",
+        "default": False,
         "help": "Skip downloaded resources.",
     },
 }

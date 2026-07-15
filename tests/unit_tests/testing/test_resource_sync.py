@@ -168,9 +168,9 @@ def test_selected_resource_directories_requires_one_choice():
     with pytest.raises(ValueError, match="Select at least one"):
         resource_sync._selected_resource_directories(
             {
-                "include_static": False,
-                "include_generated": False,
-                "include_downloaded": False,
+                "exclude_static": True,
+                "exclude_generated": True,
+                "exclude_downloaded": True,
             }
         )
 
@@ -193,6 +193,8 @@ def test_build_sync_report_requires_existing_source_resource_directory(resource_
 def test_render_sync_report_includes_obsolete(resource_roots):
     root, source_root, destination_root = resource_roots
     _write(source_root / "static" / "new.txt", "new")
+    _write(source_root / "static" / "same.txt", "same")
+    _write(destination_root / "static" / "same.txt", "same")
     _write(destination_root / "generated" / "old.txt", "old")
 
     report = resource_sync.build_sync_report(
@@ -200,7 +202,8 @@ def test_render_sync_report_includes_obsolete(resource_roots):
     )
     report_text = resource_sync.render_sync_report(report)
 
-    assert "Summary: new=1, changed=0, unchanged=0, obsolete=1" in report_text
+    assert "Summary: new=1, changed=0, obsolete=1" in report_text
+    assert "unchanged" not in report_text
     assert "new (static):" in report_text
     assert "obsolete (generated):" in report_text
 
@@ -215,9 +218,9 @@ def test_sync_test_resources_report_only(resource_roots, caplog):
         {
             "test_directory": root / "simtools-tests",
             "simtools_version": "v0.35.0",
-            "include_static": True,
-            "include_generated": True,
-            "include_downloaded": False,
+            "exclude_static": False,
+            "exclude_generated": False,
+            "exclude_downloaded": True,
             "sync": False,
             "delete_missing": False,
         }
@@ -237,9 +240,9 @@ def test_sync_test_resources_logs_manual_removal_candidates(resource_roots, capl
         {
             "test_directory": root / "simtools-tests",
             "simtools_version": "v0.35.0",
-            "include_static": False,
-            "include_generated": True,
-            "include_downloaded": False,
+            "exclude_static": True,
+            "exclude_generated": False,
+            "exclude_downloaded": True,
             "sync": False,
             "delete_missing": True,
         }
