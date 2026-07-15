@@ -113,6 +113,49 @@ def test_group_hdf5_files_by_threshold_and_run(tmp_path):
     assert grouped == {220: {1: valid}}
 
 
+def test_extract_proton_rates_returns_empty_when_no_files(tmp_path):
+    args = _base_args(tmp_path)
+
+    with patch(
+        "simtools.simtel.bias_curve_generator._group_hdf5_files_by_threshold_and_run",
+        return_value={},
+    ):
+        stats = bias_curve_generator._extract_proton_rates(args)
+
+    assert stats == {}
+
+
+def test_extract_proton_rates_calculates_statistics_per_threshold(tmp_path):
+    args = _base_args(tmp_path)
+    grouped_files = {
+        240: {2: tmp_path / "run2.hdf5"},
+        220: {1: tmp_path / "run1.hdf5", 3: tmp_path / "run3.hdf5"},
+    }
+
+    with (
+        patch(
+            "simtools.simtel.bias_curve_generator._group_hdf5_files_by_threshold_and_run",
+            return_value=grouped_files,
+        ),
+        patch(
+            "simtools.simtel.bias_curve_generator._calculate_proton_statistics_for_threshold",
+            side_effect=[
+                {"runs": {1: 10.0, 3: 12.0}, "rate_hz": 11.0, "error_hz": 1.0, "num_runs": 2},
+                {"runs": {2: 5.0}, "rate_hz": 5.0, "error_hz": 0.0, "num_runs": 1},
+            ],
+        ) as mock_calc,
+    ):
+        stats = bias_curve_generator._extract_proton_rates(args)
+
+    assert stats == {
+        220: {"runs": {1: 10.0, 3: 12.0}, "rate_hz": 11.0, "error_hz": 1.0, "num_runs": 2},
+        240: {"runs": {2: 5.0}, "rate_hz": 5.0, "error_hz": 0.0, "num_runs": 1},
+    }
+    assert mock_calc.call_count == 2
+    assert mock_calc.call_args_list[0].args == (grouped_files[220], args)
+    assert mock_calc.call_args_list[1].args == (grouped_files[240], args)
+
+
 def test_calculate_proton_statistics_for_threshold_uses_non_none_rates(tmp_path):
     files = {1: tmp_path / "run1.hdf5", 2: tmp_path / "run2.hdf5", 3: tmp_path / "run3.hdf5"}
 

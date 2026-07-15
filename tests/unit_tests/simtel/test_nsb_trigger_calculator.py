@@ -218,7 +218,13 @@ def test_generate_ecsv_output_raises_for_empty_statistics(tmp_path):
         nsb_trigger_calculator.generate_ecsv_output({}, tmp_path / "empty.ecsv", 0.001)
 
 
-def test_derive_nsb_triggers_runs_full_pipeline_without_output(tmp_path):
+@pytest.mark.parametrize("write_output", [False, True])
+def test_derive_nsb_triggers_pipeline_output_toggle(tmp_path, write_output):
+    output_file = tmp_path / "rates.ecsv"
+    args = {"root_dir": tmp_path, "time_window": 0.001}
+    if write_output:
+        args["output"] = output_file
+
     with (
         patch("simtools.simtel.nsb_trigger_calculator.crawl_log_files", return_value=["log1"]),
         patch(
@@ -243,46 +249,13 @@ def test_derive_nsb_triggers_runs_full_pipeline_without_output(tmp_path):
         ),
         patch("simtools.simtel.nsb_trigger_calculator.generate_ecsv_output") as mock_generate,
     ):
-        stats = nsb_trigger_calculator.derive_nsb_triggers(
-            {"root_dir": tmp_path, "time_window": 0.001}
-        )
+        stats = nsb_trigger_calculator.derive_nsb_triggers(args)
 
     assert stats[220]["rate_hz"] == 100
-    mock_generate.assert_not_called()
-
-
-def test_derive_nsb_triggers_writes_output_when_requested(tmp_path):
-    output_file = tmp_path / "rates.ecsv"
-
-    with (
-        patch("simtools.simtel.nsb_trigger_calculator.crawl_log_files", return_value=["log1"]),
-        patch(
-            "simtools.simtel.nsb_trigger_calculator.parse_nsb_log_files",
-            return_value=[{"threshold": 220, "run": 1, "triggers": 10, "events": 100}],
-        ),
-        patch(
-            "simtools.simtel.nsb_trigger_calculator.group_by_threshold_and_run",
-            return_value={220: {1: {"triggers": 10, "events": 100}}},
-        ),
-        patch(
-            "simtools.simtel.nsb_trigger_calculator.calculate_statistics",
-            return_value={
-                220: {
-                    "rate_hz": 100.0,
-                    "rate_khz": 0.1,
-                    "error_hz": 0.0,
-                    "total_triggers": 10,
-                    "num_runs": 1,
-                }
-            },
-        ),
-        patch("simtools.simtel.nsb_trigger_calculator.generate_ecsv_output") as mock_generate,
-    ):
-        nsb_trigger_calculator.derive_nsb_triggers(
-            {"root_dir": tmp_path, "time_window": 0.001, "output": output_file}
-        )
-
-    mock_generate.assert_called_once()
+    if write_output:
+        mock_generate.assert_called_once()
+    else:
+        mock_generate.assert_not_called()
 
 
 def test_derive_nsb_triggers_raises_for_missing_time_window(tmp_path):
