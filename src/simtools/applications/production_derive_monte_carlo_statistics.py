@@ -62,8 +62,12 @@ def _add_arguments(parser):
         "--spectral_index",
         required=False,
         type=float,
-        default=-2.0,
-        help="Power-law spectral index assumed.",
+        default=None,
+        help=(
+            "Target power-law spectral index."
+            "Reweight the simulated energy "
+            "distribution from the source spectrum to this target spectrum."
+        ),
     )
     target_group = parser.add_mutually_exclusive_group(required=True)
     target_group.add_argument(
