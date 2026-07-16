@@ -371,24 +371,19 @@ def _estimate_required_events(
         raise ValueError(
             "Target relative uncertainty and target triggered events are mutually exclusive."
         )
-    candidate_matrix, positive_mask, skipped_bins = _prepare_estimation_candidates(
-        expected_triggers_per_event,
-        energy_mask,
+    candidate_matrix, positive_mask = _prepare_estimation_candidates(
+        expected_triggers_per_event, energy_mask
     )
 
     if target_relative_uncertainty is not None:
         return _estimate_required_events_from_uncertainty(
             candidate_matrix,
             positive_mask,
-            skipped_bins,
             target_relative_uncertainty,
         )
 
     if target_triggered_events is not None:
         return _estimate_required_events_from_total_trigger_target(
-            candidate_matrix,
-            positive_mask,
-            skipped_bins,
             target_triggered_events,
             overall_trigger_probability,
         )
@@ -402,40 +397,27 @@ def _prepare_estimation_candidates(expected_triggers_per_event, energy_mask):
     """Return candidate bins and masks restricted to the optimization energy range."""
     candidate_matrix = np.asarray(expected_triggers_per_event, dtype=float)[:, energy_mask]
     positive_mask = np.isfinite(candidate_matrix) & (candidate_matrix > 0.0)
-    skipped_bins = int(candidate_matrix.size - np.count_nonzero(positive_mask))
-    return candidate_matrix, positive_mask, skipped_bins
+    return candidate_matrix, positive_mask
 
 
 def _estimate_required_events_from_uncertainty(
     candidate_matrix,
     positive_mask,
-    skipped_bins,
     target_relative_uncertainty,
 ):
     """Solve the per-bin uncertainty target using the worst relevant bin."""
     if target_relative_uncertainty <= 0.0:
         raise ValueError("Target relative uncertainty must be positive.")
     if not np.any(positive_mask):
-        return np.inf, 0.0, (0, 0), 0, skipped_bins
+        return np.inf
 
     required_trigger_count = 1.0 / float(target_relative_uncertainty) ** 2
     required_totals = np.full_like(candidate_matrix, -np.inf, dtype=float)
     required_totals[positive_mask] = required_trigger_count / candidate_matrix[positive_mask]
-    limiting_flat_index = int(np.argmax(required_totals))
-    limiting_index = np.unravel_index(limiting_flat_index, required_totals.shape)
-    return (
-        required_totals[limiting_index],
-        candidate_matrix[limiting_index],
-        limiting_index,
-        int(np.count_nonzero(positive_mask)),
-        skipped_bins,
-    )
+    return float(np.max(required_totals))
 
 
 def _estimate_required_events_from_total_trigger_target(
-    candidate_matrix,
-    positive_mask,
-    skipped_bins,
     target_triggered_events,
     overall_trigger_probability,
 ):
@@ -445,17 +427,9 @@ def _estimate_required_events_from_total_trigger_target(
     if overall_trigger_probability is None:
         raise ValueError("Overall trigger probability must be provided.")
     if overall_trigger_probability <= 0.0:
-        return np.inf, 0.0, (0, 0), 0, skipped_bins
+        return np.inf
 
-    representative_flat_index = int(np.argmax(candidate_matrix))
-    representative_index = np.unravel_index(representative_flat_index, candidate_matrix.shape)
-    return (
-        float(target_triggered_events) / float(overall_trigger_probability),
-        candidate_matrix[representative_index],
-        representative_index,
-        int(np.count_nonzero(positive_mask)),
-        skipped_bins,
-    )
+    return float(target_triggered_events) / float(overall_trigger_probability)
 
 
 def _resolve_energy_ranges(metadata_row, optimization_energy):
@@ -485,12 +459,6 @@ def _resolve_energy_ranges(metadata_row, optimization_energy):
     return br_energy, resolved_optimization_energy
 
 
-def _resolve_limiting_indices(energy_mask, limiting_index):
-    """Map limiting indices from the masked matrix back to the original energy bins."""
-    masked_energy_indices = np.flatnonzero(energy_mask)
-    return limiting_index[0], masked_energy_indices[limiting_index[1]]
-
-
 def _extract_diagnostic_file_info(metadata_row):
     """Return observational metadata used to disambiguate diagnostic plot filenames."""
     return {
@@ -502,20 +470,27 @@ def _extract_diagnostic_file_info(metadata_row):
 
 def _build_result_metadata(
     metadata_row,
-    spectral_index,
-    target_relative_uncertainty,
-    target_triggered_events,
 ):
     """Build the metadata fields shared by all estimator result rows."""
     return extract_histogram_output_metadata(
         metadata_row,
         FILE_INFO_COLUMNS,
         include_array_name=True,
-    ) | {
-        "spectral_index": spectral_index,
-        "target_relative_uncertainty": target_relative_uncertainty,
-        "target_triggered_events": target_triggered_events,
+    )
+
+
+def _build_table_metadata(args_dict):
+    """Build table-level metadata for configuration values shared by all rows."""
+    metadata = {
+        "spectral_index": args_dict.get("spectral_index"),
+        "target_relative_uncertainty": args_dict.get("target_relative_uncertainty"),
+        "target_triggered_events": args_dict.get("target_triggered_events"),
+        "optimization_energy_min": args_dict.get("optimization_energy_min"),
+        "optimization_energy_max": args_dict.get("optimization_energy_max"),
+        "reduced_core_radius": args_dict.get("reduced_core_radius"),
+        "reduced_view_cone_radius": args_dict.get("reduced_view_cone_radius"),
     }
+    return {key: value for key, value in metadata.items() if value is not None}
 
 
 def _prepare_reference_estimation_inputs(
@@ -596,10 +571,10 @@ def _build_result_row(
     bin_table,
     target_relative_uncertainty,
     target_triggered_events,
-    spectral_index,
     reduced_core_radius,
     reduced_view_cone_radius,
     optimization_energy,
+    spectral_index,
     plot_diagnostics,
 ):
     """Build one result row for a selected trigger histogram."""
@@ -616,13 +591,7 @@ def _build_result_row(
     )
     if target_triggered_events is not None:
         _log_overall_trigger_probability(metadata_row, prepared["overall_trigger_probability"])
-    (
-        required_total_events,
-        limiting_expected_per_event,
-        limiting_index,
-        optimization_bins_used,
-        optimization_bins_skipped,
-    ) = _estimate_required_events(
+    required_total_events = _estimate_required_events(
         prepared["expected_triggers_per_event"],
         prepared["energy_mask"],
         target_relative_uncertainty=target_relative_uncertainty,
@@ -634,14 +603,6 @@ def _build_result_row(
         prepared["expected_triggers_per_event"], required_total_events
     )
     relative_uncertainty = _compute_relative_uncertainty(expected_counts)
-
-    limiting_angular_index, limiting_energy_index = _resolve_limiting_indices(
-        prepared["energy_mask"], limiting_index
-    )
-    original_radius = _get_metadata_quantity(metadata_row, "core_scatter_max", u.m).to(u.m)
-    original_view_cone_radius = _get_metadata_quantity(metadata_row, "viewcone_max", u.deg).to(
-        u.deg
-    )
 
     if plot_diagnostics:
         plot_monte_carlo_statistics_diagnostics(
@@ -656,37 +617,10 @@ def _build_result_row(
 
     return _build_result_metadata(
         metadata_row,
-        spectral_index,
-        target_relative_uncertainty,
-        target_triggered_events,
     ) | {
         "estimated_total_events": required_total_events,
-        "limiting_energy_low": prepared["energy_edges"][limiting_energy_index] * u.TeV,
-        "limiting_energy_high": prepared["energy_edges"][limiting_energy_index + 1] * u.TeV,
-        "limiting_angular_distance_low": (
-            prepared["angular_edges"][limiting_angular_index] * u.deg
-        ),
-        "limiting_angular_distance_high": (
-            prepared["angular_edges"][limiting_angular_index + 1] * u.deg
-        ),
-        "limiting_expected_trigger_count": (
-            limiting_expected_per_event * required_total_events
-            if np.isfinite(required_total_events)
-            else 0.0
-        ),
-        "limiting_trigger_efficiency": prepared["trigger_efficiency"][
-            limiting_angular_index, limiting_energy_index
-        ],
-        "optimization_bins_used": optimization_bins_used,
-        "optimization_bins_skipped": optimization_bins_skipped,
-        "original_core_scatter_radius": original_radius,
-        "effective_core_scatter_radius": prepared["effective_radius"],
-        "original_view_cone_radius": original_view_cone_radius,
-        "effective_view_cone_radius": prepared["effective_view_cone_radius"],
         "br_energy_min": u.Quantity(prepared["br_energy"][0]).to(u.TeV),
         "br_energy_max": u.Quantity(prepared["br_energy"][1]).to(u.TeV),
-        "optimization_energy_min": u.Quantity(prepared["optimization_energy"][0]).to(u.TeV),
-        "optimization_energy_max": u.Quantity(prepared["optimization_energy"][1]).to(u.TeV),
     }
 
 
@@ -719,18 +653,19 @@ def estimate_monte_carlo_statistics(args_dict=None):
             bin_table,
             args_dict.get("target_relative_uncertainty"),
             args_dict.get("target_triggered_events"),
-            args_dict.get("spectral_index"),
             args_dict.get("reduced_core_radius"),
             args_dict.get("reduced_view_cone_radius"),
             (
                 args_dict.get("optimization_energy_min"),
                 args_dict.get("optimization_energy_max"),
             ),
+            args_dict.get("spectral_index"),
             args_dict.get("plot_diagnostics"),
         )
         for metadata_row in selected_references
     ]
     results = Table(rows=output_rows)
+    results.meta.update(_build_table_metadata(args_dict))
     output_file = validate_file_type(
         io_handler.IOHandler().get_output_file(args_dict.get("output_file")), file_type="table"
     )

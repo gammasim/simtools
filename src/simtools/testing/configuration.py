@@ -2,19 +2,15 @@
 
 import logging
 import os
-import re
 import shutil
 import sys
 from pathlib import Path
 
 import simtools.utils.general as gen
 import simtools.version as simtools_version
-from simtools.io import ascii_handler
+from simtools.io import ascii_handler, io_handler
 
 _logger = logging.getLogger(__name__)
-
-_TEST_RESOURCE_PATTERN = re.compile(r"\$\{(static|generated|downloaded):([^}]+)\}")
-_TEST_RESOURCE_PATH_PATTERN = re.compile(r"(?<![\w/])(?:\./)?tests/resources(?=/|$)")
 
 
 class VersionError(Exception):
@@ -94,37 +90,8 @@ def _read_configs_from_files(config_files, test_resources_path=None):
 
 
 def resolve_test_resource_paths(value, test_resources_path=None):
-    """Resolve all test-resource references recursively.
-
-    ``${static:...}``, ``${generated:...}``, and ``${downloaded:...}`` macros and existing
-    ``tests/resources/...`` paths are resolved against ``test_resources_path``.
-
-    Parameters
-    ----------
-    value : object
-        Configuration value, mapping, or sequence to resolve.
-    test_resources_path : str or pathlib.Path, optional
-        Base directory containing test resources. Defaults to ``tests/resources``.
-
-    Returns
-    -------
-    object
-        Configuration with absolute test-resource paths.
-    """
-    base_path = Path(test_resources_path or "tests/resources").expanduser().resolve()
-    if isinstance(value, dict):
-        return {
-            key: resolve_test_resource_paths(item, test_resources_path=base_path)
-            for key, item in value.items()
-        }
-    if isinstance(value, list):
-        return [resolve_test_resource_paths(item, test_resources_path=base_path) for item in value]
-    if isinstance(value, str):
-        value = _TEST_RESOURCE_PATTERN.sub(
-            lambda match: str(base_path / match.group(1) / match.group(2)), value
-        )
-        return _TEST_RESOURCE_PATH_PATTERN.sub(str(base_path), value)
-    return value
+    """Resolve test-resource references recursively."""
+    return io_handler.resolve_test_resource_paths(value, test_resources_path=test_resources_path)
 
 
 def _copy_resolved_resource_config_files(config, output_path, test_resources_path):

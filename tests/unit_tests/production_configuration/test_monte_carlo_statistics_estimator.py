@@ -217,38 +217,26 @@ def test_restrict_view_cone_counts_applies_angular_weights():
 def test_estimate_required_events_skips_empty_bins():
     expected_triggers_per_event = np.array([[0.0, 0.2], [0.1, 0.0]])
 
-    required, limiting_expected_per_event, limiting_index, used_bins, skipped_bins = (
-        monte_carlo_statistics_estimator._estimate_required_events(
-            expected_triggers_per_event,
-            np.array([True, True]),
-            0.1,
-        )
+    required = monte_carlo_statistics_estimator._estimate_required_events(
+        expected_triggers_per_event,
+        np.array([True, True]),
+        0.1,
     )
 
     assert required == pytest.approx(1000.0)
-    assert limiting_expected_per_event == pytest.approx(0.1)
-    assert limiting_index == (1, 0)
-    assert used_bins == 2
-    assert skipped_bins == 2
 
 
 def test_estimate_required_events_supports_target_triggered_events():
     expected_triggers_per_event = np.array([[0.0, 0.2], [0.1, 0.0]])
 
-    required, limiting_expected_per_event, limiting_index, used_bins, skipped_bins = (
-        monte_carlo_statistics_estimator._estimate_required_events(
-            expected_triggers_per_event,
-            np.array([True, True]),
-            target_triggered_events=25,
-            overall_trigger_probability=0.15,
-        )
+    required = monte_carlo_statistics_estimator._estimate_required_events(
+        expected_triggers_per_event,
+        np.array([True, True]),
+        target_triggered_events=25,
+        overall_trigger_probability=0.15,
     )
 
     assert required == pytest.approx(25.0 / 0.15)
-    assert limiting_expected_per_event == pytest.approx(0.2)
-    assert limiting_index == (0, 1)
-    assert used_bins == 2
-    assert skipped_bins == 2
 
 
 def test_ceil_required_total_events_rounds_up_to_integer():
@@ -292,9 +280,8 @@ def test_estimator_radius_override_changes_required_events(mocker, tmp_path):
     assert original["estimated_total_events"][0] != pytest.approx(
         reduced["estimated_total_events"][0]
     )
-    assert reduced["effective_core_scatter_radius"].quantity[0].to_value(u.m) == pytest.approx(50.0)
-    assert reduced["optimization_bins_used"][0] == 2
-    assert reduced["optimization_bins_skipped"][0] == 0
+    assert reduced.meta["reduced_core_radius"].to_value(u.m) == pytest.approx(50.0)
+    assert "effective_core_scatter_radius" not in reduced.colnames
 
 
 def test_estimator_writes_diagnostic_plots(mocker, tmp_path):
@@ -334,7 +321,7 @@ def test_estimator_writes_diagnostic_plots(mocker, tmp_path):
     }
 
 
-def test_estimator_reports_limiting_bin_and_positive_required_events(mocker, tmp_path):
+def test_estimator_reports_positive_required_events(mocker, tmp_path):
     metadata, bins = _build_reference_tables()
     mocker.patch(
         _LOAD_HISTOGRAMS,
@@ -365,7 +352,16 @@ def test_estimator_reports_limiting_bin_and_positive_required_events(mocker, tmp
     assert result["nsb_level"][0] == pytest.approx(1.0)
     assert result["estimated_total_events"][0] > 0.0
     assert float(result["estimated_total_events"][0]).is_integer()
-    assert result["limiting_energy_low"].quantity[0] in (0.1 * u.TeV, 1.0 * u.TeV)
+    assert "limiting_energy_low" not in result.colnames
+    assert "limiting_energy_high" not in result.colnames
+    assert "limiting_angular_distance_low" not in result.colnames
+    assert "limiting_angular_distance_high" not in result.colnames
+    assert "limiting_expected_trigger_count" not in result.colnames
+    assert "limiting_trigger_efficiency" not in result.colnames
+    assert "optimization_bins_used" not in result.colnames
+    assert "optimization_bins_skipped" not in result.colnames
+    assert "original_core_scatter_radius" not in result.colnames
+    assert "original_view_cone_radius" not in result.colnames
 
 
 def test_estimator_logs_reference_validation_summary(mocker, tmp_path, caplog):
@@ -484,7 +480,8 @@ def test_estimator_supports_reference_tables_reloaded_from_hdf5(mocker, tmp_path
 
     result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args)
 
-    assert result["effective_core_scatter_radius"].quantity[0].to_value(u.m) == pytest.approx(100.0)
+    assert "effective_core_scatter_radius" not in result.colnames
+    assert "original_core_scatter_radius" not in result.colnames
     assert result["estimated_total_events"][0] > 0.0
 
 
@@ -559,7 +556,8 @@ def test_estimator_view_cone_override_changes_required_events(mocker, tmp_path):
     assert original["estimated_total_events"][0] != pytest.approx(
         reduced["estimated_total_events"][0]
     )
-    assert reduced["effective_view_cone_radius"].quantity[0].to_value(u.deg) == pytest.approx(5.0)
+    assert reduced.meta["reduced_view_cone_radius"].to_value(u.deg) == pytest.approx(5.0)
+    assert "effective_view_cone_radius" not in reduced.colnames
 
 
 def test_estimator_supports_target_triggered_events(mocker, tmp_path):
@@ -584,5 +582,54 @@ def test_estimator_supports_target_triggered_events(mocker, tmp_path):
         }
     )
 
-    assert result["target_triggered_events"][0] == 25
+    assert result.meta["target_triggered_events"] == 25
+    assert result.meta["spectral_index"] == pytest.approx(-2.0)
+    assert result.meta["optimization_energy_min"].to_value(u.TeV) == pytest.approx(0.1)
+    assert result.meta["optimization_energy_max"].to_value(u.TeV) == pytest.approx(10.0)
+    assert "target_triggered_events" not in result.colnames
+    assert "spectral_index" not in result.colnames
+    assert "optimization_energy_min" not in result.colnames
+    assert "optimization_energy_max" not in result.colnames
+    assert "original_core_scatter_radius" not in result.colnames
+    assert "original_view_cone_radius" not in result.colnames
     assert result["estimated_total_events"][0] == 67
+
+    written = Table.read(tmp_path / "estimate.ecsv", format="ascii.ecsv")
+    assert written.meta["target_triggered_events"] == 25
+    assert written.meta["spectral_index"] == pytest.approx(-2.0)
+    assert written.meta["optimization_energy_min"].to_value(u.TeV) == pytest.approx(0.1)
+    assert written.meta["optimization_energy_max"].to_value(u.TeV) == pytest.approx(10.0)
+
+
+def test_estimator_writes_complete_shared_configuration_to_metadata(mocker, tmp_path):
+    metadata, bins = _build_reference_tables()
+    mocker.patch(
+        _LOAD_HISTOGRAMS,
+        return_value=(metadata, bins),
+    )
+
+    result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
+        {
+            "input": "unused.hdf5",
+            "array_names": None,
+            "spectral_index": -2.0,
+            "target_relative_uncertainty": 0.1,
+            "target_triggered_events": None,
+            "optimization_energy_min": 0.1 * u.TeV,
+            "optimization_energy_max": 10.0 * u.TeV,
+            "reduced_core_radius": 50.0 * u.m,
+            "reduced_view_cone_radius": 5.0 * u.deg,
+            "output_file": str(tmp_path / "estimate.ecsv"),
+        }
+    )
+
+    assert result.meta["spectral_index"] == pytest.approx(-2.0)
+    assert result.meta["target_relative_uncertainty"] == pytest.approx(0.1)
+    assert result.meta["optimization_energy_min"].to_value(u.TeV) == pytest.approx(0.1)
+    assert result.meta["optimization_energy_max"].to_value(u.TeV) == pytest.approx(10.0)
+    assert result.meta["reduced_core_radius"].to_value(u.m) == pytest.approx(50.0)
+    assert result.meta["reduced_view_cone_radius"].to_value(u.deg) == pytest.approx(5.0)
+    assert "effective_core_scatter_radius" not in result.colnames
+    assert "effective_view_cone_radius" not in result.colnames
+    assert "original_core_scatter_radius" not in result.colnames
+    assert "original_view_cone_radius" not in result.colnames
