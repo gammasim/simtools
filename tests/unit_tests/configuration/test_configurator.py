@@ -3,6 +3,7 @@
 import logging
 import sys
 from copy import copy
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import astropy.units as u
@@ -117,6 +118,37 @@ def test_config_from_file_preserves_selected_by_version_keys(tmp_test_directory)
             ">=7.0.0": "CTAO-North-Alpha",
         }
     }
+
+
+def test_config_from_file_resolves_test_resource_paths(tmp_test_directory):
+    config_dict = {
+        "applications": [
+            {
+                "application": "simtools-production-derive-monte-carlo-statistics",
+                "configuration": {
+                    "model_version": "7.0.0",
+                    "trigger_histogram_file": (
+                        "${generated:gamma_diffuse_run000010.trigger_histograms.hdf5}"
+                    ),
+                    "plot_config": "${static:plot_config.yml}",
+                    "table_data_path": "${downloaded:table_data}",
+                },
+            }
+        ]
+    }
+    config_file = tmp_test_directory / "configuration-resource-macros.yml"
+    with open(config_file, "w", encoding="utf-8") as output:
+        yaml.safe_dump(config_dict, output, sort_keys=False)
+
+    config_builder = Configurator()
+    loaded_config = config_builder._config_from_file(config_file)
+
+    resources_path = (Path.cwd() / "tests/resources").resolve()
+    assert loaded_config["trigger_histogram_file"] == str(
+        resources_path / "generated/gamma_diffuse_run000010.trigger_histograms.hdf5"
+    )
+    assert loaded_config["plot_config"] == str(resources_path / "static/plot_config.yml")
+    assert loaded_config["table_data_path"] == str(resources_path / "downloaded/table_data")
 
 
 def test_initialize_io_handler(configurator, tmp_test_directory):

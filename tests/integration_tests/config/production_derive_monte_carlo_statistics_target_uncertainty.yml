@@ -1,0 +1,19 @@
+---
+applications:
+- application: simtools-production-derive-monte-carlo-statistics
+  configuration:
+    trigger_histogram_file: ${generated:gamma_diffuse_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test.trigger_histograms.hdf5}
+    optimization_energy_max: 100 TeV
+    optimization_energy_min: 0.1 TeV
+    reduced_core_radius: 200 m
+    reduced_view_cone_radius: 7.5 deg
+    spectral_index: -1.5
+    output_file: mc_statistics_uncertainty.ecsv
+    output_path: simtools-output
+    target_relative_uncertainty: 0.1
+    plot_diagnostics: true
+  integration_tests:
+  - output_file: mc_statistics_uncertainty.ecsv
+  test_name: production_derive_monte_carlo_statistics_uncertainty
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
