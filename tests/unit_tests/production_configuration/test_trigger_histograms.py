@@ -37,6 +37,7 @@ class _FakeHistograms:
             "zenith": 20.0 * u.deg,
             "azimuth": 0.0 * u.deg,
             "nsb_level": 1.0,
+            "spectral_index": -2.0,
             "energy_min": 0.1 * u.TeV,
             "energy_max": 10.0 * u.TeV,
             "viewcone_min": 0.0 * u.deg,
@@ -75,6 +76,7 @@ def _full_fake_histograms():
         "zenith": 20.0 * u.deg,
         "azimuth": 0.0 * u.deg,
         "nsb_level": 1.0,
+        "spectral_index": -2.0,
         "energy_min": 0.1 * u.TeV,
         "energy_max": 10.0 * u.TeV,
         "viewcone_min": 0.0 * u.deg,
@@ -120,6 +122,7 @@ def test_create_histogram_tables_contains_expected_metadata_and_bins():
     assert bin_table.meta["EXTNAME"] == TRIGGER_HISTOGRAM_BINS_TABLE
     assert metadata_table["reference_id"][0] == "ref-1"
     assert metadata_table["site"][0] == "North"
+    assert metadata_table["spectral_index"][0] == pytest.approx(-2.0)
     assert metadata_table["angular_distance_bin_width"].quantity[0].to_value(
         u.deg
     ) == pytest.approx(1.0)
@@ -194,6 +197,7 @@ def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
     assert row["array_name"] == "alpha"
     assert loaded_histograms.array_name == "alpha"
     assert loaded_histograms.file_info["primary_particle"] == "gamma"
+    assert loaded_histograms.file_info["spectral_index"] == pytest.approx(-2.0)
     assert loaded_histograms.data_ranges["angular_distance"] == pytest.approx((0.5, 1.5))
     assert all(isinstance(histogram, dict) for histogram in loaded_histograms.histograms.values())
     np.testing.assert_allclose(loaded_histograms.energy_bins, histograms.energy_bins)

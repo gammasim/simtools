@@ -19,6 +19,7 @@ def _build_reference_tables():
                 "production_index": 0,
                 "array_name": "alpha",
                 "primary_particle": "gamma",
+                "spectral_index": -2.0,
                 "zenith": 20.0 * u.deg,
                 "azimuth": 180.0 * u.deg,
                 "nsb_level": 1.0,
@@ -63,6 +64,7 @@ def _build_legacy_reference_tables():
                 "production_index": 0,
                 "array_name": "alpha",
                 "primary_particle": "gamma",
+                "spectral_index": -2.0,
                 "zenith": 20.0 * u.deg,
                 "azimuth": 180.0 * u.deg,
                 "nsb_level": 1.0,
@@ -237,6 +239,17 @@ def test_estimate_required_events_supports_target_triggered_events():
     )
 
     assert required == pytest.approx(25.0 / 0.15)
+
+
+def test_compute_overall_trigger_probability_uses_weighted_expected_triggers():
+    expected_triggers_per_event = np.array([[0.9, 0.0], [0.0, 0.0]])
+
+    probability = monte_carlo_statistics_estimator._compute_overall_trigger_probability(
+        expected_triggers_per_event,
+        np.array([True, True]),
+    )
+
+    assert probability == pytest.approx(0.9)
 
 
 def test_ceil_required_total_events_rounds_up_to_integer():
@@ -419,6 +432,10 @@ def test_estimator_logs_overall_trigger_probability_for_target_triggered_events(
         }
     )
 
+    assert (
+        "Using user-provided target spectral index -2 for array_layout=alpha "
+        "(source spectral index -2 from trigger histogram metadata)."
+    ) in caplog.text
     assert (
         "Overall trigger probability in selected optimization range for array_layout=alpha "
         "(zenith=20.000 deg, azimuth=180.000 deg, nsb_level=1.0): 0.375"
@@ -633,3 +650,88 @@ def test_estimator_writes_complete_shared_configuration_to_metadata(mocker, tmp_
     assert "effective_view_cone_radius" not in result.colnames
     assert "original_core_scatter_radius" not in result.colnames
     assert "original_view_cone_radius" not in result.colnames
+
+
+def test_estimator_uses_histogram_spectral_index_when_no_override_is_given(mocker, tmp_path):
+    metadata, bins = _build_reference_tables()
+    mocker.patch(
+        _LOAD_HISTOGRAMS,
+        return_value=(metadata, bins),
+    )
+
+    result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
+        {
+            "input": "unused.hdf5",
+            "array_names": None,
+            "spectral_index": None,
+            "target_relative_uncertainty": None,
+            "target_triggered_events": 25,
+            "optimization_energy_min": 0.1 * u.TeV,
+            "optimization_energy_max": 10.0 * u.TeV,
+            "reduced_core_radius": None,
+            "reduced_view_cone_radius": None,
+            "output_file": str(tmp_path / "estimate.ecsv"),
+        }
+    )
+
+    assert result.meta["spectral_index"] == pytest.approx(-2.0)
+    assert result["estimated_total_events"][0] == 67
+
+
+def test_estimator_warns_and_falls_back_when_histogram_spectral_index_is_missing(
+    mocker, tmp_path, caplog
+):
+    metadata, bins = _build_reference_tables()
+    metadata.remove_column("spectral_index")
+    mocker.patch(
+        _LOAD_HISTOGRAMS,
+        return_value=(metadata, bins),
+    )
+    caplog.set_level("WARNING")
+
+    result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
+        {
+            "input": "unused.hdf5",
+            "array_names": None,
+            "spectral_index": None,
+            "target_relative_uncertainty": None,
+            "target_triggered_events": 25,
+            "optimization_energy_min": 0.1 * u.TeV,
+            "optimization_energy_max": 10.0 * u.TeV,
+            "reduced_core_radius": None,
+            "reduced_view_cone_radius": None,
+            "output_file": str(tmp_path / "estimate.ecsv"),
+        }
+    )
+
+    assert "No spectral index found in trigger histogram metadata" in caplog.text
+    assert result.meta["spectral_index"] == pytest.approx(-2.0)
+    assert result["estimated_total_events"][0] == 67
+
+
+def test_estimator_logs_when_using_histogram_spectral_index(mocker, tmp_path, caplog):
+    metadata, bins = _build_reference_tables()
+    mocker.patch(
+        _LOAD_HISTOGRAMS,
+        return_value=(metadata, bins),
+    )
+    caplog.set_level("INFO")
+
+    monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
+        {
+            "input": "unused.hdf5",
+            "array_names": None,
+            "spectral_index": None,
+            "target_relative_uncertainty": None,
+            "target_triggered_events": 25,
+            "optimization_energy_min": 0.1 * u.TeV,
+            "optimization_energy_max": 10.0 * u.TeV,
+            "reduced_core_radius": None,
+            "reduced_view_cone_radius": None,
+            "output_file": str(tmp_path / "estimate.ecsv"),
+        }
+    )
+
+    assert "Using spectral index -2 from trigger histogram metadata for array_layout=alpha." in (
+        caplog.text
+    )
