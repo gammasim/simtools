@@ -19,5 +19,5 @@ podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-netw
 In some combinations of local git directory and container settings, git might report an issue with unsafe directories. In this case, run:
 
 ```bash
- podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash -lc "git config --global --add safe.directory /workdir/external/simtools && source /workdir/env/bin/activate && cd /workdir/external/simtools && pip install -e . && bash"
+podman run --rm -it -v "$(pwd)/:/workdir/external" --network simtools-mongo-network ghcr.io/gammasim/simtools-dev:latest bash -c "git config --global --add safe.directory /workdir/external/simtools && cd /workdir/external/simtools && pip install -e . && exec bash"
  ```
