@@ -63,6 +63,7 @@ def create_mc_run_header():
         "n_use": 2,  # Important: Must be >= 1
         "direction": [0.0, 70.0 / 57.3],
         "E_range": [0.003, 330.0],
+        "energy_spectrum_slope": -2.0,
         "viewcone": [0.0, 10.0],
         "core_range": [0.0, 1000.0],
     }
@@ -271,6 +272,7 @@ def test_create_tables_enforces_schema_and_writes_empty_triggers(lookup_table_ge
             "file_name": "input.simtel.zst",
             "file_id": 0,
             "particle_id": 1,
+            "spectral_index": -2.0,
             "energy_min": 0.1,
             "energy_max": 10.0,
             "viewcone_min": 0.0,
@@ -556,6 +558,7 @@ def test_process_file_info_else(monkeypatch, tmp_path):
     fake_run_header = {"x_scatter": 10000.0}
     fake_event_header = {
         "particle_id": 3,
+        "energy_spectrum_slope": -2.3,
         "energy_min": 0.5,
         "energy_max": 5.0,
         "zenith": 0.5,
@@ -578,6 +581,7 @@ def test_process_file_info_else(monkeypatch, tmp_path):
     assert info["file_name"] == str(file_path)
     assert info["file_id"] == 1
     assert info["particle_id"] == 3
+    assert info["spectral_index"] == pytest.approx(-2.3)
     assert info["energy_min"] == pytest.approx(0.5)
     assert info["energy_max"] == pytest.approx(5.0)
     assert info["viewcone_min"] == pytest.approx(0.1)

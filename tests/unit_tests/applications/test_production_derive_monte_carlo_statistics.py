@@ -30,6 +30,7 @@ def test_add_arguments_accepts_radius_override_and_energy_ranges():
 
     assert args.trigger_histogram_file == "reference.hdf5"
     assert args.target_relative_uncertainty == pytest.approx(0.05)
+    assert args.spectral_index is None
     assert args.reduced_core_radius.value == pytest.approx(80.0)
     assert args.reduced_view_cone_radius.value == pytest.approx(2.0)
     assert args.optimization_energy_min.value == pytest.approx(0.2)
@@ -51,6 +52,7 @@ def test_add_arguments_accepts_target_triggered_events():
     )
 
     assert args.target_relative_uncertainty is None
+    assert args.spectral_index is None
     assert args.target_triggered_events == 25
 
 

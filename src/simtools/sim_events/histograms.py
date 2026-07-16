@@ -222,6 +222,7 @@ class EventDataHistograms:
             "zenith": self._get_file_info_value(file_info_table, "zenith", "deg"),
             "azimuth": self._get_file_info_value(file_info_table, "azimuth", "deg"),
             "nsb_level": self._get_file_info_value(file_info_table, "nsb_level"),
+            "spectral_index": self._get_file_info_value(file_info_table, "spectral_index"),
             "energy_min": self._get_file_info_value(file_info_table, "energy_min", "TeV"),
             "energy_max": self._get_file_info_value(file_info_table, "energy_max", "TeV"),
             "core_scatter_max": self._get_file_info_value(file_info_table, "core_scatter_max", "m"),

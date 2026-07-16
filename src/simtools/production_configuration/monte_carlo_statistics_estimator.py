@@ -92,8 +92,8 @@ def _power_law_bin_integrals(bin_lows, bin_highs, spectral_index):
     return (np.power(bin_highs, exponent) - np.power(bin_lows, exponent)) / exponent
 
 
-def _compute_energy_bin_probabilities(energy_edges, spectral_index, br_energy):
-    """Return the normalized thrown-event probability per energy bin."""
+def _compute_spectral_bin_weights(energy_edges, spectral_index, br_energy):
+    """Return unnormalized spectral weights per energy bin."""
     energy_edges = np.asarray(energy_edges, dtype=float)
     br_energy_min = u.Quantity(br_energy[0]).to_value(u.TeV)
     br_energy_max = u.Quantity(br_energy[1]).to_value(u.TeV)
@@ -115,10 +115,38 @@ def _compute_energy_bin_probabilities(energy_edges, spectral_index, br_energy):
             clipped_highs[overlaps],
             spectral_index,
         )
-    total = np.sum(weights)
+    return weights
+
+
+def _compute_energy_bin_probabilities(
+    energy_edges,
+    energy_totals,
+    source_spectral_index,
+    target_spectral_index,
+    br_energy,
+):
+    """Return empirical per-bin probabilities reweighted from source to target spectrum."""
+    energy_totals = np.asarray(energy_totals, dtype=float)
+    total_simulated = np.sum(energy_totals)
+    if total_simulated <= 0.0:
+        raise ValueError("No simulated events available in reference energy bins.")
+
+    if np.isclose(source_spectral_index, target_spectral_index):
+        return energy_totals / total_simulated
+
+    source_weights = _compute_spectral_bin_weights(energy_edges, source_spectral_index, br_energy)
+    target_weights = _compute_spectral_bin_weights(energy_edges, target_spectral_index, br_energy)
+    reweighting = np.divide(
+        target_weights,
+        source_weights,
+        out=np.zeros_like(target_weights, dtype=float),
+        where=source_weights > 0.0,
+    )
+    weighted_totals = energy_totals * reweighting
+    total = np.sum(weighted_totals)
     if total <= 0.0:
         raise ValueError("Thrown energy range does not overlap any reference energy bins.")
-    return weights / total
+    return weighted_totals / total
 
 
 def _compute_expected_trigger_matrix(simulated_counts, triggered_counts, energy_probabilities):
@@ -290,13 +318,9 @@ def _compute_trigger_efficiency(triggered_counts, simulated_counts):
     )
 
 
-def _compute_overall_trigger_probability(triggered_counts, simulated_counts, energy_mask):
-    """Return the overall trigger probability in the selected optimization range."""
-    selected_triggered = float(np.sum(np.asarray(triggered_counts, dtype=float)[:, energy_mask]))
-    selected_simulated = float(np.sum(np.asarray(simulated_counts, dtype=float)[:, energy_mask]))
-    if selected_simulated <= 0.0:
-        return 0.0
-    return selected_triggered / selected_simulated
+def _compute_overall_trigger_probability(expected_triggers_per_event, energy_mask):
+    """Return the weighted trigger probability in the selected optimization range."""
+    return float(np.sum(np.asarray(expected_triggers_per_event, dtype=float)[:, energy_mask]))
 
 
 def _log_reference_validation_summary(metadata_row, reference_rows):
@@ -493,13 +517,69 @@ def _build_table_metadata(args_dict):
     return {key: value for key, value in metadata.items() if value is not None}
 
 
+def _resolve_source_spectral_index(metadata_row):
+    """Return the original simulated spectral index stored in histogram metadata."""
+    if "spectral_index" in metadata_row.colnames:
+        spectral_index = float(metadata_row["spectral_index"])
+        if np.isfinite(spectral_index):
+            return spectral_index
+
+    _logger.warning(
+        "No spectral index found in trigger histogram metadata for array_layout=%s; assuming -2.0.",
+        metadata_row["array_name"],
+    )
+    return -2.0
+
+
+def _resolve_reference_spectral_index(
+    metadata_row, spectral_index_override, source_spectral_index=None
+):
+    """Return the target spectral index to use for one reference row."""
+    if source_spectral_index is None:
+        source_spectral_index = _resolve_source_spectral_index(metadata_row)
+    if spectral_index_override is not None:
+        spectral_index = float(spectral_index_override)
+        _logger.info(
+            "Using user-provided target spectral index %.6g for array_layout=%s "
+            "(source spectral index %.6g from trigger histogram metadata).",
+            spectral_index,
+            metadata_row["array_name"],
+            source_spectral_index,
+        )
+        return spectral_index
+
+    _logger.info(
+        "Using spectral index %.6g from trigger histogram metadata for array_layout=%s.",
+        source_spectral_index,
+        metadata_row["array_name"],
+    )
+    return source_spectral_index
+
+
+def _resolved_table_spectral_index(selected_references, spectral_index_override):
+    """Return the table-level spectral index metadata value."""
+    if spectral_index_override is not None:
+        return float(spectral_index_override)
+
+    if "spectral_index" in selected_references.colnames:
+        spectral_indices = np.asarray(selected_references["spectral_index"], dtype=float)
+        spectral_indices = spectral_indices[np.isfinite(spectral_indices)]
+        if spectral_indices.size == 0:
+            return -2.0
+        unique_indices = np.unique(np.round(spectral_indices, decimals=12))
+        if unique_indices.size == 1:
+            return float(unique_indices[0])
+    return -2.0
+
+
 def _prepare_reference_estimation_inputs(
     metadata_row,
     reference_rows,
     reduced_core_radius,
     reduced_view_cone_radius,
     optimization_energy,
-    spectral_index,
+    source_spectral_index,
+    target_spectral_index,
 ):
     """Prepare per-reference matrices, ranges, and derived probabilities for estimation."""
     energy_edges, angular_edges = _get_reference_bin_edges(reference_rows)
@@ -537,7 +617,11 @@ def _prepare_reference_estimation_inputs(
     trigger_efficiency = _compute_trigger_efficiency(triggered_counts, simulated_counts)
     br_energy, optimization_energy = _resolve_energy_ranges(metadata_row, optimization_energy)
     energy_probabilities = _compute_energy_bin_probabilities(
-        energy_edges, spectral_index, br_energy
+        energy_edges,
+        simulated_counts.sum(axis=0),
+        source_spectral_index,
+        target_spectral_index,
+        br_energy,
     )
     expected_triggers_per_event = _compute_expected_trigger_matrix(
         simulated_counts,
@@ -546,8 +630,7 @@ def _prepare_reference_estimation_inputs(
     )
     energy_mask = _optimization_energy_mask(energy_edges, optimization_energy)
     overall_trigger_probability = _compute_overall_trigger_probability(
-        triggered_counts,
-        simulated_counts,
+        expected_triggers_per_event,
         energy_mask,
     )
     return {
@@ -574,12 +657,18 @@ def _build_result_row(
     reduced_core_radius,
     reduced_view_cone_radius,
     optimization_energy,
-    spectral_index,
+    spectral_index_override,
     plot_diagnostics,
 ):
     """Build one result row for a selected trigger histogram."""
     reference_id = metadata_row["reference_id"]
     reference_rows = bin_table[bin_table["reference_id"] == reference_id]
+    source_spectral_index = _resolve_source_spectral_index(metadata_row)
+    spectral_index = _resolve_reference_spectral_index(
+        metadata_row,
+        spectral_index_override,
+        source_spectral_index=source_spectral_index,
+    )
     _log_reference_validation_summary(metadata_row, reference_rows)
     prepared = _prepare_reference_estimation_inputs(
         metadata_row,
@@ -587,6 +676,7 @@ def _build_result_row(
         reduced_core_radius,
         reduced_view_cone_radius,
         optimization_energy,
+        source_spectral_index,
         spectral_index,
     )
     if target_triggered_events is not None:
@@ -666,6 +756,12 @@ def estimate_monte_carlo_statistics(args_dict=None):
     ]
     results = Table(rows=output_rows)
     results.meta.update(_build_table_metadata(args_dict))
+    resolved_spectral_index = _resolved_table_spectral_index(
+        selected_references,
+        args_dict.get("spectral_index"),
+    )
+    if resolved_spectral_index is not None:
+        results.meta["spectral_index"] = resolved_spectral_index
     output_file = validate_file_type(
         io_handler.IOHandler().get_output_file(args_dict.get("output_file")), file_type="table"
     )
