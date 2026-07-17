@@ -13,6 +13,6 @@ applications:
     plot_diagnostics: true
   integration_tests:
   - output_file: mc_statistics_events.ecsv
-    test_name: production_derive_monte_carlo_statistics_events
+  test_name: production_derive_monte_carlo_statistics_events
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
