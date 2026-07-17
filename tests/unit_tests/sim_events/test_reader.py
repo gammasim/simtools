@@ -45,6 +45,7 @@ def mock_tables():
     file_info_table["file_name"] = ["test.hdf5"]
     file_info_table["file_id"] = [0]
     file_info_table["particle_id"] = [1]
+    file_info_table["spectral_index"] = [-2.0]
     file_info_table["zenith"] = [20.0] * u.deg
     file_info_table["azimuth"] = [0.0] * u.deg
     file_info_table["nsb_level"] = [1.0]
@@ -134,6 +135,7 @@ def test_get_reduced_simulation_info(mock_hdf5_file):
     info = reader.get_reduced_simulation_file_info(file_info)
 
     assert info["primary_particle"] == "gamma"
+    assert info["spectral_index"] == pytest.approx(-2.0)
     assert_quantity_allclose(info["zenith"], 20.0 * u.deg)
     assert_quantity_allclose(info["azimuth"], 0.0 * u.deg)
     assert info["nsb_level"] == pytest.approx(1.0)
@@ -150,6 +152,7 @@ def test_get_reduced_simulation_info_with_warning(mock_primary_particle, mock_hd
     new_file_info["file_name"] = ["test1.hdf5", "test2.hdf5"]
     new_file_info["file_id"] = [0, 1]
     new_file_info["particle_id"] = [1, 1]  # Same value, no warning
+    new_file_info["spectral_index"] = [-2.0, -2.0]
     new_file_info["zenith"] = [20.0, 30.0]  # Different value, warning
     new_file_info["azimuth"] = [0.0, 0.0]
     new_file_info["nsb_level"] = [1.0, 1.0]
@@ -181,6 +184,7 @@ def test_get_reduced_simulation_info_with_string_encoded_numeric_values(mock_hdf
     file_info["file_name"] = ["test.hdf5"]
     file_info["file_id"] = [0]
     file_info["particle_id"] = [b"1"]
+    file_info["spectral_index"] = [b"-2.0"]
     file_info["zenith"] = [20.0] * u.deg
     file_info["azimuth"] = [0.0] * u.deg
     file_info["nsb_level"] = [b"0.24053832149999996"]
@@ -194,6 +198,7 @@ def test_get_reduced_simulation_info_with_string_encoded_numeric_values(mock_hdf
     info = reader.get_reduced_simulation_file_info(file_info)
 
     assert info["primary_particle"] == "gamma"
+    assert info["spectral_index"] == pytest.approx(-2.0)
     assert info["nsb_level"] == pytest.approx(0.24)
 
 

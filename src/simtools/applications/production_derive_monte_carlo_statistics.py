@@ -5,7 +5,8 @@ Estimate required Monte Carlo statistics (thrown events) from histograms of trig
 
 This application loads a trigger-histogram file, evaluates a toy MC-event
 distribution for a configurable power-law spectrum, and computes the total Monte Carlo event
-statistics required to meet a target relative statistical uncertainty.
+statistics required to meet either a target relative statistical uncertainty or a target number
+of triggered events.
 
 Statistical uncertainties are estimated from the expected number of triggered events per bin
 in the histogram, using the axes: energy vs. angular distance.
@@ -28,7 +29,10 @@ Estimate Monte Carlo statistics from a trigger-histogram file:
 """
 
 from simtools.application_control import build_application
-from simtools.configuration.commandline_argument_helpers import positive_quantity
+from simtools.configuration.commandline_argument_helpers import (
+    positive_quantity,
+    scientific_int,
+)
 from simtools.production_configuration.monte_carlo_statistics_estimator import (
     estimate_monte_carlo_statistics,
 )
@@ -58,14 +62,23 @@ def _add_arguments(parser):
         "--spectral_index",
         required=False,
         type=float,
-        default=-2.0,
-        help="Power-law spectral index assumed.",
+        default=None,
+        help=(
+            "Target power-law spectral index."
+            "Reweight the simulated energy "
+            "distribution from the source spectrum to this target spectrum."
+        ),
     )
-    parser.add_argument(
+    target_group = parser.add_mutually_exclusive_group(required=True)
+    target_group.add_argument(
         "--target_relative_uncertainty",
-        required=True,
         type=float,
-        help="Target relative statistical uncertainty per relevant bin.",
+        help="Target relative statistical uncertainty for each relevant bin individually.",
+    )
+    target_group.add_argument(
+        "--target_triggered_events",
+        type=scientific_int,
+        help="Target total number of triggered events across the selected optimization range.",
     )
     parser.add_argument(
         "--optimization_energy_min",
@@ -89,6 +102,16 @@ def _add_arguments(parser):
         help=(
             "Optional reduced core scatter radius used for effective-area reporting "
             "(e.g., as derived from simtools-production-derive-corsika-limits)."
+        ),
+    )
+    parser.add_argument(
+        "--reduced_view_cone_radius",
+        required=False,
+        type=positive_quantity("deg"),
+        default=None,
+        help=(
+            "Optional reduced view-cone radius used for reporting required Monte Carlo "
+            "statistics within a smaller angular cone."
         ),
     )
     parser.add_argument(
