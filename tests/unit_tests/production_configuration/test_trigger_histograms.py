@@ -167,6 +167,38 @@ def test_histogram_tables_round_trip_via_hdf5(tmp_path):
     assert loaded_bins["triggered_count"][0] == 1
 
 
+def test_histogram_tables_round_trip_via_hdf5_without_spectral_index(tmp_path):
+    histograms = _FakeHistograms()
+    histograms.file_info.pop("spectral_index")
+    metadata_table, bin_table = _create_histogram_tables(
+        [
+            {
+                "reference_id": "ref-1",
+                "production_index": 0,
+                "event_data_file": "pattern*.hdf5",
+                "site": "North",
+                "array_name": "alpha",
+                "telescope_ids": ["LSTN-01"],
+                "histograms": histograms,
+            }
+        ]
+    )
+
+    assert metadata_table["spectral_index"].dtype.kind == "f"
+    assert np.isnan(metadata_table["spectral_index"][0])
+
+    output_file = tmp_path / "trigger_histograms_missing_spectral_index.hdf5"
+    table_handler.write_tables(
+        [metadata_table, bin_table],
+        output_file,
+        overwrite_existing=True,
+        file_type="HDF5",
+    )
+
+    loaded_metadata, _ = load_trigger_histograms(output_file)
+    assert np.isnan(loaded_metadata["spectral_index"][0])
+
+
 def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
     histograms = _full_fake_histograms()
     reference_specs = [
