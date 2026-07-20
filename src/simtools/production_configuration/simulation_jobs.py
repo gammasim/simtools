@@ -703,7 +703,10 @@ def _clip_energy_range_from_threshold(energy_range_pair, lower_energy_threshold)
 
 
 def _clip_energy_range_to_configured_bounds(energy_range_pair, configured_energy_range_pair):
-    """Clip selected energy bounds to configured energy-range bounds."""
+    """Clip selected energy bounds to configured energy-range bounds.
+
+    Zero-width ranges are valid for fixed-energy simulations.
+    """
     energy_min, energy_max = energy_range_pair
     configured_energy_min, configured_energy_max = configured_energy_range_pair
 
@@ -716,7 +719,7 @@ def _clip_energy_range_to_configured_bounds(energy_range_pair, configured_energy
         configured_energy_max,
     )
 
-    if selected_energy_max <= selected_energy_min.to(selected_energy_max.unit):
+    if selected_energy_max < selected_energy_min.to(selected_energy_max.unit):
         return None
     return selected_energy_min, selected_energy_max
 
