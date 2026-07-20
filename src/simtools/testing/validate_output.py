@@ -4,10 +4,14 @@ import logging
 import re
 from pathlib import Path
 
+import h5py
 import numpy as np
+from astropy import units as u
 from astropy.table import Table
+from eventio.simtel.simtelfile import SimTelFile
 
 import simtools.utils.general as gen
+from simtools.data_model import validate_data
 from simtools.db import db_handler
 from simtools.io import ascii_handler
 from simtools.sim_events import file_info
@@ -101,6 +105,7 @@ def validate_application_output(config, from_command_line=None, from_config_file
 
         if _versions_match(from_command_line, from_config_file):
             _validate_output_files(config, integration_test)
+            _validate_declarative_output(config, integration_test)
 
             if "file_type" in integration_test:
                 assert assertions.assert_file_type(
@@ -127,6 +132,438 @@ def _validate_output_files(config, integration_test):
         )
     if "model_parameter_validation" in integration_test:
         _validate_model_parameter_json_file(config, integration_test["model_parameter_validation"])
+
+
+def _validation_failure(output_path, rule, expected, actual):
+    """Raise a consistently formatted semantic output validation failure."""
+    rule_name = rule.get("name", rule.get("kind", "output_validation"))
+    raise AssertionError(
+        f"Output '{output_path}' failed rule '{rule_name}': "
+        f"expected {expected!r}, actual {actual!r}."
+    )
+
+
+def _output_validation_path(config, descriptor):
+    """Resolve an output descriptor to an absolute or configured output path."""
+    try:
+        base_path = config["configuration"][descriptor["path_descriptor"]]
+    except KeyError as exc:
+        raise KeyError(
+            f"Path {descriptor.get('path_descriptor')} not found in integration test configuration."
+        ) from exc
+    return Path(base_path) / descriptor.get("output_sub_path", "") / descriptor["file"]
+
+
+def _read_hdf5_object(path, object_path, kind):
+    """Read an HDF5 group or dataset into a validation context."""
+    with h5py.File(path, "r") as hdf5_file:
+        selected_path = object_path or "/"
+        selected = hdf5_file[selected_path]
+        metadata = dict(selected.attrs.items())
+        if kind == "group":
+            return {
+                "data": None,
+                "metadata": metadata,
+                "keys": list(selected.keys()),
+                "count": len(selected.keys()),
+            }
+        data = selected[:]
+        return {
+            "data": data,
+            "metadata": metadata,
+            "keys": list(selected.dtype.names or []),
+            "count": len(data),
+        }
+
+
+def _read_event_stream(path, descriptor):
+    """Read an event stream and return its event count and first event fields."""
+    event_type = descriptor.get("event_type")
+    event_type = {
+        "shower": "data",
+        "pedestal": "calibration",
+        "direct_injection": "calibration",
+    }.get(event_type, event_type)
+    file_format = descriptor.get("format", "simtel")
+    if file_format == "hdf5":
+        return _read_hdf5_object(path, descriptor.get("object_path"), "event_stream")
+    if file_format in ("ecsv", "fits"):
+        table = _read_table(path, file_format)
+        return {
+            "data": table,
+            "metadata": dict(table.meta),
+            "keys": table.colnames,
+            "count": len(table),
+        }
+
+    count = 0
+    first_event = None
+    with SimTelFile(path) as event_file:
+        for event in event_file:
+            if event_type and event.get("type") != event_type:
+                continue
+            count += 1
+            if first_event is None:
+                first_event = event
+    return {
+        "data": None,
+        "metadata": {},
+        "keys": list(first_event.keys()) if isinstance(first_event, dict) else [],
+        "count": count,
+    }
+
+
+def _read_table(path, file_format):
+    """Read a supported table format."""
+    if file_format == "ecsv":
+        return Table.read(path, format="ascii.ecsv")
+    return Table.read(path, format="fits")
+
+
+def _load_output_context(path, descriptor):
+    """Load one output and return the normalized semantic validation context."""
+    kind = descriptor["kind"]
+    if not path.exists():
+        _validation_failure(path, descriptor, "an existing output", "missing")
+    if kind == "file":
+        return {"data": None, "metadata": {}, "keys": [], "count": path.stat().st_size}
+    if kind == "table":
+        table = _read_table(path, descriptor.get("format", "ecsv"))
+        return {
+            "data": table,
+            "metadata": dict(table.meta),
+            "keys": table.colnames,
+            "count": len(table),
+        }
+    if kind == "mapping":
+        mapping = ascii_handler.collect_data_from_file(path)
+        if not isinstance(mapping, dict):
+            _validation_failure(path, descriptor, "a mapping", type(mapping).__name__)
+        return {"data": mapping, "metadata": mapping, "keys": list(mapping), "count": len(mapping)}
+    if kind == "group":
+        return _read_hdf5_object(path, descriptor.get("object_path"), kind)
+    if kind == "event_stream":
+        return _read_event_stream(path, descriptor)
+    _validation_failure(path, descriptor, "a supported output kind", kind)
+    return None
+
+
+def _has_path(value, dotted_path):
+    """Return whether a dotted path exists in nested mappings."""
+    current = value
+    for part in dotted_path.split("."):
+        if not isinstance(current, dict) or part not in current:
+            return False
+        current = current[part]
+    return True
+
+
+def _get_path(value, dotted_path):
+    """Read a dotted path from a nested mapping."""
+    current = value
+    for part in dotted_path.split("."):
+        current = current[part]
+    return current
+
+
+def _validate_count(path, rule, actual):
+    """Validate exact, minimum, and maximum content counts."""
+    count_rule = rule.get("count", {})
+    if "exact" in count_rule and actual != count_rule["exact"]:
+        _validation_failure(path, rule, count_rule["exact"], actual)
+    if "minimum" in count_rule and actual < count_rule["minimum"]:
+        _validation_failure(path, rule, f">={count_rule['minimum']}", actual)
+    if "maximum" in count_rule and actual > count_rule["maximum"]:
+        _validation_failure(path, rule, f"<={count_rule['maximum']}", actual)
+
+
+def _validate_keys(path, rule, context):
+    """Validate required and forbidden mapping or group keys."""
+    keys = set(context["keys"])
+    for key in rule.get("required_keys", []) + rule.get("metadata", {}).get("required_keys", []):
+        if key not in keys and not _has_path(context["metadata"], key):
+            _validation_failure(path, rule, f"required key {key}", sorted(keys))
+    for key in rule.get("forbidden_keys", []) + rule.get("metadata", {}).get("forbidden_keys", []):
+        if key in keys or _has_path(context["metadata"], key):
+            _validation_failure(path, rule, f"forbidden key {key} absent", sorted(keys))
+
+
+def _validate_columns(path, rule, context):
+    """Validate required/forbidden columns and per-column semantic constraints."""
+    data = context["data"]
+    if not isinstance(data, Table):
+        if rule.get("required_columns") or rule.get("forbidden_columns") or rule.get("columns"):
+            _validation_failure(
+                path, rule, "a tabular or structured event output", type(data).__name__
+            )
+        return
+
+    columns = set(data.colnames)
+    _validate_required_columns(path, rule, columns)
+    _validate_forbidden_columns(path, rule, columns)
+
+    for column_name, column_rule in rule.get("columns", {}).items():
+        _validate_column(path, rule, data, columns, column_name, column_rule)
+
+
+def _validate_required_columns(path, rule, columns):
+    """Validate required table columns."""
+    for column in rule.get("required_columns", []):
+        if column not in columns:
+            _validation_failure(path, rule, f"required column {column}", sorted(columns))
+
+
+def _validate_forbidden_columns(path, rule, columns):
+    """Validate forbidden table columns."""
+    for column in rule.get("forbidden_columns", []):
+        if column in columns:
+            _validation_failure(path, rule, f"forbidden column {column} absent", sorted(columns))
+
+
+def _validate_column(path, rule, data, columns, column_name, column_rule):
+    """Validate one table column against its declarative constraints."""
+    if column_name not in columns:
+        _validation_failure(path, rule, f"column {column_name}", sorted(columns))
+    column = data[column_name]
+    values = np.asarray(column)
+    if column_rule.get("type") and not _matches_dtype(values, column_rule["type"]):
+        _validation_failure(
+            path, rule, f"{column_name} type {column_rule['type']}", str(values.dtype)
+        )
+    if column_rule.get("unit") is not None:
+        _validate_unit(path, rule, column_name, column, column_rule["unit"])
+    if column_rule.get("finite"):
+        if not np.issubdtype(values.dtype, np.number) or not np.all(np.isfinite(values)):
+            _validation_failure(path, rule, f"finite values in {column_name}", values.tolist())
+    if column_rule.get("unique") and len(np.unique(values)) != len(values):
+        _validation_failure(path, rule, f"unique values in {column_name}", values.tolist())
+    _validate_allowed_values(path, rule, column_name, column, column_rule)
+    _validate_range(path, rule, column_name, column, column_rule)
+
+
+def _matches_dtype(values, expected_type):
+    """Return whether an array matches a declarative field type."""
+    if expected_type == "string":
+        return values.dtype.kind in "OUS"
+    if expected_type == "bool":
+        return values.dtype.kind == "b"
+    if expected_type == "number":
+        return np.issubdtype(values.dtype, np.number)
+    expected = np.dtype(expected_type)
+    return values.dtype == expected
+
+
+def _validate_unit(path, rule, column_name, column, expected_unit):
+    """Validate that a column has the declared physical unit."""
+    actual_unit = getattr(column, "unit", None) or u.dimensionless_unscaled
+    try:
+        if not actual_unit.is_equivalent(u.Unit(expected_unit)):
+            _validation_failure(
+                path, rule, f"unit {expected_unit} for {column_name}", str(actual_unit)
+            )
+    except ValueError as exc:
+        _validation_failure(path, rule, f"valid unit {expected_unit} for {column_name}", str(exc))
+
+
+def _validate_allowed_values(path, rule, column_name, column, column_rule):
+    """Validate a column against an allowed-value domain."""
+    allowed = column_rule.get("allowed_values")
+    if allowed is None:
+        return
+    values = np.asarray(column)
+    if not np.all(np.isin(values, allowed)):
+        _validation_failure(
+            path, rule, f"allowed values {allowed} for {column_name}", values.tolist()
+        )
+
+
+def _validate_range(path, rule, column_name, column, column_rule):
+    """Validate a numerical column against a unit-aware range."""
+    range_rule = column_rule.get("range")
+    if range_rule is None:
+        return
+    values = np.asarray(column)
+    if not np.issubdtype(values.dtype, np.number):
+        _validation_failure(path, rule, f"numerical range for {column_name}", str(values.dtype))
+    actual_unit = getattr(column, "unit", None) or u.dimensionless_unscaled
+    values = values * actual_unit
+    if range_rule.get("unit"):
+        values = values.to(range_rule["unit"])
+    numeric_values = np.asarray(values.value)
+    inclusive = range_rule.get("inclusive", True)
+    minimum = range_rule.get("minimum")
+    maximum = range_rule.get("maximum")
+    if minimum is not None:
+        valid = numeric_values >= minimum if inclusive else numeric_values > minimum
+        if not np.all(valid):
+            _validation_failure(
+                path, rule, f"minimum {minimum} for {column_name}", numeric_values.tolist()
+            )
+    if maximum is not None:
+        valid = numeric_values <= maximum if inclusive else numeric_values < maximum
+        if not np.all(valid):
+            _validation_failure(
+                path, rule, f"maximum {maximum} for {column_name}", numeric_values.tolist()
+            )
+
+
+def _content_operand(context, operand):
+    """Resolve a content metric or aggregate operand."""
+    if "path" in operand:
+        if isinstance(context["data"], Table) and operand["path"] in context["data"].colnames:
+            return np.asarray(context["data"][operand["path"]])
+        return _get_path(context["data"], operand["path"])
+    if "metric" in operand:
+        return context["count"]
+    aggregate = operand["aggregate"]
+    values = np.asarray(context["data"][aggregate["column"]])
+    aggregate_functions = {
+        "sum": np.sum,
+        "minimum": np.min,
+        "maximum": np.max,
+        "count": len,
+        "unique_count": lambda array: len(np.unique(array)),
+    }
+    return aggregate_functions[aggregate["function"]](values)
+
+
+def _resolve_operand(context, operand):
+    """Resolve a structured consistency operand."""
+    if not isinstance(operand, dict):
+        return operand
+    if operand["source"] == "metadata":
+        return _get_path(context["metadata"], operand["path"])
+    return _content_operand(context, operand)
+
+
+def _apply_operator(left, operator_name, right):
+    """Apply one supported declarative comparison operator."""
+    if operator_name == "equals":
+        if isinstance(left, (float, np.ndarray)):
+            try:
+                return bool(np.allclose(left, right))
+            except TypeError:
+                return bool(np.array_equal(left, right))
+        return left == right
+    operators = {
+        "greater_than": lambda left_value, right_value: left_value > right_value,
+        "greater_equal": lambda left_value, right_value: left_value >= right_value,
+        "less_than": lambda left_value, right_value: left_value < right_value,
+        "less_equal": lambda left_value, right_value: left_value <= right_value,
+        "in": lambda left_value, right_value: left_value in right_value,
+    }
+    return operators[operator_name](left, right)
+
+
+def _validate_consistency(path, rule, context):
+    """Validate metadata-to-content consistency rules."""
+    for consistency_rule in rule.get("consistency", []):
+        try:
+            left = _resolve_operand(context, consistency_rule["left"])
+            right = _resolve_operand(context, consistency_rule["right"])
+            valid = _apply_operator(left, consistency_rule["operator"], right)
+        except (KeyError, TypeError, ValueError) as exc:
+            _validation_failure(path, rule, consistency_rule, str(exc))
+        if not valid:
+            _validation_failure(path, rule, consistency_rule["operator"], f"{left!r} vs {right!r}")
+
+
+def _validate_data_product_schema(path, rule, context):
+    """Validate a table or mapping against an explicit simtools data schema."""
+    schema_file = rule.get("data_product_schema")
+    if not schema_file:
+        return
+    try:
+        if isinstance(context["data"], Table):
+            context["data"] = validate_data.DataValidator(
+                schema_file=_resolve_path(schema_file),
+                data_table=context["data"].copy(copy_data=True),
+            ).validate_and_transform()
+        elif isinstance(context["data"], dict):
+            context["data"] = validate_data.DataValidator(
+                schema_file=_resolve_path(schema_file),
+                data_dict=context["data"].copy(),
+            ).validate_and_transform()
+        else:
+            _validation_failure(
+                path, rule, "schema-validatable table or mapping", type(context["data"]).__name__
+            )
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        _validation_failure(path, rule, f"data-product schema {schema_file}", str(exc))
+
+
+def _validate_file_rule(config, rule):
+    """Validate one declarative output rule."""
+    path = _output_validation_path(config, rule)
+    try:
+        context = _load_output_context(path, rule)
+    except AssertionError:
+        raise
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        _validation_failure(path, rule, "a parseable output", str(exc))
+    if rule.get("non_empty") and context["count"] == 0:
+        _validation_failure(path, rule, "non-empty content", context["count"])
+    _validate_count(path, rule, context["count"])
+    _validate_keys(path, rule, context)
+    _validate_columns(path, rule, context)
+    _validate_data_product_schema(path, rule, context)
+    _validate_consistency(path, rule, context)
+    return context
+
+
+def _resolve_relationship_operand(operand, contexts):
+    """Resolve an operand by selecting a named output and reading its value.
+
+    Relationship operands use ``output`` to select one loaded output, then
+    address either a dotted metadata/content path or a content count metric.
+    """
+    if not isinstance(operand, dict):
+        return operand
+    context = contexts[operand["output"]]
+    if "metric" in operand:
+        return context["count"]
+    if "aggregate" in operand:
+        return _content_operand(context, {"aggregate": operand["aggregate"]})
+    if _has_path(context["metadata"], operand["path"]):
+        return _get_path(context["metadata"], operand["path"])
+    return _content_operand(context, {"path": operand["path"]})
+
+
+def _validate_relationship_rule(config, rule):
+    """Validate comparisons between separate generated output files.
+
+    Each output descriptor is loaded independently and stored under its local
+    ``name``. Checks then compare values selected with relationship operands,
+    for example a summary mapping's ``simulation_rows`` with a table's
+    ``row_count``. Comparisons within one file use ``consistency`` instead.
+    """
+    contexts = {}
+    for descriptor in rule["outputs"]:
+        if descriptor["name"] in contexts:
+            _validation_failure(descriptor["name"], rule, "unique output names", descriptor["name"])
+        contexts[descriptor["name"]] = _validate_file_rule(
+            config, descriptor | {"non_empty": False}
+        )
+    for check in rule["checks"]:
+        try:
+            left = _resolve_relationship_operand(check["left"], contexts)
+            right = _resolve_relationship_operand(check["right"], contexts)
+            valid = _apply_operator(left, check["operator"], right)
+        except (KeyError, TypeError, ValueError) as exc:
+            _validation_failure(rule.get("name", "relationship"), rule, check, str(exc))
+        if not valid:
+            _validation_failure(
+                rule.get("name", "relationship"), rule, check["operator"], f"{left!r} vs {right!r}"
+            )
+
+
+def _validate_declarative_output(config, integration_test):
+    """Run optional declarative semantic output validation rules."""
+    for rule in integration_test.get("output_validation", []):
+        if rule["kind"] == "relationship":
+            _validate_relationship_rule(config, rule)
+        else:
+            _validate_file_rule(config, rule)
 
 
 def _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file):

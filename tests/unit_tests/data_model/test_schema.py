@@ -201,6 +201,116 @@ def test_application_workflow_schema_accepts_optional_docs_metadata():
     )
 
 
+def _output_validation_workflow(*rules):
+    """Build a minimal workflow containing declarative output rules."""
+    return {
+        "schema_version": "0.4.0",
+        "schema_name": "application_workflow.metaschema",
+        "applications": [
+            {
+                "application": "simtools-test",
+                "configuration": {"output_path": "output"},
+                "integration_tests": [{"output_validation": list(rules)}],
+            }
+        ],
+    }
+
+
+def _valid_output_validation_rule():
+    """Build a representative table rule for metaschema tests."""
+    return {
+        "name": "table",
+        "kind": "table",
+        "path_descriptor": "output_path",
+        "file": "output.ecsv",
+        "format": "ecsv",
+        "non_empty": True,
+        "count": {"minimum": 1},
+        "required_columns": ["id"],
+        "columns": {
+            "id": {"type": "int64", "finite": True, "unique": True},
+            "energy": {
+                "type": "float64",
+                "unit": "GeV",
+                "range": {"minimum": 1.0, "unit": "GeV"},
+            },
+        },
+        "metadata": {"required_keys": ["summary"]},
+        "consistency": [
+            {
+                "left": {"source": "metadata", "path": "summary.rows"},
+                "operator": "equals",
+                "right": {"source": "content", "metric": "row_count"},
+            }
+        ],
+        "data_product_schema": "schema.yml",
+    }
+
+
+def _valid_relationship_rule():
+    """Build a representative cross-output relationship rule."""
+    return {
+        "kind": "relationship",
+        "outputs": [
+            {
+                "name": "summary",
+                "kind": "mapping",
+                "path_descriptor": "output_path",
+                "file": "summary.yml",
+            },
+            {
+                "name": "table",
+                "kind": "table",
+                "path_descriptor": "output_path",
+                "file": "output.ecsv",
+            },
+        ],
+        "checks": [
+            {
+                "left": {"output": "summary", "path": "rows"},
+                "operator": "equals",
+                "right": {"output": "table", "metric": "row_count"},
+            }
+        ],
+    }
+
+
+def test_application_workflow_schema_accepts_output_validation_rules():
+    """Test the complete declarative output-validation configuration shape."""
+    workflow_config = _output_validation_workflow(
+        _valid_output_validation_rule(), _valid_relationship_rule()
+    )
+
+    schema.validate_dict_using_schema(
+        workflow_config,
+        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+    )
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        lambda rule: rule.update({"unknown": True}),
+        lambda rule: rule.update({"kind": "unsupported"}),
+        lambda rule: rule["count"].update({"invalid": 1}),
+        lambda rule: rule["columns"]["id"].update({"range": {"minimum": "bad"}}),
+        lambda rule: rule["columns"]["id"].update({"range": {"unit": "GeV"}}),
+        lambda rule: rule["consistency"][0].update({"operator": "python"}),
+    ],
+)
+def test_application_workflow_schema_rejects_malformed_output_validation(change):
+    """Reject unknown properties and malformed declarative validation rules."""
+    rule = _valid_output_validation_rule()
+    change(rule)
+    workflow_config = _output_validation_workflow(rule)
+
+    with pytest.raises(jsonschema.ValidationError):
+        schema.validate_dict_using_schema(
+            workflow_config,
+            schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+        )
+
+
 def test_validate_dict_using_schema_remote(tmp_test_directory, mocker):
     sample_schema = {
         "type": "object",

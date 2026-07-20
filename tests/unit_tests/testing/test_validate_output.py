@@ -3,8 +3,11 @@ import logging
 from pathlib import Path
 from unittest.mock import patch
 
+import h5py
+import numpy as np
 import pytest
 import yaml
+from astropy import units as u
 from astropy.table import Table
 
 from simtools.constants import TEST_RESOURCES_GENERATED
@@ -878,3 +881,354 @@ def test_compare_nested_dicts_with_tolerance(data1, data2, tolerance, is_value_f
         )
         == should_match
     )
+
+
+def _semantic_table(path, metadata=None):
+    """Write a small table used by declarative output-validation tests."""
+    table = Table(
+        {
+            "run_number": [1, 2],
+            "value": [1.0, 2.0],
+            "label": ["a", "b"],
+        }
+    )
+    table["value"].unit = u.m
+    table.meta = metadata or {"summary": {"rows": 2, "total": 3.0}}
+    table.write(path, format="ascii.ecsv", overwrite=True)
+
+
+def _semantic_config(output_path, rule):
+    """Build a configuration containing one semantic output rule."""
+    return {
+        "configuration": {"output_path": str(output_path)},
+        "integration_tests": [{"output_validation": [rule]}],
+    }
+
+
+def test_declarative_table_validation_passes(tmp_test_directory):
+    """Validate counts, fields, units, domains, uniqueness, and consistency."""
+    tmp_test_directory = Path(tmp_test_directory)
+    output_file = tmp_test_directory / "table.ecsv"
+    _semantic_table(output_file)
+    rule = {
+        "name": "semantic_table",
+        "kind": "table",
+        "path_descriptor": "output_path",
+        "file": output_file.name,
+        "format": "ecsv",
+        "non_empty": True,
+        "count": {"exact": 2},
+        "required_columns": ["run_number", "value"],
+        "forbidden_columns": ["forbidden"],
+        "columns": {
+            "run_number": {"type": "int64", "finite": True, "unique": True},
+            "value": {
+                "type": "float64",
+                "unit": "m",
+                "finite": True,
+                "range": {"minimum": 0.0, "maximum": 3.0, "unit": "m"},
+            },
+            "label": {"type": "string", "allowed_values": ["a", "b"]},
+        },
+        "metadata": {"required_keys": ["summary"]},
+        "consistency": [
+            {
+                "left": {"source": "metadata", "path": "summary.rows"},
+                "operator": "equals",
+                "right": {"source": "content", "metric": "row_count"},
+            },
+            {
+                "left": {"source": "metadata", "path": "summary.total"},
+                "operator": "equals",
+                "right": {
+                    "source": "content",
+                    "aggregate": {"function": "sum", "column": "value"},
+                },
+            },
+        ],
+    }
+
+    validate_output.validate_application_output(_semantic_config(tmp_test_directory, rule))
+
+
+def test_empty_parseable_job_grid_fails_minimum_row_validation(tmp_test_directory):
+    """Regression test for issue #2352: an empty ECSV must not pass presence checks."""
+    tmp_test_directory = Path(tmp_test_directory)
+    workflow = yaml.safe_load(
+        Path(
+            "tests/integration_tests/config/production_generate_grid_horizontal_explicit.yml"
+        ).read_text(encoding="utf-8")
+    )
+    config = workflow["applications"][0]
+    config["configuration"]["output_path"] = str(tmp_test_directory)
+    output_file = tmp_test_directory / "job_grid_horizontal_explicit.ecsv"
+    columns = [
+        "run_number",
+        "primary",
+        "azimuth_angle",
+        "zenith_angle",
+        "energy_min",
+        "energy_max",
+        "cores_per_shower",
+        "core_scatter_max",
+        "view_cone_min",
+        "view_cone_max",
+        "showers_per_run",
+        "nsb_rate",
+        "model_version",
+        "array_layout_name",
+        "corsika_le_interaction",
+        "corsika_he_interaction",
+    ]
+    Table(names=columns, dtype=["int64", "str"] + ["float64"] * 10 + ["str"] * 4).write(
+        output_file, format="ascii.ecsv"
+    )
+    with pytest.raises(AssertionError, match=r"expected 'non-empty content', actual 0"):
+        validate_output.validate_application_output(config)
+
+
+@pytest.mark.parametrize(
+    ("change", "expected"),
+    [
+        (lambda rule: rule.update({"non_empty": True, "count": {"minimum": 3}}), ">=3"),
+        (lambda rule: rule.update({"count": {"maximum": 1}}), "<=1"),
+        (lambda rule: rule["required_columns"].append("missing"), "required column"),
+        (lambda rule: rule["columns"]["value"].update({"finite": True}), "finite"),
+        (lambda rule: rule["columns"]["run_number"].update({"unique": True}), "unique"),
+        (lambda rule: rule["columns"]["label"].update({"type": "int64"}), "type"),
+        (lambda rule: rule["columns"]["value"].update({"unit": "s"}), "unit"),
+        (lambda rule: rule.update({"forbidden_columns": ["value"]}), "forbidden column"),
+        (lambda rule: rule["columns"]["label"].update({"allowed_values": ["x"]}), "allowed"),
+        (
+            lambda rule: rule["columns"]["value"].update({"range": {"maximum": 1.0}}),
+            "maximum",
+        ),
+    ],
+)
+def test_declarative_table_validation_failures(tmp_test_directory, change, expected):
+    """Report the output, rule, expected condition, and actual value on failure."""
+    tmp_test_directory = Path(tmp_test_directory)
+    output_file = tmp_test_directory / "table.ecsv"
+    _semantic_table(output_file)
+    if expected == "finite":
+        table = Table.read(output_file, format="ascii.ecsv")
+        table["value"][0] = np.nan
+        table.write(output_file, format="ascii.ecsv", overwrite=True)
+    if expected == "unique":
+        table = Table.read(output_file, format="ascii.ecsv")
+        table["run_number"][1] = table["run_number"][0]
+        table.write(output_file, format="ascii.ecsv", overwrite=True)
+    rule = {
+        "name": "semantic_table",
+        "kind": "table",
+        "path_descriptor": "output_path",
+        "file": output_file.name,
+        "required_columns": ["run_number", "value", "label"],
+        "columns": {
+            "run_number": {"type": "int64"},
+            "value": {"type": "float64", "unit": "m"},
+            "label": {"type": "string"},
+        },
+    }
+    change(rule)
+
+    with pytest.raises(
+        AssertionError, match=r"Output .* failed rule 'semantic_table'.*"
+    ) as exc_info:
+        validate_output.validate_application_output(_semantic_config(tmp_test_directory, rule))
+    assert expected in str(exc_info.value)
+    assert "expected" in str(exc_info.value)
+    assert "actual" in str(exc_info.value)
+
+
+def test_declarative_file_and_mapping_validation(tmp_test_directory):
+    """Validate generic files and mapping keys."""
+    tmp_test_directory = Path(tmp_test_directory)
+    empty_file = tmp_test_directory / "empty.txt"
+    empty_file.touch()
+    empty_rule = {
+        "name": "non_empty_file",
+        "kind": "file",
+        "path_descriptor": "output_path",
+        "file": empty_file.name,
+        "non_empty": True,
+    }
+    with pytest.raises(AssertionError, match="non-empty"):
+        validate_output.validate_application_output(
+            _semantic_config(tmp_test_directory, empty_rule)
+        )
+
+    mapping_file = tmp_test_directory / "mapping.yml"
+    mapping_file.write_text("required: true\n", encoding="utf-8")
+    mapping_rule = {
+        "name": "mapping_keys",
+        "kind": "mapping",
+        "path_descriptor": "output_path",
+        "file": mapping_file.name,
+        "non_empty": True,
+        "required_keys": ["required"],
+        "forbidden_keys": ["forbidden"],
+    }
+    validate_output.validate_application_output(_semantic_config(tmp_test_directory, mapping_rule))
+
+    missing_key_rule = dict(mapping_rule)
+    missing_key_rule["required_keys"] = ["missing"]
+    with pytest.raises(AssertionError, match="required key"):
+        validate_output.validate_application_output(
+            _semantic_config(tmp_test_directory, missing_key_rule)
+        )
+
+    forbidden_key_rule = dict(mapping_rule)
+    forbidden_key_rule["forbidden_keys"] = ["required"]
+    with pytest.raises(AssertionError, match="forbidden key"):
+        validate_output.validate_application_output(
+            _semantic_config(tmp_test_directory, forbidden_key_rule)
+        )
+
+
+def test_declarative_group_and_event_stream_counts(tmp_test_directory):
+    """Validate HDF5 groups and event-stream counts."""
+    tmp_test_directory = Path(tmp_test_directory)
+    output_file = tmp_test_directory / "structured.h5"
+    with h5py.File(output_file, "w") as hdf5_file:
+        group = hdf5_file.create_group("group")
+        group.create_dataset("member", data=[1, 2])
+        hdf5_file.create_dataset("events", data=[10, 20, 30])
+
+    group_rule = {
+        "name": "group",
+        "kind": "group",
+        "path_descriptor": "output_path",
+        "file": output_file.name,
+        "object_path": "group",
+        "non_empty": True,
+        "count": {"exact": 1},
+        "required_keys": ["member"],
+    }
+    event_rule = {
+        "name": "events",
+        "kind": "event_stream",
+        "path_descriptor": "output_path",
+        "file": output_file.name,
+        "format": "hdf5",
+        "object_path": "events",
+        "non_empty": True,
+        "count": {"minimum": 3},
+    }
+    config = {
+        "configuration": {"output_path": str(tmp_test_directory)},
+        "integration_tests": [{"output_validation": [group_rule, event_rule]}],
+    }
+    validate_output.validate_application_output(config)
+
+    group_rule["count"] = {"maximum": 0}
+    with pytest.raises(AssertionError, match="<=0"):
+        validate_output.validate_application_output(config)
+
+    group_rule["count"] = {"exact": 1}
+    event_rule["count"] = {"exact": 4}
+    with pytest.raises(AssertionError, match="expected 4"):
+        validate_output.validate_application_output(config)
+
+
+def test_declarative_relationship_validation(tmp_test_directory):
+    """Validate a relationship between mapping metadata and a table count."""
+    tmp_test_directory = Path(tmp_test_directory)
+    table_file = tmp_test_directory / "table.ecsv"
+    _semantic_table(table_file)
+    summary_file = tmp_test_directory / "summary.yml"
+    summary_file.write_text("rows: 2\n", encoding="utf-8")
+    rule = {
+        "name": "summary_relationship",
+        "kind": "relationship",
+        "outputs": [
+            {
+                "name": "summary",
+                "kind": "mapping",
+                "path_descriptor": "output_path",
+                "file": summary_file.name,
+            },
+            {
+                "name": "table",
+                "kind": "table",
+                "path_descriptor": "output_path",
+                "file": table_file.name,
+                "format": "ecsv",
+            },
+        ],
+        "checks": [
+            {
+                "left": {"output": "summary", "path": "rows"},
+                "operator": "equals",
+                "right": {"output": "table", "metric": "row_count"},
+            }
+        ],
+    }
+    config = {
+        "configuration": {"output_path": str(tmp_test_directory)},
+        "integration_tests": [{"output_validation": [rule]}],
+    }
+    validate_output.validate_application_output(config)
+
+    summary_file.write_text("rows: 3\n", encoding="utf-8")
+    with pytest.raises(AssertionError, match="summary_relationship"):
+        validate_output.validate_application_output(config)
+
+
+def test_declarative_data_product_schema_validation(tmp_test_directory):
+    """Validate a table against an explicit simtools data-product schema."""
+    tmp_test_directory = Path(tmp_test_directory)
+    schema_file = tmp_test_directory / "table.schema.yml"
+    schema_file.write_text(
+        yaml.safe_dump(
+            {
+                "schema_version": "0.1.0",
+                "data": [
+                    {
+                        "type": "data_table",
+                        "table_columns": [
+                            {"name": "run_number", "required": True, "type": "int64"}
+                        ],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    output_file = tmp_test_directory / "schema.ecsv"
+    Table({"run_number": [1, 2]}).write(output_file, format="ascii.ecsv")
+    rule = {
+        "name": "schema",
+        "kind": "table",
+        "path_descriptor": "output_path",
+        "file": output_file.name,
+        "data_product_schema": str(schema_file),
+    }
+    validate_output.validate_application_output(_semantic_config(tmp_test_directory, rule))
+
+    Table({"other": [1, 2]}).write(output_file, format="ascii.ecsv", overwrite=True)
+    with pytest.raises(AssertionError, match="data-product schema"):
+        validate_output.validate_application_output(_semantic_config(tmp_test_directory, rule))
+
+
+def test_declarative_metadata_consistency_failure(tmp_test_directory):
+    """Reject metadata that disagrees with table content."""
+    tmp_test_directory = Path(tmp_test_directory)
+    output_file = tmp_test_directory / "inconsistent.ecsv"
+    _semantic_table(output_file, metadata={"summary": {"rows": 99, "total": 3.0}})
+    rule = {
+        "name": "metadata_consistency",
+        "kind": "table",
+        "path_descriptor": "output_path",
+        "file": output_file.name,
+        "consistency": [
+            {
+                "left": {"source": "metadata", "path": "summary.rows"},
+                "operator": "equals",
+                "right": {"source": "content", "metric": "row_count"},
+            }
+        ],
+    }
+
+    with pytest.raises(AssertionError, match="metadata_consistency"):
+        validate_output.validate_application_output(_semantic_config(tmp_test_directory, rule))
