@@ -1,5 +1,6 @@
 import json
 import logging
+from collections import UserDict
 from pathlib import Path
 from unittest.mock import patch
 
@@ -962,6 +963,13 @@ def test_declarative_table_validation_passes(tmp_test_directory):
     validate_output.validate_application_output(
         _semantic_config(tmp_test_directory, _semantic_rule(output_file, schema_file))
     )
+
+
+def test_has_path_supports_mapping_metadata():
+    """Accept mapping implementations used for ordered metadata."""
+    metadata = UserDict({"summary": UserDict({"rows": 2})})
+
+    assert validate_output._has_path(metadata, "summary.rows")
 
 
 def test_declarative_table_rejects_empty_and_duplicate_rows(tmp_test_directory):
