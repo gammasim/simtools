@@ -220,66 +220,27 @@ def _valid_output_validation_rule():
     """Build a representative table rule for metaschema tests."""
     return {
         "name": "table",
-        "kind": "table",
         "path_descriptor": "output_path",
         "file": "output.ecsv",
-        "format": "ecsv",
-        "non_empty": True,
-        "count": {"minimum": 1},
-        "required_columns": ["id"],
+        "data_product_schema": "schema.yml",
+        "minimum_rows": 1,
+        "unique_columns": ["id"],
         "columns": {
-            "id": {"type": "int64", "finite": True, "unique": True},
             "energy": {
-                "type": "float64",
-                "unit": "GeV",
                 "range": {"minimum": 1.0, "unit": "GeV"},
             },
         },
-        "metadata": {"required_keys": ["summary"]},
-        "consistency": [
-            {
-                "left": {"source": "metadata", "path": "summary.rows"},
-                "operator": "equals",
-                "right": {"source": "content", "metric": "row_count"},
-            }
-        ],
-        "data_product_schema": "schema.yml",
-    }
-
-
-def _valid_relationship_rule():
-    """Build a representative cross-output relationship rule."""
-    return {
-        "kind": "relationship",
-        "outputs": [
-            {
-                "name": "summary",
-                "kind": "mapping",
-                "path_descriptor": "output_path",
-                "file": "summary.yml",
-            },
-            {
-                "name": "table",
-                "kind": "table",
-                "path_descriptor": "output_path",
-                "file": "output.ecsv",
-            },
-        ],
-        "checks": [
-            {
-                "left": {"output": "summary", "path": "rows"},
-                "operator": "equals",
-                "right": {"output": "table", "metric": "row_count"},
-            }
-        ],
+        "metadata": {
+            "required_keys": ["summary"],
+            "row_count": "summary.rows",
+            "column_sums": {"energy": "summary.total"},
+        },
     }
 
 
 def test_application_workflow_schema_accepts_output_validation_rules():
-    """Test the complete declarative output-validation configuration shape."""
-    workflow_config = _output_validation_workflow(
-        _valid_output_validation_rule(), _valid_relationship_rule()
-    )
+    """Test the table output-validation configuration shape."""
+    workflow_config = _output_validation_workflow(_valid_output_validation_rule())
 
     schema.validate_dict_using_schema(
         workflow_config,
@@ -291,11 +252,12 @@ def test_application_workflow_schema_accepts_output_validation_rules():
     "change",
     [
         lambda rule: rule.update({"unknown": True}),
-        lambda rule: rule.update({"kind": "unsupported"}),
-        lambda rule: rule["count"].update({"invalid": 1}),
-        lambda rule: rule["columns"]["id"].update({"range": {"minimum": "bad"}}),
-        lambda rule: rule["columns"]["id"].update({"range": {"unit": "GeV"}}),
-        lambda rule: rule["consistency"][0].update({"operator": "python"}),
+        lambda rule: rule.update({"minimum_rows": -1}),
+        lambda rule: rule.update({"unique_columns": ["id", "id"]}),
+        lambda rule: rule["columns"]["energy"].update({"range": {"minimum": "bad"}}),
+        lambda rule: rule["columns"]["energy"].update({"range": {"unit": "GeV"}}),
+        lambda rule: rule["columns"].update({"id": {}}),
+        lambda rule: rule["metadata"].update({"unknown": "value"}),
     ],
 )
 def test_application_workflow_schema_rejects_malformed_output_validation(change):
