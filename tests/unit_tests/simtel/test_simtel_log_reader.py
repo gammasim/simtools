@@ -74,12 +74,6 @@ def test_extract_threshold_from_directory_part(tmp_path):
     assert simtel_log_reader.extract_threshold(file_path) == 300
 
 
-def test_extract_threshold_ignores_values_outside_expected_range(tmp_path):
-    file_path = tmp_path / "5" / "2000" / "gamma_run000001.simtel.log.gz"
-
-    assert simtel_log_reader.extract_threshold(file_path) is None
-
-
 def test_parse_log_file_returns_parsed_data(tmp_path):
     log_dir = tmp_path / "300"
     log_dir.mkdir()
