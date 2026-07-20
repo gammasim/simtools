@@ -65,11 +65,9 @@ def test_prepare_run_with_extra(corsika_runner_mock_array_model, file_has_text, 
         assert bin_bash in script_content
 
 
-def test_get_resources(corsika_runner_mock_array_model, tmp_path):
-    # get_resources now requires sub_out_file parameter
-    test_file = tmp_path / "nonexistent_file.log"
-    with pytest.raises(FileNotFoundError):
-        corsika_runner_mock_array_model.get_resources(test_file)
+def test_get_resources(corsika_runner_mock_array_model):
+    resources = corsika_runner_mock_array_model.get_resources(runtime=2.5)
+    assert resources["runtime"] == pytest.approx(2.5)
 
 
 def test_corsika_executable(corsika_runner_mock_array_model):

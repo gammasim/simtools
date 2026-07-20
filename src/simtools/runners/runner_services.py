@@ -317,32 +317,20 @@ class RunnerServices:
             return ""
         return f"run{validate_corsika_run_number(run_number):06d}"
 
-    def get_resources(self, sub_out_file):
+    def get_resources(self, runtime=None):
         """
-        Read run time of job from last line of submission log file.
+        Return resources used by a simulation run.
 
         Parameters
         ----------
-        sub_out_file: str or Path
-            Path to the submission output file.
+        runtime: float, optional
+            Wall-clock runtime in seconds measured by the Python subprocess caller.
 
         Returns
         -------
         dict
             run time and number of simulated events
         """
-        _logger.debug(f"Reading resources from {sub_out_file}")
-
-        runtime = None
-        with open(sub_out_file, encoding="utf-8") as f:
-            for line in reversed(f.readlines()):
-                if "RUNTIME" in line:
-                    runtime = int(line.split()[1])
-                    break
-
-        if runtime is None:
-            _logger.debug("RUNTIME was not found in run log file")
-
         if isinstance(self.config, CorsikaConfig):
             return {
                 "runtime": runtime,
