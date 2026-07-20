@@ -247,6 +247,8 @@ def _calculate_proton_rate_for_file(hdf5_file, args):
 def _write_proton_ecsv(proton_stats, output_file):
     """Write runwise proton trigger rates to an ECSV table."""
     output_file = Path(output_file)
+    error_hz_column = "Error (Hz)"
+    rate_hz_column = "Rate (Hz)"
 
     if not proton_stats:
         raise ValueError("No proton statistics to write")
@@ -276,17 +278,17 @@ def _write_proton_ecsv(proton_stats, output_file):
     for run in all_runs:
         table_data[f"run{run}"] = run_cols[run]
 
-    table_data["Rate (Hz)"] = rate_hz_col
-    table_data["Error (Hz)"] = error_hz_col
+    table_data[rate_hz_column] = rate_hz_col
+    table_data[error_hz_column] = error_hz_col
     table_data["Num runs"] = num_runs_col
 
     table = Table(table_data)
     table.meta["comments"] = ["Run columns contain proton trigger rates in Hz."]
 
-    table["Rate (Hz)"] = np.round(table["Rate (Hz)"], 2)
-    table["Error (Hz)"] = np.round(table["Error (Hz)"], 2)
-    table["Rate (Hz)"].format = ".2f"
-    table["Error (Hz)"].format = ".2f"
+    table[rate_hz_column] = np.round(table[rate_hz_column], 2)
+    table[error_hz_column] = np.round(table[error_hz_column], 2)
+    table[rate_hz_column].format = ".2f"
+    table[error_hz_column].format = ".2f"
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
     table.write(output_file, format="ascii.ecsv", overwrite=True)
