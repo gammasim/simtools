@@ -723,19 +723,20 @@ def test_plot_nsb_curve_returns_early_when_empty(mock_plot_trend):
 def test_plot_proton_curve_draws_points_and_trend(mock_plot_trend):
     axis = mock.MagicMock()
     proton_stats = {
-        240: {"rate_hz": 20.0},
-        220: {"rate_hz": 10.0},
+        240: {"rate_hz": 20.0, "error_hz": 2.0},
+        220: {"rate_hz": 10.0, "error_hz": 1.0},
     }
 
     plot_tables._plot_proton_curve(axis, proton_stats)
 
-    axis.plot.assert_called_once_with(
+    axis.errorbar.assert_called_once_with(
         [220, 240],
         [10.0, 20.0],
-        "s",
+        yerr=[1.0, 2.0],
+        fmt="s",
         label="Proton",
         color="tab:orange",
-        markersize=8,
+        capsize=3,
     )
     mock_plot_trend.assert_called_once_with(axis, [220, 240], [10.0, 20.0], color="tab:orange")
 
@@ -746,7 +747,7 @@ def test_plot_proton_curve_returns_early_when_empty(mock_plot_trend):
 
     plot_tables._plot_proton_curve(axis, {})
 
-    axis.plot.assert_not_called()
+    axis.errorbar.assert_not_called()
     mock_plot_trend.assert_not_called()
 
 

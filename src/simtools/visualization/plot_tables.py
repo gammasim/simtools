@@ -386,14 +386,16 @@ def _plot_proton_curve(axis, proton_stats):
 
     proton_thresholds = sorted(proton_stats.keys())
     proton_rates = [proton_stats[t]["rate_hz"] for t in proton_thresholds]
+    proton_errors = [proton_stats[t]["error_hz"] for t in proton_thresholds]
 
-    axis.plot(
+    axis.errorbar(
         proton_thresholds,
         proton_rates,
-        "s",
+        yerr=proton_errors,
+        fmt="s",
         label="Proton",
         color="tab:orange",
-        markersize=8,
+        capsize=3,
     )
 
     _plot_log_linear_trend(axis, proton_thresholds, proton_rates, color="tab:orange")
