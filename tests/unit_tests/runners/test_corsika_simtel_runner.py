@@ -46,6 +46,19 @@ def test_corsika_simtel_runner(corsika_simtel_runner):
     assert isinstance(corsika_simtel_runner.simulator_array[0], SimulatorArray)
 
 
+def test_get_resources(corsika_simtel_runner, mocker):
+    get_resources = mocker.patch.object(
+        corsika_simtel_runner.corsika_runner,
+        "get_resources",
+        return_value={"runtime": 2.5, "n_events": 100},
+    )
+
+    result = corsika_simtel_runner.get_resources(runtime=2.5)
+
+    assert result == {"runtime": 2.5, "n_events": 100}
+    get_resources.assert_called_once_with(runtime=2.5)
+
+
 def test_prepare_run(corsika_simtel_runner, tmp_path):
     # prepare_run now requires sub_script parameter and doesn't return the script path
     script_path = tmp_path / "test_script.sh"

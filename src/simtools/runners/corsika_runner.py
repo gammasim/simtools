@@ -98,9 +98,6 @@ class CorsikaRunner:
             file.write("set -e\n")
             file.write("set -o pipefail\n")
 
-            # Setting SECONDS variable to measure runtime
-            file.write("\nSECONDS=0\n")
-
             if extra_commands is not None:
                 file.write("\n# Writing extras\n")
                 file.write(f"{extra_commands}\n")
@@ -117,8 +114,6 @@ class CorsikaRunner:
             file.write("\n# Cleanup\n")
             file.write(f"gzip {corsika_log_file}\n")
 
-            file.write('\necho "RUNTIME: $SECONDS"\n')
-
-    def get_resources(self, sub_out_file):
+    def get_resources(self, runtime=None):
         """Return computing resources used."""
-        return self.runner_service.get_resources(sub_out_file)
+        return self.runner_service.get_resources(runtime=runtime)
