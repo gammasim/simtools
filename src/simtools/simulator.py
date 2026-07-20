@@ -65,6 +65,7 @@ class Simulator:
         self.io_handler = io_handler.IOHandler()
 
         self._extra_commands = extra_commands
+        self._runtime = None
         self.run_number = self._initialize_from_tool_configuration()
 
         self.array_models, self.corsika_configurations = self._initialize_array_models()
@@ -198,11 +199,12 @@ class Simulator:
         )
         self.update_file_lists()
 
-        job_manager.submit(
+        _, self._runtime = job_manager.submit(
             command=self.runner_service.get_file_name("sub_script", self.run_number),
             out_file=self.runner_service.get_file_name("sub_out", self.run_number),
             err_file=self.runner_service.get_file_name("sub_err", self.run_number),
             env=simtel_runner.SIM_TELARRAY_ENV,
+            return_runtime=True,
         )
 
     @classmethod
@@ -315,7 +317,7 @@ class Simulator:
 
         """
         runtime = []
-        _resources = self._simulation_runner.get_resources(self.get_files(file_type="sub_out"))
+        _resources = self._simulation_runner.get_resources(runtime=self._runtime)
         if _resources.get("runtime") is not None:
             runtime.append(_resources["runtime"])
 

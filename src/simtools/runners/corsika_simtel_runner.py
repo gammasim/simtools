@@ -146,9 +146,9 @@ class CorsikaSimtelRunner:
 
         multipipe_script.chmod(multipipe_script.stat().st_mode | stat.S_IEXEC)
 
-    def get_resources(self, run_number=None):
+    def get_resources(self, runtime=None):
         """Return computing resources used."""
-        return self.corsika_runner.get_resources(run_number)
+        return self.corsika_runner.get_resources(runtime=runtime)
 
     def update_file_list_from_runners(self):
         """
