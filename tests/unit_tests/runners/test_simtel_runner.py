@@ -19,6 +19,19 @@ def test_run(simtel_runner, caplog, mocker):
         simtel_runner.run(test=True, input_file="test", run_number=5)
 
 
+def test_get_resources(simtel_runner, mocker):
+    get_resources = mocker.patch.object(
+        simtel_runner.runner_service,
+        "get_resources",
+        return_value={"runtime": 2.5, "n_events": None},
+    )
+
+    result = simtel_runner.get_resources(runtime=2.5)
+
+    assert result == {"runtime": 2.5, "n_events": None}
+    get_resources.assert_called_once_with(runtime=2.5)
+
+
 def test_run_with_runs_per_set(simtel_runner, mocker):
     mock_make_run_command = mocker.patch.object(
         simtel_runner, "make_run_command", return_value=("echo test", None, None)
