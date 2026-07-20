@@ -1055,8 +1055,9 @@ def test_simulate(array_simulator, mocker):
 
     mocker.patch.object(array_simulator, "_get_corsika_file", return_value="/path/to/corsika.file")
     mocker.patch.object(array_simulator, "update_file_lists")
-
-    mock_submit = mocker.patch("simtools.job_execution.job_manager.submit")
+    mock_submit = mocker.patch(
+        "simtools.job_execution.job_manager.submit", return_value=(None, 2.5)
+    )
 
     array_simulator.simulate()
 
@@ -1074,7 +1075,9 @@ def test_simulate(array_simulator, mocker):
         out_file="output_42.out",
         err_file="output_42.err",
         env={"SIM_TELARRAY_CONFIG_PATH": ""},
+        return_runtime=True,
     )
+    assert array_simulator._runtime == pytest.approx(2.5)
 
 
 def test_save_file_lists(array_simulator, mocker, tmp_test_directory, caplog):

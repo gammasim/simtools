@@ -69,6 +69,7 @@ def submit(
     test=False,
     check=True,
     capture_output=True,
+    return_runtime=False,
 ):
     """
     Submit a job described by a command or a shell script.
@@ -102,6 +103,15 @@ def submit(
     capture_output: bool
         If True, capture stdout/stderr in pipes when no output files are provided.
         If False, inherit parent stdout/stderr when no output files are provided.
+    return_runtime: bool
+        If True, return a tuple containing the subprocess result and its wall-clock
+        runtime in seconds.
+
+    Returns
+    -------
+    subprocess.CompletedProcess or tuple
+        The subprocess result, or the result and wall-clock runtime when
+        ``return_runtime`` is True. Returns None in testing mode.
     """
     command = _build_command(command, configuration, runtime_environment)
 
@@ -115,6 +125,7 @@ def submit(
 
     sub_process_env = _build_environment(env)
     stdout, stderr = _prepare_streams(out_file, err_file, capture_output)
+    start_time = time.perf_counter()
 
     try:
         result = subprocess.run(
@@ -130,11 +141,14 @@ def submit(
     except subprocess.CalledProcessError as exc:
         _raise_job_execution_error(exc, out_file, err_file, application_log)
     finally:
+        runtime = time.perf_counter() - start_time
         if out_file:
             stdout.close()
         if err_file:
             stderr.close()
 
+    if return_runtime:
+        return result, runtime
     return result
 
 
