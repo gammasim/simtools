@@ -17,6 +17,8 @@ The input directory should contain both:
 - NSB log files or log_hist archives
 - Proton simulation HDF5 files
 
+The input files can be generated using simtools-generate-bias-curve-submissions.
+
 Command line arguments
 ----------------------
 
@@ -32,10 +34,8 @@ site (str, required)
     Site name (North/South) for telescope configuration.
 model_version (str, required)
     Model version for telescope configuration.
-array_layout_name (str, optional)
-    Array layout name for telescope configuration (alternative to telescope_ids).
-telescope_ids (str, optional)
-    Path to telescope configuration file (alternative to array_layout_name).
+telescope (str, required)
+    Telescope name for configuration.
 title (str, optional)
     Plot title. Default: "Trigger Rate Bias Curves"
 ymin (float, optional)
@@ -52,7 +52,7 @@ Example
         --data_dir /path/to/data \\
         --site North \\
         --model_version 7.0.0 \\
-        --array_layout_name LSTN-01 \\
+        --telescope LSTN-01 \\
         --output bias_curves.png
 
 """
@@ -93,7 +93,12 @@ def _add_arguments(parser):
         help="Output ECSV table file for proton rates. If not specified, no table is written.",
     )
 
-    parser.initialize_application_argument_group(["telescope_ids"])
+    parser.add_argument(
+        "--telescope",
+        type=str,
+        required=True,
+        help="Telescope name.",
+    )
 
     parser.add_argument(
         "--title",
@@ -106,14 +111,14 @@ def _add_arguments(parser):
         "--ymin",
         type=float,
         default=1e2,
-        help="Minimum y-axis value. Default: 1e2",
+        help="Minimum trigger rate value for plotting. Default: 1e2",
     )
 
     parser.add_argument(
         "--ymax",
         type=float,
         default=5e5,
-        help="Maximum y-axis value. Default: 5e5",
+        help="Maximum trigger rate value for plotting. Default: 5e5",
     )
 
 
@@ -123,9 +128,9 @@ def main():
         initialization_kwargs={
             "db_config": True,
             "simulation_model": [
+                "telescope",
                 "site",
                 "model_version",
-                "layout",
             ],
         },
     )

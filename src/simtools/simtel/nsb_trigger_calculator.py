@@ -9,10 +9,10 @@ import numpy as np
 from astropy.table import Table
 
 from simtools.simtel.simtel_log_reader import (
-    crawl_log_files,
     extract_event_count,
     extract_run_number,
     extract_trigger_count,
+    find_log_files,
     read_log_file,
 )
 
@@ -69,8 +69,8 @@ def parse_nsb_log_file(file_path):
 
     try:
         log_text = read_log_file(file_path)
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        _logger.error(f"Failed to read {file_path}: {e}")
+    except (OSError, UnicodeDecodeError) as exc:
+        _logger.error(f"Failed to read {file_path}: {exc}")
         return None
 
     run_number = extract_run_number(file_path)
@@ -127,10 +127,10 @@ def parse_nsb_log_files(file_list):
         if result is not None:
             data.append(result)
 
-    _logger.info(f"Successfully parsed {len(data)} out of {len(file_list)} log files")
-
     if not data:
         raise ValueError("No log files could be parsed successfully")
+
+    _logger.info(f"Parsed {len(data)} out of {len(file_list)} log files")
 
     return data
 
@@ -217,7 +217,8 @@ def calculate_statistics(grouped_data, time_window):
         if len(run_triggers) > 1 and time_s > 0:
             std_dev = np.std(run_triggers, ddof=1)
             error_triggers = std_dev / np.sqrt(len(run_triggers))
-            error_hz = error_triggers / time_s
+            per_run_time_s = time_s / len(run_triggers)
+            error_hz = error_triggers / per_run_time_s
 
         statistics[threshold] = {
             "runs": runs_dict,
@@ -322,7 +323,7 @@ def derive_nsb_triggers(args):
     args : dict
         Configuration parameters with keys:
         - root_dir: Root directory to search for log files
-        - pattern: Glob pattern for log files, default: ``**/*.simtel.log.gz``
+        - pattern: Glob pattern for log files, default: ``*.simtel.log.gz``
         - output: Output ECSV file path (optional, if None, no file is written)
         - time_window: Time window per event in seconds (required; telescope-dependent)
         - verbose: Enable verbose logging (optional)
@@ -344,7 +345,7 @@ def derive_nsb_triggers(args):
     ValueError
         If time_window is missing/invalid or if no log files could be parsed successfully.
     """
-    pattern = args.get("pattern", "**/*.simtel.log.gz")
+    pattern = args.get("pattern", "*.simtel.log.gz")
     time_window = args.get("time_window")
 
     if time_window is None:
@@ -356,7 +357,7 @@ def derive_nsb_triggers(args):
     try:
         time_window = float(time_window)
     except (TypeError, ValueError) as exc:
-        raise ValueError("Argument 'time_window' must be a positive number.") from exc
+        raise ValueError("Argument 'time_window' must be a number.") from exc
 
     if time_window <= 0:
         raise ValueError("Argument 'time_window' must be > 0.")
@@ -368,7 +369,7 @@ def derive_nsb_triggers(args):
         _logger.info(f"Output file: {args['output']}")
 
     _logger.info("Searching for log files...")
-    log_files = crawl_log_files(args["root_dir"], pattern)
+    log_files = find_log_files(args["root_dir"], pattern)
     _logger.info(f"Found {len(log_files)} log files")
 
     _logger.info("Parsing log files...")
