@@ -148,30 +148,17 @@ def test_get_run_number_string(runner_service_config_only):
     assert runner_service_config_only._get_run_number_string(None) == ""
 
 
-def test_get_resources(runner_service_mock_array_model, caplog):
-    sub_log_file = runner_service_mock_array_model.get_file_name(file_type="sub_log", run_number=5)
-    with open(sub_log_file, "w", encoding="utf-8") as file:
-        lines_to_write = ["RUNTIME 500\n"]
-        file.writelines(lines_to_write)
-    resources = runner_service_mock_array_model.get_resources(sub_log_file)
+def test_get_resources(runner_service_mock_array_model):
+    resources = runner_service_mock_array_model.get_resources(runtime=12.5)
     assert isinstance(resources, dict)
     assert "runtime" in resources
-    assert resources["runtime"] == 500
+    assert resources["runtime"] == pytest.approx(12.5)
     # NSHOW from corsika_config_data fixture
     assert resources["n_events"] == 100
 
-    with open(sub_log_file, "w", encoding="utf-8") as file:
-        lines_to_write = ["SOMETHING ELSE 500\n"]
-        file.writelines(lines_to_write)
-
-    with caplog.at_level(logging.DEBUG):
-        resources = runner_service_mock_array_model.get_resources(sub_log_file)
-    assert resources["runtime"] is None
-    assert "RUNTIME was not found in run log file" in caplog.text
-
     runner_service_mock_array_model.config = None
-    resources = runner_service_mock_array_model.get_resources(sub_log_file)
-    assert resources["runtime"] is None
+    resources = runner_service_mock_array_model.get_resources(runtime=12.5)
+    assert resources["runtime"] == pytest.approx(12.5)
 
 
 def test_validate_corsika_run_number():

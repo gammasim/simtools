@@ -75,6 +75,6 @@ class SimtelRunner:
         """Make the sim_telarray run command (to implemented in subclasses)."""
         raise NotImplementedError("Must be implemented in concrete subclass")
 
-    def get_resources(self, run_number=None):
+    def get_resources(self, runtime=None):
         """Return computing resources used."""
-        return self.runner_service.get_resources(run_number)
+        return self.runner_service.get_resources(runtime=runtime)
