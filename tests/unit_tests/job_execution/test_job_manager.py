@@ -67,6 +67,14 @@ def test_submit_with_pipes(mock_successful_run):
     assert call_args[1]["stderr"] == subprocess.PIPE
 
 
+def test_submit_does_not_measure_runtime_by_default(mock_successful_run, mocker):
+    perf_counter = mocker.patch("simtools.job_execution.job_manager.time.perf_counter")
+
+    jm.submit("echo test")
+
+    perf_counter.assert_not_called()
+
+
 def test_submit_returns_runtime(mock_successful_run, mocker):
     mocker.patch("simtools.job_execution.job_manager.time.perf_counter", side_effect=[10.0, 12.5])
 

@@ -125,7 +125,7 @@ def submit(
 
     sub_process_env = _build_environment(env)
     stdout, stderr = _prepare_streams(out_file, err_file, capture_output)
-    start_time = time.perf_counter()
+    start_time = time.perf_counter() if return_runtime else None
 
     try:
         result = subprocess.run(
@@ -141,7 +141,8 @@ def submit(
     except subprocess.CalledProcessError as exc:
         _raise_job_execution_error(exc, out_file, err_file, application_log)
     finally:
-        runtime = time.perf_counter() - start_time
+        if return_runtime:
+            runtime = time.perf_counter() - start_time
         if out_file:
             stdout.close()
         if err_file:
