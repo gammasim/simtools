@@ -2,7 +2,7 @@
 
 ## Test-file generation
 
-This release might require updates of test files in `tests/resources`.
+This release might require updates to test files in `tests/resources`.
 This is the case when output format or content of the output files generated
 by simtools changed.
 
@@ -10,8 +10,8 @@ For updates of test files, the following steps should be performed:
 
 - [ ] define a new version of tests in the [simtools-tests repository](https://github.com/gammasim/simtools-tests).
 - [ ] generate new resource files using `simtools-resources-test-generate` and commit them to the simtools-tests repository.
-- [ ] run unit and integration tests on the new resources (use the `--test_resources_path` option)
-- [ ] after successful tests, sync the tests files with the simtools repository using `simtools-resources-test-sync` and commit the changes to the simtools repository.
+- [ ] run unit and integration tests on the new resources (use `--test-resources-path` / `--test_resources_path` to point pytest at the new bundle)
+- [ ] after successful tests, sync the test files into the simtools repository using `simtools-resources-test-sync` and commit the changes to the simtools repository.
 - [ ] ensure again that all unit and integration tests pass with the new resources.
 
 ## Release Preparation Checklist
