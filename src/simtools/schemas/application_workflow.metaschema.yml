@@ -113,6 +113,9 @@ definitions:
         xfail_network_error:
           type: boolean
           description: "Mark test as xfail if application exits with a network error."
+        xfail:
+          type: string
+          description: "Expected failure reason for this workflow."
       required:
         - application
         - configuration

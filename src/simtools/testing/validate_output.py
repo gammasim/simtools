@@ -2,6 +2,7 @@
 
 import logging
 import re
+from collections.abc import Mapping
 from pathlib import Path
 
 import numpy as np
@@ -17,6 +18,8 @@ from simtools.simtel import simtel_validate_metadata
 from simtools.testing import assertions
 
 _logger = logging.getLogger(__name__)
+
+_ECSV_FORMAT = "ascii.ecsv"
 
 
 def _find_repo_root():
@@ -156,7 +159,7 @@ def _has_path(value, dotted_path):
     """Return whether a dotted path exists in nested mappings."""
     current = value
     for part in dotted_path.split("."):
-        if not isinstance(current, dict) or part not in current:
+        if not isinstance(current, Mapping) or part not in current:
             return False
         current = current[part]
     return True
@@ -221,8 +224,11 @@ def _validate_data_product_schema(path, rule, table):
             data_table=table.copy(copy_data=True),
         ).validate_and_transform()
     except Exception as exc:  # pylint: disable=broad-exception-caught
-        _validation_failure(path, rule, f"data-product schema {schema_file}", str(exc))
-        return None
+        rule_name = rule.get("name", "output_validation")
+        raise AssertionError(
+            f"Output '{path}' failed rule '{rule_name}': "
+            f"expected 'data-product schema {schema_file}', actual {str(exc)!r}."
+        ) from exc
 
 
 def _validate_unique_columns(path, rule, table):
@@ -247,7 +253,7 @@ def _validate_metadata(path, rule, table):
     for metadata_path in metadata_rule.get("required_keys", []):
         if not _has_path(table.meta, metadata_path):
             _validation_failure(
-                path, rule, f"required metadata key {metadata_path}", sorted(table.meta)
+                path, rule, f"required metadata key {metadata_path}", list(table.meta)
             )
 
     row_count_path = metadata_rule.get("row_count")
@@ -279,7 +285,7 @@ def _validate_table_output(config, rule):
     if not path.exists():
         _validation_failure(path, rule, "an existing output", "missing")
     try:
-        table = Table.read(path, format="ascii.ecsv")
+        table = Table.read(path, format=_ECSV_FORMAT)
     except Exception as exc:  # pylint: disable=broad-exception-caught
         _validation_failure(path, rule, "a parseable ECSV table", str(exc))
 
@@ -623,8 +629,8 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
 
     """
     _logger.info(f"Comparing files: {file1} and {file2}")
-    table1 = Table.read(file1, format="ascii.ecsv")
-    table2 = Table.read(file2, format="ascii.ecsv")
+    table1 = Table.read(file1, format=_ECSV_FORMAT)
+    table2 = Table.read(file2, format=_ECSV_FORMAT)
 
     if test_columns is None:
         test_columns = [{"test_column_name": col} for col in table1.colnames]
