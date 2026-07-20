@@ -7,7 +7,6 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
-from simtools.layout.array_layout_utils import get_array_elements_from_db_for_layouts
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.nsb_trigger_calculator import (
     derive_nsb_triggers,
@@ -24,28 +23,19 @@ _REDUCED_EVENT_DATA_SUFFIX = ".reduced_event_data.hdf5"
 
 
 def generate_bias_curves(args):
-    """
-    Generate bias curves from NSB logs and proton simulations.
-
-    Parameters
-    ----------
-    args : dict
-        Configuration parameters including:
-        - data_dir: Directory containing NSB logs and proton simulation files
-        - output: Output plot file path or output directory
-        - nsb_output: Optional ECSV table output for NSB rates
-        - proton_output: Optional ECSV table output for proton rates
-        - site, model_version, array_layout_name or telescope_ids: For telescope config
-        - title, ymin, ymax: Plot parameters
-    """
+    """Generate bias curves from NSB logs and proton simulations."""
     time_window = _calculate_time_window(args)
     _logger.info(f"Calculated time window: {time_window * 1e9:.2f} ns")
 
     _logger.info("Extracting NSB trigger rates from log files...")
     nsb_stats = _extract_nsb_rates(args, time_window)
+    if not nsb_stats:
+        raise FileNotFoundError(f"No NSB input files found in {args['data_dir']}")
 
     _logger.info("Calculating proton trigger rates...")
     proton_stats = _extract_proton_rates(args)
+    if not proton_stats:
+        raise FileNotFoundError(f"No proton input files found in {args['data_dir']}")
 
     if args.get("proton_output"):
         _write_proton_ecsv(proton_stats, args["proton_output"])
@@ -70,7 +60,7 @@ def _calculate_time_window(args):
     """
     Calculate time window from telescope parameters.
 
-    Gets telescope from array_layout_name and retrieves its parameters.
+    Gets telescope from args and retrieves its parameters.
     time_window = disc_bins / (fadc_mhz x 1e6)
 
     Parameters
@@ -88,7 +78,9 @@ def _calculate_time_window(args):
     ValueError
         If telescope name cannot be determined or parameters cannot be retrieved.
     """
-    telescope_name = _get_telescope_name_from_layout(args)
+    telescope_name = args.get("telescope")
+    if not telescope_name:
+        raise ValueError("telescope must be provided for telescope configuration")
 
     telescope_model = TelescopeModel(
         site=args["site"],
@@ -108,75 +100,22 @@ def _calculate_time_window(args):
     return time_window
 
 
-def _get_telescope_name_from_layout(args):
-    """
-    Get telescope name from array layout.
-
-    For NSB analysis, expects a single telescope in the layout.
-
-    Parameters
-    ----------
-    args : dict
-        Arguments with telescope configuration.
-
-    Returns
-    -------
-    str
-        Telescope name.
-
-    Raises
-    ------
-    ValueError
-        If array_layout_name is not provided or no telescopes found in layout.
-    """
-    if not args.get("array_layout_name"):
-        raise ValueError("array_layout_name must be provided for telescope configuration")
-
-    telescope_configs = get_array_elements_from_db_for_layouts(
-        args["array_layout_name"],
-        args["site"],
-        args["model_version"],
-    )
-
-    if not telescope_configs:
-        raise ValueError(
-            f"No telescopes found in layout '{args['array_layout_name']}' "
-            f"for site={args['site']}, model_version={args['model_version']}"
-        )
-
-    array_name = next(iter(telescope_configs.keys()))
-    telescope_ids = telescope_configs[array_name]
-
-    if not telescope_ids:
-        raise ValueError(f"No telescope IDs found in array '{array_name}'")
-
-    telescope_name = telescope_ids[0]
-    _logger.info(f"Using telescope {telescope_name} from layout {args['array_layout_name']}")
-    return telescope_name
-
-
 def _extract_nsb_rates(args, time_window):
     """Extract NSB trigger rates from direct sim_telarray logs."""
     data_dir = Path(args["data_dir"])
+    direct_logs = list(data_dir.rglob(f"*{_SIMTEL_LOG_SUFFIX}"))
+    if direct_logs:
+        _logger.info(f"Found {len(direct_logs)} direct sim_telarray log file(s)")
+        return _run_nsb_trigger_derivation(data_dir, args, time_window)
 
-    try:
-        direct_logs = list(data_dir.rglob(f"*{_SIMTEL_LOG_SUFFIX}"))
-        if direct_logs:
-            _logger.info(f"Found {len(direct_logs)} direct sim_telarray log file(s)")
-            return _run_nsb_trigger_derivation(data_dir, args, time_window)
-
-        raise FileNotFoundError(f"No *{_SIMTEL_LOG_SUFFIX} files found in {data_dir}")
-
-    except (FileNotFoundError, ValueError) as e:
-        _logger.warning(f"Could not extract NSB rates: {e}")
-        return {}
+    raise FileNotFoundError(f"No *{_SIMTEL_LOG_SUFFIX} files found in {data_dir}")
 
 
 def _run_nsb_trigger_derivation(root_dir, args, time_window):
     """Run NSB trigger derivation on a directory containing ``gamma*.simtel.log.gz`` files."""
     nsb_args = {
         "root_dir": root_dir,
-        "pattern": f"**/gamma*{_SIMTEL_LOG_SUFFIX}",
+        "pattern": f"gamma*{_SIMTEL_LOG_SUFFIX}",
         "output": args.get("nsb_output"),
         "time_window": time_window,
         "verbose": False,
@@ -194,8 +133,7 @@ def _extract_proton_rates(args):
     proton_files = _group_hdf5_files_by_threshold_and_run(data_dir)
 
     if not proton_files:
-        _logger.warning(f"No proton HDF5 files with threshold labels found in {data_dir}")
-        return {}
+        raise FileNotFoundError(f"No proton HDF5 files with threshold labels found in {data_dir}")
 
     _logger.info(f"Found proton HDF5 files for {len(proton_files)} thresholds")
 
@@ -276,20 +214,12 @@ def _calculate_proton_rate_for_file(hdf5_file, args):
     float
         Trigger rate in Hz, or None if calculation fails.
     """
-    trigger_args = {
-        "event_data_file": str(hdf5_file),
-        "plot_histograms": False,
-    }
-
-    if args.get("array_layout_name"):
-        trigger_args["array_layout_name"] = args["array_layout_name"]
-        trigger_args["site"] = args["site"]
-        trigger_args["model_version"] = args["model_version"]
-    elif args.get("telescope_ids"):
-        trigger_args["telescope_ids"] = args["telescope_ids"]
-    else:
+    if not args.get("telescope"):
         _logger.warning("No telescope configuration provided")
         return None
+
+    trigger_args = {key: args[key] for key in ("telescope", "site", "model_version")}
+    trigger_args.update({"event_data_file": str(hdf5_file), "plot_histograms": False})
 
     try:
         results = telescope_trigger_rates(trigger_args)
@@ -353,8 +283,10 @@ def _write_proton_ecsv(proton_stats, output_file):
     table = Table(table_data)
     table.meta["comments"] = ["Run columns contain proton trigger rates in Hz."]
 
-    for col in ["Rate (Hz)", "Error (Hz)"]:
-        table[col].format = ".2f"
+    table["Rate (Hz)"] = np.round(table["Rate (Hz)"], 2)
+    table["Error (Hz)"] = np.round(table["Error (Hz)"], 2)
+    table["Rate (Hz)"].format = ".2f"
+    table["Error (Hz)"].format = ".2f"
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
     table.write(output_file, format="ascii.ecsv", overwrite=True)
@@ -379,6 +311,8 @@ def _write_bias_curve_ecsv(nsb_stats, proton_stats, output_file):
         }
     )
 
+    table["NSB rate (Hz)"] = np.round(table["NSB rate (Hz)"], 2)
+    table["Proton rate (Hz)"] = np.round(table["Proton rate (Hz)"], 2)
     table["NSB rate (Hz)"].format = ".2f"
     table["Proton rate (Hz)"].format = ".2f"
 

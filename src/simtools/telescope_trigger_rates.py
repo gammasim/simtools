@@ -48,9 +48,11 @@ def telescope_trigger_rates(args_dict):
         Dictionary with array names as keys and trigger rates (astropy.units.Quantity) as values.
         Example: {"array_name": 1234.5 * u.Hz}
     """
-    if args_dict.get("array_layout_name"):
+    layout_name = args_dict.get("array_layout_name") or args_dict.get("telescope")
+
+    if layout_name:
         telescope_configs = get_array_elements_from_db_for_layouts(
-            args_dict["array_layout_name"],
+            layout_name,
             args_dict.get("site"),
             args_dict.get("model_version"),
         )

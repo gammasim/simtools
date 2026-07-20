@@ -145,9 +145,7 @@ def extract_threshold(file_path):
 
     for part in file_path.parts:
         if part.isdigit():
-            threshold = int(part)
-            if 10 <= threshold <= 1000:
-                return threshold
+            return int(part)
 
     _logger.warning(f"Could not extract threshold from {file_path}")
     return None
@@ -197,7 +195,7 @@ def parse_log_file(file_path):
     }
 
 
-def crawl_log_files(root_dir, pattern="**/*.simtel.log.gz"):
+def find_log_files(root_dir, pattern="*.simtel.log.gz"):
     """
     Recursively find all log files matching the pattern.
 
@@ -206,7 +204,7 @@ def crawl_log_files(root_dir, pattern="**/*.simtel.log.gz"):
     root_dir : Path or str
         Root directory to search in.
     pattern : str, optional
-        Glob pattern for log files. Default: ``**/*.simtel.log.gz``.
+        Glob pattern for log files. Default: ``*.simtel.log.gz``.
 
     Returns
     -------
@@ -227,7 +225,6 @@ def crawl_log_files(root_dir, pattern="**/*.simtel.log.gz"):
     if not log_files:
         raise FileNotFoundError(f"No log files found in {root_dir} matching pattern '{pattern}'")
 
-    _logger.info(f"Found {len(log_files)} log files in {root_dir}")
     return log_files
 
 

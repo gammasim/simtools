@@ -141,7 +141,7 @@ def test_calculate_statistics_with_multiple_runs():
     assert threshold_stats["time_s"] == pytest.approx(0.2)
     assert threshold_stats["rate_hz"] == pytest.approx(150.0)
     assert threshold_stats["rate_khz"] == pytest.approx(0.15)
-    assert threshold_stats["error_hz"] > 0
+    assert threshold_stats["error_hz"] == pytest.approx(50.0)
     assert threshold_stats["num_runs"] == 2
 
 
@@ -226,7 +226,7 @@ def test_derive_nsb_triggers_pipeline_output_toggle(tmp_path, write_output):
         args["output"] = output_file
 
     with (
-        patch("simtools.simtel.nsb_trigger_calculator.crawl_log_files", return_value=["log1"]),
+        patch("simtools.simtel.nsb_trigger_calculator.find_log_files", return_value=["log1"]),
         patch(
             "simtools.simtel.nsb_trigger_calculator.parse_nsb_log_files",
             return_value=[{"threshold": 220, "run": 1, "triggers": 10, "events": 100}],
@@ -272,7 +272,7 @@ def test_derive_nsb_triggers_raises_for_non_positive_time_window(tmp_path, time_
 
 
 def test_derive_nsb_triggers_raises_for_non_numeric_time_window(tmp_path):
-    with pytest.raises(ValueError, match="must be a positive number"):
+    with pytest.raises(ValueError, match="must be a number"):
         nsb_trigger_calculator.derive_nsb_triggers(
             {"root_dir": tmp_path, "time_window": "not-a-number"}
         )

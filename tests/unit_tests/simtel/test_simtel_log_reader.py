@@ -112,23 +112,23 @@ def test_parse_log_file_returns_none_when_critical_info_is_missing(tmp_path):
     assert simtel_log_reader.parse_log_file(log_file) is None
 
 
-def test_crawl_log_files_finds_matching_logs(tmp_path):
+def test_find_log_files_finds_matching_logs(tmp_path):
     log_dir = tmp_path / "logs"
     log_dir.mkdir()
     log_file = log_dir / "gamma_run000001.simtel.log.gz"
     log_file.touch()
 
-    assert simtel_log_reader.crawl_log_files(tmp_path) == [log_file]
+    assert simtel_log_reader.find_log_files(tmp_path) == [log_file]
 
 
-def test_crawl_log_files_raises_for_missing_root(tmp_path):
+def test_find_log_files_raises_for_missing_root(tmp_path):
     with pytest.raises(FileNotFoundError, match="Root directory not found"):
-        simtel_log_reader.crawl_log_files(tmp_path / "missing")
+        simtel_log_reader.find_log_files(tmp_path / "missing")
 
 
-def test_crawl_log_files_raises_when_no_files_match(tmp_path):
+def test_find_log_files_raises_when_no_files_match(tmp_path):
     with pytest.raises(FileNotFoundError, match="No log files found"):
-        simtel_log_reader.crawl_log_files(tmp_path)
+        simtel_log_reader.find_log_files(tmp_path)
 
 
 def test_parse_log_files_filters_failed_parses(tmp_path):
