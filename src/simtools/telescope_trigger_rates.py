@@ -51,8 +51,9 @@ def telescope_trigger_rates(args_dict):
     layout_name = args_dict.get("array_layout_name") or args_dict.get("telescope")
 
     if layout_name:
+        layout_names = [layout_name] if isinstance(layout_name, str) else layout_name
         telescope_configs = get_array_elements_from_db_for_layouts(
-            layout_name,
+            layout_names,
             args_dict.get("site"),
             args_dict.get("model_version"),
         )
