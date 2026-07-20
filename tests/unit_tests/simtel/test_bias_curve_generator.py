@@ -245,8 +245,11 @@ def test_write_bias_curve_ecsv_writes_combined_table(tmp_path):
     output_file = tmp_path / "bias.ecsv"
 
     bias_curve_generator._write_bias_curve_ecsv(
-        nsb_stats={220: {"rate_hz": 100.125}},
-        proton_stats={220: {"rate_hz": 5.987}, 240: {"rate_hz": 7.0}},
+        nsb_stats={220: {"rate_hz": 100.125, "error_hz": 1.234}},
+        proton_stats={
+            220: {"rate_hz": 5.987, "error_hz": 0.456},
+            240: {"rate_hz": 7.0, "error_hz": 0.0},
+        },
         output_file=output_file,
     )
 
@@ -254,11 +257,15 @@ def test_write_bias_curve_ecsv_writes_combined_table(tmp_path):
     assert list(table["threshold"]) == [220, 240]
     assert table["NSB rate (Hz)"][0] == pytest.approx(100.12)
     assert np.isnan(table["NSB rate (Hz)"][1])
+    assert table["NSB error (Hz)"][0] == pytest.approx(1.23)
+    assert np.isnan(table["NSB error (Hz)"][1])
     assert table["Proton rate (Hz)"][0] == pytest.approx(5.99)
     assert table["Proton rate (Hz)"][1] == pytest.approx(7.0)
+    assert table["Proton error (Hz)"][0] == pytest.approx(0.46)
+    assert table["Proton error (Hz)"][1] == pytest.approx(0.0)
 
     output_text = output_file.read_text(encoding="utf-8")
-    assert "220 100.12 5.99" in output_text
+    assert "220 100.12 1.23 5.99 0.46" in output_text
 
 
 def test_generate_bias_curves_runs_full_pipeline(tmp_path):

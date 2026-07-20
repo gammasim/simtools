@@ -94,13 +94,6 @@ def _add_arguments(parser):
     )
 
     parser.add_argument(
-        "--telescope",
-        type=str,
-        required=True,
-        help="Telescope name.",
-    )
-
-    parser.add_argument(
         "--title",
         type=str,
         default="Trigger Rate Bias Curves",
