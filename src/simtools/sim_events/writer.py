@@ -57,6 +57,7 @@ class TableSchemas:
         "file_name": (str, None),
         "file_id": (np.uint32, None),
         "particle_id": (np.uint32, None),
+        "spectral_index": (np.float64, None),
         "energy_min": (np.float64, u.TeV),
         "energy_max": (np.float64, u.TeV),
         "viewcone_min": (np.float64, u.deg),
@@ -346,6 +347,7 @@ class EventDataWriter:
             core_min, core_max = run_info["core_range"]
             azimuth, el = np.degrees(run_info["direction"])
             zenith = 90.0 - el
+            spectral_index = self._extract_spectral_index(run_info=run_info)
         else:  # CORSIKA IACT file
             run_header, event_header = get_corsika_run_and_event_headers(file)
             corsika7_id = int(event_header["particle_id"])
@@ -361,12 +363,14 @@ class EventDataWriter:
             core_min = 0.0
             core_max = run_header["x_scatter"] / 1.0e2  # cm to m
             nsb = 0.0
+            spectral_index = self._extract_spectral_index(event_header=event_header)
 
         self.file_info.append(
             {
                 "file_name": str(file),
                 "file_id": file_id,
                 "particle_id": corsika7_id,
+                "spectral_index": spectral_index,
                 "energy_min": e_min,
                 "energy_max": e_max,
                 "viewcone_min": view_cone_min,
@@ -378,6 +382,18 @@ class EventDataWriter:
                 "nsb_level": nsb,
             }
         )
+
+    @staticmethod
+    def _extract_spectral_index(run_info=None, event_header=None):
+        """Extract the original simulated spectral index from available headers."""
+        for source in (run_info, event_header):
+            if source is None:
+                continue
+            for key in ("energy_spectrum_slope", "spectral_index", "eslope"):
+                value = source.get(key)
+                if value is not None:
+                    return float(value)
+        return np.nan
 
     def _process_mc_shower(self, eventio_object, file_id):
         """

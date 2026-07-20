@@ -345,7 +345,6 @@ class EventDataReader:
 
         table_columns = {
             get_name("SHOWERS"): self._required_shower_columns,
-            get_name("FILE_INFO"): self._required_file_info_columns,
         }
         triggers_name = get_name("TRIGGERS")
         if triggers_name is not None:
@@ -433,6 +432,20 @@ class EventDataReader:
                     f"{', '.join(invalid_columns)}."
                 )
 
+        file_info_name = get_name("FILE_INFO")
+        if file_info_name is not None:
+            missing_columns = [
+                column
+                for column in self._required_file_info_columns
+                if column not in tables[file_info_name].colnames
+            ]
+            if missing_columns:
+                raise ValueError(
+                    f"Reduced event data file '{event_data_file}' table '{file_info_name}' "
+                    "is missing required column(s): "
+                    f"{', '.join(missing_columns)}."
+                )
+
     def filter_by_telescopes(self, triggered_data, triggered_shower, telescope_list=None):
         """
         Filter trigger and shower data by an explicit or reader telescope list.
@@ -510,6 +523,7 @@ class EventDataReader:
             "zenith",
             "azimuth",
             "nsb_level",
+            "spectral_index",
             "energy_min",
             "energy_max",
             "viewcone_min",
@@ -519,6 +533,8 @@ class EventDataReader:
         ]
         float_arrays = {}
         for key in keys:
+            if key not in simulation_file_info.colnames:
+                continue
             column_values = self._convert_numeric_column(
                 simulation_file_info[key].data,
                 key=key,
@@ -529,7 +545,7 @@ class EventDataReader:
             else:
                 float_arrays[key] = np.unique(np.round(column_values, decimals=2))
 
-        if any(len(arr) > 1 for arr in (particle_id, *(float_arrays[key] for key in keys))):
+        if any(len(arr) > 1 for arr in (particle_id, *float_arrays.values())):
             self._logger.warning("Simulation file info has non-unique values.")
 
         primary_particle_id = int(particle_id[0])
@@ -544,6 +560,8 @@ class EventDataReader:
         }
 
         for key in keys:
+            if key not in float_arrays:
+                continue
             value = float(float_arrays[key][0])
             if simulation_file_info[key].unit is not None:
                 value = value * simulation_file_info[key].unit

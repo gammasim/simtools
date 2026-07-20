@@ -8,8 +8,11 @@ ARG EXTRA_DEFINES="-DCTA_PROD6 -DMAXIMUM_TELESCOPES=99"
 ARG SIMTEL_VERSION="master"
 ARG HESSIO_VERSION="master"
 ARG STDTOOLS_VERSION="master"
-ARG ALMALINUX_VERSION="9.7"
+ARG ALMALINUX_VERSION="9.8"
 ARG GSL_VERSION="2.8"
+ARG CONTAINER_USER="simtools"
+ARG CONTAINER_UID="1000"
+ARG CONTAINER_GID="1000"
 
 # hadolint global ignore=DL3033,DL3041
 # - DL3033, DL3041: ignore warnings about installing non-specific versions with microdnf or yum)
@@ -146,6 +149,9 @@ RUN { \
 # STAGE 3: Runtime Image
 # -----------------------------------------------------------------------------
 FROM almalinux:${ALMALINUX_VERSION}-minimal
+ARG CONTAINER_USER
+ARG CONTAINER_UID
+ARG CONTAINER_GID
 WORKDIR /workdir/simulation_software
 COPY --from=build_image /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
 COPY --from=build_image /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools
@@ -156,9 +162,15 @@ COPY --from=build_image /usr/local/lib/libgslcblas.so* /usr/local/lib/
 RUN microdnf update -y && microdnf install -y \
     bc findutils procps zstd && \
     microdnf clean all && \
+    groupadd --gid "${CONTAINER_GID}" "${CONTAINER_USER}" && \
+    useradd --uid "${CONTAINER_UID}" --gid "${CONTAINER_USER}" \
+        --create-home --home-dir "/home/${CONTAINER_USER}" --shell /bin/bash "${CONTAINER_USER}" && \
     echo /usr/local/lib > /etc/ld.so.conf.d/local.conf && \
-    ldconfig
+    ldconfig && \
+    chown -R "${CONTAINER_UID}:${CONTAINER_GID}" /workdir "/home/${CONTAINER_USER}"
 
 ENV LD_LIBRARY_PATH="/usr/local/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 WORKDIR /workdir/simulation_software/sim_telarray
+ENV HOME="/home/${CONTAINER_USER}"
+USER ${CONTAINER_USER}
