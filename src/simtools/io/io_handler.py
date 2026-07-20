@@ -1,9 +1,45 @@
 """Handle input and output directories and file paths."""
 
 import logging
+import re
 from pathlib import Path
 
 import simtools.utils.general as gen
+
+_TEST_RESOURCE_PATTERN = re.compile(r"\$\{(static|generated|downloaded):([^}]+)\}")
+_TEST_RESOURCE_PATH_PATTERN = re.compile(r"(?<![\w/])(?:\./)?tests/resources(?=/|$)")
+
+
+def resolve_test_resource_paths(value, test_resources_path=None):
+    """Resolve test-resource macros and canonical test-resource paths recursively.
+
+    Parameters
+    ----------
+    value : object
+        Configuration value, mapping, or sequence to resolve.
+    test_resources_path : str or pathlib.Path, optional
+        Base directory containing the ``static``, ``generated``, and ``downloaded``
+        resource directories. Defaults to ``tests/resources``.
+
+    Returns
+    -------
+    object
+        Configuration with absolute test-resource paths.
+    """
+    base_path = Path(test_resources_path or "tests/resources").expanduser().resolve()
+    if isinstance(value, dict):
+        return {
+            key: resolve_test_resource_paths(item, test_resources_path=base_path)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [resolve_test_resource_paths(item, test_resources_path=base_path) for item in value]
+    if isinstance(value, str):
+        value = _TEST_RESOURCE_PATTERN.sub(
+            lambda match: str(base_path / match.group(1) / match.group(2)), value
+        )
+        return _TEST_RESOURCE_PATH_PATTERN.sub(str(base_path), value)
+    return value
 
 
 class IOHandlerSingleton(type):

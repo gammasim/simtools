@@ -14,7 +14,10 @@ ARG CORSIKA_VERSION="78010"
 ARG CORSIKA_OPT_PATCH_VERSION="v1.1.0"
 ARG CORSIKA_CONFIG_VERSION="v0.1.0"
 ARG AVX_FLAG="avx2"
-ARG ALMALINUX_VERSION="9.7"
+ARG ALMALINUX_VERSION="9.8"
+ARG CONTAINER_USER="simtools"
+ARG CONTAINER_UID="1000"
+ARG CONTAINER_GID="1000"
 
 # hadolint global ignore=DL3013,DL3033,DL3041,DL4006,SC1091,SC2086
 # - DL3013, DL3033: ignore warnings about installing non-specific versions with microdnf or yum)
@@ -158,10 +161,19 @@ RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
 # STAGE 3: Runtime
 # -----------------------------------------------------------------------------
 FROM almalinux:${ALMALINUX_VERSION}-minimal
+ARG CONTAINER_USER
+ARG CONTAINER_UID
+ARG CONTAINER_GID
 WORKDIR /workdir/simulation_software
 COPY --from=build_image /workdir/corsika-run /workdir/simulation_software/corsika7
 
 RUN microdnf update -y && microdnf install -y \
-    libgfortran && microdnf clean all
+    libgfortran && microdnf clean all && \
+    groupadd --gid "${CONTAINER_GID}" "${CONTAINER_USER}" && \
+    useradd --uid "${CONTAINER_UID}" --gid "${CONTAINER_USER}" \
+        --create-home --home-dir "/home/${CONTAINER_USER}" --shell /bin/bash "${CONTAINER_USER}" && \
+    chown -R "${CONTAINER_UID}:${CONTAINER_GID}" /workdir "/home/${CONTAINER_USER}"
 
 WORKDIR /workdir/simulation_software/corsika7
+ENV HOME="/home/${CONTAINER_USER}"
+USER ${CONTAINER_USER}

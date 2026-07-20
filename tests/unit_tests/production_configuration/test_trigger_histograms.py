@@ -37,6 +37,7 @@ class _FakeHistograms:
             "zenith": 20.0 * u.deg,
             "azimuth": 0.0 * u.deg,
             "nsb_level": 1.0,
+            "spectral_index": -2.0,
             "energy_min": 0.1 * u.TeV,
             "energy_max": 10.0 * u.TeV,
             "viewcone_min": 0.0 * u.deg,
@@ -75,6 +76,7 @@ def _full_fake_histograms():
         "zenith": 20.0 * u.deg,
         "azimuth": 0.0 * u.deg,
         "nsb_level": 1.0,
+        "spectral_index": -2.0,
         "energy_min": 0.1 * u.TeV,
         "energy_max": 10.0 * u.TeV,
         "viewcone_min": 0.0 * u.deg,
@@ -120,6 +122,7 @@ def test_create_histogram_tables_contains_expected_metadata_and_bins():
     assert bin_table.meta["EXTNAME"] == TRIGGER_HISTOGRAM_BINS_TABLE
     assert metadata_table["reference_id"][0] == "ref-1"
     assert metadata_table["site"][0] == "North"
+    assert metadata_table["spectral_index"][0] == pytest.approx(-2.0)
     assert metadata_table["angular_distance_bin_width"].quantity[0].to_value(
         u.deg
     ) == pytest.approx(1.0)
@@ -164,6 +167,38 @@ def test_histogram_tables_round_trip_via_hdf5(tmp_path):
     assert loaded_bins["triggered_count"][0] == 1
 
 
+def test_histogram_tables_round_trip_via_hdf5_without_spectral_index(tmp_path):
+    histograms = _FakeHistograms()
+    histograms.file_info.pop("spectral_index")
+    metadata_table, bin_table = _create_histogram_tables(
+        [
+            {
+                "reference_id": "ref-1",
+                "production_index": 0,
+                "event_data_file": "pattern*.hdf5",
+                "site": "North",
+                "array_name": "alpha",
+                "telescope_ids": ["LSTN-01"],
+                "histograms": histograms,
+            }
+        ]
+    )
+
+    assert metadata_table["spectral_index"].dtype.kind == "f"
+    assert np.isnan(metadata_table["spectral_index"][0])
+
+    output_file = tmp_path / "trigger_histograms_missing_spectral_index.hdf5"
+    table_handler.write_tables(
+        [metadata_table, bin_table],
+        output_file,
+        overwrite_existing=True,
+        file_type="HDF5",
+    )
+
+    loaded_metadata, _ = load_trigger_histograms(output_file)
+    assert np.isnan(loaded_metadata["spectral_index"][0])
+
+
 def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
     histograms = _full_fake_histograms()
     reference_specs = [
@@ -194,6 +229,7 @@ def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
     assert row["array_name"] == "alpha"
     assert loaded_histograms.array_name == "alpha"
     assert loaded_histograms.file_info["primary_particle"] == "gamma"
+    assert loaded_histograms.file_info["spectral_index"] == pytest.approx(-2.0)
     assert loaded_histograms.data_ranges["angular_distance"] == pytest.approx((0.5, 1.5))
     assert all(isinstance(histogram, dict) for histogram in loaded_histograms.histograms.values())
     np.testing.assert_allclose(loaded_histograms.energy_bins, histograms.energy_bins)
