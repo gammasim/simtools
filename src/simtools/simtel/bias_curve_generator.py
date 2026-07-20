@@ -296,25 +296,41 @@ def _write_bias_curve_ecsv(nsb_stats, proton_stats, output_file):
     """Write final plotted bias-curve values to an ECSV table."""
     output_file = Path(output_file)
     thresholds = sorted(set(nsb_stats.keys()) | set(proton_stats.keys()))
+    nsb_error_column = "NSB error (Hz)"
+    nsb_rate_column = "NSB rate (Hz)"
+    proton_error_column = "Proton error (Hz)"
+    proton_rate_column = "Proton rate (Hz)"
 
     table = Table(
         {
             "threshold": thresholds,
-            "NSB rate (Hz)": [
+            nsb_rate_column: [
                 nsb_stats[threshold]["rate_hz"] if threshold in nsb_stats else np.nan
                 for threshold in thresholds
             ],
-            "Proton rate (Hz)": [
+            nsb_error_column: [
+                nsb_stats[threshold]["error_hz"] if threshold in nsb_stats else np.nan
+                for threshold in thresholds
+            ],
+            proton_rate_column: [
                 proton_stats[threshold]["rate_hz"] if threshold in proton_stats else np.nan
+                for threshold in thresholds
+            ],
+            proton_error_column: [
+                proton_stats[threshold]["error_hz"] if threshold in proton_stats else np.nan
                 for threshold in thresholds
             ],
         }
     )
 
-    table["NSB rate (Hz)"] = np.round(table["NSB rate (Hz)"], 2)
-    table["Proton rate (Hz)"] = np.round(table["Proton rate (Hz)"], 2)
-    table["NSB rate (Hz)"].format = ".2f"
-    table["Proton rate (Hz)"].format = ".2f"
+    for column_name in (
+        nsb_rate_column,
+        nsb_error_column,
+        proton_rate_column,
+        proton_error_column,
+    ):
+        table[column_name] = np.round(table[column_name], 2)
+        table[column_name].format = ".2f"
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
     table.write(output_file, format="ascii.ecsv", overwrite=True)
