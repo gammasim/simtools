@@ -17,10 +17,8 @@ def get_corsika_configuration_args():
     return {
         "primary": {
             "help": (
-                "Primary particle to simulate. "
-                "(choices for common names: "
-                f"{', '.join(PrimaryParticle.particle_names().keys())}; "
-                "use '--primary_id_type' to use other particle ID types)."
+                "Primary particle(s) to simulate. Common names: "
+                f"{', '.join(PrimaryParticle.particle_names().keys())}."
             ),
             "type": str.lower,
             "action": helpers.OneOrManyAction,
@@ -56,7 +54,7 @@ def get_corsika_configuration_args():
             "type": int,
         },
         "run_number_offset": {
-            "help": "Offset added to run number when executing a simulation.",
+            "help": "Offset added to each run number.",
             "type": int,
             "default": 0,
         },
@@ -91,33 +89,30 @@ PARAMETER_DEFINITIONS = {
             "default": -2.0,
         },
         "energy_range": {
-            "help": ("Energy range of the primary particle (min/max, e.g., '10 GeV 5 TeV')."),
+            "help": "Minimum and maximum primary energy, e.g. '10 GeV 5 TeV'.",
             "action": helpers.QuantityPairAction,
             "nargs": "+",
             "default": (3 * u.GeV, 330 * u.TeV),
         },
         "view_cone": {
-            "help": (
-                "View cone radius for primary arrival directions "
-                "(min/max value, e.g. '0 deg 10 deg')."
-            ),
+            "help": "Minimum and maximum view-cone radius, e.g. '0 deg 10 deg'.",
             "type": helpers.parse_quantity_pair,
             "default": ["0 deg 0 deg"],
         },
         "core_scatter": {
-            "help": "Scatter radius for shower cores (number of use; scatter radius).",
+            "help": "Core positions per shower and maximum scatter radius, e.g. '10 500 m'.",
             "type": helpers.parse_integer_and_quantity,
             "default": ["10 10000 m"],
         },
     },
     "CONFIGURATION_ARGS": {
         "config": {
-            "help": "simtools configuration file",
+            "help": "YAML application configuration file.",
             "default": None,
             "type": str,
         },
         "env_file": {
-            "help": "file with environment variables",
+            "help": "File containing environment variables.",
             "default": ".env",
             "type": str,
         },
@@ -129,7 +124,7 @@ PARAMETER_DEFINITIONS = {
             "default": "./data/",
         },
         "output_path": {
-            "help": "path pointing towards output directory",
+            "help": "Directory for output files.",
             "type": Path,
             "default": "./simtools-output/",
         },
@@ -156,7 +151,7 @@ PARAMETER_DEFINITIONS = {
     },
     "OUTPUT_ARGS": {
         "output_file": {
-            "help": "output data file",
+            "help": "Output data file.",
             "type": str,
         },
         "output_file_format": {
@@ -201,7 +196,7 @@ PARAMETER_DEFINITIONS = {
     },
     "EXECUTION_ARGS": {
         "activity_id": {
-            "help": "activity identifier",
+            "help": "Activity identifier.",
             "type": str,
             "default": None,
         },
@@ -210,19 +205,19 @@ PARAMETER_DEFINITIONS = {
             "action": "store_true",
         },
         "label": {
-            "help": "job label",
+            "help": "Application run label.",
         },
         "log_level": {
             "action": "store",
             "default": "info",
-            "help": "log level to print",
+            "help": "Logging level.",
         },
         "log_file": {
-            "help": "log file path",
+            "help": "Log file.",
             "type": Path,
         },
         "log_file_path": {
-            "help": "path pointing towards log directory",
+            "help": "Directory for the generated log file.",
             "type": Path,
         },
         "disable_log_file": {
@@ -236,7 +231,7 @@ PARAMETER_DEFINITIONS = {
             "default": ["png"],
         },
         "export_build_info": {
-            "help": "export build information to file",
+            "help": "Write build information to this file.",
             "type": str,
         },
         "ignore_existing_parameter_version": {
@@ -251,7 +246,7 @@ PARAMETER_DEFINITIONS = {
         "build_info": {
             "action": helpers.BuildInfoAction,
             "build_info": f"%(prog)s {simtools.version.__version__}",
-            "help": "show build information and exit",
+            "help": "Show build information and exit.",
         },
     },
     "USER_ARGS": {
@@ -261,23 +256,23 @@ PARAMETER_DEFINITIONS = {
         "user_orcid": {"help": "user ORCID", "type": str},
     },
     "DB_CONFIG_ARGS": {
-        "db_api_user": {"help": "database user", "type": str},
-        "db_api_pw": {"help": "database password", "type": str},
-        "db_api_port": {"help": "database port", "type": int},
-        "db_server": {"help": "database server address", "type": str},
+        "db_api_user": {"help": "Database username.", "type": str},
+        "db_api_pw": {"help": "Database password.", "type": str},
+        "db_api_port": {"help": "Database server port.", "type": int},
+        "db_server": {"help": "Database server address.", "type": str},
         "db_api_authentication_database": {
-            "help": "database with user info (optional)",
+            "help": "Authentication database name.",
             "type": str,
         },
-        "db_simulation_model": {"help": "name of simulation model database", "type": str.strip},
+        "db_simulation_model": {"help": "Simulation-model database name.", "type": str.strip},
         "db_simulation_model_version": {
-            "help": "version of simulation model database",
+            "help": "Simulation-model database version.",
             "type": str.strip,
         },
     },
     "SIMULATION_MODEL_ARGS": {
         "model_version": {
-            "help": "Simulation production model version",
+            "help": "Simulation production model version(s).",
             "type": str,
             "default": None,
             "nargs": "+",
@@ -370,7 +365,7 @@ PARAMETER_DEFINITIONS = {
     },
     "SIMULATION_SOFTWARE_ARGS": {
         "simulation_software": {
-            "help": "Simulation software steps.",
+            "help": "Simulation software workflow.",
             "type": str,
             "choices": list(defaults.SIMULATION_SOFTWARE_CHOICES),
             "default": defaults.SIMULATION_SOFTWARE_DEFAULT,

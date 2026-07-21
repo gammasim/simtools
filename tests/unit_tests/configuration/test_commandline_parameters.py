@@ -34,7 +34,7 @@ def test_get_dictionary_with_corsika_configuration(mocker):
     corsika_config = get_corsika_configuration_args()
 
     assert "primary" in corsika_config
-    assert corsika_config["primary"]["help"].startswith("Primary particle to simulate.")
+    assert corsika_config["primary"]["help"].startswith("Primary particle(s) to simulate.")
     assert "proton" in corsika_config["primary"]["help"]
     assert "helium" in corsika_config["primary"]["help"]
     assert "iron" in corsika_config["primary"]["help"]
@@ -72,7 +72,7 @@ def test_get_dictionary_with_corsika_configuration(mocker):
     assert corsika_config["showers_per_run"]["type"] is int
 
     assert "run_number_offset" in corsika_config
-    assert "Offset added to run number" in corsika_config["run_number_offset"]["help"]
+    assert "Offset added to each run number" in corsika_config["run_number_offset"]["help"]
     assert corsika_config["run_number_offset"]["type"] is int
     assert corsika_config["run_number_offset"]["default"] == 0
 

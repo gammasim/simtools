@@ -12,7 +12,16 @@ def _parser():
     return build_application_parser(
         application_path=app.__file__,
         description=app.__doc__,
-        application_argument_definitions=app._APPLICATION_ARG_DEFINITIONS,
+        add_arguments_function=app._add_arguments,
+    )
+
+
+def _full_parser():
+    return build_application_parser(
+        application_path=app.__file__,
+        description=app.__doc__,
+        add_arguments_function=app._add_arguments,
+        initialization_kwargs=app._INITIALIZATION_KWARGS,
     )
 
 
@@ -29,6 +38,74 @@ def test_main_generates_job_grid(mock_build_application, mock_generate_job_grid)
     app.main()
 
     mock_generate_job_grid.assert_called_once_with(args, Path("job_grid.ecsv"))
+    mock_build_application.assert_called_once_with(
+        add_arguments_function=app._add_arguments,
+        initialization_kwargs=app._INITIALIZATION_KWARGS,
+        startup_kwargs={"resolve_sim_software_executables": False},
+    )
+
+
+def test_full_parser_contains_only_relevant_shared_arguments():
+    parser = _full_parser()
+    actions = {action.dest: action for action in parser._actions}
+
+    expected = {
+        "array_layout_name",
+        "azimuth_angle",
+        "core_scatter",
+        "energy_range",
+        "model_version",
+        "output_file",
+        "output_path",
+        "primary",
+        "run_number_offset",
+        "showers_per_run",
+        "site",
+        "view_cone",
+        "zenith_angle",
+    }
+    assert expected <= set(actions)
+    assert actions["output_file"].default == "job_grid.ecsv"
+    assert actions["output_file"].help == "Output ECSV production job grid."
+
+    irrelevant = {
+        "array_element_list",
+        "correct_for_b_field_alignment",
+        "curved_atmosphere_min_zenith_angle",
+        "data_path",
+        "eslope",
+        "event_number_first_shower",
+        "figure_format",
+        "model_path",
+        "overwrite_model_parameters",
+        "primary_id_type",
+        "run_number",
+        "telescope",
+        "user_name",
+    }
+    assert irrelevant.isdisjoint(actions)
+
+
+def test_full_parser_accepts_minimum_direct_configuration():
+    args = _full_parser().parse_args(
+        [
+            "--model_version",
+            "7.0.0",
+            "--site",
+            "North",
+            "--array_layout_name",
+            "LSTN-01",
+            "--primary",
+            "gamma",
+            "--showers_per_run",
+            "1000",
+        ]
+    )
+
+    assert args.model_version == ["7.0.0"]
+    assert args.site == "North"
+    assert args.array_layout_name == ["LSTN-01"]
+    assert args.output_file == "job_grid.ecsv"
 
 
 def test_add_arguments_accepts_compact_axis_definitions():
@@ -66,6 +143,11 @@ def test_add_arguments_accepts_zenith_angle_scaling_factor():
     args = parser.parse_args(["--zenith_angle_scaling_factor", "2.5"])
 
     assert args.zenith_angle_scaling_factor == pytest.approx(2.5)
+
+
+def test_add_arguments_rejects_both_shower_count_modes():
+    with pytest.raises(SystemExit):
+        _parser().parse_args(["--number_of_runs", "2", "--total_showers", "1000"])
 
 
 def test_add_arguments_accepts_max_total_showers_rounding_warnings():

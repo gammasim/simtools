@@ -46,6 +46,31 @@ def test_initialize_default_arguments():
     assert "output" in [str(group.title) for group in job_groups]
 
 
+def test_initialize_default_arguments_selects_shared_parameters_and_overrides():
+    commandline_parser = parser.CommandLineParser()
+    commandline_parser.initialize_default_arguments(
+        paths=["output_path"],
+        output=["output_file"],
+        common_arguments={"configuration": ["config"], "execution": ["log_level"]},
+        argument_overrides={"output_file": {"default": "grid.ecsv", "required": False}},
+    )
+
+    actions = {action.dest: action for action in commandline_parser._actions}
+    assert {"output_path", "output_file", "config", "log_level"} <= set(actions)
+    assert "data_path" not in actions
+    assert "output_file_format" not in actions
+    assert "env_file" not in actions
+    assert "activity_id" not in actions
+    assert commandline_parser.parse_args([]).output_file == "grid.ecsv"
+
+
+def test_initialize_default_arguments_rejects_unknown_common_group():
+    commandline_parser = parser.CommandLineParser()
+
+    with pytest.raises(ValueError, match=r"Unknown common argument group.*unknown"):
+        commandline_parser.initialize_default_arguments(common_arguments={"unknown": ["value"]})
+
+
 def test_initialize_default_arguments_accepts_activity_id():
     parser_with_defaults = parser.CommandLineParser()
     parser_with_defaults.initialize_default_arguments()
@@ -239,6 +264,22 @@ def test_layout_parsers():
     )
     assert args.array_layout_name == ["alpha"]
     assert args.array_layout_parameter_file == "array_layouts.json"
+
+
+def test_simulation_model_accepts_exact_layout_selection_without_implicit_arguments():
+    commandline_parser = parser.CommandLineParser()
+    commandline_parser.initialize_default_arguments(
+        simulation_model=["site", "model_version", "array_layout_name"],
+        include_implicit_simulation_model_arguments=False,
+        paths=False,
+        common_arguments={},
+    )
+
+    actions = {action.dest for action in commandline_parser._actions}
+    assert {"site", "model_version", "array_layout_name"} <= actions
+    assert "array_element_list" not in actions
+    assert "overwrite_model_parameters" not in actions
+    assert "ignore_missing_design_model" not in actions
 
 
 def test_simulation_configuration():

@@ -99,6 +99,9 @@ class Configurator:
         db_config=False,
         preserve_by_version_keys=None,
         relax_required_options=None,
+        common_arguments=None,
+        argument_overrides=None,
+        include_implicit_simulation_model_arguments=True,
     ):
         """
         Initialize application configuration.
@@ -112,10 +115,10 @@ class Configurator:
         ----------
         require_command_line: bool
             Require at least one command line argument.
-        paths: bool
-            Add path configuration to list of args.
-        output: bool
-            Add output file configuration to list of args.
+        paths: bool or list
+            Add all path arguments, no path arguments, or selected path arguments.
+        output: bool or list
+            Add all output arguments, no output arguments, or selected output arguments.
         simulation_model: list
             List of simulation model configuration parameters to add to list of args
         simulation_configuration: dict
@@ -128,6 +131,12 @@ class Configurator:
         relax_required_options: list
             CLI options that allow required parser arguments to be relaxed before reading
             full configuration. Defaults to ``["--config"]``.
+        common_arguments: dict, optional
+            Mapping of common argument-group names to selected parameter names.
+        argument_overrides: dict, optional
+            Per-parameter definition values overriding shared command-line definitions.
+        include_implicit_simulation_model_arguments: bool
+            Add legacy implicit simulation-model arguments.
 
         Returns
         -------
@@ -143,6 +152,11 @@ class Configurator:
             simulation_model=simulation_model,
             simulation_configuration=simulation_configuration,
             db_config=db_config,
+            common_arguments=common_arguments,
+            argument_overrides=argument_overrides,
+            include_implicit_simulation_model_arguments=(
+                include_implicit_simulation_model_arguments
+            ),
         )
 
         cli_arglist_kwargs = {"require_command_line": require_command_line}

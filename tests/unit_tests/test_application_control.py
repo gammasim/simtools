@@ -300,6 +300,9 @@ def test_build_application_parser(mocker, tmp_test_directory):
         simulation_model=None,
         simulation_configuration=None,
         db_config=True,
+        common_arguments=None,
+        argument_overrides=None,
+        include_implicit_simulation_model_arguments=True,
     )
 
 
@@ -314,7 +317,7 @@ def test_build_application_parser_uses_definition_help_for_default_arguments():
 
     actions = {action.dest: action for action in parser._actions}  # pylint: disable=protected-access
 
-    assert actions["config"].help == "simtools configuration file"
+    assert actions["config"].help == "YAML application configuration file."
     assert not hasattr(actions["config"], "simtools_doc")
     assert not hasattr(actions["output_file"], "simtools_doc")
     assert not hasattr(actions["db_api_user"], "simtools_doc")
