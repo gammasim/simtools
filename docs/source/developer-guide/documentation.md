@@ -10,15 +10,19 @@ Docstrings are written in RST format following the [numpydoc](https://numpydoc.r
 Documentation pages are written in Markdown ([MyST flavor](https://myst-parser.readthedocs.io/en/latest/index.html), although RST
 is also possible (but not preferred)).
 
-```{caution}
-Each application requires a small RST file (e.g., [simtools-simulate-prod.rst](https://github.com/gammasim/simtools/tree/main/docs/source/user-guide/applications/simtools-simulate-prod.rst))
-to avoid Sphinx warnings regarding duplicated labels (sphinx generates those pages using the sphinx.autodoc extension)
-```
+Each application requires a documentation page in
+`docs/source/user-guide/applications/`. The page can use either MyST Markdown (`.md`) or RST
+(`.rst`).
+
+Keep the application module docstring to a one-line synopsis. This line is used as the command-line
+description and included in the application page by `sphinx.autodoc`. Put extended user guidance,
+such as input and output descriptions, operational notes, and examples, in the application page.
 
 Application pages can render their CLI reference directly from the parser using the
 `simtools-cli-help` directive. By default it hides the repetitive common argparse groups
 (`configuration`, `paths`, `execution`, `run time`, `user`) while keeping application-specific
 groups visible. Use `:hide-groups:` or `:show-groups:` on the directive to adjust this per page.
+Use `:no-heading:` when the surrounding page provides the `Command line arguments` heading.
 
 ## Building
 
