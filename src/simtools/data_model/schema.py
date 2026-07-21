@@ -1,8 +1,7 @@
 """Module providing functionality to read and validate dictionaries using schema."""
 
 import logging
-from copy import deepcopy
-from functools import cache, lru_cache
+from functools import lru_cache
 from pathlib import Path
 
 import jsonschema
@@ -75,11 +74,7 @@ def get_model_parameter_schema(parameter, schema_version=None):
     Returns
     -------
     dict
-        Shared, immutable schema dictionary.
-
-    Notes
-    -----
-    Returned schema dictionaries are cached and must not be modified.
+        Independent schema dictionary.
     """
     schema_file = get_model_parameter_schema_file(parameter)
     return load_schema(schema_file, schema_version or "latest")
@@ -212,7 +207,6 @@ def get_schema_version_from_data(data, observatory="cta"):
     return "latest"
 
 
-@cache
 def load_schema(schema_file=None, schema_version="latest"):
     """
     Load parameter schema from file.
@@ -227,20 +221,16 @@ def load_schema(schema_file=None, schema_version="latest"):
     Returns
     -------
     schema: dict
-        Shared, immutable schema dictionary.
+        Independent schema dictionary.
 
     Raises
     ------
     FileNotFoundError
         if schema file is not found
 
-    Notes
-    -----
-    Returned schema dictionaries are cached and must not be modified.
-
     """
     schema_file = schema_file or METADATA_JSON_SCHEMA
-    schema = deepcopy(schema_loader.load_schema(schema_file, schema_version))
+    schema = schema_loader.load_schema(schema_file, schema_version)
     _add_array_elements("InstrumentTypeElement", schema)
 
     return schema

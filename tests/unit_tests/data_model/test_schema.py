@@ -46,32 +46,32 @@ def test_get_model_parameter_schema_file():
         schema.get_model_parameter_schema_file("not_a_parameter")
 
 
-def test_get_model_parameter_schema_returns_cached_schema():
-    schema.load_schema.cache_clear()
-    schema_loader.load_schema.cache_clear()
+def test_get_model_parameter_schema_returns_independent_copies():
+    schema_loader.clear_cache()
     schema_1 = schema.get_model_parameter_schema("mirror_focal_length", "0.1.0")
     schema_2 = schema.get_model_parameter_schema("mirror_focal_length", "0.1.0")
 
-    assert schema_1 is schema_2
+    schema_1["data"][0]["unit"] = "m"
+
+    assert schema_2["data"][0]["unit"] == "cm"
 
 
-def test_load_schema_cache_separates_versions(mocker):
-    schema.load_schema.cache_clear()
-    schema_loader.load_schema.cache_clear()
+def test_load_schema_uses_cached_source_for_different_versions(mocker):
+    schema_loader.clear_cache()
     collect_data = mocker.spy(ascii_handler, "collect_data_from_file")
 
     schema_1 = schema.load_schema(MODEL_PARAMETER_METASCHEMA, "0.1.0")
     schema_2 = schema.load_schema(MODEL_PARAMETER_METASCHEMA, "0.2.0")
     schema_1_cached = schema.load_schema(MODEL_PARAMETER_METASCHEMA, "0.1.0")
 
-    assert schema_1 is schema_1_cached
+    assert schema_1 == schema_1_cached
+    assert schema_1 is not schema_1_cached
     assert schema_1 is not schema_2
-    assert collect_data.call_count == 2
+    assert collect_data.call_count == 1
 
 
 def test_model_parameter_cache_is_shared_with_names(mocker):
-    schema.load_schema.cache_clear()
-    schema_loader.load_schema.cache_clear()
+    schema_loader.clear_cache()
     names._load_model_parameters.cache_clear()
     collect_data = mocker.spy(ascii_handler, "collect_data_from_file")
 
