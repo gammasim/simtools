@@ -26,6 +26,7 @@ from simtools.constants import (
     RESOURCE_PATH,
     SIM_TELARRAY_INCLUDE_FILENAME_MAX_LENGTH,
 )
+from simtools.data_model import schema_loader
 
 _logger = logging.getLogger(__name__)
 
@@ -203,12 +204,13 @@ def _load_model_parameters():
     dict
         Model parameters definitions for all model parameters.
     """
-    _parameters = {}
-    for schema_file in Path(MODEL_PARAMETER_SCHEMA_PATH).rglob("*.yml"):
-        with open(schema_file, encoding="utf-8") as f:
-            data = next(yaml.safe_load_all(f))
-            _parameters[data["name"]] = data
-    return _parameters
+    parameters, schema_files = schema_loader.get_model_parameter_schema_files(
+        MODEL_PARAMETER_SCHEMA_PATH
+    )
+    return {
+        parameter: schema_loader.load_schema(schema_file, "latest")
+        for parameter, schema_file in zip(parameters, schema_files)
+    }
 
 
 def model_parameters(class_key_list=None):
@@ -225,7 +227,7 @@ def model_parameters(class_key_list=None):
     Returns
     -------
     dict
-        Model parameters definitions.
+        Model parameters definitions. Schema values are shared and must not be modified.
     """
     if class_key_list is None:
         return _load_model_parameters()
