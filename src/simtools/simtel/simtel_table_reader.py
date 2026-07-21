@@ -547,7 +547,7 @@ def _read_simtel_data_for_lightguide_efficiency(file_path):
             theta = float(parts[0])
             eff_values = list(map(float, parts[-len(wavelengths) :]))
             data.extend((theta, wl, eff) for wl, eff in zip(wavelengths, eff_values))
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             logger.debug(f"Skipping malformed line: {line}")
             continue
 
@@ -610,7 +610,7 @@ def _read_simtel_data_for_atmospheric_transmission(file_path):
                 wavelengths.append(wl)
                 heights.append(height)
                 extinctions.append(extinction_value)
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             logger.debug(f"Skipping malformed line: {line.strip()}")
 
     table = Table()

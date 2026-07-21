@@ -818,7 +818,7 @@ def resolve_array_layout_name(array_layout_name, model_version):
             parsed_layout = ast.literal_eval(array_layout_name)
             if isinstance(parsed_layout, dict):
                 array_layout_name = parsed_layout
-        except (SyntaxError, ValueError):
+        except SyntaxError, ValueError:
             return array_layout_name
 
     if not isinstance(array_layout_name, dict) or list(array_layout_name) != ["by_version"]:
