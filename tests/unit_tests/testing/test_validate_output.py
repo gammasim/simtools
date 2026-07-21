@@ -1,10 +1,12 @@
 import json
 import logging
+from collections import UserDict
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 import yaml
+from astropy import units as u
 from astropy.table import Table
 
 from simtools.constants import TEST_RESOURCES_GENERATED
@@ -878,3 +880,206 @@ def test_compare_nested_dicts_with_tolerance(data1, data2, tolerance, is_value_f
         )
         == should_match
     )
+
+
+def _semantic_table(path, metadata=None):
+    """Write a small ECSV table used by declarative output-validation tests."""
+    table = Table(
+        {
+            "run_number": [1, 2],
+            "value": [1.0, 2.0],
+            "label": ["a", "b"],
+        }
+    )
+    table["value"].unit = u.m
+    table.meta = metadata if metadata is not None else {"summary": {"rows": 2, "total": 3.0}}
+    table.write(path, format="ascii.ecsv", overwrite=True)
+
+
+def _semantic_schema(path):
+    """Write the data-product schema for the semantic table."""
+    path.write_text(
+        yaml.safe_dump(
+            {
+                "schema_version": "0.1.0",
+                "data": [
+                    {
+                        "type": "data_table",
+                        "table_columns": [
+                            {"name": "run_number", "required": True, "type": "int64"},
+                            {
+                                "name": "value",
+                                "required": True,
+                                "type": "float64",
+                                "unit": "m",
+                            },
+                            {"name": "label", "required": True, "type": "string"},
+                        ],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def _semantic_config(output_path, rule):
+    """Build a configuration containing one semantic output rule."""
+    return {
+        "configuration": {"output_path": str(output_path)},
+        "integration_tests": [{"output_validation": [rule]}],
+    }
+
+
+def _semantic_rule(output_file, schema_file):
+    """Build the representative ECSV output-validation rule."""
+    return {
+        "name": "semantic_table",
+        "path_descriptor": "output_path",
+        "file": output_file.name,
+        "data_product_schema": str(schema_file),
+        "minimum_rows": 1,
+        "unique_columns": ["run_number"],
+        "columns": {
+            "value": {"range": {"minimum": 0.0, "maximum": 3.0, "unit": "m"}},
+            "label": {"allowed_values": ["a", "b"]},
+        },
+        "metadata": {
+            "required_keys": ["summary"],
+            "row_count": "summary.rows",
+            "column_sums": {"value": "summary.total"},
+        },
+    }
+
+
+def test_declarative_table_validation_passes(tmp_test_directory):
+    """Validate schema, rows, domains, uniqueness, and metadata summaries."""
+    tmp_test_directory = Path(tmp_test_directory)
+    output_file = tmp_test_directory / "table.ecsv"
+    schema_file = tmp_test_directory / "table.schema.yml"
+    _semantic_table(output_file)
+    _semantic_schema(schema_file)
+
+    validate_output.validate_application_output(
+        _semantic_config(tmp_test_directory, _semantic_rule(output_file, schema_file))
+    )
+
+
+def test_has_path_supports_mapping_metadata():
+    """Accept mapping implementations used for ordered metadata."""
+    metadata = UserDict({"summary": UserDict({"rows": 2})})
+
+    assert validate_output._has_path(metadata, "summary.rows")
+
+
+def test_declarative_table_rejects_empty_and_duplicate_rows(tmp_test_directory):
+    """Reject an empty table and duplicate values in a unique column."""
+    tmp_test_directory = Path(tmp_test_directory)
+    output_file = tmp_test_directory / "table.ecsv"
+    schema_file = tmp_test_directory / "table.schema.yml"
+    _semantic_schema(schema_file)
+    rule = _semantic_rule(output_file, schema_file)
+    Table(
+        names=["run_number", "value", "label"],
+        dtype=["int64", "float64", "str"],
+        meta={"summary": {"rows": 0, "total": 0.0}},
+    ).write(output_file, format="ascii.ecsv")
+    with pytest.raises(AssertionError, match="at least 1 rows"):
+        validate_output.validate_application_output(_semantic_config(tmp_test_directory, rule))
+
+    _semantic_table(output_file)
+    table = Table.read(output_file, format="ascii.ecsv")
+    table["run_number"][1] = table["run_number"][0]
+    table.write(output_file, format="ascii.ecsv", overwrite=True)
+    with pytest.raises(AssertionError, match="unique values in run_number"):
+        validate_output.validate_application_output(_semantic_config(tmp_test_directory, rule))
+
+
+@pytest.mark.parametrize(
+    ("column", "column_rule", "expected"),
+    [
+        ("label", {"allowed_values": ["x"]}, "allowed values"),
+        ("label", {"range": {"minimum": 0.0}}, "numerical range"),
+        ("value", {"range": {"minimum": 2.0, "unit": "m"}}, "minimum"),
+        ("value", {"range": {"maximum": 1.0, "unit": "m"}}, "maximum"),
+    ],
+)
+def test_declarative_column_validation_failures(tmp_test_directory, column, column_rule, expected):
+    """Reject workflow-specific column domains and ranges."""
+    tmp_test_directory = Path(tmp_test_directory)
+    output_file = tmp_test_directory / "table.ecsv"
+    schema_file = tmp_test_directory / "table.schema.yml"
+    _semantic_table(output_file)
+    _semantic_schema(schema_file)
+    rule = _semantic_rule(output_file, schema_file)
+    rule["columns"] = {column: column_rule}
+
+    with pytest.raises(AssertionError, match=expected):
+        validate_output.validate_application_output(_semantic_config(tmp_test_directory, rule))
+
+
+@pytest.mark.parametrize(
+    ("metadata", "expected"),
+    [
+        ({}, "required metadata key summary"),
+        ({"summary": {"rows": 3, "total": 3.0}}, "equals row count"),
+        ({"summary": {"rows": 2, "total": 4.0}}, "equals sum of value"),
+    ],
+)
+def test_declarative_metadata_validation_failures(tmp_test_directory, metadata, expected):
+    """Reject missing or inconsistent table metadata."""
+    tmp_test_directory = Path(tmp_test_directory)
+    output_file = tmp_test_directory / "table.ecsv"
+    schema_file = tmp_test_directory / "table.schema.yml"
+    _semantic_table(output_file, metadata=metadata)
+    _semantic_schema(schema_file)
+
+    with pytest.raises(AssertionError, match=expected):
+        validate_output.validate_application_output(
+            _semantic_config(
+                tmp_test_directory,
+                _semantic_rule(output_file, schema_file),
+            )
+        )
+
+
+def test_declarative_data_product_schema_validation(tmp_test_directory):
+    """Reject a table that does not satisfy its data-product schema."""
+    tmp_test_directory = Path(tmp_test_directory)
+    output_file = tmp_test_directory / "table.ecsv"
+    schema_file = tmp_test_directory / "table.schema.yml"
+    _semantic_schema(schema_file)
+    Table({"other": [1, 2]}).write(output_file, format="ascii.ecsv")
+
+    with pytest.raises(AssertionError, match="data-product schema"):
+        validate_output.validate_application_output(
+            _semantic_config(
+                tmp_test_directory,
+                _semantic_rule(output_file, schema_file),
+            )
+        )
+
+
+def test_declarative_output_must_exist_and_be_ecsv(tmp_test_directory):
+    """Report missing and unparsable output tables consistently."""
+    tmp_test_directory = Path(tmp_test_directory)
+    output_file = tmp_test_directory / "table.ecsv"
+    schema_file = tmp_test_directory / "table.schema.yml"
+    _semantic_schema(schema_file)
+    rule = _semantic_rule(output_file, schema_file)
+
+    with pytest.raises(AssertionError, match="existing output"):
+        validate_output.validate_application_output(_semantic_config(tmp_test_directory, rule))
+
+    output_file.write_text("not an ECSV table\n", encoding="utf-8")
+    with pytest.raises(AssertionError, match="parseable ECSV table"):
+        validate_output.validate_application_output(_semantic_config(tmp_test_directory, rule))
+
+    _semantic_table(output_file)
+    rule["unique_columns"] = ["missing"]
+    with pytest.raises(AssertionError, match="valid configured table content"):
+        validate_output.validate_application_output(_semantic_config(tmp_test_directory, rule))
+
+    rule["path_descriptor"] = "missing"
+    with pytest.raises(KeyError, match="Path missing"):
+        validate_output.validate_application_output(_semantic_config(tmp_test_directory, rule))

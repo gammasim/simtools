@@ -57,8 +57,6 @@ class SimulatorArray(SimtelRunner):
             file.write("#!/usr/bin/env bash\n\n")
             file.write("set -e\n")
             file.write("set -o pipefail\n")
-            file.write("\nSECONDS=0\n")
-
             if extra_commands:
                 file.write("# Writing extras\n")
                 for line in extra_commands:
@@ -71,8 +69,6 @@ class SimulatorArray(SimtelRunner):
                     + " ".join(command)
                     + f" 2>&1 | gzip > {log_file}\n"
                 )
-
-            file.write('\necho "RUNTIME: $SECONDS"\n')
 
     def make_run_command(self, run_number=None, input_file=None):
         """
