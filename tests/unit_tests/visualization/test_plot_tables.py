@@ -645,3 +645,160 @@ def test_select_schema_entry_returns_latest_when_version_not_found():
 def test_select_schema_entry_returns_empty_dict_for_empty_input():
     """Return an empty dict when schema input is empty/invalid."""
     assert plot_tables._select_schema_entry([], schema_version="0.2.0") == {}
+
+
+def test_resolve_plot_output_path_file_and_directory(tmp_path):
+    explicit_file = tmp_path / "custom_name.pdf"
+    output_dir = tmp_path / "plots"
+
+    assert plot_tables.resolve_plot_output_path(explicit_file) == explicit_file
+    assert plot_tables.resolve_plot_output_path(output_dir) == output_dir / "bias_curve.png"
+
+
+@mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
+@mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
+@mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
+@mock.patch("simtools.visualization.plot_tables.plt")
+def test_plot_bias_curves_saves_and_closes_figure(
+    mock_plt,
+    mock_plot_nsb_curve,
+    mock_plot_proton_curve,
+    mock_configure_axis,
+    tmp_path,
+):
+    mock_fig = mock.MagicMock()
+    mock_axis = mock.MagicMock()
+    mock_plt.subplots.return_value = (mock_fig, mock_axis)
+
+    output_path = tmp_path / "nested" / "bias.png"
+    config = {"title": "Bias", "ymin": 1, "ymax": 1e6}
+
+    plot_tables.plot_bias_curves(
+        {220: {"rate_hz": 10, "error_hz": 1}}, {220: {"rate_hz": 5}}, config, output_path
+    )
+
+    mock_plt.subplots.assert_called_once_with(figsize=(10, 7))
+    mock_plot_nsb_curve.assert_called_once_with(mock_axis, {220: {"rate_hz": 10, "error_hz": 1}})
+    mock_plot_proton_curve.assert_called_once_with(mock_axis, {220: {"rate_hz": 5}})
+    mock_configure_axis.assert_called_once_with(mock_axis, config)
+    mock_fig.tight_layout.assert_called_once_with()
+    mock_fig.savefig.assert_called_once_with(output_path, dpi=200, bbox_inches="tight")
+    mock_plt.close.assert_called_once_with(mock_fig)
+    assert output_path.parent.exists()
+
+
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
+def test_plot_nsb_curve_draws_errorbar_and_trend(mock_plot_trend):
+    axis = mock.MagicMock()
+    nsb_stats = {
+        240: {"rate_hz": 200.0, "error_hz": 10.0},
+        220: {"rate_hz": 100.0, "error_hz": 5.0},
+    }
+
+    plot_tables._plot_nsb_curve(axis, nsb_stats)
+
+    axis.errorbar.assert_called_once_with(
+        [220, 240],
+        [100.0, 200.0],
+        yerr=[5.0, 10.0],
+        fmt="o",
+        label="NSB",
+        color="tab:blue",
+        capsize=3,
+    )
+    mock_plot_trend.assert_called_once_with(axis, [220, 240], [100.0, 200.0], color="tab:blue")
+
+
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
+def test_plot_nsb_curve_returns_early_when_empty(mock_plot_trend):
+    axis = mock.MagicMock()
+
+    plot_tables._plot_nsb_curve(axis, {})
+
+    axis.errorbar.assert_not_called()
+    mock_plot_trend.assert_not_called()
+
+
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
+def test_plot_proton_curve_draws_points_and_trend(mock_plot_trend):
+    axis = mock.MagicMock()
+    proton_stats = {
+        240: {"rate_hz": 20.0, "error_hz": 2.0},
+        220: {"rate_hz": 10.0, "error_hz": 1.0},
+    }
+
+    plot_tables._plot_proton_curve(axis, proton_stats)
+
+    axis.errorbar.assert_called_once_with(
+        [220, 240],
+        [10.0, 20.0],
+        yerr=[1.0, 2.0],
+        fmt="s",
+        label="Proton",
+        color="tab:orange",
+        capsize=3,
+    )
+    mock_plot_trend.assert_called_once_with(axis, [220, 240], [10.0, 20.0], color="tab:orange")
+
+
+@mock.patch("simtools.visualization.plot_tables._plot_log_linear_trend")
+def test_plot_proton_curve_returns_early_when_empty(mock_plot_trend):
+    axis = mock.MagicMock()
+
+    plot_tables._plot_proton_curve(axis, {})
+
+    axis.errorbar.assert_not_called()
+    mock_plot_trend.assert_not_called()
+
+
+def test_plot_log_linear_trend_returns_without_plot_for_insufficient_data():
+    axis = mock.MagicMock()
+
+    plot_tables._plot_log_linear_trend(axis, [220], [10.0], color="tab:blue")
+    plot_tables._plot_log_linear_trend(axis, [220, 240], [0.0, -1.0], color="tab:blue")
+
+    axis.plot.assert_not_called()
+
+
+def test_plot_log_linear_trend_plots_for_valid_positive_rates():
+    axis = mock.MagicMock()
+
+    plot_tables._plot_log_linear_trend(axis, [220, 240, 260], [100.0, 10.0, 1.0], color="tab:blue")
+
+    axis.plot.assert_called_once()
+    args, kwargs = axis.plot.call_args
+    assert len(args[0]) == 100
+    assert len(args[1]) == 100
+    assert args[2] == "--"
+    assert kwargs["color"] == "tab:blue"
+    assert kwargs["linewidth"] == 1
+
+
+def test_configure_bias_curve_axis_with_legend():
+    axis = mock.MagicMock()
+    axis.get_legend_handles_labels.return_value = ([object()], ["NSB"])
+    config = {"title": "Bias", "ymin": 1, "ymax": 1e6}
+
+    plot_tables._configure_bias_curve_axis(axis, config)
+
+    axis.set_title.assert_called_once_with("Bias", fontsize=14, fontweight="bold")
+    axis.set_xlabel.assert_called_once_with("Threshold", fontsize=12)
+    axis.set_ylabel.assert_called_once_with("Trigger Rate [Hz]", fontsize=12)
+    axis.set_yscale.assert_called_once_with("log")
+    axis.set_ylim.assert_called_once_with(1, 1e6)
+    axis.grid.assert_called_once_with(which="both", alpha=0.3, linestyle=":")
+    axis.legend.assert_called_once_with(fontsize=11, loc="best")
+
+
+@mock.patch("simtools.visualization.plot_tables._logger")
+def test_configure_bias_curve_axis_without_legend_logs_warning(mock_logger):
+    axis = mock.MagicMock()
+    axis.get_legend_handles_labels.return_value = ([], [])
+    config = {"title": "Bias", "ymin": 1, "ymax": 1e6}
+
+    plot_tables._configure_bias_curve_axis(axis, config)
+
+    axis.legend.assert_not_called()
+    mock_logger.warning.assert_called_once_with(
+        "No NSB or proton rates found; writing empty bias-curve plot"
+    )
