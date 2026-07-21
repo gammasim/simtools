@@ -201,6 +201,98 @@ def test_application_workflow_schema_accepts_optional_docs_metadata():
     )
 
 
+def test_application_workflow_schema_accepts_expected_failure_reason():
+    """Allow workflows to document expected application failures."""
+    workflow_config = {
+        "schema_version": "0.4.0",
+        "schema_name": "application_workflow.metaschema",
+        "applications": [
+            {
+                "application": "simtools-test",
+                "configuration": {},
+                "xfail": "known issue",
+            }
+        ],
+    }
+
+    schema.validate_dict_using_schema(
+        workflow_config,
+        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+    )
+
+
+def _output_validation_workflow(*rules):
+    """Build a minimal workflow containing declarative output rules."""
+    return {
+        "schema_version": "0.4.0",
+        "schema_name": "application_workflow.metaschema",
+        "applications": [
+            {
+                "application": "simtools-test",
+                "configuration": {"output_path": "output"},
+                "integration_tests": [{"output_validation": list(rules)}],
+            }
+        ],
+    }
+
+
+def _valid_output_validation_rule():
+    """Build a representative table rule for metaschema tests."""
+    return {
+        "name": "table",
+        "path_descriptor": "output_path",
+        "file": "output.ecsv",
+        "data_product_schema": "schema.yml",
+        "minimum_rows": 1,
+        "unique_columns": ["id"],
+        "columns": {
+            "energy": {
+                "range": {"minimum": 1.0, "unit": "GeV"},
+            },
+        },
+        "metadata": {
+            "required_keys": ["summary"],
+            "row_count": "summary.rows",
+            "column_sums": {"energy": "summary.total"},
+        },
+    }
+
+
+def test_application_workflow_schema_accepts_output_validation_rules():
+    """Test the table output-validation configuration shape."""
+    workflow_config = _output_validation_workflow(_valid_output_validation_rule())
+
+    schema.validate_dict_using_schema(
+        workflow_config,
+        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+    )
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        lambda rule: rule.update({"unknown": True}),
+        lambda rule: rule.update({"minimum_rows": -1}),
+        lambda rule: rule.update({"unique_columns": ["id", "id"]}),
+        lambda rule: rule["columns"]["energy"].update({"range": {"minimum": "bad"}}),
+        lambda rule: rule["columns"]["energy"].update({"range": {"unit": "GeV"}}),
+        lambda rule: rule["columns"].update({"id": {}}),
+        lambda rule: rule["metadata"].update({"unknown": "value"}),
+    ],
+)
+def test_application_workflow_schema_rejects_malformed_output_validation(change):
+    """Reject unknown properties and malformed declarative validation rules."""
+    rule = _valid_output_validation_rule()
+    change(rule)
+    workflow_config = _output_validation_workflow(rule)
+
+    with pytest.raises(jsonschema.ValidationError):
+        schema.validate_dict_using_schema(
+            workflow_config,
+            schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+        )
+
+
 def test_validate_dict_using_schema_remote(tmp_test_directory, mocker):
     sample_schema = {
         "type": "object",
