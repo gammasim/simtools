@@ -121,7 +121,7 @@ def test_load_schema_reports_missing_source(schema_file, error, monkeypatch, tmp
 def test_get_schema_for_version_with_dict():
     schema = {"schema_version": "1.0.0", "name": "test"}
 
-    assert schema_loader.get_schema_for_version(schema, DUMMY_FILE, "1.0.0") is schema
+    assert schema_loader.get_schema_for_version(schema, DUMMY_FILE, "1.0.0") == schema
 
 
 @pytest.mark.parametrize(
