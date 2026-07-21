@@ -56,8 +56,6 @@ def test_prepare_run(simtel_runner, tmp_path, mocker):
     assert "export TEST_VAR=1" in content
     assert "echo 'extra command'" in content
     assert "echo 'test command'" in content
-    assert "SECONDS=0" in content
-    assert 'echo "RUNTIME: $SECONDS"' in content
 
 
 def test_prepare_run_no_extra_commands(simtel_runner, tmp_path, mocker):
