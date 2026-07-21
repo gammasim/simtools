@@ -40,11 +40,20 @@ def telescope_trigger_rates(args_dict):
     Parameters
     ----------
     args_dict : dict
-        Dictionary of command line arguments.
+        Dictionary with configuration parameters.
+
+    Returns
+    -------
+    dict
+        Dictionary with array names as keys and trigger rates (astropy.units.Quantity) as values.
+        Example: {"array_name": 1234.5 * u.Hz}
     """
-    if args_dict.get("array_layout_name"):
+    layout_name = args_dict.get("array_layout_name") or args_dict.get("telescope")
+
+    if layout_name:
+        layout_names = [layout_name] if isinstance(layout_name, str) else layout_name
         telescope_configs = get_array_elements_from_db_for_layouts(
-            args_dict["array_layout_name"],
+            layout_names,
             args_dict.get("site"),
             args_dict.get("model_version"),
         )
@@ -53,6 +62,7 @@ def telescope_trigger_rates(args_dict):
             "telescope_configs"
         ]
 
+    results = {}
     for array_name, telescope_ids in telescope_configs.items():
         _logger.info(
             f"Processing file: {args_dict['event_data_file']} with telescope config: {array_name}"
@@ -62,14 +72,19 @@ def telescope_trigger_rates(args_dict):
         )
         histograms.fill()
 
-        _calculate_trigger_rates(histograms, array_name, args_dict.get("cr_spectrum"))
+        _, _, trigger_rate = _calculate_trigger_rates(
+            histograms, array_name, args_dict.get("cr_spectrum")
+        )
+        results[array_name] = trigger_rate
 
-        if args_dict["plot_histograms"]:
+        if args_dict.get("plot_histograms"):
             plot_simtel_event_histograms.plot(
                 histograms.histograms,
                 output_path=io_handler.IOHandler().get_output_directory(),
                 array_name=array_name,
             )
+
+    return results
 
 
 def _calculate_trigger_rates(histograms, array_name, cr_spectrum_file=None):
