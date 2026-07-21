@@ -17,10 +17,9 @@ from simtools.constants import (
     SIM_TELARRAY_META_PARAMETER_METASCHEMA,
     SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
-from simtools.data_model import schema
+from simtools.data_model import schema, schema_loader
 from simtools.io import ascii_handler
-
-DUMMY_FILE = "dummy_file.yml"
+from simtools.utils import names
 
 
 def test_get_model_parameter_schema_files(tmp_test_directory):
@@ -47,13 +46,48 @@ def test_get_model_parameter_schema_file():
         schema.get_model_parameter_schema_file("not_a_parameter")
 
 
-def test_get_model_parameter_schema_returns_independent_copies():
+def test_get_model_parameter_schema_returns_cached_schema():
+    schema.load_schema.cache_clear()
+    schema_loader.load_schema.cache_clear()
     schema_1 = schema.get_model_parameter_schema("mirror_focal_length", "0.1.0")
     schema_2 = schema.get_model_parameter_schema("mirror_focal_length", "0.1.0")
 
-    schema_1["data"][0]["unit"] = "m"
+    assert schema_1 is schema_2
 
-    assert schema_2["data"][0]["unit"] == "cm"
+
+def test_load_schema_cache_separates_versions(mocker):
+    schema.load_schema.cache_clear()
+    schema_loader.load_schema.cache_clear()
+    collect_data = mocker.spy(ascii_handler, "collect_data_from_file")
+
+    schema_1 = schema.load_schema(MODEL_PARAMETER_METASCHEMA, "0.1.0")
+    schema_2 = schema.load_schema(MODEL_PARAMETER_METASCHEMA, "0.2.0")
+    schema_1_cached = schema.load_schema(MODEL_PARAMETER_METASCHEMA, "0.1.0")
+
+    assert schema_1 is schema_1_cached
+    assert schema_1 is not schema_2
+    assert collect_data.call_count == 2
+
+
+def test_model_parameter_cache_is_shared_with_names(mocker):
+    schema.load_schema.cache_clear()
+    schema_loader.load_schema.cache_clear()
+    names._load_model_parameters.cache_clear()
+    collect_data = mocker.spy(ascii_handler, "collect_data_from_file")
+
+    model_parameters = names.model_parameters()
+    schema_file = schema.get_model_parameter_schema_file("mirror_focal_length")
+    reads_before = sum(
+        call.kwargs.get("file_name") == schema_file for call in collect_data.call_args_list
+    )
+    loaded_schema = schema.get_model_parameter_schema("mirror_focal_length")
+    reads_after = sum(
+        call.kwargs.get("file_name") == schema_file for call in collect_data.call_args_list
+    )
+
+    assert loaded_schema == model_parameters["mirror_focal_length"]
+    assert loaded_schema is not model_parameters["mirror_focal_length"]
+    assert reads_before == reads_after == 1
 
 
 def test_validate_sim_telarray_meta_parameter_registry_schema():
@@ -466,56 +500,6 @@ def test_load_schema(caplog, tmp_test_directory):
     assert "Schema version 0.3.0 does not match 0.2.0" in caplog.text
 
 
-def test_load_schema_prefers_local_before_remote(monkeypatch, tmp_path):
-    """Test URL-based schema loading checks local schema files before remote access."""
-    monkeypatch.setattr(schema, "SCHEMA_PATH", tmp_path)
-    schema._retrieve_yaml_schema_from_uri.cache_clear()
-
-    remote_url = "https://example.com/schemas/simulation_models_info.schema.yml"
-    local_schema_path = tmp_path / "simulation_models_info.schema.yml"
-    expected_schema = {"schema_version": "0.2.0", "definitions": {}}
-
-    calls = []
-
-    def _mock_collect_data_from_file(file_name, yaml_document=None):
-        calls.append(str(file_name))
-        if Path(str(file_name)) == local_schema_path:
-            return expected_schema
-        raise FileNotFoundError(f"Missing schema: {file_name}")
-
-    monkeypatch.setattr(ascii_handler, "collect_data_from_file", _mock_collect_data_from_file)
-
-    result = schema.load_schema(schema_file=remote_url, schema_version="0.2.0")
-
-    assert result == expected_schema
-    assert str(local_schema_path) in calls
-    assert remote_url not in calls
-
-
-def test_load_schema_falls_back_to_remote_when_local_missing(monkeypatch, tmp_path):
-    """Test URL-based schema loading falls back to remote retrieval if local lookup fails."""
-    monkeypatch.setattr(schema, "SCHEMA_PATH", tmp_path)
-    schema._retrieve_yaml_schema_from_uri.cache_clear()
-
-    remote_url = "https://example.com/schemas/simulation_models_info.schema.yml"
-    expected_schema = {"schema_version": "0.2.0", "definitions": {}}
-
-    calls = []
-
-    def _mock_collect_data_from_file(file_name, yaml_document=None):
-        calls.append(str(file_name))
-        if str(file_name) == remote_url:
-            return expected_schema
-        raise FileNotFoundError(f"Missing schema: {file_name}")
-
-    monkeypatch.setattr(ascii_handler, "collect_data_from_file", _mock_collect_data_from_file)
-
-    result = schema.load_schema(schema_file=remote_url, schema_version="0.2.0")
-
-    assert result == expected_schema
-    assert str(remote_url) in calls
-
-
 def test_add_array_elements():
     test_dict_1 = {"data": {"InstrumentTypeElement": {"enum": ["LSTN", "MSTN"]}}}
     test_dict_added = schema._add_array_elements("InstrumentTypeElement", test_dict_1)
@@ -587,59 +571,6 @@ def test_get_schema_version_from_data_with_custom_observatory_lowercase():
     data = {"veritas": {"reference": {"version": "0.9.9"}}}
     result = schema.get_schema_version_from_data(data, observatory="veritas")
     assert result == "0.9.9"
-
-
-def test_get_schema_for_version_with_dict():
-    test_schema = {"schema_version": "1.0.0", "name": "test"}
-    result = schema._get_schema_for_version(test_schema, DUMMY_FILE, "1.0.0")
-    assert result == test_schema
-
-
-def test_get_schema_for_version_with_list_and_latest():
-    schema_list = [
-        {"schema_version": "2.0.0", "name": "latest"},
-        {"schema_version": "1.0.0", "name": "old"},
-    ]
-    result = schema._get_schema_for_version(schema_list, DUMMY_FILE, "latest")
-    assert result["schema_version"] == "2.0.0"
-
-
-def test_get_schema_for_version_with_list_and_specific_version():
-    schema_list = [
-        {"schema_version": "2.0.0", "name": "latest"},
-        {"schema_version": "1.0.0", "name": "old"},
-    ]
-    result = schema._get_schema_for_version(schema_list, DUMMY_FILE, "1.0.0")
-    assert result["schema_version"] == "1.0.0"
-
-
-def test_get_schema_for_version_with_list_and_missing_version():
-    schema_list = [
-        {"schema_version": "2.0.0", "name": "latest"},
-        {"schema_version": "1.0.0", "name": "old"},
-    ]
-    with pytest.raises(ValueError, match=r"Schema version 3\.0\.0 not found in dummy_file\.yml\."):
-        schema._get_schema_for_version(schema_list, DUMMY_FILE, "3.0.0")
-
-
-def test_get_schema_for_version_with_none_version():
-    test_schema = {"schema_version": "1.0.0", "name": "test"}
-    with pytest.raises(ValueError, match=r"Schema version not given in dummy_file\.yml\."):
-        schema._get_schema_for_version(test_schema, DUMMY_FILE, None)
-
-
-def test_get_schema_for_version_with_empty_list():
-    schema_list = []
-    with pytest.raises(ValueError, match=r"No schemas found in dummy_file.yml."):
-        schema._get_schema_for_version(schema_list, DUMMY_FILE, "latest")
-
-
-def test_get_schema_for_version_warns_on_version_mismatch(caplog):
-    test_schema = {"schema_version": "1.0.0", "name": "test"}
-    with caplog.at_level("WARNING"):
-        result = schema._get_schema_for_version(test_schema, DUMMY_FILE, "2.0.0")
-    assert result == test_schema
-    assert "Schema version 2.0.0 does not match 1.0.0" in caplog.text
 
 
 def test_validate_deprecation_and_version(caplog, monkeypatch):

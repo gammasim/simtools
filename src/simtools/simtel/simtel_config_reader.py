@@ -254,7 +254,6 @@ class SimtelConfigReader:
         if not any(isinstance(item, str) and item.startswith("all") for item in column):
             return column, {}
 
-        self._logger.debug(f"Resolving 'all' entries in column: {column}")
         # remove 'all:' entries
         column = [item for item in column if item not in ("all:", "all")]
         # resolve 'all:5' type entries
