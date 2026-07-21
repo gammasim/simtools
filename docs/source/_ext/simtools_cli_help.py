@@ -19,8 +19,6 @@ Render the CLI reference while keeping the ``paths`` group visible:
        :show-groups: paths
 """
 
-from __future__ import annotations
-
 import argparse
 import importlib
 from dataclasses import dataclass

@@ -19,7 +19,7 @@ application workflows, validation, reporting, and plotting.
 
 ## Project Facts
 
-- Python: `>=3.12` from `pyproject.toml`.
+- Python: `>=3.14` from `pyproject.toml`.
 - Source package: `src/simtools/`.
 - Applications: `src/simtools/applications/`, installed as `simtools-*`
   commands through `[project.scripts]`.
