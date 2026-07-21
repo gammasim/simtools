@@ -12,9 +12,13 @@ Integration tests should cover:
 - internal interfaces where one `simtools` output becomes another input
 - selected compatibility checks for generated products
 
-Keep pull-request integration tests within typical GitHub CI runtime. Prefer
-cheap checks first and stronger numerical or file-based validation where it
-adds signal.
+The tests follow the following levels of assertion, from weakest to strongest:
+
+- execution only;
+- file presence;
+- parse or schema validation;
+- semantic invariants;
+- deterministic reference comparison.
 
 ## Workflow Files
 
@@ -110,3 +114,43 @@ Prefer explicit validation blocks over exit-code-only tests. Common patterns:
 
 Keep generated outputs deterministic by fixing seeds, labels, event counts,
 worker counts, and version-specific expectations.
+
+## Declarative output validation
+
+An integration test may include an optional `output_validation` list for
+generated ECSV tables. Each rule declares the output location and its
+data-product schema. The schema validates required columns, types, units, and
+finite numerical values; keep the workflow rule focused on invariants specific
+to the integration-test configuration.
+
+```yaml
+output_validation:
+- name: job_grid_content
+  path_descriptor: output_path
+  file: job_grid.ecsv
+  data_product_schema: src/simtools/schemas/job_grid_density.schema.yml
+  minimum_rows: 1
+  unique_columns: [run_number]
+  columns:
+    primary:
+      allowed_values: [gamma, proton]
+    energy_min:
+      range:
+        minimum: 30.0
+        maximum: 300.0
+        unit: GeV
+  metadata:
+    required_keys: [job_grid_summary]
+    row_count: job_grid_summary.simulation_rows
+    column_sums:
+      showers_per_run: job_grid_summary.total_showers
+```
+
+`minimum_rows` rejects empty or unexpectedly short tables. `unique_columns`
+checks complete columns for duplicate values. Column rules support
+`allowed_values` and inclusive or exclusive numerical `range` bounds, with an
+optional unit. Metadata paths use dotted mapping notation.
+
+`metadata.row_count` names a metadata value that must equal the number of table
+rows. Each `metadata.column_sums` entry maps a table column to metadata that
+must equal that column's sum.

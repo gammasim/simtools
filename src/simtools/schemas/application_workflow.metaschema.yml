@@ -113,6 +113,9 @@ definitions:
         xfail_network_error:
           type: boolean
           description: "Mark test as xfail if application exits with a network error."
+        xfail:
+          type: string
+          description: "Expected failure reason for this workflow."
       required:
         - application
         - configuration
@@ -207,4 +210,93 @@ definitions:
             cut_condition:
               description: "Condition to apply to the cut column."
               type: string
+      output_validation:
+        description: "Declarative validation rules for generated ECSV tables."
+        type: array
+        minItems: 1
+        items:
+          "$ref": "#/definitions/output_validation_table_rule"
     title: ApplicationWorkflow
+  output_validation_table_rule:
+    description: "Content validation rules for one generated ECSV table."
+    type: object
+    additionalProperties: false
+    properties:
+      name:
+        type: string
+        minLength: 1
+      path_descriptor:
+        type: string
+        minLength: 1
+      output_sub_path:
+        type: string
+      file:
+        type: string
+        minLength: 1
+      data_product_schema:
+        type: string
+        minLength: 1
+      minimum_rows:
+        type: integer
+        minimum: 0
+      unique_columns:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+          minLength: 1
+      columns:
+        type: object
+        additionalProperties:
+          "$ref": "#/definitions/output_validation_column_rule"
+      metadata:
+        "$ref": "#/definitions/output_validation_metadata_rule"
+    required: [path_descriptor, file, data_product_schema]
+  output_validation_range:
+    type: object
+    additionalProperties: false
+    properties:
+      minimum:
+        type: number
+      maximum:
+        type: number
+      unit:
+        type: string
+        minLength: 1
+      inclusive:
+        type: boolean
+    minProperties: 1
+    anyOf:
+      - required: [minimum]
+      - required: [maximum]
+  output_validation_column_rule:
+    type: object
+    additionalProperties: false
+    properties:
+      allowed_values:
+        type: array
+        minItems: 1
+        items: {}
+      range:
+        "$ref": "#/definitions/output_validation_range"
+    minProperties: 1
+  output_validation_metadata_rule:
+    type: object
+    additionalProperties: false
+    properties:
+      required_keys:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+          minLength: 1
+      row_count:
+        type: string
+        minLength: 1
+      column_sums:
+        type: object
+        minProperties: 1
+        additionalProperties:
+          type: string
+          minLength: 1
+    minProperties: 1

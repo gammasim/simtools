@@ -2,12 +2,15 @@
 
 import logging
 import re
+from collections.abc import Mapping
 from pathlib import Path
 
 import numpy as np
+from astropy import units as u
 from astropy.table import Table
 
 import simtools.utils.general as gen
+from simtools.data_model import validate_data
 from simtools.db import db_handler
 from simtools.io import ascii_handler
 from simtools.sim_events import file_info
@@ -15,6 +18,8 @@ from simtools.simtel import simtel_validate_metadata
 from simtools.testing import assertions
 
 _logger = logging.getLogger(__name__)
+
+_ECSV_FORMAT = "ascii.ecsv"
 
 
 def _find_repo_root():
@@ -101,6 +106,7 @@ def validate_application_output(config, from_command_line=None, from_config_file
 
         if _versions_match(from_command_line, from_config_file):
             _validate_output_files(config, integration_test)
+            _validate_declarative_output(config, integration_test)
 
             if "file_type" in integration_test:
                 assert assertions.assert_file_type(
@@ -127,6 +133,179 @@ def _validate_output_files(config, integration_test):
         )
     if "model_parameter_validation" in integration_test:
         _validate_model_parameter_json_file(config, integration_test["model_parameter_validation"])
+
+
+def _validation_failure(output_path, rule, expected, actual):
+    """Raise a consistently formatted semantic output validation failure."""
+    rule_name = rule.get("name", "output_validation")
+    raise AssertionError(
+        f"Output '{output_path}' failed rule '{rule_name}': "
+        f"expected {expected!r}, actual {actual!r}."
+    )
+
+
+def _output_validation_path(config, descriptor):
+    """Resolve an output descriptor to an absolute or configured output path."""
+    try:
+        base_path = config["configuration"][descriptor["path_descriptor"]]
+    except KeyError as exc:
+        raise KeyError(
+            f"Path {descriptor.get('path_descriptor')} not found in integration test configuration."
+        ) from exc
+    return Path(base_path) / descriptor.get("output_sub_path", "") / descriptor["file"]
+
+
+def _has_path(value, dotted_path):
+    """Return whether a dotted path exists in nested mappings."""
+    current = value
+    for part in dotted_path.split("."):
+        if not isinstance(current, Mapping) or part not in current:
+            return False
+        current = current[part]
+    return True
+
+
+def _get_path(value, dotted_path):
+    """Read a dotted path from a nested mapping."""
+    current = value
+    for part in dotted_path.split("."):
+        current = current[part]
+    return current
+
+
+def _validate_allowed_values(path, rule, column_name, column, column_rule):
+    """Validate a column against an allowed-value domain."""
+    allowed = column_rule.get("allowed_values")
+    if allowed is None:
+        return
+    values = np.asarray(column)
+    if not np.all(np.isin(values, allowed)):
+        _validation_failure(
+            path, rule, f"allowed values {allowed} for {column_name}", values.tolist()
+        )
+
+
+def _validate_range(path, rule, column_name, column, column_rule):
+    """Validate a numerical column against a unit-aware range."""
+    range_rule = column_rule.get("range")
+    if range_rule is None:
+        return
+    values = np.asarray(column)
+    if not np.issubdtype(values.dtype, np.number):
+        _validation_failure(path, rule, f"numerical range for {column_name}", str(values.dtype))
+    actual_unit = getattr(column, "unit", None) or u.dimensionless_unscaled
+    values = values * actual_unit
+    if range_rule.get("unit"):
+        values = values.to(range_rule["unit"])
+    numeric_values = np.asarray(values.value)
+    inclusive = range_rule.get("inclusive", True)
+    minimum = range_rule.get("minimum")
+    maximum = range_rule.get("maximum")
+    if minimum is not None:
+        valid = numeric_values >= minimum if inclusive else numeric_values > minimum
+        if not np.all(valid):
+            _validation_failure(
+                path, rule, f"minimum {minimum} for {column_name}", numeric_values.tolist()
+            )
+    if maximum is not None:
+        valid = numeric_values <= maximum if inclusive else numeric_values < maximum
+        if not np.all(valid):
+            _validation_failure(
+                path, rule, f"maximum {maximum} for {column_name}", numeric_values.tolist()
+            )
+
+
+def _validate_data_product_schema(path, rule, table):
+    """Validate a table against its simtools data schema."""
+    schema_file = rule["data_product_schema"]
+    try:
+        return validate_data.DataValidator(
+            schema_file=_resolve_path(schema_file),
+            data_table=table.copy(copy_data=True),
+        ).validate_and_transform()
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        rule_name = rule.get("name", "output_validation")
+        raise AssertionError(
+            f"Output '{path}' failed rule '{rule_name}': "
+            f"expected 'data-product schema {schema_file}', actual {str(exc)!r}."
+        ) from exc
+
+
+def _validate_unique_columns(path, rule, table):
+    """Validate uniqueness for selected table columns."""
+    for column_name in rule.get("unique_columns", []):
+        values = np.asarray(table[column_name])
+        if len(np.unique(values)) != len(values):
+            _validation_failure(path, rule, f"unique values in {column_name}", values.tolist())
+
+
+def _validate_columns(path, rule, table):
+    """Validate workflow-specific table column domains and ranges."""
+    for column_name, column_rule in rule.get("columns", {}).items():
+        column = table[column_name]
+        _validate_allowed_values(path, rule, column_name, column, column_rule)
+        _validate_range(path, rule, column_name, column, column_rule)
+
+
+def _validate_metadata(path, rule, table):
+    """Validate required metadata and selected metadata-to-content summaries."""
+    metadata_rule = rule.get("metadata", {})
+    for metadata_path in metadata_rule.get("required_keys", []):
+        if not _has_path(table.meta, metadata_path):
+            _validation_failure(
+                path, rule, f"required metadata key {metadata_path}", list(table.meta)
+            )
+
+    row_count_path = metadata_rule.get("row_count")
+    if row_count_path:
+        metadata_row_count = _get_path(table.meta, row_count_path)
+        if metadata_row_count != len(table):
+            _validation_failure(
+                path,
+                rule,
+                f"{row_count_path} equals row count",
+                f"{metadata_row_count} vs {len(table)}",
+            )
+
+    for column_name, metadata_path in metadata_rule.get("column_sums", {}).items():
+        metadata_value = _get_path(table.meta, metadata_path)
+        column_sum = np.sum(np.asarray(table[column_name]))
+        if not np.isclose(metadata_value, column_sum):
+            _validation_failure(
+                path,
+                rule,
+                f"{metadata_path} equals sum of {column_name}",
+                f"{metadata_value!r} vs {column_sum!r}",
+            )
+
+
+def _validate_table_output(config, rule):
+    """Validate one ECSV table output."""
+    path = _output_validation_path(config, rule)
+    if not path.exists():
+        _validation_failure(path, rule, "an existing output", "missing")
+    try:
+        table = Table.read(path, format=_ECSV_FORMAT)
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        _validation_failure(path, rule, "a parseable ECSV table", str(exc))
+
+    minimum_rows = rule.get("minimum_rows", 0)
+    if len(table) < minimum_rows:
+        _validation_failure(path, rule, f"at least {minimum_rows} rows", len(table))
+
+    table = _validate_data_product_schema(path, rule, table)
+    try:
+        _validate_unique_columns(path, rule, table)
+        _validate_columns(path, rule, table)
+        _validate_metadata(path, rule, table)
+    except (KeyError, TypeError, ValueError) as exc:
+        _validation_failure(path, rule, "valid configured table content", str(exc))
+
+
+def _validate_declarative_output(config, integration_test):
+    """Run optional declarative ECSV table validation rules."""
+    for rule in integration_test.get("output_validation", []):
+        _validate_table_output(config, rule)
 
 
 def _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file):
@@ -450,8 +629,8 @@ def compare_ecsv_files(file1, file2, tolerance=1.0e-5, test_columns=None):
 
     """
     _logger.info(f"Comparing files: {file1} and {file2}")
-    table1 = Table.read(file1, format="ascii.ecsv")
-    table2 = Table.read(file2, format="ascii.ecsv")
+    table1 = Table.read(file1, format=_ECSV_FORMAT)
+    table2 = Table.read(file2, format=_ECSV_FORMAT)
 
     if test_columns is None:
         test_columns = [{"test_column_name": col} for col in table1.colnames]
