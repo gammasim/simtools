@@ -9,7 +9,7 @@ Resource files require updates, e.g., when file formats change or new features a
 ## Types of resource files
 
 The examples in the description of the
-[`simtools-resources-test-generate`](../user-guide/applications/simtools-resources-test-generate.md) application provide guidance on
+[`simtools-resources-test-generate`](../user-guide/applications/simtools-resources-test-generate.md) application provides guidance on
 how to test and generate the different types of resource files.
 
 ### Static test files
