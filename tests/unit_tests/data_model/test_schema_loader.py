@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import logging
 from pathlib import Path
 
@@ -16,9 +14,9 @@ DUMMY_FILE = "dummy_file.yml"
 @pytest.fixture(autouse=True)
 def clear_schema_loader_cache():
     """Clear shared schema state around every test."""
-    schema_loader.load_schema.cache_clear()
+    schema_loader.clear_cache()
     yield
-    schema_loader.load_schema.cache_clear()
+    schema_loader.clear_cache()
 
 
 def test_get_model_parameter_schema_files(tmp_test_directory):
@@ -49,16 +47,18 @@ def test_get_model_parameter_schema_files_raises_for_missing_schemas(
         schema_loader.get_model_parameter_schema_files(directory)
 
 
-def test_load_schema_caches_by_source_and_version(mocker):
+def test_load_schema_caches_parsed_source_across_versions(mocker):
     collect_data = mocker.spy(ascii_handler, "collect_data_from_file")
 
     schema_1 = schema_loader.load_schema(MODEL_PARAMETER_METASCHEMA, "0.1.0")
     schema_2 = schema_loader.load_schema(MODEL_PARAMETER_METASCHEMA, "0.2.0")
+    schema_1["schema_version"] = "changed"
     schema_1_cached = schema_loader.load_schema(MODEL_PARAMETER_METASCHEMA, "0.1.0")
 
-    assert schema_1 is schema_1_cached
+    assert schema_1_cached["schema_version"] == "0.1.0"
+    assert schema_1 is not schema_1_cached
     assert schema_1 is not schema_2
-    assert collect_data.call_count == 2
+    assert collect_data.call_count == 1
 
 
 def test_load_schema_prefers_local_before_remote(monkeypatch, tmp_test_directory):
@@ -76,7 +76,7 @@ def test_load_schema_prefers_local_before_remote(monkeypatch, tmp_test_directory
 
     monkeypatch.setattr(ascii_handler, "collect_data_from_file", _collect_data)
 
-    assert schema_loader.load_schema(remote_url, "1.0.0") is expected_schema
+    assert schema_loader.load_schema(remote_url, "1.0.0") == expected_schema
     assert str(local_schema) in calls
     assert remote_url not in calls
 
@@ -93,7 +93,7 @@ def test_load_schema_falls_back_to_remote(monkeypatch, tmp_test_directory):
 
     monkeypatch.setattr(ascii_handler, "collect_data_from_file", _collect_data)
 
-    assert schema_loader.load_schema(remote_url, "1.0.0") is expected_schema
+    assert schema_loader.load_schema(remote_url, "1.0.0") == expected_schema
 
 
 @pytest.mark.parametrize(

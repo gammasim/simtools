@@ -1,6 +1,7 @@
 """Cached, dependency-neutral loading of schema definitions."""
 
 import logging
+from copy import deepcopy
 from functools import cache
 from pathlib import Path
 
@@ -35,14 +36,16 @@ def get_model_parameter_schema_files(schema_directory):
     schema_files = sorted(Path(schema_directory).rglob("*.schema.yml"))
     if not schema_files:
         raise FileNotFoundError(f"No schema files found in {schema_directory}")
-    parameters = [load_schema(schema_file, "latest").get("name") for schema_file in schema_files]
+    parameters = [
+        get_schema_for_version(_load_schema_source(schema_file), schema_file, "latest").get("name")
+        for schema_file in schema_files
+    ]
     return parameters, schema_files
 
 
-@cache
 def load_schema(schema_file, schema_version="latest"):
     """
-    Load and cache an immutable schema definition by source and version.
+    Load a schema definition from a cached parsed source.
 
     Parameters
     ----------
@@ -54,7 +57,7 @@ def load_schema(schema_file, schema_version="latest"):
     Returns
     -------
     dict
-        Shared, immutable schema definition.
+        Independent schema definition selected from the cached parsed source.
 
     Raises
     ------
@@ -63,6 +66,13 @@ def load_schema(schema_file, schema_version="latest"):
     ValueError
         If the requested schema version is unavailable.
     """
+    schema = get_schema_for_version(_load_schema_source(schema_file), schema_file, schema_version)
+    return deepcopy(schema)
+
+
+@cache
+def _load_schema_source(schema_file):
+    """Resolve, parse, and cache all schema definitions from one source."""
     schema = None
     for path in _get_local_schema_candidates(schema_file):
         try:
@@ -80,7 +90,12 @@ def load_schema(schema_file, schema_version="latest"):
     if schema is None:
         raise FileNotFoundError(f"Schema file not found: {schema_file}")
 
-    return get_schema_for_version(schema, schema_file, schema_version)
+    return schema
+
+
+def clear_cache():
+    """Clear cached parsed schema sources."""
+    _load_schema_source.cache_clear()
 
 
 def _get_local_schema_candidates(schema_file):
