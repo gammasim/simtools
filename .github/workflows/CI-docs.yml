@@ -43,7 +43,8 @@ jobs:
           scripts=$(grep 'scripts.simtools-' pyproject.toml | sed -e 's/^scripts\.//' -e 's/ =.*$//')
           FULLY_DOCUMENTED="TRUE"
           for S in $scripts; do
-              if [ ! -e "docs/source/user-guide/applications/$S.rst" ]; then
+              if [[ ! -e "docs/source/user-guide/applications/$S.rst" \
+                && ! -e "docs/source/user-guide/applications/$S.md" ]]; then
                 echo "Undocumented script: $S"
                 FULLY_DOCUMENTED="FALSE"
               fi
