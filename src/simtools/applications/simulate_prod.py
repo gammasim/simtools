@@ -1,27 +1,6 @@
 #!/usr/bin/python3
 
-r"""
-Generate simulation configuration and run simulations.
-
-Multipipe scripts will be produced as part of this application.
-Allows to run array layout simulation including shower and detector simulations
-
-The entire simulation chain, parts of it, or nothing is executed:
-
-- shower simulations with CORSIKA only
-- shower simulations with CORSIKA which are piped directly to sim_telarray using
-  the sim_telarray multipipe mechanism.
-
-.. simtools-cli-help::
-   :module: simtools.applications.simulate_prod
-
-Examples
---------
-
-.. simtools-integration-example::
-    :file: simulate_prod_proton_20_deg_north_check_output.yml
-
-"""
+r"""Generate simulation configuration and run simulations."""
 
 from simtools.application_control import (
     build_application,

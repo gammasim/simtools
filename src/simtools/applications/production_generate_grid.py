@@ -1,43 +1,6 @@
 #!/usr/bin/python3
 
-r"""
-Generate a simulation production grid for a wide range of simulation parameters.
-
-Expands a production definition consistent of configuration axes, energy ranges,
-and run statistics into a grid of executable simulation jobs.
-
-Possible axes include:
-
-* Particle type (gamma, proton, electron, etc.)
-* Simulation model version
-* Interaction models
-* Pointing directions (azimuth, zenith, hour angle, declination)
-
-The generated grid is written to an ECSV file, which can be used as input for
-local production execution or workload-management submission tools.
-
-Different levels of night-sky background (NSB) can be configured through the
-production model version.
-
-.. simtools-cli-help::
-   :module: simtools.applications.production_generate_grid
-
-Examples
---------
-
-.. simtools-integration-example::
-    :file: production_generate_grid_horizontal_explicit.yml
-
-.. simtools-integration-example::
-    :file: production_generate_grid_horizontal.yml
-
-.. simtools-integration-example::
-    :file: production_generate_grid_horizontal_density.yml
-
-.. simtools-integration-example::
-    :file: production_generate_grid_ha_dec_density.yml
-
-"""
+r"""Generate a simulation production grid for a wide range of simulation parameters."""
 
 from simtools.application_control import build_application
 from simtools.configuration import defaults

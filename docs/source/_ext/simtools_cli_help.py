@@ -17,6 +17,14 @@ Render the CLI reference while keeping the ``paths`` group visible:
     .. simtools-cli-help::
        :module: simtools.applications.plot_array_layout
        :show-groups: paths
+
+Render the CLI reference under a heading supplied by the surrounding page:
+
+.. code-block:: rst
+
+    .. simtools-cli-help::
+       :module: simtools.applications.plot_array_layout
+       :no-heading:
 """
 
 import argparse
@@ -57,6 +65,7 @@ class CliHelpOptions:
     module_name: str
     prog: str | None
     hidden_groups: set[str]
+    include_heading: bool
 
 
 @dataclass(frozen=True)
@@ -175,10 +184,16 @@ def _build_description(action):
     return content
 
 
-def render_native_cli_docs(inspection: CliInspection, hidden_groups: set[str]):
+def render_native_cli_docs(
+    inspection: CliInspection, hidden_groups: set[str], include_heading: bool = True
+):
     """Render native RST nodes for one application CLI."""
-    section = nodes.section(ids=[nodes.make_id("command-line-arguments")])
-    section += nodes.title(text="Command line arguments")
+    rendered_nodes = []
+    section = None
+    if include_heading:
+        section = nodes.section(ids=[nodes.make_id("command-line-arguments")])
+        section += nodes.title(text="Command line arguments")
+        rendered_nodes.append(section)
 
     grouped_actions = _group_actions_for_docs(inspection.parser, hidden_groups)
     for group_title, actions in grouped_actions.items():
@@ -194,8 +209,11 @@ def render_native_cli_docs(inspection: CliInspection, hidden_groups: set[str]):
             item += definition
             definition_list += item
         subgroup += definition_list
-        section += subgroup
-    return [section]
+        if section is None:
+            rendered_nodes.append(subgroup)
+        else:
+            section += subgroup
+    return rendered_nodes
 
 
 class SimtoolsCliHelpDirective(SphinxDirective):
@@ -207,6 +225,7 @@ class SimtoolsCliHelpDirective(SphinxDirective):
         "prog": directives.unchanged,
         "hide-groups": directives.unchanged,
         "show-groups": directives.unchanged,
+        "no-heading": directives.flag,
     }
 
     def run(self):
@@ -217,7 +236,11 @@ class SimtoolsCliHelpDirective(SphinxDirective):
         except (ValueError, ImportError) as error:
             raise self.error(str(error)) from error
 
-        return render_native_cli_docs(inspection, options.hidden_groups)
+        return render_native_cli_docs(
+            inspection,
+            options.hidden_groups,
+            include_heading=options.include_heading,
+        )
 
     def _parse_options(self) -> CliHelpOptions:
         """Parse directive options into a structured configuration."""
@@ -227,6 +250,7 @@ class SimtoolsCliHelpDirective(SphinxDirective):
             module_name=self.options["module"],
             prog=self.options.get("prog"),
             hidden_groups=hidden_groups,
+            include_heading="no-heading" not in self.options,
         )
 
 
