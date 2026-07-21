@@ -40,7 +40,7 @@ jobs:
       - name: Python setup
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           check-latest: true
 
       - name: Check unit test files exist
@@ -68,14 +68,8 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python-version: "3.12"
-
-          - os: ubuntu-latest
-            python-version: "3.13"
-            extra-args: ["random-order"]
-
-          - os: ubuntu-latest
             python-version: "3.14"
+            extra-args: ["random-order"]
 
     defaults:
       run:
@@ -117,10 +111,10 @@ jobs:
             --cov=simtools --cov-report=xml --retries 2 --retry-delay 5
 
       - name: Upload coverage report
-        if: matrix.python-version == '3.13'
+        if: matrix.python-version == '3.14'
         uses: actions/upload-artifact@v7
         with:
-          name: coverage-python-3.13
+          name: coverage-python-3.14
           path: coverage.xml
           if-no-files-found: error
           retention-days: 3
@@ -157,7 +151,7 @@ jobs:
       - name: Download coverage report
         uses: actions/download-artifact@v8
         with:
-          name: coverage-python-3.13
+          name: coverage-python-3.14
           path: .
 
       # CTAO-DPPS-SonarQube
@@ -200,7 +194,7 @@ jobs:
               "-Dsonar.scanner.responseTimeout=120"
               "-Dsonar.plugins.download.timeout=600"
               "-Dsonar.python.coverage.reportPaths=coverage.xml"
-              "-Dsonar.python.version=3.13"
+              "-Dsonar.python.version=3.14"
               "-Dsonar.exclusions=**/docs/**,src/simtools/applications/**,**/__init__.py"
               "-Dsonar.coverage.exclusions=**/tests/**,src/simtools/applications/**"
             )
