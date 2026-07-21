@@ -102,6 +102,5 @@ applications:
           showers_per_run: job_grid_summary.total_showers
       data_product_schema: src/simtools/schemas/job_grid_density.schema.yml
   test_name: production_generate_grid_horizontal_explicit
-  xfail: "requires to address issue #2352"
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

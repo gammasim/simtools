@@ -878,6 +878,26 @@ def test_clip_energy_range_to_configured_bounds_caps_selected_max():
     assert_quantity_allclose(clipped[1], 200 * u.GeV)
 
 
+def test_clip_energy_range_to_configured_bounds_preserves_fixed_energy():
+    clipped = _clip_energy_range_to_configured_bounds(
+        (300 * u.GeV, 300 * u.GeV),
+        (300 * u.GeV, 300 * u.GeV),
+    )
+
+    assert_quantity_allclose(clipped[0], 300 * u.GeV)
+    assert_quantity_allclose(clipped[1], 300 * u.GeV)
+
+
+def test_clip_energy_range_to_configured_bounds_rejects_reversed_range():
+    assert (
+        _clip_energy_range_to_configured_bounds(
+            (300 * u.GeV, 30 * u.GeV),
+            (30 * u.GeV, 300 * u.GeV),
+        )
+        is None
+    )
+
+
 def test_clip_max_quantity_returns_configured_value_without_lookup():
     assert _clip_max_quantity(5 * u.deg, None) == 5 * u.deg
 
@@ -983,6 +1003,24 @@ def test_build_rows_for_point_skips_energy_ranges_below_threshold():
     assert [row["run_number"] for row in rows] == [10, 11]
     assert all(row["energy_min"] == 50 * u.GeV for row in rows)
     assert all(row["showers_per_run"] == 5 for row in rows)
+
+
+def test_build_rows_for_point_preserves_fixed_energy_ranges():
+    rows = _build_rows_for_point(
+        point_base={"primary": "gamma", "zenith_angle": 20 * u.deg},
+        energy_ranges=[(30 * u.GeV, 30 * u.GeV), (300 * u.GeV, 300 * u.GeV)],
+        lower_energy_threshold=None,
+        showers_per_run=5,
+        showers_per_run_power_law=None,
+        number_of_runs=1,
+        total_showers=None,
+        total_showers_scaling="fixed",
+        run_number=10,
+    )
+
+    assert len(rows) == 2
+    assert [row["energy_min"] for row in rows] == [30 * u.GeV, 300 * u.GeV]
+    assert [row["energy_max"] for row in rows] == [30 * u.GeV, 300 * u.GeV]
 
 
 def test_build_rows_for_point_rounds_total_showers_up_with_warning(caplog):
