@@ -460,7 +460,7 @@ class SimtelConfigWriter:
             build_opts = dependencies.get_build_options()
             for key, value in build_opts.items():
                 meta_items[f"simtools_{key}"] = value
-        except (FileNotFoundError, TypeError):
+        except FileNotFoundError, TypeError:
             pass  # don't expect build_opts.yml to be present on all systems
 
         # CORSIKA executable without _flat/_curved suffix (do not know here if curved or flat)
