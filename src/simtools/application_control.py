@@ -383,9 +383,6 @@ def build_application_parser(
         db_config=initialization_kwargs.get("db_config", False),
         common_arguments=initialization_kwargs.get("common_arguments"),
         argument_overrides=initialization_kwargs.get("argument_overrides"),
-        include_implicit_simulation_model_arguments=initialization_kwargs.get(
-            "include_implicit_simulation_model_arguments", True
-        ),
     )
     return config_builder.parser
 

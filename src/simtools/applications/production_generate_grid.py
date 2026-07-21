@@ -41,6 +41,11 @@ _APPLICATION_ARG_DEFINITIONS = {
         ),
         "metavar": "RANGE",
     },
+    "output_file": {
+        "type": str,
+        "default": "job_grid.ecsv",
+        "help": "Output ECSV production job grid.",
+    },
     "corsika_limits": {
         "type": str,
         "metavar": "FILE",
@@ -105,73 +110,37 @@ _APPLICATION_ARG_DEFINITIONS = {
     },
 }
 
-_INITIALIZATION_KWARGS = {
-    "argument_overrides": {
-        "model_version": {"required": True},
-        "output_file": {
-            "default": "job_grid.ecsv",
-            "help": "Output ECSV production job grid.",
-            "metavar": "FILE",
-        },
-        "run_number_offset": {
-            "help": "Offset for sequential run numbers; the first run is offset + 1."
-        },
-        "showers_per_run": {"required": True},
-        "site": {"required": True},
-    },
-    "common_arguments": {
-        "configuration": ["config", "env_file"],
-        "execution": [
-            "activity_id",
-            "label",
-            "log_level",
-            "log_file",
-            "log_file_path",
-            "disable_log_file",
-            "export_build_info",
-            "version",
-            "build_info",
-        ],
-    },
-    "db_config": True,
-    "include_implicit_simulation_model_arguments": False,
-    "output": ["output_file"],
-    "paths": ["output_path"],
-    "preserve_by_version_keys": ["array_layout_name"],
-    "simulation_model": ["site", "array_layout_name", "model_version"],
-    "simulation_configuration": {
-        "software": None,
-        "corsika_configuration": [
-            "primary",
-            "azimuth_angle",
-            "zenith_angle",
-            "showers_per_run",
-            "run_number_offset",
-            "energy_range",
-            "view_cone",
-            "core_scatter",
-            "corsika_he_interaction",
-            "corsika_le_interaction",
-        ],
-    },
-}
-
-
-def _add_arguments(parser):
-    """Add application arguments, including mutually exclusive shower-count modes."""
-    shower_count_group = parser.add_mutually_exclusive_group()
-    for parameter, definition in _APPLICATION_ARG_DEFINITIONS.items():
-        container = (
-            shower_count_group if parameter in {"number_of_runs", "total_showers"} else parser
-        )
-        parser.add_parameter_from_definition(container, parameter, definition)
-
 
 def main():
     """See CLI description."""
     app_context = build_application(
-        add_arguments_function=_add_arguments,
-        initialization_kwargs=_INITIALIZATION_KWARGS,
+        application_argument_definitions=_APPLICATION_ARG_DEFINITIONS,
+        initialization_kwargs={
+            "argument_overrides": {
+                "model_version": {"required": True},
+                "showers_per_run": {"required": True},
+                "site": {"required": True},
+            },
+            "db_config": True,
+            "paths": ["output_path"],
+            "simulation_model": ["site", "array_layout_name", "model_version"],
+            "simulation_configuration": {
+                "software": None,
+                "corsika_configuration": [
+                    "primary",
+                    "primary_id_type",
+                    "azimuth_angle",
+                    "zenith_angle",
+                    "showers_per_run",
+                    "run_number_offset",
+                    "energy_range",
+                    "view_cone",
+                    "core_scatter",
+                    "corsika_he_interaction",
+                    "corsika_le_interaction",
+                ],
+            },
+        },
         startup_kwargs={"resolve_sim_software_executables": False},
     )
 

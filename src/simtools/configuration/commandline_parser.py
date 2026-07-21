@@ -56,6 +56,7 @@ class CommandLineParser(argparse.ArgumentParser):
         """Initialize the command-line parser."""
         super().__init__(*args, **kwargs)
         self.argument_overrides = {}
+        self.preserve_by_version_keys = set()
 
     def initialize_default_arguments(
         self,
@@ -66,7 +67,6 @@ class CommandLineParser(argparse.ArgumentParser):
         db_config=False,
         common_arguments=None,
         argument_overrides=None,
-        include_implicit_simulation_model_arguments=True,
     ):
         """
         Initialize default arguments used by all applications (e.g., log level or test flag).
@@ -89,14 +89,9 @@ class CommandLineParser(argparse.ArgumentParser):
             all standard common groups and parameters are added.
         argument_overrides: dict, optional
             Per-parameter definition values overriding shared command-line definitions.
-        include_implicit_simulation_model_arguments: bool
-            Add the legacy implicit simulation-model arguments.
         """
         self.argument_overrides = argument_overrides or {}
-        self.initialize_simulation_model_arguments(
-            simulation_model,
-            include_implicit_arguments=include_implicit_simulation_model_arguments,
-        )
+        self.initialize_simulation_model_arguments(simulation_model)
         self.initialize_simulation_configuration_arguments(simulation_configuration)
 
         if db_config:
@@ -123,17 +118,15 @@ class CommandLineParser(argparse.ArgumentParser):
         selected_parameters = ["all"] if selection is True else selection
         self.initialize_named_argument_group(group_name, selected_parameters)
 
-    def initialize_simulation_model_arguments(self, model_options, include_implicit_arguments=True):
+    def initialize_simulation_model_arguments(self, model_options):
         """
         Initialize default arguments for simulation model definition.
 
         Parameters
         ----------
         model_options: list
-            Simulation-model parameters or legacy layout selectors to add.
-        include_implicit_arguments: bool
-            Add ``overwrite_model_parameters`` and ``ignore_missing_design_model`` even when
-            they are not requested explicitly. This preserves the legacy parser behavior.
+            Simulation-model parameters or legacy layout selectors to add. Model-aware
+            parsers always include ``overwrite_model_parameters``.
         """
         if model_options is None:
             return
@@ -144,7 +137,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
         self._add_parameters(
             group,
-            self._simulation_model_direct_parameters(requested, include_implicit_arguments),
+            self._simulation_model_direct_parameters(requested),
             definitions,
         )
 
@@ -154,7 +147,7 @@ class CommandLineParser(argparse.ArgumentParser):
         if requested & layout_options:
             self._add_simulation_model_layout_parameters(group, requested, definitions)
 
-        if include_implicit_arguments or "ignore_missing_design_model" in requested:
+        if "ignore_missing_design_model" in requested:
             self._add_parameters(group, ["ignore_missing_design_model"], definitions)
 
     def initialize_simulation_configuration_arguments(self, simulation_configuration):
@@ -195,6 +188,8 @@ class CommandLineParser(argparse.ArgumentParser):
     def add_parameter_from_definition(self, container, name, definition):
         """Add one argument from a parameter-definition dictionary."""
         merged_definition = {**definition, **getattr(self, "argument_overrides", {}).get(name, {})}
+        if merged_definition.pop("preserve_by_version", False):
+            self.preserve_by_version_keys.add(name)
         return container.add_argument(f"--{name}", **merged_definition)
 
     def initialize_named_argument_group(self, group_name, selected_parameters=None):
@@ -232,11 +227,10 @@ class CommandLineParser(argparse.ArgumentParser):
             if definition is not None:
                 self.add_parameter_from_definition(container, parameter_name, definition)
 
-    def _simulation_model_direct_parameters(self, requested, include_implicit_arguments=True):
+    def _simulation_model_direct_parameters(self, requested):
         """Return the ordered direct simulation-model parameters to add."""
         direct_parameters = [name for name in SIMULATION_MODEL_BASE_PARAMETERS if name in requested]
-        if include_implicit_arguments or "overwrite_model_parameters" in requested:
-            direct_parameters.append("overwrite_model_parameters")
+        direct_parameters.append("overwrite_model_parameters")
         if requested & SIMULATION_MODEL_SITE_DEPENDENCIES or "site" in requested:
             direct_parameters.append("site")
         if "telescope" in requested:

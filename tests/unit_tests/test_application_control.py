@@ -302,7 +302,6 @@ def test_build_application_parser(mocker, tmp_test_directory):
         db_config=True,
         common_arguments=None,
         argument_overrides=None,
-        include_implicit_simulation_model_arguments=True,
     )
 
 

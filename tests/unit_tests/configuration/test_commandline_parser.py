@@ -266,11 +266,10 @@ def test_layout_parsers():
     assert args.array_layout_parameter_file == "array_layouts.json"
 
 
-def test_simulation_model_accepts_exact_layout_selection_without_implicit_arguments():
+def test_simulation_model_accepts_exact_layout_selection():
     commandline_parser = parser.CommandLineParser()
     commandline_parser.initialize_default_arguments(
         simulation_model=["site", "model_version", "array_layout_name"],
-        include_implicit_simulation_model_arguments=False,
         paths=False,
         common_arguments={},
     )
@@ -278,8 +277,22 @@ def test_simulation_model_accepts_exact_layout_selection_without_implicit_argume
     actions = {action.dest for action in commandline_parser._actions}
     assert {"site", "model_version", "array_layout_name"} <= actions
     assert "array_element_list" not in actions
-    assert "overwrite_model_parameters" not in actions
+    assert "overwrite_model_parameters" in actions
     assert "ignore_missing_design_model" not in actions
+    assert commandline_parser.preserve_by_version_keys == {"array_layout_name"}
+
+
+def test_simulation_model_adds_ignore_missing_design_model_when_requested():
+    commandline_parser = parser.CommandLineParser()
+    commandline_parser.initialize_default_arguments(
+        simulation_model=["ignore_missing_design_model"],
+        paths=False,
+        common_arguments={},
+    )
+
+    actions = {action.dest for action in commandline_parser._actions}
+    assert "overwrite_model_parameters" in actions
+    assert "ignore_missing_design_model" in actions
 
 
 def test_simulation_configuration():

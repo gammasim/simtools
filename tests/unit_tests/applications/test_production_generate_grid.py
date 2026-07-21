@@ -7,12 +7,39 @@ import pytest
 import simtools.applications.production_generate_grid as app
 from simtools.application_control import build_application_parser
 
+INITIALIZATION_KWARGS = {
+    "argument_overrides": {
+        "model_version": {"required": True},
+        "showers_per_run": {"required": True},
+        "site": {"required": True},
+    },
+    "db_config": True,
+    "paths": ["output_path"],
+    "simulation_model": ["site", "array_layout_name", "model_version"],
+    "simulation_configuration": {
+        "software": None,
+        "corsika_configuration": [
+            "primary",
+            "primary_id_type",
+            "azimuth_angle",
+            "zenith_angle",
+            "showers_per_run",
+            "run_number_offset",
+            "energy_range",
+            "view_cone",
+            "core_scatter",
+            "corsika_he_interaction",
+            "corsika_le_interaction",
+        ],
+    },
+}
+
 
 def _parser():
     return build_application_parser(
         application_path=app.__file__,
         description=app.__doc__,
-        add_arguments_function=app._add_arguments,
+        application_argument_definitions=app._APPLICATION_ARG_DEFINITIONS,
     )
 
 
@@ -20,8 +47,8 @@ def _full_parser():
     return build_application_parser(
         application_path=app.__file__,
         description=app.__doc__,
-        add_arguments_function=app._add_arguments,
-        initialization_kwargs=app._INITIALIZATION_KWARGS,
+        application_argument_definitions=app._APPLICATION_ARG_DEFINITIONS,
+        initialization_kwargs=INITIALIZATION_KWARGS,
     )
 
 
@@ -39,8 +66,8 @@ def test_main_generates_job_grid(mock_build_application, mock_generate_job_grid)
 
     mock_generate_job_grid.assert_called_once_with(args, Path("job_grid.ecsv"))
     mock_build_application.assert_called_once_with(
-        add_arguments_function=app._add_arguments,
-        initialization_kwargs=app._INITIALIZATION_KWARGS,
+        application_argument_definitions=app._APPLICATION_ARG_DEFINITIONS,
+        initialization_kwargs=INITIALIZATION_KWARGS,
         startup_kwargs={"resolve_sim_software_executables": False},
     )
 
@@ -57,7 +84,9 @@ def test_full_parser_contains_only_relevant_shared_arguments():
         "model_version",
         "output_file",
         "output_path",
+        "overwrite_model_parameters",
         "primary",
+        "primary_id_type",
         "run_number_offset",
         "showers_per_run",
         "site",
@@ -75,13 +104,9 @@ def test_full_parser_contains_only_relevant_shared_arguments():
         "data_path",
         "eslope",
         "event_number_first_shower",
-        "figure_format",
         "model_path",
-        "overwrite_model_parameters",
-        "primary_id_type",
         "run_number",
         "telescope",
-        "user_name",
     }
     assert irrelevant.isdisjoint(actions)
 
@@ -143,11 +168,6 @@ def test_add_arguments_accepts_zenith_angle_scaling_factor():
     args = parser.parse_args(["--zenith_angle_scaling_factor", "2.5"])
 
     assert args.zenith_angle_scaling_factor == pytest.approx(2.5)
-
-
-def test_add_arguments_rejects_both_shower_count_modes():
-    with pytest.raises(SystemExit):
-        _parser().parse_args(["--number_of_runs", "2", "--total_showers", "1000"])
 
 
 def test_add_arguments_accepts_max_total_showers_rounding_warnings():

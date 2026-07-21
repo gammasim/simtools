@@ -97,11 +97,9 @@ class Configurator:
         simulation_model=None,
         simulation_configuration=None,
         db_config=False,
-        preserve_by_version_keys=None,
         relax_required_options=None,
         common_arguments=None,
         argument_overrides=None,
-        include_implicit_simulation_model_arguments=True,
     ):
         """
         Initialize application configuration.
@@ -125,9 +123,6 @@ class Configurator:
             Dict of simulation software configuration parameters to add to list of args.
         db_config: bool
             Add database configuration parameters to list of args.
-        preserve_by_version_keys: list
-            Top-level configuration keys whose ``by_version`` dictionaries should be preserved
-            during initial YAML loading.
         relax_required_options: list
             CLI options that allow required parser arguments to be relaxed before reading
             full configuration. Defaults to ``["--config"]``.
@@ -135,8 +130,6 @@ class Configurator:
             Mapping of common argument-group names to selected parameter names.
         argument_overrides: dict, optional
             Per-parameter definition values overriding shared command-line definitions.
-        include_implicit_simulation_model_arguments: bool
-            Add legacy implicit simulation-model arguments.
 
         Returns
         -------
@@ -154,9 +147,6 @@ class Configurator:
             db_config=db_config,
             common_arguments=common_arguments,
             argument_overrides=argument_overrides,
-            include_implicit_simulation_model_arguments=(
-                include_implicit_simulation_model_arguments
-            ),
         )
 
         cli_arglist_kwargs = {"require_command_line": require_command_line}
@@ -177,15 +167,12 @@ class Configurator:
         }
         self.config.update(env_config)
         self.config.update(gen.change_dict_keys_case(self.config_class_init or {}))
-        if preserve_by_version_keys:
-            self.config.update(
-                self._config_from_file(
-                    _config_file,
-                    preserve_by_version_keys=preserve_by_version_keys,
-                )
+        self.config.update(
+            self._config_from_file(
+                _config_file,
+                preserve_by_version_keys=self.parser.preserve_by_version_keys,
             )
-        else:
-            self.config.update(self._config_from_file(_config_file))
+        )
         self._fill_config(_cli_arglist)
 
         if self.config.get("activity_id", None) is None:

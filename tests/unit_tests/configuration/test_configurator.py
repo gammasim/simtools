@@ -106,9 +106,12 @@ def test_config_from_file_preserves_selected_by_version_keys(tmp_test_directory)
         yaml.safe_dump(config_dict, output, sort_keys=False)
 
     config_builder = Configurator()
+    config_builder.parser.initialize_default_arguments(
+        simulation_model=["array_layout_name"], paths=False, common_arguments={}
+    )
     loaded_config = config_builder._config_from_file(
         config_file,
-        preserve_by_version_keys=["array_layout_name"],
+        preserve_by_version_keys=config_builder.parser.preserve_by_version_keys,
     )
 
     assert loaded_config["model_version"] == ["6.3.0", "7.0.0"]
@@ -423,7 +426,9 @@ def test_initialize(configurator):
     configurator.parser.initialize_default_arguments.assert_called_once()
     configurator._get_cli_arglist.assert_called_once_with(require_command_line=True)
     configurator._config_from_env.assert_called_once_with(".env")
-    configurator._config_from_file.assert_called_once_with(None)
+    configurator._config_from_file.assert_called_once_with(
+        None, preserve_by_version_keys=configurator.parser.preserve_by_version_keys
+    )
     configurator._fill_config.assert_called_once_with([])
     configurator._initialize_model_versions.assert_called_once()
     configurator._initialize_io_handler.assert_called_once()
