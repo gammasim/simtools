@@ -5,6 +5,7 @@ import pytest
 from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.configuration.arguments import (
+    ARRAY_LAYOUT_NAME,
     ENERGY_RANGE,
     PRIMARY,
     SITE,
@@ -33,6 +34,27 @@ def test_add_argument_definitions_registers_shared_arguments():
     assert args.primary == "gamma"
     assert_quantity_allclose(args.energy_range[0], 30 * u.GeV)
     assert_quantity_allclose(args.energy_range[1], 2 * u.TeV)
+
+
+def test_add_argument_definitions_records_by_version_arguments():
+    """Only declarations supporting unresolved version mappings are recorded."""
+    parser = CommandLineParser()
+    parser.add_argument_definitions((ARRAY_LAYOUT_NAME, SITE))
+
+    assert parser.preserve_by_version == {"array_layout_name"}
+
+
+def test_add_argument_definitions_reuses_display_groups():
+    """Arguments sharing a display group create one argparse group."""
+    parser = CommandLineParser()
+    parser.add_argument_definitions((SITE, ARRAY_LAYOUT_NAME))
+
+    groups = [group for group in parser._action_groups if group.title == "simulation model"]
+    assert len(groups) == 1
+    assert {action.dest for action in groups[0]._group_actions} == {
+        "array_layout_name",
+        "site",
+    }
 
 
 def test_add_argument_definitions_registers_mutually_exclusive_bundle():

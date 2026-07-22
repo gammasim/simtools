@@ -23,6 +23,7 @@ class ArgumentDefinition:
     group: str | None
     exclusive_group: str | None
     exclusive_group_required: bool
+    preserve_by_version: bool
     kwargs: Mapping
 
     def __init__(
@@ -32,6 +33,7 @@ class ArgumentDefinition:
         group=None,
         exclusive_group=None,
         exclusive_group_required=False,
+        preserve_by_version=False,
         **kwargs,
     ):
         if not name or name.startswith("-"):
@@ -40,6 +42,7 @@ class ArgumentDefinition:
         object.__setattr__(self, "group", group)
         object.__setattr__(self, "exclusive_group", exclusive_group)
         object.__setattr__(self, "exclusive_group_required", exclusive_group_required)
+        object.__setattr__(self, "preserve_by_version", preserve_by_version)
         object.__setattr__(self, "kwargs", MappingProxyType(dict(kwargs)))
 
     def __call__(self, **overrides):
@@ -49,6 +52,7 @@ class ArgumentDefinition:
             group=self.group,
             exclusive_group=self.exclusive_group,
             exclusive_group_required=self.exclusive_group_required,
+            preserve_by_version=self.preserve_by_version,
             **{**self.kwargs, **overrides},
         )
 
@@ -62,6 +66,7 @@ class ArgumentDefinition:
             group=self.group,
             exclusive_group=self.exclusive_group,
             exclusive_group_required=False,
+            preserve_by_version=self.preserve_by_version,
             **kwargs,
         )
 
@@ -480,6 +485,7 @@ ARRAY_LAYOUT_NAME = _argument(
     ),
     nargs="+",
     type=str,
+    preserve_by_version=True,
 )
 
 ARRAY_ELEMENT_LIST = _argument(

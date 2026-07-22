@@ -37,9 +37,11 @@ class Configurator:
         Class label.
     description: str
         Text displayed as description.
+    usage: str
+        Application usage description.
     """
 
-    def __init__(self, config=None, label=None, description=None):
+    def __init__(self, config=None, label=None, description=None, usage=None):
         """Initialize Configurator."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init Configuration")
@@ -57,6 +59,7 @@ class Configurator:
         self.parser = argparser.CommandLineParser(
             prog=self.label,
             description=description,
+            usage=usage,
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         )
 
@@ -196,7 +199,7 @@ class Configurator:
             _config_dict = simtools_version.resolve_by_version(
                 _config_dict,
                 _config_dict.get("model_version"),
-                preserve_inconsistent=True,
+                preserve_inconsistent_keys=self.parser.preserve_by_version,
             )
             return gen.change_dict_keys_case(_config_dict)
         except TypeError, AttributeError:

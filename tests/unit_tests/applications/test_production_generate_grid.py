@@ -34,15 +34,23 @@ def test_main_generates_job_grid(mock_start, mock_generate_job_grid):
     mock_start.assert_called_once_with()
 
 
-def test_full_parser_contains_only_relevant_shared_arguments():
+def test_full_parser_retains_supported_shared_arguments():
     parser = _full_parser()
     actions = {action.dest: action for action in parser._actions}
 
     expected = {
         "array_layout_name",
+        "array_element_list",
         "azimuth_angle",
+        "correct_for_b_field_alignment",
         "core_scatter",
+        "curved_atmosphere_min_zenith_angle",
+        "data_path",
         "energy_range",
+        "eslope",
+        "event_number_first_shower",
+        "ignore_missing_design_model",
+        "model_path",
         "model_version",
         "output_file",
         "output_path",
@@ -50,27 +58,16 @@ def test_full_parser_contains_only_relevant_shared_arguments():
         "primary",
         "primary_id_type",
         "run_number_offset",
+        "run_number",
         "showers_per_run",
         "site",
+        "telescope",
         "view_cone",
         "zenith_angle",
     }
     assert expected <= set(actions)
     assert actions["output_file"].default == "job_grid.ecsv"
     assert actions["output_file"].help == "Output ECSV production job grid."
-
-    irrelevant = {
-        "array_element_list",
-        "correct_for_b_field_alignment",
-        "curved_atmosphere_min_zenith_angle",
-        "data_path",
-        "eslope",
-        "event_number_first_shower",
-        "model_path",
-        "run_number",
-        "telescope",
-    }
-    assert irrelevant.isdisjoint(actions)
 
 
 def test_full_parser_accepts_minimum_direct_configuration():

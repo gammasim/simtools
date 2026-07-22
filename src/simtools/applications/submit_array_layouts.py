@@ -64,6 +64,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.MODEL_VERSION,
         cli.UPDATED_PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
         *cli.PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),

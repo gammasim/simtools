@@ -277,7 +277,7 @@ def _resolve_single_version(by_version, parsed_version):
     return None
 
 
-def _resolve_by_version_field(by_version, parsed_versions, key, versions, preserve_inconsistent):
+def _resolve_by_version_field(by_version, parsed_versions, key, versions, preserved_keys):
     """Resolve one ``by_version`` field for the requested model versions."""
     matched_values = [
         _resolve_single_version(by_version, parsed_version) for parsed_version in parsed_versions
@@ -285,7 +285,7 @@ def _resolve_by_version_field(by_version, parsed_versions, key, versions, preser
     first_match = matched_values[0]
     if all(match == first_match for match in matched_values):
         return first_match
-    if preserve_inconsistent:
+    if key in preserved_keys:
         return {"by_version": by_version}
     raise ValueError(
         f"Inconsistent by_version resolution for key '{key}' and model versions "
@@ -293,7 +293,7 @@ def _resolve_by_version_field(by_version, parsed_versions, key, versions, preser
     )
 
 
-def resolve_by_version(config, model_version, preserve_inconsistent=False):
+def resolve_by_version(config, model_version, preserve_inconsistent_keys=None):
     """
     Resolve version-dependent values in a configuration dictionary.
 
@@ -307,8 +307,8 @@ def resolve_by_version(config, model_version, preserve_inconsistent=False):
     model_version : str or list
         Semantic version string or list of strings used to evaluate constraints
         (e.g. "6.0.2" or ["6.0.2", "6.1.1"]).
-    preserve_inconsistent : bool, optional
-        Retain ``by_version`` mappings that resolve differently for multiple versions.
+    preserve_inconsistent_keys : set, optional
+        Keys whose ``by_version`` mappings are retained when they resolve differently.
 
     Returns
     -------
@@ -321,11 +321,12 @@ def resolve_by_version(config, model_version, preserve_inconsistent=False):
 
     versions = model_version if isinstance(model_version, list) else [model_version]
     parsed_versions = [Version(str(version_item)) for version_item in versions]
+    preserved_keys = set(preserve_inconsistent_keys or ())
     resolved = {}
     for key, value in config.items():
         if isinstance(value, dict) and list(value) == ["by_version"]:
             resolved[key] = _resolve_by_version_field(
-                value["by_version"], parsed_versions, key, versions, preserve_inconsistent
+                value["by_version"], parsed_versions, key, versions, preserved_keys
             )
         else:
             resolved[key] = value

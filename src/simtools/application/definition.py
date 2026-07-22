@@ -29,6 +29,7 @@ class ApplicationDefinition:
     resolve_sim_software_executables: bool = True
     post_parse: PostParseHook | None = None
     defer_required_validation: bool = False
+    usage: str | None = None
 
     @classmethod
     def for_module(cls, module_name, **kwargs):
@@ -72,6 +73,7 @@ class ApplicationDefinition:
         config_builder = configurator.Configurator(
             label=self.label,
             description=self._description_line(),
+            usage=self.usage,
         )
         config_builder.parser.add_argument_definitions(arguments)
         return config_builder

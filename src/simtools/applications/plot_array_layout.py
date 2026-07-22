@@ -264,12 +264,14 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
         cli.SITE,
         *cli.layout_selection_arguments(include_file=True, include_plot_all=True),
         cli.ARRAY_LAYOUT_PARAMETER_FILE,
         *cli.PATH_ARGUMENTS,
     ),
     database=True,
+    usage="Use '--plot_all_layouts' to plot all layouts for the given site and model version.",
 )
 
 

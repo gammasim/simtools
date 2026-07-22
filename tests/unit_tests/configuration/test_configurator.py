@@ -11,6 +11,7 @@ import pytest
 import yaml
 
 from simtools.configuration.arguments import (
+    ARRAY_LAYOUT_NAME,
     DATABASE_ARGUMENTS,
     OUTPUT_ARGUMENTS,
     PATH_ARGUMENTS,
@@ -126,6 +127,7 @@ def test_config_from_file_preserves_selected_by_version_keys(tmp_test_directory)
         yaml.safe_dump(config_dict, output, sort_keys=False)
 
     config_builder = Configurator()
+    config_builder.parser.add_argument_definitions((ARRAY_LAYOUT_NAME,))
     loaded_config = config_builder._config_from_file(config_file)
 
     assert loaded_config["model_version"] == ["6.3.0", "7.0.0"]
@@ -135,6 +137,31 @@ def test_config_from_file_preserves_selected_by_version_keys(tmp_test_directory)
             ">=7.0.0": "CTAO-North-Alpha",
         }
     }
+
+
+def test_config_from_file_rejects_inconsistent_unpreserved_by_version_key(
+    tmp_test_directory,
+):
+    config_file = tmp_test_directory / "configuration-reject-by-version.yml"
+    with open(config_file, "w", encoding="utf-8") as output:
+        yaml.safe_dump(
+            {
+                "model_version": ["6.3.0", "7.0.0"],
+                "site": {
+                    "by_version": {
+                        "<7.0.0": "North",
+                        ">=7.0.0": "South",
+                    }
+                },
+            },
+            output,
+            sort_keys=False,
+        )
+
+    config_builder = Configurator()
+
+    with pytest.raises(ValueError, match="Inconsistent by_version resolution for key 'site'"):
+        config_builder._config_from_file(config_file)
 
 
 def test_config_from_file_resolves_test_resource_paths(tmp_test_directory):

@@ -21,6 +21,18 @@ def test_argument_definition_validates_name_and_overrides():
         ArgumentDefinition("--input_file")
 
 
+def test_argument_definition_override_preserves_declaration_metadata():
+    """Application-local overrides retain non-argparse declaration metadata."""
+    definition = ArgumentDefinition(
+        "input_file", group="input", preserve_by_version=True, required=False
+    )
+
+    required = definition(required=True)
+
+    assert required.group == "input"
+    assert required.preserve_by_version is True
+
+
 def test_application_definition_rejects_duplicate_arguments():
     """Duplicate option names fail when the application is declared."""
     with pytest.raises(ValueError, match=r"Duplicate command-line argument.*input"):
@@ -55,6 +67,17 @@ def test_build_parser_registers_groups_and_exclusive_arguments():
     assert parser.parse_args(["--file", "events.simtel.zst", "--value", "2"]).value == 2
     with pytest.raises(SystemExit):
         parser.parse_args([])
+
+
+def test_build_parser_uses_declared_usage():
+    """Application-specific usage text is retained by the parser."""
+    application = ApplicationDefinition(
+        module_name="simtools.applications.test",
+        description="Test application.",
+        usage="simtools-test --value VALUE",
+    )
+
+    assert application.build_parser().usage == "simtools-test --value VALUE"
 
 
 def test_start_delegates_to_common_startup(mocker):

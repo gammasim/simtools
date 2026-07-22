@@ -57,11 +57,15 @@ APPLICATION = ApplicationDefinition.for_module(
     arguments=(
         *_ARGUMENTS,
         cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
         cli.SITE,
         cli.TELESCOPE,
         *cli.PATH_ARGUMENTS,
     ),
     database=True,
+    usage=(
+        "simtools-plot-tabular-data --plot_config config_file_name --output_file output_file_name"
+    ),
 )
 
 

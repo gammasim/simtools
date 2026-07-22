@@ -92,6 +92,7 @@ APPLICATION = ApplicationDefinition.for_module(
     database=True,
     setup_io_handler=False,
     resolve_sim_software_executables=False,
+    usage="simtools-run-application --config_file config_file_name",
 )
 
 
