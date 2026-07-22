@@ -63,17 +63,34 @@ Local frame aligned with shower propagation direction. Used for ray-tracing and 
 
 ### Pixel Coordinates
 
-Photosensor positions in the focal plane.
+Photosensor positions in the focal plane as read from the sim_telarray camera configuration file,
+before the `Rotate` angle is applied.
 
 - **Plane:** Focal plane
 - **Origin:** Camera center
 - **Units:** Centimeters (cm)
 - **Pixel shapes:** Hexagonal (codes 1, 3 for different orientation) or Square (code 2)
 - **Data source:** sim_telarray camera configuration files
-- **Storage:** `simtools.model.camera.Camera` class
 
-Includes pixel position (x, y), ID, on/off status, and diameter.
+Includes pixel position (x, y), ID, on/off status, and diameter. The pixel coordinates define
+a coordinate basis aligned with the unrotated pixel layout.
 
 ### Camera Coordinates
 
-same as pixel coordinates, but no camera rotation applied.
+Pixel positions after applying the camera rotation from the `Rotate` entry in the sim_telarray
+camera configuration file. `simtools.model.camera.Camera` applies this rotation during
+initialization via `Camera._rotate_pixels`, so the coordinates stored in the `Camera` class are
+the rotated camera coordinates. For a rotation angle $\phi$, simtools uses
+
+$$
+x_{cam} = x_{pix}\cos(\phi) - y_{pix}\sin(\phi),
+$$
+
+$$
+y_{cam} = x_{pix}\sin(\phi) + y_{pix}\cos(\phi).
+$$
+
+Camera plots can additionally transform these coordinates to show the layout from the requested
+viewpoint. For a single-mirror telescope, the default is the view of an observer facing the
+camera. In that view, $x_{cam}$ points down and $y_{cam}$ points left. The displayed
+$x_{pix}$ and $y_{pix}$ axes show the unrotated pixel basis expressed in this camera view.
