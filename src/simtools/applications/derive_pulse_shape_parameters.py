@@ -60,7 +60,7 @@ from simtools.simtel.pulse_shapes import solve_sigma_tau_from_rise_fall
 _ARGUMENTS = (
     cli.ArgumentDefinition(
         "rise_width_ns",
-        help="Wdth on the rising edge in ns between rise_range fractions.",
+        help="Width on the rising edge in ns between rise_range fractions.",
         type=float,
         required=True,
     ),
