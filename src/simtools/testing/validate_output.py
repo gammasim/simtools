@@ -502,7 +502,7 @@ def _compare_nested_dicts_with_tolerance(data1, data2, tolerance, is_value_field
     if is_value_field:
         try:
             return _compare_value_from_parameter_dict(data1, data2, tolerance)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return data1 == data2
     if isinstance(data1, str) and isinstance(data2, str):
         return data1 == data2 or _compare_resource_path_strings(data1, data2)

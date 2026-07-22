@@ -9,12 +9,12 @@ import tarfile
 import time
 import urllib.error
 import urllib.request
+import uuid
 from pathlib import Path, PurePosixPath
 from urllib.parse import urlparse
 
 import dotenv
 import numpy as np
-import uuid6
 
 _logger = logging.getLogger(__name__)
 
@@ -1011,7 +1011,7 @@ def get_uuid():
     str
         A UUID string.
     """
-    return str(uuid6.uuid7())
+    return str(uuid.uuid7())
 
 
 def extract_uuid7_from_path(path):
@@ -1029,8 +1029,8 @@ def extract_uuid7_from_path(path):
     """
     for path_part in reversed(Path(path).parts):
         try:
-            candidate = uuid6.UUID(path_part)
-        except (ValueError, TypeError):
+            candidate = uuid.UUID(path_part)
+        except ValueError, TypeError:
             continue
         if candidate.version == 7:
             return str(candidate)

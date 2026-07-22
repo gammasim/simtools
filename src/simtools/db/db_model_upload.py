@@ -330,7 +330,7 @@ def _confirm_remote_database_upload(db):
 
         return True
 
-    except (EOFError, KeyboardInterrupt):
+    except EOFError, KeyboardInterrupt:
         logger.info(abort_message)
         return False
 
