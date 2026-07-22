@@ -39,7 +39,7 @@ def _get_number_of_camera_pixel(args_dict):
             args_dict, schema.get_model_parameter_schema_file("camera_pixels")
         )
         _camera_pixel = config_reader.parameter_dict.get(args_dict["simtel_telescope_name"])
-    except (FileNotFoundError, AttributeError):
+    except FileNotFoundError, AttributeError:
         logger.warning("Unable to retrieve camera pixel parameter.")
         _camera_pixel = None
     logger.info(f"Number of camera pixels: {_camera_pixel}")

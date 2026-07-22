@@ -3,6 +3,7 @@
 import datetime
 import logging
 import time
+import uuid
 from copy import copy
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -591,6 +592,10 @@ def test_extract_uuid7_from_path():
         "019d776b-e24c-741d-bc05-e3f6f7ec77c7/config.yml"
     )
     assert gen.extract_uuid7_from_path(path) == "019d776b-e24c-741d-bc05-e3f6f7ec77c7"
+
+
+def test_get_uuid():
+    assert uuid.UUID(gen.get_uuid()).version == 7
 
 
 def test_extract_uuid7_from_path_with_no_uuid7():

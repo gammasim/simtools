@@ -207,7 +207,7 @@ class MetadataCollector:
             url = self.input_metadata[0][self.observatory]["product"]["data"]["model"]["url"]
             self._logger.debug(f"Schema file from input metadata: {url}")
             return url
-        except (KeyError, TypeError, IndexError):
+        except KeyError, TypeError, IndexError:
             pass
 
         return None
@@ -251,7 +251,7 @@ class MetadataCollector:
             )
             if _site is not None:
                 return names.validate_site_name(_site)
-        except (KeyError, TypeError, IndexError):
+        except KeyError, TypeError, IndexError:
             pass
         return None
 
@@ -310,7 +310,7 @@ class MetadataCollector:
                 context_dict["associated_data"] = self._fill_context_sim_list(
                     context_dict["associated_data"], reduced_product_meta
                 )
-            except (KeyError, TypeError):
+            except KeyError, TypeError:
                 self._logger.debug("No input product metadata appended to associated data.")
 
         associated_activities = self.args_dict.get("associated_activities")
@@ -342,7 +342,7 @@ class MetadataCollector:
 
         try:
             table_meta = Table.read(value_path, format="ascii.ecsv").meta
-        except (OSError, KeyError, AttributeError, ValueError):
+        except OSError, KeyError, AttributeError, ValueError:
             return
 
         context_from_simtel = table_meta.get("context_from_sim_telarray")
@@ -641,7 +641,7 @@ class MetadataCollector:
             meta_dict[self.observatory]["product"]["description"] = self._remove_line_feed(
                 meta_dict[self.observatory]["product"]["description"]
             )
-        except (KeyError, AttributeError):
+        except KeyError, AttributeError:
             pass
 
         return meta_dict

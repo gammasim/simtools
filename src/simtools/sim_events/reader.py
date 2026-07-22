@@ -128,7 +128,7 @@ class EventDataReader:
                 range(len(dataset_dict["SHOWERS"])),
                 key=lambda i: int(dataset_dict["SHOWERS"][i].split("_")[-1]),
             )
-        except (ValueError, AttributeError):
+        except ValueError, AttributeError:
             sorted_indices = [0]  # Handle the case where the key is only "SHOWERS"
         for i in sorted_indices:
             entry = {

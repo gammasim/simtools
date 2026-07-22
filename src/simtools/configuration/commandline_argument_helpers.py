@@ -155,7 +155,7 @@ def quantity(target_unit):
         try:
             try:
                 return float(value) * target
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 return u.Quantity(value).to(target)
         except (TypeError, ValueError, u.UnitConversionError) as exc:
             raise argparse.ArgumentTypeError(
@@ -470,7 +470,7 @@ def string_or_dict(value):
     if stripped.startswith("{") and stripped.endswith("}"):
         try:
             parsed = ast.literal_eval(stripped)
-        except (ValueError, SyntaxError):
+        except ValueError, SyntaxError:
             return value
         if isinstance(parsed, dict):
             return parsed

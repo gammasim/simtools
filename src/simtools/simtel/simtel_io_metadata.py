@@ -161,7 +161,7 @@ def _guess_telescope_name_for_legacy_files(tel_counter, file):
     telescope_list = _legacy_merge_msts(_get_telescope_list_from_input_card(file))
     try:
         return names.validate_array_element_name(telescope_list[tel_counter])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         pass
     return None
 

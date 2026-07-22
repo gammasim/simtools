@@ -140,7 +140,7 @@ class ReportGenerator:
         sites = names.get_site_from_array_element_name(telescope)
         return [sites] if not isinstance(sites, list) else sites
 
-    def _generate_parameter_report_combinations(self) -> Generator[tuple[str, str], None, None]:
+    def _generate_parameter_report_combinations(self) -> Generator[tuple[str, str]]:
         """Generate combinations of telescopes and sites for report generation."""
         if not self.args.get("all_telescopes"):
             # For a specific telescope, get its valid sites regardless of --all_sites
@@ -176,7 +176,7 @@ class ReportGenerator:
         if self.args.get("all_telescopes"):
             self._generate_calibration_device_parameter_reports()
 
-    def _generate_observatory_report_combinations(self) -> Generator[tuple[str, str], None, None]:
+    def _generate_observatory_report_combinations(self) -> Generator[tuple[str, str]]:
         """Generate combinations of sites and model versions for observatory reports.
 
         Yields
