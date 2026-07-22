@@ -76,6 +76,7 @@ def simulation_models_path(tmp_test_directory):
                 "xSTx-design": {
                     "corsika_cherenkov_photon_bunch_size": "1.0.0",
                     "corsika_particle_kinetic_energy_cutoff": "1.0.0",
+                    "corsika_starting_grammage": "1.0.2",
                 }
             },
         },
@@ -100,8 +101,8 @@ def simulation_models_path(tmp_test_directory):
             "North",
             "dsum_prescale",
             "1.0.0",
-            [42, 256],
-            parameter_type="int64",
+            [42.0, 256.0],
+            parameter_type="uint64",
         ),
     )
     _write_json(
@@ -145,6 +146,22 @@ def simulation_models_path(tmp_test_directory):
             "1.0.0",
             [0.3, 0.1, 0.02, 0.02],
             unit="GeV",
+        ),
+    )
+    _write_json(
+        parameters
+        / ("configuration_corsika/corsika_starting_grammage/corsika_starting_grammage-1.0.2.json"),
+        _parameter(
+            None,
+            None,
+            "corsika_starting_grammage",
+            "1.0.2",
+            [
+                {"instrument": "LSTN-design", "primary_particle": "muon-", "value": 580.0},
+                {"instrument": "LSTN-design", "primary_particle": "default", "value": 0.0},
+            ],
+            parameter_type="dict",
+            unit="g/cm2",
         ),
     )
     _write_json(
@@ -283,6 +300,7 @@ def test_database_handler_uses_files_without_mongodb(simulation_models_path, moc
     assert layouts["array_layouts"]["value"] == [{"name": "test", "elements": ["LSTN-01"]}]
     assert corsika["corsika_cherenkov_photon_bunch_size"]["value"] == pytest.approx(5.0)
     assert corsika["corsika_particle_kinetic_energy_cutoff"]["unit"] == "GeV"
+    assert corsika["corsika_starting_grammage"]["unit"] == "g/cm2"
     assert sim_telarray["min_photons"]["value"] == pytest.approx(2.0)
     mongo_handler.assert_not_called()
 

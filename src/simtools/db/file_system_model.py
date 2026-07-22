@@ -133,10 +133,15 @@ class FileSystemModelHandler:
             if not parameter_path.is_file():
                 raise FileNotFoundError(f"Model parameter file not found: {parameter_path}")
             parameter_data = ascii_handler.collect_data_from_file(file_name=parameter_path)
+            parameter_data["value"], _ = value_conversion.split_value_and_unit(
+                parameter_data["value"], "int" in parameter_data.get("type", "float")
+            )
             parameter_data["value"], base_unit, _ = value_conversion.get_value_unit_type(
                 value=parameter_data["value"], unit_str=parameter_data.get("unit")
             )
-            parameter_data["unit"] = value_conversion.normalize_dimensionless_unit(base_unit)
+            parameter_data["unit"] = value_conversion.normalize_model_parameter_unit(
+                parameter_data["value"], base_unit
+            )
             self.model_parameters_cached[cache_key] = parameter_data
         return deepcopy(self.model_parameters_cached[cache_key])
 
