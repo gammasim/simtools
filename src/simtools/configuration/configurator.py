@@ -13,6 +13,7 @@ from simtools.db.mongo_db import jsonschema_db_dict
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
 
+# Allow to specify e.g., {"by_version:" "<7.0.0": beta, ">=7.0.0": CTAO-South-Beta}
 PER_VERSION_CONFIGURATION_KEYS = {"array_layout_name"}
 
 
@@ -23,7 +24,7 @@ class Configurator:
     Allow to set configuration parameters by
 
     - command line arguments
-    - configuration file (yml file)
+    - configuration file
     - configuration dict when calling the class
     - environmental variables
 

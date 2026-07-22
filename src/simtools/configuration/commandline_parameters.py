@@ -107,7 +107,7 @@ PARAMETER_DEFINITIONS = {
     },
     "CONFIGURATION_ARGS": {
         "config": {
-            "help": "YAML application configuration file.",
+            "help": "Application configuration file.",
             "default": None,
             "type": str,
         },

@@ -316,7 +316,7 @@ def test_build_application_parser_uses_definition_help_for_default_arguments():
 
     actions = {action.dest: action for action in parser._actions}  # pylint: disable=protected-access
 
-    assert actions["config"].help == "YAML application configuration file."
+    assert actions["config"].help == "Application configuration file."
     assert not hasattr(actions["config"], "simtools_doc")
     assert not hasattr(actions["output_file"], "simtools_doc")
     assert not hasattr(actions["db_api_user"], "simtools_doc")
@@ -345,19 +345,14 @@ def test_startup_application_basic():
     mock_db_config = {"host": "localhost"}
     mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
 
-    # Call startup_application
     app_context = startup_application(mock_parse_function)
-
-    # Verify parse function was called
     mock_parse_function.assert_called_once()
 
-    # Verify returned values
     assert app_context.args == mock_args_dict
     assert app_context.db_config == mock_db_config
     assert isinstance(app_context.logger, logging.Logger)
     assert app_context.io_handler is not None
 
-    # Verify logger level was set
     assert app_context.logger.level == logging.INFO
 
 

@@ -124,8 +124,7 @@ class CommandLineParser(argparse.ArgumentParser):
         Parameters
         ----------
         model_options: list
-            Simulation-model parameters or legacy layout selectors to add. Model-aware
-            parsers always include ``overwrite_model_parameters``.
+            Simulation-model parameters or legacy layout selectors to add.
         """
         if model_options is None:
             return
