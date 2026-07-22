@@ -85,10 +85,19 @@ fi
 
 strings "$executable" > "${report_dir}/executable.strings"
 if [[ "$model" == "qgs3" ]]; then
-    grep -q "QGSJET-III MODEL" "${report_dir}/executable.strings"
-    grep -q "QUARK GLUON STRING JET - III MODEL" "${report_dir}/executable.strings"
+    grep -q "QGSJET-III MODEL" "${report_dir}/executable.strings" || {
+        echo "Expected QGSJET-III banner not found in strings output for ${executable}." >&2
+        exit 1
+    }
+    grep -q "QUARK GLUON STRING JET - III MODEL" "${report_dir}/executable.strings" || {
+        echo "Expected expanded QGSJET-III banner not found in strings output for ${executable}." >&2
+        exit 1
+    }
 else
-    grep -q "EPOS MODEL" "${report_dir}/executable.strings"
+    grep -q "EPOS MODEL" "${report_dir}/executable.strings" || {
+        echo "Expected EPOS banner not found in strings output for ${executable}." >&2
+        exit 1
+    }
 fi
 
 startup_validation="skipped (requires ${optimization} CPU support)"
