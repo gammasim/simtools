@@ -105,7 +105,7 @@ class DataValidator:
             else:
                 self.data_table = Table.read(self.data_file_name, guess=True, delimiter=r"\s")
                 self.logger.info(f"Validating tabled data from: {self.data_file_name}")
-        except (AttributeError, TypeError):
+        except AttributeError, TypeError:
             pass
         if is_model_parameter:
             self.validate_parameter_and_file_name()
@@ -886,7 +886,7 @@ class DataValidator:
             col_index = int(col_name)
             if col_index < max_logs:
                 self.logger.debug(message)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             self.logger.debug(message)
 
     @staticmethod

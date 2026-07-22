@@ -522,7 +522,7 @@ class ArrayModel:
                             "array_element_sphere_radius"
                         )
                     )
-                except (KeyError, InvalidModelParameterError):
+                except KeyError, InvalidModelParameterError:
                     tel_r.append(float("nan") * u.m)
 
         table["telescope_name"] = name

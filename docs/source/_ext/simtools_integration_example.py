@@ -19,8 +19,6 @@ Render only the command block for an example:
        :show-command:
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from pathlib import Path
 

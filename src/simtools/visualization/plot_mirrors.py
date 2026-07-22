@@ -414,7 +414,7 @@ def _extract_float_after_keyword(line, keyword):
     try:
         part = line.split(keyword, 1)[1] if keyword == "=" else line.split(keyword)[-1]
         return float(part.strip().split()[0])
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         return None
 
 
@@ -656,7 +656,7 @@ def _parse_segment_id_line(line_stripped):
     """Extract segment ID from a line if it contains segment ID information."""
     try:
         return int(line_stripped.split()[-1])
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         return 0
 
 

@@ -5,10 +5,10 @@
 # documentation root, use Path.resolve() to make it absolute, like shown here.
 
 # pylint: skip-file
+import tomllib
 from pathlib import Path
 from sys import path
 
-import toml
 import yaml
 
 import simtools.version
@@ -36,8 +36,8 @@ def get_authors_from_citation_file():
 
 def get_python_version_from_pyproject():
     """Read python version from pyproject.toml file."""
-    with open(Path(__file__).parent / "../../pyproject.toml") as file:
-        pyproject = toml.load(file)
+    with open(Path(__file__).parent / "../../pyproject.toml", "rb") as file:
+        pyproject = tomllib.load(file)
 
     return (
         pyproject["project"]["requires-python"],

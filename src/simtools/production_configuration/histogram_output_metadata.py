@@ -7,7 +7,7 @@ def _read_source_value(source, column_name):
     """Read one value from a dict-like source, preserving table-column units for row scalars."""
     try:
         value = source[column_name]
-    except (KeyError, IndexError, TypeError):
+    except KeyError, IndexError, TypeError:
         return None
 
     source_table = getattr(source, "table", None)

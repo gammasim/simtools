@@ -228,5 +228,5 @@ def trace_maximum(trace):
     try:
         peaks, _ = signal.find_peaks(trace, prominence=0.1 * np.max(trace))
         return peaks.astype(int)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return np.empty(0, dtype=int)
