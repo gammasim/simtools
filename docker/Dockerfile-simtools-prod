@@ -7,23 +7,27 @@
 # hadolint global ignore=DL3013,DL3041
 # - DL3013, DL3041: ignore warnings about using latest
 
-ARG CORSIKA_IMAGE_VERSION="v78010"
-ARG SIMTEL_IMAGE_VERSION="latest"
+ARG CORSIKA_IMAGE
+ARG SIMTEL_IMAGE
+ARG BASE_IMAGE
 ARG AVX_FLAG="generic"
-ARG PYTHON_VERSION="3.14"
-ARG SIMTOOLS_BRANCH=main
-ARG ALMALINUX_VERSION="9.8"
+ARG PYTHON_VERSION
+ARG SIMTOOLS_VERSION
+ARG SIMTOOLS_GIT_REVISION
 ARG CONTAINER_USER="simtools"
 ARG CONTAINER_UID="1000"
 ARG CONTAINER_GID="1000"
 
-FROM ghcr.io/gammasim/corsika7:${CORSIKA_IMAGE_VERSION}-${AVX_FLAG} AS corsika_img
-FROM ghcr.io/gammasim/sim_telarray:${SIMTEL_IMAGE_VERSION} AS simtel_img
+FROM ${CORSIKA_IMAGE} AS corsika_img
+FROM ${SIMTEL_IMAGE} AS simtel_img
 
-FROM almalinux:${ALMALINUX_VERSION}-minimal
+FROM ${BASE_IMAGE}
 ARG PYTHON_VERSION
-ARG SIMTOOLS_BRANCH
-ARG SIMTOOLS_REPO="https://github.com/gammasim/simtools.git"
+ARG SIMTOOLS_VERSION
+ARG SIMTOOLS_GIT_REVISION
+ARG CORSIKA_IMAGE
+ARG SIMTEL_IMAGE
+ARG BASE_IMAGE
 ARG CONTAINER_USER
 ARG CONTAINER_UID
 ARG CONTAINER_GID
@@ -49,19 +53,26 @@ RUN microdnf update -y && microdnf install -y \
 
 WORKDIR /workdir
 
+COPY . /workdir/simtools
+
+ENV SIMTOOLS_SIM_TELARRAY_PATH="/workdir/simulation_software/sim_telarray"
+ENV SIMTOOLS_CORSIKA_PATH="/workdir/simulation_software/corsika7"
+ENV SIMTOOLS_DEPENDENCY_MANIFEST="/opt/simtools/provenance/dependency-manifest.json"
+ENV SIMTOOLS_GIT_REVISION=${SIMTOOLS_GIT_REVISION}
+ENV SIMTOOLS_BASE_IMAGE=${BASE_IMAGE}
+ENV SIMTOOLS_CORSIKA_IMAGE=${CORSIKA_IMAGE}
+ENV SIMTOOLS_SIMTEL_IMAGE=${SIMTEL_IMAGE}
+
 # hadolint ignore=DL4006
-RUN SIMTOOLS_BRANCH="$(printf '%s' "$SIMTOOLS_BRANCH" | sed 's#refs/tags/##')" \
-  && git clone -b "$SIMTOOLS_BRANCH" "${SIMTOOLS_REPO}" --depth 1 \
-  && python${PYTHON_VERSION} -m venv env \
+RUN python${PYTHON_VERSION} -m venv env \
   && . env/bin/activate \
-  && pip install --no-cache-dir -U pip \
-  && pip install --no-cache-dir "git+${SIMTOOLS_REPO}@${SIMTOOLS_BRANCH}" \
+  && SETUPTOOLS_SCM_PRETEND_VERSION_FOR_GAMMASIMTOOLS="${SIMTOOLS_VERSION}" \
+    pip install --no-cache-dir /workdir/simtools \
+  && SIMTOOLS_CONTAINER_BUILD=1 python /workdir/simtools/tools/generate_dependency_manifest.py \
   && pip cache purge && rm -rf /root/.cache \
   && echo ". /workdir/env/bin/activate" >> "/home/${CONTAINER_USER}/.bashrc" \
   && chown -R "${CONTAINER_UID}:${CONTAINER_GID}" /workdir "/home/${CONTAINER_USER}"
 
-ENV SIMTOOLS_SIM_TELARRAY_PATH="/workdir/simulation_software/sim_telarray"
-ENV SIMTOOLS_CORSIKA_PATH="/workdir/simulation_software/corsika7"
 ENV LD_LIBRARY_PATH="/workdir/simulation_software/hessioxxx/lib:\
 /workdir/simulation_software/stdtools/lib:\
 /workdir/simulation_software/sim_telarray/LightEmission/lib:\
@@ -69,3 +80,8 @@ ENV LD_LIBRARY_PATH="/workdir/simulation_software/hessioxxx/lib:\
 ENV PATH="/workdir/env/bin/:$PATH"
 ENV HOME="/home/${CONTAINER_USER}"
 USER ${CONTAINER_USER}
+
+LABEL org.opencontainers.image.source="https://github.com/gammasim/simtools" \
+      org.opencontainers.image.revision="${SIMTOOLS_GIT_REVISION}" \
+      org.opencontainers.image.version="${SIMTOOLS_VERSION}" \
+      org.gammasim.simtools.dependency-manifest="/opt/simtools/provenance/dependency-manifest.json"

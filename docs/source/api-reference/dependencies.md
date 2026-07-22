@@ -25,7 +25,16 @@
 ## dependencies
 
 ```{eval-rst}
-.. automodule:: dependencies
+.. automodule:: simtools.dependencies
+   :members:
+```
+
+(dependency_versions)=
+
+## dependency_versions
+
+```{eval-rst}
+.. automodule:: simtools.dependency_versions
    :members:
 ```
 

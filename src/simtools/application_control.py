@@ -591,7 +591,7 @@ def _version_info(args_dict, io_handler_instance, logger):
         build_options = dependencies.get_build_options(args_dict.get("run_time"))
     except FileNotFoundError:
         logger.debug("No build options found.")
-        return
+        build_options = {}
 
     logger.info(
         f"simtools: {version.__version__} "

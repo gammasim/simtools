@@ -1,0 +1,351 @@
+"""Read and export the simtools dependency version catalog."""
+
+import argparse
+import json
+import os
+import re
+import sys
+import tomllib
+from pathlib import Path
+
+CATALOG_KEYS = ("tool", "gammasimtools", "dependency-versions")
+SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
+REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+
+
+def find_pyproject(start_path=None):
+    """Find the nearest pyproject.toml containing the dependency catalog.
+
+    Parameters
+    ----------
+    start_path : str or Path, optional
+        Directory from which to start searching.
+
+    Returns
+    -------
+    pathlib.Path
+        Path to the matching ``pyproject.toml`` file.
+
+    Raises
+    ------
+    FileNotFoundError
+        If no matching project file can be found.
+    """
+    configured_path = os.getenv("SIMTOOLS_PYPROJECT")
+    candidates = [Path(configured_path)] if configured_path else []
+    start = Path(start_path or Path.cwd()).resolve()
+    candidates.extend(parent / "pyproject.toml" for parent in (start, *start.parents))
+    source_root = Path(__file__).resolve().parents[2]
+    candidates.append(source_root / "pyproject.toml")
+
+    for candidate in candidates:
+        if candidate.is_file() and _contains_catalog(candidate):
+            return candidate
+    raise FileNotFoundError("Could not find pyproject.toml with simtools dependency versions.")
+
+
+def _contains_catalog(pyproject_path):
+    """Return whether a project file contains the simtools catalog."""
+    try:
+        with pyproject_path.open("rb") as file:
+            data = tomllib.load(file)
+        return _nested_value(data, CATALOG_KEYS) is not None
+    except OSError, tomllib.TOMLDecodeError:
+        return False
+
+
+def _nested_value(data, keys):
+    """Return a nested mapping value or None."""
+    value = data
+    for key in keys:
+        if not isinstance(value, dict) or key not in value:
+            return None
+        value = value[key]
+    return value
+
+
+def load_dependency_catalog(pyproject_path=None, validate=True):
+    """Load the dependency version catalog from pyproject.toml.
+
+    Parameters
+    ----------
+    pyproject_path : str or Path, optional
+        Explicit project file. The repository is searched when omitted.
+    validate : bool, optional
+        Validate the catalog structure when True.
+
+    Returns
+    -------
+    dict
+        Dependency version catalog.
+    """
+    project_file = Path(pyproject_path) if pyproject_path else find_pyproject()
+    with project_file.open("rb") as file:
+        project_data = tomllib.load(file)
+    catalog = _nested_value(project_data, CATALOG_KEYS)
+    if catalog is None:
+        raise KeyError("Missing [tool.gammasimtools.dependency-versions] table.")
+    if validate:
+        validate_dependency_catalog(catalog)
+    return catalog
+
+
+def validate_dependency_catalog(catalog):
+    """Validate required dependency catalog values.
+
+    Parameters
+    ----------
+    catalog : dict
+        Dependency version catalog.
+
+    Returns
+    -------
+    dict
+        The validated catalog.
+
+    Raises
+    ------
+    ValueError
+        If a required value is missing or mutable.
+    """
+    required = {
+        "schema_version",
+        "python",
+        "base-image",
+        "archives",
+        "production-combinations",
+        "corsika",
+        "sim-telarray",
+    }
+    missing = sorted(required - catalog.keys())
+    if missing:
+        raise ValueError(f"Missing dependency catalog keys: {', '.join(missing)}")
+
+    _validate_digest(catalog["base-image"].get("runtime-digest"), "runtime base image")
+    _validate_digest(catalog["base-image"].get("build-digest"), "build base image")
+    for component in catalog["corsika"]:
+        if component.get("source-ref") in {"latest", "master", "main"}:
+            raise ValueError("CORSIKA source-ref must identify a release.")
+        _validate_revision(component.get("config-revision"), "CORSIKA configuration")
+        _validate_revision(component.get("opt-patch-revision"), "CORSIKA optimization patch")
+        for variant, digest in component.get("image-digests", {}).items():
+            _validate_digest(digest, f"CORSIKA {component.get('version')} {variant}")
+    for component in catalog["sim-telarray"]:
+        for key in ("revision", "hessio-revision", "stdtools-revision"):
+            _validate_revision(component.get(key), key)
+        _validate_digest(component.get("image-digest"), "sim_telarray image")
+    model_version = catalog.get("model-database", {}).get("default-version", "")
+    if model_version.startswith("v"):
+        raise ValueError("Model database versions must not start with 'v'.")
+    corsika_versions = {component["version"] for component in catalog["corsika"]}
+    simtel_versions = {component["version"] for component in catalog["sim-telarray"]}
+    for combination in catalog["production-combinations"]:
+        if combination["corsika"] not in corsika_versions:
+            raise ValueError("Unknown CORSIKA production combination.")
+        if combination["sim-telarray"] not in simtel_versions:
+            raise ValueError("Unknown sim_telarray production combination.")
+    return catalog
+
+
+def _validate_digest(value, label):
+    """Validate an OCI SHA-256 digest."""
+    if not isinstance(value, str) or not SHA256_PATTERN.fullmatch(value):
+        raise ValueError(f"Invalid SHA-256 digest for {label}: {value}")
+
+
+def _validate_revision(value, label):
+    """Validate a Git commit revision."""
+    if not isinstance(value, str) or not REVISION_PATTERN.fullmatch(value):
+        raise ValueError(f"Invalid Git revision for {label}: {value}")
+
+
+def validate_env_template(catalog, template_path):
+    """Validate non-secret runtime defaults against the dependency catalog.
+
+    Parameters
+    ----------
+    catalog : dict
+        Validated dependency catalog.
+    template_path : str or Path
+        Environment template to validate.
+
+    Raises
+    ------
+    ValueError
+        If the model database defaults disagree with the catalog.
+    """
+    values = {}
+    for line in Path(template_path).read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, value = stripped.split("=", maxsplit=1)
+        values[key] = value
+    model = catalog["model-database"]
+    expected = {
+        "SIMTOOLS_DB_SIMULATION_MODEL": model["name"],
+        "SIMTOOLS_DB_SIMULATION_MODEL_VERSION": model["default-version"],
+    }
+    mismatches = {
+        key: (values.get(key), value) for key, value in expected.items() if values.get(key) != value
+    }
+    if mismatches:
+        raise ValueError(f".env_template defaults disagree with dependency catalog: {mismatches}")
+
+
+def build_workflow_matrices(catalog):
+    """Build GitHub Actions matrices from the dependency catalog.
+
+    Parameters
+    ----------
+    catalog : dict
+        Validated dependency catalog.
+
+    Returns
+    -------
+    dict
+        Expanded CORSIKA, sim_telarray, and production matrices.
+    """
+    variants = catalog["cpu-variants"]
+    corsika_matrix = []
+    corsika_components = {item["version"]: item for item in catalog["corsika"]}
+    simtel_components = {item["version"]: item for item in catalog["sim-telarray"]}
+    for corsika in catalog["corsika"]:
+        for variant in variants:
+            corsika_matrix.append(
+                {
+                    "corsika": corsika["version"],
+                    "corsika_source_ref": corsika["source-ref"],
+                    "corsika_source_url": corsika["source-url"],
+                    "corsika_config": corsika["config-version"],
+                    "corsika_config_source_url": corsika["config-source-url"],
+                    "corsika_config_revision": corsika["config-revision"],
+                    "corsika_opt_patch": corsika["opt-patch-version"],
+                    "corsika_opt_patch_source_url": corsika["opt-patch-source-url"],
+                    "corsika_opt_patch_revision": corsika["opt-patch-revision"],
+                    "avx_flag": variant,
+                }
+            )
+    production_matrix = []
+    for combination in catalog["production-combinations"]:
+        corsika = corsika_components[combination["corsika"]]
+        simtel = simtel_components[combination["sim-telarray"]]
+        for variant in combination["cpu-variants"]:
+            production_matrix.append(
+                {
+                    "corsika": f"v{corsika['version']}",
+                    "corsika_image": _image_reference(
+                        "ghcr.io/gammasim/corsika7", corsika["image-digests"][variant]
+                    ),
+                    "sim_telarray": simtel["version"],
+                    "simtel_image": _image_reference(
+                        "ghcr.io/gammasim/sim_telarray", simtel["image-digest"]
+                    ),
+                    "avx_flag": variant,
+                }
+            )
+    simtel_matrix = [
+        {
+            "simtel_version": component["version"],
+            "simtel_source_url": component["source-url"],
+            "simtel_revision": component["revision"],
+            "hessio_version": component["hessio-version"],
+            "hessio_source_url": component["hessio-source-url"],
+            "hessio_revision": component["hessio-revision"],
+            "stdtools_version": component["stdtools-version"],
+            "stdtools_source_url": component["stdtools-source-url"],
+            "stdtools_revision": component["stdtools-revision"],
+        }
+        for component in catalog["sim-telarray"]
+    ]
+    return {
+        "corsika_matrix": corsika_matrix,
+        "simtel_matrix": simtel_matrix,
+        "production_matrix": production_matrix,
+    }
+
+
+def _image_reference(name, digest):
+    """Return an immutable OCI image reference."""
+    return f"{name}@{digest}"
+
+
+def dependency_catalog_summary(catalog):
+    """Return stable scalar build values used by Docker workflows."""
+    base = catalog["base-image"]
+    default_corsika = catalog["corsika"][0]
+    default_simtel = catalog["sim-telarray"][0]
+    return {
+        "python_version": catalog["python"],
+        "apptainer_version": catalog["apptainer"],
+        "base_image": _image_reference(base["name"], base["runtime-digest"]),
+        "build_base_image": _image_reference(base["name"], base["build-digest"]),
+        "almalinux_version": base["runtime-version"].removesuffix("-minimal"),
+        "autoconf_version": catalog["archives"]["autoconf"]["version"],
+        "autoconf_sha256": catalog["archives"]["autoconf"]["sha256"],
+        "gsl_version": catalog["archives"]["gsl"]["version"],
+        "gsl_sha256": catalog["archives"]["gsl"]["sha256"],
+        "model_database": catalog["model-database"]["name"],
+        "model_version": catalog["model-database"]["default-version"],
+        "dev_corsika_image": _image_reference(
+            "ghcr.io/gammasim/corsika7", default_corsika["image-digests"]["generic"]
+        ),
+        "dev_simtel_image": _image_reference(
+            "ghcr.io/gammasim/sim_telarray", default_simtel["image-digest"]
+        ),
+    }
+
+
+def _project_requirements(pyproject_path, extras):
+    """Return project requirements, optionally including named extras."""
+    with pyproject_path.open("rb") as file:
+        project = tomllib.load(file)["project"]
+    requirements = list(project["dependencies"])
+    for extra in extras:
+        requirements.extend(project["optional-dependencies"][extra])
+    return requirements
+
+
+def _parse_args(args=None):
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--pyproject", type=Path)
+    parser.add_argument(
+        "--format",
+        choices=(
+            "catalog",
+            "github-output",
+            "python-requirements",
+            "summary",
+        ),
+        default="catalog",
+    )
+    parser.add_argument("--extras", nargs="*", default=[])
+    return parser.parse_args(args)
+
+
+def main(args=None):
+    """Export validated dependency configuration for automation."""
+    parsed = _parse_args(args)
+    project_file = parsed.pyproject or find_pyproject()
+    catalog = load_dependency_catalog(project_file)
+    env_template = project_file.parent / ".env_template"
+    if env_template.is_file():
+        validate_env_template(catalog, env_template)
+    if parsed.format == "python-requirements":
+        sys.stdout.write("\n".join(_project_requirements(project_file, parsed.extras)) + "\n")
+        return
+    if parsed.format == "catalog":
+        sys.stdout.write(json.dumps(catalog, indent=2, sort_keys=True) + "\n")
+        return
+    if parsed.format == "summary":
+        sys.stdout.write(json.dumps(dependency_catalog_summary(catalog), sort_keys=True) + "\n")
+        return
+    output = {**dependency_catalog_summary(catalog), **build_workflow_matrices(catalog)}
+    for key, value in output.items():
+        serialized = json.dumps(value, separators=(",", ":")) if isinstance(value, list) else value
+        sys.stdout.write(f"{key}={serialized}\n")
+
+
+if __name__ == "__main__":
+    main()

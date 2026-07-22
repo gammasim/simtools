@@ -455,11 +455,13 @@ class SimtelConfigWriter:
         meta_items = {
             "simtools_version": simtools.version.__version__,
             "simtools_model_production_version": self._model_version,
+            **dependencies.get_dependency_metadata(),
         }
         try:
             build_opts = dependencies.get_build_options()
             for key, value in build_opts.items():
-                meta_items[f"simtools_{key}"] = value
+                if key in dependencies.SIMTEL_METADATA_BUILD_OPTION_KEYS:
+                    meta_items[f"simtools_{key}"] = value
         except FileNotFoundError, TypeError:
             pass  # don't expect build_opts.yml to be present on all systems
 

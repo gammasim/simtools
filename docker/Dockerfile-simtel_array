@@ -5,11 +5,19 @@
 #
 
 ARG EXTRA_DEFINES="-DCTA_PROD6 -DMAXIMUM_TELESCOPES=99"
-ARG SIMTEL_VERSION="master"
-ARG HESSIO_VERSION="master"
-ARG STDTOOLS_VERSION="master"
-ARG ALMALINUX_VERSION="9.8"
-ARG GSL_VERSION="2.8"
+ARG SIMTEL_VERSION
+ARG SIMTEL_REVISION
+ARG SIMTEL_SOURCE_URL
+ARG HESSIO_VERSION
+ARG HESSIO_REVISION
+ARG HESSIO_SOURCE_URL
+ARG STDTOOLS_VERSION
+ARG STDTOOLS_REVISION
+ARG STDTOOLS_SOURCE_URL
+ARG GSL_VERSION
+ARG GSL_SHA256
+ARG BASE_IMAGE
+ARG BUILD_BASE_IMAGE
 ARG CONTAINER_USER="simtools"
 ARG CONTAINER_UID="1000"
 ARG CONTAINER_GID="1000"
@@ -20,15 +28,19 @@ ARG CONTAINER_GID="1000"
 # -----------------------------------------------------------------------------
 # STAGE 1: source code preparation
 # -----------------------------------------------------------------------------
-FROM almalinux:${ALMALINUX_VERSION}-minimal AS source_preparation
-ARG SIMTEL_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray.git"
+FROM ${BASE_IMAGE} AS source_preparation
 ARG SIMTEL_VERSION
-ARG HESSIO_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio.git"
+ARG SIMTEL_REVISION
+ARG SIMTEL_SOURCE_URL
 ARG HESSIO_VERSION
-ARG STDTOOLS_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools.git"
+ARG HESSIO_REVISION
+ARG HESSIO_SOURCE_URL
 ARG STDTOOLS_VERSION
+ARG STDTOOLS_REVISION
+ARG STDTOOLS_SOURCE_URL
+ARG GSL_SHA256
 
-RUN microdnf update -y && microdnf install -y git && \
+RUN microdnf update -y && microdnf install -y git gzip tar && \
     microdnf clean all
 
 WORKDIR /src
@@ -36,31 +48,47 @@ WORKDIR /src
 # Clone sim_telarray from CTAO gitlab
 RUN --mount=type=secret,id=sim_telarray_token \
     git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${SIMTEL_VERSION}" "https://oauth2:$(cat /run/secrets/sim_telarray_token)@${SIMTEL_REPO}"
+    git clone --depth 1 --branch "${SIMTEL_VERSION}" \
+      "https://oauth2:$(cat /run/secrets/sim_telarray_token)@${SIMTEL_SOURCE_URL#https://}" && \
+    test "$(git -C sim_telarray rev-parse HEAD)" = "${SIMTEL_REVISION}"
 
 # Clone hessio from CTAO gitlab
 RUN --mount=type=secret,id=hessio_token \
     git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${HESSIO_VERSION}" "https://oauth2:$(cat /run/secrets/hessio_token)@${HESSIO_REPO}"
+    git clone --depth 1 --branch "${HESSIO_VERSION}" \
+      "https://oauth2:$(cat /run/secrets/hessio_token)@${HESSIO_SOURCE_URL#https://}" && \
+    test "$(git -C hessio rev-parse HEAD)" = "${HESSIO_REVISION}"
 
 # Clone stdtools from CTAO gitlab
 RUN --mount=type=secret,id=stdtools_token \
     git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${STDTOOLS_VERSION}" "https://oauth2:$(cat /run/secrets/stdtools_token)@${STDTOOLS_REPO}"
+    git clone --depth 1 --branch "${STDTOOLS_VERSION}" \
+      "https://oauth2:$(cat /run/secrets/stdtools_token)@${STDTOOLS_SOURCE_URL#https://}" && \
+    test "$(git -C stdtools rev-parse HEAD)" = "${STDTOOLS_REVISION}"
 
-# GSL (tar file needs to present in current directory)
-ADD gsl.tar.gz .
+# GSL archive (tar file needs to be present in the build context)
+COPY gsl.tar.gz /tmp/gsl.tar.gz
+# hadolint ignore=DL4006
+RUN echo "${GSL_SHA256}  /tmp/gsl.tar.gz" | sha256sum --check && \
+    tar -xzf /tmp/gsl.tar.gz -C /src
 
 # -----------------------------------------------------------------------------
 # STAGE 2: build_image
 # -----------------------------------------------------------------------------
-FROM almalinux:${ALMALINUX_VERSION} AS build_image
+FROM ${BUILD_BASE_IMAGE} AS build_image
 ARG EXTRA_DEFINES
-ARG SIMTEL_VERSION="master"
-ARG HESSIO_VERSION="master"
-ARG STDTOOLS_VERSION="master"
+ARG SIMTEL_VERSION
+ARG SIMTEL_REVISION
+ARG SIMTEL_SOURCE_URL
+ARG HESSIO_VERSION
+ARG HESSIO_REVISION
+ARG HESSIO_SOURCE_URL
+ARG STDTOOLS_VERSION
+ARG STDTOOLS_REVISION
+ARG STDTOOLS_SOURCE_URL
 ARG GSL_COMPILE="-DWITH_GSL -DWITH_GSL_RNG"
 ARG GSL_VERSION
+ARG GSL_SHA256
 
 ENV GCC_PATH="/usr/bin/"
 ENV HSEVENTIO="/workdir/simulation_software/hessioxxx/"
@@ -122,8 +150,16 @@ RUN make clean && \
 # Generate build_opts.yml with build information
 RUN { \
     echo "simtel_version: \"${SIMTEL_VERSION}\""; \
+    echo "simtel_revision: \"${SIMTEL_REVISION}\""; \
+    echo "simtel_source_url: \"${SIMTEL_SOURCE_URL}\""; \
     echo "hessio_version: \"${HESSIO_VERSION}\""; \
+    echo "hessio_revision: \"${HESSIO_REVISION}\""; \
+    echo "hessio_source_url: \"${HESSIO_SOURCE_URL}\""; \
     echo "stdtools_version: \"${STDTOOLS_VERSION}\""; \
+    echo "stdtools_revision: \"${STDTOOLS_REVISION}\""; \
+    echo "stdtools_source_url: \"${STDTOOLS_SOURCE_URL}\""; \
+    echo "gsl_version: \"${GSL_VERSION}\""; \
+    echo "gsl_sha256: \"${GSL_SHA256}\""; \
     echo "extra_defines: \"${EXTRA_DEFINES}\""; \
     echo "build_date: \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\""; \
     echo "components:"; \
@@ -148,7 +184,7 @@ RUN { \
 # -----------------------------------------------------------------------------
 # STAGE 3: Runtime Image
 # -----------------------------------------------------------------------------
-FROM almalinux:${ALMALINUX_VERSION}-minimal
+FROM ${BASE_IMAGE}
 ARG CONTAINER_USER
 ARG CONTAINER_UID
 ARG CONTAINER_GID

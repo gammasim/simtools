@@ -1,0 +1,221 @@
+---
+"$schema": http://json-schema.org/draft-06/schema#
+title: simtools dependency version catalog
+description: YAML representation of the simtools dependency version catalog schema.
+schema_version: 0.1.0
+schema_name: dependency_versions.schema
+type: object
+additionalProperties: false
+required:
+- schema_version
+- python
+- apptainer
+- cpu-variants
+- base-image
+- archives
+- model-database
+- production-combinations
+- corsika
+- sim-telarray
+properties:
+  schema_version:
+    const: 0.1.0
+  python:
+    type: string
+    pattern: "^[0-9]+\\.[0-9]+$"
+  apptainer:
+    "$ref": "#/definitions/version"
+  cpu-variants:
+    type: array
+    items:
+      enum:
+      - generic
+      - avx2
+      - avx512f
+      - sse4
+    minItems: 1
+    uniqueItems: true
+  base-image:
+    type: object
+    additionalProperties: false
+    required:
+    - name
+    - runtime-version
+    - runtime-digest
+    - build-version
+    - build-digest
+    properties:
+      name:
+        type: string
+      runtime-version:
+        type: string
+      runtime-digest:
+        "$ref": "#/definitions/sha256"
+      build-version:
+        type: string
+      build-digest:
+        "$ref": "#/definitions/sha256"
+  archives:
+    type: object
+    additionalProperties:
+      "$ref": "#/definitions/archive"
+    required:
+    - autoconf
+    - gsl
+  model-database:
+    type: object
+    additionalProperties: false
+    required:
+    - name
+    - default-version
+    properties:
+      name:
+        type: string
+        minLength: 1
+      default-version:
+        "$ref": "#/definitions/version"
+  production-combinations:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      additionalProperties: false
+      required:
+      - corsika
+      - sim-telarray
+      - cpu-variants
+      properties:
+        corsika:
+          type: string
+          pattern: "^[0-9]{5}$"
+        sim-telarray:
+          type: string
+        cpu-variants:
+          type: array
+          items:
+            enum:
+            - generic
+            - avx2
+            - avx512f
+            - sse4
+          minItems: 1
+          uniqueItems: true
+  corsika:
+    type: array
+    minItems: 1
+    items:
+      "$ref": "#/definitions/corsika"
+  sim-telarray:
+    type: array
+    minItems: 1
+    items:
+      "$ref": "#/definitions/simtel"
+definitions:
+  version:
+    type: string
+    pattern: "^[0-9]+\\.[0-9]+(?:\\.[0-9]+)?$"
+  revision:
+    type: string
+    pattern: "^[0-9a-f]{40}$"
+  sha256:
+    type: string
+    pattern: "^sha256:[0-9a-f]{64}$"
+  archive-sha256:
+    type: string
+    pattern: "^[0-9a-f]{64}$"
+  archive:
+    type: object
+    additionalProperties: false
+    required:
+    - version
+    - sha256
+    properties:
+      version:
+        type: string
+      sha256:
+        "$ref": "#/definitions/archive-sha256"
+  corsika:
+    type: object
+    additionalProperties: false
+    required:
+    - version
+    - source-ref
+    - source-url
+    - config-version
+    - config-source-url
+    - config-revision
+    - opt-patch-version
+    - opt-patch-source-url
+    - opt-patch-revision
+    - image-digests
+    properties:
+      version:
+        type: string
+        pattern: "^[0-9]{5}$"
+      source-ref:
+        type: string
+        pattern: "^v[0-9]+\\.[0-9]+$"
+      source-url:
+        type: string
+        pattern: "^https://"
+      config-version:
+        type: string
+      config-source-url:
+        type: string
+        pattern: "^https://"
+      config-revision:
+        "$ref": "#/definitions/revision"
+      opt-patch-version:
+        type: string
+      opt-patch-source-url:
+        type: string
+        pattern: "^https://"
+      opt-patch-revision:
+        "$ref": "#/definitions/revision"
+      image-digests:
+        type: object
+        additionalProperties:
+          "$ref": "#/definitions/sha256"
+        required:
+        - generic
+        - avx2
+        - avx512f
+        - sse4
+  simtel:
+    type: object
+    additionalProperties: false
+    required:
+    - version
+    - source-url
+    - revision
+    - hessio-version
+    - hessio-source-url
+    - hessio-revision
+    - stdtools-version
+    - stdtools-source-url
+    - stdtools-revision
+    - image-digest
+    properties:
+      version:
+        type: string
+      source-url:
+        type: string
+        pattern: "^https://"
+      revision:
+        "$ref": "#/definitions/revision"
+      hessio-version:
+        type: string
+      hessio-source-url:
+        type: string
+        pattern: "^https://"
+      hessio-revision:
+        "$ref": "#/definitions/revision"
+      stdtools-version:
+        type: string
+      stdtools-source-url:
+        type: string
+        pattern: "^https://"
+      stdtools-revision:
+        "$ref": "#/definitions/revision"
+      image-digest:
+        "$ref": "#/definitions/sha256"
