@@ -1,6 +1,7 @@
 """Access simulation models from MongoDB or files."""
 
 import logging
+import os
 from collections import defaultdict
 from pathlib import Path
 
@@ -40,7 +41,7 @@ class DatabaseHandler:
         self.io_handler = io_handler.IOHandler()
         simulation_models_path = settings.config.args.get("simulation_models_path")
         if not isinstance(simulation_models_path, str | Path):
-            simulation_models_path = None
+            simulation_models_path = os.getenv("SIMTOOLS_SIMULATION_MODELS_PATH")
         self.file_system_handler = (
             FileSystemModelHandler(simulation_models_path) if simulation_models_path else None
         )

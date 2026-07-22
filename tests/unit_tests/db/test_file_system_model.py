@@ -247,6 +247,32 @@ def test_database_handler_uses_files_without_mongodb(simulation_models_path, moc
     mongo_handler.assert_not_called()
 
 
+def test_database_handler_uses_environment_path(simulation_models_path, mocker, monkeypatch):
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(simulation_models_path))
+    settings_mock = mocker.patch("simtools.db.db_handler.settings")
+    settings_mock.config.args = {}
+    settings_mock.config.db_config = {"invalid": "mongo config must not be validated"}
+    mongo_handler = mocker.patch("simtools.db.db_handler.MongoDBHandler")
+
+    database = db_handler.DatabaseHandler()
+
+    assert database.model_source_name == str(simulation_models_path.resolve())
+    mongo_handler.assert_not_called()
+
+
+def test_database_handler_cli_path_precedes_environment(
+    simulation_models_path, tmp_test_directory, mocker, monkeypatch
+):
+    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(Path(tmp_test_directory) / "missing"))
+    settings_mock = mocker.patch("simtools.db.db_handler.settings")
+    settings_mock.config.args = {"simulation_models_path": simulation_models_path}
+    settings_mock.config.db_config = {}
+
+    database = db_handler.DatabaseHandler()
+
+    assert database.model_source_name == str(simulation_models_path.resolve())
+
+
 def test_file_export_and_mongodb_only_guard(simulation_models_path, tmp_test_directory):
     handler = file_system_model.FileSystemModelHandler(simulation_models_path)
     destination = Path(tmp_test_directory) / "export"
