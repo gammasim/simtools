@@ -1,5 +1,6 @@
 """Plot camera pixel layout."""
 
+import copy
 import logging
 
 import matplotlib.colors as mcolors
@@ -46,43 +47,55 @@ def plot_pixel_layout(camera, camera_in_sky_coor=False, pixels_id_to_print=50):
 
     fig, ax = plt.subplots(figsize=(8, 8))
 
+    plot_camera = camera
     if not is_two_mirror_telescope(camera.telescope_name) and not camera_in_sky_coor:
-        camera.pixels["y"] = [(-1) * y_val for y_val in camera.pixels["y"]]
+        plot_camera = copy.copy(camera)
+        plot_camera.pixels = {
+            **camera.pixels,
+            "y": [-y_value for y_value in camera.pixels["y"]],
+        }
 
-    on_pixels, edge_pixels, off_pixels = create_pixel_patches_by_type(camera)
-    for i_pix, (x, y) in enumerate(zip(camera.pixels["x"], camera.pixels["y"])):
-        if camera.pixels["pix_id"][i_pix] < pixels_id_to_print + 1:
+    on_pixels, edge_pixels, off_pixels = create_pixel_patches_by_type(plot_camera)
+    for i_pix, (x, y) in enumerate(zip(plot_camera.pixels["x"], plot_camera.pixels["y"])):
+        if plot_camera.pixels["pix_id"][i_pix] < pixels_id_to_print + 1:
             font_size = (
-                4 if "SCT" in names.get_array_element_type_from_name(camera.telescope_name) else 2
+                4
+                if "SCT" in names.get_array_element_type_from_name(plot_camera.telescope_name)
+                else 2
             )
             plt.text(
-                x, y, camera.pixels["pix_id"][i_pix], ha="center", va="center", fontsize=font_size
+                x,
+                y,
+                plot_camera.pixels["pix_id"][i_pix],
+                ha="center",
+                va="center",
+                fontsize=font_size,
             )
     add_pixel_patch_collections(ax, on_pixels, edge_pixels, off_pixels)
-    setup_camera_axis_properties(ax, camera, grid=True, axis_below=True, y_scale_factor=1.42)
+    setup_camera_axis_properties(ax, plot_camera, grid=True, axis_below=True, y_scale_factor=1.42)
     plt.xlabel("Horizontal scale [cm]", fontsize=18, labelpad=0)
     plt.ylabel("Vertical scale [cm]", fontsize=18, labelpad=0)
     ax.set_title(
-        f"Pixels layout in {camera.telescope_name} camera",
+        f"Pixels layout in {plot_camera.telescope_name} camera",
         fontsize=15,
         y=1.02,
     )
     plt.tick_params(axis="both", which="major", labelsize=15)
 
-    _plot_axes_def(camera, plt, camera.pixels["rotate_angle"])
+    _plot_axes_def(plot_camera, plt, plot_camera.pixels["rotate_angle"])
 
     description = {
         False: "For an observer facing the camera",
         True: "For an observer behind the camera looking through",
         None: "For an observer looking from secondary to camera",
-    }[camera_in_sky_coor and not is_two_mirror_telescope(camera.telescope_name)]
+    }[camera_in_sky_coor and not is_two_mirror_telescope(plot_camera.telescope_name)]
     ax.text(0.02, 0.02, description, transform=ax.transAxes, color="black", fontsize=12)
 
-    fov, r_edge_avg = camera.calc_fov()
+    fov, r_edge_avg = plot_camera.calc_fov()
     ax.text(
         0.02,
         0.96,
-        rf"$f_{{\mathrm{{eff}}}} = {camera.focal_length:.3f}\,\mathrm{{cm}}$",
+        rf"$f_{{\mathrm{{eff}}}} = {plot_camera.focal_length:.3f}\,\mathrm{{cm}}$",
         transform=ax.transAxes,
         color="black",
         fontsize=12,
@@ -331,7 +344,7 @@ def _plot_one_axis_def(plot, **kwargs):
             ec: str
             edge colour of the axis
             invert_yaxis: bool
-            Flag to invert the y-axis (for dual mirror telescopes).
+            Flag to invert the horizontal direction for single-mirror camera views.
     """
     x_title = kwargs["x_title"]
     y_title = kwargs["y_title"]
