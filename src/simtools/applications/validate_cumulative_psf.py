@@ -69,23 +69,34 @@
 
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.ray_tracing.optics_validation import validate_cumulative_psf
 
+_ARGUMENTS = (
+    cli.SOURCE_DISTANCE(),
+    cli.RAY_TRACING_ZENITH_ANGLE(),
+    cli.DATA(),
+)
 
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.initialize_application_argument_group(["source_distance", "zenith_angle", "data"])
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION(),
+        cli.OVERWRITE_MODEL_PARAMETERS(),
+        cli.SITE(),
+        cli.TELESCOPE(),
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": ["telescope", "model_version"],
-        },
-    )
+    app_context = APPLICATION.start()
     validate_cumulative_psf(app_context)
 
 

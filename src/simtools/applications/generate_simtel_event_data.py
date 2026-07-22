@@ -126,40 +126,49 @@ To read a reduced event data file, use the following command reading on of the t
 
 from pathlib import Path
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import io_handler, table_handler
 from simtools.sim_events.writer import EventDataWriter
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--input",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "input",
         type=str,
         required=True,
         help="Input file path (wildcards allowed; e.g., '/data_path/gamma_*dark*.simtel.zst')",
-    )
-    parser.add_argument(
-        "--max_files",
+    ),
+    cli.ArgumentDefinition(
+        "max_files",
         type=int,
         default=None,
         help="Maximum number of input files to process (default: all).",
-    )
-    parser.add_argument(
-        "--print_dataset_information",
+    ),
+    cli.ArgumentDefinition(
+        "print_dataset_information",
         type=int,
         help="Print data set information for the given number of events.",
         default=0,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    initialize_output=True,
+    setup_io_handler=False,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"db_config": False, "output": True},
-        startup_kwargs={"setup_io_handler": False},
-    )
+    app_context = APPLICATION.start()
     app_context.logger.info(f"Loading input files from: {app_context.args['input']}")
 
     input_pattern = Path(app_context.args["input"])

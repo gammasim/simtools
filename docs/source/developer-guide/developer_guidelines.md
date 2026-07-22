@@ -51,31 +51,34 @@ Application should not include complex algorithm, this should be done at the mod
 All applications should follow the same structure:
 
 ```python
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
+
+_ARGUMENTS = (
+    cli.ArgumentDefinition("input_file", type=str, required=True),
+)
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION(required=True),
+        cli.SITE(required=True),
+        cli.OUTPUT_PATH(),
+    ),
+    database=True,
+)
+
 def main():
-
-    # application name
-    label = Path(__file__).stem
-    # short description of the application
-    description = "...."
-    # short help on how to use the application
-    usage = "....."
-
-    # configuration handling (from command line, config file, etc)
-    config = Configurator(label=label, description=description, usage=usage)
-    ...
-    args_dict, db_dict = config.initialize()
-
-    # generic logger
-    logger = logging.getLogger()
-    logger.setLevel(gen.get_log_level_from_user(args_dict["log_level"]))
-
-    # application code follows
-    ...
+    context = APPLICATION.start()
+    run_application(context.args)
 ```
 
-Application handling should be done using the [Configurator](configuration_module.md#configurationconfigurator) class, which allows to set
-configurations from the command-line options, configuration files, or environmental variables.
-Check the [commandline_parser](configuration_module.md#configurationcommandline_parser) module for generic command-line arguments before introducing new ones in applications
+Use statically named shared argument factories such as `cli.MODEL_VERSION()` and `cli.SITE()` before
+introducing an application-specific `cli.ArgumentDefinition`. Stable bundles such as
+`cli.PATH_ARGUMENTS` and `cli.SIM_TELARRAY_ARGUMENTS` may be expanded directly; do not select
+arguments using string names. `ApplicationDefinition` reads command-line options, configuration
+files, and environment variables before delegating to the common application startup code.
 
 ```{important}
 Application code is excluded from unit tests.

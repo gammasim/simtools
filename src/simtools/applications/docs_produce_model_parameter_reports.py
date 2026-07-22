@@ -8,27 +8,35 @@ comparing their values over various model versions.
 Currently only implemented for telescopes.
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 from simtools.reporting.docs_read_parameters import ReadParameters
 
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "all_telescopes", action="store_true", help="Produce reports for all telescopes."
+    ),
+    cli.ArgumentDefinition("all_sites", action="store_true", help="Produce reports for all sites."),
+)
 
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--all_telescopes",
-        action="store_true",
-        help="Produce reports for all telescopes.",
-    )
 
-    parser.add_argument("--all_sites", action="store_true", help="Produce reports for all sites.")
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.OVERWRITE_MODEL_PARAMETERS(),
+        cli.SITE(),
+        cli.TELESCOPE(),
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"db_config": True, "simulation_model": ["site", "telescope"]},
-    )
+    app_context = APPLICATION.start()
     output_path = app_context.io_handler.get_output_directory()
 
     if any([app_context.args.get("all_telescopes"), app_context.args.get("all_sites")]):

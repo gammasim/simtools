@@ -9,7 +9,7 @@ import pytest
 
 
 @patch("simtools.applications.simulate_illuminator.MultiIlluminatorSimulator")
-@patch("simtools.applications.simulate_illuminator.build_application")
+@patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_single_pair_mode(mock_build_app, mock_simulator_class):
     """Test main function in single-pair mode."""
     from simtools.applications.simulate_illuminator import main
@@ -51,7 +51,7 @@ def test_main_single_pair_mode(mock_build_app, mock_simulator_class):
 
 
 @patch("simtools.applications.simulate_illuminator.MultiIlluminatorSimulator")
-@patch("simtools.applications.simulate_illuminator.build_application")
+@patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_multi_pair_mode(mock_build_app, mock_simulator_class):
     """Test main function in multi-pair mode (simulate_all)."""
     from simtools.applications.simulate_illuminator import main
@@ -87,7 +87,7 @@ def test_main_multi_pair_mode(mock_build_app, mock_simulator_class):
 
 
 @patch("simtools.applications.simulate_illuminator.MultiIlluminatorSimulator")
-@patch("simtools.applications.simulate_illuminator.build_application")
+@patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_multi_pair_with_filters(mock_build_app, mock_simulator_class):
     """Test main function in multi-pair mode with filters."""
     from simtools.applications.simulate_illuminator import main
@@ -121,7 +121,7 @@ def test_main_multi_pair_with_filters(mock_build_app, mock_simulator_class):
     assert call_kwargs["telescopes"] is None
 
 
-@patch("simtools.applications.simulate_illuminator.build_application")
+@patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_single_pair_missing_light_source(mock_build_app):
     """Test main function exits when light_source is missing in single-pair mode."""
     from simtools.applications.simulate_illuminator import main
@@ -142,7 +142,7 @@ def test_main_single_pair_missing_light_source(mock_build_app):
     assert "telescope are required" in str(exc_info.value)
 
 
-@patch("simtools.applications.simulate_illuminator.build_application")
+@patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_single_pair_missing_telescope(mock_build_app):
     """Test main function exits when telescope is missing in single-pair mode."""
     from simtools.applications.simulate_illuminator import main
@@ -163,7 +163,7 @@ def test_main_single_pair_missing_telescope(mock_build_app):
     assert "required" in str(exc_info.value)
 
 
-@patch("simtools.applications.simulate_illuminator.build_application")
+@patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_single_pair_missing_both(mock_build_app):
     """Test main function exits when both parameters are missing in single-pair mode."""
     from simtools.applications.simulate_illuminator import main
@@ -184,7 +184,7 @@ def test_main_single_pair_missing_both(mock_build_app):
 
 
 @patch("simtools.applications.simulate_illuminator.MultiIlluminatorSimulator")
-@patch("simtools.applications.simulate_illuminator.build_application")
+@patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_single_pair_no_valid_pairs(mock_build_app, mock_simulator_class):
     """Test main function exits when no valid pairs found in single-pair mode."""
     from simtools.applications.simulate_illuminator import main

@@ -1,6 +1,5 @@
-"""Application control utilities for startup and shutdown simtools applications."""
+"""Runtime control shared by simtools applications."""
 
-import inspect
 import logging
 import os
 import re
@@ -11,7 +10,6 @@ from astropy.utils import iers
 
 import simtools.utils.general as gen
 from simtools import dependencies, version
-from simtools.configuration import configurator
 from simtools.db import db_handler
 from simtools.io import io_handler
 from simtools.runners.simtools_runner import prepare_runtime_environment
@@ -117,23 +115,6 @@ def get_log_file(args_dict):
     return Path(log_file_path) / log_file
 
 
-def add_input_meta_argument(parser, nargs=None):
-    """Register the common ``--input_meta`` command line argument."""
-    help_text = "meta data file associated to input data"
-    if nargs is not None:
-        help_text = (
-            "meta data file(s) associated to input data (wildcards or list of files allowed)"
-        )
-
-    parser.add_argument(
-        "--input_meta",
-        help=help_text,
-        type=str,
-        nargs=nargs,
-        required=False,
-    )
-
-
 class RedactFilter(logging.Filter):
     """
     Filter to redact sensitive information from log messages.
@@ -184,207 +165,6 @@ class ApplicationContext:
     logger: logging.Logger
     io_handler: io_handler.IOHandler | None
     run_time: list | None = None
-
-
-def _resolve_application_metadata(
-    application_path,
-    description,
-    add_arguments_function,
-    application_argument_definitions=None,
-    caller_globals=None,
-):
-    """Resolve missing application metadata from the caller module when available."""
-    if (
-        application_path is None
-        or description is None
-        or (add_arguments_function is None and application_argument_definitions is None)
-    ):
-        caller_globals = caller_globals or inspect.currentframe().f_back.f_globals
-        if application_path is None:
-            application_path = caller_globals.get("__file__")
-        if description is None:
-            description = caller_globals.get("__doc__")
-        if add_arguments_function is None and application_argument_definitions is None:
-            add_arguments_function = caller_globals.get("_add_arguments")
-            application_argument_definitions = caller_globals.get("_APPLICATION_ARG_DEFINITIONS")
-
-    if application_path is None:
-        raise ValueError("Missing application path; provide application_path explicitly.")
-    if description is None:
-        raise ValueError("Missing description; provide description explicitly.")
-    return application_path, description, add_arguments_function, application_argument_definitions
-
-
-def _build_application_configurator(
-    application_path,
-    description,
-    add_arguments_function,
-    application_argument_definitions=None,
-    usage=None,
-    epilog=None,
-):
-    """Create a configurator populated with application-specific arguments."""
-    config_builder = configurator.Configurator(
-        label=get_application_label(application_path),
-        usage=usage,
-        description=get_module_description_line(description),
-        epilog=epilog,
-    )
-    if add_arguments_function is not None:
-        add_arguments_function(config_builder.parser)
-    elif application_argument_definitions is not None:
-        for parameter, definition in application_argument_definitions.items():
-            config_builder.parser.add_parameter_from_definition(
-                config_builder.parser, parameter, definition
-            )
-    return config_builder
-
-
-def build_application(
-    application_path=None,
-    description=None,
-    add_arguments_function=None,
-    application_argument_definitions=None,
-    initialization_kwargs=None,
-    startup_kwargs=None,
-    usage=None,
-    epilog=None,
-    parse_function=None,
-):
-    """
-    Build and start an application using the standard simtools startup flow.
-
-    Parameters
-    ----------
-    application_path : str, optional
-        Application file path, typically ``__file__``.
-        If not provided, it is inferred from the caller module.
-    description : str, optional
-        Application description shown in the CLI help (reduced to first line).
-        If not provided, it is inferred from the caller module docstring.
-    add_arguments_function : callable, optional
-        Function receiving the application's ``CommandLineParser`` instance to register
-        application-specific arguments. If not provided, ``_add_arguments`` from the
-        caller module is used when available.
-    application_argument_definitions : dict, optional
-        Dictionary of application-specific argument definitions. If provided, or if
-        ``_APPLICATION_ARG_DEFINITIONS`` exists in the caller module, simtools registers
-        those arguments directly without requiring an application-local wrapper
-        function.
-    initialization_kwargs : dict, optional
-        Keyword arguments forwarded to ``Configurator.initialize``.
-    startup_kwargs : dict, optional
-        Keyword arguments forwarded to ``startup_application``.
-    usage : str, optional
-        CLI usage string.
-    epilog : str, optional
-        CLI epilog.
-    parse_function : callable, optional
-        Existing parser function returning ``(args_dict, db_config)``. If provided,
-        ``build_application`` delegates directly to ``startup_application`` with this
-        parser function.
-
-    Returns
-    -------
-    ApplicationContext
-        Application context returned by ``startup_application``.
-    """
-    initialization_kwargs = initialization_kwargs or {}
-    startup_kwargs = startup_kwargs or {}
-
-    application_path, description, add_arguments_function, application_argument_definitions = (
-        _resolve_application_metadata(
-            application_path,
-            description,
-            add_arguments_function,
-            application_argument_definitions=application_argument_definitions,
-            caller_globals=inspect.currentframe().f_back.f_globals,
-        )
-    )
-
-    if parse_function is not None:
-        return startup_application(parse_function, **startup_kwargs)
-
-    def _parse():
-        config_builder = _build_application_configurator(
-            application_path=application_path,
-            description=description,
-            add_arguments_function=add_arguments_function,
-            application_argument_definitions=application_argument_definitions,
-            usage=usage,
-            epilog=epilog,
-        )
-        return config_builder.initialize(**initialization_kwargs)
-
-    return startup_application(_parse, **startup_kwargs)
-
-
-def build_application_parser(
-    application_path=None,
-    description=None,
-    add_arguments_function=None,
-    application_argument_definitions=None,
-    initialization_kwargs=None,
-    usage=None,
-    epilog=None,
-):
-    """
-    Build an application parser without parsing command-line arguments.
-
-    This is intended for documentation and inspection tooling that should reuse the
-    real CLI definition without triggering application startup side effects.
-
-    Parameters
-    ----------
-    application_path : str, optional
-        Application file path, typically ``__file__``.
-    description : str, optional
-        Application description shown in the CLI help (reduced to first line).
-    add_arguments_function : callable, optional
-        Function receiving the application's ``CommandLineParser`` instance to register
-        application-specific arguments.
-    application_argument_definitions : dict, optional
-        Dictionary of application-specific argument definitions to register directly.
-    initialization_kwargs : dict, optional
-        Keyword arguments that control which default-argument groups are initialized.
-        Only parser-shape-related keys are used.
-    usage : str, optional
-        CLI usage string.
-    epilog : str, optional
-        CLI epilog.
-
-    Returns
-    -------
-    CommandLineParser
-        Fully initialized parser.
-    """
-    initialization_kwargs = initialization_kwargs or {}
-    application_path, description, add_arguments_function, application_argument_definitions = (
-        _resolve_application_metadata(
-            application_path,
-            description,
-            add_arguments_function,
-            application_argument_definitions=application_argument_definitions,
-        )
-    )
-    config_builder = _build_application_configurator(
-        application_path=application_path,
-        description=description,
-        add_arguments_function=add_arguments_function,
-        application_argument_definitions=application_argument_definitions,
-        usage=usage,
-        epilog=epilog,
-    )
-    config_builder.parser.initialize_default_arguments(
-        paths=initialization_kwargs.get("paths", True),
-        output=initialization_kwargs.get("output", False),
-        simulation_model=initialization_kwargs.get("simulation_model"),
-        simulation_configuration=initialization_kwargs.get("simulation_configuration"),
-        db_config=initialization_kwargs.get("db_config", False),
-        common_arguments=initialization_kwargs.get("common_arguments"),
-        argument_overrides=initialization_kwargs.get("argument_overrides"),
-    )
-    return config_builder.parser
 
 
 def startup_application(
@@ -486,61 +266,6 @@ def _prepare_runtime_environment_from_cli(args_dict):
     args_dict["runtime_environment"] = runtime_environment
     args_dict["run_time"] = run_time
     return run_time
-
-
-def get_application_label(file_path):
-    """
-    Get application label from file path.
-
-    This is a convenience function to extract the application name from __file__.
-
-    Parameters
-    ----------
-    file_path : str
-        The __file__ variable from the calling application.
-
-    Returns
-    -------
-    str
-        Application label (filename without extension).
-
-    Examples
-    --------
-    .. code-block:: python
-
-        def main():
-            label = get_application_label(__file__)
-            # label will be the filename without .py extension
-    """
-    return Path(file_path).stem
-
-
-def get_module_description_line(docstring):
-    """Return the first non-empty line from a docstring.
-
-    Parameters
-    ----------
-    docstring : str
-        Module docstring (typically from __doc__).
-
-    Returns
-    -------
-    str
-        First non-empty line from the docstring.
-
-    Raises
-    ------
-    ValueError
-        If docstring is None or empty.
-    """
-    if not docstring:
-        raise ValueError("Missing or empty docstring")
-
-    for line in docstring.splitlines():
-        if line.strip():
-            return line.strip()
-
-    raise ValueError("Empty docstring (only whitespace)")
 
 
 def _resolve_model_version_to_latest_patch(args_dict, logger):

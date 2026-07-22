@@ -1,11 +1,14 @@
-"""Shared command-line parameter definitions for simtools applications."""
+"""Authoritative command-line argument definitions for simtools applications."""
 
 import argparse
+from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 
 import astropy.units as u
 
-import simtools.configuration.commandline_argument_helpers as helpers
+import simtools.configuration.argument_helpers as helpers
 import simtools.version
 from simtools import constants
 from simtools.configuration import defaults
@@ -447,3 +450,192 @@ PARAMETER_DEFINITIONS = {
         },
     },
 }
+
+
+@dataclass(frozen=True, init=False)
+class ArgumentDefinition:
+    """Definition of one command-line argument."""
+
+    name: str
+    group: str | None
+    exclusive_group: str | None
+    exclusive_group_required: bool
+    required_unless: str | None
+    kwargs: Mapping
+
+    def __init__(
+        self,
+        name,
+        *,
+        group=None,
+        exclusive_group=None,
+        exclusive_group_required=False,
+        required_unless=None,
+        **kwargs,
+    ):
+        if not name or name.startswith("-"):
+            raise ValueError(f"Invalid argument name: {name!r}")
+        if required_unless is not None and exclusive_group is None:
+            raise ValueError("required_unless requires an exclusive_group")
+        object.__setattr__(self, "name", name)
+        object.__setattr__(self, "group", group)
+        object.__setattr__(self, "exclusive_group", exclusive_group)
+        object.__setattr__(self, "exclusive_group_required", exclusive_group_required)
+        object.__setattr__(self, "required_unless", required_unless)
+        object.__setattr__(self, "kwargs", MappingProxyType(dict(kwargs)))
+
+    def with_overrides(self, **overrides):
+        """Return a copy with updated argparse keyword arguments."""
+        return ArgumentDefinition(
+            self.name,
+            group=self.group,
+            exclusive_group=self.exclusive_group,
+            exclusive_group_required=self.exclusive_group_required,
+            required_unless=self.required_unless,
+            **{**self.kwargs, **overrides},
+        )
+
+    def __call__(self, **overrides):
+        """Return this shared definition with optional local overrides."""
+        return self.with_overrides(**overrides)
+
+    def without_requiredness(self):
+        """Return a runtime copy whose required constraints are validated later."""
+        kwargs = dict(self.kwargs)
+        if "required" in kwargs:
+            kwargs["required"] = False
+        return ArgumentDefinition(
+            self.name,
+            group=self.group,
+            exclusive_group=self.exclusive_group,
+            exclusive_group_required=False,
+            required_unless=self.required_unless,
+            **kwargs,
+        )
+
+
+class ArgumentCatalog:
+    """Callable templates for one group of shared command-line arguments."""
+
+    def __init__(self, group, definitions):
+        self.group = group
+        self._definitions = MappingProxyType(definitions)
+
+    def __getattr__(self, name):
+        """Return a factory for one named shared argument."""
+        try:
+            definition = self._definitions[name]
+        except KeyError as exc:
+            raise AttributeError(f"Unknown {self.group} argument: {name}") from exc
+
+        def _argument(**overrides):
+            return ArgumentDefinition(name, group=self.group, **{**definition, **overrides})
+
+        return _argument
+
+    def all(self):
+        """Return definitions for every argument in this catalog."""
+        return tuple(getattr(self, name)() for name in self._definitions)
+
+
+CONFIGURATION = ArgumentCatalog("configuration", PARAMETER_DEFINITIONS["CONFIGURATION_ARGS"])
+DATABASE = ArgumentCatalog("database configuration", PARAMETER_DEFINITIONS["DB_CONFIG_ARGS"])
+EXECUTION = ArgumentCatalog("execution", PARAMETER_DEFINITIONS["EXECUTION_ARGS"])
+OUTPUT = ArgumentCatalog("output", PARAMETER_DEFINITIONS["OUTPUT_ARGS"])
+PATH = ArgumentCatalog("paths", PARAMETER_DEFINITIONS["PATH_ARGS"])
+RUN_TIME = ArgumentCatalog("run time", PARAMETER_DEFINITIONS["RUN_TIME_ARGS"])
+USER = ArgumentCatalog("user", PARAMETER_DEFINITIONS["USER_ARGS"])
+MODEL = ArgumentCatalog("simulation model", PARAMETER_DEFINITIONS["SIMULATION_MODEL_ARGS"])
+SOFTWARE = ArgumentCatalog("simulation software", PARAMETER_DEFINITIONS["SIMULATION_SOFTWARE_ARGS"])
+CORSIKA = ArgumentCatalog("simulation configuration", get_corsika_configuration_args())
+SHOWER = ArgumentCatalog("shower parameters", PARAMETER_DEFINITIONS["SHOWER_ARGS"])
+CORSIKA_INTERACTION = ArgumentCatalog(
+    "corsika configuration", PARAMETER_DEFINITIONS["CORSIKA_ARGS"]
+)
+SIM_TELARRAY = ArgumentCatalog("sim_telarray configuration", PARAMETER_DEFINITIONS["SIMTEL_ARGS"])
+APPLICATION_ARGUMENTS = ArgumentCatalog("application", PARAMETER_DEFINITIONS["APPLICATION_ARGS"])
+
+# Simulation model arguments
+MODEL_VERSION = MODEL.model_version()
+PARAMETER_VERSION = MODEL.parameter_version()
+UPDATED_PARAMETER_VERSION = MODEL.updated_parameter_version()
+OVERWRITE_MODEL_PARAMETERS = MODEL.overwrite_model_parameters()
+SITE = MODEL.site()
+TELESCOPE = MODEL.telescope()
+ARRAY_LAYOUT_NAME = MODEL.array_layout_name()
+ARRAY_ELEMENT_LIST = MODEL.array_element_list()
+ARRAY_LAYOUT_FILE = MODEL.array_layout_file()
+ARRAY_LAYOUT_PARAMETER_FILE = MODEL.array_layout_parameter_file()
+PLOT_ALL_LAYOUTS = MODEL.plot_all_layouts()
+
+# Simulation software and CORSIKA arguments
+SIMULATION_SOFTWARE = SOFTWARE.simulation_software()
+PRIMARY = CORSIKA.primary()
+PRIMARY_ID_TYPE = CORSIKA.primary_id_type()
+AZIMUTH_ANGLE = CORSIKA.azimuth_angle()
+ZENITH_ANGLE = CORSIKA.zenith_angle()
+SHOWERS_PER_RUN = CORSIKA.showers_per_run()
+RUN_NUMBER_OFFSET = CORSIKA.run_number_offset()
+RUN_NUMBER = CORSIKA.run_number()
+ENERGY_RANGE = SHOWER.energy_range()
+VIEW_CONE = SHOWER.view_cone()
+CORE_SCATTER = SHOWER.core_scatter()
+CORSIKA_HE_INTERACTION = CORSIKA_INTERACTION.corsika_he_interaction()
+CORSIKA_LE_INTERACTION = CORSIKA_INTERACTION.corsika_le_interaction()
+
+# Application-domain arguments
+ALL_MODEL_VERSIONS = APPLICATION_ARGUMENTS.all_model_versions()
+DATA = APPLICATION_ARGUMENTS.data()
+EVENT_DATA_FILE = APPLICATION_ARGUMENTS.event_data_file()
+MAX_OFFSET = APPLICATION_ARGUMENTS.max_offset()
+NUMBER_OF_PHOTONS = APPLICATION_ARGUMENTS.number_of_photons()
+OFF_AXIS_ANGLES = APPLICATION_ARGUMENTS.off_axis_angles()
+OFFSET_STEP = APPLICATION_ARGUMENTS.offset_step()
+SOURCE_DISTANCE = APPLICATION_ARGUMENTS.source_distance()
+RAY_TRACING_ZENITH_ANGLE = APPLICATION_ARGUMENTS.zenith_angle()
+TELESCOPE_IDS = APPLICATION_ARGUMENTS.telescope_ids()
+
+# Paths, output, and stable simulation-configuration bundles
+OUTPUT_PATH = PATH.output_path()
+PATH_ARGUMENTS = PATH.all()
+OUTPUT_ARGUMENTS = OUTPUT.all()
+CORSIKA_CONFIGURATION_ARGUMENTS = CORSIKA.all()
+SHOWER_ARGUMENTS = SHOWER.all()
+CORSIKA_INTERACTION_ARGUMENTS = CORSIKA_INTERACTION.all()
+SIM_TELARRAY_ARGUMENTS = SIM_TELARRAY.all()
+
+STANDARD_ARGUMENTS = (
+    *CONFIGURATION.all(),
+    *EXECUTION.all(),
+    *RUN_TIME.all(),
+    *USER.all(),
+)
+
+
+def _layout_argument(name, *, required_unless=None):
+    """Build one argument belonging to the shared array-layout selection group."""
+    return ArgumentDefinition(
+        name,
+        group="simulation model",
+        exclusive_group="array layout",
+        exclusive_group_required=True,
+        required_unless=required_unless,
+        **{
+            "array_layout_name": ARRAY_LAYOUT_NAME,
+            "array_element_list": ARRAY_ELEMENT_LIST,
+            "array_layout_file": ARRAY_LAYOUT_FILE,
+            "plot_all_layouts": PLOT_ALL_LAYOUTS,
+        }[name].kwargs,
+    )
+
+
+def layout_selection_arguments(*, include_file=False, include_plot_all=False):
+    """Return the standard mutually exclusive array-layout selections."""
+    names = ["array_layout_name", "array_element_list"]
+    if include_file:
+        names.append("array_layout_file")
+    if include_plot_all:
+        names.append("plot_all_layouts")
+    return tuple(
+        _layout_argument(name, required_unless="--list_available_layouts") for name in names
+    )

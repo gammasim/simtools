@@ -8,14 +8,14 @@ Render the CLI reference for an application while hiding the default repeated gr
 .. code-block:: rst
 
     .. simtools-cli-help::
-       :module: simtools.applications.plot_array_layout
+       :application: plot_array_layout
 
 Render the CLI reference while keeping the ``paths`` group visible:
 
 .. code-block:: rst
 
     .. simtools-cli-help::
-       :module: simtools.applications.plot_array_layout
+       :application: plot_array_layout
        :show-groups: paths
 
 Render the CLI reference under a heading supplied by the surrounding page:
@@ -23,7 +23,7 @@ Render the CLI reference under a heading supplied by the surrounding page:
 .. code-block:: rst
 
     .. simtools-cli-help::
-       :module: simtools.applications.plot_array_layout
+       :application: plot_array_layout
        :no-heading:
 """
 
@@ -33,8 +33,6 @@ from dataclasses import dataclass
 
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
-
-from simtools.application_control import build_application_parser
 
 try:
     from sphinx.util.docutils import SphinxDirective
@@ -50,19 +48,11 @@ DEFAULT_HIDDEN_GROUPS = {
 }
 
 
-class _ParserCapturedError(RuntimeError):
-    """Internal exception used to short-circuit application main functions."""
-
-    def __init__(self, parser):
-        super().__init__("parser captured")
-        self.parser = parser
-
-
 @dataclass(frozen=True)
 class CliHelpOptions:
     """Options controlling CLI-help rendering."""
 
-    module_name: str
+    application_name: str
     prog: str | None
     hidden_groups: set[str]
     include_heading: bool
@@ -82,55 +72,18 @@ def _split_csv_option(value: str | None) -> set[str]:
     return {item.strip() for item in value.split(",") if item.strip()}
 
 
-def _resolve_module_name(module_name: str) -> str:
-    """Resolve short application-module names to their package path."""
-    if "." in module_name:
-        return module_name
-    return f"simtools.applications.{module_name}"
-
-
-def _capture_parser_from_main(module, prog: str | None):
-    """Execute module.main() with a patched build_application that captures the parser."""
-    original_build_application = getattr(module, "build_application", None)
-    if original_build_application is None:
-        raise ValueError(f"Application module has no build_application import: {module.__name__}")
-
-    def _fake_build_application(*_args, **kwargs):
-        initialization_kwargs = kwargs.get("initialization_kwargs")
-        if initialization_kwargs is None and kwargs.get("parse_function") is not None:
-            initialization_kwargs = getattr(module, "_INITIALIZATION_KWARGS", {})
-
-        parser = build_application_parser(
-            application_path=getattr(module, "__file__", None),
-            description=getattr(module, "__doc__", None),
-            add_arguments_function=getattr(module, "_add_arguments", None),
-            application_argument_definitions=kwargs.get(
-                "application_argument_definitions",
-                getattr(module, "_APPLICATION_ARG_DEFINITIONS", None),
-            ),
-            initialization_kwargs=initialization_kwargs,
-            usage=kwargs.get("usage"),
-            epilog=kwargs.get("epilog"),
-        )
-        if prog is not None:
-            parser.prog = prog
-        raise _ParserCapturedError(parser)
-
-    module.build_application = _fake_build_application
-    try:
-        module.main()
-    except _ParserCapturedError as error:
-        return CliInspection(parser=error.parser)
-    finally:
-        module.build_application = original_build_application
-
-    raise ValueError(f"Failed to capture parser from application main(): {module.__name__}")
-
-
-def load_application_parser(module_name: str, prog: str | None = None):
-    """Load an application parser from the target module."""
-    module = importlib.import_module(_resolve_module_name(module_name))
-    return _capture_parser_from_main(module, prog=prog)
+def load_application_parser(application_name: str, prog: str | None = None):
+    """Load the explicit parser definition from an application module."""
+    if "." in application_name:
+        raise ValueError("Application names must not contain a module path")
+    module = importlib.import_module(f"simtools.applications.{application_name}")
+    application = getattr(module, "APPLICATION", None)
+    if application is None:
+        raise ValueError(f"Application has no APPLICATION definition: {application_name}")
+    parser = application.build_parser()
+    if prog is not None:
+        parser.prog = prog
+    return CliInspection(parser=parser)
 
 
 def _iter_visible_group_actions(parser):
@@ -221,7 +174,7 @@ class SimtoolsCliHelpDirective(SphinxDirective):
 
     has_content = False
     option_spec = {
-        "module": directives.unchanged_required,
+        "application": directives.unchanged_required,
         "prog": directives.unchanged,
         "hide-groups": directives.unchanged,
         "show-groups": directives.unchanged,
@@ -232,7 +185,7 @@ class SimtoolsCliHelpDirective(SphinxDirective):
         """Render the directive content."""
         options = self._parse_options()
         try:
-            inspection = load_application_parser(options.module_name, prog=options.prog)
+            inspection = load_application_parser(options.application_name, prog=options.prog)
         except (ValueError, ImportError) as error:
             raise self.error(str(error)) from error
 
@@ -247,7 +200,7 @@ class SimtoolsCliHelpDirective(SphinxDirective):
         hidden_groups = DEFAULT_HIDDEN_GROUPS | _split_csv_option(self.options.get("hide-groups"))
         hidden_groups -= _split_csv_option(self.options.get("show-groups"))
         return CliHelpOptions(
-            module_name=self.options["module"],
+            application_name=self.options["application"],
             prog=self.options.get("prog"),
             hidden_groups=hidden_groups,
             include_heading="no-heading" not in self.options,

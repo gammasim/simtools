@@ -44,43 +44,58 @@ r"""
     The output is saved in simtools-output/validate_camera_efficiency.
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
 from simtools.camera.camera_efficiency import CameraEfficiency
+from simtools.configuration import arguments as cli
 from simtools.io.ascii_handler import write_data_to_file
 from simtools.utils import names
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--nsb_spectrum",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "nsb_spectrum",
         help=(
-            "File with NSB spectrum to use for the efficiency simulation."
-            "The expected format is two columns with wavelength in nm and "
-            "NSB flux with the units: [1e9 * ph/m2/s/sr/nm]."
-            "If the file has more than two columns, the first and third are used,"
-            "and the second is ignored (native sim_telarray behavior)."
+            "File with NSB spectrum for the efficiency simulation. Expected format: two "
+            "columns with wavelength in nm and NSB flux in [1e9 * ph/m2/s/sr/nm]. If more "
+            "than two columns are present, the first and third are used and the second is "
+            "ignored (native sim_telarray behavior)."
         ),
         type=str,
         default=None,
         required=False,
-    )
-    parser.add_argument(
-        "--skip_correction_to_nsb_spectrum",
+    ),
+    cli.ArgumentDefinition(
+        "skip_correction_to_nsb_spectrum",
         help=(
-            "Skip correction to the NSB spectrum to account for the "
-            "difference between the altitude used in the reference B&E spectrum and "
-            "the observation level at the CTAO sites."
+            "Skip correction to the NSB spectrum for the altitude difference between the "
+            "reference B&E spectrum and the observation level at the CTAO sites."
         ),
         required=False,
         action="store_true",
-    )
-    parser.add_argument(
-        "--write_reference_nsb_rate_as_parameter",
-        help=("Write the NSB pixel rate obtained for reference conditions as a model parameter "),
+    ),
+    cli.ArgumentDefinition(
+        "write_reference_nsb_rate_as_parameter",
+        help="Write the NSB pixel rate obtained for reference conditions as a model parameter ",
         action="store_true",
         required=False,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION(),
+        cli.PARAMETER_VERSION(),
+        cli.OVERWRITE_MODEL_PARAMETERS(),
+        cli.SITE(),
+        cli.TELESCOPE(),
+        cli.ZENITH_ANGLE(),
+        cli.AZIMUTH_ANGLE(),
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def _validate_required_args(args_dict):
@@ -91,15 +106,7 @@ def _validate_required_args(args_dict):
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": ["telescope", "model_version", "parameter_version"],
-            "simulation_configuration": {
-                "corsika_configuration": ["zenith_angle", "azimuth_angle"]
-            },
-        },
-    )
+    app_context = APPLICATION.start()
     _validate_required_args(app_context.args)
 
     results = {}

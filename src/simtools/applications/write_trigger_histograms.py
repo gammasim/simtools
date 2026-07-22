@@ -25,15 +25,14 @@ Fill trigger histograms from reduced event-data files:
 
 import astropy.units as u
 
-from simtools.application_control import build_application
-from simtools.configuration.commandline_argument_helpers import positive_quantity
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
+from simtools.configuration.argument_helpers import positive_quantity
 from simtools.production_configuration.trigger_histograms import write_trigger_histograms
 
-
-def _add_arguments(parser):
-    """Application-specific command line arguments."""
-    parser.add_argument(
-        "--event_data_file",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "event_data_file",
         help=(
             "Reduced event-data file or glob pattern. Provide one or more patterns to build "
             "histograms for multiple productions."
@@ -41,48 +40,59 @@ def _add_arguments(parser):
         nargs="+",
         action="extend",
         required=True,
-    )
-    parser.add_argument(
-        "--energy_bins_per_decade",
+    ),
+    cli.ArgumentDefinition(
+        "energy_bins_per_decade",
         help="Number of logarithmic energy bins per decade.",
         type=int,
         default=10,
-    )
-    parser.add_argument(
-        "--angular_distance_bin_width",
+    ),
+    cli.ArgumentDefinition(
+        "angular_distance_bin_width",
         help="Angular-distance bin width. The range is taken from broad-range viewcone limits.",
         type=positive_quantity("deg"),
         default=0.5 * u.deg,
-    )
-    parser.add_argument(
-        "--skip_invalid_event_data_files",
+    ),
+    cli.ArgumentDefinition(
+        "skip_invalid_event_data_files",
         help=(
-            "Skip malformed or incomplete reduced event-data files inside each input pattern. "
-            "By default, the application stops at the first invalid file."
+            "Skip malformed or incomplete reduced event-data files inside each input "
+            "pattern. By default, stop at the first invalid file."
         ),
         action="store_true",
         default=False,
-    )
-    parser.add_argument(
-        "--max_workers",
+    ),
+    cli.ArgumentDefinition(
+        "max_workers",
         help=(
             "Number of worker processes to use for execution "
             "(default: 1; set to 0 for auto-detection of available cores)."
         ),
         type=int,
         default=1,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION(),
+        cli.OVERWRITE_MODEL_PARAMETERS(),
+        cli.SITE(),
+        *cli.layout_selection_arguments(),
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    database=True,
+    initialize_output=True,
+)
 
 
 def main():
     """Run the trigger-histogram writer CLI application."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "output": True,
-            "simulation_model": ["site", "model_version", "layout"],
-        },
-    )
+    app_context = APPLICATION.start()
     write_trigger_histograms(app_context.args)
 
 

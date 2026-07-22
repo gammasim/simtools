@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 
+"""Tests for shared command-line argument definitions."""
+
 import astropy.units as u
 
-import simtools.configuration.commandline_argument_helpers as helpers
-from simtools.configuration.commandline_parameters import (
+import simtools.configuration.argument_helpers as helpers
+from simtools.configuration.arguments import (
     PARAMETER_DEFINITIONS,
     get_corsika_configuration_args,
 )

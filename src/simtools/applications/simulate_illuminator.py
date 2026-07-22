@@ -134,101 +134,102 @@ light_source_pointing (float, float, float, optional)
 import logging
 import sys
 
-from simtools.application_control import build_application
-from simtools.configuration.commandline_argument_helpers import positive_quantity, scientific_int
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
+from simtools.configuration.argument_helpers import positive_quantity, scientific_int
 from simtools.simtel.multi_illuminator_simulator import MultiIlluminatorSimulator
 from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
 
 
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--light_source",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "light_source",
         help="Illuminator name, e.g. ILLN-01. Required for single-pair mode.",
         type=str,
         default=None,
         required=False,
-    )
-    parser.add_argument(
-        "--simulate_all",
+    ),
+    cli.ArgumentDefinition(
+        "simulate_all",
         help="Simulate all valid illuminator-telescope pairs from the visibility table.",
         action="store_true",
         default=False,
-    )
-    parser.add_argument(
-        "--max_workers",
+    ),
+    cli.ArgumentDefinition(
+        "max_workers",
         help=(
-            "Maximum number of parallel workers for multi-pair mode. "
-            "Default: 60%% of CPU cores. Set to 0 or negative for all cores."
+            "Maximum parallel workers for multi-pair mode. Default: 60%% of CPU cores. "
+            "Set to 0 or negative for all cores."
         ),
         type=int,
         default=None,
         required=False,
-    )
-    configurable_light_source_args = parser.add_argument_group(
-        "Configurable light source position and pointing (override simulation model values)"
-    )
-    configurable_light_source_args.add_argument(
-        "--light_source_position",
+    ),
+    cli.ArgumentDefinition(
+        "light_source_position",
+        group="Configurable light source position and pointing (override simulation model values)",
         help="Light source position (x,y,z) relative to the array center (ground coordinates) in m",
         metavar=("X", "Y", "Z"),
         nargs=3,
         required=False,
-    )
-    configurable_light_source_args.add_argument(
-        "--light_source_pointing",
+    ),
+    cli.ArgumentDefinition(
+        "light_source_pointing",
+        group="Configurable light source position and pointing (override simulation model values)",
         help=(
             "Light source pointing direction "
-            "(Example for pointing downwards: --light_source_pointing 0 0 -1)"
+            "(example pointing downwards: --light_source_pointing 0 0 -1)"
         ),
         metavar=("X", "Y", "Z"),
         nargs=3,
         required=False,
-    )
-    parser.add_argument(
-        "--number_of_events",
-        help="Number of events to simulate",
-        type=int,
-        default=1,
-        required=False,
-    )
-    parser.add_argument(
-        "--flasher_photons",
+    ),
+    cli.ArgumentDefinition(
+        "number_of_events", help="Number of events to simulate", type=int, default=1, required=False
+    ),
+    cli.ArgumentDefinition(
+        "flasher_photons",
         help=(
-            "Override flasher photon yield. "
-            "Accepts integers including scientific notation, e.g. 1e8."
+            "Override flasher photon yield. Accepts integers including scientific notation, "
+            "e.g. 1e8."
         ),
         type=scientific_int,
         required=False,
-    )
-    parser.add_argument(
-        "--wavelength",
+    ),
+    cli.ArgumentDefinition(
+        "wavelength",
         help=(
-            "Wavelength(s) in nanometers (unitless values are interpreted as nm). "
-            "Must be one of the wavelengths "
-            "supported by the illuminator model (typically 266, 355, 473, or 532 nm). "
-            "Multiple wavelengths can be specified (space-separated on command line, "
-            "or as a list in config file: wavelength: [355, 473]). "
-            "If not specified, all model wavelengths will be simulated. "
-            "Will be validated against the model's allowed wavelengths."
+            "Wavelength(s) in nanometers (unitless values are interpreted as nm). Values "
+            "must be supported by the illuminator model (typically 266, 355, 473, or 532 "
+            "nm). Specify multiple values space-separated on the command line or as a list "
+            "in configuration. If omitted, simulate all model wavelengths."
         ),
         type=positive_quantity("nm"),
         nargs="+",
         required=False,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION(),
+        cli.OVERWRITE_MODEL_PARAMETERS(),
+        cli.SITE(),
+        cli.TELESCOPE(),
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": ["telescope", "model_version"],
-            "require_command_line": True,
-        },
-    )
+    app_context = APPLICATION.start()
 
     # Determine illuminator and telescope filters
     light_source = app_context.args.get("light_source")

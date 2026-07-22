@@ -142,144 +142,140 @@ Plot layout with some telescopes grayed out and others highlighted:
 """
 
 import simtools.layout.array_layout_utils as layout_utils
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.visualization.plot_array_layout import (
     generate_plot_combinations,
     plot_array_layouts,
 )
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.initialize_application_argument_group(["all_model_versions"])
-
-    parser.add_argument(
-        "--all_sites",
-        action="store_true",
-        help="Plot layouts for all sites.",
-    )
-
-    parser.add_argument(
-        "--figure_name",
+_ARGUMENTS = (
+    cli.ALL_MODEL_VERSIONS(),
+    cli.ArgumentDefinition("all_sites", action="store_true", help="Plot layouts for all sites."),
+    cli.ArgumentDefinition(
+        "figure_name",
         help="Name of the output figure to be saved.",
         type=str,
         required=False,
         default=None,
-    )
-    parser.add_argument(
-        "--show_labels",
+    ),
+    cli.ArgumentDefinition(
+        "show_labels",
         help="Plot array element labels.",
         action="store_true",
         required=False,
         default=False,
-    )
-    parser.add_argument(
-        "--marker_scaling",
+    ),
+    cli.ArgumentDefinition(
+        "marker_scaling",
         help="Scaling factor for the markers.",
         type=float,
         required=False,
         default=1.0,
-    )
-    parser.add_argument(
-        "--coordinate_system",
+    ),
+    cli.ArgumentDefinition(
+        "coordinate_system",
         help="Coordinate system for the array layout.",
         type=str,
         required=False,
         default="ground",
         choices=["ground", "utm"],
-    )
-    parser.add_argument(
-        "--axes_range",
+    ),
+    cli.ArgumentDefinition(
+        "axes_range",
         help="Range of the both axes in meters.",
         type=float,
         required=False,
         default=None,
-    )
-    parser.add_argument(
-        "--x_lim",
+    ),
+    cli.ArgumentDefinition(
+        "x_lim",
         help="Explicit x-axis limits [xmin xmax] in meters.",
         type=float,
         nargs=2,
         required=False,
         default=None,
         metavar=("XMIN", "XMAX"),
-    )
-    parser.add_argument(
-        "--y_lim",
+    ),
+    cli.ArgumentDefinition(
+        "y_lim",
         help="Explicit y-axis limits [ymin ymax] in meters.",
         type=float,
         nargs=2,
         required=False,
         default=None,
         metavar=("YMIN", "YMAX"),
-    )
-    parser.add_argument(
-        "--array_layout_name_background",
+    ),
+    cli.ArgumentDefinition(
+        "array_layout_name_background",
         help="Name of the background layout array (e.g., test_layout, alpha, 4mst, etc.).",
         type=str,
         required=False,
         default=None,
-    )
-    parser.add_argument(
-        "--grayed_out_array_elements",
+    ),
+    cli.ArgumentDefinition(
+        "grayed_out_array_elements",
         help="List of array elements to plot as gray circles.",
         type=str,
         nargs="*",
         required=False,
         default=None,
-    )
-    parser.add_argument(
-        "--highlighted_array_elements",
+    ),
+    cli.ArgumentDefinition(
+        "highlighted_array_elements",
         help="List of array elements to plot with red circles around them.",
         type=str,
         nargs="*",
         required=False,
         default=None,
-    )
-    parser.add_argument(
-        "--legend_location",
+    ),
+    cli.ArgumentDefinition(
+        "legend_location",
         help=(
-            "Location of the legend (e.g., 'best', 'upper right', 'upper left', "
-            "'lower left', 'lower right', 'right', 'center left', 'center right', "
-            "'lower center', 'upper center', 'center', 'no_legend')."
+            "Legend location: 'best', 'upper right', 'upper left', 'lower left', "
+            "'lower right', 'right', 'center left', 'center right', 'lower center', "
+            "'upper center', 'center', or 'no_legend'."
         ),
         type=str,
         required=False,
         default="best",
-    )
-    parser.add_argument(
-        "--bounds",
-        help=("Axis bounds mode: 'symmetric' uses +-R with padding, 'exact' uses per-axis min/max"),
+    ),
+    cli.ArgumentDefinition(
+        "bounds",
+        help="Axis bounds mode: 'symmetric' uses +-R with padding, 'exact' uses per-axis min/max",
         type=str,
         choices=["symmetric", "exact"],
         required=False,
         default="symmetric",
-    )
-    parser.add_argument(
-        "--padding",
-        help=("Fractional padding applied around computed extents (used for both modes)."),
+    ),
+    cli.ArgumentDefinition(
+        "padding",
+        help="Fractional padding applied around computed extents (used for both modes).",
         type=float,
         required=False,
         default=0.1,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION(),
+        cli.OVERWRITE_MODEL_PARAMETERS(),
+        cli.SITE(),
+        *cli.layout_selection_arguments(include_file=True, include_plot_all=True),
+        cli.ARRAY_LAYOUT_PARAMETER_FILE(),
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        usage="Use '--plot_all_layouts' to plot all layouts for the given site and model version.",
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": [
-                "site",
-                "model_version",
-                "layout",
-                "layout_file",
-                "plot_all_layouts",
-                "layout_parameter_file",
-            ],
-        },
-    )
+    app_context = APPLICATION.start()
 
     if app_context.args.get("all_model_versions") or app_context.args.get("all_sites"):
         for model_version, site in generate_plot_combinations(app_context.args):

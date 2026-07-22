@@ -54,55 +54,59 @@ azimuth_angle (float, optional)
     Azimuth angle in degrees.
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.simulator import Simulator
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--run_mode",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "run_mode",
         help="Calibration run mode",
         type=str,
         required=True,
         choices=["pedestals", "pedestals_dark", "pedestals_nsb_only"],
-    )
-    parser.add_argument(
-        "--number_of_events",
-        help="Number of pedestal events to simulate",
-        type=int,
-        required=True,
-    )
-    parser.add_argument(
-        "--nsb_scaling_factor",
+    ),
+    cli.ArgumentDefinition(
+        "number_of_events", help="Number of pedestal events to simulate", type=int, required=True
+    ),
+    cli.ArgumentDefinition(
+        "nsb_scaling_factor",
         help=(
-            "Scaling factor for the NSB rate. "
-            "Default is 1.0, which corresponds to the nominal (dark sky) NSB rate."
+            "Scaling factor for the NSB rate. Default is 1.0, corresponding to the nominal "
+            "(dark sky) NSB rate."
         ),
         type=float,
         required=False,
         default=1.0,
-    )
-    parser.add_argument(
-        "--stars",
-        help="List of stars (azimuth, zenith, weighting factor).",
-        type=str,
-        default=None,
-    )
+    ),
+    cli.ArgumentDefinition(
+        "stars", help="List of stars (azimuth, zenith, weighting factor).", type=str, default=None
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION(),
+        cli.OVERWRITE_MODEL_PARAMETERS(),
+        cli.SITE(),
+        cli.TELESCOPE(),
+        *cli.layout_selection_arguments(),
+        cli.RUN_NUMBER(),
+        cli.AZIMUTH_ANGLE(),
+        cli.ZENITH_ANGLE(),
+        *cli.SIM_TELARRAY_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": ["site", "layout", "telescope", "model_version"],
-            "simulation_configuration": {
-                "corsika_configuration": ["run_number", "azimuth_angle", "zenith_angle"],
-                "sim_telarray_configuration": ["all"],
-            },
-        },
-    )
+    app_context = APPLICATION.start()
 
     simulator = Simulator(label=app_context.args.get("label"))
     simulator.simulate()

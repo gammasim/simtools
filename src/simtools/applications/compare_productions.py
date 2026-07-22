@@ -23,48 +23,55 @@ array_layout_name (str, optional)
     trigger histogram HDF5 metadata.
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.sim_events.production_comparison import (
     collect_production_metrics,
     parse_production_arguments,
 )
 from simtools.visualization import plot_event_level_production_comparison
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.initialize_application_argument_group(["output_path"])
-    parser.add_argument(
-        "--production",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "production",
         action="append",
         nargs="+",
         metavar=("LABEL", "TRIGGER_HISTOGRAM_FILES"),
         required=True,
         help=(
-            "Production descriptor. "
-            "Use as: --production <label> <comma-separated file patterns>. "
-            "Repeat this argument as needed for multiple trigger histogram files."
+            "Production descriptor: --production <label> <comma-separated file patterns>. "
+            "Repeat for multiple trigger histogram files."
         ),
-    )
-    parser.add_argument(
-        "--comparison_level",
+    ),
+    cli.ArgumentDefinition(
+        "comparison_level",
         choices=["events", "signals", "compute"],
         default="events",
         help="Comparison level to execute.",
-    )
-    parser.add_argument(
-        "--array_layout_name",
+    ),
+    cli.ArgumentDefinition(
+        "array_layout_name",
         nargs="+",
         help="Restrict trigger histogram references to the selected array layout name(s).",
         required=False,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    initialize_output=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"db_config": False, "output": True},
-    )
+    app_context = APPLICATION.start()
 
     comparison_level = app_context.args["comparison_level"]
     if comparison_level == "events":

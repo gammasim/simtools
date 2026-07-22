@@ -36,38 +36,45 @@ r"""
 """
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.simtel.simtel_config_reader import SimtelConfigReader
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--schema", help="Schema file for model parameter validation", required=True
-    )
-    parser.add_argument(
-        "--simtel_cfg_file",
-        help="File name for sim_telarray configuration",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "--simtel_telescope_name",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "schema", help="Schema file for model parameter validation", required=True
+    ),
+    cli.ArgumentDefinition(
+        "simtel_cfg_file", help="File name for sim_telarray configuration", type=str, required=True
+    ),
+    cli.ArgumentDefinition(
+        "simtel_telescope_name",
         help="Name of the telescope in the sim_telarray configuration file",
         type=str,
         required=True,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.PARAMETER_VERSION(),
+        cli.OVERWRITE_MODEL_PARAMETERS(),
+        cli.SITE(),
+        cli.TELESCOPE(),
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    initialize_output=True,
+    setup_io_handler=False,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "simulation_model": ["telescope", "parameter_version"],
-            "output": True,
-        },
-        startup_kwargs={"setup_io_handler": False},
-    )
+    app_context = APPLICATION.start()
 
     simtel_config_reader = SimtelConfigReader(
         schema_file=app_context.args["schema"],

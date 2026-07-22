@@ -1,18 +1,18 @@
 #!/usr/bin/python3
 
-import argparse
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import simtools.applications.db_upload_model_repository as app
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.constants import DEFAULT_SIMULATION_MODELS
 
 
 def test_add_arguments_includes_repository_dir_option(tmp_test_directory):
-    parser = argparse.ArgumentParser()
+    parser = CommandLineParser()
 
-    app._add_arguments(parser)
+    parser.add_argument_definitions(app._ARGUMENTS)
 
     repository_dir = str(Path(tmp_test_directory) / "simulation-models")
     args = parser.parse_args(["--repository_dir", repository_dir])
@@ -22,7 +22,7 @@ def test_add_arguments_includes_repository_dir_option(tmp_test_directory):
 @patch("simtools.applications.db_upload_model_repository.db_model_upload.add_complete_model")
 @patch("simtools.applications.db_upload_model_repository.db_handler.DatabaseHandler")
 @patch("simtools.applications.db_upload_model_repository.config.load")
-@patch("simtools.applications.db_upload_model_repository.build_application")
+@patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_forwards_repository_dir(
     mock_build_application,
     mock_config_load,
@@ -66,7 +66,7 @@ def test_main_forwards_repository_dir(
 @patch("simtools.applications.db_upload_model_repository.db_model_upload.add_complete_model")
 @patch("simtools.applications.db_upload_model_repository.db_handler.DatabaseHandler")
 @patch("simtools.applications.db_upload_model_repository.config.load")
-@patch("simtools.applications.db_upload_model_repository.build_application")
+@patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_uses_default_repository_url_without_repository_dir(
     mock_build_application,
     mock_config_load,

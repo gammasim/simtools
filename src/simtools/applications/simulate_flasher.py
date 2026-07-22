@@ -77,80 +77,92 @@ run_number (int, optional)
     Run number to use (default: 1, required for direct injection mode).
 """
 
-from simtools.application_control import build_application
-from simtools.configuration.commandline_argument_helpers import scientific_int, telescope
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
+from simtools.configuration.argument_helpers import scientific_int, telescope
 from simtools.model.model_utils import get_array_elements_for_layout
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.simulator import Simulator
 from simtools.utils import general
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--run_mode",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "run_mode",
         help="Flasher simulation run mode",
         type=str,
         choices=["direct_injection", "full_simulation"],
         required=True,
         default="direct_injection",
-    )
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        "--light_source",
+    ),
+    cli.ArgumentDefinition(
+        "light_source",
+        exclusive_group="group",
+        exclusive_group_required=True,
         help="Flasher device associated with a specific telescope, i.e. MSFx-FlashCam",
         type=str,
-    )
-    group.add_argument(
-        "--light_source_type",
+    ),
+    cli.ArgumentDefinition(
+        "light_source_type",
+        exclusive_group="group",
+        exclusive_group_required=True,
         help="Type of the light source (e.g. flat_fielding)",
         type=str,
-    )
-    target_group = parser.add_mutually_exclusive_group(required=True)
-    target_group.add_argument(
-        "--telescopes",
+    ),
+    cli.ArgumentDefinition(
+        "telescopes",
+        exclusive_group="target group",
+        exclusive_group_required=True,
         help="One or more telescopes (e.g. LSTN-01, MSTN-04, SSTS-04)",
         type=telescope,
         nargs="+",
-    )
-    target_group.add_argument(
-        "--array_layout_name",
+    ),
+    cli.ArgumentDefinition(
+        "array_layout_name",
+        exclusive_group="target group",
+        exclusive_group_required=True,
         help="Array layout name(s) (e.g. alpha, subsystem_msts)",
         nargs="+",
         type=str,
-    )
-    parser.add_argument(
-        "--number_of_events",
+    ),
+    cli.ArgumentDefinition(
+        "number_of_events",
         help="Number of flasher events to simulate",
         type=int,
         default=1,
         nargs="+",
         required=False,
-    )
-    parser.add_argument(
-        "--flasher_photons",
+    ),
+    cli.ArgumentDefinition(
+        "flasher_photons",
         help=(
-            "Override flasher photon yield (single value for all telescopes). "
-            "Accepts integers including scientific notation, e.g. 1e6."
+            "Override flasher photon yield (one value for all telescopes). Accepts integers "
+            "including scientific notation, e.g. 1e6."
         ),
         type=scientific_int,
         nargs="+",
         required=False,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION(),
+        cli.OVERWRITE_MODEL_PARAMETERS(),
+        cli.SITE(),
+        cli.RUN_NUMBER(),
+        *cli.SIM_TELARRAY_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": ["site", "model_version"],
-            "simulation_configuration": {
-                "corsika_configuration": ["run_number"],
-                "sim_telarray_configuration": ["all"],
-            },
-        },
-    )
+    app_context = APPLICATION.start()
 
     tel_string = (
         f"telescope(s) {app_context.args['telescopes']}"

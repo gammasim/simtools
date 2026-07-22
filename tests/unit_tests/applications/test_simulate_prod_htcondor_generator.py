@@ -1,16 +1,16 @@
 #!/usr/bin/python3
 
-import argparse
 from types import SimpleNamespace
 from unittest.mock import patch
 
 import simtools.applications.simulate_prod_htcondor_generator as app
+from simtools.configuration.commandline_parser import CommandLineParser
 
 
 @patch(
     "simtools.applications.simulate_prod_htcondor_generator.htcondor_script_generator.generate_submission_script"
 )
-@patch("simtools.applications.simulate_prod_htcondor_generator.build_application")
+@patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_uses_standard_build_application(
     mock_build_application, mock_generate_submission_script
 ):
@@ -23,9 +23,9 @@ def test_main_uses_standard_build_application(
 
 
 def test_add_arguments_registers_job_grid_argument():
-    parser = argparse.ArgumentParser()
+    parser = CommandLineParser()
 
-    app._add_arguments(parser)
+    parser.add_argument_definitions(app._ARGUMENTS)
     args = parser.parse_args(
         [
             "--job_grid_file",
