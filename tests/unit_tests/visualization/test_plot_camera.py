@@ -345,7 +345,7 @@ def _axis_direction(annotation_call):
     """Return the vector from the axis origin to its labelled arrow tip."""
     origin = np.asarray(annotation_call.kwargs["xy"])
     arrow_tip = np.asarray(annotation_call.kwargs["xytext"])
-    return arrow_tip - origin
+    return (arrow_tip - origin).tolist()
 
 
 def test_plot_axes_dual_mirror_directions():
