@@ -11,6 +11,7 @@ from itertools import groupby
 from pathlib import Path
 
 import numpy as np
+from astropy.table import Table
 
 from simtools.constants import DEFAULT_SIMULATIONS_REPO
 from simtools.db import db_handler
@@ -1073,17 +1074,17 @@ class ReadParameters:
             return
 
         file.write(f"\n## {parameter.replace('_', ' ').title()}\n\n")
-        headers = value_data[0].keys()
-        file.write("| " + " | ".join(headers) + " |\n")
-        file.write("|" + " --- |" * len(headers) + "\n")
-        for entry in value_data:
-            formatted_cells = []
-            for h in headers:
-                cell_value = entry.get(h, "")
-                u = unit if h == "value" and cell_value is not None else ""
-                formatted_cells.append(f"{cell_value} {u}".strip())
-            row = "| " + " | ".join(formatted_cells) + " |\n"
-            file.write(row)
+        table_rows = [entry.copy() for entry in value_data]
+        for entry in table_rows:
+            if entry.get("value") is not None:
+                entry["value"] = f"{entry['value']} {unit}".strip()
+
+        Table(rows=table_rows).write(
+            file,
+            format="ascii.fixed_width_two_line",
+            delimiter="|",
+            bookend=True,
+        )
 
     def _write_array_layouts_section(self, file, layouts):
         """Write the array layouts section of the report."""

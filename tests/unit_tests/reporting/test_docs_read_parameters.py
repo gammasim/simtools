@@ -15,6 +15,15 @@ DESCRIPTION = "Test parameter"
 SHORT_DESC = "Short"
 
 
+def _markdown_table_rows(content):
+    """Return Markdown table rows with only cell-padding whitespace removed."""
+    return [
+        [cell.strip() for cell in line.strip("|").split("|")]
+        for line in content.splitlines()
+        if line.startswith("|")
+    ]
+
+
 def test_get_all_parameter_descriptions(telescope_model_lst, tmp_path):
     args = {
         "telescope": telescope_model_lst.name,
@@ -626,9 +635,10 @@ def test__write_parameters_table(tmp_path):
     # Verify list-of-dicts parameter is linked and table is written below
     assert "| dict_param | [View Dict Param](#dict-param) | 4.0.0 |" in output
     assert "## Dict Param" in output
-    assert "| a | b | value |" in output
-    assert "| A | B | 1 m |" in output
-    assert "| X | Y | 2 m |" in output
+    table_rows = _markdown_table_rows(output)
+    assert ["a", "b", "value"] in table_rows
+    assert ["A", "B", "1 m"] in table_rows
+    assert ["X", "Y", "2 m"] in table_rows
 
 
 def test_model_version_setter_with_invalid_list(tmp_path):
@@ -798,8 +808,9 @@ def test_produce_simulation_configuration_report(tmp_path):
         assert "# configuration_corsika" in content
         assert "[View Corsika Starting Grammage](#corsika-starting-grammage)" in content
         assert "## Corsika Starting Grammage" in content
-        assert "| instrument | primary_particle | value |" in content
-        assert "| LSTN-design | muon+ | 580.0 g/cm2 |" in content
+        table_rows = _markdown_table_rows(content)
+        assert ["instrument", "primary_particle", "value"] in table_rows
+        assert ["LSTN-design", "muon+", "580.0 g/cm2"] in table_rows
 
 
 def test_produce_calibration_reports(mocker, tmp_path):
@@ -1423,6 +1434,23 @@ def test__write_dict_table_empty_value_data(tmp_path):
     file = StringIO()
     rp._write_dict_table("dict_param", file, [], "m")
     assert file.getvalue() == ""
+
+
+def test__write_dict_table_handles_inconsistent_keys_without_mutating_input(
+    tmp_test_directory,
+):
+    rp = ReadParameters(args={}, output_path=tmp_test_directory)
+    value_data = [{"a": "A", "value": 1}, {"b": "B", "value": 2}]
+    expected_value_data = [entry.copy() for entry in value_data]
+    file = StringIO()
+
+    rp._write_dict_table("dict_param", file, value_data, "m")
+
+    table_rows = _markdown_table_rows(file.getvalue())
+    assert ["a", "value", "b"] in table_rows
+    assert ["A", "1 m", ""] in table_rows
+    assert ["", "2 m", "B"] in table_rows
+    assert value_data == expected_value_data
 
 
 def test_get_calibration_data_uses_telescope_description_fallback(tmp_path):
