@@ -24,6 +24,7 @@ require_define() {
         echo "Required macro ${symbol} is not defined in ${config_file}." >&2
         exit 1
     fi
+    return 0
 }
 
 reject_define() {
@@ -32,6 +33,7 @@ reject_define() {
         echo "Unexpected macro ${symbol} is defined in ${config_file}." >&2
         exit 1
     fi
+    return 0
 }
 
 [[ -x "$executable" ]] || {
