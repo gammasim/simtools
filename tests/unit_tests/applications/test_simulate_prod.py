@@ -95,6 +95,16 @@ def test_add_arguments_job_grid_row_defaults_to_one():
 
     assert args.job_grid_file is None
     assert args.job_grid_row == 1
+    assert args.save_corsika_output is False
+
+
+def test_add_arguments_save_corsika_output():
+    parser = argparse.ArgumentParser()
+
+    app._add_arguments(parser)
+    args = parser.parse_args(["--save_corsika_output"])
+
+    assert args.save_corsika_output is True
 
 
 @pytest.mark.parametrize(

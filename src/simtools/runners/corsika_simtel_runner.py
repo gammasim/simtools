@@ -26,6 +26,8 @@ class CorsikaSimtelRunner:
     use_multipipe : bool
         Use multipipe to run CORSIKA and sim_telarray.
         Dictionary with configuration for sim_telarray random instrument setup.
+    save_corsika_output : bool
+        Save the CORSIKA output stream to a compressed file.
     """
 
     def __init__(
@@ -34,6 +36,7 @@ class CorsikaSimtelRunner:
         label=None,
         sequential=False,
         curved_atmosphere_min_zenith_angle=None,
+        save_corsika_output=False,
     ):
         self._logger = logging.getLogger(__name__)
         self.corsika_config = gen.ensure_list(corsika_config)
@@ -42,6 +45,7 @@ class CorsikaSimtelRunner:
         self.base_corsika_config = self.corsika_config[0]
         self.label = label
         self.sequential = "--sequential" if sequential else ""
+        self.save_corsika_output = save_corsika_output
 
         self.runner_service = runner_services.RunnerServices(
             self.base_corsika_config, run_type="multi_pipe", label=label
@@ -119,6 +123,12 @@ class CorsikaSimtelRunner:
                     + f" | gzip > {log_file} 2>&1\n"
                 )
                 file.write("\n")
+
+            if self.save_corsika_output:
+                corsika_output = self.corsika_runner.runner_service.get_file_name(
+                    file_type="corsika_output", run_number=run_number
+                )
+                file.write(f"zstd > {corsika_output}\n")
 
         self._logger.info(f"Multipipe script: {multipipe_file}")
         self._write_multipipe_script(multipipe_file, run_number)

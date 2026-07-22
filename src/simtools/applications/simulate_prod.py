@@ -54,6 +54,16 @@ def _add_arguments(parser):
         default=False,
     )
     parser.add_argument(
+        "--save_corsika_output",
+        help=(
+            "Save CORSIKA output when piping CORSIKA directly to sim_telarray "
+            "(only relevant for simulation software 'corsika_sim_telarray')."
+        ),
+        action="store_true",
+        required=False,
+        default=False,
+    )
+    parser.add_argument(
         "--save_reduced_event_lists",
         help=(
             "Save reduced event lists with event data on simulated and triggered events. "
