@@ -19,6 +19,7 @@ from simtools.visualization.plot_camera import (
     _plot_axes_def,
     _plot_one_axis_def,
     plot_camera_pixel_layout_from_args,
+    plot_pixel_layout,
     plot_pixel_layout_with_image,
 )
 
@@ -340,30 +341,42 @@ def test_plot_one_axis_with_invert():
     assert plt_mock.gca.return_value.annotate.call_count == 2
 
 
-def test_plot_axes_dual_mirror():
-    """Test axes definition for dual mirror telescope."""
+def _axis_direction(annotation_call):
+    """Return the vector from the axis origin to its labelled arrow tip."""
+    origin = np.asarray(annotation_call.kwargs["xy"])
+    arrow_tip = np.asarray(annotation_call.kwargs["xytext"])
+    return (arrow_tip - origin).tolist()
+
+
+def test_plot_axes_dual_mirror_directions():
+    """Test camera-axis directions for a dual-mirror camera view."""
     camera = MagicMock()
     camera.telescope_name = "LST-01"
-    camera.pixels = {"rotate_angle": 0.5}
     plt_mock = MagicMock()
 
     with patch("simtools.visualization.plot_camera.is_two_mirror_telescope", return_value=True):
-        _plot_axes_def(camera, plt_mock, 0.5)
+        _plot_axes_def(camera, plt_mock, 0.0)
 
-    assert plt_mock.gca.return_value.annotate.call_count >= 2
+    calls = plt_mock.gca.return_value.annotate.call_args_list
+    assert _axis_direction(calls[2]) == pytest.approx([0.0, -0.1])  # x_cam: down
+    assert _axis_direction(calls[3]) == pytest.approx([0.1, 0.0])  # y_cam: right
 
 
-def test_plot_axes_single_mirror():
-    """Test axes definition for single mirror telescope."""
+def test_plot_axes_single_mirror_directions():
+    """Test rotated pixel axes and camera axes for a single-mirror camera view."""
     camera = MagicMock()
     camera.telescope_name = "MST-01"
-    camera.pixels = {"rotate_angle": 0.5}
     plt_mock = MagicMock()
+    rotate_angle = np.deg2rad(30.0)
 
     with patch("simtools.visualization.plot_camera.is_two_mirror_telescope", return_value=False):
-        _plot_axes_def(camera, plt_mock, 0.5)
+        _plot_axes_def(camera, plt_mock, rotate_angle)
 
-    assert plt_mock.gca.return_value.annotate.call_count >= 2
+    calls = plt_mock.gca.return_value.annotate.call_args_list
+    assert _axis_direction(calls[0]) == pytest.approx([-0.05, -np.sqrt(3) * 0.05])
+    assert _axis_direction(calls[1]) == pytest.approx([-np.sqrt(3) * 0.05, 0.05])
+    assert _axis_direction(calls[2]) == pytest.approx([0.0, -0.1])  # x_cam: down
+    assert _axis_direction(calls[3]) == pytest.approx([-0.1, 0.0])  # y_cam: left
 
 
 def test_plot_axes_large_rotation():
@@ -377,6 +390,26 @@ def test_plot_axes_large_rotation():
         _plot_axes_def(camera, plt_mock, np.deg2rad(120))
 
     assert plt_mock.gca.return_value.annotate.call_count >= 2
+
+
+def test_plot_pixel_layout_does_not_mutate_camera_coordinates(simple_camera):
+    """Test that changing the camera viewpoint does not mutate the camera model."""
+    simple_camera.telescope_name = "LSTN-01"
+    original_y = list(simple_camera.pixels["y"])
+
+    with (
+        patch("simtools.visualization.plot_camera.is_two_mirror_telescope", return_value=False),
+        patch(
+            "simtools.visualization.plot_camera.create_pixel_patches_by_type",
+            return_value=([], [], []),
+        ) as mock_create_patches,
+    ):
+        figure = plot_pixel_layout(simple_camera, camera_in_sky_coor=False)
+
+    plotted_camera = mock_create_patches.call_args.args[0]
+    assert plotted_camera.pixels["y"] == [-value for value in original_y]
+    assert simple_camera.pixels["y"] == original_y
+    plt.close(figure)
 
 
 def _mock_camera(n_pixels=1855):
