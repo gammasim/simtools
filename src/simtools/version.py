@@ -269,7 +269,31 @@ def check_version_constraint(version_string, constraint):
     return False
 
 
-def resolve_by_version(config, model_version):
+def _resolve_single_version(by_version, parsed_version):
+    """Resolve one ``by_version`` mapping for one model version."""
+    for constraint, result in by_version.items():
+        if check_version_constraint(str(parsed_version), constraint):
+            return result
+    return None
+
+
+def _resolve_by_version_field(by_version, parsed_versions, key, versions, preserved_keys):
+    """Resolve one ``by_version`` field for the requested model versions."""
+    matched_values = [
+        _resolve_single_version(by_version, parsed_version) for parsed_version in parsed_versions
+    ]
+    first_match = matched_values[0]
+    if all(match == first_match for match in matched_values):
+        return first_match
+    if key in preserved_keys:
+        return {"by_version": by_version}
+    raise ValueError(
+        f"Inconsistent by_version resolution for key '{key}' and model versions "
+        f"{versions}: {matched_values}"
+    )
+
+
+def resolve_by_version(config, model_version, preserve_version_dependent_keys=None):
     """
     Resolve version-dependent values in a configuration dictionary.
 
@@ -283,6 +307,8 @@ def resolve_by_version(config, model_version):
     model_version : str or list
         Semantic version string or list of strings used to evaluate constraints
         (e.g. "6.0.2" or ["6.0.2", "6.1.1"]).
+    preserve_version_dependent_keys : set, optional
+        Keys whose ``by_version`` mappings are retained when they resolve to different values.
 
     Returns
     -------
@@ -295,28 +321,14 @@ def resolve_by_version(config, model_version):
 
     versions = model_version if isinstance(model_version, list) else [model_version]
     parsed_versions = [Version(str(version_item)) for version_item in versions]
-
-    def resolve_by_version_field(by_version_dict, parsed_versions, key):
-        """Resolve a single by_version field for all versions, enforcing consistency."""
-        matched_values = [resolve_single_version(by_version_dict, pv) for pv in parsed_versions]
-        first_match = matched_values[0]
-        if not all(match == first_match for match in matched_values):
-            raise ValueError(
-                f"Inconsistent by_version resolution for key '{key}' and model versions "
-                f"{versions}: {matched_values}"
-            )
-        return first_match
-
-    def resolve_single_version(by_version_dict, parsed_version):
-        for constraint, result in by_version_dict.items():
-            if check_version_constraint(str(parsed_version), constraint):
-                return result
-        return None
+    preserved_keys = set(preserve_version_dependent_keys or [])
 
     resolved = {}
     for key, value in config.items():
         if isinstance(value, dict) and list(value) == ["by_version"]:
-            resolved[key] = resolve_by_version_field(value["by_version"], parsed_versions, key)
+            resolved[key] = _resolve_by_version_field(
+                value["by_version"], parsed_versions, key, versions, preserved_keys
+            )
         else:
             resolved[key] = value
     return resolved

@@ -13,6 +13,8 @@ from simtools.db.mongo_db import jsonschema_db_dict
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
 
+PER_VERSION_CONFIGURATION_KEYS = {"array_layout_name"}
+
 
 class Configurator:
     """
@@ -167,12 +169,7 @@ class Configurator:
         }
         self.config.update(env_config)
         self.config.update(gen.change_dict_keys_case(self.config_class_init or {}))
-        self.config.update(
-            self._config_from_file(
-                _config_file,
-                preserve_by_version_keys=self.parser.preserve_by_version_keys,
-            )
-        )
+        self.config.update(self._config_from_file(_config_file))
         self._fill_config(_cli_arglist)
 
         if self.config.get("activity_id", None) is None:
@@ -240,7 +237,7 @@ class Configurator:
         for action in self.parser._actions:  # pylint: disable=protected-access
             action.required = False
 
-    def _config_from_file(self, config_file, preserve_by_version_keys=None):
+    def _config_from_file(self, config_file):
         """
         Read configuration from yaml file and return as dictionary.
 
@@ -248,8 +245,6 @@ class Configurator:
         ----------
         config_file: str
             Name of configuration file.
-        preserve_by_version_keys: list
-            Top-level configuration keys whose ``by_version`` dictionaries should be preserved.
 
         Returns
         -------
@@ -273,19 +268,11 @@ class Configurator:
             if _config_dict:
                 _config_dict = io_handler.resolve_test_resource_paths(_config_dict)
 
-            preserved_by_version = {}
-            for key in preserve_by_version_keys or []:
-                value = _config_dict.get(key)
-                if isinstance(value, dict) and list(value) == ["by_version"]:
-                    preserved_by_version[key] = value
-
-            for key in preserved_by_version:
-                _config_dict.pop(key)
-
             _config_dict = simtools_version.resolve_by_version(
-                _config_dict, _config_dict.get("model_version")
+                _config_dict,
+                _config_dict.get("model_version"),
+                preserve_version_dependent_keys=PER_VERSION_CONFIGURATION_KEYS,
             )
-            _config_dict.update(preserved_by_version)
             return gen.change_dict_keys_case(_config_dict)
         except (TypeError, AttributeError):
             self._logger.debug("No YAML configuration update applied to configuration dictionary.")

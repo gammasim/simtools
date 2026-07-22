@@ -56,7 +56,6 @@ class CommandLineParser(argparse.ArgumentParser):
         """Initialize the command-line parser."""
         super().__init__(*args, **kwargs)
         self.argument_overrides = {}
-        self.preserve_by_version_keys = set()
 
     def initialize_default_arguments(
         self,
@@ -188,8 +187,6 @@ class CommandLineParser(argparse.ArgumentParser):
     def add_parameter_from_definition(self, container, name, definition):
         """Add one argument from a parameter-definition dictionary."""
         merged_definition = {**definition, **getattr(self, "argument_overrides", {}).get(name, {})}
-        if merged_definition.pop("preserve_by_version", False):
-            self.preserve_by_version_keys.add(name)
         return container.add_argument(f"--{name}", **merged_definition)
 
     def initialize_named_argument_group(self, group_name, selected_parameters=None):

@@ -300,6 +300,15 @@ def test_resolve_by_version_list_inconsistent_raises():
     with pytest.raises(ValueError, match="Inconsistent by_version resolution"):
         version.resolve_by_version(config, ["6.0.2", "7.0.0"])
 
+    assert (
+        version.resolve_by_version(
+            config,
+            ["6.0.2", "7.0.0"],
+            preserve_version_dependent_keys={"array_layout_name"},
+        )
+        == config
+    )
+
 
 def test_is_valid_semantic_version():
     assert version.is_valid_semantic_version("1.0.0")

@@ -279,7 +279,6 @@ def test_simulation_model_accepts_exact_layout_selection():
     assert "array_element_list" not in actions
     assert "overwrite_model_parameters" in actions
     assert "ignore_missing_design_model" not in actions
-    assert commandline_parser.preserve_by_version_keys == {"array_layout_name"}
 
 
 def test_simulation_model_adds_ignore_missing_design_model_when_requested():

@@ -311,7 +311,6 @@ PARAMETER_DEFINITIONS = {
             ),
             "nargs": "+",
             "type": str,
-            "preserve_by_version": True,
         },
         "array_element_list": {
             "help": "list of array elements (e.g., LSTN-01, LSTN-02, MSTN).",
