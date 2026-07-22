@@ -15,7 +15,7 @@ from simtools.constants import (
     MODEL_PARAMETER_SCHEMA_PATH,
     SCHEMA_PATH,
 )
-from simtools.data_model import format_checkers
+from simtools.data_model import format_checkers, schema_loader
 from simtools.dependencies import get_software_version
 from simtools.io import ascii_handler
 from simtools.utils import names, value_conversion
@@ -36,15 +36,7 @@ def get_model_parameter_schema_files(schema_directory=MODEL_PARAMETER_SCHEMA_PAT
         List of schema files found in schema file directory.
 
     """
-    schema_files = sorted(Path(schema_directory).rglob("*.schema.yml"))
-    if not schema_files:
-        raise FileNotFoundError(f"No schema files found in {schema_directory}")
-    parameters = []
-    for schema_file in schema_files:
-        # reading parameter 'name' only - first document in schema file should be ok
-        schema_dict = ascii_handler.collect_data_from_file(file_name=schema_file, yaml_document=0)
-        parameters.append(schema_dict.get("name"))
-    return parameters, schema_files
+    return schema_loader.get_model_parameter_schema_files(schema_directory)
 
 
 def get_model_parameter_schema_file(parameter):
@@ -82,10 +74,10 @@ def get_model_parameter_schema(parameter, schema_version=None):
     Returns
     -------
     dict
-        Schema dictionary.
+        Independent schema dictionary.
     """
     schema_file = get_model_parameter_schema_file(parameter)
-    return load_schema(schema_file, schema_version=schema_version or "latest")
+    return load_schema(schema_file, schema_version or "latest")
 
 
 def get_model_parameter_schema_version(schema_version=None):
@@ -229,7 +221,7 @@ def load_schema(schema_file=None, schema_version="latest"):
     Returns
     -------
     schema: dict
-        Schema dictionary.
+        Independent schema dictionary.
 
     Raises
     ------
@@ -238,81 +230,9 @@ def load_schema(schema_file=None, schema_version="latest"):
 
     """
     schema_file = schema_file or METADATA_JSON_SCHEMA
-
-    schema = None
-    for path in _get_local_schema_candidates(schema_file):
-        try:
-            schema = ascii_handler.collect_data_from_file(file_name=path)
-            break
-        except FileNotFoundError:
-            continue
-
-    # Fall back to remote retrieval only if local resolution fails.
-    if schema is None and gen.is_url(str(schema_file)):
-        try:
-            schema = ascii_handler.collect_data_from_file(file_name=schema_file)
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(f"Schema file not found: {schema_file}") from exc
-
-    if schema is None:
-        raise FileNotFoundError(f"Schema file not found: {schema_file}")
-
-    _logger.debug(f"Loading schema from {schema_file} for schema version {schema_version}")
-    schema = _get_schema_for_version(schema, schema_file, schema_version)
+    schema = schema_loader.load_schema(schema_file, schema_version)
     _add_array_elements("InstrumentTypeElement", schema)
 
-    return schema
-
-
-def _get_local_schema_candidates(schema_file):
-    """Build local candidate paths for a schema file reference."""
-    schema_path = Path(str(schema_file))
-    candidates = [schema_path, SCHEMA_PATH / schema_path]
-
-    if gen.is_url(str(schema_file)):
-        schema_name = Path(str(schema_file)).name
-        if schema_name:
-            candidates.extend([SCHEMA_PATH / schema_name, Path(schema_name)])
-
-    # Keep order stable while removing duplicates.
-    return list(dict.fromkeys(candidates))
-
-
-def _get_schema_for_version(schema, schema_file, schema_version):
-    """
-    Get schema for a specific version.
-
-    Allow for 'latest' version to return the most recent schema.
-
-    Parameters
-    ----------
-    schema: dict or list
-        Schema dictionary or list of dictionaries.
-    schema_file: str
-        Path to schema file.
-    schema_version: str or None
-        Schema version to retrieve. If 'latest', the most recent version is returned.
-
-    Returns
-    -------
-    dict
-        Schema dictionary for the specified version.
-    """
-    if schema_version is None:
-        raise ValueError(f"Schema version not given in {schema_file}.")
-
-    if isinstance(schema, list):  # schema file with several schemas defined
-        if len(schema) == 0:
-            raise ValueError(f"No schemas found in {schema_file}.")
-        if schema_version == "latest":
-            schema_version = schema[0].get("schema_version")
-        schema = next((doc for doc in schema if doc.get("schema_version") == schema_version), None)
-    if schema is None:
-        raise ValueError(f"Schema version {schema_version} not found in {schema_file}.")
-    if schema_version not in (None, "latest") and schema_version != schema.get("schema_version"):
-        _logger.warning(
-            f"Schema version {schema_version} does not match {schema.get('schema_version')}"
-        )
     return schema
 
 
