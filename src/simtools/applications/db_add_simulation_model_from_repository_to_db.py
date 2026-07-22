@@ -99,6 +99,7 @@ def main():
         raise ValueError("Both db_simulation_model and db_simulation_model_version are required.")
 
     db = db_handler.DatabaseHandler()
+    db.require_mongodb("Adding a simulation model to a database")
 
     if app_context.args.get("type") == "model_parameters":
         db_model_upload.add_model_parameters_to_db(

@@ -10,7 +10,7 @@ from simtools.model import model_repository
 
 TEST_PRODUCTION_FILE = "test_production.json"
 TEST_MODIFICATIONS_FILE = "modifications.json"
-PATH_PATCH = "simtools.model.model_repository._get_model_parameter_file_path"
+PATH_PATCH = "simtools.model.model_repository.get_model_parameter_file_path"
 
 
 def test_verify_simulation_model_production_tables_success(tmp_test_directory):
@@ -158,7 +158,7 @@ def test_get_model_parameter_file_path_regular_collection(mock_get_collection, t
     """Test getting file path for regular collection."""
     mock_get_collection.return_value = "camera"
 
-    result = model_repository._get_model_parameter_file_path(
+    result = model_repository.get_model_parameter_file_path(
         str(tmp_test_directory), "telescope", "camera_config", "1.0.0"
     )
 
@@ -180,7 +180,7 @@ def test_get_model_parameter_file_path_configuration_sim_telarray(
     """Test getting file path for configuration_sim_telarray collection."""
     mock_get_collection.return_value = "configuration_sim_telarray"
 
-    result = model_repository._get_model_parameter_file_path(
+    result = model_repository.get_model_parameter_file_path(
         str(tmp_test_directory), "telescope", "sim_telarray_config", "1.0.0"
     )
 
@@ -203,7 +203,7 @@ def test_get_model_parameter_file_path_configuration_corsika(
     """Test getting file path for configuration_corsika collection."""
     mock_get_collection.return_value = "configuration_corsika"
 
-    result = model_repository._get_model_parameter_file_path(
+    result = model_repository.get_model_parameter_file_path(
         str(tmp_test_directory), "telescope", "corsika_config", "1.0.0"
     )
 

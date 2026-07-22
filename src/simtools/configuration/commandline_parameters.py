@@ -261,6 +261,14 @@ PARAMETER_DEFINITIONS = {
         "user_orcid": {"help": "user ORCID", "type": str},
     },
     "DB_CONFIG_ARGS": {
+        "simulation_models_path": {
+            "help": (
+                "path containing simulation model files; when set, "
+                "model parameters are read from files instead of MongoDB"
+            ),
+            "type": Path,
+            "default": None,
+        },
         "db_api_user": {"help": "database user", "type": str},
         "db_api_pw": {"help": "database password", "type": str},
         "db_api_port": {"help": "database port", "type": int},

@@ -390,6 +390,17 @@ def test_initialize_db_config_arguments_strip_string():
         assert args.db_simulation_model == "test"
 
 
+def test_initialize_db_config_arguments_with_simulation_models_path(tmp_test_directory):
+    parser_10 = parser.CommandLineParser()
+    parser_10.initialize_argument_group(
+        "database configuration", ["all"], PARAMETER_DEFINITIONS["DB_CONFIG_ARGS"]
+    )
+
+    args = parser_10.parse_args(["--simulation_models_path", str(tmp_test_directory)])
+
+    assert args.simulation_models_path == Path(tmp_test_directory)
+
+
 def _parser(*params):
     p = parser.CommandLineParser()
     p.initialize_argument_group(

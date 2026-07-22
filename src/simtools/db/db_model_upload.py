@@ -175,7 +175,7 @@ def add_production_tables_to_db(input_path, db):
 
     for model in sorted(filter(Path.is_dir, input_path.iterdir())):
         logger.info(f"Reading production tables for model version {model.name}")
-        model_dict = _read_production_tables(model)
+        model_dict = read_production_tables(model)
 
         for collection, data in model_dict.items():
             if data["parameters"]:
@@ -188,7 +188,7 @@ def add_production_tables_to_db(input_path, db):
                 logger.info(f"No production table for {collection} in model version {model.name}")
 
 
-def _read_production_tables(model_path):
+def read_production_tables(model_path):
     """
     Read production tables from a directory.
 
@@ -199,6 +199,11 @@ def _read_production_tables(model_path):
     ----------
     model_path : Path
         Path to the directory containing the production tables for a specific model version.
+
+    Returns
+    -------
+    dict
+        Aggregated production tables keyed by model collection.
     """
     model_dict = {}
     models = [model_path.name]
@@ -219,6 +224,10 @@ def _read_production_tables(model_path):
     _remove_deprecated_model_parameters(model_dict)
 
     return model_dict
+
+
+# Backward-compatible alias for callers and tests using the former private helper.
+_read_production_tables = read_production_tables
 
 
 def _read_production_table(model_dict, file, model_name):

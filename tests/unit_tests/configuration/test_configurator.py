@@ -255,6 +255,7 @@ def test_get_db_parameters_from_env(configurator, args_dict):
     actual_config.pop("db_api_authentication_database")  # depends on user setup; ignore here
 
     expected_config["sim_telarray_path"] = settings.config.sim_telarray_path
+    expected_config["simulation_models_path"] = None
 
     assert expected_config == actual_config
 
