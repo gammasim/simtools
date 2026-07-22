@@ -17,7 +17,7 @@ def _write_json(path, data):
     path.write_text(json.dumps(data), encoding="utf-8")
 
 
-def _parameter(instrument, site, name, version, value, file=False):
+def _parameter(instrument, site, name, version, value, file=False, parameter_type=None, unit=None):
     """Return minimal filesystem model-parameter data."""
     return {
         "file": file,
@@ -28,9 +28,9 @@ def _parameter(instrument, site, name, version, value, file=False):
         "parameter_version": version,
         "schema_version": "0.3.0",
         "site": site,
-        "type": "string" if file else "float64",
+        "type": parameter_type or ("string" if file else "float64"),
         "unique_id": None,
-        "unit": None,
+        "unit": unit,
         "value": value,
     }
 
@@ -72,7 +72,12 @@ def simulation_models_path(tmp_test_directory):
         {
             "model_version": "1.0.0",
             "production_table_name": "configuration_corsika",
-            "parameters": {"xSTx-design": {"corsika_cherenkov_photon_bunch_size": "1.0.0"}},
+            "parameters": {
+                "xSTx-design": {
+                    "corsika_cherenkov_photon_bunch_size": "1.0.0",
+                    "corsika_particle_kinetic_energy_cutoff": "1.0.0",
+                }
+            },
         },
     )
     _write_json(
@@ -86,15 +91,32 @@ def simulation_models_path(tmp_test_directory):
 
     _write_json(
         parameters / "LSTN-design/camera_body_diameter/camera_body_diameter-1.0.0.json",
-        _parameter("LSTN-design", "North", "camera_body_diameter", "1.0.0", 348.0),
+        _parameter("LSTN-design", "North", "camera_body_diameter", "1.0.0", 348.0, unit="cm"),
+    )
+    _write_json(
+        parameters / "LSTN-design/dsum_prescale/dsum_prescale-1.0.0.json",
+        _parameter(
+            "LSTN-design",
+            "North",
+            "dsum_prescale",
+            "1.0.0",
+            [42.0, 256.0],
+            parameter_type="int64",
+        ),
     )
     _write_json(
         parameters / "LSTN-01/camera_body_diameter/camera_body_diameter-2.0.0.json",
-        _parameter("LSTN-01", "North", "camera_body_diameter", "2.0.0", 350.0),
+        _parameter("LSTN-01", "North", "camera_body_diameter", "2.0.0", 350.0, unit="cm"),
     )
     _write_json(
         parameters / "OBS-North/array_layouts/array_layouts-1.0.0.json",
-        _parameter("OBS-North", "North", "array_layouts", "1.0.0", [{"name": "test"}]),
+        _parameter(
+            "OBS-North",
+            "North",
+            "array_layouts",
+            "1.0.0",
+            [{"name": "test", "elements": ["LSTN-01"]}],
+        ),
     )
     _write_json(
         parameters
@@ -111,8 +133,23 @@ def simulation_models_path(tmp_test_directory):
         ),
     )
     _write_json(
+        parameters
+        / (
+            "configuration_corsika/corsika_particle_kinetic_energy_cutoff/"
+            "corsika_particle_kinetic_energy_cutoff-1.0.0.json"
+        ),
+        _parameter(
+            None,
+            None,
+            "corsika_particle_kinetic_energy_cutoff",
+            "1.0.0",
+            [0.3, 0.1, 0.02, 0.02],
+            unit="GeV",
+        ),
+    )
+    _write_json(
         parameters / "configuration_sim_telarray/LSTN-design/min_photons/min_photons-1.0.0.json",
-        _parameter("LSTN-design", ["North", "South"], "min_photons", "1.0.0", 2.0),
+        _parameter("LSTN-design", "North", "min_photons", "1.0.0", 2.0),
     )
     files = parameters / "Files"
     files.mkdir()
@@ -147,6 +184,18 @@ def test_file_system_handler_reads_production_and_parameters(simulation_models_p
     assert production["design_model"] == {"LSTN-01": "LSTN-design"}
     assert parameters[0]["value"] == pytest.approx(350.0)
     assert handler.get_model_versions() == ["1.0.0"]
+
+    integer_parameter = handler.query_model_parameters(
+        {
+            "instrument": "LSTN-design",
+            "parameter": "dsum_prescale",
+            "parameter_version": "1.0.0",
+            "site": "North",
+        },
+        "telescopes",
+    )
+    assert integer_parameter[0]["value"] == [42, 256]
+    assert all(isinstance(value, int) for value in integer_parameter[0]["value"])
 
 
 def test_file_system_handler_caches_production_and_parameter_reads(simulation_models_path, mocker):
@@ -191,8 +240,9 @@ def test_database_handler_uses_files_without_mongodb(simulation_models_path, moc
 
     assert database.is_configured()
     assert parameters["camera_body_diameter"]["value"] == pytest.approx(350.0)
-    assert layouts["array_layouts"]["value"] == [{"name": "test"}]
+    assert layouts["array_layouts"]["value"] == {"name": "test", "elements": ["LSTN-01"]}
     assert corsika["corsika_cherenkov_photon_bunch_size"]["value"] == pytest.approx(5.0)
+    assert corsika["corsika_particle_kinetic_energy_cutoff"]["unit"] == "GeV"
     assert sim_telarray["min_photons"]["value"] == pytest.approx(2.0)
     mongo_handler.assert_not_called()
 

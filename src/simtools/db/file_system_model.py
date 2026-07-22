@@ -7,13 +7,10 @@ from pathlib import Path
 from astropy.table import Table
 from packaging.version import Version
 
+from simtools.data_model.validate_data import DataValidator
 from simtools.db import db_model_upload
 from simtools.io import ascii_handler
-from simtools.model.model_repository import (
-    get_model_parameter_directory,
-    get_model_parameter_file_path,
-    get_production_directory,
-)
+from simtools.utils import names, value_conversion
 
 
 class FileSystemModelHandler:
@@ -33,8 +30,10 @@ class FileSystemModelHandler:
     def __init__(self, simulation_models_path):
         """Initialize and validate the simulation model path."""
         self.simulation_models_path = Path(simulation_models_path).expanduser().resolve()
-        self.productions_path = get_production_directory(self.simulation_models_path)
-        self.model_parameters_path = get_model_parameter_directory(self.simulation_models_path)
+        self.productions_path = self.simulation_models_path / "simulation-models/productions"
+        self.model_parameters_path = (
+            self.simulation_models_path / "simulation-models/model_parameters"
+        )
         self.files_path = self.model_parameters_path / "Files"
         self._validate_model_path()
 
@@ -91,16 +90,21 @@ class FileSystemModelHandler:
             parameter_version = parameter_query.get("parameter_version")
             if not parameter or not parameter_version:
                 continue
-            parameter_path = get_model_parameter_file_path(
-                self.simulation_models_path,
-                instrument,
-                parameter,
-                parameter_version,
-            )
+            parameter_path = self._get_parameter_file_path(instrument, parameter, parameter_version)
             parameter_data = self._read_parameter_file(parameter_path)
             if self._matches_query(parameter_data, query):
                 parameters.append(parameter_data)
         return parameters
+
+    def _get_parameter_file_path(self, instrument, parameter, parameter_version):
+        """Return the path for one model parameter version."""
+        collection = names.get_collection_name_from_parameter_name(parameter)
+        path = self.model_parameters_path
+        if collection in ("configuration_sim_telarray", "configuration_corsika"):
+            path /= collection
+        if collection != "configuration_corsika":
+            path /= instrument
+        return path / parameter / f"{parameter}-{parameter_version}.json"
 
     @staticmethod
     def _resolve_instrument(query, collection_name):
@@ -122,9 +126,13 @@ class FileSystemModelHandler:
         if cache_key not in self.model_parameters_cached:
             if not parameter_path.is_file():
                 raise FileNotFoundError(f"Model parameter file not found: {parameter_path}")
-            self.model_parameters_cached[cache_key] = ascii_handler.collect_data_from_file(
-                file_name=parameter_path
+            parameter_data = ascii_handler.collect_data_from_file(file_name=parameter_path)
+            parameter_data = DataValidator.validate_model_parameter(parameter_data)
+            parameter_data["value"], base_unit, _ = value_conversion.get_value_unit_type(
+                value=parameter_data["value"], unit_str=parameter_data.get("unit")
             )
+            parameter_data["unit"] = value_conversion.normalize_dimensionless_unit(base_unit)
+            self.model_parameters_cached[cache_key] = parameter_data
         return deepcopy(self.model_parameters_cached[cache_key])
 
     @staticmethod
