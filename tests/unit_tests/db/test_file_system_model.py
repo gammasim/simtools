@@ -279,6 +279,25 @@ def test_file_system_handler_caches_production_and_parameter_reads(simulation_mo
     assert len(parameter_reads) == 1
 
 
+def test_file_system_handler_reads_requested_production_collection_only(
+    simulation_models_path, mocker
+):
+    parameter_spy = mocker.spy(file_system_model.ascii_handler, "collect_data_from_file")
+    file_index_spy = mocker.spy(file_system_model.db_model_upload, "get_production_table_files")
+    handler = file_system_model.FileSystemModelHandler(simulation_models_path)
+
+    handler.read_production_table("sites", "1.0.0")
+    handler.read_production_table("telescopes", "1.0.0")
+
+    production_reads = [
+        Path(call.kwargs["file_name"]).name
+        for call in parameter_spy.call_args_list
+        if "productions" in Path(call.kwargs["file_name"]).parts
+    ]
+    assert production_reads == ["OBS-North.json", "LSTN-01.json", "LSTN-design.json"]
+    assert file_index_spy.call_count == 1
+
+
 def test_database_handler_uses_files_without_mongodb(simulation_models_path, mocker):
     settings_mock = mocker.patch("simtools.db.db_handler.settings")
     settings_mock.config.args = {"simulation_models_path": simulation_models_path}

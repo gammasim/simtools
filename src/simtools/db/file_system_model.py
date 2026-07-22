@@ -23,6 +23,7 @@ class FileSystemModelHandler:
     """
 
     production_tables_cached = {}
+    production_files_cached = {}
     model_parameters_cached = {}
     model_versions_cached = {}
 
@@ -63,13 +64,20 @@ class FileSystemModelHandler:
 
     def read_production_table(self, collection_name, model_version):
         """Return an aggregated production table for a collection and model version."""
-        cache_key = (str(self.simulation_models_path), str(model_version))
+        cache_key = (str(self.simulation_models_path), str(model_version), collection_name)
         if cache_key not in self.production_tables_cached:
             model_path = self.productions_path / str(model_version)
             if not model_path.is_dir():
                 raise ValueError(f"Model version {model_version} not found in {self.source_name}")
+            file_cache_key = (str(self.simulation_models_path), str(model_version))
+            if file_cache_key not in self.production_files_cached:
+                self.production_files_cached[file_cache_key] = (
+                    db_model_upload.get_production_table_files(model_path)
+                )
             self.production_tables_cached[cache_key] = db_model_upload.read_production_tables(
-                model_path
+                model_path,
+                collection_name=collection_name,
+                production_files=self.production_files_cached[file_cache_key],
             )
         try:
             return deepcopy(self.production_tables_cached[cache_key][collection_name])
@@ -130,8 +138,6 @@ class FileSystemModelHandler:
         """Read and cache one model parameter JSON file."""
         cache_key = str(parameter_path)
         if cache_key not in self.model_parameters_cached:
-            if not parameter_path.is_file():
-                raise FileNotFoundError(f"Model parameter file not found: {parameter_path}")
             parameter_data = ascii_handler.collect_data_from_file(file_name=parameter_path)
             parameter_data["value"], _ = value_conversion.split_value_and_unit(
                 parameter_data["value"], "int" in parameter_data.get("type", "float")
@@ -210,5 +216,6 @@ class FileSystemModelHandler:
     def clear_caches(cls):
         """Clear all filesystem model caches."""
         cls.production_tables_cached.clear()
+        cls.production_files_cached.clear()
         cls.model_parameters_cached.clear()
         cls.model_versions_cached.clear()
