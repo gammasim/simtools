@@ -91,33 +91,38 @@ else
     grep -q "EPOS MODEL" "${report_dir}/executable.strings"
 fi
 
-printf 'EXIT\n' > "${report_dir}/startup.input"
-set +e
-timeout 20 "$executable" \
-    < "${report_dir}/startup.input" \
-    > "${report_dir}/startup.log" 2>&1
-startup_status=$?
-set -e
-if [[ $startup_status -eq 124 || $startup_status -eq 126 || $startup_status -eq 127 || \
-    $startup_status -ge 128 ]]; then
-    echo "CORSIKA startup probe failed with status ${startup_status}." >&2
-    exit 1
-fi
+startup_validation="skipped (requires ${optimization} CPU support)"
+startup_status="not run"
+if [[ "$optimization" == "generic" ]]; then
+    printf 'EXIT\n' > "${report_dir}/startup.input"
+    set +e
+    timeout 20 "$executable" \
+        < "${report_dir}/startup.input" \
+        > "${report_dir}/startup.log" 2>&1
+    startup_status=$?
+    set -e
+    if [[ $startup_status -eq 124 || $startup_status -eq 126 || $startup_status -eq 127 || \
+        $startup_status -ge 128 ]]; then
+        echo "CORSIKA startup probe failed with status ${startup_status}." >&2
+        exit 1
+    fi
 
-display_version="7.${corsika_version:1}"
-display_version_pattern=${display_version//./\\.}
-grep -Eq "NUMBER OF VERSION[[:space:]]*:[[:space:]]*${display_version_pattern}" \
-    "${report_dir}/startup.log"
-if grep -q "CORSIKA version is .* but IACT interface was adapted" \
-    "${report_dir}/startup.log"; then
-    echo "CORSIKA/IACT version mismatch found during startup validation." >&2
-    exit 1
-fi
+    display_version="7.${corsika_version:1}"
+    display_version_pattern=${display_version//./\\.}
+    grep -Eq "NUMBER OF VERSION[[:space:]]*:[[:space:]]*${display_version_pattern}" \
+        "${report_dir}/startup.log"
+    if grep -q "CORSIKA version is .* but IACT interface was adapted" \
+        "${report_dir}/startup.log"; then
+        echo "CORSIKA/IACT version mismatch found during startup validation." >&2
+        exit 1
+    fi
 
-if [[ "$model" == "qgs3" ]]; then
-    grep -q "QGSJET-III MODEL" "${report_dir}/startup.log"
-else
-    grep -q "EPOS MODEL" "${report_dir}/startup.log"
+    if [[ "$model" == "qgs3" ]]; then
+        grep -q "QGSJET-III MODEL" "${report_dir}/startup.log"
+    else
+        grep -q "EPOS MODEL" "${report_dir}/startup.log"
+    fi
+    startup_validation="passed"
 fi
 
 {
@@ -129,6 +134,6 @@ fi
     echo "macro_validation: passed"
     echo "binary_model_validation: passed"
     echo "linked_library_validation: passed"
-    echo "startup_validation: passed"
+    echo "startup_validation: ${startup_validation}"
     echo "startup_exit_status: ${startup_status}"
 } > "${report_dir}/validation.txt"
