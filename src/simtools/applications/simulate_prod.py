@@ -94,6 +94,7 @@ def _resolve_job_grid_arguments(args_dict, config_sources, parser):
     if not args_dict.get("job_grid_file"):
         if job_grid_row_is_explicit:
             parser.error("'--job_grid_row' requires '--job_grid_file'.")
+        _validate_simulation_arguments(args_dict, parser)
         return
 
     conflicting_keys = sorted(explicit_keys & SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS)
@@ -105,6 +106,13 @@ def _resolve_job_grid_arguments(args_dict, config_sources, parser):
 
     job_row, metadata = read_job_grid_row(args_dict["job_grid_file"], args_dict["job_grid_row"])
     args_dict.update(job_grid_row_to_simulate_prod_args(job_row, metadata))
+    _validate_simulation_arguments(args_dict, parser)
+
+
+def _validate_simulation_arguments(args_dict, parser):
+    """Validate requirements that depend on the selected simulation software."""
+    if "corsika" in args_dict["simulation_software"] and not args_dict.get("primary"):
+        parser.error("the following argument is required for CORSIKA: --primary")
 
 
 APPLICATION = ApplicationDefinition.for_module(
@@ -117,7 +125,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE(),
         *cli.layout_selection_arguments(),
         cli.SIMULATION_SOFTWARE(),
-        *cli.CORSIKA_CONFIGURATION_ARGUMENTS,
+        *cli.corsika_configuration_arguments(primary_required=False),
         *cli.SHOWER_ARGUMENTS,
         *cli.CORSIKA_INTERACTION_ARGUMENTS,
         *cli.SIM_TELARRAY_ARGUMENTS,

@@ -612,6 +612,14 @@ STANDARD_ARGUMENTS = (
 )
 
 
+def corsika_configuration_arguments(*, primary_required=True):
+    """Return CORSIKA arguments with application-specific primary requiredness."""
+    return tuple(
+        PRIMARY(required=primary_required) if argument.name == "primary" else argument
+        for argument in CORSIKA_CONFIGURATION_ARGUMENTS
+    )
+
+
 def _layout_argument(name, *, required_unless=None):
     """Build one argument belonging to the shared array-layout selection group."""
     return ArgumentDefinition(

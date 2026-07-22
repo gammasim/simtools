@@ -11,7 +11,7 @@ import pytest
 import yaml
 
 from simtools import settings
-from simtools.configuration.arguments import DATABASE, OUTPUT, PATH, STANDARD_ARGUMENTS
+from simtools.configuration.arguments import DATABASE, OUTPUT, PATH, SHOWER, STANDARD_ARGUMENTS
 from simtools.configuration.configurator import Configurator
 from simtools.io import io_handler
 
@@ -88,6 +88,19 @@ def test_config_file_applies_when_no_command_line(tmp_test_directory, monkeypatc
     # Config file values should be used
     assert config["label"] == "config_label"
     assert config["log_level"] == "debug"
+
+
+def test_parser_defaults_are_converted(monkeypatch):
+    """Parser defaults pass through the same converters as configured values."""
+    configurator = Configurator()
+    configurator.parser.add_argument_definitions((*SHOWER.all(), *STANDARD_ARGUMENTS))
+    monkeypatch.setattr(sys, "argv", ["test_configurator.py"])
+
+    config, _ = configurator.initialize_preconfigured(require_command_line=False)
+
+    assert config["view_cone"] == (0 * u.deg, 0 * u.deg)
+    assert config["core_scatter"] == (10, 10000 * u.m)
+    assert config["energy_range"] == (3 * u.GeV, 330 * u.TeV)
 
 
 def test_config_from_file_preserves_selected_by_version_keys(tmp_test_directory):

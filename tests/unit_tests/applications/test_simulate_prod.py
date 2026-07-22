@@ -139,6 +139,25 @@ def test_parse_job_grid_row_without_file_fails(monkeypatch, capsys):
     assert "job_grid_file" in stderr
 
 
+def test_sim_telarray_only_does_not_require_primary(monkeypatch):
+    args = _parse_with_args(
+        monkeypatch,
+        ["--simulation_software", "sim_telarray", "--array_layout_name", "alpha"],
+    )
+
+    assert args["primary"] is None
+
+
+def test_corsika_requires_primary(monkeypatch, capsys):
+    with pytest.raises(SystemExit):
+        _parse_with_args(
+            monkeypatch,
+            ["--simulation_software", "corsika", "--array_layout_name", "alpha"],
+        )
+
+    assert "--primary" in capsys.readouterr().err
+
+
 @pytest.mark.parametrize("source", ["cli", "yaml"])
 def test_job_grid_file_rejects_explicit_production_parameter(capsys, job_grid_file, source):
     source_kwargs = {f"{source}_keys": {"zenith_angle"}}

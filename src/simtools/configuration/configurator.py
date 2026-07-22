@@ -139,19 +139,17 @@ class Configurator:
         env_config = self._config_from_env(env_file)
         file_config = self._config_from_file(config_file)
         constructor_config = gen.change_dict_keys_case(self.config_class_init or {})
+        default_config = self._parser_defaults()
         cli_keys = self._explicit_cli_keys(cli_arglist)
         self.config_sources = {
-            "defaults": {
-                action.dest
-                for action in self.parser._actions  # pylint: disable=protected-access
-                if action.default is not argparse.SUPPRESS
-            },
+            "defaults": set(default_config),
             "environment": set(env_config),
             "constructor": set(constructor_config),
             "yaml": set(file_config),
             "cli": cli_keys,
         }
         merged_config = {
+            **default_config,
             **env_config,
             **constructor_config,
             **file_config,
@@ -176,6 +174,14 @@ class Configurator:
         db_dict = self._get_db_parameters()
         self.config["application_label"] = self.config.get("application_label") or self.label
         return self.config, db_dict
+
+    def _parser_defaults(self):
+        """Return parser defaults as a configuration source mapping."""
+        return {
+            action.dest: action.default
+            for action in self.parser._actions  # pylint: disable=protected-access
+            if action.default is not argparse.SUPPRESS
+        }
 
     @staticmethod
     def _option_value(arg_list, option_name):
