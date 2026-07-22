@@ -142,7 +142,7 @@ def _write_params_file(params_file_path, label_job_specs, params_fields):
                     value = _format_param_value(job_spec.get(field), field)
                     row.append(
                         f'"{value}"'
-                        if isinstance(value, str) and re.search(r"\s", value)
+                        if isinstance(value, str) and (not value or re.search(r"\s", value))
                         else value
                     )
 

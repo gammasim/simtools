@@ -2,6 +2,7 @@
 
 r"""Generate simulation configuration and run simulations."""
 
+import os
 import sys
 from pathlib import Path
 
@@ -137,7 +138,9 @@ def _parse():
 
 def _list_available_corsika_models(args_dict, parser):
     """Print installed CORSIKA build variants and exit."""
-    corsika_path = Path(args_dict.get("corsika_path") or defaults.CORSIKA_PATH)
+    corsika_path = Path(
+        args_dict.get("corsika_path") or os.getenv("SIMTOOLS_CORSIKA_PATH") or defaults.CORSIKA_PATH
+    )
     try:
         variants = get_installed_corsika_build_variants(corsika_path)
     except (FileNotFoundError, PermissionError, ValueError) as exc:

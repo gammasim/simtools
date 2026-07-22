@@ -437,6 +437,37 @@ def test_write_params_file_includes_optional_queue_fields(tmp_test_directory):
     assert row[-4:] == ["120.0", "overwrite.yaml", "asum_220", "LSTN-01"]
 
 
+def test_write_params_file_preserves_missing_optional_queue_field_in_mixed_rows(
+    tmp_test_directory,
+):
+    params_file_path = Path(tmp_test_directory) / "params.txt"
+    params_fields = [
+        *htg._PARAMS_FIELDS,
+        "corsika_hadronic_transition_energy",
+        "overwrite_model_parameters",
+    ]
+    job_spec = {
+        "image_label": "default",
+        **_base_job_row_for_optional_fields(),
+        "grid_output_path": "simtools-output",
+        "overwrite_model_parameters": "overwrite.yaml",
+    }
+    job_spec_with_transition = {
+        **job_spec,
+        "corsika_hadronic_transition_energy": 120 * u.GeV,
+    }
+
+    htg._write_params_file(
+        params_file_path,
+        [job_spec_with_transition, job_spec],
+        params_fields=params_fields,
+    )
+
+    rows = params_file_path.read_text(encoding="utf-8").splitlines()
+    assert rows[0].endswith("epos 1 simtools-output 120.0 overwrite.yaml")
+    assert rows[1].endswith('epos 1 simtools-output "" overwrite.yaml')
+
+
 def test_get_submit_script_with_optional_queue_fields():
     submit_args = {
         "label": "test_label",
