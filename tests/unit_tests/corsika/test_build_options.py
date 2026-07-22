@@ -7,6 +7,7 @@ import pytest
 from simtools.corsika.build_options import (
     CorsikaBuildVariant,
     format_corsika_build_variants,
+    get_corsika_build_report,
     get_installed_corsika_build_variants,
     read_corsika_build_variants,
     select_corsika_build_variant,
@@ -75,6 +76,22 @@ def test_get_installed_corsika_build_variants_checks_executables(
     Path(tmp_test_directory, build_variants[0]["executable"]).unlink()
     with pytest.raises(ValueError, match="declares a missing executable"):
         get_installed_corsika_build_variants(tmp_test_directory)
+
+
+def test_get_corsika_build_report_uses_environment_path(
+    monkeypatch, tmp_test_directory, build_variants
+):
+    _write_build_options(tmp_test_directory, build_variants)
+    for entry in build_variants:
+        executable = Path(tmp_test_directory, entry["executable"])
+        executable.touch()
+        executable.chmod(0o755)
+    monkeypatch.setenv("SIMTOOLS_CORSIKA_PATH", str(tmp_test_directory))
+
+    report = get_corsika_build_report()
+
+    assert "epos" in report
+    assert "qgs3" in report
 
 
 def test_select_corsika_build_variant_rejects_unsupported(build_variants):

@@ -6,6 +6,8 @@ from pathlib import Path
 
 import yaml
 
+from simtools.configuration import defaults
+
 
 @dataclass(frozen=True)
 class CorsikaBuildVariant:
@@ -218,3 +220,32 @@ def format_corsika_build_variants(variants):
         "  ".join(value.ljust(widths[index]) for index, value in enumerate(row)).rstrip()
         for row in rows
     )
+
+
+def get_corsika_build_report(corsika_path=None):
+    """Return a report of installed CORSIKA interaction-model variants.
+
+    Parameters
+    ----------
+    corsika_path : str or Path, optional
+        CORSIKA installation directory. If omitted, use ``SIMTOOLS_CORSIKA_PATH`` and then the
+        simtools default path.
+
+    Returns
+    -------
+    str
+        Human-readable table of installed variants.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the build manifest is missing.
+    PermissionError
+        If a declared executable is not executable.
+    ValueError
+        If the manifest is invalid or declares a missing executable.
+    """
+    resolved_path = Path(
+        corsika_path or os.getenv("SIMTOOLS_CORSIKA_PATH") or defaults.CORSIKA_PATH
+    )
+    return format_corsika_build_variants(get_installed_corsika_build_variants(resolved_path))

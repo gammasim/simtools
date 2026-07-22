@@ -2,22 +2,17 @@
 
 r"""Generate simulation configuration and run simulations."""
 
-import os
 import sys
-from pathlib import Path
 
 from simtools.application_control import (
     build_application,
     get_application_label,
     get_module_description_line,
 )
-from simtools.configuration import configurator, defaults
+from simtools.configuration import configurator
 from simtools.configuration.commandline_argument_helpers import bounded_int
 from simtools.constants import CORSIKA_MAX_SEED
-from simtools.corsika.build_options import (
-    format_corsika_build_variants,
-    get_installed_corsika_build_variants,
-)
+from simtools.corsika.build_options import get_corsika_build_report
 from simtools.production_configuration.job_grid_io import (
     SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS,
     job_grid_row_to_simulate_prod_args,
@@ -138,14 +133,11 @@ def _parse():
 
 def _list_available_corsika_models(args_dict, parser):
     """Print installed CORSIKA build variants and exit."""
-    corsika_path = Path(
-        args_dict.get("corsika_path") or os.getenv("SIMTOOLS_CORSIKA_PATH") or defaults.CORSIKA_PATH
-    )
     try:
-        variants = get_installed_corsika_build_variants(corsika_path)
+        report = get_corsika_build_report(args_dict.get("corsika_path"))
     except (FileNotFoundError, PermissionError, ValueError) as exc:
         parser.error(str(exc))
-    sys.stdout.write(format_corsika_build_variants(variants) + "\n")
+    sys.stdout.write(report + "\n")
     parser.exit()
 
 

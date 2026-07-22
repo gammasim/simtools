@@ -122,31 +122,6 @@ def test_list_available_corsika_models_exits_with_table(tmp_test_directory, caps
     assert "qgs3" in capsys.readouterr().out
 
 
-def test_list_available_corsika_models_uses_environment_path(
-    monkeypatch, tmp_test_directory, capsys
-):
-    build_options = tmp_test_directory / "build_opts.yml"
-    build_options.write_text(
-        "variant:\n"
-        "  - executable: corsika_epos_urqmd_flat\n"
-        "    config: config_epos_urqmd_flat\n"
-        "    atmosphere_geometry: flat\n"
-        "    he_hadronic_model: epos\n"
-        "    le_hadronic_model: urqmd\n",
-        encoding="utf-8",
-    )
-    executable = Path(tmp_test_directory) / "corsika_epos_urqmd_flat"
-    executable.touch()
-    executable.chmod(0o755)
-    monkeypatch.setenv("SIMTOOLS_CORSIKA_PATH", str(tmp_test_directory))
-
-    with pytest.raises(SystemExit) as exc:
-        app._list_available_corsika_models({"corsika_path": None}, argparse.ArgumentParser())
-
-    assert exc.value.code == 0
-    assert "epos" in capsys.readouterr().out
-
-
 def test_validate_single_interaction_models_rejects_lists(capsys):
     with pytest.raises(SystemExit):
         app._validate_single_interaction_models(
