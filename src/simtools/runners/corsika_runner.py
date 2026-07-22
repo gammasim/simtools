@@ -21,8 +21,6 @@ class CorsikaRunner:
         Instance label.
     use_multipipe: bool
         Use multipipe to run CORSIKA and sim_telarray.
-    curved_atmosphere_min_zenith_angle: Quantity
-        Minimum zenith angle for which to use the curved-atmosphere CORSIKA binary.
     """
 
     def __init__(
@@ -30,7 +28,6 @@ class CorsikaRunner:
         corsika_config,
         label=None,
         use_multipipe=False,
-        curved_atmosphere_min_zenith_angle=None,
     ):
         """Initialize CorsikaRunner."""
         self._logger = logging.getLogger(__name__)
@@ -38,8 +35,6 @@ class CorsikaRunner:
 
         self.corsika_config = corsika_config
         self._use_multipipe = use_multipipe
-        self.curved_atmosphere_min_zenith_angle = curved_atmosphere_min_zenith_angle
-
         self.runner_service = RunnerServices(corsika_config, run_type="corsika", label=label)
         self.file_list = None
 
@@ -81,10 +76,28 @@ class CorsikaRunner:
     def _corsika_executable(self):
         """Get the CORSIKA executable path."""
         if self.corsika_config.use_curved_atmosphere:
-            self._logger.debug("Using curved-atmosphere CORSIKA binary.")
-            return Path(settings.config.corsika_exe_curved)
-        self._logger.debug("Using flat-atmosphere CORSIKA binary.")
-        return Path(settings.config.corsika_exe)
+            geometry = "curved"
+            executable = Path(settings.config.corsika_exe_curved)
+        else:
+            geometry = "flat"
+            executable = Path(settings.config.corsika_exe)
+
+        he_model, le_model = settings.config.corsika_interaction_models
+        transition_energy = settings.config.args.get("corsika_hadronic_transition_energy")
+        transition_description = (
+            "CORSIKA default"
+            if transition_energy is None
+            else f"{transition_energy.to_value('GeV')} GeV"
+        )
+        self._logger.info(
+            "Resolved CORSIKA configuration: HE=%s LE=%s HILOW=%s geometry=%s executable=%s",
+            he_model,
+            le_model,
+            transition_description,
+            geometry,
+            executable,
+        )
+        return executable
 
     def _export_run_script(self, run_number, sub_script, corsika_run_dir, extra_commands):
         """Export CORSIKA run script."""

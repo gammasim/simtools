@@ -153,7 +153,12 @@ def test_job_grid_density_schema_defines_supported_columns():
     optional_columns = [column["name"] for column in table_columns if not column.get("required")]
 
     assert required_columns == job_grid_io.JOB_GRID_COLUMNS
-    assert optional_columns == ["ha", "dec", *job_grid_io._OPTIONAL_STRING_FIELDS]
+    assert optional_columns == [
+        "ha",
+        "dec",
+        "corsika_hadronic_transition_energy",
+        *job_grid_io._OPTIONAL_STRING_FIELDS,
+    ]
     schema_units = {
         column["name"]: u.Unit(column["unit"]) for column in table_columns if "unit" in column
     }
@@ -194,6 +199,30 @@ def test_read_job_grid_validates_schema_units(tmp_test_directory):
 
     with pytest.raises(u.UnitConversionError, match="not convertible"):
         job_grid_io.read_job_grid(input_file)
+
+
+def test_read_job_grid_without_transition_energy_preserves_build_default(tmp_test_directory):
+    input_file = Path(tmp_test_directory) / "job_grid.ecsv"
+    job_grid_io.serialize_job_grid(_job_rows(), input_file, metadata=_metadata())
+    table = Table.read(input_file, format="ascii.ecsv")
+
+    rows, _ = job_grid_io.read_job_grid(input_file)
+
+    assert "corsika_hadronic_transition_energy" not in table.colnames
+    assert "corsika_hadronic_transition_energy" not in rows[0]
+
+
+def test_serialize_and_read_explicit_transition_energy(tmp_test_directory):
+    input_file = Path(tmp_test_directory) / "job_grid.ecsv"
+    rows = _job_rows()
+    rows[0]["corsika_hadronic_transition_energy"] = 120 * u.GeV
+    job_grid_io.serialize_job_grid(rows, input_file, metadata=_metadata())
+    table = Table.read(input_file, format="ascii.ecsv")
+
+    read_rows, _ = job_grid_io.read_job_grid(input_file)
+
+    assert table["corsika_hadronic_transition_energy"].unit == u.GeV
+    assert read_rows[0]["corsika_hadronic_transition_energy"] == 120 * u.GeV
 
 
 def test_read_job_grid_rejects_non_integral_integer_columns(tmp_test_directory):
@@ -248,8 +277,18 @@ def test_job_grid_row_to_simulate_prod_args_maps_fields():
     assert args["array_layout_name"] == "CTAO-North-Alpha"
     assert args["corsika_le_interaction"] == "urqmd"
     assert args["corsika_he_interaction"] == "epos"
+    assert "corsika_hadronic_transition_energy" not in args
     assert args["run_number"] == 10
     assert "site" not in args
+
+
+def test_job_grid_row_to_simulate_prod_args_includes_explicit_transition_energy():
+    row = _job_rows()[0]
+    row["corsika_hadronic_transition_energy"] = 120 * u.GeV
+
+    args = job_grid_io.job_grid_row_to_simulate_prod_args(row)
+
+    assert args["corsika_hadronic_transition_energy"] == 120 * u.GeV
 
 
 def test_job_grid_row_to_simulate_prod_args_includes_metadata_site_and_software():

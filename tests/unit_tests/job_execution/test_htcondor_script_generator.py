@@ -383,7 +383,8 @@ def test_write_params_file_replaces_whitespace_in_grid_output_path(tmp_test_dire
 
     assert params_file_path.read_text(encoding="utf-8") == (
         "gamma 0.0 20.0 30.0 10000.0 10 200.0 0.0 5.0 "
-        "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/grid_label_7.0.0\n"
+        "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 "
+        "simtools-output/grid_label_7.0.0\n"
     )
 
 
@@ -424,6 +425,7 @@ def test_write_params_file_includes_optional_queue_fields(tmp_test_directory):
         "image_label": "grid label",
         **_base_job_row_for_optional_fields(),
         "grid_output_path": "simtools-output/grid label",
+        "corsika_hadronic_transition_energy": 120 * u.GeV,
         "overwrite_model_parameters": "overwrite.yaml",
         "scan_label": "asum 220",
         "telescope": "LSTN-01",
@@ -432,7 +434,7 @@ def test_write_params_file_includes_optional_queue_fields(tmp_test_directory):
     htg._write_params_file(params_file_path, [job_spec], params_fields=params_fields)
 
     row = params_file_path.read_text(encoding="utf-8").strip().split()
-    assert row[-3:] == ["overwrite.yaml", "asum_220", "LSTN-01"]
+    assert row[-4:] == ["120.0", "overwrite.yaml", "asum_220", "LSTN-01"]
 
 
 def test_get_submit_script_with_optional_queue_fields():
@@ -447,7 +449,8 @@ def test_get_submit_script_with_optional_queue_fields():
 
     script = htg._get_submit_script(submit_args, params_fields=params_fields)
 
-    assert 'overwrite_model_parameters="${18}"' in script
+    assert '--corsika_hadronic_transition_energy "${18}"' in script
+    assert 'overwrite_model_parameters="${19}"' in script
     assert "overwrite_model_parameters_args=()" in script
     assert (
         "overwrite_model_parameters_args+=(--overwrite_model_parameters "
@@ -455,10 +458,10 @@ def test_get_submit_script_with_optional_queue_fields():
     ) in script
     assert '    "${overwrite_model_parameters_args[@]}" \\' in script
 
-    assert 'scan_label="${19}"' in script
+    assert 'scan_label="${20}"' in script
     assert 'job_label="${job_label}_${scan_label}"' in script
 
-    assert 'telescope="${20}"' in script
+    assert 'telescope="${21}"' in script
     assert "telescope_args=()" in script
     assert 'telescope_args+=(--telescope "$telescope")' in script
     assert '    "${telescope_args[@]}" \\' in script

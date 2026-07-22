@@ -44,6 +44,9 @@ corsika_le_interaction (str)
     CORSIKA low-energy interaction model (default: urqmd).
 corsika_he_interaction (str)
     CORSIKA high-energy interaction model (default: epos).
+corsika_hadronic_transition_energy (Quantity)
+    Transition energy between low- and high-energy hadronic models. If omitted, use the CORSIKA
+    build default.
 nsb_energy_range (str)
     NSB gamma energy range (default: "20 MeV 25 MeV").
 proton_energy_range (str)
@@ -96,6 +99,7 @@ from simtools.configuration.commandline_argument_helpers import (
     azimuth_angle,
     parse_integer_and_quantity,
     parse_quantity_pair,
+    positive_quantity,
     zenith_angle,
 )
 from simtools.job_execution import bias_curve_submissions
@@ -174,6 +178,15 @@ def _add_arguments(parser):
         help="CORSIKA high-energy interaction model.",
         type=str,
         default="epos",
+    )
+    parser.add_argument(
+        "--corsika_hadronic_transition_energy",
+        help=(
+            "Transition energy between low- and high-energy hadronic models. "
+            "If omitted, use the CORSIKA build default."
+        ),
+        type=positive_quantity("GeV"),
+        default=None,
     )
     parser.add_argument(
         "--nsb_energy_range",

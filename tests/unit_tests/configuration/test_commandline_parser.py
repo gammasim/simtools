@@ -331,6 +331,30 @@ def test_simulation_configuration_accepts_grid_list_values():
     assert args.corsika_he_interaction == ["epos", "qgsjet"]
 
 
+def test_simulation_configuration_parses_hadronic_transition_energy():
+    test_parser = parser.CommandLineParser()
+    test_parser.initialize_default_arguments(
+        simulation_configuration={"corsika_configuration": ["all"]}
+    )
+
+    args = test_parser.parse_args(
+        ["--primary", "gamma", "--corsika_hadronic_transition_energy", "0.12 TeV"]
+    )
+
+    assert_quantity_allclose(args.corsika_hadronic_transition_energy, 120 * u.GeV)
+
+
+def test_simulation_configuration_leaves_hadronic_transition_energy_unset():
+    test_parser = parser.CommandLineParser()
+    test_parser.initialize_default_arguments(
+        simulation_configuration={"corsika_configuration": ["all"]}
+    )
+
+    args = test_parser.parse_args(["--primary", "gamma"])
+
+    assert args.corsika_hadronic_transition_energy is None
+
+
 def test_simulation_configuration_accepts_energy_range_list_pair():
     test_parser = parser.CommandLineParser()
     test_parser.initialize_default_arguments(

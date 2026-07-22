@@ -9,6 +9,7 @@ from unittest import mock
 from unittest.mock import call
 
 import pytest
+from astropy import units as u
 
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.model.model_parameter import InvalidModelParameterError
@@ -1078,6 +1079,38 @@ def test_simulate(array_simulator, mocker):
         return_runtime=True,
     )
     assert array_simulator._runtime == pytest.approx(2.5)
+
+
+@pytest.mark.parametrize("transition_energy", [None, 120 * u.GeV])
+def test_simulate_exports_resolved_corsika_configuration(
+    shower_simulator, mocker, transition_energy
+):
+    """Test that child jobs receive the authoritative CORSIKA configuration."""
+    shower_simulator._simulation_runner = mocker.Mock()
+    shower_simulator.runner_service = mocker.Mock()
+    shower_simulator.runner_service.get_file_name.side_effect = lambda file_type, run_number: (
+        f"{file_type}_{run_number}"
+    )
+    mocker.patch.object(shower_simulator, "update_file_lists")
+
+    mock_config = mocker.Mock()
+    mock_config.args = {"corsika_hadronic_transition_energy": transition_energy}
+    mock_config.corsika_interaction_models = ("qgs3", "urqmd")
+    mocker.patch("simtools.settings.config", mock_config)
+    mock_submit = mocker.patch(
+        "simtools.job_execution.job_manager.submit", return_value=(None, 2.5)
+    )
+
+    shower_simulator.simulate()
+
+    expected_environment = {
+        "SIM_TELARRAY_CONFIG_PATH": "",
+        "SIMTOOLS_CORSIKA_HE_INTERACTION": "qgs3",
+        "SIMTOOLS_CORSIKA_LE_INTERACTION": "urqmd",
+    }
+    if transition_energy is not None:
+        expected_environment["SIMTOOLS_CORSIKA_HADRONIC_TRANSITION_ENERGY_GEV"] = "120.0"
+    assert mock_submit.call_args.kwargs["env"] == expected_environment
 
 
 def test_save_file_lists(array_simulator, mocker, tmp_test_directory, caplog):

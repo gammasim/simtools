@@ -1119,6 +1119,7 @@ def _build_observation_params_for_point(
     resolved_layout_name,
     corsika_le,
     corsika_he,
+    corsika_hadronic_transition_energy,
     core_scatter,
     cores_per_shower,
     view_cone_min,
@@ -1154,6 +1155,10 @@ def _build_observation_params_for_point(
         observation_params["ha"] = point["ha"]
     if point.get("dec") is not None:
         observation_params["dec"] = point["dec"]
+    if corsika_hadronic_transition_energy is not None:
+        observation_params["corsika_hadronic_transition_energy"] = (
+            corsika_hadronic_transition_energy
+        )
     return observation_params
 
 
@@ -1216,6 +1221,7 @@ def build_simulation_jobs(args_dict):
     cores_per_shower = int(core_scatter[0])
     view_cone_min = view_cone[0]
     configured_view_cone_max = view_cone[1]
+    corsika_hadronic_transition_energy = args_dict.get("corsika_hadronic_transition_energy")
     nsb_rates_per_model_version = _resolve_nsb_rates_per_model_version(
         args_dict,
         grid_axes["model_version"],
@@ -1250,6 +1256,7 @@ def build_simulation_jobs(args_dict):
                 resolved_layout_name=resolved_layout_name,
                 corsika_le=corsika_le,
                 corsika_he=corsika_he,
+                corsika_hadronic_transition_energy=corsika_hadronic_transition_energy,
                 core_scatter=core_scatter,
                 cores_per_shower=cores_per_shower,
                 view_cone_min=view_cone_min,

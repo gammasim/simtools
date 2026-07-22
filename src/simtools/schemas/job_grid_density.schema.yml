@@ -1,7 +1,7 @@
 %YAML 1.2
 ---
 title: Schema for production_generate_grid density output
-schema_version: 0.2.0
+schema_version: 0.3.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
 meta_schema_version: 0.1.0
@@ -94,6 +94,11 @@ data:
         description: CORSIKA high-energy interaction model.
         required: true
         type: string
+      - name: corsika_hadronic_transition_energy
+        description: Transition energy between low- and high-energy hadronic models.
+        required: false
+        type: float64
+        unit: GeV
       - name: overwrite_model_parameters
         description: File containing model parameter values that overwrite production defaults.
         required: false

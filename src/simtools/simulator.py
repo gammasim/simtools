@@ -6,7 +6,6 @@ import shutil
 from pathlib import Path
 
 import numpy as np
-from astropy import units as u
 
 from simtools import settings
 from simtools.configuration import defaults
@@ -174,11 +173,6 @@ class Simulator:
             "corsika_config": self.corsika_configurations,
         }
 
-        if runner_class is not SimulatorArray:
-            runner_args["curved_atmosphere_min_zenith_angle"] = settings.config.args.get(
-                "curved_atmosphere_min_zenith_angle",
-                defaults.CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG * u.deg,
-            )
         if runner_class is corsika_simtel_runner.CorsikaSimtelRunner:
             runner_args["sequential"] = settings.config.args.get("sequential", False)
 
@@ -199,11 +193,26 @@ class Simulator:
         )
         self.update_file_lists()
 
+        job_environment = dict(simtel_runner.SIM_TELARRAY_ENV)
+        if self.simulation_software != "sim_telarray":
+            he_model, le_model = settings.config.corsika_interaction_models
+            job_environment.update(
+                {
+                    "SIMTOOLS_CORSIKA_HE_INTERACTION": he_model,
+                    "SIMTOOLS_CORSIKA_LE_INTERACTION": le_model,
+                }
+            )
+            transition_energy = settings.config.args.get("corsika_hadronic_transition_energy")
+            if transition_energy is not None:
+                job_environment["SIMTOOLS_CORSIKA_HADRONIC_TRANSITION_ENERGY_GEV"] = str(
+                    transition_energy.to_value("GeV")
+                )
+
         _, self._runtime = job_manager.submit(
             command=self.runner_service.get_file_name("sub_script", self.run_number),
             out_file=self.runner_service.get_file_name("sub_out", self.run_number),
             err_file=self.runner_service.get_file_name("sub_err", self.run_number),
-            env=simtel_runner.SIM_TELARRAY_ENV,
+            env=job_environment,
             return_runtime=True,
         )
 

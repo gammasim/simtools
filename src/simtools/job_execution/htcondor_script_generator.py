@@ -34,13 +34,18 @@ _PARAMS_FIELDS = [
     "run_number",
     "grid_output_path",
 ]
-_OPTIONAL_QUEUE_FIELDS = ("overwrite_model_parameters", "scan_label", "telescope")
+_OPTIONAL_QUEUE_FIELDS = (
+    "corsika_hadronic_transition_energy",
+    "overwrite_model_parameters",
+    "scan_label",
+    "telescope",
+)
 
 _PARAMS_JOB_SPEC_FIELDS = {field: field for field in _PARAMS_FIELDS}
 
 _PARAM_QUANTITY_UNITS = {
     field: JOB_GRID_SCHEMA.column_units[field]
-    for field in _PARAMS_FIELDS
+    for field in (*_PARAMS_FIELDS, *_OPTIONAL_QUEUE_FIELDS)
     if field in JOB_GRID_SCHEMA.column_units
 }
 
@@ -362,6 +367,12 @@ def _get_submit_script(args_dict, params_fields=None):
         "run_number",
     ):
         command_parts.append(f'--{field} "{bash_indices[field]}"')
+
+    if "corsika_hadronic_transition_energy" in params_fields:
+        command_parts.append(
+            "--corsika_hadronic_transition_energy "
+            f'"{bash_indices["corsika_hadronic_transition_energy"]}"'
+        )
 
     command_parts.extend(
         [

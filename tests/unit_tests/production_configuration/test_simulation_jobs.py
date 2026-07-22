@@ -1329,6 +1329,28 @@ def test_build_simulation_jobs_from_horizontal_grid_does_not_add_hadec(
 
     assert "ha" not in rows[0]
     assert "dec" not in rows[0]
+    assert "corsika_hadronic_transition_energy" not in rows[0]
+
+
+@patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")
+def test_build_simulation_jobs_propagates_explicit_hadronic_transition_energy(
+    mock_generate_observation_grids_per_layout,
+):
+    mock_generate_observation_grids_per_layout.return_value = _observation_grid_return(
+        {
+            "azimuth": 180 * u.deg,
+            "zenith_angle": 20 * u.deg,
+            "lower_energy_limit": 40 * u.GeV,
+            "upper_radius_limit": 100 * u.m,
+            "viewcone_radius": 2 * u.deg,
+        }
+    )
+    args_dict = _base_simulation_jobs_args()
+    args_dict["corsika_hadronic_transition_energy"] = 120 * u.GeV
+
+    rows = build_simulation_jobs(args_dict)
+
+    assert rows[0]["corsika_hadronic_transition_energy"] == 120 * u.GeV
 
 
 @patch("simtools.production_configuration.simulation_jobs.SiteModel")

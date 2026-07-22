@@ -382,7 +382,7 @@ PARAMETER_DEFINITIONS = {
                 "High-energy interaction model for CORSIKA "
                 f"(default fallback: {defaults.CORSIKA_HE_INTERACTION})."
             ),
-            "type": str,
+            "type": str.lower,
             "action": helpers.OneOrManyAction,
             "nargs": "+",
             "default": None,
@@ -392,9 +392,18 @@ PARAMETER_DEFINITIONS = {
                 "Low-energy interaction model for CORSIKA "
                 f"(default fallback: {defaults.CORSIKA_LE_INTERACTION})."
             ),
-            "type": str,
+            "type": str.lower,
             "action": helpers.OneOrManyAction,
             "nargs": "+",
+            "default": None,
+        },
+        "corsika_hadronic_transition_energy": {
+            "help": (
+                "Transition energy between the low- and high-energy CORSIKA hadronic "
+                "interaction models. Unitless values are interpreted as GeV. If omitted, "
+                "the CORSIKA build default is used."
+            ),
+            "type": helpers.positive_quantity("GeV"),
             "default": None,
         },
     },

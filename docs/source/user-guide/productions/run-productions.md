@@ -39,13 +39,17 @@ simtools-simulate-prod \
     --core_scatter 10 500 m \
     --view_cone 0 deg 10 deg \
     --showers_per_run 5 \
+    --corsika_he_interaction qgs3 \
+    --corsika_le_interaction urqmd \
+    --corsika_hadronic_transition_energy 80 GeV \
     --run_number 1 \
     --save_reduced_event_lists
 ```
 
 Alternatively, a single job can be selected from an executable production grid. In this mode,
 the selected row defines the production parameters such as primary, direction, energy range,
-layout, model version, site, run number, and simulation software. Do not combine
+layout, model version, hadronic models and any explicitly configured transition energy, site, run
+number, and simulation software. Do not combine
 `--job_grid_file` with manual production arguments such as `--zenith_angle`; use only operational
 options such as labels and output paths alongside the grid selection.
 

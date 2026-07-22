@@ -2,14 +2,21 @@
 
 r"""Generate simulation configuration and run simulations."""
 
+import sys
+from pathlib import Path
+
 from simtools.application_control import (
     build_application,
     get_application_label,
     get_module_description_line,
 )
-from simtools.configuration import configurator
+from simtools.configuration import configurator, defaults
 from simtools.configuration.commandline_argument_helpers import bounded_int
 from simtools.constants import CORSIKA_MAX_SEED
+from simtools.corsika.build_options import (
+    format_corsika_build_variants,
+    get_installed_corsika_build_variants,
+)
 from simtools.production_configuration.job_grid_io import (
     SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS,
     job_grid_row_to_simulate_prod_args,
@@ -25,12 +32,23 @@ _INITIALIZATION_KWARGS = {
         "corsika_configuration": ["all"],
         "sim_telarray_configuration": ["all"],
     },
-    "relax_required_options": ["--config", "--job_grid_file", "--job_grid_row"],
+    "relax_required_options": [
+        "--config",
+        "--job_grid_file",
+        "--job_grid_row",
+        "--list_available_corsika_models",
+    ],
 }
 
 
 def _add_arguments(parser):
     """Register application-specific command line arguments."""
+    parser.add_argument(
+        "--list_available_corsika_models",
+        help="List interaction-model variants available in the CORSIKA installation and exit.",
+        action="store_true",
+        default=False,
+    )
     parser.add_argument(
         "--corsika_file",
         help=(
@@ -110,8 +128,29 @@ def _parse():
     )
     _add_arguments(config_builder.parser)
     args_dict, db_config = config_builder.initialize(**_INITIALIZATION_KWARGS)
+    if args_dict["list_available_corsika_models"]:
+        _list_available_corsika_models(args_dict, config_builder.parser)
     _resolve_job_grid_arguments(args_dict, config_builder.config_sources, config_builder.parser)
+    _validate_single_interaction_models(args_dict, config_builder.parser)
     return args_dict, db_config
+
+
+def _list_available_corsika_models(args_dict, parser):
+    """Print installed CORSIKA build variants and exit."""
+    corsika_path = Path(args_dict.get("corsika_path") or defaults.CORSIKA_PATH)
+    try:
+        variants = get_installed_corsika_build_variants(corsika_path)
+    except (FileNotFoundError, PermissionError, ValueError) as exc:
+        parser.error(str(exc))
+    sys.stdout.write(format_corsika_build_variants(variants) + "\n")
+    parser.exit()
+
+
+def _validate_single_interaction_models(args_dict, parser):
+    """Reject interaction-model lists for a single simulation run."""
+    for argument in ("corsika_he_interaction", "corsika_le_interaction"):
+        if isinstance(args_dict.get(argument), list):
+            parser.error(f"'--{argument}' accepts exactly one value for simulate_prod.")
 
 
 def _resolve_job_grid_arguments(args_dict, config_sources, parser):

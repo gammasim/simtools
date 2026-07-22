@@ -33,7 +33,6 @@ class CorsikaSimtelRunner:
         corsika_config,
         label=None,
         sequential=False,
-        curved_atmosphere_min_zenith_angle=None,
     ):
         self._logger = logging.getLogger(__name__)
         self.corsika_config = gen.ensure_list(corsika_config)
@@ -52,7 +51,6 @@ class CorsikaSimtelRunner:
             corsika_config=self.base_corsika_config,
             label=label,
             use_multipipe=True,
-            curved_atmosphere_min_zenith_angle=curved_atmosphere_min_zenith_angle,
         )
         # The simulator array should be defined for every CORSIKA configuration
         # because it allows to define multiple sim_telarray instances
