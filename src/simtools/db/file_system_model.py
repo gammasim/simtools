@@ -91,9 +91,15 @@ class FileSystemModelHandler:
             if not parameter or not parameter_version:
                 continue
             parameter_path = self._get_parameter_file_path(instrument, parameter, parameter_version)
+            if not parameter_path.is_file():
+                continue
             parameter_data = self._read_parameter_file(parameter_path)
             if self._matches_query(parameter_data, query):
                 parameters.append(parameter_data)
+        if not parameters:
+            raise ValueError(
+                f"The following query for {collection_name} returned zero results: {query}"
+            )
         return parameters
 
     def _get_parameter_file_path(self, instrument, parameter, parameter_version):

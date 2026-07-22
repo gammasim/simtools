@@ -198,6 +198,24 @@ def test_file_system_handler_reads_production_and_parameters(simulation_models_p
     assert all(isinstance(value, int) for value in integer_parameter[0]["value"])
 
 
+def test_file_system_handler_ignores_missing_files_in_or_query(simulation_models_path):
+    handler = file_system_model.FileSystemModelHandler(simulation_models_path)
+
+    parameters = handler.query_model_parameters(
+        {
+            "$or": [
+                {"parameter": "camera_body_diameter", "parameter_version": "9.0.0"},
+                {"parameter": "camera_body_diameter", "parameter_version": "2.0.0"},
+            ],
+            "instrument": "LSTN-01",
+            "site": "North",
+        },
+        "telescopes",
+    )
+
+    assert [parameter["parameter"] for parameter in parameters] == ["camera_body_diameter"]
+
+
 def test_file_system_handler_caches_production_and_parameter_reads(simulation_models_path, mocker):
     production_spy = mocker.spy(file_system_model.db_model_upload, "read_production_tables")
     parameter_spy = mocker.spy(file_system_model.ascii_handler, "collect_data_from_file")
@@ -339,7 +357,7 @@ def test_missing_model_data_reports_source(simulation_models_path):
         handler.read_production_table("telescopes", "2.0.0")
     with pytest.raises(ValueError, match="No production table for collection"):
         handler.read_production_table("calibration_devices", "1.0.0")
-    with pytest.raises(FileNotFoundError, match="Model parameter file not found"):
+    with pytest.raises(ValueError, match="returned zero results"):
         handler.query_model_parameters(
             {
                 "parameter": "camera_body_diameter",
