@@ -10,8 +10,13 @@ import astropy.units as u
 import pytest
 import yaml
 
-from simtools import settings
-from simtools.configuration.arguments import DATABASE, OUTPUT, PATH, SHOWER, STANDARD_ARGUMENTS
+from simtools.configuration.arguments import (
+    DATABASE_ARGUMENTS,
+    OUTPUT_ARGUMENTS,
+    PATH_ARGUMENTS,
+    SHOWER_ARGUMENTS,
+    STANDARD_ARGUMENTS,
+)
 from simtools.configuration.configurator import Configurator
 from simtools.io import io_handler
 
@@ -21,12 +26,8 @@ logger = logging.getLogger()
 @pytest.fixture
 def configurator(tmp_test_directory, _mock_settings_env_vars):
     config = Configurator()
-    config.default_config(
-        (
-            "--output_path",
-            str(tmp_test_directory),
-        )
-    )
+    config.parser.add_argument_definitions((*PATH_ARGUMENTS, *STANDARD_ARGUMENTS))
+    config.config = vars(config.parser.parse_args(("--output_path", str(tmp_test_directory))))
     return config
 
 
@@ -43,7 +44,9 @@ def test_command_line_precedence_over_config_file(tmp_test_directory, monkeypatc
 
     # Initialize configurator with command-line args that differ from config file
     configurator = Configurator()
-    configurator.parser.add_argument_definitions((*PATH.all(), *OUTPUT.all(), *STANDARD_ARGUMENTS))
+    configurator.parser.add_argument_definitions(
+        (*PATH_ARGUMENTS, *OUTPUT_ARGUMENTS, *STANDARD_ARGUMENTS)
+    )
     monkeypatch.setattr(
         sys,
         "argv",
@@ -57,9 +60,7 @@ def test_command_line_precedence_over_config_file(tmp_test_directory, monkeypatc
             "info",
         ],
     )
-    config, _ = configurator.initialize_preconfigured(
-        require_command_line=False, initialize_output=True
-    )
+    config, _ = configurator.configure(initialize_output=True)
 
     # Command-line values should take precedence
     assert config["label"] == "cli_label"
@@ -79,11 +80,11 @@ def test_config_file_applies_when_no_command_line(tmp_test_directory, monkeypatc
 
     # Initialize configurator with only config file (no CLI overrides for these keys)
     configurator = Configurator()
-    configurator.parser.add_argument_definitions((*PATH.all(), *OUTPUT.all(), *STANDARD_ARGUMENTS))
-    monkeypatch.setattr(sys, "argv", ["test_configurator.py", "--config", str(_config_file)])
-    config, _ = configurator.initialize_preconfigured(
-        require_command_line=False, initialize_output=True
+    configurator.parser.add_argument_definitions(
+        (*PATH_ARGUMENTS, *OUTPUT_ARGUMENTS, *STANDARD_ARGUMENTS)
     )
+    monkeypatch.setattr(sys, "argv", ["test_configurator.py", "--config", str(_config_file)])
+    config, _ = configurator.configure(initialize_output=True)
 
     # Config file values should be used
     assert config["label"] == "config_label"
@@ -93,10 +94,10 @@ def test_config_file_applies_when_no_command_line(tmp_test_directory, monkeypatc
 def test_parser_defaults_are_converted(monkeypatch):
     """Parser defaults pass through the same converters as configured values."""
     configurator = Configurator()
-    configurator.parser.add_argument_definitions((*SHOWER.all(), *STANDARD_ARGUMENTS))
-    monkeypatch.setattr(sys, "argv", ["test_configurator.py"])
+    configurator.parser.add_argument_definitions((*SHOWER_ARGUMENTS, *STANDARD_ARGUMENTS))
+    monkeypatch.setattr(sys, "argv", ["test_configurator.py", "--label", "test"])
 
-    config, _ = configurator.initialize_preconfigured(require_command_line=False)
+    config, _ = configurator.configure()
 
     assert config["view_cone"] == (0 * u.deg, 0 * u.deg)
     assert config["core_scatter"] == (10, 10000 * u.m)
@@ -248,34 +249,29 @@ def test_convert_string_none_to_none():
     assert _tmp_none == Configurator._convert_string_none_to_none(_tmp_dict)
 
 
-def test_get_db_parameters_from_env(configurator, args_dict):
-    configurator.parser.add_argument_definitions(DATABASE.all())
-    configurator._fill_config([])
+def test_get_db_parameters_from_env(configurator):
+    configurator.parser.add_argument_definitions(DATABASE_ARGUMENTS)
     configurator.config["env_file"] = "this_file_does_not_exist.env"
     _env_config = configurator._config_from_env(configurator.config["env_file"])
-    configurator._fill_config(configurator._arglist_from_config(_env_config))
+    configurator.config = vars(
+        configurator.parser.parse_args(
+            configurator._arglist_from_config(_env_config, parser=configurator.parser)
+        )
+    )
 
-    args_dict["db_api_user"] = "db_user"
-    args_dict["db_api_pw"] = "12345"
-    args_dict["db_api_port"] = 42
-    args_dict["db_server"] = "abc@def.de"
-    args_dict["db_simulation_model"] = "sim_model"
-    args_dict["db_simulation_model_version"] = "v0.0.0"
-    args_dict["env_file"] = "this_file_does_not_exist.env"
-
-    # remove user defined parameters from comparison (depends on environment)
-    expected_config = {k: v for k, v in args_dict.items() if not k.startswith("user_")}
-    actual_config = {k: v for k, v in configurator.config.items() if not k.startswith("user_")}
-    actual_config.pop("db_api_authentication_database")  # depends on user setup; ignore here
-
-    expected_config["sim_telarray_path"] = settings.config.sim_telarray_path
-
-    assert expected_config == actual_config
+    assert configurator._get_db_parameters() == {
+        "db_api_authentication_database": None,
+        "db_api_port": 42,
+        "db_api_pw": "12345",
+        "db_api_user": "db_user",
+        "db_server": "abc@def.de",
+        "db_simulation_model": "sim_model",
+        "db_simulation_model_version": "v0.0.0",
+    }
 
 
 def test_initialize_output(configurator):
-    configurator.parser.add_argument_definitions(OUTPUT.all())
-    configurator._fill_config([])
+    configurator.config.update(output_file=None, output_file_format="ecsv")
 
     # output file for testing
     configurator.config["test"] = True
@@ -302,24 +298,9 @@ def test_initialize_output(configurator):
     assert configurator.config["output_file"] == "unit_test.txt"
 
 
-def test_default_config_with_site():
-    configurator = Configurator(config={})
-    configurator.default_config(arg_list=["--site", "North"])
-    assert "site" in configurator.config
-    assert "telescope" not in configurator.config
-
-
-def test_default_config_with_telescope():
-    configurator = Configurator(config={})
-    configurator.default_config(arg_list=["--telescope", "LSTN-01"])
-    assert "telescope" in configurator.config
-    assert "site" in configurator.config
-
-
 def test_get_db_parameters():
-    # default config
     configurator = Configurator(config={})
-    configurator.default_config(add_db_config=True)
+    configurator.config = {argument.name: None for argument in DATABASE_ARGUMENTS}
     db_params = configurator._get_db_parameters()
     assert db_params == {
         "db_api_authentication_database": None,
@@ -333,7 +314,6 @@ def test_get_db_parameters():
 
     # filled with one entry only
     configurator = Configurator(config={})
-    configurator.default_config(add_db_config=True)
     configurator.config = {
         "db_api_port": 1234,
     }
@@ -344,7 +324,6 @@ def test_get_db_parameters():
 
     # filled config
     configurator = Configurator()
-    configurator.default_config(add_db_config=True)
     configurator.config = {
         "db_api_user": "user",
         "db_api_pw": "password",
@@ -364,7 +343,6 @@ def test_get_db_parameters():
 
     # empty config
     configurator = Configurator(config={})
-    configurator.default_config(add_db_config=True)
     configurator.config = {}
     db_params = configurator._get_db_parameters()
     assert db_params == {}
@@ -374,9 +352,9 @@ def test_required_argument_can_be_supplied_by_constructor_configuration(monkeypa
     configurator = Configurator(config={"arg": "configured"})
     configurator.parser.add_argument("--arg", required=True)
     configurator.parser.add_argument("--label")
-    monkeypatch.setattr("sys.argv", ["application"])
+    monkeypatch.setattr("sys.argv", ["application", "--label", "test"])
 
-    config, _ = configurator.initialize_preconfigured(require_command_line=False)
+    config, _ = configurator.configure()
 
     assert config["arg"] == "configured"
     assert next(action for action in configurator.parser._actions if action.dest == "arg").required
@@ -390,7 +368,7 @@ def test_cli_exclusive_argument_overrides_configured_alternative(monkeypatch):
     configurator.parser.add_argument("--label")
     monkeypatch.setattr("sys.argv", ["application", "--arg2", "cli"])
 
-    config, _ = configurator.initialize_preconfigured()
+    config, _ = configurator.configure()
 
     assert config["arg1"] is None
     assert config["arg2"] == "cli"
@@ -428,10 +406,10 @@ def test_initialize(configurator):
     configurator._initialize_output = MagicMock()
     configurator._get_db_parameters = MagicMock(return_value={"db_param": "test"})
 
-    config, db_dict = configurator.initialize_preconfigured()
+    config, db_dict = configurator.configure()
 
     # Assert that the methods were called
-    configurator._get_cli_arglist.assert_called_once_with(require_command_line=True)
+    configurator._get_cli_arglist.assert_called_once_with()
     configurator._config_from_env.assert_called_once_with(".env")
     configurator._config_from_file.assert_called_once_with(None)
     configurator._initialize_model_versions.assert_called_once()
@@ -445,10 +423,7 @@ def test_initialize(configurator):
     assert config["label"] == configurator.label
     assert db_dict == {"db_param": "test"}
 
-    configurator.initialize_preconfigured(
-        require_command_line=False,
-        initialize_output=True,
-    )
+    configurator.configure(initialize_output=True)
 
     # Assert that the methods were called with the correct parameters
     configurator._get_cli_arglist.assert_called()
@@ -461,6 +436,6 @@ def test_initialize(configurator):
 
     # test activity_id and label
     configurator.config_class_init = {"activity_id": "test_activity_id", "label": "test_label"}
-    configurator.initialize_preconfigured()
+    configurator.configure()
     assert configurator.config["activity_id"] == "test_activity_id"
     assert configurator.config["label"] == "test_label"

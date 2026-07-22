@@ -57,8 +57,8 @@ from simtools.configuration import arguments as cli
 from simtools.telescope_trigger_rates import telescope_trigger_rates
 
 _ARGUMENTS = (
-    cli.TELESCOPE_IDS(),
-    cli.EVENT_DATA_FILE(),
+    cli.TELESCOPE_IDS,
+    cli.EVENT_DATA_FILE,
     cli.ArgumentDefinition(
         "plot_histograms",
         help="Plot histograms of the event data.",
@@ -82,9 +82,9 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.MODEL_VERSION(),
-        cli.OVERWRITE_MODEL_PARAMETERS(),
-        cli.SITE(),
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.SITE,
         *cli.layout_selection_arguments(),
         *cli.PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,

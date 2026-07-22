@@ -70,9 +70,9 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.MODEL_VERSION(),
-        cli.OVERWRITE_MODEL_PARAMETERS(),
-        cli.SITE(),
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.SITE,
         *cli.PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),

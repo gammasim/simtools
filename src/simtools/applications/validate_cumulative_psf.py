@@ -74,9 +74,9 @@ from simtools.configuration import arguments as cli
 from simtools.ray_tracing.optics_validation import validate_cumulative_psf
 
 _ARGUMENTS = (
-    cli.SOURCE_DISTANCE(),
-    cli.RAY_TRACING_ZENITH_ANGLE(),
-    cli.DATA(),
+    cli.SOURCE_DISTANCE,
+    cli.RAY_TRACING_ZENITH_ANGLE,
+    cli.DATA,
 )
 
 
@@ -84,10 +84,10 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.MODEL_VERSION(),
-        cli.OVERWRITE_MODEL_PARAMETERS(),
-        cli.SITE(),
-        cli.TELESCOPE(),
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.SITE,
+        cli.TELESCOPE,
         *cli.PATH_ARGUMENTS,
     ),
     database=True,

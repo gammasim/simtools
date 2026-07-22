@@ -115,9 +115,9 @@ from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing import psf_parameter_optimisation as psf_opt
 
 _ARGUMENTS = (
-    cli.SOURCE_DISTANCE(),
-    cli.RAY_TRACING_ZENITH_ANGLE(),
-    cli.DATA(),
+    cli.SOURCE_DISTANCE,
+    cli.RAY_TRACING_ZENITH_ANGLE,
+    cli.DATA,
     cli.ArgumentDefinition(
         "plot_all",
         help=(
@@ -186,11 +186,11 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.MODEL_VERSION(),
-        cli.PARAMETER_VERSION(),
-        cli.OVERWRITE_MODEL_PARAMETERS(),
-        cli.SITE(),
-        cli.TELESCOPE(),
+        cli.MODEL_VERSION,
+        cli.PARAMETER_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.SITE,
+        cli.TELESCOPE,
         *cli.PATH_ARGUMENTS,
     ),
     database=True,

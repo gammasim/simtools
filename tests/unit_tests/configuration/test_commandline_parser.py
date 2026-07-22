@@ -5,9 +5,9 @@ import pytest
 from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.configuration.arguments import (
-    CORSIKA,
-    MODEL,
-    SHOWER,
+    ENERGY_RANGE,
+    PRIMARY,
+    SITE,
     ArgumentDefinition,
     layout_selection_arguments,
 )
@@ -19,9 +19,9 @@ def test_add_argument_definitions_registers_shared_arguments():
     parser = CommandLineParser()
     parser.add_argument_definitions(
         (
-            MODEL.site(),
-            CORSIKA.primary(),
-            SHOWER.energy_range(),
+            SITE,
+            PRIMARY,
+            ENERGY_RANGE,
         )
     )
 
@@ -48,6 +48,17 @@ def test_add_argument_definitions_registers_mutually_exclusive_bundle():
         parser.parse_args(
             ["--array_layout_name", "CTAO-North-Alpha", "--array_layout_file", "layout.ecsv"]
         )
+
+
+def test_layout_selection_can_be_explicitly_optional():
+    """Applications that list layouts can declare layout selection as optional."""
+    parser = CommandLineParser()
+    parser.add_argument_definitions(layout_selection_arguments(required=False))
+
+    args = parser.parse_args([])
+
+    assert args.array_layout_name is None
+    assert args.array_element_list is None
 
 
 def test_add_argument_definitions_rejects_conflicting_exclusive_group_state():

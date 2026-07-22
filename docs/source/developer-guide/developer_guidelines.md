@@ -64,7 +64,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         cli.MODEL_VERSION(required=True),
         cli.SITE(required=True),
-        cli.OUTPUT_PATH(),
+        cli.OUTPUT_PATH,
     ),
     database=True,
 )
@@ -74,9 +74,9 @@ def main():
     run_application(context.args)
 ```
 
-Use statically named shared argument factories such as `cli.MODEL_VERSION()` and `cli.SITE()` before
-introducing an application-specific `cli.ArgumentDefinition`. Stable bundles such as
-`cli.PATH_ARGUMENTS` and `cli.SIM_TELARRAY_ARGUMENTS` may be expanded directly; do not select
+Use shared definitions such as `cli.OUTPUT_PATH` directly. Call a definition only to apply a local
+override, for example `cli.MODEL_VERSION(required=True)`. Stable bundles such as
+`cli.PATH_ARGUMENTS` and `cli.SIM_TELARRAY_ARGUMENTS` may be expanded directly. Do not select
 arguments using string names. `ApplicationDefinition` reads command-line options, configuration
 files, and environment variables before delegating to the common application startup code.
 

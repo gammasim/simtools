@@ -36,9 +36,9 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.MODEL_VERSION(),
-        cli.OVERWRITE_MODEL_PARAMETERS(),
-        cli.SITE(),
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.SITE,
         *cli.layout_selection_arguments(),
         *cli.PATH_ARGUMENTS,
     ),

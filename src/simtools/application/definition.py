@@ -3,11 +3,12 @@
 import sys
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from pathlib import Path
 
-from simtools.application.control import ApplicationContext, startup_application
+from simtools.application.control import ApplicationContext, _initialize_runtime
 from simtools.configuration import configurator
 from simtools.configuration.arguments import (
-    DATABASE,
+    DATABASE_ARGUMENTS,
     STANDARD_ARGUMENTS,
     ArgumentDefinition,
 )
@@ -24,15 +25,10 @@ class ApplicationDefinition:
     arguments: tuple[ArgumentDefinition, ...] = ()
     database: bool = False
     initialize_output: bool = False
-    require_command_line: bool = True
     setup_io_handler: bool = True
-    logger_name: str | None = None
     resolve_sim_software_executables: bool = True
     post_parse: PostParseHook | None = None
     defer_required_validation: bool = False
-    usage: str | None = None
-    epilog: str | None = None
-    include_standard_arguments: bool = True
 
     @classmethod
     def for_module(cls, module_name, **kwargs):
@@ -40,6 +36,8 @@ class ApplicationDefinition:
         module = sys.modules.get(module_name)
         if module is None:
             raise ValueError(f"Application module is not loaded: {module_name}")
+        if module_name == "__main__":
+            module_name = f"simtools.applications.{Path(module.__file__).stem}"
         return cls(module_name=module_name, description=module.__doc__, **kwargs)
 
     def __post_init__(self):
@@ -55,9 +53,8 @@ class ApplicationDefinition:
     @property
     def all_arguments(self):
         """Return standard and application-selected arguments in registration order."""
-        standard = STANDARD_ARGUMENTS if self.include_standard_arguments else ()
-        database = DATABASE.all() if self.database else ()
-        return (*self.arguments, *database, *standard)
+        database = DATABASE_ARGUMENTS if self.database else ()
+        return (*self.arguments, *database, *STANDARD_ARGUMENTS)
 
     @staticmethod
     def _validate_arguments(arguments):
@@ -68,14 +65,16 @@ class ApplicationDefinition:
 
     def build_parser(self):
         """Build the complete parser without reading configuration or starting the application."""
+        return self._configurator(self.all_arguments).parser
+
+    def _configurator(self, arguments):
+        """Return a configurator populated with the given arguments."""
         config_builder = configurator.Configurator(
             label=self.label,
-            usage=self.usage,
             description=self._description_line(),
-            epilog=self.epilog,
         )
-        config_builder.parser.add_argument_definitions(self.all_arguments)
-        return config_builder.parser
+        config_builder.parser.add_argument_definitions(arguments)
+        return config_builder
 
     def _description_line(self):
         """Return the first non-empty line of the application description."""
@@ -86,22 +85,13 @@ class ApplicationDefinition:
 
     def _parse(self):
         """Read configuration using this definition's preconfigured parser."""
-        config_builder = configurator.Configurator(
-            label=self.label,
-            usage=self.usage,
-            description=self._description_line(),
-            epilog=self.epilog,
-        )
         runtime_arguments = (
             tuple(argument.without_requiredness() for argument in self.all_arguments)
             if self.defer_required_validation
             else self.all_arguments
         )
-        config_builder.parser.add_argument_definitions(runtime_arguments)
-        args_dict, db_config = config_builder.initialize_preconfigured(
-            require_command_line=self.require_command_line,
-            initialize_output=self.initialize_output,
-        )
+        config_builder = self._configurator(runtime_arguments)
+        args_dict, db_config = config_builder.configure(initialize_output=self.initialize_output)
         if self.post_parse is not None:
             self.post_parse(args_dict, config_builder.config_sources, config_builder.parser)
         if self.defer_required_validation:
@@ -134,9 +124,10 @@ class ApplicationDefinition:
 
     def start(self) -> ApplicationContext:
         """Read configuration and run the standard application startup sequence."""
-        return startup_application(
-            self._parse,
+        args_dict, db_config = self._parse()
+        return _initialize_runtime(
+            args_dict,
+            db_config,
             setup_io_handler=self.setup_io_handler,
-            logger_name=self.logger_name,
             resolve_sim_software_executables=self.resolve_sim_software_executables,
         )

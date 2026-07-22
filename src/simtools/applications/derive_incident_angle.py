@@ -79,9 +79,9 @@ from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
 from simtools.visualization.plot_incident_angles import plot_incident_angles
 
 _ARGUMENTS = (
-    cli.OFF_AXIS_ANGLES(),
-    cli.SOURCE_DISTANCE(),
-    cli.NUMBER_OF_PHOTONS(),
+    cli.OFF_AXIS_ANGLES,
+    cli.SOURCE_DISTANCE,
+    cli.NUMBER_OF_PHOTONS,
     cli.ArgumentDefinition(
         "perfect_mirror",
         help="Assume perfect mirror shape/alignment/reflection",
@@ -109,10 +109,10 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.MODEL_VERSION(),
-        cli.OVERWRITE_MODEL_PARAMETERS(),
-        cli.SITE(),
-        cli.TELESCOPE(),
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.SITE,
+        cli.TELESCOPE,
         *cli.PATH_ARGUMENTS,
     ),
     database=True,

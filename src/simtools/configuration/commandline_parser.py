@@ -24,9 +24,7 @@ class CommandLineParser(argparse.ArgumentParser):
                 )
             if argument.exclusive_group is not None:
                 group_key = (argument.group, argument.exclusive_group)
-                required = argument.exclusive_group_required and (
-                    argument.required_unless not in self._option_string_actions
-                )
+                required = argument.exclusive_group_required
                 if group_key in exclusive_groups:
                     exclusive_container, existing_required = exclusive_groups[group_key]
                     if existing_required != required:

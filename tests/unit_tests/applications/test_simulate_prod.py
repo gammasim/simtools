@@ -10,7 +10,7 @@ import astropy.units as u
 import pytest
 
 import simtools.applications.simulate_prod as app
-from simtools.application.definition import ApplicationDefinition
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.production_configuration import job_grid_io
 
 pytestmark = pytest.mark.usefixtures("_mock_settings_env_vars")
@@ -73,8 +73,8 @@ def _parse_with_config_sources(job_grid_file, cli_keys=(), yaml_keys=()):
     return args
 
 
-def _mock_application_context(mock_build_app, label="test"):
-    mock_build_app.return_value = MagicMock(
+def _mock_application_context(mock_application_start, label="test"):
+    mock_application_start.return_value = MagicMock(
         args={
             "label": label,
             "save_reduced_event_lists": False,
@@ -85,12 +85,8 @@ def _mock_application_context(mock_build_app, label="test"):
 
 
 def test_add_arguments_registers_job_grid_file_and_row():
-    parser = ApplicationDefinition(
-        module_name=app.__name__,
-        description=app.__doc__,
-        arguments=app._ARGUMENTS,
-        include_standard_arguments=False,
-    ).build_parser()
+    parser = CommandLineParser()
+    parser.add_argument_definitions(app._ARGUMENTS)
     args = parser.parse_args(["--job_grid_file", "my_grid.ecsv", "--job_grid_row", "3"])
 
     assert args.job_grid_file == "my_grid.ecsv"
@@ -98,12 +94,8 @@ def test_add_arguments_registers_job_grid_file_and_row():
 
 
 def test_add_arguments_job_grid_row_defaults_to_one():
-    parser = ApplicationDefinition(
-        module_name=app.__name__,
-        description=app.__doc__,
-        arguments=app._ARGUMENTS,
-        include_standard_arguments=False,
-    ).build_parser()
+    parser = CommandLineParser()
+    parser.add_argument_definitions(app._ARGUMENTS)
     args = parser.parse_args([])
 
     assert args.job_grid_file is None
@@ -181,21 +173,21 @@ def test_job_grid_file_allows_operational_parameters(job_grid_file):
 
 @patch("simtools.applications.simulate_prod.Simulator")
 @patch("simtools.application.definition.ApplicationDefinition.start")
-def test_main_uses_explicit_application_definition(mock_build_app, mock_simulator_class):
-    _mock_application_context(mock_build_app)
+def test_main_uses_explicit_application_definition(mock_application_start, mock_simulator_class):
+    _mock_application_context(mock_application_start)
     mock_simulator_class.return_value = MagicMock()
 
     app.main()
 
-    mock_build_app.assert_called_once_with()
+    mock_application_start.assert_called_once_with()
     assert app.APPLICATION.setup_io_handler is False
     assert app.APPLICATION.post_parse == app._resolve_job_grid_arguments
 
 
 @patch("simtools.applications.simulate_prod.Simulator")
 @patch("simtools.application.definition.ApplicationDefinition.start")
-def test_main_runs_simulator_and_reports(mock_build_app, mock_simulator_class):
-    _mock_application_context(mock_build_app, label="myprod")
+def test_main_runs_simulator_and_reports(mock_application_start, mock_simulator_class):
+    _mock_application_context(mock_application_start, label="myprod")
     mock_simulator = MagicMock()
     mock_simulator_class.return_value = mock_simulator
 

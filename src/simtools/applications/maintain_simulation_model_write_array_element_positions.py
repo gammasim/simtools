@@ -66,8 +66,8 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.PARAMETER_VERSION(),
-        cli.OVERWRITE_MODEL_PARAMETERS(),
+        cli.PARAMETER_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
         *cli.PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),

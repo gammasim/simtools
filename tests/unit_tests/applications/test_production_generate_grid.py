@@ -5,16 +5,13 @@ from unittest.mock import Mock, patch
 import pytest
 
 import simtools.applications.production_generate_grid as app
-from simtools.application.definition import ApplicationDefinition
+from simtools.configuration.commandline_parser import CommandLineParser
 
 
 def _parser():
-    return ApplicationDefinition(
-        module_name=app.__name__,
-        description=app.__doc__,
-        arguments=app._GRID_ARGUMENTS,
-        include_standard_arguments=False,
-    ).build_parser()
+    parser = CommandLineParser()
+    parser.add_argument_definitions(app._GRID_ARGUMENTS)
+    return parser
 
 
 def _full_parser():

@@ -56,9 +56,9 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.OVERWRITE_MODEL_PARAMETERS(),
-        cli.SITE(),
-        cli.TELESCOPE(),
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.SITE,
+        cli.TELESCOPE,
         *cli.PATH_ARGUMENTS,
     ),
     database=True,

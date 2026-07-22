@@ -1,5 +1,7 @@
 """Tests for explicit application definitions."""
 
+import sys
+from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
@@ -26,7 +28,6 @@ def test_application_definition_rejects_duplicate_arguments():
             module_name="simtools.applications.test",
             description="Test application.",
             arguments=(ArgumentDefinition("input"), ArgumentDefinition("input")),
-            include_standard_arguments=False,
         )
 
 
@@ -48,7 +49,6 @@ def test_build_parser_registers_groups_and_exclusive_arguments():
                 exclusive_group_required=True,
             ),
         ),
-        include_standard_arguments=False,
     )
 
     parser = application.build_parser()
@@ -60,21 +60,19 @@ def test_build_parser_registers_groups_and_exclusive_arguments():
 def test_start_delegates_to_common_startup(mocker):
     """Starting an application delegates with its parser and startup options."""
     startup = mocker.patch(
-        "simtools.application.definition.startup_application", return_value="context"
+        "simtools.application.definition._initialize_runtime", return_value="context"
     )
     application = ApplicationDefinition(
         module_name="simtools.applications.test",
         description="Test application.",
-        include_standard_arguments=False,
         setup_io_handler=False,
     )
+    mocker.patch.object(ApplicationDefinition, "_parse", return_value=({"value": 3}, {"db": 4}))
 
     assert application.start() == "context"
-    parse_function = startup.call_args.args[0]
-    assert parse_function == application._parse
+    assert startup.call_args.args == ({"value": 3}, {"db": 4})
     assert startup.call_args.kwargs == {
         "setup_io_handler": False,
-        "logger_name": None,
         "resolve_sim_software_executables": True,
     }
 
@@ -83,17 +81,27 @@ def test_for_module_uses_loaded_module_documentation():
     """The module factory resolves metadata without caller-frame inspection."""
     application = ApplicationDefinition.for_module(
         __name__,
-        include_standard_arguments=False,
     )
 
     assert application.module_name == __name__
     assert application.description == __doc__
 
 
+def test_for_module_uses_file_name_when_application_runs_as_script(monkeypatch):
+    """Direct execution has the same label as an installed entry point."""
+    module = SimpleNamespace(__doc__="Test application.", __file__="/tmp/example_app.py")
+    monkeypatch.setitem(sys.modules, "__main__", module)
+
+    application = ApplicationDefinition.for_module("__main__")
+
+    assert application.module_name == "simtools.applications.example_app"
+    assert application.label == "example_app"
+
+
 def test_post_parse_hook_receives_configuration_sources(mocker):
     """The post-parse hook receives parsed data, source tracking, and the parser."""
     initialize = mocker.patch(
-        "simtools.application.definition.configurator.Configurator.initialize_preconfigured",
+        "simtools.application.definition.configurator.Configurator.configure",
         return_value=({"value": 3}, {}),
     )
     hook = Mock()
@@ -101,7 +109,6 @@ def test_post_parse_hook_receives_configuration_sources(mocker):
         module_name="simtools.applications.test",
         description="Test application.",
         arguments=(ArgumentDefinition("value", type=int),),
-        include_standard_arguments=False,
         post_parse=hook,
     )
 

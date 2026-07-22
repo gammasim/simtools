@@ -6,16 +6,16 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 
-_ARGUMENTS = (cli.ALL_MODEL_VERSIONS(),)
+_ARGUMENTS = (cli.ALL_MODEL_VERSIONS,)
 
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.MODEL_VERSION(),
-        cli.OVERWRITE_MODEL_PARAMETERS(),
-        cli.SIMULATION_SOFTWARE(),
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.SIMULATION_SOFTWARE,
         *cli.PATH_ARGUMENTS,
     ),
     database=True,

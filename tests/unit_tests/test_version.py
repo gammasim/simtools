@@ -304,7 +304,7 @@ def test_resolve_by_version_list_inconsistent_raises():
         version.resolve_by_version(
             config,
             ["6.0.2", "7.0.0"],
-            preserve_version_dependent_keys={"array_layout_name"},
+            preserve_inconsistent=True,
         )
         == config
     )

@@ -24,7 +24,7 @@ def test_add_arguments_includes_repository_dir_option(tmp_test_directory):
 @patch("simtools.applications.db_upload_model_repository.config.load")
 @patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_forwards_repository_dir(
-    mock_build_application,
+    mock_application_start,
     mock_config_load,
     mock_database_handler,
     mock_add_complete_model,
@@ -42,7 +42,7 @@ def test_main_forwards_repository_dir(
         },
         db_config={},
     )
-    mock_build_application.return_value = app_context
+    mock_application_start.return_value = app_context
 
     db = Mock()
     mock_database_handler.return_value = db
@@ -68,7 +68,7 @@ def test_main_forwards_repository_dir(
 @patch("simtools.applications.db_upload_model_repository.config.load")
 @patch("simtools.application.definition.ApplicationDefinition.start")
 def test_main_uses_default_repository_url_without_repository_dir(
-    mock_build_application,
+    mock_application_start,
     mock_config_load,
     mock_database_handler,
     mock_add_complete_model,
@@ -84,7 +84,7 @@ def test_main_uses_default_repository_url_without_repository_dir(
         },
         db_config={},
     )
-    mock_build_application.return_value = app_context
+    mock_application_start.return_value = app_context
     mock_database_handler.return_value = Mock()
 
     app.main()

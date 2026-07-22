@@ -1,96 +1,56 @@
-#!/usr/bin/python3
-
 """Tests for shared command-line argument definitions."""
 
 import astropy.units as u
 
 import simtools.configuration.argument_helpers as helpers
 from simtools.configuration.arguments import (
-    PARAMETER_DEFINITIONS,
-    get_corsika_configuration_args,
+    AZIMUTH_ANGLE,
+    CORSIKA_CONFIGURATION_ARGUMENTS,
+    DATABASE_ARGUMENTS,
+    EXECUTION_ARGUMENTS,
+    PATH_ARGUMENTS,
+    PRIMARY,
+    PRIMARY_ID_TYPE,
+    RUN_TIME_ARGUMENTS,
+    SHOWER_ARGUMENTS,
+    STANDARD_ARGUMENTS,
+    USER_ARGUMENTS,
+    ZENITH_ANGLE,
+    ArgumentDefinition,
 )
 
 
-def test_parameter_definitions_contains_shared_groups():
-    assert "APPLICATION_ARGS" in PARAMETER_DEFINITIONS
-    assert "CONFIGURATION_ARGS" in PARAMETER_DEFINITIONS
-    assert "DB_CONFIG_ARGS" in PARAMETER_DEFINITIONS
-    assert "EXECUTION_ARGS" in PARAMETER_DEFINITIONS
-    assert "OUTPUT_ARGS" in PARAMETER_DEFINITIONS
-    assert "PATH_ARGS" in PARAMETER_DEFINITIONS
-    assert "RUN_TIME_ARGS" in PARAMETER_DEFINITIONS
-    assert "SHOWER_ARGS" in PARAMETER_DEFINITIONS
-    assert "SIMTEL_ARGS" in PARAMETER_DEFINITIONS
-    assert "SIMULATION_MODEL_ARGS" in PARAMETER_DEFINITIONS
-    assert "SIMULATION_SOFTWARE_ARGS" in PARAMETER_DEFINITIONS
-    assert "USER_ARGS" in PARAMETER_DEFINITIONS
-
-
-def test_get_dictionary_with_corsika_configuration(mocker):
-    mock_particle_names = {"proton": 1, "helium": 2, "iron": 3}
-    mocker.patch(
-        "simtools.corsika.primary_particle.PrimaryParticle.particle_names",
-        return_value=mock_particle_names,
+def test_shared_arguments_have_one_direct_definition():
+    bundles = (
+        DATABASE_ARGUMENTS,
+        EXECUTION_ARGUMENTS,
+        PATH_ARGUMENTS,
+        RUN_TIME_ARGUMENTS,
+        SHOWER_ARGUMENTS,
+        USER_ARGUMENTS,
     )
-
-    corsika_config = get_corsika_configuration_args()
-
-    assert "primary" in corsika_config
-    assert corsika_config["primary"]["help"].startswith("Primary particle(s) to simulate.")
-    assert "proton" in corsika_config["primary"]["help"]
-    assert "helium" in corsika_config["primary"]["help"]
-    assert "iron" in corsika_config["primary"]["help"]
-    assert corsika_config["primary"]["type"] is str.lower
-    assert corsika_config["primary"]["action"] is helpers.OneOrManyAction
-    assert corsika_config["primary"]["nargs"] == "+"
-    assert corsika_config["primary"]["required"] is True
-
-    assert "primary_id_type" in corsika_config
-    assert corsika_config["primary_id_type"]["help"] == "Primary particle ID type"
-    assert corsika_config["primary_id_type"]["type"] is str
-    assert corsika_config["primary_id_type"]["choices"] == ["common_name", "corsika7_id", "pdg_id"]
-    assert corsika_config["primary_id_type"]["default"] == "common_name"
-
-    assert "azimuth_angle" in corsika_config
-    assert corsika_config["azimuth_angle"]["help"].startswith(
-        "Telescope pointing direction in azimuth."
+    assert all(
+        isinstance(argument, ArgumentDefinition) for bundle in bundles for argument in bundle
     )
-    assert corsika_config["azimuth_angle"]["type"] == helpers.azimuth_angle
-    assert corsika_config["azimuth_angle"]["action"] is helpers.OneOrManyAction
-    assert corsika_config["azimuth_angle"]["nargs"] == "+"
-    assert corsika_config["azimuth_angle"]["default"] == 0 * u.deg
+    assert len({argument.name for argument in STANDARD_ARGUMENTS}) == len(STANDARD_ARGUMENTS)
 
-    assert "zenith_angle" in corsika_config
-    assert corsika_config["zenith_angle"]["help"] == "Zenith angle in degrees (between 0 and 180)."
-    assert corsika_config["zenith_angle"]["type"] == helpers.zenith_angle
-    assert corsika_config["zenith_angle"]["action"] is helpers.OneOrManyAction
-    assert corsika_config["zenith_angle"]["nargs"] == "+"
-    assert corsika_config["zenith_angle"]["default"] == 20 * u.deg
 
-    assert "showers_per_run" in corsika_config
-    assert (
-        corsika_config["showers_per_run"]["help"] == "Baseline number of CORSIKA showers per run."
-    )
-    assert corsika_config["showers_per_run"]["type"] is int
+def test_corsika_arguments_retain_argparse_configuration():
+    assert CORSIKA_CONFIGURATION_ARGUMENTS[0] is PRIMARY
+    assert PRIMARY.kwargs["type"] is str.lower
+    assert PRIMARY.kwargs["action"] is helpers.OneOrManyAction
+    assert PRIMARY.kwargs["nargs"] == "+"
+    assert PRIMARY.kwargs["required"] is True
+    assert "proton" in PRIMARY.kwargs["help"]
 
-    assert "run_number_offset" in corsika_config
-    assert "Offset added to each run number" in corsika_config["run_number_offset"]["help"]
-    assert corsika_config["run_number_offset"]["type"] is int
-    assert corsika_config["run_number_offset"]["default"] == 0
+    assert PRIMARY_ID_TYPE.kwargs["choices"] == ["common_name", "corsika7_id", "pdg_id"]
+    assert AZIMUTH_ANGLE.kwargs["default"] == 0 * u.deg
+    assert ZENITH_ANGLE.kwargs["default"] == 20 * u.deg
 
-    assert "run_number" in corsika_config
-    assert corsika_config["run_number"]["help"] == "Run number to be simulated."
-    assert corsika_config["run_number"]["type"] is int
-    assert corsika_config["run_number"]["default"] == 1
 
-    assert "event_number_first_shower" in corsika_config
-    assert corsika_config["event_number_first_shower"]["help"] == "Event number of first shower"
-    assert corsika_config["event_number_first_shower"]["type"] is int
-    assert corsika_config["event_number_first_shower"]["default"] == 1
+def test_argument_override_returns_an_independent_definition():
+    optional_primary = PRIMARY(required=False)
 
-    assert "correct_for_b_field_alignment" in corsika_config
-    assert (
-        corsika_config["correct_for_b_field_alignment"]["help"] == "Correct for B-field alignment"
-    )
-    assert corsika_config["correct_for_b_field_alignment"]["action"] == "store_true"
-    assert corsika_config["correct_for_b_field_alignment"]["default"] is True
+    assert optional_primary is not PRIMARY
+    assert optional_primary.kwargs["required"] is False
+    assert PRIMARY.kwargs["required"] is True

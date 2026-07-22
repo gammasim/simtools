@@ -150,7 +150,7 @@ from simtools.visualization.plot_array_layout import (
 )
 
 _ARGUMENTS = (
-    cli.ALL_MODEL_VERSIONS(),
+    cli.ALL_MODEL_VERSIONS,
     cli.ArgumentDefinition("all_sites", action="store_true", help="Plot layouts for all sites."),
     cli.ArgumentDefinition(
         "figure_name",
@@ -262,11 +262,11 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.MODEL_VERSION(),
-        cli.OVERWRITE_MODEL_PARAMETERS(),
-        cli.SITE(),
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.SITE,
         *cli.layout_selection_arguments(include_file=True, include_plot_all=True),
-        cli.ARRAY_LAYOUT_PARAMETER_FILE(),
+        cli.ARRAY_LAYOUT_PARAMETER_FILE,
         *cli.PATH_ARGUMENTS,
     ),
     database=True,

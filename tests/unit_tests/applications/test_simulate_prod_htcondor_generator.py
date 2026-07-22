@@ -11,14 +11,12 @@ from simtools.configuration.commandline_parser import CommandLineParser
     "simtools.applications.simulate_prod_htcondor_generator.htcondor_script_generator.generate_submission_script"
 )
 @patch("simtools.application.definition.ApplicationDefinition.start")
-def test_main_uses_standard_build_application(
-    mock_build_application, mock_generate_submission_script
-):
-    mock_build_application.return_value = SimpleNamespace(args={"output_path": "htcondor_submit"})
+def test_main_uses_application_definition(mock_application_start, mock_generate_submission_script):
+    mock_application_start.return_value = SimpleNamespace(args={"output_path": "htcondor_submit"})
 
     app.main()
 
-    assert mock_build_application.call_args.kwargs == {}
+    assert mock_application_start.call_args.kwargs == {}
     mock_generate_submission_script.assert_called_once_with({"output_path": "htcondor_submit"})
 
 

@@ -9,13 +9,9 @@ import astropy.units as u
 
 import simtools.configuration.commandline_parser as argparser
 import simtools.version as simtools_version
-from simtools.configuration.arguments import DATABASE, MODEL, PATH, STANDARD_ARGUMENTS
 from simtools.db.mongo_db import jsonschema_db_dict
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
-
-# Allow to specify e.g., {"by_version:" "<7.0.0": beta, ">=7.0.0": CTAO-South-Beta}
-PER_VERSION_CONFIGURATION_KEYS = {"array_layout_name"}
 
 
 class Configurator:
@@ -39,15 +35,11 @@ class Configurator:
         Configuration parameters as dict.
     label: str
         Class label.
-    usage: str
-        Application usage description.
     description: str
         Text displayed as description.
-    epilog: str
-        Text display after all arguments.
     """
 
-    def __init__(self, config=None, label=None, usage=None, description=None, epilog=None):
+    def __init__(self, config=None, label=None, description=None):
         """Initialize Configurator."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init Configuration")
@@ -64,51 +56,18 @@ class Configurator:
         }
         self.parser = argparser.CommandLineParser(
             prog=self.label,
-            usage=usage,
             description=description,
-            epilog=epilog,
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         )
 
-    def default_config(self, arg_list=None, add_db_config=False):
-        """
-        Return dictionary of default configuration.
-
-        Parameters
-        ----------
-        arg_list: list
-            List of arguments.
-        add_db_config: bool
-            Add DB configuration file.
-
-        Returns
-        -------
-        dict
-            Configuration parameters as dict.
-        """
-        arguments = [*PATH.all(), *STANDARD_ARGUMENTS]
-        if arg_list and "--telescope" in arg_list:
-            arguments.extend((MODEL.overwrite_model_parameters(), MODEL.site(), MODEL.telescope()))
-        elif arg_list and "--site" in arg_list:
-            arguments.extend((MODEL.overwrite_model_parameters(), MODEL.site()))
-        if add_db_config:
-            arguments.extend(DATABASE.all())
-        self.parser.add_argument_definitions(arguments)
-
-        self._fill_config(arg_list)
-        return self.config
-
-    def initialize_preconfigured(
+    def configure(
         self,
-        require_command_line=True,
         initialize_output=False,
     ):
         """Initialize configuration from an already populated parser.
 
         Parameters
         ----------
-        require_command_line : bool
-            Require at least one command-line argument.
         initialize_output : bool
             Generate a default output filename when none is configured.
 
@@ -117,18 +76,7 @@ class Configurator:
         tuple
             Application configuration and database configuration dictionaries.
         """
-        return self._initialize_from_parser(
-            require_command_line=require_command_line,
-            initialize_output=initialize_output,
-        )
-
-    def _initialize_from_parser(
-        self,
-        require_command_line=True,
-        initialize_output=False,
-    ):
-        """Read and merge configuration using the current parser."""
-        cli_arglist = self._get_cli_arglist(require_command_line=require_command_line)
+        cli_arglist = self._get_cli_arglist()
         config_file = self._option_value(cli_arglist, "--config") or (
             self.config_class_init or {}
         ).get("config")
@@ -194,34 +142,12 @@ class Configurator:
                 value = argument.split("=", maxsplit=1)[1]
         return value
 
-    def _get_cli_arglist(
-        self,
-        arg_list=None,
-        require_command_line=True,
-    ):
-        """
-        Return CLI arguments as a list without modifying the configuration.
-
-        Parameters
-        ----------
-        arg_list: list
-            List of arguments.
-        require_command_line: bool
-            Require at least one command line argument.
-
-        Returns
-        -------
-        list
-            Command-line arguments.
-
-        """
-        if arg_list is None:
-            arg_list = sys.argv[1:]
-
-        if require_command_line and len(arg_list) == 0:
+    def _get_cli_arglist(self):
+        """Return CLI arguments, or help when the application was called without arguments."""
+        arg_list = sys.argv[1:]
+        if not arg_list:
             self._logger.debug("No command line arguments given, printing help.")
             arg_list = ["--help"]
-
         return arg_list
 
     def _without_cli_overrides(self, config, cli_keys):
@@ -270,7 +196,7 @@ class Configurator:
             _config_dict = simtools_version.resolve_by_version(
                 _config_dict,
                 _config_dict.get("model_version"),
-                preserve_version_dependent_keys=PER_VERSION_CONFIGURATION_KEYS,
+                preserve_inconsistent=True,
             )
             return gen.change_dict_keys_case(_config_dict)
         except TypeError, AttributeError:
@@ -464,24 +390,6 @@ class Configurator:
             input_dict[key] = None if value == "None" else value
 
         return input_dict
-
-    def _fill_config(self, input_container):
-        """
-        Fill configuration dictionary.
-
-        Parameters
-        ----------
-        input_container
-            List or dictionary with configuration updates.
-        """
-        self.config = self._convert_string_none_to_none(
-            vars(
-                self.parser.parse_args(
-                    self._arglist_from_config(self.config, parser=self.parser)
-                    + self._arglist_from_config(input_container, parser=self.parser)
-                )
-            )
-        )
 
     def _get_db_parameters(self):
         """

@@ -167,30 +167,22 @@ class ApplicationContext:
     run_time: list | None = None
 
 
-def startup_application(
-    parse_function,
+def _initialize_runtime(
+    args_dict,
+    db_config,
     setup_io_handler=True,
-    logger_name=None,
     resolve_sim_software_executables=True,
 ):
-    """
-    Initialize common application startup tasks.
-
-    This function handles the repetitive startup tasks common to most simtools applications:
-
-    - Parse command line arguments and configuration
-    - Set up logging with appropriate level
-    - Optionally initialize IOHandler
+    """Initialize common runtime services for parsed application configuration.
 
     Parameters
     ----------
-    parse_function : Callable
-        Function that parses configuration and returns (args_dict, db_config) tuple.
-        This should be the application's _parse() function.
+    args_dict : dict
+        Parsed application configuration.
+    db_config : dict
+        Database configuration.
     setup_io_handler : bool, optional
         Whether to initialize and return an IOHandler instance. Default is True.
-    logger_name : str, optional
-        Name for the logger. If None, uses the root logger. Default is None.
     resolve_sim_software_executables : bool, optional
         Resolve simulation software executable paths during settings load.
         Set to False for applications that only orchestrate other applications.
@@ -201,40 +193,16 @@ def startup_application(
         Container holding parsed arguments, database configuration, logger, and the optional
         IO handler instance.
 
-    Examples
-    --------
-    Basic usage in an application:
-
-    .. code-block:: python
-
-        def main():
-            app_context = startup_application(_parse)
-
-            # Application-specific code follows
-            app_context.logger.info("Starting application")
-            # ... rest of application logic
-
-    Usage without IOHandler:
-
-    .. code-block:: python
-
-        def main():
-            app_context = startup_application(_parse, setup_io_handler=False)
-
-            # Application-specific code follows
-            app_context.logger.info("Starting application")
-            # ... rest of application logic
     """
     _configure_iers_from_env()
 
-    args_dict, db_config = parse_function()
     config.load(
         args_dict,
         db_config,
         resolve_sim_software_executables=resolve_sim_software_executables,
     )
 
-    logger = setup_logging(logger_name, args_dict["log_level"], log_file=get_log_file(args_dict))
+    logger = setup_logging(log_level=args_dict["log_level"], log_file=get_log_file(args_dict))
     logger.info(
         f"simtools application {args_dict.get('application_label')}"
         f" started with activity ID {config.activity_id}"

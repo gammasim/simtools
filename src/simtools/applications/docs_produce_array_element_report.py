@@ -15,7 +15,7 @@ from simtools.reporting.docs_auto_report_generator import ReportGenerator
 from simtools.reporting.docs_read_parameters import ReadParameters
 
 _ARGUMENTS = (
-    cli.ALL_MODEL_VERSIONS(),
+    cli.ALL_MODEL_VERSIONS,
     cli.ArgumentDefinition(
         "all_telescopes", action="store_true", help="Produce reports for all telescopes."
     ),
@@ -32,10 +32,10 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        cli.MODEL_VERSION(),
-        cli.OVERWRITE_MODEL_PARAMETERS(),
-        cli.SITE(),
-        cli.TELESCOPE(),
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.SITE,
+        cli.TELESCOPE,
         *cli.PATH_ARGUMENTS,
     ),
     database=True,

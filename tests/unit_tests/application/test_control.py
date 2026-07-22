@@ -9,11 +9,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from simtools.application.control import (
+    _initialize_runtime,
     _resolve_model_version_to_latest_patch,
     _version_info,
     get_log_file,
     setup_logging,
-    startup_application,
 )
 from simtools.settings import config
 
@@ -35,8 +35,7 @@ def redact_test_setup():
     """Set up logging handler and application context for redaction testing."""
     mock_args_dict = {"log_level": "debug"}
     mock_db_config = {}
-    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
-    app_context = startup_application(mock_parse_function, setup_io_handler=False)
+    app_context = _initialize_runtime(mock_args_dict, mock_db_config, setup_io_handler=False)
 
     handler = app_context.logger.handlers[0] if app_context.logger.handlers else None
 
@@ -154,15 +153,11 @@ def test_redact_filter_child_logger(redact_test_setup):
         assert test_password not in output
 
 
-def test_startup_application_basic():
-    """Test startup_application function with basic configuration."""
-    # Mock parse function
+def test_initialize_runtime_basic():
+    """Test application runtime startup with basic configuration."""
     mock_args_dict = {"log_level": "info", "test": True}
     mock_db_config = {"host": "localhost"}
-    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
-
-    app_context = startup_application(mock_parse_function)
-    mock_parse_function.assert_called_once()
+    app_context = _initialize_runtime(mock_args_dict, mock_db_config)
 
     assert app_context.args == mock_args_dict
     assert app_context.db_config == mock_db_config
@@ -172,18 +167,11 @@ def test_startup_application_basic():
     assert app_context.logger.level == logging.INFO
 
 
-def test_startup_application_without_io_handler():
-    """Test startup_application function without IOHandler."""
-    # Mock parse function
+def test_initialize_runtime_without_io_handler():
+    """Test application runtime startup without IOHandler."""
     mock_args_dict = {"log_level": "debug"}
     mock_db_config = {}
-    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
-
-    # Call startup_application without IOHandler
-    app_context = startup_application(mock_parse_function, setup_io_handler=False)
-
-    # Verify parse function was called
-    mock_parse_function.assert_called_once()
+    app_context = _initialize_runtime(mock_args_dict, mock_db_config, setup_io_handler=False)
 
     # Verify returned values
     assert app_context.args == mock_args_dict
@@ -195,32 +183,14 @@ def test_startup_application_without_io_handler():
     assert app_context.logger.level == logging.DEBUG
 
 
-def test_startup_application_with_custom_logger_name():
-    """Test startup_application function with custom logger name."""
-    # Mock parse function
-    mock_args_dict = {"log_level": "warning"}
-    mock_db_config = {}
-    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
-
-    # Call startup_application with custom logger name
-    app_context = startup_application(
-        mock_parse_function, logger_name="test_logger", setup_io_handler=False
-    )
-
-    # Verify logger name
-    assert app_context.logger.name == "test_logger"
-    assert app_context.logger.level == logging.WARNING
-
-
-def test_startup_application_without_resolving_sim_software_executables():
-    """Test startup_application forwards executable-resolution flag to settings load."""
+def test_initialize_runtime_without_resolving_sim_software_executables():
+    """Test runtime startup forwards executable-resolution flag to settings load."""
     mock_args_dict = {"log_level": "info"}
     mock_db_config = {}
-    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
-
     with patch("simtools.application.control.config.load") as mock_load:
-        startup_application(
-            mock_parse_function,
+        _initialize_runtime(
+            mock_args_dict,
+            mock_db_config,
             setup_io_handler=False,
             resolve_sim_software_executables=False,
         )
@@ -232,21 +202,19 @@ def test_startup_application_without_resolving_sim_software_executables():
     )
 
 
-def test_startup_application_prepares_runtime_environment_from_cli():
-    """Test startup_application prepares runtime environment from CLI file argument."""
+def test_initialize_runtime_prepares_runtime_environment_from_cli():
+    """Test runtime startup prepares the requested runtime environment."""
     mock_args_dict = {
         "log_level": "info",
         "runtime_environment_file": Path("runtime.yml"),
         "ignore_runtime_environment": False,
     }
     mock_db_config = {}
-    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
-
     with patch(
         "simtools.application.control.prepare_runtime_environment",
         return_value=({"image": "test-image"}, ["podman", "run"]),
     ) as mock_prepare:
-        app_context = startup_application(mock_parse_function, setup_io_handler=False)
+        app_context = _initialize_runtime(mock_args_dict, mock_db_config, setup_io_handler=False)
 
     mock_prepare.assert_called_once_with(Path("runtime.yml"))
     assert app_context.run_time == ["podman", "run"]
@@ -254,18 +222,16 @@ def test_startup_application_prepares_runtime_environment_from_cli():
     assert app_context.args["run_time"] == ["podman", "run"]
 
 
-def test_startup_application_runtime_environment_ignored_from_cli():
-    """Test startup_application ignores runtime environment when requested by CLI flag."""
+def test_initialize_runtime_runtime_environment_ignored_from_cli():
+    """Test runtime startup ignores the runtime environment when requested."""
     mock_args_dict = {
         "log_level": "info",
         "runtime_environment_file": Path("runtime.yml"),
         "ignore_runtime_environment": True,
     }
     mock_db_config = {}
-    mock_parse_function = MagicMock(return_value=(mock_args_dict, mock_db_config))
-
     with patch("simtools.application.control.prepare_runtime_environment") as mock_prepare:
-        app_context = startup_application(mock_parse_function, setup_io_handler=False)
+        app_context = _initialize_runtime(mock_args_dict, mock_db_config, setup_io_handler=False)
 
     mock_prepare.assert_not_called()
     assert app_context.run_time is None
