@@ -76,6 +76,14 @@ def _argument(name, group, **kwargs):
     return ArgumentDefinition(name, group=group, **kwargs)
 
 
+_RUN_TIME_GROUP = "run time"
+_DATABASE_CONFIGURATION_GROUP = "database configuration"
+_SIMULATION_MODEL_GROUP = "simulation model"
+_SIMULATION_CONFIGURATION_GROUP = "simulation configuration"
+_SHOWER_PARAMETERS_GROUP = "shower parameters"
+_SIM_TELARRAY_CONFIGURATION_GROUP = "sim_telarray configuration"
+
+
 CONFIG = _argument(
     "config",
     "configuration",
@@ -184,7 +192,7 @@ OUTPUT_ARGUMENTS = (
 
 RUNTIME_ENVIRONMENT_FILE = _argument(
     "runtime_environment_file",
-    "run time",
+    _RUN_TIME_GROUP,
     type=Path,
     help="Path to a standalone runtime-environment YAML file (top-level 'runtime_environment').",
     default=None,
@@ -192,7 +200,7 @@ RUNTIME_ENVIRONMENT_FILE = _argument(
 
 APPTAINER_IMAGE = _argument(
     "apptainer_image",
-    "run time",
+    _RUN_TIME_GROUP,
     help="Apptainer image path or a dictionary mapping labels to image paths.",
     type=helpers.string_or_dict,
     default=None,
@@ -200,7 +208,7 @@ APPTAINER_IMAGE = _argument(
 
 IGNORE_RUNTIME_ENVIRONMENT = _argument(
     "ignore_runtime_environment",
-    "run time",
+    _RUN_TIME_GROUP,
     action="store_true",
     help="Ignore the runtime environment and run the application in the current environment.",
     default=False,
@@ -208,7 +216,7 @@ IGNORE_RUNTIME_ENVIRONMENT = _argument(
 
 OVERWRITE_COLLECTION_FILES = _argument(
     "overwrite_collection_files",
-    "run time",
+    _RUN_TIME_GROUP,
     action="store_true",
     help=(
         "Allow files copied by the workflow collection block to overwrite existing "
@@ -365,49 +373,49 @@ USER_ARGUMENTS = (
 
 DB_API_USER = _argument(
     "db_api_user",
-    "database configuration",
+    _DATABASE_CONFIGURATION_GROUP,
     help="Database username.",
     type=str,
 )
 
 DB_API_PW = _argument(
     "db_api_pw",
-    "database configuration",
+    _DATABASE_CONFIGURATION_GROUP,
     help="Database password.",
     type=str,
 )
 
 DB_API_PORT = _argument(
     "db_api_port",
-    "database configuration",
+    _DATABASE_CONFIGURATION_GROUP,
     help="Database server port.",
     type=int,
 )
 
 DB_SERVER = _argument(
     "db_server",
-    "database configuration",
+    _DATABASE_CONFIGURATION_GROUP,
     help="Database server address.",
     type=str,
 )
 
 DB_API_AUTHENTICATION_DATABASE = _argument(
     "db_api_authentication_database",
-    "database configuration",
+    _DATABASE_CONFIGURATION_GROUP,
     help="Authentication database name.",
     type=str,
 )
 
 DB_SIMULATION_MODEL = _argument(
     "db_simulation_model",
-    "database configuration",
+    _DATABASE_CONFIGURATION_GROUP,
     help="Simulation-model database name.",
     type=str.strip,
 )
 
 DB_SIMULATION_MODEL_VERSION = _argument(
     "db_simulation_model_version",
-    "database configuration",
+    _DATABASE_CONFIGURATION_GROUP,
     help="Simulation-model database version.",
     type=str.strip,
 )
@@ -424,7 +432,7 @@ DATABASE_ARGUMENTS = (
 
 MODEL_VERSION = _argument(
     "model_version",
-    "simulation model",
+    _SIMULATION_MODEL_GROUP,
     help="Simulation production model version(s).",
     type=str,
     default=None,
@@ -433,7 +441,7 @@ MODEL_VERSION = _argument(
 
 PARAMETER_VERSION = _argument(
     "parameter_version",
-    "simulation model",
+    _SIMULATION_MODEL_GROUP,
     help="model parameter version",
     type=str,
     default=None,
@@ -441,7 +449,7 @@ PARAMETER_VERSION = _argument(
 
 UPDATED_PARAMETER_VERSION = _argument(
     "updated_parameter_version",
-    "simulation model",
+    _SIMULATION_MODEL_GROUP,
     help="updated parameter version",
     type=str,
     default=None,
@@ -449,28 +457,28 @@ UPDATED_PARAMETER_VERSION = _argument(
 
 OVERWRITE_MODEL_PARAMETERS = _argument(
     "overwrite_model_parameters",
-    "simulation model",
+    _SIMULATION_MODEL_GROUP,
     help="File name to overwrite model parameters from DB with provided values",
     type=str,
 )
 
 SITE = _argument(
     "site",
-    "simulation model",
+    _SIMULATION_MODEL_GROUP,
     help="Observatory site (e.g., North, South)",
     type=helpers.site,
 )
 
 TELESCOPE = _argument(
     "telescope",
-    "simulation model",
+    _SIMULATION_MODEL_GROUP,
     help="telescope model name (e.g., LSTN-01, SSTS-design, ...)",
     type=helpers.telescope,
 )
 
 TELESCOPES = _argument(
     "telescopes",
-    "simulation model",
+    _SIMULATION_MODEL_GROUP,
     help="list of telescopes (e.g., LSTN-01, SSTS-design, ...)",
     type=helpers.telescope,
     nargs="+",
@@ -478,7 +486,7 @@ TELESCOPES = _argument(
 
 ARRAY_LAYOUT_NAME = _argument(
     "array_layout_name",
-    "simulation model",
+    _SIMULATION_MODEL_GROUP,
     help=(
         "Array layout name(s) (e.g., CTAO-North-Alpha, LSTN-01). "
         "Telescope names are assumed as single-telescope layouts."
@@ -490,7 +498,7 @@ ARRAY_LAYOUT_NAME = _argument(
 
 ARRAY_ELEMENT_LIST = _argument(
     "array_element_list",
-    "simulation model",
+    _SIMULATION_MODEL_GROUP,
     help="list of array elements (e.g., LSTN-01, LSTN-02, MSTN).",
     nargs="+",
     type=str,
@@ -499,7 +507,7 @@ ARRAY_ELEMENT_LIST = _argument(
 
 ARRAY_LAYOUT_FILE = _argument(
     "array_layout_file",
-    "simulation model",
+    _SIMULATION_MODEL_GROUP,
     help="file(s) with the list of array elements (astropy table format).",
     nargs="+",
     type=str,
@@ -508,7 +516,7 @@ ARRAY_LAYOUT_FILE = _argument(
 
 ARRAY_LAYOUT_PARAMETER_FILE = _argument(
     "array_layout_parameter_file",
-    "simulation model",
+    _SIMULATION_MODEL_GROUP,
     help="Array layout model parameter file (typically in JSON format).",
     type=str,
     default=None,
@@ -516,14 +524,14 @@ ARRAY_LAYOUT_PARAMETER_FILE = _argument(
 
 PLOT_ALL_LAYOUTS = _argument(
     "plot_all_layouts",
-    "simulation model",
+    _SIMULATION_MODEL_GROUP,
     help="plot all available layouts",
     action="store_true",
 )
 
 IGNORE_MISSING_DESIGN_MODEL = _argument(
     "ignore_missing_design_model",
-    "simulation model",
+    _SIMULATION_MODEL_GROUP,
     help="Ignore missing design model definition of DB",
     action="store_true",
 )
@@ -539,7 +547,7 @@ SIMULATION_SOFTWARE = _argument(
 
 PRIMARY = _argument(
     "primary",
-    "simulation configuration",
+    _SIMULATION_CONFIGURATION_GROUP,
     help=(
         "Primary particle(s) to simulate. Common names: "
         f"{', '.join(PrimaryParticle.particle_names().keys())}."
@@ -552,7 +560,7 @@ PRIMARY = _argument(
 
 PRIMARY_ID_TYPE = _argument(
     "primary_id_type",
-    "simulation configuration",
+    _SIMULATION_CONFIGURATION_GROUP,
     help="Primary particle ID type",
     type=str,
     choices=["common_name", "corsika7_id", "pdg_id"],
@@ -561,7 +569,7 @@ PRIMARY_ID_TYPE = _argument(
 
 AZIMUTH_ANGLE = _argument(
     "azimuth_angle",
-    "simulation configuration",
+    _SIMULATION_CONFIGURATION_GROUP,
     help=(
         "Telescope pointing direction in azimuth. It can be in degrees between 0 and 360 "
         "or one of north, south, east or west. North is 0 degrees and the azimuth grows "
@@ -575,7 +583,7 @@ AZIMUTH_ANGLE = _argument(
 
 ZENITH_ANGLE = _argument(
     "zenith_angle",
-    "simulation configuration",
+    _SIMULATION_CONFIGURATION_GROUP,
     help="Zenith angle in degrees (between 0 and 180).",
     type=helpers.zenith_angle,
     action=helpers.OneOrManyAction,
@@ -585,14 +593,14 @@ ZENITH_ANGLE = _argument(
 
 SHOWERS_PER_RUN = _argument(
     "showers_per_run",
-    "simulation configuration",
+    _SIMULATION_CONFIGURATION_GROUP,
     help="Baseline number of CORSIKA showers per run.",
     type=int,
 )
 
 RUN_NUMBER_OFFSET = _argument(
     "run_number_offset",
-    "simulation configuration",
+    _SIMULATION_CONFIGURATION_GROUP,
     help="Offset added to each run number.",
     type=int,
     default=0,
@@ -600,7 +608,7 @@ RUN_NUMBER_OFFSET = _argument(
 
 RUN_NUMBER = _argument(
     "run_number",
-    "simulation configuration",
+    _SIMULATION_CONFIGURATION_GROUP,
     help="Run number to be simulated.",
     type=int,
     default=1,
@@ -608,7 +616,7 @@ RUN_NUMBER = _argument(
 
 EVENT_NUMBER_FIRST_SHOWER = _argument(
     "event_number_first_shower",
-    "simulation configuration",
+    _SIMULATION_CONFIGURATION_GROUP,
     help="Event number of first shower",
     type=int,
     default=1,
@@ -616,7 +624,7 @@ EVENT_NUMBER_FIRST_SHOWER = _argument(
 
 CORRECT_FOR_B_FIELD_ALIGNMENT = _argument(
     "correct_for_b_field_alignment",
-    "simulation configuration",
+    _SIMULATION_CONFIGURATION_GROUP,
     help="Correct for B-field alignment",
     action="store_true",
     default=True,
@@ -624,7 +632,7 @@ CORRECT_FOR_B_FIELD_ALIGNMENT = _argument(
 
 CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE = _argument(
     "curved_atmosphere_min_zenith_angle",
-    "simulation configuration",
+    _SIMULATION_CONFIGURATION_GROUP,
     help="Minimum zenith angle (deg) for using curved-atmosphere CORSIKA binaries. ",
     type=helpers.zenith_angle,
     default=defaults.CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG * u.deg,
@@ -645,7 +653,7 @@ CORSIKA_CONFIGURATION_ARGUMENTS = (
 
 ESLOPE = _argument(
     "eslope",
-    "shower parameters",
+    _SHOWER_PARAMETERS_GROUP,
     help="Slope of the energy spectrum.",
     type=float,
     default=-2.0,
@@ -653,7 +661,7 @@ ESLOPE = _argument(
 
 ENERGY_RANGE = _argument(
     "energy_range",
-    "shower parameters",
+    _SHOWER_PARAMETERS_GROUP,
     help="Minimum and maximum primary energy, e.g. '10 GeV 5 TeV'.",
     action=helpers.QuantityPairAction,
     nargs="+",
@@ -662,7 +670,7 @@ ENERGY_RANGE = _argument(
 
 VIEW_CONE = _argument(
     "view_cone",
-    "shower parameters",
+    _SHOWER_PARAMETERS_GROUP,
     help="Minimum and maximum view-cone radius, e.g. '0 deg 10 deg'.",
     type=helpers.parse_quantity_pair,
     default=["0 deg 0 deg"],
@@ -670,7 +678,7 @@ VIEW_CONE = _argument(
 
 CORE_SCATTER = _argument(
     "core_scatter",
-    "shower parameters",
+    _SHOWER_PARAMETERS_GROUP,
     help="Core positions per shower and maximum scatter radius, e.g. '10 500 m'.",
     type=helpers.parse_integer_and_quantity,
     default=["10 10000 m"],
@@ -716,14 +724,14 @@ CORSIKA_INTERACTION_ARGUMENTS = (
 
 SIM_TELARRAY_INSTRUMENT_SEED = _argument(
     "sim_telarray_instrument_seed",
-    "sim_telarray configuration",
+    _SIM_TELARRAY_CONFIGURATION_GROUP,
     help="Random seed used for sim_telarray instrument setup.",
     type=helpers.bounded_int(1, constants.SIMTEL_MAX_SEED),
 )
 
 SIM_TELARRAY_RANDOM_INSTRUMENT_INSTANCES = _argument(
     "sim_telarray_random_instrument_instances",
-    "sim_telarray configuration",
+    _SIM_TELARRAY_CONFIGURATION_GROUP,
     help="Number of random instrument instances initialized in sim_telarray.",
     type=helpers.bounded_int(1, 1024),
     default=1,
@@ -731,7 +739,7 @@ SIM_TELARRAY_RANDOM_INSTRUMENT_INSTANCES = _argument(
 
 SIM_TELARRAY_SEED = _argument(
     "sim_telarray_seed",
-    "sim_telarray configuration",
+    _SIM_TELARRAY_CONFIGURATION_GROUP,
     help=(
         "Random seed used for sim_telarray simulation. Single value: seed for event "
         "simulation. Two values: [instrument_seed, simulation_seed] (use for testing only)."
@@ -742,7 +750,7 @@ SIM_TELARRAY_SEED = _argument(
 
 SIM_TELARRAY_SEED_FILE = _argument(
     "sim_telarray_seed_file",
-    "sim_telarray configuration",
+    _SIM_TELARRAY_CONFIGURATION_GROUP,
     help=argparse.SUPPRESS,
     type=str,
     default="sim_telarray_instrument_seeds.txt",

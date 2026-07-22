@@ -110,9 +110,11 @@ def test_for_module_uses_loaded_module_documentation():
     assert application.description == __doc__
 
 
-def test_for_module_uses_file_name_when_application_runs_as_script(monkeypatch):
+def test_for_module_uses_file_name_when_application_runs_as_script(monkeypatch, tmp_test_directory):
     """Direct execution has the same label as an installed entry point."""
-    module = SimpleNamespace(__doc__="Test application.", __file__="/tmp/example_app.py")
+    module = SimpleNamespace(
+        __doc__="Test application.", __file__=str(tmp_test_directory / "example_app.py")
+    )
     monkeypatch.setitem(sys.modules, "__main__", module)
 
     application = ApplicationDefinition.for_module("__main__")
