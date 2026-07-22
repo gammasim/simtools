@@ -16,7 +16,7 @@ podman buildx build --platform=linux/arm64 --secret id=gitlab_token,src=./my_sec
 Then build the simtools production container:
 
 ```bash
-podman buildx build --platform=linux/arm64 --build-arg BASE_IMAGE=localhost/corsika-simtelarray --build-arg BUILD_BRANCH=main --build-arg PYTHON_VERSION=3.12 -f Dockerfile-simtools -t simtools  .
+podman buildx build --platform=linux/arm64 --build-arg BASE_IMAGE=localhost/corsika-simtelarray --build-arg BUILD_BRANCH=main --build-arg PYTHON_VERSION=3.14 -f Dockerfile-simtools -t simtools  .
 ```
 
 The build process requires a tarball of corsika/sim\_telarray (named `corsika_simtelarray.tar.gz`) to be present in the build directory.

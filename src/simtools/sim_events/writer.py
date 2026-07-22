@@ -558,7 +558,7 @@ class EventDataWriter:
         if nsb_integrated_flux is not None:
             try:
                 return float(nsb_integrated_flux)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 self._logger.warning(
                     f"Invalid nsb_integrated_flux value '{nsb_integrated_flux}' for {file}"
                 )

@@ -252,7 +252,7 @@ class EventDataHistograms:
         """Accumulate the finite minimum and maximum of an event-data field."""
         try:
             values = np.asarray(values, dtype=float)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return
         values = values[np.isfinite(values)]
         if values.size == 0:
@@ -515,7 +515,7 @@ class EventDataHistograms:
                 "core_distance": np.asarray(event_data.core_distance_shower, dtype=float),
                 "angular_distance": np.asarray(triggered_data.angular_distance, dtype=float),
             }
-        except (AttributeError, TypeError, ValueError):
+        except AttributeError, TypeError, ValueError:
             return
         histogram_specs = {
             "energy": (coordinates["energy"], self.energy_bins),

@@ -27,8 +27,6 @@ Render the CLI reference under a heading supplied by the surrounding page:
        :no-heading:
 """
 
-from __future__ import annotations
-
 import argparse
 import importlib
 from dataclasses import dataclass

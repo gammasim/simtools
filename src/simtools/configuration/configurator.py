@@ -274,7 +274,7 @@ class Configurator:
                 preserve_version_dependent_keys=PER_VERSION_CONFIGURATION_KEYS,
             )
             return gen.change_dict_keys_case(_config_dict)
-        except (TypeError, AttributeError):
+        except TypeError, AttributeError:
             self._logger.debug("No YAML configuration update applied to configuration dictionary.")
             return {}
         except FileNotFoundError:
@@ -291,7 +291,7 @@ class Configurator:
             return set(gen.change_dict_keys_case(config_dict).keys())
         except FileNotFoundError:
             return set()
-        except (TypeError, AttributeError):
+        except TypeError, AttributeError:
             return set()
 
     def _explicit_cli_keys(self, arg_list):

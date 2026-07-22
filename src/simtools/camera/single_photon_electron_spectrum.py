@@ -162,7 +162,7 @@ class SinglePhotonElectronSpectrum:
             for tmp_file in [tmp_input_file, tmp_ap_file]:
                 try:
                     Path(tmp_file.name).unlink()
-                except (AttributeError, FileNotFoundError):
+                except AttributeError, FileNotFoundError:
                     pass
 
         self.data = result.stdout
