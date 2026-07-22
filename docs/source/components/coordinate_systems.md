@@ -63,22 +63,24 @@ Local frame aligned with shower propagation direction. Used for ray-tracing and 
 
 ### Pixel Coordinates
 
-Photosensor positions in the focal plane before applying the camera rotation from the
-`Rotate` entry in the sim_telarray camera configuration file.
+Photosensor positions in the focal plane as read from the sim_telarray camera configuration file,
+before the `Rotate` angle is applied.
 
 - **Plane:** Focal plane
 - **Origin:** Camera center
 - **Units:** Centimeters (cm)
 - **Pixel shapes:** Hexagonal (codes 1, 3 for different orientation) or Square (code 2)
 - **Data source:** sim_telarray camera configuration files
-- **Storage:** `simtools.model.camera.Camera` class
 
 Includes pixel position (x, y), ID, on/off status, and diameter. The pixel coordinates define
 a coordinate basis aligned with the unrotated pixel layout.
 
 ### Camera Coordinates
 
-Pixel positions after applying the camera rotation. For a rotation angle $\phi$, simtools uses
+Pixel positions after applying the camera rotation from the `Rotate` entry in the sim_telarray
+camera configuration file. `simtools.model.camera.Camera` applies this rotation during
+initialization via `Camera._rotate_pixels`, so the coordinates stored in the `Camera` class are
+the rotated camera coordinates. For a rotation angle $\phi$, simtools uses
 
 $$
 x_{cam} = x_{pix}\cos(\phi) - y_{pix}\sin(\phi),
