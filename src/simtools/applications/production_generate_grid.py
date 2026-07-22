@@ -133,6 +133,7 @@ def main():
             "simulation_model": ["site", "layout", "telescope", "model_version"],
             "simulation_configuration": {"software": None, "corsika_configuration": ["all"]},
         },
+        startup_kwargs={"resolve_sim_software_executables": False},
     )
 
     generate_job_grid(

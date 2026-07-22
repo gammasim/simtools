@@ -28,6 +28,16 @@ def test_main_generates_job_grid(mock_build_application, mock_generate_job_grid)
     mock_build_application.return_value = SimpleNamespace(args=args, io_handler=io_handler)
     app.main()
 
+    mock_build_application.assert_called_once_with(
+        application_argument_definitions=app._APPLICATION_ARG_DEFINITIONS,
+        initialization_kwargs={
+            "db_config": True,
+            "preserve_by_version_keys": ["array_layout_name"],
+            "simulation_model": ["site", "layout", "telescope", "model_version"],
+            "simulation_configuration": {"software": None, "corsika_configuration": ["all"]},
+        },
+        startup_kwargs={"resolve_sim_software_executables": False},
+    )
     mock_generate_job_grid.assert_called_once_with(args, Path("job_grid.ecsv"))
 
 
