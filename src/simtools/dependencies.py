@@ -50,7 +50,7 @@ def get_version_string(run_time=None, include_software_versions=True):
         """Return executable path string, or None if environment is not configured."""
         try:
             return path_getter()
-        except (FileNotFoundError, TypeError):
+        except FileNotFoundError, TypeError:
             return None
 
     if include_software_versions:
@@ -207,7 +207,7 @@ def get_corsika_version(run_time=None):
         return version
     try:
         build_opts = get_build_options(run_time)
-    except (FileNotFoundError, TypeError, ValueError):
+    except FileNotFoundError, TypeError, ValueError:
         _logger.warning("Could not get CORSIKA version.")
         return None
     _logger.debug("Getting the CORSIKA version from the build options.")
@@ -242,13 +242,13 @@ def get_build_options(run_time=None):
             continue
         try:
             build_opts.update(_get_build_options_from_file(path / "build_opts.yml", run_time))
-        except (FileNotFoundError, TypeError, ValueError):
+        except FileNotFoundError, TypeError, ValueError:
             # legacy fallback only for sim_telarray
             if package == "sim_telarray":
                 try:
                     legacy_path = path.parent / "build_opts.yml"
                     build_opts.update(_get_build_options_from_file(legacy_path, run_time))
-                except (FileNotFoundError, TypeError, ValueError):
+                except FileNotFoundError, TypeError, ValueError:
                     _logger.debug(f"No build options found for {package}.")
     if not build_opts:
         raise FileNotFoundError("No build option file found.")

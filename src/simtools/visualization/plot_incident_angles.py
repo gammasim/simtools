@@ -34,7 +34,7 @@ def _gather_radius_arrays(results_by_offset, column, log):
             continue
         try:
             arrays.append(tab[column].to(u.m).value)
-        except (AttributeError, ValueError, TypeError):
+        except AttributeError, ValueError, TypeError:
             log.warning("Skipping radius values for off-axis=%s due to unit/format issue", off)
     return arrays
 

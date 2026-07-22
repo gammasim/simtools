@@ -87,7 +87,7 @@ class SimtelConfigReader:
             self.simtel_parameter_name = names.get_simulation_software_name_from_parameter_name(
                 self.parameter_name
             ).upper()
-        except (KeyError, AttributeError):
+        except KeyError, AttributeError:
             self.simtel_parameter_name = self.parameter_name.upper() if parameter_name else None
         self.simtel_telescope_name = simtel_telescope_name
         self.camera_pixels = camera_pixels
@@ -113,7 +113,7 @@ class SimtelConfigReader:
             if len(self.schema_dict["data"]) == 1:
                 return self.schema_dict["data"][0].get(data_type)
             return [data.get(data_type) for data in self.schema_dict["data"]]
-        except (KeyError, IndexError):
+        except KeyError, IndexError:
             return None
 
     @staticmethod
@@ -139,7 +139,7 @@ class SimtelConfigReader:
         try:
             if np.all(np.isclose(_from_simtel, _from_schema)):
                 return True
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             pass
 
         return False

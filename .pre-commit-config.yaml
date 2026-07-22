@@ -1,4 +1,7 @@
 ---
+default_language_version:
+  python: python3.14
+
 repos:
 # Ruff
 - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -45,6 +48,7 @@ repos:
   rev: v2.3.2  # most recent docstr-coverage release or commit sha
   hooks:
   - id: docstr-coverage
+    language_version: python3.14
     args: ["--verbose", "2", "--fail-under", "70.", "src/simtools"]
 # Github action
 - repo: https://github.com/rhysd/actionlint

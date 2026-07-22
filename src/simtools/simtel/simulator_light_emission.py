@@ -467,7 +467,7 @@ class SimulatorLightEmission(SimtelRunner):
         """
         try:
             vec = np.asarray(pointing_vector, dtype=float)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return True
         if vec.size < 3 or not np.all(np.isfinite(vec[:3])):
             return True

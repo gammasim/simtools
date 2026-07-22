@@ -423,7 +423,7 @@ class ModelDataWriter:
         """
         try:
             return self.schema_dict["data"][0]["type"] == "file"
-        except (KeyError, IndexError):
+        except KeyError, IndexError:
             pass
         return False
 
@@ -443,7 +443,7 @@ class ModelDataWriter:
                 for data in self.schema_dict["data"]
             ]
             return unit_list if len(unit_list) > 1 else unit_list[0]
-        except (KeyError, IndexError):
+        except KeyError, IndexError:
             pass
         return None
 

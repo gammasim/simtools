@@ -111,7 +111,7 @@ def get_value_unit_type(value, unit_str=None):
                 except ValueError:
                     pass
         # ValueError: covers strings of type "5 not a unit"
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             base_value = value
             base_type = "str"
     else:

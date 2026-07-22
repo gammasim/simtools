@@ -1,7 +1,5 @@
 """Compare, sync, and report obsolete versioned integration-test resources."""
 
-from __future__ import annotations
-
 import hashlib
 import logging
 import shutil
