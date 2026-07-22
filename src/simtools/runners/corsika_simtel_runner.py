@@ -23,9 +23,10 @@ class CorsikaSimtelRunner:
         contain the CORSIKA configuration parameters.
     label : str
         Label.
-    use_multipipe : bool
-        Use multipipe to run CORSIKA and sim_telarray.
-        Dictionary with configuration for sim_telarray random instrument setup.
+    sequential : bool
+        Run multipipe_corsika in sequential mode (disables parallel CORSIKA/sim_telarray execution).
+    curved_atmosphere_min_zenith_angle : astropy.units.Quantity, optional
+        Minimum zenith angle for which to use the curved-atmosphere CORSIKA binary.
     save_corsika_output : bool
         Save the CORSIKA output stream to a compressed file.
     """
