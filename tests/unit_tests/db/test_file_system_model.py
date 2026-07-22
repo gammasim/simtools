@@ -100,7 +100,7 @@ def simulation_models_path(tmp_test_directory):
             "North",
             "dsum_prescale",
             "1.0.0",
-            [42.0, 256.0],
+            [42, 256],
             parameter_type="int64",
         ),
     )
@@ -216,6 +216,28 @@ def test_file_system_handler_ignores_missing_files_in_or_query(simulation_models
     assert [parameter["parameter"] for parameter in parameters] == ["camera_body_diameter"]
 
 
+def test_file_system_handler_avoids_schema_lookup_and_validation(simulation_models_path, mocker):
+    collection_lookup = mocker.patch("simtools.utils.names.get_collection_name_from_parameter_name")
+    parameter_validation = mocker.patch(
+        "simtools.data_model.validate_data.DataValidator.validate_model_parameter"
+    )
+    handler = file_system_model.FileSystemModelHandler(simulation_models_path)
+
+    parameters = handler.query_model_parameters(
+        {
+            "parameter": "camera_body_diameter",
+            "parameter_version": "2.0.0",
+            "instrument": "LSTN-01",
+            "site": "North",
+        },
+        "telescopes",
+    )
+
+    assert parameters[0]["value"] == pytest.approx(350.0)
+    collection_lookup.assert_not_called()
+    parameter_validation.assert_not_called()
+
+
 def test_file_system_handler_caches_production_and_parameter_reads(simulation_models_path, mocker):
     production_spy = mocker.spy(file_system_model.db_model_upload, "read_production_tables")
     parameter_spy = mocker.spy(file_system_model.ascii_handler, "collect_data_from_file")
@@ -258,7 +280,7 @@ def test_database_handler_uses_files_without_mongodb(simulation_models_path, moc
 
     assert database.is_configured()
     assert parameters["camera_body_diameter"]["value"] == pytest.approx(350.0)
-    assert layouts["array_layouts"]["value"] == {"name": "test", "elements": ["LSTN-01"]}
+    assert layouts["array_layouts"]["value"] == [{"name": "test", "elements": ["LSTN-01"]}]
     assert corsika["corsika_cherenkov_photon_bunch_size"]["value"] == pytest.approx(5.0)
     assert corsika["corsika_particle_kinetic_energy_cutoff"]["unit"] == "GeV"
     assert sim_telarray["min_photons"]["value"] == pytest.approx(2.0)

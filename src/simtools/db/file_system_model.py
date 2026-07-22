@@ -7,10 +7,9 @@ from pathlib import Path
 from astropy.table import Table
 from packaging.version import Version
 
-from simtools.data_model.validate_data import DataValidator
 from simtools.db import db_model_upload
 from simtools.io import ascii_handler
-from simtools.utils import names, value_conversion
+from simtools.utils import value_conversion
 
 
 class FileSystemModelHandler:
@@ -90,7 +89,9 @@ class FileSystemModelHandler:
             parameter_version = parameter_query.get("parameter_version")
             if not parameter or not parameter_version:
                 continue
-            parameter_path = self._get_parameter_file_path(instrument, parameter, parameter_version)
+            parameter_path = self._get_parameter_file_path(
+                collection_name, instrument, parameter, parameter_version
+            )
             if not parameter_path.is_file():
                 continue
             parameter_data = self._read_parameter_file(parameter_path)
@@ -102,13 +103,12 @@ class FileSystemModelHandler:
             )
         return parameters
 
-    def _get_parameter_file_path(self, instrument, parameter, parameter_version):
+    def _get_parameter_file_path(self, collection_name, instrument, parameter, parameter_version):
         """Return the path for one model parameter version."""
-        collection = names.get_collection_name_from_parameter_name(parameter)
         path = self.model_parameters_path
-        if collection in ("configuration_sim_telarray", "configuration_corsika"):
-            path /= collection
-        if collection != "configuration_corsika":
+        if collection_name in ("configuration_sim_telarray", "configuration_corsika"):
+            path /= collection_name
+        if collection_name != "configuration_corsika":
             path /= instrument
         return path / parameter / f"{parameter}-{parameter_version}.json"
 
@@ -133,7 +133,6 @@ class FileSystemModelHandler:
             if not parameter_path.is_file():
                 raise FileNotFoundError(f"Model parameter file not found: {parameter_path}")
             parameter_data = ascii_handler.collect_data_from_file(file_name=parameter_path)
-            parameter_data = DataValidator.validate_model_parameter(parameter_data)
             parameter_data["value"], base_unit, _ = value_conversion.get_value_unit_type(
                 value=parameter_data["value"], unit_str=parameter_data.get("unit")
             )
