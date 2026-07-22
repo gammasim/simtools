@@ -72,6 +72,17 @@ def test_add_argument_definitions_registers_mutually_exclusive_bundle():
         )
 
 
+def test_layout_selection_supports_parameter_files():
+    """A model-parameter file can satisfy the required layout selection."""
+    parser = CommandLineParser()
+    parser.add_argument_definitions(layout_selection_arguments(include_parameter_file=True))
+
+    args = parser.parse_args(["--array_layout_parameter_file", "layouts.json"])
+
+    assert args.array_layout_parameter_file == "layouts.json"
+    assert parser.preserve_by_version == {"array_layout_name"}
+
+
 def test_layout_selection_can_be_explicitly_optional():
     """Applications that list layouts can declare layout selection as optional."""
     parser = CommandLineParser()

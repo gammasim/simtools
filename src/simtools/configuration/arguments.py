@@ -861,15 +861,20 @@ def _layout_argument(argument, *, required):
         group=argument.group,
         exclusive_group="array layout",
         exclusive_group_required=required,
+        preserve_by_version=argument.preserve_by_version,
         **argument.kwargs,
     )
 
 
-def layout_selection_arguments(*, required=True, include_file=False, include_plot_all=False):
+def layout_selection_arguments(
+    *, required=True, include_file=False, include_parameter_file=False, include_plot_all=False
+):
     """Return the standard mutually exclusive array-layout selections."""
     arguments = [ARRAY_LAYOUT_NAME, ARRAY_ELEMENT_LIST]
     if include_file:
         arguments.append(ARRAY_LAYOUT_FILE)
+    if include_parameter_file:
+        arguments.append(ARRAY_LAYOUT_PARAMETER_FILE)
     if include_plot_all:
         arguments.append(PLOT_ALL_LAYOUTS)
     return tuple(_layout_argument(argument, required=required) for argument in arguments)

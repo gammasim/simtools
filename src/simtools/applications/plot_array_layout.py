@@ -266,8 +266,11 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.IGNORE_MISSING_DESIGN_MODEL,
         cli.SITE,
-        *cli.layout_selection_arguments(include_file=True, include_plot_all=True),
-        cli.ARRAY_LAYOUT_PARAMETER_FILE,
+        *cli.layout_selection_arguments(
+            include_file=True,
+            include_parameter_file=True,
+            include_plot_all=True,
+        ),
         *cli.PATH_ARGUMENTS,
     ),
     database=True,
