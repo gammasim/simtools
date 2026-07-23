@@ -256,3 +256,48 @@ def test_main_runs_simulator_and_reports(mock_application_start, mock_simulator_
     mock_simulator.simulate.assert_called_once()
     mock_simulator.validate_simulations.assert_called_once()
     mock_simulator.report.assert_called_once()
+
+
+@patch("simtools.applications.simulate_prod.write_data_to_file")
+@patch("simtools.applications.simulate_prod.build_simulation_job_metadata")
+@patch("simtools.applications.simulate_prod.Simulator")
+@patch("simtools.application.definition.ApplicationDefinition.start")
+def test_main_writes_job_metadata_to_grid_output_path(
+    mock_application_start,
+    mock_simulator_class,
+    mock_build_metadata,
+    mock_write_data,
+):
+    _mock_application_context(mock_application_start)
+    mock_application_start.return_value.args["grid_output_path"] = Path("grid-output")
+    mock_simulator = MagicMock()
+    mock_simulator_class.return_value = mock_simulator
+    mock_build_metadata.return_value = {"runNumber": 7}
+
+    app.main()
+
+    mock_build_metadata.assert_called_once_with(
+        mock_application_start.return_value.args, mock_simulator
+    )
+    mock_simulator.pack_for_register.assert_called_once_with(Path("grid-output"))
+    mock_write_data.assert_called_once_with(
+        {"runNumber": 7}, Path("grid-output") / app._JOB_METADATA_FILE
+    )
+
+
+@patch("simtools.applications.simulate_prod.write_data_to_file")
+@patch("simtools.applications.simulate_prod.Simulator")
+@patch("simtools.application.definition.ApplicationDefinition.start")
+def test_main_does_not_write_job_metadata_when_validation_fails(
+    mock_application_start, mock_simulator_class, mock_write_data
+):
+    _mock_application_context(mock_application_start)
+    mock_application_start.return_value.args["grid_output_path"] = Path("grid-output")
+    mock_simulator_class.return_value.validate_simulations.side_effect = RuntimeError(
+        "invalid output"
+    )
+
+    with pytest.raises(RuntimeError, match="invalid output"):
+        app.main()
+
+    mock_write_data.assert_not_called()
