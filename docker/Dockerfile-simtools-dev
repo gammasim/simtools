@@ -35,10 +35,10 @@ COPY --from=simtel_img /usr/local/lib/ /usr/local/lib/
 
 RUN microdnf update -y && microdnf install -y \
   bc bzip2 findutils gcc-c++ git git-lfs libgfortran procps wget zstd \
-  python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
+  python"${PYTHON_VERSION}" python"${PYTHON_VERSION}"-pip python"${PYTHON_VERSION}"-devel && \
   microdnf clean all && \
   rm -rf /var/cache/dnf/* /tmp/* /var/tmp/* && \
-  ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python && \
+  ln -sf /usr/bin/python"${PYTHON_VERSION}" /usr/bin/python && \
   echo /usr/local/lib > /etc/ld.so.conf.d/local.conf && \
   ldconfig
 
@@ -56,10 +56,10 @@ WORKDIR /workdir
 COPY pyproject.toml /workdir/pyproject.toml
 COPY src/simtools/applications/dependency_versions.py /workdir/dependency_versions.py
 COPY tools/generate_development_manifest.py /workdir/generate_development_manifest.py
-RUN python${PYTHON_VERSION} /workdir/dependency_versions.py \
+RUN python"${PYTHON_VERSION}" /workdir/dependency_versions.py \
       --pyproject /workdir/pyproject.toml --format python-requirements \
       --extras dev doc tests > /workdir/requirements-dev.txt && \
-    python${PYTHON_VERSION} -m venv env && \
+    python"${PYTHON_VERSION}" -m venv env && \
     . env/bin/activate && \
     pip install --no-cache-dir --requirement /workdir/requirements-dev.txt && \
     SIMTOOLS_CONTAINER_BUILD=1 \
