@@ -15,6 +15,7 @@ import os
 import platform
 import re
 import subprocess
+import tomllib
 from importlib import metadata
 from pathlib import Path
 
@@ -272,8 +273,77 @@ def write_dependency_manifest(output_file):
     output_file : str or Path
         JSON manifest output path.
     """
+    _write_manifest(build_dependency_manifest(), output_file)
+
+
+def write_development_dependency_manifest(output_file, project_file, build_option_files):
+    """Write provenance for a development image without installing simtools.
+
+    Parameters
+    ----------
+    output_file : str or Path
+        JSON manifest output path.
+    project_file : str or Path
+        Project file declaring direct Python dependencies.
+    build_option_files : iterable of str or Path
+        CORSIKA and sim_telarray build-options files to merge when available.
+    """
+    manifest = {
+        "schema_version": DEPENDENCY_MANIFEST_SCHEMA_VERSION,
+        "source": "container-build",
+        "simtools": {
+            "version": "not-installed",
+            "revision": os.getenv("SIMTOOLS_GIT_REVISION"),
+        },
+        "runtime": {
+            "python_version": platform.python_version(),
+            "pip_version": _distribution_version("pip"),
+            "direct_python_dependencies": _project_dependency_versions(project_file),
+        },
+        "build_options": _build_options_from_files(build_option_files),
+        "container": {
+            key: value
+            for key, value in {
+                "base_image": os.getenv("SIMTOOLS_BASE_IMAGE"),
+                "corsika_image": os.getenv("SIMTOOLS_CORSIKA_IMAGE"),
+                "sim_telarray_image": os.getenv("SIMTOOLS_SIMTEL_IMAGE"),
+            }.items()
+            if value
+        },
+    }
+    _write_manifest(manifest, output_file)
+
+
+def _project_dependency_versions(project_file):
+    """Return installed versions of direct dependencies declared by a project file."""
+    with Path(project_file).open("rb") as file:
+        requirements = tomllib.load(file)["project"]["dependencies"]
+    versions = {}
+    for requirement in requirements:
+        match = re.match(r"^([A-Za-z0-9_.-]+)", requirement)
+        if match:
+            name = match.group(1).lower().replace("_", "-")
+            installed_version = _distribution_version(name)
+            if installed_version is not None:
+                versions[name] = installed_version
+    return dict(sorted(versions.items()))
+
+
+def _build_options_from_files(build_option_files):
+    """Merge deterministic build options from existing YAML files."""
+    options = {}
+    for build_options_file in build_option_files:
+        path = Path(build_options_file)
+        if path.is_file():
+            options.update(
+                _sanitize_build_options(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
+            )
+    return options
+
+
+def _write_manifest(manifest, output_file):
+    """Write a manifest and its canonical SHA-256 digest."""
     output_path = Path(output_file)
-    manifest = build_dependency_manifest()
     content = json.dumps(manifest, default=str, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(content, encoding="utf-8")

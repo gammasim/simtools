@@ -62,6 +62,7 @@ simtools-db-get-parameter-from-db <applications/simtools-db-get-parameter-from-d
 simtools-db-generate-compound-indexes <applications/simtools-db-generate-compound-indexes>
 simtools-db-inspect-databases <applications/simtools-db-inspect-databases>
 simtools-db-upload-model-repository <applications/simtools-db-upload-model-repository>
+simtools-dependency-manifest <applications/simtools-dependency-manifest>
 simtools-dependency-versions <applications/simtools-dependency-versions>
 simtools-derive-bias-curves <applications/simtools-derive-bias-curves>
 simtools-derive-ctao-array-layouts <applications/simtools-derive-ctao-array-layouts>

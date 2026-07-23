@@ -13,7 +13,8 @@ on:
       - pyproject.toml
       - src/simtools/applications/dependency_versions.py
       - src/simtools/schemas/dependency_versions.schema.yml
-      - tools/generate_development_manifest.py
+      - src/simtools/applications/dependency_manifest.py
+      - src/simtools/dependencies.py
   release:
     types: [published]
   schedule:

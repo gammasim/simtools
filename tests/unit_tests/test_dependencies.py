@@ -23,6 +23,7 @@ from simtools.dependencies import (
     get_software_version,
     get_version_string,
     write_dependency_manifest,
+    write_development_dependency_manifest,
 )
 from simtools.version import __version__
 
@@ -612,7 +613,40 @@ def test_write_dependency_manifest(mocker, tmp_test_directory):
     write_dependency_manifest(output)
 
     assert json.loads(output.read_text(encoding="utf-8")) == manifest
-    assert output.with_suffix(".json.sha256").is_file()
+    assert Path(str(output)).with_suffix(".json.sha256").is_file()
+
+
+def test_write_development_dependency_manifest(mocker, monkeypatch, tmp_test_directory):
+    project_file = tmp_test_directory / "pyproject.toml"
+    project_file.write_text('[project]\ndependencies = ["astropy>=7", "numpy"]\n', encoding="utf-8")
+    corsika_options = tmp_test_directory / "corsika_build_opts.yml"
+    corsika_options.write_text("corsika_version: '78010'\nbuild_date: ignored\n", encoding="utf-8")
+    simtel_options = tmp_test_directory / "simtel_build_opts.yml"
+    simtel_options.write_text("simtel_version: v2025-11-30-rc\n", encoding="utf-8")
+    mocker.patch(
+        "simtools.dependencies._distribution_version",
+        side_effect=lambda package: {"pip": "26.1.2", "astropy": "8.0.0", "numpy": "2.5.0"}.get(
+            package
+        ),
+    )
+    monkeypatch.setenv("SIMTOOLS_GIT_REVISION", "a" * 40)
+    monkeypatch.setenv("SIMTOOLS_BASE_IMAGE", "alma:9")
+    output = tmp_test_directory / "dependency-manifest.json"
+
+    write_development_dependency_manifest(output, project_file, [corsika_options, simtel_options])
+
+    manifest = json.loads(output.read_text(encoding="utf-8"))
+    assert manifest["simtools"] == {"revision": "a" * 40, "version": "not-installed"}
+    assert manifest["runtime"]["direct_python_dependencies"] == {
+        "astropy": "8.0.0",
+        "numpy": "2.5.0",
+    }
+    assert manifest["build_options"] == {
+        "corsika_version": "78010",
+        "simtel_version": "v2025-11-30-rc",
+    }
+    assert manifest["container"] == {"base_image": "alma:9"}
+    assert Path(str(output)).with_suffix(".json.sha256").is_file()
 
 
 def test_get_dependency_metadata(mocker):

@@ -54,9 +54,8 @@ RUN { \
 # Install the simtools development environment without installing simtools itself.
 WORKDIR /workdir
 COPY pyproject.toml /workdir/pyproject.toml
-COPY src/simtools/applications/dependency_versions.py /workdir/dependency_versions.py
-COPY tools/generate_development_manifest.py /workdir/generate_development_manifest.py
-RUN python"${PYTHON_VERSION}" /workdir/dependency_versions.py \
+COPY src /workdir/src
+RUN python"${PYTHON_VERSION}" /workdir/src/simtools/applications/dependency_versions.py \
       --pyproject /workdir/pyproject.toml --format python-requirements \
       --extras dev doc tests > /workdir/requirements-dev.txt && \
     python"${PYTHON_VERSION}" -m venv env && \
@@ -67,7 +66,12 @@ RUN python"${PYTHON_VERSION}" /workdir/dependency_versions.py \
       SIMTOOLS_BASE_IMAGE="${BASE_IMAGE}" \
       SIMTOOLS_CORSIKA_IMAGE="${CORSIKA_IMAGE}" \
       SIMTOOLS_SIMTEL_IMAGE="${SIMTEL_IMAGE}" \
-      python /workdir/generate_development_manifest.py && \
+      PYTHONPATH=/workdir/src python -m simtools.applications.dependency_manifest \
+        --development \
+        --project_file /workdir/pyproject.toml \
+        --build_option_files \
+          /workdir/simulation_software/corsika7/build_opts.yml \
+          /workdir/simulation_software/sim_telarray/build_opts.yml && \
     echo ". /workdir/env/bin/activate" >> /root/.bashrc && \
     mkdir -p /workdir/external
 

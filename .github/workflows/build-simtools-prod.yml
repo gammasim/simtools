@@ -12,10 +12,10 @@ on:
       - docker/Dockerfile-simtools-prod
       - pyproject.toml
       - src/simtools/applications/dependency_versions.py
+      - src/simtools/applications/dependency_manifest.py
       - src/simtools/dependencies.py
       - src/simtools/schemas/dependency_manifest.schema.yml
       - src/simtools/schemas/dependency_versions.schema.yml
-      - tools/generate_dependency_manifest.py
   release:
     types: [published]
   schedule:
