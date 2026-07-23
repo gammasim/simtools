@@ -329,6 +329,20 @@ def _get_submit_script(args_dict, params_fields=None):
         )
         overwrite_parameters_argument = '"${overwrite_model_parameters_args[@]}"'
 
+    transition_energy_block = ""
+    transition_energy_argument = ""
+    if "corsika_hadronic_transition_energy" in params_fields:
+        transition_energy_block = (
+            "corsika_hadronic_transition_energy="
+            f'"{bash_indices["corsika_hadronic_transition_energy"]}"\n'
+            "corsika_hadronic_transition_energy_args=()\n"
+            'if [ -n "$corsika_hadronic_transition_energy" ]; then\n'
+            "    corsika_hadronic_transition_energy_args+=(--corsika_hadronic_transition_energy "
+            '"$corsika_hadronic_transition_energy")\n'
+            "fi\n"
+        )
+        transition_energy_argument = '"${corsika_hadronic_transition_energy_args[@]}"'
+
     telescope_block = ""
     telescope_argument = ""
     if "telescope" in params_fields:
@@ -368,12 +382,6 @@ def _get_submit_script(args_dict, params_fields=None):
     ):
         command_parts.append(f'--{field} "{bash_indices[field]}"')
 
-    if "corsika_hadronic_transition_energy" in params_fields:
-        command_parts.append(
-            "--corsika_hadronic_transition_energy "
-            f'"{bash_indices["corsika_hadronic_transition_energy"]}"'
-        )
-
     command_parts.extend(
         [
             f"--energy_range {energy_range_string}",
@@ -385,6 +393,8 @@ def _get_submit_script(args_dict, params_fields=None):
     )
     if args_dict.get("save_file_lists"):
         command_parts.append("--save_file_lists")
+    if transition_energy_argument:
+        command_parts.append(transition_energy_argument.rstrip())
     if telescope_argument:
         command_parts.append(telescope_argument.rstrip())
     if overwrite_parameters_argument:
@@ -403,6 +413,7 @@ def _get_submit_script(args_dict, params_fields=None):
         'set -a; source "$1"',
         f'job_label="{job_label}"',
         scan_label_block.rstrip(),
+        transition_energy_block.rstrip(),
         overwrite_parameters_block.rstrip(),
         telescope_block.rstrip(),
         "",

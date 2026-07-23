@@ -480,7 +480,14 @@ def test_get_submit_script_with_optional_queue_fields():
 
     script = htg._get_submit_script(submit_args, params_fields=params_fields)
 
-    assert '--corsika_hadronic_transition_energy "${18}"' in script
+    assert 'corsika_hadronic_transition_energy="${18}"' in script
+    assert "corsika_hadronic_transition_energy_args=()" in script
+    assert (
+        "corsika_hadronic_transition_energy_args+=(--corsika_hadronic_transition_energy "
+        '"$corsika_hadronic_transition_energy")'
+    ) in script
+    assert '    "${corsika_hadronic_transition_energy_args[@]}" \\' in script
+    assert '--corsika_hadronic_transition_energy "${18}"' not in script
     assert 'overwrite_model_parameters="${19}"' in script
     assert "overwrite_model_parameters_args=()" in script
     assert (
