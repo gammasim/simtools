@@ -12,7 +12,7 @@
 
 ARG CORSIKA_VERSION="78010"
 ARG CORSIKA_OPT_PATCH_VERSION="v1.1.0"
-ARG CORSIKA_CONFIG_VERSION="v0.1.0"
+ARG CORSIKA_CONFIG_VERSION="v1.0.0"
 ARG AVX_FLAG="avx2"
 ARG ALMALINUX_VERSION="9.8"
 ARG CONTAINER_USER="simtools"
@@ -48,8 +48,11 @@ RUN git config --global advice.detachedHead false && \
 # Clone CORSIKA from KIT gitlab (note change in version tag format: e.g., v7.8010)
 RUN --mount=type=secret,id=corsika7_token \
     CORSIKA7_TAG="v$(echo "${CORSIKA_VERSION}" | cut -c1).$(echo "${CORSIKA_VERSION}" | cut -c2-)" && \
+    CORSIKA_AUTH=$(printf "oauth2:%s" "$(cat /run/secrets/corsika7_token)" | base64 -w 0) && \
     git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${CORSIKA7_TAG}" "https://oauth2:$(cat /run/secrets/corsika7_token)@${CORSIKA_REPO}"
+    git -c http.extraHeader="Authorization: Basic ${CORSIKA_AUTH}" \
+        clone --depth 1 --branch "${CORSIKA7_TAG}" "https://${CORSIKA_REPO}" && \
+    rm -rf corsika7/.git
 
 # Clone CORSIKA optimization patches from CTAO gitlab
 RUN git config --global advice.detachedHead false && \
@@ -78,6 +81,7 @@ RUN yum update -y --setopt=tsflags=nodocs && \
 WORKDIR /workdir/simulation_software
 COPY --from=source_preparation /src .
 COPY --from=source_preparation /src/corsika7/bernlohr/iact.c /tmp/iact.c
+COPY docker/validate_corsika7_build.sh /usr/local/bin/validate_corsika7_build
 
 # Install autoconf 2.71 - needed to apply CORSIKA patches
 WORKDIR /workdir/simulation_software/autoconf-2.71
@@ -96,36 +100,47 @@ RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
     fi
 
 # Build all CORSIKA versions (each config*.h file results in one build)
-RUN ls ../config_*.h && for config_file in ../config_*.h; do \
-        ./coconut -d && rm -f ./*/*.a lib/*/*.a include/*.h && \
-        # Extract variant name (curved/flat) from config file name
+RUN set -e; ls ../config_*.h; for config_file in ../config_*.h; do \
+        ./coconut -d && rm -f ./*/*.a lib/*/*.a include/*.h \
+            ./run/corsika"${CORSIKA_VERSION}"Linux_* && \
+        # Extract variant and model names from config file name
         variant=$(basename "$config_file" .h | sed 's/.*_\(curved\|flat\)$/\1/'); \
+        he_model=$(basename "$config_file" .h | sed 's/^config_\([^_]*\)_.*/\1/'); \
         # CTAO specific CORSIKA configuration
         cp -v "$config_file" include/config.h; \
         # compilation flags (with or without optimization)
         AVX_EXTRA_FLAG=$([ "$AVX_FLAG" = "avx512f" ] && echo "-ffp-contract=off" || echo "") && \
+        optimization="generic"; \
         if [ "$AVX_FLAG" = "generic" ] || [ "$variant" = "curved" ]; then \
             BASE_FLAGS="-g -O3"; \
         # Optimization config options
         else \
+            optimization="$AVX_FLAG"; \
             BASE_FLAGS="-g -DCERENKOPT -DVLIBM -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
-            echo "#define __CERENKOPT__ 1" >> include/config.h; \
-            echo "#define __VLIBM__ 1" >> include/config.h; \
-            echo "#define __CACHE_CERENKOPT__" >> include/config.h; \
-            echo "#define __CACHE_VLIBM__" >> include/config.h; \
+            { \
+                echo "#define __CERENKOPT__ 1"; \
+                echo "#define __VLIBM__ 1"; \
+                echo "#define __CACHE_CERENKOPT__"; \
+                echo "#define __CACHE_VLIBM__"; \
+            } >> include/config.h; \
         fi && \
-        CFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" && \
-        CXXFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" && \
-        FFLAGS="${BASE_FLAGS} ${FORTRAN_SPECIFIC_FLAGS}" && \
+        export CFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" \
+            CXXFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" \
+            FFLAGS="${BASE_FLAGS} ${FORTRAN_SPECIFIC_FLAGS}" && \
         CORSIKA_USER_COMP=1 ./coconut --expert --without-root --without-COASTUSERLIB --without-conex < /dev/null; \
-        # cleanup and move built corsika binary and compile file to a separate directory
+        # Require exactly one newly built executable before moving it
+        set -- ./run/corsika"${CORSIKA_VERSION}"Linux_*; \
+        if [ "$#" -ne 1 ] || [ ! -x "$1" ]; then exit 1; fi; \
         rm -v -f ./run/qgsdat-II-04 && \
         CORSIKA_RUN_DIR="/workdir/corsika-run" && \
-        mkdir -p ${CORSIKA_RUN_DIR} && \
+        mkdir -p "$CORSIKA_RUN_DIR" && \
         corsika_name=$(basename "$config_file" .h | sed 's/^config_/corsika_/'); \
-        mv -v -f "./run/corsika${CORSIKA_VERSION}Linux_"* "${CORSIKA_RUN_DIR}/${corsika_name}" && \
+        mv -v "$1" "${CORSIKA_RUN_DIR}/${corsika_name}" && \
+        validate_corsika7_build include/config.h "${CORSIKA_RUN_DIR}/${corsika_name}" \
+            "$CORSIKA_VERSION" "$he_model" "$variant" "$optimization" "/tmp/${corsika_name}" && \
+        rm -rf -- "/tmp/${corsika_name}" && \
         # NUCNUCS table required to be in same directory as executables
-        cp -v -f ./run/NUCNUCCS ${CORSIKA_RUN_DIR}/; \
+        cp -v -f ./run/NUCNUCCS "$CORSIKA_RUN_DIR/"; \
     done
 
 # Generate build_opts.yml with build information
@@ -148,12 +163,19 @@ RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
         he_model=$(echo "$basename_file" | sed 's/^config_\([^_]*\)_.*/\1/'); \
         le_model=$(echo "$basename_file" | sed 's/^config_[^_]*_\([^_]*\)_.*/\1/'); \
         variant=$(echo "$basename_file" | sed 's/.*_\(curved\|flat\)$/\1/'); \
+        optimization="$AVX_FLAG"; \
+        if [ "$AVX_FLAG" = "generic" ] || [ "$variant" = "curved" ]; then \
+            optimization="generic"; \
+        fi; \
         { \
             echo "  - executable: \"${corsika_name}\""; \
             echo "    config: \"${basename_file}\""; \
             echo "    atmosphere_geometry: \"${variant}\""; \
             echo "    he_hadronic_model: \"${he_model}\""; \
             echo "    le_hadronic_model: \"${le_model}\""; \
+            echo "    optimization: \"${optimization}\""; \
+            echo "    cerenkopt: $([ "$optimization" = "generic" ] && echo false || echo true)"; \
+            echo "    vlibm: $([ "$optimization" = "generic" ] && echo false || echo true)"; \
         } >> ${CORSIKA_RUN_DIR}/build_opts.yml; \
     done
 
