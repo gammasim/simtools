@@ -159,7 +159,7 @@ def _build_environment(env):
     if env:
         for key, value in env.items():
             sub_process_env[key] = value
-    logger.debug(f"Setting environment variables for job execution: {sub_process_env}")
+    logger.debug(f"Setting environment overrides for job execution: {env or {}}")
     return sub_process_env
 
 

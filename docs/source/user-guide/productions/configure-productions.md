@@ -19,7 +19,7 @@ the simulated phase space. A review of the generated grid is required before sub
 The production context includes:
 
 - the site, model version, and array layout;
-- the primary particles and CORSIKA interaction models;
+- the primary particles, CORSIKA interaction models, and hadronic transition energy;
 - the simulation energy range, core scatter, and view cone;
 - whether the pointing grid is horizontal (`azimuth`/`zenith`) or hour-angle (`ha`/`dec`);
 - the source-offset grid points;
@@ -33,8 +33,10 @@ exact software versions used by a production are identified from the image tag, 
 notes, and generated run logs.
 
 Some parameters are normally production-policy settings rather than per-production tuning knobs.
-Examples are `simulation_software` and `curved_atmosphere_min_zenith_angle`. These parameters
-normally remain at their defaults unless the production definition explicitly requires otherwise.
+Examples are `simulation_software`, `curved_atmosphere_min_zenith_angle`, and
+`corsika_hadronic_transition_energy`. An explicitly configured transition energy is written into
+every job-grid row; when omitted, the transition field is omitted and the selected CORSIKA
+executable retains its own behavior.
 
 ## Pointing Strategy
 
@@ -153,6 +155,7 @@ model_version: 7.0.0
 array_layout_name: LSTN-01
 corsika_le_interaction: urqmd
 corsika_he_interaction: epos
+corsika_hadronic_transition_energy: 80 GeV
 energy_range: 30 GeV 300 GeV
 core_scatter: 10 500 m
 view_cone: 0 deg 10 deg
