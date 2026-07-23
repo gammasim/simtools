@@ -90,7 +90,7 @@ def _contains_catalog(pyproject_path):
         with pyproject_path.open("rb") as file:
             data = tomllib.load(file)
         return _nested_value(data, CATALOG_KEYS) is not None
-    except OSError, tomllib.TOMLDecodeError:
+    except (OSError, tomllib.TOMLDecodeError):  # fmt: skip
         return False
 
 
