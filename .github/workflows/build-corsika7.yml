@@ -30,6 +30,8 @@ jobs:
 
     steps:
       - name: download-auxiliary-files
+        env:
+          CLOUD_AUTOCONF: ${{ secrets.CLOUD_AUTOCONF }}
         run: |
           if curl -L --fail \
             --retry 5 --retry-delay 10 --retry-connrefused \
@@ -43,7 +45,7 @@ jobs:
             curl -L --fail \
               --retry 5 --retry-delay 10 --retry-connrefused \
               --connect-timeout 30 \
-              "${{ env.CLOUD_URL }}/${{ secrets.CLOUD_AUTOCONF }}/download" \
+              "${{ env.CLOUD_URL }}/${CLOUD_AUTOCONF}/download" \
               -o autoconf.tar.gz
             echo "${{ env.AUTOCONF_SHA256 }}  autoconf.tar.gz" | sha256sum --check --strict
           fi
