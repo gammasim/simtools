@@ -4,6 +4,27 @@
 The following applications are for testing, maintenance or debugging the simulation model database and repository.
 Note that the remote primary production database is modified only by the simulation models GitLab CI.
 
+## Reading from files
+
+Applications can read the simulation model from a local directory instead of MongoDB:
+
+```console
+simtools-db-get-parameter-from-db \
+    --simulation_models_path /path/to/model-files \
+    --parameter camera_body_diameter \
+    --parameter_version 1.0.0 \
+    --site North \
+    --telescope LSTN-design
+```
+
+The supplied path must contain
+`simulation-models/productions` and `simulation-models/model_parameters`. When the option is set,
+the filesystem source takes precedence over MongoDB configuration. Production tables and referenced
+parameter files are cached for the process lifetime; unrelated parameter versions are not read.
+
+Filesystem access is read-only. Database inspection, index generation, uploads, and inserts
+require MongoDB and report an error if used with only `--simulation_models_path`.
+
 ## Simulation model database
 
 ### Inspecting the model database

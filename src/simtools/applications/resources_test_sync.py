@@ -4,60 +4,61 @@ r"""Compare, sync, and prune test resources from a versioned simtools-tests bund
 
 from pathlib import Path
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.testing import resource_sync
 
-_APPLICATION_ARG_DEFINITIONS = {
-    "test_directory": {
-        "type": Path,
-        "required": True,
-        "help": "Path to the simtools-tests bundle.",
-    },
-    "simtools_version": {
-        "required": True,
-        "help": "Version of the simtools-tests bundle.",
-    },
-    "sync": {
-        "action": "store_true",
-        "help": "Sync test resources from the simtools-tests bundle.",
-    },
-    "delete_missing": {
-        "action": "store_true",
-        "help": "List obsolete test resources that should be removed manually.",
-    },
-    "resources_path": {
-        "type": Path,
-        "default": Path("tests/resources"),
-        "help": "Destination test-resources directory.",
-    },
-    "exclude_static": {
-        "action": "store_true",
-        "default": False,
-        "help": "Skip static resources.",
-    },
-    "exclude_generated": {
-        "action": "store_true",
-        "default": False,
-        "help": "Skip generated resources.",
-    },
-    "exclude_downloaded": {
-        "action": "store_true",
-        "default": False,
-        "help": "Skip downloaded resources.",
-    },
-}
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "test_directory",
+        type=Path,
+        required=True,
+        help="Path to the simtools-tests bundle.",
+    ),
+    cli.ArgumentDefinition(
+        "simtools_version",
+        required=True,
+        help="Version of the simtools-tests bundle.",
+    ),
+    cli.ArgumentDefinition(
+        "sync",
+        action="store_true",
+        help="Sync test resources from the simtools-tests bundle.",
+    ),
+    cli.ArgumentDefinition(
+        "delete_missing",
+        action="store_true",
+        help="List obsolete test resources that should be removed manually.",
+    ),
+    cli.ArgumentDefinition(
+        "resources_path",
+        type=Path,
+        default=Path("tests/resources"),
+        help="Destination test-resources directory.",
+    ),
+    cli.ArgumentDefinition(
+        "exclude_static", action="store_true", default=False, help="Skip static resources."
+    ),
+    cli.ArgumentDefinition(
+        "exclude_generated", action="store_true", default=False, help="Skip generated resources."
+    ),
+    cli.ArgumentDefinition(
+        "exclude_downloaded", action="store_true", default=False, help="Skip downloaded resources."
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(*_ARGUMENTS,),
+    setup_io_handler=False,
+    resolve_sim_software_executables=False,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        application_argument_definitions=_APPLICATION_ARG_DEFINITIONS,
-        initialization_kwargs={"db_config": False, "paths": False},
-        startup_kwargs={
-            "setup_io_handler": False,
-            "resolve_sim_software_executables": False,
-        },
-    )
+    app_context = APPLICATION.start()
 
     resource_sync.sync_test_resources(app_context.args)
 

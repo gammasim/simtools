@@ -5,40 +5,91 @@ from unittest.mock import Mock, patch
 import pytest
 
 import simtools.applications.production_generate_grid as app
-from simtools.application_control import build_application_parser
+from simtools.configuration.commandline_parser import CommandLineParser
 
 
 def _parser():
-    return build_application_parser(
-        application_path=app.__file__,
-        description=app.__doc__,
-        application_argument_definitions=app._APPLICATION_ARG_DEFINITIONS,
-    )
+    parser = CommandLineParser()
+    parser.add_argument_definitions(app._GRID_ARGUMENTS)
+    return parser
+
+
+def _full_parser():
+    return app.APPLICATION.build_parser()
 
 
 @patch("simtools.applications.production_generate_grid.generate_job_grid")
-@patch("simtools.applications.production_generate_grid.build_application")
-def test_main_generates_job_grid(mock_build_application, mock_generate_job_grid):
+@patch("simtools.application.definition.ApplicationDefinition.start")
+def test_main_generates_job_grid(mock_start, mock_generate_job_grid):
     io_handler = Mock()
     io_handler.get_output_file.return_value = Path("job_grid.ecsv")
     args = {
         "output_file": "job_grid.ecsv",
         "run_number_offset": 10,
     }
-    mock_build_application.return_value = SimpleNamespace(args=args, io_handler=io_handler)
+    mock_start.return_value = SimpleNamespace(args=args, io_handler=io_handler)
     app.main()
 
-    mock_build_application.assert_called_once_with(
-        application_argument_definitions=app._APPLICATION_ARG_DEFINITIONS,
-        initialization_kwargs={
-            "db_config": True,
-            "preserve_by_version_keys": ["array_layout_name"],
-            "simulation_model": ["site", "layout", "telescope", "model_version"],
-            "simulation_configuration": {"software": None, "corsika_configuration": ["all"]},
-        },
-        startup_kwargs={"resolve_sim_software_executables": False},
-    )
     mock_generate_job_grid.assert_called_once_with(args, Path("job_grid.ecsv"))
+    mock_start.assert_called_once_with()
+
+
+def test_full_parser_retains_supported_shared_arguments():
+    parser = _full_parser()
+    actions = {action.dest: action for action in parser._actions}
+
+    expected = {
+        "array_layout_name",
+        "array_element_list",
+        "azimuth_angle",
+        "correct_for_b_field_alignment",
+        "core_scatter",
+        "curved_atmosphere_min_zenith_angle",
+        "data_path",
+        "energy_range",
+        "eslope",
+        "event_number_first_shower",
+        "ignore_missing_design_model",
+        "model_path",
+        "model_version",
+        "output_file",
+        "output_path",
+        "overwrite_model_parameters",
+        "primary",
+        "primary_id_type",
+        "run_number_offset",
+        "run_number",
+        "showers_per_run",
+        "site",
+        "telescope",
+        "view_cone",
+        "zenith_angle",
+    }
+    assert expected <= set(actions)
+    assert actions["output_file"].default == "job_grid.ecsv"
+    assert actions["output_file"].help == "Output ECSV production job grid."
+
+
+def test_full_parser_accepts_minimum_direct_configuration():
+    args = _full_parser().parse_args(
+        [
+            "--model_version",
+            "7.0.0",
+            "--site",
+            "North",
+            "--array_layout_name",
+            "LSTN-01",
+            "--primary",
+            "gamma",
+            "--showers_per_run",
+            "1000",
+        ]
+    )
+
+    assert args.model_version == ["7.0.0"]
+    assert args.site == "North"
+    assert args.array_layout_name == ["LSTN-01"]
+    assert args.output_file == "job_grid.ecsv"
 
 
 def test_add_arguments_accepts_compact_axis_definitions():

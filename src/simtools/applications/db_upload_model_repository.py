@@ -45,51 +45,57 @@ used to name the database, but no tag checkout is done):
 
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.constants import DEFAULT_SIMULATION_MODELS
 from simtools.db import db_handler, db_model_upload
 from simtools.settings import config
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--branch",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "branch",
         help="Repository branch to clone (optional, defaults to using version tag).",
         type=str,
         required=False,
-    )
-    parser.add_argument(
-        "--tmp_dir",
+    ),
+    cli.ArgumentDefinition(
+        "tmp_dir",
         help="Temporary directory for cloning the repository (default: ./tmp_model_parameters).",
         type=str,
         default="tmp_model_parameters",
         required=False,
-    )
-    parser.add_argument(
-        "--max_attempts",
+    ),
+    cli.ArgumentDefinition(
+        "max_attempts",
         help="Maximum number of attempts to clone the repository (default: 3).",
         type=int,
         default=3,
         required=False,
-    )
-    parser.add_argument(
-        "--repository_dir",
+    ),
+    cli.ArgumentDefinition(
+        "repository_dir",
         help="Path to existing simulation model repository directory (optional).",
         type=str,
         required=False,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    database=True,
+    initialize_output=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "output": True,
-            "require_command_line": True,
-            "db_config": True,
-        },
-    )
+    app_context = APPLICATION.start()
 
     if app_context.args.get("db_simulation_model_version"):
         app_context.db_config["db_simulation_model"] = app_context.args.get(
@@ -103,6 +109,7 @@ def main():
         raise ValueError("Setting of db_simulation_model_version is required.")
 
     db = db_handler.DatabaseHandler()
+    db.require_mongodb("Uploading a simulation model to a database")
     db.print_connection_info()
 
     db_model_upload.add_complete_model(

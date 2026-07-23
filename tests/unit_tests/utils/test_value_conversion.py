@@ -219,6 +219,21 @@ def test_normalize_dimensionless_unit():
     ]
 
 
+@pytest.mark.parametrize(
+    ("value", "unit", "expected"),
+    [
+        (1, "count", "ct"),
+        (1.0, "g/cm2", "g / cm2"),
+        ([0.3, 0.1, 0.02, 0.02], "GeV", "GeV"),
+        ([{"value": 580.0}], "g/cm2", "g/cm2"),
+        ([1, 2], ["null", "count"], [None, "count"]),
+        (1.0, None, None),
+    ],
+)
+def test_normalize_model_parameter_unit(value, unit, expected):
+    assert value_conversion.normalize_model_parameter_unit(value, unit) == expected
+
+
 def test_get_value_in_unit_converts_quantity():
     assert value_conversion.get_value_in_unit(180 * u.deg, "rad") == pytest.approx(np.pi)
 

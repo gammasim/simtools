@@ -55,67 +55,67 @@ Expected output is a ecsv file in the directory printed to the screen.
 """
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import add_input_meta_argument, build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.layout import array_layout
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--input",
-        help="list of array element positions",
-        required=True,
-    )
-    add_input_meta_argument(parser)
-    parser.add_argument(
-        "--print",
+_ARGUMENTS = (
+    cli.ArgumentDefinition("input", help="list of array element positions", required=True),
+    cli.ArgumentDefinition(
+        "input_meta", help="meta data file associated to input data", type=str, required=False
+    ),
+    cli.ArgumentDefinition(
+        "print",
         help="print list of positions in requested coordinate system",
         required=False,
         default="",
-        choices=[
-            "ground",
-            "utm",
-            "mercator",
-        ],
-    )
-    parser.add_argument(
-        "--export",
+        choices=["ground", "utm", "mercator"],
+    ),
+    cli.ArgumentDefinition(
+        "export",
         help="export array element list to file (in requested coordinate system)",
         required=False,
         default=None,
-        choices=[
-            "ground",
-            "utm",
-            "mercator",
-        ],
-    )
-    parser.add_argument(
-        "--select_assets",
+        choices=["ground", "utm", "mercator"],
+    ),
+    cli.ArgumentDefinition(
+        "select_assets",
         help="select a subset of assets (e.g., MSTN, LSTN)",
         required=False,
         default=None,
         nargs="+",
-    )
-    parser.add_argument(
-        "--skip_input_validation",
+    ),
+    cli.ArgumentDefinition(
+        "skip_input_validation",
         help="skip input data validation against schema",
         default=False,
         required=False,
         action="store_true",
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION,
+        cli.PARAMETER_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    database=True,
+    initialize_output=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "output": True,
-            "require_command_line": True,
-            "simulation_model": ["model_version", "parameter_version", "site"],
-        },
-    )
+    app_context = APPLICATION.start()
 
     if app_context.args.get("input", "").endswith(".json"):
         site = app_context.args.get("site", None)

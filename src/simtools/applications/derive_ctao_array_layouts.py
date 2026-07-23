@@ -42,7 +42,8 @@ r"""
             --updated_parameter_version 3.0.0
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.constants import DEFAULT_COMPUTING_REPO
 from simtools.db import db_handler
 from simtools.layout.array_layout_utils import (
@@ -51,38 +52,44 @@ from simtools.layout.array_layout_utils import (
     write_array_layouts,
 )
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--repository_url",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "repository_url",
         help="URL or path of the CTAO common identifiers repository.",
         type=str,
         default=f"{DEFAULT_COMPUTING_REPO}/common/identifiers/-/raw/",
-    )
-    parser.add_argument(
-        "--repository_branch",
+    ),
+    cli.ArgumentDefinition(
+        "repository_branch",
         help="Repository branch to use for CTAO common identifiers.",
         type=str,
         default="main",
         required=False,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION,
+        cli.PARAMETER_VERSION,
+        cli.UPDATED_PARAMETER_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    database=True,
+    initialize_output=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "output": True,
-            "simulation_model": [
-                "site",
-                "parameter_version",
-                "updated_parameter_version",
-                "model_version",
-            ],
-        },
-    )
+    app_context = APPLICATION.start()
 
     ctao_array_layouts, associated_data = retrieve_ctao_array_layouts(
         site=app_context.args["site"],

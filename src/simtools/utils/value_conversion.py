@@ -55,6 +55,28 @@ def normalize_dimensionless_unit(unit):
     return None if is_dimensionless_unit(unit) else unit
 
 
+def normalize_model_parameter_unit(value, unit):
+    """Normalize a model parameter unit for use by database consumers.
+
+    Parameters
+    ----------
+    value : object
+        Model parameter value associated with the unit.
+    unit : str, list, numpy.ndarray, or None
+        Unit representation to normalize.
+
+    Returns
+    -------
+    str, list, or None
+        Normalized unit. Scalar units are canonicalized for scalar values and
+        retained for list-valued parameters.
+    """
+    unit = normalize_dimensionless_unit(unit)
+    if unit is None or isinstance(value, list | np.ndarray) or isinstance(unit, list):
+        return unit
+    return u.Unit(unit).to_string()
+
+
 def extract_type_of_value(value):
     """
     Extract the string representation of the the type of a value.

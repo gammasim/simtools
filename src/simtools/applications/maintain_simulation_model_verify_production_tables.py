@@ -17,25 +17,29 @@ Example
 
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.model import model_repository
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--simulation_models_path",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "simulation_models_path",
         help="Path to the simulation models repository.",
         type=str,
         required=True,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(*_ARGUMENTS,),
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"db_config": False, "output": False, "paths": False},
-    )
+    app_context = APPLICATION.start()
 
     if not model_repository.verify_simulation_model_production_tables(
         simulation_models_path=app_context.args["simulation_models_path"]

@@ -28,33 +28,50 @@ r"""
 from pathlib import Path
 
 import simtools.utils.general as gen
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.db import db_handler
 from simtools.io import ascii_handler
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--file_name", help="file to be added", type=str)
-    group.add_argument(
-        "--input_path",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "file_name",
+        exclusive_group="group",
+        exclusive_group_required=True,
+        help="file to be added",
+        type=str,
+    ),
+    cli.ArgumentDefinition(
+        "input_path",
+        exclusive_group="group",
+        exclusive_group_required=True,
         help="A directory with json files to upload to the DB.",
         type=Path,
-    )
-    parser.add_argument(
-        "--db_collection", help="DB collection to which to add new values.", required=True
-    )
-    parser.add_argument(
-        "--test_db",
+    ),
+    cli.ArgumentDefinition(
+        "db_collection", help="DB collection to which to add new values.", required=True
+    ),
+    cli.ArgumentDefinition(
+        "test_db",
         help="Use sandbox database. Drop all data after the operation.",
         action="store_true",
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(initialization_kwargs={"db_config": True})
+    app_context = APPLICATION.start()
 
     if app_context.args.get("test_db", False):
         app_context.db_config["db_simulation_model_version"] = gen.get_uuid()
@@ -62,6 +79,7 @@ def main():
             f"Using test database version {app_context.db_config['db_simulation_model_version']}"
         )
     db = db_handler.DatabaseHandler()
+    db.require_mongodb("Adding parameters to a database")
 
     files_to_insert = []
     if app_context.args.get("file_name", None) is not None:

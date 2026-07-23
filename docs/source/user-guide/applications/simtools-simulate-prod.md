@@ -25,11 +25,27 @@ low- and high-energy models. If omitted, the selected CORSIKA build default is r
 
 ```{eval-rst}
 .. simtools-cli-help::
-   :module: simtools.applications.simulate_prod
+   :application: simulate_prod
    :no-heading:
 ```
 
 ## Examples
+
+To read the simulation model from files instead of MongoDB, pass the root directory containing
+the nested `simulation-models` directory:
+
+```console
+simtools-simulate-prod \
+    --simulation_models_path /path/to/model-files \
+    --model_version 7.0.0 \
+    --site North \
+    --array_layout_name CTAO-North-Alpha \
+    --simulation_software corsika_sim_telarray \
+    --config production.yml
+```
+
+The explicitly configured path takes precedence over MongoDB environment settings. Filesystem
+access is read-only.
 
 ```{eval-rst}
 .. simtools-integration-example::
