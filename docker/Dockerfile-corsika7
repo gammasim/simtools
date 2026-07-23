@@ -138,6 +138,7 @@ RUN set -e; ls ../config_*.h; for config_file in ../config_*.h; do \
         mv -v "$1" "${CORSIKA_RUN_DIR}/${corsika_name}" && \
         validate_corsika7_build include/config.h "${CORSIKA_RUN_DIR}/${corsika_name}" \
             "$CORSIKA_VERSION" "$he_model" "$variant" "$optimization" "/tmp/${corsika_name}" && \
+        rm -rf -- "/tmp/${corsika_name}" && \
         # NUCNUCS table required to be in same directory as executables
         cp -v -f ./run/NUCNUCCS "$CORSIKA_RUN_DIR/"; \
     done
