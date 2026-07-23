@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
-import argparse
-
 from simtools.applications import resources_test_sync
+from simtools.configuration.commandline_parser import CommandLineParser
 
 
 def test_add_arguments_exclude_flags_override_defaults():
-    parser = argparse.ArgumentParser()
-    for parameter, definition in resources_test_sync._APPLICATION_ARG_DEFINITIONS.items():
-        parser.add_argument(f"--{parameter}", **definition)
+    parser = CommandLineParser()
+    parser.add_argument_definitions(resources_test_sync._ARGUMENTS)
 
     args = parser.parse_args(
         [

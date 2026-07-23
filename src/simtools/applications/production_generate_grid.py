@@ -2,138 +2,166 @@
 
 r"""Generate a simulation production grid for a wide range of simulation parameters."""
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.configuration import defaults
-from simtools.configuration.commandline_argument_helpers import scientific_int
+from simtools.configuration.argument_helpers import scientific_int
 from simtools.production_configuration.simulation_jobs import (
     TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
     generate_job_grid,
 )
 
-_APPLICATION_ARG_DEFINITIONS = {
-    "axis": {
-        "action": "append",
-        "nargs": "+",
-        "help": (
-            "Compact axis definition: --axis <name> <min> <unit> <max> <unit> <binning> "
-            "[scaling]. May be repeated. Supported axes: azimuth, zenith, ha, dec, offset. "
-            "Options for scaling are: linear, log, 1/cos"
+_GRID_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "axis",
+        action="append",
+        nargs="+",
+        help=(
+            "Grid axis as NAME MIN UNIT MAX UNIT POINTS [SCALING]. Repeat for each axis. "
+            "Use azimuth/zenith or ha/dec, plus offset. SCALING is linear, log, or 1/cos."
         ),
-    },
-    "direction_grid_density": {
-        "nargs": "+",
-        "default": None,
-        "help": (
-            "Direction-grid density in 1/deg^2. If set, direction-axis binning is "
-            "derived from axis ranges and this density. With HA/Dec axes, use "
-            "local_zenith_range/local_azimuth_range to filter generated points."
+        metavar="AXIS",
+    ),
+    cli.ArgumentDefinition(
+        "direction_grid_density",
+        nargs="+",
+        default=None,
+        help="Direction-point density in deg^-2. Overrides POINTS for both direction axes.",
+        metavar="DENSITY",
+    ),
+    cli.ArgumentDefinition(
+        "local_zenith_range",
+        nargs="+",
+        default=None,
+        help="Accepted local zenith range for an HA/Dec density grid, e.g. 0 deg 70 deg.",
+        metavar="RANGE",
+    ),
+    cli.ArgumentDefinition(
+        "local_azimuth_range",
+        nargs="+",
+        default=None,
+        help=(
+            "Accepted local azimuth range for an HA/Dec density grid. Ranges may wrap through "
+            "0 deg."
         ),
-    },
-    "local_zenith_range": {
-        "nargs": "+",
-        "default": None,
-        "help": (
-            "Local zenith range (quantity pair) used to filter HA/Dec density points, "
-            "for example: --local_zenith_range 0 deg 70 deg"
+        metavar="RANGE",
+    ),
+    cli.ArgumentDefinition(
+        "output_file",
+        type=str,
+        default="job_grid.ecsv",
+        help="Output ECSV production job grid.",
+    ),
+    cli.ArgumentDefinition(
+        "corsika_limits",
+        type=str,
+        metavar="FILE",
+        help="ECSV lookup table of direction-dependent CORSIKA simulation limits.",
+    ),
+    cli.ArgumentDefinition(
+        "number_of_runs",
+        help="Runs generated per grid point and energy interval.",
+        type=scientific_int,
+        default=None,
+    ),
+    cli.ArgumentDefinition(
+        "total_showers",
+        help=(
+            "Target showers per grid point and energy interval; incompatible with --number_of_runs."
         ),
-    },
-    "local_azimuth_range": {
-        "nargs": "+",
-        "default": None,
-        "help": (
-            "Local azimuth range (quantity pair) used to filter HA/Dec density points, "
-            "for example: --local_azimuth_range 300 deg 60 deg"
+        type=scientific_int,
+        default=None,
+    ),
+    cli.ArgumentDefinition(
+        "total_showers_scaling",
+        help=(
+            "Total-shower zenith scaling. zenith_scaled applies "
+            "N * exp(factor * (cos(zenith) - 1))."
         ),
-    },
-    "output_file": {
-        "type": str,
-        "default": "job_grid.ecsv",
-        "help": "Output file for the generated executable job grid.",
-    },
-    "corsika_limits": {
-        "type": str,
-        "help": "Path to the lookup table for simulation limits.",
-    },
-    "number_of_runs": {
-        "help": "Number of runs to be simulated for each production grid point and energy range.",
-        "type": scientific_int,
-        "default": None,
-    },
-    "total_showers": {
-        "help": "Total number of showers to simulate per production grid point and energy range.",
-        "type": scientific_int,
-        "default": None,
-    },
-    "total_showers_scaling": {
-        "help": "Scaling mode for total showers.",
-        "type": str,
-        "choices": ["fixed", "zenith_scaled"],
-        "default": "fixed",
-    },
-    "zenith_angle_scaling_factor": {
-        "help": (
-            "Scaling factor for zenith-dependent total_showers scaling. "
-            "Used only when --total_showers_scaling is 'zenith_scaled'."
+        type=str,
+        choices=["fixed", "zenith_scaled"],
+        default="fixed",
+    ),
+    cli.ArgumentDefinition(
+        "zenith_angle_scaling_factor",
+        help="Factor in the zenith_scaled total-showers expression.",
+        type=float,
+        default=defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
+    ),
+    cli.ArgumentDefinition(
+        "max_total_showers_rounding_warnings",
+        help="Maximum warnings emitted when total_showers is rounded up to complete runs.",
+        type=scientific_int,
+        default=TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
+    ),
+    cli.ArgumentDefinition(
+        "showers_per_run_power_law",
+        help=(
+            "Scale showers per run by (E_mid / E_ref)^INDEX. Provide INDEX VALUE UNIT; "
+            "E_mid is the logarithmic energy-interval midpoint."
         ),
-        "type": float,
-        "default": defaults.ZENITH_ANGLE_SCALING_FACTOR_DEFAULT,
-    },
-    "max_total_showers_rounding_warnings": {
-        "help": (
-            "Maximum number of per-point warnings emitted when total_showers is "
-            "rounded up to keep equal showers per run."
+        nargs=3,
+        type=str,
+        metavar=("POWER_INDEX", "REFERENCE_ENERGY_VALUE", "REFERENCE_ENERGY_UNIT"),
+        default=None,
+    ),
+    cli.ArgumentDefinition(
+        "showers_per_run_scaling",
+        help="Showers-per-run zenith scaling. cosine_zenith applies ceil(N * cos(zenith)).",
+        type=str,
+        choices=["fixed", "cosine_zenith"],
+        default="fixed",
+    ),
+    cli.ArgumentDefinition(
+        "energy_max_scaling",
+        help=(
+            "Set the zenith-dependent maximum energy to VALUE * cos(zenith)^INDEX. "
+            "Provide INDEX VALUE UNIT; the configured energy-range maximum remains an upper bound."
         ),
-        "type": scientific_int,
-        "default": TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
-    },
-    "showers_per_run_power_law": {
-        "help": (
-            "Scale showers_per_run by (E_mid / E_ref) ** power_index using the bin midpoint: "
-            "<power_index> <reference_energy_value> <reference_energy_unit> "
-            "(for example: --showers_per_run_power_law -2.0 1 TeV)."
-        ),
-        "nargs": 3,
-        "type": str,
-        "metavar": ("POWER_INDEX", "REFERENCE_ENERGY_VALUE", "REFERENCE_ENERGY_UNIT"),
-        "default": None,
-    },
-    "showers_per_run_scaling": {
-        "help": (
-            "Zenith-angle scaling mode for showers_per_run: "
-            "'fixed' keeps the baseline value, "
-            "'cosine_zenith' applies showers_per_run * cos(zenith_angle)."
-        ),
-        "type": str,
-        "choices": ["fixed", "cosine_zenith"],
-        "default": "fixed",
-    },
-    "energy_max_scaling": {
-        "help": (
-            "Scale max energy with zenith angle as "
-            "energy_max_scaling_reference * cos(zenith_angle) ** power_index. "
-            "Provide: <power_index> <reference_energy_value> <reference_energy_unit> "
-            "(for example: --energy_max_scaling -2.5 300 TeV). "
-            "Max energy is limited by the configured energy_range."
-        ),
-        "nargs": 3,
-        "type": str,
-        "metavar": ("POWER_INDEX", "REFERENCE_ENERGY_VALUE", "REFERENCE_ENERGY_UNIT"),
-        "default": None,
-    },
-}
+        nargs=3,
+        type=str,
+        metavar=("POWER_INDEX", "REFERENCE_ENERGY_VALUE", "REFERENCE_ENERGY_UNIT"),
+        default=None,
+    ),
+)
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_GRID_ARGUMENTS,
+        cli.MODEL_VERSION(required=True),
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE(required=True),
+        cli.TELESCOPE,
+        *cli.layout_selection_arguments(),
+        cli.SIMULATION_SOFTWARE,
+        cli.PRIMARY,
+        cli.PRIMARY_ID_TYPE,
+        cli.AZIMUTH_ANGLE,
+        cli.ZENITH_ANGLE,
+        cli.SHOWERS_PER_RUN(required=True),
+        cli.RUN_NUMBER_OFFSET,
+        cli.RUN_NUMBER,
+        cli.EVENT_NUMBER_FIRST_SHOWER,
+        cli.CORRECT_FOR_B_FIELD_ALIGNMENT,
+        cli.CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE,
+        cli.ESLOPE,
+        cli.ENERGY_RANGE,
+        cli.VIEW_CONE,
+        cli.CORE_SCATTER,
+        cli.CORSIKA_HE_INTERACTION,
+        cli.CORSIKA_LE_INTERACTION,
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+    resolve_sim_software_executables=False,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        application_argument_definitions=_APPLICATION_ARG_DEFINITIONS,
-        initialization_kwargs={
-            "db_config": True,
-            "preserve_by_version_keys": ["array_layout_name"],
-            "simulation_model": ["site", "layout", "telescope", "model_version"],
-            "simulation_configuration": {"software": None, "corsika_configuration": ["all"]},
-        },
-    )
+    app_context = APPLICATION.start()
 
     generate_job_grid(
         app_context.args,

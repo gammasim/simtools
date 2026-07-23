@@ -10,7 +10,7 @@
 
 ```{eval-rst}
 .. simtools-cli-help::
-   :module: simtools.applications.resources_test_sync
+   :application: resources_test_sync
    :no-heading:
 ```
 

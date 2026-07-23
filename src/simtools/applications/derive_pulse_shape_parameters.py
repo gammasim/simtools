@@ -52,69 +52,81 @@ Derive parameters for a pulse with 2.5 ns rise (10-90%) and
 import logging
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.simtel.pulse_shapes import solve_sigma_tau_from_rise_fall
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--rise_width_ns",
-        help="Wdth on the rising edge in ns between rise_range fractions.",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "rise_width_ns",
+        help="Width on the rising edge in ns between rise_range fractions.",
         type=float,
         required=True,
-    )
-    parser.add_argument(
-        "--fall_width_ns",
+    ),
+    cli.ArgumentDefinition(
+        "fall_width_ns",
         help="Width on the falling edge in ns between fall_range fractions.",
         type=float,
         required=True,
-    )
-    parser.add_argument(
-        "--rise_range",
+    ),
+    cli.ArgumentDefinition(
+        "rise_range",
         help="Fractional amplitudes (low high) for rise width, e.g. 0.1 0.9",
         type=float,
         nargs=2,
         default=[0.1, 0.9],
         required=False,
-    )
-    parser.add_argument(
-        "--fall_range",
+    ),
+    cli.ArgumentDefinition(
+        "fall_range",
         help="Fractional amplitudes (high low) for fall width, e.g. 0.9 0.1",
         type=float,
         nargs=2,
         default=[0.9, 0.1],
         required=False,
-    )
-    parser.add_argument(
-        "--dt_ns",
+    ),
+    cli.ArgumentDefinition(
+        "dt_ns",
         help="Time sampling step in ns used by the solver.",
         type=float,
         default=0.1,
         required=False,
-    )
-    parser.add_argument(
-        "--time_margin_ns",
+    ),
+    cli.ArgumentDefinition(
+        "time_margin_ns",
         help=(
-            "Margin (ns) added to both ends of the instrument readout window when deriving the "
-            "internal time window."
+            "Margin (ns) added to both ends of the instrument readout window when deriving "
+            "the internal time window."
         ),
         type=float,
         default=10.0,
         required=False,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION,
+        cli.PARAMETER_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE,
+        cli.TELESCOPE,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    database=True,
+    initialize_output=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": ["site", "telescope", "model_version", "parameter_version"],
-            "output": True,
-        },
-    )
+    app_context = APPLICATION.start()
     log = logging.getLogger(__name__)
 
     rise_width_ns = app_context.args["rise_width_ns"]

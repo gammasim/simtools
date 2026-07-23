@@ -61,74 +61,71 @@ Example
 
 from pathlib import Path
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.simtel.bias_curve_generator import generate_bias_curves
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--data_dir",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "data_dir",
         type=Path,
         required=True,
         help="Directory containing both NSB logs/log_hist archives and proton simulation files.",
-    )
-
-    parser.add_argument(
-        "--output",
+    ),
+    cli.ArgumentDefinition(
+        "output",
         type=Path,
         default=Path("bias_curve.png"),
         help="Output plot file path or output directory. Default: bias_curve.png",
-    )
-
-    parser.add_argument(
-        "--nsb_output",
+    ),
+    cli.ArgumentDefinition(
+        "nsb_output",
         type=Path,
         required=False,
         help="Output ECSV table file for NSB trigger rates. If not specified, no table is written.",
-    )
-
-    parser.add_argument(
-        "--proton_output",
+    ),
+    cli.ArgumentDefinition(
+        "proton_output",
         type=Path,
         required=False,
         help="Output ECSV table file for proton rates. If not specified, no table is written.",
-    )
-
-    parser.add_argument(
-        "--title",
-        type=str,
-        default="Trigger Rate Bias Curves",
-        help="Plot title.",
-    )
-
-    parser.add_argument(
-        "--ymin",
+    ),
+    cli.ArgumentDefinition(
+        "title", type=str, default="Trigger Rate Bias Curves", help="Plot title."
+    ),
+    cli.ArgumentDefinition(
+        "ymin",
         type=float,
-        default=1e2,
+        default=100.0,
         help="Minimum trigger rate value for plotting. Default: 1e2",
-    )
-
-    parser.add_argument(
-        "--ymax",
+    ),
+    cli.ArgumentDefinition(
+        "ymax",
         type=float,
-        default=5e5,
+        default=500000.0,
         help="Maximum trigger rate value for plotting. Default: 5e5",
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE,
+        cli.TELESCOPE,
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": [
-                "telescope",
-                "site",
-                "model_version",
-            ],
-        },
-    )
+    app_context = APPLICATION.start()
 
     generate_bias_curves(app_context.args)
 

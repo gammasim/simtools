@@ -68,44 +68,47 @@ priority (int, optional)
 
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.job_execution import htcondor_script_generator
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--job_grid_file",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "job_grid_file",
         help="Path to a pre-generated executable job grid file.",
         type=str,
         required=True,
-    )
-    parser.add_argument(
-        "--priority",
-        help="Job priority.",
-        type=int,
-        required=False,
-        default=1,
-    )
-    parser.add_argument(
-        "--htcondor_log_path",
+    ),
+    cli.ArgumentDefinition("priority", help="Job priority.", type=int, required=False, default=1),
+    cli.ArgumentDefinition(
+        "htcondor_log_path",
         help="Directory for HTCondor output files (default: output_path/htcondor_logs).",
         type=str,
         required=False,
         default=None,
-    )
-    parser.add_argument(
-        "--simulation_output",
+    ),
+    cli.ArgumentDefinition(
+        "simulation_output",
         help="Output path for simulation data (default: ./simtools-output).",
         type=str,
         required=False,
         default="./simtools-output",
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+    ),
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application()
+    app_context = APPLICATION.start()
 
     htcondor_script_generator.generate_submission_script(app_context.args)
 

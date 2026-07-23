@@ -8,7 +8,7 @@ from simtools.configuration.commandline_parser import CommandLineParser
 
 def test_add_arguments_accepts_multi_pattern_and_binning_options():
     parser = CommandLineParser()
-    write_trigger_histograms._add_arguments(parser)
+    parser.add_argument_definitions(write_trigger_histograms._ARGUMENTS)
 
     args = parser.parse_args(
         [
@@ -30,7 +30,7 @@ def test_add_arguments_accepts_multi_pattern_and_binning_options():
 
 def test_add_arguments_uses_default_angular_distance_bin_width():
     parser = CommandLineParser()
-    write_trigger_histograms._add_arguments(parser)
+    parser.add_argument_definitions(write_trigger_histograms._ARGUMENTS)
 
     args = parser.parse_args(["--event_data_file", "a*.hdf5"])
 
@@ -39,7 +39,7 @@ def test_add_arguments_uses_default_angular_distance_bin_width():
 
 def test_add_arguments_accepts_max_workers():
     parser = CommandLineParser()
-    write_trigger_histograms._add_arguments(parser)
+    parser.add_argument_definitions(write_trigger_histograms._ARGUMENTS)
 
     args = parser.parse_args(["--event_data_file", "a*.hdf5", "--max_workers", "24"])
 

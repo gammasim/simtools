@@ -23,38 +23,37 @@ Example
 
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.io import ascii_handler
 from simtools.simtel import simtel_validate_metadata
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--output_file",
-        help="Output file name",
-        type=str,
-        required=False,
-    )
-    parser.add_argument(
-        "--source_type",
+_ARGUMENTS = (
+    cli.ArgumentDefinition("output_file", help="Output file name", type=str, required=False),
+    cli.ArgumentDefinition(
+        "source_type",
         help="Metadata source type to export",
         choices=simtel_validate_metadata.META_PARAMETER_SOURCE_TYPES,
         default="all",
-    )
-    parser.add_argument(
-        "--schema_version",
-        help="Registry schema version",
-        type=str,
-        required=False,
-    )
+    ),
+    cli.ArgumentDefinition(
+        "schema_version", help="Registry schema version", type=str, required=False
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+    ),
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"output": False, "require_command_line": True},
-    )
+    app_context = APPLICATION.start()
 
     registry = simtel_validate_metadata.get_meta_parameter_registry(
         schema_version=app_context.args.get("schema_version"),

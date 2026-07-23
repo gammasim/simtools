@@ -21,7 +21,7 @@ def test_main_loads_precomputed_trigger_histograms_and_plots(tmp_test_directory)
 
     with (
         patch(
-            "simtools.applications.plot_simulated_event_distributions.build_application",
+            "simtools.application.definition.ApplicationDefinition.start",
             return_value=app_context,
         ),
         patch(
@@ -53,7 +53,7 @@ def test_main_raises_for_missing_array_layout(tmp_test_directory):
 
     with (
         patch(
-            "simtools.applications.plot_simulated_event_distributions.build_application",
+            "simtools.application.definition.ApplicationDefinition.start",
             return_value=app_context,
         ),
         patch(

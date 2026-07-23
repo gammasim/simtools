@@ -73,46 +73,56 @@ Example of a secondary mirror incident angle plot for a SST:
 
 import astropy.units as u
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.ray_tracing.incident_angles import IncidentAnglesCalculator
 from simtools.visualization.plot_incident_angles import plot_incident_angles
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.initialize_argument_group(
-        "application", ["off_axis_angles", "source_distance", "number_of_photons"]
-    )
-    parser.add_argument(
-        "--perfect_mirror",
+_ARGUMENTS = (
+    cli.OFF_AXIS_ANGLES,
+    cli.SOURCE_DISTANCE,
+    cli.NUMBER_OF_PHOTONS,
+    cli.ArgumentDefinition(
+        "perfect_mirror",
         help="Assume perfect mirror shape/alignment/reflection",
         action="store_true",
         required=False,
-    )
-    parser.add_argument(
-        "--debug_plots",
+    ),
+    cli.ArgumentDefinition(
+        "debug_plots",
         dest="debug_plots",
         help="Generate additional debug plots (radius histograms, XY heatmaps, radius vs angle)",
         action="store_true",
         required=False,
-    )
-    parser.add_argument(
-        "--calculate_primary_secondary_angles",
+    ),
+    cli.ArgumentDefinition(
+        "calculate_primary_secondary_angles",
         dest="calculate_primary_secondary_angles",
         help="Compute angles of incidence on primary and secondary mirrors",
         required=False,
         action="store_true",
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE,
+        cli.TELESCOPE,
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": ["telescope", "site", "model_version"],
-        },
-    )
+    app_context = APPLICATION.start()
 
     app_context.logger.info("Starting derivation of incident angles")
 

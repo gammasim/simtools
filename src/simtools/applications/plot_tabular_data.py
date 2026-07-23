@@ -24,44 +24,54 @@ Plot tabular data using a configuration file.
 """
 
 import simtools.utils.general as gen
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.constants import PLOT_CONFIG_SCHEMA
 from simtools.data_model import schema
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import ascii_handler
 from simtools.visualization import plot_tables
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--plot_config",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "plot_config",
         help="Plotting configuration file name.",
         type=str,
         required=True,
         default=None,
-    )
-    parser.add_argument(
-        "--table_data_path",
+    ),
+    cli.ArgumentDefinition(
+        "table_data_path",
         help="Path to the data files (optional). Expect all files to be in the same directory.",
         type=str,
         default=None,
-    )
-    parser.add_argument(
-        "--output_file",
-        help="Output file name (without suffix)",
-        type=str,
-        required=True,
-    )
+    ),
+    cli.ArgumentDefinition(
+        "output_file", help="Output file name (without suffix)", type=str, required=True
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE,
+        cli.TELESCOPE,
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+    usage=(
+        "simtools-plot-tabular-data --plot_config config_file_name --output_file output_file_name"
+    ),
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        usage="""simtools-plot-tabular-data --plot_config config_file_name "
-                 --output_file output_file_name""",
-        initialization_kwargs={"db_config": True, "simulation_model": ["telescope"]},
-    )
+    app_context = APPLICATION.start()
 
     plot_config = gen.convert_keys_in_dict_to_lowercase(
         schema.validate_dict_using_schema(

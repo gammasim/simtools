@@ -27,15 +27,27 @@ Example
 
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.reporting.docs_production_summary import write_production_summary_markdown
+
+_ARGUMENTS = ()
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    initialize_output=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"output": True, "require_command_line": True},
-    )
+    app_context = APPLICATION.start()
 
     output_file = app_context.args.get("output_file")
     if output_file is None:

@@ -8,7 +8,7 @@ from simtools.configuration.commandline_parser import CommandLineParser
 
 def test_add_arguments_accepts_radius_override_and_energy_ranges():
     parser = CommandLineParser()
-    production_derive_monte_carlo_statistics._add_arguments(parser)
+    parser.add_argument_definitions(production_derive_monte_carlo_statistics._ARGUMENTS)
 
     args = parser.parse_args(
         [
@@ -40,7 +40,7 @@ def test_add_arguments_accepts_radius_override_and_energy_ranges():
 
 def test_add_arguments_accepts_target_triggered_events():
     parser = CommandLineParser()
-    production_derive_monte_carlo_statistics._add_arguments(parser)
+    parser.add_argument_definitions(production_derive_monte_carlo_statistics._ARGUMENTS)
 
     args = parser.parse_args(
         [
@@ -58,7 +58,7 @@ def test_add_arguments_accepts_target_triggered_events():
 
 def test_add_arguments_accepts_scientific_notation_target_triggered_events():
     parser = CommandLineParser()
-    production_derive_monte_carlo_statistics._add_arguments(parser)
+    parser.add_argument_definitions(production_derive_monte_carlo_statistics._ARGUMENTS)
 
     args = parser.parse_args(
         [

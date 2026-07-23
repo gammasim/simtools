@@ -30,7 +30,7 @@ The application reads and writes the following user-visible files:
 
 ```{eval-rst}
 .. simtools-cli-help::
-   :module: simtools.applications.production_generate_grid
+   :application: production_generate_grid
    :no-heading:
 ```
 

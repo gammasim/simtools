@@ -20,7 +20,7 @@ directly to sim_telarray using the sim_telarray multipipe mechanism.
 
 ```{eval-rst}
 .. simtools-cli-help::
-   :module: simtools.applications.simulate_prod
+   :application: simulate_prod
    :no-heading:
 ```
 

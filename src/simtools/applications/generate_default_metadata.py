@@ -21,32 +21,36 @@ r"""
 
     """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.data_model import metadata_model
 from simtools.io import ascii_handler
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--schema",
-        help="schema file describing input data",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "--output_file",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "schema", help="schema file describing input data", type=str, required=True
+    ),
+    cli.ArgumentDefinition(
+        "output_file",
         help="output file name (if not given: print to stdout)",
         type=str,
         required=False,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+    ),
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"output": False, "require_command_line": True},
-    )
+    app_context = APPLICATION.start()
 
     default_values = metadata_model.get_default_metadata_dict(app_context.args["schema"])
 

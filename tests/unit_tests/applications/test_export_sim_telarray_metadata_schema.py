@@ -1,16 +1,16 @@
 #!/usr/bin/python3
 
-import argparse
 import json
 from types import SimpleNamespace
 
 from simtools.applications import export_sim_telarray_metadata_schema
+from simtools.configuration.commandline_parser import CommandLineParser
 
 
 def test_add_arguments_uses_suffix_based_output_format():
-    parser = argparse.ArgumentParser()
+    parser = CommandLineParser()
 
-    export_sim_telarray_metadata_schema._add_arguments(parser)
+    parser.add_argument_definitions(export_sim_telarray_metadata_schema._ARGUMENTS)
 
     args = parser.parse_args(["--output_file", "metadata.json"])
     assert args.output_file == "metadata.json"
@@ -30,7 +30,7 @@ def test_main_writes_registry_using_output_file_suffix(tmp_test_directory, mocke
         logger=SimpleNamespace(info=lambda _: None),
     )
     mocker.patch(
-        "simtools.applications.export_sim_telarray_metadata_schema.build_application",
+        "simtools.application.definition.ApplicationDefinition.start",
         return_value=app_context,
     )
     get_registry = mocker.patch(

@@ -36,83 +36,86 @@ r"""
 
 from pathlib import Path
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
 from simtools.camera.single_photon_electron_spectrum import SinglePhotonElectronSpectrum
+from simtools.configuration import arguments as cli
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--input_spectrum",
-        help="File with amplitude spectrum.",
-        type=Path,
-        required=True,
-    )
-    parser.add_argument(
-        "--afterpulse_spectrum",
-        help="File with afterpulse spectrum.",
-        type=Path,
-        required=False,
-    )
-    parser.add_argument(
-        "--step_size",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "input_spectrum", help="File with amplitude spectrum.", type=Path, required=True
+    ),
+    cli.ArgumentDefinition(
+        "afterpulse_spectrum", help="File with afterpulse spectrum.", type=Path, required=False
+    ),
+    cli.ArgumentDefinition(
+        "step_size",
         help="Step size in amplitude spectrum",
         type=float,
         default=0.02,
         required=False,
-    )
-    parser.add_argument(
-        "--max_amplitude",
+    ),
+    cli.ArgumentDefinition(
+        "max_amplitude",
         help="Maximum amplitude for single p.e. for amplitude spectrum",
         type=float,
         default=42.0,
         required=False,
-    )
-    parser.add_argument(
-        "--scale_afterpulse_spectrum",
+    ),
+    cli.ArgumentDefinition(
+        "scale_afterpulse_spectrum",
         help="Scale afterpulse spectrum by the given factor",
         type=float,
         default=1.0,
         required=False,
-    )
-    parser.add_argument(
-        "--afterpulse_amplitude_range",
+    ),
+    cli.ArgumentDefinition(
+        "afterpulse_amplitude_range",
         help="Amplitude range in pe for afterpulse calculation",
         type=float,
         nargs=2,
         default=[0.0, 42.0],
         required=False,
-    )
-    parser.add_argument(
-        "--fit_afterpulse",
+    ),
+    cli.ArgumentDefinition(
+        "fit_afterpulse",
         help="Fit afterpulse spectrum with an exponential decay function.",
         action="store_true",
         required=False,
-    )
-    parser.add_argument(
-        "--afterpulse_decay_factor_fixed_value",
+    ),
+    cli.ArgumentDefinition(
+        "afterpulse_decay_factor_fixed_value",
         help="Fix decay factor in afterpulse fit (free fit parameter if not set set).",
         type=float,
         default=15.0,
         required=False,
-    )
-    parser.add_argument(
-        "--use_norm_spe",
+    ),
+    cli.ArgumentDefinition(
+        "use_norm_spe",
         help="Use sim_telarray tool 'norm_spe' to normalize the spectrum.",
         action="store_true",
         required=False,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE,
+        cli.TELESCOPE,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    initialize_output=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": False,
-            "output": True,
-            "simulation_model": ["telescope"],
-        },
-    )
+    app_context = APPLICATION.start()
 
     single_pe = SinglePhotonElectronSpectrum(app_context.args)
     single_pe.derive_single_pe_spectrum()

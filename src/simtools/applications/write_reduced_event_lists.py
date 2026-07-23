@@ -32,45 +32,55 @@ Write reduced event lists for a set of sim_telarray output files:
 
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.simulator import Simulator
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    input_group = parser.add_mutually_exclusive_group(required=True)
-    input_group.add_argument(
-        "--input_files",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "input_files",
+        exclusive_group="input group",
+        exclusive_group_required=True,
         nargs="+",
         help="sim_telarray output file(s) to process (e.g., '*.simtel.zst').",
-    )
-    input_group.add_argument(
-        "--input_file_list",
+    ),
+    cli.ArgumentDefinition(
+        "input_file_list",
+        exclusive_group="input group",
+        exclusive_group_required=True,
         help="Text file containing one sim_telarray output file per line.",
-    )
-    parser.add_argument(
-        "--files_per_reduced_event_file",
+    ),
+    cli.ArgumentDefinition(
+        "files_per_reduced_event_file",
         type=int,
         default=1,
         help="Number of input files combined into each reduced event file (default: 1).",
-    )
-    parser.add_argument(
-        "--max_workers",
+    ),
+    cli.ArgumentDefinition(
+        "max_workers",
         type=int,
         default=None,
         help=(
-            "Maximum number of parallel output-file workers. Default: 60%% of CPU cores; "
-            "use 1 for serial execution or 0 for all cores."
+            "Maximum parallel output-file workers. Default: 60%% of CPU cores; use 1 for "
+            "serial execution or 0 for all cores."
         ),
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+    ),
+    resolve_sim_software_executables=False,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"db_config": False},
-        startup_kwargs={"setup_io_handler": True, "resolve_sim_software_executables": False},
-    )
+    app_context = APPLICATION.start()
 
     Simulator.write_reduced_event_lists(
         input_files=app_context.args["input_files"],

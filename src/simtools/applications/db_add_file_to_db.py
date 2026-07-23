@@ -40,35 +40,41 @@ r"""
 from pathlib import Path
 
 import simtools.utils.general as gen
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.db import db_handler
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        "--file_name",
-        help=("The file name to upload. A list of files is also allowed."),
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "file_name",
+        exclusive_group="group",
+        exclusive_group_required=True,
+        help="The file name to upload. A list of files is also allowed.",
         type=str,
         nargs="+",
-    )
-    group.add_argument(
-        "--input_path",
-        help=("A directory with files to upload to the DB."),
+    ),
+    cli.ArgumentDefinition(
+        "input_path",
+        exclusive_group="group",
+        exclusive_group_required=True,
+        help="A directory with files to upload to the DB.",
         type=Path,
-    )
-
-    parser.add_argument(
-        "--db",
-        type=str,
-        help=("The database to insert the files to."),
-    )
-    parser.add_argument(
-        "--test_db",
+    ),
+    cli.ArgumentDefinition("db", type=str, help="The database to insert the files to."),
+    cli.ArgumentDefinition(
+        "test_db",
         help="Use sandbox database. Drop all data after the operation.",
         action="store_true",
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(*_ARGUMENTS,),
+    database=True,
+    setup_io_handler=False,
+)
 
 
 def collect_files_to_insert(args_dict, logger, db):
@@ -155,10 +161,7 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"paths": False, "db_config": True},
-        startup_kwargs={"setup_io_handler": False},
-    )
+    app_context = APPLICATION.start()
 
     db = db_handler.DatabaseHandler()
 

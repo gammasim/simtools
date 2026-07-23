@@ -134,23 +134,22 @@ are organized into per-production subdirectories when several productions are st
 histogram file.
 """
 
-from simtools.application_control import build_application
-from simtools.configuration.commandline_argument_helpers import efficiency_interval
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
+from simtools.configuration.argument_helpers import efficiency_interval
 from simtools.production_configuration.derive_corsika_limits import (
     generate_corsika_limits_grid,
 )
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--trigger_histogram_file",
-        help=("Precomputed trigger-histogram HDF5 file from simtools-write-trigger-histograms. "),
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "trigger_histogram_file",
+        help="Precomputed trigger-histogram HDF5 file from simtools-write-trigger-histograms. ",
         type=str,
         required=True,
-    )
-    parser.add_argument(
-        "--array_layout_name",
+    ),
+    cli.ArgumentDefinition(
+        "array_layout_name",
         help=(
             "Optional array layout name(s) to select from a precomputed trigger-histogram "
             "file. If omitted, derive limits for all layouts available in the file."
@@ -159,36 +158,35 @@ def _add_arguments(parser):
         type=str,
         required=False,
         default=None,
-    )
-    parser.add_argument(
-        "--allowed_losses",
+    ),
+    cli.ArgumentDefinition(
+        "allowed_losses",
         type=str,
         required=True,
         nargs="+",
         action="extend",
         metavar="AXIS,FRACTION,MIN_EVENTS",
         help=(
-            "Per-axis allowed losses as axis,fraction,min_events. Repeat this argument "
-            "for each axis using canonical names core_distance, angular_distance, "
-            "or use all to set both. "
-            "Example: --allowed_losses core_distance,1e-6,10"
+            "Per-axis allowed losses as axis,fraction,min_events. Repeat for each axis "
+            "using core_distance, angular_distance, or all to set both. Example: "
+            "--allowed_losses core_distance,1e-6,10"
         ),
-    )
-    parser.add_argument(
-        "--energy_threshold_fraction",
+    ),
+    cli.ArgumentDefinition(
+        "energy_threshold_fraction",
         help="Fraction of the stable energy-peak count used to derive ERANGE ",
         type=efficiency_interval,
         required=False,
         default=0.01,
-    )
-    parser.add_argument(
-        "--plot_histograms",
+    ),
+    cli.ArgumentDefinition(
+        "plot_histograms",
         help="Plot histograms of the event data.",
         action="store_true",
         default=False,
-    )
-    parser.add_argument(
-        "--differential_loss_bins_per_decade",
+    ),
+    cli.ArgumentDefinition(
+        "differential_loss_bins_per_decade",
         help=(
             "Number of differential energy bins per decade for per-bin limit computation. "
             "Set to 0 (default) to use integrated limits."
@@ -196,12 +194,24 @@ def _add_arguments(parser):
         type=int,
         required=False,
         default=0,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    initialize_output=True,
+)
 
 
 def main():
     """See CLI description."""
-    build_application(initialization_kwargs={"db_config": False, "output": True})
+    APPLICATION.start()
     generate_corsika_limits_grid()
 
 

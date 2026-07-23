@@ -65,44 +65,59 @@ r"""
 
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.ray_tracing.optics_validation import validate_optics
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.initialize_argument_group(
-        "application", ["source_distance", "zenith_angle", "max_offset", "offset_step"]
-    )
-    parser.add_argument(
-        "--offset_file",
-        help="Path to ECSV file with x, y offset columns (in degrees). "
-        "If provided, overrides max_offset and offset_step.",
+_ARGUMENTS = (
+    cli.SOURCE_DISTANCE,
+    cli.RAY_TRACING_ZENITH_ANGLE,
+    cli.MAX_OFFSET,
+    cli.OFFSET_STEP,
+    cli.ArgumentDefinition(
+        "offset_file",
+        help=(
+            "Path to ECSV file with x, y offset columns (in degrees). If provided, "
+            "overrides max_offset and offset_step."
+        ),
         type=str,
         default=None,
-    )
-    parser.add_argument(
-        "--offset_directions",
-        help="Cardinal directions for offset generation (comma-separated): N,S,E,W. "
-        "Only used with max_offset. Default: all four directions.",
+    ),
+    cli.ArgumentDefinition(
+        "offset_directions",
+        help=(
+            "Cardinal directions for offset generation (comma-separated): N,S,E,W. "
+            "Only used with max_offset. Default: all four directions."
+        ),
         type=str,
         default="N,S,E,W",
-    )
-    parser.add_argument(
-        "--plot_images",
+    ),
+    cli.ArgumentDefinition(
+        "plot_images",
         help="Produce a multiple pages pdf file with the image plots.",
         action="store_true",
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE,
+        cli.TELESCOPE,
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": ["telescope", "model_version"],
-        },
-    )
+    app_context = APPLICATION.start()
     validate_optics(app_context)
 
 

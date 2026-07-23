@@ -2,20 +2,29 @@
 
 r"""Produces a markdown file for calibration reports."""
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 
+_ARGUMENTS = (cli.ALL_MODEL_VERSIONS,)
 
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.initialize_application_argument_group(["all_model_versions"])
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"db_config": True, "simulation_model": ["model_version"]},
-    )
+    app_context = APPLICATION.start()
 
     output_path = app_context.io_handler.get_output_directory()
 

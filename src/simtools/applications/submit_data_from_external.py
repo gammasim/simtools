@@ -37,37 +37,39 @@ r"""
 """
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import add_input_meta_argument, build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.data_model import validate_data
 from simtools.data_model.metadata_collector import MetadataCollector
 
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "input_meta", help="meta data file associated to input data", type=str, required=False
+    ),
+    cli.ArgumentDefinition("input", help="input data file", type=str, required=True),
+    cli.ArgumentDefinition(
+        "schema", help="schema file describing input data", type=str, required=False
+    ),
+    cli.ArgumentDefinition(
+        "ignore_metadata", help="Ignore metadata", action="store_true", required=False
+    ),
+)
 
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    add_input_meta_argument(parser)
-    parser.add_argument(
-        "--input",
-        help="input data file",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "--schema",
-        help="schema file describing input data",
-        type=str,
-        required=False,
-    )
-    parser.add_argument(
-        "--ignore_metadata",
-        help="Ignore metadata",
-        action="store_true",
-        required=False,
-    )
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    initialize_output=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(initialization_kwargs={"output": True})
+    app_context = APPLICATION.start()
 
     _metadata = (
         None if app_context.args.get("ignore_metadata") else MetadataCollector(app_context.args)

@@ -63,34 +63,52 @@ Retrieve array-element positions including calibration elements.
 """
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.model.array_model import ArrayModel
 from simtools.model.site_model import SiteModel
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    input_group = parser.add_mutually_exclusive_group()
-    input_group.add_argument(
-        "--list_available_layouts",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "list_available_layouts",
+        exclusive_group="input group",
+        exclusive_group_required=False,
         help="List available layouts in the database.",
         action="store_true",
         required=False,
-    )
-    parser.add_argument(
-        "--include_calibration_array_elements",
+    ),
+    cli.ArgumentDefinition(
+        "include_calibration_array_elements",
         help="Include calibration array elements in output table.",
         action="store_true",
         required=False,
-    )
-    parser.add_argument(
-        "--coordinate_system",
+    ),
+    cli.ArgumentDefinition(
+        "coordinate_system",
         help="Coordinate system for the array layout.",
         type=str,
         required=False,
         default="ground",
         choices=["ground", "utm"],
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE,
+        *cli.layout_selection_arguments(required=False),
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    database=True,
+    initialize_output=True,
+)
 
 
 def _layout_from_db(args_dict):
@@ -121,13 +139,7 @@ def _layout_from_db(args_dict):
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": ["site", "layout", "model_version"],
-            "output": True,
-        },
-    )
+    app_context = APPLICATION.start()
 
     if app_context.args.get("list_available_layouts", False):
         if app_context.args.get("site", None) is None:

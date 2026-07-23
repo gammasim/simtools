@@ -89,6 +89,8 @@ nitpick_ignore = [
     ("py:class", "astropy.units.core.Unit"),
     ("py:class", "astropy.units.quantity.Quantity"),
     ("py:class", "collections.Counter"),
+    ("py:class", "collections.abc.Callable"),
+    ("py:class", "collections.abc.Mapping"),
     ("py:class", "logging.Logger"),
     ("py:class", "numpy.float64"),
     ("py:class", "numpy.ndarray"),

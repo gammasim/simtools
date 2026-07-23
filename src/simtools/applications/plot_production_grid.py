@@ -37,36 +37,47 @@ The output figure shows local Alt/Az (polar projection). The equatorial
 RA/Dec panel is added when RA/Dec columns are available in the grid file.
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.visualization.plot_production_grid import ProductionGridPlotter
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--grid_points_file",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "grid_points_file",
         type=str,
         required=True,
         help="Path to the ECSV file containing grid points.",
-    )
-    parser.add_argument(
-        "--plot_ra_dec_tracks",
+    ),
+    cli.ArgumentDefinition(
+        "plot_ra_dec_tracks",
         action="store_true",
         default=False,
         help="Plot manual or inferred RA/Dec guide tracks on the sky projection.",
-    )
-    parser.add_argument(
-        "--dec_values",
+    ),
+    cli.ArgumentDefinition(
+        "dec_values",
         nargs="+",
         type=float,
         default=None,
         help="Optional list of declination values in degrees to plot as manual tracks.",
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    initialize_output=True,
+)
 
 
 def main():
     """Run the ProductionGridPlotter."""
-    app_context = build_application(initialization_kwargs={"db_config": False, "output": True})
+    app_context = APPLICATION.start()
 
     plotter = ProductionGridPlotter(
         grid_points_file=app_context.args["grid_points_file"],

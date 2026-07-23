@@ -27,20 +27,19 @@ Generate plots from a precomputed trigger-histogram file:
         --output_path simtools_output
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.visualization import plot_simtel_event_histograms
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--trigger_histogram_file",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "trigger_histogram_file",
         help="Precomputed trigger-histogram HDF5 file from simtools-write-trigger-histograms.",
         type=str,
         required=True,
-    )
-    parser.add_argument(
-        "--array_layout_name",
+    ),
+    cli.ArgumentDefinition(
+        "array_layout_name",
         help=(
             "Optional array layout name to select from a precomputed trigger-histogram "
             "file. If omitted, plot all layouts available in the file."
@@ -48,14 +47,24 @@ def _add_arguments(parser):
         type=str,
         required=False,
         default=None,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    initialize_output=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"db_config": False, "output": True},
-    )
+    app_context = APPLICATION.start()
     output_dir = app_context.io_handler.get_output_directory()
 
     app_context.logger.info(

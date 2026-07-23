@@ -28,8 +28,9 @@ Estimate Monte Carlo statistics from a trigger-histogram file:
 
 """
 
-from simtools.application_control import build_application
-from simtools.configuration.commandline_argument_helpers import (
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
+from simtools.configuration.argument_helpers import (
     positive_quantity,
     scientific_int,
 )
@@ -37,18 +38,16 @@ from simtools.production_configuration.monte_carlo_statistics_estimator import (
     estimate_monte_carlo_statistics,
 )
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--trigger_histogram_file",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "trigger_histogram_file",
         required=True,
         type=str,
         dest="trigger_histogram_file",
         help="Path to the trigger-histogram file.",
-    )
-    parser.add_argument(
-        "--array_layout_name",
+    ),
+    cli.ArgumentDefinition(
+        "array_layout_name",
         help=(
             "Optional array layout name(s) to select from a precomputed trigger-histogram "
             "file. If omitted, derive limits for all layouts available in the file."
@@ -57,45 +56,47 @@ def _add_arguments(parser):
         type=str,
         required=False,
         default=None,
-    )
-    parser.add_argument(
-        "--spectral_index",
+    ),
+    cli.ArgumentDefinition(
+        "spectral_index",
         required=False,
         type=float,
         default=None,
         help=(
-            "Target power-law spectral index."
-            "Reweight the simulated energy "
-            "distribution from the source spectrum to this target spectrum."
+            "Target power-law spectral index. Reweight the simulated energy distribution "
+            "from the source spectrum to this target spectrum."
         ),
-    )
-    target_group = parser.add_mutually_exclusive_group(required=True)
-    target_group.add_argument(
-        "--target_relative_uncertainty",
+    ),
+    cli.ArgumentDefinition(
+        "target_relative_uncertainty",
+        exclusive_group="target group",
+        exclusive_group_required=True,
         type=float,
         help="Target relative statistical uncertainty for each relevant bin individually.",
-    )
-    target_group.add_argument(
-        "--target_triggered_events",
+    ),
+    cli.ArgumentDefinition(
+        "target_triggered_events",
+        exclusive_group="target group",
+        exclusive_group_required=True,
         type=scientific_int,
         help="Target total number of triggered events across the selected optimization range.",
-    )
-    parser.add_argument(
-        "--optimization_energy_min",
+    ),
+    cli.ArgumentDefinition(
+        "optimization_energy_min",
         required=False,
         type=positive_quantity("TeV"),
         default=None,
         help="Optional lower bound of the optimization range.",
-    )
-    parser.add_argument(
-        "--optimization_energy_max",
+    ),
+    cli.ArgumentDefinition(
+        "optimization_energy_max",
         required=False,
         type=positive_quantity("TeV"),
         default=None,
         help="Optional upper bound of the optimization range.",
-    )
-    parser.add_argument(
-        "--reduced_core_radius",
+    ),
+    cli.ArgumentDefinition(
+        "reduced_core_radius",
         required=False,
         type=positive_quantity("m"),
         default=None,
@@ -103,9 +104,9 @@ def _add_arguments(parser):
             "Optional reduced core scatter radius used for effective-area reporting "
             "(e.g., as derived from simtools-production-derive-corsika-limits)."
         ),
-    )
-    parser.add_argument(
-        "--reduced_view_cone_radius",
+    ),
+    cli.ArgumentDefinition(
+        "reduced_view_cone_radius",
         required=False,
         type=positive_quantity("deg"),
         default=None,
@@ -113,18 +114,30 @@ def _add_arguments(parser):
             "Optional reduced view-cone radius used for reporting required Monte Carlo "
             "statistics within a smaller angular cone."
         ),
-    )
-    parser.add_argument(
-        "--plot_diagnostics",
+    ),
+    cli.ArgumentDefinition(
+        "plot_diagnostics",
         help="Write diagnostic plots for expected events and relative uncertainty.",
         action="store_true",
         default=False,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    initialize_output=True,
+)
 
 
 def main():
     """Run the Monte Carlo statistics estimator CLI application."""
-    build_application(initialization_kwargs={"db_config": False, "output": True})
+    APPLICATION.start()
     estimate_monte_carlo_statistics()
 
 

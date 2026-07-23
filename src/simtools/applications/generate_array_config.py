@@ -25,18 +25,31 @@ North - 5.0.0:
 The output is saved in simtools-output/test/model.
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.model.array_model import ArrayModel
+
+_ARGUMENTS = ()
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE,
+        *cli.layout_selection_arguments(),
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": ["site", "layout", "model_version"],
-        },
-    )
+    app_context = APPLICATION.start()
 
     array_model = ArrayModel(
         label=app_context.args["label"],

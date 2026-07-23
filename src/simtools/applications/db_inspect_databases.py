@@ -9,26 +9,29 @@ db_name (str)
     Database name (use "all" for all databases)
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.db import db_handler
 
+_ARGUMENTS = (
+    cli.ArgumentDefinition("db_name", help="Database name", default="all", required=True),
+)
 
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--db_name",
-        help="Database name",
-        default="all",
-        required=True,
-    )
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+    setup_io_handler=False,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"db_config": True},
-        startup_kwargs={"setup_io_handler": False},
-    )
+    app_context = APPLICATION.start()
 
     db = db_handler.DatabaseHandler()
     # databases without internal databases we don't have rights to modify

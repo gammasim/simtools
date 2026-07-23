@@ -7,6 +7,7 @@ applications:
     - LSTN-01
     - MSTN-03
     label: test-flasher-direct-injection-lst-north
+    light_source_type: flat_fielding
     log_level: DEBUG
     model_version: 7.0.0
     number_of_events: 3
