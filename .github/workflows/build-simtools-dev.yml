@@ -40,7 +40,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - id: config
-        run: python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
+        run: |
+          python -m pip install packaging
+          python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
 
   build-simtools-dev:
     runs-on: ubuntu-latest

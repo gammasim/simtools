@@ -55,7 +55,8 @@ RUN { \
 WORKDIR /workdir
 COPY pyproject.toml /workdir/pyproject.toml
 COPY src /workdir/src
-RUN python"${PYTHON_VERSION}" /workdir/src/simtools/applications/dependency_versions.py \
+RUN python"${PYTHON_VERSION}" -m pip install --no-cache-dir packaging && \
+    python"${PYTHON_VERSION}" /workdir/src/simtools/applications/dependency_versions.py \
       --pyproject /workdir/pyproject.toml --format python-requirements \
       --extras dev doc tests > /workdir/requirements-dev.txt && \
     python"${PYTHON_VERSION}" -m venv env && \

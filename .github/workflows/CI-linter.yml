@@ -57,7 +57,7 @@ jobs:
 
       - name: Install and validate pyproject.toml
         run: |
-          pip install validate-pyproject
+          pip install validate-pyproject packaging
           validate-pyproject pyproject.toml
           python src/simtools/applications/dependency_versions.py --format summary
 
