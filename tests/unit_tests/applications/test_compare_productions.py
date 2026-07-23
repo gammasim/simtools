@@ -26,7 +26,7 @@ def test_main_collects_metrics_and_plots(tmp_test_directory):
 
     with (
         patch(
-            "simtools.applications.compare_productions.build_application",
+            "simtools.application.definition.ApplicationDefinition.start",
             return_value=app_context,
         ),
         patch(

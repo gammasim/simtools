@@ -11,7 +11,7 @@ from simtools.configuration.commandline_parser import CommandLineParser
 
 def test_add_arguments_parses_allowed_losses_and_defaults():
     parser = CommandLineParser()
-    production_derive_corsika_limits._add_arguments(parser)
+    parser.add_argument_definitions(production_derive_corsika_limits._ARGUMENTS)
 
     args = parser.parse_args(
         [
@@ -34,7 +34,7 @@ def test_main_builds_application_and_generates_limits():
 
     with (
         patch(
-            "simtools.applications.production_derive_corsika_limits.build_application",
+            "simtools.application.definition.ApplicationDefinition.start",
             return_value=app_context,
         ) as mock_build,
         patch(
@@ -43,10 +43,7 @@ def test_main_builds_application_and_generates_limits():
     ):
         production_derive_corsika_limits.main()
 
-    mock_build.assert_called_once_with(
-        initialization_kwargs={
-            "db_config": False,
-            "output": True,
-        }
-    )
+    mock_build.assert_called_once_with()
+    assert production_derive_corsika_limits.APPLICATION.database is False
+    assert production_derive_corsika_limits.APPLICATION.initialize_output is True
     mock_generate.assert_called_once_with()

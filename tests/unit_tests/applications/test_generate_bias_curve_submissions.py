@@ -30,7 +30,7 @@ def _required_arguments():
 
 def test_add_arguments_uses_bias_curve_defaults():
     parser = CommandLineParser()
-    app._add_arguments(parser)
+    parser.add_argument_definitions(app._ARGUMENTS)
 
     args = parser.parse_args(_required_arguments())
 
@@ -44,7 +44,7 @@ def test_add_arguments_uses_bias_curve_defaults():
 
 def test_add_arguments_accepts_custom_bias_curve_values():
     parser = CommandLineParser()
-    app._add_arguments(parser)
+    parser.add_argument_definitions(app._ARGUMENTS)
 
     args = parser.parse_args(
         [
