@@ -99,6 +99,7 @@ def test_export_multipipe_script(corsika_simtel_runner, simtel_command, show_all
         assert "-C telescope_theta=20" in script_content
         assert "-C telescope_phi=0" in script_content
         assert show_all in script_content
+        assert "zstd >" not in script_content
 
     # Test second call
     corsika_simtel_runner._export_multipipe_script(run_number=1)
@@ -110,6 +111,26 @@ def test_export_multipipe_script(corsika_simtel_runner, simtel_command, show_all
         # For calibration runs, we should see noise settings
         if corsika_simtel_runner.base_corsika_config.is_calibration_run():
             assert "-C fadc_lg_noise=0.0" in script_content
+
+
+def test_export_multipipe_script_saves_corsika_output(corsika_config_mock_array_model):
+    runner = CorsikaSimtelRunner(
+        corsika_config=corsika_config_mock_array_model,
+        label="test-corsika-simtel-runner",
+        save_corsika_output=True,
+    )
+
+    runner._export_multipipe_script(run_number=1)
+
+    script = runner.runner_service.get_file_name("multi_pipe_config", run_number=1)
+    corsika_output = runner.corsika_runner.runner_service.get_file_name(
+        "corsika_output", run_number=1
+    )
+    with open(script) as file:
+        script_content = file.read()
+
+    assert script_content.count("zstd >") == 1
+    assert f"zstd > {corsika_output}" in script_content
 
 
 def test_write_multipipe_script(corsika_simtel_runner):

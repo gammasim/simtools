@@ -181,6 +181,9 @@ class Simulator:
             )
         if runner_class is corsika_simtel_runner.CorsikaSimtelRunner:
             runner_args["sequential"] = settings.config.args.get("sequential", False)
+            runner_args["save_corsika_output"] = settings.config.args.get(
+                "save_corsika_output", False
+            )
 
         return runner_class(**runner_args)
 
@@ -582,6 +585,11 @@ class Simulator:
         simtools_log_file = general.get_simtools_log_file()
         histogram_files = general.ensure_list(self.get_files(file_type="sim_telarray_histogram"))
         corsika_log_files = general.ensure_list(self.get_files(file_type="corsika_log"))
+        corsika_output_files = (
+            general.ensure_list(self.get_files(file_type="corsika_output"))
+            if settings.config.args.get("save_corsika_output")
+            else []
+        )
         reduced_event_files = (
             general.ensure_list(self.get_files(file_type="sim_telarray_event_data"))
             if settings.config.args.get("save_reduced_event_lists")
@@ -615,7 +623,7 @@ class Simulator:
             ):
                 shutil.copyfileobj(file_in, file_out)
 
-        for file_to_move in output_files + reduced_event_files:
+        for file_to_move in output_files + reduced_event_files + corsika_output_files:
             destination_file = directory_for_grid_upload / Path(file_to_move).name
             if destination_file.exists():
                 self.logger.warning(f"Overwriting existing file: {destination_file}")
@@ -705,6 +713,7 @@ class Simulator:
             corsika_output_validator.validate_corsika_output(
                 data_files=self.get_files(file_type="corsika_output")
                 if self.simulation_software == "corsika"
+                or settings.config.args.get("save_corsika_output")
                 else None,
                 log_files=self.get_files(file_type="corsika_log"),
                 expected_shower_events=expected_shower_events,

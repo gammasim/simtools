@@ -37,6 +37,16 @@ _ARGUMENTS = (
         default=False,
     ),
     cli.ArgumentDefinition(
+        "save_corsika_output",
+        help=(
+            "Save CORSIKA output when piping CORSIKA directly to sim_telarray "
+            "(only relevant for simulation software 'corsika_sim_telarray')."
+        ),
+        action="store_true",
+        required=False,
+        default=False,
+    ),
+    cli.ArgumentDefinition(
         "save_reduced_event_lists",
         help=(
             "Save reduced event lists with event data on simulated and triggered events. "

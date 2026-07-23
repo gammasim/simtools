@@ -338,6 +338,7 @@ def test_pack_for_register_with_multiple_versions(
     args_dict = copy.deepcopy(simulations_args_dict)
     args_dict["simulation_software"] = "corsika_sim_telarray"
     args_dict["label"] = "local-test-shower-array-simulator"
+    args_dict["save_corsika_output"] = True
     model_versions = ["5.0.0", "6.0.1"]
     args_dict["model_version"] = model_versions
 
@@ -377,6 +378,7 @@ def test_pack_for_register_with_multiple_versions(
         "output": "output_file_{}_simtel.zst",
         "log": "log_file_{}_simtel.log.gz",
         "corsika_log": "log_file_corsika_{}.log.gz",
+        "corsika_output": "output_file_corsika_{}.corsika.zst",
         "histogram": "hist_file_{}_hist_log.zst",
     }
 
@@ -387,6 +389,8 @@ def test_pack_for_register_with_multiple_versions(
             return [file_patterns["log"].format(v) for v in model_versions]
         if file_type == "corsika_log":
             return [file_patterns["corsika_log"].format(model_versions[0])]
+        if file_type == "corsika_output":
+            return [file_patterns["corsika_output"].format(model_versions[0])]
         if file_type == "sim_telarray_histogram":
             return [file_patterns["histogram"].format(v) for v in model_versions]
         if file_type == "sim_telarray_event_data":
@@ -418,6 +422,12 @@ def test_pack_for_register_with_multiple_versions(
             directory_for_grid_upload / Path(file_patterns["log"].format(version)),
         )
 
+    corsika_output = file_patterns["corsika_output"].format(model_versions[0])
+    shutil.move.assert_any_call(
+        corsika_output,
+        directory_for_grid_upload / Path(corsika_output),
+    )
+
 
 @pytest.mark.parametrize(
     ("fixture_name", "expected_software"),
@@ -434,6 +444,16 @@ def test_initialize_simulation_runner(fixture_name, expected_software, request):
     simulation_runner = simulator._initialize_simulation_runner()
     assert simulation_runner is not None
     assert simulator.simulation_software == expected_software
+
+
+def test_initialize_simulation_runner_saves_corsika_output(shower_array_simulator, mocker):
+    mock_config = mocker.patch("simtools.simulator.settings.config")
+    mock_config.args = {"save_corsika_output": True, "sequential": True}
+    runner_class = mocker.patch("simtools.runners.corsika_simtel_runner.CorsikaSimtelRunner")
+
+    shower_array_simulator._initialize_simulation_runner()
+
+    assert runner_class.call_args.kwargs["save_corsika_output"] is True
 
 
 def test_save_reduced_event_lists_not_sim_telarray(shower_simulator, caplog):
@@ -1308,7 +1328,17 @@ def test_validate_simulations_corsika(shower_simulator, mocker):
     mock_simtel_validator.assert_not_called()
 
 
-def test_validate_simulations_corsika_sim_telarray(shower_array_simulator, mocker, caplog):
+@pytest.mark.parametrize(
+    ("save_corsika_output", "expected_corsika_data_files"),
+    [(False, None), (True, ["output_file.corsika.zst"])],
+)
+def test_validate_simulations_corsika_sim_telarray(
+    shower_array_simulator,
+    mocker,
+    caplog,
+    save_corsika_output,
+    expected_corsika_data_files,
+):
     """Test validate_simulations for corsika_sim_telarray simulations."""
     mock_corsika_config = mocker.Mock()
     mock_corsika_config.shower_events = 1500
@@ -1329,6 +1359,7 @@ def test_validate_simulations_corsika_sim_telarray(shower_array_simulator, mocke
     mock_simtel_output_files = ["output_file.simtel.zst"]
     mock_simtel_log_files = ["log_file.log.gz"]
     mock_corsika_log_files = ["corsika_run_001.log"]
+    mock_corsika_output_files = ["output_file.corsika.zst"]
 
     mocker.patch.object(
         shower_array_simulator,
@@ -1337,8 +1368,11 @@ def test_validate_simulations_corsika_sim_telarray(shower_array_simulator, mocke
             "sim_telarray_output": mock_simtel_output_files,
             "sim_telarray_log": mock_simtel_log_files,
             "corsika_log": mock_corsika_log_files,
+            "corsika_output": mock_corsika_output_files,
         }.get(file_type, []),
     )
+    mock_config = mocker.patch("simtools.simulator.settings.config")
+    mock_config.args = {"save_corsika_output": save_corsika_output}
 
     with caplog.at_level(logging.INFO):
         shower_array_simulator.validate_simulations()
@@ -1347,7 +1381,12 @@ def test_validate_simulations_corsika_sim_telarray(shower_array_simulator, mocke
     assert "750 MC events and 1500 shower events" in caplog.text
 
     mock_simtel_validator.assert_called_once()
-    mock_corsika_validator.assert_called_once()
+    mock_corsika_validator.assert_called_once_with(
+        data_files=expected_corsika_data_files,
+        log_files=mock_corsika_log_files,
+        expected_shower_events=1500,
+        curved_atmo=False,
+    )
 
 
 def test_validate_simulations_with_reduced_event_lists(array_simulator, mocker, caplog):
