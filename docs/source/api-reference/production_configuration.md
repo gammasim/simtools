@@ -81,6 +81,15 @@ related production-configuration helpers used by the supported workflows.
    :members:
 ```
 
+(job-metadata)=
+
+## job_metadata
+
+```{eval-rst}
+.. automodule:: production_configuration.job_metadata
+   :members:
+```
+
 (job-generation-summary)=
 
 ## job_generation_summary
