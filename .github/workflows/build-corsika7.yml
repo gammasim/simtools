@@ -54,7 +54,7 @@ jobs:
           AUTOCONF_VERSION: ${{ needs.dependency-config.outputs.autoconf_version }}
           AUTOCONF_SHA256: ${{ needs.dependency-config.outputs.autoconf_sha256 }}
         run: |
-          if curl -L --fail \
+          if curl -L --fail --proto '=https' --proto-redir '=https' \
             --retry 5 --retry-delay 10 --retry-connrefused \
             --connect-timeout 30 \
             "https://ftp.gnu.org/gnu/autoconf/autoconf-${AUTOCONF_VERSION}.tar.gz" \
@@ -63,7 +63,7 @@ jobs:
             echo "Downloaded autoconf from GNU."
           else
             echo "GNU download failed; trying the DESY cloud backup."
-            curl -L --fail \
+            curl -L --fail --proto '=https' --proto-redir '=https' \
               --retry 5 --retry-delay 10 --retry-connrefused \
               --connect-timeout 30 \
               "${{ env.CLOUD_URL }}/${CLOUD_AUTOCONF}/download" \
