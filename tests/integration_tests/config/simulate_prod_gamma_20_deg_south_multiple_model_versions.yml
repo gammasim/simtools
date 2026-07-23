@@ -23,6 +23,7 @@ applications:
     primary: 1
     primary_id_type: corsika7_id
     run_number: 1
+    save_corsika_output: true
     save_reduced_event_lists: true
     sim_telarray_seed: [1745, 290]
     simulation_software: corsika_sim_telarray
@@ -47,6 +48,8 @@ applications:
       file: gamma_run000001_za20deg_azm180deg_South_CTAO-South-Alpha_6.0.2_multiple_model_versions.simtel.zst
       path_descriptor: grid_output_path
     - file: gamma_run000001_za20deg_azm180deg_South_CTAO-South-Alpha_6.0.2_multiple_model_versions.reduced_event_data.hdf5
+      path_descriptor: grid_output_path
+    - file: gamma_run000001_za20deg_azm180deg_South_CTAO-South-Alpha_6.0.2_multiple_model_versions.corsika.zst
       path_descriptor: grid_output_path
     - file: gamma_run000001_za20deg_azm180deg_South_CTAO-South-Alpha_6.1_multiple_model_versions.simtel.log.gz
       path_descriptor: grid_output_path
