@@ -13,7 +13,7 @@ configuration file directory in the `simtools-tests` repository.
 
 ```{eval-rst}
 .. simtools-cli-help::
-   :module: simtools.applications.resources_test_generate
+   :application: resources_test_generate
    :no-heading:
 ```
 

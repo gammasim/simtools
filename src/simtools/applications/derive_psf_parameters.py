@@ -109,85 +109,98 @@ r"""
 
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing import psf_parameter_optimisation as psf_opt
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.initialize_application_argument_group(["source_distance", "zenith_angle", "data"])
-    parser.add_argument(
-        "--plot_all",
+_ARGUMENTS = (
+    cli.SOURCE_DISTANCE,
+    cli.RAY_TRACING_ZENITH_ANGLE,
+    cli.DATA,
+    cli.ArgumentDefinition(
+        "plot_all",
         help=(
-            "On: plot cumulative PSF for all tested combinations, "
-            "Off: plot it only for the best set of values"
+            "On: plot cumulative PSF for all tested combinations, Off: plot it only for "
+            "the best set of values"
         ),
         action="store_true",
-    )
-    parser.add_argument(
-        "--write_psf_parameters",
-        help=("Write the optimized PSF parameters as simulation model parameter files"),
+    ),
+    cli.ArgumentDefinition(
+        "write_psf_parameters",
+        help="Write the optimized PSF parameters as simulation model parameter files",
         action="store_true",
         required=False,
-    )
-    parser.add_argument(
-        "--rmsd_threshold",
+    ),
+    cli.ArgumentDefinition(
+        "rmsd_threshold",
         help=(
             "RMSD threshold for gradient descent convergence "
             "(not used with --monte_carlo_analysis)."
         ),
         type=float,
         default=0.01,
-    )
-    parser.add_argument(
-        "--learning_rate",
+    ),
+    cli.ArgumentDefinition(
+        "learning_rate",
         help=(
             "Learning rate for gradient descent optimization "
             "(not used with --monte_carlo_analysis)."
         ),
         type=float,
         default=0.0001,
-    )
-    parser.add_argument(
-        "--max_iterations",
+    ),
+    cli.ArgumentDefinition(
+        "max_iterations",
         help=(
             "Maximum number of gradient descent iterations (not used with --monte_carlo_analysis)."
         ),
         type=int,
         default=200,
-    )
-    parser.add_argument(
-        "--monte_carlo_analysis",
+    ),
+    cli.ArgumentDefinition(
+        "monte_carlo_analysis",
         help="Run analysis to find monte carlo uncertainties.",
         action="store_true",
-    )
-    parser.add_argument(
-        "--ks_statistic",
+    ),
+    cli.ArgumentDefinition(
+        "ks_statistic",
         help="Use KS statistic for monte carlo uncertainty analysis.",
         action="store_true",
-    )
-    parser.add_argument(
-        "--fraction",
+    ),
+    cli.ArgumentDefinition(
+        "fraction",
         help="PSF containment fraction for diameter calculation (e.g., 0.8 for D80, 0.95 for D95).",
         type=float,
         default=0.8,
-    )
-    parser.add_argument(
-        "--cleanup",
+    ),
+    cli.ArgumentDefinition(
+        "cleanup",
         help="Remove intermediate *.log and *.lis* files after optimization.",
         action="store_true",
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION,
+        cli.PARAMETER_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE,
+        cli.TELESCOPE,
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": ["telescope", "model_version", "parameter_version"],
-        },
-    )
+    app_context = APPLICATION.start()
 
     tel_model, site_model, _ = initialize_simulation_models(
         label=app_context.args.get("label"),

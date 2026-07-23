@@ -33,27 +33,37 @@
 
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.db import db_handler
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--file_name",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "file_name",
         help="The name of the file(s) to be downloaded (single file or space-separated list).",
         type=str,
         nargs="+",
         required=True,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    database=True,
+    initialize_output=True,
+    usage="simtools-get-file-from-db --file_name mirror_CTA-S-LST_v2020-04-07.dat",
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        usage="simtools-get-file-from-db --file_name mirror_CTA-S-LST_v2020-04-07.dat",
-        initialization_kwargs={"db_config": True, "output": True},
-    )
+    app_context = APPLICATION.start()
 
     db = db_handler.DatabaseHandler()
     try:
@@ -63,11 +73,11 @@ def main():
         )
     except FileNotFoundError as exc:
         raise FileNotFoundError(
-            f"The file {app_context.args['file_name']} was not found in {db.db_name}."
+            f"The file {app_context.args['file_name']} was not found in {db.model_source_name}."
         ) from exc
 
     app_context.logger.info(
-        f"Got file {app_context.args['file_name']} from DB {db.db_name} "
+        f"Got file {app_context.args['file_name']} from {db.model_source_name} "
         f"and saved into {app_context.io_handler.get_output_directory()}"
     )
 

@@ -13,7 +13,7 @@ from astropy import units as u
 from astropy.coordinates import EarthLocation
 
 from simtools.configuration import defaults
-from simtools.configuration.commandline_argument_helpers import parse_quantity_pair
+from simtools.configuration.argument_helpers import parse_quantity_pair
 from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.model.site_model import SiteModel
 from simtools.production_configuration.angle_ranges import (

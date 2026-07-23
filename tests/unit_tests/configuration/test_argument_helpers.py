@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+"""Unit tests for command-line argument helpers."""
+
 import argparse
 import logging
 
@@ -7,8 +9,9 @@ import astropy.units as u
 import pytest
 from astropy.tests.helper import assert_quantity_allclose
 
-import simtools.configuration.commandline_argument_helpers as helpers
+import simtools.configuration.argument_helpers as helpers
 import simtools.configuration.commandline_parser as parser
+from simtools.configuration.arguments import ENERGY_RANGE, PRIMARY
 
 
 def test_scientific_int():
@@ -285,9 +288,7 @@ def test_string_or_dict():
 
 def test_one_or_many_action():
     test_parser = parser.CommandLineParser()
-    test_parser.initialize_default_arguments(
-        simulation_configuration={"software": None, "corsika_configuration": ["primary"]}
-    )
+    test_parser.add_argument_definitions((PRIMARY,))
 
     args = test_parser.parse_args(["--primary", "gamma"])
     assert args.primary == "gamma"
@@ -300,9 +301,7 @@ def test_one_or_many_action():
 
 def test_quantity_pair_action():
     test_parser = parser.CommandLineParser()
-    test_parser.initialize_default_arguments(
-        simulation_configuration={"software": None, "corsika_configuration": ["energy_range"]}
-    )
+    test_parser.add_argument_definitions((ENERGY_RANGE,))
 
     args = test_parser.parse_args(["--energy_range", "30 GeV 300 GeV"])
     assert len(args.energy_range) == 2

@@ -1,4 +1,4 @@
-"""Reusable argparse helpers for command-line parsing."""
+"""Command-line argument conversion and validation helpers."""
 
 import argparse
 import ast

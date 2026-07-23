@@ -22,24 +22,35 @@ Example
        --output_path simtools-output
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.data_model import data_reader
 from simtools.visualization.plot_corsika_limits import plot_limits
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--input",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "input",
         type=str,
         required=True,
         help="Path to a merged CORSIKA limits table in ECSV format.",
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    initialize_output=True,
+)
 
 
 def main():
     """Run CORSIKA limits plotting."""
-    app_context = build_application(initialization_kwargs={"output": True})
+    app_context = APPLICATION.start()
 
     plot_limits(
         data_reader.read_table_from_file(app_context.args["input"]),

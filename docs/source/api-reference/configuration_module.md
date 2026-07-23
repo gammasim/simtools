@@ -9,7 +9,7 @@ Reference documentation for the configuration of simtools applications.
 ## configurator
 
 ```{eval-rst}
-.. automodule:: configuration.configurator
+.. automodule:: simtools.configuration.configurator
    :members:
 ```
 
@@ -18,34 +18,33 @@ Reference documentation for the configuration of simtools applications.
 ## commandline_parser
 
 ```{eval-rst}
-.. automodule:: configuration.commandline_parser
+.. automodule:: simtools.configuration.commandline_parser
    :members:
 ```
 
-(configurationcommandline-parameters)=
+(configuration-arguments)=
 
-## commandline_parameters
+## arguments
 
 ```{eval-rst}
-.. automodule:: configuration.commandline_parameters
+.. automodule:: simtools.configuration.arguments
    :members:
 ```
 
-(configurationcommandline-argument-helpers)=
+(configuration-argument-helpers)=
 
-## commandline_argument_helpers
+## argument_helpers
 
 ```{eval-rst}
-.. automodule:: configuration.commandline_argument_helpers
+.. automodule:: simtools.configuration.argument_helpers
    :members:
 ```
-
 
 (configurationdefaults)=
 
 ## defaults
 
 ```{eval-rst}
-.. automodule:: configuration.defaults
+.. automodule:: simtools.configuration.defaults
    :members:
 ```

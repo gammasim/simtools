@@ -47,40 +47,49 @@ r"""
 
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.visualization.plot_camera import plot_camera_pixel_layout_from_args
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--camera_in_sky_coor",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "camera_in_sky_coor",
         help=(
             "Plot the camera layout in sky coordinates "
-            "(akin to looking at it from behind for single mirror telescopes)"
+            "(akin to looking at it from behind for single-mirror telescopes)"
         ),
         action="store_true",
         default=False,
-    )
-    parser.add_argument(
-        "--print_pixels_id",
+    ),
+    cli.ArgumentDefinition(
+        "print_pixels_id",
         help=(
-            "Up to which pixel ID to print. "
-            "To suppress printing of pixel IDs, set to zero (--print_pixels_id 0). "
-            "To print all pixels, set to 'All'."
+            "Highest pixel ID to print. Use zero (--print_pixels_id 0) to suppress pixel "
+            "IDs, or 'All' to print every pixel."
         ),
         default=50,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE,
+        cli.TELESCOPE,
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": ["telescope", "model_version"],
-        },
-    )
+    app_context = APPLICATION.start()
     plot_camera_pixel_layout_from_args(app_context)
 
 

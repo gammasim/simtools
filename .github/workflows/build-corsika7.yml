@@ -14,6 +14,8 @@ on:
       - pyproject.toml
       - src/simtools/dependency_versions.py
       - src/simtools/schemas/dependency_versions.schema.yml
+      - docker/validate_corsika7_build.sh
+      - .github/workflows/build-corsika7.yml
   schedule:
     - cron: '0 0 1 * *'  # Every 1st day of the month at 00:00 UTC (build only)
 
@@ -21,7 +23,8 @@ permissions: {}
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  AUTOCONF_URL: "https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz"
+  AUTOCONF_SHA256: "431075ad0bf529ef13cb41e9042c542381103e80015686222b8a9d4abef42a1c"
   CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
 jobs:
@@ -45,8 +48,25 @@ jobs:
 
     steps:
       - name: download-auxiliary-files
+        env:
+          CLOUD_AUTOCONF: ${{ secrets.CLOUD_AUTOCONF }}
         run: |
-          wget --no-verbose ${{ env.CLOUD_URL }}/${{ secrets.CLOUD_AUTOCONF }}/download -O autoconf.tar.gz
+          if curl -L --fail \
+            --retry 5 --retry-delay 10 --retry-connrefused \
+            --connect-timeout 30 \
+            "${{ env.AUTOCONF_URL }}" \
+            -o autoconf.tar.gz && \
+            echo "${{ env.AUTOCONF_SHA256 }}  autoconf.tar.gz" | sha256sum --check --strict; then
+            echo "Downloaded autoconf from GNU."
+          else
+            echo "GNU download failed; trying the DESY cloud backup."
+            curl -L --fail \
+              --retry 5 --retry-delay 10 --retry-connrefused \
+              --connect-timeout 30 \
+              "${{ env.CLOUD_URL }}/${CLOUD_AUTOCONF}/download" \
+              -o autoconf.tar.gz
+            echo "${{ env.AUTOCONF_SHA256 }}  autoconf.tar.gz" | sha256sum --check --strict
+          fi
       - name: upload-auxiliary-files
         uses: actions/upload-artifact@v7
         with:
@@ -56,6 +76,7 @@ jobs:
           retention-days: 1
 
   build-corsika7:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     needs: [dependency-config, download-auxiliary-files]
     permissions:
@@ -82,6 +103,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Log in to the Container registry
+        if: github.event_name == 'workflow_dispatch'
         uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}

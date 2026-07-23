@@ -34,7 +34,7 @@ def test_main_reads_table_and_plots(tmp_test_directory):
 
     with (
         patch(
-            "simtools.applications.plot_corsika_limits.build_application",
+            "simtools.application.definition.ApplicationDefinition.start",
             return_value=app_context,
         ),
         patch(

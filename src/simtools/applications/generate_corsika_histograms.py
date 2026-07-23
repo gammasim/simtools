@@ -69,56 +69,60 @@ r"""
 
 from astropy import units as u
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.corsika.corsika_histograms import CorsikaHistograms
 from simtools.visualization import plot_corsika_histograms
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--input_files",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "input_files",
         help="Name(s) of the CORSIKA IACT file(s) to process",
         type=str,
         nargs="+",
         required=True,
-    )
-    parser.add_argument(
-        "--file_labels",
+    ),
+    cli.ArgumentDefinition(
+        "file_labels",
         help="Labels for the input files (in the same order as input_files)",
         type=str,
         nargs="+",
         required=None,
-    )
-    parser.add_argument(
-        "--normalization",
+    ),
+    cli.ArgumentDefinition(
+        "normalization",
         help="Normalization method for histograms. Options: 'per-telescope', 'per-bin'",
         type=str,
         choices=["per-telescope", "per-bin"],
         default="per-telescope",
-    )
-    parser.add_argument(
-        "--axis_distance",
+    ),
+    cli.ArgumentDefinition(
+        "axis_distance",
         help=(
-            "Distance from x/y axes to consider when calculating "
-            "the lateral density profiles (in meters)."
+            "Distance from x/y axes to consider when calculating lateral density profiles "
+            "(in meters)."
         ),
         type=float,
         default=1000.0,
-    )
-    parser.add_argument(
-        "--pdf_file_name",
-        help="Save histograms into a pdf file.",
-        type=str,
-        required=None,
-    )
+    ),
+    cli.ArgumentDefinition(
+        "pdf_file_name", help="Save histograms into a pdf file.", type=str, required=None
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+    ),
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"db_config": False, "paths": True},
-    )
+    app_context = APPLICATION.start()
 
     all_histograms = []
     for input_file in app_context.args["input_files"]:

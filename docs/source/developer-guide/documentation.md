@@ -23,6 +23,8 @@ Application pages can render their CLI reference directly from the parser using 
 (`configuration`, `paths`, `execution`, `run time`, `user`) while keeping application-specific
 groups visible. Use `:hide-groups:` or `:show-groups:` on the directive to adjust this per page.
 Use `:no-heading:` when the surrounding page provides the `Command line arguments` heading.
+The directive accepts the short application module name through `:application:` and reads the
+module-level `APPLICATION` definition without executing `main()`.
 
 ## Building
 

@@ -1,6 +1,6 @@
 (dependencymanagement)=
 
-# Application, dependency and version management.
+# Application, dependency and version management
 
 (settings)=
 
@@ -11,12 +11,21 @@
    :members:
 ```
 
-(application_control)=
+(application-control)=
 
-## application_control
+## application.control
 
 ```{eval-rst}
-.. automodule:: simtools.application_control
+.. automodule:: simtools.application.control
+   :members:
+```
+
+(application-definition)=
+
+## application.definition
+
+```{eval-rst}
+.. automodule:: simtools.application.definition
    :members:
 ```
 
@@ -43,6 +52,6 @@
 ## version
 
 ```{eval-rst}
-.. automodule:: version
+.. automodule:: simtools.version
    :members:
 ```
