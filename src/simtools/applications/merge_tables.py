@@ -37,32 +37,39 @@ Merge tables from two files generated with 'simtools-generate-simtel-event-data'
 """
 
 import simtools.utils.general as gen
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.io import table_handler
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    input_group = parser.add_mutually_exclusive_group(required=True)
-    input_group.add_argument(
-        "--input_files",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "input_files",
+        exclusive_group="input group",
+        exclusive_group_required=True,
         type=str,
         nargs="+",
         help="Input file(s) (e.g., 'file1 file2') or a file with a list of input files.",
-    )
-    parser.add_argument(
-        "--table_names",
-        type=str,
-        nargs="+",
-        help="Names of tables to merge from each input file.",
-    )
+    ),
+    cli.ArgumentDefinition(
+        "table_names", type=str, nargs="+", help="Names of tables to merge from each input file."
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    initialize_output=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"db_config": False, "output": True},
-    )
+    app_context = APPLICATION.start()
 
     app_context.logger.info(f"Loading input files: {app_context.args['input_files']}")
 

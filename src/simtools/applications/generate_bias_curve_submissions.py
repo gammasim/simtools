@@ -91,8 +91,9 @@ example:
 
 """
 
-from simtools.application_control import build_application
-from simtools.configuration.commandline_argument_helpers import (
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
+from simtools.configuration.argument_helpers import (
     azimuth_angle,
     parse_integer_and_quantity,
     parse_quantity_pair,
@@ -100,101 +101,65 @@ from simtools.configuration.commandline_argument_helpers import (
 )
 from simtools.job_execution import bias_curve_submissions
 
-
-def _add_arguments(parser):
-    """Application-specific arguments."""
-    parser.add_argument(
-        "--site",
-        help="Observation site (e.g., North, South).",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "--model_version",
-        help="Simulation model version.",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "--telescope",
-        help="Telescope name.",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "--simulation_software",
-        help="Simulation software.",
-        type=str,
-        default="corsika_sim_telarray",
-    )
-    parser.add_argument(
-        "--azimuth_angle",
-        help="Azimuth angle in degrees.",
-        type=azimuth_angle,
-        required=True,
-    )
-    parser.add_argument(
-        "--zenith_angle",
-        help="Zenith angle in degrees.",
-        type=zenith_angle,
-        required=True,
-    )
-    parser.add_argument(
-        "--showers_per_run",
-        help="Number of showers per run.",
-        type=int,
-        required=True,
-    )
-    parser.add_argument(
-        "--core_scatter",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "site", help="Observation site (e.g., North, South).", type=str, required=True
+    ),
+    cli.ArgumentDefinition(
+        "model_version", help="Simulation model version.", type=str, required=True
+    ),
+    cli.ArgumentDefinition("telescope", help="Telescope name.", type=str, required=True),
+    cli.ArgumentDefinition(
+        "simulation_software", help="Simulation software.", type=str, default="corsika_sim_telarray"
+    ),
+    cli.ArgumentDefinition(
+        "azimuth_angle", help="Azimuth angle in degrees.", type=azimuth_angle, required=True
+    ),
+    cli.ArgumentDefinition(
+        "zenith_angle", help="Zenith angle in degrees.", type=zenith_angle, required=True
+    ),
+    cli.ArgumentDefinition(
+        "showers_per_run", help="Number of showers per run.", type=int, required=True
+    ),
+    cli.ArgumentDefinition(
+        "core_scatter",
         help="Core scatter, e.g. '20 1900 m'.",
         type=parse_integer_and_quantity,
         required=True,
-    )
-    parser.add_argument(
-        "--view_cone",
-        help="View cone, e.g. '0 deg 5 deg'.",
-        type=parse_quantity_pair,
-        required=True,
-    )
-    parser.add_argument(
-        "--number_of_runs",
-        help="Number of runs.",
-        type=int,
-        required=True,
-    )
-    parser.add_argument(
-        "--corsika_le_interaction",
+    ),
+    cli.ArgumentDefinition(
+        "view_cone", help="View cone, e.g. '0 deg 5 deg'.", type=parse_quantity_pair, required=True
+    ),
+    cli.ArgumentDefinition("number_of_runs", help="Number of runs.", type=int, required=True),
+    cli.ArgumentDefinition(
+        "corsika_le_interaction",
         help="CORSIKA low-energy interaction model.",
         type=str,
         default="urqmd",
-    )
-    parser.add_argument(
-        "--corsika_he_interaction",
+    ),
+    cli.ArgumentDefinition(
+        "corsika_he_interaction",
         help="CORSIKA high-energy interaction model.",
         type=str,
         default="epos",
-    )
-    parser.add_argument(
-        "--nsb_energy_range",
+    ),
+    cli.ArgumentDefinition(
+        "nsb_energy_range",
         help="Energy range for the NSB gamma curve.",
         type=parse_quantity_pair,
         default=parse_quantity_pair("20 MeV 25 MeV"),
-    )
-    parser.add_argument(
-        "--proton_energy_range",
+    ),
+    cli.ArgumentDefinition(
+        "proton_energy_range",
         help="Energy range for the proton curve.",
         type=parse_quantity_pair,
         default=parse_quantity_pair("2 GeV 2000 GeV"),
-    )
-    parser.add_argument(
-        "--nsb_scaling_factor",
-        help="NSB scaling factor used for both curves.",
-        type=float,
-        default=2,
-    )
-    parser.add_argument(
-        "--trigger_thresholds",
+    ),
+    cli.ArgumentDefinition(
+        "nsb_scaling_factor", help="NSB scaling factor used for both curves.", type=float, default=2
+    ),
+    cli.ArgumentDefinition(
+        "trigger_thresholds",
         help=(
             "Define evenly spaced trigger thresholds for both curves as "
             "MIN_THRESHOLD NUMBER_OF_THRESHOLDS STEP_SIZE."
@@ -203,17 +168,23 @@ def _add_arguments(parser):
         nargs=3,
         metavar=("MIN_THRESHOLD", "NUMBER_OF_THRESHOLDS", "STEP_SIZE"),
         default=None,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        application_path=__file__,
-        description=__doc__,
-        add_arguments_function=_add_arguments,
-        initialization_kwargs={"db_config": True, "output": False},
-    )
+    app_context = APPLICATION.start()
     bias_curve_submissions.generate_scan_grids(app_context.args, app_context.io_handler)
 
 

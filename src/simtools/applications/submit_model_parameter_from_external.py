@@ -43,48 +43,63 @@ r"""
 from pathlib import Path
 
 import simtools.data_model.model_data_writer as writer
-from simtools.application_control import add_input_meta_argument, build_application
-from simtools.configuration.commandline_argument_helpers import instrument
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
+from simtools.configuration.argument_helpers import instrument
 from simtools.simtel import simtel_table_reader
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--parameter", type=str, required=True, help="Parameter for simulation model"
-    )
-    parser.add_argument("--instrument", type=instrument, required=True, help="Instrument name")
-    parser.add_argument("--site", type=str, required=True, help="Site location")
-    parser.add_argument("--parameter_version", type=str, required=True, help="Parameter version")
-    parser.add_argument(
-        "--model_parameter_schema_version",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "parameter", type=str, required=True, help="Parameter for simulation model"
+    ),
+    cli.ArgumentDefinition("instrument", type=instrument, required=True, help="Instrument name"),
+    cli.ArgumentDefinition("site", type=str, required=True, help="Site location"),
+    cli.ArgumentDefinition("parameter_version", type=str, required=True, help="Parameter version"),
+    cli.ArgumentDefinition(
+        "model_parameter_schema_version",
         type=str,
         required=False,
         help="Model-parameter schema version to use for validation and value interpretation",
-    )
-    parser.add_argument(
-        "--value",
+    ),
+    cli.ArgumentDefinition(
+        "value",
         type=str,
         required=True,
         help=(
-            "Model parameter value. "
-            "Can be a single number, a number with a unit, or a list of values with units. "
-            'Examples: "--value=5", "--value=\'5 km\'", "--value=\'5 cm, 0.5 deg\'"'
+            "Model parameter value: a number, a number with a unit, or a list of values "
+            "with units. Examples: --value=5, --value='5 km', --value='5 cm, 0.5 deg'"
         ),
-    )
-    add_input_meta_argument(parser, nargs="+")
-    parser.add_argument(
-        "--check_parameter_version",
+    ),
+    cli.ArgumentDefinition(
+        "input_meta",
+        help="meta data file(s) associated to input data (wildcards or list of files allowed)",
+        type=str,
+        required=False,
+        nargs="+",
+    ),
+    cli.ArgumentDefinition(
+        "check_parameter_version",
         help="Check if the parameter version exists in the database",
         action="store_true",
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    database=True,
+    initialize_output=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"output": True, "db_config": True},
-    )
+    app_context = APPLICATION.start()
     model_parameter_schema_version = app_context.args.get("model_parameter_schema_version")
     value = app_context.args["value"]
     data_writer = writer.ModelDataWriter()

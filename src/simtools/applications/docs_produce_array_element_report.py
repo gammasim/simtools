@@ -9,37 +9,43 @@ such as the parameter name, value, unit, description, and short description.
 
 from pathlib import Path
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.reporting.docs_auto_report_generator import ReportGenerator
 from simtools.reporting.docs_read_parameters import ReadParameters
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.initialize_application_argument_group(["all_model_versions"])
-    parser.add_argument(
-        "--all_telescopes",
-        action="store_true",
-        help="Produce reports for all telescopes.",
-    )
-
-    parser.add_argument("--all_sites", action="store_true", help="Produce reports for all sites.")
-
-    parser.add_argument(
-        "--observatory",
+_ARGUMENTS = (
+    cli.ALL_MODEL_VERSIONS,
+    cli.ArgumentDefinition(
+        "all_telescopes", action="store_true", help="Produce reports for all telescopes."
+    ),
+    cli.ArgumentDefinition("all_sites", action="store_true", help="Produce reports for all sites."),
+    cli.ArgumentDefinition(
+        "observatory",
         action="store_true",
         help="Produce reports for an observatory at a given site.",
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE,
+        cli.TELESCOPE,
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": ["site", "telescope", "model_version"],
-        },
-    )
+    app_context = APPLICATION.start()
     output_path = app_context.io_handler.get_output_directory()
 
     if any(

@@ -1,16 +1,15 @@
 """Tests for the write_reduced_event_lists application."""
 
-import argparse
-
 import pytest
 
 from simtools.applications import write_reduced_event_lists
+from simtools.configuration.commandline_parser import CommandLineParser
 
 
 def test_input_file_list_arguments():
     """Accept a file list and batch size."""
-    parser = argparse.ArgumentParser()
-    write_reduced_event_lists._add_arguments(parser)
+    parser = CommandLineParser()
+    parser.add_argument_definitions(write_reduced_event_lists._ARGUMENTS)
 
     args = parser.parse_args(
         [
@@ -28,8 +27,8 @@ def test_input_file_list_arguments():
 
 def test_max_workers_option():
     """Read the maximum number of workers."""
-    parser = argparse.ArgumentParser()
-    write_reduced_event_lists._add_arguments(parser)
+    parser = CommandLineParser()
+    parser.add_argument_definitions(write_reduced_event_lists._ARGUMENTS)
 
     args = parser.parse_args(["--input_files", "input.simtel.zst", "--max_workers", "3"])
 
@@ -38,8 +37,8 @@ def test_max_workers_option():
 
 def test_input_arguments_are_mutually_exclusive():
     """Require exactly one form of input argument."""
-    parser = argparse.ArgumentParser()
-    write_reduced_event_lists._add_arguments(parser)
+    parser = CommandLineParser()
+    parser.add_argument_definitions(write_reduced_event_lists._ARGUMENTS)
 
     with pytest.raises(SystemExit):
         parser.parse_args([])

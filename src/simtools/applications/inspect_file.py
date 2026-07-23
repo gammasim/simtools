@@ -16,33 +16,37 @@ max_entries (int, optional)
 
 from pathlib import Path
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.io.file_inspector import inspect_file
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--input_file",
-        help="Simulation-related file to inspect.",
-        required=True,
-        type=Path,
-    )
-    parser.add_argument(
-        "--max_entries",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "input_file", help="Simulation-related file to inspect.", required=True, type=Path
+    ),
+    cli.ArgumentDefinition(
+        "max_entries",
         help="Maximum number of entries or preview lines to print; use 0 for no limit.",
         required=False,
         default=50,
         type=int,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+    ),
+    setup_io_handler=False,
+)
 
 
 def main():
     """Run the simulation-file inspector."""
-    app_context = build_application(
-        initialization_kwargs={"db_config": False},
-        startup_kwargs={"setup_io_handler": False},
-    )
+    app_context = APPLICATION.start()
     reports = inspect_file(
         app_context.args["input_file"],
         max_entries=app_context.args["max_entries"],

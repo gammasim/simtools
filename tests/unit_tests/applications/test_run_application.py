@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
-import argparse
 from types import SimpleNamespace
 
 from simtools.applications import run_application
+from simtools.configuration.commandline_parser import CommandLineParser
 
 
 def test_add_arguments():
-    """Test that _add_arguments only adds config_file and steps arguments."""
-    parser = argparse.ArgumentParser()
+    """Test that the declaration adds config_file and steps arguments."""
+    parser = CommandLineParser()
 
-    run_application._add_arguments(parser)
+    parser.add_argument_definitions(run_application._ARGUMENTS)
     args = parser.parse_args(
         [
             "--config_file",
@@ -35,8 +35,8 @@ def test_main_pass_args_to_run_applications(monkeypatch):
 
     monkeypatch.setattr(
         run_application,
-        "build_application",
-        lambda **_: SimpleNamespace(args=args, run_time=["mock", "runtime"]),
+        "APPLICATION",
+        SimpleNamespace(start=lambda: SimpleNamespace(args=args, run_time=["mock", "runtime"])),
     )
 
     def _fake_run_applications(app_args, run_time=None):
@@ -60,8 +60,8 @@ def test_main_handles_none_run_time(monkeypatch):
 
     monkeypatch.setattr(
         run_application,
-        "build_application",
-        lambda **_: SimpleNamespace(args=args, run_time=None),
+        "APPLICATION",
+        SimpleNamespace(start=lambda: SimpleNamespace(args=args, run_time=None)),
     )
 
     def _fake_run_applications(app_args, run_time=None):
