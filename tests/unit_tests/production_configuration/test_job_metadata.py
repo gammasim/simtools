@@ -50,7 +50,7 @@ def test_build_simulation_job_metadata_uses_catalog_conventions():
     }
 
 
-def test_build_simulation_job_metadata_omits_missing_coordinates_and_sct():
+def test_build_simulation_job_metadata_omits_missing_coordinates_and_sets_sct_false():
     metadata = build_simulation_job_metadata(
         _args(site="North", azimuth_angle=180 * u.deg),
         _simulator("LSTN-01", run_number=5),
