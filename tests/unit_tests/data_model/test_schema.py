@@ -255,6 +255,26 @@ def test_application_workflow_schema_accepts_expected_failure_reason():
     )
 
 
+def test_application_workflow_schema_accepts_mongodb_requirement():
+    """Allow integration tests to declare that an application requires MongoDB."""
+    workflow_config = {
+        "schema_version": "0.4.0",
+        "schema_name": "application_workflow.metaschema",
+        "applications": [
+            {
+                "application": "simtools-test",
+                "configuration": {},
+                "requires_mongodb": True,
+            }
+        ],
+    }
+
+    schema.validate_dict_using_schema(
+        workflow_config,
+        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+    )
+
+
 def _output_validation_workflow(*rules):
     """Build a minimal workflow containing declarative output rules."""
     return {

@@ -78,6 +78,9 @@ definitions:
         skip_for_production_db:
           type: boolean
           description: "Skip test if production DB is used."
+        requires_mongodb:
+          type: boolean
+          description: "Application test requires MongoDB access."
         skip_integration_test:
           type: string
           description: "Skip test with the given skip message."

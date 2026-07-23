@@ -175,7 +175,7 @@ def add_production_tables_to_db(input_path, db):
 
     for model in sorted(filter(Path.is_dir, input_path.iterdir())):
         logger.info(f"Reading production tables for model version {model.name}")
-        model_dict = _read_production_tables(model)
+        model_dict = read_production_tables(model)
 
         for collection, data in model_dict.items():
             if data["parameters"]:
@@ -188,7 +188,33 @@ def add_production_tables_to_db(input_path, db):
                 logger.info(f"No production table for {collection} in model version {model.name}")
 
 
-def _read_production_tables(model_path):
+def get_production_table_files(model_path):
+    """Return production JSON files with their model versions.
+
+    Parameters
+    ----------
+    model_path : Path
+        Production directory for a model version.
+
+    Returns
+    -------
+    list
+        Pairs containing a model version and production file path.
+    """
+    models = [model_path.name]
+    if (model_path / "info.yml").exists():
+        info = ascii_handler.collect_data_from_file(file_name=model_path / "info.yml")
+        if info.get("model_update") == "patch_update":
+            models.extend(info.get("model_version_history", []))
+    models = sorted(set(models), key=Version, reverse=False)
+    return [
+        (model, file)
+        for model in models
+        for file in sorted((model_path.parent / model).rglob("*json"))
+    ]
+
+
+def read_production_tables(model_path, collection_name=None, production_files=None):
     """
     Read production tables from a directory.
 
@@ -199,18 +225,29 @@ def _read_production_tables(model_path):
     ----------
     model_path : Path
         Path to the directory containing the production tables for a specific model version.
+    collection_name : str, optional
+        Read production files for this collection only.
+    production_files : list, optional
+        Pairs of model versions and production file paths.
+
+    Returns
+    -------
+    dict
+        Aggregated production tables keyed by model collection.
     """
     model_dict = {}
-    models = [model_path.name]
-    if (model_path / "info.yml").exists():
-        info = ascii_handler.collect_data_from_file(file_name=model_path / "info.yml")
-        if info.get("model_update") == "patch_update":
-            models.extend(info.get("model_version_history", []))
-    # sort oldest --> newest
-    models = sorted(set(models), key=Version, reverse=False)
-    for model in models:
-        for file in sorted((model_path.parent / model).rglob("*json")):
-            _read_production_table(model_dict, file, model)
+    collection_description = f" and collection {collection_name}" if collection_name else ""
+    logger.debug(
+        f"Reading production tables for model version {model_path.name}{collection_description}"
+    )
+    if production_files is None:
+        production_files = get_production_table_files(model_path)
+    for model, file in production_files:
+        if collection_name and (
+            names.get_collection_name_from_array_element_name(file.stem, False) != collection_name
+        ):
+            continue
+        _read_production_table(model_dict, file, model)
 
     # ensure that the for patch updates the model version is set correctly
     for table in model_dict.values():
@@ -219,6 +256,10 @@ def _read_production_tables(model_path):
     _remove_deprecated_model_parameters(model_dict)
 
     return model_dict
+
+
+# Backward-compatible alias for callers and tests using the former private helper.
+_read_production_tables = read_production_tables
 
 
 def _read_production_table(model_dict, file, model_name):
@@ -236,10 +277,6 @@ def _read_production_table(model_dict, file, model_name):
         },
     )
     parameter_dict = ascii_handler.collect_data_from_file(file_name=file)
-    logger.debug(
-        f"Reading production table for {array_element} "
-        f"(model_version {model_name}, collection {collection})"
-    )
     try:
         if array_element in ("configuration_corsika", "configuration_sim_telarray"):
             model_dict[collection]["parameters"] = parameter_dict["parameters"]

@@ -12,6 +12,12 @@ from simtools import settings
 def pytest_addoption(parser):
     """Model version command line parameter."""
     parser.addoption("--model_version", action="store", default=None)
+    parser.addoption(
+        "--simulation-models-path",
+        action="store",
+        default=None,
+        help="Read simulation models from files at this path.",
+    )
 
 
 @pytest.fixture(autouse=True)

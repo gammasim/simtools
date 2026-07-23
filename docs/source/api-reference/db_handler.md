@@ -13,6 +13,13 @@ Modules for database access. See the databases sections for details.
    :members:
 ```
 
+## file_system_model
+
+```{eval-rst}
+.. automodule:: db.file_system_model
+   :members:
+```
+
 ## mongo_db
 
 (mongo-db-class)=

@@ -8,6 +8,7 @@ from simtools.configuration.arguments import (
     ARRAY_LAYOUT_NAME,
     ENERGY_RANGE,
     PRIMARY,
+    SIMULATION_MODELS_PATH,
     SITE,
     ArgumentDefinition,
     layout_selection_arguments,
@@ -55,6 +56,16 @@ def test_add_argument_definitions_reuses_display_groups():
         "array_layout_name",
         "site",
     }
+
+
+def test_add_argument_definitions_registers_simulation_models_path(tmp_test_directory):
+    """The file-backed model source is available as a database argument."""
+    parser = CommandLineParser()
+    parser.add_argument_definitions((SIMULATION_MODELS_PATH,))
+
+    args = parser.parse_args(["--simulation_models_path", str(tmp_test_directory)])
+
+    assert args.simulation_models_path == tmp_test_directory
 
 
 def test_add_argument_definitions_registers_mutually_exclusive_bundle():

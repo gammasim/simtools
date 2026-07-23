@@ -34,10 +34,11 @@ def main():
     app_context = APPLICATION.start()
 
     db = db_handler.DatabaseHandler()
+    mongo_db_handler = db.require_mongodb("Inspecting databases")
     # databases without internal databases we don't have rights to modify
-    databases = db.mongo_db_handler.get_accessible_database_names()
+    databases = mongo_db_handler.get_accessible_database_names()
     requested = app_context.args["db_name"]
-    databases = db.mongo_db_handler.resolve_requested_databases(requested, databases)
+    databases = mongo_db_handler.resolve_requested_databases(requested, databases)
 
     for db_name in databases:
         print("Database:", db_name)

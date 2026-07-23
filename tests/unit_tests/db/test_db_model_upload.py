@@ -218,6 +218,7 @@ def test_read_production_tables_basic(
     model_path.mkdir(parents=True, exist_ok=True)
     (model_path / "LSTN-01.json").touch()
     (model_path / "MSTS-02.json").touch()
+    (model_path / "OBS-North.json").touch()
 
     mock_read_production_table.side_effect = lambda md, file, model: md.update(
         {
@@ -231,7 +232,7 @@ def test_read_production_tables_basic(
         }
     )
 
-    result = db_model_upload._read_production_tables(model_path)
+    result = db_model_upload._read_production_tables(model_path, collection_name="telescopes")
 
     assert mock_read_production_table.call_count == 2
     assert "telescopes" in result

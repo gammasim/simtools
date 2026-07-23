@@ -7,6 +7,7 @@ applications:
     - ${static:MLTdata-preproduction.meta.yml}
     - ${static:MLTdata-preproduction.ecsv}
     test_db: true
+  requires_mongodb: true
   skip_for_production_db: true
   test_name: run
 schema_name: application_workflow.metaschema

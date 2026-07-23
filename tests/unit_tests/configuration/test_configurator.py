@@ -286,6 +286,7 @@ def test_get_db_parameters_from_env(configurator):
         )
     )
 
+    assert configurator.config["simulation_models_path"] is None
     assert configurator._get_db_parameters() == {
         "db_api_authentication_database": None,
         "db_api_port": 42,

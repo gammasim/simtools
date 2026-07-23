@@ -378,6 +378,17 @@ DB_API_USER = _argument(
     type=str,
 )
 
+SIMULATION_MODELS_PATH = _argument(
+    "simulation_models_path",
+    _DATABASE_CONFIGURATION_GROUP,
+    help=(
+        "Path containing simulation model files; when set, model parameters are read "
+        "from files instead of MongoDB."
+    ),
+    type=Path,
+    default=None,
+)
+
 DB_API_PW = _argument(
     "db_api_pw",
     _DATABASE_CONFIGURATION_GROUP,
@@ -421,6 +432,7 @@ DB_SIMULATION_MODEL_VERSION = _argument(
 )
 
 DATABASE_ARGUMENTS = (
+    SIMULATION_MODELS_PATH,
     DB_API_USER,
     DB_API_PW,
     DB_API_PORT,

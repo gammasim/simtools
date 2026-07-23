@@ -135,7 +135,7 @@ def _verify_model_parameters_for_production(simulation_models_path, production_f
         if isinstance(par_dict, dict):
             for param_name, param_version in par_dict.items():
                 total_checked += 1
-                parameter_file = _get_model_parameter_file_path(
+                parameter_file = get_model_parameter_file_path(
                     simulation_models_path, array_element, param_name, param_version
                 )
                 if parameter_file and not parameter_file.exists():
@@ -144,7 +144,7 @@ def _verify_model_parameters_for_production(simulation_models_path, production_f
     return missing_files, total_checked
 
 
-def _get_model_parameter_file_path(
+def get_model_parameter_file_path(
     simulation_models_path, array_element, parameter_name, parameter_version
 ):
     """
@@ -651,7 +651,7 @@ def _download_model_parameter_from_workflow(
         )
 
     try:
-        target_dir = _get_model_parameter_file_path(
+        target_dir = get_model_parameter_file_path(
             simulation_models_path,
             telescope,
             param,
@@ -683,7 +683,7 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
         Path to the simulation models directory.
     """
     try:
-        param_dir = _get_model_parameter_file_path(
+        param_dir = get_model_parameter_file_path(
             simulation_models_path,
             telescope,
             param,

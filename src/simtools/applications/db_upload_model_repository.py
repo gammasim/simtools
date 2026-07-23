@@ -109,6 +109,7 @@ def main():
         raise ValueError("Setting of db_simulation_model_version is required.")
 
     db = db_handler.DatabaseHandler()
+    db.require_mongodb("Uploading a simulation model to a database")
     db.print_connection_info()
 
     db_model_upload.add_complete_model(
