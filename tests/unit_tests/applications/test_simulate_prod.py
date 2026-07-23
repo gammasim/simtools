@@ -101,6 +101,16 @@ def test_add_arguments_job_grid_row_defaults_to_one():
 
     assert args.job_grid_file is None
     assert args.job_grid_row == 1
+    assert args.save_corsika_output is False
+
+
+def test_add_arguments_save_corsika_output():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(app._ARGUMENTS)
+
+    args = parser.parse_args(["--save_corsika_output"])
+
+    assert args.save_corsika_output is True
 
 
 def test_list_available_corsika_models_exits_with_table(tmp_test_directory, capsys):

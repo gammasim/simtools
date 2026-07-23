@@ -22,6 +22,7 @@ env:
   REGISTRY: ghcr.io
   AUTOCONF_URL: "https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz"
   AUTOCONF_SHA256: "431075ad0bf529ef13cb41e9042c542381103e80015686222b8a9d4abef42a1c"
+  CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
 jobs:
   download-auxiliary-files:
@@ -29,13 +30,25 @@ jobs:
 
     steps:
       - name: download-auxiliary-files
+        env:
+          CLOUD_AUTOCONF: ${{ secrets.CLOUD_AUTOCONF }}
         run: |
-          curl -L --fail \
+          if curl -L --fail \
             --retry 5 --retry-delay 10 --retry-connrefused \
             --connect-timeout 30 \
             "${{ env.AUTOCONF_URL }}" \
-            -o autoconf.tar.gz
-          echo "${{ env.AUTOCONF_SHA256 }}  autoconf.tar.gz" | sha256sum --check --strict
+            -o autoconf.tar.gz && \
+            echo "${{ env.AUTOCONF_SHA256 }}  autoconf.tar.gz" | sha256sum --check --strict; then
+            echo "Downloaded autoconf from GNU."
+          else
+            echo "GNU download failed; trying the DESY cloud backup."
+            curl -L --fail \
+              --retry 5 --retry-delay 10 --retry-connrefused \
+              --connect-timeout 30 \
+              "${{ env.CLOUD_URL }}/${CLOUD_AUTOCONF}/download" \
+              -o autoconf.tar.gz
+            echo "${{ env.AUTOCONF_SHA256 }}  autoconf.tar.gz" | sha256sum --check --strict
+          fi
       - name: upload-auxiliary-files
         uses: actions/upload-artifact@v7
         with:
