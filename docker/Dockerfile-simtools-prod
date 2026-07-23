@@ -39,12 +39,11 @@ COPY --from=simtel_img /workdir/simulation_software/stdtools /workdir/simulation
 COPY --from=simtel_img /usr/local/lib/ /usr/local/lib/
 
 RUN microdnf update -y && microdnf install -y \
-  bc bzip2 findutils gcc-c++ git git-lfs libgfortran procps wget zstd \
+  bc bzip2 findutils gcc-c++ git libgfortran procps wget zstd \
   python"${PYTHON_VERSION}" python"${PYTHON_VERSION}"-pip python"${PYTHON_VERSION}"-devel && \
   microdnf clean all && \
   rm -rf /var/cache/dnf/* /tmp/* /var/tmp/* && \
   ln -sf /usr/bin/python"${PYTHON_VERSION}" /usr/bin/python && \
-  git lfs install --system && \
   groupadd --gid "${CONTAINER_GID}" "${CONTAINER_USER}" && \
   useradd --uid "${CONTAINER_UID}" --gid "${CONTAINER_USER}" \
     --create-home --home-dir "/home/${CONTAINER_USER}" --shell /bin/bash "${CONTAINER_USER}" && \
