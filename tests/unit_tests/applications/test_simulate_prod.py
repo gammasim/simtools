@@ -4,6 +4,7 @@
 
 import argparse
 import sys
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import astropy.units as u
@@ -120,6 +121,21 @@ def test_parse_job_grid_file_selects_row(
     for key, value in expected.items():
         assert args[key] == value
     assert args["simulation_software"] == "corsika_sim_telarray"
+
+
+def test_parse_accepts_simulation_models_path(monkeypatch, job_grid_file, tmp_test_directory):
+    args = _parse_with_args(
+        monkeypatch,
+        _job_grid_args(
+            job_grid_file,
+            "--output_path",
+            tmp_test_directory,
+            "--simulation_models_path",
+            tmp_test_directory,
+        ),
+    )
+
+    assert args["simulation_models_path"] == Path(tmp_test_directory)
 
 
 def test_parse_job_grid_row_without_file_fails(monkeypatch, capsys):

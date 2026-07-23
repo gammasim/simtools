@@ -3,6 +3,7 @@ applications:
 - application: simtools-db-inspect-databases
   configuration:
     db_name: all
+  requires_mongodb: true
   test_name: db_inspect_databases
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

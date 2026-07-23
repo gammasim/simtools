@@ -164,6 +164,7 @@ def main():
     app_context = APPLICATION.start()
 
     db = db_handler.DatabaseHandler()
+    db.require_mongodb("Adding files to a database")
 
     files_to_insert = collect_files_to_insert(app_context.args, app_context.logger, db)
     confirm_and_insert_files(files_to_insert, app_context.args, db, app_context.logger)

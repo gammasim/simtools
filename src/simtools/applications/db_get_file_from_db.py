@@ -73,11 +73,11 @@ def main():
         )
     except FileNotFoundError as exc:
         raise FileNotFoundError(
-            f"The file {app_context.args['file_name']} was not found in {db.db_name}."
+            f"The file {app_context.args['file_name']} was not found in {db.model_source_name}."
         ) from exc
 
     app_context.logger.info(
-        f"Got file {app_context.args['file_name']} from DB {db.db_name} "
+        f"Got file {app_context.args['file_name']} from {db.model_source_name} "
         f"and saved into {app_context.io_handler.get_output_directory()}"
     )
 

@@ -195,8 +195,8 @@ def main():
     )
 
     if app_context.args["output_file"] is not None:
-        pars[app_context.args["parameter"]].pop("_id")
-        pars[app_context.args["parameter"]].pop("entry_date")
+        pars[app_context.args["parameter"]].pop("_id", None)
+        pars[app_context.args["parameter"]].pop("entry_date", None)
         ascii_handler.write_data_to_file(
             data=pars[app_context.args["parameter"]],
             output_file=app_context.io_handler.get_output_file(app_context.args["output_file"]),
