@@ -50,6 +50,7 @@ APPLICATION = _create_application() if __package__ else None
 
 CATALOG_KEYS = ("tool", "gammasimtools", "dependency-versions")
 SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
+ARCHIVE_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 
 
@@ -161,19 +162,22 @@ def validate_dependency_catalog(catalog):
     if missing:
         raise ValueError(f"Missing dependency catalog keys: {', '.join(missing)}")
 
-    _validate_digest(catalog["base-image"].get("runtime-digest"), "runtime base image")
-    _validate_digest(catalog["base-image"].get("build-digest"), "build base image")
+    _validate_optional_digest(catalog["base-image"].get("runtime-digest"), "runtime base image")
+    _validate_optional_digest(catalog["base-image"].get("build-digest"), "build base image")
+    _validate_archive_checksums(catalog["archives"])
     for component in catalog["corsika"]:
         if component.get("source-ref") in {"latest", "master", "main"}:
             raise ValueError("CORSIKA source-ref must identify a release.")
-        _validate_revision(component.get("config-revision"), "CORSIKA configuration")
-        _validate_revision(component.get("opt-patch-revision"), "CORSIKA optimization patch")
+        _validate_optional_revision(component.get("config-revision"), "CORSIKA configuration")
+        _validate_optional_revision(
+            component.get("opt-patch-revision"), "CORSIKA optimization patch"
+        )
         for variant, digest in component.get("image-digests", {}).items():
-            _validate_digest(digest, f"CORSIKA {component.get('version')} {variant}")
+            _validate_optional_digest(digest, f"CORSIKA {component.get('version')} {variant}")
     for component in catalog["sim-telarray"]:
         for key in ("revision", "hessio-revision", "stdtools-revision"):
-            _validate_revision(component.get(key), key)
-        _validate_digest(component.get("image-digest"), "sim_telarray image")
+            _validate_optional_revision(component.get(key), key)
+        _validate_optional_digest(component.get("image-digest"), "sim_telarray image")
     model_version = catalog.get("model-database", {}).get("default-version", "")
     if model_version.startswith("v"):
         raise ValueError("Model database versions must not start with 'v'.")
@@ -197,6 +201,32 @@ def _validate_revision(value, label):
     """Validate a Git commit revision."""
     if not isinstance(value, str) or not REVISION_PATTERN.fullmatch(value):
         raise ValueError(f"Invalid Git revision for {label}: {value}")
+
+
+def _validate_optional_digest(value, label):
+    """Validate an OCI SHA-256 digest when one is declared."""
+    if value is not None:
+        _validate_digest(value, label)
+
+
+def _validate_archive_checksums(archives):
+    """Validate every optional archive SHA-256 checksum."""
+    for archive_name, archive in archives.items():
+        _validate_optional_archive_checksum(archive.get("sha256"), archive_name)
+
+
+def _validate_optional_revision(value, label):
+    """Validate a Git commit revision when one is declared."""
+    if value is not None:
+        _validate_revision(value, label)
+
+
+def _validate_optional_archive_checksum(value, archive_name):
+    """Validate an archive SHA-256 checksum when one is declared."""
+    if value is None:
+        return
+    if not isinstance(value, str) or not ARCHIVE_SHA256_PATTERN.fullmatch(value):
+        raise ValueError(f"Invalid SHA-256 checksum for {archive_name}: {value}")
 
 
 def validate_env_template(catalog, template_path):
@@ -259,10 +289,10 @@ def build_workflow_matrices(catalog):
                     "corsika_source_url": corsika["source-url"],
                     "corsika_config": corsika["config-version"],
                     "corsika_config_source_url": corsika["config-source-url"],
-                    "corsika_config_revision": corsika["config-revision"],
+                    "corsika_config_revision": corsika.get("config-revision", ""),
                     "corsika_opt_patch": corsika["opt-patch-version"],
                     "corsika_opt_patch_source_url": corsika["opt-patch-source-url"],
-                    "corsika_opt_patch_revision": corsika["opt-patch-revision"],
+                    "corsika_opt_patch_revision": corsika.get("opt-patch-revision", ""),
                     "avx_flag": variant,
                 }
             )
@@ -275,11 +305,15 @@ def build_workflow_matrices(catalog):
                 {
                     "corsika": f"v{corsika['version']}",
                     "corsika_image": _image_reference(
-                        "ghcr.io/gammasim/corsika7", corsika["image-digests"][variant]
+                        "ghcr.io/gammasim/corsika7",
+                        f"v{corsika['version']}-{variant}",
+                        corsika.get("image-digests", {}).get(variant),
                     ),
                     "sim_telarray": simtel["version"],
                     "simtel_image": _image_reference(
-                        "ghcr.io/gammasim/sim_telarray", simtel["image-digest"]
+                        "ghcr.io/gammasim/sim_telarray",
+                        simtel["version"],
+                        simtel.get("image-digest"),
                     ),
                     "avx_flag": variant,
                 }
@@ -288,13 +322,13 @@ def build_workflow_matrices(catalog):
         {
             "simtel_version": component["version"],
             "simtel_source_url": component["source-url"],
-            "simtel_revision": component["revision"],
+            "simtel_revision": component.get("revision", ""),
             "hessio_version": component["hessio-version"],
             "hessio_source_url": component["hessio-source-url"],
-            "hessio_revision": component["hessio-revision"],
+            "hessio_revision": component.get("hessio-revision", ""),
             "stdtools_version": component["stdtools-version"],
             "stdtools_source_url": component["stdtools-source-url"],
-            "stdtools_revision": component["stdtools-revision"],
+            "stdtools_revision": component.get("stdtools-revision", ""),
         }
         for component in catalog["sim-telarray"]
     ]
@@ -305,9 +339,9 @@ def build_workflow_matrices(catalog):
     }
 
 
-def _image_reference(name, digest):
-    """Return an immutable OCI image reference."""
-    return f"{name}@{digest}"
+def _image_reference(name, tag, digest=None):
+    """Return a digest reference when declared, otherwise a version tag."""
+    return f"{name}@{digest}" if digest else f"{name}:{tag}"
 
 
 def dependency_catalog_summary(catalog):
@@ -318,20 +352,28 @@ def dependency_catalog_summary(catalog):
     return {
         "python_version": catalog["python"],
         "apptainer_version": catalog["apptainer"],
-        "base_image": _image_reference(base["name"], base["runtime-digest"]),
-        "build_base_image": _image_reference(base["name"], base["build-digest"]),
+        "base_image": _image_reference(
+            base["name"], base["runtime-version"], base.get("runtime-digest")
+        ),
+        "build_base_image": _image_reference(
+            base["name"], base["build-version"], base.get("build-digest")
+        ),
         "almalinux_version": base["runtime-version"].removesuffix("-minimal"),
         "autoconf_version": catalog["archives"]["autoconf"]["version"],
-        "autoconf_sha256": catalog["archives"]["autoconf"]["sha256"],
+        "autoconf_sha256": catalog["archives"]["autoconf"].get("sha256", ""),
         "gsl_version": catalog["archives"]["gsl"]["version"],
-        "gsl_sha256": catalog["archives"]["gsl"]["sha256"],
+        "gsl_sha256": catalog["archives"]["gsl"].get("sha256", ""),
         "model_database": catalog["model-database"]["name"],
         "model_version": catalog["model-database"]["default-version"],
         "dev_corsika_image": _image_reference(
-            "ghcr.io/gammasim/corsika7", default_corsika["image-digests"]["generic"]
+            "ghcr.io/gammasim/corsika7",
+            f"v{default_corsika['version']}-generic",
+            default_corsika.get("image-digests", {}).get("generic"),
         ),
         "dev_simtel_image": _image_reference(
-            "ghcr.io/gammasim/sim_telarray", default_simtel["image-digest"]
+            "ghcr.io/gammasim/sim_telarray",
+            default_simtel["version"],
+            default_simtel.get("image-digest"),
         ),
     }
 

@@ -41,9 +41,7 @@ properties:
     required:
     - name
     - runtime-version
-    - runtime-digest
     - build-version
-    - build-digest
     properties:
       name:
         type: string
@@ -128,7 +126,6 @@ definitions:
     additionalProperties: false
     required:
     - version
-    - sha256
     properties:
       version:
         type: string
@@ -143,11 +140,8 @@ definitions:
     - source-url
     - config-version
     - config-source-url
-    - config-revision
     - opt-patch-version
     - opt-patch-source-url
-    - opt-patch-revision
-    - image-digests
     properties:
       version:
         type: string
@@ -176,25 +170,16 @@ definitions:
         type: object
         additionalProperties:
           "$ref": "#/definitions/sha256"
-        required:
-        - generic
-        - avx2
-        - avx512f
-        - sse4
   simtel:
     type: object
     additionalProperties: false
     required:
     - version
     - source-url
-    - revision
     - hessio-version
     - hessio-source-url
-    - hessio-revision
     - stdtools-version
     - stdtools-source-url
-    - stdtools-revision
-    - image-digest
     properties:
       version:
         type: string

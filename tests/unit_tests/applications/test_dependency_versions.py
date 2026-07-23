@@ -21,15 +21,18 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path):
     assert len(matrices["corsika_matrix"]) == 8
     assert len(matrices["simtel_matrix"]) == 1
     assert len(matrices["production_matrix"]) == 8
-    assert all("@sha256:" in item["corsika_image"] for item in matrices["production_matrix"])
+    assert all(
+        item["corsika_image"].startswith("ghcr.io/gammasim/corsika7:v")
+        for item in matrices["production_matrix"]
+    )
 
 
-def test_catalog_summary_uses_immutable_images(simtools_root_path):
+def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
     catalog = dependency_versions.load_dependency_catalog(simtools_root_path / "pyproject.toml")
     summary = dependency_versions.dependency_catalog_summary(catalog)
 
-    assert summary["base_image"].startswith("docker.io/library/almalinux@sha256:")
-    assert summary["dev_corsika_image"].startswith("ghcr.io/gammasim/corsika7@sha256:")
+    assert summary["base_image"] == "docker.io/library/almalinux:9.8-minimal"
+    assert summary["dev_corsika_image"] == "ghcr.io/gammasim/corsika7:v78010-generic"
     assert summary["model_version"] == "0.16.0"
 
 
@@ -59,6 +62,10 @@ def test_env_template_rejects_mismatched_model_version(tmp_test_directory, simto
         (
             lambda data: data["base-image"].update({"runtime-digest": "latest"}),
             "Invalid SHA-256 digest",
+        ),
+        (
+            lambda data: data["archives"]["gsl"].update({"sha256": "invalid"}),
+            "Invalid SHA-256 checksum",
         ),
         (
             lambda data: data["corsika"][0].update({"source-ref": "master"}),

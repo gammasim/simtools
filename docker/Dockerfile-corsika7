@@ -55,7 +55,10 @@ WORKDIR /src
 # Clone CORSIKA configuration files from CTAO gitlab
 RUN git config --global advice.detachedHead false && \
     git clone --depth 1 --branch "${CORSIKA_CONFIG_VERSION}" "${CORSIKA_CONFIG_SOURCE_URL}" && \
-    test "$(git -C corsika7-config rev-parse HEAD)" = "${CORSIKA_CONFIG_REVISION}" && \
+    git -C corsika7-config rev-parse HEAD > /src/corsika_config_revision && \
+    if [ -n "${CORSIKA_CONFIG_REVISION}" ]; then \
+        test "$(cat /src/corsika_config_revision)" = "${CORSIKA_CONFIG_REVISION}"; \
+    fi && \
     cp -v corsika7-config/config/${CORSIKA_VERSION}/*.h . && \
     rm -rf corsika7-config
 
@@ -69,14 +72,20 @@ RUN --mount=type=secret,id=corsika7_token \
 # Clone CORSIKA optimization patches from CTAO gitlab
 RUN git config --global advice.detachedHead false && \
     git clone --depth 1 --branch "${CORSIKA_OPT_PATCH_VERSION}" "${CORSIKA_OPT_PATCH_SOURCE_URL}" && \
-    test "$(git -C corsika-opt-patches rev-parse HEAD)" = "${CORSIKA_OPT_PATCH_REVISION}" && \
+    git -C corsika-opt-patches rev-parse HEAD > /src/corsika_opt_patch_revision && \
+    if [ -n "${CORSIKA_OPT_PATCH_REVISION}" ]; then \
+        test "$(cat /src/corsika_opt_patch_revision)" = "${CORSIKA_OPT_PATCH_REVISION}"; \
+    fi && \
     cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/* corsika7/ && \
     rm -rf corsika-opt-patches
 
 # autoconf archive (tar file needs to be present in the build context)
 COPY autoconf.tar.gz /tmp/autoconf.tar.gz
 # hadolint ignore=DL4006
-RUN echo "${AUTOCONF_SHA256}  /tmp/autoconf.tar.gz" | sha256sum --check && \
+RUN sha256sum /tmp/autoconf.tar.gz | cut -d ' ' -f1 > /src/autoconf_sha256 && \
+    if [ -n "${AUTOCONF_SHA256}" ]; then \
+        test "$(cat /src/autoconf_sha256)" = "${AUTOCONF_SHA256}"; \
+    fi && \
     tar -xzf /tmp/autoconf.tar.gz -C /src
 
 # -----------------------------------------------------------------------------
@@ -177,13 +186,13 @@ RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
         echo "corsika_revision: \"$(cat /workdir/simulation_software/corsika_revision)\""; \
         echo "corsika_source_url: \"${CORSIKA_SOURCE_URL}\""; \
         echo "corsika_opt_patch_version: \"${CORSIKA_OPT_PATCH_VERSION}\""; \
-        echo "corsika_opt_patch_revision: \"${CORSIKA_OPT_PATCH_REVISION}\""; \
+        echo "corsika_opt_patch_revision: \"$(cat /workdir/simulation_software/corsika_opt_patch_revision)\""; \
         echo "corsika_opt_patch_source_url: \"${CORSIKA_OPT_PATCH_SOURCE_URL}\""; \
         echo "corsika_config_version: \"${CORSIKA_CONFIG_VERSION}\""; \
-        echo "corsika_config_revision: \"${CORSIKA_CONFIG_REVISION}\""; \
+        echo "corsika_config_revision: \"$(cat /workdir/simulation_software/corsika_config_revision)\""; \
         echo "corsika_config_source_url: \"${CORSIKA_CONFIG_SOURCE_URL}\""; \
         echo "autoconf_version: \"${AUTOCONF_VERSION}\""; \
-        echo "autoconf_sha256: \"${AUTOCONF_SHA256}\""; \
+        echo "autoconf_sha256: \"$(cat /workdir/simulation_software/autoconf_sha256)\""; \
         echo "avx_flag: \"${AVX_FLAG}\""; \
         echo "iact_atmo_version: \"${IACT_ATMO_VERSION}\""; \
         echo "variant:"; \

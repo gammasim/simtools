@@ -50,26 +50,35 @@ RUN --mount=type=secret,id=sim_telarray_token \
     git config --global advice.detachedHead false && \
     git clone --depth 1 --branch "${SIMTEL_VERSION}" \
       "https://oauth2:$(cat /run/secrets/sim_telarray_token)@${SIMTEL_SOURCE_URL#https://}" && \
-    test "$(git -C sim_telarray rev-parse HEAD)" = "${SIMTEL_REVISION}"
+    if [ -n "${SIMTEL_REVISION}" ]; then \
+        test "$(git -C sim_telarray rev-parse HEAD)" = "${SIMTEL_REVISION}"; \
+    fi
 
 # Clone hessio from CTAO gitlab
 RUN --mount=type=secret,id=hessio_token \
     git config --global advice.detachedHead false && \
     git clone --depth 1 --branch "${HESSIO_VERSION}" \
       "https://oauth2:$(cat /run/secrets/hessio_token)@${HESSIO_SOURCE_URL#https://}" && \
-    test "$(git -C hessio rev-parse HEAD)" = "${HESSIO_REVISION}"
+    if [ -n "${HESSIO_REVISION}" ]; then \
+        test "$(git -C hessio rev-parse HEAD)" = "${HESSIO_REVISION}"; \
+    fi
 
 # Clone stdtools from CTAO gitlab
 RUN --mount=type=secret,id=stdtools_token \
     git config --global advice.detachedHead false && \
     git clone --depth 1 --branch "${STDTOOLS_VERSION}" \
       "https://oauth2:$(cat /run/secrets/stdtools_token)@${STDTOOLS_SOURCE_URL#https://}" && \
-    test "$(git -C stdtools rev-parse HEAD)" = "${STDTOOLS_REVISION}"
+    if [ -n "${STDTOOLS_REVISION}" ]; then \
+        test "$(git -C stdtools rev-parse HEAD)" = "${STDTOOLS_REVISION}"; \
+    fi
 
 # GSL archive (tar file needs to be present in the build context)
 COPY gsl.tar.gz /tmp/gsl.tar.gz
 # hadolint ignore=DL4006
-RUN echo "${GSL_SHA256}  /tmp/gsl.tar.gz" | sha256sum --check && \
+RUN sha256sum /tmp/gsl.tar.gz | cut -d ' ' -f1 > /src/gsl_sha256 && \
+    if [ -n "${GSL_SHA256}" ]; then \
+        test "$(cat /src/gsl_sha256)" = "${GSL_SHA256}"; \
+    fi && \
     tar -xzf /tmp/gsl.tar.gz -C /src
 
 # -----------------------------------------------------------------------------
@@ -148,18 +157,21 @@ RUN make clean && \
     find . -name "*.o" -exec rm -f {} \;
 
 # Generate build_opts.yml with build information
-RUN { \
+RUN SIMTEL_ACTUAL_REVISION=$(git rev-parse HEAD) && \
+    HESSIO_ACTUAL_REVISION=$(git -C /workdir/simulation_software/hessio rev-parse HEAD) && \
+    STDTOOLS_ACTUAL_REVISION=$(git -C /workdir/simulation_software/stdtools rev-parse HEAD) && \
+    { \
     echo "simtel_version: \"${SIMTEL_VERSION}\""; \
-    echo "simtel_revision: \"${SIMTEL_REVISION}\""; \
+    echo "simtel_revision: \"${SIMTEL_ACTUAL_REVISION}\""; \
     echo "simtel_source_url: \"${SIMTEL_SOURCE_URL}\""; \
     echo "hessio_version: \"${HESSIO_VERSION}\""; \
-    echo "hessio_revision: \"${HESSIO_REVISION}\""; \
+    echo "hessio_revision: \"${HESSIO_ACTUAL_REVISION}\""; \
     echo "hessio_source_url: \"${HESSIO_SOURCE_URL}\""; \
     echo "stdtools_version: \"${STDTOOLS_VERSION}\""; \
-    echo "stdtools_revision: \"${STDTOOLS_REVISION}\""; \
+    echo "stdtools_revision: \"${STDTOOLS_ACTUAL_REVISION}\""; \
     echo "stdtools_source_url: \"${STDTOOLS_SOURCE_URL}\""; \
     echo "gsl_version: \"${GSL_VERSION}\""; \
-    echo "gsl_sha256: \"${GSL_SHA256}\""; \
+    echo "gsl_sha256: \"$(cat /workdir/simulation_software/gsl_sha256)\""; \
     echo "extra_defines: \"${EXTRA_DEFINES}\""; \
     echo "build_date: \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\""; \
     echo "components:"; \

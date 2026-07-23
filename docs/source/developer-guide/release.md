@@ -20,8 +20,9 @@ https://github.com/gammasim/simtools/compare/main...v2.1.3-rc?quick_pull=1&templ
 The template is the [Release Candidate pull request template](https://github.com/gammasim/simtools/blob/main/.github/PULL_REQUEST_TEMPLATE/release-candidate.md), which includes a checklist of items to complete before the release.
 This should be the final pull request before a release.
 
-Before merging the release candidate, confirm that the dependency catalog validates and every
-production parent image is selected by digest. See [Dependency versions and provenance](dependency_versions.md).
+Before merging the release candidate, confirm that the dependency catalog validates. Add image
+digests and source revisions for a release that requires immutable build inputs. See
+[Dependency versions and provenance](dependency_versions.md).
 
 ## Release and Deploy
 

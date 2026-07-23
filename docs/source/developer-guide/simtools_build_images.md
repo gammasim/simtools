@@ -15,21 +15,23 @@ simtools-dependency-versions --format github-output
 ## Scientific component images
 
 `docker/Dockerfile-corsika7` builds each catalogued CORSIKA and CPU variant. It requires the CORSIKA
-source token and the `autoconf.tar.gz` archive. The Dockerfile verifies the catalogued source,
-configuration and optimization-patch revisions plus the archive checksum.
+source token and the `autoconf.tar.gz` archive. The Dockerfile records the source,
+configuration and optimization-patch revisions that it actually checked out, as well as the
+archive checksum it calculated. Optional catalogued revisions and checksums are verified when set.
 
-`docker/Dockerfile-simtel_array` builds the catalogued sim_telarray, hessio and stdtools revisions.
-It requires the corresponding GitLab tokens and `gsl.tar.gz`; the archive checksum is verified
-before extraction.
+`docker/Dockerfile-simtel_array` builds the catalogued sim_telarray, hessio and stdtools releases.
+It requires the corresponding GitLab tokens and `gsl.tar.gz`; its calculated archive checksum is
+recorded before extraction, and verified when the catalog supplies one.
 
 Use the workflow-generated matrix values as build arguments. This ensures that a local build uses
-the same base-image digests, source revisions and flags as CI.
+the same base-image tags, source releases and flags as CI. Add optional digests and revisions to
+the catalog when a fully immutable build is needed.
 
 ## Production and development images
 
 `docker/Dockerfile-simtools-prod` installs the checked-out simtools revision with the compatible
 Python dependencies declared in `pyproject.toml`. Its CORSIKA, sim_telarray and AlmaLinux inputs
-are immutable OCI digest references.
+are version-tag references unless optional OCI digests are declared.
 
 `docker/Dockerfile-simtools-dev` installs the same compatible Python dependencies, including the
 development, documentation and test extras, but leaves simtools itself to be installed from a

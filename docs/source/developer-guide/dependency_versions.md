@@ -11,7 +11,7 @@ The dependency information is maintained in two places with distinct responsibil
 - `[project.dependencies]` and `[project.optional-dependencies]` in `pyproject.toml` declare the
   supported direct Python requirements.
 - `[tool.gammasimtools.dependency-versions]` declares the supported Python version, container base images,
-  scientific software releases and revisions, archive checksums, image digests, and the default
+  scientific software releases, archive checksums, and the default
   simulation-model version.
 
 Dockerfiles do not provide independent version defaults. GitHub Actions reads the catalog with
@@ -20,13 +20,14 @@ Dockerfiles do not provide independent version defaults. GitHub Actions reads th
 simtools-dependency-versions --format github-output
 ```
 
-and supplies the resulting immutable image references and build arguments.
+and supplies the resulting image references and build arguments.
 
 ## Updating versions
 
 Change the compatible Python requirements or the external component entry in `pyproject.toml`.
-For external sources, update both the human-readable release and the immutable Git revision,
-image digest, or archive SHA-256. Never use `main`, `master`, or `latest` as a production input.
+For external sources, update the human-readable release. An optional Git revision, OCI image
+digest, or archive SHA-256 can be added when an immutable build input is required. Dockerfiles
+always record the archive checksum and source revisions actually used for a build.
 
 Install the compatible Python environment in a clean Python 3.14 environment containing all extras:
 
@@ -37,7 +38,7 @@ python -m pip install -e '.[dev,doc,tests]'
 ```
 
 The resulting Python and package versions are recorded in the image dependency manifest. Image
-builds still consume only immutable external sources and image digests from the catalog.
+builds use the catalogued release tags unless an optional revision or digest is declared.
 
 Validate the catalog and matrices with
 
@@ -50,8 +51,8 @@ simtools-dependency-versions --format catalog
 
 Production and development images contain the canonical dependency record at
 `/opt/simtools/provenance/dependency-manifest.json`. It contains the simtools revision, Python and
-direct Python dependency versions, scientific build options, source
-revisions, and immutable parent-image references. Credentials, local paths, hostnames, and build
+direct Python dependency versions, scientific build options, observed source
+revisions, and parent-image references. Credentials, local paths, hostnames, and build
 timestamps are excluded.
 
 Inspect the active environment with any simtools application:
