@@ -357,8 +357,8 @@ dependency-versions.base-image.build-version = "9.8"
 dependency-versions.model-database.name = "CTAO-Simulation-Model"
 dependency-versions.model-database.default-version = "0.16.0"
 dependency-versions.production-combinations = [
-  { corsika = "78010", sim-telarray = "v2025-11-30-rc", cpu-variants = [ "generic", "avx2", "avx512f", "sse4" ] },
-  { corsika = "78050", sim-telarray = "v2025-11-30-rc", cpu-variants = [ "generic", "avx2", "avx512f", "sse4" ] },
+  { corsika = "78010", sim-telarray = "v2025-11-30-rc" },
+  { corsika = "78050", sim-telarray = "v2025-11-30-rc" },
 ]
 
 [[tool.gammasimtools.dependency-versions.corsika]]

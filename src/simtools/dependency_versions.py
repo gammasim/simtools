@@ -147,11 +147,15 @@ def _validate_production_combinations(catalog):
     """Validate every production combination against catalogued components."""
     corsika_versions = {component["version"] for component in catalog["corsika"]}
     simtel_versions = {component["version"] for component in catalog["sim-telarray"]}
+    cpu_variants = set(catalog["cpu-variants"])
     for combination in catalog["production-combinations"]:
         if combination["corsika"] not in corsika_versions:
             raise ValueError("Unknown CORSIKA production combination.")
         if combination["sim-telarray"] not in simtel_versions:
             raise ValueError("Unknown sim_telarray production combination.")
+        invalid_variants = set(combination.get("cpu-variants", cpu_variants)) - cpu_variants
+        if invalid_variants:
+            raise ValueError("Unknown CPU variant in production combination.")
 
 
 def _validate_digest(value, label):
@@ -246,7 +250,7 @@ def build_workflow_matrices(catalog):
     production_matrix = [
         _production_matrix_entry(corsika_components, simtel_components, combination, variant)
         for combination in catalog["production-combinations"]
-        for variant in combination["cpu-variants"]
+        for variant in combination.get("cpu-variants", variants)
     ]
     simtel_matrix = [
         {

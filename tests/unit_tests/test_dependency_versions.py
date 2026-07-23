@@ -79,6 +79,10 @@ def test_env_template_rejects_mismatched_model_version(tmp_test_directory, simto
             lambda data: data["model-database"].update({"default-version": "v0.16.0"}),
             "must not start",
         ),
+        (
+            lambda data: data["production-combinations"][0].update({"cpu-variants": ["unknown"]}),
+            "Unknown CPU variant",
+        ),
     ],
 )
 def test_validate_dependency_catalog_rejects_invalid_values(simtools_root_path, mutator, error):
@@ -138,6 +142,17 @@ def test_build_workflow_matrices_uses_optional_image_digests(simtools_root_path)
 
     assert matrix[0]["corsika_image"] == f"ghcr.io/gammasim/corsika7@{digest}"
     assert matrix[0]["simtel_image"] == f"ghcr.io/gammasim/sim_telarray@{digest}"
+
+
+def test_production_matrix_uses_global_cpu_variants_by_default(simtools_root_path):
+    """Test production combinations inherit the catalog CPU variants."""
+    catalog = dependency_versions.load_dependency_catalog(simtools_root_path / "pyproject.toml")
+    expected = dependency_versions.build_workflow_matrices(catalog)["production_matrix"]
+    catalog["production-combinations"][0].pop("cpu-variants", None)
+
+    matrix = dependency_versions.build_workflow_matrices(catalog)["production_matrix"]
+
+    assert matrix == expected
 
 
 @pytest.mark.parametrize(
