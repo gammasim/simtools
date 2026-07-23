@@ -7,6 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from simtools.configuration import defaults
+from simtools.corsika.build_options import CorsikaBuildVariant
 from simtools.settings import _Config
 
 
@@ -38,7 +39,19 @@ def simtools_settings(clear_simtools_env):
 
 
 @pytest.fixture
-def config_instance():
+def config_instance(mocker):
+    variants = tuple(
+        CorsikaBuildVariant(
+            executable=f"corsika_{he_model}_urqmd_{geometry}",
+            config=f"config_{he_model}_urqmd_{geometry}",
+            atmosphere_geometry=geometry,
+            he_hadronic_model=he_model,
+            le_hadronic_model="urqmd",
+        )
+        for he_model in ("epos", "qgs3")
+        for geometry in ("flat", "curved")
+    )
+    mocker.patch("simtools.settings.get_installed_corsika_build_variants", return_value=variants)
     return _Config()
 
 
@@ -125,6 +138,62 @@ def test_get_corsika_exec_uses_default_interaction_models(
     )
 
 
+@patch("os.access", return_value=True)
+@patch("pathlib.Path.is_dir", return_value=True)
+@patch("pathlib.Path.is_file", return_value=True)
+@patch.dict(os.environ, {}, clear=True)
+def test_get_corsika_exec_uses_build_manifest(
+    mock_is_file, mock_is_dir, mock_access, config_instance, mocker
+):
+    variants = (
+        CorsikaBuildVariant(
+            executable="corsika_qgs3_urqmd_flat",
+            config="config_qgs3_urqmd_flat",
+            atmosphere_geometry="flat",
+            he_hadronic_model="qgs3",
+            le_hadronic_model="urqmd",
+        ),
+    )
+    mocker.patch("simtools.settings.get_installed_corsika_build_variants", return_value=variants)
+
+    config_instance.load(
+        args={
+            "corsika_path": "/path/to/corsika",
+            "corsika_he_interaction": "QGS3",
+            "corsika_le_interaction": "URQMD",
+        }
+    )
+
+    assert config_instance.corsika_exe == Path("/path/to/corsika/corsika_qgs3_urqmd_flat")
+    assert config_instance.corsika_interaction_models == ("qgs3", "urqmd")
+
+
+@patch("pathlib.Path.is_dir", return_value=True)
+@patch.dict(os.environ, {}, clear=True)
+def test_get_corsika_exec_rejects_variant_missing_from_manifest(
+    mock_is_dir, config_instance, mocker
+):
+    variants = (
+        CorsikaBuildVariant(
+            executable="corsika_epos_urqmd_flat",
+            config="config_epos_urqmd_flat",
+            atmosphere_geometry="flat",
+            he_hadronic_model="epos",
+            le_hadronic_model="urqmd",
+        ),
+    )
+    mocker.patch("simtools.settings.get_installed_corsika_build_variants", return_value=variants)
+
+    with pytest.raises(ValueError, match=r"Unsupported.*qgs3/urqmd/flat"):
+        config_instance.load(
+            args={
+                "corsika_path": "/path/to/corsika",
+                "corsika_he_interaction": "qgs3",
+                "corsika_le_interaction": "urqmd",
+            }
+        )
+
+
 @patch("pathlib.Path.is_dir", return_value=False)
 @patch.dict(os.environ, {}, clear=True)
 def test_load_without_resolving_sim_software_executables(mock_is_dir, config_instance):
@@ -205,7 +274,7 @@ def test_corsika_path_property(mock_is_dir, config_instance):
 @patch.dict(os.environ, {}, clear=True)
 def test_corsika_exe_property(mock_exists, mock_is_file, mock_is_dir, mock_access, config_instance):
     config_instance.load(args={"corsika_path": "/path/to/corsika"})
-    assert config_instance.corsika_exe == Path("/path/to/corsika/corsika")
+    assert config_instance.corsika_exe == Path("/path/to/corsika/corsika_epos_urqmd_flat")
 
 
 @patch("os.access", return_value=True)
@@ -236,7 +305,7 @@ def test_corsika_dummy_file_property(mock_is_dir, config_instance):
 def test_corsika_exe_curved_none():
     config = _Config()
     config._corsika_exe = None
-    with pytest.raises(AttributeError):
+    with pytest.raises(FileNotFoundError, match="manifest has not been loaded"):
         _ = config.corsika_exe_curved
 
 
@@ -258,22 +327,16 @@ def test_corsika_exe_curved_flat(
     assert config_instance.corsika_exe_curved == Path("/path/to/corsika/corsika_qgs3_urqmd_curved")
 
 
-@patch("os.access", return_value=True)
-@patch("pathlib.Path.exists", return_value=False)
 @patch("pathlib.Path.is_dir", return_value=True)
-@patch("pathlib.Path.is_file", return_value=True)
 @patch.dict(os.environ, {}, clear=True)
-def test_corsika_exe_curved_legacy(
-    mock_is_file, mock_is_dir, mock_exists, mock_access, config_instance
-):
-    config_instance.load(
-        args={
-            "corsika_path": "/path/to/corsika",
-            "corsika_he_interaction": None,
-            "corsika_le_interaction": None,
-        }
+def test_load_requires_corsika_build_manifest(mock_is_dir, config_instance, mocker):
+    mocker.patch(
+        "simtools.settings.get_installed_corsika_build_variants",
+        side_effect=FileNotFoundError("build_opts.yml"),
     )
-    assert config_instance.corsika_exe_curved == Path("/path/to/corsika/corsika-curved")
+
+    with pytest.raises(FileNotFoundError, match=r"build_opts\.yml"):
+        config_instance.load(args={"corsika_path": "/path/to/corsika"})
 
 
 @patch("pathlib.Path.is_dir", return_value=True)

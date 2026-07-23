@@ -25,8 +25,6 @@ class CorsikaSimtelRunner:
         Label.
     sequential : bool
         Run multipipe_corsika in sequential mode (disables parallel CORSIKA/sim_telarray execution).
-    curved_atmosphere_min_zenith_angle : astropy.units.Quantity, optional
-        Minimum zenith angle for which to use the curved-atmosphere CORSIKA binary.
     save_corsika_output : bool
         Save the CORSIKA output stream to a compressed file.
     """
@@ -36,7 +34,6 @@ class CorsikaSimtelRunner:
         corsika_config,
         label=None,
         sequential=False,
-        curved_atmosphere_min_zenith_angle=None,
         save_corsika_output=False,
     ):
         self._logger = logging.getLogger(__name__)
@@ -57,7 +54,6 @@ class CorsikaSimtelRunner:
             corsika_config=self.base_corsika_config,
             label=label,
             use_multipipe=True,
-            curved_atmosphere_min_zenith_angle=curved_atmosphere_min_zenith_angle,
         )
         # The simulator array should be defined for every CORSIKA configuration
         # because it allows to define multiple sim_telarray instances

@@ -6,6 +6,10 @@ from pathlib import Path
 from types import MappingProxyType
 
 from simtools.configuration import defaults
+from simtools.corsika.build_options import (
+    get_installed_corsika_build_variants,
+    select_corsika_build_variant,
+)
 from simtools.utils.general import find_executable_in_dir, get_uuid
 
 
@@ -21,6 +25,7 @@ class _Config:
         self._corsika_path = None
         self._corsika_interaction_table_path = None
         self._corsika_exe = None
+        self._corsika_build_variants = None
         self.user = os.getenv("USER", "unknown")
         self.hostname = socket.gethostname()
         self.activity_id = get_uuid()
@@ -68,12 +73,14 @@ class _Config:
             "SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH",
             default=defaults.CORSIKA_INTERACTION_TABLE_PATH,
         )
+        self._corsika_build_variants = None
         if (
             resolve_sim_software_executables
             and self._corsika_path is not None
             and Path(self._corsika_path).is_dir()
         ):
-            self._corsika_exe = self._get_corsika_exec()
+            self._corsika_build_variants = self._load_corsika_build_variants()
+            self._corsika_exe = self._get_corsika_exec("flat")
         else:
             self._corsika_exe = None
 
@@ -91,34 +98,37 @@ class _Config:
         activity_id = args.get("activity_id") if args is not None else None
         return activity_id if activity_id is not None else get_uuid()
 
-    def _get_corsika_exec(self):
-        """
-        Get the CORSIKA executable from environment variable or command line argument.
+    def _load_corsika_build_variants(self):
+        """Load the required CORSIKA build manifest."""
+        if self._corsika_path is None:
+            return None
+        return get_installed_corsika_build_variants(self._corsika_path)
 
-        Build the executable name based on configured interaction models. Fall back to
-        legacy naming (simply "corsika") if models are not specified.
-        """
+    def _get_corsika_interaction_models(self):
+        """Return normalized high- and low-energy interaction model names."""
         he_model = self._get_config_value(
             self._args,
             "corsika_he_interaction",
             "SIMTOOLS_CORSIKA_HE_INTERACTION",
             default=defaults.CORSIKA_HE_INTERACTION,
         )
-
         le_model = self._get_config_value(
             self._args,
             "corsika_le_interaction",
             "SIMTOOLS_CORSIKA_LE_INTERACTION",
             default=defaults.CORSIKA_LE_INTERACTION,
         )
+        return str(he_model).lower(), str(le_model).lower()
 
-        if he_model and le_model:
-            corsika_exe = self.corsika_path / f"corsika_{he_model}_{le_model}_flat"
-            if corsika_exe.exists():
-                return corsika_exe
-
-        # legacy naming
-        return self.corsika_path / "corsika"
+    def _get_corsika_exec(self, geometry):
+        """Get the exact CORSIKA executable declared by the build manifest."""
+        if self._corsika_build_variants is None:
+            raise FileNotFoundError("CORSIKA build manifest has not been loaded")
+        he_model, le_model = self._get_corsika_interaction_models()
+        variant = select_corsika_build_variant(
+            self._corsika_build_variants, he_model, le_model, geometry
+        )
+        return self.corsika_path / variant.executable
 
     @property
     def args(self):
@@ -180,12 +190,12 @@ class _Config:
     @property
     def corsika_exe_curved(self):
         """Path to the curved version of the CORSIKA executable."""
-        corsika_curved = (
-            self._corsika_exe.name.replace("_flat", "_curved")
-            if "_flat" in self._corsika_exe.name
-            else self._corsika_exe.name + "-curved"  # legacy naming convention
-        )
-        return find_executable_in_dir(corsika_curved, self.corsika_path)
+        return find_executable_in_dir(self._get_corsika_exec("curved"), self.corsika_path)
+
+    @property
+    def corsika_interaction_models(self):
+        """Configured high- and low-energy CORSIKA interaction models."""
+        return self._get_corsika_interaction_models()
 
     @property
     def corsika_dummy_file(self):

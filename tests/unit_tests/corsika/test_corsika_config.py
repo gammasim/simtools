@@ -253,8 +253,44 @@ def test_corsika_configuration_interaction_flags(
     assert isinstance(parameters, dict)
     assert "ECUTS" in parameters
     assert parameters["MAXPRT"] == ["10"]
+    assert "HILOW" not in parameters
     # number of parameters depend on HE interaction model (qgs3 or epos)
     assert len(parameters) == 9 or len(parameters) == 19
+
+
+def test_corsika_configuration_custom_hadronic_transition_energy(
+    corsika_config_mock_array_model, get_standard_corsika_parameters, mocker
+):
+    mocker.patch.object(
+        _Config,
+        "args",
+        new_callable=mocker.PropertyMock,
+        return_value={"corsika_hadronic_transition_energy": 120 * u.GeV},
+    )
+
+    parameters = corsika_config_mock_array_model._corsika_configuration_interaction_flags(
+        get_standard_corsika_parameters
+    )
+
+    assert parameters["HILOW"] == [120.0]
+
+
+def test_corsika_configuration_uses_resolved_model_for_epos_flags(
+    corsika_config_mock_array_model, get_standard_corsika_parameters, mocker
+):
+    corsika_config_mock_array_model.corsika_exec = "corsika-production-flat"
+    mocker.patch.object(
+        _Config,
+        "corsika_interaction_models",
+        new_callable=mocker.PropertyMock,
+        return_value=("epos", "urqmd"),
+    )
+
+    parameters = corsika_config_mock_array_model._corsika_configuration_interaction_flags(
+        get_standard_corsika_parameters
+    )
+
+    assert "EPOPAR fname inics" in parameters
 
 
 def test_input_config_first_interaction_height(corsika_config_mock_array_model):
@@ -740,7 +776,7 @@ def test_use_curved_atmosphere(corsika_config_mock_array_model):
         "curved_atmosphere_min_zenith_angle": 90 * u.deg,
         "zenith_angle": 90 * u.deg,
     }
-    assert not corsika_config_mock_array_model.use_curved_atmosphere
+    assert corsika_config_mock_array_model.use_curved_atmosphere
 
     corsika_config_mock_array_model.use_curved_atmosphere = None
     assert not corsika_config_mock_array_model.use_curved_atmosphere

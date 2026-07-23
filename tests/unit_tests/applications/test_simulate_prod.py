@@ -113,6 +113,39 @@ def test_add_arguments_save_corsika_output():
     assert args.save_corsika_output is True
 
 
+def test_list_available_corsika_models_exits_with_table(tmp_test_directory, capsys):
+    build_options = tmp_test_directory / "build_opts.yml"
+    build_options.write_text(
+        "variant:\n"
+        "  - executable: corsika_qgs3_urqmd_flat\n"
+        "    config: config_qgs3_urqmd_flat\n"
+        "    atmosphere_geometry: flat\n"
+        "    he_hadronic_model: qgs3\n"
+        "    le_hadronic_model: urqmd\n",
+        encoding="utf-8",
+    )
+    executable = Path(tmp_test_directory) / "corsika_qgs3_urqmd_flat"
+    executable.touch()
+    executable.chmod(0o755)
+
+    with pytest.raises(SystemExit) as exc:
+        app._list_available_corsika_models(
+            {"corsika_path": tmp_test_directory}, argparse.ArgumentParser()
+        )
+
+    assert exc.value.code == 0
+    assert "qgs3" in capsys.readouterr().out
+
+
+def test_validate_single_interaction_models_rejects_lists(capsys):
+    with pytest.raises(SystemExit):
+        app._validate_single_interaction_models(
+            {"corsika_he_interaction": ["epos", "qgs3"]}, argparse.ArgumentParser()
+        )
+
+    assert "accepts exactly one value" in capsys.readouterr().err
+
+
 @pytest.mark.parametrize(
     ("row_args", "expected"),
     [
@@ -207,7 +240,7 @@ def test_main_uses_explicit_application_definition(mock_application_start, mock_
 
     mock_application_start.assert_called_once_with()
     assert app.APPLICATION.setup_io_handler is False
-    assert app.APPLICATION.post_parse == app._resolve_job_grid_arguments
+    assert app.APPLICATION.post_parse == app._post_parse
 
 
 @patch("simtools.applications.simulate_prod.Simulator")

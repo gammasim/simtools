@@ -35,6 +35,7 @@ SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS = frozenset(
         "array_layout_name",
         "corsika_le_interaction",
         "corsika_he_interaction",
+        "corsika_hadronic_transition_energy",
         "run_number",
         "run_number_offset",
         "site",
@@ -347,6 +348,8 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
         # since the job grid row already specifies the run number.
         "run_number_offset": 0,
     }
+    if job_row.get("corsika_hadronic_transition_energy") is not None:
+        args["corsika_hadronic_transition_energy"] = job_row["corsika_hadronic_transition_energy"]
     if metadata:
         for key in ("site", "simulation_software"):
             if metadata.get(key):
