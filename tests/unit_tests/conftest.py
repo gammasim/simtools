@@ -25,7 +25,14 @@ from dotenv import load_dotenv
 
 import simtools.io.io_handler
 from simtools import settings
-from simtools.configuration.configurator import Configurator
+from simtools.configuration.arguments import (
+    OVERWRITE_MODEL_PARAMETERS,
+    PATH_ARGUMENTS,
+    SITE,
+    STANDARD_ARGUMENTS,
+    TELESCOPE,
+)
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.db import db_handler
 from simtools.db.mongo_db import MongoDBHandler
@@ -288,31 +295,41 @@ def _mock_settings_env_vars(tmp_test_directory):
 @pytest.fixture
 def args_dict(tmp_test_directory, data_path):
     """Minimal configuration from command line."""
-    return Configurator().default_config(
-        (
-            "--output_path",
-            str(tmp_test_directory),
-            "--data_path",
-            data_path,
-        ),
+    parser = CommandLineParser()
+    parser.add_argument_definitions((*PATH_ARGUMENTS, *STANDARD_ARGUMENTS))
+    return vars(
+        parser.parse_args(
+            (
+                "--output_path",
+                str(tmp_test_directory),
+                "--data_path",
+                data_path,
+            )
+        )
     )
 
 
 @pytest.fixture
 def args_dict_site(tmp_test_directory, data_path):
     "Configuration include site and telescopes."
-    return Configurator().default_config(
-        (
-            "--output_path",
-            str(tmp_test_directory),
-            "--data_path",
-            data_path,
-            "--site",
-            "South",
-            "--telescope",
-            "MSTS-07",
-            "--label",
-            "integration_test",
+    parser = CommandLineParser()
+    parser.add_argument_definitions(
+        (*PATH_ARGUMENTS, OVERWRITE_MODEL_PARAMETERS, SITE, TELESCOPE, *STANDARD_ARGUMENTS)
+    )
+    return vars(
+        parser.parse_args(
+            (
+                "--output_path",
+                str(tmp_test_directory),
+                "--data_path",
+                data_path,
+                "--site",
+                "South",
+                "--telescope",
+                "MSTS-07",
+                "--label",
+                "integration_test",
+            )
         )
     )
 

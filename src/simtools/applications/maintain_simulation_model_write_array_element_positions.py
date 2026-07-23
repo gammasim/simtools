@@ -43,36 +43,43 @@
 
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.layout.array_layout_utils import write_array_elements_from_file_to_repository
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--input",
-        help="File containing a table of array element positions.",
-        required=False,
-    )
-    parser.add_argument(
-        "--coordinate_system",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "input", help="File containing a table of array element positions.", required=False
+    ),
+    cli.ArgumentDefinition(
+        "coordinate_system",
         help="Coordinate system of array element positions (utm or ground).",
         default="ground",
         required=False,
         type=str,
         choices=["ground", "utm"],
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.PARAMETER_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    database=True,
+    initialize_output=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "output": True,
-            "simulation_model": ["parameter_version"],
-        },
-    )
+    app_context = APPLICATION.start()
 
     write_array_elements_from_file_to_repository(
         coordinate_system=app_context.args["coordinate_system"],

@@ -53,39 +53,42 @@ r"""
 
 from pathlib import Path
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.db import db_handler, db_model_upload
 from simtools.settings import config
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--input_path",
-        help="Path to simulation model repository.",
-        type=Path,
-        required=True,
-    )
-    parser.add_argument(
-        "--type",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "input_path", help="Path to simulation model repository.", type=Path, required=True
+    ),
+    cli.ArgumentDefinition(
+        "type",
         help="Type of data to be uploaded to the database.",
         type=str,
         required=False,
         default="model_parameters",
         choices=["model_parameters", "production_tables"],
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    database=True,
+    initialize_output=True,
+    setup_io_handler=False,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "output": True,
-            "require_command_line": True,
-            "db_config": True,
-        },
-        startup_kwargs={"setup_io_handler": False},
-    )
+    app_context = APPLICATION.start()
 
     if app_context.args.get("db_simulation_model") and app_context.args.get(
         "db_simulation_model_version"

@@ -48,51 +48,50 @@ r"""
 
 """
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import metadata_collector, schema, validate_data
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--file_name",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "file_name",
         help="File to be validated (full path or name pattern, e.g., '*.json')",
         default="*.json",
-    )
-    parser.add_argument(
-        "--file_directory",
+    ),
+    cli.ArgumentDefinition(
+        "file_directory",
         help=(
-            "Directory with files to be validated. "
-            "If no schema file is provided, the assumption is that model "
-            "parameters are validated and the schema files are taken from "
+            "Directory with files to validate. Without a schema file, model parameters are "
+            "assumed and schemas are read from "
             f"{MODEL_PARAMETER_SCHEMA_PATH}."
         ),
-    )
-    parser.add_argument("--schema", help="Schema file", required=False)
-    parser.add_argument(
-        "--data_type",
+    ),
+    cli.ArgumentDefinition("schema", help="Schema file", required=False),
+    cli.ArgumentDefinition(
+        "data_type",
         help="Type of input data",
         choices=["metadata", "schema", "data", "model_parameter"],
         default="data",
-    )
-    parser.add_argument(
-        "--check_exact_data_type",
-        help="Require exact data type for validation",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--ignore_software_version",
-        help="Ignore software version check.",
-        action="store_true",
-    )
+    ),
+    cli.ArgumentDefinition(
+        "check_exact_data_type", help="Require exact data type for validation", action="store_true"
+    ),
+    cli.ArgumentDefinition(
+        "ignore_software_version", help="Ignore software version check.", action="store_true"
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(*_ARGUMENTS,),
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={"paths": False},
-    )
+    app_context = APPLICATION.start()
 
     file_name = app_context.args.get("file_name")
     file_directory = app_context.args.get("file_directory")

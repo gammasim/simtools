@@ -10,7 +10,7 @@ from simtools.configuration.commandline_parser import CommandLineParser
 
 def test_add_arguments_parses_required_input_and_default_limit():
     parser = CommandLineParser()
-    inspect_file._add_arguments(parser)
+    parser.add_argument_definitions(inspect_file._ARGUMENTS)
 
     args = parser.parse_args(["--input_file", "test.hdf5"])
 
@@ -20,7 +20,7 @@ def test_add_arguments_parses_required_input_and_default_limit():
 
 def test_add_arguments_accepts_zero_as_unlimited_limit():
     parser = CommandLineParser()
-    inspect_file._add_arguments(parser)
+    parser.add_argument_definitions(inspect_file._ARGUMENTS)
 
     args = parser.parse_args(["--input_file", "test.hdf5", "--max_entries", "0"])
 
@@ -32,7 +32,7 @@ def test_main_builds_application_and_prints_report():
 
     with (
         patch(
-            "simtools.applications.inspect_file.build_application",
+            "simtools.application.definition.ApplicationDefinition.start",
             return_value=app_context,
         ) as mock_build,
         patch(
@@ -43,9 +43,8 @@ def test_main_builds_application_and_prints_report():
     ):
         inspect_file.main()
 
-    mock_build.assert_called_once_with(
-        initialization_kwargs={"db_config": False},
-        startup_kwargs={"setup_io_handler": False},
-    )
+    mock_build.assert_called_once_with()
+    assert inspect_file.APPLICATION.database is False
+    assert inspect_file.APPLICATION.setup_io_handler is False
     mock_inspect.assert_called_once_with("test.hdf5", max_entries=25, format_report=True)
     mock_print.assert_called_once_with("report output\nspecialized output")

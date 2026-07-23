@@ -111,53 +111,63 @@ r"""
 
 from pprint import pprint
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.db import db_handler
 from simtools.io import ascii_handler
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument("--parameter", help="Parameter name", type=str, required=True)
-    parser.add_argument(
-        "--output_file",
+_ARGUMENTS = (
+    cli.ArgumentDefinition("parameter", help="Parameter name", type=str, required=True),
+    cli.ArgumentDefinition(
+        "output_file",
         help=(
-            "Output file name for writing the DB entry, overriding file-backed export "
-            "name, or base name for ECSV export of dict-backed tables."
+            "Output file name for writing the DB entry, overriding file-backed export name, "
+            "or base name for ECSV export of dict-backed tables."
         ),
         type=str,
         required=False,
-    )
-    parser.add_argument(
-        "--export_model_file",
+    ),
+    cli.ArgumentDefinition(
+        "export_model_file",
         help=(
             "Export parameter data (model files for file-backed parameters; ECSV for "
             "dict-backed table parameters)."
         ),
         action="store_true",
         required=False,
-    )
-    parser.add_argument(
-        "--export_model_file_as_table",
+    ),
+    cli.ArgumentDefinition(
+        "export_model_file_as_table",
         help=(
-            "Also export file-backed parameters as ECSV. Use together with "
-            "--export_model_file. "
-            "(legacy option; as file-backed parameters will be replaced by table-backed ones, "
-            "this option will be removed in the future)"
+            "Also export file-backed parameters as ECSV. Use with --export_model_file. "
+            "This legacy option will be removed when file-backed parameters are replaced "
+            "by table-backed ones."
         ),
         action="store_true",
         required=False,
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION,
+        cli.PARAMETER_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE,
+        cli.TELESCOPE,
+        *cli.PATH_ARGUMENTS,
+    ),
+    database=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "simulation_model": ["telescope", "parameter_version", "model_version"],
-        },
-    )
+    app_context = APPLICATION.start()
 
     db = db_handler.DatabaseHandler()
 

@@ -10,8 +10,14 @@ import astropy.units as u
 import pytest
 import yaml
 
-from simtools import settings
-from simtools.configuration.commandline_parameters import PARAMETER_DEFINITIONS
+from simtools.configuration.arguments import (
+    ARRAY_LAYOUT_NAME,
+    DATABASE_ARGUMENTS,
+    OUTPUT_ARGUMENTS,
+    PATH_ARGUMENTS,
+    SHOWER_ARGUMENTS,
+    STANDARD_ARGUMENTS,
+)
 from simtools.configuration.configurator import Configurator
 from simtools.io import io_handler
 
@@ -21,12 +27,8 @@ logger = logging.getLogger()
 @pytest.fixture
 def configurator(tmp_test_directory, _mock_settings_env_vars):
     config = Configurator()
-    config.default_config(
-        (
-            "--output_path",
-            str(tmp_test_directory),
-        )
-    )
+    config.parser.add_argument_definitions((*PATH_ARGUMENTS, *STANDARD_ARGUMENTS))
+    config.config = vars(config.parser.parse_args(("--output_path", str(tmp_test_directory))))
     return config
 
 
@@ -43,6 +45,9 @@ def test_command_line_precedence_over_config_file(tmp_test_directory, monkeypatc
 
     # Initialize configurator with command-line args that differ from config file
     configurator = Configurator()
+    configurator.parser.add_argument_definitions(
+        (*PATH_ARGUMENTS, *OUTPUT_ARGUMENTS, *STANDARD_ARGUMENTS)
+    )
     monkeypatch.setattr(
         sys,
         "argv",
@@ -56,7 +61,7 @@ def test_command_line_precedence_over_config_file(tmp_test_directory, monkeypatc
             "info",
         ],
     )
-    config, _ = configurator.initialize(require_command_line=False, output=True)
+    config, _ = configurator.configure(initialize_output=True)
 
     # Command-line values should take precedence
     assert config["label"] == "cli_label"
@@ -76,12 +81,28 @@ def test_config_file_applies_when_no_command_line(tmp_test_directory, monkeypatc
 
     # Initialize configurator with only config file (no CLI overrides for these keys)
     configurator = Configurator()
+    configurator.parser.add_argument_definitions(
+        (*PATH_ARGUMENTS, *OUTPUT_ARGUMENTS, *STANDARD_ARGUMENTS)
+    )
     monkeypatch.setattr(sys, "argv", ["test_configurator.py", "--config", str(_config_file)])
-    config, _ = configurator.initialize(require_command_line=False, output=True)
+    config, _ = configurator.configure(initialize_output=True)
 
     # Config file values should be used
     assert config["label"] == "config_label"
     assert config["log_level"] == "debug"
+
+
+def test_parser_defaults_are_converted(monkeypatch):
+    """Parser defaults pass through the same converters as configured values."""
+    configurator = Configurator()
+    configurator.parser.add_argument_definitions((*SHOWER_ARGUMENTS, *STANDARD_ARGUMENTS))
+    monkeypatch.setattr(sys, "argv", ["test_configurator.py", "--label", "test"])
+
+    config, _ = configurator.configure()
+
+    assert config["view_cone"] == (0 * u.deg, 0 * u.deg)
+    assert config["core_scatter"] == (10, 10000 * u.m)
+    assert config["energy_range"] == (3 * u.GeV, 330 * u.TeV)
 
 
 def test_config_from_file_preserves_selected_by_version_keys(tmp_test_directory):
@@ -106,10 +127,8 @@ def test_config_from_file_preserves_selected_by_version_keys(tmp_test_directory)
         yaml.safe_dump(config_dict, output, sort_keys=False)
 
     config_builder = Configurator()
-    loaded_config = config_builder._config_from_file(
-        config_file,
-        preserve_by_version_keys=["array_layout_name"],
-    )
+    config_builder.parser.add_argument_definitions((ARRAY_LAYOUT_NAME,))
+    loaded_config = config_builder._config_from_file(config_file)
 
     assert loaded_config["model_version"] == ["6.3.0", "7.0.0"]
     assert loaded_config["array_layout_name"] == {
@@ -118,6 +137,31 @@ def test_config_from_file_preserves_selected_by_version_keys(tmp_test_directory)
             ">=7.0.0": "CTAO-North-Alpha",
         }
     }
+
+
+def test_config_from_file_rejects_inconsistent_unpreserved_by_version_key(
+    tmp_test_directory,
+):
+    config_file = tmp_test_directory / "configuration-reject-by-version.yml"
+    with open(config_file, "w", encoding="utf-8") as output:
+        yaml.safe_dump(
+            {
+                "model_version": ["6.3.0", "7.0.0"],
+                "site": {
+                    "by_version": {
+                        "<7.0.0": "North",
+                        ">=7.0.0": "South",
+                    }
+                },
+            },
+            output,
+            sort_keys=False,
+        )
+
+    config_builder = Configurator()
+
+    with pytest.raises(ValueError, match="Inconsistent by_version resolution for key 'site'"):
+        config_builder._config_from_file(config_file)
 
 
 def test_config_from_file_resolves_test_resource_paths(tmp_test_directory):
@@ -232,38 +276,29 @@ def test_convert_string_none_to_none():
     assert _tmp_none == Configurator._convert_string_none_to_none(_tmp_dict)
 
 
-def test_get_db_parameters_from_env(configurator, args_dict):
-    configurator.parser.initialize_argument_group(
-        "database configuration", ["all"], PARAMETER_DEFINITIONS["DB_CONFIG_ARGS"]
-    )
-    configurator._fill_config([])
+def test_get_db_parameters_from_env(configurator):
+    configurator.parser.add_argument_definitions(DATABASE_ARGUMENTS)
     configurator.config["env_file"] = "this_file_does_not_exist.env"
     _env_config = configurator._config_from_env(configurator.config["env_file"])
-    configurator._fill_config(configurator._arglist_from_config(_env_config))
+    configurator.config = vars(
+        configurator.parser.parse_args(
+            configurator._arglist_from_config(_env_config, parser=configurator.parser)
+        )
+    )
 
-    args_dict["db_api_user"] = "db_user"
-    args_dict["db_api_pw"] = "12345"
-    args_dict["db_api_port"] = 42
-    args_dict["db_server"] = "abc@def.de"
-    args_dict["db_simulation_model"] = "sim_model"
-    args_dict["db_simulation_model_version"] = "v0.0.0"
-    args_dict["env_file"] = "this_file_does_not_exist.env"
-
-    # remove user defined parameters from comparison (depends on environment)
-    expected_config = {k: v for k, v in args_dict.items() if not k.startswith("user_")}
-    actual_config = {k: v for k, v in configurator.config.items() if not k.startswith("user_")}
-    actual_config.pop("db_api_authentication_database")  # depends on user setup; ignore here
-
-    expected_config["sim_telarray_path"] = settings.config.sim_telarray_path
-
-    assert expected_config == actual_config
+    assert configurator._get_db_parameters() == {
+        "db_api_authentication_database": None,
+        "db_api_port": 42,
+        "db_api_pw": "12345",
+        "db_api_user": "db_user",
+        "db_server": "abc@def.de",
+        "db_simulation_model": "sim_model",
+        "db_simulation_model_version": "v0.0.0",
+    }
 
 
 def test_initialize_output(configurator):
-    configurator.parser.initialize_argument_group(
-        "output", ["all"], PARAMETER_DEFINITIONS["OUTPUT_ARGS"]
-    )
-    configurator._fill_config([])
+    configurator.config.update(output_file=None, output_file_format="ecsv")
 
     # output file for testing
     configurator.config["test"] = True
@@ -290,24 +325,9 @@ def test_initialize_output(configurator):
     assert configurator.config["output_file"] == "unit_test.txt"
 
 
-def test_default_config_with_site():
-    configurator = Configurator(config={})
-    configurator.default_config(arg_list=["--site", "North"])
-    assert "site" in configurator.config
-    assert "telescope" not in configurator.config
-
-
-def test_default_config_with_telescope():
-    configurator = Configurator(config={})
-    configurator.default_config(arg_list=["--telescope", "LSTN-01"])
-    assert "telescope" in configurator.config
-    assert "site" in configurator.config
-
-
 def test_get_db_parameters():
-    # default config
     configurator = Configurator(config={})
-    configurator.default_config(add_db_config=True)
+    configurator.config = {argument.name: None for argument in DATABASE_ARGUMENTS}
     db_params = configurator._get_db_parameters()
     assert db_params == {
         "db_api_authentication_database": None,
@@ -321,7 +341,6 @@ def test_get_db_parameters():
 
     # filled with one entry only
     configurator = Configurator(config={})
-    configurator.default_config(add_db_config=True)
     configurator.config = {
         "db_api_port": 1234,
     }
@@ -332,7 +351,6 @@ def test_get_db_parameters():
 
     # filled config
     configurator = Configurator()
-    configurator.default_config(add_db_config=True)
     configurator.config = {
         "db_api_user": "user",
         "db_api_pw": "password",
@@ -352,34 +370,36 @@ def test_get_db_parameters():
 
     # empty config
     configurator = Configurator(config={})
-    configurator.default_config(add_db_config=True)
     configurator.config = {}
     db_params = configurator._get_db_parameters()
     assert db_params == {}
 
 
-def test_reset_requirements_parameter():
-    configurator = Configurator()
+def test_required_argument_can_be_supplied_by_constructor_configuration(monkeypatch):
+    configurator = Configurator(config={"arg": "configured"})
     configurator.parser.add_argument("--arg", required=True)
-    configurator.config["arg"] = True
+    configurator.parser.add_argument("--label")
+    monkeypatch.setattr("sys.argv", ["application", "--label", "test"])
 
-    configurator._reset_required_arguments()
+    config, _ = configurator.configure()
 
-    for action in configurator.parser._actions:
-        assert action.required is False
+    assert config["arg"] == "configured"
+    assert next(action for action in configurator.parser._actions if action.dest == "arg").required
 
 
-def test_reset_required_arguments_group():
-    configurator = Configurator()
+def test_cli_exclusive_argument_overrides_configured_alternative(monkeypatch):
+    configurator = Configurator(config={"arg1": "configured"})
     group = configurator.parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--arg1")
     group.add_argument("--arg2")
-    configurator.config["arg1"] = True
+    configurator.parser.add_argument("--label")
+    monkeypatch.setattr("sys.argv", ["application", "--arg2", "cli"])
 
-    configurator._reset_required_arguments()
+    config, _ = configurator.configure()
 
-    for group in configurator.parser._mutually_exclusive_groups:
-        assert group.required is False
+    assert config["arg1"] is None
+    assert config["arg2"] == "cli"
+    assert group.required
 
 
 def test_set_model_versions(configurator):
@@ -405,26 +425,20 @@ def test_set_model_versions(configurator):
 
 
 def test_initialize(configurator):
-    configurator.parser.initialize_default_arguments = MagicMock()
     configurator._get_cli_arglist = MagicMock(return_value=[])
     configurator._config_from_env = MagicMock(return_value={})
     configurator._config_from_file = MagicMock(return_value={})
-    configurator._fill_config = MagicMock()
-    configurator._reset_required_arguments = MagicMock()
     configurator._initialize_model_versions = MagicMock()
     configurator._initialize_io_handler = MagicMock()
     configurator._initialize_output = MagicMock()
     configurator._get_db_parameters = MagicMock(return_value={"db_param": "test"})
 
-    # Call initialize with default parameters
-    config, db_dict = configurator.initialize()
+    config, db_dict = configurator.configure()
 
     # Assert that the methods were called
-    configurator.parser.initialize_default_arguments.assert_called_once()
-    configurator._get_cli_arglist.assert_called_once_with(require_command_line=True)
+    configurator._get_cli_arglist.assert_called_once_with()
     configurator._config_from_env.assert_called_once_with(".env")
     configurator._config_from_file.assert_called_once_with(None)
-    configurator._fill_config.assert_called_once_with([])
     configurator._initialize_model_versions.assert_called_once()
     configurator._initialize_io_handler.assert_called_once()
     configurator._initialize_output.assert_not_called()
@@ -436,22 +450,12 @@ def test_initialize(configurator):
     assert config["label"] == configurator.label
     assert db_dict == {"db_param": "test"}
 
-    # Call initialize with custom parameters
-    configurator.initialize(
-        require_command_line=False,
-        paths=False,
-        output=True,
-        simulation_model=["site"],
-        simulation_configuration={"test": "test"},
-        db_config=True,
-    )
+    configurator.configure(initialize_output=True)
 
     # Assert that the methods were called with the correct parameters
-    configurator.parser.initialize_default_arguments.assert_called()
     configurator._get_cli_arglist.assert_called()
     configurator._config_from_env.assert_called()
     configurator._config_from_file.assert_called()
-    configurator._fill_config.assert_called()
     configurator._initialize_model_versions.assert_called()
     configurator._initialize_io_handler.assert_called()
     configurator._initialize_output.assert_called_once()
@@ -459,9 +463,6 @@ def test_initialize(configurator):
 
     # test activity_id and label
     configurator.config_class_init = {"activity_id": "test_activity_id", "label": "test_label"}
-    configurator._fill_config.side_effect = lambda _: configurator.config.update(
-        {"activity_id": "test_activity_id", "label": "test_label"}
-    )
-    configurator.initialize()
+    configurator.configure()
     assert configurator.config["activity_id"] == "test_activity_id"
     assert configurator.config["label"] == "test_label"
