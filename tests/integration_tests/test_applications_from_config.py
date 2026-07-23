@@ -14,6 +14,20 @@ from simtools.testing import configuration, helpers, log_inspector, validate_out
 logger = logging.getLogger()
 
 
+def _get_simulation_models_path(config, request, simtools_root_path):
+    """Return the configured model path or skip MongoDB-only applications."""
+    simulation_models_path = request.config.getoption("simulation_models_path", default=None)
+    if not simulation_models_path:
+        return None
+    if config.get("requires_mongodb"):
+        pytest.skip(f"{config['application']} requires MongoDB")
+
+    simulation_models_path = Path(simulation_models_path)
+    if not simulation_models_path.is_absolute():
+        simulation_models_path = Path(simtools_root_path) / simulation_models_path
+    return simulation_models_path.resolve()
+
+
 def pytest_generate_tests(metafunc):
     """Parametrize application tests using the configured test-resources path."""
     if "config" not in metafunc.fixturenames:
@@ -38,7 +52,9 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize("config", test_parameters)
 
 
-def test_applications_from_config(tmp_test_directory, config, request, simtools_root_path):
+def test_applications_from_config(
+    tmp_test_directory, config, request, simtools_root_path, monkeypatch
+):
     """
     Test all applications from config files found in the config directory.
 
@@ -65,6 +81,10 @@ def test_applications_from_config(tmp_test_directory, config, request, simtools_
 
     if tmp_config.get("skip_integration_test"):
         pytest.skip(tmp_config["skip_integration_test"])
+
+    simulation_models_path = _get_simulation_models_path(tmp_config, request, simtools_root_path)
+    if simulation_models_path:
+        monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(simulation_models_path))
 
     logger.info(f"Test configuration from config file: {tmp_config}")
     logger.info(f"Model version: {model_version}")
@@ -110,4 +130,40 @@ def test_applications_from_config(tmp_test_directory, config, request, simtools_
         tmp_config,
         model_version,
         config_file_model_version or model_version,
+    )
+
+
+def test_get_simulation_models_path(tmp_test_directory, mocker):
+    """Resolve a relative simulation-model path against the simtools root."""
+    request = mocker.MagicMock()
+    request.config.getoption.return_value = "../simulation-models"
+    root_path = Path(tmp_test_directory) / "simtools"
+
+    path = _get_simulation_models_path(
+        {"application": "simtools-simulate-prod"}, request, root_path
+    )
+
+    assert path == (root_path / "../simulation-models").resolve()
+
+
+def test_mongodb_only_application_is_skipped(tmp_test_directory, mocker):
+    """Skip MongoDB-only applications when filesystem model access is selected."""
+    request = mocker.MagicMock()
+    request.config.getoption.return_value = "../simulation-models"
+    config = {"application": "simtools-mongodb-operation", "requires_mongodb": True}
+
+    with pytest.raises(pytest.skip.Exception, match="simtools-mongodb-operation requires MongoDB"):
+        _get_simulation_models_path(config, request, tmp_test_directory)
+
+
+def test_get_simulation_models_path_is_optional(tmp_test_directory, mocker):
+    """Leave integration tests unchanged when no filesystem path is configured."""
+    request = mocker.MagicMock()
+    request.config.getoption.return_value = None
+
+    assert (
+        _get_simulation_models_path(
+            {"application": "simtools-simulate-prod"}, request, tmp_test_directory
+        )
+        is None
     )

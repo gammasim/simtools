@@ -6,6 +6,7 @@ applications:
     db_simulation_model: sandbox
     file_name: tests/resources/generated/model_parameters/array_layouts-2.0.2.json
     test_db: true
+  requires_mongodb: true
   skip_for_production_db: true
   test_name: run
 schema_name: application_workflow.metaschema

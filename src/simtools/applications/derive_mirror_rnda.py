@@ -67,63 +67,57 @@ Example
 
 from pathlib import Path
 
-from simtools.application_control import build_application
+from simtools.application.definition import ApplicationDefinition
+from simtools.configuration import arguments as cli
 from simtools.ray_tracing.mirror_panel_psf import MirrorPanelPSF
 from simtools.ray_tracing.psf_parameter_optimisation import cleanup_intermediate_files
 
-
-def _add_arguments(parser):
-    """Register application-specific command line arguments."""
-    parser.add_argument(
-        "--data",
-        help="ECSV file with a PSF diameter column (mm) per mirror",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "--threshold",
+_ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "data", help="ECSV file with a PSF diameter column (mm) per mirror", type=str, required=True
+    ),
+    cli.ArgumentDefinition(
+        "threshold",
         help="Convergence threshold for percentage difference.",
         type=float,
         required=False,
         default=0.05,
-    )
-    parser.add_argument(
-        "--learning_rate",
+    ),
+    cli.ArgumentDefinition(
+        "learning_rate",
         help="Learning rate for gradient descent.",
         type=float,
         required=False,
         default=0.001,
-    )
-    parser.add_argument(
-        "--fraction",
-        help=(
-            "PSF containment fraction for diameter calculation (e.g., 0.8 for D80, 0.95 for D95)."
-        ),
+    ),
+    cli.ArgumentDefinition(
+        "fraction",
+        help="PSF containment fraction for diameter calculation (e.g., 0.8 for D80, 0.95 for D95).",
         type=float,
         default=0.8,
-    )
-    parser.add_argument(
-        "--max_workers",
+    ),
+    cli.ArgumentDefinition(
+        "max_workers",
         help="Number of parallel worker processes to use.",
         type=int,
         required=False,
         default=0,
-    )
-    parser.add_argument(
-        "--number_of_mirrors_to_test",
+    ),
+    cli.ArgumentDefinition(
+        "number_of_mirrors_to_test",
         help="Number of mirrors to optimize when --test is used.",
         type=int,
         required=False,
         default=10,
-    )
-    parser.add_argument(
-        "--profile_serial",
+    ),
+    cli.ArgumentDefinition(
+        "profile_serial",
         action="store_true",
         default=False,
         help="Run optimization in a single process (no process pool).",
-    )
-    parser.add_argument(
-        "--psf_hist",
+    ),
+    cli.ArgumentDefinition(
+        "psf_hist",
         nargs="?",
         const="psf_distributions.png",
         default=None,
@@ -131,26 +125,39 @@ def _add_arguments(parser):
             "Write a histogram comparing measured vs simulated PSF diameter distributions. "
             "Optionally provide a filename (relative to output dir unless absolute)."
         ),
-    )
-    parser.add_argument(
-        "--cleanup",
+    ),
+    cli.ArgumentDefinition(
+        "cleanup",
         action="store_true",
         default=False,
         help=(
             "Remove intermediate files from the output directory (patterns: *.log, *.lis*, *.dat)."
         ),
-    )
+    ),
+)
+
+
+APPLICATION = ApplicationDefinition.for_module(
+    __name__,
+    arguments=(
+        *_ARGUMENTS,
+        cli.MODEL_VERSION,
+        cli.PARAMETER_VERSION,
+        cli.OVERWRITE_MODEL_PARAMETERS,
+        cli.IGNORE_MISSING_DESIGN_MODEL,
+        cli.SITE,
+        cli.TELESCOPE,
+        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_ARGUMENTS,
+    ),
+    database=True,
+    initialize_output=True,
+)
 
 
 def main():
     """See CLI description."""
-    app_context = build_application(
-        initialization_kwargs={
-            "db_config": True,
-            "output": True,
-            "simulation_model": ["telescope", "model_version", "site", "parameter_version"],
-        },
-    )
+    app_context = APPLICATION.start()
     panel_psf = MirrorPanelPSF(app_context.args.get("label"), app_context.args)
     panel_psf.optimize_with_gradient_descent()
     panel_psf.write_optimization_data()
