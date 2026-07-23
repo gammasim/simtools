@@ -82,6 +82,7 @@ _SIMULATION_MODEL_GROUP = "simulation model"
 _SIMULATION_CONFIGURATION_GROUP = "simulation configuration"
 _SHOWER_PARAMETERS_GROUP = "shower parameters"
 _SIM_TELARRAY_CONFIGURATION_GROUP = "sim_telarray configuration"
+_CORSIKA_CONFIGURATION_GROUP = "corsika configuration"
 
 
 CONFIG = _argument(
@@ -705,7 +706,7 @@ SHOWER_ARGUMENTS = (
 
 CORSIKA_HE_INTERACTION = _argument(
     "corsika_he_interaction",
-    "corsika configuration",
+    _CORSIKA_CONFIGURATION_GROUP,
     help=(
         "High-energy interaction model for CORSIKA "
         f"(default fallback: {defaults.CORSIKA_HE_INTERACTION})."
@@ -718,7 +719,7 @@ CORSIKA_HE_INTERACTION = _argument(
 
 CORSIKA_LE_INTERACTION = _argument(
     "corsika_le_interaction",
-    "corsika configuration",
+    _CORSIKA_CONFIGURATION_GROUP,
     help=(
         "Low-energy interaction model for CORSIKA "
         f"(default fallback: {defaults.CORSIKA_LE_INTERACTION})."
@@ -729,9 +730,22 @@ CORSIKA_LE_INTERACTION = _argument(
     default=None,
 )
 
+CORSIKA_HADRONIC_TRANSITION_ENERGY = _argument(
+    "corsika_hadronic_transition_energy",
+    _CORSIKA_CONFIGURATION_GROUP,
+    help=(
+        "Transition energy between the low- and high-energy CORSIKA hadronic "
+        "interaction models. Unitless values are interpreted as GeV. If omitted, "
+        "the CORSIKA build default is used."
+    ),
+    type=helpers.positive_quantity("GeV"),
+    default=None,
+)
+
 CORSIKA_INTERACTION_ARGUMENTS = (
     CORSIKA_HE_INTERACTION,
     CORSIKA_LE_INTERACTION,
+    CORSIKA_HADRONIC_TRANSITION_ENERGY,
 )
 
 SIM_TELARRAY_INSTRUMENT_SEED = _argument(

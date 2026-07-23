@@ -104,7 +104,7 @@ class CorsikaConfig:
             try:
                 self._use_curved_atmosphere = (
                     args.get("zenith_angle", 0.0 * u.deg).to("deg").value
-                    > args["curved_atmosphere_min_zenith_angle"].to("deg").value
+                    >= args["curved_atmosphere_min_zenith_angle"].to("deg").value
                 )
             except KeyError:
                 self._use_curved_atmosphere = False
@@ -432,8 +432,11 @@ class CorsikaConfig:
         )
         parameters["MAXPRT"] = ["10"]
         parameters["ECTMAP"] = ["1.e6"]
+        transition_energy = settings.config.args.get("corsika_hadronic_transition_energy")
+        if transition_energy is not None:
+            parameters["HILOW"] = [transition_energy.to_value("GeV")]
 
-        if "epos" in str(self.corsika_exec).lower():
+        if settings.config.corsika_interaction_models[0] == "epos":
             parameters.update(self._epos_flags())
 
         self._logger.debug(f"Interaction parameters: {parameters}")

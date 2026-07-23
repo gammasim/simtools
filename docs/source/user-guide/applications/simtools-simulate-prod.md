@@ -16,6 +16,11 @@ The application produces multipipe scripts and runs array-layout simulations tha
 and detector simulations. It can execute only the CORSIKA shower simulation or pipe CORSIKA output
 directly to sim_telarray using the sim_telarray multipipe mechanism.
 
+The installed CORSIKA build determines which hadronic interaction-model combinations are
+available. Use `--list_available_corsika_models` to inspect them. For simulations that run
+CORSIKA, `--corsika_hadronic_transition_energy` controls the `HILOW` transition between the
+low- and high-energy models. If omitted, the selected CORSIKA build default is retained.
+
 ## Command line arguments
 
 ```{eval-rst}

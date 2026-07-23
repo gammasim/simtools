@@ -6,6 +6,7 @@ from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.configuration.arguments import (
     ARRAY_LAYOUT_NAME,
+    CORSIKA_HADRONIC_TRANSITION_ENERGY,
     ENERGY_RANGE,
     PRIMARY,
     SIMULATION_MODELS_PATH,
@@ -35,6 +36,16 @@ def test_add_argument_definitions_registers_shared_arguments():
     assert args.primary == "gamma"
     assert_quantity_allclose(args.energy_range[0], 30 * u.GeV)
     assert_quantity_allclose(args.energy_range[1], 2 * u.TeV)
+
+
+def test_add_argument_definitions_registers_hadronic_transition_energy():
+    """The CORSIKA transition energy is parsed and converted to GeV."""
+    parser = CommandLineParser()
+    parser.add_argument_definitions((CORSIKA_HADRONIC_TRANSITION_ENERGY,))
+
+    args = parser.parse_args(["--corsika_hadronic_transition_energy", "0.12 TeV"])
+
+    assert_quantity_allclose(args.corsika_hadronic_transition_energy, 120 * u.GeV)
 
 
 def test_add_argument_definitions_records_by_version_arguments():

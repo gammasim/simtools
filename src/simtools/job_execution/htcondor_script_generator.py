@@ -34,13 +34,18 @@ _PARAMS_FIELDS = [
     "run_number",
     "grid_output_path",
 ]
-_OPTIONAL_QUEUE_FIELDS = ("overwrite_model_parameters", "scan_label", "telescope")
+_OPTIONAL_QUEUE_FIELDS = (
+    "corsika_hadronic_transition_energy",
+    "overwrite_model_parameters",
+    "scan_label",
+    "telescope",
+)
 
 _PARAMS_JOB_SPEC_FIELDS = {field: field for field in _PARAMS_FIELDS}
 
 _PARAM_QUANTITY_UNITS = {
     field: JOB_GRID_SCHEMA.column_units[field]
-    for field in _PARAMS_FIELDS
+    for field in (*_PARAMS_FIELDS, *_OPTIONAL_QUEUE_FIELDS)
     if field in JOB_GRID_SCHEMA.column_units
 }
 
@@ -137,7 +142,7 @@ def _write_params_file(params_file_path, label_job_specs, params_fields):
                     value = _format_param_value(job_spec.get(field), field)
                     row.append(
                         f'"{value}"'
-                        if isinstance(value, str) and re.search(r"\s", value)
+                        if isinstance(value, str) and (not value or re.search(r"\s", value))
                         else value
                     )
 
@@ -324,6 +329,20 @@ def _get_submit_script(args_dict, params_fields=None):
         )
         overwrite_parameters_argument = '"${overwrite_model_parameters_args[@]}"'
 
+    transition_energy_block = ""
+    transition_energy_argument = ""
+    if "corsika_hadronic_transition_energy" in params_fields:
+        transition_energy_block = (
+            "corsika_hadronic_transition_energy="
+            f'"{bash_indices["corsika_hadronic_transition_energy"]}"\n'
+            "corsika_hadronic_transition_energy_args=()\n"
+            'if [ -n "$corsika_hadronic_transition_energy" ]; then\n'
+            "    corsika_hadronic_transition_energy_args+=(--corsika_hadronic_transition_energy "
+            '"$corsika_hadronic_transition_energy")\n'
+            "fi\n"
+        )
+        transition_energy_argument = '"${corsika_hadronic_transition_energy_args[@]}"'
+
     telescope_block = ""
     telescope_argument = ""
     if "telescope" in params_fields:
@@ -374,6 +393,8 @@ def _get_submit_script(args_dict, params_fields=None):
     )
     if args_dict.get("save_file_lists"):
         command_parts.append("--save_file_lists")
+    if transition_energy_argument:
+        command_parts.append(transition_energy_argument.rstrip())
     if telescope_argument:
         command_parts.append(telescope_argument.rstrip())
     if overwrite_parameters_argument:
@@ -392,6 +413,7 @@ def _get_submit_script(args_dict, params_fields=None):
         'set -a; source "$1"',
         f'job_label="{job_label}"',
         scan_label_block.rstrip(),
+        transition_energy_block.rstrip(),
         overwrite_parameters_block.rstrip(),
         telescope_block.rstrip(),
         "",

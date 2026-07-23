@@ -33,6 +33,7 @@ _PRODUCTION_GRID_ARGS = [
     "number_of_runs",
     "corsika_le_interaction",
     "corsika_he_interaction",
+    "corsika_hadronic_transition_energy",
 ]
 _DEFAULT_ASUM_THRESHOLDS = [*range(220, 310, 10), *range(320, 361, 20)]
 _DEFAULT_DSUM_THRESHOLDS = list(range(22, 31))

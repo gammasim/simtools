@@ -2,10 +2,13 @@
 
 r"""Generate simulation configuration and run simulations."""
 
+import sys
+
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import bounded_int
 from simtools.constants import CORSIKA_MAX_SEED
+from simtools.corsika.build_options import get_corsika_build_report
 from simtools.production_configuration.job_grid_io import (
     SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS,
     job_grid_row_to_simulate_prod_args,
@@ -14,6 +17,12 @@ from simtools.production_configuration.job_grid_io import (
 from simtools.simulator import Simulator
 
 _ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "list_available_corsika_models",
+        help="List interaction-model variants available in the CORSIKA installation and exit.",
+        action="store_true",
+        default=False,
+    ),
     cli.ArgumentDefinition(
         "corsika_file",
         help=(
@@ -96,6 +105,31 @@ _ARGUMENTS = (
 )
 
 
+def _list_available_corsika_models(args_dict, parser):
+    """Print installed CORSIKA build variants and exit."""
+    try:
+        report = get_corsika_build_report(args_dict.get("corsika_path"))
+    except (FileNotFoundError, PermissionError, ValueError) as exc:
+        parser.error(str(exc))
+    sys.stdout.write(report + "\n")
+    parser.exit()
+
+
+def _validate_single_interaction_models(args_dict, parser):
+    """Reject interaction-model lists for a single simulation run."""
+    for argument in ("corsika_he_interaction", "corsika_le_interaction"):
+        if isinstance(args_dict.get(argument), list):
+            parser.error(f"'--{argument}' accepts exactly one value for simulate_prod.")
+
+
+def _post_parse(args_dict, config_sources, parser):
+    """Apply simulate-prod validations after configuration sources are merged."""
+    if args_dict["list_available_corsika_models"]:
+        _list_available_corsika_models(args_dict, parser)
+    _resolve_job_grid_arguments(args_dict, config_sources, parser)
+    _validate_single_interaction_models(args_dict, parser)
+
+
 def _resolve_job_grid_arguments(args_dict, config_sources, parser):
     """Merge selected job-grid row values into args after rejecting ambiguous input."""
     explicit_keys = set(config_sources["cli"]) | set(config_sources["yaml"])
@@ -144,7 +178,7 @@ APPLICATION = ApplicationDefinition.for_module(
     ),
     database=True,
     setup_io_handler=False,
-    post_parse=_resolve_job_grid_arguments,
+    post_parse=_post_parse,
     defer_required_validation=True,
 )
 

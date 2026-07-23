@@ -152,6 +152,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.CORE_SCATTER,
         cli.CORSIKA_HE_INTERACTION,
         cli.CORSIKA_LE_INTERACTION,
+        cli.CORSIKA_HADRONIC_TRANSITION_ENERGY,
         *cli.PATH_ARGUMENTS,
     ),
     database=True,

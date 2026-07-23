@@ -15,7 +15,16 @@ DEFAULT_OUTPUT_FILE_STEM = "production_grid_sky_projection"
 PLOT_VALUE_KEYS = tuple(
     key
     for key in JOB_GRID_SCHEMA.column_units
-    if key not in ("azimuth_angle", "zenith_angle", "ha", "dec", "view_cone_min", "nsb_rate")
+    if key
+    not in (
+        "azimuth_angle",
+        "zenith_angle",
+        "ha",
+        "dec",
+        "view_cone_min",
+        "nsb_rate",
+        "corsika_hadronic_transition_energy",
+    )
 )
 DEFAULT_OUTPUT_FILE_EXTENSION = "png"
 DEFAULT_MARKER_SIZE = 8

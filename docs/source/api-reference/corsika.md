@@ -4,6 +4,13 @@
 
 Support modules for running CORSIKA.
 
+## build_options
+
+```{eval-rst}
+.. automodule:: corsika.build_options
+   :members:
+```
+
 ## corsika_config
 
 (corsika-config-1)=
