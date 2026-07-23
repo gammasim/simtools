@@ -12,7 +12,7 @@ on:
     paths:
       - docker/Dockerfile-corsika7
       - pyproject.toml
-      - src/simtools/dependency_versions.py
+      - src/simtools/applications/dependency_versions.py
       - src/simtools/schemas/dependency_versions.schema.yml
       - docker/validate_corsika7_build.sh
       - .github/workflows/build-corsika7.yml
@@ -41,7 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - id: config
-        run: python src/simtools/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
+        run: python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
 
   download-auxiliary-files:
     runs-on: ubuntu-latest

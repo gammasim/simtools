@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 """Read and export the simtools dependency version catalog."""
 
 import argparse
@@ -7,6 +9,44 @@ import re
 import sys
 import tomllib
 from pathlib import Path
+
+
+def _create_application():
+    """Create the standard simtools application definition when dependencies are available."""
+    # pylint: disable=import-outside-toplevel
+    from simtools.application.definition import ApplicationDefinition
+    from simtools.configuration import arguments as cli
+
+    arguments = (
+        cli.ArgumentDefinition(
+            "pyproject",
+            help="Explicit project file (the repository is searched when omitted).",
+            type=Path,
+            default=None,
+        ),
+        cli.ArgumentDefinition(
+            "format",
+            help="Output format.",
+            choices=("catalog", "github-output", "python-requirements", "summary"),
+            default="catalog",
+        ),
+        cli.ArgumentDefinition(
+            "extras",
+            help="Optional dependency groups to include with python-requirements.",
+            nargs="*",
+            default=[],
+        ),
+    )
+
+    return ApplicationDefinition.for_module(
+        __name__,
+        arguments=arguments,
+        setup_io_handler=False,
+        resolve_sim_software_executables=False,
+    )
+
+
+APPLICATION = _create_application() if __package__ else None
 
 CATALOG_KEYS = ("tool", "gammasimtools", "dependency-versions")
 SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -324,27 +364,35 @@ def _parse_args(args=None):
     return parser.parse_args(args)
 
 
-def main(args=None):
-    """Export validated dependency configuration for automation."""
-    parsed = _parse_args(args)
-    project_file = parsed.pyproject or find_pyproject()
+def _export_dependency_configuration(args):
+    """Export dependency configuration for parsed application arguments."""
+    project_file = args["pyproject"] or find_pyproject()
     catalog = load_dependency_catalog(project_file)
     env_template = project_file.parent / ".env_template"
     if env_template.is_file():
         validate_env_template(catalog, env_template)
-    if parsed.format == "python-requirements":
-        sys.stdout.write("\n".join(_project_requirements(project_file, parsed.extras)) + "\n")
+    if args["format"] == "python-requirements":
+        sys.stdout.write("\n".join(_project_requirements(project_file, args["extras"])) + "\n")
         return
-    if parsed.format == "catalog":
+    if args["format"] == "catalog":
         sys.stdout.write(json.dumps(catalog, indent=2, sort_keys=True) + "\n")
         return
-    if parsed.format == "summary":
+    if args["format"] == "summary":
         sys.stdout.write(json.dumps(dependency_catalog_summary(catalog), sort_keys=True) + "\n")
         return
     output = {**dependency_catalog_summary(catalog), **build_workflow_matrices(catalog)}
     for key, value in output.items():
         serialized = json.dumps(value, separators=(",", ":")) if isinstance(value, list) else value
         sys.stdout.write(f"{key}={serialized}\n")
+
+
+def main(args=None):
+    """Export validated dependency configuration for automation."""
+    if args is not None or APPLICATION is None:
+        parsed = vars(_parse_args(args))
+    else:
+        parsed = APPLICATION.start().args
+    _export_dependency_configuration(parsed)
 
 
 if __name__ == "__main__":

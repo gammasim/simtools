@@ -38,15 +38,6 @@
    :members:
 ```
 
-(dependency_versions)=
-
-## dependency_versions
-
-```{eval-rst}
-.. automodule:: simtools.dependency_versions
-   :members:
-```
-
 (version)=
 
 ## version

@@ -17,7 +17,7 @@ The dependency information is maintained in two places with distinct responsibil
 Dockerfiles do not provide independent version defaults. GitHub Actions reads the catalog with
 
 ```console
-python src/simtools/dependency_versions.py --format github-output
+simtools-dependency-versions --format github-output
 ```
 
 and supplies the resulting immutable image references and build arguments.
@@ -42,8 +42,8 @@ builds still consume only immutable external sources and image digests from the 
 Validate the catalog and matrices with
 
 ```console
-python src/simtools/dependency_versions.py --format summary
-python src/simtools/dependency_versions.py --format catalog
+simtools-dependency-versions --format summary
+simtools-dependency-versions --format catalog
 ```
 
 ## Container manifest

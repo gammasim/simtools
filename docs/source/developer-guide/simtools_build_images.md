@@ -9,7 +9,7 @@ All build versions come from `pyproject.toml`; see
 independent software-version defaults. Before a local build, export the validated values with
 
 ```console
-python src/simtools/dependency_versions.py --format github-output
+simtools-dependency-versions --format github-output
 ```
 
 ## Scientific component images

@@ -11,7 +11,7 @@ on:
     paths:
       - docker/Dockerfile-simtools-dev
       - pyproject.toml
-      - src/simtools/dependency_versions.py
+      - src/simtools/applications/dependency_versions.py
       - src/simtools/schemas/dependency_versions.schema.yml
       - tools/generate_development_manifest.py
   release:
@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - id: config
-        run: python src/simtools/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
+        run: python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
 
   build-simtools-dev:
     runs-on: ubuntu-latest

@@ -59,7 +59,7 @@ jobs:
         run: |
           pip install validate-pyproject
           validate-pyproject pyproject.toml
-          python src/simtools/dependency_versions.py --format summary
+          python src/simtools/applications/dependency_versions.py --format summary
 
       - name: Check CITATION.cff metadata
         uses: citation-file-format/cffconvert-github-action@2.0.0

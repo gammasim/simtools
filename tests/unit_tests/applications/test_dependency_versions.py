@@ -3,7 +3,14 @@ import copy
 import pytest
 import yaml
 
-from simtools import dependency_versions
+from simtools.applications import dependency_versions
+
+
+def test_application_definition_is_configured():
+    """Test the dependency-version exporter uses the standard application definition."""
+    assert dependency_versions.APPLICATION is not None
+    assert dependency_versions.APPLICATION.setup_io_handler is False
+    assert dependency_versions.APPLICATION.resolve_sim_software_executables is False
 
 
 def test_load_dependency_catalog_and_build_matrices(simtools_root_path):

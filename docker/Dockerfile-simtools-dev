@@ -54,7 +54,7 @@ RUN { \
 # Install the simtools development environment without installing simtools itself.
 WORKDIR /workdir
 COPY pyproject.toml /workdir/pyproject.toml
-COPY src/simtools/dependency_versions.py /workdir/dependency_versions.py
+COPY src/simtools/applications/dependency_versions.py /workdir/dependency_versions.py
 COPY tools/generate_development_manifest.py /workdir/generate_development_manifest.py
 RUN python${PYTHON_VERSION} /workdir/dependency_versions.py \
       --pyproject /workdir/pyproject.toml --format python-requirements \
