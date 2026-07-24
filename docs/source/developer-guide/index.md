@@ -22,6 +22,8 @@ All software components of `simtools` are available as OCI-compatible container 
 
 - [Running simtools containers](../user-guide/getting_started.md#container-images)
 - [Building simtools images](simtools_build_images.md):
+- [Dependency versions and provenance](dependency_versions.md): Maintain reproducible software
+  versions and inspect container manifests.
 
 ## Preparing simtools Releases
 
@@ -38,5 +40,6 @@ documentation.md
 testing.md
 continuous_integration.md
 simtools_build_images.md
+dependency_versions.md
 release.md
 ```
