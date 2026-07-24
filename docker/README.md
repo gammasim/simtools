@@ -2,7 +2,7 @@
 
 Container files are available for [simtools](https://github.com/gammasim/simtools) for both development and runtime use. Pre-built container images are available through the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
 
-See the [simtools container documentation](https://gammasim.github.io/simtools/user-guide/docker_files.html) for further details:
+See the [simtools container documentation](https://gammasim.github.io/simtools/developer-guide/simtools_build_images.html) for build details and the [dependency version documentation](https://gammasim.github.io/simtools/developer-guide/dependency_versions.html) for the version catalog and provenance manifest.
 
 For convenience, the command to use a container as a developer is repeated here:
 

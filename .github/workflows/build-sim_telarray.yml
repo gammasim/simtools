@@ -10,6 +10,9 @@ on:
   pull_request:
     paths:
       - docker/Dockerfile-simtel_array
+      - pyproject.toml
+      - src/simtools/applications/dependency_versions.py
+      - src/simtools/schemas/dependency_versions.schema.yml
   schedule:
     - cron: '0 0 1 * *'  # Every 1st day of the month at 00:00 UTC (build only)
 
@@ -22,6 +25,21 @@ permissions:
   contents: read
 
 jobs:
+  dependency-config:
+    runs-on: ubuntu-latest
+    outputs:
+      base_image: ${{ steps.config.outputs.base_image }}
+      build_base_image: ${{ steps.config.outputs.build_base_image }}
+      gsl_version: ${{ steps.config.outputs.gsl_version }}
+      gsl_sha256: ${{ steps.config.outputs.gsl_sha256 }}
+      simtel_matrix: ${{ steps.config.outputs.simtel_matrix }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: config
+        run: |
+          python -m pip install packaging
+          python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
+
   download-auxiliary-files:
     runs-on: ubuntu-latest
 
@@ -43,17 +61,16 @@ jobs:
 
   build-sim_telarray:
     runs-on: ubuntu-latest
-    needs: [download-auxiliary-files]
+    needs: [dependency-config, download-auxiliary-files]
     permissions:
       contents: read
       packages: write
     strategy:
       matrix:
-        version:
-          - {simtel_version: 'v2025-11-30-rc', hessio_version: 'v2025-12-01-rc', stdtools_version: 'v2025-06-16-rc'}
+        include: ${{ fromJSON(needs.dependency-config.outputs.simtel_matrix) }}
     env:
       BASE_LABEL: "sim_telarray"
-      BASE_TAG: "${{ matrix.version.simtel_version }}"
+      BASE_TAG: "${{ matrix.simtel_version }}"
 
     steps:
       - name: Checkout repository
@@ -93,9 +110,19 @@ jobs:
           context: .
           platforms: 'linux/amd64,linux/arm64/v8'
           build-args: |
-            SIMTEL_VERSION=${{ matrix.version.simtel_version }}
-            HESSIO_VERSION=${{ matrix.version.hessio_version }}
-            STDTOOLS_VERSION=${{ matrix.version.stdtools_version }}
+            BASE_IMAGE=${{ needs.dependency-config.outputs.base_image }}
+            BUILD_BASE_IMAGE=${{ needs.dependency-config.outputs.build_base_image }}
+            SIMTEL_VERSION=${{ matrix.simtel_version }}
+            SIMTEL_SOURCE_URL=${{ matrix.simtel_source_url }}
+            SIMTEL_REVISION=${{ matrix.simtel_revision }}
+            HESSIO_VERSION=${{ matrix.hessio_version }}
+            HESSIO_SOURCE_URL=${{ matrix.hessio_source_url }}
+            HESSIO_REVISION=${{ matrix.hessio_revision }}
+            STDTOOLS_VERSION=${{ matrix.stdtools_version }}
+            STDTOOLS_SOURCE_URL=${{ matrix.stdtools_source_url }}
+            STDTOOLS_REVISION=${{ matrix.stdtools_revision }}
+            GSL_VERSION=${{ needs.dependency-config.outputs.gsl_version }}
+            GSL_SHA256=${{ needs.dependency-config.outputs.gsl_sha256 }}
           secrets: |
             sim_telarray_token=${{ secrets.SIMTELARRAY_CTAO_GITLAB }}
             hessio_token=${{ secrets.HESSIO_CTAO_GITLAB }}

@@ -11,17 +11,21 @@
 # hadolint global ignore=DL3013,DL3041
 # - DL3013, DL3041: ignore warnings about using latest
 
-ARG CORSIKA_IMAGE_VERSION="v78010"
-ARG SIMTEL_IMAGE_VERSION="latest"
-ARG AVX_FLAG="generic"
-ARG PYTHON_VERSION="3.14"
-ARG ALMALINUX_VERSION="9.8"
-
-FROM ghcr.io/gammasim/corsika7:${CORSIKA_IMAGE_VERSION}-${AVX_FLAG} AS corsika_img
-FROM ghcr.io/gammasim/sim_telarray:${SIMTEL_IMAGE_VERSION} AS simtel_img
-
-FROM almalinux:${ALMALINUX_VERSION}-minimal
+ARG CORSIKA_IMAGE
+ARG SIMTEL_IMAGE
+ARG BASE_IMAGE
 ARG PYTHON_VERSION
+ARG SIMTOOLS_GIT_REVISION
+
+FROM ${CORSIKA_IMAGE} AS corsika_img
+FROM ${SIMTEL_IMAGE} AS simtel_img
+
+FROM ${BASE_IMAGE}
+ARG PYTHON_VERSION
+ARG SIMTOOLS_GIT_REVISION
+ARG CORSIKA_IMAGE
+ARG SIMTEL_IMAGE
+ARG BASE_IMAGE
 
 COPY --from=corsika_img /workdir/simulation_software/corsika7  /workdir/simulation_software/corsika7
 COPY --from=simtel_img /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray
@@ -31,10 +35,10 @@ COPY --from=simtel_img /usr/local/lib/ /usr/local/lib/
 
 RUN microdnf update -y && microdnf install -y \
   bc bzip2 findutils gcc-c++ git git-lfs libgfortran procps wget zstd \
-  python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-devel && \
+  python"${PYTHON_VERSION}" python"${PYTHON_VERSION}"-pip python"${PYTHON_VERSION}"-devel && \
   microdnf clean all && \
   rm -rf /var/cache/dnf/* /tmp/* /var/tmp/* && \
-  ln -sf /usr/bin/python${PYTHON_VERSION} /usr/bin/python && \
+  ln -sf /usr/bin/python"${PYTHON_VERSION}" /usr/bin/python && \
   echo /usr/local/lib > /etc/ld.so.conf.d/local.conf && \
   ldconfig
 
@@ -47,16 +51,28 @@ RUN { \
     printf '%s\n' "git config --global --add safe.directory \"/workdir/external/simtools\""; \
 } > /etc/profile.d/git_safe_dir.sh
 
-# Install simtools (main branch)
+# Install the simtools development environment without installing simtools itself.
 WORKDIR /workdir
-RUN wget --quiet https://raw.githubusercontent.com/gammasim/simtools/main/pyproject.toml && \
-    python${PYTHON_VERSION} -m venv env && \
+COPY pyproject.toml /workdir/pyproject.toml
+COPY src /workdir/src
+RUN python"${PYTHON_VERSION}" -m pip install --no-cache-dir packaging && \
+    python"${PYTHON_VERSION}" /workdir/src/simtools/applications/dependency_versions.py \
+      --pyproject /workdir/pyproject.toml --format python-requirements \
+      --extras dev doc tests > /workdir/requirements-dev.txt && \
+    python"${PYTHON_VERSION}" -m venv env && \
     . env/bin/activate && \
-    pip install --no-cache-dir -U pip && \
-    pip install --no-cache-dir toml-to-requirements && \
-    toml-to-req --toml-file pyproject.toml --optional-lists dev,doc,tests && \
-    pip uninstall -y toml-to-requirements && \
-    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir --requirement /workdir/requirements-dev.txt && \
+    SIMTOOLS_CONTAINER_BUILD=1 \
+      SIMTOOLS_GIT_REVISION="${SIMTOOLS_GIT_REVISION}" \
+      SIMTOOLS_BASE_IMAGE="${BASE_IMAGE}" \
+      SIMTOOLS_CORSIKA_IMAGE="${CORSIKA_IMAGE}" \
+      SIMTOOLS_SIMTEL_IMAGE="${SIMTEL_IMAGE}" \
+      PYTHONPATH=/workdir/src python -m simtools.applications.dependency_manifest \
+        --development \
+        --project_file /workdir/pyproject.toml \
+        --build_option_files \
+          /workdir/simulation_software/corsika7/build_opts.yml \
+          /workdir/simulation_software/sim_telarray/build_opts.yml && \
     echo ". /workdir/env/bin/activate" >> /root/.bashrc && \
     mkdir -p /workdir/external
 
@@ -67,8 +83,13 @@ ENV LD_LIBRARY_PATH="/workdir/simulation_software/hessioxxx/lib:\
 /workdir/simulation_software/sim_telarray/LightEmission/lib:\
 /usr/local/lib"
 ENV PATH="/workdir/env/bin/:$PATH"
+ENV SIMTOOLS_DEPENDENCY_MANIFEST="/opt/simtools/provenance/dependency-manifest.json"
 SHELL ["/bin/bash", "-c"]
 
 # Development requires writing to bind-mounted source trees and to the image virtual environment.
 # A fixed non-root UID cannot portably match host ownership, especially with Podman Desktop.
 WORKDIR /workdir/external
+
+LABEL org.opencontainers.image.source="https://github.com/gammasim/simtools" \
+      org.opencontainers.image.revision="${SIMTOOLS_GIT_REVISION}" \
+      org.gammasim.simtools.dependency-manifest="/opt/simtools/provenance/dependency-manifest.json"

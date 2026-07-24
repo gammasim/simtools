@@ -1,0 +1,66 @@
+---
+"$schema": http://json-schema.org/draft-06/schema#
+title: simtools dependency manifest
+description: YAML representation of the simtools dependency manifest schema.
+schema_version: 0.1.0
+schema_name: dependency_manifest.schema
+type: object
+additionalProperties: false
+required:
+- schema_version
+- source
+- simtools
+- runtime
+- build_options
+- container
+properties:
+  schema_version:
+    const: 0.1.0
+  source:
+    enum:
+    - runtime-discovery
+    - container-build
+  simtools:
+    type: object
+    additionalProperties: false
+    required:
+    - version
+    - revision
+    properties:
+      version:
+        type: string
+      revision:
+        type:
+        - string
+        - 'null'
+        pattern: "^[0-9a-f]{40}$"
+  runtime:
+    type: object
+    additionalProperties: false
+    required:
+    - python_version
+    - pip_version
+    - direct_python_dependencies
+    properties:
+      python_version:
+        type: string
+      pip_version:
+        type:
+        - string
+        - 'null'
+      direct_python_dependencies:
+        type: object
+        additionalProperties:
+          type: string
+  build_options:
+    type: object
+  container:
+    type: object
+    additionalProperties: false
+    properties:
+      base_image:
+        type: string
+      corsika_image:
+        type: string
+      sim_telarray_image:
+        type: string

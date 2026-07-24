@@ -10,11 +10,20 @@
 #
 # CORSIKA can be build with or without optimization flags (AVX2/AVX512).
 
-ARG CORSIKA_VERSION="78010"
-ARG CORSIKA_OPT_PATCH_VERSION="v1.2.0"
-ARG CORSIKA_CONFIG_VERSION="v1.0.0"
-ARG AVX_FLAG="avx2"
-ARG ALMALINUX_VERSION="9.8"
+ARG CORSIKA_VERSION
+ARG CORSIKA_SOURCE_REF
+ARG CORSIKA_SOURCE_URL
+ARG CORSIKA_OPT_PATCH_VERSION
+ARG CORSIKA_OPT_PATCH_REVISION
+ARG CORSIKA_OPT_PATCH_SOURCE_URL
+ARG CORSIKA_CONFIG_VERSION
+ARG CORSIKA_CONFIG_REVISION
+ARG CORSIKA_CONFIG_SOURCE_URL
+ARG AUTOCONF_VERSION
+ARG AUTOCONF_SHA256
+ARG AVX_FLAG
+ARG BASE_IMAGE
+ARG BUILD_BASE_IMAGE
 ARG CONTAINER_USER="simtools"
 ARG CONTAINER_UID="1000"
 ARG CONTAINER_GID="1000"
@@ -28,49 +37,69 @@ ARG CONTAINER_GID="1000"
 # -----------------------------------------------------------------------------
 # STAGE 1: source code preparation
 # -----------------------------------------------------------------------------
-FROM almalinux:${ALMALINUX_VERSION}-minimal AS source_preparation
-ARG CORSIKA_REPO="gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git"
+FROM ${BASE_IMAGE} AS source_preparation
 ARG CORSIKA_VERSION
-ARG CORSIKA_OPT_PATCH_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git"
+ARG CORSIKA_SOURCE_REF
+ARG CORSIKA_SOURCE_URL
 ARG CORSIKA_OPT_PATCH_VERSION
-ARG CORSIKA_CONFIG_REPO="gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git"
+ARG CORSIKA_OPT_PATCH_REVISION
+ARG CORSIKA_OPT_PATCH_SOURCE_URL
 ARG CORSIKA_CONFIG_VERSION
+ARG CORSIKA_CONFIG_REVISION
+ARG CORSIKA_CONFIG_SOURCE_URL
+ARG AUTOCONF_SHA256
 
-RUN microdnf update -y && microdnf install -y git && microdnf clean all
+RUN microdnf update -y && microdnf install -y git gzip tar && microdnf clean all
 WORKDIR /src
 
 # Clone CORSIKA configuration files from CTAO gitlab
 RUN git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${CORSIKA_CONFIG_VERSION}" "https://${CORSIKA_CONFIG_REPO}" && \
+    git clone --depth 1 --branch "${CORSIKA_CONFIG_VERSION}" "${CORSIKA_CONFIG_SOURCE_URL}" && \
+    git -C corsika7-config rev-parse HEAD > /src/corsika_config_revision && \
+    if [ -n "${CORSIKA_CONFIG_REVISION}" ]; then \
+        test "$(cat /src/corsika_config_revision)" = "${CORSIKA_CONFIG_REVISION}"; \
+    fi && \
     cp -v corsika7-config/config/${CORSIKA_VERSION}/*.h . && \
     rm -rf corsika7-config
 
-# Clone CORSIKA from KIT gitlab (note change in version tag format: e.g., v7.8010)
-RUN --mount=type=secret,id=corsika7_token \
-    CORSIKA7_TAG="v$(echo "${CORSIKA_VERSION}" | cut -c1).$(echo "${CORSIKA_VERSION}" | cut -c2-)" && \
-    CORSIKA_AUTH=$(printf "oauth2:%s" "$(cat /run/secrets/corsika7_token)" | base64 -w 0) && \
-    git config --global advice.detachedHead false && \
-    git -c http.extraHeader="Authorization: Basic ${CORSIKA_AUTH}" \
-        clone --depth 1 --branch "${CORSIKA7_TAG}" "https://${CORSIKA_REPO}" && \
-    rm -rf corsika7/.git
+# CORSIKA source is downloaded once per release by the GitHub workflow.
+COPY corsika-source/corsika7 /src/corsika7
+COPY corsika-source/corsika_revision /src/corsika_revision
 
 # Clone CORSIKA optimization patches from CTAO gitlab
 RUN git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${CORSIKA_OPT_PATCH_VERSION}" "https://${CORSIKA_OPT_PATCH_REPO}" && \
+    git clone --depth 1 --branch "${CORSIKA_OPT_PATCH_VERSION}" "${CORSIKA_OPT_PATCH_SOURCE_URL}" && \
+    git -C corsika-opt-patches rev-parse HEAD > /src/corsika_opt_patch_revision && \
+    if [ -n "${CORSIKA_OPT_PATCH_REVISION}" ]; then \
+        test "$(cat /src/corsika_opt_patch_revision)" = "${CORSIKA_OPT_PATCH_REVISION}"; \
+    fi && \
     cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/* corsika7/ && \
     rm -rf corsika-opt-patches
 
-# autoconf 2.71 (tar file needs to present in current directory)
-ADD autoconf.tar.gz .
+# autoconf archive (tar file needs to be present in the build context)
+COPY autoconf.tar.gz /tmp/autoconf.tar.gz
+# hadolint ignore=DL4006
+RUN sha256sum /tmp/autoconf.tar.gz | cut -d ' ' -f1 > /src/autoconf_sha256 && \
+    if [ -n "${AUTOCONF_SHA256}" ]; then \
+        test "$(cat /src/autoconf_sha256)" = "${AUTOCONF_SHA256}"; \
+    fi && \
+    tar -xzf /tmp/autoconf.tar.gz -C /src
 
 # -----------------------------------------------------------------------------
 # STAGE 2: build_image
 # -----------------------------------------------------------------------------
-FROM almalinux:${ALMALINUX_VERSION} AS build_image
+FROM ${BUILD_BASE_IMAGE} AS build_image
 ARG AVX_FLAG
 ARG CORSIKA_VERSION
 ARG CORSIKA_OPT_PATCH_VERSION
+ARG CORSIKA_OPT_PATCH_SOURCE_URL
 ARG CORSIKA_CONFIG_VERSION
+ARG CORSIKA_CONFIG_SOURCE_URL
+ARG CORSIKA_SOURCE_URL
+ARG CORSIKA_CONFIG_REVISION
+ARG CORSIKA_OPT_PATCH_REVISION
+ARG AUTOCONF_VERSION
+ARG AUTOCONF_SHA256
 ARG C_SPECIFIC_FLAGS="-std=c99"
 ARG FORTRAN_SPECIFIC_FLAGS="-ffixed-line-length-132 -fno-automatic -frecord-marker=4 -std=legacy"
 
@@ -84,7 +113,7 @@ COPY --from=source_preparation /src/corsika7/bernlohr/iact.c /tmp/iact.c
 COPY docker/validate_corsika7_build.sh /usr/local/bin/validate_corsika7_build
 
 # Install autoconf 2.71 - needed to apply CORSIKA patches
-WORKDIR /workdir/simulation_software/autoconf-2.71
+WORKDIR /workdir/simulation_software/autoconf-${AUTOCONF_VERSION}
 RUN ./configure --prefix=/usr && \
     make && make install
 
@@ -151,8 +180,16 @@ RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
     fi && \
     { \
         echo "corsika_version: \"${CORSIKA_VERSION}\""; \
+        echo "corsika_revision: \"$(cat /workdir/simulation_software/corsika_revision)\""; \
+        echo "corsika_source_url: \"${CORSIKA_SOURCE_URL}\""; \
         echo "corsika_opt_patch_version: \"${CORSIKA_OPT_PATCH_VERSION}\""; \
+        echo "corsika_opt_patch_revision: \"$(cat /workdir/simulation_software/corsika_opt_patch_revision)\""; \
+        echo "corsika_opt_patch_source_url: \"${CORSIKA_OPT_PATCH_SOURCE_URL}\""; \
         echo "corsika_config_version: \"${CORSIKA_CONFIG_VERSION}\""; \
+        echo "corsika_config_revision: \"$(cat /workdir/simulation_software/corsika_config_revision)\""; \
+        echo "corsika_config_source_url: \"${CORSIKA_CONFIG_SOURCE_URL}\""; \
+        echo "autoconf_version: \"${AUTOCONF_VERSION}\""; \
+        echo "autoconf_sha256: \"$(cat /workdir/simulation_software/autoconf_sha256)\""; \
         echo "avx_flag: \"${AVX_FLAG}\""; \
         echo "iact_atmo_version: \"${IACT_ATMO_VERSION}\""; \
         echo "variant:"; \
@@ -182,7 +219,7 @@ RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
 # -----------------------------------------------------------------------------
 # STAGE 3: Runtime
 # -----------------------------------------------------------------------------
-FROM almalinux:${ALMALINUX_VERSION}-minimal
+FROM ${BASE_IMAGE}
 ARG CONTAINER_USER
 ARG CONTAINER_UID
 ARG CONTAINER_GID

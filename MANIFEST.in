@@ -4,7 +4,7 @@ include CHANGELOG.md
 include CITATION.cff
 include pyproject.toml
 
-recursive-include src *.py
+recursive-include src *.py *.yml
 recursive-include docs *
 
 prune src/simtools/_dev_version
