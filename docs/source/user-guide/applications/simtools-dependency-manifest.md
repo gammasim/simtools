@@ -1,7 +1,7 @@
 # simtools-dependency-manifest
 
 ```{eval-rst}
-.. automodule:: dependency_manifest
+.. automodule:: simtools.applications.dependency_manifest
    :members:
    :exclude-members: main
 ```

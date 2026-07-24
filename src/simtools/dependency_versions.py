@@ -106,9 +106,12 @@ def validate_dependency_catalog(catalog):
     required = {
         "schema_version",
         "python",
+        "apptainer",
+        "cpu-variants",
         "base-image",
         "corsika-interaction-tables",
         "archives",
+        "model-database",
         "production-combinations",
         "corsika",
         "sim-telarray",
@@ -348,8 +351,15 @@ def project_requirements(pyproject_path, extras):
     with Path(pyproject_path).open("rb") as file:
         project = tomllib.load(file)["project"]
     requirements = list(project["dependencies"])
+    optional = project.get("optional-dependencies", {})
     for extra in extras:
-        requirements.extend(project["optional-dependencies"][extra])
+        try:
+            requirements.extend(optional[extra])
+        except KeyError as exc:
+            available = ", ".join(sorted(optional)) or "none"
+            raise ValueError(
+                f"Unknown optional-dependency group: {extra}. Available groups: {available}"
+            ) from exc
     return requirements
 
 
