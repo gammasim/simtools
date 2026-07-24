@@ -51,6 +51,19 @@ application workflows, validation, reporting, and plotting.
 - Keep code and docs ASCII-only unless an existing file clearly requires
   another character set.
 
+## Container Workflows
+
+- If a task requires building or running containers, first check whether Docker,
+  Podman, or Apptainer is available and use an available runtime where
+  practical.
+- Do not install or require a container runtime without explicit user approval.
+
+## Python Environment
+
+- If `python`, `pytest`, or `pylint` is not available in the current
+  environment, check for a Conda or Mamba environment named `simtools-dev` and
+  run the command there when available.
+
 ## Testing
 
 Default `pytest` runs unit tests only because `tool.pytest.ini_options.testpaths`
