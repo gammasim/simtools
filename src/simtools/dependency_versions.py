@@ -107,6 +107,7 @@ def validate_dependency_catalog(catalog):
         "schema_version",
         "python",
         "base-image",
+        "corsika-interaction-tables",
         "archives",
         "production-combinations",
         "corsika",
@@ -318,6 +319,7 @@ def dependency_catalog_summary(catalog):
         "autoconf_sha256": catalog["archives"]["autoconf"].get("sha256", ""),
         "gsl_version": catalog["archives"]["gsl"]["version"],
         "gsl_sha256": catalog["archives"]["gsl"].get("sha256", ""),
+        "corsika_tables_version": catalog["corsika-interaction-tables"]["version"],
         "model_database": catalog["model-database"]["name"],
         "model_version": catalog["model-database"]["default-version"],
         "dev_corsika_image": _image_reference(

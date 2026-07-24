@@ -12,6 +12,7 @@ required:
 - apptainer
 - cpu-variants
 - base-image
+- corsika-interaction-tables
 - archives
 - model-database
 - production-combinations
@@ -53,6 +54,15 @@ properties:
         type: string
       build-digest:
         "$ref": "#/definitions/sha256"
+  corsika-interaction-tables:
+    type: object
+    additionalProperties: false
+    required:
+    - version
+    properties:
+      version:
+        type: string
+        minLength: 1
   archives:
     type: object
     additionalProperties:

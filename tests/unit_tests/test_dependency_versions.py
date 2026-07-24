@@ -30,6 +30,7 @@ def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
     summary = dependency_versions.dependency_catalog_summary(catalog)
 
     assert summary["base_image"] == "docker.io/library/almalinux:9.8-minimal"
+    assert summary["corsika_tables_version"] == "v0.1.0"
     assert summary["dev_corsika_image"] == "ghcr.io/gammasim/corsika7:v78010-generic"
     assert summary["model_version"] == "0.16.0"
 
