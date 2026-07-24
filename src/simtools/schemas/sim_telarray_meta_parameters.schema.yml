@@ -108,6 +108,10 @@ generated_meta_parameters:
     scope: global
     mode: set
     value_schema: {kind: scalar, data_type: integer}
+  simtools_dependency_manifest_sha256:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
   simtools_extra_defines:
     scope: global
     mode: set
@@ -116,11 +120,19 @@ generated_meta_parameters:
     scope: global
     mode: set
     value_schema: *string_scalar
+  simtools_git_revision:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
   simtools_iact_atmo_version:
     scope: global
     mode: set
     value_schema: *string_scalar
   simtools_model_production_version:
+    scope: global
+    mode: set
+    value_schema: *string_scalar
+  simtools_python_version:
     scope: global
     mode: set
     value_schema: *string_scalar

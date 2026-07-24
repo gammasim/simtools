@@ -3,6 +3,7 @@
 """Unit tests for command-line argument helpers."""
 
 import argparse
+import logging
 
 import astropy.units as u
 import pytest
@@ -216,22 +217,22 @@ def test_quantity():
         quantity_parser("invalid")
 
 
-def test_build_info_action(mocker):
-    mock_get_build_options = mocker.patch(
-        "simtools.dependencies.get_build_options",
-        return_value={"version": "1.0.0", "python": "3.9"},
+def test_build_info_action(mocker, caplog):
+    caplog.set_level(logging.INFO)
+    mock_get_dependency_summary = mocker.patch(
+        "simtools.dependencies.get_dependency_summary",
+        return_value="Python: 3.14",
     )
-    mock_print = mocker.patch("builtins.print")
     mock_exit = mocker.patch.object(argparse.ArgumentParser, "exit")
 
     action = helpers.BuildInfoAction(option_strings=["--build_info"], build_info="Test build info")
     test_parser = parser.CommandLineParser()
     action(test_parser, None, None, "--build_info")
 
-    assert mock_get_build_options.called
-    assert mock_print.called
+    assert mock_get_dependency_summary.called
     assert mock_exit.called
-    assert mock_print.call_args_list[0][0][0] == "Test build info"
+    assert "Test build info" in caplog.text
+    assert "Python: 3.14" in caplog.text
 
 
 def test_bounded_int():
