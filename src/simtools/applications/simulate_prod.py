@@ -3,18 +3,23 @@
 r"""Generate simulation configuration and run simulations."""
 
 import sys
+from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import bounded_int
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.build_options import get_corsika_build_report
+from simtools.io.ascii_handler import write_data_to_file
 from simtools.production_configuration.job_grid_io import (
     SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS,
     job_grid_row_to_simulate_prod_args,
     read_job_grid_row,
 )
+from simtools.production_configuration.job_metadata import build_simulation_job_metadata
 from simtools.simulator import Simulator
+
+_JOB_METADATA_FILE = "simulate_prod_job_metadata.yml"
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -200,7 +205,12 @@ def main():
         simulator.save_file_lists()
 
     if app_context.args.get("grid_output_path"):
-        simulator.pack_for_register(app_context.args["grid_output_path"])
+        grid_output_path = Path(app_context.args["grid_output_path"])
+        simulator.pack_for_register(grid_output_path)
+        write_data_to_file(
+            build_simulation_job_metadata(app_context.args, simulator),
+            grid_output_path / _JOB_METADATA_FILE,
+        )
 
 
 if __name__ == "__main__":
