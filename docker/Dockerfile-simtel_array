@@ -59,8 +59,9 @@ RUN --mount=type=secret,id=hessio_token \
     git config --global advice.detachedHead false && \
     git clone --depth 1 --branch "${HESSIO_VERSION}" \
       "https://oauth2:$(cat /run/secrets/hessio_token)@${HESSIO_SOURCE_URL#https://}" && \
+    git -C hessio rev-parse HEAD > /src/hessio_revision && \
     if [ -n "${HESSIO_REVISION}" ]; then \
-        test "$(git -C hessio rev-parse HEAD)" = "${HESSIO_REVISION}"; \
+        test "$(cat /src/hessio_revision)" = "${HESSIO_REVISION}"; \
     fi
 
 # Clone stdtools from CTAO gitlab
@@ -163,7 +164,7 @@ RUN { \
     echo "simtel_revision: \"$(git rev-parse HEAD)\""; \
     echo "simtel_source_url: \"${SIMTEL_SOURCE_URL}\""; \
     echo "hessio_version: \"${HESSIO_VERSION}\""; \
-    echo "hessio_revision: \"$(git -C /workdir/simulation_software/hessio rev-parse HEAD)\""; \
+    echo "hessio_revision: \"$(cat /workdir/simulation_software/hessio_revision)\""; \
     echo "hessio_source_url: \"${HESSIO_SOURCE_URL}\""; \
     echo "stdtools_version: \"${STDTOOLS_VERSION}\""; \
     echo "stdtools_revision: \"$(git -C /workdir/simulation_software/stdtools rev-parse HEAD)\""; \
