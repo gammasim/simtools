@@ -72,9 +72,15 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IT_NAME: "corsika7-interaction-tables"
-      CORSIKA_TABLES: "v0.1.0"
 
     steps:
+      - uses: actions/checkout@v7
+
+      - name: Read CORSIKA interaction tables version
+        run: |
+          python src/simtools/applications/dependency_versions.py --format github-output \
+            | grep '^corsika_tables_version=' >> "$GITHUB_ENV"
+
       - name: Restore cached CORSIKA interaction tables
         id: restore_interaction_tables
         uses: actions/cache/restore@v6

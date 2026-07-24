@@ -35,6 +35,7 @@ dependencies = [
   "jsonschema",
   "matplotlib",
   "numpy",
+  "packaging",
   "particle",
   "pymongo",
   "pyproj",
@@ -84,6 +85,8 @@ scripts.simtools-db-get-file-from-db = "simtools.applications.db_get_file_from_d
 scripts.simtools-db-get-parameter-from-db = "simtools.applications.db_get_parameter_from_db:main"
 scripts.simtools-db-inspect-databases = "simtools.applications.db_inspect_databases:main"
 scripts.simtools-db-upload-model-repository = "simtools.applications.db_upload_model_repository:main"
+scripts.simtools-dependency-manifest = "simtools.applications.dependency_manifest:main"
+scripts.simtools-dependency-versions = "simtools.applications.dependency_versions:main"
 scripts.simtools-derive-bias-curves = "simtools.applications.derive_bias_curves:main"
 scripts.simtools-derive-ctao-array-layouts = "simtools.applications.derive_ctao_array_layouts:main"
 scripts.simtools-derive-incident-angle = "simtools.applications.derive_incident_angle:main"
@@ -283,7 +286,7 @@ main.max-statements = 80
 main.min-public-methods = 1
 
 [tool.codespell]
-ignore-words-list = "chec,arrang,livetime"
+ignore-words-list = "chec,arrang,livetime,astroid"
 
 [tool.pytest]
 ini_options.minversion = "6.0"
@@ -339,3 +342,49 @@ fragment.maintenance.name = "Maintenance"
 fragment.maintenance.showcontent = true
 fragment.model.name = "Simulation model"
 fragment.model.showcontent = true
+
+[tool.gammasimtools]
+dependency-versions.schema_version = "0.1.0"
+dependency-versions.python = "3.14"
+dependency-versions.apptainer = "1.5.0"
+dependency-versions.cpu-variants = [ "generic", "avx2", "avx512f", "sse4" ]
+dependency-versions.archives.autoconf.version = "2.71"
+dependency-versions.archives.autoconf.sha256 = "431075ad0bf529ef13cb41e9042c542381103e80015686222b8a9d4abef42a1c"
+dependency-versions.archives.gsl.version = "2.8"
+dependency-versions.archives.gsl.sha256 = "6a99eeed15632c6354895b1dd542ed5a855c0f15d9ad1326c6fe2b2c9e423190"
+dependency-versions.base-image.name = "docker.io/library/almalinux"
+dependency-versions.base-image.runtime-version = "9.8-minimal"
+dependency-versions.base-image.build-version = "9.8"
+dependency-versions.corsika-interaction-tables.version = "v0.1.0"
+dependency-versions.model-database.name = "CTAO-Simulation-Model"
+dependency-versions.model-database.default-version = "0.16.0"
+dependency-versions.production-combinations = [
+  { corsika = "78010", sim-telarray = "v2025-11-30-rc" },
+  { corsika = "78050", sim-telarray = "v2025-11-30-rc" },
+]
+
+[[tool.gammasimtools.dependency-versions.corsika]]
+version = "78010"
+source-ref = "v7.8010"
+source-url = "https://gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git"
+config-version = "v0.1.0"
+config-source-url = "https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git"
+opt-patch-version = "v1.1.0"
+opt-patch-source-url = "https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git"
+
+[[tool.gammasimtools.dependency-versions.corsika]]
+version = "78050"
+source-ref = "v7.8050"
+source-url = "https://gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git"
+config-version = "v1.0.0"
+config-source-url = "https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git"
+opt-patch-version = "v1.2.0"
+opt-patch-source-url = "https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git"
+
+[[tool.gammasimtools.dependency-versions.sim-telarray]]
+version = "v2025-11-30-rc"
+source-url = "https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray.git"
+hessio-version = "v2025-12-01-rc"
+hessio-source-url = "https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio.git"
+stdtools-version = "v2025-06-16-rc"
+stdtools-source-url = "https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools.git"

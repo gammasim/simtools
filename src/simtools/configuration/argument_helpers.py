@@ -10,6 +10,8 @@ from astropy.units import UnitsError
 
 from simtools.utils import general, names
 
+logger = logging.getLogger(__name__)
+
 
 def scientific_int(value):
     """Convert string (including scientific notation) to integer.
@@ -241,7 +243,6 @@ def zenith_angle(angle):
     argparse.ArgumentTypeError
         If angle is outside [0, 180] interval.
     """
-    logger = logging.getLogger(__name__)
     try:
         try:
             float_angle = float(angle) * u.deg
@@ -278,7 +279,6 @@ def azimuth_angle(angle):
     argparse.ArgumentTypeError
         If angle is outside [0, 360] interval or invalid string.
     """
-    logger = logging.getLogger(__name__)
     try:
         float_angle = float(angle)
         if float_angle < 0.0 or float_angle > 360.0:
@@ -581,8 +581,6 @@ class BuildInfoAction(argparse.Action):
         """
         from simtools import dependencies  # pylint: disable=import-outside-toplevel
 
-        build_options = dependencies.get_build_options()
-        print(f"{self.build_info}")
-        for key, value in build_options.items():
-            print(f"{key}: {value}")
+        logger.info(self.build_info)
+        logger.info(dependencies.get_dependency_summary())
         parser.exit()

@@ -1,3 +1,4 @@
+import json
 import logging
 import subprocess
 from pathlib import Path
@@ -8,13 +9,21 @@ import yaml
 from simtools.dependencies import (
     _get_build_options_from_file,
     _get_package_path,
+    build_dependency_manifest,
+    canonical_manifest_bytes,
     export_build_info,
     get_build_options,
     get_corsika_version,
     get_database_version_or_name,
+    get_dependency_manifest,
+    get_dependency_manifest_digest,
+    get_dependency_metadata,
+    get_direct_python_dependency_versions,
     get_sim_telarray_version,
     get_software_version,
     get_version_string,
+    write_dependency_manifest,
+    write_development_dependency_manifest,
 )
 from simtools.version import __version__
 
@@ -414,6 +423,10 @@ def test_export_build_info(mocker, tmp_test_directory):
     mocker.patch(
         "simtools.dependencies.get_database_version_or_name", side_effect=["test_db", "1.2.3"]
     )
+    mocker.patch(
+        "simtools.dependencies.get_dependency_manifest",
+        return_value={"schema_version": "0.1.0"},
+    )
 
     output_file = Path(str(tmp_test_directory)) / "build_info.yml"
     export_build_info(output_file, run_time=None)
@@ -436,6 +449,10 @@ def test_export_build_info_with_run_time(mocker, tmp_test_directory):
     )
     mocker.patch(
         "simtools.dependencies.get_database_version_or_name", side_effect=["prod_db", "2.0.0"]
+    )
+    mocker.patch(
+        "simtools.dependencies.get_dependency_manifest",
+        return_value={"schema_version": "0.1.0"},
     )
 
     output_file = Path(str(tmp_test_directory)) / "build_info.yml"
@@ -499,3 +516,148 @@ def test_get_package_path_config_takes_precedence(mocker):
     result = _get_package_path("corsika")
     assert result == Path("/config/corsika")
     mock_load_env.assert_not_called()
+
+
+def test_get_dependency_manifest_reads_configured_file(monkeypatch, tmp_test_directory):
+    manifest_path = tmp_test_directory / "manifest.json"
+    manifest_path.write_text('{"schema_version": "0.1.0"}', encoding="utf-8")
+    monkeypatch.setenv("SIMTOOLS_DEPENDENCY_MANIFEST", str(manifest_path))
+
+    assert get_dependency_manifest() == {"schema_version": "0.1.0"}
+
+
+def test_get_dependency_manifest_invalid_json(monkeypatch, tmp_test_directory):
+    manifest_path = tmp_test_directory / "manifest.json"
+    manifest_path.write_text("not-json", encoding="utf-8")
+    monkeypatch.setenv("SIMTOOLS_DEPENDENCY_MANIFEST", str(manifest_path))
+
+    with pytest.raises(ValueError, match="Invalid dependency manifest"):
+        get_dependency_manifest()
+
+
+def test_get_dependency_manifest_from_container(mocker):
+    run = mocker.patch("simtools.dependencies.subprocess.run")
+    run.return_value.returncode = 0
+    run.return_value.stdout = '{"schema_version": "0.1.0"}'
+
+    manifest = get_dependency_manifest(["apptainer", "exec", "image.sif"])
+
+    assert manifest["schema_version"] == "0.1.0"
+    assert run.call_args.args[0][-2:] == [
+        "cat",
+        "/opt/simtools/provenance/dependency-manifest.json",
+    ]
+
+
+def test_get_dependency_manifest_container_missing(mocker):
+    run = mocker.patch("simtools.dependencies.subprocess.run")
+    run.return_value.returncode = 1
+    run.return_value.stderr = "missing"
+
+    with pytest.raises(FileNotFoundError, match="not found in container"):
+        get_dependency_manifest(["docker", "run"])
+
+
+def test_get_direct_python_dependency_versions(mocker):
+    mocker.patch(
+        "simtools.dependencies.metadata.requires",
+        return_value=["astropy>=7", "pytest; extra == 'tests'", "numpy"],
+    )
+    versions = {"astropy": "8.0.0", "numpy": "2.5.0"}
+    mocker.patch("simtools.dependencies.metadata.version", side_effect=versions.get)
+
+    assert get_direct_python_dependency_versions() == versions
+
+
+def test_build_dependency_manifest(mocker, monkeypatch, simtools_root_path):
+    mocker.patch(
+        "simtools.dependencies.get_build_options", return_value={"corsika_version": "78010"}
+    )
+    mocker.patch(
+        "simtools.dependencies.get_direct_python_dependency_versions",
+        return_value={"astropy": "8.0.0"},
+    )
+    mocker.patch("simtools.dependencies._distribution_version", return_value="26.1.2")
+    monkeypatch.setenv("SIMTOOLS_CONTAINER_BUILD", "1")
+    monkeypatch.setenv("SIMTOOLS_GIT_REVISION", "b" * 40)
+
+    manifest = build_dependency_manifest()
+
+    assert manifest["source"] == "container-build"
+    assert manifest["simtools"]["revision"] == "b" * 40
+    assert manifest["runtime"]["direct_python_dependencies"] == {"astropy": "8.0.0"}
+
+    import jsonschema
+
+    schema_path = simtools_root_path / "src/simtools/schemas/dependency_manifest.schema.yml"
+    schema = yaml.safe_load(schema_path.read_text(encoding="utf-8"))
+    jsonschema.validate(manifest, schema)
+
+
+def test_manifest_digest_is_independent_of_dictionary_order(mocker):
+    first = {"b": 2, "a": 1}
+    second = {"a": 1, "b": 2}
+    mocker.patch("simtools.dependencies.get_dependency_manifest", return_value=first)
+    first_digest = get_dependency_manifest_digest()
+    mocker.patch("simtools.dependencies.get_dependency_manifest", return_value=second)
+
+    assert canonical_manifest_bytes(first) == canonical_manifest_bytes(second)
+    assert get_dependency_manifest_digest() == first_digest
+
+
+def test_write_dependency_manifest(mocker, tmp_test_directory):
+    manifest = {"schema_version": "0.1.0", "value": "test"}
+    mocker.patch("simtools.dependencies.build_dependency_manifest", return_value=manifest)
+    output = Path(str(tmp_test_directory)) / "dependency-manifest.json"
+
+    write_dependency_manifest(output)
+
+    assert json.loads(output.read_text(encoding="utf-8")) == manifest
+    assert Path(str(output)).with_suffix(".json.sha256").is_file()
+
+
+def test_write_development_dependency_manifest(mocker, monkeypatch, tmp_test_directory):
+    project_file = tmp_test_directory / "pyproject.toml"
+    project_file.write_text('[project]\ndependencies = ["astropy>=7", "numpy"]\n', encoding="utf-8")
+    corsika_options = tmp_test_directory / "corsika_build_opts.yml"
+    corsika_options.write_text("corsika_version: '78010'\nbuild_date: ignored\n", encoding="utf-8")
+    simtel_options = tmp_test_directory / "simtel_build_opts.yml"
+    simtel_options.write_text("simtel_version: v2025-11-30-rc\n", encoding="utf-8")
+    mocker.patch(
+        "simtools.dependencies._distribution_version",
+        side_effect=lambda package: {"pip": "26.1.2", "astropy": "8.0.0", "numpy": "2.5.0"}.get(
+            package
+        ),
+    )
+    monkeypatch.setenv("SIMTOOLS_GIT_REVISION", "a" * 40)
+    monkeypatch.setenv("SIMTOOLS_BASE_IMAGE", "alma:9")
+    output = tmp_test_directory / "dependency-manifest.json"
+
+    write_development_dependency_manifest(output, project_file, [corsika_options, simtel_options])
+
+    manifest = json.loads(output.read_text(encoding="utf-8"))
+    assert manifest["simtools"] == {"revision": "a" * 40, "version": "not-installed"}
+    assert manifest["runtime"]["direct_python_dependencies"] == {
+        "astropy": "8.0.0",
+        "numpy": "2.5.0",
+    }
+    assert manifest["build_options"] == {
+        "corsika_version": "78010",
+        "simtel_version": "v2025-11-30-rc",
+    }
+    assert manifest["container"] == {"base_image": "alma:9"}
+    assert Path(str(output)).with_suffix(".json.sha256").is_file()
+
+
+def test_get_dependency_metadata(mocker):
+    manifest = {
+        "simtools": {"revision": "a" * 40},
+        "runtime": {"python_version": "3.14.6"},
+    }
+    mocker.patch("simtools.dependencies.get_dependency_manifest", return_value=manifest)
+
+    result = get_dependency_metadata()
+
+    assert result["simtools_git_revision"] == "a" * 40
+    assert result["simtools_python_version"] == "3.14.6"
+    assert len(result["simtools_dependency_manifest_sha256"]) == 64

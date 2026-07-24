@@ -1,38 +1,51 @@
 # Build Images
 
-Pre-built images are available from the [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
-Replace the command by the container run engine of your choice (e.g., Docker).
+Pre-built OCI and Apptainer images are available from the
+[simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
+The GitHub Actions workflows in `.github/workflows/build-*.yml` are the reference image builds.
 
-## Build a simulation production container
+All build versions come from `pyproject.toml`; see
+[Dependency versions and provenance](dependency_versions.md). Dockerfiles deliberately have no
+independent software-version defaults. Before a local build, export the validated values with
 
-First build the CORSIKA/sim_telarray container locally (or use the pre-built image from the package registry):
-
-```bash
-podman buildx build --platform=linux/arm64 --secret id=gitlab_token,src=./my_secret --build-arg AVX_FLAG=generic -f Dockerfile-corsika-simtel -t corsika-simtelarray .
+```console
+simtools-dependency-versions --format github-output
 ```
 
-(requires a secret token to access the CTAO GitLab repository).
+## Scientific component images
 
-Then build the simtools production container:
+`docker/Dockerfile-corsika7` builds each catalogued CORSIKA and CPU variant. It requires the CORSIKA
+source token and the `autoconf.tar.gz` archive. The Dockerfile records the source,
+configuration and optimization-patch revisions that it actually checked out, as well as the
+archive checksum it calculated. Optional catalogued revisions and checksums are verified when set.
 
-```bash
-podman buildx build --platform=linux/arm64 --build-arg BASE_IMAGE=localhost/corsika-simtelarray --build-arg BUILD_BRANCH=main --build-arg PYTHON_VERSION=3.14 -f Dockerfile-simtools -t simtools  .
+`docker/Dockerfile-simtel_array` builds the catalogued sim_telarray, hessio and stdtools releases.
+It requires the corresponding GitLab tokens and `gsl.tar.gz`; its calculated archive checksum is
+recorded before extraction, and verified when the catalog supplies one.
+
+Use the workflow-generated matrix values as build arguments. This ensures that a local build uses
+the same base-image tags, source releases and flags as CI. Add optional digests and revisions to
+the catalog when a fully immutable build is needed.
+
+## Production and development images
+
+`docker/Dockerfile-simtools-prod` installs the checked-out simtools revision with the compatible
+Python dependencies declared in `pyproject.toml`. Its CORSIKA, sim_telarray and AlmaLinux inputs
+are version-tag references unless optional OCI digests are declared.
+
+`docker/Dockerfile-simtools-dev` installs the same compatible Python dependencies, including the
+development, documentation and test extras, but leaves simtools itself to be installed from a
+bind-mounted checkout.
+
+Run a development image with
+
+```console
+podman run --rm -it \
+  -v "$(pwd):/workdir/external/simtools" \
+  ghcr.io/gammasim/simtools-dev:latest \
+  bash -lc "cd /workdir/external/simtools && pip install -e . && exec bash"
 ```
 
-The build process requires a tarball of corsika/sim\_telarray (named `corsika_simtelarray.tar.gz`) to be present in the build directory.
-This package is available from MPIK (password protected).
-Build arguments can be configured as specified at the top of the Dockerfile.
-
-Run the newly built container:
-
-```bash
-podman run --rm -it -v "$(pwd)/external:/workdir/external" simtools bash
-```
-
-## Build a developers container locally
-
-To build an image locally run in the [`./docker`](https://github.com/gammasim/simtools/tree/main/docker) directory:
-
-```bash
-podman build -f Dockerfile-dev -t simtools-dev .
-```
+Published production images include `/opt/simtools/provenance/dependency-manifest.json`. The
+production workflow converts each pushed OCI image to SIF from its digest, verifies the manifest,
+and publishes the SIF through GHCR using the `-apptainer` tag suffix.

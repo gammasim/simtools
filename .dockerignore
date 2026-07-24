@@ -1,0 +1,10 @@
+.env
+.git
+.venv
+build
+cov_annotate
+docs/build
+simtools-output
+simtools-grid-output
+**/__pycache__
+**/*.pyc
