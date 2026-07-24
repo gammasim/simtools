@@ -269,6 +269,14 @@ def build_workflow_matrices(catalog):
     ]
     return {
         "corsika_matrix": corsika_matrix,
+        "corsika_source_matrix": [
+            {
+                "corsika": component["version"],
+                "corsika_source_ref": component["source-ref"],
+                "corsika_source_url": component["source-url"],
+            }
+            for component in catalog["corsika"]
+        ],
         "simtel_matrix": simtel_matrix,
         "production_matrix": production_matrix,
     }

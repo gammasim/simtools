@@ -16,6 +16,7 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path):
 
     assert catalog["python"] == "3.14"
     assert len(matrices["corsika_matrix"]) == 8
+    assert len(matrices["corsika_source_matrix"]) == 2
     assert len(matrices["simtel_matrix"]) == 1
     assert len(matrices["production_matrix"]) == 8
     assert all(

@@ -62,12 +62,9 @@ RUN git config --global advice.detachedHead false && \
     cp -v corsika7-config/config/${CORSIKA_VERSION}/*.h . && \
     rm -rf corsika7-config
 
-# Clone CORSIKA from KIT gitlab (note change in version tag format: e.g., v7.8010)
-RUN --mount=type=secret,id=corsika7_token \
-    git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${CORSIKA_SOURCE_REF}" \
-      "https://oauth2:$(cat /run/secrets/corsika7_token)@${CORSIKA_SOURCE_URL#https://}" && \
-    git -C corsika7 rev-parse HEAD > /src/corsika_revision
+# CORSIKA source is downloaded once per release by the GitHub workflow.
+COPY corsika-source/corsika7 /src/corsika7
+COPY corsika-source/corsika_revision /src/corsika_revision
 
 # Clone CORSIKA optimization patches from CTAO gitlab
 RUN git config --global advice.detachedHead false && \
