@@ -50,9 +50,8 @@ RUN --mount=type=secret,id=sim_telarray_token \
     git config --global advice.detachedHead false && \
     git clone --depth 1 --branch "${SIMTEL_VERSION}" \
       "https://oauth2:$(cat /run/secrets/sim_telarray_token)@${SIMTEL_SOURCE_URL#https://}" && \
-    git -C sim_telarray rev-parse HEAD > /src/simtel_revision && \
     if [ -n "${SIMTEL_REVISION}" ]; then \
-        test "$(cat /src/simtel_revision)" = "${SIMTEL_REVISION}"; \
+        test "$(git -C sim_telarray rev-parse HEAD)" = "${SIMTEL_REVISION}"; \
     fi
 
 # Clone hessio from CTAO gitlab
@@ -60,9 +59,8 @@ RUN --mount=type=secret,id=hessio_token \
     git config --global advice.detachedHead false && \
     git clone --depth 1 --branch "${HESSIO_VERSION}" \
       "https://oauth2:$(cat /run/secrets/hessio_token)@${HESSIO_SOURCE_URL#https://}" && \
-    git -C hessio rev-parse HEAD > /src/hessio_revision && \
     if [ -n "${HESSIO_REVISION}" ]; then \
-        test "$(cat /src/hessio_revision)" = "${HESSIO_REVISION}"; \
+        test "$(git -C hessio rev-parse HEAD)" = "${HESSIO_REVISION}"; \
     fi
 
 # Clone stdtools from CTAO gitlab
@@ -70,9 +68,8 @@ RUN --mount=type=secret,id=stdtools_token \
     git config --global advice.detachedHead false && \
     git clone --depth 1 --branch "${STDTOOLS_VERSION}" \
       "https://oauth2:$(cat /run/secrets/stdtools_token)@${STDTOOLS_SOURCE_URL#https://}" && \
-    git -C stdtools rev-parse HEAD > /src/stdtools_revision && \
     if [ -n "${STDTOOLS_REVISION}" ]; then \
-        test "$(cat /src/stdtools_revision)" = "${STDTOOLS_REVISION}"; \
+        test "$(git -C stdtools rev-parse HEAD)" = "${STDTOOLS_REVISION}"; \
     fi
 
 # GSL archive (tar file needs to be present in the build context)
@@ -130,13 +127,13 @@ RUN sed -i "s|hessioxxx-prepare: build-doc doc/eventio_en.pdf doc/hessio_refman.
     make hessioxxx-prepare && mv hessioxxx /workdir/simulation_software/
 
 WORKDIR /workdir/simulation_software/hessioxxx
-RUN rm -rf /workdir/simulation_software/hessio && make clean && make include/eventio_version.h && \
+RUN make clean && make include/eventio_version.h && \
     make WITH_RPATH=1 DEFINES="${EXTRA_DEFINES} ${GSL_COMPILE}" && \
-    rm -rf ./out ./doc ./root ./hessio_refman.pdf ./.git
+    rm -rf ./out ./doc ./root ./hessio_refman.pdf
 
 WORKDIR /workdir/simulation_software/stdtools
 RUN make WITH_RPATH=1 EXTRA_DEFINES="${EXTRA_DEFINES} ${GSL_COMPILE}" && \
-    mv -v -f out/libstdtools.so ./lib && rm -rf out ./.git
+    mv -v -f out/libstdtools.so ./lib && rm -rf out
 
 WORKDIR /workdir/simulation_software/sim_telarray
 # Create version.h file
@@ -155,20 +152,20 @@ RUN make WITH_RPATH=1 EXTRA_DEFINES="${EXTRA_DEFINES} -DDEBUG_TRACE_99 ${GSL_COM
 RUN make clean && \
     make WITH_RPATH=1 EXTRA_DEFINES="${EXTRA_DEFINES} ${GSL_COMPILE}" install && \
     mv ./sim_telarray_debug_trace ./bin/sim_telarray_debug_trace && \
-    rm -fr ./cfg/* ./hegra ./hess ./doc_src ./doc ./LightEmission/out ./.git && \
+    rm -fr ./cfg/* ./hegra ./hess ./doc_src ./doc ./LightEmission/out && \
     rm -vf LightEmission/LightSourcesPresentation.pdf && \
     find . -name "*.o" -exec rm -f {} \;
 
-# Generate build_opts.yml with build information
+# Generate build_opts.yml with build information before removing Git metadata.
 RUN { \
     echo "simtel_version: \"${SIMTEL_VERSION}\""; \
-    echo "simtel_revision: \"$(cat /workdir/simulation_software/simtel_revision)\""; \
+    echo "simtel_revision: \"$(git rev-parse HEAD)\""; \
     echo "simtel_source_url: \"${SIMTEL_SOURCE_URL}\""; \
     echo "hessio_version: \"${HESSIO_VERSION}\""; \
-    echo "hessio_revision: \"$(cat /workdir/simulation_software/hessio_revision)\""; \
+    echo "hessio_revision: \"$(git -C /workdir/simulation_software/hessio rev-parse HEAD)\""; \
     echo "hessio_source_url: \"${HESSIO_SOURCE_URL}\""; \
     echo "stdtools_version: \"${STDTOOLS_VERSION}\""; \
-    echo "stdtools_revision: \"$(cat /workdir/simulation_software/stdtools_revision)\""; \
+    echo "stdtools_revision: \"$(git -C /workdir/simulation_software/stdtools rev-parse HEAD)\""; \
     echo "stdtools_source_url: \"${STDTOOLS_SOURCE_URL}\""; \
     echo "gsl_version: \"${GSL_VERSION}\""; \
     echo "gsl_sha256: \"$(cat /workdir/simulation_software/gsl_sha256)\""; \
@@ -191,7 +188,11 @@ RUN { \
     echo "    build_flags: \"EXTRA_DEFINES=${EXTRA_DEFINES} -DDEBUG_TRACE_99 ${GSL_COMPILE}\""; \
     echo "    executables:"; \
     echo "      - \"sim_telarray_debug_trace\""; \
-    } > build_opts.yml
+    } > build_opts.yml && \
+    rm -rf /workdir/simulation_software/hessio \
+           /workdir/simulation_software/hessioxxx/.git \
+           /workdir/simulation_software/stdtools/.git \
+           /workdir/simulation_software/sim_telarray/.git
 
 # -----------------------------------------------------------------------------
 # STAGE 3: Runtime Image
