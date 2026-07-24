@@ -127,7 +127,8 @@ RUN sed -i "s|hessioxxx-prepare: build-doc doc/eventio_en.pdf doc/hessio_refman.
     make hessioxxx-prepare && mv hessioxxx /workdir/simulation_software/
 
 WORKDIR /workdir/simulation_software/hessioxxx
-RUN make clean && make include/eventio_version.h && \
+RUN rm -rf /workdir/simulation_software/hessio && \
+    make clean && make include/eventio_version.h && \
     make WITH_RPATH=1 DEFINES="${EXTRA_DEFINES} ${GSL_COMPILE}" && \
     rm -rf ./out ./doc ./root ./hessio_refman.pdf
 
@@ -189,8 +190,7 @@ RUN { \
     echo "    executables:"; \
     echo "      - \"sim_telarray_debug_trace\""; \
     } > build_opts.yml && \
-    rm -rf /workdir/simulation_software/hessio \
-           /workdir/simulation_software/hessioxxx/.git \
+    rm -rf /workdir/simulation_software/hessioxxx/.git \
            /workdir/simulation_software/stdtools/.git \
            /workdir/simulation_software/sim_telarray/.git
 

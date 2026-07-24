@@ -92,10 +92,8 @@ jobs:
         id: restore-corsika-source
         uses: actions/cache/restore@v6
         with:
-          path: |
-            corsika7
-            corsika_revision
-          key: corsika7-source-${{ matrix.corsika }}-${{ matrix.corsika_source_ref }}
+          path: corsika7-source.tar.gz
+          key: corsika7-source-tarball-${{ matrix.corsika }}-${{ matrix.corsika_source_ref }}
 
       - name: Clone CORSIKA source from KIT
         if: steps.restore-corsika-source.outputs.cache-hit != 'true'
@@ -108,23 +106,20 @@ jobs:
             "https://oauth2:${CORSIKA7_TOKEN}@${CORSIKA_SOURCE_URL#https://}" corsika7
           git -C corsika7 rev-parse HEAD > corsika_revision
           rm -rf corsika7/.git
+          tar -czf corsika7-source.tar.gz corsika7 corsika_revision
 
       - name: Save CORSIKA source cache
         if: steps.restore-corsika-source.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6
         with:
-          path: |
-            corsika7
-            corsika_revision
-          key: corsika7-source-${{ matrix.corsika }}-${{ matrix.corsika_source_ref }}
+          path: corsika7-source.tar.gz
+          key: corsika7-source-tarball-${{ matrix.corsika }}-${{ matrix.corsika_source_ref }}
 
       - name: Upload CORSIKA source
         uses: actions/upload-artifact@v7
         with:
           name: corsika7-source-${{ matrix.corsika }}
-          path: |
-            corsika7
-            corsika_revision
+          path: corsika7-source.tar.gz
           retention-days: 1
 
   build-corsika7:
@@ -156,6 +151,9 @@ jobs:
         with:
           name: corsika7-source-${{ matrix.corsika }}
           path: corsika-source
+
+      - name: Extract CORSIKA source
+        run: tar -xzf corsika-source/corsika7-source.tar.gz -C corsika-source
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
