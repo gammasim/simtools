@@ -1,7 +1,7 @@
 # Dockerfile for simtools production.
 #
-# Uses CORSIKA and sim_telarray pre-built images; CORSIKA AVX optimization
-# (generic, avx2, avx512f, sse4) is selected via the AVX_FLAG build argument.
+# Uses CORSIKA and sim_telarray pre-built images; the selected CORSIKA image
+# determines the available AVX optimization.
 # No QGSJet tables are included.
 #
 # hadolint global ignore=DL3013,DL3041
@@ -10,13 +10,6 @@
 ARG CORSIKA_IMAGE
 ARG SIMTEL_IMAGE
 ARG BASE_IMAGE
-ARG AVX_FLAG="generic"
-ARG PYTHON_VERSION
-ARG SIMTOOLS_VERSION
-ARG SIMTOOLS_GIT_REVISION
-ARG CONTAINER_USER="simtools"
-ARG CONTAINER_UID="1000"
-ARG CONTAINER_GID="1000"
 
 FROM ${CORSIKA_IMAGE} AS corsika_img
 FROM ${SIMTEL_IMAGE} AS simtel_img
@@ -28,9 +21,9 @@ ARG SIMTOOLS_GIT_REVISION
 ARG CORSIKA_IMAGE
 ARG SIMTEL_IMAGE
 ARG BASE_IMAGE
-ARG CONTAINER_USER
-ARG CONTAINER_UID
-ARG CONTAINER_GID
+ARG CONTAINER_USER="simtools"
+ARG CONTAINER_UID="1000"
+ARG CONTAINER_GID="1000"
 
 COPY --from=corsika_img /workdir/simulation_software/corsika7  /workdir/simulation_software/corsika7
 COPY --from=simtel_img /workdir/simulation_software/sim_telarray /workdir/simulation_software/sim_telarray

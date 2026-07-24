@@ -114,7 +114,6 @@ jobs:
             BASE_IMAGE=${{ needs.dependency-config.outputs.base_image }}
             CORSIKA_IMAGE=${{ matrix.corsika_image }}
             SIMTEL_IMAGE=${{ matrix.simtel_image }}
-            AVX_FLAG=${{ matrix.avx_flag }}
             PYTHON_VERSION=${{ needs.dependency-config.outputs.python_version }}
             SIMTOOLS_VERSION=${{ env.SIMTOOLS_VERSION }}
             SIMTOOLS_GIT_REVISION=${{ env.SIMTOOLS_GIT_REVISION }}

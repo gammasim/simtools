@@ -4,23 +4,8 @@
 # Image with sim_telarray and tools.
 #
 
-ARG EXTRA_DEFINES="-DCTA_PROD6 -DMAXIMUM_TELESCOPES=99"
-ARG SIMTEL_VERSION
-ARG SIMTEL_REVISION
-ARG SIMTEL_SOURCE_URL
-ARG HESSIO_VERSION
-ARG HESSIO_REVISION
-ARG HESSIO_SOURCE_URL
-ARG STDTOOLS_VERSION
-ARG STDTOOLS_REVISION
-ARG STDTOOLS_SOURCE_URL
-ARG GSL_VERSION
-ARG GSL_SHA256
 ARG BASE_IMAGE
 ARG BUILD_BASE_IMAGE
-ARG CONTAINER_USER="simtools"
-ARG CONTAINER_UID="1000"
-ARG CONTAINER_GID="1000"
 
 # hadolint global ignore=DL3033,DL3041
 # - DL3033, DL3041: ignore warnings about installing non-specific versions with microdnf or yum)
@@ -86,19 +71,15 @@ RUN sha256sum /tmp/gsl.tar.gz | cut -d ' ' -f1 > /src/gsl_sha256 && \
 # STAGE 2: build_image
 # -----------------------------------------------------------------------------
 FROM ${BUILD_BASE_IMAGE} AS build_image
-ARG EXTRA_DEFINES
+ARG EXTRA_DEFINES="-DCTA_PROD6 -DMAXIMUM_TELESCOPES=99"
 ARG SIMTEL_VERSION
-ARG SIMTEL_REVISION
 ARG SIMTEL_SOURCE_URL
 ARG HESSIO_VERSION
-ARG HESSIO_REVISION
 ARG HESSIO_SOURCE_URL
 ARG STDTOOLS_VERSION
-ARG STDTOOLS_REVISION
 ARG STDTOOLS_SOURCE_URL
 ARG GSL_COMPILE="-DWITH_GSL -DWITH_GSL_RNG"
 ARG GSL_VERSION
-ARG GSL_SHA256
 
 ENV GCC_PATH="/usr/bin/"
 ENV HSEVENTIO="/workdir/simulation_software/hessioxxx/"
@@ -199,9 +180,9 @@ RUN { \
 # STAGE 3: Runtime Image
 # -----------------------------------------------------------------------------
 FROM ${BASE_IMAGE}
-ARG CONTAINER_USER
-ARG CONTAINER_UID
-ARG CONTAINER_GID
+ARG CONTAINER_USER="simtools"
+ARG CONTAINER_UID="1000"
+ARG CONTAINER_GID="1000"
 WORKDIR /workdir/simulation_software
 COPY --from=build_image /workdir/simulation_software/hessioxxx /workdir/simulation_software/hessioxxx
 COPY --from=build_image /workdir/simulation_software/stdtools /workdir/simulation_software/stdtools

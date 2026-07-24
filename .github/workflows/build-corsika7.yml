@@ -189,7 +189,6 @@ jobs:
             BUILD_BASE_IMAGE=${{ needs.dependency-config.outputs.build_base_image }}
             AVX_FLAG=${{ matrix.avx_flag }}
             CORSIKA_VERSION=${{ matrix.corsika }}
-            CORSIKA_SOURCE_REF=${{ matrix.corsika_source_ref }}
             CORSIKA_SOURCE_URL=${{ matrix.corsika_source_url }}
             CORSIKA_CONFIG_VERSION=${{ matrix.corsika_config }}
             CORSIKA_CONFIG_SOURCE_URL=${{ matrix.corsika_config_source_url }}
