@@ -68,12 +68,12 @@ RUN python"${PYTHON_VERSION}" -m venv env \
        if [ ! -f /opt/simtools/provenance/dependency-manifest.json ]; then \
          python -c 'from simtools.dependencies import write_dependency_manifest; \
 write_dependency_manifest("/opt/simtools/provenance/dependency-manifest.json")'; \
-       fi; \
-       digest="$(python -c 'from pathlib import Path; \
+    fi \
+    && digest="$(python -c 'from pathlib import Path; \
 from simtools.dependencies import get_dependency_manifest_digest; \
 manifest=Path("/opt/simtools/provenance/dependency-manifest.json"); \
 print(get_dependency_manifest_digest() + "  " + manifest.name)')"; \
-       printf '%s\n' "$digest" > /opt/simtools/provenance/dependency-manifest.json.sha256; \
+    printf '%s\n' "$digest" > /opt/simtools/provenance/dependency-manifest.json.sha256; \
      fi \
   && echo ". /workdir/env/bin/activate" >> "/home/${CONTAINER_USER}/.bashrc" \
   && chown -R "${CONTAINER_UID}:${CONTAINER_GID}" /workdir "/home/${CONTAINER_USER}"
