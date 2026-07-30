@@ -63,7 +63,11 @@ RUN python"${PYTHON_VERSION}" -m venv env \
     pip install --no-cache-dir /workdir/simtools \
   && SIMTOOLS_CONTAINER_BUILD=1 simtools-dependency-manifest \
   && pip cache purge && rm -rf /root/.cache \
+  && mkdir -p /opt/simtools/provenance \
   && if [ ! -f /opt/simtools/provenance/dependency-manifest.json.sha256 ]; then \
+       if [ ! -f /opt/simtools/provenance/dependency-manifest.json ]; then \
+         python -c 'from simtools.dependencies import write_dependency_manifest; write_dependency_manifest("/opt/simtools/provenance/dependency-manifest.json")'; \
+       fi; \
        digest="$(python -c 'from pathlib import Path; from simtools.dependencies import get_dependency_manifest_digest; manifest=Path("/opt/simtools/provenance/dependency-manifest.json"); print(get_dependency_manifest_digest() + "  " + manifest.name)')"; \
        printf '%s\n' "$digest" > /opt/simtools/provenance/dependency-manifest.json.sha256; \
      fi \
