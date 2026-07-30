@@ -56,6 +56,9 @@ RUN SIMTOOLS_BRANCH="$(printf '%s' "$SIMTOOLS_BRANCH" | sed 's#refs/tags/##')" \
   && pip install --no-cache-dir -U pip \
   && pip install --no-cache-dir "git+${SIMTOOLS_REPO}@${SIMTOOLS_BRANCH}" \
   && pip cache purge && rm -rf /root/.cache \
+  && mkdir -p /opt/simtools/provenance \
+  && python${PYTHON_VERSION} -c 'import json, subprocess, pathlib; p=pathlib.Path("/opt/simtools/provenance/dependency-manifest.json"); deps=json.loads(subprocess.check_output(["/workdir/env/bin/pip", "list", "--format=json"], text=True)); p.write_text(json.dumps(sorted(deps, key=lambda x: x["name"].lower()), indent=2) + "\n", encoding="utf-8")' \
+  && sha256sum /opt/simtools/provenance/dependency-manifest.json > /opt/simtools/provenance/dependency-manifest.json.sha256 \
   && echo ". /workdir/env/bin/activate" >> "/home/${CONTAINER_USER}/.bashrc" \
   && chown -R "${CONTAINER_UID}:${CONTAINER_GID}" /workdir "/home/${CONTAINER_USER}"
 
