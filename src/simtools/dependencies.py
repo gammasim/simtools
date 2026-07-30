@@ -8,9 +8,15 @@ This modules provides two main functionalities:
 
 """
 
+import hashlib
+import json
 import logging
+import os
+import platform
 import re
 import subprocess
+import tomllib
+from importlib import metadata
 from pathlib import Path
 
 import yaml
@@ -21,6 +27,21 @@ from simtools.utils import general as gen
 from simtools.version import __version__
 
 _logger = logging.getLogger(__name__)
+
+DEPENDENCY_MANIFEST_PATH = Path("/opt/simtools/provenance/dependency-manifest.json")
+DEPENDENCY_MANIFEST_SCHEMA_VERSION = "0.1.0"
+SIMTEL_METADATA_BUILD_OPTION_KEYS = {
+    "avx_flag",
+    "build_date",
+    "corsika_config_version",
+    "corsika_opt_patch_version",
+    "corsika_version",
+    "extra_defines",
+    "hessio_version",
+    "iact_atmo_version",
+    "simtel_version",
+    "stdtools_version",
+}
 
 
 def get_version_string(run_time=None, include_software_versions=True):
@@ -64,6 +85,7 @@ def get_version_string(run_time=None, include_software_versions=True):
         build_options = get_build_options(run_time)
 
     return (
+        f"simtools version: {__version__}\n"
         f"Database name: {get_database_version_or_name(version=False)}\n"
         f"Database version: {get_database_version_or_name(version=True)}\n"
         f"sim_telarray version: {simtel_version}\n"
@@ -73,6 +95,292 @@ def get_version_string(run_time=None, include_software_versions=True):
         f"Build options: {build_options}\n"
         f"Runtime environment: {run_time if run_time else 'None'}\n"
     )
+
+
+def get_dependency_manifest(run_time=None):
+    """Return the installed dependency manifest or a discovered fallback.
+
+    Parameters
+    ----------
+    run_time : list, optional
+        Runtime command used to read a manifest from a container.
+
+    Returns
+    -------
+    dict
+        Dependency manifest.
+
+    Raises
+    ------
+    FileNotFoundError
+        If an explicitly requested container does not contain a manifest.
+    ValueError
+        If the manifest contains invalid JSON.
+    """
+    manifest_path = Path(os.getenv("SIMTOOLS_DEPENDENCY_MANIFEST", str(DEPENDENCY_MANIFEST_PATH)))
+    try:
+        return _read_dependency_manifest(manifest_path, run_time)
+    except FileNotFoundError:
+        if run_time is not None:
+            raise
+    return build_dependency_manifest()
+
+
+def _read_dependency_manifest(manifest_path, run_time=None):
+    """Read a dependency manifest locally or through a runtime command."""
+    if run_time is None:
+        try:
+            return json.loads(manifest_path.read_text(encoding="utf-8"))
+        except OSError as exc:
+            raise FileNotFoundError(f"Dependency manifest not found: {manifest_path}") from exc
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Invalid dependency manifest: {manifest_path}") from exc
+
+    result = subprocess.run(
+        [*run_time, "cat", str(manifest_path)], capture_output=True, text=True, check=False
+    )
+    if result.returncode:
+        raise FileNotFoundError(f"Dependency manifest not found in container: {result.stderr}")
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise ValueError("Invalid dependency manifest in container.") from exc
+
+
+def build_dependency_manifest():
+    """Build a deterministic manifest from the active runtime environment.
+
+    Returns
+    -------
+    dict
+        Discovered dependency manifest.
+    """
+    try:
+        build_options = get_build_options()
+    except FileNotFoundError, TypeError, ValueError:
+        build_options = {}
+    return {
+        "schema_version": DEPENDENCY_MANIFEST_SCHEMA_VERSION,
+        "source": (
+            "container-build"
+            if os.getenv("SIMTOOLS_CONTAINER_BUILD") == "1"
+            else "runtime-discovery"
+        ),
+        "simtools": {
+            "version": __version__,
+            "revision": os.getenv("SIMTOOLS_GIT_REVISION") or _get_simtools_revision(),
+        },
+        "runtime": {
+            "python_version": platform.python_version(),
+            "pip_version": _distribution_version("pip"),
+            "direct_python_dependencies": get_direct_python_dependency_versions(),
+        },
+        "build_options": _sanitize_build_options(build_options),
+        "container": {
+            key: value
+            for key, value in {
+                "base_image": os.getenv("SIMTOOLS_BASE_IMAGE"),
+                "corsika_image": os.getenv("SIMTOOLS_CORSIKA_IMAGE"),
+                "sim_telarray_image": os.getenv("SIMTOOLS_SIMTEL_IMAGE"),
+            }.items()
+            if value
+        },
+    }
+
+
+def _sanitize_build_options(build_options):
+    """Remove nondeterministic values from build options used in a manifest."""
+    return {key: value for key, value in build_options.items() if key != "build_date"}
+
+
+def get_direct_python_dependency_versions():
+    """Return installed versions of direct simtools Python dependencies.
+
+    Returns
+    -------
+    dict
+        Normalized distribution names mapped to installed versions.
+    """
+    try:
+        requirements = metadata.requires("gammasimtools") or []
+    except metadata.PackageNotFoundError:
+        return {}
+    versions = {}
+    for requirement in requirements:
+        if "extra ==" in requirement:
+            continue
+        match = re.match(r"^([A-Za-z0-9_.-]+)", requirement)
+        if not match:
+            continue
+        name = match.group(1).lower().replace("_", "-")
+        installed_version = _distribution_version(name)
+        if installed_version is not None:
+            versions[name] = installed_version
+    return dict(sorted(versions.items()))
+
+
+def _distribution_version(name):
+    """Return an installed distribution version or None."""
+    try:
+        return metadata.version(name)
+    except metadata.PackageNotFoundError:
+        return None
+
+
+def _get_simtools_revision():
+    """Return the installed simtools VCS revision when available."""
+    try:
+        direct_url = metadata.distribution("gammasimtools").read_text("direct_url.json")
+        vcs_info = json.loads(direct_url or "{}").get("vcs_info", {})
+        return vcs_info.get("commit_id")
+    except metadata.PackageNotFoundError, json.JSONDecodeError:
+        return None
+
+
+def canonical_manifest_bytes(manifest):
+    """Serialize a manifest deterministically for hashing.
+
+    Parameters
+    ----------
+    manifest : dict
+        Dependency manifest.
+
+    Returns
+    -------
+    bytes
+        Canonical UTF-8 JSON representation.
+    """
+    return json.dumps(
+        manifest,
+        default=str,
+        ensure_ascii=True,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+
+
+def get_dependency_manifest_digest(run_time=None):
+    """Return the SHA-256 digest of the dependency manifest."""
+    manifest = get_dependency_manifest(run_time)
+    return hashlib.sha256(canonical_manifest_bytes(manifest)).hexdigest()
+
+
+def write_dependency_manifest(output_file):
+    """Write the active dependency manifest and its SHA-256 file.
+
+    Parameters
+    ----------
+    output_file : str or Path
+        JSON manifest output path.
+    """
+    _write_manifest(build_dependency_manifest(), output_file)
+
+
+def write_development_dependency_manifest(output_file, project_file, build_option_files):
+    """Write provenance for a development image without installing simtools.
+
+    Parameters
+    ----------
+    output_file : str or Path
+        JSON manifest output path.
+    project_file : str or Path
+        Project file declaring direct Python dependencies.
+    build_option_files : iterable of str or Path
+        CORSIKA and sim_telarray build-options files to merge when available.
+    """
+    manifest = {
+        "schema_version": DEPENDENCY_MANIFEST_SCHEMA_VERSION,
+        "source": "container-build",
+        "simtools": {
+            "version": "not-installed",
+            "revision": os.getenv("SIMTOOLS_GIT_REVISION"),
+        },
+        "runtime": {
+            "python_version": platform.python_version(),
+            "pip_version": _distribution_version("pip"),
+            "direct_python_dependencies": _project_dependency_versions(project_file),
+        },
+        "build_options": _build_options_from_files(build_option_files),
+        "container": {
+            key: value
+            for key, value in {
+                "base_image": os.getenv("SIMTOOLS_BASE_IMAGE"),
+                "corsika_image": os.getenv("SIMTOOLS_CORSIKA_IMAGE"),
+                "sim_telarray_image": os.getenv("SIMTOOLS_SIMTEL_IMAGE"),
+            }.items()
+            if value
+        },
+    }
+    _write_manifest(manifest, output_file)
+
+
+def _project_dependency_versions(project_file):
+    """Return installed versions of direct dependencies declared by a project file."""
+    with Path(project_file).open("rb") as file:
+        requirements = tomllib.load(file)["project"]["dependencies"]
+    versions = {}
+    for requirement in requirements:
+        match = re.match(r"^([A-Za-z0-9_.-]+)", requirement)
+        if match:
+            name = match.group(1).lower().replace("_", "-")
+            installed_version = _distribution_version(name)
+            if installed_version is not None:
+                versions[name] = installed_version
+    return dict(sorted(versions.items()))
+
+
+def _build_options_from_files(build_option_files):
+    """Merge deterministic build options from existing YAML files."""
+    options = {}
+    for build_options_file in build_option_files:
+        path = Path(build_options_file)
+        if path.is_file():
+            options.update(
+                _sanitize_build_options(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
+            )
+    return options
+
+
+def _write_manifest(manifest, output_file):
+    """Write a manifest and its canonical SHA-256 digest."""
+    output_path = Path(output_file)
+    content = json.dumps(manifest, default=str, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(content, encoding="utf-8")
+    digest = hashlib.sha256(canonical_manifest_bytes(manifest)).hexdigest()
+    output_path.with_suffix(output_path.suffix + ".sha256").write_text(
+        f"{digest}  {output_path.name}\n", encoding="utf-8"
+    )
+
+
+def get_dependency_summary(run_time=None):
+    """Return a compact human-readable dependency summary."""
+    manifest = get_dependency_manifest(run_time)
+    build_options = manifest.get("build_options", {})
+    simtools_info = manifest.get("simtools", {})
+    runtime = manifest.get("runtime", {})
+    return (
+        f"simtools: {simtools_info.get('version', __version__)}\n"
+        f"revision: {simtools_info.get('revision')}\n"
+        f"Python: {runtime.get('python_version')}\n"
+        f"CORSIKA: {build_options.get('corsika_version')}\n"
+        f"sim_telarray: {build_options.get('simtel_version')}\n"
+        f"dependency manifest SHA-256: "
+        f"{hashlib.sha256(canonical_manifest_bytes(manifest)).hexdigest()}"
+    )
+
+
+def get_dependency_metadata():
+    """Return compact scalar provenance values for simulation metadata."""
+    manifest = get_dependency_manifest()
+    values = {
+        "simtools_dependency_manifest_sha256": hashlib.sha256(
+            canonical_manifest_bytes(manifest)
+        ).hexdigest(),
+        "simtools_git_revision": manifest.get("simtools", {}).get("revision"),
+        "simtools_python_version": manifest.get("runtime", {}).get("python_version"),
+    }
+    return {key: value for key, value in values.items() if value is not None}
 
 
 def get_software_version(software):
@@ -296,8 +604,28 @@ def export_build_info(output_file, run_time=None):
     run_time : list, optional
         Runtime environment command (e.g., Docker).
     """
-    build_info = get_build_options(run_time)
-    build_info["simtools"] = __version__
-    build_info["database_name"] = get_database_version_or_name(version=False)
-    build_info["database_version"] = get_database_version_or_name(version=True)
+    try:
+        build_options = get_build_options(run_time)
+    except FileNotFoundError:
+        build_options = {}
+    manifest = get_dependency_manifest(run_time)
+    database_name = get_database_version_or_name(version=False)
+    database_version = get_database_version_or_name(version=True)
+    build_info = {
+        "schema_version": DEPENDENCY_MANIFEST_SCHEMA_VERSION,
+        "dependency_manifest": manifest,
+        "dependency_manifest_sha256": hashlib.sha256(
+            canonical_manifest_bytes(manifest)
+        ).hexdigest(),
+        "runtime": {
+            "database_name": database_name,
+            "database_version": database_version,
+        },
+        "build_options": build_options,
+        # Compatibility fields retained for existing consumers.
+        **build_options,
+        "simtools": __version__,
+        "database_name": database_name,
+        "database_version": database_version,
+    }
     ascii_handler.write_data_to_file(data=build_info, output_file=Path(output_file))

@@ -30,3 +30,15 @@ simtools-export-sim-telarray-metadata-schema \
 To add a new metadata value, update the matching model-parameter schema if it is model-derived,
 or add the new generated key to the sim_telarray metadata registry, then run the metadata tests to
 verify that the value is written and read correctly.
+
+## Software provenance
+
+Simulation output contains a compact software summary rather than the complete Python environment.
+The generated global metadata includes the simtools, CORSIKA, sim_telarray, hessio, stdtools, and
+Python versions; the simtools Git revision; relevant CORSIKA build variants; and
+`simtools_dependency_manifest_sha256`.
+
+The manifest digest identifies the complete canonical record stored in the container at
+`/opt/simtools/provenance/dependency-manifest.json`. Use it to match an output file to the OCI or
+Apptainer provenance artifact published by the container workflow. The full manifest is not
+embedded in every event file.

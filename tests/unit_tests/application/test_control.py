@@ -432,9 +432,14 @@ def test_version_info_no_build_options():
         "simtools.application.control.dependencies.get_build_options",
         side_effect=FileNotFoundError("Build options not found"),
     ):
-        _version_info(args_dict, mock_io_handler, logger)
+        with patch(
+            "simtools.application.control.dependencies.get_database_version_or_name",
+            side_effect=[None, None],
+        ):
+            with patch("simtools.application.control.version.__version__", "1.0.0"):
+                _version_info(args_dict, mock_io_handler, logger)
 
-        mock_io_handler.get_output_file.assert_not_called()
+                mock_io_handler.get_output_file.assert_not_called()
 
 
 def test_version_info_export_build_info_with_io_handler():
