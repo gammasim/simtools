@@ -63,9 +63,10 @@ RUN python"${PYTHON_VERSION}" -m venv env \
     pip install --no-cache-dir /workdir/simtools \
   && SIMTOOLS_CONTAINER_BUILD=1 simtools-dependency-manifest \
   && pip cache purge && rm -rf /root/.cache \
-  && mkdir -p /opt/simtools/provenance \
-  && python${PYTHON_VERSION} -c 'import json, subprocess, pathlib; p=pathlib.Path("/opt/simtools/provenance/dependency-manifest.json"); deps=json.loads(subprocess.check_output(["/workdir/env/bin/pip", "list", "--format=json"], text=True)); p.write_text(json.dumps(sorted(deps, key=lambda x: x["name"].lower()), indent=2) + "\n", encoding="utf-8")' \
-  && sha256sum /opt/simtools/provenance/dependency-manifest.json > /opt/simtools/provenance/dependency-manifest.json.sha256 \
+  && if [ ! -f /opt/simtools/provenance/dependency-manifest.json.sha256 ]; then \
+       digest="$(python -c 'from pathlib import Path; from simtools.dependencies import get_dependency_manifest_digest; manifest=Path("/opt/simtools/provenance/dependency-manifest.json"); print(get_dependency_manifest_digest() + "  " + manifest.name)')"; \
+       printf '%s\n' "$digest" > /opt/simtools/provenance/dependency-manifest.json.sha256; \
+     fi \
   && echo ". /workdir/env/bin/activate" >> "/home/${CONTAINER_USER}/.bashrc" \
   && chown -R "${CONTAINER_UID}:${CONTAINER_GID}" /workdir "/home/${CONTAINER_USER}"
 
