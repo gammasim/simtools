@@ -97,7 +97,8 @@ _GRID_ARGUMENTS = (
     cli.ArgumentDefinition(
         "showers_per_run_power_law",
         help=(
-            "Scale showers per run by (E_mid / E_ref)^INDEX. Provide INDEX VALUE UNIT; "
+            "Scale showers per run by (E_mid / E_ref)^INDEX (mostly used for fixed energy grid). "
+            "Provide INDEX VALUE UNIT; "
             "E_mid is the logarithmic energy-interval midpoint."
         ),
         nargs=3,
