@@ -84,6 +84,7 @@ ENV LD_LIBRARY_PATH="/workdir/simulation_software/hessioxxx/lib:\
 /usr/local/lib"
 ENV PATH="/workdir/env/bin/:$PATH"
 ENV HOME="/home/${CONTAINER_USER}"
+# hadolint ignore=DL3066
 USER ${CONTAINER_UID}:${CONTAINER_GID}
 
 LABEL org.opencontainers.image.source="https://github.com/gammasim/simtools" \
