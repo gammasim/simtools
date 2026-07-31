@@ -64,7 +64,7 @@ To import these positions into the model parameter repository, see the following
 ```bash
 simtools-write-array-element-positions-to-repository \
     --input /path/to/positions.txt \
-    --repository_path /path/to/repository \
+    --simulation_models_directory /path/to/repository \
     --model_version 1.0.0 \
     --coordinate_system ground \
     --site North

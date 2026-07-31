@@ -155,7 +155,8 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.SITE,
         cli.RUN_NUMBER,
         *cli.SIM_TELARRAY_ARGUMENTS,
-        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_PATH_ARGUMENTS,
+        *cli.SIM_TELARRAY_PATH_ARGUMENTS,
     ),
     database=True,
 )
