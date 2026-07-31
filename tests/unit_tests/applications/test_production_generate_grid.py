@@ -59,6 +59,7 @@ def test_full_parser_retains_supported_shared_arguments():
         "run_number_offset",
         "run_number",
         "showers_per_run",
+        "show_options",
         "site",
         "telescope",
         "view_cone",
@@ -207,3 +208,15 @@ def test_add_arguments_accepts_energy_max_scaling():
     args = parser.parse_args(["--energy_max_scaling", "-2.5", "300", "TeV"])
 
     assert args.energy_max_scaling == ["-2.5", "300", "TeV"]
+
+
+def test_application_parse_allows_show_options_without_required_runtime_arguments(
+    monkeypatch, capsys
+):
+    monkeypatch.setattr("sys.argv", ["production_generate_grid.py", "--show-options", "site"])
+
+    with pytest.raises(SystemExit) as exc:
+        app.APPLICATION._parse()
+
+    assert exc.value.code == 0
+    assert "Available values:" in capsys.readouterr().out
