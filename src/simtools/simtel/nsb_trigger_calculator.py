@@ -1,4 +1,4 @@
-"""Calculate NSB trigger rates from SIMTEL log files and generate ECSV output."""
+"""Calculate NSB trigger rates from reduced event-data HDF5 files."""
 
 import logging
 import re
@@ -8,16 +8,105 @@ from pathlib import Path
 import numpy as np
 from astropy.table import Table
 
-from simtools.simtel.simtel_log_reader import (
-    extract_event_count,
-    extract_run_number,
-    extract_trigger_count,
-    find_log_files,
-    read_log_file,
-)
-
 _logger = logging.getLogger(__name__)
 _THRESHOLD_RE = re.compile(r"_[ad]sum(?P<threshold>\d+)(?=\.)")
+_RUN_NUMBER_RE = re.compile(r"run(?P<run_number>\d+)", re.IGNORECASE)
+_THRESHOLD_METADATA_COLUMNS = (
+    "trigger_threshold",
+    "threshold",
+    "asum_threshold",
+    "dsum_threshold",
+)
+
+
+def _extract_run_number(file_path):
+    """Extract run number from file name or parent directory parts."""
+    file_path = Path(file_path)
+
+    match = _RUN_NUMBER_RE.search(file_path.name)
+    if match:
+        return int(match.group("run_number"))
+
+    for part in file_path.parts:
+        match = _RUN_NUMBER_RE.search(part)
+        if match:
+            return int(match.group("run_number"))
+
+    _logger.warning(f"Could not extract run number from {file_path}")
+    return None
+
+
+def _coerce_threshold_value(value):
+    """Convert metadata threshold values from scalar/string forms to int."""
+    if value is None:
+        return None
+
+    if isinstance(value, (bytes, np.bytes_)):
+        value = value.decode("utf-8", errors="ignore")
+
+    if isinstance(value, str):
+        return _coerce_threshold_string(value)
+
+    return _coerce_threshold_numeric(value)
+
+
+def _coerce_threshold_string(value):
+    """Extract threshold from a string-like metadata value."""
+    stripped = value.strip()
+    if not stripped:
+        return None
+
+    try:
+        return int(float(stripped))
+    except ValueError:
+        match = re.search(r"\d+", stripped)
+        return int(match.group(0)) if match else None
+
+
+def _coerce_threshold_numeric(value):
+    """Extract threshold from a numeric metadata value."""
+    try:
+        numeric_value = float(value)
+    except TypeError, ValueError:
+        return None
+
+    if not np.isfinite(numeric_value):
+        return None
+
+    return int(numeric_value)
+
+
+def extract_threshold_from_hdf5_metadata(file_path):
+    """
+    Extract threshold from ``FILE_INFO`` table metadata.
+
+    Parameters
+    ----------
+    file_path : Path or str
+        Path to reduced event-data HDF5 file.
+
+    Returns
+    -------
+    int or None
+        Threshold value if found in known metadata columns, else None.
+    """
+    file_path = Path(file_path)
+    try:
+        file_info = Table.read(file_path, path="FILE_INFO")
+    except OSError, ValueError, KeyError:
+        return None
+
+    if len(file_info) == 0:
+        return None
+
+    for col_name in _THRESHOLD_METADATA_COLUMNS:
+        if col_name not in file_info.colnames:
+            continue
+        threshold = _coerce_threshold_value(file_info[col_name][0])
+        if threshold is not None:
+            return threshold
+
+    return None
 
 
 def extract_threshold_from_file_name(file_path):
@@ -26,13 +115,13 @@ def extract_threshold_from_file_name(file_path):
 
     Supports current production labels like:
 
-    - ``*_asum220.simtel.log.gz``
-    - ``*_dsum450.simtel.log.gz``
+    - ``*_asum220.reduced_event_data.hdf5``
+    - ``*_dsum450.reduced_event_data.hdf5``
 
     Parameters
     ----------
     file_path : Path or str
-        Path to the log file.
+        Path to input file.
 
     Returns
     -------
@@ -47,17 +136,14 @@ def extract_threshold_from_file_name(file_path):
     return None
 
 
-def parse_nsb_log_file(file_path):
+def parse_nsb_hdf5_file(file_path):
     """
-    Parse a single NSB log file.
-
-    The log file is read only for trigger and event counts.
-    The threshold is extracted from the file name.
+    Parse one NSB reduced event-data HDF5 file.
 
     Parameters
     ----------
     file_path : Path or str
-        Path to the log file.
+        Path to the HDF5 file.
 
     Returns
     -------
@@ -68,19 +154,23 @@ def parse_nsb_log_file(file_path):
     file_path = Path(file_path)
 
     try:
-        log_text = read_log_file(file_path)
-    except (OSError, UnicodeDecodeError) as exc:
-        _logger.error(f"Failed to read {file_path}: {exc}")
+        events_table = Table.read(file_path, path="SHOWERS")
+    except (OSError, ValueError, KeyError) as exc:
+        _logger.error(f"Failed to read SHOWERS table from {file_path}: {exc}")
         return None
 
-    run_number = extract_run_number(file_path)
-    threshold = extract_threshold_from_file_name(file_path)
-    triggers = extract_trigger_count(log_text)
-    events = extract_event_count(log_text)
-
-    if triggers is None and events is not None:
-        _logger.info(f"No NSB triggers found in {file_path}; using 0 triggers")
+    try:
+        triggers_table = Table.read(file_path, path="TRIGGERS")
+        triggers = len(triggers_table)
+    except OSError, ValueError, KeyError:
+        _logger.info(f"No TRIGGERS table found in {file_path}; using 0 triggers")
         triggers = 0
+
+    run_number = _extract_run_number(file_path)
+    threshold = extract_threshold_from_hdf5_metadata(file_path)
+    if threshold is None:
+        threshold = extract_threshold_from_file_name(file_path)
+    events = len(events_table)
 
     if run_number is None or threshold is None or triggers is None:
         _logger.warning(
@@ -98,16 +188,14 @@ def parse_nsb_log_file(file_path):
     }
 
 
-def parse_nsb_log_files(file_list):
+def parse_nsb_hdf5_files(file_list):
     """
-    Parse multiple NSB log files.
-
-    Thresholds are extracted from file names, not directories.
+    Parse multiple NSB reduced event-data HDF5 files.
 
     Parameters
     ----------
     file_list : list of Path
-        List of log file paths to parse.
+        List of HDF5 file paths to parse.
 
     Returns
     -------
@@ -117,22 +205,54 @@ def parse_nsb_log_files(file_list):
     Raises
     ------
     ValueError
-        If no log files could be parsed successfully.
+        If no files could be parsed successfully.
     """
     data = []
 
     for file_path in file_list:
         _logger.debug(f"Parsing {file_path}")
-        result = parse_nsb_log_file(file_path)
+        result = parse_nsb_hdf5_file(file_path)
         if result is not None:
             data.append(result)
 
     if not data:
-        raise ValueError("No log files could be parsed successfully")
+        raise ValueError("No HDF5 files could be parsed successfully")
 
-    _logger.info(f"Parsed {len(data)} out of {len(file_list)} log files")
+    _logger.info(f"Parsed {len(data)} out of {len(file_list)} HDF5 files")
 
     return data
+
+
+def find_hdf5_files(root_dir, pattern="*.reduced_event_data.hdf5"):
+    """
+    Recursively find reduced event-data HDF5 files matching the pattern.
+
+    Parameters
+    ----------
+    root_dir : Path or str
+        Root directory to search in.
+    pattern : str, optional
+        Glob pattern for HDF5 files. Default: ``*.reduced_event_data.hdf5``.
+
+    Returns
+    -------
+    list of Path
+        Sorted list of matching HDF5 file paths.
+
+    Raises
+    ------
+    FileNotFoundError
+        If root directory does not exist or no matching files are found.
+    """
+    root_dir = Path(root_dir)
+    if not root_dir.exists():
+        raise FileNotFoundError(f"Root directory not found: {root_dir}")
+
+    hdf5_files = sorted(root_dir.rglob(pattern))
+    if not hdf5_files:
+        raise FileNotFoundError(f"No HDF5 files found in {root_dir} matching pattern '{pattern}'")
+
+    return hdf5_files
 
 
 def group_by_threshold_and_run(data):
@@ -142,7 +262,7 @@ def group_by_threshold_and_run(data):
     Parameters
     ----------
     data : list of dict
-        List of parsed log file data.
+        List of parsed HDF5 file data.
 
     Returns
     -------
@@ -316,14 +436,14 @@ def generate_ecsv_output(statistics, output_file, time_window):
 
 def derive_nsb_triggers(args):
     """
-    Derive NSB trigger rates from log files.
+    Derive NSB trigger rates from reduced event-data HDF5 files.
 
     Parameters
     ----------
     args : dict
         Configuration parameters with keys:
-        - root_dir: Root directory to search for log files
-        - pattern: Glob pattern for log files, default: ``*.simtel.log.gz``
+        - root_dir: Root directory to search for reduced event-data HDF5 files
+        - pattern: Glob pattern for HDF5 files, default: ``*.reduced_event_data.hdf5``
         - output: Output ECSV file path (optional, if None, no file is written)
         - time_window: Time window per event in seconds (required; telescope-dependent)
         - verbose: Enable verbose logging (optional)
@@ -341,11 +461,11 @@ def derive_nsb_triggers(args):
     Raises
     ------
     FileNotFoundError
-        If root directory doesn't exist or no log files found.
+        If root directory doesn't exist or no matching HDF5 files are found.
     ValueError
-        If time_window is missing/invalid or if no log files could be parsed successfully.
+        If time_window is missing/invalid or if no files could be parsed successfully.
     """
-    pattern = args.get("pattern", "*.simtel.log.gz")
+    pattern = args.get("pattern", "*.reduced_event_data.hdf5")
     time_window = args.get("time_window")
 
     if time_window is None:
@@ -368,13 +488,13 @@ def derive_nsb_triggers(args):
     if args.get("output"):
         _logger.info(f"Output file: {args['output']}")
 
-    _logger.info("Searching for log files...")
-    log_files = find_log_files(args["root_dir"], pattern)
-    _logger.info(f"Found {len(log_files)} log files")
+    _logger.info("Searching for reduced event-data HDF5 files...")
+    hdf5_files = find_hdf5_files(args["root_dir"], pattern)
+    _logger.info(f"Found {len(hdf5_files)} HDF5 files")
 
-    _logger.info("Parsing log files...")
-    parsed_data = parse_nsb_log_files(log_files)
-    _logger.info(f"Successfully parsed {len(parsed_data)} log files")
+    _logger.info("Parsing HDF5 files...")
+    parsed_data = parse_nsb_hdf5_files(hdf5_files)
+    _logger.info(f"Successfully parsed {len(parsed_data)} HDF5 files")
 
     _logger.info("Grouping data by threshold and run...")
     grouped_data = group_by_threshold_and_run(parsed_data)
