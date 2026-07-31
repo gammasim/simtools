@@ -8,6 +8,7 @@ from pathlib import Path
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration.argument_helpers import bounded_int
+from simtools.configuration.show_options import handle_show_options
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.build_options import get_corsika_build_report
 from simtools.io.ascii_handler import write_data_to_file
@@ -129,6 +130,8 @@ def _validate_single_interaction_models(args_dict, parser):
 
 def _post_parse(args_dict, config_sources, parser):
     """Apply simulate-prod validations after configuration sources are merged."""
+    if handle_show_options(args_dict, parser):
+        return
     if args_dict["list_available_corsika_models"]:
         _list_available_corsika_models(args_dict, parser)
     _resolve_job_grid_arguments(args_dict, config_sources, parser)
@@ -180,6 +183,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.CORSIKA_INTERACTION_ARGUMENTS,
         *cli.SIM_TELARRAY_ARGUMENTS,
         *cli.PATH_ARGUMENTS,
+        cli.SHOW_OPTIONS,
     ),
     database=True,
     setup_io_handler=False,

@@ -190,3 +190,8 @@ class PrimaryParticle:
             ids["pdg_name"] = Particle.findall(pdgid=ids["pdg_id"])[0].name
 
         return particles
+
+    @classmethod
+    def available_particle_names(cls):
+        """Return sorted primary-particle common names."""
+        return sorted(cls.particle_names())

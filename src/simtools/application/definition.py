@@ -7,6 +7,7 @@ from pathlib import Path
 
 from simtools.application.control import ApplicationContext, _initialize_runtime
 from simtools.configuration import configurator
+from simtools.settings import config
 from simtools.configuration.arguments import (
     DATABASE_ARGUMENTS,
     STANDARD_ARGUMENTS,
@@ -94,6 +95,8 @@ class ApplicationDefinition:
         )
         config_builder = self._configurator(runtime_arguments)
         args_dict, db_config = config_builder.configure(initialize_output=self.initialize_output)
+        if args_dict.get("show_options"):
+            config.load(args_dict, db_config, resolve_sim_software_executables=True)
         if self.post_parse is not None:
             self.post_parse(args_dict, config_builder.config_sources, config_builder.parser)
         if self.defer_required_validation:

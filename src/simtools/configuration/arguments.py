@@ -24,6 +24,7 @@ class ArgumentDefinition:
     exclusive_group: str | None
     exclusive_group_required: bool
     preserve_by_version: bool
+    aliases: tuple[str, ...]
     kwargs: Mapping
 
     def __init__(
@@ -34,6 +35,7 @@ class ArgumentDefinition:
         exclusive_group=None,
         exclusive_group_required=False,
         preserve_by_version=False,
+        aliases=(),
         **kwargs,
     ):
         if not name or name.startswith("-"):
@@ -43,6 +45,7 @@ class ArgumentDefinition:
         object.__setattr__(self, "exclusive_group", exclusive_group)
         object.__setattr__(self, "exclusive_group_required", exclusive_group_required)
         object.__setattr__(self, "preserve_by_version", preserve_by_version)
+        object.__setattr__(self, "aliases", tuple(aliases))
         object.__setattr__(self, "kwargs", MappingProxyType(dict(kwargs)))
 
     def __call__(self, **overrides):
@@ -53,6 +56,7 @@ class ArgumentDefinition:
             exclusive_group=self.exclusive_group,
             exclusive_group_required=self.exclusive_group_required,
             preserve_by_version=self.preserve_by_version,
+            aliases=self.aliases,
             **{**self.kwargs, **overrides},
         )
 
@@ -67,6 +71,7 @@ class ArgumentDefinition:
             exclusive_group=self.exclusive_group,
             exclusive_group_required=False,
             preserve_by_version=self.preserve_by_version,
+            aliases=self.aliases,
             **kwargs,
         )
 
@@ -446,7 +451,7 @@ DATABASE_ARGUMENTS = (
 MODEL_VERSION = _argument(
     "model_version",
     _SIMULATION_MODEL_GROUP,
-    help="Simulation production model version(s).",
+    help="Simulation production model version(s). Use --show-options model_version.",
     type=str,
     default=None,
     nargs="+",
@@ -478,7 +483,7 @@ OVERWRITE_MODEL_PARAMETERS = _argument(
 SITE = _argument(
     "site",
     _SIMULATION_MODEL_GROUP,
-    help="Observatory site (e.g., North, South)",
+    help="Observatory site (e.g., North, South). Use --show-options site.",
     type=helpers.site,
 )
 
@@ -502,7 +507,8 @@ ARRAY_LAYOUT_NAME = _argument(
     _SIMULATION_MODEL_GROUP,
     help=(
         "Array layout name(s) (e.g., CTAO-North-Alpha, LSTN-01). "
-        "Telescope names are assumed as single-telescope layouts."
+        "Telescope names are assumed as single-telescope layouts. "
+        "Use --show-options array_layout_name."
     ),
     nargs="+",
     type=str,
@@ -563,7 +569,7 @@ PRIMARY = _argument(
     _SIMULATION_CONFIGURATION_GROUP,
     help=(
         "Primary particle(s) to simulate. Common names: "
-        f"{', '.join(PrimaryParticle.particle_names().keys())}."
+        f"{', '.join(PrimaryParticle.particle_names().keys())}. Use --show-options primary."
     ),
     type=str.lower,
     action=helpers.OneOrManyAction,
@@ -709,7 +715,8 @@ CORSIKA_HE_INTERACTION = _argument(
     _CORSIKA_CONFIGURATION_GROUP,
     help=(
         "High-energy interaction model for CORSIKA "
-        f"(default fallback: {defaults.CORSIKA_HE_INTERACTION})."
+        f"(default fallback: {defaults.CORSIKA_HE_INTERACTION}). "
+        "Use --show-options corsika_he_interaction."
     ),
     type=str,
     action=helpers.OneOrManyAction,
@@ -722,7 +729,8 @@ CORSIKA_LE_INTERACTION = _argument(
     _CORSIKA_CONFIGURATION_GROUP,
     help=(
         "Low-energy interaction model for CORSIKA "
-        f"(default fallback: {defaults.CORSIKA_LE_INTERACTION})."
+        f"(default fallback: {defaults.CORSIKA_LE_INTERACTION}). "
+        "Use --show-options corsika_le_interaction."
     ),
     type=str,
     action=helpers.OneOrManyAction,
@@ -867,6 +875,15 @@ TELESCOPE_IDS = _argument(
     type=str,
 )
 
+SHOW_OPTIONS = _argument(
+    "show_options",
+    "application",
+    help="Print available values for a supported option and exit.",
+    aliases=("--show-options",),
+    type=str,
+    default=None,
+)
+
 STANDARD_ARGUMENTS = (
     *CONFIGURATION_ARGUMENTS,
     *EXECUTION_ARGUMENTS,
@@ -888,6 +905,7 @@ def _layout_argument(argument, *, required):
         exclusive_group="array layout",
         exclusive_group_required=required,
         preserve_by_version=argument.preserve_by_version,
+        aliases=argument.aliases,
         **argument.kwargs,
     )
 
