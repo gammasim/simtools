@@ -3,31 +3,32 @@ applications:
 - application: simtools-production-generate-grid
   docs:
     title: Explicit definition of all grid parameters.
-    summary: Includes number of events scaled by energy and zenith.
+    summary: Fixed energy grid. Includes number of events scaled by energy and zenith.
   configuration:
     array_layout_name:
       by_version:
         "<7.0.0": alpha
         ">=7.0.0": CTAO-North-Alpha
     azimuth_angle:
-    - North
-    - South
-    core_scatter: 10 500 m
+    - North  # Geographic North
+    - South  # Geographic South
+    core_scatter: 10 500 m  # Number of uses for each event; max scatter radius for core position
+    # Run "simtools-simulate-prod --list_available_corsika_models" for available interaction models
     corsika_he_interaction:
     - epos
     - qgs3
     corsika_le_interaction: urqmd
-    energy_range:
+    energy_range:  # Grid of fixed energies.
     - 30 GeV 30 GeV
     - 300 GeV 300 GeV
     label: test-production-grid
     log_level: DEBUG
-    model_version:
+    model_version:  # Run "simtools-db-inspect --model_versions" for available model versions
     - 6.3.0
     - 7.0.0
-    showers_per_run: 5
-    showers_per_run_power_law: 0.0 1 TeV
-    total_showers: 50
+    showers_per_run: 5  # For total showers, multiply by number of runs
+    showers_per_run_power_law: 0.0 1 TeV  # No scaling of number of showers with energy
+    total_showers: 50  # For total showers, multiply by number of runs
     total_showers_scaling: zenith_scaled
     output_file: job_grid_horizontal_explicit.ecsv
     output_path: simtools-output
@@ -35,7 +36,7 @@ applications:
     - gamma
     - proton
     simulation_software: corsika_sim_telarray
-    site: North
+    site: North  # CTAO site
     view_cone: 0 deg 10 deg
     zenith_angle:
     - 20
