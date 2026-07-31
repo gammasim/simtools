@@ -226,6 +226,45 @@ def test_write_tables_hdf5(tmp_path, mock_table):
     assert not list(tmp_path.glob(f"{TEST_H5}.incomplete-*"))
 
 
+def test_write_tables_hdf5_unicode_string_columns(tmp_path):
+    """Test that unicode string columns are converted to byte strings when writing to HDF5."""
+    table = Table({"name": ["hello", "world"], "value": [1, 2]})
+    table.meta["EXTNAME"] = TEST_TABLE_NAME
+    output_file = tmp_path / TEST_H5
+
+    write_tables([table], output_file, file_type="HDF5")
+
+    with h5py.File(output_file, "r") as hdf5_file:
+        dataset = hdf5_file[TEST_TABLE_NAME]
+        assert dataset["name"].dtype.kind == "S"
+        assert dataset["name"][:].tolist() == [b"hello", b"world"]
+
+
+def test_write_tables_hdf5_object_dtype_string_columns(tmp_path):
+    """Test that object-dtype columns with string values are serialized to HDF5."""
+    col = np.array(["hello", "world"], dtype=object)
+    table = Table({"name": col, "value": [1, 2]})
+    table.meta["EXTNAME"] = TEST_TABLE_NAME
+    output_file = tmp_path / TEST_H5
+
+    write_tables([table], output_file, file_type="HDF5")
+
+    with h5py.File(output_file, "r") as hdf5_file:
+        dataset = hdf5_file[TEST_TABLE_NAME]
+        assert dataset["name"].dtype.kind == "S"
+
+
+def test_write_tables_hdf5_object_dtype_non_string_raises(tmp_path):
+    """Test that object-dtype columns with non-string values raise TypeError when writing HDF5."""
+    col = np.array(["hello", None], dtype=object)
+    table = Table({"name": col, "value": [1, 2]})
+    table.meta["EXTNAME"] = TEST_TABLE_NAME
+    output_file = tmp_path / TEST_H5
+
+    with pytest.raises(TypeError, match="non-string or missing values"):
+        write_tables([table], output_file, file_type="HDF5")
+
+
 def test_write_table_chunks_appends_and_widens_strings(tmp_path):
     """Append chunks without truncating strings that grow in later chunks."""
     first = Table({"name": ["a"], "value": [1]})
