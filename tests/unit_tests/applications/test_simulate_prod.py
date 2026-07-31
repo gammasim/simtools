@@ -104,6 +104,13 @@ def test_add_arguments_job_grid_row_defaults_to_one():
     assert args.save_corsika_output is False
 
 
+def test_application_parser_includes_show_options():
+    parser = app.APPLICATION.build_parser()
+    actions = {action.dest: action for action in parser._actions}
+
+    assert "show_options" in actions
+
+
 def test_add_arguments_save_corsika_output():
     parser = CommandLineParser()
     parser.add_argument_definitions(app._ARGUMENTS)
