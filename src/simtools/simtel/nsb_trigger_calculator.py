@@ -13,7 +13,7 @@ _THRESHOLD_RE = re.compile(r"_[ad]sum(?P<threshold>\d+)(?=\.)")
 _RUN_NUMBER_RE = re.compile(r"run(?P<run_number>\d+)", re.IGNORECASE)
 
 
-def _extract_run_number(file_path):
+def extract_run_number_from_path(file_path):
     """Extract run number from file name or parent directory parts."""
     file_path = Path(file_path)
 
@@ -28,6 +28,11 @@ def _extract_run_number(file_path):
 
     _logger.warning(f"Could not extract run number from {file_path}")
     return None
+
+
+def _extract_run_number(file_path):
+    """Backward-compatible alias for tests using the private helper."""
+    return extract_run_number_from_path(file_path)
 
 
 def extract_threshold_from_file_name(file_path):
@@ -87,7 +92,7 @@ def parse_nsb_hdf5_file(file_path):
         _logger.info(f"No TRIGGERS table found in {file_path}; using 0 triggers")
         triggers = 0
 
-    run_number = _extract_run_number(file_path)
+    run_number = extract_run_number_from_path(file_path)
     threshold = extract_threshold_from_file_name(file_path)
     events = len(events_table)
 

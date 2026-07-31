@@ -25,7 +25,7 @@ Command line arguments
 ----------------------
 
 data_dir (str, required)
-    Directory containing both NSB logs/log_hist archives and proton simulation files.
+    Directory containing NSB/proton reduced event-data HDF5 files (e.g. gamma* and proton*).
 output (str, optional)
     Output plot file path or output directory. Default: bias_curve.png
 nsb_output (str, optional)
