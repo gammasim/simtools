@@ -132,3 +132,36 @@ def test_read_corsika_build_variants_rejects_missing_variant_list(tmp_test_direc
 
     with pytest.raises(ValueError, match="no variant list"):
         read_corsika_build_variants(tmp_test_directory)
+
+
+def test_read_corsika_build_variants_accepts_optional_hadronic_transition_energy(
+    tmp_test_directory,
+):
+    Path(tmp_test_directory, "build_opts.yml").write_text(
+        "variant:\n"
+        "  - executable: corsika_epos_urqmd_flat\n"
+        "    config: config_epos_urqmd_flat\n"
+        "    atmosphere_geometry: flat\n"
+        "    he_hadronic_model: epos\n"
+        "    le_hadronic_model: urqmd\n"
+        "    hadronic_transition_energy_default_gev: 30\n",
+        encoding="utf-8",
+    )
+
+    variant = read_corsika_build_variants(tmp_test_directory)[0]
+
+    assert variant.hadronic_transition_energy_default_gev == 30
+
+
+def test_corsika_build_variant_rejects_invalid_hadronic_transition_energy():
+    with pytest.raises(ValueError, match="hadronic transition energy"):
+        CorsikaBuildVariant.from_mapping(
+            {
+                "executable": "corsika_epos_urqmd_flat",
+                "config": "config_epos_urqmd_flat",
+                "atmosphere_geometry": "flat",
+                "he_hadronic_model": "epos",
+                "le_hadronic_model": "urqmd",
+                "hadronic_transition_energy_default_gev": "invalid",
+            }
+        )
