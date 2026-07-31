@@ -135,7 +135,8 @@ RUN set -e; ls ../config_*.h; for config_file in ../config_*.h; do \
                 echo "#define __CACHE_VLIBM__"; \
             } >> include/config.h; \
         fi && \
-        export CFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" \
+        export MAKEFLAGS="-j4" \
+            CFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" \
             CXXFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" \
             FFLAGS="${BASE_FLAGS} ${FORTRAN_SPECIFIC_FLAGS}" && \
         CORSIKA_USER_COMP=1 ./coconut --expert --without-root --without-COASTUSERLIB --without-conex < /dev/null; \
