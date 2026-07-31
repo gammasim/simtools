@@ -43,7 +43,7 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_PATH_ARGUMENTS,
     ),
 )
 
