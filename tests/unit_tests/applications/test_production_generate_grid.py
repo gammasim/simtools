@@ -40,7 +40,6 @@ def test_full_parser_retains_supported_shared_arguments():
 
     expected = {
         "array_layout_name",
-        "array_element_list",
         "azimuth_angle",
         "correct_for_b_field_alignment",
         "core_scatter",
@@ -66,6 +65,7 @@ def test_full_parser_retains_supported_shared_arguments():
         "zenith_angle",
     }
     assert expected <= set(actions)
+    assert "array_element_list" not in actions
     assert actions["output_file"].default == "job_grid.ecsv"
     assert actions["output_file"].help == "Output ECSV production job grid."
 
@@ -90,6 +90,40 @@ def test_full_parser_accepts_minimum_direct_configuration():
     assert args.site == "North"
     assert args.array_layout_name == ["LSTN-01"]
     assert args.output_file == "job_grid.ecsv"
+
+
+def test_full_parser_requires_array_layout_name():
+    with pytest.raises(SystemExit):
+        _full_parser().parse_args(
+            [
+                "--model_version",
+                "7.0.0",
+                "--site",
+                "North",
+                "--primary",
+                "gamma",
+                "--showers_per_run",
+                "1000",
+            ]
+        )
+
+
+def test_full_parser_rejects_array_element_list():
+    with pytest.raises(SystemExit):
+        _full_parser().parse_args(
+            [
+                "--model_version",
+                "7.0.0",
+                "--site",
+                "North",
+                "--array_element_list",
+                "LSTN-01",
+                "--primary",
+                "gamma",
+                "--showers_per_run",
+                "1000",
+            ]
+        )
 
 
 def test_add_arguments_accepts_compact_axis_definitions():

@@ -60,7 +60,7 @@ _GRID_ARGUMENTS = (
     ),
     cli.ArgumentDefinition(
         "number_of_runs",
-        help="Runs generated per grid point and energy interval.",
+        help="Runs generated per grid point.",
         type=scientific_int,
         default=None,
     ),
@@ -135,7 +135,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.IGNORE_MISSING_DESIGN_MODEL,
         cli.SITE(required=True),
         cli.TELESCOPE,
-        *cli.layout_selection_arguments(),
+        cli.ARRAY_LAYOUT_NAME(required=True),
         cli.SIMULATION_SOFTWARE,
         cli.PRIMARY,
         cli.PRIMARY_ID_TYPE,

@@ -3,7 +3,9 @@ applications:
 - application: simtools-production-generate-grid
   docs:
     title: Explicit definition of all grid parameters.
-    summary: Fixed energy grid. Includes number of events scaled by energy and zenith.
+    summary: >
+      Explicit definition of all grid parameters along all axes.
+      Fixed energy grid. Includes number of events scaled by energy and zenith.
   configuration:
     array_layout_name:
       by_version:
@@ -13,7 +15,6 @@ applications:
     - North  # Geographic North
     - South  # Geographic South
     core_scatter: 10 500 m  # Number of uses for each event; max scatter radius for core position
-    # Run "simtools-simulate-prod --list_available_corsika_models" for available interaction models
     corsika_he_interaction:
     - epos
     - qgs3
@@ -23,7 +24,7 @@ applications:
     - 300 GeV 300 GeV
     label: test-production-grid
     log_level: DEBUG
-    model_version:  # Run "simtools-db-inspect --model_versions" for available model versions
+    model_version:
     - 6.3.0
     - 7.0.0
     showers_per_run: 5  # For total showers, multiply by number of runs
