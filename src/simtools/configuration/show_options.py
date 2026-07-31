@@ -1,5 +1,6 @@
 """Shared option-discovery helpers for selected command-line arguments."""
 
+import argparse
 import os
 import sys
 from dataclasses import dataclass, field
@@ -19,10 +20,11 @@ class ShowOptionsResult:
     """Normalized output for ``--show-options``."""
 
     option_name: str
-    environment: dict[str, str] = field(default_factory=dict)
-    values: tuple[str, ...] = ()
-    grouped_values: dict[str, tuple[str, ...]] = field(default_factory=dict)
-    notes: tuple[str, ...] = ()
+    help_text: str | None = None
+    environment: dict = field(default_factory=dict)
+    values: tuple = ()
+    grouped_values: dict = field(default_factory=dict)
+    notes: tuple = ()
 
 
 def handle_show_options(args_dict, parser):
@@ -31,7 +33,7 @@ def handle_show_options(args_dict, parser):
         return False
 
     try:
-        result = resolve_show_options(args_dict)
+        result = resolve_show_options(args_dict, parser)
     except (FileNotFoundError, PermissionError, ValueError) as exc:
         parser.error(str(exc))
 
@@ -40,23 +42,73 @@ def handle_show_options(args_dict, parser):
     return True
 
 
-def resolve_show_options(args_dict):
-    """Resolve ``--show-options`` into a printable result."""
+def resolve_show_options(args_dict, parser=None):
+    """Resolve ``--show-options`` using a custom provider or parser metadata."""
     option_name = args_dict["show_options"]
+    provider = _SHOW_OPTION_PROVIDERS.get(option_name)
+    if provider is not None:
+        return _with_argparse_help(provider(args_dict), parser)
+    if parser is not None:
+        return _show_argparse_option(option_name, parser)
+    supported = ", ".join(sorted(_SHOW_OPTION_PROVIDERS))
+    raise ValueError(
+        f"Unsupported option for '--show-options': {option_name}. Supported values: {supported}."
+    )
+
+
+def _with_argparse_help(result, parser):
+    """Attach the parser help text for a resolved option."""
+    if parser is None or result.help_text is not None:
+        return result
     try:
-        provider = _SHOW_OPTION_PROVIDERS[option_name]
-    except KeyError as exc:
-        supported = ", ".join(sorted(_SHOW_OPTION_PROVIDERS))
-        raise ValueError(
-            f"Unsupported option for '--show-options': {option_name}. "
-            f"Supported values: {supported}."
-        ) from exc
-    return provider(args_dict)
+        action = _find_argparse_action(parser, result.option_name)
+    except ValueError:
+        return result
+    return ShowOptionsResult(
+        option_name=result.option_name,
+        help_text=_action_help(action),
+        environment=result.environment,
+        values=result.values,
+        grouped_values=result.grouped_values,
+        notes=result.notes,
+    )
+
+
+def _show_argparse_option(option_name, parser):
+    """Build a result from an argparse action when no custom provider exists."""
+    action = _find_argparse_action(parser, option_name)
+    values = tuple(str(value) for value in action.choices) if action.choices is not None else ()
+    notes = () if values else ("Argparse does not define a finite set of available values.",)
+    return ShowOptionsResult(
+        option_name=action.dest,
+        help_text=_action_help(action),
+        values=values,
+        notes=notes,
+    )
+
+
+def _find_argparse_action(parser, option_name):
+    """Find a parser action by destination name or hyphenated destination name."""
+    destination = option_name.removeprefix("--").replace("-", "_")
+    for action in parser._actions:  # pylint: disable=protected-access
+        if action.dest == destination:
+            return action
+    raise ValueError(f"Unknown command-line option for --show-options: {option_name}.")
+
+
+def _action_help(action):
+    """Return visible help text from an argparse action."""
+    if action.help in (None, argparse.SUPPRESS):
+        return None
+    return action.help
 
 
 def format_show_options_result(result):
     """Format one ``ShowOptionsResult``."""
     lines = [f"Option: {result.option_name}"]
+
+    if result.help_text:
+        lines.extend(["", "Help:", f"  {result.help_text}"])
 
     if result.environment:
         lines.extend(["", "Environment:"])
@@ -66,13 +118,14 @@ def format_show_options_result(result):
         lines.extend(["", "Notes:"])
         lines.extend(f"  {note}" for note in result.notes)
 
-    lines.extend(["", "Available values:"])
-    if result.grouped_values:
-        for group_name, values in result.grouped_values.items():
-            lines.append(f"  {group_name}:")
-            lines.extend(f"    {value}" for value in values)
-    else:
-        lines.extend(f"  {value}" for value in result.values)
+    if result.grouped_values or result.values:
+        lines.extend(["", "Available values:"])
+        if result.grouped_values:
+            for group_name, values in result.grouped_values.items():
+                lines.append(f"  {group_name}:")
+                lines.extend(f"    {value}" for value in values)
+        else:
+            lines.extend(f"  {value}" for value in result.values)
     return "\n".join(lines)
 
 

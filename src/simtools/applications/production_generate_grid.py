@@ -6,14 +6,12 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration import defaults
 from simtools.configuration.argument_helpers import scientific_int
-from simtools.configuration.show_options import handle_show_options
 from simtools.production_configuration.simulation_jobs import (
     TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
     generate_job_grid,
 )
 
 _GRID_ARGUMENTS = (
-    cli.SHOW_OPTIONS,
     cli.ArgumentDefinition(
         "axis",
         action="append",
@@ -128,11 +126,6 @@ _GRID_ARGUMENTS = (
 )
 
 
-def _post_parse(args_dict, _config_sources, parser):
-    """Exit early for shared option discovery."""
-    handle_show_options(args_dict, parser)
-
-
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
@@ -165,8 +158,6 @@ APPLICATION = ApplicationDefinition.for_module(
     ),
     database=True,
     resolve_sim_software_executables=False,
-    post_parse=_post_parse,
-    defer_required_validation=True,
 )
 
 

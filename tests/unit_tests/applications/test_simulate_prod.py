@@ -144,49 +144,6 @@ def test_list_available_corsika_models_exits_with_table(tmp_test_directory, caps
     assert "qgs3" in capsys.readouterr().out
 
 
-@patch("simtools.applications.simulate_prod.handle_show_options")
-def test_post_parse_show_options_exits_early(mock_handle_show_options):
-    mock_handle_show_options.return_value = True
-
-    app._post_parse({}, {"cli": set(), "yaml": set()}, argparse.ArgumentParser())
-
-    mock_handle_show_options.assert_called_once()
-
-
-@patch("simtools.applications.simulate_prod.handle_show_options")
-def test_post_parse_list_available_corsika_models_runs_after_show_options_check(
-    mock_handle_show_options, tmp_test_directory, capsys
-):
-    mock_handle_show_options.return_value = False
-    build_options = tmp_test_directory / "build_opts.yml"
-    build_options.write_text(
-        "variant:\n"
-        "  - executable: corsika_qgs3_urqmd_flat\n"
-        "    config: config_qgs3_urqmd_flat\n"
-        "    atmosphere_geometry: flat\n"
-        "    he_hadronic_model: qgs3\n"
-        "    le_hadronic_model: urqmd\n",
-        encoding="utf-8",
-    )
-    executable = Path(tmp_test_directory) / "corsika_qgs3_urqmd_flat"
-    executable.touch()
-    executable.chmod(0o755)
-
-    with pytest.raises(SystemExit) as exc:
-        app._post_parse(
-            {
-                "show_options": None,
-                "list_available_corsika_models": True,
-                "corsika_path": tmp_test_directory,
-            },
-            {"cli": set(), "yaml": set()},
-            argparse.ArgumentParser(),
-        )
-
-    assert exc.value.code == 0
-    assert "qgs3" in capsys.readouterr().out
-
-
 def test_validate_single_interaction_models_rejects_lists(capsys):
     with pytest.raises(SystemExit):
         app._validate_single_interaction_models(

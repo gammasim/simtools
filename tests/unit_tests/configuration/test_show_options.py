@@ -31,12 +31,36 @@ def test_resolve_show_options_rejects_multiple_model_versions_for_array_layout_n
         )
 
 
-def test_handle_show_options_formats_values(capsys):
+def test_resolve_show_options_uses_argparse_choices():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", help="Simulation mode.", choices=["fast", "safe"])
+
+    result = show_options.resolve_show_options({"show_options": "mode"}, parser)
+
+    assert result.values == ("fast", "safe")
+    assert result.help_text == "Simulation mode."
+
+
+def test_resolve_show_options_accepts_unrestricted_argparse_option():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output_path", help="Directory for output files.")
+
+    result = show_options.resolve_show_options({"show_options": "output_path"}, parser)
+
+    assert result.values == ()
+    assert result.notes == ("Argparse does not define a finite set of available values.",)
+    assert "Available values:" not in show_options.format_show_options_result(result)
+
+
+def test_handle_show_options_formats_help_and_values(capsys):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--site", help="Observatory site.")
+
     with pytest.raises(SystemExit) as exc:
-        show_options.handle_show_options(
-            {"show_options": "site"},
-            argparse.ArgumentParser(),
-        )
+        show_options.handle_show_options({"show_options": "site"}, parser)
 
     assert exc.value.code == 0
-    assert "Available values:" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert "Help:" in output
+    assert "Observatory site." in output
+    assert "Available values:" in output
