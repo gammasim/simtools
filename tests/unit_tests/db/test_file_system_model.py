@@ -391,6 +391,16 @@ def test_patch_production_inherits_base_tables(simulation_models_path):
     assert production["parameters"]["LSTN-01"]["camera_body_diameter"] == "2.0.0"
 
 
+def test_database_handler_rejects_mongodb_operation(simulation_models_path, mocker):
+    settings_mock = mocker.patch("simtools.db.db_handler.settings")
+    settings_mock.config.args = {"simulation_models_path": simulation_models_path}
+    settings_mock.config.db_config = {}
+    database = db_handler.DatabaseHandler()
+
+    with pytest.raises(RuntimeError, match="requires a MongoDB model source"):
+        database.get_collection("telescopes")
+
+
 def test_invalid_model_path_fails_without_fallback(tmp_test_directory):
     with pytest.raises(FileNotFoundError, match="Expected simulation models directory"):
         file_system_model.FileSystemModelHandler(Path(tmp_test_directory) / "model")
