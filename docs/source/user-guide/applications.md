@@ -64,7 +64,6 @@ simtools-db-get-array-layouts-from-db <applications/simtools-db-get-array-layout
 simtools-db-get-file-from-db <applications/simtools-db-get-file-from-db>
 simtools-db-get-parameter-from-db <applications/simtools-db-get-parameter-from-db>
 simtools-db-generate-compound-indexes <applications/simtools-db-generate-compound-indexes>
-simtools-db-inspect-databases <applications/simtools-db-inspect-databases>
 simtools-db-upload-model-repository <applications/simtools-db-upload-model-repository>
 simtools-dependency-manifest <applications/simtools-dependency-manifest>
 simtools-dependency-versions <applications/simtools-dependency-versions>
