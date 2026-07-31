@@ -6,19 +6,15 @@ from astropy.io import fits
 from astropy.table import Table
 
 from simtools.io.table_handler import (
-    _merge,
     _read_table_list_fits,
     _read_table_list_hdf5,
     _write_table_to_hdf5_file,
-    copy_metadata_to_hdf5,
     group_table_rows,
-    merge_tables,
     read_table_file_type,
     read_table_from_hdf5,
     read_table_list,
     read_tables,
     write_table_chunks,
-    write_table_in_hdf5,
     write_tables,
 )
 
@@ -28,20 +24,11 @@ READ_TABLE_FILE_TYPE = f"{TABLE_HANDLER_PATH}.read_table_file_type"
 ASTROPY_TABLE_READ = "astropy.table.Table.read"
 H5PY_FILE = "h5py.File"
 TEST_TABLE_NAME = "test_table"
-FILE_ID = "file_id"
 
 # Test file paths
 TEST_FITS = "test.fits"
 TEST_HDF5 = "test.hdf5"
 TEST_H5 = "test.h5"
-OUTPUT_FITS = "output.fits"
-FILE1_FITS = "file1.fits"
-FILE2_FITS = "file2.fits"
-SOURCE_H5 = "source.h5"
-DEST_H5 = "dest.h5"
-FILE1_H5 = "file1.h5"
-FILE2_H5 = "file2.h5"
-OUTPUT_HDF5 = "output.hdf5"
 TEST_CSV = "test.csv"
 
 
@@ -79,12 +66,6 @@ def mock_fits_objects(mocker):
         "table_hdu": mocker.patch("astropy.io.fits.BinTableHDU"),
         "hdul": mocker.patch("astropy.io.fits.HDUList"),
     }
-
-
-@pytest.fixture
-def mock_logger(mocker):
-    """Mock logger."""
-    return mocker.patch("simtools.io.table_handler._logger")
 
 
 @pytest.fixture
@@ -140,98 +121,6 @@ def test_group_table_rows():
     assert list(grouped_by_reference["ref-1"]["value"]) == [1, 2]
     assert set(grouped_by_reference_axis) == {("ref-1", 0), ("ref-1", 1), ("ref-2", 0)}
     assert grouped_by_reference_axis[("ref-1", 1)]["value"][0] == 2
-
-
-def test_merge_single_table(mocker, tmp_path):
-    """Test merging single table from multiple files."""
-    # Mock read_tables function
-    mock_read = mocker.patch(f"{TABLE_HANDLER_PATH}.read_tables")
-
-    # Create test tables
-    table1 = Table({"col1": [1, 2], FILE_ID: [0, 0]})
-    table2 = Table({"col1": [3, 4], FILE_ID: [0, 0]})
-
-    mock_read.side_effect = [
-        {TEST_TABLE_NAME: table1},
-        {TEST_TABLE_NAME: table2},
-    ]
-
-    output_file = tmp_path / OUTPUT_FITS
-    result = _merge([FILE1_FITS, FILE2_FITS], [TEST_TABLE_NAME], "FITS", output_file)
-
-    assert len(result) == 1
-    assert TEST_TABLE_NAME in result
-    assert len(result[TEST_TABLE_NAME]) == 4
-    assert np.array_equal(result[TEST_TABLE_NAME][FILE_ID], [0, 0, 1, 1])
-
-
-def test_merge_multiple_tables(mocker, tmp_path):
-    """Test merging multiple tables from multiple files."""
-    mock_read = mocker.patch(f"{TABLE_HANDLER_PATH}.read_tables")
-    tables1 = {
-        "table1": Table({"col1": [1], FILE_ID: [0]}),
-        "table2": Table({"col2": [2], FILE_ID: [0]}),
-    }
-    tables2 = {
-        "table1": Table({"col1": [3], FILE_ID: [0]}),
-        "table2": Table({"col2": [4], FILE_ID: [0]}),
-    }
-    mock_read.side_effect = [tables1, tables2]
-
-    output_file = tmp_path / OUTPUT_FITS
-    result = _merge([FILE1_FITS, FILE2_FITS], ["table1", "table2"], "FITS", output_file)
-
-    assert len(result) == 2
-    assert all(name in result for name in ["table1", "table2"])
-    assert len(result["table1"]) == 2
-    assert len(result["table2"]) == 2
-
-
-def test_merge_without_file_id(mocker, tmp_path):
-    """Test merging tables without file_id column."""
-    mock_read = mocker.patch(f"{TABLE_HANDLER_PATH}.read_tables")
-    table1 = Table({"col1": [1, 2]})
-    table2 = Table({"col1": [3, 4]})
-    mock_read.side_effect = [{TEST_TABLE_NAME: table1}, {TEST_TABLE_NAME: table2}]
-
-    output_file = tmp_path / OUTPUT_FITS
-    result = _merge([FILE1_FITS, FILE2_FITS], [TEST_TABLE_NAME], "FITS", output_file)
-
-    assert len(result) == 1
-    assert TEST_TABLE_NAME in result
-    assert len(result[TEST_TABLE_NAME]) == 4
-    assert FILE_ID not in result[TEST_TABLE_NAME].colnames
-
-
-def test_merge_hdf5(mocker, tmp_path):
-    mock_read = mocker.patch(f"{TABLE_HANDLER_PATH}.read_tables")
-    mock_copy = mocker.patch(f"{TABLE_HANDLER_PATH}.copy_metadata_to_hdf5")
-    table1 = Table({"col1": [1, 2]})
-    table2 = Table({"col1": [3, 4]})
-    mock_read.side_effect = [{TEST_TABLE_NAME: table1}, {TEST_TABLE_NAME: table2}]
-
-    output_file = tmp_path / OUTPUT_HDF5
-    result = _merge([FILE1_H5, FILE2_H5], [TEST_TABLE_NAME], "HDF5", output_file)
-
-    assert len(result) == 1
-    assert mock_copy.call_count == 1
-
-    # Mock Table.read
-    mock_read = mocker.patch(ASTROPY_TABLE_READ)
-    mock_table = Table({"col1": [1, 2]})
-    mock_read.return_value = mock_table
-
-    mock_file_type = mocker.patch(READ_TABLE_FILE_TYPE)
-    mock_file_type.return_value = "FITS"
-
-    result = read_tables(TEST_FITS, ["table1", "table2"])
-
-    assert len(result) == 2
-    assert all(name in result for name in ["table1", "table2"])
-    assert mock_read.call_count == 2
-    mock_read.assert_has_calls(
-        [mocker.call(TEST_FITS, hdu="table1"), mocker.call(TEST_FITS, hdu="table2")]
-    )
 
 
 def test_read_tables_hdf5(mocker):
@@ -447,175 +336,6 @@ def test_write_tables_no_file_type(tmp_path, mock_table, mock_read_type, mock_fi
     mock_fits_objects["hdul"].assert_called_once()
 
 
-def test_merge_tables_success(mock_read_type, mock_logger, mocker):
-    """Test successful table merging."""
-    mock_merge = mocker.patch(f"{TABLE_HANDLER_PATH}._merge")
-    mock_write = mocker.patch(f"{TABLE_HANDLER_PATH}.write_tables")
-
-    input_files = [FILE1_FITS, FILE2_FITS]
-    table_names = ["table1", "table2"]
-    output_file = OUTPUT_FITS
-
-    mock_read_type.return_value = "FITS"
-    mock_merge.return_value = {"table1": mocker.Mock(), "table2": mocker.Mock()}
-
-    merge_tables(input_files, table_names, output_file)
-
-    mock_read_type.assert_called_once_with(input_files)
-    mock_merge.assert_called_once_with(input_files, table_names, "FITS", output_file)
-    mock_write.assert_called_once_with(mock_merge.return_value, output_file, "FITS")
-
-
-def test_merge_tables_hdf5(mocker):
-    """Test merging with HDF5 files."""
-    mock_read_type = mocker.patch(f"{TABLE_HANDLER_PATH}.read_table_file_type")
-    mock_merge = mocker.patch(f"{TABLE_HANDLER_PATH}._merge")
-    mocker.patch(f"{TABLE_HANDLER_PATH}.write_tables")
-
-    input_files = ["file1.hdf5", "file2.hdf5"]
-    table_names = ["table1"]
-    output_file = "output.hdf5"
-
-    mock_read_type.return_value = "HDF5"
-    mock_merge.return_value = {"table1": mocker.Mock()}
-
-    merge_tables(input_files, table_names, output_file)
-
-    mock_read_type.assert_called_once_with(input_files)
-    mock_merge.assert_called_once_with(input_files, table_names, "HDF5", output_file)
-
-
-def test_merge_tables_propagates_errors(mocker):
-    mock_read_type = mocker.patch(READ_TABLE_FILE_TYPE)
-    mock_read_type.side_effect = ValueError("Test error")
-
-    input_files = ["file1.txt"]
-    table_names = ["table1"]
-    output_file = OUTPUT_FITS
-
-    with pytest.raises(ValueError, match="Test error"):
-        merge_tables(input_files, table_names, output_file)
-
-
-def test_copy_metadata_to_hdf5(mocker):
-    """Test copying metadata between HDF5 files."""
-    mock_h5py = mocker.patch(H5PY_FILE)
-    mock_src = mocker.MagicMock()
-    mock_dst = mocker.MagicMock()
-
-    # Configure File context manager to return our mocks
-    mock_h5py.return_value.__enter__.side_effect = [mock_src, mock_dst]
-
-    # Set up source file mock with metadata
-    table_name = TEST_TABLE_NAME
-    meta_name = f"{table_name}.__table_column_meta__"
-    mock_src.__contains__.return_value = True
-    mock_dst.__contains__.return_value = False
-
-    # Test copying metadata
-    copy_metadata_to_hdf5(SOURCE_H5, DEST_H5, table_name)
-
-    # Verify file opening modes
-    mock_h5py.assert_any_call(SOURCE_H5, "r")
-    mock_h5py.assert_any_call(DEST_H5, "a")
-
-    # Verify metadata was copied
-    mock_src.copy.assert_called_once_with(meta_name, mock_dst, name=meta_name)
-
-
-def test_copy_metadata_to_hdf5_overwrite(mock_h5py_file, mocker):
-    """Test copying metadata when it already exists in destination."""
-    mock_src = mocker.MagicMock()
-    mock_dst = mocker.MagicMock()
-
-    mock_context = mocker.MagicMock()
-    mock_context.__enter__.side_effect = [mock_src, mock_dst]
-    mocker.patch(H5PY_FILE, return_value=mock_context)
-
-    table_name = TEST_TABLE_NAME
-    meta_name = f"{table_name}.__table_column_meta__"
-
-    # Configure mocks to indicate metadata exists in both files
-    mock_src.__contains__.return_value = True
-    mock_dst.__contains__.return_value = True
-
-    copy_metadata_to_hdf5(SOURCE_H5, DEST_H5, table_name)
-
-    # Verify existing metadata was deleted
-    mock_dst.__delitem__.assert_called_once_with(meta_name)
-
-    # Verify new metadata was copied
-    mock_src.copy.assert_called_once_with(meta_name, mock_dst, name=meta_name)
-
-
-def test_copy_metadata_to_hdf5_no_metadata(mock_h5py_file, mocker):
-    """Test when source file has no metadata to copy."""
-    mock_src = mocker.MagicMock()
-    mock_dst = mocker.MagicMock()
-
-    mock_context = mocker.MagicMock()
-    mock_context.__enter__.side_effect = [mock_src, mock_dst]
-    mocker.patch(H5PY_FILE, return_value=mock_context)
-
-    table_name = TEST_TABLE_NAME
-
-    # Configure mock to indicate no metadata in source
-    mock_src.__contains__.return_value = False
-
-    copy_metadata_to_hdf5(SOURCE_H5, DEST_H5, table_name)
-
-    # Verify no copy operation was performed
-    mock_src.copy.assert_not_called()
-    mock_dst.__delitem__.assert_not_called()
-
-
-def test_write_table_in_hdf5_new_table(mocker, mock_h5py_file, mock_table):
-    """Test writing a new table to HDF5 file."""
-    mock_h5py_file.__contains__.return_value = False
-    mock_dataset = mocker.MagicMock()
-    mock_h5py_file.create_dataset.return_value = mock_dataset
-
-    write_table_in_hdf5(mock_table, TEST_H5, TEST_TABLE_NAME)
-
-    # Verify dataset creation
-    mock_h5py_file.create_dataset.assert_called_once()
-    call_args = mock_h5py_file.create_dataset.call_args[1]
-    assert call_args["compression"] == "gzip"
-    assert call_args["compression_opts"] == 6
-    assert call_args["chunks"] is True
-
-    # Verify metadata was written
-    assert mock_dataset.attrs.__setitem__.call_count == len(mock_table.meta)
-    mock_dataset.attrs.__setitem__.assert_any_call("EXTNAME", TEST_TABLE_NAME)
-
-
-def test_write_table_in_hdf5_append(mock_h5py_file, mock_table):
-    """Test appending to existing table in HDF5 file."""
-    mock_h5py_file.__contains__.return_value = True
-    mock_dataset = mock_h5py_file.__getitem__.return_value
-    mock_dataset.shape = (2, 2)  # Initial shape
-    mock_dataset.dtype = np.array(mock_table).dtype
-
-    write_table_in_hdf5(mock_table, TEST_H5, TEST_TABLE_NAME)
-
-    # Verify dataset was resized and data appended
-    mock_dataset.resize.assert_called_once()
-    mock_dataset.__setitem__.assert_called_once()
-
-
-def test_write_table_in_hdf5_empty_table(mock_h5py_file):
-    """Test writing empty table to HDF5 file."""
-    empty_table = Table()
-    empty_table.meta["EXTNAME"] = "empty_table"
-
-    write_table_in_hdf5(empty_table, TEST_H5, "empty_table")
-
-    # Verify dataset creation was called with empty data
-    mock_h5py_file.create_dataset.assert_called_once()
-    call_args = mock_h5py_file.create_dataset.call_args[1]
-    assert np.array_equal(call_args["data"], np.array([]))
-
-
 def test_read_table_list_hdf5(mocker):
     """Test read_table_list with HDF5 file."""
     mock_read_type = mocker.patch(READ_TABLE_FILE_TYPE, return_value="HDF5")
@@ -822,74 +542,6 @@ def test_read_table_list_fits_with_indexed(mocker):
     }
 
 
-def test_write_table_in_hdf5_unicode_conversion(mock_h5py_file):
-    """Test writing table with Unicode columns to HDF5."""
-    data = {"unicode_col": ["abc", "def", "ghi"]}
-    table = Table(data)
-    table.meta["EXTNAME"] = TEST_TABLE_NAME
-
-    write_table_in_hdf5(table, TEST_H5, TEST_TABLE_NAME)
-
-    assert table["unicode_col"].dtype.kind == "U"
-    mock_h5py_file.create_dataset.assert_called_once()
-    call_args = mock_h5py_file.create_dataset.call_args[1]
-
-    data_array = call_args["data"]
-    assert isinstance(data_array, np.ndarray)
-    for original in data["unicode_col"]:
-        assert original.encode("ascii") in data_array.tobytes()
-
-
-def test_write_table_in_hdf5_unicode_append(mock_h5py_file):
-    """Test appending Unicode data to existing HDF5 dataset."""
-    mock_h5py_file.__contains__.return_value = True
-    mock_dataset = mock_h5py_file.__getitem__.return_value
-    mock_dataset.shape = (2,)
-
-    data = {"unicode_col": ["abc", "def", "ghi"]}
-    table = Table(data)
-    table.meta["EXTNAME"] = TEST_TABLE_NAME
-    mock_dataset.dtype = np.dtype([("unicode_col", "S3")])
-
-    write_table_in_hdf5(table, TEST_H5, TEST_TABLE_NAME)
-
-    mock_dataset.resize.assert_called_once()
-
-    set_item_call = mock_dataset.__setitem__.call_args[0]
-    appended_data = set_item_call[1]
-    assert isinstance(appended_data, np.ndarray)
-    for original in data["unicode_col"]:
-        assert original.encode("ascii") in appended_data.tobytes()
-
-
-def test_write_table_in_hdf5_object_dtype_conversion(mock_h5py_file):
-    """Test writing table with object-dtype (Python str) columns to HDF5 (issue #2208)."""
-    data = {"file_name": np.array(["file_a.hdf5", "file_b.hdf5"], dtype=object)}
-    table = Table(data)
-    table.meta["EXTNAME"] = TEST_TABLE_NAME
-
-    write_table_in_hdf5(table, TEST_H5, TEST_TABLE_NAME)
-
-    assert table["file_name"].dtype.kind == "O"
-    mock_h5py_file.create_dataset.assert_called_once()
-    call_args = mock_h5py_file.create_dataset.call_args[1]
-    data_array = call_args["data"]
-    assert isinstance(data_array, np.ndarray)
-    assert data_array.dtype.kind != "O"
-    for original in data["file_name"]:
-        assert original.encode("ascii") in data_array.tobytes()
-
-
-def test_write_table_in_hdf5_rejects_non_string_object_dtype(mock_h5py_file):
-    """Object columns containing missing numeric data must not be converted to strings."""
-    table = Table({"x_core": np.array([1.0, None], dtype=object)})
-
-    with pytest.raises(TypeError, match="contains non-string or missing values"):
-        write_table_in_hdf5(table, TEST_H5, TEST_TABLE_NAME)
-
-    mock_h5py_file.create_dataset.assert_not_called()
-
-
 def test_read_table_from_hdf5_basic(mocker):
     """Test basic reading from HDF5 without units."""
     # Mock Table.read
@@ -1003,19 +655,3 @@ def test_read_table_from_hdf5_with_missing_selected_columns(mocker):
 
     with pytest.raises(KeyError, match="not found in table"):
         read_table_from_hdf5(TEST_H5, TEST_TABLE_NAME, columns=["col2"])
-
-
-def test_write_table_in_hdf5_with_units(mocker, mock_h5py_file):
-    """Test writing table with units to HDF5."""
-    table = Table({"col1": [1, 2] * u.m, "col2": [3, 4] * u.s})
-    table.meta["EXTNAME"] = "table_with_units"
-
-    mock_dataset = mocker.MagicMock()
-    mock_h5py_file.create_dataset.return_value = mock_dataset
-    mock_h5py_file.__contains__.return_value = False
-
-    write_table_in_hdf5(table, TEST_H5, "table_with_units")
-
-    # Verify unit attributes were set
-    mock_dataset.attrs.__setitem__.assert_any_call("col1_unit", "m")
-    mock_dataset.attrs.__setitem__.assert_any_call("col2_unit", "s")

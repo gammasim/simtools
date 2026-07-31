@@ -93,7 +93,6 @@ simtools-maintain-simulation-model-add-production <applications/simtools-maintai
 simtools-maintain-simulation-model-compare-productions <applications/simtools-maintain-simulation-model-compare-productions>
 simtools-maintain-simulation-model-verify-production-tables <applications/simtools-maintain-simulation-model-verify-production-tables>
 simtools-maintain-simulation-model-write-array-element-positions <applications/simtools-maintain-simulation-model-write-array-element-positions>
-simtools-merge-tables <applications/simtools-merge-tables>
 simtools-plot-array-layout <applications/simtools-plot-array-layout>
 simtools-plot-corsika-limits <applications/simtools-plot-corsika-limits>
 simtools-plot-production-grid <applications/simtools-plot-production-grid>
