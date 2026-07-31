@@ -37,6 +37,7 @@ def handle_show_options(args_dict, parser):
 
     sys.stdout.write(format_show_options_result(result) + "\n")
     parser.exit()
+    return True
 
 
 def resolve_show_options(args_dict):

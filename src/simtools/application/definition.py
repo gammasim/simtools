@@ -7,12 +7,12 @@ from pathlib import Path
 
 from simtools.application.control import ApplicationContext, _initialize_runtime
 from simtools.configuration import configurator
-from simtools.settings import config
 from simtools.configuration.arguments import (
     DATABASE_ARGUMENTS,
     STANDARD_ARGUMENTS,
     ArgumentDefinition,
 )
+from simtools.settings import config
 
 PostParseHook = Callable[[dict, Mapping[str, set], object], None]
 

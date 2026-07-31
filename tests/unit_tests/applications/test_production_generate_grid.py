@@ -177,7 +177,9 @@ def test_post_parse_show_options_exits_early(mock_handle_show_options):
     mock_handle_show_options.assert_called_once()
 
 
-def test_application_parse_allows_show_options_without_required_runtime_arguments(monkeypatch, capsys):
+def test_application_parse_allows_show_options_without_required_runtime_arguments(
+    monkeypatch, capsys
+):
     monkeypatch.setattr("sys.argv", ["production_generate_grid.py", "--show_options", "site"])
 
     with pytest.raises(SystemExit) as exc:
