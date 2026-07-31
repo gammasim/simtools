@@ -1,6 +1,6 @@
 # Data Model
 
-The simtools data model covers three areas:
+The simtools data model covers four areas:
 
 - [Simulation model parameters](model_parameters.md): schema-defined parameter entries and files.
 - [Output data formats](output_data_formats.md): main file formats produced or consumed by workflows.
