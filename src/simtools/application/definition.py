@@ -99,7 +99,14 @@ class ApplicationDefinition:
         config_builder = self._configurator(runtime_arguments)
         args_dict, db_config = config_builder.configure(initialize_output=self.initialize_output)
         if args_dict.get("show_options"):
-            config.load(args_dict, db_config, resolve_sim_software_executables=True)
+            try:
+                config.load(
+                    args_dict,
+                    db_config,
+                    resolve_sim_software_executables=self.resolve_sim_software_executables,
+                )
+            except (FileNotFoundError, PermissionError, ValueError) as exc:
+                config_builder.parser.error(str(exc))
             handle_show_options(args_dict, config_builder.parser)
         if self.post_parse is not None:
             self.post_parse(args_dict, config_builder.config_sources, config_builder.parser)

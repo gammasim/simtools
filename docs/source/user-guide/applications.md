@@ -39,7 +39,7 @@ EXPORT SIMTOOLS_OUTPUT_PATH="<path name>"
 ```
 
 Configuration methods can be combined; conflicting configuration settings raise an Exception.
-Configuration parameters are generally expected in lower-case snake-make case.
+Configuration parameters are generally expected in lowercase snake_case.
 Configuration parameters for each application are printed to screen when executing the application with the `--help` option.
 
 To inspect the available values for an option, use `--show-options <option>`; for example,
