@@ -12,7 +12,7 @@
 
     input : str
         File containing a table of array element positions.
-    simulation_models_directory : str
+    simulation_models_directory : Path
         Path of local copy of model parameter repository.
     parameter_version : str
         Parameter version.

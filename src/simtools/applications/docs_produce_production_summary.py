@@ -11,7 +11,7 @@ Command line arguments
 ----------------------
 production_models_directory (Path)
     Path to the simulation-models repository root.
-output_path (str)
+output_path (Path)
     Directory for the output file.
 output_file (str)
     Output markdown file name.
