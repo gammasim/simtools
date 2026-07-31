@@ -1,7 +1,6 @@
 """Generate bias curves from NSB and proton trigger rates."""
 
 import logging
-import re
 from pathlib import Path
 
 import numpy as np
@@ -11,6 +10,7 @@ from astropy.table import Table
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.nsb_trigger_calculator import (
     derive_nsb_triggers,
+    extract_run_number_from_path,
     extract_threshold_from_file_name,
 )
 from simtools.telescope_trigger_rates import telescope_trigger_rates
@@ -19,24 +19,6 @@ from simtools.visualization import plot_tables
 _logger = logging.getLogger(__name__)
 
 _REDUCED_EVENT_DATA_SUFFIX = ".reduced_event_data.hdf5"
-_RUN_NUMBER_RE = re.compile(r"run(?P<run_number>\d+)", re.IGNORECASE)
-
-
-def _extract_run_number(file_path):
-    """Extract run number from file name or parent directory parts."""
-    file_path = Path(file_path)
-
-    match = _RUN_NUMBER_RE.search(file_path.name)
-    if match:
-        return int(match.group("run_number"))
-
-    for part in file_path.parts:
-        match = _RUN_NUMBER_RE.search(part)
-        if match:
-            return int(match.group("run_number"))
-
-    _logger.warning(f"Could not extract run number from {file_path}")
-    return None
 
 
 def generate_bias_curves(args):
@@ -171,7 +153,7 @@ def _group_hdf5_files_by_threshold_and_run(proton_dir):
             continue
 
         threshold = extract_threshold_from_file_name(hdf5_file)
-        run = _extract_run_number(hdf5_file)
+        run = extract_run_number_from_path(hdf5_file)
 
         if threshold is None or run is None:
             _logger.warning(
