@@ -41,7 +41,11 @@ EXPORT SIMTOOLS_OUTPUT_PATH="<path name>"
 Configuration methods can be combined; conflicting configuration settings raise an Exception.
 Configuration parameters are generally expected in lower-case snake-make case.
 Configuration parameters for each application are printed to screen when executing the application with the `--help` option.
-Parameters with the same functionality are named consistently the same among all applications.
+
+To inspect the available values for an option, use `--show-options <option>`; for example,
+`simtools-simulate-prod --show-options primary` lists the configured primary-particle names.
+This also works for options without a dedicated provider: simtools prints the option help and any
+finite choices declared by argparse.
 
 ## List of applications
 
