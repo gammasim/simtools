@@ -11,12 +11,6 @@ from astropy.table import Table
 _logger = logging.getLogger(__name__)
 _THRESHOLD_RE = re.compile(r"_[ad]sum(?P<threshold>\d+)(?=\.)")
 _RUN_NUMBER_RE = re.compile(r"run(?P<run_number>\d+)", re.IGNORECASE)
-_THRESHOLD_METADATA_COLUMNS = (
-    "trigger_threshold",
-    "threshold",
-    "asum_threshold",
-    "dsum_threshold",
-)
 
 
 def _extract_run_number(file_path):
@@ -33,79 +27,6 @@ def _extract_run_number(file_path):
             return int(match.group("run_number"))
 
     _logger.warning(f"Could not extract run number from {file_path}")
-    return None
-
-
-def _coerce_threshold_value(value):
-    """Convert metadata threshold values from scalar/string forms to int."""
-    if value is None:
-        return None
-
-    if isinstance(value, (bytes, np.bytes_)):
-        value = value.decode("utf-8", errors="ignore")
-
-    if isinstance(value, str):
-        return _coerce_threshold_string(value)
-
-    return _coerce_threshold_numeric(value)
-
-
-def _coerce_threshold_string(value):
-    """Extract threshold from a string-like metadata value."""
-    stripped = value.strip()
-    if not stripped:
-        return None
-
-    try:
-        return int(float(stripped))
-    except ValueError:
-        match = re.search(r"\d+", stripped)
-        return int(match.group(0)) if match else None
-
-
-def _coerce_threshold_numeric(value):
-    """Extract threshold from a numeric metadata value."""
-    try:
-        numeric_value = float(value)
-    except TypeError, ValueError:
-        return None
-
-    if not np.isfinite(numeric_value):
-        return None
-
-    return int(numeric_value)
-
-
-def extract_threshold_from_hdf5_metadata(file_path):
-    """
-    Extract threshold from ``FILE_INFO`` table metadata.
-
-    Parameters
-    ----------
-    file_path : Path or str
-        Path to reduced event-data HDF5 file.
-
-    Returns
-    -------
-    int or None
-        Threshold value if found in known metadata columns, else None.
-    """
-    file_path = Path(file_path)
-    try:
-        file_info = Table.read(file_path, path="FILE_INFO")
-    except OSError, ValueError, KeyError:
-        return None
-
-    if len(file_info) == 0:
-        return None
-
-    for col_name in _THRESHOLD_METADATA_COLUMNS:
-        if col_name not in file_info.colnames:
-            continue
-        threshold = _coerce_threshold_value(file_info[col_name][0])
-        if threshold is not None:
-            return threshold
-
     return None
 
 
@@ -167,9 +88,7 @@ def parse_nsb_hdf5_file(file_path):
         triggers = 0
 
     run_number = _extract_run_number(file_path)
-    threshold = extract_threshold_from_hdf5_metadata(file_path)
-    if threshold is None:
-        threshold = extract_threshold_from_file_name(file_path)
+    threshold = extract_threshold_from_file_name(file_path)
     events = len(events_table)
 
     if run_number is None or threshold is None or triggers is None:

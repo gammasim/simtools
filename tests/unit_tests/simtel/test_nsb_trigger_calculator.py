@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-import numpy as np
 import pytest
 from astropy.table import Table
 
@@ -21,27 +20,6 @@ def _write_nsb_hdf5(file_path, n_showers=0, n_triggers=None, threshold=None):
     if threshold is not None:
         file_info_table = Table({"asum_threshold": [threshold]})
         file_info_table.write(file_path, path="FILE_INFO", format="hdf5", append=True)
-
-
-@pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        (None, None),
-        ("", None),
-        ("  ", None),
-        ("245", 245),
-        ("245.9", 245),
-        ("asum250", 250),
-        (b"260", 260),
-        (270, 270),
-        (270.9, 270),
-        (np.nan, None),
-        (np.inf, None),
-        (object(), None),
-    ],
-)
-def test_coerce_threshold_value_covers_string_bytes_and_numeric_paths(value, expected):
-    assert nsb_trigger_calculator._coerce_threshold_value(value) == expected
 
 
 def test_extract_run_number_from_parent_directory_parts(tmp_path):
@@ -78,45 +56,6 @@ def test_extract_threshold_from_file_name_returns_none_when_missing():
     )
 
 
-def test_extract_threshold_from_hdf5_metadata_reads_threshold(tmp_path):
-    hdf5_file = tmp_path / "gamma_run000001.reduced_event_data.hdf5"
-    _write_nsb_hdf5(hdf5_file, n_showers=10, n_triggers=2, threshold=250)
-
-    assert nsb_trigger_calculator.extract_threshold_from_hdf5_metadata(hdf5_file) == 250
-
-
-def test_extract_threshold_from_hdf5_metadata_returns_none_when_missing_file_info(tmp_path):
-    hdf5_file = tmp_path / "gamma_run000001.reduced_event_data.hdf5"
-    _write_nsb_hdf5(hdf5_file, n_showers=10, n_triggers=2, threshold=None)
-
-    assert nsb_trigger_calculator.extract_threshold_from_hdf5_metadata(hdf5_file) is None
-
-
-def test_extract_threshold_from_hdf5_metadata_returns_none_for_empty_file_info(tmp_path):
-    hdf5_file = tmp_path / "gamma_run000001.reduced_event_data.hdf5"
-    _write_nsb_hdf5(hdf5_file, n_showers=10, n_triggers=2, threshold=None)
-
-    Table({"asum_threshold": []}).write(hdf5_file, path="FILE_INFO", format="hdf5", overwrite=True)
-
-    assert nsb_trigger_calculator.extract_threshold_from_hdf5_metadata(hdf5_file) is None
-
-
-def test_extract_threshold_from_hdf5_metadata_uses_first_known_threshold_column(tmp_path):
-    hdf5_file = tmp_path / "gamma_run000001.reduced_event_data.hdf5"
-    _write_nsb_hdf5(hdf5_file, n_showers=10, n_triggers=2, threshold=None)
-
-    file_info_table = Table(
-        {
-            "trigger_threshold": [" 300 "],
-            "asum_threshold": [250],
-            "dsum_threshold": [200],
-        }
-    )
-    file_info_table.write(hdf5_file, path="FILE_INFO", format="hdf5", overwrite=True)
-
-    assert nsb_trigger_calculator.extract_threshold_from_hdf5_metadata(hdf5_file) == 300
-
-
 def test_parse_nsb_hdf5_file_returns_parsed_data(tmp_path):
     hdf5_file = tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5"
     _write_nsb_hdf5(hdf5_file, n_showers=200, n_triggers=20)
@@ -130,15 +69,6 @@ def test_parse_nsb_hdf5_file_returns_parsed_data(tmp_path):
         "events": 200,
         "file_path": str(hdf5_file),
     }
-
-
-def test_parse_nsb_hdf5_file_uses_metadata_threshold_before_filename(tmp_path):
-    hdf5_file = tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5"
-    _write_nsb_hdf5(hdf5_file, n_showers=100, n_triggers=10, threshold=245)
-
-    result = nsb_trigger_calculator.parse_nsb_hdf5_file(hdf5_file)
-
-    assert result["threshold"] == 245
 
 
 def test_parse_nsb_hdf5_file_uses_zero_when_triggers_table_missing(tmp_path):
