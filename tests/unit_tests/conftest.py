@@ -26,8 +26,8 @@ from dotenv import load_dotenv
 import simtools.io.io_handler
 from simtools import settings
 from simtools.configuration.arguments import (
+    OUTPUT_PATH_ARGUMENTS,
     OVERWRITE_MODEL_PARAMETERS,
-    PATH_ARGUMENTS,
     SITE,
     STANDARD_ARGUMENTS,
     TELESCOPE,
@@ -293,36 +293,32 @@ def _mock_settings_env_vars(tmp_test_directory):
 
 
 @pytest.fixture
-def args_dict(tmp_test_directory, data_path):
+def args_dict(tmp_test_directory):
     """Minimal configuration from command line."""
     parser = CommandLineParser()
-    parser.add_argument_definitions((*PATH_ARGUMENTS, *STANDARD_ARGUMENTS))
+    parser.add_argument_definitions((*OUTPUT_PATH_ARGUMENTS, *STANDARD_ARGUMENTS))
     return vars(
         parser.parse_args(
             (
                 "--output_path",
                 str(tmp_test_directory),
-                "--data_path",
-                data_path,
             )
         )
     )
 
 
 @pytest.fixture
-def args_dict_site(tmp_test_directory, data_path):
+def args_dict_site(tmp_test_directory):
     "Configuration include site and telescopes."
     parser = CommandLineParser()
     parser.add_argument_definitions(
-        (*PATH_ARGUMENTS, OVERWRITE_MODEL_PARAMETERS, SITE, TELESCOPE, *STANDARD_ARGUMENTS)
+        (*OUTPUT_PATH_ARGUMENTS, OVERWRITE_MODEL_PARAMETERS, SITE, TELESCOPE, *STANDARD_ARGUMENTS)
     )
     return vars(
         parser.parse_args(
             (
                 "--output_path",
                 str(tmp_test_directory),
-                "--data_path",
-                data_path,
                 "--site",
                 "South",
                 "--telescope",

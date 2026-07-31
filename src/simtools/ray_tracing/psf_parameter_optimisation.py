@@ -957,7 +957,7 @@ def load_and_process_data(args_dict):
     Parameters
     ----------
     args_dict : dict
-        Dictionary containing command-line arguments with 'data' and 'model_path' keys.
+        Dictionary containing command-line arguments with 'data' and 'data_search_path' keys.
 
     Returns
     -------
@@ -974,7 +974,7 @@ def load_and_process_data(args_dict):
     if args_dict["data"] is None:
         raise FileNotFoundError("No data file specified for PSF optimization.")
 
-    data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
+    data_file = gen.find_file(args_dict["data"], args_dict["data_search_path"])
     table = Table.read(data_file, format="ascii.ecsv")
 
     radius_column = next((col for col in table.colnames if "radius" in col.lower()), None)
