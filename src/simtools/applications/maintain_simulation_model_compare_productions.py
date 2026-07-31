@@ -38,10 +38,7 @@ _ARGUMENTS = (
 
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
-    arguments=(
-        *_ARGUMENTS,
-        *cli.PATH_ARGUMENTS,
-    ),
+    arguments=(*_ARGUMENTS,),
     setup_io_handler=False,
 )
 

@@ -40,7 +40,11 @@ EXPORT SIMTOOLS_OUTPUT_PATH="<path name>"
 
 Configuration methods can be combined; conflicting configuration settings raise an Exception.
 Configuration parameters are generally expected in lowercase snake_case.
-Configuration parameters for each application are printed to screen when executing the application with the `--help` option.
+Configuration parameters for each application are printed to screen when executing the application
+with the `--help` option.
+
+A configuration file must use the same option names displayed by that command's `--help`;
+unsupported path keys are rejected.
 
 To inspect the available values for an option, use `--show-options <option>`; for example,
 `simtools-simulate-prod --show-options primary` lists the configured primary-particle names.

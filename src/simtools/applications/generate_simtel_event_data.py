@@ -137,7 +137,7 @@ _ARGUMENTS = (
         "input",
         type=str,
         required=True,
-        help="Input file path (wildcards allowed; e.g., '/data_path/gamma_*dark*.simtel.zst')",
+        help="Input file path (wildcards allowed; e.g., '/path/to/gamma_*dark*.simtel.zst')",
     ),
     cli.ArgumentDefinition(
         "max_files",
@@ -158,7 +158,7 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
     initialize_output=True,

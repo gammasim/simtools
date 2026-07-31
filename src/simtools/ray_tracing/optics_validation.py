@@ -109,7 +109,7 @@ def validate_cumulative_psf(app_context):
     data_to_plot = OrderedDict()
     radius = None
     if args_dict.get("data", None):
-        data_file = gen.find_file(args_dict["data"], args_dict["model_path"])
+        data_file = gen.find_file(args_dict["data"], args_dict["data_search_path"])
         data_to_plot["measured"] = load_data(data_file)
         radius = data_to_plot["measured"]["Radius [cm]"]
 

@@ -111,41 +111,25 @@ CONFIGURATION_ARGUMENTS = (
     ENV_FILE,
 )
 
-DATA_PATH = _argument(
-    "data_path",
-    "paths",
-    help="path pointing towards data directory",
-    type=Path,
-    default="./data/",
-)
-
 OUTPUT_PATH = _argument(
     "output_path",
     "paths",
-    help="Directory for output files.",
+    help="Directory for files produced by this application.",
     type=Path,
     default="./simtools-output/",
-)
-
-MODEL_PATH = _argument(
-    "model_path",
-    "paths",
-    help="path pointing towards simulation model file directory",
-    type=Path,
-    default="./",
 )
 
 SIM_TELARRAY_PATH = _argument(
     "sim_telarray_path",
     "paths",
-    help="path pointing to sim_telarray installation",
+    help="sim_telarray installation directory.",
     type=Path,
 )
 
 CORSIKA_PATH = _argument(
     "corsika_path",
     "paths",
-    help=f"path pointing to CORSIKA installation (default: {defaults.CORSIKA_PATH})",
+    help=f"CORSIKA installation directory (default: {defaults.CORSIKA_PATH}).",
     type=Path,
 )
 
@@ -153,20 +137,24 @@ CORSIKA_INTERACTION_TABLE_PATH = _argument(
     "corsika_interaction_table_path",
     "paths",
     help=(
-        "path pointing to CORSIKA interaction tables "
-        f"(default: {defaults.CORSIKA_INTERACTION_TABLE_PATH})"
+        f"CORSIKA interaction-table directory (default: {defaults.CORSIKA_INTERACTION_TABLE_PATH})."
     ),
     type=Path,
 )
 
-PATH_ARGUMENTS = (
-    DATA_PATH,
-    OUTPUT_PATH,
-    MODEL_PATH,
-    SIM_TELARRAY_PATH,
-    CORSIKA_PATH,
-    CORSIKA_INTERACTION_TABLE_PATH,
+DATA_SEARCH_PATH = _argument(
+    "data_search_path",
+    "paths",
+    help="Directory used to resolve relative input data files.",
+    type=Path,
+    default=Path(),
 )
+
+OUTPUT_PATH_ARGUMENTS = (OUTPUT_PATH,)
+
+SIM_TELARRAY_PATH_ARGUMENTS = (SIM_TELARRAY_PATH,)
+
+CORSIKA_PATH_ARGUMENTS = (CORSIKA_PATH, CORSIKA_INTERACTION_TABLE_PATH)
 
 OUTPUT_FILE = _argument(
     "output_file",
