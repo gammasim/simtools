@@ -40,6 +40,15 @@ Reference documentation for the configuration of simtools applications.
    :members:
 ```
 
+(configurationshow-options)=
+
+## show_options
+
+```{eval-rst}
+.. automodule:: simtools.configuration.show_options
+   :members:
+```
+
 (configurationdefaults)=
 
 ## defaults
