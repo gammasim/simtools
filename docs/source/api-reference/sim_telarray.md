@@ -31,15 +31,6 @@ Support modules for running sim_telarray.
    :members:
 ```
 
-## simtel_log_reader
-
-(simtel-log-reader-1)=
-
-```{eval-rst}
-.. automodule:: simtel.simtel_log_reader
-   :members:
-```
-
 ## simtel_config_writer
 
 (simtel-config-writer-1)=
