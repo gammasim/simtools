@@ -217,4 +217,5 @@ RUN microdnf update -y && microdnf install -y \
 
 WORKDIR /workdir/simulation_software/corsika7
 ENV HOME="/home/${CONTAINER_USER}"
-USER ${CONTAINER_USER}
+# hadolint ignore=DL3066
+USER ${CONTAINER_UID}:${CONTAINER_GID}

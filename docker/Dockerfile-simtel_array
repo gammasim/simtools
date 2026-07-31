@@ -204,4 +204,5 @@ ENV LD_LIBRARY_PATH="/usr/local/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 WORKDIR /workdir/simulation_software/sim_telarray
 ENV HOME="/home/${CONTAINER_USER}"
-USER ${CONTAINER_USER}
+# hadolint ignore=DL3066
+USER ${CONTAINER_UID}:${CONTAINER_GID}
