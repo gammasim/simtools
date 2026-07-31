@@ -43,5 +43,3 @@ databases.md
 ## Additional Components
 
 - Geomagnetic-field tools used to derive model inputs.
-- [pyeventio](https://github.com/cta-observatory/pyeventio) for EventIO I/O used in analysis and
-  validation workflows.
