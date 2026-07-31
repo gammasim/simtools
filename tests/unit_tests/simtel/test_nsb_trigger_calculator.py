@@ -7,24 +7,31 @@ from astropy.table import Table
 
 from simtools.simtel import nsb_trigger_calculator
 
-LOG_TEXT = """
-Tel. triggered: 10
-Run(s) completed as expected after 100 events
-Tel. triggered: 20
-Run(s) completed as expected after 200 events
-"""
+
+def _write_nsb_hdf5(file_path, n_showers=0, n_triggers=None, threshold=None):
+    """Create a minimal reduced event-data HDF5 file for NSB calculator tests."""
+    showers_table = Table({"event_id": list(range(n_showers))})
+    showers_table.write(file_path, path="SHOWERS", format="hdf5", overwrite=True)
+
+    if n_triggers is not None:
+        triggers_table = Table({"event_id": list(range(n_triggers))})
+        triggers_table.write(file_path, path="TRIGGERS", format="hdf5", append=True)
+
+    if threshold is not None:
+        file_info_table = Table({"asum_threshold": [threshold]})
+        file_info_table.write(file_path, path="FILE_INFO", format="hdf5", append=True)
 
 
 def test_extract_threshold_from_file_name_asum_and_dsum():
     assert (
         nsb_trigger_calculator.extract_threshold_from_file_name(
-            "gamma_run000001_asum220.simtel.log.gz"
+            "gamma_run000001_asum220.reduced_event_data.hdf5"
         )
         == 220
     )
     assert (
         nsb_trigger_calculator.extract_threshold_from_file_name(
-            "gamma_run000001_dsum450.simtel.log.gz"
+            "gamma_run000001_dsum450.reduced_event_data.hdf5"
         )
         == 450
     )
@@ -32,75 +39,97 @@ def test_extract_threshold_from_file_name_asum_and_dsum():
 
 def test_extract_threshold_from_file_name_returns_none_when_missing():
     assert (
-        nsb_trigger_calculator.extract_threshold_from_file_name("gamma_run000001.simtel.log.gz")
+        nsb_trigger_calculator.extract_threshold_from_file_name(
+            "gamma_run000001.reduced_event_data.hdf5"
+        )
         is None
     )
 
 
-def test_parse_nsb_log_file_returns_parsed_data(tmp_path):
-    log_file = tmp_path / "gamma_run000001_asum220.simtel.log"
-    log_file.write_text(LOG_TEXT, encoding="utf-8")
+def test_extract_threshold_from_hdf5_metadata_reads_threshold(tmp_path):
+    hdf5_file = tmp_path / "gamma_run000001.reduced_event_data.hdf5"
+    _write_nsb_hdf5(hdf5_file, n_showers=10, n_triggers=2, threshold=250)
 
-    result = nsb_trigger_calculator.parse_nsb_log_file(log_file)
+    assert nsb_trigger_calculator.extract_threshold_from_hdf5_metadata(hdf5_file) == 250
+
+
+def test_parse_nsb_hdf5_file_returns_parsed_data(tmp_path):
+    hdf5_file = tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5"
+    _write_nsb_hdf5(hdf5_file, n_showers=200, n_triggers=20)
+
+    result = nsb_trigger_calculator.parse_nsb_hdf5_file(hdf5_file)
 
     assert result == {
         "run": 1,
         "threshold": 220,
         "triggers": 20,
         "events": 200,
-        "file_path": str(log_file),
+        "file_path": str(hdf5_file),
     }
 
 
-def test_parse_nsb_log_file_uses_zero_when_no_triggers_but_events_exist(tmp_path):
-    log_file = tmp_path / "gamma_run000001_asum220.simtel.log"
-    log_file.write_text("Run(s) completed as expected after 200 events\n", encoding="utf-8")
+def test_parse_nsb_hdf5_file_uses_metadata_threshold_before_filename(tmp_path):
+    hdf5_file = tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5"
+    _write_nsb_hdf5(hdf5_file, n_showers=100, n_triggers=10, threshold=245)
 
-    result = nsb_trigger_calculator.parse_nsb_log_file(log_file)
+    result = nsb_trigger_calculator.parse_nsb_hdf5_file(hdf5_file)
+
+    assert result["threshold"] == 245
+
+
+def test_parse_nsb_hdf5_file_uses_zero_when_triggers_table_missing(tmp_path):
+    hdf5_file = tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5"
+    _write_nsb_hdf5(hdf5_file, n_showers=200, n_triggers=None)
+
+    result = nsb_trigger_calculator.parse_nsb_hdf5_file(hdf5_file)
 
     assert result["triggers"] == 0
     assert result["events"] == 200
 
 
-def test_parse_nsb_log_file_returns_none_when_file_cannot_be_read(tmp_path):
-    with patch(
-        "simtools.simtel.nsb_trigger_calculator.read_log_file",
-        side_effect=OSError("cannot read"),
-    ):
-        assert (
-            nsb_trigger_calculator.parse_nsb_log_file(
-                tmp_path / "gamma_run000001_asum220.simtel.log"
-            )
-            is None
-        )
+def test_parse_nsb_hdf5_file_returns_none_when_events_table_missing(tmp_path):
+    hdf5_file = tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5"
+    Table({"event_id": [1]}).write(hdf5_file, path="TRIGGERS", format="hdf5", overwrite=True)
+
+    assert nsb_trigger_calculator.parse_nsb_hdf5_file(hdf5_file) is None
 
 
-def test_parse_nsb_log_file_returns_none_when_critical_info_is_missing(tmp_path):
-    log_file = tmp_path / "gamma_run000001.simtel.log"
-    log_file.write_text(LOG_TEXT, encoding="utf-8")
+def test_parse_nsb_hdf5_file_returns_none_when_critical_info_is_missing(tmp_path):
+    hdf5_file = tmp_path / "gamma_run000001.reduced_event_data.hdf5"
+    _write_nsb_hdf5(hdf5_file, n_showers=100, n_triggers=10)
 
-    assert nsb_trigger_calculator.parse_nsb_log_file(log_file) is None
+    assert nsb_trigger_calculator.parse_nsb_hdf5_file(hdf5_file) is None
 
 
-def test_parse_nsb_log_files_filters_failed_parses(tmp_path):
-    files = [tmp_path / "good.log", tmp_path / "bad.log"]
+def test_parse_nsb_hdf5_files_filters_failed_parses(tmp_path):
+    files = [tmp_path / "good.hdf5", tmp_path / "bad.hdf5"]
 
     with patch(
-        "simtools.simtel.nsb_trigger_calculator.parse_nsb_log_file",
+        "simtools.simtel.nsb_trigger_calculator.parse_nsb_hdf5_file",
         side_effect=[
             {"run": 1, "threshold": 220, "triggers": 10, "events": 100},
             None,
         ],
     ):
-        assert nsb_trigger_calculator.parse_nsb_log_files(files) == [
+        assert nsb_trigger_calculator.parse_nsb_hdf5_files(files) == [
             {"run": 1, "threshold": 220, "triggers": 10, "events": 100}
         ]
 
 
-def test_parse_nsb_log_files_raises_when_all_parses_fail(tmp_path):
-    with patch("simtools.simtel.nsb_trigger_calculator.parse_nsb_log_file", return_value=None):
-        with pytest.raises(ValueError, match="No log files could be parsed successfully"):
-            nsb_trigger_calculator.parse_nsb_log_files([tmp_path / "bad.log"])
+def test_parse_nsb_hdf5_files_raises_when_all_parses_fail(tmp_path):
+    with patch("simtools.simtel.nsb_trigger_calculator.parse_nsb_hdf5_file", return_value=None):
+        with pytest.raises(ValueError, match="No HDF5 files could be parsed successfully"):
+            nsb_trigger_calculator.parse_nsb_hdf5_files([tmp_path / "bad.hdf5"])
+
+
+def test_find_hdf5_files_raises_for_missing_root(tmp_path):
+    with pytest.raises(FileNotFoundError, match="Root directory not found"):
+        nsb_trigger_calculator.find_hdf5_files(tmp_path / "missing")
+
+
+def test_find_hdf5_files_raises_for_missing_matches(tmp_path):
+    with pytest.raises(FileNotFoundError, match="No HDF5 files found"):
+        nsb_trigger_calculator.find_hdf5_files(tmp_path)
 
 
 def test_group_by_threshold_and_run():
@@ -226,9 +255,9 @@ def test_derive_nsb_triggers_pipeline_output_toggle(tmp_path, write_output):
         args["output"] = output_file
 
     with (
-        patch("simtools.simtel.nsb_trigger_calculator.find_log_files", return_value=["log1"]),
+        patch("simtools.simtel.nsb_trigger_calculator.find_hdf5_files", return_value=["f1"]),
         patch(
-            "simtools.simtel.nsb_trigger_calculator.parse_nsb_log_files",
+            "simtools.simtel.nsb_trigger_calculator.parse_nsb_hdf5_files",
             return_value=[{"threshold": 220, "run": 1, "triggers": 10, "events": 100}],
         ),
         patch(

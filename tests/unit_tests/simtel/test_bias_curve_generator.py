@@ -45,10 +45,10 @@ def test_calculate_time_window_reads_telescope_model(tmp_path):
     assert time_window == pytest.approx(68 / (1024 * 1e6))
 
 
-def test_extract_nsb_rates_uses_direct_logs(tmp_path):
+def test_extract_nsb_rates_uses_gamma_hdf5(tmp_path):
     args = _base_args(tmp_path)
-    log_file = tmp_path / "gamma_run000001_asum220.simtel.log.gz"
-    log_file.touch()
+    hdf5_file = tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5"
+    hdf5_file.touch()
 
     with patch(
         "simtools.simtel.bias_curve_generator._run_nsb_trigger_derivation",
@@ -63,7 +63,10 @@ def test_extract_nsb_rates_uses_direct_logs(tmp_path):
 def test_extract_nsb_rates_raises_when_no_logs(tmp_path):
     args = _base_args(tmp_path)
 
-    with pytest.raises(FileNotFoundError, match=r"No \*\.simtel\.log\.gz files found"):
+    with pytest.raises(
+        FileNotFoundError,
+        match=r"No gamma\*\.reduced_event_data\.hdf5 files found",
+    ):
         bias_curve_generator._extract_nsb_rates(args, time_window=0.001)
 
 
