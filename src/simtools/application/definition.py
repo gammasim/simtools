@@ -12,6 +12,8 @@ from simtools.configuration.arguments import (
     STANDARD_ARGUMENTS,
     ArgumentDefinition,
 )
+from simtools.configuration.show_options import handle_show_options
+from simtools.settings import config
 
 PostParseHook = Callable[[dict, Mapping[str, set], object], None]
 
@@ -87,20 +89,38 @@ class ApplicationDefinition:
 
     def _parse(self):
         """Read configuration using this definition's preconfigured parser."""
+        show_options_requested = self._show_options_requested()
+        defer_required_validation = self.defer_required_validation or show_options_requested
         runtime_arguments = (
             tuple(argument.without_requiredness() for argument in self.all_arguments)
-            if self.defer_required_validation
+            if defer_required_validation
             else self.all_arguments
         )
         config_builder = self._configurator(runtime_arguments)
         args_dict, db_config = config_builder.configure(initialize_output=self.initialize_output)
+        if args_dict.get("show_options"):
+            try:
+                config.load(
+                    args_dict,
+                    db_config,
+                    resolve_sim_software_executables=self.resolve_sim_software_executables,
+                )
+            except (FileNotFoundError, PermissionError, ValueError) as exc:
+                config_builder.parser.error(str(exc))
+            handle_show_options(args_dict, config_builder.parser)
         if self.post_parse is not None:
             self.post_parse(args_dict, config_builder.config_sources, config_builder.parser)
-        if self.defer_required_validation:
+        if defer_required_validation:
             self._validate_required_values(args_dict, config_builder.parser)
         if not self.database:
             db_config = {}
         return args_dict, db_config
+
+    @staticmethod
+    def _show_options_requested():
+        """Return whether the command line requests option discovery."""
+        option_names = {"--show_options", "--show-options", "--show_option", "--show-option"}
+        return any(argument.split("=", maxsplit=1)[0] in option_names for argument in sys.argv[1:])
 
     def _validate_required_values(self, args, parser):
         """Validate declarations deferred until after the post-parse hook."""

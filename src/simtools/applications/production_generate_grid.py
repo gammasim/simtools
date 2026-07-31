@@ -125,6 +125,7 @@ _GRID_ARGUMENTS = (
     ),
 )
 
+
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
