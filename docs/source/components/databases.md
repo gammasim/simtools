@@ -1,6 +1,8 @@
 # Databases
 
-Simulation model parameters and production configurations are stored in databases (see the [Simulation Model](model_parameters.md#simulation-model) section) and synced with the [CTAO model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models).
+Simulation model parameters and production configurations are stored in databases (see
+[Simulation Models](simulation_models.md)) and synced with the
+[CTAO model repository](https://gitlab.cta-observatory.org/cta-science/simulations/simulation-model/simulation-models).
 The simtools package uses a MongoDB database to store production tables and simulation model parameters.
 
 ```{important}
