@@ -132,7 +132,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *_GRID_ARGUMENTS,
         cli.MODEL_VERSION(required=True),
         cli.OVERWRITE_MODEL_PARAMETERS,
-        cli.IGNORE_MISSING_DESIGN_MODEL,
         cli.SITE(required=True),
         cli.TELESCOPE,
         cli.ARRAY_LAYOUT_NAME(required=True),

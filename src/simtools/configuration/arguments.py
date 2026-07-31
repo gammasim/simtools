@@ -638,7 +638,7 @@ EVENT_NUMBER_FIRST_SHOWER = _argument(
 CORRECT_FOR_B_FIELD_ALIGNMENT = _argument(
     "correct_for_b_field_alignment",
     _SIMULATION_CONFIGURATION_GROUP,
-    help="Correct for B-field alignment",
+    help="Align North with geographic North (and not magnetic North).",
     action="store_true",
     default=True,
 )

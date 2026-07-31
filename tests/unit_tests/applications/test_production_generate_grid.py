@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+import simtools.applications.plot_array_layout as plot_array_layout_app
 import simtools.applications.production_generate_grid as app
 from simtools.configuration.commandline_parser import CommandLineParser
 
@@ -48,7 +49,6 @@ def test_full_parser_retains_supported_shared_arguments():
         "energy_range",
         "eslope",
         "event_number_first_shower",
-        "ignore_missing_design_model",
         "model_path",
         "model_version",
         "output_file",
@@ -68,6 +68,12 @@ def test_full_parser_retains_supported_shared_arguments():
     assert "array_element_list" not in actions
     assert actions["output_file"].default == "job_grid.ecsv"
     assert actions["output_file"].help == "Output ECSV production job grid."
+
+
+def test_plot_array_layout_parser_retains_ignore_missing_design_model():
+    actions = {action.dest for action in plot_array_layout_app.APPLICATION.build_parser()._actions}
+
+    assert "ignore_missing_design_model" in actions
 
 
 def test_full_parser_accepts_minimum_direct_configuration():
