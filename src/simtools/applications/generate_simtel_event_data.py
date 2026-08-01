@@ -81,9 +81,6 @@ The output consists of an HDF5 file containing the following tables:
 | telescope_list  | string  | Comma-separated list of triggered telescopes  |
 +-----------------+---------+-----------------------------------------------+
 
-Several files generated with this application can be combined into a single
-dataset using the 'simtools-merge-tables' command.
-
 Command line arguments
 ----------------------
 prefix (str, required)

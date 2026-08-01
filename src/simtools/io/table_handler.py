@@ -7,7 +7,7 @@ import astropy.units as u
 import h5py
 import numpy as np
 from astropy.io import fits
-from astropy.table import Table, vstack
+from astropy.table import Table
 
 from simtools.utils import general
 
@@ -139,34 +139,6 @@ def _read_table_list_fits(input_file, table_names, include_indexed_tables):
     return datasets
 
 
-def merge_tables(input_files, input_table_names, output_file):
-    """
-    Merge multiple astropy tables from different files into a single file.
-
-    Handles multiple tables per file and supports both HDF5 and FITS formats.
-    Updates 'file_id' column if present to maintain file origin tracking.
-
-    Parameters
-    ----------
-    input_files : list of str
-        List of input file paths to be merged.
-    input_table_names : list of str
-        List of table names to be merged from each input file.
-    output_file : str
-        Path to the output file where the merged data will be saved.
-
-    Returns
-    -------
-    None
-    """
-    _logger.info(f"Merging {len(input_files)} files into {output_file}")
-
-    file_type = read_table_file_type(input_files)
-    merged_tables = _merge(input_files, input_table_names, file_type, output_file)
-    if file_type != "HDF5":
-        write_tables(merged_tables, output_file, file_type)
-
-
 def read_table_file_type(input_files):
     """
     Determine the file type of the input files.
@@ -198,54 +170,6 @@ def read_table_file_type(input_files):
     if len(file_types) != 1:
         raise ValueError("All input files must be of the same type (either all HDF5 or all FITS)")
     return file_types.pop()
-
-
-def _merge(input_files, table_names, file_type, output_file, add_file_id_to_table_name=True):
-    """
-    Merge tables from multiple input files into single tables.
-
-    Parameters
-    ----------
-    input_files : list of str
-        List of input file paths to be merged.
-    table_names : list of str
-        List of table names to be merged from each input file.
-    file_type : str
-        Type of the input files ('HDF5' or 'FITS').
-    add_file_id_to_table_name : bool, optional
-        If True, appends the file index to the table name.
-
-    Returns
-    -------
-    dict
-        Dictionary with table names as keys and merged astropy tables as values.
-    """
-    merged = {name: [] for name in table_names}
-    is_hdf5 = file_type == "HDF5"
-
-    def update_file_id(table, idx):
-        if "file_id" in table.colnames:
-            table["file_id"] = idx
-
-    def process_table(table, key, idx):
-        table_name = f"{key}_{idx}" if add_file_id_to_table_name else key
-        update_file_id(table, idx)
-        if is_hdf5:
-            write_table_in_hdf5(table, output_file, table_name)
-            if idx == 0:
-                copy_metadata_to_hdf5(input_files[0], output_file, table_name)
-        else:
-            merged[key].append(table)
-
-    for idx, file in enumerate(input_files):
-        tables = read_tables(file, table_names, file_type)
-        for key, table in tables.items():
-            process_table(table, key, idx)
-
-    if file_type != "HDF5":
-        merged = {k: vstack(v, metadata_conflicts="silent") for k, v in merged.items()}
-
-    return merged
 
 
 def read_tables(file, table_names, file_type=None, table_columns=None):
@@ -476,27 +400,6 @@ def _prepare_string_columns_for_hdf5(table):
     return table
 
 
-def write_table_in_hdf5(table, output_file, table_name):
-    """
-    Write or append a single astropy table to an HDF5 file.
-
-    Parameters
-    ----------
-    table : astropy.table.Table
-        The astropy table to write.
-    output_file : str or Path
-        Path to the output HDF5 file.
-    table_name : str
-        Name of the table in the HDF5 file.
-
-    Returns
-    -------
-    None
-    """
-    with h5py.File(output_file, "a") as f:
-        _write_table_to_hdf5_file(table, f, table_name)
-
-
 def _write_table_to_hdf5_file(table, hdf5_file, table_name):
     """Write or append one table using an already open HDF5 file."""
     table = _prepare_string_columns_for_hdf5(table)
@@ -557,26 +460,3 @@ def _replace_dataset_with_promoted_dtype(hdf5_file, table_name, dtype):
     del hdf5_file[table_name]
     hdf5_file.move(temporary_name, table_name)
     return hdf5_file[table_name]
-
-
-def copy_metadata_to_hdf5(src_file, dst_file, table_name):
-    """
-    Copy metadata (table column meta) from one HDF5 file to another.
-
-    For merging tables, this function ensures that the metadata is preserved.
-
-    Parameters
-    ----------
-    src_file : str or Path
-        Path to the source HDF5 file.
-    dst_file : str or Path
-        Path to the destination HDF5 file.
-    table_name : str
-        Name of the table whose metadata is to be copied.
-    """
-    with h5py.File(src_file, "r") as src, h5py.File(dst_file, "a") as dst:
-        meta_name = f"{table_name}.__table_column_meta__"
-        if meta_name in src:
-            if meta_name in dst:
-                del dst[meta_name]  # overwrite if exists
-            src.copy(meta_name, dst, name=meta_name)
