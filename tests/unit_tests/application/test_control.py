@@ -59,11 +59,13 @@ def redact_test_setup():
             [],
         ),
         (
-            "Setting environment variables: {{"
-            "'SIMTOOLS_DB_API_PW': '{secret}', "
-            "'SIMTOOLS_DB_API_USER': 'api', "
-            "'SIMTOOLS_DB_SERVER': 'simtools-mongodb', "
-            "'USER': 'test_user'}}",
+            (
+                "Setting environment variables: {{"
+                "'SIMTOOLS_DB_API_PW': '{secret}', "
+                "'SIMTOOLS_DB_API_USER': 'api', "
+                "'SIMTOOLS_DB_SERVER': 'simtools-mongodb', "
+                "'USER': 'test_user'}}"
+            ),
             "my_secret_db_password",
             "SIMTOOLS_DB_API_PW",
             ["api", "simtools-mongodb"],
