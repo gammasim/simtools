@@ -31,7 +31,6 @@ require MongoDB and report an error if used with only `--simulation_models_path`
 
 Applications to retrieve values or information from the database:
 
-* list all databases and collections defined: [simtools-db-inspect-databases](db_inspect_databases)
 * retrieve a single model parameter: [simtools-db-get-parameter-from-db](db_get_parameter_from_db)
 * retrieve a model parameter file: [simtools-db-get-file-from-db](db_get_file_from_db)
 * retrieve and print array layouts defined in the database: [simtools-db-get-array-layouts-from-db](db_get_array_layouts_from_db)

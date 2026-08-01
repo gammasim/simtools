@@ -83,7 +83,6 @@ scripts.simtools-db-generate-compound-indexes = "simtools.applications.db_genera
 scripts.simtools-db-get-array-layouts-from-db = "simtools.applications.db_get_array_layouts_from_db:main"
 scripts.simtools-db-get-file-from-db = "simtools.applications.db_get_file_from_db:main"
 scripts.simtools-db-get-parameter-from-db = "simtools.applications.db_get_parameter_from_db:main"
-scripts.simtools-db-inspect-databases = "simtools.applications.db_inspect_databases:main"
 scripts.simtools-db-upload-model-repository = "simtools.applications.db_upload_model_repository:main"
 scripts.simtools-dependency-manifest = "simtools.applications.dependency_manifest:main"
 scripts.simtools-dependency-versions = "simtools.applications.dependency_versions:main"
