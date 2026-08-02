@@ -10,8 +10,8 @@ from astropy.table import Table
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.nsb_trigger_calculator import (
     derive_nsb_triggers,
-    extract_run_number_from_path,
-    extract_threshold_from_file_name,
+    extract_run_number,
+    extract_threshold,
 )
 from simtools.telescope_trigger_rates import telescope_trigger_rates
 from simtools.visualization import plot_tables
@@ -152,8 +152,8 @@ def _group_hdf5_files_by_threshold_and_run(proton_dir):
         if "proton" not in hdf5_file.name.lower():
             continue
 
-        threshold = extract_threshold_from_file_name(hdf5_file)
-        run = extract_run_number_from_path(hdf5_file)
+        threshold = extract_threshold(hdf5_file)
+        run = extract_run_number(hdf5_file)
 
         if threshold is None or run is None:
             _logger.warning(

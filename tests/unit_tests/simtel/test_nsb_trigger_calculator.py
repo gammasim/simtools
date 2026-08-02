@@ -18,47 +18,46 @@ def _write_nsb_hdf5(file_path, n_showers=0, n_triggers=None, threshold=None):
         triggers_table.write(file_path, path="TRIGGERS", format="hdf5", append=True)
 
     if threshold is not None:
-        file_info_table = Table({"asum_threshold": [threshold]})
-        file_info_table.write(file_path, path="FILE_INFO", format="hdf5", append=True)
+        file_info_name = f"gamma_run000001_asum{threshold}.simtel.zst"
+    else:
+        file_info_name = "gamma_run000001.simtel.zst"
+
+    file_info_table = Table({"file_name": [file_info_name]})
+    file_info_table.write(file_path, path="FILE_INFO", format="hdf5", append=True)
 
 
-def test_extract_run_number_from_parent_directory_parts(tmp_path):
-    nested = tmp_path / "run000123" / "subdir" / "file.reduced_event_data.hdf5"
-    assert nsb_trigger_calculator._extract_run_number(nested) == 123
+def _write_file_info_hdf5(file_path, file_name):
+    """Create an HDF5 file containing only FILE_INFO/file_name metadata."""
+    Table({"file_name": [file_name]}).write(
+        file_path, path="FILE_INFO", format="hdf5", overwrite=True
+    )
 
 
 def test_extract_run_number_returns_none_when_missing(tmp_path):
     missing = tmp_path / "subdir" / "file.reduced_event_data.hdf5"
-    assert nsb_trigger_calculator._extract_run_number(missing) is None
+    assert nsb_trigger_calculator.extract_run_number(missing) is None
 
 
-def test_extract_threshold_from_file_name_asum_and_dsum():
-    assert (
-        nsb_trigger_calculator.extract_threshold_from_file_name(
-            "gamma_run000001_asum220.reduced_event_data.hdf5"
-        )
-        == 220
-    )
-    assert (
-        nsb_trigger_calculator.extract_threshold_from_file_name(
-            "gamma_run000001_dsum450.reduced_event_data.hdf5"
-        )
-        == 450
-    )
+def test_extract_threshold_asum_and_dsum(tmp_path):
+    asum_file = tmp_path / "asum.reduced_event_data.hdf5"
+    dsum_file = tmp_path / "dsum.reduced_event_data.hdf5"
+    _write_file_info_hdf5(asum_file, "gamma_run000001_asum220.simtel.zst")
+    _write_file_info_hdf5(dsum_file, "gamma_run000001_dsum450.simtel.zst")
+
+    assert nsb_trigger_calculator.extract_threshold(asum_file) == 220
+    assert nsb_trigger_calculator.extract_threshold(dsum_file) == 450
 
 
-def test_extract_threshold_from_file_name_returns_none_when_missing():
-    assert (
-        nsb_trigger_calculator.extract_threshold_from_file_name(
-            "gamma_run000001.reduced_event_data.hdf5"
-        )
-        is None
-    )
+def test_extract_threshold_returns_none_when_missing(tmp_path):
+    hdf5_file = tmp_path / "missing_threshold.reduced_event_data.hdf5"
+    _write_file_info_hdf5(hdf5_file, "gamma_run000001.simtel.zst")
+
+    assert nsb_trigger_calculator.extract_threshold(hdf5_file) is None
 
 
 def test_parse_nsb_hdf5_file_returns_parsed_data(tmp_path):
     hdf5_file = tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5"
-    _write_nsb_hdf5(hdf5_file, n_showers=200, n_triggers=20)
+    _write_nsb_hdf5(hdf5_file, n_showers=200, n_triggers=20, threshold=220)
 
     result = nsb_trigger_calculator.parse_nsb_hdf5_file(hdf5_file)
 
@@ -73,7 +72,7 @@ def test_parse_nsb_hdf5_file_returns_parsed_data(tmp_path):
 
 def test_parse_nsb_hdf5_file_uses_zero_when_triggers_table_missing(tmp_path):
     hdf5_file = tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5"
-    _write_nsb_hdf5(hdf5_file, n_showers=200, n_triggers=None)
+    _write_nsb_hdf5(hdf5_file, n_showers=200, n_triggers=None, threshold=220)
 
     result = nsb_trigger_calculator.parse_nsb_hdf5_file(hdf5_file)
 
@@ -117,12 +116,12 @@ def test_parse_nsb_hdf5_files_raises_when_all_parses_fail(tmp_path):
 
 
 def test_find_hdf5_files_raises_for_missing_root(tmp_path):
-    with pytest.raises(FileNotFoundError, match="Root directory not found"):
+    with pytest.raises(FileNotFoundError, match="No files found"):
         nsb_trigger_calculator.find_hdf5_files(tmp_path / "missing")
 
 
 def test_find_hdf5_files_raises_for_missing_matches(tmp_path):
-    with pytest.raises(FileNotFoundError, match="No HDF5 files found"):
+    with pytest.raises(FileNotFoundError, match="No files found"):
         nsb_trigger_calculator.find_hdf5_files(tmp_path)
 
 
