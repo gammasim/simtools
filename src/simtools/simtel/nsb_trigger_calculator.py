@@ -8,57 +8,54 @@ from pathlib import Path
 import numpy as np
 from astropy.table import Table
 
+from simtools.utils import general
+
 _logger = logging.getLogger(__name__)
 _THRESHOLD_RE = re.compile(r"_[ad]sum(?P<threshold>\d+)(?=\.)")
 _RUN_NUMBER_RE = re.compile(r"run(?P<run_number>\d+)", re.IGNORECASE)
 
 
-def extract_run_number_from_path(file_path):
-    """Extract run number from file name or parent directory parts."""
-    file_path = Path(file_path)
+def extract_run_number(file_path):
+    """Extract run number from the FILE_INFO table in the HDF5 file."""
+    try:
+        file_info = Table.read(file_path, path="FILE_INFO")
+    except OSError, ValueError, KeyError:
+        _logger.exception(f"Failed to read FILE_INFO from {file_path}")
+        return None
 
-    match = _RUN_NUMBER_RE.search(file_path.name)
+    simtel_path = file_info["file_name"][0]
+
+    # astropy may return bytes
+    if isinstance(simtel_path, bytes):
+        simtel_path = simtel_path.decode()
+
+    match = _RUN_NUMBER_RE.search(simtel_path)
     if match:
         return int(match.group("run_number"))
 
-    for part in file_path.parts:
-        match = _RUN_NUMBER_RE.search(part)
-        if match:
-            return int(match.group("run_number"))
-
-    _logger.warning(f"Could not extract run number from {file_path}")
+    _logger.warning(f"Could not extract run number from FILE_INFO in {file_path}")
     return None
 
 
-def _extract_run_number(file_path):
-    """Backward-compatible alias for tests using the private helper."""
-    return extract_run_number_from_path(file_path)
+def extract_threshold(file_path):
+    """Extract threshold from the FILE_INFO table in the HDF5 file."""
+    try:
+        file_info = Table.read(file_path, path="FILE_INFO")
+    except OSError, ValueError, KeyError:
+        _logger.exception(f"Failed to read FILE_INFO from {file_path}")
+        return None
 
+    simtel_path = file_info["file_name"][0]
 
-def extract_threshold_from_file_name(file_path):
-    """
-    Extract threshold value from file name.
+    # astropy may return bytes
+    if isinstance(simtel_path, bytes):
+        simtel_path = simtel_path.decode()
 
-    Supports current production labels like:
-
-    - ``*_asum220.reduced_event_data.hdf5``
-    - ``*_dsum450.reduced_event_data.hdf5``
-
-    Parameters
-    ----------
-    file_path : Path or str
-        Path to input file.
-
-    Returns
-    -------
-    int or None
-        Threshold value, or None if not found.
-    """
-    match = _THRESHOLD_RE.search(Path(file_path).name)
+    match = _THRESHOLD_RE.search(simtel_path)
     if match:
         return int(match.group("threshold"))
 
-    _logger.warning(f"Could not extract threshold from {file_path}")
+    _logger.warning(f"Could not extract threshold from FILE_INFO in {file_path}")
     return None
 
 
@@ -81,8 +78,8 @@ def parse_nsb_hdf5_file(file_path):
 
     try:
         events_table = Table.read(file_path, path="SHOWERS")
-    except (OSError, ValueError, KeyError) as exc:
-        _logger.error(f"Failed to read SHOWERS table from {file_path}: {exc}")
+    except OSError, ValueError, KeyError:
+        _logger.exception(f"Failed to read SHOWERS table from {file_path}")
         return None
 
     try:
@@ -92,8 +89,8 @@ def parse_nsb_hdf5_file(file_path):
         _logger.info(f"No TRIGGERS table found in {file_path}; using 0 triggers")
         triggers = 0
 
-    run_number = extract_run_number_from_path(file_path)
-    threshold = extract_threshold_from_file_name(file_path)
+    run_number = extract_run_number(file_path)
+    threshold = extract_threshold(file_path)
     events = len(events_table)
 
     if run_number is None or threshold is None or triggers is None:
@@ -148,35 +145,8 @@ def parse_nsb_hdf5_files(file_list):
 
 
 def find_hdf5_files(root_dir, pattern="*.reduced_event_data.hdf5"):
-    """
-    Recursively find reduced event-data HDF5 files matching the pattern.
-
-    Parameters
-    ----------
-    root_dir : Path or str
-        Root directory to search in.
-    pattern : str, optional
-        Glob pattern for HDF5 files. Default: ``*.reduced_event_data.hdf5``.
-
-    Returns
-    -------
-    list of Path
-        Sorted list of matching HDF5 file paths.
-
-    Raises
-    ------
-    FileNotFoundError
-        If root directory does not exist or no matching files are found.
-    """
-    root_dir = Path(root_dir)
-    if not root_dir.exists():
-        raise FileNotFoundError(f"Root directory not found: {root_dir}")
-
-    hdf5_files = sorted(root_dir.rglob(pattern))
-    if not hdf5_files:
-        raise FileNotFoundError(f"No HDF5 files found in {root_dir} matching pattern '{pattern}'")
-
-    return hdf5_files
+    """Recursively find reduced event-data HDF5 files matching the pattern."""
+    return sorted(general.resolve_file_patterns(Path(root_dir) / "**" / pattern))
 
 
 def group_by_threshold_and_run(data):

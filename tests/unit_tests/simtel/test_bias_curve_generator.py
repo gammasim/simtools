@@ -23,6 +23,13 @@ def _base_args(tmp_path):
     }
 
 
+def _write_file_info_hdf5(file_path, file_name):
+    """Create a minimal HDF5 file with FILE_INFO/file_name metadata."""
+    Table({"file_name": [file_name]}).write(
+        file_path, path="FILE_INFO", format="hdf5", overwrite=True
+    )
+
+
 def test_calculate_time_window_requires_telescope(tmp_path):
     args = _base_args(tmp_path)
     args["telescope"] = ""
@@ -72,9 +79,15 @@ def test_extract_nsb_rates_raises_when_no_logs(tmp_path):
 
 def test_group_hdf5_files_by_threshold_and_run(tmp_path):
     valid = tmp_path / "proton_run000001_asum220.reduced_event_data.hdf5"
-    valid.touch()
-    (tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5").touch()
-    (tmp_path / "proton_missing_threshold.reduced_event_data.hdf5").touch()
+    _write_file_info_hdf5(valid, "proton_run000001_asum220.simtel.zst")
+    _write_file_info_hdf5(
+        tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5",
+        "gamma_run000001_asum220.simtel.zst",
+    )
+    _write_file_info_hdf5(
+        tmp_path / "proton_missing_threshold.reduced_event_data.hdf5",
+        "proton_run000001.simtel.zst",
+    )
 
     grouped = bias_curve_generator._group_hdf5_files_by_threshold_and_run(tmp_path)
 

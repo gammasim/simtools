@@ -9,14 +9,14 @@ This application combines NSB (Night Sky Background) and proton trigger rates
 to generate bias curves showing how trigger rates vary with threshold.
 
 The tool:
-1. Extracts NSB trigger rates from gamma reduced event-data HDF5 files
+1. Extracts NSB trigger rates from reduced event-data HDF5 files
 2. Calculates proton trigger rates from proton reduced event-data HDF5 files
 3. Plots both curves on the same figure for comparison
 4. Outputs ecsv files for runwise nsb simulation,
 runwise proton simulation, nsb rate and proton rate vs threshold
 
 The input directory should contain both:
-- NSB gamma reduced event-data HDF5 files
+- NSB reduced event-data HDF5 files
 - Proton simulation reduced event-data HDF5 files
 
 The input files can be generated using simtools-generate-bias-curve-submissions.
