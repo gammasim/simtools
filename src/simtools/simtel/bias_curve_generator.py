@@ -10,24 +10,23 @@ from astropy.table import Table
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel.nsb_trigger_calculator import (
     derive_nsb_triggers,
-    extract_threshold_from_file_name,
+    extract_run_number,
+    extract_threshold,
 )
-from simtools.simtel.simtel_log_reader import extract_run_number
 from simtools.telescope_trigger_rates import telescope_trigger_rates
 from simtools.visualization import plot_tables
 
 _logger = logging.getLogger(__name__)
 
-_SIMTEL_LOG_SUFFIX = ".simtel.log.gz"
 _REDUCED_EVENT_DATA_SUFFIX = ".reduced_event_data.hdf5"
 
 
 def generate_bias_curves(args):
-    """Generate bias curves from NSB logs and proton simulations."""
+    """Generate bias curves from NSB/proton reduced event-data HDF5 files."""
     time_window = _calculate_time_window(args)
     _logger.info(f"Calculated time window: {time_window * 1e9:.2f} ns")
 
-    _logger.info("Extracting NSB trigger rates from log files...")
+    _logger.info("Extracting NSB trigger rates from HDF5 files...")
     nsb_stats = _extract_nsb_rates(args, time_window)
     if not nsb_stats:
         raise FileNotFoundError(f"No NSB input files found in {args['data_dir']}")
@@ -101,21 +100,21 @@ def _calculate_time_window(args):
 
 
 def _extract_nsb_rates(args, time_window):
-    """Extract NSB trigger rates from direct sim_telarray logs."""
+    """Extract NSB trigger rates from gamma reduced event-data HDF5 files."""
     data_dir = Path(args["data_dir"])
-    direct_logs = list(data_dir.rglob(f"*{_SIMTEL_LOG_SUFFIX}"))
-    if direct_logs:
-        _logger.info(f"Found {len(direct_logs)} direct sim_telarray log file(s)")
+    gamma_hdf5_files = list(data_dir.rglob(f"gamma*{_REDUCED_EVENT_DATA_SUFFIX}"))
+    if gamma_hdf5_files:
+        _logger.info(f"Found {len(gamma_hdf5_files)} gamma HDF5 file(s)")
         return _run_nsb_trigger_derivation(data_dir, args, time_window)
 
-    raise FileNotFoundError(f"No *{_SIMTEL_LOG_SUFFIX} files found in {data_dir}")
+    raise FileNotFoundError(f"No gamma*{_REDUCED_EVENT_DATA_SUFFIX} files found in {data_dir}")
 
 
 def _run_nsb_trigger_derivation(root_dir, args, time_window):
-    """Run NSB trigger derivation on a directory containing ``gamma*.simtel.log.gz`` files."""
+    """Run NSB trigger derivation on gamma reduced event-data HDF5 files."""
     nsb_args = {
         "root_dir": root_dir,
-        "pattern": f"gamma*{_SIMTEL_LOG_SUFFIX}",
+        "pattern": f"gamma*{_REDUCED_EVENT_DATA_SUFFIX}",
         "output": args.get("nsb_output"),
         "time_window": time_window,
         "verbose": False,
@@ -153,7 +152,7 @@ def _group_hdf5_files_by_threshold_and_run(proton_dir):
         if "proton" not in hdf5_file.name.lower():
             continue
 
-        threshold = extract_threshold_from_file_name(hdf5_file)
+        threshold = extract_threshold(hdf5_file)
         run = extract_run_number(hdf5_file)
 
         if threshold is None or run is None:
