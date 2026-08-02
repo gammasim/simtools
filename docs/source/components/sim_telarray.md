@@ -10,6 +10,7 @@ The following executables from the `sim_telarray` package are used by `simtools`
 - `xyzls`: Simulates a calibration light source at a specified position.
 - `ls-beam`: Simulates a laser beam calibration light source.
 
-```{warning}
-Incomplete documentation - missing references
-```
+simtools generates sim_telarray configuration files from model parameters and production-grid
+settings, then executes sim_telarray as part of production and calibration workflows. The command
+interface is intentionally lightweight in this component guide; operational details are documented
+in application-level documentation.

@@ -154,7 +154,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.CORSIKA_HE_INTERACTION,
         cli.CORSIKA_LE_INTERACTION,
         cli.CORSIKA_HADRONIC_TRANSITION_ENERGY,
-        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_PATH_ARGUMENTS,
     ),
     database=True,
     resolve_sim_software_executables=False,

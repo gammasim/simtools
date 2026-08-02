@@ -398,7 +398,7 @@ def test_database_handler_rejects_mongodb_operation(simulation_models_path, mock
     database = db_handler.DatabaseHandler()
 
     with pytest.raises(RuntimeError, match="requires a MongoDB model source"):
-        database.get_collections()
+        database.get_collection("telescopes")
 
 
 def test_invalid_model_path_fails_without_fallback(tmp_test_directory):

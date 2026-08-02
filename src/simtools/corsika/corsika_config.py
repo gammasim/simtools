@@ -505,10 +505,12 @@ class CorsikaConfig:
         """Return ECUTS parameter CORSIKA format."""
         e_cuts = entry["value"]
         return [
-            f"{e_cuts[0] * u.Unit(entry['unit']).to('GeV')} "
-            f"{e_cuts[1] * u.Unit(entry['unit']).to('GeV')} "
-            f"{e_cuts[2] * u.Unit(entry['unit']).to('GeV')} "
-            f"{e_cuts[3] * u.Unit(entry['unit']).to('GeV')}"
+            (
+                f"{e_cuts[0] * u.Unit(entry['unit']).to('GeV')} "
+                f"{e_cuts[1] * u.Unit(entry['unit']).to('GeV')} "
+                f"{e_cuts[2] * u.Unit(entry['unit']).to('GeV')} "
+                f"{e_cuts[3] * u.Unit(entry['unit']).to('GeV')}"
+            )
         ]
 
     def _input_config_corsika_longitudinal_parameters(self, entry):

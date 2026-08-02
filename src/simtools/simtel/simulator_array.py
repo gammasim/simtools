@@ -106,14 +106,12 @@ class SimulatorArray(SimtelRunner):
         str
             Command to run sim_telarray.
         """
+        power_law = SimulatorArray.get_power_law_for_sim_telarray_histograms(
+            self.corsika_config.primary_particle
+        )
         return [
             "-C",
-            "power_law="
-            f"{
-                SimulatorArray.get_power_law_for_sim_telarray_histograms(
-                    self.corsika_config.primary_particle
-                )
-            }",
+            f"power_law={power_law}",
         ]
 
     def _make_run_command_for_calibration_simulations(self):

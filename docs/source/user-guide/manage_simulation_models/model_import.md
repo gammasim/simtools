@@ -62,10 +62,9 @@ Positions of array elements like telescopes are provided by CTAO in form of tabl
 To import these positions into the model parameter repository, see the following example:
 
 ```bash
-simtools-write-array-element-positions-to-repository \
+simtools-maintain-simulation-model-write-array-element-positions \
     --input /path/to/positions.txt \
-    --repository_path /path/to/repository \
-    --model_version 1.0.0 \
+    --simulation_models_directory /path/to/simulation-models \
+    --parameter_version 1.0.0 \
     --coordinate_system ground \
-    --site North
 ```

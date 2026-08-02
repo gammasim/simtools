@@ -62,8 +62,10 @@ def test_inspect_ignore_info_lines(mock_logger):
 
 def test_inspect_mixed_input(mock_logger):
     log_text = [
-        "INFO:: All systems operational.\nException: A critical failure occurred.\n"
-        "INFO:: This is fine.\nFailed to connect to the database."
+        (
+            "INFO:: All systems operational.\nException: A critical failure occurred.\n"
+            "INFO:: This is fine.\nFailed to connect to the database."
+        )
     ]
     result = log_inspector.inspect(log_text)
     assert result is False

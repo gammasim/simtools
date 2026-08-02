@@ -17,7 +17,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.IGNORE_MISSING_DESIGN_MODEL,
         cli.SIMULATION_SOFTWARE,
-        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_PATH_ARGUMENTS,
     ),
     database=True,
 )

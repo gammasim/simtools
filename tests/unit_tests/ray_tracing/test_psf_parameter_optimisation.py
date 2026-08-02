@@ -51,7 +51,7 @@ def mock_args_dict():
     """Create mock arguments dictionary."""
     return {
         "data": "test_data.txt",
-        "model_path": "/path/to/model",
+        "data_search_path": "/path/to/model",
         "ks_statistic": False,
         "learning_rate": 0.1,
         "test": True,
