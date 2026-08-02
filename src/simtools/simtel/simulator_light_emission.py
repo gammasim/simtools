@@ -530,8 +530,10 @@ class SimulatorLightEmission(SimtelRunner):
         if self.light_emission_config["light_source_type"] == "illuminator":
             cmd += [
                 "-A",
-                f"{config_directory}/"
-                f"{self.telescope_model.get_parameter_value('atmospheric_profile')}",
+                (
+                    f"{config_directory}/"
+                    f"{self.telescope_model.get_parameter_value('atmospheric_profile')}"
+                ),
             ]
 
         cmd += ["-o", str(iact_output)]

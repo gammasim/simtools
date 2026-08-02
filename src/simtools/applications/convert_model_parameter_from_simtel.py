@@ -65,7 +65,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.IGNORE_MISSING_DESIGN_MODEL,
         cli.SITE,
         cli.TELESCOPE,
-        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
     initialize_output=True,

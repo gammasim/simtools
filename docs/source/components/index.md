@@ -10,22 +10,18 @@ The main components are:
 
 ## Simulation Software
 
-```{warning}
-Incomplete Documentation.
-```
-
 The following simulation software packages are used by simtools:
 
 - [CORSIKA](corsika.md): Air shower simulation software.
 - [sim_telarray](sim_telarray.md): Telescope simulation software for ray tracing, triggering, and camera-level simulation.
-- ROBAST
+- ROBAST (used externally for dedicated optics workflows)
 
 ```{note}
 Simulation software is external to simtools and developed by the respective teams. The integration of these components into simtools is done through interfaces, allowing for flexibility and future updates.
 ```
 
 
-## Simulation Models
+## Simulation Models and Databases
 
 [Simulation models and parameters](simulation_models.md) describe the properties of all relevant elements of the observatory, including site, telescopes, and calibration devices.
 [Databases](databases.md) are used to store simulation model parameters for efficient querying and management.
@@ -46,8 +42,4 @@ databases.md
 
 ## Additional Components
 
-```{warning}
-Incomplete documentation
-```
-
-- software tool for geomagnetic field determination
+- Geomagnetic-field tools used to derive model inputs.

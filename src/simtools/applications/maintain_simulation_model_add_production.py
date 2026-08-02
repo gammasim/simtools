@@ -29,7 +29,7 @@ The following example applies a patch update with changes defined in a YAML file
 .. code-block:: console
 
     simtools-maintain-simulation-model-add-production \\
-        --model_path ../simulation-models-dev \\
+        --simulation_models_directory ../simulation-models-dev \\
         --model_version 6.0.2
 
 """
@@ -41,6 +41,12 @@ from simtools.configuration import arguments as cli
 from simtools.model import model_repository
 
 _ARGUMENTS = (
+    cli.ArgumentDefinition(
+        "simulation_models_directory",
+        help="Local simulation-model repository to update.",
+        type=Path,
+        required=True,
+    ),
     cli.ArgumentDefinition(
         "setting_workflows_git_tag",
         help=(
@@ -60,7 +66,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.IGNORE_MISSING_DESIGN_MODEL,
-        *cli.PATH_ARGUMENTS,
     ),
 )
 
@@ -71,7 +76,7 @@ def main():
 
     model_repository.generate_new_production(
         model_version=app_context.args["model_version"],
-        simulation_models_path=Path(app_context.args["model_path"]),
+        simulation_models_path=Path(app_context.args["simulation_models_directory"]),
         setting_workflows_git_tag=app_context.args["setting_workflows_git_tag"],
     )
 

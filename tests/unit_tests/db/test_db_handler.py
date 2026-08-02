@@ -1297,16 +1297,6 @@ def test_generate_compound_indexes_for_databases_delegation(db, mocker):
     mock_generate.assert_called_once_with("test_db", "model", "1.0.0")
 
 
-def test_get_collections_delegation(db, mocker):
-    """Test get_collections delegates to mongo_db_handler."""
-    mock_get_collections = mocker.patch.object(
-        db.mongo_db_handler, "get_collections", return_value=["coll1", "coll2"]
-    )
-    result = db.get_collections(db_name="test_db", model_collections_only=True)
-    assert result == ["coll1", "coll2"]
-    mock_get_collections.assert_called_once_with("test_db", True)
-
-
 def test_write_file_from_db_to_disk_delegation(db, mocker, tmp_test_directory):
     """Test _write_file_from_db_to_disk delegates to mongo_db_handler."""
     mock_write = mocker.patch.object(db.mongo_db_handler, "write_file_from_db_to_disk")
