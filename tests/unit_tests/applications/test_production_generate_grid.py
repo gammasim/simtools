@@ -171,7 +171,7 @@ def test_add_arguments_accepts_energy_max_scaling():
 def test_application_parse_allows_show_options_without_required_runtime_arguments(
     monkeypatch, capsys
 ):
-    monkeypatch.setattr("sys.argv", ["production_generate_grid.py", "--show-options", "site"])
+    monkeypatch.setattr("sys.argv", ["production_generate_grid.py", "--show_options", "site"])
 
     with pytest.raises(SystemExit) as exc:
         app.APPLICATION._parse()

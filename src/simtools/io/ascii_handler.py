@@ -353,16 +353,16 @@ def _write_to_yaml(data, output_file, sort_keys):
         If True, sort the keys.
 
     """
-    data = _to_builtin(data)
+    data = to_builtin(data)
     with open(output_file, "w", encoding="utf-8") as file:
         yaml.dump(data, file, indent=2, sort_keys=sort_keys, explicit_start=True)
 
 
-def _to_builtin(data):
+def to_builtin(data):
     """Convert common values to plain Python types for serialization."""
     if isinstance(data, u.Quantity):
         data = {
-            "value": _to_builtin(data.value),
+            "value": to_builtin(data.value),
             "unit": str(data.unit),
         }
     elif isinstance(data, (bytes, np.bytes_)):
@@ -370,13 +370,13 @@ def _to_builtin(data):
     elif isinstance(data, Path):
         data = str(data)
     elif isinstance(data, np.ndarray):
-        data = _to_builtin(data.tolist())
+        data = to_builtin(data.tolist())
     elif isinstance(data, np.generic):
-        data = _to_builtin(data.item())
+        data = to_builtin(data.item())
     elif isinstance(data, dict):
-        data = {str(k): _to_builtin(v) for k, v in data.items()}
+        data = {str(k): to_builtin(v) for k, v in data.items()}
     elif isinstance(data, (list, tuple)):
-        data = [_to_builtin(v) for v in data]
+        data = [to_builtin(v) for v in data]
     return data
 
 

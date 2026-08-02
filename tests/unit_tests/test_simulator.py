@@ -11,6 +11,7 @@ from unittest.mock import call
 import pytest
 from astropy import units as u
 
+from simtools import settings
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.sim_events import file_info
@@ -490,16 +491,26 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
     mock_simtel_io_writer.assert_any_call(["output_file2.simtel.zst"])
 
     assert mock_table_handler.write_table_chunks.call_count == 2
-    mock_table_handler.write_table_chunks.assert_any_call(
-        table_chunks=mock_generator.iter_table_chunks.return_value,
-        output_file=Path("output_file1.reduced_event_data.hdf5"),
-        overwrite_existing=True,
+    output_files = {
+        call.kwargs["output_file"] for call in mock_table_handler.write_table_chunks.call_args_list
+    }
+    assert output_files == {
+        Path("output_file1.reduced_event_data.hdf5"),
+        Path("output_file2.reduced_event_data.hdf5"),
+    }
+    assert all(
+        "metadata_documents" in call.kwargs
+        for call in mock_table_handler.write_table_chunks.call_args_list
     )
-    mock_table_handler.write_table_chunks.assert_any_call(
-        table_chunks=mock_generator.iter_table_chunks.return_value,
-        output_file=Path("output_file2.reduced_event_data.hdf5"),
-        overwrite_existing=True,
-    )
+
+
+def test_save_reduced_event_lists_passes_activity_metadata(array_simulator, mocker):
+    """Pass the configured activity arguments to reduced-event metadata generation."""
+    mock_write = mocker.patch.object(Simulator, "write_reduced_event_lists")
+
+    array_simulator.save_reduced_event_lists()
+
+    assert mock_write.call_args.kwargs["metadata_args"] is settings.config.args
 
 
 def test_save_reduced_event_lists_no_output_files(array_simulator, mocker, caplog):
@@ -540,16 +551,13 @@ def test_write_reduced_event_lists_derives_output_files(mocker, tmp_test_directo
     mock_simtel_io_writer.assert_any_call([str(data_dir / "output_file2.simtel.gz")])
 
     assert mock_table_handler.write_table_chunks.call_count == 2
-    mock_table_handler.write_table_chunks.assert_any_call(
-        table_chunks=mock_generator.iter_table_chunks.return_value,
-        output_file=output_dir / "output_file1.reduced_event_data.hdf5",
-        overwrite_existing=True,
-    )
-    mock_table_handler.write_table_chunks.assert_any_call(
-        table_chunks=mock_generator.iter_table_chunks.return_value,
-        output_file=output_dir / "output_file2.reduced_event_data.hdf5",
-        overwrite_existing=True,
-    )
+    output_files = {
+        call.kwargs["output_file"] for call in mock_table_handler.write_table_chunks.call_args_list
+    }
+    assert output_files == {
+        output_dir / "output_file1.reduced_event_data.hdf5",
+        output_dir / "output_file2.reduced_event_data.hdf5",
+    }
 
 
 def test_write_reduced_event_lists_derives_output_to_input_directory(mocker, tmp_test_directory):
@@ -566,11 +574,9 @@ def test_write_reduced_event_lists_derives_output_to_input_directory(mocker, tmp
     Simulator.write_reduced_event_lists(input_files=[input_file])
 
     mock_simtel_io_writer.assert_called_once_with([input_file])
-    mock_table_handler.write_table_chunks.assert_called_once_with(
-        table_chunks=mock_generator.iter_table_chunks.return_value,
-        output_file=data_dir / "output_file3.reduced_event_data.hdf5",
-        overwrite_existing=True,
-    )
+    call = mock_table_handler.write_table_chunks.call_args
+    assert call.kwargs["output_file"] == data_dir / "output_file3.reduced_event_data.hdf5"
+    assert "metadata_documents" in call.kwargs
 
 
 def test_write_reduced_event_lists_raises_for_mismatched_explicit_output_files(mocker):
@@ -613,14 +619,16 @@ def test_write_reduced_event_lists_from_file_list_in_batches(mocker, tmp_test_di
         mocker.call(input_files[2:4]),
         mocker.call(input_files[4:5]),
     ]
-    assert mock_table_handler.write_table_chunks.call_args_list == [
-        mocker.call(
-            table_chunks=mock_generator.iter_table_chunks.return_value,
-            output_file=output_dir / f"simtel_files.part{index:04d}.reduced_event_data.hdf5",
-            overwrite_existing=True,
-        )
+    assert [
+        call.kwargs["output_file"] for call in mock_table_handler.write_table_chunks.call_args_list
+    ] == [
+        output_dir / f"simtel_files.part{index:04d}.reduced_event_data.hdf5"
         for index in range(1, 4)
     ]
+    assert all(
+        "metadata_documents" in call.kwargs
+        for call in mock_table_handler.write_table_chunks.call_args_list
+    )
 
 
 def test_write_reduced_event_lists_parallelizes_output_batches(mocker):

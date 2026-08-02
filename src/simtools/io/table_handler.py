@@ -11,7 +11,7 @@ from astropy.io import fits
 from astropy.table import Table
 
 from simtools.io import ascii_handler
-from simtools.io.ascii_handler import _to_builtin
+from simtools.io.ascii_handler import to_builtin
 from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
@@ -422,7 +422,7 @@ def _write_metadata_documents(hdf5_file, metadata_documents):
         ):
             raise ValueError(f"Invalid or duplicate metadata document name '{document_name}'.")
         encoded = json.dumps(
-            _to_builtin(document),
+            to_builtin(document),
             cls=ascii_handler.JsonNumpyEncoder,
             sort_keys=True,
         )

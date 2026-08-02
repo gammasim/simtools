@@ -221,11 +221,11 @@ def _resolve_corsika_path(args_dict):
 def _get_single_model_version(args_dict, option_name):
     model_version = args_dict.get("model_version")
     if model_version is None:
-        raise ValueError(f"'--show-options {option_name}' requires '--model_version'.")
+        raise ValueError(f"'--show_options {option_name}' requires '--model_version'.")
     if isinstance(model_version, list):
         if len(model_version) != 1:
             raise ValueError(
-                f"'--show-options {option_name}' requires exactly one '--model_version' value."
+                f"'--show_options {option_name}' requires exactly one '--model_version' value."
             )
         return model_version[0]
     return model_version

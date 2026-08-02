@@ -122,7 +122,8 @@ def inspect_hdf5_entry(file_path, entry_name, max_entries=50):
     if is_table:
         table = read_table_from_hdf5(file_path, entry_name)
         max_entries = _normalize_max_entries(max_entries)
-        return str(table if max_entries is None else table[:max_entries])
+        table = table if max_entries is None else table[:max_entries]
+        return "\n".join(table.pformat(max_lines=-1, max_width=-1))
 
     with h5py.File(file_path, "r") as hdf5_file:
         value = hdf5_file[entry_name][()]

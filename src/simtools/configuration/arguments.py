@@ -439,7 +439,7 @@ DATABASE_ARGUMENTS = (
 MODEL_VERSION = _argument(
     "model_version",
     _SIMULATION_MODEL_GROUP,
-    help="Simulation production model version(s). Use --show-options model_version.",
+    help="Simulation production model version(s). Use --show_options model_version.",
     type=str,
     default=None,
     nargs="+",
@@ -496,7 +496,7 @@ ARRAY_LAYOUT_NAME = _argument(
     help=(
         "Array layout name(s) (e.g., CTAO-North-Alpha, LSTN-01). "
         "Telescope names are assumed as single-telescope layouts. "
-        "Use --show-options array_layout_name."
+        "Use --show_options array_layout_name."
     ),
     nargs="+",
     type=str,
@@ -704,7 +704,7 @@ CORSIKA_HE_INTERACTION = _argument(
     help=(
         "High-energy interaction model for CORSIKA "
         f"(default fallback: {defaults.CORSIKA_HE_INTERACTION}). "
-        "Use --show-options corsika_he_interaction."
+        "Use --show_options corsika_he_interaction."
     ),
     type=str,
     action=helpers.OneOrManyAction,
@@ -718,7 +718,7 @@ CORSIKA_LE_INTERACTION = _argument(
     help=(
         "Low-energy interaction model for CORSIKA "
         f"(default fallback: {defaults.CORSIKA_LE_INTERACTION}). "
-        "Use --show-options corsika_le_interaction."
+        "Use --show_options corsika_le_interaction."
     ),
     type=str,
     action=helpers.OneOrManyAction,
@@ -867,7 +867,6 @@ SHOW_OPTIONS = _argument(
     "show_options",
     "application",
     help="Print available values for a supported option and exit.",
-    aliases=("--show-options",),
     type=str,
     default=None,
 )
