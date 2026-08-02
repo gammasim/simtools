@@ -91,7 +91,7 @@ def test_validate_cumulative_psf_saves_cumulative_and_image_plots(tmp_test_direc
         "zenith_angle": 20.0 * u.deg,
         "source_distance": 10.0 * u.km,
         "data": "measured.dat",
-        "model_path": str(tmp_test_directory),
+        "data_search_path": str(tmp_test_directory),
         "label": "validate_optics",
         "test": True,
     }

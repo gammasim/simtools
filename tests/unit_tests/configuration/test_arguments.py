@@ -6,13 +6,15 @@ import simtools.configuration.argument_helpers as helpers
 from simtools.configuration.arguments import (
     AZIMUTH_ANGLE,
     CORSIKA_CONFIGURATION_ARGUMENTS,
+    CORSIKA_PATH_ARGUMENTS,
     DATABASE_ARGUMENTS,
     EXECUTION_ARGUMENTS,
-    PATH_ARGUMENTS,
+    OUTPUT_PATH_ARGUMENTS,
     PRIMARY,
     PRIMARY_ID_TYPE,
     RUN_TIME_ARGUMENTS,
     SHOWER_ARGUMENTS,
+    SIM_TELARRAY_PATH_ARGUMENTS,
     STANDARD_ARGUMENTS,
     USER_ARGUMENTS,
     ZENITH_ANGLE,
@@ -24,7 +26,8 @@ def test_shared_arguments_have_one_direct_definition():
     bundles = (
         DATABASE_ARGUMENTS,
         EXECUTION_ARGUMENTS,
-        PATH_ARGUMENTS,
+        OUTPUT_PATH_ARGUMENTS,
+        SIM_TELARRAY_PATH_ARGUMENTS,
         RUN_TIME_ARGUMENTS,
         SHOWER_ARGUMENTS,
         USER_ARGUMENTS,
@@ -33,6 +36,15 @@ def test_shared_arguments_have_one_direct_definition():
         isinstance(argument, ArgumentDefinition) for bundle in bundles for argument in bundle
     )
     assert len({argument.name for argument in STANDARD_ARGUMENTS}) == len(STANDARD_ARGUMENTS)
+
+
+def test_path_bundles_are_purpose_specific():
+    assert [argument.name for argument in OUTPUT_PATH_ARGUMENTS] == ["output_path"]
+    assert [argument.name for argument in SIM_TELARRAY_PATH_ARGUMENTS] == ["sim_telarray_path"]
+    assert [argument.name for argument in CORSIKA_PATH_ARGUMENTS] == [
+        "corsika_path",
+        "corsika_interaction_table_path",
+    ]
 
 
 def test_corsika_arguments_retain_argparse_configuration():

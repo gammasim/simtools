@@ -14,7 +14,7 @@ from simtools.configuration.arguments import (
     ARRAY_LAYOUT_NAME,
     DATABASE_ARGUMENTS,
     OUTPUT_ARGUMENTS,
-    PATH_ARGUMENTS,
+    OUTPUT_PATH_ARGUMENTS,
     SHOWER_ARGUMENTS,
     STANDARD_ARGUMENTS,
 )
@@ -27,7 +27,7 @@ logger = logging.getLogger()
 @pytest.fixture
 def configurator(tmp_test_directory, _mock_settings_env_vars):
     config = Configurator()
-    config.parser.add_argument_definitions((*PATH_ARGUMENTS, *STANDARD_ARGUMENTS))
+    config.parser.add_argument_definitions((*OUTPUT_PATH_ARGUMENTS, *STANDARD_ARGUMENTS))
     config.config = vars(config.parser.parse_args(("--output_path", str(tmp_test_directory))))
     return config
 
@@ -46,7 +46,7 @@ def test_command_line_precedence_over_config_file(tmp_test_directory, monkeypatc
     # Initialize configurator with command-line args that differ from config file
     configurator = Configurator()
     configurator.parser.add_argument_definitions(
-        (*PATH_ARGUMENTS, *OUTPUT_ARGUMENTS, *STANDARD_ARGUMENTS)
+        (*OUTPUT_PATH_ARGUMENTS, *OUTPUT_ARGUMENTS, *STANDARD_ARGUMENTS)
     )
     monkeypatch.setattr(
         sys,
@@ -82,7 +82,7 @@ def test_config_file_applies_when_no_command_line(tmp_test_directory, monkeypatc
     # Initialize configurator with only config file (no CLI overrides for these keys)
     configurator = Configurator()
     configurator.parser.add_argument_definitions(
-        (*PATH_ARGUMENTS, *OUTPUT_ARGUMENTS, *STANDARD_ARGUMENTS)
+        (*OUTPUT_PATH_ARGUMENTS, *OUTPUT_ARGUMENTS, *STANDARD_ARGUMENTS)
     )
     monkeypatch.setattr(sys, "argv", ["test_configurator.py", "--config", str(_config_file)])
     config, _ = configurator.configure(initialize_output=True)

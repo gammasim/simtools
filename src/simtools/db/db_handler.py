@@ -328,26 +328,6 @@ class DatabaseHandler:
             collection_name, db_name
         )
 
-    def get_collections(self, db_name=None, model_collections_only=False):
-        """
-        List of collections in the DB.
-
-        Parameters
-        ----------
-        db_name: str
-            Database name.
-        model_collections_only: bool
-            If True, only return model collections (i.e. exclude fs.files, fs.chunks)
-
-        Returns
-        -------
-        list
-            List of collection names
-        """
-        return self.require_mongodb("Listing raw database collections").get_collections(
-            db_name or self.db_name, model_collections_only
-        )
-
     def export_model_file(
         self,
         parameter,

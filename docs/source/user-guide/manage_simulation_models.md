@@ -1,33 +1,29 @@
 # Manage simulation models
 
-```{warning}
-Incomplete documentation.
-```
+Simulation models define the physical and technical state of the observatory used by Monte Carlo
+productions. simtools supports model work in four stages:
 
-## Main steps
+1. **Receive input data** from telescope teams and calibration pipelines.
+2. **Derive parameters** from those inputs with dedicated workflows.
+3. **Validate parameters** against schema constraints and physics or engineering expectations.
+4. **Publish and review** model versions for production use.
 
-### Receive
+This guide focuses on process and responsibilities. Command-line details are documented in the
+[Applications](applications.md) reference.
 
-- setting workflows
-- Interface to CalibPipe / other pipelines / telescope teams
-- Input data description (e.g., what calibration data is required to derive the optical PSF or the single photo-electron spectrum)
+## Typical workflow
 
-### Derive
+1. Prepare or update model-parameter entries in the model repository.
+2. Validate consistency of schema, production tables, and file references.
+3. Compare proposed model changes against a baseline model version.
+4. Promote an accepted model release for production usage.
 
-- detailed description of each setting workflows
-
-### Validate
-
-- validation workflows
-
-### View
-
-- reporting on model parameters
-- reporting on setting and validation
+Model changes should be traceable to calibration inputs, analyses, or review decisions. Each model
+version should be reproducible and attributable.
 
 ## Maintenance
 
-- [Maintenance of simulation models databases](manage_simulation_models/simulation_models_database.md)
+- [Simulation models database and repository operations](manage_simulation_models/simulation_models_database.md)
 - [Import simulation model parameters](manage_simulation_models/model_import.md)
 
 ```{toctree}

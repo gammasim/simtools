@@ -271,7 +271,7 @@ APPLICATION = ApplicationDefinition.for_module(
             include_parameter_file=True,
             include_plot_all=True,
         ),
-        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_PATH_ARGUMENTS,
     ),
     database=True,
     usage="Use '--plot_all_layouts' to plot all layouts for the given site and model version.",

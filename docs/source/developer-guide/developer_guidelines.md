@@ -76,7 +76,7 @@ def main():
 
 Use shared definitions such as `cli.OUTPUT_PATH` directly. Call a definition only to apply a local
 override, for example `cli.MODEL_VERSION(required=True)`. Stable bundles such as
-`cli.PATH_ARGUMENTS` and `cli.SIM_TELARRAY_ARGUMENTS` may be expanded directly. Do not select
+`cli.OUTPUT_PATH_ARGUMENTS` and `cli.SIM_TELARRAY_ARGUMENTS` may be expanded directly. Do not select
 arguments using string names. `ApplicationDefinition` reads command-line options, configuration
 files, and environment variables before delegating to the common application startup code.
 
