@@ -10,11 +10,12 @@ application workflows, validation, reporting, and plotting.
 
 1. Inspect the existing code and tests before changing behavior.
 2. Prefer the narrowest change that fixes the requested issue.
-3. Check whether a local skill applies:
+3. Make architectural changes for the long term. Avoid short-term hacks.
+4. Check whether a local skill applies:
    - `.agents/skills/unit-testing/SKILL.md`
    - `.agents/skills/integration-testing/SKILL.md`
    - `.agents/skills/documentation/SKILL.md`
-4. Keep generated or unrelated user changes intact. Do not revert files you did
+5. Keep generated or unrelated user changes intact. Do not revert files you did
    not intentionally modify.
 
 ## Project Facts
@@ -162,6 +163,7 @@ work.
   `Examples`.
 - Changelog fragment types: `feature`, `bugfix`, `api`, `doc`,
   `maintenance`, `model`. Use the PR number, not the issue number.
+- Do not add development plans to the documentation.
 
 Docs validation:
 
@@ -182,6 +184,7 @@ New application checklist:
 4. Add an integration config in `tests/integration_tests/config/`.
 5. Add the RST application page and applications toctree entry.
 6. Add a changelog fragment when working in a PR flow.
+7. Applications in `src/simtools/applications/` are entry scripts. If possible, avoid adding code here and instead put reusable code in a library module.
 
 New library module checklist:
 
