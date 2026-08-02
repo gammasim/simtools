@@ -89,7 +89,9 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.IGNORE_MISSING_DESIGN_MODEL,
         cli.SITE,
         cli.TELESCOPE,
-        *cli.PATH_ARGUMENTS,
+        cli.DATA_SEARCH_PATH,
+        *cli.OUTPUT_PATH_ARGUMENTS,
+        *cli.SIM_TELARRAY_PATH_ARGUMENTS,
     ),
     database=True,
 )

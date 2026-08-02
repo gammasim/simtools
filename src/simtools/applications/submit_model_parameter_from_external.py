@@ -78,6 +78,12 @@ _ARGUMENTS = (
         nargs="+",
     ),
     cli.ArgumentDefinition(
+        "value_data_path",
+        help="Directory containing files referenced by table-valued parameters.",
+        type=Path,
+        default=None,
+    ),
+    cli.ArgumentDefinition(
         "check_parameter_version",
         help="Check if the parameter version exists in the database",
         action="store_true",
@@ -89,7 +95,7 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
     database=True,
@@ -115,7 +121,7 @@ def main():
         value = simtel_table_reader.resolve_dict_parameter_value(
             value,
             app_context.args["parameter"],
-            app_context.args.get("data_path"),
+            app_context.args.get("value_data_path"),
         )
 
     if app_context.args.get("output_path"):
