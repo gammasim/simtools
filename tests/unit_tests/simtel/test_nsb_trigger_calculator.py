@@ -38,6 +38,22 @@ def test_extract_run_number_returns_none_when_missing(tmp_path):
     assert nsb_trigger_calculator.extract_run_number(missing) is None
 
 
+def test_extract_run_number_from_file_info(tmp_path):
+    hdf5_file = tmp_path / "run_number.reduced_event_data.hdf5"
+    _write_file_info_hdf5(hdf5_file, "gamma_run000123_asum220.simtel.zst")
+
+    assert nsb_trigger_calculator.extract_run_number(hdf5_file) == 123
+
+
+def test_extract_run_number_decodes_bytes_and_returns_none_without_run(tmp_path):
+    hdf5_file = tmp_path / "no_run.reduced_event_data.hdf5"
+    Table({"file_name": [b"gamma_asum220.simtel.zst"]}).write(
+        hdf5_file, path="FILE_INFO", format="hdf5", overwrite=True
+    )
+
+    assert nsb_trigger_calculator.extract_run_number(hdf5_file) is None
+
+
 def test_extract_threshold_asum_and_dsum(tmp_path):
     asum_file = tmp_path / "asum.reduced_event_data.hdf5"
     dsum_file = tmp_path / "dsum.reduced_event_data.hdf5"
@@ -46,6 +62,20 @@ def test_extract_threshold_asum_and_dsum(tmp_path):
 
     assert nsb_trigger_calculator.extract_threshold(asum_file) == 220
     assert nsb_trigger_calculator.extract_threshold(dsum_file) == 450
+
+
+def test_extract_threshold_decodes_bytes(tmp_path):
+    hdf5_file = tmp_path / "bytes_threshold.reduced_event_data.hdf5"
+    Table({"file_name": [b"gamma_run000001_dsum450.simtel.zst"]}).write(
+        hdf5_file, path="FILE_INFO", format="hdf5", overwrite=True
+    )
+
+    assert nsb_trigger_calculator.extract_threshold(hdf5_file) == 450
+
+
+def test_extract_threshold_returns_none_when_file_info_missing(tmp_path):
+    missing = tmp_path / "subdir" / "file.reduced_event_data.hdf5"
+    assert nsb_trigger_calculator.extract_threshold(missing) is None
 
 
 def test_extract_threshold_returns_none_when_missing(tmp_path):
