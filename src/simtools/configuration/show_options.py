@@ -17,7 +17,7 @@ from simtools.utils import names
 
 @dataclass(frozen=True)
 class ShowOptionsResult:
-    """Normalized output for ``--show-options``."""
+    """Normalized output for ``--show_options``."""
 
     option_name: str
     help_text: str | None = None
@@ -43,7 +43,7 @@ def handle_show_options(args_dict, parser):
 
 
 def resolve_show_options(args_dict, parser=None):
-    """Resolve ``--show-options`` using a custom provider or parser metadata."""
+    """Resolve ``--show_options`` using a custom provider or parser metadata."""
     option_name = args_dict["show_options"]
     provider = _SHOW_OPTION_PROVIDERS.get(option_name)
     if provider is not None:
@@ -52,7 +52,7 @@ def resolve_show_options(args_dict, parser=None):
         return _show_argparse_option(option_name, parser)
     supported = ", ".join(sorted(_SHOW_OPTION_PROVIDERS))
     raise ValueError(
-        f"Unsupported option for '--show-options': {option_name}. Supported values: {supported}."
+        f"Unsupported option for '--show_options': {option_name}. Supported values: {supported}."
     )
 
 
@@ -93,7 +93,7 @@ def _find_argparse_action(parser, option_name):
     for action in parser._actions:  # pylint: disable=protected-access
         if action.dest == destination:
             return action
-    raise ValueError(f"Unknown command-line option for --show-options: {option_name}.")
+    raise ValueError(f"Unknown command-line option for --show_options: {option_name}.")
 
 
 def _action_help(action):

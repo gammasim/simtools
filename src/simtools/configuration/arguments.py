@@ -24,7 +24,6 @@ class ArgumentDefinition:
     exclusive_group: str | None
     exclusive_group_required: bool
     preserve_by_version: bool
-    aliases: tuple[str, ...]
     kwargs: Mapping
 
     def __init__(
@@ -35,7 +34,6 @@ class ArgumentDefinition:
         exclusive_group=None,
         exclusive_group_required=False,
         preserve_by_version=False,
-        aliases=(),
         **kwargs,
     ):
         if not name or name.startswith("-"):
@@ -45,7 +43,6 @@ class ArgumentDefinition:
         object.__setattr__(self, "exclusive_group", exclusive_group)
         object.__setattr__(self, "exclusive_group_required", exclusive_group_required)
         object.__setattr__(self, "preserve_by_version", preserve_by_version)
-        object.__setattr__(self, "aliases", tuple(aliases))
         object.__setattr__(self, "kwargs", MappingProxyType(dict(kwargs)))
 
     def __call__(self, **overrides):
@@ -56,7 +53,6 @@ class ArgumentDefinition:
             exclusive_group=self.exclusive_group,
             exclusive_group_required=self.exclusive_group_required,
             preserve_by_version=self.preserve_by_version,
-            aliases=self.aliases,
             **{**self.kwargs, **overrides},
         )
 
@@ -71,7 +67,6 @@ class ArgumentDefinition:
             exclusive_group=self.exclusive_group,
             exclusive_group_required=False,
             preserve_by_version=self.preserve_by_version,
-            aliases=self.aliases,
             **kwargs,
         )
 
@@ -471,7 +466,7 @@ OVERWRITE_MODEL_PARAMETERS = _argument(
 SITE = _argument(
     "site",
     _SIMULATION_MODEL_GROUP,
-    help="Observatory site (e.g., North, South). Use --show-options site.",
+    help="Observatory site (e.g., North, South). Use --show_options site.",
     type=helpers.site,
 )
 
@@ -557,7 +552,7 @@ PRIMARY = _argument(
     _SIMULATION_CONFIGURATION_GROUP,
     help=(
         "Primary particle(s) to simulate. Common names: "
-        f"{', '.join(PrimaryParticle.particle_names().keys())}. Use --show-options primary."
+        f"{', '.join(PrimaryParticle.particle_names().keys())}. Use --show_options primary."
     ),
     type=str.lower,
     action=helpers.OneOrManyAction,
@@ -893,7 +888,6 @@ def _layout_argument(argument, *, required):
         exclusive_group="array layout",
         exclusive_group_required=required,
         preserve_by_version=argument.preserve_by_version,
-        aliases=argument.aliases,
         **argument.kwargs,
     )
 
