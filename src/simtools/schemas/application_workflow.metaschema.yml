@@ -150,6 +150,14 @@ definitions:
               description: |
                 "Expected output of integration test."
               type: object
+            expected_hdf5_datasets:
+              description: "Root-level HDF5 datasets required in the output file."
+              type: array
+              minItems: 1
+              uniqueItems: true
+              items:
+                type: string
+                minLength: 1
           required: ["path_descriptor", "file"]
       file_type:
         description: |
