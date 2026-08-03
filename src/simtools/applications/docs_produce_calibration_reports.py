@@ -15,7 +15,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
-        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_PATH_ARGUMENTS,
     ),
     database=True,
 )

@@ -78,7 +78,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.UPDATED_PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
-        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
     database=True,

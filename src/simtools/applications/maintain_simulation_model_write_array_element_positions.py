@@ -12,7 +12,7 @@
 
     input : str
         File containing a table of array element positions.
-    repository_path : str
+    simulation_models_directory : Path
         Path of local copy of model parameter repository.
     parameter_version : str
         Parameter version.
@@ -27,7 +27,7 @@
 
         simtools-maintain-simulation-model-write-array-element-positions \
             --input tests/resources/telescope_positions-North-ground.ecsv \
-            --output_path /path/to/repository \
+            --simulation_models_directory /path/to/repository \
             --parameter_version 0.1.0 \
             --coordinate_system ground
 
@@ -37,11 +37,13 @@
 
         simtools-maintain-simulation-model-write-array-element-positions \
             --input tests/resources/telescope_positions-North-utm.ecsv \
-            --output_path /path/to/repository \
+            --simulation_models_directory /path/to/repository \
             --parameter_version 0.1.0 \
             --coordinate_system utm
 
 """
+
+from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
@@ -50,6 +52,12 @@ from simtools.layout.array_layout_utils import write_array_elements_from_file_to
 _ARGUMENTS = (
     cli.ArgumentDefinition(
         "input", help="File containing a table of array element positions.", required=False
+    ),
+    cli.ArgumentDefinition(
+        "simulation_models_directory",
+        help="Local simulation-model repository to update.",
+        type=Path,
+        required=True,
     ),
     cli.ArgumentDefinition(
         "coordinate_system",
@@ -68,11 +76,8 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         cli.PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
-        *cli.PATH_ARGUMENTS,
-        *cli.OUTPUT_ARGUMENTS,
     ),
     database=True,
-    initialize_output=True,
 )
 
 
@@ -83,7 +88,7 @@ def main():
     write_array_elements_from_file_to_repository(
         coordinate_system=app_context.args["coordinate_system"],
         input_file=app_context.args["input"],
-        repository_path=app_context.args["output_path"],
+        repository_path=app_context.args["simulation_models_directory"],
         parameter_version=app_context.args["parameter_version"],
     )
 

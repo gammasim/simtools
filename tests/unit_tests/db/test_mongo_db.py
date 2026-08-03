@@ -125,7 +125,6 @@ def test_init_with_valid_config(mocker, valid_db_config):
     mocker.patch("simtools.db.mongo_db.MongoClient", return_value=mocker.MagicMock())
     handler = mongo_db.MongoDBHandler(valid_db_config)
     assert handler.db_config == valid_db_config
-    assert handler.list_of_collections == {}
 
 
 def test_init_with_none_config():
@@ -318,35 +317,6 @@ def test_get_collection(mocker, mongo_handler):
     mock_client.__getitem__.assert_called_once_with("test_db")
     mock_db.__getitem__.assert_called_once_with("test_collection")
     assert result == mock_collection
-
-
-def test_get_collections(mocker, mongo_handler):
-    """Test get_collections method."""
-    mock_client = mocker.MagicMock()
-    mock_db = mocker.MagicMock()
-    mock_db.list_collection_names.return_value = ["coll1", "coll2", "fs.files", "fs.chunks"]
-    mock_client.__getitem__.return_value = mock_db
-
-    mongo_db.MongoDBHandler.db_client = mock_client
-
-    result = mongo_handler.get_collections("test_db", model_collections_only=False)
-
-    assert result == ["coll1", "coll2", "fs.files", "fs.chunks"]
-    assert "test_db" in mongo_handler.list_of_collections
-
-
-def test_get_collections_model_only(mocker, mongo_handler):
-    """Test get_collections with model_collections_only=True."""
-    mock_client = mocker.MagicMock()
-    mock_db = mocker.MagicMock()
-    mock_db.list_collection_names.return_value = ["coll1", "coll2", "fs.files", "fs.chunks"]
-    mock_client.__getitem__.return_value = mock_db
-
-    mongo_db.MongoDBHandler.db_client = mock_client
-
-    result = mongo_handler.get_collections("test_db", model_collections_only=True)
-
-    assert result == ["coll1", "coll2"]
 
 
 def test_list_database_names(mocker, mongo_handler):

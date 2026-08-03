@@ -102,7 +102,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         *cli.layout_selection_arguments(required=False),
-        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
     database=True,

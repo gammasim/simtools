@@ -98,7 +98,8 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.AZIMUTH_ANGLE,
         cli.ZENITH_ANGLE,
         *cli.SIM_TELARRAY_ARGUMENTS,
-        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_PATH_ARGUMENTS,
+        *cli.SIM_TELARRAY_PATH_ARGUMENTS,
     ),
     database=True,
 )

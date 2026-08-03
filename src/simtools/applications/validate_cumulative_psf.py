@@ -88,7 +88,9 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         cli.TELESCOPE,
-        *cli.PATH_ARGUMENTS,
+        cli.DATA_SEARCH_PATH,
+        *cli.OUTPUT_PATH_ARGUMENTS,
+        *cli.SIM_TELARRAY_PATH_ARGUMENTS,
     ),
     database=True,
 )

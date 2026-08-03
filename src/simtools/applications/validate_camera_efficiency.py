@@ -92,7 +92,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.TELESCOPE,
         cli.ZENITH_ANGLE,
         cli.AZIMUTH_ANGLE,
-        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_PATH_ARGUMENTS,
     ),
     database=True,
 )

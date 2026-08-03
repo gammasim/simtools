@@ -105,7 +105,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         cli.TELESCOPE,
-        *cli.PATH_ARGUMENTS,
+        *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
     ),
     initialize_output=True,
