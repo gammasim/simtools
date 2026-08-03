@@ -342,7 +342,12 @@ class Configurator:
         """Return tokens for a boolean parser action, or None for non-boolean values."""
         if not isinstance(value, bool):
             return None
-        if action is not None and action.__class__.__name__ == "_StoreFalseAction":
+        if action is None:
+            return [option] if value else []
+        class_name = action.__class__.__name__
+        if class_name == "BooleanOptionalAction":
+            return [option] if value else [action.option_strings[1]]
+        if class_name == "_StoreFalseAction":
             return [option] if not value else []
         return [option] if value else []
 

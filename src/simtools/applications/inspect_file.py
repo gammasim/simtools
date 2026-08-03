@@ -12,6 +12,8 @@ input_file (str, required)
     Simulation-related file to inspect.
 max_entries (int, optional)
     Maximum number of entries or preview lines to print. Use 0 for no limit.
+show_entry (str, optional)
+    Print the content of one HDF5 root dataset instead of the file structure report.
 """
 
 from pathlib import Path
@@ -31,6 +33,13 @@ _ARGUMENTS = (
         default=50,
         type=int,
     ),
+    cli.ArgumentDefinition(
+        "show_entry",
+        help="Print one HDF5 root dataset, for example SIMULATION_METADATA or SHOWERS.",
+        required=False,
+        default=None,
+        type=str,
+    ),
 )
 
 
@@ -48,6 +57,7 @@ def main():
         app_context.args["input_file"],
         max_entries=app_context.args["max_entries"],
         format_report=True,
+        entry_name=app_context.args["show_entry"],
     )
     print("\n".join(reports))
 
