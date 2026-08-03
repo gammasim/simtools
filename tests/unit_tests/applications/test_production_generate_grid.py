@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+import simtools.applications.plot_array_layout as plot_array_layout_app
 import simtools.applications.production_generate_grid as app
 from simtools.configuration.commandline_parser import CommandLineParser
 
@@ -40,7 +41,6 @@ def test_full_parser_retains_supported_shared_arguments():
 
     expected = {
         "array_layout_name",
-        "array_element_list",
         "azimuth_angle",
         "correct_for_b_field_alignment",
         "core_scatter",
@@ -48,7 +48,6 @@ def test_full_parser_retains_supported_shared_arguments():
         "energy_range",
         "eslope",
         "event_number_first_shower",
-        "ignore_missing_design_model",
         "model_version",
         "output_file",
         "output_path",
@@ -65,8 +64,15 @@ def test_full_parser_retains_supported_shared_arguments():
         "zenith_angle",
     }
     assert expected <= set(actions)
+    assert "array_element_list" not in actions
     assert actions["output_file"].default == "job_grid.ecsv"
     assert actions["output_file"].help == "Output ECSV production job grid."
+
+
+def test_plot_array_layout_parser_retains_ignore_missing_design_model():
+    actions = {action.dest for action in plot_array_layout_app.APPLICATION.build_parser()._actions}
+
+    assert "ignore_missing_design_model" in actions
 
 
 def test_full_parser_accepts_minimum_direct_configuration():
@@ -89,6 +95,40 @@ def test_full_parser_accepts_minimum_direct_configuration():
     assert args.site == "North"
     assert args.array_layout_name == ["LSTN-01"]
     assert args.output_file == "job_grid.ecsv"
+
+
+def test_full_parser_requires_array_layout_name():
+    with pytest.raises(SystemExit):
+        _full_parser().parse_args(
+            [
+                "--model_version",
+                "7.0.0",
+                "--site",
+                "North",
+                "--primary",
+                "gamma",
+                "--showers_per_run",
+                "1000",
+            ]
+        )
+
+
+def test_full_parser_rejects_array_element_list():
+    with pytest.raises(SystemExit):
+        _full_parser().parse_args(
+            [
+                "--model_version",
+                "7.0.0",
+                "--site",
+                "North",
+                "--array_element_list",
+                "LSTN-01",
+                "--primary",
+                "gamma",
+                "--showers_per_run",
+                "1000",
+            ]
+        )
 
 
 def test_add_arguments_accepts_compact_axis_definitions():
