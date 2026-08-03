@@ -399,8 +399,8 @@ class Simulator:
             return
 
         Simulator.write_reduced_event_lists(
-            input_files=self.get_files(file_type="sim_telarray_output"),
-            output_files=self.get_files(file_type="sim_telarray_event_data"),
+            input_files=general.ensure_list(self.get_files(file_type="sim_telarray_output")),
+            output_files=general.ensure_list(self.get_files(file_type="sim_telarray_event_data")),
             metadata_args=settings.config.args,
             array_models=self.array_models,
         )
@@ -630,7 +630,7 @@ class Simulator:
         )
         reduced_event_files = (
             general.ensure_list(self.get_files(file_type="sim_telarray_event_data"))
-            if settings.config.args.get("save_reduced_event_lists")
+            if settings.config.args.get("reduced_event_lists")
             else []
         )
 
@@ -758,7 +758,7 @@ class Simulator:
                 curved_atmo=_corsika_config.use_curved_atmosphere,
             )
 
-        if settings.config.args.get("save_reduced_event_lists"):
+        if settings.config.args.get("reduced_event_lists"):
             output_validator.validate_sim_events(
                 data_files=self.get_files(file_type="sim_telarray_event_data"),
                 expected_mc_events=expected_mc_events,

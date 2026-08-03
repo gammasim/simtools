@@ -396,7 +396,7 @@ def test_pack_for_register_with_multiple_versions(
         if file_type == "sim_telarray_histogram":
             return [file_patterns["histogram"].format(v) for v in model_versions]
         if file_type == "sim_telarray_event_data":
-            return []  # Empty since save_reduced_event_lists is not set
+            return []  # Empty since reduced_event_lists is not set
         return []
 
     mocker.patch.object(local_shower_array_simulator, "get_files", side_effect=mock_get_files)
@@ -458,13 +458,13 @@ def test_initialize_simulation_runner_saves_corsika_output(shower_array_simulato
     assert runner_class.call_args.kwargs["save_corsika_output"] is True
 
 
-def test_save_reduced_event_lists_not_sim_telarray(shower_simulator, caplog):
+def test_reduced_event_lists_not_sim_telarray(shower_simulator, caplog):
     with caplog.at_level(logging.WARNING):
         shower_simulator.save_reduced_event_lists()
     assert "Reduced event lists can only be saved for sim_telarray simulations." in caplog.text
 
 
-def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
+def test_reduced_event_lists_sim_telarray(array_simulator, mocker):
     mock_output_files = ["output_file1.simtel.zst", "output_file2.simtel.zst"]
     mock_event_data_files = [
         "output_file1.reduced_event_data.hdf5",
@@ -504,7 +504,7 @@ def test_save_reduced_event_lists_sim_telarray(array_simulator, mocker):
     )
 
 
-def test_save_reduced_event_lists_passes_activity_metadata(array_simulator, mocker):
+def test_reduced_event_lists_passes_activity_metadata(array_simulator, mocker):
     """Pass the configured activity arguments to reduced-event metadata generation."""
     mock_write = mocker.patch.object(Simulator, "write_reduced_event_lists")
 
@@ -513,7 +513,26 @@ def test_save_reduced_event_lists_passes_activity_metadata(array_simulator, mock
     assert mock_write.call_args.kwargs["metadata_args"] is settings.config.args
 
 
-def test_save_reduced_event_lists_no_output_files(array_simulator, mocker, caplog):
+def test_reduced_event_lists_normalizes_single_files(array_simulator, mocker):
+    """Normalize singleton file paths before writing reduced event lists."""
+    input_file = Path("output_file.simtel.zst")
+    output_file = Path("output_file.reduced_event_data.hdf5")
+    mocker.patch.object(
+        array_simulator,
+        "get_files",
+        side_effect=lambda file_type: (
+            input_file if file_type == "sim_telarray_output" else output_file
+        ),
+    )
+    mock_write = mocker.patch.object(Simulator, "write_reduced_event_lists")
+
+    array_simulator.save_reduced_event_lists()
+
+    assert mock_write.call_args.kwargs["input_files"] == [input_file]
+    assert mock_write.call_args.kwargs["output_files"] == [output_file]
+
+
+def test_reduced_event_lists_no_output_files(array_simulator, mocker, caplog):
     """Test save_reduced_event_lists with no output files available."""
     mocker.patch.object(array_simulator, "get_files", return_value=[])
     mock_simtel_io_writer = mocker.patch("simtools.sim_events.writer.EventDataWriter")
