@@ -186,7 +186,7 @@ class ProductionGridPlotter:
         """
         azimuth = self._extract_first_available_quantity_value(
             point,
-            ("azimuth", "azimuth_angle"),
+            ("azimuth_angle",),
         )
         zenith = self._extract_first_available_quantity_value(point, ("zenith_angle",))
         ra = self._extract_first_available_quantity_value(point, ("ra", "ra_value"))

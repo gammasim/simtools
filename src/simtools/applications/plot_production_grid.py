@@ -1,41 +1,6 @@
 #!/usr/bin/python3
 
-r"""
-Plot production grid points on sky coordinate projections.
-
-This application visualizes production grid points on a polar sky projection using
-altitude / azimuth coordinates. The input is an ECSV production-grid table generated
-by ``simtools-production-generate-grid``.
-
-Command line arguments
-----------------------
-grid_points_file (str, required)
-    Path to the ECSV file containing grid points.
-plot_ra_dec_tracks (flag, optional)
-    If provided, plot RA/Dec guide tracks on top of the sky projection. When native
-    RA/Dec grid points are present (grid file contains explicit ``ra`` and ``dec``
-    columns), thin grid lines are inferred automatically.
-    Default: False.
-dec_values (list of float, optional)
-    Optional list of declination values in degrees to plot as manual tracks. If not
-    provided, tracks are inferred from native RA/Dec grid points when possible.
-    Default: None.
-
-Example
--------
-To plot grid points on a sky projection:
-
-.. code-block:: console
-
-    simtools-plot-production-grid \
-        --grid_points_file path/to/grid_points_production.ecsv \
-        --plot_ra_dec_tracks
-
-Output
-------
-The output figure shows local Alt/Az (polar projection). The equatorial
-RA/Dec panel is added when RA/Dec columns are available in the grid file.
-"""
+"""Plot production-grid points on sky coordinate projections."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

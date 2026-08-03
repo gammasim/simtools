@@ -29,7 +29,6 @@ def _write_grid_file(tmp_test_directory, file_name, grid_points):
 
     table = Table(rows=rows)
     unit_mapping = {
-        "azimuth": "deg",
         "azimuth_angle": "deg",
         "zenith_angle": "deg",
         "ra": "deg",
@@ -61,7 +60,7 @@ def test_normalize_altaz_point(tmp_test_directory):
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_altaz.ecsv",
-        [{"azimuth": 180.0, "zenith_angle": 20.0, "nsb_level": 0.0}],
+        [{"azimuth_angle": 180.0, "zenith_angle": 20.0, "nsb_level": 0.0}],
     )
 
     plotter = _create_plotter(
@@ -163,7 +162,7 @@ def test_plot_sky_projection_creates_output_altaz_only(tmp_test_directory):
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_altaz_only.ecsv",
-        [{"azimuth": 120.0, "zenith_angle": 35.0}],
+        [{"azimuth_angle": 120.0, "zenith_angle": 35.0}],
     )
     output_path = Path(tmp_test_directory) / "output"
 
@@ -182,7 +181,7 @@ def test_plot_sky_projection_creates_output_with_radec_panel(tmp_test_directory)
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_altaz_radec.ecsv",
-        [{"azimuth": 100.0, "zenith_angle": 25.0, "ra": 180.0, "dec": -10.0}],
+        [{"azimuth_angle": 100.0, "zenith_angle": 25.0, "ra": 180.0, "dec": -10.0}],
     )
     output_path = Path(tmp_test_directory) / "output"
 
@@ -378,7 +377,7 @@ def test_plot_sky_projection_logs_tracks_disabled(tmp_test_directory, caplog):
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_altaz_with_radec_for_tracks.ecsv",
-        [{"azimuth": 10.0, "zenith_angle": 20.0, "ra": 120.0, "dec": -20.0}],
+        [{"azimuth_angle": 10.0, "zenith_angle": 20.0, "ra": 120.0, "dec": -20.0}],
     )
     plotter = _create_plotter(
         grid_file=grid_file,
@@ -396,7 +395,7 @@ def test_plot_sky_projection_writes_grid_density_subtitle(tmp_test_directory, mo
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_with_density_meta.ecsv",
-        [{"azimuth": 100.0, "zenith_angle": 25.0, "ra": 180.0, "dec": -10.0}],
+        [{"azimuth_angle": 100.0, "zenith_angle": 25.0, "ra": 180.0, "dec": -10.0}],
     )
     table = Table.read(grid_file, format="ascii.ecsv")
     table.meta["direction_grid_density"] = 0.25
