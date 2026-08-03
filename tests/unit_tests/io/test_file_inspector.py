@@ -83,8 +83,7 @@ def test_inspect_hdf5_entry_reads_table_with_limit(tmp_test_directory):
 
 def test_inspect_hdf5_entry_rejects_missing_root_entry(tmp_test_directory):
     file_path = tmp_test_directory / "empty.hdf5"
-    with h5py.File(file_path, "w"):
-        pass
+    h5py.File(file_path, "w").close()
 
     with pytest.raises(KeyError, match="not found"):
         inspect_hdf5_entry(file_path, "MISSING")

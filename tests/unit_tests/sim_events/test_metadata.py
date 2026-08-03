@@ -2,6 +2,7 @@
 
 import astropy.units as u
 import pytest
+from bson.objectid import ObjectId
 
 from simtools.model.array_model import ArrayModel
 from simtools.sim_events.metadata import (
@@ -69,6 +70,35 @@ def test_array_model_export_keeps_telescope_context_and_parameter_records():
         "value": 2.0,
         "unit": "km",
     }
+
+
+def test_array_model_export_excludes_database_bookkeeping_fields():
+    """MongoDB bookkeeping fields are not included in simulation metadata."""
+    array_model = ArrayModel.__new__(ArrayModel)
+    array_model.model_version = "7.0.0"
+    array_model.layout_name = "layout"
+    array_model.array_elements = {}
+    database_parameter = {
+        "value": [],
+        "unit": None,
+        "_id": ObjectId(),
+        "entry_date": "database timestamp",
+    }
+    array_model.site_model = type(
+        "Site",
+        (),
+        {
+            "site": "North",
+            "model_version": "7.0.0",
+            "parameters": {"array_layouts": database_parameter},
+        },
+    )()
+    array_model.telescope_models = {}
+    array_model.calibration_models = {}
+
+    exported = array_model.to_simulation_metadata_dict()
+
+    assert exported["site_model"]["parameters"] == {"array_layouts": {"value": [], "unit": None}}
 
 
 def test_validate_simulation_metadata_rejects_model_arrays_when_unavailable():

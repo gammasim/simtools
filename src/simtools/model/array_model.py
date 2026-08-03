@@ -18,6 +18,20 @@ from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel import simtel_config_writer, simtel_seeds
 from simtools.utils import general, names
 
+_DATABASE_METADATA_FIELDS = {"_id", "entry_date"}
+
+
+def _export_parameter_records(parameters):
+    """Remove database bookkeeping fields from exported parameter records."""
+    return {
+        parameter_name: {
+            key: value
+            for key, value in parameter_record.items()
+            if key not in _DATABASE_METADATA_FIELDS
+        }
+        for parameter_name, parameter_record in parameters.items()
+    }
+
 
 class ArrayModel:
     """
@@ -204,13 +218,13 @@ class ArrayModel:
                     "model_name": device_model.name,
                     "model_version": device_model.model_version,
                     "site_name": device_model.site,
-                    "parameters": device_model.parameters,
+                    "parameters": _export_parameter_records(device_model.parameters),
                 }
             telescopes[telescope_name] = {
                 "design_model": telescope_model.design_model,
                 "model_version": telescope_model.model_version,
                 "site_name": telescope_model.site,
-                "parameters": telescope_model.parameters,
+                "parameters": _export_parameter_records(telescope_model.parameters),
                 "calibration_devices": devices,
             }
 
@@ -223,7 +237,7 @@ class ArrayModel:
                 "site_model": {
                     "site_name": self.site_model.site,
                     "model_version": self.site_model.model_version,
-                    "parameters": self.site_model.parameters,
+                    "parameters": _export_parameter_records(self.site_model.parameters),
                 },
                 "telescopes": telescopes,
             }
