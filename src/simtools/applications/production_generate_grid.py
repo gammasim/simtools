@@ -58,12 +58,7 @@ _GRID_ARGUMENTS = (
         metavar="FILE",
         help="ECSV lookup table of direction-dependent CORSIKA simulation limits.",
     ),
-    cli.ArgumentDefinition(
-        "number_of_runs",
-        help="Runs generated per grid point.",
-        type=scientific_int,
-        default=None,
-    ),
+    cli.NUMBER_OF_RUNS(help="Runs generated per grid point."),
     cli.ArgumentDefinition(
         "total_showers",
         help=(

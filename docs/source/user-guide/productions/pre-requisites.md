@@ -76,7 +76,7 @@ Deterministic example using the test lookup table:
 
 ```bash
 simtools-plot-corsika-limits \
-    --input tests/resources/corsika_simulation_limits/corsika_limits_north.ecsv \
+    --corsika_limits_file tests/resources/corsika_simulation_limits/corsika_limits_north.ecsv \
     --output_path simtools-output
 ```
 

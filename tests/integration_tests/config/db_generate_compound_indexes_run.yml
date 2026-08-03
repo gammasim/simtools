@@ -1,12 +1,8 @@
 ---
 applications:
-- application: simtools-db-add-file-to-db
+- application: simtools-db-generate-compound-indexes
   configuration:
     database_name: sandbox
-    file_name:
-    - ${static:MLTdata-preproduction.meta.yml}
-    - ${static:MLTdata-preproduction.ecsv}
-    test_db: true
   requires_mongodb: true
   skip_for_production_db: true
   test_name: run

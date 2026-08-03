@@ -17,7 +17,7 @@ r"""
     input_path (str, required if file_name is not given)
         A directory with files to upload to the DB. \
         All files in the directory with a predefined list of extensions will be uploaded.
-    db (str)
+    database_name (str)
         The DB to insert the files to.
 
     Example
@@ -26,7 +26,7 @@ r"""
 
     .. code-block:: console
 
-        simtools-db-add-file-to-db --file_name test_application.dat --db test-data
+        simtools-db-add-file-to-db --file_name test_application.dat --database_name test-data
 
     Expected final print-out message:
 
@@ -60,7 +60,7 @@ _ARGUMENTS = (
         help="A directory with files to upload to the DB.",
         type=Path,
     ),
-    cli.ArgumentDefinition("db", type=str, help="The database to insert the files to."),
+    cli.DATABASE_NAME,
     cli.ArgumentDefinition(
         "test_db",
         help="Use sandbox database. Drop all data after the operation.",
@@ -139,24 +139,26 @@ def confirm_and_insert_files(files_to_insert, args_dict, db, logger):
     plural = "" if len(files_to_insert) == 1 else "s"
 
     if args_dict.get("test_db", False):
-        args_dict["db"] = args_dict["db"] + gen.get_uuid()
-        logger.info(f"Using test database: {args_dict['db']}")
+        args_dict["database_name"] = args_dict["database_name"] + gen.get_uuid()
+        logger.info(f"Using test database: {args_dict['database_name']}")
 
-    print(f"Should the following file{plural} be inserted to the {args_dict['db']} DB?:\n")
+    print(
+        f"Should the following file{plural} be inserted to the {args_dict['database_name']} DB?:\n"
+    )
     print(*files_to_insert, sep="\n")
     print()
 
     if gen.user_confirm():
         for file_to_insert_now in files_to_insert:
-            db.insert_file_to_db(file_to_insert_now, args_dict["db"])
-            logger.info(f"File {file_to_insert_now} inserted to {args_dict['db']} DB")
+            db.insert_file_to_db(file_to_insert_now, args_dict["database_name"])
+            logger.info(f"File {file_to_insert_now} inserted to {args_dict['database_name']} DB")
     else:
-        logger.info(f"Aborted, did not insert file{plural} to the {args_dict['db']} DB")
+        logger.info(f"Aborted, did not insert file{plural} to the {args_dict['database_name']} DB")
 
     # drop test database; be safe and required DB name is sandbox
-    if args_dict.get("test_db", False) and "sandbox" in args_dict["db"]:
-        logger.info(f"Test database used. Dropping all data from {args_dict['db']}")
-        db.mongo_db_handler.db_client.drop_database(args_dict["db"])
+    if args_dict.get("test_db", False) and "sandbox" in args_dict["database_name"]:
+        logger.info(f"Test database used. Dropping all data from {args_dict['database_name']}")
+        db.mongo_db_handler.db_client.drop_database(args_dict["database_name"])
 
 
 def main():
