@@ -119,8 +119,9 @@ class ApplicationDefinition:
     @staticmethod
     def _show_options_requested():
         """Return whether the command line requests option discovery."""
-        option_names = {"--show_options", "--show-options", "--show_option", "--show-option"}
-        return any(argument.split("=", maxsplit=1)[0] in option_names for argument in sys.argv[1:])
+        return any(
+            argument.split("=", maxsplit=1)[0] == "--show_options" for argument in sys.argv[1:]
+        )
 
     def _validate_required_values(self, args, parser):
         """Validate declarations deferred until after the post-parse hook."""

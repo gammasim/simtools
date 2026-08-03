@@ -38,6 +38,15 @@ def test_add_argument_definitions_registers_shared_arguments():
     assert_quantity_allclose(args.energy_range[1], 2 * u.TeV)
 
 
+def test_parser_rejects_abbreviated_options():
+    """Explicit command-line options must be spelled out completely."""
+    parser = CommandLineParser()
+    parser.add_argument_definitions((ArgumentDefinition("telescopes", nargs="+"),))
+
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--telescope", "MSTN-04"])
+
+
 def test_add_argument_definitions_registers_hadronic_transition_energy():
     """The CORSIKA transition energy is parsed and converted to GeV."""
     parser = CommandLineParser()
