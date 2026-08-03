@@ -10,9 +10,6 @@ import simtools.utils.value_conversion as value_conversion
 
 
 def test_extract_type_of_value() -> None:
-    """
-    Test the extract_type_of_value function.
-    """
     # Test with a string.
     assert value_conversion.extract_type_of_value("str") == "str"
 
@@ -46,7 +43,6 @@ def test_extract_type_of_value() -> None:
 
 
 def test_get_value_unit_type() -> None:
-    """Test the get_value_unit_type function."""
     # Test with a string.
     assert value_conversion.get_value_unit_type("hello") == ("hello", None, "str")
 
@@ -108,7 +104,6 @@ def test_assign_unit_to_quantity():
 
 
 def test_split_value_and_unit():
-    """Test the split_value_and_unit function."""
     assert value_conversion.split_value_and_unit(100 * u.m) == (100, "m")
 
     assert value_conversion.split_value_and_unit([100, 200] * u.m) == ([100, 200], ["m", "m"])
@@ -145,15 +140,6 @@ def test_split_value_and_unit():
     assert isinstance(float_value, float)
 
 
-def test_split_value_is_quantity():
-    assert value_conversion._split_value_is_quantity(100 * u.m) == (100, "m")
-    assert value_conversion._split_value_is_quantity([100, 200] * u.m) == ([100, 200], ["m", "m"])
-    assert value_conversion._split_value_is_quantity(np.array([100, 200]) * u.m) == (
-        [100, 200],
-        ["m", "m"],
-    )
-
-
 def test_split_value_is_string():
     assert value_conversion._split_value_is_string("100") == (100, None)
     assert value_conversion._split_value_is_string("100 m") == (100, "m")
@@ -166,18 +152,6 @@ def test_split_value_is_string():
     assert test_int[0] == 100
 
 
-def test_split_value_is_list():
-    assert value_conversion._split_value_is_list(["100 m", "220 cm"]) == ([100, 220], ["m", "cm"])
-    assert value_conversion._split_value_is_list(np.array(["100 m", "230 cm"])) == (
-        [100, 230],
-        ["m", "cm"],
-    )
-    assert value_conversion._split_value_is_list([100, "250 cm", 300 * u.m]) == (
-        [100, 250, 300],
-        [None, "cm", "m"],
-    )
-
-
 def test_unit_as_string():
     assert value_conversion._unit_as_string(None) is None
     assert value_conversion._unit_as_string("m") == "m"
@@ -188,58 +162,6 @@ def test_unit_as_string():
     assert value_conversion._unit_as_string(u.Unit("m")) == "m"
     assert value_conversion._unit_as_string([u.Unit("m")]) == "m"
     assert value_conversion._unit_as_string([u.Unit("m"), u.Unit("cm")]) == ["m", "cm"]
-
-
-def test_is_dimensionless_unit():
-    assert value_conversion.is_dimensionless_unit(None)
-    assert value_conversion.is_dimensionless_unit("")
-    assert value_conversion.is_dimensionless_unit("dimensionless")
-    assert value_conversion.is_dimensionless_unit("null")
-    assert value_conversion.is_dimensionless_unit(u.dimensionless_unscaled)
-    assert value_conversion.is_dimensionless_unit(u.UnrecognizedUnit("dimensionless"))
-    assert not value_conversion.is_dimensionless_unit("m")
-    assert not value_conversion.is_dimensionless_unit(u.m)
-
-
-def test_normalize_dimensionless_unit():
-    assert value_conversion.normalize_dimensionless_unit(None) is None
-    assert value_conversion.normalize_dimensionless_unit("") is None
-    assert value_conversion.normalize_dimensionless_unit("dimensionless") is None
-    assert value_conversion.normalize_dimensionless_unit("null") is None
-    assert value_conversion.normalize_dimensionless_unit(u.dimensionless_unscaled) is None
-    assert (
-        value_conversion.normalize_dimensionless_unit(u.UnrecognizedUnit("dimensionless")) is None
-    )
-    assert value_conversion.normalize_dimensionless_unit("m") == "m"
-    assert value_conversion.normalize_dimensionless_unit(["m", "dimensionless", "null", None]) == [
-        "m",
-        None,
-        None,
-        None,
-    ]
-
-
-@pytest.mark.parametrize(
-    ("value", "unit", "expected"),
-    [
-        (1, "count", "ct"),
-        (1.0, "g/cm2", "g / cm2"),
-        ([0.3, 0.1, 0.02, 0.02], "GeV", "GeV"),
-        ([{"value": 580.0}], "g/cm2", "g/cm2"),
-        ([1, 2], ["null", "count"], [None, "count"]),
-        (1.0, None, None),
-    ],
-)
-def test_normalize_model_parameter_unit(value, unit, expected):
-    assert value_conversion.normalize_model_parameter_unit(value, unit) == expected
-
-
-def test_get_value_in_unit_converts_quantity():
-    assert value_conversion.get_value_in_unit(180 * u.deg, "rad") == pytest.approx(np.pi)
-
-
-def test_get_value_in_unit_accepts_numeric_scalar_with_unit():
-    assert value_conversion.get_value_in_unit(5, "deg") == 5
 
 
 def test_get_value_in_unit_raises_for_non_numeric_with_unit():

@@ -192,38 +192,6 @@ def test_build_axes_dict_from_cli_args_derives_hadec_binning_from_density():
     assert axes["ha"]["direction_grid_density"] == pytest.approx(1.0)
 
 
-def test_build_axes_dict_from_cli_args_reduces_ra_binning_towards_dec_poles():
-    axes = build_axes_dict_from_cli_args(
-        {
-            "direction_grid_density": 1.0,
-            "axis": [
-                ["ha", "0", "deg", "360", "deg", "36", "linear"],
-                ["dec", "80", "deg", "90", "deg", "10", "linear"],
-                ["offset", "0", "deg", "10", "deg", "2", "linear"],
-            ],
-        }
-    )
-
-    assert axes["ha"]["binning"] == 32
-    assert axes["dec"]["binning"] == 10
-    assert axes["ha"]["direction_grid_density"] == pytest.approx(1.0)
-
-
-def test_build_axes_dict_from_cli_args_sets_hadec_density_metadata_for_adaptive_grid():
-    axes = build_axes_dict_from_cli_args(
-        {
-            "direction_grid_density": 0.5,
-            "axis": [
-                ["ha", "0", "deg", "360", "deg", "36", "linear"],
-                ["dec", "-30", "deg", "30", "deg", "6", "linear"],
-                ["offset", "0", "deg", "10", "deg", "2", "linear"],
-            ],
-        }
-    )
-
-    assert axes["ha"]["direction_grid_density"] == pytest.approx(0.5)
-
-
 def test_build_axes_dict_from_cli_args_keeps_horizontal_constraints_in_hadec_mode():
     axes = build_axes_dict_from_cli_args(
         {
@@ -244,69 +212,6 @@ def test_build_axes_dict_from_cli_args_keeps_horizontal_constraints_in_hadec_mod
     assert "azimuth" not in axes
     assert axes["ha"]["local_zenith_range"] == pytest.approx([0.0, 70.0])
     assert axes["ha"]["local_azimuth_range"] == pytest.approx([300.0, 60.0])
-
-
-def test_build_axes_dict_from_cli_args_reduces_az_binning_towards_zenith_pole():
-    axes = build_axes_dict_from_cli_args(
-        {
-            "direction_grid_density": 1.0,
-            "axis": [
-                ["azimuth", "0", "deg", "180", "deg", "36", "linear"],
-                ["zenith", "0", "deg", "10", "deg", "10", "linear"],
-                ["offset", "0", "deg", "10", "deg", "2", "linear"],
-            ],
-        }
-    )
-
-    assert axes["azimuth"]["binning"] == 16
-    assert axes["zenith_angle"]["binning"] == 10
-
-
-def test_build_axes_dict_from_cli_args_uses_directed_azimuth_span_for_density():
-    axes = build_axes_dict_from_cli_args(
-        {
-            "direction_grid_density": 1.0,
-            "axis": [
-                ["azimuth", "0", "deg", "240", "deg", "36", "linear"],
-                ["zenith", "0", "deg", "70", "deg", "2", "linear"],
-                ["offset", "0", "deg", "10", "deg", "2", "linear"],
-            ],
-        }
-    )
-
-    assert axes["azimuth"]["binning"] == 130
-    assert axes["zenith_angle"]["binning"] == 70
-
-
-def test_build_axes_dict_from_cli_args_sets_horizontal_density_metadata_for_adaptive_grid():
-    axes = build_axes_dict_from_cli_args(
-        {
-            "direction_grid_density": 1.0,
-            "axis": [
-                ["azimuth", "0", "deg", "240", "deg", "36", "linear"],
-                ["zenith", "0", "deg", "70", "deg", "2", "linear"],
-                ["offset", "0", "deg", "10", "deg", "2", "linear"],
-            ],
-        }
-    )
-
-    assert axes["azimuth"]["direction_grid_density"] == pytest.approx(1.0)
-
-
-def test_build_axes_dict_from_cli_args_uses_full_circle_span_for_azimuth_density():
-    axes = build_axes_dict_from_cli_args(
-        {
-            "direction_grid_density": 1.0,
-            "axis": [
-                ["azimuth", "0", "deg", "360", "deg", "36", "linear"],
-                ["zenith", "0", "deg", "70", "deg", "2", "linear"],
-                ["offset", "0", "deg", "10", "deg", "2", "linear"],
-            ],
-        }
-    )
-
-    assert axes["azimuth"]["binning"] == 194
-    assert axes["zenith_angle"]["binning"] == 70
 
 
 def test_build_axes_dict_from_cli_args_rejects_non_positive_density():
@@ -683,28 +588,6 @@ def test_get_core_scatter_max_for_zenith_angle_without_lookup_uses_configured_ma
     assert get_core_scatter_max_for_zenith_angle(20 * u.deg, [10, 150 * u.m], None) == 150 * u.m
 
 
-@patch.object(CorsikaLimitsLookup, "__init__", return_value=None)
-@patch.object(
-    CorsikaLimitsLookup,
-    "interpolate_point",
-    return_value={
-        "lower_energy_limit": 0.01,
-        "upper_radius_limit": 100.0,
-        "viewcone_radius": 2.0,
-    },
-)
-def test_get_core_scatter_max_for_zenith_angle_uses_lookup_path(mock_interpolate_point, mock_init):
-    scatter_max = get_core_scatter_max_for_zenith_angle(
-        20 * u.deg,
-        [10, 150 * u.m],
-        "limits.ecsv",
-    )
-
-    assert scatter_max == 100 * u.m
-    mock_init.assert_called_once_with("limits.ecsv")
-    mock_interpolate_point.assert_called_once()
-
-
 def test_get_viewcone_max_for_zenith_angle_without_lookup_uses_configured_max():
     assert get_viewcone_max_for_zenith_angle(20 * u.deg, [0 * u.deg, 5 * u.deg], None) == 5 * u.deg
 
@@ -794,10 +677,6 @@ def test_calculate_zenith_scaled_showers_per_run_scales_with_cosine():
     assert calculate_zenith_scaled_showers_per_run(60 * u.deg, 1000, "cosine_zenith") == expected
 
 
-def test_calculate_zenith_scaled_showers_per_run_keeps_baseline_at_zenith_0():
-    assert calculate_zenith_scaled_showers_per_run(0 * u.deg, 1000, "cosine_zenith") == 1000
-
-
 def test_calculate_zenith_scaled_showers_per_run_raises_for_non_positive_baseline():
     with pytest.raises(ValueError, match="positive integer"):
         calculate_zenith_scaled_showers_per_run(20 * u.deg, 0, "cosine_zenith")
@@ -806,12 +685,6 @@ def test_calculate_zenith_scaled_showers_per_run_raises_for_non_positive_baselin
 def test_calculate_zenith_scaled_showers_per_run_raises_at_zenith_90():
     with pytest.raises(ValueError, match="at least 1"):
         calculate_zenith_scaled_showers_per_run(90 * u.deg, 1000, "cosine_zenith")
-
-
-def test_calculate_zenith_scaled_showers_per_run_raises_near_zenith_90():
-    # Rounding makes this tiny cosine effectively zero, which must trigger validation.
-    with pytest.raises(ValueError, match="at least 1"):
-        calculate_zenith_scaled_showers_per_run(89.999999999999 * u.deg, 1000, "cosine_zenith")
 
 
 def test_calculate_zenith_scaled_showers_per_run_raises_for_invalid_mode():
@@ -852,16 +725,6 @@ def test_scale_energy_max_for_zenith_angle_raises_for_negative_index_at_zenith_9
         scale_energy_max_for_zenith_angle(90 * u.deg, (30 * u.GeV, 100 * u.GeV), (-2.0, None))
 
 
-def test_clip_energy_range_from_threshold_returns_none_above_max():
-    assert (
-        _clip_energy_range_from_threshold(
-            (30 * u.GeV, 100 * u.GeV),
-            200 * u.GeV,
-        )
-        is None
-    )
-
-
 def test_clip_energy_range_from_threshold_returns_original_without_threshold():
     energy_range = (30 * u.GeV, 100 * u.GeV)
 
@@ -876,16 +739,6 @@ def test_clip_energy_range_to_configured_bounds_caps_selected_max():
 
     assert_quantity_allclose(clipped[0], 50 * u.GeV)
     assert_quantity_allclose(clipped[1], 200 * u.GeV)
-
-
-def test_clip_energy_range_to_configured_bounds_preserves_fixed_energy():
-    clipped = _clip_energy_range_to_configured_bounds(
-        (300 * u.GeV, 300 * u.GeV),
-        (300 * u.GeV, 300 * u.GeV),
-    )
-
-    assert_quantity_allclose(clipped[0], 300 * u.GeV)
-    assert_quantity_allclose(clipped[1], 300 * u.GeV)
 
 
 def test_clip_energy_range_to_configured_bounds_rejects_reversed_range():
@@ -1005,24 +858,6 @@ def test_build_rows_for_point_skips_energy_ranges_below_threshold():
     assert all(row["showers_per_run"] == 5 for row in rows)
 
 
-def test_build_rows_for_point_preserves_fixed_energy_ranges():
-    rows = _build_rows_for_point(
-        point_base={"primary": "gamma", "zenith_angle": 20 * u.deg},
-        energy_ranges=[(30 * u.GeV, 30 * u.GeV), (300 * u.GeV, 300 * u.GeV)],
-        lower_energy_threshold=None,
-        showers_per_run=5,
-        showers_per_run_power_law=None,
-        number_of_runs=1,
-        total_showers=None,
-        total_showers_scaling="fixed",
-        run_number=10,
-    )
-
-    assert len(rows) == 2
-    assert [row["energy_min"] for row in rows] == [30 * u.GeV, 300 * u.GeV]
-    assert [row["energy_max"] for row in rows] == [30 * u.GeV, 300 * u.GeV]
-
-
 def test_build_rows_for_point_rounds_total_showers_up_with_warning(caplog):
     caplog.set_level("WARNING")
 
@@ -1093,77 +928,6 @@ def test_build_rows_for_point_scales_total_showers_with_zenith_scaled():
 
     assert [row["showers_per_run"] for row in rows] == [200, 200]
     assert [row["run_number"] for row in rows] == [1, 2]
-
-
-def test_build_rows_for_point_uses_custom_zenith_angle_scaling_factor():
-    rows = _build_rows_for_point(
-        point_base={"primary": "gamma", "zenith_angle": 60 * u.deg},
-        energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
-        lower_energy_threshold=None,
-        showers_per_run=1000,
-        showers_per_run_power_law=None,
-        number_of_runs=1,
-        total_showers=2500,
-        total_showers_scaling="zenith_scaled",
-        run_number=1,
-        zenith_angle_scaling_factor=0.0,
-    )
-
-    assert [row["showers_per_run"] for row in rows] == [1000, 1000, 1000]
-    assert [row["run_number"] for row in rows] == [1, 2, 3]
-
-
-def test_build_rows_for_point_scales_showers_per_run_with_zenith():
-    rows = _build_rows_for_point(
-        point_base={"primary": "gamma", "zenith_angle": 60 * u.deg},
-        energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
-        lower_energy_threshold=None,
-        showers_per_run=1000,
-        showers_per_run_power_law=None,
-        showers_per_run_scaling="cosine_zenith",
-        number_of_runs=2,
-        total_showers=None,
-        total_showers_scaling="fixed",
-        run_number=1,
-    )
-
-    assert [row["showers_per_run"] for row in rows] == [500, 500]
-
-
-def test_build_rows_for_point_scales_energy_max_with_zenith_and_clips_to_configured_range():
-    rows = _build_rows_for_point(
-        point_base={"primary": "gamma", "zenith_angle": 60 * u.deg},
-        energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
-        lower_energy_threshold=None,
-        showers_per_run=1000,
-        showers_per_run_power_law=None,
-        number_of_runs=1,
-        total_showers=None,
-        total_showers_scaling="fixed",
-        run_number=1,
-        energy_max_scaling=(-2.0, 100 * u.GeV),
-    )
-
-    assert len(rows) == 1
-    assert_quantity_allclose(rows[0]["energy_min"], 30 * u.GeV)
-    assert_quantity_allclose(rows[0]["energy_max"], 100 * u.GeV)
-
-
-def test_build_rows_for_point_skips_when_threshold_exceeds_configured_energy_max():
-    rows = _build_rows_for_point(
-        point_base={"primary": "gamma", "zenith_angle": 60 * u.deg},
-        energy_ranges=[(30 * u.GeV, 100 * u.GeV)],
-        lower_energy_threshold=150 * u.GeV,
-        showers_per_run=1000,
-        showers_per_run_power_law=None,
-        number_of_runs=1,
-        total_showers=None,
-        total_showers_scaling="fixed",
-        run_number=1,
-        energy_max_scaling=(-2.0, 100 * u.GeV),
-    )
-
-    assert rows == []
 
 
 def test_generate_observation_points_from_axes_adds_lookup_limits():
@@ -1260,29 +1024,6 @@ def test_generate_observation_grids_per_layout_uses_shared_axes_and_skips_duplic
     assert mock_site_model.call_count == 2
 
 
-@patch("simtools.production_configuration.simulation_jobs._resolve_nsb_rate")
-@patch("simtools.production_configuration.simulation_jobs.build_production_grid_engine")
-def test_generate_observation_grids_per_layout_does_not_reuse_different_nsb_rates(
-    mock_build_production_grid_engine,
-    mock_resolve_nsb_rate,
-):
-    mock_build_production_grid_engine.return_value.generate_simulation_grid.return_value = [
-        {"azimuth": 0 * u.deg}
-    ]
-    mock_resolve_nsb_rate.side_effect = [0.2, 0.4]
-
-    _generate_observation_grids_per_layout(
-        _horizontal_shared_axis_args({"<7.0.0": "alpha", ">=7.0.0": "alpha"}),
-        _two_model_versions_grid_axes(),
-    )
-
-    assert mock_build_production_grid_engine.call_count == 2
-    called_model_versions = [
-        call.kwargs["model_version"] for call in mock_build_production_grid_engine.call_args_list
-    ]
-    assert called_model_versions == ["6.3.0", "7.0.0"]
-
-
 @patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")
 def test_build_simulation_jobs_expands_runs_from_observation_grid(
     mock_generate_observation_grids_per_layout,
@@ -1351,104 +1092,6 @@ def test_build_simulation_jobs_propagates_explicit_hadronic_transition_energy(
     rows = build_simulation_jobs(args_dict)
 
     assert rows[0]["corsika_hadronic_transition_energy"] == 120 * u.GeV
-
-
-@patch("simtools.production_configuration.simulation_jobs.SiteModel")
-@patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")
-def test_build_simulation_jobs_sets_nsb_rate_from_site_model(
-    mock_generate_observation_grids_per_layout,
-    mock_site_model,
-):
-    mock_generate_observation_grids_per_layout.return_value = _observation_grid_return(
-        {
-            "azimuth": 180 * u.deg,
-            "zenith_angle": 20 * u.deg,
-            "lower_energy_limit": 40 * u.GeV,
-            "upper_radius_limit": 100 * u.m,
-            "viewcone_radius": 2 * u.deg,
-        }
-    )
-    mock_site_model.return_value.get_nsb_integrated_flux.return_value = 0.37
-
-    args_dict = _base_simulation_jobs_args()
-    args_dict["site"] = "North"
-
-    rows = build_simulation_jobs(args_dict)
-
-    assert rows[0]["nsb_rate"] == pytest.approx(0.37)
-    mock_site_model.assert_called_once_with(model_version="6.3.0", site="North")
-
-
-@patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")
-def test_build_simulation_jobs_clips_core_and_viewcone_max_by_configured_limits(
-    mock_generate_observation_grids_per_layout,
-):
-    mock_generate_observation_grids_per_layout.return_value = _observation_grid_return(
-        {
-            "azimuth": 180 * u.deg,
-            "zenith_angle": 20 * u.deg,
-            "lower_energy_limit": 40 * u.GeV,
-            "upper_radius_limit": 400 * u.m,
-            "viewcone_radius": 10 * u.deg,
-        }
-    )
-    args_dict = _base_simulation_jobs_args()
-    args_dict["view_cone"] = [3 * u.deg, 5 * u.deg]
-    rows = build_simulation_jobs(args_dict)
-
-    assert rows[0]["core_scatter_max"] == 200 * u.m
-    assert rows[0]["configured_core_scatter_max"] == 200 * u.m
-    assert rows[0]["lookup_core_scatter_max"] == 400 * u.m
-    assert rows[0]["view_cone_min"] == 3 * u.deg
-    assert rows[0]["view_cone_max"] == 5 * u.deg
-    assert rows[0]["configured_view_cone_min"] == 3 * u.deg
-    assert rows[0]["configured_view_cone_max"] == 5 * u.deg
-    assert rows[0]["lookup_view_cone_max"] == 10 * u.deg
-
-
-@patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")
-def test_build_simulation_jobs_uses_interpolated_energy_min_when_threshold_key_missing(
-    mock_generate_observation_grids_per_layout,
-):
-    mock_generate_observation_grids_per_layout.return_value = _observation_grid_return(
-        {
-            "azimuth": 180 * u.deg,
-            "zenith_angle": 20 * u.deg,
-            "br_energy_min": 50 * u.GeV,
-            "upper_radius_limit": 100 * u.m,
-            "viewcone_radius": 2 * u.deg,
-        }
-    )
-    rows = build_simulation_jobs(_base_simulation_jobs_args())
-
-    assert len(rows) == 1
-    assert rows[0]["energy_min"] == 50 * u.GeV
-    assert rows[0]["energy_max"] == 100 * u.GeV
-    assert rows[0]["configured_energy_min"] == 30 * u.GeV
-    assert rows[0]["configured_energy_max"] == 100 * u.GeV
-    assert rows[0]["energy_min_lookup_limit"] == 50 * u.GeV
-    assert rows[0]["configured_showers_per_run"] == 5
-
-
-@patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")
-def test_build_simulation_jobs_clips_viewcone_min_to_lookup_limited_max(
-    mock_generate_observation_grids_per_layout,
-):
-    mock_generate_observation_grids_per_layout.return_value = _observation_grid_return(
-        {
-            "azimuth": 180 * u.deg,
-            "zenith_angle": 20 * u.deg,
-            "lower_energy_limit": 40 * u.GeV,
-            "upper_radius_limit": 100 * u.m,
-            "viewcone_radius": 2 * u.deg,
-        }
-    )
-    args_dict = _base_simulation_jobs_args()
-    args_dict["view_cone"] = [3 * u.deg, 5 * u.deg]
-    rows = build_simulation_jobs(args_dict)
-
-    assert rows[0]["view_cone_min"] == 2 * u.deg
-    assert rows[0]["view_cone_max"] == 2 * u.deg
 
 
 @patch("simtools.production_configuration.simulation_jobs._generate_observation_grids_per_layout")

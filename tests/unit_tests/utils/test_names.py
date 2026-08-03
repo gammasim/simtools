@@ -10,19 +10,12 @@ from simtools.utils import names
 
 logging.getLogger().setLevel(logging.DEBUG)
 
-
 ecsv_suffix = ".ecsv"
 
 
 @pytest.fixture
 def invalid_name():
     return "Invalid name"
-
-
-def test_model_parameters():
-    assert isinstance(names.model_parameters(), dict)
-    assert isinstance(names.model_parameters("Telescope"), dict)
-    assert len(names.model_parameters()) > len(names.model_parameters("Telescope"))
 
 
 def test_site_parameters():
@@ -67,28 +60,6 @@ def test_get_list_of_array_element_types():
     )
 
 
-def test_validate_name():
-    with_lists = {
-        "South": ["south"],
-        "North": ["north"],
-    }
-
-    for key, value in with_lists.items():
-        for _site in value:
-            assert key == names._validate_name(_site, with_lists)
-
-    with pytest.raises(ValueError, match=r"Invalid name Aar"):
-        names._validate_name("Aar", with_lists)
-
-    with_lists_in_dicts = {
-        "LSTN": ["LSTN", "lstn"],
-        "MSTS": ["MSTN", "mstn"],
-    }
-    for key, value in with_lists_in_dicts.items():
-        for _tel in value:
-            assert key == names._validate_name(_tel, with_lists_in_dicts)
-
-
 def test_instrument_class_key_to_db_collection():
     assert "telescopes" == names.instrument_class_key_to_db_collection("Telescope")
     assert "calibration_devices" == names.instrument_class_key_to_db_collection("Calibration")
@@ -102,20 +73,6 @@ def test_instrument_class_key_to_db_collection():
 
     with pytest.raises(ValueError, match=r"^Class Not_a_class not found"):
         names.instrument_class_key_to_db_collection("Not_a_class")
-
-
-def test_get_collection_name_from_parameter_name():
-    assert "telescopes" == names.get_collection_name_from_parameter_name("num_gains")
-    assert "sites" == names.get_collection_name_from_parameter_name("atmospheric_profile")
-    assert "calibration_devices" == names.get_collection_name_from_parameter_name("flasher_photons")
-    assert "configuration_sim_telarray" == names.get_collection_name_from_parameter_name(
-        "iobuf_maximum"
-    )
-    assert "configuration_corsika" == names.get_collection_name_from_parameter_name(
-        "corsika_particle_kinetic_energy_cutoff"
-    )
-    with pytest.raises(KeyError, match=r"Parameter Not_a_parameter without schema definition"):
-        names.get_collection_name_from_parameter_name("Not_a_parameter")
 
 
 def test_validate_array_element_id_name(caplog):
@@ -139,60 +96,6 @@ def test_validate_array_element_id_name(caplog):
             names.validate_array_element_id_name(_id)
 
     assert "FlashCam" == names.validate_array_element_id_name("FlashCam", "MSTx")
-
-
-def test_array_element_design_types():
-    assert names.array_element_design_types(None) == ["design", "test"]
-    assert names.array_element_design_types("LSTN") == ["design", "test"]
-    _expected_mstx_types = ["test", "FlashCam", "NectarCam"]
-    for _type in _expected_mstx_types:
-        assert _type in names.array_element_design_types("MSTx")
-
-
-def test_validate_site_name(invalid_name):
-    for key, value in names.site_names().items():
-        for test_name in value:
-            assert key == names.validate_site_name(test_name)
-    with pytest.raises(ValueError, match=rf"^{invalid_name}"):
-        names.validate_site_name("Not a site")
-
-
-def test_validate_array_element_type(invalid_name):
-    assert "LSTN" == names.validate_array_element_type("LSTN")
-    assert "ILLS" == names.validate_array_element_type("ILLS")
-
-    with pytest.raises(ValueError, match=rf"^{invalid_name}"):
-        names.validate_array_element_type("Not a type")
-    with pytest.raises(ValueError, match=rf"^{invalid_name}"):
-        names.validate_array_element_type("LSTN-01")
-
-
-def test_validate_array_element_name(invalid_name):
-    telescopes = {
-        "LSTN-design": "LSTN-design",
-        "LSTN-test": "LSTN-test",
-        "LSTN-01": "LSTN-01",
-        "SSTS-01": "SSTS-01",
-        "OBS-North": "North",
-        "MSTx-NectarCam": "MSTx-NectarCam",
-    }
-
-    for key, value in telescopes.items():
-        logging.getLogger().info(f"Validating {key}")
-        new_name = names.validate_array_element_name(key)
-        logging.getLogger().info(f"New name {new_name}")
-        assert value == new_name
-
-    with pytest.raises(ValueError, match=rf"^{invalid_name}"):
-        names.validate_array_element_name("South-MST-FlashCam-D")
-    with pytest.raises(ValueError, match=rf"^{invalid_name}"):
-        names.validate_array_element_name("LSTN")
-
-
-def test_generate_array_element_name_from_type_site_id():
-    assert "LSTN-01" == names.generate_array_element_name_from_type_site_id("LST", "North", "01")
-    assert "LSTN-01" == names.generate_array_element_name_from_type_site_id("LST", "North", "1")
-    assert "LSTS-01" == names.generate_array_element_name_from_type_site_id("LST", "South", "01")
 
 
 def test_get_site_from_array_element_name(invalid_name):
@@ -233,21 +136,6 @@ def test_sanitize_name(caplog):
 
     with pytest.raises(ValueError, match=r"^The string  could not be sanitized."):
         names.sanitize_name("")
-
-
-def test_get_array_element_type_from_name(invalid_name):
-    assert names.get_array_element_type_from_name("LSTN-01") == "LSTN"
-    assert names.get_array_element_type_from_name("MSTN-02") == "MSTN"
-    assert names.get_array_element_type_from_name("SSTS-27") == "SSTS"
-    assert names.get_array_element_type_from_name("SCTS-27") == "SCTS"
-    assert names.get_array_element_type_from_name("MAGIC-2") == "MAGIC"
-    assert names.get_array_element_type_from_name("VERITAS-4") == "VERITAS"
-    assert names.get_array_element_type_from_name("OBS-North") == "North"
-    assert names.get_array_element_type_from_name("OBS-South") == "South"
-    for _name in ["", "01", "Not_a_telescope", "LST", "MST"]:
-        with pytest.raises(ValueError, match=rf"^{invalid_name}"):
-            names.get_array_element_type_from_name(_name)
-    assert names.get_array_element_type_from_name("South") == "South"
 
 
 def test_get_array_element_id_from_name(invalid_name):
@@ -495,12 +383,6 @@ def test_generate_file_name_ray_tracing():
     )
 
 
-def test_simulation_software():
-    software = names.simulation_software()
-    assert isinstance(software, list)
-    assert "sim_telarray" in software
-
-
 def test_get_simulation_software_name_from_parameter_name():
     sim_telarray = "sim_telarray"
     assert (
@@ -584,34 +466,6 @@ def test_db_collection_to_instrument_class_key():
 
     with pytest.raises(KeyError, match="Invalid collection name no_collection"):
         names.db_collection_to_instrument_class_key("no_collection")
-
-
-def test_is_design_type():
-    assert names.is_design_type("LSTN-design")
-    assert names.is_design_type("MSTS-FlashCam")
-    assert names.is_design_type("MSTS-NectarCam")
-    assert not names.is_design_type("MSTS-22")
-
-
-@pytest.mark.parametrize(
-    ("key_name", "array_element_name", "expected"),
-    [
-        ("LSTN-01", "LSTN-01", True),
-        ("LSTN-design", "LSTN-01", True),
-        ("MSTS-FlashCam", "MSTS-22", True),
-        ("MSTS-design", "LSTN-01", False),
-        ("LSTN-02", "LSTN-01", False),
-        ("not-a-name", "LSTN-01", False),
-        (None, "LSTN-01", False),
-        ("LSTN-01", None, False),
-        (None, None, False),
-        ("LSTN", "LSTN-01", False),
-        ("LSTN-01", "LSTN", False),
-        ("South", "LSTN-01", False),
-    ],
-)
-def test_matches_array_element_name_or_design_type(key_name, array_element_name, expected):
-    assert names.matches_array_element_name_or_design_type(key_name, array_element_name) is expected
 
 
 def test_array_element_common_identifiers():

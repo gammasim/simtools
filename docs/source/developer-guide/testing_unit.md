@@ -41,6 +41,16 @@ pytest -n 4 --dist loadscope tests/unit_tests/
 
 - Reuse fixtures from `tests/unit_tests/conftest.py` and `tests/conftest.py`
   before adding new helpers.
+- Keep mutable settings, database clients, simulator paths, and I/O handlers
+  explicit in the test or module that needs them. Global autouse fixtures are
+  reserved for harmless process-wide safety such as the matplotlib backend.
+- Prefer one parametrized test with descriptive case IDs for an invariant that
+  has several inputs. Keep distinct error contracts and boundary branches as
+  separate cases in the same table.
+- Every collected test must have an explicit oracle: an assertion, an
+  `assert_*` helper, a `pytest.raises`/`pytest.warns` context, or a mock
+  assertion. Assertions such as `is not None`, `.called`, or file existence
+  alone are not sufficient when the returned value or file content is known.
 - Use `tmp_test_directory` for file I/O tests.
 - Mock external dependencies such as databases, network access, file downloads,
   and installed simulation software.
@@ -55,7 +65,11 @@ Coverage is a diagnostic tool, not the goal by itself. Use it to find missing
 branches after the semantic behavior is covered.
 
 ```bash
-pytest --cov-report=html tests/unit_tests/
+pytest --cov-branch --cov-report=html --cov-report=json tests/unit_tests/
 ```
 
 Open the file `htmlcov/index.html` in your browser to see the coverage report.
+The CI quality gate preserves at least 97.32% statement coverage and requires
+at least 92% branch coverage. It also checks that tracked Python code in
+`tests/unit_tests/` stays below the consolidation budget and that each test has
+an explicit outcome check.

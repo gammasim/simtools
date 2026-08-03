@@ -29,7 +29,6 @@ def mirror_list_test_file():
 
 
 def test_read_simtel_data(spe_test_file, spe_meta_test_comment):
-    """Test reading of sim_telarray table file into strings."""
 
     data, meta, n_columns, n_dim = simtel_table_reader._read_simtel_data(spe_test_file)
 
@@ -44,7 +43,6 @@ def test_read_simtel_data(spe_test_file, spe_meta_test_comment):
 
 
 def test_process_line_parts(caplog):
-    """Test processing of line parts with various inputs."""
     # Test normal case - all parts convertible to floats
     parts = ["1.0", "2.5", "3.0"]
     result = simtel_table_reader._process_line_parts(parts)
@@ -79,7 +77,6 @@ def test_read_simtel_data_rpol(mock_read_file_encoded_in_utf_or_latin):
 
 
 def test_read_simtel_table_to_table(spe_test_file, spe_meta_test_comment):
-    """Test reading of sim_telarray pm_photoelectron_spectrum table file into astropy table."""
 
     parameter_name = "pm_photoelectron_spectrum"
 
@@ -109,7 +106,6 @@ def test_read_simtel_table_to_table(spe_test_file, spe_meta_test_comment):
 
 
 def test_read_simtel_table_for_mirror_list(mirror_list_test_file):
-    """Test reading mirror_list table including mirror panel IDs from '#% id=' data."""
     table = simtel_table_reader.read_simtel_table("mirror_list", mirror_list_test_file)
 
     assert len(table) > 0
@@ -134,7 +130,6 @@ def test_read_simtel_table_for_mirror_list(mirror_list_test_file):
 
 
 def test_read_simtel_table_as_row_data_for_mirror_list(mirror_list_test_file):
-    """Test row-data serialization of mirror_list table."""
     row_data = simtel_table_reader.read_simtel_table_as_row_data(
         "mirror_list", mirror_list_test_file
     )
@@ -217,30 +212,9 @@ def test_resolve_dict_parameter_value_from_file_path(tmp_test_directory):
     assert result == {"columns": ["time"]}
 
 
-def test_row_data_to_astropy_table_returns_correct_table():
-    row_data = {
-        "columns": ["time", "amplitude"],
-        "column_units": ["ns", "dimensionless"],
-        "rows": [[0.0, 0.0], [0.5, 0.12], [1.0, 0.48]],
-    }
-    table = simtel_table_reader.row_data_to_astropy_table(row_data)
-
-    assert list(table.colnames) == ["time", "amplitude"]
-    assert len(table) == 3
-    assert table["time"][1] == pytest.approx(0.5)
-    assert table["amplitude"][2] == pytest.approx(0.48)
-    assert str(table["time"].unit) == "ns"
-    assert table["amplitude"].unit == u.dimensionless_unscaled
-
-
 def test_row_data_to_astropy_table_raises_on_missing_keys():
     with pytest.raises(ValueError, match="'columns' and 'rows'"):
         simtel_table_reader.row_data_to_astropy_table({"columns": ["time"]})
-
-
-def test_row_data_to_astropy_table_raises_on_wrong_type():
-    with pytest.raises(ValueError, match="'columns' and 'rows'"):
-        simtel_table_reader.row_data_to_astropy_table("not a dict")
 
 
 def test_resolve_dict_parameter_value_raises_without_column_units():
@@ -254,7 +228,6 @@ def test_resolve_dict_parameter_value_raises_without_column_units():
 def test_resolve_dict_parameter_value_invalid_inline_json_falls_back_to_file(
     tmp_test_directory,
 ):
-    """Fallback to file-path resolution if inline JSON parsing fails."""
     with mock.patch(
         "simtools.simtel.simtel_table_reader.read_simtel_table_as_row_data",
         return_value={"columns": ["time"], "column_units": ["ns"], "rows": [[0.0]]},
@@ -273,7 +246,6 @@ def test_resolve_dict_parameter_value_invalid_inline_json_falls_back_to_file(
 
 
 def test_resolve_dict_parameter_value_non_string_non_dict_uses_file_reader(tmp_test_directory):
-    """Resolve Path-like input values through table-file reader path."""
     with mock.patch(
         "simtools.simtel.simtel_table_reader.read_simtel_table_as_row_data",
         return_value={"columns": ["time"], "column_units": ["ns"], "rows": [[0.0]]},

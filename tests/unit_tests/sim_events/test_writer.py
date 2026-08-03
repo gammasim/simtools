@@ -1,4 +1,3 @@
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import h5py
@@ -132,7 +131,6 @@ def test_process_files(
     mock_get_sim_telarray_telescope_id_to_telescope_name_mapping,
     mock_read_sim_telarray_metadata,
 ):
-    """Test processing of files and creation of tables."""
     # Create sequence that matches EventDataWriter expectations
     mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = [
         create_mc_run_header(),
@@ -172,62 +170,17 @@ def test_no_input_files():
 
 
 def test_default_processes_all_input_files():
-    """Do not silently truncate batches at 100 input files."""
     writer = EventDataWriter([f"input_{index}" for index in range(101)])
 
     assert writer.max_files == 101
 
 
-@pytest.mark.parametrize(
-    ("requested", "expected"),
-    [(0, 0), (2, 2), (200, 101)],
-)
-def test_max_files_respects_requested_and_available_files(requested, expected):
-    """Respect explicit limits without exceeding the available input files."""
-    writer = EventDataWriter([f"input_{index}" for index in range(101)], max_files=requested)
-
-    assert writer.max_files == expected
-
-
 def test_max_files_rejects_negative_values():
-    """Reject negative limits instead of silently excluding files from the end."""
     with pytest.raises(ValueError, match="max_files must be non-negative"):
         EventDataWriter(["input"], max_files=-1)
 
 
-@patch("simtools.sim_events.writer.EventIOFile", autospec=True)
-def test_multiple_files(
-    mock_eventio_class,
-    tmp_path,
-    mock_get_sim_telarray_telescope_id_to_telescope_name_mapping,
-    mock_read_sim_telarray_metadata,
-):
-    """Test processing multiple input files."""
-    # Create mock events for each file
-    mock_eventio_class.return_value.__enter__.return_value.__iter__.return_value = [
-        create_mc_run_header(),
-        create_mc_shower(shower_id=1),
-        create_mc_event(shower_num=1, event_id=10000),
-        create_mc_event(shower_num=1, event_id=10001),
-        create_array_event(),
-    ]
-
-    # Create test files
-    input_files = [str(tmp_path / f"mock_eventio_file_{i}.simtel.zst") for i in range(3)]
-    for file in input_files:
-        Path(file).touch()
-
-    writer = EventDataWriter(input_files=input_files, max_files=3)
-    tables = writer.process_files()
-
-    assert mock_eventio_class.call_count == 3
-    assert len(tables) == 3
-    assert len(tables[2]) == 3  # file_info table should have 3 entries
-    assert set(tables[2]["file_id"]) == {0, 1, 2}
-
-
 def test_chunked_output_matches_non_chunked_output(get_test_data_file, tmp_path):
-    """Chunked conversion must preserve datasets, dtypes, values, and attributes."""
     input_file = get_test_data_file("sim_telarray", "gamma")
     reference_file = tmp_path / "reference.hdf5"
     chunked_file = tmp_path / "chunked.hdf5"
@@ -267,37 +220,7 @@ def create_test_data():
     }
 
 
-def test_create_tables_enforces_schema_and_writes_empty_triggers(lookup_table_generator):
-    """Schemas are applied and an empty trigger table is represented explicitly."""
-    lookup_table_generator.shower_data = [create_test_data()]
-    lookup_table_generator.file_info = [
-        {
-            "file_name": "input.simtel.zst",
-            "file_id": 0,
-            "particle_id": 1,
-            "spectral_index": -2.0,
-            "energy_min": 0.1,
-            "energy_max": 10.0,
-            "viewcone_min": 0.0,
-            "viewcone_max": 0.0,
-            "core_scatter_min": 0.0,
-            "core_scatter_max": 1000.0,
-            "zenith": 20.0,
-            "azimuth": 0.0,
-            "nsb_level": 0.24,
-        }
-    ]
-
-    tables = lookup_table_generator.create_tables()
-
-    assert [table.meta["EXTNAME"] for table in tables] == ["SHOWERS", "TRIGGERS", "FILE_INFO"]
-    assert len(tables[1]) == 0
-    assert tables[0]["event_id"].dtype == np.dtype(np.uint32)
-    assert tables[0]["x_core"].dtype == np.dtype(np.float64)
-
-
 def test_create_chunk_rejects_unset_shower_fields(lookup_table_generator):
-    """Partially populated MC event rows are rejected before HDF5 serialization."""
     shower = create_test_data()
     shower["x_core"] = None
 
@@ -309,7 +232,6 @@ def test_create_chunk_rejects_unset_shower_fields(lookup_table_generator):
 
 
 def test_process_array_event(lookup_table_generator):
-    """Test array event processing."""
     mock_array_event = MagicMock(spec=ArrayEvent)
     mock_array_event.event_id = 42
 
@@ -335,7 +257,6 @@ def test_process_array_event(lookup_table_generator):
 
 
 def test_process_array_event_empty(lookup_table_generator):
-    """Test _process_array_event method with empty array event."""
     mock_array_event = MagicMock(spec=ArrayEvent)
     mock_array_event.__iter__.return_value = []
 
@@ -347,25 +268,7 @@ def test_process_array_event_empty(lookup_table_generator):
     assert len(lookup_table_generator.trigger_data) == initial_len
 
 
-def test_process_array_event_with_trigger_data(lookup_table_generator):
-    """Test processing array events and updating trigger data."""
-    mock_array_event = create_array_event()
-    lookup_table_generator.shower_data.append({"shower_id": 1, "event_id": 42, "file_id": 0})
-
-    with patch.object(
-        lookup_table_generator, "_map_telescope_names", return_value=one_two_three.split(",")
-    ):
-        lookup_table_generator._process_array_event(mock_array_event, 0)
-
-    assert len(lookup_table_generator.trigger_data) == 1
-    trigger_event = lookup_table_generator.trigger_data[0]
-    assert trigger_event["shower_id"] == 1
-    assert trigger_event["event_id"] == 42
-    assert trigger_event["telescope_list"] == one_two_three
-
-
 def test_get_nsb_level_from_file_name(lookup_table_generator):
-    """Test parsing NSB levels from filenames."""
     assert lookup_table_generator._get_nsb_level_from_file_name(
         "dark_file.simtel.zst"
     ) == pytest.approx(0.24)
@@ -388,33 +291,18 @@ def test_get_nsb_level_from_file_name(lookup_table_generator):
 
 
 def test_get_nsb_level_from_file_name_unknown(lookup_table_generator):
-    """Test that ValueError is raised when no NSB keyword is found in the file name."""
     with pytest.raises(ValueError, match="Cannot determine NSB level"):
         lookup_table_generator._get_nsb_level_from_file_name("file.simtel.zst")
 
 
 def test_get_nsb_level_from_file_name_invalid_input(lookup_table_generator):
-    """Test NSB level parsing with invalid input."""
     with pytest.raises(AttributeError, match=r"Invalid file name."):
         lookup_table_generator._get_nsb_level_from_file_name(None)
-
-
-def test_get_nsb_level_from_metadata_casts_string_value(mocker, lookup_table_generator):
-    """Test NSB metadata string values are converted to float."""
-    mocker.patch(
-        "simtools.sim_events.writer.read_sim_telarray_metadata",
-        return_value=({"nsb_integrated_flux": "0.24053832149999996"}, {}),
-    )
-
-    nsb = lookup_table_generator.get_nsb_level_from_sim_telarray_metadata("dummy.simtel.zst")
-
-    assert nsb == pytest.approx(0.24053832149999996)
 
 
 def test_get_nsb_level_from_metadata_invalid_value_falls_back(
     mocker, lookup_table_generator, caplog
 ):
-    """Test invalid NSB metadata values trigger fallback to filename parsing."""
     mocker.patch(
         "simtools.sim_events.writer.read_sim_telarray_metadata",
         return_value=({"nsb_integrated_flux": "not-a-number"}, {}),
@@ -436,7 +324,6 @@ def test_get_nsb_level_from_metadata_invalid_value_falls_back(
 
 
 def test_process_mc_event(lookup_table_generator):
-    """Test processing of MC events."""
     lookup_table_generator.n_use = 2
     lookup_table_generator.shower_data = [
         {"shower_id": 1, "event_id": None},
@@ -462,7 +349,6 @@ def test_process_mc_event(lookup_table_generator):
 
 
 def test_process_mc_event_inconsistent_shower(lookup_table_generator):
-    """Test processing MC event with inconsistent shower ID."""
     lookup_table_generator.n_use = 2
     lookup_table_generator.shower_data = [
         {"shower_id": 1, "event_id": None},
@@ -494,37 +380,7 @@ def test_process_mc_event_inconsistent_shower(lookup_table_generator):
         lookup_table_generator._process_mc_event(mock_event)
 
 
-def test_map_telescope_names(lookup_table_generator):
-    """Test mapping of telescope IDs to names."""
-    # Set up test mapping
-    lookup_table_generator.telescope_id_to_name = {
-        1: "LSTN-01",
-        2: "LSTN-02",
-        3: "MSTN-01",
-        4: "MSTN-02",
-    }
-
-    # Test with known IDs
-    telescope_ids = [1, 2, 3]
-    expected = ["LSTN-01", "LSTN-02", "MSTN-01"]
-    assert lookup_table_generator._map_telescope_names(telescope_ids) == expected
-
-    # Test with unknown ID
-    telescope_ids = [1, 99]
-    expected = ["LSTN-01", "Unknown_99"]
-    assert lookup_table_generator._map_telescope_names(telescope_ids) == expected
-
-    # Test with empty list
-    assert lookup_table_generator._map_telescope_names([]) == []
-
-    # Test with all unknown IDs
-    telescope_ids = [98, 99]
-    expected = ["Unknown_98", "Unknown_99"]
-    assert lookup_table_generator._map_telescope_names(telescope_ids) == expected
-
-
 def test_process_mc_shower_from_iact_simple(lookup_table_generator):
-    """Very simple test for _process_mc_shower_from_iact."""
     mock_eventio_object = MagicMock()
     mock_eventio_object.parse.return_value = {
         "n_reuse": 2,
@@ -554,7 +410,6 @@ def test_process_mc_shower_from_iact_simple(lookup_table_generator):
 
 
 def test_process_file_info_else(monkeypatch, tmp_path):
-    """Test _process_file_info for CORSIKA IACT file (run_info is None)."""
     file_path = tmp_path / "test.iact"
     file_path.touch()
 

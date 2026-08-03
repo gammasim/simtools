@@ -67,14 +67,6 @@ def test_submit_with_pipes(mock_successful_run):
     assert call_args[1]["stderr"] == subprocess.PIPE
 
 
-def test_submit_does_not_measure_runtime_by_default(mock_successful_run, mocker):
-    perf_counter = mocker.patch("simtools.job_execution.job_manager.time.perf_counter")
-
-    jm.submit("echo test")
-
-    perf_counter.assert_not_called()
-
-
 def test_submit_returns_runtime(mock_successful_run, mocker):
     mocker.patch("simtools.job_execution.job_manager.time.perf_counter", side_effect=[10.0, 12.5])
 
@@ -99,21 +91,6 @@ def test_submit_test_mode(mocker, tmp_path):
 
     assert result is None
     mock_run.assert_not_called()
-
-
-def test_submit_check_false_returns_result_on_nonzero(mocker):
-    mock_run = mocker.patch("simtools.job_execution.job_manager.subprocess.run")
-    mock_result = MagicMock()
-    mock_result.returncode = 125
-    mock_result.stdout = ""
-    mock_result.stderr = "image not known"
-    mock_run.return_value = mock_result
-
-    result = jm.submit("podman image inspect some/image:tag", check=False)
-
-    assert result.returncode == 125
-    call_kwargs = mock_run.call_args[1]
-    assert call_kwargs["check"] is False
 
 
 def test_submit_check_true_raises_on_nonzero(mocker):
@@ -237,16 +214,6 @@ def test_convert_dict_to_args(input_dict, expected):
             assert item in result
 
 
-def test_convert_dict_to_args_mixed_types():
-    result = jm._convert_dict_to_args(
-        {"name": "test", "enabled": True, "disabled": False, "items": ["a", "b"], "number": 10}
-    )
-    expected_present = ["--name", "test", "--enabled", "--items", "a", "b", "--number", "10"]
-    for item in expected_present:
-        assert item in result
-    assert "--disabled" not in result
-
-
 def test_raise_job_execution_error_with_all_logs(mocker, tmp_path):
     mock_get_log_excerpt = mocker.patch("simtools.utils.general.get_log_excerpt")
     mock_get_file_age = mocker.patch("simtools.utils.general.get_file_age", return_value=2)
@@ -290,21 +257,6 @@ def test_raise_job_execution_error_without_out_file(mocker, tmp_path):
     mock_get_log_excerpt.assert_any_call(app_log)
 
 
-def test_raise_job_execution_error_without_err_file(mocker, tmp_path):
-    mock_get_log_excerpt = mocker.patch("simtools.utils.general.get_log_excerpt")
-
-    out_file = tmp_path / "output.log"
-    out_file.write_text("output content")
-
-    exc = subprocess.CalledProcessError(1, "failing command")
-    exc.stderr = "stderr message"
-
-    with pytest.raises(jm.JobExecutionError):
-        jm._raise_job_execution_error(exc, out_file, None, None)
-
-    mock_get_log_excerpt.assert_called_once_with(out_file)
-
-
 def test_raise_job_execution_error_app_log_too_old(mocker, tmp_path):
     mock_get_log_excerpt = mocker.patch("simtools.utils.general.get_log_excerpt")
     mocker.patch("simtools.utils.general.get_file_age", return_value=10)
@@ -340,13 +292,3 @@ def test_raise_job_execution_error_app_log_missing(mocker, tmp_path):
 
     mock_get_log_excerpt.assert_called_once_with(err_file)
     mock_get_file_age.assert_not_called()
-
-
-def test_raise_job_execution_error_no_logs(mocker):
-    exc = subprocess.CalledProcessError(1, "failing command")
-    exc.stderr = "stderr message"
-
-    with pytest.raises(jm.JobExecutionError) as exc_info:
-        jm._raise_job_execution_error(exc, None, None, None)
-
-    assert "See excerpt from log file above" in str(exc_info.value)

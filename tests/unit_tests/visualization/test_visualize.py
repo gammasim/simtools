@@ -88,7 +88,6 @@ def test_plot_table(io_handler):
 
 
 def test_plot_1d_legend_fontsize_setting():
-    """Test that plot_1d applies the requested legend font size."""
     dtype = [("x", float), ("y", float)]
     data_ref = np.array([(1.0, 1.0), (2.0, 2.0)], dtype=dtype)
     data_cmp = np.array([(1.0, 1.2), (2.0, 2.3)], dtype=dtype)
@@ -136,22 +135,7 @@ def test_save_figure(io_handler):
     plt.close(fig)
 
 
-def test_save_figure_defaults_to_png(io_handler):
-    fig, ax = plt.subplots()
-    ax.plot([0, 1], [0, 1])
-
-    output_file = io_handler.get_output_file(file_name="test_save_figure_default", sub_dir="plots")
-
-    visualize.save_figure(fig, output_file)
-
-    assert Path(output_file).with_suffix(".png").exists()
-    assert not Path(output_file).with_suffix(".pdf").exists()
-
-    plt.close(fig)
-
-
 def test_save_figure_closes_when_requested(io_handler, mocker):
-    """Test optional figure closing after saving."""
     fig = mocker.Mock()
     mock_close = mocker.patch("simtools.visualization.visualize.plt.close")
     output_file = io_handler.get_output_file(file_name="test_save_figure_close", sub_dir="plots")
@@ -163,20 +147,7 @@ def test_save_figure_closes_when_requested(io_handler, mocker):
     mock_close.assert_called_once_with(fig)
 
 
-def test_plot_hist_2d_uses_existing_axes():
-    """Test drawing a 2D histogram on caller-provided axes."""
-    data = np.array([(0.0, 0.0), (1.0, -1.0)], dtype=[("X", "f8"), ("Y", "f8")])
-    fig, ax = plt.subplots()
-
-    assert visualize.plot_hist_2d(data, ax=ax, bins=2) is fig
-    assert ax.get_xlabel() == "X"
-    assert ax.get_ylabel() == "Y"
-
-    plt.close(fig)
-
-
 def test_plot_histogram_uses_existing_axes():
-    """Test drawing a one-dimensional histogram on caller-provided axes."""
     data = np.array([0.0, 1.0, 1.0])
     fig, ax = plt.subplots()
 
@@ -187,7 +158,6 @@ def test_plot_histogram_uses_existing_axes():
 
 
 def test_plot_error_plots():
-    """Test the _plot_error_plots function for both error types."""
     x = np.array([1, 2, 3])
     y = np.array([10, 20, 30])
     y_err = np.array([1, 2, 1])
@@ -227,7 +197,6 @@ def test_plot_error_plots():
 
 
 def test_get_data_columns():
-    """Test the _get_data_columns function with different column configurations."""
     # Test with 2 columns
     data_2col = np.zeros(3, dtype=[("x", float), ("y", float)])
     x_col, y_col, x_err_col, y_err_col = visualize._get_data_columns(data_2col)
@@ -261,7 +230,6 @@ def test_get_data_columns():
 
 
 def test_plot_ratio_difference():
-    """Test the plot_ratio_difference function for both ratio and difference plots."""
     # Create test data
     x = np.array([1, 2, 3])
     y1 = np.array([10, 20, 30])

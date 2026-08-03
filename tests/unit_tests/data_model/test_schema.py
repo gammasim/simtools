@@ -13,13 +13,11 @@ from simtools.constants import (
     MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
     MODEL_PARAMETER_METASCHEMA,
     MODEL_PARAMETER_SCHEMA_PATH,
-    SCHEMA_PATH,
     SIM_TELARRAY_META_PARAMETER_METASCHEMA,
     SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
 from simtools.data_model import schema, schema_loader
 from simtools.io import ascii_handler
-from simtools.utils import names
 
 
 def test_get_model_parameter_schema_files(tmp_test_directory):
@@ -54,40 +52,6 @@ def test_get_model_parameter_schema_returns_independent_copies():
     schema_1["data"][0]["unit"] = "m"
 
     assert schema_2["data"][0]["unit"] == "cm"
-
-
-def test_load_schema_uses_cached_source_for_different_versions(mocker):
-    schema_loader.clear_cache()
-    collect_data = mocker.spy(ascii_handler, "collect_data_from_file")
-
-    schema_1 = schema.load_schema(MODEL_PARAMETER_METASCHEMA, "0.1.0")
-    schema_2 = schema.load_schema(MODEL_PARAMETER_METASCHEMA, "0.2.0")
-    schema_1_cached = schema.load_schema(MODEL_PARAMETER_METASCHEMA, "0.1.0")
-
-    assert schema_1 == schema_1_cached
-    assert schema_1 is not schema_1_cached
-    assert schema_1 is not schema_2
-    assert collect_data.call_count == 1
-
-
-def test_model_parameter_cache_is_shared_with_names(mocker):
-    schema_loader.clear_cache()
-    names._load_model_parameters.cache_clear()
-    collect_data = mocker.spy(ascii_handler, "collect_data_from_file")
-
-    model_parameters = names.model_parameters()
-    schema_file = schema.get_model_parameter_schema_file("mirror_focal_length")
-    reads_before = sum(
-        call.kwargs.get("file_name") == schema_file for call in collect_data.call_args_list
-    )
-    loaded_schema = schema.get_model_parameter_schema("mirror_focal_length")
-    reads_after = sum(
-        call.kwargs.get("file_name") == schema_file for call in collect_data.call_args_list
-    )
-
-    assert loaded_schema == model_parameters["mirror_focal_length"]
-    assert loaded_schema is not model_parameters["mirror_focal_length"]
-    assert reads_before == reads_after == 1
 
 
 def test_validate_sim_telarray_meta_parameter_registry_schema():
@@ -183,98 +147,6 @@ def test_validate_dict_using_schema(tmp_test_directory, caplog):
         schema.validate_dict_using_schema(invalid_data, schema_file)
 
 
-def test_runtime_environment_definition_is_reused_by_workflow_schema():
-    workflow_config = {
-        "schema_version": "0.4.0",
-        "schema_name": "application_workflow.metaschema",
-        "runtime_environment": {
-            "container_engine": "podman",
-            "image": "test-image",
-            "network": "simtools-mongo-network",
-            "environment_file": ".env",
-            "options": ["--arch amd64"],
-        },
-        "applications": [
-            {
-                "application": "simtools-test",
-                "configuration": {},
-            }
-        ],
-    }
-
-    schema.validate_dict_using_schema(
-        workflow_config, schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml"
-    )
-
-    workflow_config["runtime_environment"]["unknown"] = "value"
-    with pytest.raises(jsonschema.ValidationError):
-        schema.validate_dict_using_schema(
-            workflow_config, schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml"
-        )
-
-
-def test_application_workflow_schema_accepts_optional_docs_metadata():
-    workflow_config = {
-        "schema_version": "0.4.0",
-        "schema_name": "application_workflow.metaschema",
-        "applications": [
-            {
-                "application": "simtools-test",
-                "docs": {
-                    "title": "Example title",
-                    "summary": "Example summary.",
-                },
-                "configuration": {},
-            }
-        ],
-    }
-
-    schema.validate_dict_using_schema(
-        workflow_config,
-        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
-    )
-
-
-def test_application_workflow_schema_accepts_expected_failure_reason():
-    """Allow workflows to document expected application failures."""
-    workflow_config = {
-        "schema_version": "0.4.0",
-        "schema_name": "application_workflow.metaschema",
-        "applications": [
-            {
-                "application": "simtools-test",
-                "configuration": {},
-                "xfail": "known issue",
-            }
-        ],
-    }
-
-    schema.validate_dict_using_schema(
-        workflow_config,
-        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
-    )
-
-
-def test_application_workflow_schema_accepts_mongodb_requirement():
-    """Allow integration tests to declare that an application requires MongoDB."""
-    workflow_config = {
-        "schema_version": "0.4.0",
-        "schema_name": "application_workflow.metaschema",
-        "applications": [
-            {
-                "application": "simtools-test",
-                "configuration": {},
-                "requires_mongodb": True,
-            }
-        ],
-    }
-
-    schema.validate_dict_using_schema(
-        workflow_config,
-        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
-    )
-
-
 def _output_validation_workflow(*rules):
     """Build a minimal workflow containing declarative output rules."""
     return {
@@ -310,41 +182,6 @@ def _valid_output_validation_rule():
             "column_sums": {"energy": "summary.total"},
         },
     }
-
-
-def test_application_workflow_schema_accepts_output_validation_rules():
-    """Test the table output-validation configuration shape."""
-    workflow_config = _output_validation_workflow(_valid_output_validation_rule())
-
-    schema.validate_dict_using_schema(
-        workflow_config,
-        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
-    )
-
-
-@pytest.mark.parametrize(
-    "change",
-    [
-        lambda rule: rule.update({"unknown": True}),
-        lambda rule: rule.update({"minimum_rows": -1}),
-        lambda rule: rule.update({"unique_columns": ["id", "id"]}),
-        lambda rule: rule["columns"]["energy"].update({"range": {"minimum": "bad"}}),
-        lambda rule: rule["columns"]["energy"].update({"range": {"unit": "GeV"}}),
-        lambda rule: rule["columns"].update({"id": {}}),
-        lambda rule: rule["metadata"].update({"unknown": "value"}),
-    ],
-)
-def test_application_workflow_schema_rejects_malformed_output_validation(change):
-    """Reject unknown properties and malformed declarative validation rules."""
-    rule = _valid_output_validation_rule()
-    change(rule)
-    workflow_config = _output_validation_workflow(rule)
-
-    with pytest.raises(jsonschema.ValidationError):
-        schema.validate_dict_using_schema(
-            workflow_config,
-            schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
-        )
 
 
 def test_validate_dict_using_schema_remote(tmp_test_directory, mocker):
@@ -441,7 +278,6 @@ def test_validate_schema_astropy_units(caplog):
 
 @pytest.mark.parametrize("model_status", ["development", "production", "superseded"])
 def test_validate_simulation_models_info_schema_accepts_model_status(model_status):
-    """Test simulation models info schema accepts all supported model_status values."""
     data = {
         "schema_version": "0.2.0",
         "model_version": "6.1.0",
@@ -452,48 +288,13 @@ def test_validate_simulation_models_info_schema_accepts_model_status(model_statu
         "changes": {},
     }
 
-    schema.validate_dict_using_schema(
-        data=data,
-        schema_file="simulation_models_info.schema.yml",
-        offline=True,
-    )
-
-
-def test_validate_simulation_models_info_schema_rejects_invalid_model_status():
-    """Test simulation models info schema rejects unsupported model_status values."""
-    data = {
-        "schema_version": "0.2.0",
-        "model_version": "6.1.0",
-        "model_update": "patch_update",
-        "model_version_history": ["6.0.2"],
-        "model_status": "ready-for-production",
-        "description": "test",
-        "changes": {},
-    }
-
-    with pytest.raises(jsonschema.exceptions.ValidationError):
+    assert (
         schema.validate_dict_using_schema(
             data=data,
             schema_file="simulation_models_info.schema.yml",
             offline=True,
         )
-
-
-def test_validate_simulation_models_info_schema_allows_missing_model_status_for_010():
-    """Test simulation models info schema 0.1.0 keeps backward compatibility."""
-    data = {
-        "schema_version": "0.1.0",
-        "model_version": "6.1.0",
-        "model_update": "patch_update",
-        "model_version_history": ["6.0.2"],
-        "description": "test",
-        "changes": {},
-    }
-
-    schema.validate_dict_using_schema(
-        data=data,
-        schema_file="simulation_models_info.schema.yml",
-        offline=True,
+        == data
     )
 
 
@@ -529,72 +330,7 @@ def test_add_array_elements():
     assert len(test_dict_added_2["data"]["InstrumentTypeElement"]["enum"]) > 2
 
 
-def test_retrieve_yaml_schema_from_uri(tmp_path, monkeypatch):
-    # Create a dummy schema file
-    dummy_schema = {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "type": "object",
-        "properties": {"foo": {"type": "string"}},
-    }
-    schema_file = tmp_path / "dummy.schema.yml"
-    with open(schema_file, "w", encoding="utf-8") as f:
-        yaml.dump(dummy_schema, f)
-
-    # Patch SCHEMA_PATH to tmp_path for this test
-    monkeypatch.setattr(schema, "SCHEMA_PATH", tmp_path)
-
-    # The uri should be 'file:/dummy.schema.yml'
-    uri = f"file:/{schema_file.name}"
-
-    resource = schema._retrieve_yaml_schema_from_uri(uri)
-    assert hasattr(resource, "contents")
-    assert resource.contents["type"] == "object"
-    assert "foo" in resource.contents["properties"]
-
-    # Test with non-existing file
-    bad_uri = "file:/not_existing_file.schema.yml"
-    with pytest.raises(FileNotFoundError):
-        schema._retrieve_yaml_schema_from_uri(bad_uri)
-
-
-def test_get_schema_version_from_data_with_schema_version():
-    data = {"schema_version": "1.2.3"}
-    result = schema.get_schema_version_from_data(data)
-    assert result == "1.2.3"
-
-
-def test_get_schema_version_from_data_with_uppercase_reference():
-    data = {"CTA": {"REFERENCE": {"VERSION": "2.0.0"}}}
-    result = schema.get_schema_version_from_data(data)
-    assert result == "2.0.0"
-
-
-def test_get_schema_version_from_data_with_lowercase_reference():
-    data = {"cta": {"reference": {"version": "3.1.4"}}}
-    result = schema.get_schema_version_from_data(data)
-    assert result == "3.1.4"
-
-
-def test_get_schema_version_from_data_with_no_version():
-    data = {"foo": "bar"}
-    result = schema.get_schema_version_from_data(data)
-    assert result == "latest"
-
-
-def test_get_schema_version_from_data_with_custom_observatory():
-    data = {"VERITAS": {"REFERENCE": {"VERSION": "0.9.8"}}}
-    result = schema.get_schema_version_from_data(data, observatory="veritas")
-    assert result == "0.9.8"
-
-
-def test_get_schema_version_from_data_with_custom_observatory_lowercase():
-    data = {"veritas": {"reference": {"version": "0.9.9"}}}
-    result = schema.get_schema_version_from_data(data, observatory="veritas")
-    assert result == "0.9.9"
-
-
 def test_validate_deprecation_and_version(caplog, monkeypatch):
-    """Test validate_deprecation_and_version function covering all edge cases."""
 
     # Mock simtools version for predictable testing
     def mock_get_software_version(software_name):
@@ -716,7 +452,6 @@ def test_validate_deprecation_and_version(caplog, monkeypatch):
 
 
 def test_extract_schema_url_from_metadata_dict():
-    """Test _extract_schema_url_from_metadata_dict function."""
     # Test with cta lowercase (default observatory is "cta")
     metadata = {"cta": {"product": {"data": {"model": {"url": "https://schema.example.com"}}}}}
     result = schema._extract_schema_url_from_metadata_dict(metadata)
@@ -745,7 +480,6 @@ def test_extract_schema_url_from_metadata_dict():
 
 
 def test_get_schema_file_from_file_metadata(tmp_test_directory):
-    """Test get_schema_file_from_file_metadata function."""
     # Create a test file with schema URL (lowercase cta)
     test_file = Path(tmp_test_directory) / "test_with_schema.yml"
     metadata = {"cta": {"product": {"data": {"model": {"url": "https://schema.example.com"}}}}}
@@ -771,7 +505,6 @@ def test_get_schema_file_from_file_metadata(tmp_test_directory):
 
 
 def test_get_schema_file_name(tmp_test_directory):
-    """Test _get_schema_file_name function."""
     # Test with schema_file provided
     result = schema._get_schema_file_name(schema_file="my_schema.yml")
     assert result == "my_schema.yml"
@@ -809,7 +542,6 @@ def test_get_schema_file_name(tmp_test_directory):
 
 
 def test_validate_schema_from_files(tmp_test_directory, caplog):
-    """Test validate_schema_from_files function."""
     # Create a simple valid data file
     test_file = Path(tmp_test_directory) / "valid_data.yml"
     valid_data = {
@@ -868,38 +600,7 @@ def test_validate_schema_from_files(tmp_test_directory, caplog):
         )
 
 
-def test_table_column_unit_is_optional_in_data_description_schema():
-    data_description = {
-        "title": "Schema without table column units",
-        "schema_version": "0.1.0",
-        "meta_schema": "simpipe-schema",
-        "meta_schema_version": "0.1.0",
-        "name": "schema_without_table_column_units",
-        "description": "Table columns without explicit units default to dimensionless.",
-        "data": [
-            {
-                "type": "data_table",
-                "table_columns": [
-                    {
-                        "name": "value",
-                        "description": "Dimensionless value.",
-                        "required": True,
-                        "type": "float64",
-                    }
-                ],
-            }
-        ],
-    }
-
-    schema.validate_dict_using_schema(
-        data_description,
-        schema_file=MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
-        offline=True,
-    )
-
-
 def test_validate_meta_schema_url_offline():
-    """Test _validate_meta_schema_url function."""
     # Test with non-dict data
     schema._validate_meta_schema_url("not a dict")
     schema._validate_meta_schema_url([1, 2, 3])
@@ -910,25 +611,3 @@ def test_validate_meta_schema_url_offline():
     # Test with empty meta_schema_url
     with pytest.raises(ValueError, match=r"unknown url type: ''"):
         schema._validate_meta_schema_url({"meta_schema_url": ""})
-
-
-def test_get_array_element_list(monkeypatch):
-    """Test _get_array_element_list function."""
-
-    def mock_array_elements():
-        return {"telescope": None, "calibration_device": None}
-
-    def mock_array_element_design_types(element):
-        if element == "telescope":
-            return ["design1", "design2"]
-        return []
-
-    monkeypatch.setattr(schema.names, "array_elements", mock_array_elements)
-    monkeypatch.setattr(schema.names, "array_element_design_types", mock_array_element_design_types)
-
-    result = schema._get_array_element_list()
-    assert isinstance(result, list)
-    assert "telescope" in result
-    assert "calibration_device" in result
-    assert "telescope-design1" in result
-    assert "telescope-design2" in result

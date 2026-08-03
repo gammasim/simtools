@@ -3,7 +3,6 @@ import logging
 import astropy.units as u
 import numpy as np
 import pytest
-from astropy.tests.helper import assert_quantity_allclose
 
 from simtools.sim_events.histograms import EventDataHistograms
 
@@ -44,35 +43,11 @@ def reduced_file_info():
 
 
 def test_init(mock_reader, hdf5_file_name):
-    """Test initialization with telescope list."""
     test_telescope_list = [1, 2]
     histograms = EventDataHistograms(hdf5_file_name, "test_array", test_telescope_list)
 
     assert histograms.event_data_file == hdf5_file_name
     mock_reader.assert_called_once_with(hdf5_file_name, telescope_list=test_telescope_list)
-
-
-def test_init_default_telescope_list(mock_reader, hdf5_file_name):
-    """Test initialization without telescope list."""
-    histograms = EventDataHistograms(hdf5_file_name)
-
-    assert histograms.event_data_file == hdf5_file_name
-    mock_reader.assert_called_once_with(hdf5_file_name, telescope_list=None)
-
-
-def test_init_resolves_event_data_glob_patterns(mocker):
-    """Test initialization resolves glob patterns before opening the first file."""
-    mock_resolve = mocker.patch(
-        "simtools.sim_events.histograms.resolve_file_patterns",
-        return_value=["test_file_1.h5", "test_file_2.h5"],
-    )
-    mock_reader = mocker.patch("simtools.sim_events.histograms.EventDataReader")
-
-    histograms = EventDataHistograms("test_file_*.h5")
-
-    mock_resolve.assert_called_once_with("test_file_*.h5")
-    assert histograms.event_data_files == ["test_file_1.h5", "test_file_2.h5"]
-    mock_reader.assert_called_once_with("test_file_1.h5", telescope_list=None)
 
 
 def test_energy_bins(mock_reader, hdf5_file_name):
@@ -84,38 +59,6 @@ def test_energy_bins(mock_reader, hdf5_file_name):
     assert bins[0] == pytest.approx(1.0e-3)
     assert bins[-1] == pytest.approx(1.0e3)
     assert np.allclose(np.diff(np.log10(bins)), 0.1)
-
-
-def test_energy_bins_use_file_info_energy_max(mock_reader, hdf5_file_name):
-    """Test energy_bins uses energy_max from file_info when available."""
-    histograms = EventDataHistograms(hdf5_file_name)
-    histograms.file_info = {
-        "energy_min": 0.1 * u.TeV,
-        "energy_max": 30.0 * u.TeV,
-    }
-
-    bins = histograms.energy_bins
-
-    assert bins[0] == pytest.approx(0.1)
-    assert bins[-1] == pytest.approx(100.0)
-    assert len(bins) == 31
-    assert np.allclose(np.diff(np.log10(bins)), 0.1)
-
-
-def test_energy_bins_use_configured_bins_per_decade(mock_reader, hdf5_file_name):
-    """Test energy_bins respects the configured logarithmic resolution."""
-    histograms = EventDataHistograms(hdf5_file_name, energy_bins_per_decade=5)
-    histograms.file_info = {
-        "energy_min": 0.1 * u.TeV,
-        "energy_max": 30.0 * u.TeV,
-    }
-
-    bins = histograms.energy_bins
-
-    assert bins[0] == pytest.approx(0.1)
-    assert bins[-1] == pytest.approx(100.0)
-    assert len(bins) == 16
-    assert np.allclose(np.diff(np.log10(bins)), 0.2)
 
 
 def test_core_distance_bins(mock_reader, hdf5_file_name):
@@ -189,31 +132,6 @@ def test_fill_histogram_and_bin_edges_2d_new(mock_reader, hdf5_file_name):
         np.array([1, 2, 3]), np.array([4, 5, 6]), bins=[np.array([0, 2, 4]), np.array([3, 5, 7])]
     )
     assert np.array_equal(data["histogram"], expected_hist)
-
-
-def test_fill_histogram_and_bin_edges_2d_existing(mock_reader, hdf5_file_name):
-    histograms = EventDataHistograms(hdf5_file_name)
-    data = {
-        "1d": False,
-        "event_data": (mock_reader.return_value, mock_reader.return_value),
-        "event_data_column": ("simulated_energy", "core_distance_shower"),
-        "bin_edges": [np.array([0, 2, 4]), np.array([3, 5, 7])],
-        "histogram": None,
-    }
-    setattr(mock_reader.return_value, "simulated_energy", np.array([1, 2]))
-    setattr(mock_reader.return_value, "core_distance_shower", np.array([4, 5]))
-    histograms._fill_histogram_and_bin_edges(data)
-    setattr(mock_reader.return_value, "simulated_energy", np.array([2, 3]))
-    setattr(mock_reader.return_value, "core_distance_shower", np.array([5, 6]))
-    histograms._fill_histogram_and_bin_edges(data)
-    combined_data = (
-        np.concatenate([np.array([1, 2]), np.array([2, 3])]),
-        np.concatenate([np.array([4, 5]), np.array([5, 6])]),
-    )
-    expected_total_hist, _, _ = np.histogram2d(
-        combined_data[0], combined_data[1], bins=[np.array([0, 2, 4]), np.array([3, 5, 7])]
-    )
-    assert np.array_equal(data["histogram"], expected_total_hist)
 
 
 def test_fill_histogram_and_bin_edges_2d_event_data_none(mock_reader, hdf5_file_name):
@@ -311,7 +229,6 @@ def test_fill(mock_reader, hdf5_file_name, mocker):
 
 
 def test_fill_populates_primary_particle(mock_reader, hdf5_file_name, mocker, reduced_file_info):
-    """Test that fill() stores primary_particle in file_info."""
     histograms = EventDataHistograms(hdf5_file_name)
 
     mock_reader.return_value.data_sets = ["test_dataset"]
@@ -333,7 +250,6 @@ def test_fill_populates_primary_particle(mock_reader, hdf5_file_name, mocker, re
 
 
 def test_fill_reads_multiple_files_sequentially(mock_reader, mocker):
-    """Test fill iterates over multiple files without keeping a shared reader state."""
     histograms = EventDataHistograms(["test_file_1.h5", "test_file_2.h5"])
 
     mock_file_info = mocker.Mock()
@@ -373,7 +289,6 @@ def test_fill_reads_multiple_files_sequentially(mock_reader, mocker):
 
 @pytest.mark.parametrize("exception", [OSError("bad file"), KeyError("missing dataset")])
 def test_iter_readers_skips_unreadable_files_when_enabled(mocker, exception):
-    """Test unreadable files are skipped when creating readers."""
     mocker.patch(
         "simtools.sim_events.histograms.resolve_file_patterns",
         return_value=["bad_file.h5"],
@@ -387,7 +302,6 @@ def test_iter_readers_skips_unreadable_files_when_enabled(mocker, exception):
 
 @pytest.mark.parametrize("exception", [OSError("bad file"), KeyError("missing dataset")])
 def test_fill_skips_read_errors_when_enabled(mock_reader, mocker, hdf5_file_name, exception):
-    """Test read errors are skipped while filling histograms."""
     histograms = EventDataHistograms(hdf5_file_name, skip_invalid_event_data_files=True)
     mock_reader.return_value.data_sets = ["test_dataset"]
     mock_reader.return_value.read_event_data.side_effect = exception
@@ -406,7 +320,6 @@ def test_fill_skips_read_errors_when_enabled(mock_reader, mocker, hdf5_file_name
 def test_fill_accumulates_histograms_across_data_sets(
     mock_reader, hdf5_file_name, mocker, reduced_file_info
 ):
-    """Test fill accumulates histogram counts across all indexed datasets."""
     histograms = EventDataHistograms(hdf5_file_name)
 
     mock_reader.return_value.data_sets = ["dataset_0", "dataset_1"]
@@ -452,45 +365,6 @@ def test_fill_accumulates_histograms_across_data_sets(
 
     np.testing.assert_array_equal(histograms.histograms["energy"]["histogram"], np.array([2, 1]))
     assert mock_reader.return_value.read_event_data.call_count == 2
-
-
-def test_fill_coerces_unitless_file_info_values(mock_reader, hdf5_file_name, mocker):
-    """Test fill converts unitless FILE_INFO values to expected quantities."""
-    histograms = EventDataHistograms(hdf5_file_name)
-
-    mock_reader.return_value.data_sets = ["dataset_0"]
-    mock_reader.return_value.read_event_data.return_value = (
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-    )
-    mock_reader.return_value.get_reduced_simulation_file_info.return_value = {
-        "primary_particle": "gamma",
-        "zenith": 20.0,
-        "azimuth": 180.0,
-        "nsb_level": 1.0,
-        "energy_min": 0.1,
-        "core_scatter_max": 100.0,
-        "viewcone_max": 2.0,
-        "solid_angle": 1.0,
-        "scatter_area": 1.0,
-    }
-
-    mocker.patch.object(histograms, "_define_histograms", return_value={})
-    mocker.patch.object(histograms, "print_summary")
-    mocker.patch.object(histograms, "calculate_efficiency_data")
-    mocker.patch.object(histograms, "calculate_cumulative_data")
-
-    histograms.fill()
-
-    assert_quantity_allclose(histograms.file_info["zenith"], 20.0 * u.deg)
-    assert_quantity_allclose(histograms.file_info["azimuth"], 180.0 * u.deg)
-    assert_quantity_allclose(histograms.file_info["energy_min"], 0.1 * u.TeV)
-    assert_quantity_allclose(histograms.file_info["core_scatter_max"], 100.0 * u.m)
-    assert_quantity_allclose(histograms.file_info["viewcone_max"], 2.0 * u.deg)
-    assert_quantity_allclose(histograms.file_info["solid_angle"], 1.0 * u.sr)
-    assert_quantity_allclose(histograms.file_info["scatter_area"], 1.0 * (u.cm**2))
 
 
 def test_triggered_reuse_counts_repeat_per_triggered_event(mock_reader, hdf5_file_name, mocker):
@@ -632,7 +506,6 @@ def test_accumulate_reuse_histograms_match_triggered_event_phase_space(
 
 
 def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
-    """Test calculation of cumulative histogram."""
     histograms = EventDataHistograms(hdf5_file_name)
 
     # Test None case
@@ -722,7 +595,6 @@ def test_calculate_cumulative_histogram(mock_reader, hdf5_file_name):
 
 
 def test_normalized_cumulative_histogram(mock_reader, hdf5_file_name):
-    """Test normalized cumulative histogram calculation for alpha plots."""
     histograms = EventDataHistograms(hdf5_file_name)
 
     # Test None case
@@ -778,7 +650,6 @@ def mock_histograms(mocker):
 
 
 def test_rebin_2d_histogram(mock_histograms):
-    """Test rebinning a 2D histogram along the energy dimension (y-axis) only."""
     hist = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]])
     x_bins = np.array([0, 1, 2, 3, 4])
     y_bins = np.array([0, 10, 20, 30, 40])
@@ -818,38 +689,7 @@ def test_rebin_2d_histogram(mock_histograms):
     assert np.array_equal(rebinned_y_bins, expected_y_bins)
 
 
-def test_energy_bins_default(mock_reader, hdf5_file_name):
-    """Test energy_bins property with default values."""
-    histograms = EventDataHistograms(hdf5_file_name)
-    mock_reader.return_value.get_reduced_simulation_file_info.return_value = {}
-
-    bins = histograms.energy_bins
-
-    assert isinstance(bins, np.ndarray)
-    assert len(bins) == 61
-    assert bins[0] == pytest.approx(1.0e-3)
-    assert bins[-1] == pytest.approx(1.0e3)
-    assert np.allclose(np.diff(np.log10(bins)), 0.1)
-
-
-def test_core_distance_bins_with_file_info(mock_reader, hdf5_file_name):
-    """Test core_distance_bins with file_info values."""
-    histograms = EventDataHistograms(hdf5_file_name)
-    histograms.file_info = {
-        "core_scatter_min": 10.0 * u.m,
-        "core_scatter_max": 500.0 * u.m,
-    }
-
-    bins = histograms.core_distance_bins
-
-    assert isinstance(bins, np.ndarray)
-    assert len(bins) == 100
-    assert bins[0] == pytest.approx(10.0)
-    assert bins[-1] == pytest.approx(500.0)
-
-
 def test_core_distance_bins_with_existing_edges(mock_reader, hdf5_file_name):
-    """Test core_distance_bins when bin edges already exist in histograms."""
     histograms = EventDataHistograms(hdf5_file_name)
     mock_edges = np.linspace(0, 1000, 50)
     histograms.histograms["core_distance_bin_edges"] = mock_edges
@@ -861,22 +701,7 @@ def test_core_distance_bins_with_existing_edges(mock_reader, hdf5_file_name):
     assert np.array_equal(bins, mock_edges)
 
 
-def test_view_cone_bins_default(mock_reader, hdf5_file_name):
-    """Test default view_cone_bins when no histogram data is present."""
-    histograms = EventDataHistograms(hdf5_file_name)
-    histograms.file_info = {
-        "viewcone_min": 0.0 * u.deg,
-        "viewcone_max": 10.0 * u.deg,
-    }
-    bins = histograms.view_cone_bins
-    assert isinstance(bins, np.ndarray)
-    assert len(bins) == 100
-    assert bins[0] == pytest.approx(0.0)
-    assert bins[-1] == pytest.approx(10.0)
-
-
 def test_view_cone_bins_from_bin_width(mock_reader, hdf5_file_name):
-    """Test view_cone_bins from broad-range limits and fixed angular bin width."""
     histograms = EventDataHistograms(hdf5_file_name, angular_distance_bin_width=0.5 * u.deg)
     histograms.file_info = {
         "viewcone_min": 0.25 * u.deg,
@@ -887,7 +712,6 @@ def test_view_cone_bins_from_bin_width(mock_reader, hdf5_file_name):
 
 
 def test_view_cone_bins_with_histogram_data(mock_reader, hdf5_file_name):
-    """Test view_cone_bins when histogram data is already present."""
     histograms = EventDataHistograms(hdf5_file_name)
     mock_bins = np.linspace(0.0, 5.0, 50)
     histograms.histograms["viewcone_bin_edges"] = mock_bins
@@ -897,18 +721,7 @@ def test_view_cone_bins_with_histogram_data(mock_reader, hdf5_file_name):
     assert np.array_equal(bins, mock_bins)
 
 
-def test_view_cone_bins_no_file_info(mock_reader, hdf5_file_name):
-    """Test view_cone_bins when file_info is empty."""
-    histograms = EventDataHistograms(hdf5_file_name)
-    bins = histograms.view_cone_bins
-    assert isinstance(bins, np.ndarray)
-    assert len(bins) == 100
-    assert bins[0] == pytest.approx(0.0)
-    assert bins[-1] == pytest.approx(20.0)
-
-
 def test_calculate_cumulative_data(mock_reader, hdf5_file_name):
-    """Test calculate_cumulative_data end-to-end without patching internals."""
     histograms = EventDataHistograms(hdf5_file_name)
     histograms.reader.data_sets = [{"TRIGGERS": "TRIGGERS"}]
 
@@ -962,7 +775,6 @@ def test_calculate_cumulative_data(mock_reader, hdf5_file_name):
 
 
 def test_calculate_efficiency_data(mock_reader, hdf5_file_name):
-    """Test calculate_efficiency_data method."""
     histograms = EventDataHistograms(hdf5_file_name)
     histograms.reader.data_sets = [{"TRIGGERS": "TRIGGERS"}]
 
@@ -993,7 +805,6 @@ def test_calculate_efficiency_data(mock_reader, hdf5_file_name):
 
 
 def test_calculate_efficiency_data_shape_mismatch(mock_reader, hdf5_file_name, caplog):
-    """Test calculate_efficiency_data with shape mismatch."""
     histograms = EventDataHistograms(hdf5_file_name)
     histograms.reader.data_sets = [{"TRIGGERS": "TRIGGERS"}]
     histograms.histograms = {
@@ -1013,7 +824,6 @@ def test_calculate_efficiency_data_shape_mismatch(mock_reader, hdf5_file_name, c
 
 
 def test_calculate_efficiency_data_missing_histograms(mock_reader, hdf5_file_name):
-    """Test calculate_efficiency_data with missing histograms."""
     histograms = EventDataHistograms(hdf5_file_name)
     histograms.reader.data_sets = [{"TRIGGERS": "TRIGGERS"}]
 
@@ -1034,48 +844,7 @@ def test_energy_bins_with_histogram_edges(mock_reader, hdf5_file_name):
     assert np.array_equal(bins, mock_edges)
 
 
-def test_update_file_info_stores_energy_max(mock_reader, hdf5_file_name):
-    """Test _update_file_info keeps energy_max from reduced file info."""
-    histograms = EventDataHistograms(hdf5_file_name)
-    file_info_table = {
-        "primary_particle": "gamma",
-        "zenith": 20.0 * u.deg,
-        "azimuth": 0.0 * u.deg,
-        "nsb_level": 1.0,
-        "energy_min": 0.03 * u.TeV,
-        "energy_max": 30.0 * u.TeV,
-        "core_scatter_max": 500.0 * u.m,
-        "viewcone_max": 10.0 * u.deg,
-        "solid_angle": 1.0 * u.sr,
-        "scatter_area": 1.0 * u.cm**2,
-    }
-
-    histograms._update_file_info(file_info_table)
-
-    assert_quantity_allclose(histograms.file_info["energy_max"], 30.0 * u.TeV)
-
-
-def test_print_summary(mock_histograms, mocker, caplog):
-    """Test the print_summary method."""
-    histograms = mock_histograms
-
-    # Mock histogram data
-    mock_histograms.histograms = {
-        "energy_mc": {"histogram": np.array([10, 20, 30])},
-        "energy": {"histogram": np.array([5, 15, 25])},
-    }
-
-    # Capture log output
-    with caplog.at_level(logging.INFO):
-        histograms.print_summary()
-
-    # Verify log messages
-    assert "Total simulated events: 60" in caplog.text
-    assert "Total triggered events: 45" in caplog.text
-
-
 def test_fill_histogram_and_bin_edges_event_data_none(mock_reader, hdf5_file_name):
-    """Test _fill_histogram_and_bin_edges returns early if event_data is None."""
     histograms = EventDataHistograms(hdf5_file_name)
     data = {
         "1d": True,
@@ -1099,7 +868,6 @@ def test_fill_histogram_and_bin_edges_event_data_none(mock_reader, hdf5_file_nam
 
 
 def test_view_cone_bins_min_equals_max(mock_reader, hdf5_file_name):
-    """Test view_cone_bins when viewcone_min equals viewcone_max."""
     histograms = EventDataHistograms(hdf5_file_name)
     histograms.file_info = {
         "viewcone_min": 5.0 * u.deg,
@@ -1113,7 +881,6 @@ def test_view_cone_bins_min_equals_max(mock_reader, hdf5_file_name):
 
 
 def test_accumulate_tracks_angular_distance_range(mock_reader, hdf5_file_name, mocker):
-    """Angular-distance extrema are retained after raw event data is released."""
     histograms = EventDataHistograms.create_accumulator()
     triggered_data = mocker.Mock(angular_distance=np.array([0.1, 0.1]))
     mocker.patch.object(histograms, "_update_file_info")

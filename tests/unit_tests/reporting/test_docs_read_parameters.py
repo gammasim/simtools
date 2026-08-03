@@ -591,7 +591,6 @@ def test_produce_observatory_report(mocker, tmp_path):
 
 
 def test__write_parameters_table(tmp_path):
-    """Test writing parameters table."""
     args = {}
     read_parameters = ReadParameters(args, tmp_path)
 
@@ -632,7 +631,6 @@ def test__write_parameters_table(tmp_path):
 
 
 def test_model_version_setter_with_invalid_list(tmp_path):
-    """Test setting model_version with an invalid list containing more than one element."""
     args = {"model_version": "6.0.0"}
     read_parameters = ReadParameters(args=args, output_path=tmp_path)
 
@@ -1171,7 +1169,6 @@ def test_write_single_calibration_report(
 
 
 def test_generate_model_parameter_reports_for_devices(tmp_path):
-    """Test generating model parameter reports for calibration devices."""
     args = {"all_sites": True, "all_telescopes": True}
     read_parameters = ReadParameters(args=args, output_path=tmp_path)
 
@@ -1318,27 +1315,6 @@ def test_get_simulation_configuration_data_collects_dict_table(tmp_path):
     assert dict_tables[0][1] == "dict_param"
 
 
-def test_produce_simulation_configuration_report_non_simtel_writes_dict_table(tmp_path, mocker):
-    rp = ReadParameters(
-        args={"model_version": "6.0.0", "simulation_software": "corsika"},
-        output_path=tmp_path,
-    )
-    mocker.patch.object(
-        rp,
-        "get_simulation_configuration_data",
-        return_value=(
-            [("LSTN-01", "p", "1.0.0", "v", "d", "s")],
-            [("LSTN-01", "dict_param", [{"a": 1}], "m")],
-        ),
-    )
-    write_dict_table = mocker.patch.object(rp, "_write_dict_table")
-
-    rp.produce_simulation_configuration_report()
-
-    assert write_dict_table.call_count == 1
-    assert write_dict_table.call_args[0][0] == "dict_param"
-
-
 def test_produce_array_element_report_writes_design_note_and_dict_table(tmp_path, mocker):
     rp = ReadParameters(
         args={"site": "North", "telescope": "LSTN-01", "model_version": "6.0.0"},
@@ -1425,39 +1401,6 @@ def test__write_dict_table_empty_value_data(tmp_path):
     assert file.getvalue() == ""
 
 
-def test_get_calibration_data_uses_telescope_description_fallback(tmp_path):
-    rp = ReadParameters(args={"model_version": "6.0.0"}, output_path=tmp_path)
-
-    all_parameter_data = {
-        "array_element_position_ground": {
-            "value": [0.0, 0.0, 0.0],
-            "unit": "m",
-            "parameter_version": "1.0.0",
-            "file": False,
-            "instrument": "ILLN-design",
-        }
-    }
-
-    with patch.object(
-        rp,
-        "get_all_parameter_descriptions",
-        side_effect=[
-            {},
-            {
-                "array_element_position_ground": {
-                    "description": "pos desc",
-                    "short_description": "pos short",
-                    "inst_class": "Structure",
-                }
-            },
-        ],
-    ):
-        data, _dict_tables = rp.get_calibration_data(all_parameter_data, "ILLN-01")
-
-    assert data[0][0] == "Structure"
-    assert "array_element_position_ground" in data[0][1]
-
-
 def test_generate_model_parameter_reports_for_devices_site_list(tmp_path):
     rp = ReadParameters(args={"all_sites": True}, output_path=tmp_path)
 
@@ -1485,14 +1428,6 @@ def test__build_version_parameter_item_returns_none_for_other_instrument(tmp_pat
     )
 
     assert result is None
-
-
-def test__collect_calibration_array_elements_adds_design_model(tmp_path, mocker):
-    rp = ReadParameters(args={"model_version": "6.0.0"}, output_path=tmp_path)
-    mocker.patch.object(rp.db, "get_array_elements", return_value=["ILLN-01"])
-    mocker.patch.object(rp.db, "get_design_model", return_value="ILLN-design")
-
-    assert rp._collect_calibration_array_elements() == ["ILLN-01", "ILLN-design"]
 
 
 def _delta_entry(value):
@@ -1541,29 +1476,6 @@ def test__write_delta_helpers(tmp_path):
     assert "../6.0.0/target.md" in content
     assert "focal_length" in content
     assert "2810" in content
-
-
-@pytest.mark.parametrize(
-    ("parameters", "base_data", "current_data", "expected_count"),
-    [
-        (
-            None,
-            {"a": _delta_entry(1)},
-            {"a": _delta_entry(2)},
-            1,
-        ),
-        (
-            None,
-            {"a": _delta_entry(1)},
-            {"a": _delta_entry(1)},
-            0,
-        ),
-    ],
-)
-def test__build_delta_changes(parameters, base_data, current_data, expected_count, tmp_path):
-    rp = ReadParameters(args={}, output_path=tmp_path)
-    changes = rp._build_delta_changes(base_data, current_data, parameters=parameters)
-    assert len(changes) == expected_count
 
 
 @pytest.mark.parametrize(

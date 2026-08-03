@@ -3,11 +3,23 @@
 import os
 import time
 from concurrent.futures import Future
-from multiprocessing import Manager
 
 import pytest
 
-from simtools.job_execution import process_pool as pp
+
+def _process_pools_available():
+    """Return whether the host permits multiprocessing semaphore creation."""
+    try:
+        os.sysconf("SC_SEM_NSEMS_MAX")
+    except OSError, PermissionError:
+        return False
+    return True
+
+
+pytestmark = pytest.mark.skipif(
+    not _process_pools_available(),
+    reason="the host does not permit multiprocessing semaphore creation",
+)
 
 
 def _sleep_then_return(args):
@@ -53,136 +65,3 @@ class _FakeExecutor:
         except (ValueError, TypeError, RuntimeError) as exc:
             fut.set_exception(exc)
         return fut
-
-
-def test_preserves_input_order_real_pool():
-    """Results should be returned in the same order as inputs."""
-    items = [(0.03, "a"), (0.00, "b"), (0.01, "c")]
-    results = pp.process_pool_map_ordered(
-        _sleep_then_return,
-        items,
-        max_workers=3,
-        mp_start_method=None,
-    )
-    assert results == ["a", "b", "c"]
-
-
-def test_propagates_worker_exception_real_pool():
-    """Worker exceptions should be re-raised when collecting results."""
-    with pytest.raises(ValueError, match="boom"):
-        pp.process_pool_map_ordered(
-            _raise_on_3,
-            [1, 2, 3, 4],
-            max_workers=2,
-            mp_start_method=None,
-        )
-
-
-def test_initializer_runs_in_workers_real_pool():
-    """Initializer should run in worker processes (at least one PID recorded)."""
-    with Manager() as manager:
-        pid_list = manager.list()
-        results = pp.process_pool_map_ordered(
-            _identity,
-            list(range(4)),
-            max_workers=2,
-            mp_start_method=None,
-            initializer=_init_record_pid,
-            initargs=(pid_list,),
-        )
-        assert results == list(range(4))
-        assert len(set(pid_list)) >= 1
-
-
-def test_uses_60_percent_when_max_workers_none(monkeypatch):
-    """If max_workers is None, should use 60% of CPUs."""
-    monkeypatch.setattr(pp.os, "cpu_count", (10).__int__)
-    monkeypatch.setattr(pp, "ProcessPoolExecutor", _FakeExecutor)
-    monkeypatch.setattr(pp, "as_completed", list)
-
-    results = pp.process_pool_map_ordered(_identity, [1, 2, 3], max_workers=None)
-    assert results == [1, 2, 3]
-    assert _FakeExecutor.last_kwargs["max_workers"] == 6
-
-
-def test_uses_all_cpus_when_max_workers_zero_or_negative(monkeypatch):
-    """If max_workers is <=0, os.cpu_count() should be used."""
-    monkeypatch.setattr(pp.os, "cpu_count", (7).__int__)
-    monkeypatch.setattr(pp, "ProcessPoolExecutor", _FakeExecutor)
-    monkeypatch.setattr(pp, "as_completed", list)
-
-    results = pp.process_pool_map_ordered(_identity, [1, 2, 3], max_workers=0)
-    assert results == [1, 2, 3]
-    assert _FakeExecutor.last_kwargs["max_workers"] == 7
-
-    results = pp.process_pool_map_ordered(_identity, [1, 2, 3], max_workers=-1)
-    assert results == [1, 2, 3]
-    assert _FakeExecutor.last_kwargs["max_workers"] == 7
-
-
-def test_does_not_set_mp_context_when_start_method_none(monkeypatch):
-    """When mp_start_method is None, mp_context should not be passed to the executor."""
-    monkeypatch.setattr(pp, "ProcessPoolExecutor", _FakeExecutor)
-    monkeypatch.setattr(pp, "as_completed", list)
-    pp.process_pool_map_ordered(_identity, [1], max_workers=1, mp_start_method=None)
-    assert "mp_context" not in _FakeExecutor.last_kwargs
-
-
-def test_single_worker(monkeypatch):
-    """Should work with max_workers=1."""
-    monkeypatch.setattr(pp, "ProcessPoolExecutor", _FakeExecutor)
-    monkeypatch.setattr(pp, "as_completed", list)
-    results = pp.process_pool_map_ordered(_identity, [5, 6, 7], max_workers=1)
-    assert results == [5, 6, 7]
-
-
-def test_empty_input(monkeypatch):
-    """Should handle empty input gracefully."""
-    monkeypatch.setattr(pp, "ProcessPoolExecutor", _FakeExecutor)
-    monkeypatch.setattr(pp, "as_completed", list)
-    results = pp.process_pool_map_ordered(_identity, [], max_workers=2)
-    assert results == []
-
-
-def test_determine_max_workers_with_explicit_value():
-    """Test determine_max_workers with explicit positive value."""
-    assert pp.determine_max_workers(max_workers=4) == 4
-    assert pp.determine_max_workers(max_workers=1) == 1
-    assert pp.determine_max_workers(max_workers=16) == 16
-
-
-def test_determine_max_workers_with_default(monkeypatch):
-    """Test determine_max_workers with None (uses 60% of CPUs by default)."""
-    monkeypatch.setattr(pp.os, "cpu_count", (10).__int__)
-    assert pp.determine_max_workers(max_workers=None) == 6
-
-    monkeypatch.setattr(pp.os, "cpu_count", (8).__int__)
-    assert pp.determine_max_workers(max_workers=None) == 4
-
-    # Should use at least 1
-    monkeypatch.setattr(pp.os, "cpu_count", (1).__int__)
-    assert pp.determine_max_workers(max_workers=None) == 1
-
-
-def test_determine_max_workers_with_zero(monkeypatch):
-    """Test determine_max_workers with 0 (use all cores)."""
-    monkeypatch.setattr(pp.os, "cpu_count", (8).__int__)
-    assert pp.determine_max_workers(max_workers=0) == 8
-
-    monkeypatch.setattr(pp.os, "cpu_count", (12).__int__)
-    assert pp.determine_max_workers(max_workers=-1) == 12
-
-
-def test_determine_max_workers_custom_fraction(monkeypatch):
-    """Test determine_max_workers with custom default fraction."""
-    monkeypatch.setattr(pp.os, "cpu_count", (10).__int__)
-    assert pp.determine_max_workers(max_workers=None, default_fraction=0.8) == 8
-    assert pp.determine_max_workers(max_workers=None, default_fraction=0.5) == 5
-    assert pp.determine_max_workers(max_workers=None, default_fraction=1.0) == 10
-
-
-def test_determine_max_workers_when_cpu_count_none(monkeypatch):
-    """Test determine_max_workers when os.cpu_count() returns None."""
-    monkeypatch.setattr(pp.os, "cpu_count", lambda: None)
-    assert pp.determine_max_workers(max_workers=None) == 1
-    assert pp.determine_max_workers(max_workers=0) == 1

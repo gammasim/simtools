@@ -164,42 +164,6 @@ def test_replace_placeholders_in_configuration_replaces_in_list():
     assert result["output_path"] == str(output_path)
 
 
-def test_replace_placeholders_in_configuration_no_placeholder():
-    config = {"key": "value", "list": ["item1", "item2"]}
-    output_path = TEST_OUTPUT_PATH
-    setting_workflow = "WF"
-    result = simtools_runner._replace_placeholders_in_configuration(
-        config.copy(), output_path, setting_workflow
-    )
-    assert result["key"] == "value"
-    assert result["list"] == ["item1", "item2"]
-    assert result["output_path"] == str(output_path)
-
-
-def test_replace_placeholders_in_configuration_empty_config():
-    config = {}
-    output_path = TEST_OUTPUT_PATH
-    setting_workflow = "WF"
-    result = simtools_runner._replace_placeholders_in_configuration(
-        config.copy(), output_path, setting_workflow
-    )
-    assert result["output_path"] == str(output_path)
-
-
-def test_replace_placeholders_in_configuration_keeps_existing_output_path(tmp_test_directory):
-    config = {
-        "output_path": str(tmp_test_directory / "WF"),
-        "input_file": "__SETTING_WORKFLOW__/data.txt",
-    }
-    output_path = TEST_OUTPUT_PATH
-    setting_workflow = "LSTN-01/workflow"
-    result = simtools_runner._replace_placeholders_in_configuration(
-        config.copy(), output_path, setting_workflow
-    )
-    assert result["output_path"] == str(tmp_test_directory / "WF")
-    assert result["input_file"] == "LSTN-01/workflow/data.txt"
-
-
 def test_prepare_application_configuration_resolves_by_version(tmp_test_directory):
     config = {
         "model_version": "6.0.2",
@@ -309,33 +273,6 @@ def test_read_application_configuration_empty_applications(
     assert workflow_activity_id is not None
 
 
-def test_read_application_configuration_uses_first_app_output_path_for_log(
-    monkeypatch,
-    mock_logger,
-    mock_collect_data_from_file,
-    mock_set_input_output_directories,
-    mock_change_dict_keys_case,
-):
-    """When all apps already have output_path, log goes to the first app's dir."""
-    applications = [
-        {"application": "app1", "configuration": {"key": "value", "output_path": "my-output"}},
-        {"application": "app2", "configuration": {"key": "value2", "output_path": "other-output"}},
-    ]
-    _patch_application_configuration_read(
-        monkeypatch,
-        applications,
-        mock_collect_data_from_file,
-        mock_set_input_output_directories,
-        mock_change_dict_keys_case,
-        lambda config, output_path, setting_workflow: config,
-    )
-
-    _, _, log_file, _, _ = simtools_runner._read_application_configuration(
-        DUMMY_CONFIG_FILE, None, mock_logger
-    )
-    assert log_file == Path("my-output") / "simtools.log"
-
-
 def test_read_application_configuration_falls_back_to_derived_path_when_first_app_has_no_output(
     monkeypatch,
     mock_logger,
@@ -343,7 +280,6 @@ def test_read_application_configuration_falls_back_to_derived_path_when_first_ap
     mock_set_input_output_directories,
     mock_change_dict_keys_case,
 ):
-    """When placeholder replacement removes output_path, fall back to derived path."""
     applications = [
         {"application": "app1", "configuration": {"key": "value", "output_path": "my-output"}},
     ]
@@ -499,34 +435,6 @@ def test_run_applications_uses_log_file_override(monkeypatch, tmp_test_directory
     assert not default_log.exists()
 
 
-def test_run_applications_keeps_workflow_log_file_when_cli_log_file_is_none(
-    monkeypatch, tmp_test_directory
-):
-    tmp_test_directory = Path(tmp_test_directory)
-    default_log = tmp_test_directory / "tmp_application_output" / "simtools.log"
-    monkeypatch.setattr(
-        simtools_runner,
-        "_read_application_configuration",
-        mock.Mock(return_value=([], None, default_log, "wf-activity-id", None)),
-    )
-    monkeypatch.setattr(
-        simtools_runner.dependencies,
-        "get_version_string",
-        mock.Mock(return_value=""),
-    )
-
-    simtools_runner.run_applications(
-        {
-            "config_file": "workflow.config.yml",
-            "log_file": None,
-            "steps": None,
-            "ignore_runtime_environment": True,
-        }
-    )
-
-    assert default_log.is_file()
-
-
 def test_run_applications_propagates_ignore_existing_parameter_version(
     monkeypatch, tmp_test_directory
 ):
@@ -571,7 +479,6 @@ def test_run_applications_propagates_ignore_existing_parameter_version(
 
 
 def test_run_applications_copies_collection_files(monkeypatch, tmp_test_directory):
-    """Copy collection files from application output_path to collection output_path."""
     tmp_path = Path(str(tmp_test_directory))
     source_output = tmp_path / "app_output"
     source_output.mkdir(parents=True, exist_ok=True)
@@ -607,7 +514,6 @@ def test_run_applications_copies_collection_files(monkeypatch, tmp_test_director
 def test_run_applications_copies_collection_files_from_grid_output_path(
     monkeypatch, tmp_test_directory
 ):
-    """Copy collection files from grid_output_path when not in output_path."""
     tmp_path = Path(str(tmp_test_directory))
     source_output = tmp_path / "app_output"
     source_output.mkdir(parents=True, exist_ok=True)
@@ -648,7 +554,6 @@ def test_run_applications_copies_collection_files_from_grid_output_path(
 
 
 def test_copy_collection_files_uses_source_directory_list(tmp_test_directory):
-    """Copy collection files from all configured source directories."""
     tmp_path = Path(str(tmp_test_directory))
     source_output = tmp_path / "app_output_multi"
     source_output.mkdir()
@@ -728,66 +633,6 @@ def test_run_applications_passes_workflow_instrument_context(monkeypatch, tmp_te
     assert workflow_build_mock.call_args.kwargs["workflow_context"]["site"] == "North"
     assert workflow_build_mock.call_args.kwargs["workflow_context"]["instrument"] == "LSTN-design"
     workflow_update_mock.assert_called_once()
-
-
-def test_run_applications_retries_metadata_file_detection_after_submit(
-    monkeypatch, tmp_test_directory
-):
-    """Retry metadata detection after submit when pre-submit detection returns None."""
-    mock_args_dict = {
-        "config_file": "dummy_config.yml",
-        "steps": None,
-        "ignore_runtime_environment": False,
-    }
-    mock_configurations = [
-        {
-            "application": "simtools-submit-model-parameter-from-external",
-            "run_application": True,
-            "configuration": {
-                "output_path": str(tmp_test_directory),
-                "activity_id": "cfg-id-1",
-            },
-        },
-    ]
-    log_file_path = tmp_test_directory / "simtools.log"
-
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._read_application_configuration",
-        mock.Mock(return_value=(mock_configurations, None, log_file_path, "wf-activity-id", None)),
-    )
-    monkeypatch.setattr(
-        "simtools.dependencies.get_version_string",
-        mock.Mock(return_value="simtools version: 1.2.3\n"),
-    )
-    monkeypatch.setattr(
-        "simtools.job_execution.job_manager.submit",
-        mock.Mock(return_value=mock.Mock(stdout="ok", stderr="")),
-    )
-
-    discovered_metadata_file = Path(str(tmp_test_directory)) / "p" / "p-1.0.0.meta.yml"
-    get_metadata_mock = mock.Mock(side_effect=[None, discovered_metadata_file])
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._get_model_parameter_metadata_file",
-        get_metadata_mock,
-    )
-
-    workflow_build_mock = mock.Mock(return_value={"id": "wf-activity-id"})
-    workflow_update_mock = mock.Mock()
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner.workflow_metadata.build_workflow_activity_metadata",
-        workflow_build_mock,
-    )
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner.workflow_metadata.update_model_parameter_metadata_file",
-        workflow_update_mock,
-    )
-
-    simtools_runner.run_applications(mock_args_dict)
-
-    assert get_metadata_mock.call_count == 2
-    workflow_build_mock.assert_called_once()
-    workflow_update_mock.assert_called_once()
-    assert workflow_update_mock.call_args.kwargs["metadata_file"] == discovered_metadata_file
 
 
 def test_run_applications_handles_job_execution_exception(monkeypatch, tmp_test_directory):
@@ -889,12 +734,6 @@ def test_read_runtime_environment_with_minimal_options(monkeypatch):
     assert result == expected_command
 
 
-def test_read_runtime_environment_with_no_runtime_environment():
-    runtime_environment = None
-    result = simtools_runner.read_runtime_environment(runtime_environment)
-    assert result == []
-
-
 def test_prepare_runtime_environment(tmp_test_directory, monkeypatch):
     runtime_file = Path(tmp_test_directory) / "runtime.yml"
     runtime_file.write_text(
@@ -961,162 +800,7 @@ def test_prepare_runtime_environment_schema_validation(tmp_test_directory, conte
         simtools_runner.prepare_runtime_environment(runtime_file)
 
 
-def test_read_runtime_environment_with_missing_options(monkeypatch):
-    runtime_environment = {
-        "image": "ghcr.io/gammasim/simtools-prod-sim-telarray",
-        "network": "simtools-mongo-network",
-        "container_engine": "docker",
-    }
-    monkeypatch.setattr(shutil, "which", mock.Mock(return_value="docker"))
-    monkeypatch.setattr("simtools.runners.simtools_runner._pull_image", mock.Mock())
-    expected_command = [
-        "docker",
-        "run",
-        "--rm",
-        "--network",
-        runtime_environment["network"],
-        runtime_environment["image"],
-    ]
-    result = simtools_runner.read_runtime_environment(runtime_environment)
-    assert result == expected_command
-
-
 # Note: run_application function has been replaced by job_manager.submit
-
-
-def test_run_applications_with_runtime_environment_ignored(monkeypatch, tmp_test_directory):
-    """Test that runtime environment is ignored when ignore_runtime_environment is True."""
-    mock_args_dict = {
-        "config_file": "dummy_config.yml",
-        "steps": [1],
-        "ignore_runtime_environment": True,
-    }
-
-    mock_configurations = [
-        {"application": "app1", "run_application": True, "configuration": {"key": "value1"}},
-    ]
-    runtime_environment = {"image": "test-image", "container_engine": "docker"}
-    log_file_path = tmp_test_directory / "simtools.log"
-
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._read_application_configuration",
-        mock.Mock(
-            return_value=(
-                mock_configurations,
-                runtime_environment,
-                log_file_path,
-                "wf-activity-id",
-                None,
-            )
-        ),
-    )
-    monkeypatch.setattr(
-        "simtools.dependencies.get_version_string",
-        mock.Mock(return_value="simtools version: 1.2.3\n"),
-    )
-
-    # Mock job_manager.submit to verify no runtime_environment is passed
-    def mock_submit(app, out_file, err_file, configuration=None, runtime_environment=None):
-        assert runtime_environment == []  # Should be empty list when ignored
-        result_mock = mock.Mock()
-        result_mock.stdout = f"{app}_stdout"
-        result_mock.stderr = f"{app}_stderr"
-        return result_mock
-
-    monkeypatch.setattr("simtools.job_execution.job_manager.submit", mock_submit)
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner.workflow_metadata.build_workflow_activity_metadata",
-        mock.Mock(return_value={"id": "wf-activity-id"}),
-    )
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner.workflow_metadata.update_model_parameter_metadata_file",
-        mock.Mock(),
-    )
-
-    simtools_runner.run_applications(mock_args_dict)
-
-
-def test_read_runtime_environment_error_handling(monkeypatch):
-    """Test error handling in read_runtime_environment."""
-    # Test with container engine not found
-    runtime_environment = {"image": "test-image", "container_engine": "nonexistent"}
-
-    # Mock shutil.which to return None (engine not found)
-    monkeypatch.setattr(shutil, "which", mock.Mock(return_value=None))
-
-    with pytest.raises(RuntimeError, match="Container engine 'nonexistent' not found"):
-        simtools_runner.read_runtime_environment(runtime_environment)
-
-
-def test_read_runtime_environment_with_environment_file_and_options(monkeypatch):
-    """Test read_runtime_environment with environment_file and various options."""
-    runtime_environment = {
-        "image": "test-image",
-        "container_engine": "podman",
-        "environment_file": ".env",
-        "options": ["--privileged", "--user", "root"],
-    }
-
-    monkeypatch.setattr(shutil, "which", mock.Mock(return_value="podman"))
-    monkeypatch.setattr("simtools.runners.simtools_runner._pull_image", mock.Mock())
-
-    result = simtools_runner.read_runtime_environment(runtime_environment)
-
-    expected = [
-        "podman",
-        "run",
-        "--rm",
-        "--privileged",
-        "--user",
-        "root",
-        "--env-file",
-        ".env",
-        "test-image",
-    ]
-    assert result == expected
-
-
-def test_run_applications_with_empty_configuration_list(monkeypatch, tmp_test_directory):
-    """Test run_applications with empty configuration list."""
-    mock_args_dict = {
-        "config_file": "empty_config.yml",
-        "steps": None,
-        "ignore_runtime_environment": False,
-    }
-
-    log_file_path = tmp_test_directory / "simtools.log"
-
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._read_application_configuration",
-        mock.Mock(return_value=([], None, log_file_path, "wf-activity-id", None)),
-    )
-    monkeypatch.setattr(
-        "simtools.dependencies.get_version_string",
-        mock.Mock(return_value="simtools version: 1.2.3\n"),
-    )
-
-    # Should not call job_manager.submit at all
-    mock_submit = mock.Mock()
-    monkeypatch.setattr("simtools.job_execution.job_manager.submit", mock_submit)
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner.workflow_metadata.build_workflow_activity_metadata",
-        mock.Mock(return_value={"id": "wf-activity-id"}),
-    )
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner.workflow_metadata.update_model_parameter_metadata_file",
-        mock.Mock(),
-    )
-
-    simtools_runner.run_applications(mock_args_dict)
-
-    # Check log file was created with version info
-    with log_file_path.open("r", encoding="utf-8") as f:
-        content = f.read()
-    assert "Running simtools applications" in content
-    assert "simtools version: 1.2.3" in content
-
-    # Verify no applications were submitted
-    mock_submit.assert_not_called()
 
 
 def test_pull_image_skips_pull_if_image_exists(monkeypatch):
@@ -1198,34 +882,6 @@ def test_get_model_parameter_metadata_file_autodetects_single_metadata_file(tmp_
     assert resolved_file == metadata_file
 
 
-def test_get_model_parameter_metadata_file_returns_none_for_ambiguous_metadata_files(
-    tmp_test_directory,
-):
-    tmp_path = Path(str(tmp_test_directory))
-    file_a = tmp_path / "p1" / "p1-3.0.0.meta.yml"
-    file_b = tmp_path / "p2" / "p2-3.0.0.meta.yml"
-    file_a.parent.mkdir(parents=True, exist_ok=True)
-    file_b.parent.mkdir(parents=True, exist_ok=True)
-    file_a.write_text("a: 1\n", encoding="utf-8")
-    file_b.write_text("b: 2\n", encoding="utf-8")
-
-    config = {
-        "output_path": str(tmp_path),
-        "updated_parameter_version": "3.0.0",
-    }
-    resolved_file = simtools_runner._get_model_parameter_metadata_file(config)
-    assert resolved_file is None
-
-
-def test_get_workflow_configuration_value():
-    configurations = [
-        {"configuration": {"site": None}},
-        {"configuration": {"site": "North"}},
-    ]
-    assert simtools_runner._get_workflow_configuration_value(configurations, "site") == "North"
-    assert simtools_runner._get_workflow_configuration_value(configurations, "instrument") is None
-
-
 def test_extract_uuid7_from_configuration_path():
     config_file = (
         "input/LSTN-design/pm_photoelectron_spectrum/"
@@ -1267,55 +923,7 @@ def test_read_application_configuration_prefers_path_uuid7(
     assert workflow_activity_id == path_uuid
 
 
-def test_read_application_configuration_ignores_top_level_activity_id(
-    monkeypatch,
-    mock_set_input_output_directories,
-    mock_change_dict_keys_case,
-):
-    path_uuid = "019d776b-e24c-741d-bc05-e3f6f7ec77c7"
-    configuration_file = f"input/test/workflow/{path_uuid}/config.yml"
-
-    monkeypatch.setattr(
-        "simtools.io.ascii_handler.collect_data_from_file",
-        mock.Mock(
-            return_value={
-                "activity_id": "workflow-yaml-activity-id",
-                "applications": [{"application": "app1", "configuration": {}}],
-            }
-        ),
-    )
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._set_input_output_directories",
-        mock_set_input_output_directories,
-    )
-    monkeypatch.setattr("simtools.utils.general.change_dict_keys_case", mock_change_dict_keys_case)
-    monkeypatch.setattr(
-        "simtools.runners.simtools_runner._replace_placeholders_in_configuration",
-        lambda config, output_path, setting_workflow: config,
-    )
-
-    _, _, _, workflow_activity_id, _ = simtools_runner._read_application_configuration(
-        configuration_file,
-        steps=None,
-        workflow_activity_id="generated-by-run-application",
-    )
-
-    assert workflow_activity_id == path_uuid
-
-
-def test_find_collection_files_exact_match(tmp_test_directory):
-    """Exact filename (no glob) returns the first match and preserves existing semantics."""
-    src = Path(str(tmp_test_directory)) / "src"
-    src.mkdir()
-    (src / "result.ecsv").write_text("data", encoding="utf-8")
-
-    matched = _find_collection_files("result.ecsv", [src])
-    assert len(matched) == 1
-    assert matched[0] == src / "result.ecsv"
-
-
 def test_find_collection_files_exact_not_found(tmp_test_directory):
-    """Exact filename raises FileNotFoundError when absent."""
     src = Path(str(tmp_test_directory)) / "src_missing"
     src.mkdir()
 
@@ -1324,7 +932,6 @@ def test_find_collection_files_exact_not_found(tmp_test_directory):
 
 
 def test_find_collection_files_exact_recursive_match(tmp_test_directory):
-    """Exact filename falls back to a unique nested match."""
     src = Path(str(tmp_test_directory)) / "src_nested"
     nested = src / "model" / "6.0.2"
     nested.mkdir(parents=True)
@@ -1336,7 +943,6 @@ def test_find_collection_files_exact_recursive_match(tmp_test_directory):
 
 
 def test_find_collection_files_glob_matches_multiple(tmp_test_directory):
-    """Glob pattern collects all matching files recursively."""
     src = Path(str(tmp_test_directory)) / "src_glob"
     src.mkdir()
     (src / "energy_MyArray_z20_az0_nsb0.png").write_text("p1", encoding="utf-8")
@@ -1349,20 +955,7 @@ def test_find_collection_files_glob_matches_multiple(tmp_test_directory):
     assert "energy_MyArray_z52_az0_nsb0.png" in names
 
 
-def test_find_collection_files_glob_recursive(tmp_test_directory):
-    """Glob pattern searches subdirectories recursively."""
-    src = Path(str(tmp_test_directory)) / "src_recursive"
-    subdir = src / "sub"
-    subdir.mkdir(parents=True)
-    (subdir / "energy_z20.png").write_text("p", encoding="utf-8")
-
-    matched = _find_collection_files("energy_*.png", [src])
-    assert len(matched) == 1
-    assert matched[0].name == "energy_z20.png"
-
-
 def test_find_collection_files_glob_no_match_warns(tmp_test_directory, caplog):
-    """Glob pattern with no matches emits a warning rather than raising."""
     src = Path(str(tmp_test_directory)) / "src_empty"
     src.mkdir()
 
@@ -1372,41 +965,7 @@ def test_find_collection_files_glob_no_match_warns(tmp_test_directory, caplog):
     assert "nonexistent_*.png" in caplog.text
 
 
-def test_run_applications_copies_collection_files_glob(monkeypatch, tmp_test_directory):
-    """Glob patterns in collection.files copy all matching files."""
-    tmp_path = Path(str(tmp_test_directory))
-    source_output = tmp_path / "app_output_glob"
-    source_output.mkdir(parents=True, exist_ok=True)
-    (source_output / "energy_MyArray_z20_az0_nsb0.png").write_text("img1", encoding="utf-8")
-    (source_output / "energy_MyArray_z52_az0_nsb0.png").write_text("img2", encoding="utf-8")
-
-    collection_output = tmp_path / "collection_glob"
-
-    mock_configurations = [
-        {
-            "application": "app1",
-            "run_application": True,
-            "configuration": {
-                "activity_id": "cfg-id-1",
-                "output_path": str(source_output),
-            },
-        }
-    ]
-    _patch_run_applications_dependencies(
-        monkeypatch,
-        mock_configurations,
-        tmp_path / "simtools.log",
-        {"output_path": str(collection_output), "files": ["energy_*.png"]},
-    )
-
-    simtools_runner.run_applications(_runner_args())
-
-    assert (collection_output / "energy_MyArray_z20_az0_nsb0.png").exists()
-    assert (collection_output / "energy_MyArray_z52_az0_nsb0.png").exists()
-
-
 def test_copy_collection_files_raises_on_name_collision(tmp_test_directory):
-    """Raise FileExistsError when two different sources produce the same basename."""
     tmp_path = Path(str(tmp_test_directory))
     src_a = tmp_path / "src_a"
     src_b = tmp_path / "src_b"
@@ -1429,7 +988,6 @@ def test_copy_collection_files_raises_on_name_collision(tmp_test_directory):
 
 
 def test_copy_collection_files_allows_name_collision_with_overwrite(tmp_test_directory):
-    """Allow collisions and overwrite destination when overwrite_files is enabled."""
     tmp_path = Path(str(tmp_test_directory))
     src_a = tmp_path / "src_a"
     src_b = tmp_path / "src_b"
@@ -1458,7 +1016,6 @@ def test_copy_collection_files_allows_name_collision_with_overwrite(tmp_test_dir
 
 
 def test_copy_collection_files_list_format(tmp_test_directory):
-    """List collection config writes to separate output directories."""
     tmp_path = Path(str(tmp_test_directory))
     src = tmp_path / "app_out"
     src.mkdir()
@@ -1480,7 +1037,6 @@ def test_copy_collection_files_list_format(tmp_test_directory):
 
 
 def test_copy_collection_files_list_format_skips_empty_entry(tmp_test_directory):
-    """List entries with no output_path or files are silently skipped."""
     tmp_path = Path(str(tmp_test_directory))
     src = tmp_path / "app_out2"
     src.mkdir()

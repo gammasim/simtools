@@ -57,7 +57,6 @@ def _create_plotter(grid_file, output_path):
 
 
 def test_normalize_altaz_point(tmp_test_directory):
-    """Keep native Alt/Az values and no RA/Dec when absent in file."""
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_altaz.ecsv",
@@ -81,7 +80,6 @@ def test_normalize_altaz_point(tmp_test_directory):
 
 
 def test_normalize_job_grid_altaz_columns(tmp_test_directory):
-    """Handle semantic job-grid coordinate columns."""
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_altaz_flattened.ecsv",
@@ -108,7 +106,6 @@ def test_normalize_job_grid_altaz_columns(tmp_test_directory):
 
 
 def test_normalize_altaz_keeps_explicit_radec_columns(tmp_test_directory):
-    """Use explicit RA/Dec columns from the same grid row when available."""
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_altaz_with_radec.ecsv",
@@ -136,7 +133,6 @@ def test_normalize_altaz_keeps_explicit_radec_columns(tmp_test_directory):
 
 
 def test_normalize_radec_point_without_altaz_projection(tmp_test_directory):
-    """Keep native RA/Dec points without deriving Alt/Az."""
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_radec.ecsv",
@@ -159,7 +155,6 @@ def test_normalize_radec_point_without_altaz_projection(tmp_test_directory):
 
 
 def test_plot_sky_projection_creates_output_altaz_only(tmp_test_directory):
-    """Write the sky projection plot with Alt/Az data only."""
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_altaz_only.ecsv",
@@ -178,7 +173,6 @@ def test_plot_sky_projection_creates_output_altaz_only(tmp_test_directory):
 
 
 def test_plot_sky_projection_creates_output_with_radec_panel(tmp_test_directory):
-    """Write the sky projection plot with both Alt/Az and RA/Dec data."""
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_altaz_radec.ecsv",
@@ -197,7 +191,6 @@ def test_plot_sky_projection_creates_output_with_radec_panel(tmp_test_directory)
 
 
 def test_plot_altaz_projection_with_limits_creates_outputs(tmp_test_directory):
-    """Write Alt/Az color-scale plots and zenith profiles for all supported limits."""
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_energy_flattened.ecsv",
@@ -243,7 +236,6 @@ def test_plot_altaz_projection_with_limits_creates_outputs(tmp_test_directory):
 
 
 def test_load_grid_points_file_not_found(tmp_test_directory):
-    """Raise when the grid points file does not exist."""
     missing_file = Path(tmp_test_directory) / "does_not_exist.ecsv"
 
     with pytest.raises(FileNotFoundError, match="Grid points file not found"):
@@ -254,7 +246,6 @@ def test_load_grid_points_file_not_found(tmp_test_directory):
 
 
 def test_load_grid_points_wrong_suffix(tmp_test_directory):
-    """Raise when the grid points file is not ECSV."""
     wrong_file = Path(tmp_test_directory) / "grid_points.txt"
     wrong_file.write_text("dummy", encoding="utf-8")
 
@@ -266,7 +257,6 @@ def test_load_grid_points_wrong_suffix(tmp_test_directory):
 
 
 def test_extract_quantity_value_dict_branches():
-    """Cover value/lower/None extraction paths."""
     point_with_value = {"x": {"value": 12.3, "unit": "deg"}}
     assert ProductionGridPlotter._extract_quantity_value(point_with_value, "x") == pytest.approx(
         12.3
@@ -281,44 +271,7 @@ def test_extract_quantity_value_dict_branches():
     assert ProductionGridPlotter._extract_quantity_value(point_without_value, "x") is None
 
 
-def test_format_value_label_with_unit_uses_available_unit():
-    """Append units from quantity values when present in normalized points."""
-    plot_points = [{"energy_min": 1.0 * u.TeV}]
-
-    formatted_label = ProductionGridPlotter._format_value_label_with_unit(
-        plot_points,
-        value_key="energy_min",
-        value_label="energy_min",
-    )
-
-    assert formatted_label == "energy_min [TeV]"
-
-
-def test_configure_radec_axis_expands_flat_ranges(tmp_test_directory):
-    """Expand axis limits by +/-5 deg when computed min and max are equal."""
-    grid_file = _write_grid_file(
-        tmp_test_directory,
-        "grid_single_radec.ecsv",
-        [{"ra": 40.0, "dec": 20.0}],
-    )
-    plotter = _create_plotter(
-        grid_file=grid_file,
-        output_path=Path(tmp_test_directory) / "output",
-    )
-
-    figure, axis = plt.subplots()
-    try:
-        plotter._configure_radec_axis(axis, [{"ra": 40.0, "dec": 20.0}])
-        xlim = axis.get_xlim()
-        ylim = axis.get_ylim()
-        assert xlim == pytest.approx((45.0, 35.0))
-        assert ylim == pytest.approx((15.0, 25.0))
-    finally:
-        plt.close(figure)
-
-
 def test_plot_frame_points_logs_no_valid_points(tmp_test_directory, caplog):
-    """Log warning and return zero when no points can be plotted."""
     grid_file = _write_grid_file(tmp_test_directory, "grid_empty.ecsv", [])
     plotter = _create_plotter(
         grid_file=grid_file,
@@ -346,7 +299,6 @@ def test_plot_frame_points_logs_no_valid_points(tmp_test_directory, caplog):
 
 
 def test_plot_altaz_points_logs_hidden_radec_points(tmp_test_directory, caplog):
-    """Log info when RA/Dec points are not visible in Azimuth/Zenith panel."""
     grid_file = _write_grid_file(tmp_test_directory, "grid_empty_altaz.ecsv", [])
     plotter = _create_plotter(
         grid_file=grid_file,
@@ -374,7 +326,6 @@ def test_plot_altaz_points_logs_hidden_radec_points(tmp_test_directory, caplog):
 
 
 def test_plot_sky_projection_logs_tracks_disabled(tmp_test_directory, caplog):
-    """Log that RA/Dec tracks are disabled in file-driven mode."""
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_altaz_with_radec_for_tracks.ecsv",
@@ -392,7 +343,6 @@ def test_plot_sky_projection_logs_tracks_disabled(tmp_test_directory, caplog):
 
 
 def test_plot_sky_projection_writes_grid_density_subtitle(tmp_test_directory, monkeypatch):
-    """Render direction grid density in subtitle when present in metadata."""
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_with_density_meta.ecsv",

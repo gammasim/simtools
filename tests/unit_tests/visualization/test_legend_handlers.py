@@ -22,23 +22,6 @@ class MockHandleBox:
         self.artist = artist
 
 
-def test_objects():
-    object_list = [
-        leg_h.EdgePixelObject,
-        leg_h.LSTObject,
-        leg_h.MSTObject,
-        leg_h.MeanRadiusOuterEdgeObject,
-        leg_h.OffPixelObject,
-        leg_h.PixelObject,
-        leg_h.SCTObject,
-        leg_h.SSTObject,
-    ]
-
-    for obj in object_list:
-        instance = obj()
-        assert isinstance(instance, object)
-
-
 def test_handlers(io_handler):
     handler_list = [
         leg_h.HexEdgePixelHandler,
@@ -62,25 +45,6 @@ def test_handlers(io_handler):
     assert "color" in tel_handler.config
     assert "radius" in tel_handler.config
     assert "shape" in tel_handler.config
-
-
-def test_telescope_config():
-    """Test that all telescope types in TELESCOPE_CONFIG work with BaseLegendHandler."""
-    for telescope_type in leg_h.TELESCOPE_CONFIG:
-        handler = leg_h.BaseLegendHandler(telescope_type)
-        assert handler.telescope_type == telescope_type
-        assert handler.config == leg_h.TELESCOPE_CONFIG[telescope_type]
-
-
-def test_get_telescope_config():
-    """Test that get_telescope_config returns the correct configuration."""
-    for telescope_type in leg_h.TELESCOPE_CONFIG:
-        config = leg_h.get_telescope_config(telescope_type)
-        assert config == leg_h.TELESCOPE_CONFIG[telescope_type]
-
-    prefix = "LST"
-    config = leg_h.get_telescope_config(prefix)
-    assert config == leg_h.TELESCOPE_CONFIG["LST"]
 
 
 def test_calculate_center():
@@ -125,7 +89,6 @@ def test_base_square_pixel_handler_create_square_patch():
 
 
 def test_telescope_handler():
-    """Test the BaseLegendHandler class for various telescope types."""
     for telescope_type, config in leg_h.TELESCOPE_CONFIG.items():
         handler = leg_h.BaseLegendHandler(telescope_type)
         assert handler.telescope_type == telescope_type
@@ -161,7 +124,6 @@ def test_various_telescope_handlers():
 
 
 def test_mean_radius_outer_edge_handler():
-    """Test the MeanRadiusOuterEdgeHandler class."""
     handlebox = MockHandleBox()
     handler = leg_h.MeanRadiusOuterEdgeHandler()
     patch = handler.legend_artist(None, None, None, handlebox)

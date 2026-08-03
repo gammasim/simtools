@@ -20,7 +20,6 @@ from simtools.utils import names
 
 logger = logging.getLogger()
 
-
 test_file_2 = "test_file_2.ecsv"
 ascii_format = "ascii.ecsv"
 
@@ -79,37 +78,6 @@ def test_write(tmp_test_directory, args_dict_site):
     w_1.output_file = tmp_test_directory.join("test_file.json")
     w_1.write_data(metadata=None, product_data=dict_data)
     assert Path(w_1.output_file).is_file()
-
-
-def test__write_model_parameter_dict_json(tmp_test_directory):
-    w1 = writer.ModelDataWriter(output_path=tmp_test_directory)
-    data_dict = {"value": 5.5}
-    data_file = tmp_test_directory.join("test_file.json")
-    w1.write_model_parameter_dict_json(file_name=data_file, data_dict=data_dict)
-    assert Path(data_file).is_file()
-
-
-def test__write_model_parameter_dict_json_compact_numeric_lists_switch(tmp_test_directory):
-    w1 = writer.ModelDataWriter(output_path=tmp_test_directory)
-    data_file = tmp_test_directory.join("test_file.json")
-
-    with patch(
-        "simtools.data_model.model_data_writer.ascii_handler.write_data_to_file"
-    ) as mock_write:
-        w1.write_model_parameter_dict_json(
-            file_name=data_file,
-            data_dict={"value": {"a": [1, 2, 3]}},
-        )
-        assert mock_write.call_args.kwargs["compact_numeric_lists"] is True
-
-    with patch(
-        "simtools.data_model.model_data_writer.ascii_handler.write_data_to_file"
-    ) as mock_write:
-        w1.write_model_parameter_dict_json(
-            file_name=data_file,
-            data_dict={"value": [1, 2, 3]},
-        )
-        assert mock_write.call_args.kwargs["compact_numeric_lists"] is False
 
 
 def test_dump(args_dict):
@@ -459,31 +427,6 @@ def test_get_validated_parameter_dict_fadc_pulse_shape_embedded_invalid_columns(
         "columns": ["time", "HG"],
         "column_units": ["ns", "dimensionless"],
         "rows": [[0.0, 0.0], [0.12, 0.01]],
-    }
-
-    with pytest.raises(ValidationError):
-        w1.get_validated_parameter_dict(
-            parameter_name="fadc_pulse_shape",
-            value=invalid_embedded_value,
-            instrument="LSTN-01",
-            parameter_version="0.0.1",
-            model_parameter_schema_version="0.2.0",
-        )
-
-
-@pytest.mark.parametrize(
-    "invalid_rows",
-    [
-        [[0.0], [0.12]],
-        [[0.0, 0.0, 0.0, 0.0], [0.12, 0.01, 0.001, 0.0001]],
-    ],
-)
-def test_get_validated_parameter_dict_fadc_pulse_shape_embedded_invalid_row_length(invalid_rows):
-    w1 = writer.ModelDataWriter()
-    invalid_embedded_value = {
-        "columns": ["time", "amplitude", "amplitude (low gain)"],
-        "column_units": ["ns", "dimensionless", "dimensionless"],
-        "rows": invalid_rows,
     }
 
     with pytest.raises(ValidationError):

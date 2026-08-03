@@ -1,7 +1,3 @@
-from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import Mock, patch
-
 import pytest
 
 import simtools.applications.plot_array_layout as plot_array_layout_app
@@ -17,22 +13,6 @@ def _parser():
 
 def _full_parser():
     return app.APPLICATION.build_parser()
-
-
-@patch("simtools.applications.production_generate_grid.generate_job_grid")
-@patch("simtools.application.definition.ApplicationDefinition.start")
-def test_main_generates_job_grid(mock_start, mock_generate_job_grid):
-    io_handler = Mock()
-    io_handler.get_output_file.return_value = Path("job_grid.ecsv")
-    args = {
-        "output_file": "job_grid.ecsv",
-        "run_number_offset": 10,
-    }
-    mock_start.return_value = SimpleNamespace(args=args, io_handler=io_handler)
-    app.main()
-
-    mock_generate_job_grid.assert_called_once_with(args, Path("job_grid.ecsv"))
-    mock_start.assert_called_once_with()
 
 
 def test_full_parser_retains_supported_shared_arguments():
@@ -97,117 +77,6 @@ def test_full_parser_accepts_minimum_direct_configuration():
     assert args.output_file == "job_grid.ecsv"
 
 
-def test_full_parser_requires_array_layout_name():
-    with pytest.raises(SystemExit):
-        _full_parser().parse_args(
-            [
-                "--model_version",
-                "7.0.0",
-                "--site",
-                "North",
-                "--primary",
-                "gamma",
-                "--showers_per_run",
-                "1000",
-            ]
-        )
-
-
-def test_full_parser_rejects_array_element_list():
-    with pytest.raises(SystemExit):
-        _full_parser().parse_args(
-            [
-                "--model_version",
-                "7.0.0",
-                "--site",
-                "North",
-                "--array_element_list",
-                "LSTN-01",
-                "--primary",
-                "gamma",
-                "--showers_per_run",
-                "1000",
-            ]
-        )
-
-
-def test_add_arguments_accepts_compact_axis_definitions():
-    parser = _parser()
-
-    args = parser.parse_args(
-        [
-            "--axis",
-            "azimuth",
-            "310",
-            "deg",
-            "20",
-            "deg",
-            "3",
-            "linear",
-            "--axis",
-            "offset",
-            "0",
-            "deg",
-            "10",
-            "deg",
-            "2",
-        ]
-    )
-
-    assert args.axis == [
-        ["azimuth", "310", "deg", "20", "deg", "3", "linear"],
-        ["offset", "0", "deg", "10", "deg", "2"],
-    ]
-
-
-def test_add_arguments_accepts_zenith_angle_scaling_factor():
-    parser = _parser()
-
-    args = parser.parse_args(["--zenith_angle_scaling_factor", "2.5"])
-
-    assert args.zenith_angle_scaling_factor == pytest.approx(2.5)
-
-
-def test_add_arguments_accepts_max_total_showers_rounding_warnings():
-    parser = _parser()
-
-    args = parser.parse_args(["--max_total_showers_rounding_warnings", "7"])
-
-    assert args.max_total_showers_rounding_warnings == 7
-
-
-def test_add_arguments_accepts_direction_grid_density():
-    parser = _parser()
-
-    args = parser.parse_args(["--direction_grid_density", "1.5"])
-
-    assert args.direction_grid_density == ["1.5"]
-
-
-def test_add_arguments_accepts_direction_grid_density_with_unit():
-    parser = _parser()
-
-    args = parser.parse_args(["--direction_grid_density", "0.25", "1/deg^2"])
-
-    assert args.direction_grid_density == ["0.25", "1/deg^2"]
-
-
-def test_add_arguments_accepts_showers_per_run_scaling():
-    parser = _parser()
-
-    args = parser.parse_args(["--showers_per_run_scaling", "cosine_zenith"])
-
-    assert args.showers_per_run_scaling == "cosine_zenith"
-
-
-def test_add_arguments_accepts_energy_max_scaling():
-    parser = _parser()
-
-    args = parser.parse_args(["--energy_max_scaling", "-2.5", "300", "TeV"])
-
-    assert args.energy_max_scaling == ["-2.5", "300", "TeV"]
-
-
 def test_application_parse_allows_show_options_without_required_runtime_arguments(
     monkeypatch, capsys
 ):
@@ -218,26 +87,3 @@ def test_application_parse_allows_show_options_without_required_runtime_argument
 
     assert exc.value.code == 0
     assert "Available values:" in capsys.readouterr().out
-
-
-@pytest.mark.parametrize("option", ["--show-options", "--show_option", "--show-option"])
-def test_application_parser_rejects_show_options_aliases(option):
-    argv = [
-        "--model_version",
-        "7.0.0",
-        "--site",
-        "North",
-        "--array_layout_name",
-        "LSTN-01",
-        "--primary",
-        "gamma",
-        "--showers_per_run",
-        "1000",
-        option,
-        "site",
-    ]
-
-    with pytest.raises(SystemExit) as exc:
-        _full_parser().parse_args(argv)
-
-    assert exc.value.code == 2

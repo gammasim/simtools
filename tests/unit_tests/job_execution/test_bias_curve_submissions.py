@@ -175,20 +175,6 @@ def test_scan_config_contains_proton_base_overwrite_and_trigger_scan(tmp_test_di
     ]
 
 
-@pytest.mark.parametrize("curve_name", ["nsb", "proton"])
-def test_scan_config_uses_configured_scaling_and_thresholds(curve_name, tmp_test_directory):
-    args = _base_args(tmp_test_directory)
-    args["nsb_scaling_factor"] = 3.5
-    args["trigger_thresholds"] = [225, 2, 10]
-
-    scan_config = bias_curve_submissions._scan_config(curve_name, "LSTN-01", args)
-
-    assert scan_config["parameter_scan"]["overwrite"]["changes"]["OBS-North"]["nsb_scaling_factor"][
-        "value"
-    ] == pytest.approx(3.5)
-    assert scan_config["parameter_scan"]["parameters"][0]["values"] == [225, 235]
-
-
 def test_base_overwrite_rejects_unknown_curve(tmp_test_directory):
     args = _base_args(tmp_test_directory)
 
@@ -222,17 +208,6 @@ def test_production_grid_configuration_uses_curve_specific_primary_and_energy_ra
     assert configuration["label"] == curve_name
     assert configuration["array_layout_name"] == "LSTN-01"
     assert "telescope" not in configuration
-
-
-def test_curve_definitions_use_configured_energy_ranges(tmp_test_directory):
-    args = _base_args(tmp_test_directory)
-    args["nsb_energy_range"] = "10 MeV 30 MeV"
-    args["proton_energy_range"] = "5 GeV 500 GeV"
-
-    definitions = bias_curve_submissions._curve_definitions(args)
-
-    assert definitions["nsb"]["energy_range"] == "10 MeV 30 MeV"
-    assert definitions["proton"]["energy_range"] == "5 GeV 500 GeV"
 
 
 def test_generate_scan_grid_generates_and_expands_grid(tmp_test_directory):

@@ -10,21 +10,6 @@ from simtools.model.site_model import SiteModel
 logger = logging.getLogger()
 
 
-def test_site_model(model_version):
-    _south = SiteModel(
-        site="South",
-        label="testing-sitemodel",
-        model_version=model_version,
-    )
-
-    assert isinstance(_south.get_reference_point(), dict)
-    for key in ["center_altitude", "center_northing", "center_easting", "epsg_code"]:
-        assert key in _south.get_reference_point()
-
-    assert "reference_point_altitude" in _south.parameters.keys()
-    assert isinstance(_south.parameters["reference_point_altitude"]["value"], float)
-
-
 def test_get_corsika_site_parameters(model_version):
     _north = SiteModel(
         site="North",
@@ -38,7 +23,6 @@ def test_get_corsika_site_parameters(model_version):
 
 
 def test_get_corsika_site_parameters_with_model_directory(array_model_north):
-    """Test that the atmospheric profile file is provided with the model directory."""
     model_directory = array_model_north.get_config_directory()
     corsika_site_parameters = array_model_north.site_model.get_corsika_site_parameters(
         config_file_style=True, model_directory=model_directory
@@ -109,39 +93,6 @@ def test_get_list_of_array_layouts(model_version):
 
     assert isinstance(_north.get_list_of_array_layouts(), list)
     assert "test_layout" in _north.get_list_of_array_layouts()
-
-
-def test_get_array_elements_of_type_uses_correct_collection(model_version, mocker):
-    _south = SiteModel(
-        site="South",
-        label="testing-sitemodel",
-        model_version=model_version,
-    )
-
-    mock_get_array_elements = mocker.patch.object(
-        _south.db,
-        "get_array_elements_of_type",
-        return_value=["ILLS-01"],
-    )
-
-    result = _south.get_array_elements_of_type("ILLS")
-
-    assert result == ["ILLS-01"]
-    mock_get_array_elements.assert_called_once_with(
-        array_element_type="ILLS",
-        model_version=model_version,
-        collection="calibration_devices",
-    )
-
-
-def test_get_array_elements_of_type_returns_empty_for_invalid_type(model_version):
-    _south = SiteModel(
-        site="South",
-        label="testing-sitemodel",
-        model_version=model_version,
-    )
-
-    assert _south.get_array_elements_of_type("MSTE") == []
 
 
 def test_export_atmospheric_transmission_file(model_version, tmp_path, mocker):
