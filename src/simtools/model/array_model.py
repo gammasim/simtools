@@ -9,6 +9,7 @@ from astropy.table import QTable
 from simtools import settings
 from simtools.data_model import data_reader, schema
 from simtools.io import io_handler
+from simtools.io.ascii_handler import to_builtin
 from simtools.model.calibration_model import CalibrationModel
 from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.model.model_utils import read_overwrite_model_parameter_dict
@@ -16,6 +17,20 @@ from simtools.model.site_model import SiteModel
 from simtools.model.telescope_model import TelescopeModel
 from simtools.simtel import simtel_config_writer, simtel_seeds
 from simtools.utils import general, names
+
+_DATABASE_METADATA_FIELDS = {"_id", "entry_date"}
+
+
+def _export_parameter_records(parameters):
+    """Remove database bookkeeping fields from exported parameter records."""
+    return {
+        parameter_name: {
+            key: value
+            for key, value in parameter_record.items()
+            if key not in _DATABASE_METADATA_FIELDS
+        }
+        for parameter_name, parameter_record in parameters.items()
+    }
 
 
 class ArrayModel:
@@ -181,6 +196,52 @@ class ArrayModel:
             Site name.
         """
         return self.site_model.site
+
+    def to_simulation_metadata_dict(self):
+        """Export the resolved array model as a compact metadata dictionary.
+
+        The export contains resolved parameter records and references, but never model-file
+        contents or private runtime state.
+
+        Returns
+        -------
+        dict
+            JSON-compatible array model metadata.
+        """
+        telescopes = {}
+        for telescope_name, telescope_model in self.telescope_models.items():
+            devices = {}
+            for device_name, device_model in self.calibration_models.get(
+                telescope_name, {}
+            ).items():
+                devices[device_name] = {
+                    "model_name": device_model.name,
+                    "model_version": device_model.model_version,
+                    "site_name": device_model.site,
+                    "parameters": _export_parameter_records(device_model.parameters),
+                }
+            telescopes[telescope_name] = {
+                "design_model": telescope_model.design_model,
+                "model_version": telescope_model.model_version,
+                "site_name": telescope_model.site,
+                "parameters": _export_parameter_records(telescope_model.parameters),
+                "calibration_devices": devices,
+            }
+
+        return to_builtin(
+            {
+                "model_version": self.model_version,
+                "site_name": self.site_model.site,
+                "array_layout": self.layout_name,
+                "array_elements": self.array_elements,
+                "site_model": {
+                    "site_name": self.site_model.site,
+                    "model_version": self.site_model.model_version,
+                    "parameters": _export_parameter_records(self.site_model.parameters),
+                },
+                "telescopes": telescopes,
+            }
+        )
 
     def _build_telescope_models(self, site_model, array_elements, calibration_device_types):
         """
