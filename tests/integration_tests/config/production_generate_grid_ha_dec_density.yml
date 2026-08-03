@@ -2,10 +2,10 @@
 applications:
 - application: simtools-production-generate-grid
   docs:
-    title: Production grid defined on Ha/Dec axes (grid density).
+    title: Production grid defined on HA/Dec axes (grid density).
     summary: >
       Full zenith coverage from 0 to 70 deg and a directed azimuth window.
-      Use corsika limits files to adjust energy ranges, viecone, and
+      Use corsika limits files to adjust energy ranges, view cone, and
       core scatter settings.
   configuration:
     array_layout_name:

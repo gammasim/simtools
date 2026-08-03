@@ -5,7 +5,7 @@ applications:
     title: Grid defined in HA/Dec.
     summary: >
       Point-like simulations with fixed offsets.
-      Use corsika limits files to adjust energy ranges, viecone, and
+      Use corsika limits files to adjust energy ranges, view cone, and
       core scatter settings.
   configuration:
     array_layout_name: LSTN-01
