@@ -14,7 +14,7 @@ applications:
     azimuth_angle:
     - North  # Geographic North
     - South  # Geographic South
-    core_scatter: 10 500 m  # Number of uses for each event; max scatter radius for core position
+    core_scatter: 10 500 m  # Core positions per shower; max scatter radius for core position
     corsika_he_interaction:
     - epos
     - qgs3
@@ -27,9 +27,9 @@ applications:
     model_version:
     - 6.3.0
     - 7.0.0
-    showers_per_run: 5  # For total showers, multiply by number of runs
+    showers_per_run: 5  # Baseline number of showers per generated job (before per-run scaling)
     showers_per_run_power_law: 0.0 1 TeV  # No scaling of number of showers with energy
-    total_showers: 50  # For total showers, multiply by number of runs
+    total_showers: 50  # Target total showers per grid point and energy interval (jobs are sized by showers_per_run)
     total_showers_scaling: zenith_scaled
     output_file: job_grid_horizontal_explicit.ecsv
     output_path: simtools-output
