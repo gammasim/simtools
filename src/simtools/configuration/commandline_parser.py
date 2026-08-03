@@ -8,6 +8,7 @@ class CommandLineParser(argparse.ArgumentParser):
 
     def __init__(self, *args, **kwargs):
         """Initialize an empty parser and its declaration metadata."""
+        kwargs["allow_abbrev"] = False
         super().__init__(*args, **kwargs)
         self.preserve_by_version = set()
 
