@@ -8,10 +8,7 @@ applications:
       Use corsika limits files to adjust energy ranges, view cone, and
       core scatter settings.
   configuration:
-    array_layout_name:
-      by_version:
-        "<7.0.0": 1lst
-        ">=7.0.0": LSTN-01
+    array_layout_name: LSTN-01
     axis:
     # HA/Dec define the sampling frame; binning placeholders are overridden by
     # direction_grid_density in adaptive HA/Dec mode.
