@@ -4,6 +4,7 @@ import json
 import logging
 from pathlib import Path
 
+import h5py
 import yaml
 
 from simtools.simtel import simtel_output_validator
@@ -44,6 +45,51 @@ def assert_file_type(file_type, file_name):
     # no dedicated tests for other file types, checking suffix only
     _logger.info(f"File type test is checking suffix only for {file_name} (suffix: {file_type}))")
     return Path(file_name).suffix[1:] == file_type
+
+
+def assert_hdf5_datasets(file_name, expected_datasets):
+    """Assert that an HDF5 file contains the requested root datasets.
+
+    Parameters
+    ----------
+    file_name : str or pathlib.Path
+        HDF5 file to inspect.
+    expected_datasets : sequence of str
+        Names of root-level HDF5 datasets that must be present.
+
+    Returns
+    -------
+    bool
+        ``True`` when all requested datasets are present.
+
+    Raises
+    ------
+    AssertionError
+        If a requested item is missing or is not an HDF5 dataset.
+    OSError
+        If ``file_name`` is not a readable HDF5 file.
+    """
+    with h5py.File(file_name, "r") as hdf5_file:
+        missing = []
+        invalid = []
+        for dataset_name in expected_datasets:
+            if dataset_name not in hdf5_file:
+                missing.append(dataset_name)
+            elif not isinstance(hdf5_file[dataset_name], h5py.Dataset):
+                invalid.append(dataset_name)
+
+        if missing or invalid:
+            details = []
+            if missing:
+                details.append(f"missing {missing}")
+            if invalid:
+                details.append(f"not datasets {invalid}")
+            raise AssertionError(
+                f"HDF5 file {file_name} has invalid output structure: "
+                f"{'; '.join(details)}. Available root items: {list(hdf5_file)}"
+            )
+
+    return True
 
 
 def check_output_from_sim_telarray(file, file_test):
