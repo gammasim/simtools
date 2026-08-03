@@ -132,7 +132,6 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
     def __init__(self, db_config=None):
         """Initialize the MongoDBHandler class."""
         self.db_config = MongoDBHandler.validate_db_config(db_config)
-        self.list_of_collections = {}
 
         if self.db_config:
             self._initialize_client(self.db_config)
@@ -332,31 +331,6 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
             The collection from the DB.
         """
         return MongoDBHandler.db_client[db_name][collection_name]
-
-    def get_collections(self, db_name, model_collections_only=False):
-        """
-        List of collections in the DB.
-
-        Parameters
-        ----------
-        db_name: str
-            Database name.
-        model_collections_only: bool
-            If True, only return model collections (i.e. exclude fs.files, fs.chunks)
-
-        Returns
-        -------
-        list
-            List of collection names
-        """
-        if db_name not in self.list_of_collections:
-            self.list_of_collections[db_name] = MongoDBHandler.db_client[
-                db_name
-            ].list_collection_names()
-        collections = self.list_of_collections[db_name]
-        if model_collections_only:
-            return [collection for collection in collections if not collection.startswith("fs.")]
-        return collections
 
     def list_database_names(self):
         """
