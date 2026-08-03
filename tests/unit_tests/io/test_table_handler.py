@@ -10,6 +10,7 @@ from simtools.io.table_handler import (
     _read_table_list_hdf5,
     _write_table_to_hdf5_file,
     group_table_rows,
+    read_metadata_document,
     read_table_file_type,
     read_table_from_hdf5,
     read_table_list,
@@ -311,6 +312,22 @@ def test_write_tables_dict_input(tmp_path, mock_table):
 
     with h5py.File(output_file, "r") as hdf5_file:
         assert TEST_TABLE_NAME in hdf5_file
+
+
+def test_write_and_read_named_metadata_documents(tmp_path, mock_table):
+    """Store named JSON documents atomically alongside event tables."""
+    output_file = tmp_path / TEST_H5
+    write_tables(
+        [mock_table],
+        output_file,
+        file_type="HDF5",
+        metadata_documents={"METADATA": {"value": np.int64(3)}},
+    )
+
+    assert read_metadata_document(output_file, "METADATA") == {"value": 3}
+    with h5py.File(output_file, "r") as hdf5_file:
+        assert hdf5_file["METADATA"].shape == (1,)
+        assert hdf5_file.attrs["simtools_write_status"] == "complete"
 
 
 def test_write_tables_hdf5_failure_preserves_existing_output(tmp_path, mock_table, mocker):

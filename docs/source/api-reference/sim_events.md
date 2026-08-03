@@ -32,6 +32,13 @@ Provide tools for reading, writing, and processing simulated shower and telescop
    :members:
 ```
 
+## Embedded metadata
+
+```{eval-rst}
+.. automodule:: simtools.sim_events.metadata
+   :members:
+```
+
 ## Histograms
 
 (sim_events_histograms-1)=

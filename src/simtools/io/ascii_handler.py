@@ -353,24 +353,30 @@ def _write_to_yaml(data, output_file, sort_keys):
         If True, sort the keys.
 
     """
-    data = _to_builtin(data)
+    data = to_builtin(data)
     with open(output_file, "w", encoding="utf-8") as file:
         yaml.dump(data, file, indent=2, sort_keys=sort_keys, explicit_start=True)
 
 
-def _to_builtin(data):
-    """Convert numpy types to native Python types for yaml output."""
+def to_builtin(data):
+    """Convert common values to plain Python types for serialization."""
     if isinstance(data, u.Quantity):
-        return {
-            "value": float(data.value),
+        data = {
+            "value": to_builtin(data.value),
             "unit": str(data.unit),
         }
-    if isinstance(data, np.generic):
-        return data.item()
-    if isinstance(data, dict):
-        return {k: _to_builtin(v) for k, v in data.items()}
-    if isinstance(data, (list, tuple)):
-        return [_to_builtin(v) for v in data]
+    elif isinstance(data, (bytes, np.bytes_)):
+        data = data.decode("utf-8", errors="replace")
+    elif isinstance(data, Path):
+        data = str(data)
+    elif isinstance(data, np.ndarray):
+        data = to_builtin(data.tolist())
+    elif isinstance(data, np.generic):
+        data = to_builtin(data.item())
+    elif isinstance(data, dict):
+        data = {str(k): to_builtin(v) for k, v in data.items()}
+    elif isinstance(data, (list, tuple)):
+        data = [to_builtin(v) for v in data]
     return data
 
 

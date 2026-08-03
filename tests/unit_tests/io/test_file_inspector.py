@@ -17,6 +17,7 @@ from simtools.io.file_inspector import (
     _normalize_max_entries,
     _select_inspector,
     inspect_file,
+    inspect_hdf5_entry,
     inspect_hdf5_file,
     inspect_json_or_yaml_file,
     inspect_sim_telarray_file,
@@ -24,6 +25,7 @@ from simtools.io.file_inspector import (
     inspect_text_file,
 )
 from simtools.io.file_type import is_file_type
+from simtools.io.table_handler import write_tables
 
 
 def test_inspect_file_reports_generic_hdf5_structure(tmp_path):
@@ -40,6 +42,60 @@ def test_inspect_file_reports_generic_hdf5_structure(tmp_path):
     assert "group_a" in report["root_entries"]
     assert report["dataset_count"] == 1
     assert report["group_count"] >= 1
+
+
+def test_inspect_file_prints_json_hdf5_entry(tmp_test_directory):
+    file_path = tmp_test_directory / "metadata.hdf5"
+    with h5py.File(file_path, "w") as hdf5_file:
+        dataset = hdf5_file.create_dataset(
+            "METADATA",
+            shape=(1,),
+            dtype=h5py.string_dtype(encoding="utf-8"),
+            data=['{"value": 3}'],
+        )
+        dataset.attrs["format"] = "json"
+
+    reports = inspect_file(file_path, entry_name="METADATA")
+
+    assert reports == ['{\n  "value": 3\n}']
+
+
+def test_inspect_hdf5_entry_reads_table_with_limit(tmp_test_directory):
+    file_path = tmp_test_directory / "table.hdf5"
+    table = Table(
+        {
+            "first_column": [1, 2],
+            "second_column": [3, 4],
+            "third_column": [5, 6],
+        }
+    )
+    table.meta["EXTNAME"] = "SHOWERS"
+    write_tables([table], file_path, file_type="HDF5")
+
+    report = inspect_hdf5_entry(file_path, "SHOWERS", max_entries=1)
+
+    assert "first_column" in report
+    assert "second_column" in report
+    assert "third_column" in report
+    assert "  1" in report
+    assert "  2" not in report
+
+
+def test_inspect_hdf5_entry_rejects_missing_root_entry(tmp_test_directory):
+    file_path = tmp_test_directory / "empty.hdf5"
+    h5py.File(file_path, "w").close()
+
+    with pytest.raises(KeyError, match="not found"):
+        inspect_hdf5_entry(file_path, "MISSING")
+
+
+def test_inspect_hdf5_entry_rejects_root_group(tmp_test_directory):
+    file_path = tmp_test_directory / "group.hdf5"
+    with h5py.File(file_path, "w") as hdf5_file:
+        hdf5_file.create_group("GROUP")
+
+    with pytest.raises(ValueError, match="not a dataset"):
+        inspect_hdf5_entry(file_path, "GROUP")
 
 
 def test_inspect_file_reports_json_structure(tmp_path):

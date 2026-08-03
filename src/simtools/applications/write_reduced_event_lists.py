@@ -88,6 +88,7 @@ def main():
         files_per_reduced_event_file=app_context.args["files_per_reduced_event_file"],
         max_workers=app_context.args["max_workers"],
         output_path=app_context.io_handler.get_output_directory(),
+        metadata_args=app_context.args,
     )
 
 

@@ -27,3 +27,12 @@ When these fields are present and consistent, results can be reviewed, compared,
 
 simtools writes a dedicated metadata block into sim_telarray outputs. The key registry and schema
 rules are documented in [sim_telarray metadata](sim_telarray_metadata.md).
+
+## Reduced event-list metadata
+
+Reduced event-list HDF5 files embed two one-record metadata tables:
+
+- `METADATA` is the canonical standard document produced by `MetadataCollector`.
+- `SIMULATION_METADATA` contains input run headers, sim_telarray `HistoryMeta`, and the resolved
+  site, layout, telescope, calibration, and parameter records. Model-file contents are not
+  embedded.

@@ -17,6 +17,7 @@ from simtools.job_execution.process_pool import process_pool_map_ordered
 from simtools.model.array_model import ArrayModel
 from simtools.runners import corsika_runner, corsika_simtel_runner, runner_services, simtel_runner
 from simtools.sim_events import file_info, output_validator, writer
+from simtools.sim_events.metadata import build_simulation_metadata, build_standard_metadata
 from simtools.simtel import simtel_output_validator
 from simtools.simtel.simulator_array import SimulatorArray
 from simtools.utils import general
@@ -24,12 +25,24 @@ from simtools.utils import general
 
 def _write_reduced_event_list_batch(job_spec):
     """Write one reduced-event output file from one input-file batch."""
-    input_files, output_file = job_spec
+    input_files, output_file = job_spec[:2]
+    metadata_args = job_spec[2] if len(job_spec) > 2 else {}
+    model_exports = job_spec[3] if len(job_spec) > 3 else []
     generator = writer.EventDataWriter(input_files)
+
+    def build_metadata_documents():
+        return {
+            "METADATA": build_standard_metadata(metadata_args, output_file),
+            "SIMULATION_METADATA": build_simulation_metadata(
+                generator.get_simulation_input_metadata(), array_models=model_exports
+            ),
+        }
+
     table_handler.write_table_chunks(
         table_chunks=generator.iter_table_chunks(),
         output_file=Path(output_file),
         overwrite_existing=True,
+        metadata_documents=build_metadata_documents,
     )
 
 
@@ -388,6 +401,8 @@ class Simulator:
         Simulator.write_reduced_event_lists(
             input_files=self.get_files(file_type="sim_telarray_output"),
             output_files=self.get_files(file_type="sim_telarray_event_data"),
+            metadata_args=settings.config.args,
+            array_models=self.array_models,
         )
 
     @staticmethod
@@ -398,6 +413,8 @@ class Simulator:
         input_file_list=None,
         files_per_reduced_event_file=1,
         max_workers=1,
+        metadata_args=None,
+        array_models=None,
     ):
         """
         Write reduced event lists for given sim_telarray output files.
@@ -423,6 +440,10 @@ class Simulator:
         max_workers : int, optional
             Maximum number of output-file worker processes. ``None`` uses 60% of
             available CPUs, 0 uses all CPUs, and 1 runs serially. Defaults to 1.
+        metadata_args : dict, optional
+            Arguments used to build the embedded standard metadata document.
+        array_models : list, optional
+            Resolved ``ArrayModel`` instances to export into simulation metadata.
 
         Raises
         ------
@@ -459,6 +480,8 @@ class Simulator:
             input_file_batches=input_file_batches,
             output_files=resolved_output_files,
             max_workers=max_workers,
+            metadata_args=metadata_args,
+            array_models=array_models,
         )
 
     @staticmethod
@@ -562,9 +585,15 @@ class Simulator:
             )
 
     @staticmethod
-    def _run_reduced_event_list_jobs(input_file_batches, output_files, max_workers):
+    def _run_reduced_event_list_jobs(
+        input_file_batches, output_files, max_workers, metadata_args=None, array_models=None
+    ):
         """Run reduced event list jobs serially or in parallel."""
-        job_specs = list(zip(input_file_batches, output_files))
+        model_exports = [model.to_simulation_metadata_dict() for model in (array_models or [])]
+        job_specs = [
+            (input_files, output_file, metadata_args or {}, model_exports)
+            for input_files, output_file in zip(input_file_batches, output_files)
+        ]
         if max_workers == 1 or len(job_specs) < 2:
             for job_spec in job_specs:
                 _write_reduced_event_list_batch(job_spec)

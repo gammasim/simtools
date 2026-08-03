@@ -60,6 +60,7 @@ def create_mc_run_header():
     """Create mock MC run header."""
     mock_header = MagicMock(spec=MCRunHeader)
     mock_header.parse.return_value = {
+        "run": 123,
         "n_use": 2,  # Important: Must be >= 1
         "direction": [0.0, 70.0 / 57.3],
         "E_range": [0.003, 330.0],
@@ -161,6 +162,8 @@ def test_process_files(
     assert "array_altitude" in tables[1].colnames
     assert "telescope_list" in tables[1].colnames
     assert one_two_three in tables[1]["telescope_list"]
+    assert tables[2]["run_number"][0] == 123
+    assert lookup_table_generator.get_simulation_input_metadata()[0]["run_number"] == 123
 
 
 def test_no_input_files():
