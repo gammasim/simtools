@@ -184,7 +184,8 @@ New application checklist:
 4. Add an integration config in `tests/integration_tests/config/`.
 5. Add the RST application page and applications toctree entry.
 6. Add a changelog fragment when working in a PR flow.
-7. Applications in `src/simtools/applications/` are entry scripts. If possible, avoid adding code here and instead put reusable code in a library module.
+7. Applications in `src/simtools/applications/` are entry scripts. If possible, avoid
+   adding code here and instead put reusable code in a library module.
 
 New library module checklist:
 
