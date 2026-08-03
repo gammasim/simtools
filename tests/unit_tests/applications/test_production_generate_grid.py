@@ -182,5 +182,22 @@ def test_application_parse_allows_show_options_without_required_runtime_argument
 
 @pytest.mark.parametrize("option", ["--show-options", "--show_option", "--show-option"])
 def test_application_parser_rejects_show_options_aliases(option):
-    with pytest.raises(SystemExit):
-        _full_parser().parse_args([option, "site"])
+    argv = [
+        "--model_version",
+        "7.0.0",
+        "--site",
+        "North",
+        "--array_layout_name",
+        "LSTN-01",
+        "--primary",
+        "gamma",
+        "--showers_per_run",
+        "1000",
+        option,
+        "site",
+    ]
+
+    with pytest.raises(SystemExit) as exc:
+        _full_parser().parse_args(argv)
+
+    assert exc.value.code == 2
