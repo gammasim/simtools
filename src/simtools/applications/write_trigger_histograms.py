@@ -80,7 +80,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
-        cli.IGNORE_MISSING_DESIGN_MODEL,
         cli.SITE,
         *cli.layout_selection_arguments(),
         *cli.OUTPUT_PATH_ARGUMENTS,

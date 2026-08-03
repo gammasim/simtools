@@ -60,7 +60,7 @@ _GRID_ARGUMENTS = (
     ),
     cli.ArgumentDefinition(
         "number_of_runs",
-        help="Runs generated per grid point and energy interval.",
+        help="Runs generated per grid point.",
         type=scientific_int,
         default=None,
     ),
@@ -97,7 +97,8 @@ _GRID_ARGUMENTS = (
     cli.ArgumentDefinition(
         "showers_per_run_power_law",
         help=(
-            "Scale showers per run by (E_mid / E_ref)^INDEX. Provide INDEX VALUE UNIT; "
+            "Scale showers per run by (E_mid / E_ref)^INDEX (mostly used for fixed energy grid). "
+            "Provide INDEX VALUE UNIT; "
             "E_mid is the logarithmic energy-interval midpoint."
         ),
         nargs=3,
@@ -132,10 +133,9 @@ APPLICATION = ApplicationDefinition.for_module(
         *_GRID_ARGUMENTS,
         cli.MODEL_VERSION(required=True),
         cli.OVERWRITE_MODEL_PARAMETERS,
-        cli.IGNORE_MISSING_DESIGN_MODEL,
         cli.SITE(required=True),
         cli.TELESCOPE,
-        *cli.layout_selection_arguments(),
+        cli.ARRAY_LAYOUT_NAME(required=True),
         cli.SIMULATION_SOFTWARE,
         cli.PRIMARY,
         cli.PRIMARY_ID_TYPE,

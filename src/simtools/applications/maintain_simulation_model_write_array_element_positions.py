@@ -76,7 +76,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         cli.PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
-        cli.IGNORE_MISSING_DESIGN_MODEL,
     ),
     database=True,
 )

@@ -177,6 +177,36 @@ def _show_corsika_le_interaction(args_dict):
     return _show_corsika_interaction(args_dict, interaction_level="low")
 
 
+def _show_corsika_hadronic_transition_energy(args_dict):
+    """Show CORSIKA HILOW defaults recorded for installed build variants."""
+    variants, resolved_path = _get_corsika_variants(args_dict)
+    grouped_values = {}
+    missing_variants = []
+    for variant in variants:
+        variant_name = (
+            f"{variant.he_hadronic_model}/{variant.le_hadronic_model}/{variant.atmosphere_geometry}"
+        )
+        transition_energy = getattr(variant, "hadronic_transition_energy_default_gev", None)
+        if transition_energy is None:
+            missing_variants.append(variant_name)
+        else:
+            grouped_values[variant_name] = (f"{transition_energy:g} GeV",)
+
+    notes = ()
+    if missing_variants:
+        notes = (
+            "The installed CORSIKA build metadata does not declare HILOW for: "
+            + ", ".join(missing_variants)
+            + ".",
+        )
+    return ShowOptionsResult(
+        option_name="corsika_hadronic_transition_energy",
+        environment=_get_corsika_environment(resolved_path, variants),
+        grouped_values=grouped_values,
+        notes=notes,
+    )
+
+
 def _show_corsika_interaction(args_dict, interaction_level):
     variants, resolved_path = _get_corsika_variants(args_dict)
     if interaction_level == "high":
@@ -236,6 +266,7 @@ _SHOW_OPTION_PROVIDERS = {
     "corsika_he_interaction": _show_corsika_he_interaction,
     "corsika_le_interaction": _show_corsika_le_interaction,
     "model_version": _show_model_versions,
+    "corsika_hadronic_transition_energy": _show_corsika_hadronic_transition_energy,
     "primary": _show_primary,
     "site": _show_sites,
 }

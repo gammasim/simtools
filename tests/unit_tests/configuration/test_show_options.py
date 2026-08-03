@@ -240,3 +240,30 @@ def test_resolve_corsika_path_uses_environment_and_default(monkeypatch):
     monkeypatch.delenv("SIMTOOLS_CORSIKA_PATH")
     monkeypatch.setattr(show_options.defaults, "CORSIKA_PATH", "/from-default")
     assert show_options._resolve_corsika_path({}) == Path("/from-default")
+
+
+def test_show_corsika_hadronic_transition_energy_allows_missing_build_metadata(monkeypatch):
+    variants = [
+        SimpleNamespace(
+            he_hadronic_model="epos",
+            le_hadronic_model="urqmd",
+            atmosphere_geometry="flat",
+            executable="corsika-epos",
+            hadronic_transition_energy_default_gev=30,
+        ),
+        SimpleNamespace(
+            he_hadronic_model="qgsjet",
+            le_hadronic_model="gheisha",
+            atmosphere_geometry="curved",
+            executable="corsika-qgsjet",
+        ),
+    ]
+    monkeypatch.setattr(show_options, "get_installed_corsika_build_variants", lambda path: variants)
+    monkeypatch.setattr(show_options, "get_corsika_version", lambda: None)
+
+    result = show_options.resolve_show_options(
+        {"show_options": "corsika_hadronic_transition_energy", "corsika_path": "/corsika"}
+    )
+
+    assert result.grouped_values == {"epos/urqmd/flat": ("30 GeV",)}
+    assert "qgsjet/gheisha/curved" in result.notes[0]
