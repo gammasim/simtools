@@ -13,19 +13,6 @@ _ARGUMENTS = (
         required=True,
         help="Path to the ECSV file containing grid points.",
     ),
-    cli.ArgumentDefinition(
-        "plot_ra_dec_tracks",
-        action="store_true",
-        default=False,
-        help="Plot manual or inferred RA/Dec guide tracks on the sky projection.",
-    ),
-    cli.ArgumentDefinition(
-        "dec_values",
-        nargs="+",
-        type=float,
-        default=None,
-        help="Optional list of declination values in degrees to plot as manual tracks.",
-    ),
 )
 
 
@@ -49,10 +36,7 @@ def main():
         output_path=app_context.io_handler.get_output_directory(),
     )
 
-    plotter.plot_sky_projection(
-        plot_ra_dec_tracks=app_context.args["plot_ra_dec_tracks"],
-        dec_values=app_context.args["dec_values"],
-    )
+    plotter.plot_sky_projection()
     plotter.plot_limit_projections()
 
 
