@@ -538,6 +538,25 @@ def test_validate_output_path_and_file_checks_hdf5_datasets(tmp_test_directory, 
     mock_check_hdf5.assert_called_once_with(output_file, file_test["expected_hdf5_datasets"])
 
 
+def test_validate_output_path_and_file_rejects_non_hdf5_dataset_check(tmp_test_directory):
+    """Reject HDF5 dataset checks for outputs with a non-HDF5 suffix."""
+    output_file = Path(str(tmp_test_directory)) / "output.simtel.zst"
+    output_file.touch()
+    file_test = {
+        "path_descriptor": "output_path",
+        "file": output_file.name,
+        "expected_hdf5_datasets": ["FILE_INFO"],
+    }
+
+    with pytest.raises(
+        AssertionError,
+        match="expected_hdf5_datasets requires an HDF5 output file",
+    ):
+        validate_output._validate_output_path_and_file(
+            {"configuration": {"output_path": str(tmp_test_directory)}}, [file_test]
+        )
+
+
 def test_compare_simtel_cfg_files(tmp_test_directory):
     file1 = Path(f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/7.0.0/CTAO-LSTN-01.cfg")
     file2 = Path(f"{TEST_RESOURCES_GENERATED}/sim_telarray_configurations/7.0.0/CTAO-LSTN-01.cfg")
