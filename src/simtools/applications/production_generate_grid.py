@@ -6,6 +6,7 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration import defaults
 from simtools.configuration.argument_helpers import scientific_int
+from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.production_configuration.simulation_jobs import (
     TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
     generate_job_grid,
@@ -168,6 +169,7 @@ def main():
     generate_job_grid(
         app_context.args,
         app_context.io_handler.get_output_file(app_context.args["output_file"]),
+        metadata=MetadataCollector(app_context.args).get_top_level_metadata(),
     )
 
 

@@ -20,8 +20,9 @@ def _full_parser():
 
 
 @patch("simtools.applications.production_generate_grid.generate_job_grid")
+@patch("simtools.applications.production_generate_grid.MetadataCollector")
 @patch("simtools.application.definition.ApplicationDefinition.start")
-def test_main_generates_job_grid(mock_start, mock_generate_job_grid):
+def test_main_generates_job_grid(mock_start, mock_metadata_collector, mock_generate_job_grid):
     io_handler = Mock()
     io_handler.get_output_file.return_value = Path("job_grid.ecsv")
     args = {
@@ -29,9 +30,12 @@ def test_main_generates_job_grid(mock_start, mock_generate_job_grid):
         "run_number_offset": 10,
     }
     mock_start.return_value = SimpleNamespace(args=args, io_handler=io_handler)
+    metadata = {"cta": {"activity": {"name": "production_generate_grid"}}}
+    mock_metadata_collector.return_value.get_top_level_metadata.return_value = metadata
     app.main()
 
-    mock_generate_job_grid.assert_called_once_with(args, Path("job_grid.ecsv"))
+    mock_metadata_collector.assert_called_once_with(args)
+    mock_generate_job_grid.assert_called_once_with(args, Path("job_grid.ecsv"), metadata=metadata)
     mock_start.assert_called_once_with()
 
 
