@@ -139,7 +139,14 @@ def test_post_parse_hook_receives_configuration_sources(mocker):
 
     args, database = application._parse()
 
-    assert args == {"value": 3}
+    assert args["value"] == 3
+    assert args["_metadata_configuration_sources"] == {
+        "constructor": [],
+        "cli": [],
+        "defaults": [],
+        "environment": [],
+        "yaml": [],
+    }
     assert database == {}
     initialize.assert_called_once()
     hook.assert_called_once()
