@@ -51,8 +51,8 @@ applications:
             unit: deg
         ha:
           range:
-            minimum: -180.0
-            maximum: 180.0
+            minimum: 0.0
+            maximum: 360.0
             unit: deg
         dec:
           range:
