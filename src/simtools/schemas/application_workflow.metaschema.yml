@@ -225,6 +225,10 @@ definitions:
     type: object
     additionalProperties: false
     properties:
+      profile:
+        description: "Named reusable output-validation profile."
+        type: string
+        minLength: 1
       name:
         type: string
         minLength: 1
@@ -254,7 +258,14 @@ definitions:
           "$ref": "#/definitions/output_validation_column_rule"
       metadata:
         "$ref": "#/definitions/output_validation_metadata_rule"
-    required: [path_descriptor, file, data_product_schema]
+    required: [file]
+    allOf:
+      - anyOf:
+          - required: [path_descriptor]
+          - required: [profile]
+      - anyOf:
+          - required: [data_product_schema]
+          - required: [profile]
   output_validation_range:
     type: object
     additionalProperties: false

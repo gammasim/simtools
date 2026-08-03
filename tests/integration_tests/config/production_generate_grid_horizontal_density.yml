@@ -34,19 +34,11 @@ applications:
   integration_tests:
   - output_file: job_grid_horizontal_grid_density.ecsv
     output_validation:
-    - name: job_grid_content
-      path_descriptor: output_path
+    - profile: job_grid
       file: job_grid_horizontal_grid_density.ecsv
-      minimum_rows: 1
-      unique_columns: [run_number]
       columns:
         primary:
           allowed_values: [gamma]
-        azimuth_angle:
-          range:
-            minimum: 0.0
-            maximum: 360.0
-            unit: deg
         zenith_angle:
           range:
             minimum: 0.0
@@ -77,23 +69,12 @@ applications:
             minimum: 0.0
             maximum: 10.0
             unit: deg
-        showers_per_run:
-          range:
-            minimum: 1.0
         model_version:
           allowed_values: ["7.0.0"]
         corsika_le_interaction:
           allowed_values: [urqmd]
         corsika_he_interaction:
           allowed_values: [epos]
-      metadata:
-        required_keys:
-        - job_grid_summary
-        - job_grid_format_version
-        row_count: job_grid_summary.simulation_rows
-        column_sums:
-          showers_per_run: job_grid_summary.total_showers
-      data_product_schema: src/simtools/schemas/job_grid_density.schema.yml
   model_version_use_current: true
   test_name: production_generate_grid_horizontal_density
 schema_name: application_workflow.metaschema
