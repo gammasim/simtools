@@ -2,6 +2,7 @@
 
 r"""Generate simulation configuration and run simulations."""
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -66,7 +67,7 @@ _ARGUMENTS = (
             "Save reduced event lists with event data on simulated and triggered events. "
             "Saved with the same name as the sim_telarray output file (different extension). "
         ),
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         required=False,
         default=True,
     ),

@@ -20,7 +20,7 @@ Typical outputs are:
 
 - CORSIKA, sim_telarray, and simtools log files
 - sim_telarray eventio files and histogram files
-- reduced event-data HDF5 files when `--reduced_event_lists` is used
+- reduced event-data HDF5 files (enabled by default; disable with `--reduced_event_lists`)
 - output and log file lists when `--save_file_lists` is used
 - copied grid output files, including logs, histogram files, model archives, moved event files,
   and `simtools.log.gz`, when `--grid_output_path` is configured
@@ -42,8 +42,7 @@ simtools-simulate-prod \
     --corsika_he_interaction qgs3 \
     --corsika_le_interaction urqmd \
     --corsika_hadronic_transition_energy 80 GeV \
-    --run_number 1 \
-    --reduced_event_lists
+    --run_number 1
 ```
 
 Alternatively, a single job can be selected from an executable production grid. In this mode,

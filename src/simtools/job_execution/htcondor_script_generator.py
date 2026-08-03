@@ -388,7 +388,6 @@ def _get_submit_script(args_dict, params_fields=None):
             f"--core_scatter {core_scatter_string}",
             f"--view_cone {view_cone_string}",
             f"--run_number_offset {args_dict.get('run_number_offset', 0)}",
-            "--reduced_event_lists",
         ]
     )
     if args_dict.get("save_file_lists"):

@@ -513,6 +513,25 @@ def test_reduced_event_lists_passes_activity_metadata(array_simulator, mocker):
     assert mock_write.call_args.kwargs["metadata_args"] is settings.config.args
 
 
+def test_reduced_event_lists_normalizes_single_files(array_simulator, mocker):
+    """Normalize singleton file paths before writing reduced event lists."""
+    input_file = Path("output_file.simtel.zst")
+    output_file = Path("output_file.reduced_event_data.hdf5")
+    mocker.patch.object(
+        array_simulator,
+        "get_files",
+        side_effect=lambda file_type: (
+            input_file if file_type == "sim_telarray_output" else output_file
+        ),
+    )
+    mock_write = mocker.patch.object(Simulator, "write_reduced_event_lists")
+
+    array_simulator.save_reduced_event_lists()
+
+    assert mock_write.call_args.kwargs["input_files"] == [input_file]
+    assert mock_write.call_args.kwargs["output_files"] == [output_file]
+
+
 def test_reduced_event_lists_no_output_files(array_simulator, mocker, caplog):
     """Test save_reduced_event_lists with no output files available."""
     mocker.patch.object(array_simulator, "get_files", return_value=[])

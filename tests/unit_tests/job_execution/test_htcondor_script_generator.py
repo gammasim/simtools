@@ -181,7 +181,6 @@ simtools-simulate-prod \\
     --core_scatter "${{7}} ${{8}} m" \\
     --view_cone "${{9}} deg ${{10}} deg" \\
     --run_number_offset 0 \\
-    --reduced_event_lists \\
     --output_path /tmp/simtools-output \\
     --grid_output_path "${{17}}"
 """
@@ -195,7 +194,6 @@ def test_get_submit_script_includes_save_file_lists_when_requested(args_dict):
     generated_script = _get_submit_script(args_dict)
 
     assert "--save_file_lists" in generated_script
-    assert "--reduced_event_lists" in generated_script
     assert "--output_path /tmp/simtools-output" in generated_script
 
 

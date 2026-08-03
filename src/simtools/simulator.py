@@ -399,8 +399,8 @@ class Simulator:
             return
 
         Simulator.write_reduced_event_lists(
-            input_files=self.get_files(file_type="sim_telarray_output"),
-            output_files=self.get_files(file_type="sim_telarray_event_data"),
+            input_files=general.ensure_list(self.get_files(file_type="sim_telarray_output")),
+            output_files=general.ensure_list(self.get_files(file_type="sim_telarray_event_data")),
             metadata_args=settings.config.args,
             array_models=self.array_models,
         )
