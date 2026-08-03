@@ -369,6 +369,10 @@ def _validate_output_path_and_file(config, integration_file_tests):
             ".log"
         ):
             assert assertions.check_log_files(output_file_path, file_test)
+        if "expected_hdf5_datasets" in file_test:
+            assert assertions.assert_hdf5_datasets(
+                output_file_path, file_test["expected_hdf5_datasets"]
+            )
 
 
 def _validate_model_parameter_json_file(config, model_parameter_validation):
