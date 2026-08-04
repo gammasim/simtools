@@ -126,9 +126,8 @@ def test_htcondor_submit_creates_one_process_per_job(monkeypatch, tmp_test_direc
             return 0
 
     class _Schedd:
-        def submit(self, description, count, itemdata):
+        def submit(self, description, itemdata):
             captured["description"] = description
-            captured["count"] = count
             captured["itemdata"] = list(itemdata)
             return _Result()
 
@@ -147,10 +146,11 @@ def test_htcondor_submit_creates_one_process_per_job(monkeypatch, tmp_test_direc
     handle = HTCondorBackend().submit(jobs, options)
 
     assert handle.scheduler_id == 17
-    assert captured["count"] == 2
     assert captured["itemdata"] == [{"job_id": "job-000000"}, {"job_id": "job-000001"}]
     assert captured["description"]["request_cpus"] == "1"
     assert captured["description"]["priority"] == "42"
+    assert captured["description"]["arguments"].endswith("--job-id $(job_id)")
+    assert "'$(job_id)'" not in captured["description"]["arguments"]
 
 
 def test_htcondor_rejects_unknown_configuration():

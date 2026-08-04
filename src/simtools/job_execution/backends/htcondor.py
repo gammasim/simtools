@@ -203,7 +203,7 @@ class HTCondorBackend:
         itemdata = self._build_itemdata(jobs, resource_defaults, resource_keys)
         try:
             submission = htcondor.Submit(submit_values)
-            result = self._schedd.submit(submission, count=len(jobs), itemdata=iter(itemdata))
+            result = self._schedd.submit(submission, itemdata=iter(itemdata))
         except Exception as exc:  # pylint: disable=broad-exception-caught
             raise BackendSubmissionError(f"HTCondor submission failed: {exc}") from exc
         handle = self._make_handle(result, jobs, work_dir, event_log, config)
@@ -296,13 +296,13 @@ class HTCondorBackend:
         """Build the submit description and per-job resource metadata."""
         submit_values = {
             "executable": sys.executable,
-            "arguments": shlex.join(
+            "arguments": " ".join(
                 [
-                    "-m",
-                    "simtools.job_execution.worker",
-                    "--run-directory",
-                    str(work_dir),
-                    "--job-id",
+                    shlex.quote("-m"),
+                    shlex.quote("simtools.job_execution.worker"),
+                    shlex.quote("--run-directory"),
+                    shlex.quote(str(work_dir)),
+                    shlex.quote("--job-id"),
                     "$(job_id)",
                 ]
             ),
