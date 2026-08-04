@@ -193,9 +193,9 @@ class MetadataCollector:
 
         """
         # from command line
-        if self.args_dict.get("schema"):
-            self._logger.debug(f"Schema file from command line: {self.args_dict['schema']}")
-            return self.args_dict["schema"]
+        if self.args_dict.get("schema_file"):
+            self._logger.debug(f"Schema file from command line: {self.args_dict['schema_file']}")
+            return self.args_dict["schema_file"]
 
         # from metadata
         try:

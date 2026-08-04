@@ -12,7 +12,7 @@ r"""
       input file to be validated
     file_directory (str)
         directory with json files of model parameters to be validated
-    schema (str)
+    schema_file (str)
       schema file (jsonschema format) used for validation
     data_type (str)
         type of input data (allowed types: metadata, schema, data, model_parameter)
@@ -26,7 +26,7 @@ r"""
 
         simtools-validate-file-using-schema \\
          --file_name tests/resources/MLTdata-preproduction.meta.yml \\
-         --schema simtools/schemas/metadata.metaschema.yml \\
+         --schema_file simtools/schemas/metadata.metaschema.yml \\
          --data_type metadata
 
     Validate schema of a file:
@@ -35,7 +35,7 @@ r"""
 
         simtools-validate-file-using-schema \\
          --file_name tests/resources/model_parameters/schema-0.3.0/num_gains-1.0.0.json \\
-         --schema src/simtools/schemas/model_parameter.metaschema.yml \\
+         --schema_file src/simtools/schemas/model_parameter.metaschema.yml \\
          --data_type schema
 
     Validate all model parameter files in a directory:
@@ -67,7 +67,7 @@ _ARGUMENTS = (
             f"{MODEL_PARAMETER_SCHEMA_PATH}."
         ),
     ),
-    cli.ArgumentDefinition("schema", help="Schema file", required=False),
+    cli.ArgumentDefinition("schema_file", help="Schema file", required=False),
     cli.ArgumentDefinition(
         "data_type",
         help="Type of input data",
@@ -95,7 +95,7 @@ def main():
 
     file_name = app_context.args.get("file_name")
     file_directory = app_context.args.get("file_directory")
-    schema_file = app_context.args.get("schema")
+    schema_file = app_context.args.get("schema_file")
     data_type = app_context.args.get("data_type").lower()
 
     if data_type == "metadata":

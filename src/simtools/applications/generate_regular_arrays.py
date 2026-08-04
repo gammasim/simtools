@@ -14,7 +14,7 @@ Command line arguments
 ----------------------
 telescope_type (str)
     Type of telescope (e.g., LST, MST, SST).
-n_telescopes (int)
+number_of_telescopes (int)
     Number of telescopes in the array.
 telescope_distance (float)
     Distance between telescopes in the array (in meters).
@@ -48,7 +48,7 @@ _ARGUMENTS = (
         "telescope_type", help="Type of telescope (e.g., LST, MST, SST).", type=str, default="LST"
     ),
     cli.ArgumentDefinition(
-        "n_telescopes", help="Number of telescopes in the array.", type=int, default=4
+        "number_of_telescopes", help="Number of telescopes in the array.", type=int, default=4
     ),
     cli.ArgumentDefinition(
         "telescope_distance",
@@ -84,7 +84,7 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    n_tel = app_context.args["n_telescopes"]
+    n_tel = app_context.args["number_of_telescopes"]
     tel_type = app_context.args["telescope_type"]
     tel_dist = app_context.args["telescope_distance"] * u.m
     shape = app_context.args["array_shape"]
