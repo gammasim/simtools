@@ -455,7 +455,17 @@ def _setup_multi_intensity_flasher_test(simulator_instance):
     simulator_instance.telescope_model.get_parameter_value.return_value = "hexagonal"
 
 
-def test__add_flasher_command_options_multi_intensity_with_event_list(simulator_instance):
+@pytest.mark.parametrize(
+    ("number_of_events", "expected_events"),
+    [
+        ([100, 50, 20], "100,50,20"),
+        (100, "100,100,100"),
+    ],
+    ids=["one-event-per-intensity", "single-event-broadcast"],
+)
+def test__add_flasher_command_options_multi_intensity(
+    simulator_instance, number_of_events, expected_events
+):
     _setup_multi_intensity_flasher_test(simulator_instance)
 
     with (
@@ -482,50 +492,13 @@ def test__add_flasher_command_options_multi_intensity_with_event_list(simulator_
         mock_distance.return_value = mock_distance_value
 
         simulator_instance.light_emission_config = {
-            "number_of_events": [100, 50, 20],
+            "number_of_events": number_of_events,
             "flasher_photons": [1000000, 2000000, 3000000],
         }
 
         result = simulator_instance._add_flasher_command_options()
 
-        assert "--events 100,50,20" in result
-        assert "--photons 1000000,2000000,3000000" in result
-
-
-def test__add_flasher_command_options_multi_intensity_with_single_event_value(simulator_instance):
-    _setup_multi_intensity_flasher_test(simulator_instance)
-
-    with (
-        patch.object(
-            simulator_instance, "calculate_distance_focal_plane_calibration_device"
-        ) as mock_distance,
-        patch(
-            "simtools.simtel.simulator_light_emission.fiducial_radius_from_shape",
-            return_value=90.0,
-        ),
-        patch.object(
-            simulator_instance,
-            "_get_angular_distribution_string_for_sim_telarray",
-            return_value="gauss:2.5",
-        ),
-        patch.object(
-            simulator_instance,
-            "_get_pulse_shape_argument_for_sim_telarray",
-            return_value="gauss:2.0",
-        ),
-    ):
-        mock_distance_value = Mock()
-        mock_distance_value.to.return_value.value = 1000.0
-        mock_distance.return_value = mock_distance_value
-
-        simulator_instance.light_emission_config = {
-            "number_of_events": 100,
-            "flasher_photons": [1000000, 2000000, 3000000],
-        }
-
-        result = simulator_instance._add_flasher_command_options()
-
-        assert "--events 100,100,100" in result
+        assert f"--events {expected_events}" in result
         assert "--photons 1000000,2000000,3000000" in result
 
 

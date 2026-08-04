@@ -330,124 +330,88 @@ def test_add_array_elements():
     assert len(test_dict_added_2["data"]["InstrumentTypeElement"]["enum"]) > 2
 
 
-def test_validate_deprecation_and_version(caplog, monkeypatch):
+def _mock_software_version(monkeypatch):
+    monkeypatch.setattr("simtools.data_model.schema.get_software_version", lambda _: "1.0.0")
 
-    # Mock simtools version for predictable testing
-    def mock_get_software_version(software_name):
-        return "1.0.0"
 
-    monkeypatch.setattr(
-        "simtools.data_model.schema.get_software_version", mock_get_software_version
-    )
-
-    # Test 1: Non-dict data should return early without errors
-    schema.validate_deprecation_and_version("not_a_dict")
-    schema.validate_deprecation_and_version(None)
-    schema.validate_deprecation_and_version([1, 2, 3])
-
-    # Test 2: Empty dict should not raise errors
-    schema.validate_deprecation_and_version({})
-
-    # Test 3: Deprecated data should log warning
+@pytest.mark.parametrize(
+    "data",
+    ["not_a_dict", None, [1, 2, 3], {}, {"deprecated": False}],
+    ids=["non-mapping", "none", "list", "empty", "not-deprecated"],
+)
+def test_validate_deprecation_and_version_accepts_noop_inputs(data, caplog, monkeypatch):
+    _mock_software_version(monkeypatch)
     with caplog.at_level(logging.WARNING):
-        schema.validate_deprecation_and_version({"name": "test_parameter", "deprecated": True})
-    assert "Data for test_parameter is deprecated" in caplog.text
-    caplog.clear()
+        assert schema.validate_deprecation_and_version(data) is None
+    assert caplog.text == ""
 
-    # Test 4: Deprecated data with custom note
+
+@pytest.mark.parametrize(
+    ("data", "message"),
+    [
+        ({"name": "test_parameter", "deprecated": True}, "Data for test_parameter is deprecated"),
+        (
+            {"deprecated": True, "deprecation_note": "Use new version instead"},
+            "Use new version instead",
+        ),
+    ],
+    ids=["default-note", "custom-note"],
+)
+def test_validate_deprecation_and_version_warns_for_deprecated_data(
+    data, message, caplog, monkeypatch
+):
+    _mock_software_version(monkeypatch)
     with caplog.at_level(logging.WARNING):
-        schema.validate_deprecation_and_version(
-            {"deprecated": True, "deprecation_note": "Use new version instead"}
-        )
-    assert "Use new version instead" in caplog.text
-    caplog.clear()
+        assert schema.validate_deprecation_and_version(data) is None
+    assert message in caplog.text
 
-    # Test 5: Non-deprecated data should not warn
-    with caplog.at_level(logging.WARNING):
-        schema.validate_deprecation_and_version({"deprecated": False})
-    assert "deprecated" not in caplog.text
 
-    # Test 6: Valid version constraint should pass
-    valid_data = {"simulation_software": [{"name": "simtools", "version": ">=1.0.0"}]}
-    schema.validate_deprecation_and_version(valid_data)
+@pytest.mark.parametrize(
+    "constraint",
+    ["==1.0.0", ">=1.0.0,<2.0.0", "~=1.0", "!=0.9.0", "  >=1.0.0  "],
+    ids=["exact", "range", "compatible", "not-equal", "whitespace"],
+)
+def test_validate_deprecation_and_version_accepts_valid_constraints(constraint, monkeypatch):
+    _mock_software_version(monkeypatch)
+    data = {"simulation_software": [{"name": "simtools", "version": constraint}]}
+    assert schema.validate_deprecation_and_version(data) is None
 
-    # Test 7: Multiple software entries, only simtools matters
-    multi_sw_data = {
-        "simulation_software": [
-            {"name": "other_software", "version": ">=0.2.0"},
-            {"name": "simtools", "version": ">=0.5.0"},
-            {"name": "another_software", "version": ">=0.8.0"},
-        ]
-    }
-    schema.validate_deprecation_and_version(multi_sw_data)
 
-    # Test 8: Invalid version constraint should raise ValueError
-    invalid_data = {
+@pytest.mark.parametrize(
+    ("data", "software_name"),
+    [
+        ({"simulation_software": [{"name": "simtools"}]}, "simtools"),
+        ({"simulation_software": [{"name": "simtools", "version": None}]}, "simtools"),
+        ({"simulation_software": [{"name": "custom_tool", "version": ">=1.0.0"}]}, "custom_tool"),
+        ({"simulation_software": [{"name": "other_software", "version": ">=0.2.0"}]}, "simtools"),
+    ],
+    ids=["missing-version", "none-version", "custom-name", "no-match"],
+)
+def test_validate_deprecation_and_version_accepts_optional_or_unrelated_constraints(
+    data, software_name, monkeypatch
+):
+    _mock_software_version(monkeypatch)
+    assert schema.validate_deprecation_and_version(data, software_name=software_name) is None
+
+
+def test_validate_deprecation_and_version_reports_invalid_constraints(caplog, monkeypatch):
+    _mock_software_version(monkeypatch)
+    mismatch = {
         "name": "invalid_parameter",
         "simulation_software": [{"name": "simtools", "version": ">=2.0.0"}],
     }
-    with pytest.raises(
-        ValueError, match=r"invalid_parameter: version 1.0.0 of simtools does not match >=2.0.0"
-    ):
-        schema.validate_deprecation_and_version(invalid_data)
+    with pytest.raises(ValueError, match=r"invalid_parameter: version 1\.0\.0"):
+        schema.validate_deprecation_and_version(mismatch)
 
-    # Test 9: Software without version constraint should pass
-    no_version_data = {"simulation_software": [{"name": "simtools"}]}
-    schema.validate_deprecation_and_version(no_version_data)
-
-    # Test 10: Software with None version should pass
-    none_version_data = {"simulation_software": [{"name": "simtools", "version": None}]}
-    schema.validate_deprecation_and_version(none_version_data)
-
-    # Test 11: Complex version constraints
-    complex_constraints = ["==1.0.0", ">=1.0.0,<2.0.0", "~=1.0", "!=0.9.0"]
-    for constraint in complex_constraints:
-        data = {"simulation_software": [{"name": "simtools", "version": constraint}]}
-        schema.validate_deprecation_and_version(data)
-
-    # Test 12: Version constraint with whitespace should be handled
-    whitespace_data = {"simulation_software": [{"name": "simtools", "version": "  >=1.0.0  "}]}
-    schema.validate_deprecation_and_version(whitespace_data)
-
-    # Test 12a: Version constraint with random parameter should be handled
-    invalid_data = {"simulation_software": [{"name": "simtools", "version": "  >=1.0.0-abc  "}]}
     with pytest.raises(InvalidSpecifier, match=r"Invalid specifier: '>=1.0.0-abc'"):
-        schema.validate_deprecation_and_version(invalid_data)
+        schema.validate_deprecation_and_version(
+            {"simulation_software": [{"name": "simtools", "version": ">=1.0.0-abc"}]}
+        )
 
-    # Test 13: Custom software name parameter
-    custom_sw_data = {"simulation_software": [{"name": "custom_tool", "version": ">=1.0.0"}]}
-    schema.validate_deprecation_and_version(custom_sw_data, software_name="custom_tool")
-
-    # Test 13a: Custom software name parameter with mismatch (should skip)
-    mismatch_sw_data = {
-        "simulation_software": [
-            {"name": "other_tool", "version": ">=2.0.0"},
-            {"name": "simtools", "version": ">=0.5.0"},
-        ]
-    }
-    schema.validate_deprecation_and_version(mismatch_sw_data, software_name="simtools")
-
-    # Test 14: No matching software name should pass
-    no_match_data = {"simulation_software": [{"name": "other_software", "version": ">=0.2.0"}]}
-    schema.validate_deprecation_and_version(no_match_data)
-
-    # Test 15: Combined deprecation and version validation
-    combined_data = {
-        "deprecated": True,
-        "deprecation_note": "Old version",
-        "simulation_software": [{"name": "simtools", "version": ">=0.5.0"}],
-    }
     with caplog.at_level(logging.WARNING):
-        schema.validate_deprecation_and_version(combined_data)
-    assert "Old version" in caplog.text
-
-    # Test 16: ignore_software_version=True should log warning and not raise
-    mismatch_data = {
-        "name": "parameter_warning",
-        "simulation_software": [{"name": "simtools", "version": ">=2.0.0"}],
-    }
-    with caplog.at_level(logging.WARNING):
-        schema.validate_deprecation_and_version(mismatch_data, ignore_software_version=True)
+        assert (
+            schema.validate_deprecation_and_version(mismatch, ignore_software_version=True) is None
+        )
     assert "does not match" in caplog.text
 
 
