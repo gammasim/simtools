@@ -378,8 +378,8 @@ class MetadataCollector:
             quote = assignment_value[0] if assignment_value[0] in "\"'" else ""
             redacted_value = f"{quote}***REDACTED***{quote}" if quote else "***REDACTED***"
             return (
-                f"{match.group('option') or ''}{match.group('key')}"
-                f"{match.group('separator')}{redacted_value}"
+                f"{match.group(\"option\") or \"\"}{match.group(\"key\")}"
+                f"{match.group(\"separator\")}{redacted_value}"
             )
 
         return _SENSITIVE_CONFIGURATION_ASSIGNMENT.sub(redact_assignment, value)
