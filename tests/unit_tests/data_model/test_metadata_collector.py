@@ -26,10 +26,10 @@ def test_get_data_model_schema_file_name():
     schema_file = _collector.get_data_model_schema_file_name()
     assert schema_file is None
 
-    args_dict = {"schema": str(METADATA_JSON_SCHEMA)}
+    args_dict = {"schema_file": str(METADATA_JSON_SCHEMA)}
     _collector = metadata_collector.MetadataCollector(args_dict, clean_meta=False)
     schema_file = _collector.get_data_model_schema_file_name()
-    assert schema_file == args_dict["schema"]
+    assert schema_file == args_dict["schema_file"]
 
     # from metadata
     _collector.top_level_meta["cta"]["product"]["data"]["model"]["url"] = str(
@@ -37,8 +37,8 @@ def test_get_data_model_schema_file_name():
     )
     schema_file = _collector.get_data_model_schema_file_name()
     # test that priority is given to args_dict (if not none)
-    assert schema_file == args_dict["schema"]
-    _collector.args_dict["schema"] = None
+    assert schema_file == args_dict["schema_file"]
+    _collector.args_dict["schema_file"] = None
     schema_file = _collector.get_data_model_schema_file_name()
     assert schema_file == str(SCHEMA_PATH / "top_level_meta.schema.yml")
 
@@ -205,7 +205,9 @@ def test_fill_product_meta(args_dict_site):
     assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.0.0"
 
     # read product metadata from schema file
-    metadata_1.args_dict["schema"] = SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
+    metadata_1.args_dict["schema_file"] = (
+        SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
+    )
     metadata_1._fill_product_meta(product_dict=metadata_1.top_level_meta["cta"]["product"])
 
     assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.1.0"

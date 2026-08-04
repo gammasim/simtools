@@ -96,66 +96,23 @@ example:
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.configuration.argument_helpers import (
-    azimuth_angle,
-    parse_integer_and_quantity,
-    parse_quantity_pair,
-    positive_quantity,
-    zenith_angle,
-)
+from simtools.configuration.argument_helpers import parse_quantity_pair
 from simtools.job_execution import bias_curve_submissions
 
 _ARGUMENTS = (
-    cli.ArgumentDefinition(
-        "site", help="Observation site (e.g., North, South).", type=str, required=True
-    ),
-    cli.ArgumentDefinition(
-        "model_version", help="Simulation model version.", type=str, required=True
-    ),
-    cli.ArgumentDefinition("telescope", help="Telescope name.", type=str, required=True),
-    cli.ArgumentDefinition(
-        "simulation_software", help="Simulation software.", type=str, default="corsika_sim_telarray"
-    ),
-    cli.ArgumentDefinition(
-        "azimuth_angle", help="Azimuth angle in degrees.", type=azimuth_angle, required=True
-    ),
-    cli.ArgumentDefinition(
-        "zenith_angle", help="Zenith angle in degrees.", type=zenith_angle, required=True
-    ),
-    cli.ArgumentDefinition(
-        "showers_per_run", help="Number of showers per run.", type=int, required=True
-    ),
-    cli.ArgumentDefinition(
-        "core_scatter",
-        help="Core scatter, e.g. '20 1900 m'.",
-        type=parse_integer_and_quantity,
-        required=True,
-    ),
-    cli.ArgumentDefinition(
-        "view_cone", help="View cone, e.g. '0 deg 5 deg'.", type=parse_quantity_pair, required=True
-    ),
-    cli.ArgumentDefinition("number_of_runs", help="Number of runs.", type=int, required=True),
-    cli.ArgumentDefinition(
-        "corsika_le_interaction",
-        help="CORSIKA low-energy interaction model.",
-        type=str,
-        default="urqmd",
-    ),
-    cli.ArgumentDefinition(
-        "corsika_he_interaction",
-        help="CORSIKA high-energy interaction model.",
-        type=str,
-        default="epos",
-    ),
-    cli.ArgumentDefinition(
-        "corsika_hadronic_transition_energy",
-        help=(
-            "Transition energy between low- and high-energy hadronic models. "
-            "If omitted, use the CORSIKA build default."
-        ),
-        type=positive_quantity("GeV"),
-        default=None,
-    ),
+    cli.SITE(required=True),
+    cli.MODEL_VERSION(required=True, nargs=None),
+    cli.TELESCOPE(required=True),
+    cli.SIMULATION_SOFTWARE,
+    cli.AZIMUTH_ANGLE(required=True, action="store", nargs=None, default=None),
+    cli.ZENITH_ANGLE(required=True, action="store", nargs=None, default=None),
+    cli.SHOWERS_PER_RUN(required=True),
+    cli.CORE_SCATTER(required=True),
+    cli.VIEW_CONE(required=True),
+    cli.NUMBER_OF_RUNS(required=True),
+    cli.CORSIKA_LE_INTERACTION(action="store", nargs=None, default="urqmd"),
+    cli.CORSIKA_HE_INTERACTION(action="store", nargs=None, default="epos"),
+    cli.CORSIKA_HADRONIC_TRANSITION_ENERGY,
     cli.ArgumentDefinition(
         "nsb_energy_range",
         help="Energy range for the NSB gamma curve.",

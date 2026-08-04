@@ -28,8 +28,8 @@ from simtools.visualization import plot_simtel_events
 def mock_event_data():
     """Create minimal mock event data."""
     rng = np.random.default_rng(42)
-    n_pixels, n_samples = 100, 50
-    adc_samples = rng.uniform(50, 100, (2, n_pixels, n_samples))  # dual gain
+    number_of_pixels, n_samples = 100, 50
+    adc_samples = rng.uniform(50, 100, (2, number_of_pixels, n_samples))  # dual gain
     adc_samples[:, :, -10:] = 60  # pedestals
     adc_samples[:, 10, 20:30] = 200  # signal in pixel 10
 
@@ -53,7 +53,7 @@ def mock_camera():
     """Create a mock camera with minimal required attributes."""
     rng = np.random.default_rng(42)
     camera = mock.Mock()
-    camera.n_pixels = 100
+    camera.number_of_pixels = 100
     camera.pixel_x_pos = rng.uniform(-1, 1, 100)
     camera.pixel_y_pos = rng.uniform(-1, 1, 100)
     camera.camera_name = "TestCamera"
@@ -76,7 +76,7 @@ def test_plot_simtel_event_init(mock_plotter):
     assert mock_plotter.event_ids == 0
     assert 0 in mock_plotter.event_data
     event = mock_plotter.event_data[0]
-    assert event.n_pixels == 100
+    assert event.number_of_pixels == 100
     assert event.n_samples == 50
     assert event.adc_samples.shape == (100, 50)
     assert event.pedestals.shape == (100,)
@@ -114,7 +114,7 @@ def test_plots_to_run_specific(mock_plotter):
 
 
 def test_plot_time_traces(mock_plotter):
-    fig = mock_plotter.plot_time_traces(event_index=0, n_pixels=3)
+    fig = mock_plotter.plot_time_traces(event_index=0, number_of_pixels=3)
     assert fig is not None
     assert len(fig.axes) == 1
     plt.close(fig)
@@ -207,7 +207,7 @@ def test_plot_pedestals(mock_plotter):
     """Test pedestal plot generation."""
     rng = np.random.default_rng(42)
     event = mock_plotter.event_data[0]
-    event.pedestals = rng.uniform(50, 70, event.n_pixels)
+    event.pedestals = rng.uniform(50, 70, event.number_of_pixels)
     with mock.patch("simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"):
         fig = mock_plotter.plot_pedestals(event_index=0)
         assert fig is not None
@@ -218,7 +218,7 @@ def test_plot_signals(mock_plotter):
     """Test signal plot generation."""
     rng = np.random.default_rng(42)
     event = mock_plotter.event_data[0]
-    event.image = rng.uniform(100, 500, event.n_pixels)
+    event.image = rng.uniform(100, 500, event.number_of_pixels)
     with mock.patch("simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"):
         fig = mock_plotter.plot_signals(event_index=0)
         assert fig is not None
@@ -238,12 +238,18 @@ def test_plot_camera_image_and_histogram(mock_plotter):
     rng = np.random.default_rng(42)
     event = mock_plotter.event_data[0]
     with mock.patch("simtools.visualization.plot_simtel_events.plot_pixel_layout_with_image"):
-        values = rng.uniform(0, 100, event.n_pixels)
-        pix_ids = np.arange(event.n_pixels)
+        values = rng.uniform(0, 100, event.number_of_pixels)
+        pix_ids = np.arange(event.number_of_pixels)
         edges = np.linspace(0, 100, 50)
 
         fig = mock_plotter._plot_camera_image_and_histogram(
-            values, pix_ids, event.n_pixels, edges, "test", "count", event_index=0
+            values,
+            pix_ids,
+            event.number_of_pixels,
+            edges,
+            "test",
+            "count",
+            event_index=0,
         )
         assert fig is not None
         assert len(fig.axes) == 2

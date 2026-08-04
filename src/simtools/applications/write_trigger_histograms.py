@@ -17,7 +17,7 @@ Fill trigger histograms from reduced event-data files:
 .. code-block:: console
 
     simtools-write-trigger-histograms \
-        --event_data_file simtools-output/reduced_event_data_*.hdf5 \
+        --event_data_files simtools-output/reduced_event_data_*.hdf5 \
         --energy_bins_per_decade 10 \
         --angular_distance_bin_width 0.5 deg
 
@@ -32,7 +32,7 @@ from simtools.production_configuration.trigger_histograms import write_trigger_h
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
-        "event_data_file",
+        "event_data_files",
         help=(
             "Reduced event-data file or glob pattern. Provide one or more patterns to build "
             "histograms for multiple productions."
