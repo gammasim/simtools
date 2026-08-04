@@ -30,6 +30,7 @@ from simtools.production_configuration.simulation_jobs import (
     calculate_log_energy_midpoint,
     calculate_scaled_showers_per_run,
     calculate_zenith_scaled_showers_per_run,
+    generate_job_grid,
     get_core_scatter_max_for_zenith_angle,
     get_energy_range_for_zenith_angle,
     get_viewcone_max_for_zenith_angle,
@@ -435,6 +436,35 @@ def test_build_job_grid_metadata_raises_for_hadec_without_site():
                 "corsika_limits": "limits.ecsv",
             }
         )
+
+
+@patch("simtools.production_configuration.simulation_jobs.serialize_job_grid")
+@patch("simtools.production_configuration.simulation_jobs.build_simulation_jobs", return_value=[])
+def test_generate_job_grid_adds_default_metadata_to_ecsv_header(
+    mock_build_simulation_jobs, mock_serialize_job_grid
+):
+    default_metadata = {"cta": {"activity": {"name": "production_generate_grid"}}}
+    args = {
+        "site": "North",
+        "simulation_software": "corsika_sim_telarray",
+        "axis": [
+            ["azimuth", "0", "deg", "1", "deg", "2"],
+            ["zenith", "0", "deg", "1", "deg", "2"],
+        ],
+    }
+
+    generate_job_grid(args, "job_grid.ecsv", metadata=default_metadata)
+
+    mock_build_simulation_jobs.assert_called_once_with(args)
+    assert mock_serialize_job_grid.call_args.kwargs["metadata"] == {
+        **default_metadata,
+        "site": "North",
+        "simulation_software": "corsika_sim_telarray",
+        "coordinate_system": "horizontal",
+        "direction_grid_density": None,
+        "direction_grid_density_unit": None,
+        "corsika_limits": None,
+    }
 
 
 @patch("simtools.production_configuration.simulation_jobs.SiteModel")

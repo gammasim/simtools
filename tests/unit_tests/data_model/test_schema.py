@@ -322,6 +322,16 @@ def test_application_workflow_schema_accepts_output_validation_rules():
     )
 
 
+def test_application_workflow_schema_accepts_profiled_output_validation_rule():
+    """Allow profiles to provide shared output-validation fields."""
+    workflow_config = _output_validation_workflow({"profile": "job_grid", "file": "job_grid.ecsv"})
+
+    schema.validate_dict_using_schema(
+        workflow_config,
+        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+    )
+
+
 @pytest.mark.parametrize(
     "change",
     [
