@@ -79,7 +79,7 @@ class EventData:
 
     event_id: int
     adc_samples: np.ndarray = None
-    n_pixels: int = 0
+    number_of_pixels: int = 0
     n_samples: int = 0
     pedestals: np.ndarray = None
     image: np.ndarray = None
@@ -132,14 +132,14 @@ class PlotSimtelEvent:
         n_samples = None
         for idx, event in zip(_event_index, _events):
             adc_samples = trace.get_adc_samples_per_gain(event.get("adc_samples", None))
-            n_pixels, n_samples = adc_samples.shape
+            number_of_pixels, n_samples = adc_samples.shape
             pedestals = trace.calculate_pedestals(
                 adc_samples, start=n_samples + PEDESTAL_WINDOW_START, end=n_samples
             )
             event_data[idx] = EventData(
                 event_id=idx,
                 adc_samples=adc_samples,
-                n_pixels=n_pixels,
+                number_of_pixels=number_of_pixels,
                 n_samples=n_samples,
                 pedestals=pedestals,
                 image=trace.trace_integration(
@@ -256,7 +256,10 @@ class PlotSimtelEvent:
                 self.plot_peak_timing,
                 {"sum_threshold": DEFAULT_SUM_THRESHOLD, "timing_bins": None},
             ),
-            "time_traces": (self.plot_time_traces, {"n_pixels": DEFAULT_TIME_TRACES_PIXELS}),
+            "time_traces": (
+                self.plot_time_traces,
+                {"number_of_pixels": DEFAULT_TIME_TRACES_PIXELS},
+            ),
             "waveforms": (self.plot_waveforms, {"vmax": None, "pixel_step": None}),
             "step_traces": (
                 self.plot_step_traces,
@@ -268,7 +271,7 @@ class PlotSimtelEvent:
         """Generate consistent plot title."""
         return f"{self.telescope} {subject} (event {event_index})"
 
-    def plot_time_traces(self, event_index, n_pixels=DEFAULT_TIME_TRACES_PIXELS):
+    def plot_time_traces(self, event_index, number_of_pixels=DEFAULT_TIME_TRACES_PIXELS):
         """
         Plot R1 time traces for pixels with highest signal.
 
@@ -276,7 +279,7 @@ class PlotSimtelEvent:
         ----------
         event_index : int
             Event index.
-        n_pixels : int, optional
+        number_of_pixels : int, optional
             Number of pixels with highest signal to plot.
 
         Returns
@@ -285,7 +288,7 @@ class PlotSimtelEvent:
             The created figure.
         """
         image_flat = np.asarray(self.event_data[event_index].image).ravel()
-        pix_ids = np.argsort(image_flat)[-n_pixels:][::-1]
+        pix_ids = np.argsort(image_flat)[-number_of_pixels:][::-1]
 
         fig, ax = plt.subplots(dpi=300)
         for pid in pix_ids:
@@ -327,7 +330,7 @@ class PlotSimtelEvent:
             The created figure.
         """
         step = self._ensure_positive_int(pixel_step, default=1)
-        pix_idx = np.arange(self.event_data[event_index].n_pixels)[::step]
+        pix_idx = np.arange(self.event_data[event_index].number_of_pixels)[::step]
         w_sel = self.event_data[event_index].adc_samples[pix_idx]
 
         fig, ax = plt.subplots(dpi=300)
@@ -361,7 +364,7 @@ class PlotSimtelEvent:
             The created figure.
         """
         step = self._ensure_positive_int(pixel_step, default=DEFAULT_STEP_TRACES_INTERVAL)
-        pix_ids = np.arange(0, self.event_data[event_index].n_pixels, step)
+        pix_ids = np.arange(0, self.event_data[event_index].number_of_pixels, step)
         if max_pixels is not None:
             pix_ids = pix_ids[:max_pixels]
 
@@ -421,8 +424,8 @@ class PlotSimtelEvent:
         values = self.event_data[event_index].image
         return self._plot_camera_image_and_histogram(
             values,
-            np.arange(self.event_data[event_index].n_pixels),
-            self.event_data[event_index].n_pixels,
+            np.arange(self.event_data[event_index].number_of_pixels),
+            self.event_data[event_index].number_of_pixels,
             self._create_histogram_edges(values, DEFAULT_HISTOGRAM_BINS),
             x_label="signal",
             y_label=PIXEL_LABEL,
@@ -434,8 +437,8 @@ class PlotSimtelEvent:
         values = self.event_data[event_index].pedestals
         return self._plot_camera_image_and_histogram(
             values,
-            np.arange(self.event_data[event_index].n_pixels),
-            self.event_data[event_index].n_pixels,
+            np.arange(self.event_data[event_index].number_of_pixels),
+            self.event_data[event_index].number_of_pixels,
             self._create_histogram_edges(values, DEFAULT_HISTOGRAM_BINS),
             x_label="pedestals",
             y_label=PIXEL_LABEL,

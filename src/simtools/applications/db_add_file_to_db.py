@@ -60,7 +60,7 @@ _ARGUMENTS = (
         help="A directory with files to upload to the DB.",
         type=Path,
     ),
-    cli.DATABASE_NAME,
+    cli.DATABASE_NAME(required=True),
     cli.ArgumentDefinition(
         "test_db",
         help="Use sandbox database. Drop all data after the operation.",

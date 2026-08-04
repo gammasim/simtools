@@ -94,7 +94,10 @@ _ARGUMENTS = (
         choices=sorted(PLOT_CHOICES),
     ),
     cli.ArgumentDefinition(
-        "number_of_pixels", type=int, default=3, help="For time_traces: number of pixel traces"
+        "number_of_pixels",
+        type=int,
+        default=3,
+        help="For time_traces: number of pixel traces",
     ),
     cli.ArgumentDefinition(
         "pixel_step", type=int, default=10, help="Step between pixel ids for step plots"

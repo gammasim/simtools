@@ -51,7 +51,7 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "array_element_positions_file",
         help="File containing a table of array element positions.",
-        required=False,
+        required=True,
     ),
     cli.SIMULATION_MODELS_PATH(required=True),
     cli.ArgumentDefinition(
