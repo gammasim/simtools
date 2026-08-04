@@ -2,14 +2,14 @@
 applications:
 - application: simtools-maintain-simulation-model-write-array-element-positions
   configuration:
-    input: ${static:telescope_positions-North-ground.ecsv}
+    array_element_positions_file: ${static:telescope_positions-North-ground.ecsv}
     coordinate_system: ground
-    simulation_models_directory: simtools-output
+    simulation_models_path: simtools-output
     parameter_version: 0.1.0
   integration_tests:
   - test_output_files:
     - file: LSTN-04/array_element_position_ground.json
-      path_descriptor: simulation_models_directory
+      path_descriptor: simulation_models_path
   test_name: ground
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

@@ -378,6 +378,14 @@ SIMULATION_MODELS_PATH = _argument(
     default=None,
 )
 
+DATABASE_NAME = _argument(
+    "database_name",
+    "application",
+    help="Database name.",
+    type=str,
+    default=None,
+)
+
 DB_API_PW = _argument(
     "db_api_pw",
     _DATABASE_CONFIGURATION_GROUP,
@@ -616,6 +624,14 @@ RUN_NUMBER = _argument(
     default=1,
 )
 
+NUMBER_OF_RUNS = _argument(
+    "number_of_runs",
+    _SIMULATION_CONFIGURATION_GROUP,
+    help="Number of runs.",
+    type=helpers.scientific_int,
+    default=None,
+)
+
 EVENT_NUMBER_FIRST_SHOWER = _argument(
     "event_number_first_shower",
     _SIMULATION_CONFIGURATION_GROUP,
@@ -851,8 +867,8 @@ EVENT_DATA_FILE = _argument(
     required=True,
 )
 
-TELESCOPE_IDS = _argument(
-    "telescope_ids",
+TELESCOPE_CONFIG_FILE = _argument(
+    "telescope_config_file",
     "application",
     help="Path to a file containing telescope configurations.",
     type=str,

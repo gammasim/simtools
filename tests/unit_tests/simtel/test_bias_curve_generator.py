@@ -13,7 +13,7 @@ from simtools.simtel import bias_curve_generator
 def _base_args(tmp_path):
     return {
         "data_dir": tmp_path,
-        "output": tmp_path / "bias_curve.png",
+        "figure_file": tmp_path / "bias_curve.png",
         "site": "North",
         "model_version": "7.0.0",
         "telescope": "LSTN-01",
@@ -286,8 +286,8 @@ def test_write_bias_curve_ecsv_writes_combined_table(tmp_path):
 
 def test_generate_bias_curves_runs_full_pipeline(tmp_path):
     args = _base_args(tmp_path)
-    args["proton_output"] = tmp_path / "proton.ecsv"
-    args["nsb_output"] = tmp_path / "nsb.ecsv"
+    args["proton_table_file"] = tmp_path / "proton.ecsv"
+    args["nsb_table_file"] = tmp_path / "nsb.ecsv"
 
     with (
         patch("simtools.simtel.bias_curve_generator._calculate_time_window", return_value=0.001),
@@ -318,7 +318,7 @@ def test_generate_bias_curves_runs_full_pipeline(tmp_path):
 
 def test_generate_bias_curves_raises_when_no_nsb_inputs_exist(tmp_path):
     args = _base_args(tmp_path)
-    args["nsb_output"] = tmp_path / "nsb.ecsv"
+    args["nsb_table_file"] = tmp_path / "nsb.ecsv"
 
     with (
         patch("simtools.simtel.bias_curve_generator._calculate_time_window", return_value=0.001),

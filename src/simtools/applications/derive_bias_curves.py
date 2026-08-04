@@ -26,11 +26,11 @@ Command line arguments
 
 data_dir (str, required)
     Directory containing NSB/proton reduced event-data HDF5 files (e.g. gamma* and proton*).
-output (str, optional)
+figure_file (str, optional)
     Output plot file path or output directory. Default: bias_curve.png
-nsb_output (str, optional)
+nsb_table_file (str, optional)
     Output ECSV table file for NSB trigger rates. If not specified, no table is written.
-proton_output (str, optional)
+proton_table_file (str, optional)
     Output ECSV table file for proton rates. If not specified, no table is written.
 site (str, required)
     Site name (North/South) for telescope configuration.
@@ -55,7 +55,7 @@ Example
         --site North \\
         --model_version 7.0.0 \\
         --telescope LSTN-01 \\
-        --output bias_curves.png
+        --figure_file bias_curves.png
 
 """
 
@@ -76,19 +76,19 @@ _ARGUMENTS = (
         ),
     ),
     cli.ArgumentDefinition(
-        "output",
+        "figure_file",
         type=Path,
         default=Path("bias_curve.png"),
         help="Output plot file path or output directory. Default: bias_curve.png",
     ),
     cli.ArgumentDefinition(
-        "nsb_output",
+        "nsb_table_file",
         type=Path,
         required=False,
         help="Output ECSV table file for NSB trigger rates. If not specified, no table is written.",
     ),
     cli.ArgumentDefinition(
-        "proton_output",
+        "proton_table_file",
         type=Path,
         required=False,
         help="Output ECSV table file for proton rates. If not specified, no table is written.",

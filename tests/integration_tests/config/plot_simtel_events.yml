@@ -5,6 +5,7 @@ applications:
     simtel_file: ${generated:full_simulation_run000010_North_7.0.0_simtools-simulate-flasher_LSTN-04.simtel.zst}
     plots: all
     max_events: 1
+    number_of_pixels: 3
     telescope: LSTN-04
     output_file: event_plots
     test: true

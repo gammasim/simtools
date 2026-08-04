@@ -23,7 +23,7 @@ telescope (str, required)
 plots (list, optional)
     Which plots to generate. Choices: pedestals, signals, peak_timing, time_traces,
     waveforms, step_traces, all. Default: all.
-n_pixels (int, optional)
+number_of_pixels (int, optional)
     For time_traces: number of brightest pixel traces to plot. Default: 3.
 pixel_step (int, optional)
     For step_traces and waveforms: step between pixel indices. Default: 100.
@@ -94,7 +94,10 @@ _ARGUMENTS = (
         choices=sorted(PLOT_CHOICES),
     ),
     cli.ArgumentDefinition(
-        "n_pixels", type=int, default=3, help="For time_traces: number of pixel traces"
+        "number_of_pixels",
+        type=int,
+        default=3,
+        help="For time_traces: number of pixel traces",
     ),
     cli.ArgumentDefinition(
         "pixel_step", type=int, default=10, help="Step between pixel ids for step plots"

@@ -2,7 +2,7 @@
 applications:
 - application: simtools-db-add-file-to-db
   configuration:
-    db: sandbox
+    database_name: sandbox
     file_name:
     - ${static:MLTdata-preproduction.meta.yml}
     - ${static:MLTdata-preproduction.ecsv}

@@ -100,7 +100,7 @@ Generate a reduced dataset from input files and save the result.
 
     simtools-production-extract-mc-event-data \\
     simtools-generate-simtel-event-data \\
-        --input 'path/to/input_files/gamma_*dark*.simtel.zst' \\
+        --simtel_file 'path/to/input_files/gamma_*dark*.simtel.zst' \\
         --output_file output_file.hdf5 \\
         --max_files 50 \\
         --print_dataset_information 10
@@ -131,7 +131,7 @@ from simtools.sim_events.writer import EventDataWriter
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
-        "input",
+        "simtel_file",
         type=str,
         required=True,
         help="Input file path (wildcards allowed; e.g., '/path/to/gamma_*dark*.simtel.zst')",
@@ -166,9 +166,9 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    app_context.logger.info(f"Loading input files from: {app_context.args['input']}")
+    app_context.logger.info(f"Loading input files from: {app_context.args['simtel_file']}")
 
-    input_pattern = Path(app_context.args["input"])
+    input_pattern = Path(app_context.args["simtel_file"])
     files = list(input_pattern.parent.glob(input_pattern.name))
     if not files:
         app_context.logger.warning("No matching input files found.")

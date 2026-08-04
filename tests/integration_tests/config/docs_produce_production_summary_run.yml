@@ -2,7 +2,7 @@
 applications:
 - application: simtools-docs-produce-production-summary
   configuration:
-    production_models_directory: ../simulation-models
+    simulation_models_path: ../simulation-models
     output_path: simtools-output/reports/productions/
     output_file: production_version_descriptions.md
   integration_tests:

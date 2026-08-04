@@ -25,7 +25,7 @@ def test_main_reads_table_and_plots(tmp_test_directory):
     """Test application orchestration from CLI input to plotting output."""
     output_dir = Path(tmp_test_directory) / "plots"
     app_context = SimpleNamespace(
-        args={"input": "merged_limits.ecsv"},
+        args={"corsika_limits_file": "merged_limits.ecsv"},
         io_handler=MagicMock(),
     )
     app_context.io_handler.get_output_directory.return_value = output_dir

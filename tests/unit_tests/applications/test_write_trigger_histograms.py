@@ -12,7 +12,7 @@ def test_add_arguments_accepts_multi_pattern_and_binning_options():
 
     args = parser.parse_args(
         [
-            "--event_data_file",
+            "--event_data_files",
             "a*.hdf5",
             "b*.hdf5",
             "--energy_bins_per_decade",
@@ -22,7 +22,7 @@ def test_add_arguments_accepts_multi_pattern_and_binning_options():
         ]
     )
 
-    assert args.event_data_file == ["a*.hdf5", "b*.hdf5"]
+    assert args.event_data_files == ["a*.hdf5", "b*.hdf5"]
     assert args.energy_bins_per_decade == 8
     assert args.angular_distance_bin_width.value == pytest.approx(0.25)
     assert args.max_workers == 1
@@ -32,7 +32,7 @@ def test_add_arguments_uses_default_angular_distance_bin_width():
     parser = CommandLineParser()
     parser.add_argument_definitions(write_trigger_histograms._ARGUMENTS)
 
-    args = parser.parse_args(["--event_data_file", "a*.hdf5"])
+    args = parser.parse_args(["--event_data_files", "a*.hdf5"])
 
     assert args.angular_distance_bin_width.value == pytest.approx(0.5)
 
@@ -41,6 +41,6 @@ def test_add_arguments_accepts_max_workers():
     parser = CommandLineParser()
     parser.add_argument_definitions(write_trigger_histograms._ARGUMENTS)
 
-    args = parser.parse_args(["--event_data_file", "a*.hdf5", "--max_workers", "24"])
+    args = parser.parse_args(["--event_data_files", "a*.hdf5", "--max_workers", "24"])
 
     assert args.max_workers == 24
