@@ -12,9 +12,11 @@ from simtools.configuration.argument_helpers import bounded_int
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.build_options import get_corsika_build_report
 from simtools.io.ascii_handler import write_data_to_file
+from simtools.job_execution import JobSpec, execute_jobs, options_from_args
 from simtools.production_configuration.job_grid_io import (
     SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS,
     job_grid_row_to_simulate_prod_args,
+    read_job_grid,
     read_job_grid_row,
 )
 from simtools.production_configuration.job_metadata import build_simulation_job_metadata
@@ -102,7 +104,8 @@ _ARGUMENTS = (
         "job_grid_row",
         help=(
             "1-based index of the row to read from the file given by '--job_grid_file'. "
-            "Defaults to 1 (first row)."
+            "When omitted with '--backend htcondor', all rows are submitted; "
+            "otherwise row 1 is used."
         ),
         type=int,
         required=False,
@@ -154,9 +157,91 @@ def _resolve_job_grid_arguments(args_dict, config_sources, parser):
             + ", ".join(conflicting_keys)
         )
 
-    job_row, metadata = read_job_grid_row(args_dict["job_grid_file"], args_dict["job_grid_row"])
+    if args_dict.get("backend") == "htcondor":
+        rows, metadata = read_job_grid(args_dict["job_grid_file"])
+        if job_grid_row_is_explicit:
+            row_index = args_dict.get("job_grid_row") or 1
+            if row_index < 1 or row_index > len(rows):
+                parser.error(
+                    f"Row index {row_index} is out of range for a grid with {len(rows)} row(s)."
+                )
+            rows = [rows[row_index - 1]]
+        args_dict["_job_grid_rows"] = rows
+        args_dict["_job_grid_metadata"] = metadata
+        return
+
+    row_index = args_dict.get("job_grid_row") or 1
+    job_row, metadata = read_job_grid_row(args_dict["job_grid_file"], row_index)
     args_dict.update(job_grid_row_to_simulate_prod_args(job_row, metadata))
     _validate_simulation_arguments(args_dict, parser)
+
+
+def _append_command_argument(command, key, value):
+    """Append one configured argument using the CLI's normal value shape."""
+    if value in (None, False):
+        return
+    command.append(f"--{key}")
+    if value is True:
+        return
+    values = value if isinstance(value, (list, tuple)) else [value]
+    command.extend(str(item) for item in values)
+
+
+def _grid_job_command(args_dict, row, metadata, job_index):
+    """Build a direct simulate-prod command for one grid row."""
+    row_args = job_grid_row_to_simulate_prod_args(row, metadata)
+    output_root = Path(args_dict["output_path"])
+    job_args = {
+        key: args_dict.get(key)
+        for key in (
+            "env_file",
+            "log_level",
+            "label",
+            "simulation_software",
+            "site",
+            "telescope",
+            "output_path",
+            "grid_output_path",
+            "sim_telarray_path",
+            "corsika_path",
+            "corsika_interaction_table_path",
+            "save_file_lists",
+            "save_corsika_output",
+            "reduced_event_lists",
+            "corsika_seeds",
+            "sequential",
+            "overwrite_model_parameters",
+        )
+    }
+    job_args.update(row_args)
+    job_args["output_path"] = str(output_root / f"job-{job_index:06d}")
+    if job_args.get("grid_output_path"):
+        job_args["grid_output_path"] = str(
+            Path(job_args["grid_output_path"]) / f"job-{job_index:06d}"
+        )
+    command = [sys.executable, "-m", "simtools.applications.simulate_prod", "--backend", "local"]
+    for key, value in job_args.items():
+        _append_command_argument(command, key, value)
+    return tuple(command)
+
+
+def _submit_job_grid(args_dict):
+    """Submit all selected production-grid rows through the generic backend."""
+    metadata = args_dict.get("_job_grid_metadata", {})
+    job_specs = [
+        JobSpec(
+            job_id=f"job-{index:06d}",
+            index=index,
+            command=_grid_job_command(args_dict, row, metadata, index),
+        )
+        for index, row in enumerate(args_dict["_job_grid_rows"])
+    ]
+    options = options_from_args(
+        args_dict,
+        work_dir=Path(args_dict["output_path"]),
+    )
+    options.backend = "htcondor"
+    execute_jobs(job_specs, options)
 
 
 def _validate_simulation_arguments(args_dict, parser):
@@ -169,6 +254,7 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
+        *cli.BACKEND_ARGUMENTS,
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
@@ -193,6 +279,10 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
+
+    if app_context.args.get("_job_grid_rows") is not None:
+        _submit_job_grid(app_context.args)
+        return
 
     simulator = Simulator(label=app_context.args.get("label"))
 

@@ -42,6 +42,7 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
+        *cli.BACKEND_ARGUMENTS,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
     resolve_sim_software_executables=False,
@@ -57,6 +58,8 @@ def main():
         input_file_list=app_context.args["input_file_list"],
         files_per_reduced_event_file=app_context.args["files_per_reduced_event_file"],
         max_workers=app_context.args["max_workers"],
+        backend=app_context.args.get("backend", "local"),
+        backend_config=app_context.args.get("backend_config"),
         output_path=app_context.io_handler.get_output_directory(),
         metadata_args=app_context.args,
     )

@@ -2,7 +2,6 @@
 
 import json
 import logging
-import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -11,7 +10,7 @@ from astropy.table import Table
 
 import simtools.utils.general as gen
 from simtools.data_model import model_data_writer
-from simtools.job_execution.process_pool import process_pool_map_ordered
+from simtools.job_execution import map_ordered
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.utils import names
@@ -373,24 +372,18 @@ class MirrorPanelPSF:
                 f" mirrors in the model ({self.telescope_model.mirrors.number_of_mirrors})"
             )
 
-        if self.args_dict.get("profile_serial", False):
-            self._logger.info(
-                "Running serial optimization mode (--profile_serial) for profiler visibility"
-            )
-            self.per_mirror_results = [
-                self.optimize_single_mirror(i, self.measured_data[i]) for i in range(n_mirrors)
-            ]
-        else:
-            max_workers = int(self.args_dict.get("max_workers") or os.cpu_count())
-            parent = MirrorPanelPSF(self.label, dict(self.args_dict))
-            worker_args = [(parent, i, parent.measured_data[i]) for i in range(n_mirrors)]
+        max_workers = self.args_dict.get("max_workers")
+        parent = MirrorPanelPSF(self.label, dict(self.args_dict))
+        worker_args = [(parent, i, parent.measured_data[i]) for i in range(n_mirrors)]
 
-            self.per_mirror_results = process_pool_map_ordered(
-                _optimize_single_mirror_worker,
-                worker_args,
-                max_workers=max_workers,
-                mp_start_method="fork",
-            )
+        self.per_mirror_results = map_ordered(
+            _optimize_single_mirror_worker,
+            worker_args,
+            backend=self.args_dict.get("backend", "local"),
+            max_workers=max_workers,
+            backend_config=self.args_dict.get("backend_config"),
+            mp_start_method="fork",
+        )
 
         self.rnda_opt = np.mean(
             [r.optimized_rnda for r in self.per_mirror_results], axis=0

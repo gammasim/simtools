@@ -15,6 +15,17 @@ effective-area, and Monte Carlo statistics studies. Input files can be supplied
 directly or through a text file; several input files can be combined into one
 output file.
 
+Independent output batches can run locally or on HTCondor. Local execution is the default; select
+the scheduler with `--backend htcondor` and provide a shared-filesystem backend configuration.
+
+```bash
+simtools-write-reduced-event-lists \
+    --input_file_list simtel_files.txt \
+    --files_per_reduced_event_file 10 \
+    --backend htcondor \
+    --backend_config htcondor.yml
+```
+
 Each output file contains the following root-level datasets:
 
 - ``SHOWERS``: simulated energy, core position, shower direction, event IDs, and

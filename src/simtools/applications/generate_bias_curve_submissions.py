@@ -15,8 +15,8 @@ parameter-scan grid:
 - ``scan_config.yaml``
 - ``scan_grid.ecsv``
 
-The resulting scan grids can be consumed by a backend-specific submission generator,
-for example ``simtools-simulate-prod-htcondor-generator``.
+The resulting scan grids can be submitted directly with
+``simtools-simulate-prod --backend htcondor``.
 
 Command line arguments
 ----------------------
@@ -86,10 +86,10 @@ example:
 
 .. code-block:: console
 
-    simtools-simulate-prod-htcondor-generator \
+    simtools-simulate-prod --backend htcondor \
         --job_grid_file ./bias_curves/nsb/scan_grid.ecsv \
         --output_path ./bias_curves/nsb/htcondor_submit \
-        --apptainer_image /path/to/image.sif \
+        --backend_config htcondor.yml \
         --label nsb
 
 """

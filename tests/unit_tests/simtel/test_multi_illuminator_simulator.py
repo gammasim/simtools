@@ -117,7 +117,7 @@ def test_determine_max_workers_all_cores(simple_visibility_data, base_config):
     assert simulator.max_workers == expected_workers
 
 
-@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_simulate_all_pairs(mock_pool, simple_visibility_data, base_config):
     """Test simulate() runs all valid pairs."""
     # Mock successful results
@@ -166,7 +166,7 @@ def test_simulate_all_pairs(mock_pool, simple_visibility_data, base_config):
     "simtools.simtel.simulator_light_emission."
     "SimulatorLightEmission.get_available_wavelengths_from_config"
 )
-@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_simulate_filter_by_illuminators(
     mock_pool, mock_get_wavelengths, simple_visibility_data, base_config
 ):
@@ -201,7 +201,7 @@ def test_simulate_filter_by_illuminators(
     "simtools.simtel.simulator_light_emission."
     "SimulatorLightEmission.get_available_wavelengths_from_config"
 )
-@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_simulate_filter_by_telescopes(
     mock_pool, mock_get_wavelengths, simple_visibility_data, base_config
 ):
@@ -232,7 +232,7 @@ def test_simulate_filter_by_telescopes(
     assert called_config["light_source"] in ["ILLS-01", "ILLS-02"]  # One of the illuminators
 
 
-@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_simulate_filter_both(mock_pool, simple_visibility_data, base_config):
     """Test simulate() with both illuminator and telescope filtering."""
     mock_pool.return_value = [
@@ -253,7 +253,7 @@ def test_simulate_filter_both(mock_pool, simple_visibility_data, base_config):
     assert results[0]["telescope"] == "MSTS-01"
 
 
-@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_simulate_no_valid_pairs_after_filtering(mock_pool, simple_visibility_data, base_config):
     """Test simulate() when filtering results in no valid pairs."""
     simulator = MultiIlluminatorSimulator(
@@ -270,7 +270,7 @@ def test_simulate_no_valid_pairs_after_filtering(mock_pool, simple_visibility_da
     mock_pool.assert_not_called()
 
 
-@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_get_summary_success(mock_pool, simple_visibility_data, base_config):
     """Test get_summary() with successful simulations."""
     mock_pool.return_value = [
@@ -305,7 +305,7 @@ def test_get_summary_before_simulation(simple_visibility_data, base_config):
         simulator.get_summary()
 
 
-@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_get_failed_pairs(mock_pool, simple_visibility_data, base_config):
     """Test get_failed_pairs() returns correct failures."""
     mock_pool.return_value = [
@@ -339,7 +339,7 @@ def test_get_failed_pairs_before_simulation(simple_visibility_data, base_config)
         simulator.get_failed_pairs()
 
 
-@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_get_failed_results(mock_pool, simple_visibility_data, base_config):
     """Test get_failed_results() returns detailed failure information."""
     mock_pool.return_value = [
@@ -438,7 +438,7 @@ def test_simulate_illuminator_telescope_pair_failure(mock_sim_class):
     assert "Simulation failed" in result["error"]
 
 
-@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_simulate_empty_visibility_table(mock_pool, base_config):
     """Test simulate() with visibility data having no valid pairs."""
     visibility_data = {
@@ -482,7 +482,7 @@ def test_load_visibility_from_site_model(mock_site_model_class, base_config):
     mock_site_model.get_parameter_value.assert_called_once_with("illuminator_telescope_visibility")
 
 
-@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 @patch("simtools.simtel.simulator_light_emission.SimulatorLightEmission")
 def test_simulate_with_wavelengths_provided(
     mock_sim_class, mock_pool, simple_visibility_data, base_config
@@ -539,7 +539,7 @@ def test_simulate_with_wavelengths_provided(
     assert all(label == "test" for label in labels)
 
 
-@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 @patch(
     "simtools.simtel.simulator_light_emission."
     "SimulatorLightEmission.get_available_wavelengths_from_config"
@@ -596,7 +596,7 @@ def test_simulate_with_wavelengths_from_model(
     assert len(job_specs) == 16
 
 
-@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_simulate_with_wavelength_in_config(mock_pool, simple_visibility_data, base_config):
     """Test simulate() uses wavelength from base_config if present."""
 
@@ -651,7 +651,7 @@ def test_simulate_with_wavelength_in_config(mock_pool, simple_visibility_data, b
     assert all(u.isclose(job["wavelength"], 355 * u.nm) for job in job_specs)
 
 
-@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_simulate_with_list_of_wavelengths_in_config(
     mock_pool, simple_visibility_data, base_config
 ):
@@ -693,7 +693,7 @@ def test_simulate_with_list_of_wavelengths_in_config(
     assert len(job_specs) == 8
 
 
-@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 @patch(
     "simtools.simtel.simulator_light_emission."
     "SimulatorLightEmission.get_available_wavelengths_from_config"
@@ -742,7 +742,7 @@ def test_simulate_wavelengths_parameter_overrides_config(
     assert all(u.isclose(job["wavelength"], 473 * u.nm) for job in job_specs)
 
 
-@patch("simtools.simtel.multi_illuminator_simulator.process_pool_map_ordered")
+@patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_simulate_wavelength_labels_formatted_correctly(
     mock_pool, simple_visibility_data, base_config
 ):

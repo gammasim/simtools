@@ -180,7 +180,7 @@ def test_optimize_with_gradient_descent_limits_mirrors_in_test_mode(mocker):
             ),
         ]
 
-    mocker.patch.object(mpp, "process_pool_map_ordered", side_effect=_fake_ppm)
+    mocker.patch.object(mpp, "map_ordered", side_effect=_fake_ppm)
 
     inst.optimize_with_gradient_descent()
 

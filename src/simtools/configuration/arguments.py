@@ -147,6 +147,24 @@ DATA_SEARCH_PATH = _argument(
 
 OUTPUT_PATH_ARGUMENTS = (OUTPUT_PATH,)
 
+BACKEND = _argument(
+    "backend",
+    "execution",
+    help="Execution backend for independent jobs (default: local).",
+    choices=("local", "htcondor"),
+    default="local",
+)
+
+BACKEND_CONFIG = _argument(
+    "backend_config",
+    "execution",
+    help="Backend configuration file or inline dictionary.",
+    type=helpers.string_or_dict,
+    default=None,
+)
+
+BACKEND_ARGUMENTS = (BACKEND, BACKEND_CONFIG)
+
 SIM_TELARRAY_PATH_ARGUMENTS = (SIM_TELARRAY_PATH,)
 
 CORSIKA_PATH_ARGUMENTS = (CORSIKA_PATH, CORSIKA_INTERACTION_TABLE_PATH)

@@ -12,8 +12,7 @@ from simtools.configuration import defaults
 from simtools.corsika import corsika_output_validator
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler, table_handler
-from simtools.job_execution import job_manager
-from simtools.job_execution.process_pool import process_pool_map_ordered
+from simtools.job_execution import job_manager, map_ordered
 from simtools.model.array_model import ArrayModel
 from simtools.runners import corsika_runner, corsika_simtel_runner, runner_services, simtel_runner
 from simtools.sim_events import file_info, output_validator, writer
@@ -413,6 +412,8 @@ class Simulator:
         input_file_list=None,
         files_per_reduced_event_file=1,
         max_workers=1,
+        backend="local",
+        backend_config=None,
         metadata_args=None,
         array_models=None,
     ):
@@ -444,6 +445,10 @@ class Simulator:
             Arguments used to build the embedded standard metadata document.
         array_models : list, optional
             Resolved ``ArrayModel`` instances to export into simulation metadata.
+        backend : str, optional
+            Execution backend. Defaults to ``"local"``.
+        backend_config : dict, optional
+            Backend-specific execution settings.
 
         Raises
         ------
@@ -480,6 +485,8 @@ class Simulator:
             input_file_batches=input_file_batches,
             output_files=resolved_output_files,
             max_workers=max_workers,
+            backend=backend,
+            backend_config=backend_config,
             metadata_args=metadata_args,
             array_models=array_models,
         )
@@ -583,10 +590,18 @@ class Simulator:
                 "Length mismatch between input_files and output_files: "
                 f"{len(input_file_batches)} batch(es), {len(output_files)} output file(s)."
             )
+        if len(set(map(Path, output_files))) != len(output_files):
+            raise ValueError("Reduced-event output files must be unique.")
 
     @staticmethod
     def _run_reduced_event_list_jobs(
-        input_file_batches, output_files, max_workers, metadata_args=None, array_models=None
+        input_file_batches,
+        output_files,
+        max_workers,
+        backend="local",
+        backend_config=None,
+        metadata_args=None,
+        array_models=None,
     ):
         """Run reduced event list jobs serially or in parallel."""
         model_exports = [model.to_simulation_metadata_dict() for model in (array_models or [])]
@@ -594,16 +609,20 @@ class Simulator:
             (input_files, output_file, metadata_args or {}, model_exports)
             for input_files, output_file in zip(input_file_batches, output_files)
         ]
-        if max_workers == 1 or len(job_specs) < 2:
-            for job_spec in job_specs:
-                _write_reduced_event_list_batch(job_spec)
-            return
-
-        process_pool_map_ordered(
+        map_ordered(
             _write_reduced_event_list_batch,
             job_specs,
+            backend=backend,
             max_workers=max_workers,
+            backend_config=backend_config,
         )
+        if backend == "htcondor":
+            missing_outputs = [str(path) for path in output_files if not Path(path).is_file()]
+            if missing_outputs:
+                raise FileNotFoundError(
+                    "Reduced-event jobs completed without expected output(s): "
+                    + ", ".join(missing_outputs)
+                )
 
     def pack_for_register(self, directory_for_grid_upload=None):
         """

@@ -374,7 +374,7 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
         "simtools.production_configuration.trigger_histograms.io_handler.IOHandler"
     ).return_value.get_output_file.return_value = tmp_path / "trigger_histograms.hdf5"
     mock_process_pool = mocker.patch(
-        "simtools.production_configuration.trigger_histograms.process_pool_map_ordered",
+        "simtools.production_configuration.trigger_histograms.map_ordered",
         return_value=[
             [
                 {

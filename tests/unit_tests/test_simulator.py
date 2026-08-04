@@ -652,7 +652,7 @@ def test_write_reduced_event_lists_from_file_list_in_batches(mocker, tmp_test_di
 
 def test_write_reduced_event_lists_parallelizes_output_batches(mocker):
     """Execute independent output batches through the shared process-pool helper."""
-    mock_pool = mocker.patch("simtools.simulator.process_pool_map_ordered")
+    mock_pool = mocker.patch("simtools.simulator.map_ordered")
 
     Simulator.write_reduced_event_lists(
         input_files=["input1.simtel.zst", "input2.simtel.zst"],

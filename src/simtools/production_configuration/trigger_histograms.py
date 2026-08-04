@@ -11,7 +11,7 @@ from astropy.table import Table, vstack
 import simtools.utils.general as gen
 from simtools.io import io_handler, table_handler
 from simtools.io.file_type import validate_file_type
-from simtools.job_execution.process_pool import process_pool_map_ordered
+from simtools.job_execution import map_ordered
 from simtools.production_configuration.production_event_data_helpers import (
     accumulate_histograms_by_telescope_config,
     normalize_telescope_configs,
@@ -539,10 +539,12 @@ def write_trigger_histograms(args_dict):
         len(job_specs),
         args_dict.get("max_workers", 1),
     )
-    for production_result in process_pool_map_ordered(
+    for production_result in map_ordered(
         _execute_production_job,
         job_specs,
+        backend=args_dict.get("backend", "local"),
         max_workers=args_dict.get("max_workers", 1),
+        backend_config=args_dict.get("backend_config"),
     ):
         for spec in production_result:
             reference_specs.append(spec | {"reference_id": gen.get_uuid()})
