@@ -2,7 +2,7 @@
 applications:
 - application: simtools-db-generate-compound-indexes
   configuration:
-    database_name: sandbox
+    database_name: all
   requires_mongodb: true
   skip_for_production_db: true
   test_name: run
