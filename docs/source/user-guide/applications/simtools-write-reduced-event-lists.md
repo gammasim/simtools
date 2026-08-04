@@ -19,6 +19,8 @@ Independent output batches can run locally or on HTCondor. Local execution is th
 the scheduler with `--backend htcondor` and provide a shared-filesystem backend configuration.
 HTCondor submission returns after queueing the independent batches; add `--wait` to keep the
 controller attached until all outputs are complete.
+Each remote batch writes its INFO-level application log to `logs/job-*.log` below the submitted
+HTCondor work directory.
 
 ```bash
 simtools-write-reduced-event-lists \

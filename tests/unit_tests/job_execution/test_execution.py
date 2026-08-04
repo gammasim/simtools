@@ -1,5 +1,6 @@
 """Tests for the generic execution facade."""
 
+import logging
 import sys
 import types
 from pathlib import Path
@@ -22,6 +23,12 @@ from simtools.job_execution.worker import run as run_worker
 
 def _square(value):
     """Return the square of one value."""
+    return value * value
+
+
+def _log_square(value):
+    """Log one worker message and return the square of one value."""
+    logging.getLogger(__name__).info("processing value %s", value)
     return value * value
 
 
@@ -104,6 +111,25 @@ def test_worker_writes_result(tmp_test_directory):
     assert payload == {"ok": True, "value": 16}
 
 
+def test_worker_writes_info_log(tmp_test_directory):
+    """The remote worker writes INFO messages to its dedicated log file."""
+    run_directory = Path(tmp_test_directory)
+    input_directory = run_directory / "inputs"
+    input_directory.mkdir()
+    result_directory = run_directory / "results"
+    result_directory.mkdir()
+    log_file = run_directory / "logs" / "job-000000.log"
+    job = JobSpec("job-000000", 0, function=_log_square, item=4)
+
+    import pickle
+
+    with (input_directory / "job-000000.pkl").open("wb") as handle:
+        pickle.dump(job, handle)
+
+    assert run_worker(run_directory, "job-000000", log_file) == 0
+    assert "processing value 4" in log_file.read_text(encoding="utf-8")
+
+
 def test_htcondor_backend_reports_missing_dependency(monkeypatch):
     """Selecting HTCondor without the optional package gives an actionable error."""
     monkeypatch.setitem(__import__("sys").modules, "htcondor2", None)
@@ -149,8 +175,12 @@ def test_htcondor_submit_creates_one_process_per_job(monkeypatch, tmp_test_direc
     assert captured["itemdata"] == [{"job_id": "job-000000"}, {"job_id": "job-000001"}]
     assert captured["description"]["request_cpus"] == "1"
     assert captured["description"]["priority"] == "42"
-    assert captured["description"]["arguments"].endswith("--job-id $(job_id)")
-    assert "'$(job_id)'" not in captured["description"]["arguments"]
+    arguments = captured["description"]["arguments"]
+    assert "--job-id $(job_id)" in arguments
+    assert "--log-file" in arguments
+    assert arguments.endswith("logs/$(job_id).log")
+    assert "'$(job_id)'" not in arguments
+    assert handle.metadata["job_log_dir"] == str(handle.work_dir / "logs")
 
 
 def test_htcondor_rejects_unknown_configuration():

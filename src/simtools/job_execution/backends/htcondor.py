@@ -267,6 +267,7 @@ class HTCondorBackend:
             work_dir / "results",
             work_dir / "stdout",
             work_dir / "stderr",
+            work_dir / "logs",
         ):
             directory.mkdir(parents=True, exist_ok=True)
         return work_dir
@@ -304,6 +305,8 @@ class HTCondorBackend:
                     shlex.quote(str(work_dir)),
                     shlex.quote("--job-id"),
                     "$(job_id)",
+                    shlex.quote("--log-file"),
+                    str(work_dir / "logs" / "$(job_id).log"),
                 ]
             ),
             "initialdir": str(work_dir),
@@ -374,6 +377,7 @@ class HTCondorBackend:
                 "environment_file": str(config["environment_file"])
                 if config.get("environment_file")
                 else None,
+                "job_log_dir": str(work_dir / "logs"),
                 "event_log": str(event_log),
                 "python_version": platform.python_version(),
                 "simtools_version": simtools_version,
