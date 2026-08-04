@@ -8,6 +8,8 @@ import re
 import uuid
 from pathlib import Path
 
+import astropy.units as u
+import jsonschema
 import pytest
 from astropy.table import Table
 
@@ -109,6 +111,57 @@ def test_fill_contact_meta(args_dict_site, caplog):
         assert contact_dict["name"] == getpass.getuser()
     except Exception:  # pylint: disable=broad-except
         pass
+
+
+def test_application_configuration_is_embedded_sanitized_and_valid(args_dict_site):
+    """Embed resolved configuration in metadata context without exposing credentials."""
+    args_dict_site.update(
+        {
+            "application_label": "test_application",
+            "activity_id": "019fc820-d1f3-7677-ac30-4002f1a8dd37",
+            "output_file": "result.ecsv",
+            "output_file_format": "ecsv",
+            "input_path": Path("input/events.simtel.zst"),
+            "off_axis_angle": 1.5 * u.deg,
+            "db_api_pw": "do-not-store-this",
+            "nested": {"api_token": "do-not-store-this-either"},
+            "runtime_environment": {"options": ["--env SIMTOOLS_DB_API_PW=runtime-secret"]},
+            "run_time": ["podman", "run", "--env", "SIMTOOLS_DB_API_PW=runtime-secret"],
+            "_metadata_configuration_sources": {
+                "cli": {"input_path"},
+                "defaults": {"off_axis_angle"},
+            },
+        }
+    )
+
+    metadata = metadata_collector.MetadataCollector(
+        args_dict=args_dict_site
+    ).get_top_level_metadata()
+    configuration = metadata["cta"]["context"]["application_configuration"]
+
+    assert configuration["schema_version"] == "1.0.0"
+    assert configuration["application"] == "test_application"
+    assert configuration["arguments"]["input_path"] == "input/events.simtel.zst"
+    assert configuration["arguments"]["off_axis_angle"] == {"value": 1.5, "unit": "deg"}
+    assert configuration["arguments"]["db_api_pw"] == "***REDACTED***"
+    assert configuration["arguments"]["nested"]["api_token"] == "***REDACTED***"
+    assert configuration["arguments"]["runtime_environment"]["options"] == [
+        "--env SIMTOOLS_DB_API_PW=***REDACTED***"
+    ]
+    assert configuration["arguments"]["run_time"] == [
+        "podman",
+        "run",
+        "--env",
+        "SIMTOOLS_DB_API_PW=***REDACTED***",
+    ]
+    assert configuration["sources"] == {
+        "cli": ["input_path"],
+        "defaults": ["off_axis_angle"],
+    }
+    context_schema = schema.load_schema(METADATA_JSON_SCHEMA)["definitions"]["cta"]["properties"][
+        "context"
+    ]
+    jsonschema.Draft6Validator(context_schema).validate(metadata["cta"]["context"])
 
 
 def test_get_site(args_dict_site):
