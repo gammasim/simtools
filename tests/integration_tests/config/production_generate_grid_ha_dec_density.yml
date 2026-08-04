@@ -2,13 +2,13 @@
 applications:
 - application: simtools-production-generate-grid
   docs:
-    title: Production grid defined on Ha/Dec axes.
-    summary: Example with full zenith coverage from 0 to 70 deg and a directed azimuth window.
+    title: Production grid defined on HA/Dec axes (grid density).
+    summary: >
+      Full zenith coverage from 0 to 70 deg and a directed azimuth window.
+      Use corsika limits files to adjust energy ranges, view cone, and
+      core scatter settings.
   configuration:
-    array_layout_name:
-      by_version:
-        "<7.0.0": 1lst
-        ">=7.0.0": LSTN-01
+    array_layout_name: LSTN-01
     axis:
     # HA/Dec define the sampling frame; binning placeholders are overridden by
     # direction_grid_density in adaptive HA/Dec mode.
@@ -37,7 +37,58 @@ applications:
     view_cone: 0 deg 10 deg
   integration_tests:
   - output_file: job_grid_ha_dec_density.ecsv
-  skip_integration_test: Requires model DB access for site-location lookup in ha_dec mode.
-  test_name: production_generate_grid_ha_dec
+    output_validation:
+    - profile: job_grid
+      file: job_grid_ha_dec_density.ecsv
+      columns:
+        primary:
+          allowed_values: [gamma]
+        zenith_angle:
+          range:
+            minimum: 0.0
+            maximum: 70.0
+            unit: deg
+        ha:
+          range:
+            minimum: -180.0
+            maximum: 180.0
+            unit: deg
+        dec:
+          range:
+            minimum: -40.0
+            maximum: 80.0
+            unit: deg
+        energy_min:
+          range:
+            minimum: 0.0
+            maximum: 300.0
+            unit: GeV
+        energy_max:
+          range:
+            minimum: 30.0
+            maximum: 300.0
+            unit: GeV
+        core_scatter_max:
+          range:
+            minimum: 0.0
+            maximum: 500.0
+            unit: m
+        view_cone_min:
+          range:
+            minimum: 0.0
+            maximum: 10.0
+            unit: deg
+        view_cone_max:
+          range:
+            minimum: 0.0
+            maximum: 10.0
+            unit: deg
+        model_version:
+          allowed_values: ["7.0.0"]
+        corsika_le_interaction:
+          allowed_values: [urqmd]
+        corsika_he_interaction:
+          allowed_values: [epos]
+  test_name: production_generate_grid_ha_dec_density
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
