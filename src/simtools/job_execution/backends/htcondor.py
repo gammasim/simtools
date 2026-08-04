@@ -49,6 +49,8 @@ _CONFIG_KEYS = {
 class HTCondorBackend:
     """Submit one HTCondor process for every job specification."""
 
+    supports_submit_only = True
+
     def __init__(self):
         self._htcondor = None
         self._schedd = None
@@ -78,6 +80,7 @@ class HTCondorBackend:
             names = ", ".join(sorted(unknown))
             raise BackendConfigurationError(f"Unknown HTCondor configuration key(s): {names}.")
         HTCondorBackend._validate_request_cpus(config)
+        HTCondorBackend._validate_priority(config)
         HTCondorBackend._validate_extra_attributes(config)
         HTCondorBackend._validate_timing(config)
         HTCondorBackend._validate_paths(config)
@@ -96,6 +99,21 @@ class HTCondorBackend:
             raise BackendConfigurationError("request_cpus must be a positive integer.")
         if request_cpus < 1:
             raise BackendConfigurationError("request_cpus must be a positive integer.")
+
+    @staticmethod
+    def _validate_priority(config):
+        """Validate the scheduler job priority."""
+        raw_priority = config.get("priority", 0)
+        try:
+            priority = int(raw_priority)
+        except (TypeError, ValueError) as exc:
+            raise BackendConfigurationError("priority must be an integer.") from exc
+        if isinstance(raw_priority, bool) or (
+            isinstance(raw_priority, float) and not raw_priority.is_integer()
+        ):
+            raise BackendConfigurationError("priority must be an integer.")
+        if str(raw_priority).strip() != str(priority):
+            raise BackendConfigurationError("priority must be an integer.")
 
     @staticmethod
     def _validate_extra_attributes(config):
@@ -346,6 +364,7 @@ class HTCondorBackend:
             metadata={
                 "poll_interval": float(config.get("poll_interval", 60)),
                 "timeout": config.get("timeout"),
+                "cancel_on_interrupt": bool(config.get("cancel_on_interrupt", False)),
                 "keep_successful_artifacts": bool(config.get("keep_successful_artifacts", False)),
                 "request_cpus": config.get("request_cpus", 1),
                 "request_memory": config.get("request_memory"),
@@ -366,6 +385,7 @@ class HTCondorBackend:
         """Wait for all HTCondor processes and load their result files."""
         if not submission.job_ids:
             return []
+        self._load_htcondor()
         failures = self._wait_for_processes(submission)
         results, result_failures = self._load_results(submission)
         failures.extend(result_failures)

@@ -88,3 +88,15 @@ class SubmissionHandle:
             "process_ids": self.process_ids,
             "metadata": self.metadata,
         }
+
+    @classmethod
+    def from_dict(cls, payload):
+        """Restore a submission handle from a manifest mapping."""
+        return cls(
+            backend=payload["backend"],
+            work_dir=Path(payload["work_dir"]),
+            job_ids=tuple(payload.get("job_ids", ())),
+            scheduler_id=payload.get("scheduler_id"),
+            process_ids={key: int(value) for key, value in payload.get("process_ids", {}).items()},
+            metadata=dict(payload.get("metadata", {})),
+        )

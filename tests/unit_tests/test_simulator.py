@@ -664,6 +664,25 @@ def test_write_reduced_event_lists_parallelizes_output_batches(mocker):
     assert len(mock_pool.call_args.args[1]) == 2
 
 
+def test_write_reduced_event_lists_submits_htcondor_without_waiting(mocker, tmp_test_directory):
+    """HTCondor reduced-event batches can be submitted without waiting."""
+    mock_submit = mocker.patch("simtools.simulator.submit_jobs")
+    output_files = [
+        Path(tmp_test_directory) / "part0001.hdf5",
+        Path(tmp_test_directory) / "part0002.hdf5",
+    ]
+
+    Simulator.write_reduced_event_lists(
+        input_files=["input1.simtel.zst", "input2.simtel.zst"],
+        output_files=output_files,
+        backend="htcondor",
+        wait_for_completion=False,
+    )
+
+    mock_submit.assert_called_once()
+    assert len(mock_submit.call_args.args[0]) == 2
+
+
 @pytest.mark.parametrize("files_per_reduced_event_file", [0, -1])
 def test_write_reduced_event_lists_rejects_invalid_batch_size(
     files_per_reduced_event_file,

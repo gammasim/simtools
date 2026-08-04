@@ -38,6 +38,16 @@ def test_max_workers_option():
     assert args.max_workers == 3
 
 
+def test_wait_option():
+    """Allow callers to wait for asynchronous backend jobs."""
+    parser = CommandLineParser()
+    parser.add_argument_definitions(write_reduced_event_lists._ARGUMENTS)
+
+    args = parser.parse_args(["--input_files", "input.simtel.zst", "--wait"])
+
+    assert args.wait is True
+
+
 def test_input_arguments_are_mutually_exclusive():
     """Require exactly one form of input argument."""
     parser = CommandLineParser()

@@ -12,7 +12,13 @@ from simtools.configuration import defaults
 from simtools.corsika import corsika_output_validator
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler, table_handler
-from simtools.job_execution import job_manager, map_ordered
+from simtools.job_execution import (
+    JobSpec,
+    job_manager,
+    map_ordered,
+    options_from_args,
+    submit_jobs,
+)
 from simtools.model.array_model import ArrayModel
 from simtools.runners import corsika_runner, corsika_simtel_runner, runner_services, simtel_runner
 from simtools.sim_events import file_info, output_validator, writer
@@ -414,6 +420,7 @@ class Simulator:
         max_workers=1,
         backend="local",
         backend_config=None,
+        wait_for_completion=True,
         metadata_args=None,
         array_models=None,
     ):
@@ -449,6 +456,14 @@ class Simulator:
             Execution backend. Defaults to ``"local"``.
         backend_config : dict, optional
             Backend-specific execution settings.
+        wait_for_completion : bool, optional
+            Wait for all backend jobs before returning. Submit-only mode is
+            available for asynchronous backends such as HTCondor.
+
+        Returns
+        -------
+        SubmissionHandle or None
+            A handle for submit-only execution; blocking execution returns ``None``.
 
         Raises
         ------
@@ -481,12 +496,13 @@ class Simulator:
             output_files=resolved_output_files,
         )
 
-        Simulator._run_reduced_event_list_jobs(
+        return Simulator._run_reduced_event_list_jobs(
             input_file_batches=input_file_batches,
             output_files=resolved_output_files,
             max_workers=max_workers,
             backend=backend,
             backend_config=backend_config,
+            wait_for_completion=wait_for_completion,
             metadata_args=metadata_args,
             array_models=array_models,
         )
@@ -600,6 +616,7 @@ class Simulator:
         max_workers,
         backend="local",
         backend_config=None,
+        wait_for_completion=True,
         metadata_args=None,
         array_models=None,
     ):
@@ -609,6 +626,23 @@ class Simulator:
             (input_files, output_file, metadata_args or {}, model_exports)
             for input_files, output_file in zip(input_file_batches, output_files)
         ]
+        if not wait_for_completion:
+            submit_specs = [
+                JobSpec(
+                    job_id=f"job-{index:06d}",
+                    index=index,
+                    function=_write_reduced_event_list_batch,
+                    item=job_spec,
+                    output_paths=(Path(output_files[index]),),
+                )
+                for index, job_spec in enumerate(job_specs)
+            ]
+            options = options_from_args(
+                {"backend": backend, "backend_config": backend_config},
+                max_workers=max_workers,
+                work_dir=Path(output_files[0]).parent if output_files else None,
+            )
+            return submit_jobs(submit_specs, options)
         map_ordered(
             _write_reduced_event_list_batch,
             job_specs,
@@ -623,6 +657,7 @@ class Simulator:
                     "Reduced-event jobs completed without expected output(s): "
                     + ", ".join(missing_outputs)
                 )
+        return None
 
     def pack_for_register(self, directory_for_grid_upload=None):
         """

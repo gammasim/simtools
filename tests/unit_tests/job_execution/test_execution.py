@@ -10,8 +10,10 @@ from simtools.job_execution import (
     ExecutionOptions,
     JobSpec,
     SubmissionHandle,
+    load_submission,
     map_ordered,
     options_from_args,
+    submit_jobs,
 )
 from simtools.job_execution.backends.base import BackendConfigurationError
 from simtools.job_execution.backends.htcondor import HTCondorBackend
@@ -41,6 +43,45 @@ def test_options_from_args_reads_yaml(tmp_test_directory):
     assert options.backend == "htcondor"
     assert options.backend_config["request_cpus"] == 2
     assert options.work_dir == Path(tmp_test_directory)
+
+
+def test_submit_jobs_keeps_local_execution_blocking():
+    """Submit-only requests remain blocking for the local backend."""
+    jobs = [JobSpec("job-000000", 0, function=_square, item=1)]
+
+    submission = submit_jobs(jobs, ExecutionOptions(backend="local"))
+
+    assert submission.metadata["direct_results"][0].value == 1
+
+
+def test_submission_handle_round_trip(tmp_test_directory):
+    """Submission manifests can be restored for a later wait operation."""
+    handle = SubmissionHandle(
+        backend="htcondor",
+        work_dir=Path(tmp_test_directory),
+        job_ids=("job-000000",),
+        scheduler_id=17,
+        process_ids={"job-000000": 0},
+        metadata={"expected_outputs": [str(Path(tmp_test_directory) / "output.hdf5")]},
+    )
+
+    restored = SubmissionHandle.from_dict(handle.as_dict())
+
+    assert restored == handle
+
+
+def test_load_submission_reads_manifest(tmp_test_directory):
+    """A saved manifest can be loaded for a later wait operation."""
+    manifest = Path(tmp_test_directory) / "submission.json"
+    manifest.write_text(
+        '{"backend": "htcondor", "work_dir": "run", "job_ids": []}\n',
+        encoding="utf-8",
+    )
+
+    restored = load_submission(manifest)
+
+    assert restored.backend == "htcondor"
+    assert restored.work_dir == Path("run")
 
 
 def test_worker_writes_result(tmp_test_directory):
@@ -101,7 +142,7 @@ def test_htcondor_submit_creates_one_process_per_job(monkeypatch, tmp_test_direc
     options = ExecutionOptions(
         backend="htcondor",
         work_dir=Path(tmp_test_directory),
-        backend_config={"request_cpus": 1},
+        backend_config={"request_cpus": 1, "priority": 42},
     )
     handle = HTCondorBackend().submit(jobs, options)
 
@@ -109,12 +150,20 @@ def test_htcondor_submit_creates_one_process_per_job(monkeypatch, tmp_test_direc
     assert captured["count"] == 2
     assert captured["itemdata"] == [{"job_id": "job-000000"}, {"job_id": "job-000001"}]
     assert captured["description"]["request_cpus"] == "1"
+    assert captured["description"]["priority"] == "42"
 
 
 def test_htcondor_rejects_unknown_configuration():
     """Scheduler configuration is explicit rather than silently ignored."""
     with pytest.raises(BackendConfigurationError, match="Unknown HTCondor configuration"):
         HTCondorBackend._validate_config({"not_a_submit_option": True})
+
+
+@pytest.mark.parametrize("priority", ["high", 1.5, True])
+def test_htcondor_rejects_invalid_priority(priority):
+    """Scheduler priority must be an integer."""
+    with pytest.raises(BackendConfigurationError, match="priority must be an integer"):
+        HTCondorBackend._validate_config({"priority": priority})
 
 
 def test_htcondor_event_log_uses_integer_poll_deadline(tmp_test_directory):

@@ -7,7 +7,7 @@ from pathlib import Path
 import yaml
 
 from simtools.job_execution.backends.registry import get_backend
-from simtools.job_execution.job import ExecutionOptions, JobSpec
+from simtools.job_execution.job import ExecutionOptions, JobSpec, SubmissionHandle
 
 logger = logging.getLogger(__name__)
 
@@ -20,22 +20,81 @@ def execute_jobs(job_specs, options=None):
     backend = get_backend(options.backend)
     if jobs:
         logger.info("Executing %d job(s) with backend %s", len(jobs), options.backend)
-    submission = backend.submit(jobs, options)
-    _mark_submission(submission, options, "submitted")
-    try:
-        results = backend.wait(submission)
-    except KeyboardInterrupt:
-        _mark_submission(submission, options, "interrupted")
-        _cancel_if_requested(backend, submission, options)
-        raise
-    except Exception:
-        _mark_submission(submission, options, "failed")
-        raise
-    _mark_submission(submission, options, "completed")
-    _validate_outputs(jobs)
+    submission = _submit_validated(jobs, options, backend)
+    results = wait_for_submission(submission, options=options, backend=backend)
     if jobs:
         logger.info("Completed %d job(s) with backend %s", len(results), options.backend)
     return sorted(results, key=lambda result: result.index)
+
+
+def submit_jobs(job_specs, options=None):
+    """Submit independent jobs, detaching when the backend supports it.
+
+    Scheduler-backed implementations return without waiting. Backends that do
+    not advertise submit-only support complete synchronously.
+    """
+    options = options or ExecutionOptions()
+    jobs = list(job_specs)
+    _validate_jobs(jobs)
+    backend = get_backend(options.backend)
+    submission = _submit_validated(jobs, options, backend)
+    supports_submit_only = getattr(backend, "supports_submit_only", False)
+    if not supports_submit_only:
+        wait_for_submission(submission, options=options, backend=backend)
+    if jobs:
+        if supports_submit_only:
+            logger.info(
+                "Submitted %d job(s) with backend %s; manifest: %s",
+                len(jobs),
+                options.backend,
+                submission.work_dir / "submission.json",
+            )
+        else:
+            logger.info(
+                "Completed %d job(s) synchronously with backend %s",
+                len(jobs),
+                options.backend,
+            )
+    return submission
+
+
+def wait_for_submission(submission, *, options=None, backend=None):
+    """Wait for a previously submitted job set and validate its outputs."""
+    backend = backend or get_backend(submission.backend)
+    try:
+        results = backend.wait(submission)
+        _validate_manifest_outputs(submission)
+    except KeyboardInterrupt:
+        _mark_submission(submission, "interrupted")
+        _cancel_if_requested(backend, submission, options)
+        raise
+    except Exception:
+        _mark_submission(submission, "failed")
+        raise
+    _mark_submission(submission, "completed")
+    return sorted(results, key=lambda result: result.index)
+
+
+def load_submission(path):
+    """Load a submission handle from a JSON manifest."""
+    manifest = Path(path)
+    try:
+        payload = json.loads(manifest.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise FileNotFoundError(f"Submission manifest not found: {manifest}") from exc
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid submission manifest: {manifest}") from exc
+    return SubmissionHandle.from_dict(payload)
+
+
+def _submit_validated(jobs, options, backend):
+    """Submit validated jobs and persist a remote manifest."""
+    submission = backend.submit(jobs, options)
+    submission.metadata["expected_outputs"] = [
+        str(path) for job in jobs for path in job.output_paths
+    ]
+    _mark_submission(submission, "submitted")
+    return submission
 
 
 def _validate_jobs(jobs):
@@ -49,9 +108,9 @@ def _validate_jobs(jobs):
         raise ValueError("Execution jobs contain duplicate expected output paths.")
 
 
-def _mark_submission(submission, options, state):
+def _mark_submission(submission, state):
     """Update the remote submission manifest when applicable."""
-    if options.backend == "local":
+    if submission.backend == "local":
         return
     submission.metadata["state"] = state
     _write_manifest(submission)
@@ -59,15 +118,18 @@ def _mark_submission(submission, options, state):
 
 def _cancel_if_requested(backend, submission, options):
     """Cancel a remote submission when interruption policy requests it."""
-    configured = (options.backend_config or {}).get("cancel_on_interrupt", False)
-    if options.cancel_on_interrupt or configured:
+    configured = submission.metadata.get("cancel_on_interrupt", False)
+    if options is not None:
+        configured = configured or (options.backend_config or {}).get("cancel_on_interrupt", False)
+        configured = configured or options.cancel_on_interrupt
+    if configured:
         backend.cancel(submission)
 
 
-def _validate_outputs(jobs):
-    """Verify all declared output paths after execution."""
+def _validate_manifest_outputs(submission):
+    """Validate output paths recorded in a durable submission manifest."""
     missing_outputs = [
-        str(path) for job in jobs for path in job.output_paths if not Path(path).is_file()
+        path for path in submission.metadata.get("expected_outputs", []) if not Path(path).is_file()
     ]
     if missing_outputs:
         raise FileNotFoundError(

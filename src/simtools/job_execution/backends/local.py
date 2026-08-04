@@ -37,6 +37,8 @@ def execute_job_spec(job_spec):
 class LocalBackend:
     """Execute job specifications with local worker processes."""
 
+    supports_submit_only = False
+
     def submit(self, job_specs, options):
         """Submit jobs to a local process pool."""
         item_list = list(job_specs)

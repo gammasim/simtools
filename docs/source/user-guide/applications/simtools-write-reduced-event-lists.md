@@ -17,6 +17,8 @@ output file.
 
 Independent output batches can run locally or on HTCondor. Local execution is the default; select
 the scheduler with `--backend htcondor` and provide a shared-filesystem backend configuration.
+HTCondor submission returns after queueing the independent batches; add `--wait` to keep the
+controller attached until all outputs are complete.
 
 ```bash
 simtools-write-reduced-event-lists \
