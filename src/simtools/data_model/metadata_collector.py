@@ -22,6 +22,14 @@ from simtools.io import ascii_handler, io_handler
 from simtools.settings import config
 from simtools.utils import names
 
+_SENSITIVE_CONFIGURATION_ASSIGNMENT = re.compile(
+    r"(?<![\w-])(?P<option>--)?"
+    r"(?P<key>[A-Za-z_][A-Za-z0-9_-]*(?:password|passwd|pw|pwd|secret|token|api[_-]?key)"
+    r"[A-Za-z0-9_-]*)(?P<separator>=|:)"
+    r"(?P<value>\"[^\"]*\"|'[^']*'|[^\s]+)",
+    re.IGNORECASE,
+)
+
 
 class MetadataCollector:
     """
@@ -357,13 +365,34 @@ class MetadataCollector:
             }
         if isinstance(value, (list, tuple)):
             return [cls._sanitize_configuration(item) for item in value]
+        if isinstance(value, str):
+            return cls._sanitize_configuration_string(value)
         return ascii_handler.to_builtin(value)
+
+    @staticmethod
+    def _sanitize_configuration_string(value):
+        """Redact sensitive values embedded in command-option strings."""
+
+        def redact_assignment(match):
+            assignment_value = match.group("value")
+            quote = assignment_value[0] if assignment_value[0] in "\"'" else ""
+            redacted_value = f"{quote}***REDACTED***{quote}" if quote else "***REDACTED***"
+            return (
+                f"{match.group('option') or ''}{match.group('key')}"
+                f"{match.group('separator')}{redacted_value}"
+            )
+
+        return _SENSITIVE_CONFIGURATION_ASSIGNMENT.sub(redact_assignment, value)
 
     @staticmethod
     def _is_sensitive_configuration_key(key):
         """Return whether a configuration key may contain a secret."""
-        return key == "db_api_pw" or bool(
-            re.search(r"password|passwd|(^|[_-])pwd($|[_-])|secret|token|api[_-]?key", key, re.I)
+        return key.casefold() == "db_api_pw" or bool(
+            re.search(
+                r"password|passwd|(^|[_-])(pw|pwd)($|[_-])|secret|token|api[_-]?key",
+                key,
+                re.I,
+            )
         )
 
     def _append_context_note_from_value_table(self, context_dict):

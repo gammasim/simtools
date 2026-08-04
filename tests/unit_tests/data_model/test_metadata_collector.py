@@ -125,6 +125,8 @@ def test_application_configuration_is_embedded_sanitized_and_valid(args_dict_sit
             "off_axis_angle": 1.5 * u.deg,
             "db_api_pw": "do-not-store-this",
             "nested": {"api_token": "do-not-store-this-either"},
+            "runtime_environment": {"options": ["--env SIMTOOLS_DB_API_PW=runtime-secret"]},
+            "run_time": ["podman", "run", "--env", "SIMTOOLS_DB_API_PW=runtime-secret"],
             "_metadata_configuration_sources": {
                 "cli": {"input_path"},
                 "defaults": {"off_axis_angle"},
@@ -143,6 +145,15 @@ def test_application_configuration_is_embedded_sanitized_and_valid(args_dict_sit
     assert configuration["arguments"]["off_axis_angle"] == {"value": 1.5, "unit": "deg"}
     assert configuration["arguments"]["db_api_pw"] == "***REDACTED***"
     assert configuration["arguments"]["nested"]["api_token"] == "***REDACTED***"
+    assert configuration["arguments"]["runtime_environment"]["options"] == [
+        "--env SIMTOOLS_DB_API_PW=***REDACTED***"
+    ]
+    assert configuration["arguments"]["run_time"] == [
+        "podman",
+        "run",
+        "--env",
+        "SIMTOOLS_DB_API_PW=***REDACTED***",
+    ]
     assert configuration["sources"] == {
         "cli": ["input_path"],
         "defaults": ["off_axis_angle"],
