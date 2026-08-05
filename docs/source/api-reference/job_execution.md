@@ -43,6 +43,16 @@ This is mostly used for small productions during the validation or verification 
    :members:
 ```
 
+```{eval-rst}
+.. automodule:: job_execution.backends.registry
+   :members:
+```
+
+```{eval-rst}
+.. automodule:: job_execution.worker
+   :members:
+```
+
 (parameter-scan-generator)=
 
 ```{eval-rst}
