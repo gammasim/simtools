@@ -13,6 +13,7 @@ from simtools.constants import (
     MODEL_PARAMETER_DESCRIPTION_METASCHEMA,
     MODEL_PARAMETER_METASCHEMA,
     MODEL_PARAMETER_SCHEMA_PATH,
+    SCHEMA_PATH,
     SIM_TELARRAY_META_PARAMETER_METASCHEMA,
     SIM_TELARRAY_META_PARAMETER_REGISTRY,
 )
@@ -182,6 +183,51 @@ def _valid_output_validation_rule():
             "column_sums": {"energy": "summary.total"},
         },
     }
+
+
+def test_application_workflow_schema_accepts_output_validation_rules():
+    """Test the table output-validation configuration shape."""
+    workflow_config = _output_validation_workflow(_valid_output_validation_rule())
+
+    schema.validate_dict_using_schema(
+        workflow_config,
+        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+    )
+
+
+def test_application_workflow_schema_accepts_profiled_output_validation_rule():
+    """Allow profiles to provide shared output-validation fields."""
+    workflow_config = _output_validation_workflow({"profile": "job_grid", "file": "job_grid.ecsv"})
+
+    schema.validate_dict_using_schema(
+        workflow_config,
+        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+    )
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        lambda rule: rule.update({"unknown": True}),
+        lambda rule: rule.update({"minimum_rows": -1}),
+        lambda rule: rule.update({"unique_columns": ["id", "id"]}),
+        lambda rule: rule["columns"]["energy"].update({"range": {"minimum": "bad"}}),
+        lambda rule: rule["columns"]["energy"].update({"range": {"unit": "GeV"}}),
+        lambda rule: rule["columns"].update({"id": {}}),
+        lambda rule: rule["metadata"].update({"unknown": "value"}),
+    ],
+)
+def test_application_workflow_schema_rejects_malformed_output_validation(change):
+    """Reject unknown properties and malformed declarative validation rules."""
+    rule = _valid_output_validation_rule()
+    change(rule)
+    workflow_config = _output_validation_workflow(rule)
+
+    with pytest.raises(jsonschema.ValidationError):
+        schema.validate_dict_using_schema(
+            workflow_config,
+            schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+        )
 
 
 def test_validate_dict_using_schema_remote(tmp_test_directory, mocker):

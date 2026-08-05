@@ -9,7 +9,7 @@ as function of zenith angle.
 
 Command line arguments
 ----------------------
-input (str, required)
+corsika_limits_file (str, required)
     Path to a CORSIKA limits table in ECSV format.
 
 Example
@@ -18,7 +18,7 @@ Example
 .. code-block:: console
 
    simtools-production-plot-corsika-limits \
-       --input simtools-output/merged_corsika_limits.ecsv \
+       --corsika_limits_file simtools-output/merged_corsika_limits.ecsv \
        --output_path simtools-output
 """
 
@@ -29,7 +29,7 @@ from simtools.visualization.plot_corsika_limits import plot_limits
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
-        "input",
+        "corsika_limits_file",
         type=str,
         required=True,
         help="Path to a merged CORSIKA limits table in ECSV format.",
@@ -53,7 +53,7 @@ def main():
     app_context = APPLICATION.start()
 
     plot_limits(
-        data_reader.read_table_from_file(app_context.args["input"]),
+        data_reader.read_table_from_file(app_context.args["corsika_limits_file"]),
         app_context.io_handler.get_output_directory(),
     )
 

@@ -56,7 +56,7 @@ podman run --rm -it \
     -v "$(pwd):/workdir/external" \
     ghcr.io/gammasim/simtools-240205-corsika-77500-bernlohr-1.67-prod6-baseline-qgs2-no_opt:latest \
     simtools-convert-geo-coordinates-of-array-elements \
-    --input ./simtools/tests/resources/telescope_positions-North-utm.ecsv \
+    --array_element_positions_file ./simtools/tests/resources/telescope_positions-North-utm.ecsv \
     --export ground \
     --output_path /workdir/external/
 ```
@@ -81,7 +81,7 @@ podman run --rm -it \
     --bind "$(pwd):/workdir/external" \
     simtools-prod.sif \
     simtools-convert-geo-coordinates-of-array-elements \
-    --input ./simtools/tests/resources/telescope_positions-North-utm.ecsv \
+    --array_element_positions_file ./simtools/tests/resources/telescope_positions-North-utm.ecsv \
     --export ground \
     --output_path /workdir/external/
   ```

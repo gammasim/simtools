@@ -1,0 +1,10 @@
+---
+applications:
+- application: simtools-db-generate-compound-indexes
+  configuration:
+    database_name: all
+  requires_mongodb: true
+  skip_for_production_db: true
+  test_name: run
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0

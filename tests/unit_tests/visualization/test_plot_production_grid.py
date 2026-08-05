@@ -29,10 +29,9 @@ def _write_grid_file(tmp_test_directory, file_name, grid_points):
 
     table = Table(rows=rows)
     unit_mapping = {
-        "azimuth": "deg",
         "azimuth_angle": "deg",
         "zenith_angle": "deg",
-        "ra": "deg",
+        "ha": "deg",
         "dec": "deg",
         "nsb_level": "MHz",
         "offset": "deg",
@@ -57,10 +56,11 @@ def _create_plotter(grid_file, output_path):
 
 
 def test_normalize_altaz_point(tmp_test_directory):
+    """Keep native Alt/Az values and no HA/Dec when absent in file."""
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_altaz.ecsv",
-        [{"azimuth": 180.0, "zenith_angle": 20.0, "nsb_level": 0.0}],
+        [{"azimuth_angle": 180.0, "zenith_angle": 20.0, "nsb_level": 0.0}],
     )
 
     plotter = _create_plotter(
@@ -75,7 +75,7 @@ def test_normalize_altaz_point(tmp_test_directory):
     assert normalized_points[0]["visible_in_altaz"] is True
     assert normalized_points[0]["azimuth"] == pytest.approx(180.0)
     assert normalized_points[0]["zenith"] == pytest.approx(20.0)
-    assert normalized_points[0]["ra"] is None
+    assert normalized_points[0]["ha"] is None
     assert normalized_points[0]["dec"] is None
 
 
@@ -105,15 +105,16 @@ def test_normalize_job_grid_altaz_columns(tmp_test_directory):
     assert normalized_points[0]["zenith"] == pytest.approx(70.0)
 
 
-def test_normalize_altaz_keeps_explicit_radec_columns(tmp_test_directory):
+def test_normalize_altaz_keeps_explicit_hadec_columns(tmp_test_directory):
+    """Use explicit HA/Dec columns from the same grid row when available."""
     grid_file = _write_grid_file(
         tmp_test_directory,
-        "grid_altaz_with_radec.ecsv",
+        "grid_altaz_with_hadec.ecsv",
         [
             {
                 "azimuth_angle": 10.0,
                 "zenith_angle": 20.0,
-                "ra": 120.0,
+                "ha": 120.0,
                 "dec": -20.0,
             }
         ],
@@ -128,15 +129,16 @@ def test_normalize_altaz_keeps_explicit_radec_columns(tmp_test_directory):
 
     assert len(normalized_points) == 1
     assert normalized_points[0]["native_frame"] == "altaz"
-    assert normalized_points[0]["ra"] == pytest.approx(120.0)
+    assert normalized_points[0]["ha"] == pytest.approx(120.0)
     assert normalized_points[0]["dec"] == pytest.approx(-20.0)
 
 
-def test_normalize_radec_point_without_altaz_projection(tmp_test_directory):
+def test_normalize_hadec_point_without_altaz_projection(tmp_test_directory):
+    """Keep native HA/Dec points without deriving Alt/Az."""
     grid_file = _write_grid_file(
         tmp_test_directory,
-        "grid_radec.ecsv",
-        [{"ra": 155.0, "dec": 30.0}],
+        "grid_hadec.ecsv",
+        [{"ha": 155.0, "dec": 30.0}],
     )
 
     plotter = _create_plotter(
@@ -147,10 +149,10 @@ def test_normalize_radec_point_without_altaz_projection(tmp_test_directory):
     normalized_points = plotter.normalize_grid_points()
 
     assert len(normalized_points) == 1
-    assert normalized_points[0]["native_frame"] == "radec"
+    assert normalized_points[0]["native_frame"] == "hadec"
     assert normalized_points[0]["azimuth"] is None
     assert normalized_points[0]["zenith"] is None
-    assert normalized_points[0]["ra"] == pytest.approx(155.0)
+    assert normalized_points[0]["ha"] == pytest.approx(155.0)
     assert normalized_points[0]["dec"] == pytest.approx(30.0)
 
 
@@ -158,7 +160,7 @@ def test_plot_sky_projection_creates_output_altaz_only(tmp_test_directory):
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_altaz_only.ecsv",
-        [{"azimuth": 120.0, "zenith_angle": 35.0}],
+        [{"azimuth_angle": 120.0, "zenith_angle": 35.0}],
     )
     output_path = Path(tmp_test_directory) / "output"
 
@@ -167,16 +169,17 @@ def test_plot_sky_projection_creates_output_altaz_only(tmp_test_directory):
         output_path=output_path,
     )
 
-    plotter.plot_sky_projection(plot_ra_dec_tracks=True, dec_values=[20.0])
+    plotter.plot_sky_projection()
 
     assert (output_path / f"{DEFAULT_OUTPUT_FILE_STEM}.png").exists()
 
 
-def test_plot_sky_projection_creates_output_with_radec_panel(tmp_test_directory):
+def test_plot_sky_projection_creates_output_with_hadec_panel(tmp_test_directory):
+    """Write the sky projection plot with both Alt/Az and HA/Dec data."""
     grid_file = _write_grid_file(
         tmp_test_directory,
-        "grid_altaz_radec.ecsv",
-        [{"azimuth": 100.0, "zenith_angle": 25.0, "ra": 180.0, "dec": -10.0}],
+        "grid_altaz_hadec.ecsv",
+        [{"azimuth_angle": 100.0, "zenith_angle": 25.0, "ha": 180.0, "dec": -10.0}],
     )
     output_path = Path(tmp_test_directory) / "output"
 
@@ -271,6 +274,42 @@ def test_extract_quantity_value_dict_branches():
     assert ProductionGridPlotter._extract_quantity_value(point_without_value, "x") is None
 
 
+def test_format_value_label_with_unit_uses_available_unit():
+    """Append units from quantity values when present in normalized points."""
+    plot_points = [{"energy_min": 1.0 * u.TeV}]
+
+    formatted_label = ProductionGridPlotter._format_value_label_with_unit(
+        plot_points,
+        value_key="energy_min",
+        value_label="energy_min",
+    )
+
+    assert formatted_label == "energy_min [TeV]"
+
+
+def test_configure_hadec_axis_expands_flat_ranges(tmp_test_directory):
+    """Expand axis limits by +/-5 deg when computed min and max are equal."""
+    grid_file = _write_grid_file(
+        tmp_test_directory,
+        "grid_single_hadec.ecsv",
+        [{"ha": 40.0, "dec": 20.0}],
+    )
+    plotter = _create_plotter(
+        grid_file=grid_file,
+        output_path=Path(tmp_test_directory) / "output",
+    )
+
+    figure, axis = plt.subplots()
+    try:
+        plotter._configure_hadec_axis(axis, [{"ha": 40.0, "dec": 20.0}])
+        xlim = axis.get_xlim()
+        ylim = axis.get_ylim()
+        assert xlim == pytest.approx((35.0, 45.0))
+        assert ylim == pytest.approx((15.0, 25.0))
+    finally:
+        plt.close(figure)
+
+
 def test_plot_frame_points_logs_no_valid_points(tmp_test_directory, caplog):
     grid_file = _write_grid_file(tmp_test_directory, "grid_empty.ecsv", [])
     plotter = _create_plotter(
@@ -285,7 +324,7 @@ def test_plot_frame_points_logs_no_valid_points(tmp_test_directory, caplog):
                 axis=axis,
                 plot_points=[],
                 primary_frame="altaz",
-                secondary_frame="radec",
+                secondary_frame="hadec",
                 primary_color="tab:blue",
                 secondary_color="tab:orange",
                 x_key="azimuth",
@@ -298,7 +337,8 @@ def test_plot_frame_points_logs_no_valid_points(tmp_test_directory, caplog):
         plt.close(figure)
 
 
-def test_plot_altaz_points_logs_hidden_radec_points(tmp_test_directory, caplog):
+def test_plot_altaz_points_logs_hidden_hadec_points(tmp_test_directory, caplog):
+    """Log info when HA/Dec points are not visible in Azimuth/Zenith panel."""
     grid_file = _write_grid_file(tmp_test_directory, "grid_empty_altaz.ecsv", [])
     plotter = _create_plotter(
         grid_file=grid_file,
@@ -310,43 +350,26 @@ def test_plot_altaz_points_logs_hidden_radec_points(tmp_test_directory, caplog):
     try:
         plot_points = [
             {
-                "native_frame": "radec",
+                "native_frame": "hadec",
                 "azimuth": None,
                 "zenith": None,
-                "ra": 10.0,
+                "ha": 10.0,
                 "dec": -80.0,
                 "visible_in_altaz": False,
             }
         ]
         with caplog.at_level("INFO"):
             plotter._plot_altaz_points(axis, plot_points)
-        assert "Skipping 1 RA/Dec points below the horizon in Azimuth/Zenith panel" in caplog.text
+        assert "Skipping 1 HA/Dec points below the horizon in Azimuth/Zenith panel" in caplog.text
     finally:
         plt.close(figure)
-
-
-def test_plot_sky_projection_logs_tracks_disabled(tmp_test_directory, caplog):
-    grid_file = _write_grid_file(
-        tmp_test_directory,
-        "grid_altaz_with_radec_for_tracks.ecsv",
-        [{"azimuth": 10.0, "zenith_angle": 20.0, "ra": 120.0, "dec": -20.0}],
-    )
-    plotter = _create_plotter(
-        grid_file=grid_file,
-        output_path=Path(tmp_test_directory) / "output",
-    )
-
-    with caplog.at_level("INFO"):
-        plotter.plot_sky_projection(plot_ra_dec_tracks=True)
-
-    assert "RA/Dec tracks are disabled in file-driven plotting mode" in caplog.text
 
 
 def test_plot_sky_projection_writes_grid_density_subtitle(tmp_test_directory, monkeypatch):
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_with_density_meta.ecsv",
-        [{"azimuth": 100.0, "zenith_angle": 25.0, "ra": 180.0, "dec": -10.0}],
+        [{"azimuth_angle": 100.0, "zenith_angle": 25.0, "ha": 180.0, "dec": -10.0}],
     )
     table = Table.read(grid_file, format="ascii.ecsv")
     table.meta["direction_grid_density"] = 0.25

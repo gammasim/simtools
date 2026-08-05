@@ -5,8 +5,11 @@ import getpass
 import json
 import logging
 import re
+import uuid
 from pathlib import Path
 
+import astropy.units as u
+import jsonschema
 import pytest
 from astropy.table import Table
 
@@ -24,10 +27,10 @@ def test_get_data_model_schema_file_name():
     schema_file = _collector.get_data_model_schema_file_name()
     assert schema_file is None
 
-    args_dict = {"schema": str(METADATA_JSON_SCHEMA)}
+    args_dict = {"schema_file": str(METADATA_JSON_SCHEMA)}
     _collector = metadata_collector.MetadataCollector(args_dict, clean_meta=False)
     schema_file = _collector.get_data_model_schema_file_name()
-    assert schema_file == args_dict["schema"]
+    assert schema_file == args_dict["schema_file"]
 
     # from metadata
     _collector.top_level_meta["cta"]["product"]["data"]["model"]["url"] = str(
@@ -35,8 +38,8 @@ def test_get_data_model_schema_file_name():
     )
     schema_file = _collector.get_data_model_schema_file_name()
     # test that priority is given to args_dict (if not none)
-    assert schema_file == args_dict["schema"]
-    _collector.args_dict["schema"] = None
+    assert schema_file == args_dict["schema_file"]
+    _collector.args_dict["schema_file"] = None
     schema_file = _collector.get_data_model_schema_file_name()
     assert schema_file == str(SCHEMA_PATH / "top_level_meta.schema.yml")
 
@@ -109,6 +112,57 @@ def test_fill_contact_meta(args_dict_site, caplog):
         pass
 
 
+def test_application_configuration_is_embedded_sanitized_and_valid(args_dict_site):
+    """Embed resolved configuration in metadata context without exposing credentials."""
+    args_dict_site.update(
+        {
+            "application_label": "test_application",
+            "activity_id": "019fc820-d1f3-7677-ac30-4002f1a8dd37",
+            "output_file": "result.ecsv",
+            "output_file_format": "ecsv",
+            "input_path": Path("input/events.simtel.zst"),
+            "off_axis_angle": 1.5 * u.deg,
+            "db_api_pw": "do-not-store-this",
+            "nested": {"api_token": "do-not-store-this-either"},
+            "runtime_environment": {"options": ["--env SIMTOOLS_DB_API_PW=runtime-secret"]},
+            "run_time": ["podman", "run", "--env", "SIMTOOLS_DB_API_PW=runtime-secret"],
+            "_metadata_configuration_sources": {
+                "cli": {"input_path"},
+                "defaults": {"off_axis_angle"},
+            },
+        }
+    )
+
+    metadata = metadata_collector.MetadataCollector(
+        args_dict=args_dict_site
+    ).get_top_level_metadata()
+    configuration = metadata["cta"]["context"]["application_configuration"]
+
+    assert configuration["schema_version"] == "1.0.0"
+    assert configuration["application"] == "test_application"
+    assert configuration["arguments"]["input_path"] == "input/events.simtel.zst"
+    assert configuration["arguments"]["off_axis_angle"] == {"value": 1.5, "unit": "deg"}
+    assert configuration["arguments"]["db_api_pw"] == "***REDACTED***"
+    assert configuration["arguments"]["nested"]["api_token"] == "***REDACTED***"
+    assert configuration["arguments"]["runtime_environment"]["options"] == [
+        "--env SIMTOOLS_DB_API_PW=***REDACTED***"
+    ]
+    assert configuration["arguments"]["run_time"] == [
+        "podman",
+        "run",
+        "--env",
+        "SIMTOOLS_DB_API_PW=***REDACTED***",
+    ]
+    assert configuration["sources"] == {
+        "cli": ["input_path"],
+        "defaults": ["off_axis_angle"],
+    }
+    context_schema = schema.load_schema(METADATA_JSON_SCHEMA)["definitions"]["cta"]["properties"][
+        "context"
+    ]
+    jsonschema.Draft6Validator(context_schema).validate(metadata["cta"]["context"])
+
+
 def test_get_site(args_dict_site):
     _collector_1 = metadata_collector.MetadataCollector(
         args_dict=args_dict_site,
@@ -179,6 +233,43 @@ def test_read_input_metadata_from_ecsv(args_dict_site, caplog):
         with pytest.raises(FileNotFoundError):
             metadata_1._read_input_metadata_from_ecsv("file_not_there.ecsv")
     assert "Failed reading metadata for" in caplog.text
+
+
+def test_fill_product_meta(args_dict_site):
+    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site, clean_meta=False)
+
+    with pytest.raises(TypeError):
+        metadata_1._fill_product_meta(product_dict=None)
+
+    _product_dict = {}
+    with pytest.raises(KeyError):
+        metadata_1._fill_product_meta(product_dict=_product_dict)
+
+    _product_dict["data"] = {}
+    _product_dict["data"]["model"] = {}
+    metadata_1._fill_product_meta(product_dict=metadata_1.top_level_meta["cta"]["product"])
+
+    try:
+        uuid.UUID(metadata_1.top_level_meta["cta"]["product"]["id"])
+    except ValueError:
+        pytest.fail("Invalid UUID format in metadata")
+
+    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.0.0"
+
+    # read product metadata from schema file
+    metadata_1.args_dict["schema_file"] = (
+        SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
+    )
+    metadata_1._fill_product_meta(product_dict=metadata_1.top_level_meta["cta"]["product"])
+
+    assert metadata_1.top_level_meta["cta"]["product"]["data"]["model"]["version"] == "0.1.0"
+
+
+def test_fill_process_meta(args_dict_site):
+    metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
+    metadata_1._fill_process_meta(metadata_1.top_level_meta["cta"]["activity"])
+
+    assert metadata_1.top_level_meta["cta"]["activity"]["type"] == "simulation"
 
 
 def test_merge_config_dicts(args_dict_site):

@@ -1,6 +1,12 @@
 ---
 applications:
 - application: simtools-production-generate-grid
+  docs:
+    title: Grid defined in HA/Dec.
+    summary: >
+      Point-like simulations with fixed offsets.
+      Use corsika limits files to adjust energy ranges, view cone, and
+      core scatter settings.
   configuration:
     array_layout_name: LSTN-01
     axis:
@@ -24,7 +30,58 @@ applications:
     view_cone: 0 deg 10 deg
   integration_tests:
   - output_file: job_grid_ha_dec.ecsv
-  skip_integration_test: Requires model DB access for site-location lookup in ha_dec mode.
+    output_validation:
+    - profile: job_grid
+      file: job_grid_ha_dec.ecsv
+      columns:
+        primary:
+          allowed_values: [gamma]
+        zenith_angle:
+          range:
+            minimum: 0.0
+            maximum: 180.0
+            unit: deg
+        ha:
+          range:
+            minimum: 0.0
+            maximum: 360.0
+            unit: deg
+        dec:
+          range:
+            minimum: -90.0
+            maximum: 90.0
+            unit: deg
+        energy_min:
+          range:
+            minimum: 0.0
+            maximum: 300.0
+            unit: GeV
+        energy_max:
+          range:
+            minimum: 30.0
+            maximum: 300.0
+            unit: GeV
+        core_scatter_max:
+          range:
+            minimum: 0.0
+            maximum: 500.0
+            unit: m
+        view_cone_min:
+          range:
+            minimum: 0.0
+            maximum: 10.0
+            unit: deg
+        view_cone_max:
+          range:
+            minimum: 0.0
+            maximum: 10.0
+            unit: deg
+        model_version:
+          allowed_values: ["7.0.0"]
+        corsika_le_interaction:
+          allowed_values: [urqmd]
+        corsika_he_interaction:
+          allowed_values: [epos]
   test_name: production_generate_grid_ha_dec
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

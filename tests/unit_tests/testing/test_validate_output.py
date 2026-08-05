@@ -1,5 +1,6 @@
 import json
 import logging
+from collections import UserDict
 from pathlib import Path
 from unittest.mock import patch
 
@@ -8,7 +9,7 @@ import yaml
 from astropy import units as u
 from astropy.table import Table
 
-from simtools.constants import TEST_RESOURCES_GENERATED
+from simtools.constants import SCHEMA_PATH, TEST_RESOURCES_GENERATED
 from simtools.testing import validate_output
 from simtools.testing.validate_output import (
     _validate_output_path_and_file,
@@ -856,6 +857,43 @@ def test_declarative_table_validation_passes(tmp_test_directory):
         )
         is None
     )
+
+
+def test_output_validation_profile_applies_defaults_and_overrides():
+    """Apply shared job-grid rules while preserving local column expectations."""
+    rule = validate_output._expand_output_validation_profile(
+        {
+            "profile": "job_grid",
+            "file": "job_grid.ecsv",
+            "columns": {"primary": {"allowed_values": ["gamma"]}},
+            "metadata": {"required_keys": ["cta"]},
+        }
+    )
+
+    assert rule["path_descriptor"] == "output_path"
+    assert rule["data_product_schema"] == SCHEMA_PATH / "job_grid_density.schema.yml"
+    assert rule["columns"]["primary"] == {"allowed_values": ["gamma"]}
+    assert rule["columns"]["azimuth_angle"] == {
+        "range": {"minimum": 0.0, "maximum": 360.0, "unit": "deg"}
+    }
+    assert rule["metadata"] == {
+        "required_keys": ["cta"],
+        "row_count": "job_grid_summary.simulation_rows",
+        "column_sums": {"showers_per_run": "job_grid_summary.total_showers"},
+    }
+
+
+def test_output_validation_profile_rejects_unknown_name():
+    """Reject validation profiles that have not been defined."""
+    with pytest.raises(ValueError, match="Unknown output validation profile: missing"):
+        validate_output._expand_output_validation_profile({"profile": "missing"})
+
+
+def test_has_path_supports_mapping_metadata():
+    """Accept mapping implementations used for ordered metadata."""
+    metadata = UserDict({"summary": UserDict({"rows": 2})})
+
+    assert validate_output._has_path(metadata, "summary.rows")
 
 
 def test_declarative_table_rejects_empty_and_duplicate_rows(tmp_test_directory):

@@ -11,7 +11,7 @@ event_data_file (str, required)
     Event data file containing reduced event data.
 array_layout_name (list, optional)
     Name of the array layout to use for the simulation.
-telescope_ids (str, optional)
+telescope_config_file (str, optional)
     Path to a file containing telescope configurations.
 plot_histograms (bool, optional)
     Plot histograms of the event data.
@@ -57,7 +57,7 @@ from simtools.configuration import arguments as cli
 from simtools.telescope_trigger_rates import telescope_trigger_rates
 
 _ARGUMENTS = (
-    cli.TELESCOPE_IDS,
+    cli.TELESCOPE_CONFIG_FILE,
     cli.EVENT_DATA_FILE,
     cli.ArgumentDefinition(
         "plot_histograms",

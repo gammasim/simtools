@@ -19,7 +19,7 @@ FILE_SIMTEL = "test_file.simtel"
 
 def test_telescope_trigger_rates():
     args_dict = {
-        "telescope_ids": Path("test_telescope_ids.txt"),
+        "telescope_config_file": Path("test_telescope_ids.txt"),
         "event_data_file": FILE_SIMTEL,
         "plot_histograms": True,
     }

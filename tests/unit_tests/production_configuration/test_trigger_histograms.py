@@ -339,7 +339,7 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
 
     metadata_table, _ = write_trigger_histograms(
         {
-            "event_data_file": ["prod_a/*.hdf5", "prod_b/*.hdf5"],
+            "event_data_files": ["prod_a/*.hdf5", "prod_b/*.hdf5"],
             "array_element_list": ["LSTN-01"],
             "energy_bins_per_decade": 4,
             "angular_distance_bin_width": 1.0 * u.deg,

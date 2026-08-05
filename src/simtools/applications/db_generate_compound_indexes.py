@@ -9,7 +9,7 @@ of 5 in query time with a factor of 10 less documents examined).
 
 Command line arguments
 ----------------------
-db_name (str, optional)
+database_name (str, optional)
     Database name (use "all" for all databases)
 """
 
@@ -17,9 +17,7 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.db import db_handler
 
-_ARGUMENTS = (
-    cli.ArgumentDefinition("db_name", help="Database name", default=None, required=False),
-)
+_ARGUMENTS = (cli.DATABASE_NAME,)
 
 
 APPLICATION = ApplicationDefinition.for_module(
@@ -37,7 +35,7 @@ def main():
     db = db_handler.DatabaseHandler()
 
     db.generate_compound_indexes_for_databases(
-        db_name=app_context.args["db_name"],
+        db_name=app_context.args["database_name"],
         db_simulation_model=app_context.args.get("db_simulation_model"),
         db_simulation_model_version=app_context.args.get("db_simulation_model_version"),
     )
