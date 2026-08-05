@@ -29,10 +29,20 @@ class MirrorOptimizationResult:
     containment_fraction: float  # PSF containment fraction used for the diameter
 
 
-def _optimize_single_mirror_worker(args):
-    """Worker wrapper for optimizing a single mirror in parallel."""
-    instance, mirror_idx, measured = args
-    return instance.optimize_single_mirror(mirror_idx, measured)
+@dataclass(frozen=True)
+class MirrorOptimizationJob:
+    """Compact input required to reconstruct one mirror optimization."""
+
+    label: str
+    args: dict
+    mirror_index: int
+    measured_psf: float
+
+
+def _optimize_single_mirror_worker(job):
+    """Reconstruct optimization state and optimize one mirror."""
+    instance = MirrorPanelPSF(job.label, job.args)
+    return instance.optimize_single_mirror(job.mirror_index, job.measured_psf)
 
 
 class MirrorPanelPSF:
@@ -373,8 +383,15 @@ class MirrorPanelPSF:
             )
 
         max_workers = self.args_dict.get("max_workers")
-        parent = MirrorPanelPSF(self.label, dict(self.args_dict))
-        worker_args = [(parent, i, parent.measured_data[i]) for i in range(n_mirrors)]
+        worker_args = [
+            MirrorOptimizationJob(
+                self.label,
+                dict(self.args_dict),
+                mirror_index,
+                float(self.measured_data[mirror_index]),
+            )
+            for mirror_index in range(n_mirrors)
+        ]
 
         self.per_mirror_results = map_ordered(
             _optimize_single_mirror_worker,

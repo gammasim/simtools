@@ -17,13 +17,13 @@ def execute_jobs(job_specs, options=None):
     options = options or ExecutionOptions()
     jobs = list(job_specs)
     _validate_jobs(jobs)
+    if not jobs:
+        return []
     backend = get_backend(options.backend)
-    if jobs:
-        logger.info("Executing %d job(s) with backend %s", len(jobs), options.backend)
+    logger.info("Executing %d job(s) with backend %s", len(jobs), options.backend)
     submission = _submit_validated(jobs, options, backend)
     results = wait_for_submission(submission, options=options, backend=backend)
-    if jobs:
-        logger.info("Completed %d job(s) with backend %s", len(results), options.backend)
+    logger.info("Completed %d job(s) with backend %s", len(results), options.backend)
     return sorted(results, key=lambda result: result.index)
 
 
@@ -36,6 +36,12 @@ def submit_jobs(job_specs, options=None):
     options = options or ExecutionOptions()
     jobs = list(job_specs)
     _validate_jobs(jobs)
+    if not jobs:
+        return SubmissionHandle(
+            backend=options.backend,
+            work_dir=Path(options.work_dir or Path.cwd()),
+            job_ids=(),
+        )
     backend = get_backend(options.backend)
     submission = _submit_validated(jobs, options, backend)
     supports_submit_only = getattr(backend, "supports_submit_only", False)
@@ -90,9 +96,11 @@ def load_submission(path):
 def _submit_validated(jobs, options, backend):
     """Submit validated jobs and persist a remote manifest."""
     submission = backend.submit(jobs, options)
-    submission.metadata["expected_outputs"] = [
-        str(path) for job in jobs for path in job.output_paths
-    ]
+    submission.metadata["expected_outputs"] = {
+        job.job_id: [str(Path(path).expanduser().resolve()) for path in job.output_paths]
+        for job in jobs
+        if job.output_paths
+    }
     _mark_submission(submission, "submitted")
     return submission
 
@@ -103,7 +111,9 @@ def _validate_jobs(jobs):
         raise ValueError("Execution jobs must have unique job IDs.")
     if len({job.index for job in jobs}) != len(jobs):
         raise ValueError("Execution jobs must have unique input-order indices.")
-    expected_outputs = [Path(path) for job in jobs for path in job.output_paths]
+    expected_outputs = [
+        Path(path).expanduser().resolve() for job in jobs for path in job.output_paths
+    ]
     if len(expected_outputs) != len(set(expected_outputs)):
         raise ValueError("Execution jobs contain duplicate expected output paths.")
 
@@ -128,8 +138,11 @@ def _cancel_if_requested(backend, submission, options):
 
 def _validate_manifest_outputs(submission):
     """Validate output paths recorded in a durable submission manifest."""
+    expected = submission.metadata.get("expected_outputs", {})
+    if isinstance(expected, list):
+        expected = {"unknown": expected}
     missing_outputs = [
-        path for path in submission.metadata.get("expected_outputs", []) if not Path(path).is_file()
+        path for paths in expected.values() for path in paths if not Path(path).is_file()
     ]
     if missing_outputs:
         raise FileNotFoundError(
@@ -208,4 +221,9 @@ def _write_manifest(submission):
     """Write a durable submission manifest."""
     submission.work_dir.mkdir(parents=True, exist_ok=True)
     manifest = submission.work_dir / "submission.json"
-    manifest.write_text(json.dumps(submission.as_dict(), indent=2, default=str) + "\n")
+    temporary = manifest.with_suffix(".tmp")
+    temporary.write_text(
+        json.dumps(submission.as_dict(), indent=2, default=str) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(manifest)

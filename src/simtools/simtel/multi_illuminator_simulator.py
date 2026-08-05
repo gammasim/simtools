@@ -3,7 +3,6 @@
 import logging
 
 from simtools.job_execution import map_ordered
-from simtools.job_execution.backends.local import determine_max_workers
 from simtools.model.illuminator_visibility import IlluminatorTelescopeVisibility
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.utils import general
@@ -131,12 +130,12 @@ class MultiIlluminatorSimulator:
 
         self.base_config = config
         self.label = label or "multi_illuminator"
-        self.max_workers = determine_max_workers(max_workers)
+        self.max_workers = max_workers
         self.backend = backend
         self.backend_config = backend_config
         self.results = None
 
-        self._logger.info(f"Will use {self.max_workers} parallel workers")
+        self._logger.info("Using execution backend %s", self.backend)
 
     @staticmethod
     def _load_visibility_from_site_model(config):

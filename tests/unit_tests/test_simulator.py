@@ -464,11 +464,24 @@ def test_reduced_event_lists_not_sim_telarray(shower_simulator, caplog):
     assert "Reduced event lists can only be saved for sim_telarray simulations." in caplog.text
 
 
-def test_reduced_event_lists_sim_telarray(array_simulator, mocker):
+def _mock_reduced_event_table_writer(mocker):
+    """Mock table writing while preserving the output-file contract."""
+    table_handler = mocker.patch("simtools.simulator.table_handler")
+
+    def _touch_output(*_args, **kwargs):
+        output_file = Path(kwargs["output_file"])
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.touch()
+
+    table_handler.write_table_chunks.side_effect = _touch_output
+    return table_handler
+
+
+def test_reduced_event_lists_sim_telarray(array_simulator, mocker, tmp_test_directory):
     mock_output_files = ["output_file1.simtel.zst", "output_file2.simtel.zst"]
     mock_event_data_files = [
-        "output_file1.reduced_event_data.hdf5",
-        "output_file2.reduced_event_data.hdf5",
+        tmp_test_directory / "output_file1.reduced_event_data.hdf5",
+        tmp_test_directory / "output_file2.reduced_event_data.hdf5",
     ]
     mocker.patch.object(
         array_simulator,
@@ -482,7 +495,7 @@ def test_reduced_event_lists_sim_telarray(array_simulator, mocker):
     mock_simtel_io_writer = mocker.patch(
         "simtools.sim_events.writer.EventDataWriter", return_value=mock_generator
     )
-    mock_table_handler = mocker.patch("simtools.simulator.table_handler")
+    mock_table_handler = _mock_reduced_event_table_writer(mocker)
 
     array_simulator.save_reduced_event_lists()
 
@@ -495,8 +508,8 @@ def test_reduced_event_lists_sim_telarray(array_simulator, mocker):
         call.kwargs["output_file"] for call in mock_table_handler.write_table_chunks.call_args_list
     }
     assert output_files == {
-        Path("output_file1.reduced_event_data.hdf5"),
-        Path("output_file2.reduced_event_data.hdf5"),
+        Path(tmp_test_directory) / "output_file1.reduced_event_data.hdf5",
+        Path(tmp_test_directory) / "output_file2.reduced_event_data.hdf5",
     }
     assert all(
         "metadata_documents" in call.kwargs
@@ -561,7 +574,7 @@ def test_write_reduced_event_lists_derives_output_files(mocker, tmp_test_directo
     mock_simtel_io_writer = mocker.patch(
         "simtools.sim_events.writer.EventDataWriter", return_value=mock_generator
     )
-    mock_table_handler = mocker.patch("simtools.simulator.table_handler")
+    mock_table_handler = _mock_reduced_event_table_writer(mocker)
 
     Simulator.write_reduced_event_lists(input_files=input_files, output_path=output_path)
 
@@ -588,7 +601,7 @@ def test_write_reduced_event_lists_derives_output_to_input_directory(mocker, tmp
     mock_simtel_io_writer = mocker.patch(
         "simtools.sim_events.writer.EventDataWriter", return_value=mock_generator
     )
-    mock_table_handler = mocker.patch("simtools.simulator.table_handler")
+    mock_table_handler = _mock_reduced_event_table_writer(mocker)
 
     Simulator.write_reduced_event_lists(input_files=[input_file])
 
@@ -604,7 +617,7 @@ def test_write_reduced_event_lists_raises_for_mismatched_explicit_output_files(m
     output_files = ["output_file1.reduced_event_data.hdf5"]
 
     mock_simtel_io_writer = mocker.patch("simtools.sim_events.writer.EventDataWriter")
-    mock_table_handler = mocker.patch("simtools.simulator.table_handler")
+    mock_table_handler = _mock_reduced_event_table_writer(mocker)
 
     with pytest.raises(ValueError, match="Length mismatch between input_files and output_files"):
         Simulator.write_reduced_event_lists(input_files=input_files, output_files=output_files)
@@ -625,7 +638,7 @@ def test_write_reduced_event_lists_from_file_list_in_batches(mocker, tmp_test_di
     mock_simtel_io_writer = mocker.patch(
         "simtools.sim_events.writer.EventDataWriter", return_value=mock_generator
     )
-    mock_table_handler = mocker.patch("simtools.simulator.table_handler")
+    mock_table_handler = _mock_reduced_event_table_writer(mocker)
 
     Simulator.write_reduced_event_lists(
         input_file_list=input_file_list,
@@ -651,17 +664,19 @@ def test_write_reduced_event_lists_from_file_list_in_batches(mocker, tmp_test_di
 
 
 def test_write_reduced_event_lists_parallelizes_output_batches(mocker):
-    """Execute independent output batches through the shared process-pool helper."""
-    mock_pool = mocker.patch("simtools.simulator.map_ordered")
+    """Execute independent output batches through the shared execution facade."""
+    mock_execute = mocker.patch("simtools.simulator.execute_jobs")
 
     Simulator.write_reduced_event_lists(
         input_files=["input1.simtel.zst", "input2.simtel.zst"],
         max_workers=2,
     )
 
-    mock_pool.assert_called_once()
-    assert mock_pool.call_args.kwargs["max_workers"] == 2
-    assert len(mock_pool.call_args.args[1]) == 2
+    mock_execute.assert_called_once()
+    jobs, options = mock_execute.call_args.args
+    assert options.max_workers == 2
+    assert len(jobs) == 2
+    assert all(job.output_paths for job in jobs)
 
 
 def test_write_reduced_event_lists_submits_htcondor_without_waiting(mocker, tmp_test_directory):

@@ -14,8 +14,8 @@ from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler, table_handler
 from simtools.job_execution import (
     JobSpec,
+    execute_jobs,
     job_manager,
-    map_ordered,
     options_from_args,
     submit_jobs,
 )
@@ -626,37 +626,24 @@ class Simulator:
             (input_files, output_file, metadata_args or {}, model_exports)
             for input_files, output_file in zip(input_file_batches, output_files)
         ]
-        if not wait_for_completion:
-            submit_specs = [
-                JobSpec(
-                    job_id=f"job-{index:06d}",
-                    index=index,
-                    function=_write_reduced_event_list_batch,
-                    item=job_spec,
-                    output_paths=(Path(output_files[index]),),
-                )
-                for index, job_spec in enumerate(job_specs)
-            ]
-            options = options_from_args(
-                {"backend": backend, "backend_config": backend_config},
-                max_workers=max_workers,
-                work_dir=Path(output_files[0]).parent if output_files else None,
+        execution_jobs = [
+            JobSpec(
+                job_id=f"job-{index:06d}",
+                index=index,
+                function=_write_reduced_event_list_batch,
+                item=job_spec,
+                output_paths=(Path(output_files[index]),),
             )
-            return submit_jobs(submit_specs, options)
-        map_ordered(
-            _write_reduced_event_list_batch,
-            job_specs,
-            backend=backend,
+            for index, job_spec in enumerate(job_specs)
+        ]
+        options = options_from_args(
+            {"backend": backend, "backend_config": backend_config},
             max_workers=max_workers,
-            backend_config=backend_config,
+            work_dir=Path(output_files[0]).parent if output_files else None,
         )
-        if backend == "htcondor":
-            missing_outputs = [str(path) for path in output_files if not Path(path).is_file()]
-            if missing_outputs:
-                raise FileNotFoundError(
-                    "Reduced-event jobs completed without expected output(s): "
-                    + ", ".join(missing_outputs)
-                )
+        if not wait_for_completion:
+            return submit_jobs(execution_jobs, options)
+        execute_jobs(execution_jobs, options)
         return None
 
     def pack_for_register(self, directory_for_grid_upload=None):

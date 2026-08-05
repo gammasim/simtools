@@ -84,7 +84,6 @@ extensions = [
 ]
 
 nitpicky = True
-autodoc_typehints = "none"
 nitpick_ignore = [
     ("py:class", "astropy.table.table.Table"),
     ("py:class", "astropy.units.core.Unit"),

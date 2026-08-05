@@ -1,6 +1,5 @@
 """Unit tests for multi_illuminator_simulator module."""
 
-import os
 from unittest.mock import MagicMock, patch
 
 import astropy.units as u
@@ -93,28 +92,26 @@ def test_determine_max_workers_explicit(simple_visibility_data, base_config):
     assert simulator.max_workers == 4
 
 
-def test_determine_max_workers_default(simple_visibility_data, base_config):
-    """Test max_workers initialization with default (60% of cores)."""
+def test_max_workers_default_is_resolved_by_backend(simple_visibility_data, base_config):
+    """Leave the local default for the execution backend to resolve."""
     simulator = MultiIlluminatorSimulator(
         visibility_data=simple_visibility_data,
         config=base_config,
         max_workers=None,
     )
 
-    expected_workers = max(1, int((os.cpu_count() or 1) * 0.6))
-    assert simulator.max_workers == expected_workers
+    assert simulator.max_workers is None
 
 
-def test_determine_max_workers_all_cores(simple_visibility_data, base_config):
-    """Test max_workers initialization with 0 (use all cores)."""
+def test_max_workers_all_cores_is_resolved_by_backend(simple_visibility_data, base_config):
+    """Preserve zero so only the selected local backend interprets it."""
     simulator = MultiIlluminatorSimulator(
         visibility_data=simple_visibility_data,
         config=base_config,
         max_workers=0,
     )
 
-    expected_workers = os.cpu_count() or 1
-    assert simulator.max_workers == expected_workers
+    assert simulator.max_workers == 0
 
 
 @patch("simtools.simtel.multi_illuminator_simulator.map_ordered")

@@ -20,7 +20,8 @@ the scheduler with `--backend htcondor` and provide a shared-filesystem backend 
 HTCondor submission returns after queueing the independent batches; add `--wait` to keep the
 controller attached until all outputs are complete.
 Each remote batch writes its INFO-level application log to `logs/job-*.log` below the submitted
-HTCondor work directory.
+HTCondor work directory. See [Execution backends](../execution_backends.md) for backend
+configuration, manifests, and recovery after interruption.
 
 ```bash
 simtools-write-reduced-event-lists \

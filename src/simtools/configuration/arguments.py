@@ -151,7 +151,6 @@ BACKEND = _argument(
     "backend",
     "execution",
     help="Execution backend for independent jobs (default: local).",
-    choices=("local", "htcondor"),
     default="local",
 )
 

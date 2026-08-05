@@ -2,13 +2,13 @@
 
 import logging
 import os
-import subprocess
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import get_context
 from pathlib import Path
 
 from simtools.job_execution.backends.base import BackendExecutionError
 from simtools.job_execution.job import JobResult, SubmissionHandle
+from simtools.job_execution.worker import execute_job_spec
 
 logger = logging.getLogger(__name__)
 
@@ -19,19 +19,6 @@ def determine_max_workers(max_workers=None, default_fraction=0.6):
     if max_workers is None:
         return max(1, int(cpu_count * default_fraction))
     return max_workers if max_workers > 0 else cpu_count
-
-
-def execute_job_spec(job_spec):
-    """Execute one job specification in a worker process or HTCondor worker."""
-    if job_spec.initializer is not None:
-        job_spec.initializer(*job_spec.initargs)
-    if job_spec.function is not None:
-        return job_spec.function(job_spec.item)
-    completed = subprocess.run(
-        list(job_spec.command),
-        check=True,
-    )
-    return completed.returncode
 
 
 class LocalBackend:

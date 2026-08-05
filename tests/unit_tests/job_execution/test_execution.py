@@ -1,6 +1,7 @@
 """Tests for the generic execution facade."""
 
 import logging
+import pickle
 import sys
 import types
 from pathlib import Path
@@ -11,14 +12,16 @@ from simtools.job_execution import (
     ExecutionOptions,
     JobSpec,
     SubmissionHandle,
+    execute_jobs,
     load_submission,
     map_ordered,
     options_from_args,
     submit_jobs,
 )
-from simtools.job_execution.backends.base import BackendConfigurationError
+from simtools.job_execution.backends.base import BackendConfigurationError, BackendExecutionError
 from simtools.job_execution.backends.htcondor import HTCondorBackend
 from simtools.job_execution.worker import run as run_worker
+from simtools.job_execution.worker import write_job_payload
 
 
 def _square(value):
@@ -35,6 +38,11 @@ def _log_square(value):
 def test_map_ordered_returns_input_order():
     """Local execution returns values in input order."""
     assert map_ordered(_square, [3, 1, 2], max_workers=2) == [9, 1, 4]
+
+
+def test_execute_jobs_empty_input_does_not_resolve_backend():
+    """An empty execution plan has no backend dependency or side effects."""
+    assert execute_jobs([], ExecutionOptions(backend="not-installed")) == []
 
 
 def test_options_from_args_reads_yaml(tmp_test_directory):
@@ -100,10 +108,7 @@ def test_worker_writes_result(tmp_test_directory):
     result_directory.mkdir()
     job = JobSpec("job-000000", 0, function=_square, item=4)
 
-    import pickle
-
-    with (input_directory / "job-000000.pkl").open("wb") as handle:
-        pickle.dump(job, handle)
+    write_job_payload(job, input_directory / "job-000000.pkl")
 
     assert run_worker(run_directory, "job-000000") == 0
     with (result_directory / "job-000000.pkl").open("rb") as handle:
@@ -121,13 +126,37 @@ def test_worker_writes_info_log(tmp_test_directory):
     log_file = run_directory / "logs" / "job-000000.log"
     job = JobSpec("job-000000", 0, function=_log_square, item=4)
 
-    import pickle
-
-    with (input_directory / "job-000000.pkl").open("wb") as handle:
-        pickle.dump(job, handle)
+    write_job_payload(job, input_directory / "job-000000.pkl")
 
     assert run_worker(run_directory, "job-000000", log_file) == 0
     assert "processing value 4" in log_file.read_text(encoding="utf-8")
+
+
+def test_worker_rejects_path_traversal_job_id(tmp_test_directory):
+    """Workers only load job-owned payload files from the private input directory."""
+    with pytest.raises(ValueError, match="Invalid job ID"):
+        run_worker(tmp_test_directory, "../payload")
+
+
+def test_worker_records_payload_version_mismatch(tmp_test_directory):
+    """Version mismatches become structured, atomic worker failures."""
+    run_directory = Path(tmp_test_directory)
+    (run_directory / "inputs").mkdir()
+    (run_directory / "results").mkdir()
+    payload_path = run_directory / "inputs" / "job-000000.pkl"
+    write_job_payload(JobSpec("job-000000", 0, function=_square, item=4), payload_path)
+    with payload_path.open("rb") as handle:
+        payload = pickle.load(handle)
+    payload["simtools_version"] = "different"
+    with payload_path.open("wb") as handle:
+        pickle.dump(payload, handle)
+
+    assert run_worker(run_directory, "job-000000") == 1
+    with (run_directory / "results" / "job-000000.pkl").open("rb") as handle:
+        result = pickle.load(handle)
+    assert result["ok"] is False
+    assert "simtools version" in result["message"]
+    assert not (run_directory / "results" / "job-000000.tmp").exists()
 
 
 def test_htcondor_backend_reports_missing_dependency(monkeypatch):
@@ -189,6 +218,13 @@ def test_htcondor_rejects_unknown_configuration():
         HTCondorBackend._validate_config({"not_a_submit_option": True})
 
 
+def test_htcondor_rejects_unknown_per_job_resource():
+    """Per-job resources use the same explicit scheduler vocabulary."""
+    job = JobSpec("job-000000", 0, function=_square, item=1, resources={"gpu": 1})
+    with pytest.raises(BackendConfigurationError, match="Unknown resource key"):
+        HTCondorBackend._validate_job_resources([job])
+
+
 @pytest.mark.parametrize("priority", ["high", 1.5, True])
 def test_htcondor_rejects_invalid_priority(priority):
     """Scheduler priority must be an integer."""
@@ -223,3 +259,37 @@ def test_htcondor_event_log_uses_integer_poll_deadline(tmp_test_directory):
 
     assert backend._wait_for_processes(submission) == []
     assert captured["stop_after"] == 60
+
+
+def test_htcondor_preserves_artifacts_when_expected_output_is_missing(
+    monkeypatch, tmp_test_directory
+):
+    """Output validation happens before successful-artifact cleanup."""
+    work_dir = Path(tmp_test_directory)
+    input_dir = work_dir / "inputs"
+    result_dir = work_dir / "results"
+    input_dir.mkdir()
+    result_dir.mkdir()
+    (input_dir / "job-000000.pkl").touch()
+    with (result_dir / "job-000000.pkl").open("wb") as handle:
+        pickle.dump({"ok": True, "value": 1}, handle)
+    submission = SubmissionHandle(
+        backend="htcondor",
+        work_dir=work_dir,
+        job_ids=("job-000000",),
+        scheduler_id=17,
+        process_ids={"job-000000": 0},
+        metadata={
+            "indices": {"job-000000": 0},
+            "expected_outputs": {"job-000000": [str(work_dir / "missing.hdf5")]},
+        },
+    )
+    backend = HTCondorBackend()
+    backend._htcondor = object()
+    monkeypatch.setattr(backend, "_wait_for_processes", lambda _submission: [])
+
+    with pytest.raises(BackendExecutionError, match="job job-000000"):
+        backend.wait(submission)
+
+    assert input_dir.exists()
+    assert result_dir.exists()

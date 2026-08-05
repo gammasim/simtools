@@ -71,7 +71,9 @@ Example integration configurations are available in `tests/integration_tests/con
 Large productions can be submitted directly from `simtools-simulate-prod` using the generic
 HTCondor backend. The application reads the ECSV job grid written by
 [simtools-production-generate-grid](../applications/simtools-production-generate-grid), submits one
-job per row, waits for completion, and writes scheduler logs.
+job per row, waits for completion, and writes scheduler logs. See
+[Execution backends](../execution_backends.md) for runtime assumptions, configuration details,
+manifest recovery, and failure behavior.
 
 Install the optional scheduler extra on the submission host:
 

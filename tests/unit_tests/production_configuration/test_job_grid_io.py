@@ -310,3 +310,36 @@ def test_job_grid_row_to_simulate_prod_args_skips_empty_metadata():
     for args in (args_no_meta, args_empty_meta):
         assert "site" not in args
         assert "simulation_software" not in args
+
+
+def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory):
+    """Build unique backend-neutral commands while forcing nested execution local."""
+    row = {
+        **_job_rows()[0],
+        "scan_label": "high_nsb",
+        "telescope": "LSTN-01",
+        "overwrite_model_parameters": "overwrite.yml",
+    }
+    args = {
+        "output_path": tmp_test_directory / "output",
+        "grid_output_path": tmp_test_directory / "grid",
+        "label": "prod",
+        "simulation_models_path": tmp_test_directory / "models",
+    }
+
+    jobs = job_grid_io.build_simulate_prod_job_specs(args, [row], _metadata())
+
+    assert len(jobs) == 1
+    command = jobs[0].command
+    assert command[1:5] == (
+        "-m",
+        "simtools.applications.simulate_prod",
+        "--backend",
+        "local",
+    )
+    assert "prod_high_nsb" in command
+    assert "LSTN-01" in command
+    assert "overwrite.yml" in command
+    assert str(tmp_test_directory / "models") in command
+    assert str(tmp_test_directory / "output" / "job-000000") in command
+    assert str(tmp_test_directory / "grid" / "job-000000") in command

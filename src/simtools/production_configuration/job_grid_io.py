@@ -1,6 +1,7 @@
 """Read and write executable job grids for production preparation."""
 
 import logging
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from astropy.table import Table
 from simtools.constants import SCHEMA_PATH, SCHEMA_URL
 from simtools.data_model import validate_data
 from simtools.io.ascii_handler import collect_data_from_file
+from simtools.job_execution import JobSpec
 from simtools.production_configuration.job_grid_summary import build_job_grid_summary
 from simtools.utils.value_conversion import get_value_as_quantity, get_value_in_unit
 
@@ -41,6 +43,26 @@ SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS = frozenset(
         "site",
         "simulation_software",
     }
+)
+_SIMULATE_PROD_OPERATIONAL_FIELDS = (
+    "env_file",
+    "log_level",
+    "label",
+    "simulation_software",
+    "site",
+    "telescope",
+    "grid_output_path",
+    "sim_telarray_path",
+    "corsika_path",
+    "corsika_interaction_table_path",
+    "simulation_models_path",
+    "model_path",
+    "save_file_lists",
+    "save_corsika_output",
+    "reduced_event_lists",
+    "corsika_seeds",
+    "sequential",
+    "overwrite_model_parameters",
 )
 
 
@@ -354,4 +376,63 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
         for key in ("site", "simulation_software"):
             if metadata.get(key):
                 args[key] = metadata[key]
+    for key in ("telescope", "overwrite_model_parameters"):
+        if job_row.get(key):
+            args[key] = job_row[key]
     return args
+
+
+def _append_command_argument(command, key, value):
+    """Append one value using the standard simtools CLI argument shape."""
+    if value in (None, False):
+        return
+    command.append(f"--{key}")
+    if value is True:
+        return
+    values = value if isinstance(value, (list, tuple)) else [value]
+    command.extend(str(item) for item in values)
+
+
+def build_simulate_prod_job_specs(args_dict, rows, metadata=None):
+    """Build backend-neutral command jobs for production-grid rows.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Controller application arguments.
+    rows : list[dict]
+        Deserialized production-grid rows.
+    metadata : dict, optional
+        Production-grid metadata.
+
+    Returns
+    -------
+    list[JobSpec]
+        Ordered command jobs that force local execution inside each worker.
+    """
+    metadata = metadata or {}
+    output_root = Path(args_dict["output_path"])
+    jobs = []
+    for index, row in enumerate(rows):
+        job_args = {key: args_dict.get(key) for key in _SIMULATE_PROD_OPERATIONAL_FIELDS}
+        job_args.update(job_grid_row_to_simulate_prod_args(row, metadata))
+        job_args["output_path"] = str(output_root / f"job-{index:06d}")
+        if job_args.get("grid_output_path"):
+            job_args["grid_output_path"] = str(
+                Path(job_args["grid_output_path"]) / f"job-{index:06d}"
+            )
+        if row.get("scan_label"):
+            label = job_args.get("label") or "simulate-prod"
+            job_args["label"] = f"{label}_{row['scan_label']}"
+
+        command = [
+            sys.executable,
+            "-m",
+            "simtools.applications.simulate_prod",
+            "--backend",
+            "local",
+        ]
+        for key, value in job_args.items():
+            _append_command_argument(command, key, value)
+        jobs.append(JobSpec(f"job-{index:06d}", index, command=tuple(command)))
+    return jobs

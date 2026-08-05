@@ -153,12 +153,11 @@ def test_optimize_with_gradient_descent_limits_mirrors_in_test_mode(mocker):
     inst.measured_data = [10.0, 11.0, 12.0]
     inst.telescope_model.mirrors = SimpleNamespace(number_of_mirrors=3)
 
-    parent_stub = SimpleNamespace(measured_data=list(inst.measured_data))
-    mocker.patch.object(mpp, "MirrorPanelPSF", return_value=parent_stub)
-
     def _fake_ppm(func, items, **kwargs):
         assert func is mpp._optimize_single_mirror_worker
         assert len(items) == 2
+        assert [item.mirror_index for item in items] == [0, 1]
+        assert [item.measured_psf for item in items] == [10.0, 11.0]
         assert kwargs["max_workers"] == 4
         assert kwargs["mp_start_method"] == "fork"
         return [
@@ -188,9 +187,14 @@ def test_optimize_with_gradient_descent_limits_mirrors_in_test_mode(mocker):
     assert inst.final_percentage_diff == pytest.approx(20.0)
 
 
-def test_optimize_single_mirror_worker_calls_optimizer_with_measured_value():
+def test_optimize_single_mirror_worker_reconstructs_optimizer(mocker):
     dummy = SimpleNamespace(optimize_single_mirror=MagicMock(return_value={"ok": True}))
-    result = mpp._optimize_single_mirror_worker((dummy, 1, 12.25))
+    constructor = mocker.patch.object(mpp, "MirrorPanelPSF", return_value=dummy)
+    job = mpp.MirrorOptimizationJob("test", {"site": "North"}, 1, 12.25)
+
+    result = mpp._optimize_single_mirror_worker(job)
+
+    constructor.assert_called_once_with("test", {"site": "North"})
     dummy.optimize_single_mirror.assert_called_once_with(1, 12.25)
     assert result == {"ok": True}
 

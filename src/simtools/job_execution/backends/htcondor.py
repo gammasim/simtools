@@ -9,6 +9,7 @@ import sys
 import time
 import uuid
 from dataclasses import replace
+from datetime import UTC, datetime
 from pathlib import Path
 
 from simtools.job_execution.backends.base import (
@@ -17,6 +18,7 @@ from simtools.job_execution.backends.base import (
     BackendSubmissionError,
 )
 from simtools.job_execution.job import JobResult, SubmissionHandle
+from simtools.job_execution.worker import write_job_payload
 from simtools.version import __version__ as simtools_version
 
 logger = logging.getLogger(__name__)
@@ -81,6 +83,7 @@ class HTCondorBackend:
             raise BackendConfigurationError(f"Unknown HTCondor configuration key(s): {names}.")
         HTCondorBackend._validate_request_cpus(config)
         HTCondorBackend._validate_priority(config)
+        HTCondorBackend._validate_resource_sizes(config)
         HTCondorBackend._validate_extra_attributes(config)
         HTCondorBackend._validate_timing(config)
         HTCondorBackend._validate_paths(config)
@@ -114,6 +117,14 @@ class HTCondorBackend:
             raise BackendConfigurationError("priority must be an integer.")
         if str(raw_priority).strip() != str(priority):
             raise BackendConfigurationError("priority must be an integer.")
+
+    @staticmethod
+    def _validate_resource_sizes(config):
+        """Validate optional HTCondor memory and disk expressions."""
+        for key in ("request_memory", "request_disk"):
+            value = config.get(key)
+            if value is not None and (not isinstance(value, str) or not value.strip()):
+                raise BackendConfigurationError(f"{key} must be a non-empty string.")
 
     @staticmethod
     def _validate_extra_attributes(config):
@@ -193,7 +204,7 @@ class HTCondorBackend:
         htcondor = self._load_htcondor()
         config = self._build_config(options)
         self._validate_config(config)
-        self._validate_job_resources(jobs)
+        self._validate_job_resources(jobs, config)
         work_dir = self._create_work_dir(options)
         self._serialize_jobs(jobs, work_dir)
         event_log = self._resolve_event_log(config, work_dir)
@@ -212,16 +223,21 @@ class HTCondorBackend:
 
     @staticmethod
     def _prepare_jobs(job_specs, options):
-        """Materialize jobs and attach a configured initializer when needed."""
+        """Materialize jobs and normalize worker-specific settings."""
         jobs = list(job_specs)
-        if options.initializer is None:
-            return jobs
-        return [
-            replace(job, initializer=options.initializer, initargs=tuple(options.initargs))
-            if job.initializer is None
-            else job
-            for job in jobs
-        ]
+        prepared = []
+        for job in jobs:
+            resources = dict(job.resources)
+            if resources.get("container_image"):
+                resources["container_image"] = str(
+                    Path(resources["container_image"]).expanduser().resolve()
+                )
+            initializer = job.initializer if job.initializer is not None else options.initializer
+            initargs = job.initargs if job.initializer is not None else tuple(options.initargs)
+            prepared.append(
+                replace(job, resources=resources, initializer=initializer, initargs=initargs)
+            )
+        return prepared
 
     @staticmethod
     def _build_config(options):
@@ -243,22 +259,49 @@ class HTCondorBackend:
         for key, value in option_values.items():
             if value not in (None, {}, False) and key not in config:
                 config[key] = value
+        for key in ("container_image", "environment_file"):
+            if config.get(key):
+                config[key] = str(Path(config[key]).expanduser().resolve())
         return config
 
     @staticmethod
-    def _validate_job_resources(jobs):
-        """Validate per-job container overrides."""
+    def _validate_job_resources(jobs, config=None):
+        """Validate supported per-job resource overrides."""
+        config = config or {}
         for job in jobs:
+            unknown = set(job.resources) - {
+                "request_cpus",
+                "request_memory",
+                "request_disk",
+                "priority",
+                "container_image",
+            }
+            if unknown:
+                raise BackendConfigurationError(
+                    f"Unknown resource key(s) for job {job.job_id}: " + ", ".join(sorted(unknown))
+                )
+            HTCondorBackend._validate_request_cpus(job.resources)
+            HTCondorBackend._validate_priority(job.resources)
+            HTCondorBackend._validate_resource_sizes(job.resources)
             image = job.resources.get("container_image")
             if image is not None and not Path(image).is_file():
                 raise BackendConfigurationError(
                     f"Configured container_image does not exist: {image}"
                 )
+        has_image_override = any("container_image" in job.resources for job in jobs)
+        if (
+            has_image_override
+            and not config.get("container_image")
+            and any(not job.resources.get("container_image") for job in jobs)
+        ):
+            raise BackendConfigurationError(
+                "Every job must define container_image when per-job container overrides are used."
+            )
 
     @staticmethod
     def _create_work_dir(options):
         """Create the shared, private run directory."""
-        root = Path(options.work_dir or Path.cwd() / "simtools-jobs")
+        root = Path(options.work_dir or Path.cwd() / "simtools-jobs").expanduser().resolve()
         root.mkdir(parents=True, exist_ok=True)
         work_dir = root / f"htcondor-{uuid.uuid4().hex}"
         work_dir.mkdir(mode=0o700)
@@ -277,8 +320,7 @@ class HTCondorBackend:
         """Serialize one payload per job."""
         for job in jobs:
             try:
-                with (work_dir / "inputs" / f"{job.job_id}.pkl").open("wb") as handle:
-                    pickle.dump(job, handle)
+                write_job_payload(job, work_dir / "inputs" / f"{job.job_id}.pkl")
             except (OSError, pickle.PickleError, TypeError, AttributeError) as exc:
                 raise BackendSubmissionError(
                     f"Cannot serialize HTCondor job {job.job_id}: {exc}"
@@ -381,6 +423,7 @@ class HTCondorBackend:
                 "event_log": str(event_log),
                 "python_version": platform.python_version(),
                 "simtools_version": simtools_version,
+                "submitted_at": datetime.now(UTC).isoformat(),
                 "indices": {job.job_id: job.index for job in jobs},
             },
         )
@@ -393,10 +436,24 @@ class HTCondorBackend:
         failures = self._wait_for_processes(submission)
         results, result_failures = self._load_results(submission)
         failures.extend(result_failures)
+        failures.extend(self._missing_output_failures(submission))
         if failures:
             raise BackendExecutionError("HTCondor job failure(s): " + "; ".join(failures))
         self._cleanup_successful_artifacts(submission)
         return sorted(results, key=lambda result: result.index)
+
+    @staticmethod
+    def _missing_output_failures(submission):
+        """Report missing declared outputs before transient artifacts are removed."""
+        expected = submission.metadata.get("expected_outputs", {})
+        if isinstance(expected, list):
+            expected = {"unknown": expected}
+        return [
+            f"job {job_id}: missing expected output {path}"
+            for job_id, paths in expected.items()
+            for path in paths
+            if not Path(path).is_file()
+        ]
 
     @staticmethod
     def _cleanup_successful_artifacts(submission):
