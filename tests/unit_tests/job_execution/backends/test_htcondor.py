@@ -1,18 +1,80 @@
 """Tests for HTCondor backend validation and event handling."""
 
+import sys
 from pathlib import Path
 
 import pytest
 
 from simtools.job_execution.backends.base import BackendConfigurationError
 from simtools.job_execution.backends.htcondor import HTCondorBackend
-from simtools.job_execution.job import SubmissionHandle
+from simtools.job_execution.job import JobSpec, SubmissionHandle
 
 
 def test_htcondor_validates_resource_sizes():
     """Memory and disk requests must be non-empty expressions."""
     with pytest.raises(BackendConfigurationError, match="request_memory"):
         HTCondorBackend._validate_config({"request_memory": ""})
+
+
+def test_htcondor_validates_container_python_command():
+    with pytest.raises(BackendConfigurationError, match="python_executable"):
+        HTCondorBackend._validate_config({"python_executable": ""})
+
+
+def test_htcondor_validates_container_target_directory():
+    """Container scratch mounts must use an absolute path."""
+    with pytest.raises(BackendConfigurationError, match="absolute path"):
+        HTCondorBackend._validate_config({"container_target_dir": "workdir"})
+
+
+def test_htcondor_uses_container_python_command(tmp_test_directory):
+    job = JobSpec("job-000000", 0, command=("echo", "ok"))
+    backend = HTCondorBackend()
+    submit_values, _, _ = backend._build_submit_values(
+        {
+            "container_image": "/shared/simtools.sif",
+            "python_executable": "/opt/conda/bin/python",
+        },
+        [job],
+        Path(tmp_test_directory),
+        Path(tmp_test_directory) / "scheduler.log",
+    )
+
+    assert submit_values["executable"] == "/usr/bin/env"
+    assert submit_values["arguments"].startswith(
+        "/opt/conda/bin/python -m simtools.job_execution.worker"
+    )
+    assert submit_values["universe"] == "container"
+    assert submit_values["container_target_dir"] == "/simtools-run"
+
+
+def test_htcondor_uses_configured_container_target_directory(tmp_test_directory):
+    job = JobSpec("job-000000", 0, command=("echo", "ok"))
+    submit_values, _, _ = HTCondorBackend()._build_submit_values(
+        {
+            "container_image": "/shared/simtools.sif",
+            "container_target_dir": "/scratch/simtools",
+        },
+        [job],
+        Path(tmp_test_directory),
+        Path(tmp_test_directory) / "scheduler.log",
+    )
+
+    assert submit_values["container_target_dir"] == "/scratch/simtools"
+
+
+def test_htcondor_uses_submission_python_without_container(tmp_test_directory):
+    job = JobSpec("job-000000", 0, command=("echo", "ok"))
+    submit_values, _, _ = HTCondorBackend()._build_submit_values(
+        {},
+        [job],
+        Path(tmp_test_directory),
+        Path(tmp_test_directory) / "scheduler.log",
+    )
+
+    assert submit_values["executable"] == sys.executable
+    assert submit_values["arguments"].startswith(f"{sys.executable} -m")
+    assert "universe" not in submit_values
 
 
 def test_htcondor_reads_dotenv_entries(tmp_test_directory):

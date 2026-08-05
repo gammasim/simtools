@@ -31,6 +31,7 @@ _PROTECTED_ATTRIBUTES = {
     "log",
     "queue",
     "initialdir",
+    "container_target_dir",
 }
 _CONFIG_KEYS = {
     "request_cpus",
@@ -38,6 +39,8 @@ _CONFIG_KEYS = {
     "request_disk",
     "priority",
     "container_image",
+    "container_target_dir",
+    "python_executable",
     "environment_file",
     "poll_interval",
     "timeout",
@@ -48,6 +51,9 @@ _CONFIG_KEYS = {
 }
 _REQUEST_CPUS_ERROR = "request_cpus must be a positive integer."
 _PRIORITY_ERROR = "priority must be an integer."
+_DEFAULT_CONTAINER_PYTHON = "python"
+_DEFAULT_CONTAINER_TARGET_DIR = "/simtools-run"
+_CONTAINER_LAUNCHER = "/usr/bin/env"
 
 
 class HTCondorBackend:
@@ -86,6 +92,8 @@ class HTCondorBackend:
         HTCondorBackend._validate_request_cpus(config)
         HTCondorBackend._validate_priority(config)
         HTCondorBackend._validate_resource_sizes(config)
+        HTCondorBackend._validate_python_executable(config)
+        HTCondorBackend._validate_container_target_dir(config)
         HTCondorBackend._validate_extra_attributes(config)
         HTCondorBackend._validate_timing(config)
         HTCondorBackend._validate_paths(config)
@@ -127,6 +135,22 @@ class HTCondorBackend:
             value = config.get(key)
             if value is not None and (not isinstance(value, str) or not value.strip()):
                 raise BackendConfigurationError(f"{key} must be a non-empty string.")
+
+    @staticmethod
+    def _validate_python_executable(config):
+        """Validate the optional Python command used inside container images."""
+        python_executable = config.get("python_executable", _DEFAULT_CONTAINER_PYTHON)
+        if not isinstance(python_executable, str) or not python_executable.strip():
+            raise BackendConfigurationError("python_executable must be a non-empty string.")
+
+    @staticmethod
+    def _validate_container_target_dir(config):
+        """Validate the directory used for the container scratch mount."""
+        target_dir = config.get("container_target_dir", _DEFAULT_CONTAINER_TARGET_DIR)
+        if not isinstance(target_dir, str) or not target_dir.strip():
+            raise BackendConfigurationError("container_target_dir must be a non-empty path.")
+        if not Path(target_dir).is_absolute():
+            raise BackendConfigurationError("container_target_dir must be an absolute path.")
 
     @staticmethod
     def _validate_extra_attributes(config):
@@ -339,10 +363,26 @@ class HTCondorBackend:
 
     def _build_submit_values(self, config, jobs, work_dir, event_log):
         """Build the submit description and per-job resource metadata."""
+        resource_defaults = {
+            "request_cpus": config.get("request_cpus", 1),
+            "request_memory": config.get("request_memory") or "",
+            "request_disk": config.get("request_disk") or "",
+            "priority": config.get("priority") if config.get("priority") is not None else 0,
+            "container_image": config.get("container_image") or "",
+        }
+        resource_keys = tuple(
+            key for key in resource_defaults if any(key in job.resources for job in jobs)
+        )
+        uses_container = bool(config.get("container_image") or "container_image" in resource_keys)
+        python_executable = config.get("python_executable", _DEFAULT_CONTAINER_PYTHON)
+        container_target_dir = config.get("container_target_dir", _DEFAULT_CONTAINER_TARGET_DIR)
+        worker_executable = _CONTAINER_LAUNCHER if uses_container else sys.executable
+        worker_python = python_executable if uses_container else sys.executable
         submit_values = {
-            "executable": sys.executable,
+            "executable": worker_executable,
             "arguments": " ".join(
                 [
+                    shlex.quote(worker_python),
                     shlex.quote("-m"),
                     shlex.quote("simtools.job_execution.worker"),
                     shlex.quote("--run-directory"),
@@ -360,23 +400,14 @@ class HTCondorBackend:
             "should_transfer_files": "NO",
             "request_cpus": str(config.get("request_cpus", 1)),
         }
-        resource_defaults = {
-            "request_cpus": config.get("request_cpus", 1),
-            "request_memory": config.get("request_memory") or "",
-            "request_disk": config.get("request_disk") or "",
-            "priority": config.get("priority") if config.get("priority") is not None else 0,
-            "container_image": config.get("container_image") or "",
-        }
-        resource_keys = tuple(
-            key for key in resource_defaults if any(key in job.resources for job in jobs)
-        )
         for key in resource_keys:
             submit_values[key] = f"$({key})"
         for key in ("request_memory", "request_disk", "priority", "container_image"):
             if config.get(key) is not None:
                 submit_values[key] = str(config[key])
-        if config.get("container_image") or "container_image" in resource_keys:
+        if uses_container:
             submit_values["universe"] = "container"
+            submit_values["container_target_dir"] = container_target_dir
         environment = self._read_environment_file(config.get("environment_file"))
         if environment:
             submit_values["environment"] = environment

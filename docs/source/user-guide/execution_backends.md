@@ -15,8 +15,9 @@ pip install "gammasimtools[htcondor]"
 
 The initial backend uses a shared filesystem. Input payloads, application outputs, logs,
 containers, and environment files must be visible at the same absolute paths on the submit and
-execute hosts. Execute nodes must provide the same Python and simtools versions as the submission
-host, either directly or through the configured container.
+execute hosts. Execute nodes must provide the same Python major/minor and simtools versions as the
+submission host, either directly or through the configured container. Python patch releases may
+differ.
 
 Worker payloads use Python pickle and are executable data. Keep the backend work directory private
 and load submission manifests only from trusted runs created by simtools.
@@ -31,6 +32,10 @@ priority: 0
 request_memory: 4GB
 request_disk: 10GB
 container_image: /shared/containers/simtools.sif
+# Keep the HTCondor scratch mount away from the image's /workdir environment.
+container_target_dir: /simtools-run
+# Python command available inside the container; use an absolute path if needed.
+python_executable: python
 environment_file: /shared/config/simtools.env
 log_path: scheduler.log
 poll_interval: 60
@@ -43,6 +48,16 @@ extra_submit_attributes: {}
 Unknown keys and protected scheduler fields fail before submission. The environment file accepts
 `KEY=VALUE` entries; its contents are passed to HTCondor but are not copied into the durable
 manifest or simtools logs.
+
+When `container_image` is configured, HTCondor starts `/usr/bin/env` inside the image and resolves
+`python_executable` through the image's environment. It defaults to `python`; set it to `python3` or
+an absolute path such as `/opt/conda/bin/python` when the image uses a different Python location.
+`container_target_dir` defaults to `/simtools-run`. This is where HTCondor mounts the job scratch
+directory inside the container; it must not replace a directory containing the image's Python
+environment, such as `/workdir` in the production image.
+The image must also contain `simtools.job_execution.worker`; an older production image built
+before the generic execution backend was added cannot execute these jobs. Check an image before
+submitting with `apptainer exec IMAGE python -c "import simtools.job_execution.worker"`.
 
 ## Manifests, logs, and failures
 

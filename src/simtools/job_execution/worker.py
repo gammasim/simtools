@@ -18,6 +18,13 @@ _PAYLOAD_VERSION = 1
 _JOB_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
 
+def _python_major_minor(version):
+    """Return the compatibility portion of a Python version string."""
+    if not isinstance(version, str):
+        return ()
+    return tuple(version.split(".")[:2])
+
+
 def _parser():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-directory", type=Path, required=True)
@@ -72,10 +79,12 @@ def _load_job_payload(path):
         payload = pickle.load(handle)
     if not isinstance(payload, dict) or payload.get("payload_version") != _PAYLOAD_VERSION:
         raise ValueError("Unsupported worker payload format.")
-    if payload.get("python_version") != platform.python_version():
+    payload_python_version = payload.get("python_version")
+    worker_python_version = platform.python_version()
+    if _python_major_minor(payload_python_version) != _python_major_minor(worker_python_version):
         raise RuntimeError(
-            "Worker Python version does not match the submitted payload: "
-            f"{platform.python_version()} != {payload.get('python_version')}."
+            "Worker Python major/minor version does not match the submitted payload: "
+            f"{worker_python_version} != {payload_python_version}."
         )
     if payload.get("simtools_version") != simtools_version:
         raise RuntimeError(

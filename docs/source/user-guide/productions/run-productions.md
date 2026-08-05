@@ -96,6 +96,7 @@ request_cpus: 1
 request_memory: 4GB
 request_disk: 10GB
 container_image: /shared/containers/simtools.sif
+container_target_dir: /simtools-run
 environment_file: /shared/config/simtools.env
 poll_interval: 60
 # timeout: 86400
