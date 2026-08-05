@@ -75,7 +75,10 @@ def validate_simulation_dependencies(simulation_software):
     if "sim_telarray" in required:
         _collect_dependency_error(errors, "sim_telarray", lambda: settings.config.sim_telarray_exe)
     if "corsika" in required:
-        _collect_dependency_error(errors, "CORSIKA", lambda: settings.config.corsika_exe)
+        geometry = "curved" if _uses_curved_atmosphere() else "flat"
+        _collect_dependency_error(
+            errors, f"CORSIKA ({geometry})", lambda: _corsika_executable(geometry)
+        )
         try:
             table_path = settings.config.corsika_interaction_table_path
             errors.extend(_validate_corsika_interaction_tables(table_path))
@@ -93,6 +96,24 @@ def _collect_dependency_error(errors, name, getter):
             raise FileNotFoundError("not configured")
     except (FileNotFoundError, PermissionError, TypeError, ValueError) as exc:
         errors.append(f"{name}: {exc}")
+
+
+def _uses_curved_atmosphere():
+    """Return whether the configured zenith angle selects curved CORSIKA."""
+    try:
+        args = settings.config.args
+        return args.get("zenith_angle").to_value("deg") >= args[
+            "curved_atmosphere_min_zenith_angle"
+        ].to_value("deg")
+    except AttributeError, KeyError, TypeError:
+        return False
+
+
+def _corsika_executable(geometry):
+    """Return the configured CORSIKA executable for an atmosphere geometry."""
+    if geometry == "curved":
+        return settings.config.corsika_exe_curved
+    return settings.config.corsika_exe
 
 
 def _validate_corsika_interaction_tables(table_path):

@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from astropy import units as u
 
 from simtools.dependencies import (
     _get_build_options_from_file,
@@ -59,7 +60,9 @@ def _mock_corsika_config(mocker, table_path):
     """Patch settings with a valid CORSIKA dependency fixture."""
     table_path = Path(str(table_path))
     mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.args = {}
     mock_config.corsika_exe = table_path / "corsika"
+    mock_config.corsika_exe_curved = table_path / "corsika_curved"
     mock_config.corsika_interaction_table_path = table_path
     mock_config.corsika_interaction_models = ("qgs3", "urqmd")
     return mock_config
@@ -71,6 +74,22 @@ def test_validate_simulation_dependencies_accepts_manifest(tmp_test_directory, m
     _mock_corsika_config(mocker, tmp_test_directory)
 
     validate_simulation_dependencies("corsika")
+
+
+def test_validate_simulation_dependencies_uses_curved_corsika_executable(
+    tmp_test_directory, mocker
+):
+    """Curved simulations validate the executable selected by their zenith angle."""
+    _write_interaction_table_manifest(tmp_test_directory)
+    mock_config = _mock_corsika_config(mocker, tmp_test_directory)
+    mock_config.args = {
+        "zenith_angle": 70 * u.deg,
+        "curved_atmosphere_min_zenith_angle": 65 * u.deg,
+    }
+    mock_config.corsika_exe_curved = None
+
+    with pytest.raises(ValueError, match=r"CORSIKA \(curved\): not configured"):
+        validate_simulation_dependencies("corsika")
 
 
 def test_validate_simulation_dependencies_rejects_missing_and_unhydrated_tables(
