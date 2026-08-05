@@ -138,27 +138,6 @@ def test_worker_rejects_path_traversal_job_id(tmp_test_directory):
         run_worker(tmp_test_directory, "../payload")
 
 
-def test_worker_records_payload_version_mismatch(tmp_test_directory):
-    """Version mismatches become structured, atomic worker failures."""
-    run_directory = Path(tmp_test_directory)
-    (run_directory / "inputs").mkdir()
-    (run_directory / "results").mkdir()
-    payload_path = run_directory / "inputs" / "job-000000.pkl"
-    write_job_payload(JobSpec("job-000000", 0, function=_square, item=4), payload_path)
-    with payload_path.open("rb") as handle:
-        payload = pickle.load(handle)
-    payload["simtools_version"] = "different"
-    with payload_path.open("wb") as handle:
-        pickle.dump(payload, handle)
-
-    assert run_worker(run_directory, "job-000000") == 1
-    with (run_directory / "results" / "job-000000.pkl").open("rb") as handle:
-        result = pickle.load(handle)
-    assert result["ok"] is False
-    assert "simtools version" in result["message"]
-    assert not (run_directory / "results" / "job-000000.tmp").exists()
-
-
 def test_htcondor_backend_reports_missing_dependency(monkeypatch):
     """Selecting HTCondor without the optional package gives an actionable error."""
     monkeypatch.setitem(__import__("sys").modules, "htcondor2", None)

@@ -15,9 +15,8 @@ pip install "gammasimtools[htcondor]"
 
 The initial backend uses a shared filesystem. Input payloads, application outputs, logs,
 containers, and environment files must be visible at the same absolute paths on the submit and
-execute hosts. Execute nodes must provide the same Python major/minor and simtools versions as the
-submission host, either directly or through the configured container. Python patch releases may
-differ.
+execute hosts must provide a compatible Python environment and the dependencies required by the
+serialized job, either directly or through the configured container.
 
 Worker payloads use Python pickle and are executable data. Keep the backend work directory private
 and load submission manifests only from trusted runs created by simtools.

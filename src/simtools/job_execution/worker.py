@@ -3,26 +3,17 @@
 import argparse
 import logging
 import pickle
-import platform
 import re
 import subprocess
 import traceback
 from pathlib import Path
 
 from simtools.job_execution.job import JobSpec
-from simtools.version import __version__ as simtools_version
 
 logger = logging.getLogger(__name__)
 
 _PAYLOAD_VERSION = 1
 _JOB_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
-
-
-def _python_major_minor(version):
-    """Return the compatibility portion of a Python version string."""
-    if not isinstance(version, str):
-        return ()
-    return tuple(version.split(".")[:2])
 
 
 def _parser():
@@ -65,8 +56,6 @@ def write_job_payload(job_spec, path):
     """Serialize a versioned worker payload."""
     payload = {
         "payload_version": _PAYLOAD_VERSION,
-        "python_version": platform.python_version(),
-        "simtools_version": simtools_version,
         "job_spec": job_spec,
     }
     with Path(path).open("wb") as handle:
@@ -79,18 +68,6 @@ def _load_job_payload(path):
         payload = pickle.load(handle)
     if not isinstance(payload, dict) or payload.get("payload_version") != _PAYLOAD_VERSION:
         raise ValueError("Unsupported worker payload format.")
-    payload_python_version = payload.get("python_version")
-    worker_python_version = platform.python_version()
-    if _python_major_minor(payload_python_version) != _python_major_minor(worker_python_version):
-        raise RuntimeError(
-            "Worker Python major/minor version does not match the submitted payload: "
-            f"{worker_python_version} != {payload_python_version}."
-        )
-    if payload.get("simtools_version") != simtools_version:
-        raise RuntimeError(
-            "Worker simtools version does not match the submitted payload: "
-            f"{simtools_version} != {payload.get('simtools_version')}."
-        )
     job_spec = payload.get("job_spec")
     if not isinstance(job_spec, JobSpec):
         raise TypeError("Worker payload does not contain a JobSpec.")

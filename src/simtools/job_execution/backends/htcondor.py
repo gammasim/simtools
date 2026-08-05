@@ -2,7 +2,6 @@
 
 import logging
 import pickle
-import platform
 import shlex
 import shutil
 import sys
@@ -19,7 +18,6 @@ from simtools.job_execution.backends.base import (
 )
 from simtools.job_execution.job import JobResult, SubmissionHandle
 from simtools.job_execution.worker import write_job_payload
-from simtools.version import __version__ as simtools_version
 
 logger = logging.getLogger(__name__)
 
@@ -454,8 +452,6 @@ class HTCondorBackend:
                 else None,
                 "job_log_dir": str(work_dir / "logs"),
                 "event_log": str(event_log),
-                "python_version": platform.python_version(),
-                "simtools_version": simtools_version,
                 "submitted_at": datetime.now(UTC).isoformat(),
                 "indices": {job.job_id: job.index for job in jobs},
             },
