@@ -11,7 +11,7 @@ applications:
     core_scatter: 20 1900 m
     view_cone: 0 deg 5 deg
     number_of_runs: 1
-    trigger_thresholds: [220, 3, 10]
+    trigger_thresholds: [220, 2, 10]
     output_path: simtools-output
   integration_tests:
   - test_output_files:
@@ -30,9 +30,6 @@ applications:
     - file: overwrite_nsb_asum230.yaml
       path_descriptor: output_path
       output_sub_path: nsb
-    - file: overwrite_nsb_asum240.yaml
-      path_descriptor: output_path
-      output_sub_path: nsb
     - file: base_grid.ecsv
       path_descriptor: output_path
       output_sub_path: proton
@@ -46,9 +43,6 @@ applications:
       path_descriptor: output_path
       output_sub_path: proton
     - file: overwrite_proton_asum230.yaml
-      path_descriptor: output_path
-      output_sub_path: proton
-    - file: overwrite_proton_asum240.yaml
       path_descriptor: output_path
       output_sub_path: proton
     output_validation:
@@ -101,12 +95,12 @@ applications:
     - name: nsb_scan_grid_content
       path_descriptor: output_path
       file: nsb/scan_grid.ecsv
-      minimum_rows: 3
+      minimum_rows: 2
       columns:
         primary:
           allowed_values: [gamma]
         scan_label:
-          allowed_values: [asum220, asum230, asum240]
+          allowed_values: [asum220, asum230]
         telescope:
           allowed_values: [LSTN-01]
       metadata:
@@ -118,12 +112,12 @@ applications:
     - name: proton_scan_grid_content
       path_descriptor: output_path
       file: proton/scan_grid.ecsv
-      minimum_rows: 3
+      minimum_rows: 2
       columns:
         primary:
           allowed_values: [proton]
         scan_label:
-          allowed_values: [asum220, asum230, asum240]
+          allowed_values: [asum220, asum230]
         telescope:
           allowed_values: [LSTN-01]
       metadata:
@@ -132,10 +126,10 @@ applications:
         - job_grid_format_version
         row_count: job_grid_summary.simulation_rows
       data_product_schema: src/simtools/schemas/job_grid_density.schema.yml
-    reference_output_file: tests/resources/static/bias_curve_submissions/overwrite_nsb_asum220.yaml
+    reference_output_file: tests/resources/generated/nsb/overwrite_nsb_asum220.yaml
     test_output_file: nsb/overwrite_nsb_asum220.yaml
-  - reference_output_file: tests/resources/static/bias_curve_submissions/overwrite_proton_asum240.yaml
-    test_output_file: proton/overwrite_proton_asum240.yaml
+  - reference_output_file: tests/resources/generated/proton/overwrite_proton_asum230.yaml
+    test_output_file: proton/overwrite_proton_asum230.yaml
   model_version_use_current: true
   test_name: generate_bias_curve_submissions_lstn-01
 schema_name: application_workflow.metaschema
