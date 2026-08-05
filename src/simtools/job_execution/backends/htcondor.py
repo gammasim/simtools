@@ -46,6 +46,8 @@ _CONFIG_KEYS = {
     "extra_submit_attributes",
     "log_path",
 }
+_REQUEST_CPUS_ERROR = "request_cpus must be a positive integer."
+_PRIORITY_ERROR = "priority must be an integer."
 
 
 class HTCondorBackend:
@@ -95,13 +97,13 @@ class HTCondorBackend:
         try:
             request_cpus = int(raw_request_cpus)
         except (TypeError, ValueError) as exc:
-            raise BackendConfigurationError("request_cpus must be a positive integer.") from exc
+            raise BackendConfigurationError(_REQUEST_CPUS_ERROR) from exc
         if isinstance(raw_request_cpus, float) and not raw_request_cpus.is_integer():
-            raise BackendConfigurationError("request_cpus must be a positive integer.")
+            raise BackendConfigurationError(_REQUEST_CPUS_ERROR)
         if isinstance(raw_request_cpus, bool):
-            raise BackendConfigurationError("request_cpus must be a positive integer.")
+            raise BackendConfigurationError(_REQUEST_CPUS_ERROR)
         if request_cpus < 1:
-            raise BackendConfigurationError("request_cpus must be a positive integer.")
+            raise BackendConfigurationError(_REQUEST_CPUS_ERROR)
 
     @staticmethod
     def _validate_priority(config):
@@ -110,13 +112,13 @@ class HTCondorBackend:
         try:
             priority = int(raw_priority)
         except (TypeError, ValueError) as exc:
-            raise BackendConfigurationError("priority must be an integer.") from exc
+            raise BackendConfigurationError(_PRIORITY_ERROR) from exc
         if isinstance(raw_priority, bool) or (
             isinstance(raw_priority, float) and not raw_priority.is_integer()
         ):
-            raise BackendConfigurationError("priority must be an integer.")
+            raise BackendConfigurationError(_PRIORITY_ERROR)
         if str(raw_priority).strip() != str(priority):
-            raise BackendConfigurationError("priority must be an integer.")
+            raise BackendConfigurationError(_PRIORITY_ERROR)
 
     @staticmethod
     def _validate_resource_sizes(config):
