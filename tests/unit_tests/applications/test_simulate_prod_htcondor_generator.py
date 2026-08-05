@@ -17,6 +17,7 @@ def test_main_uses_application_definition(mock_application_start, mock_generate_
     app.main()
 
     assert mock_application_start.call_args.kwargs == {}
+    assert app.APPLICATION.validate_simulation_dependencies is False
     mock_generate_submission_script.assert_called_once_with({"output_path": "htcondor_submit"})
 
 

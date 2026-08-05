@@ -22,10 +22,104 @@ from simtools.dependencies import (
     get_sim_telarray_version,
     get_software_version,
     get_version_string,
+    validate_simulation_dependencies,
     write_dependency_manifest,
     write_development_dependency_manifest,
 )
 from simtools.version import __version__
+
+
+def _write_interaction_table_manifest(table_path):
+    """Create a compact manifest fixture for dependency validation tests."""
+    table_path = Path(str(table_path))
+    groups = {
+        "common": [{"path": "common.dat", "size": 5}],
+        "electromagnetic": {"egs4": [{"path": "egs.dat", "size": 3}]},
+        "low_energy": {"urqmd": [{"path": "urqmd.dat", "size": 4}]},
+        "high_energy": {
+            "qgs3": [
+                {"path": "qgsdat-III", "size": 6},
+                {"path": "sectnu-III", "size": 7},
+            ]
+        },
+    }
+    manifest = {"schema_version": "1.0.0", "files": groups}
+    for entries in (
+        groups["common"],
+        groups["electromagnetic"]["egs4"],
+        groups["low_energy"]["urqmd"],
+        groups["high_energy"]["qgs3"],
+    ):
+        for entry in entries:
+            (table_path / entry["path"]).write_bytes(b"x" * entry["size"])
+    (table_path / "manifest.yaml").write_text(yaml.safe_dump(manifest), encoding="utf-8")
+
+
+def _mock_corsika_config(mocker, table_path):
+    """Patch settings with a valid CORSIKA dependency fixture."""
+    table_path = Path(str(table_path))
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.corsika_exe = table_path / "corsika"
+    mock_config.corsika_interaction_table_path = table_path
+    mock_config.corsika_interaction_models = ("qgs3", "urqmd")
+    return mock_config
+
+
+def test_validate_simulation_dependencies_accepts_manifest(tmp_test_directory, mocker):
+    """A hydrated manifest and all selected files satisfy CORSIKA validation."""
+    _write_interaction_table_manifest(tmp_test_directory)
+    _mock_corsika_config(mocker, tmp_test_directory)
+
+    validate_simulation_dependencies("corsika")
+
+
+def test_validate_simulation_dependencies_rejects_missing_and_unhydrated_tables(
+    tmp_test_directory, mocker
+):
+    """Validation reports missing files, size mismatches, and LFS pointers."""
+    _write_interaction_table_manifest(tmp_test_directory)
+    table_path = Path(str(tmp_test_directory))
+    _mock_corsika_config(mocker, table_path)
+    (table_path / "common.dat").unlink()
+    (table_path / "egs.dat").write_bytes(b"x")
+    (table_path / "qgsdat-III").write_bytes(b"version https://git-lfs.github.com/spec/v1\n")
+
+    with pytest.raises(ValueError, match=r"missing file.*common.dat") as error:
+        validate_simulation_dependencies("corsika")
+
+    message = str(error.value)
+    assert "size mismatch" in message
+    assert "Git LFS pointer" in message
+
+
+def test_validate_simulation_dependencies_rejects_unknown_model_group(tmp_test_directory, mocker):
+    """A model absent from the manifest fails before any table is used."""
+    _write_interaction_table_manifest(tmp_test_directory)
+    mock_config = _mock_corsika_config(mocker, tmp_test_directory)
+    mock_config.corsika_interaction_models = ("qgs2", "urqmd")
+
+    with pytest.raises(ValueError, match=r"files\.high_energy\.qgs2"):
+        validate_simulation_dependencies("corsika")
+
+
+def test_validate_simulation_dependencies_only_checks_selected_software(mocker):
+    """sim_telarray-only validation does not access CORSIKA settings."""
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.sim_telarray_exe = "sim_telarray"
+
+    validate_simulation_dependencies("sim_telarray")
+
+
+def test_validate_simulation_dependencies_requires_both_for_combined_mode(mocker):
+    """Combined simulations report an unavailable sim_telarray executable."""
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.sim_telarray_exe = None
+    mock_config.corsika_exe = None
+    mock_config.corsika_interaction_table_path = None
+    mock_config.corsika_interaction_models = ("qgs3", "urqmd")
+
+    with pytest.raises(ValueError, match="sim_telarray: not configured"):
+        validate_simulation_dependencies("corsika_sim_telarray")
 
 
 def test_get_version_string(mocker):
