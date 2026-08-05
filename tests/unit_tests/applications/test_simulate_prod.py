@@ -263,7 +263,32 @@ def test_parse_without_job_grid_requires_array_layout(monkeypatch, capsys):
     with pytest.raises(SystemExit):
         _parse_with_args(monkeypatch, ["--simulation_software", "sim_telarray"])
 
-    assert "--array_layout_name/--array_element_list" in capsys.readouterr().err
+    assert "--array_layout_name" in capsys.readouterr().err
+
+
+def test_parse_rejects_array_element_list(monkeypatch, capsys):
+    with pytest.raises(SystemExit):
+        _parse_with_args(
+            monkeypatch,
+            [
+                "--simulation_software",
+                "sim_telarray",
+                "--array_element_list",
+                "MSTN-01",
+            ],
+        )
+
+    assert "unrecognized arguments: --array_element_list" in capsys.readouterr().err
+
+
+def test_parse_rejects_telescope(monkeypatch, capsys):
+    with pytest.raises(SystemExit):
+        _parse_with_args(
+            monkeypatch,
+            ["--simulation_software", "sim_telarray", "--telescope", "LSTN-01"],
+        )
+
+    assert "unrecognized arguments: --telescope" in capsys.readouterr().err
 
 
 def test_corsika_requires_primary(monkeypatch, capsys):

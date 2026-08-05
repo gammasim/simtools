@@ -191,9 +191,9 @@ def _resolve_job_grid_arguments(args_dict, config_sources, parser):
 
 def _validate_layout_selection(args_dict, parser):
     """Require a direct array-layout selection when no job grid supplies one."""
-    if args_dict.get("array_layout_name") or args_dict.get("array_element_list"):
+    if args_dict.get("array_layout_name"):
         return
-    parser.error("the following arguments are required: --array_layout_name/--array_element_list")
+    parser.error("the following argument is required: --array_layout_name")
 
 
 def _execute_job_grid(args_dict):
@@ -224,8 +224,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
-        cli.TELESCOPE,
-        *cli.layout_selection_arguments(required=False),
+        cli.ARRAY_LAYOUT_NAME(required=False),
         cli.SIMULATION_SOFTWARE,
         *cli.corsika_configuration_arguments(primary_required=False),
         *cli.SHOWER_ARGUMENTS,

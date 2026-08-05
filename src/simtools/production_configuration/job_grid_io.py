@@ -22,7 +22,7 @@ _ECSV_SUFFIX = ".ecsv"
 _ECSV_FORMAT = "ascii.ecsv"
 _JOB_GRID_SCHEMA_FILE = "job_grid_density.schema.yml"
 _JOB_GRID_SCHEMA_URL = SCHEMA_URL + "/" + _JOB_GRID_SCHEMA_FILE
-_OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label", "telescope")
+_OPTIONAL_STRING_FIELDS = ("overwrite_model_parameters", "scan_label")
 _MISSING = object()
 SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS = frozenset(
     {
@@ -50,7 +50,6 @@ _SIMULATE_PROD_OPERATIONAL_FIELDS = (
     "label",
     "simulation_software",
     "site",
-    "telescope",
     "grid_output_path",
     "sim_telarray_path",
     "corsika_path",
@@ -376,9 +375,8 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
         for key in ("site", "simulation_software"):
             if metadata.get(key):
                 args[key] = metadata[key]
-    for key in ("telescope", "overwrite_model_parameters"):
-        if job_row.get(key):
-            args[key] = job_row[key]
+    if job_row.get("overwrite_model_parameters"):
+        args["overwrite_model_parameters"] = job_row["overwrite_model_parameters"]
     return args
 
 

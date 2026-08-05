@@ -150,7 +150,7 @@ def test_scan_config_contains_nsb_base_overwrite_and_trigger_scan(tmp_test_direc
     assert scan_config["parameter_scan"]["parameters"] == [
         bias_curve_submissions._parameter_scan_entry("LSTN-01", "asum_threshold")
     ]
-    assert scan_config["parameter_scan"]["job_grid_updates"] == {"telescope": "LSTN-01"}
+    assert scan_config["parameter_scan"]["job_grid_updates"] == {"array_layout_name": "LSTN-01"}
 
 
 def test_scan_config_contains_proton_base_overwrite_and_trigger_scan(tmp_test_directory):
@@ -269,7 +269,7 @@ def test_generate_scan_grid_generates_and_expands_grid(tmp_test_directory):
     assert scan_config["label"] == "nsb"
     assert scan_config["parameter_scan"]["parameters"][0]["label"] == "asum"
     assert scan_config["parameter_scan"]["parameters"][0]["label_separator"] == ""
-    assert scan_config["parameter_scan"]["job_grid_updates"] == {"telescope": "LSTN-01"}
+    assert scan_config["parameter_scan"]["job_grid_updates"] == {"array_layout_name": "LSTN-01"}
 
     mock_generate_job_grid.assert_called_once_with(
         bias_curve_submissions._production_grid_configuration(

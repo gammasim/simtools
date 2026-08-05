@@ -257,7 +257,7 @@ def test_expand_job_grid_with_scan_uses_explicit_compact_label(
         "label": "nsb",
         "parameter_scan": {
             "overwrite": {**_overwrite_base(), "changes": {"LSTN-01": {}}},
-            "job_grid_updates": {"telescope": "LSTN-01"},
+            "job_grid_updates": {"array_layout_name": "LSTN-01"},
             "parameters": [
                 {
                     "name": "asum_threshold",
@@ -286,7 +286,7 @@ def test_expand_job_grid_with_scan_uses_explicit_compact_label(
 
     assert overwrite_file.name == "overwrite_nsb_asum220.yaml"
     assert expanded_rows[0]["scan_label"] == "asum220"
-    assert expanded_rows[0]["telescope"] == "LSTN-01"
+    assert expanded_rows[0]["array_layout_name"] == "LSTN-01"
 
     overwrite = yaml.safe_load(overwrite_file.read_text(encoding="utf-8"))
     assert overwrite["changes"]["LSTN-01"]["asum_threshold"] == {

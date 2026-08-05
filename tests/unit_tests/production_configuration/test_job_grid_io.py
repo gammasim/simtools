@@ -131,7 +131,6 @@ def test_serialize_and_read_job_grid_with_optional_string_fields(tmp_test_direct
             "run_number": 11,
             "overwrite_model_parameters": "overwrite file.yaml",
             "scan_label": "asum220",
-            "telescope": "LSTN-01",
         }
     )
 
@@ -141,7 +140,6 @@ def test_serialize_and_read_job_grid_with_optional_string_fields(tmp_test_direct
     assert "overwrite_model_parameters" not in read_rows[0]
     assert read_rows[1]["overwrite_model_parameters"] == "overwrite file.yaml"
     assert read_rows[1]["scan_label"] == "asum220"
-    assert read_rows[1]["telescope"] == "LSTN-01"
 
 
 def test_job_grid_density_schema_defines_supported_columns():
@@ -317,7 +315,6 @@ def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory
     row = {
         **_job_rows()[0],
         "scan_label": "high_nsb",
-        "telescope": "LSTN-01",
         "overwrite_model_parameters": "overwrite.yml",
     }
     args = {
@@ -338,7 +335,6 @@ def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory
         "local",
     )
     assert "prod_high_nsb" in command
-    assert "LSTN-01" in command
     assert "overwrite.yml" in command
     assert str(tmp_test_directory / "models") in command
     assert str(tmp_test_directory / "output" / "job-000000") in command

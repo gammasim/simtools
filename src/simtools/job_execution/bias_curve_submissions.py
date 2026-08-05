@@ -124,7 +124,7 @@ def _scan_config(curve_name, telescope, args):
                     args.get("trigger_thresholds"),
                 )
             ],
-            "job_grid_updates": {"telescope": telescope},
+            "job_grid_updates": {"array_layout_name": telescope},
         },
     }
 
