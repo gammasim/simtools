@@ -135,7 +135,8 @@ RUN set -e; ls ../config_*.h; for config_file in ../config_*.h; do \
                 echo "#define __CACHE_VLIBM__"; \
             } >> include/config.h; \
         fi && \
-        export CFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" \
+        export MAKEFLAGS="-j4" \
+            CFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" \
             CXXFLAGS="${BASE_FLAGS} ${C_SPECIFIC_FLAGS}" \
             FFLAGS="${BASE_FLAGS} ${FORTRAN_SPECIFIC_FLAGS}" && \
         CORSIKA_USER_COMP=1 ./coconut --expert --without-root --without-COASTUSERLIB --without-conex < /dev/null; \
@@ -146,7 +147,10 @@ RUN set -e; ls ../config_*.h; for config_file in ../config_*.h; do \
         CORSIKA_RUN_DIR="/workdir/corsika-run" && \
         mkdir -p "$CORSIKA_RUN_DIR" && \
         corsika_name=$(basename "$config_file" .h | sed 's/^config_/corsika_/'); \
+        hilow_default=$(sed -n 's/^[Cc*][[:space:]]*HILOW[[:space:]]*\([0-9][0-9.]*\)[[:space:]]*$/\1/p' src/corsikacompilefile.f) && \
+        test -n "$hilow_default" && \
         mv -v "$1" "${CORSIKA_RUN_DIR}/${corsika_name}" && \
+        printf '%s\n' "$hilow_default" > "${CORSIKA_RUN_DIR}/.${corsika_name}.hilow_default" && \
         validate_corsika7_build include/config.h "${CORSIKA_RUN_DIR}/${corsika_name}" \
             "$CORSIKA_VERSION" "$he_model" "$variant" "$optimization" "/tmp/${corsika_name}" && \
         rm -rf -- "/tmp/${corsika_name}" && \
@@ -182,6 +186,7 @@ RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
         he_model=$(echo "$basename_file" | sed 's/^config_\([^_]*\)_.*/\1/'); \
         le_model=$(echo "$basename_file" | sed 's/^config_[^_]*_\([^_]*\)_.*/\1/'); \
         variant=$(echo "$basename_file" | sed 's/.*_\(curved\|flat\)$/\1/'); \
+        hilow_default=$(cat "${CORSIKA_RUN_DIR}/.${corsika_name}.hilow_default"); \
         optimization="$AVX_FLAG"; \
         if [ "$AVX_FLAG" = "generic" ] || [ "$variant" = "curved" ]; then \
             optimization="generic"; \
@@ -192,10 +197,12 @@ RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
             echo "    atmosphere_geometry: \"${variant}\""; \
             echo "    he_hadronic_model: \"${he_model}\""; \
             echo "    le_hadronic_model: \"${le_model}\""; \
+            echo "    hadronic_transition_energy_default_gev: ${hilow_default}"; \
             echo "    optimization: \"${optimization}\""; \
             echo "    cerenkopt: $([ "$optimization" = "generic" ] && echo false || echo true)"; \
             echo "    vlibm: $([ "$optimization" = "generic" ] && echo false || echo true)"; \
         } >> ${CORSIKA_RUN_DIR}/build_opts.yml; \
+        rm -f "${CORSIKA_RUN_DIR}/.${corsika_name}.hilow_default"; \
     done
 
 # -----------------------------------------------------------------------------

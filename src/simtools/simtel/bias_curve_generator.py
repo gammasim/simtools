@@ -36,11 +36,11 @@ def generate_bias_curves(args):
     if not proton_stats:
         raise FileNotFoundError(f"No proton input files found in {args['data_dir']}")
 
-    if args.get("proton_output"):
-        _write_proton_ecsv(proton_stats, args["proton_output"])
-        _logger.info(f"Proton table written to {args['proton_output']}")
+    if args.get("proton_table_file"):
+        _write_proton_ecsv(proton_stats, args["proton_table_file"])
+        _logger.info(f"Proton table written to {args['proton_table_file']}")
 
-    plot_output_path = plot_tables.resolve_plot_output_path(args["output"])
+    plot_output_path = plot_tables.resolve_plot_output_path(args["figure_file"])
     bias_curve_table_output = plot_output_path.with_suffix(".ecsv")
 
     _logger.info("Plotting bias curves...")
@@ -50,9 +50,9 @@ def generate_bias_curves(args):
 
     _logger.info(f"Bias curve plot written to {plot_output_path}")
     _logger.info(f"Bias curve table written to {bias_curve_table_output}")
-    nsb_output = args.get("nsb_output")
-    if nsb_output and Path(nsb_output).exists():
-        _logger.info(f"NSB table written to {nsb_output}")
+    nsb_table_file = args.get("nsb_table_file")
+    if nsb_table_file and Path(nsb_table_file).exists():
+        _logger.info(f"NSB table written to {nsb_table_file}")
 
 
 def _calculate_time_window(args):
@@ -115,7 +115,7 @@ def _run_nsb_trigger_derivation(root_dir, args, time_window):
     nsb_args = {
         "root_dir": root_dir,
         "pattern": f"gamma*{_REDUCED_EVENT_DATA_SUFFIX}",
-        "output": args.get("nsb_output"),
+        "output": args.get("nsb_table_file"),
         "time_window": time_window,
         "verbose": False,
     }

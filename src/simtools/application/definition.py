@@ -114,13 +114,17 @@ class ApplicationDefinition:
             self._validate_required_values(args_dict, config_builder.parser)
         if not self.database:
             db_config = {}
+        args_dict["_metadata_configuration_sources"] = {
+            source: sorted(keys) for source, keys in config_builder.config_sources.items()
+        }
         return args_dict, db_config
 
     @staticmethod
     def _show_options_requested():
         """Return whether the command line requests option discovery."""
-        option_names = {"--show_options", "--show-options", "--show_option", "--show-option"}
-        return any(argument.split("=", maxsplit=1)[0] in option_names for argument in sys.argv[1:])
+        return any(
+            argument.split("=", maxsplit=1)[0] == "--show_options" for argument in sys.argv[1:]
+        )
 
     def _validate_required_values(self, args, parser):
         """Validate declarations deferred until after the post-parse hook."""

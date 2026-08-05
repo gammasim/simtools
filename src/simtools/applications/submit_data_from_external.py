@@ -9,9 +9,9 @@ r"""
     ----------------------
     input_meta (str, optional)
         input meta data file (yml format)
-    input (str, optional)
+    input_data_file (str, optional)
         input data file
-    schema (str, optional)
+    schema_file (str, optional)
         Schema describing the input data
 
     Example
@@ -23,8 +23,8 @@ r"""
 
         simtools-submit-data-from-external \\
             --input_meta ./tests/resources/MLTdata-preproduction.meta.yml \\
-            --input ./tests/resources/MLTdata-preproduction.ecsv \\
-            --schema src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml \\
+            --input_data_file ./tests/resources/MLTdata-preproduction.ecsv \\
+            --schema_file src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml \\
             --output_file TEST-submit_data_from_external.ecsv
 
     Expected final print-out message:
@@ -46,9 +46,9 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "input_meta", help="meta data file associated to input data", type=str, required=False
     ),
-    cli.ArgumentDefinition("input", help="input data file", type=str, required=True),
+    cli.ArgumentDefinition("input_data_file", help="Input data file", type=str, required=True),
     cli.ArgumentDefinition(
-        "schema", help="schema file describing input data", type=str, required=False
+        "schema_file", help="Schema file describing input data", type=str, required=False
     ),
     cli.ArgumentDefinition(
         "ignore_metadata", help="Ignore metadata", action="store_true", required=False
@@ -79,9 +79,9 @@ def main():
         schema_file=(
             _metadata.get_data_model_schema_file_name()
             if _metadata
-            else app_context.args.get("schema")
+            else app_context.args.get("schema_file")
         ),
-        data_file=app_context.args["input"],
+        data_file=app_context.args["input_data_file"],
     )
 
     writer.ModelDataWriter.write_product_data(

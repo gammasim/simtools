@@ -695,6 +695,11 @@ def write_array_elements_from_file_to_repository(
         Path to model repository.
     parameter_version : str
         Parameter version to use when writing to repository.
+
+    Notes
+    -----
+    Repository generation writes files directly and does not query a database
+    for an existing parameter version.
     """
     repository_path = Path(repository_path)
 
@@ -733,6 +738,7 @@ def write_array_elements_from_file_to_repository(
             parameter_version=parameter_version,
             output_path=repository_path / instrument,
             output_file=f"{parameter_name}.json",
+            check_db_for_existing_parameter=False,
         )
 
 

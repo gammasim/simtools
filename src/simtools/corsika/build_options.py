@@ -18,6 +18,7 @@ class CorsikaBuildVariant:
     atmosphere_geometry: str
     he_hadronic_model: str
     le_hadronic_model: str
+    hadronic_transition_energy_default_gev: float | None = None
 
     @classmethod
     def from_mapping(cls, entry):
@@ -57,12 +58,26 @@ class CorsikaBuildVariant:
         if geometry not in {"flat", "curved"}:
             raise ValueError(f"Invalid CORSIKA atmosphere geometry: {geometry}")
 
+        transition_energy_default = entry.get("hadronic_transition_energy_default_gev")
+        if transition_energy_default is not None:
+            try:
+                transition_energy_default = float(transition_energy_default)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    "Invalid CORSIKA hadronic transition energy default; expected a number"
+                ) from exc
+            if transition_energy_default <= 0:
+                raise ValueError(
+                    "Invalid CORSIKA hadronic transition energy default; expected a positive value"
+                )
+
         return cls(
             executable=str(entry["executable"]),
             config=str(entry["config"]),
             atmosphere_geometry=geometry,
             he_hadronic_model=str(entry["he_hadronic_model"]).lower(),
             le_hadronic_model=str(entry["le_hadronic_model"]).lower(),
+            hadronic_transition_energy_default_gev=transition_energy_default,
         )
 
 

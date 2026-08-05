@@ -512,7 +512,7 @@ def write_trigger_histograms(args_dict):
         If the output file does not use an HDF5 suffix or no supported telescope
         selection is provided.
     """
-    production_patterns = gen.ensure_string_lists(args_dict["event_data_file"])
+    production_patterns = gen.ensure_string_lists(args_dict["event_data_files"])
     telescope_configs = _use_readable_inline_array_names(
         normalize_telescope_configs(resolve_telescope_configs(args_dict))
     )

@@ -1308,7 +1308,7 @@ def renumber_job_rows(job_rows, run_number_offset):
     return job_rows
 
 
-def generate_job_grid(args_dict, output_file):
+def generate_job_grid(args_dict, output_file, metadata=None):
     """
     Generate and serialize a production job grid.
 
@@ -1320,6 +1320,8 @@ def generate_job_grid(args_dict, output_file):
         :func:`build_job_grid_metadata`.
     output_file : str or Path
         Path to the ECSV file to write.
+    metadata : dict, optional
+        Default metadata to include in the ECSV header.
     """
     job_rows = renumber_job_rows(
         build_simulation_jobs(args_dict),
@@ -1328,5 +1330,5 @@ def generate_job_grid(args_dict, output_file):
     serialize_job_grid(
         job_rows=job_rows,
         output_file=output_file,
-        metadata=build_job_grid_metadata(args_dict),
+        metadata=(metadata or {}) | build_job_grid_metadata(args_dict),
     )

@@ -626,6 +626,35 @@ definitions:
               required:
                 - activity_name
                 - activity_id
+          application_configuration:
+            title: Resolved application configuration.
+            description: |-
+              Sanitized configuration used to execute the application that produced this data.
+            type: object
+            additionalProperties: false
+            properties:
+              schema_version:
+                type: string
+                default: "1.0.0"
+              application:
+                anyOf:
+                  - type: string
+                  - type: "null"
+                default: null
+              arguments:
+                type: object
+                additionalProperties: true
+                default: {}
+              sources:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+                default: {}
+            required:
+              - schema_version
+              - arguments
 ...
 ---
 $schema: http://json-schema.org/draft-06/schema#
@@ -1256,3 +1285,32 @@ definitions:
               required:
                 - ACTIVITY_NAME
                 - ACTIVITY_ID
+          APPLICATION_CONFIGURATION:
+            title: Resolved application configuration.
+            description: |-
+              Sanitized configuration used to execute the application that produced this data.
+            type: object
+            additionalProperties: false
+            properties:
+              SCHEMA_VERSION:
+                type: string
+                default: "1.0.0"
+              APPLICATION:
+                anyOf:
+                  - type: string
+                  - type: "null"
+                default: null
+              ARGUMENTS:
+                type: object
+                additionalProperties: true
+                default: {}
+              SOURCES:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+                default: {}
+            required:
+              - SCHEMA_VERSION
+              - ARGUMENTS

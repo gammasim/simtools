@@ -482,24 +482,24 @@ def test_write_to_text_file_unique_multiline(tmp_test_directory):
 
 
 def test_to_builtin_quantity():
-    """Test _to_builtin with astropy Quantity."""
+    """Test to_builtin with astropy Quantity."""
     quantity = 5.0 * u.m
-    result = ascii_handler._to_builtin(quantity)
+    result = ascii_handler.to_builtin(quantity)
     assert isinstance(result, dict)
     assert result["value"] == pytest.approx(5.0)
     assert result["unit"] == "m"
 
 
 def test_to_builtin_numpy_types():
-    """Test _to_builtin with various numpy types."""
-    assert ascii_handler._to_builtin(np.float64(3.14)) == pytest.approx(3.14)
-    assert ascii_handler._to_builtin(np.int32(42)) == 42
-    assert ascii_handler._to_builtin(np.int64(100)) == 100
-    assert ascii_handler._to_builtin(np.float32(1.5)) == pytest.approx(np.float32(1.5).item())
+    """Test to_builtin with various numpy types."""
+    assert ascii_handler.to_builtin(np.float64(3.14)) == pytest.approx(3.14)
+    assert ascii_handler.to_builtin(np.int32(42)) == 42
+    assert ascii_handler.to_builtin(np.int64(100)) == 100
+    assert ascii_handler.to_builtin(np.float32(1.5)) == pytest.approx(np.float32(1.5).item())
 
 
 def test_to_builtin_dict():
-    """Test _to_builtin with nested dictionaries."""
+    """Test to_builtin with nested dictionaries."""
     data = {
         "int_value": np.int64(10),
         "float_value": np.float64(2.5),
@@ -508,7 +508,7 @@ def test_to_builtin_dict():
             "array": np.array([1, 2, 3]),
         },
     }
-    result = ascii_handler._to_builtin(data)
+    result = ascii_handler.to_builtin(data)
     assert result["int_value"] == 10
     assert result["float_value"] == pytest.approx(2.5)
     assert result["nested"]["quantity"]["value"] == pytest.approx(3.0)
@@ -517,9 +517,9 @@ def test_to_builtin_dict():
 
 
 def test_to_builtin_list():
-    """Test _to_builtin with lists."""
+    """Test to_builtin with lists."""
     data = [np.int64(1), np.float64(2.5), 3.0 * u.m]
-    result = ascii_handler._to_builtin(data)
+    result = ascii_handler.to_builtin(data)
     assert result[0] == 1
     assert result[1] == pytest.approx(2.5)
     assert result[2]["value"] == pytest.approx(3.0)
@@ -527,9 +527,9 @@ def test_to_builtin_list():
 
 
 def test_to_builtin_tuple():
-    """Test _to_builtin with tuples."""
+    """Test to_builtin with tuples."""
     data = (np.int64(5), np.float64(1.5), 2.0 * u.kg)
-    result = ascii_handler._to_builtin(data)
+    result = ascii_handler.to_builtin(data)
     assert isinstance(result, list)
     assert result[0] == 5
     assert result[1] == pytest.approx(1.5)
@@ -538,15 +538,15 @@ def test_to_builtin_tuple():
 
 
 def test_to_builtin_scalar_types():
-    """Test _to_builtin with scalar Python types."""
-    assert ascii_handler._to_builtin(42) == 42
-    assert ascii_handler._to_builtin(3.14) == pytest.approx(3.14)
-    assert ascii_handler._to_builtin("string") == "string"
-    assert ascii_handler._to_builtin(True) is True
+    """Test to_builtin with scalar Python types."""
+    assert ascii_handler.to_builtin(42) == 42
+    assert ascii_handler.to_builtin(3.14) == pytest.approx(3.14)
+    assert ascii_handler.to_builtin("string") == "string"
+    assert ascii_handler.to_builtin(True) is True
 
 
 def test_to_builtin_complex_nested_structure():
-    """Test _to_builtin with complex nested structures."""
+    """Test to_builtin with complex nested structures."""
     data = {
         "measurements": [
             {"value": np.float64(1.23), "unit_obj": 5.0 * u.m},
@@ -557,7 +557,7 @@ def test_to_builtin_complex_nested_structure():
             "name": "test",
         },
     }
-    result = ascii_handler._to_builtin(data)
+    result = ascii_handler.to_builtin(data)
     assert result["measurements"][0]["value"] == pytest.approx(1.23)
     assert result["measurements"][0]["unit_obj"]["value"] == pytest.approx(5.0)
     assert result["measurements"][0]["unit_obj"]["unit"] == "m"
@@ -565,3 +565,20 @@ def test_to_builtin_complex_nested_structure():
     assert np.array_equal(result["measurements"][1]["array"], [7, 8, 9])
     assert result["metadata"]["count"] == 2
     assert result["metadata"]["name"] == "test"
+
+
+def test_to_builtin_serialization_values():
+    """Test conversion of values encountered in embedded metadata."""
+    result = ascii_handler.to_builtin(
+        {
+            "bytes": b"observer",
+            "path": Path("run.simtel.zst"),
+            "quantity": np.array([1.0, 2.0]) * u.m,
+        }
+    )
+
+    assert result == {
+        "bytes": "observer",
+        "path": "run.simtel.zst",
+        "quantity": {"value": [1.0, 2.0], "unit": "m"},
+    }

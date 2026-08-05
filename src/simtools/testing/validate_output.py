@@ -1,5 +1,6 @@
 """Compare application output to reference output."""
 
+import copy
 import logging
 import re
 from collections.abc import Mapping
@@ -10,6 +11,7 @@ from astropy import units as u
 from astropy.table import Table
 
 import simtools.utils.general as gen
+from simtools.constants import SCHEMA_PATH
 from simtools.data_model import validate_data
 from simtools.db import db_handler
 from simtools.io import ascii_handler
@@ -20,6 +22,44 @@ from simtools.testing import assertions
 _logger = logging.getLogger(__name__)
 
 _ECSV_FORMAT = "ascii.ecsv"
+
+_OUTPUT_VALIDATION_PROFILES = {
+    "job_grid": {
+        "name": "job_grid_content",
+        "path_descriptor": "output_path",
+        "data_product_schema": SCHEMA_PATH / "job_grid_density.schema.yml",
+        "minimum_rows": 1,
+        "unique_columns": ["run_number"],
+        "columns": {
+            "azimuth_angle": {
+                "range": {"minimum": 0.0, "maximum": 360.0, "unit": "deg"},
+            },
+            "energy_min": {
+                "range": {"minimum": 0.0, "unit": "GeV"},
+            },
+            "energy_max": {
+                "range": {"minimum": 0.0, "unit": "GeV"},
+            },
+            "core_scatter_max": {
+                "range": {"minimum": 0.0, "unit": "m"},
+            },
+            "view_cone_min": {
+                "range": {"minimum": 0.0, "unit": "deg"},
+            },
+            "view_cone_max": {
+                "range": {"minimum": 0.0, "unit": "deg"},
+            },
+            "showers_per_run": {
+                "range": {"minimum": 1.0},
+            },
+        },
+        "metadata": {
+            "required_keys": ["job_grid_summary", "job_grid_format_version"],
+            "row_count": "job_grid_summary.simulation_rows",
+            "column_sums": {"showers_per_run": "job_grid_summary.total_showers"},
+        },
+    }
+}
 
 
 def _find_repo_root():
@@ -302,10 +342,35 @@ def _validate_table_output(config, rule):
         _validation_failure(path, rule, "valid configured table content", str(exc))
 
 
+def _merge_mappings(defaults, overrides):
+    """Merge nested validation mappings, preferring values from overrides."""
+    merged = copy.deepcopy(defaults)
+    for key, value in overrides.items():
+        if isinstance(value, Mapping) and isinstance(merged.get(key), Mapping):
+            merged[key] = _merge_mappings(merged[key], value)
+        else:
+            merged[key] = copy.deepcopy(value)
+    return merged
+
+
+def _expand_output_validation_profile(rule):
+    """Apply an optional named validation profile to a table rule."""
+    profile_name = rule.get("profile")
+    if profile_name is None:
+        return rule
+    try:
+        defaults = _OUTPUT_VALIDATION_PROFILES[profile_name]
+    except KeyError as exc:
+        raise ValueError(f"Unknown output validation profile: {profile_name}") from exc
+
+    overrides = {key: value for key, value in rule.items() if key != "profile"}
+    return _merge_mappings(defaults, overrides)
+
+
 def _validate_declarative_output(config, integration_test):
     """Run optional declarative ECSV table validation rules."""
     for rule in integration_test.get("output_validation", []):
-        _validate_table_output(config, rule)
+        _validate_table_output(config, _expand_output_validation_profile(rule))
 
 
 def _test_simtel_cfg_files(config, integration_test, from_command_line, from_config_file):
@@ -369,6 +434,14 @@ def _validate_output_path_and_file(config, integration_file_tests):
             ".log"
         ):
             assert assertions.check_log_files(output_file_path, file_test)
+        if "expected_hdf5_datasets" in file_test:
+            if output_file_path.suffix.lower() not in (".hdf5", ".h5"):
+                raise AssertionError(
+                    f"expected_hdf5_datasets requires an HDF5 output file, got {output_file_path}."
+                )
+            assert assertions.assert_hdf5_datasets(
+                output_file_path, file_test["expected_hdf5_datasets"]
+            )
 
 
 def _validate_model_parameter_json_file(config, model_parameter_validation):

@@ -1,5 +1,8 @@
 """Tests for the write_reduced_event_lists application."""
 
+from types import SimpleNamespace
+from unittest.mock import patch
+
 import pytest
 
 from simtools.applications import write_reduced_event_lists
@@ -44,3 +47,30 @@ def test_input_arguments_are_mutually_exclusive():
         parser.parse_args([])
     with pytest.raises(SystemExit):
         parser.parse_args(["--input_files", "input.simtel.zst", "--input_file_list", "inputs.txt"])
+
+
+def test_main_passes_application_arguments_to_metadata_builder():
+    """Pass the generated activity ID into reduced-event metadata."""
+    args = {
+        "input_files": ["input.simtel.zst"],
+        "input_file_list": None,
+        "files_per_reduced_event_file": 1,
+        "max_workers": 1,
+    }
+    app_context = SimpleNamespace(
+        args=args,
+        io_handler=SimpleNamespace(get_output_directory=lambda: "output"),
+    )
+
+    with (
+        patch(
+            "simtools.application.definition.ApplicationDefinition.start",
+            return_value=app_context,
+        ),
+        patch.object(
+            write_reduced_event_lists.Simulator, "write_reduced_event_lists"
+        ) as mock_write,
+    ):
+        write_reduced_event_lists.main()
+
+    assert mock_write.call_args.kwargs["metadata_args"] is args

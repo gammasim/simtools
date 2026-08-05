@@ -6,6 +6,7 @@ from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.configuration import defaults
 from simtools.configuration.argument_helpers import scientific_int
+from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.production_configuration.simulation_jobs import (
     TOTAL_SHOWERS_ROUNDING_WARNINGS_MAX_DEFAULT,
     generate_job_grid,
@@ -58,12 +59,7 @@ _GRID_ARGUMENTS = (
         metavar="FILE",
         help="ECSV lookup table of direction-dependent CORSIKA simulation limits.",
     ),
-    cli.ArgumentDefinition(
-        "number_of_runs",
-        help="Runs generated per grid point and energy interval.",
-        type=scientific_int,
-        default=None,
-    ),
+    cli.NUMBER_OF_RUNS(help="Runs generated per grid point."),
     cli.ArgumentDefinition(
         "total_showers",
         help=(
@@ -97,7 +93,8 @@ _GRID_ARGUMENTS = (
     cli.ArgumentDefinition(
         "showers_per_run_power_law",
         help=(
-            "Scale showers per run by (E_mid / E_ref)^INDEX. Provide INDEX VALUE UNIT; "
+            "Scale showers per run by (E_mid / E_ref)^INDEX (mostly used for fixed energy grid). "
+            "Provide INDEX VALUE UNIT; "
             "E_mid is the logarithmic energy-interval midpoint."
         ),
         nargs=3,
@@ -132,10 +129,9 @@ APPLICATION = ApplicationDefinition.for_module(
         *_GRID_ARGUMENTS,
         cli.MODEL_VERSION(required=True),
         cli.OVERWRITE_MODEL_PARAMETERS,
-        cli.IGNORE_MISSING_DESIGN_MODEL,
         cli.SITE(required=True),
         cli.TELESCOPE,
-        *cli.layout_selection_arguments(),
+        cli.ARRAY_LAYOUT_NAME(required=True),
         cli.SIMULATION_SOFTWARE,
         cli.PRIMARY,
         cli.PRIMARY_ID_TYPE,
@@ -168,6 +164,7 @@ def main():
     generate_job_grid(
         app_context.args,
         app_context.io_handler.get_output_file(app_context.args["output_file"]),
+        metadata=MetadataCollector(app_context.args).get_top_level_metadata(),
     )
 
 

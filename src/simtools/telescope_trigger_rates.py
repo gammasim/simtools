@@ -58,9 +58,9 @@ def telescope_trigger_rates(args_dict):
             args_dict.get("model_version"),
         )
     else:
-        telescope_configs = ascii_handler.collect_data_from_file(args_dict["telescope_ids"])[
-            "telescope_configs"
-        ]
+        telescope_configs = ascii_handler.collect_data_from_file(
+            args_dict["telescope_config_file"]
+        )["telescope_configs"]
 
     results = {}
     for array_name, telescope_ids in telescope_configs.items():

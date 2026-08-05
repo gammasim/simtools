@@ -63,8 +63,8 @@ To import these positions into the model parameter repository, see the following
 
 ```bash
 simtools-maintain-simulation-model-write-array-element-positions \
-    --input /path/to/positions.txt \
-    --simulation_models_directory /path/to/simulation-models \
+    --array_element_positions_file /path/to/positions.txt \
+    --simulation_models_path /path/to/simulation-models \
     --parameter_version 1.0.0 \
     --coordinate_system ground \
 ```

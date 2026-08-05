@@ -29,7 +29,7 @@ r"""
        simtools-convert-model-parameter-from-simtel \\
           --simtel_telescope_name CT1 \\
           --telescope LSTN-01 \\
-          --schema tests/resources/num_gains.schema.yml \\
+          --schema_file tests/resources/num_gains.schema.yml \\
           --simtel_cfg_file tests/resources/simtel_config_test_la_palma.cfg \\
           --output_file num_gains.json
 
@@ -42,7 +42,7 @@ from simtools.simtel.simtel_config_reader import SimtelConfigReader
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
-        "schema", help="Schema file for model parameter validation", required=True
+        "schema_file", help="Schema file for model parameter validation", required=True
     ),
     cli.ArgumentDefinition(
         "simtel_cfg_file", help="File name for sim_telarray configuration", type=str, required=True
@@ -62,7 +62,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         cli.PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
-        cli.IGNORE_MISSING_DESIGN_MODEL,
         cli.SITE,
         cli.TELESCOPE,
         *cli.OUTPUT_PATH_ARGUMENTS,
@@ -78,7 +77,7 @@ def main():
     app_context = APPLICATION.start()
 
     simtel_config_reader = SimtelConfigReader(
-        schema_file=app_context.args["schema"],
+        schema_file=app_context.args["schema_file"],
         simtel_config_file=app_context.args["simtel_cfg_file"],
         simtel_telescope_name=app_context.args["simtel_telescope_name"],
     )

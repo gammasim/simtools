@@ -28,8 +28,6 @@ PLOT_VALUE_KEYS = tuple(
 )
 DEFAULT_OUTPUT_FILE_EXTENSION = "png"
 DEFAULT_MARKER_SIZE = 8
-DEFAULT_GRID_LINE_WIDTH = 0.6
-GRID_GROUP_ROUND_DECIMALS = 6
 
 
 def _azimuth_zenith_output_file_stem(value_key):
@@ -66,7 +64,7 @@ class ProductionGridPlotter:
 
         self.grid_metadata = {}
         self.grid_columns = []
-        self.has_radec_columns = False
+        self.has_hadec_columns = False
         self.grid_points = self._load_grid_points()
 
         logger.info(f"Loaded {len(self.grid_points)} grid points from {self.grid_points_file}")
@@ -99,10 +97,7 @@ class ProductionGridPlotter:
         grid_table = Table.read(self.grid_points_file, format="ascii.ecsv")
         self.grid_metadata = dict(grid_table.meta)
         self.grid_columns = list(grid_table.colnames)
-        self.has_radec_columns = {"ra", "dec"}.issubset(self.grid_columns) or {
-            "ra_value",
-            "dec_value",
-        }.issubset(self.grid_columns)
+        self.has_hadec_columns = {"ha", "dec"}.issubset(self.grid_columns)
         return self._convert_ecsv_table_to_grid_points(grid_table)
 
     @classmethod
@@ -186,33 +181,33 @@ class ProductionGridPlotter:
         """
         azimuth = self._extract_first_available_quantity_value(
             point,
-            ("azimuth", "azimuth_angle"),
+            ("azimuth_angle",),
         )
         zenith = self._extract_first_available_quantity_value(point, ("zenith_angle",))
-        ra = self._extract_first_available_quantity_value(point, ("ra", "ra_value"))
-        dec = self._extract_first_available_quantity_value(point, ("dec", "dec_value"))
+        hour_angle = self._extract_quantity_value(point, "ha")
+        declination = self._extract_quantity_value(point, "dec")
         value_data = {value_key: point.get(value_key) for value_key in PLOT_VALUE_KEYS}
-        point_ra = float(ra % 360.0) if ra is not None else None
-        point_dec = float(dec) if dec is not None else None
+        point_ha = float(hour_angle) if hour_angle is not None else None
+        point_dec = float(declination) if declination is not None else None
 
         if azimuth is not None and zenith is not None:
             return {
                 "native_frame": "altaz",
                 "azimuth": azimuth % 360.0,
                 "zenith": zenith,
-                "ra": point_ra,
+                "ha": point_ha,
                 "dec": point_dec,
                 **value_data,
                 "visible_in_altaz": True,
             }
 
-        if ra is not None and dec is not None:
+        if hour_angle is not None and declination is not None:
             return {
-                "native_frame": "radec",
+                "native_frame": "hadec",
                 "azimuth": None,
                 "zenith": None,
-                "ra": float(ra % 360.0),
-                "dec": float(dec),
+                "ha": float(hour_angle),
+                "dec": float(declination),
                 **value_data,
                 "visible_in_altaz": None,
             }
@@ -246,49 +241,6 @@ class ProductionGridPlotter:
         return selected_points
 
     @staticmethod
-    def _group_radec_points_by_coordinate(plot_points, coordinate_key, sort_key):
-        """Group RA/Dec points by one coordinate and sort by the orthogonal one."""
-        grouped_points = {}
-        for point in plot_points:
-            coordinate_value = round(point[coordinate_key], GRID_GROUP_ROUND_DECIMALS)
-            grouped_points.setdefault(coordinate_value, []).append(point)
-
-        ordered_groups = []
-        for coordinate_value in sorted(grouped_points):
-            group = grouped_points[coordinate_value]
-            if len(group) < 2:
-                continue
-            ordered_groups.append(sorted(group, key=lambda point: point[sort_key]))
-        return ordered_groups
-
-    def infer_radec_grid_tracks(self, plot_points):
-        """Infer RA and Dec grid tracks from native RA/Dec grid points."""
-        native_radec_points = self._split_points_by_frame(plot_points, "radec")
-        return {
-            "declination_tracks": self._group_radec_points_by_coordinate(
-                native_radec_points,
-                coordinate_key="dec",
-                sort_key="ra",
-            ),
-            "right_ascension_tracks": self._group_radec_points_by_coordinate(
-                native_radec_points,
-                coordinate_key="ra",
-                sort_key="dec",
-            ),
-        }
-
-    @staticmethod
-    def _split_visible_segments(mask):
-        """Split a visibility mask into contiguous visible segments."""
-        visible_indices = np.flatnonzero(mask)
-        if len(visible_indices) < 2:
-            return []
-
-        split_indices = np.nonzero(np.diff(visible_indices) > 1)[0] + 1
-        segments = np.split(visible_indices, split_indices)
-        return [segment for segment in segments if len(segment) >= 2]
-
-    @staticmethod
     def _resolve_value_unit(plot_points, value_key):
         """Resolve a representative unit string for one plotted value key."""
         for point in plot_points:
@@ -313,18 +265,18 @@ class ProductionGridPlotter:
         return value_label
 
     @staticmethod
-    def _has_plottable_radec_points(plot_points):
-        """Return whether normalized points include plottable RA/Dec coordinates."""
-        return any(point["ra"] is not None and point["dec"] is not None for point in plot_points)
+    def _has_plottable_hadec_points(plot_points):
+        """Return whether normalized points include plottable HA/Dec coordinates."""
+        return any(point["ha"] is not None and point["dec"] is not None for point in plot_points)
 
     @staticmethod
-    def _create_projection_axes(show_radec_panel):
+    def _create_projection_axes(show_hadec_panel):
         """Create figure and projection axes based on available coordinate panels."""
-        figure = plt.figure(figsize=(15, 7) if show_radec_panel else (8, 7))
-        if show_radec_panel:
+        figure = plt.figure(figsize=(15, 7) if show_hadec_panel else (8, 7))
+        if show_hadec_panel:
             altaz_axis = figure.add_subplot(1, 2, 1, projection="polar")
-            radec_axis = figure.add_subplot(1, 2, 2)
-            return figure, altaz_axis, radec_axis
+            hadec_axis = figure.add_subplot(1, 2, 2)
+            return figure, altaz_axis, hadec_axis
 
         altaz_axis = figure.add_subplot(1, 1, 1, projection="polar")
         return figure, altaz_axis, None
@@ -336,31 +288,16 @@ class ProductionGridPlotter:
         if any(label and not label.startswith("_") for label in labels):
             axis.legend(**location_kwargs)
 
-    def _add_panel_legends(self, altaz_axis, radec_axis, altaz_count, radec_count):
-        """Add legends to Alt/Az and RA/Dec panels when needed."""
+    def _add_panel_legends(self, altaz_axis, hadec_axis, altaz_count, hadec_count):
+        """Add legends to Alt/Az and HA/Dec panels when needed."""
         if altaz_count > 0:
             self._add_axis_legend_if_present(
                 altaz_axis,
                 {"loc": "upper left", "bbox_to_anchor": (1.0, 1.15)},
             )
 
-        if radec_axis and radec_count > 0:
-            self._add_axis_legend_if_present(radec_axis, {"loc": "upper right"})
-
-    @staticmethod
-    def _log_track_request_status(plot_ra_dec_tracks, dec_values):
-        """Log status for manual RA/Dec track requests in file-driven plotting mode."""
-        if not plot_ra_dec_tracks:
-            return
-
-        if dec_values:
-            logger.info(
-                "RA/Dec tracks are disabled in file-driven plotting mode "
-                "(ignoring manual dec_values)"
-            )
-            return
-
-        logger.info("RA/Dec tracks are disabled in file-driven plotting mode")
+        if hadec_axis and hadec_count > 0:
+            self._add_axis_legend_if_present(hadec_axis, {"loc": "upper right"})
 
     def _build_subtitle_lines(self):
         """Build subtitle lines from available grid metadata."""
@@ -391,27 +328,15 @@ class ProductionGridPlotter:
                 fontsize=10,
             )
 
-    def plot_sky_projection(self, plot_ra_dec_tracks=False, dec_values=None):
-        """
-        Create sky projection plots with Alt/Az and RA/Dec grid points.
-
-        Parameters
-        ----------
-        plot_ra_dec_tracks : bool
-            Kept for backward-compatible CLI/API usage.
-            In file-driven plotting mode, RA/Dec tracks are not rendered and this flag is ignored.
-        dec_values : list of float, optional
-            Kept for backward-compatible CLI/API usage.
-            In file-driven plotting mode, this argument is ignored.
-        """
+    def plot_sky_projection(self):
+        """Create sky projection plots with Alt/Az and HA/Dec grid points."""
         plot_points = self.normalize_grid_points()
-        show_radec_panel = self.has_radec_columns and self._has_plottable_radec_points(plot_points)
-        figure, altaz_axis, radec_axis = self._create_projection_axes(show_radec_panel)
+        show_hadec_panel = self.has_hadec_columns and self._has_plottable_hadec_points(plot_points)
+        figure, altaz_axis, hadec_axis = self._create_projection_axes(show_hadec_panel)
 
         altaz_count = self._plot_altaz_points(altaz_axis, plot_points)
-        radec_count = self._plot_radec_points(radec_axis, plot_points) if radec_axis else 0
-        self._log_track_request_status(plot_ra_dec_tracks, dec_values)
-        self._add_panel_legends(altaz_axis, radec_axis, altaz_count, radec_count)
+        hadec_count = self._plot_hadec_points(hadec_axis, plot_points) if hadec_axis else 0
+        self._add_panel_legends(altaz_axis, hadec_axis, altaz_count, hadec_count)
 
         figure.suptitle("Production Grid Points", fontsize=14, y=0.98)
         self._render_subtitle_lines(figure, self._build_subtitle_lines())
@@ -438,27 +363,27 @@ class ProductionGridPlotter:
         axis.set_ylabel("")
         axis.set_axisbelow(False)
 
-    def _configure_radec_axis(self, axis, plot_points):
-        """Configure the RA/Dec axis."""
-        right_ascensions = (
-            np.array([point["ra"] for point in plot_points]) if plot_points else np.array([])
+    def _configure_hadec_axis(self, axis, plot_points):
+        """Configure the HA/Dec axis."""
+        hour_angles = (
+            np.array([point["ha"] for point in plot_points]) if plot_points else np.array([])
         )
         declinations = (
             np.array([point["dec"] for point in plot_points]) if plot_points else np.array([])
         )
 
         axis.grid(True, color="gray", alpha=0.5, linestyle="--")
-        axis.set_xlabel("Right Ascension [deg]")
+        axis.set_xlabel("Hour angle [deg]")
         axis.set_ylabel("Declination [deg]")
-        axis.set_title("Equatorial RA/Dec")
+        axis.set_title("Hour angle / Declination")
 
-        if right_ascensions.size > 0:
-            ra_min = np.floor(np.min(right_ascensions) / 10.0) * 10.0
-            ra_max = np.ceil(np.max(right_ascensions) / 10.0) * 10.0
-            if np.isclose(ra_min, ra_max):
-                ra_min -= 5.0
-                ra_max += 5.0
-            axis.set_xlim(ra_max, ra_min)
+        if hour_angles.size > 0:
+            ha_min = np.floor(np.min(hour_angles) / 10.0) * 10.0
+            ha_max = np.ceil(np.max(hour_angles) / 10.0) * 10.0
+            if np.isclose(ha_min, ha_max):
+                ha_min -= 5.0
+                ha_max += 5.0
+            axis.set_xlim(ha_min, ha_max)
 
         if declinations.size > 0:
             dec_min = np.floor(np.min(declinations) / 5.0) * 5.0
@@ -557,7 +482,7 @@ class ProductionGridPlotter:
             axis=axis,
             plot_points=plot_points,
             primary_frame="altaz",
-            secondary_frame="radec",
+            secondary_frame="hadec",
             primary_color="tab:blue",
             secondary_color="tab:orange",
             x_key="azimuth",
@@ -570,13 +495,13 @@ class ProductionGridPlotter:
         hidden_points = sum(point["visible_in_altaz"] is False for point in plot_points)
         if hidden_points > 0:
             logger.info(
-                f"Skipping {hidden_points} RA/Dec points below the horizon in Azimuth/Zenith panel"
+                f"Skipping {hidden_points} HA/Dec points below the horizon in Azimuth/Zenith panel"
             )
         return plotted_points
 
-    def _plot_radec_points(self, axis, plot_points):
+    def _plot_hadec_points(self, axis, plot_points):
         """
-        Plot grid points on the RA/Dec projection.
+        Plot grid points on the HA/Dec projection.
 
         Parameters
         ----------
@@ -585,17 +510,17 @@ class ProductionGridPlotter:
         plot_points : list of dict
             Normalized plot points.
         """
-        self._configure_radec_axis(axis, plot_points)
+        self._configure_hadec_axis(axis, plot_points)
         return self._plot_frame_points(
             axis=axis,
             plot_points=plot_points,
-            primary_frame="radec",
+            primary_frame="hadec",
             secondary_frame="altaz",
             primary_color="tab:orange",
             secondary_color="tab:blue",
-            x_key="ra",
+            x_key="ha",
             y_key="dec",
-            panel_name="RA/Dec",
+            panel_name="HA/Dec",
         )
 
     @staticmethod

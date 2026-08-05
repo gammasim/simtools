@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.14"
 
@@ -51,7 +51,7 @@ jobs:
             echo "Testing schema $file"
             python src/simtools/applications/validate_file_using_schema.py \
             --file_name "$file" \
-            --schema model_parameter_and_data_schema.metaschema.yml \
+            --schema_file model_parameter_and_data_schema.metaschema.yml \
             --data_type "schema" \
             --ignore_software_version \
             --log_level DEBUG
@@ -63,7 +63,7 @@ jobs:
             echo "Testing config file $file"
             python src/simtools/applications/validate_file_using_schema.py \
             --file_name "$file" \
-            --schema application_workflow.metaschema.yml \
+            --schema_file application_workflow.metaschema.yml \
             --data_type "schema" \
             --log_level DEBUG
           done

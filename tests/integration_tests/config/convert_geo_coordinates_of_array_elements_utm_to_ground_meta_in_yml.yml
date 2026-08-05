@@ -3,8 +3,8 @@ applications:
 - application: simtools-convert-geo-coordinates-of-array-elements
   configuration:
     export: ground
-    input: tests/resources/static/telescope_positions-North-utm-without-cta-meta.ecsv
-    input_meta: tests/resources/static/telescope_positions-North-utm.meta.yml
+    array_element_positions_file: ${static:telescope_positions-North-utm-without-cta-meta.ecsv}
+    input_meta: ${static:telescope_positions-North-utm.meta.yml}
     log_level: DEBUG
     model_version: 6.0.2
     output_file: test.ecsv

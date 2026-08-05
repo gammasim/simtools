@@ -15,7 +15,7 @@ Available coordinate systems are:
 
 Command line arguments
 ----------------------
-input (str)
+array_element_positions_file (str)
     File name with list of array element positions.
     Input can be given as astropy table file (ecsv) or a single array element in
     a json file.
@@ -34,7 +34,7 @@ Convert a list of array elements using a list of telescope positions in UTM coor
 .. code-block:: console
 
     simtools-convert-geo-coordinates-of-array-elements
-        --input tests/resources/telescope_positions-North-utm.ecsv
+        --array_element_positions_file tests/resources/telescope_positions-North-utm.ecsv
         --print ground
 
 The converted list of telescope positions in ground coordinates is printed to the screen.
@@ -46,7 +46,7 @@ only a subset of the array elements (telescopes; ignore calibration devices):
 .. code-block:: console
 
     simtools-convert-geo-coordinates-of-array-elements
-        --input tests/resources/telescope_positions-North-utm.ecsv
+        --array_element_positions_file tests/resources/telescope_positions-North-utm.ecsv
         --export ground
         --select_assets LSTN
 
@@ -61,7 +61,9 @@ from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.layout import array_layout
 
 _ARGUMENTS = (
-    cli.ArgumentDefinition("input", help="list of array element positions", required=True),
+    cli.ArgumentDefinition(
+        "array_element_positions_file", help="List of array element positions.", required=True
+    ),
     cli.ArgumentDefinition(
         "input_meta", help="meta data file associated to input data", type=str, required=False
     ),
@@ -103,7 +105,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.MODEL_VERSION,
         cli.PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
-        cli.IGNORE_MISSING_DESIGN_MODEL,
         cli.SITE,
         *cli.OUTPUT_PATH_ARGUMENTS,
         *cli.OUTPUT_ARGUMENTS,
@@ -117,20 +118,20 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    if app_context.args.get("input", "").endswith(".json"):
+    if app_context.args.get("array_element_positions_file", "").endswith(".json"):
         site = app_context.args.get("site", None)
         metadata, validate_schema_file = None, None
     else:
         metadata = MetadataCollector(
             args_dict=app_context.args, model_parameter_name="array_coordinates"
         )
-        site = metadata.get_site(from_input_meta=True)
+        site = metadata.get_site(from_input_meta=True) or app_context.args.get("site")
         validate_schema_file = metadata.get_data_model_schema_file_name()
 
     layout = array_layout.ArrayLayout(
         model_version=app_context.args["model_version"],
         site=site,
-        telescope_list_file=app_context.args["input"],
+        telescope_list_file=app_context.args["array_element_positions_file"],
         telescope_list_metadata_file=app_context.args["input_meta"],
         validate=not app_context.args["skip_input_validation"],
     )
@@ -143,7 +144,7 @@ def main():
                 crs_name=app_context.args["export"],
                 parameter_version=app_context.args.get("parameter_version"),
             )
-            if app_context.args.get("input", "").endswith(".json")
+            if app_context.args.get("array_element_positions_file", "").endswith(".json")
             else layout.export_telescope_list_table(crs_name=app_context.args["export"])
         )
         writer.ModelDataWriter.write_product_data(

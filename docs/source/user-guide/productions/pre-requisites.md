@@ -21,7 +21,7 @@ Example command:
 
 ```bash
 simtools-write-trigger-histograms \
-    --event_data_file "reduced_event_data/gamma_20deg_0deg_run*.hdf5" \
+    --event_data_files "reduced_event_data/gamma_20deg_0deg_run*.hdf5" \
     --array_layout_name LSTN-01 \
     --site North \
     --model_version 7.0.0 \
@@ -76,7 +76,7 @@ Deterministic example using the test lookup table:
 
 ```bash
 simtools-plot-corsika-limits \
-    --input tests/resources/corsika_simulation_limits/corsika_limits_north.ecsv \
+    --corsika_limits_file tests/resources/corsika_simulation_limits/corsika_limits_north.ecsv \
     --output_path simtools-output
 ```
 

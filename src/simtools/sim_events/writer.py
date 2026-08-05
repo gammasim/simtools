@@ -56,6 +56,7 @@ class TableSchemas:
     file_info_schema = {
         "file_name": (str, None),
         "file_id": (np.uint32, None),
+        "run_number": (np.uint32, None),
         "particle_id": (np.uint32, None),
         "spectral_index": (np.float64, None),
         "energy_min": (np.float64, u.TeV),
@@ -112,7 +113,11 @@ class EventDataWriter:
         self.shower_data = []
         self.trigger_data = []
         self.file_info = []
+        self.input_metadata = []
         self.telescope_id_to_name = {}
+        self._current_run_header = {}
+        self._current_mc_run_header = {}
+        self._current_simtel_metadata = ({}, {})
         self._reset_data()
 
     def _reset_data(self):
@@ -121,6 +126,9 @@ class EventDataWriter:
         self.trigger_data = []
         self.file_info = []
         self.telescope_id_to_name = {}
+        self._current_run_header = {}
+        self._current_mc_run_header = {}
+        self._current_simtel_metadata = ({}, {})
 
     def process_files(self):
         """
@@ -142,6 +150,8 @@ class EventDataWriter:
         if chunk_size < 1:
             raise ValueError("chunk_size must be greater than zero.")
 
+        self.input_metadata = []
+        self._reset_data()
         yield self.create_tables()  # initialize all output tables, including empty ones
         for file_id, file in enumerate(self.input_files[: self.max_files]):
             self._logger.info(f"Processing file {file_id + 1}/{self.max_files}: {file}")
@@ -174,6 +184,7 @@ class EventDataWriter:
                 shower_rows=shower_rows,
                 trigger_rows=trigger_rows,
             )
+            self._record_input_metadata(file_id, file, run_info or None)
             self._reset_data()
             yield tables
 
@@ -255,6 +266,8 @@ class EventDataWriter:
     @staticmethod
     def _create_typed_table(data, schema, table_name):
         """Create a table using the declared schema instead of inferred dtypes."""
+        if table_name == "FILE_INFO":
+            data = [{**row, "run_number": row.get("run_number", 0)} for row in data]
         try:
             return Table(
                 rows=data,
@@ -276,13 +289,17 @@ class EventDataWriter:
     def _process_eventio_object(self, eventio_object, file_id, file, run_info):
         """Process one EventIO object and update accumulated records."""
         if isinstance(eventio_object, RunHeader):
-            run_info.update(eventio_object.parse())
+            self._current_run_header = eventio_object.parse()
+            run_info.update(self._current_run_header)
+            self._current_simtel_metadata = read_sim_telarray_metadata(file)
             self.telescope_id_to_name = get_sim_telarray_telescope_id_to_telescope_name_mapping(
                 file
             )
         elif isinstance(eventio_object, MCRunHeader):
-            run_info.update(self._process_mc_run_header(eventio_object))
+            self._current_mc_run_header = self._process_mc_run_header(eventio_object)
+            run_info.update(self._current_mc_run_header)
             if not self.telescope_id_to_name:
+                self._current_simtel_metadata = read_sim_telarray_metadata(file)
                 self.telescope_id_to_name = get_sim_telarray_telescope_id_to_telescope_name_mapping(
                     file
                 )
@@ -333,8 +350,41 @@ class EventDataWriter:
         self._logger.info(f"Shower reuse factor: {self.n_use} (viewcone: {mc_head['viewcone']})")
         return mc_head
 
+    def _record_input_metadata(self, file_id, file, run_info):
+        """Retain rich provenance for one processed input file."""
+        run_info = run_info or {}
+        global_metadata, telescope_metadata = self._current_simtel_metadata
+        telescope_metadata = {
+            str(telescope_id): {
+                "telescope_name": self.telescope_id_to_name.get(telescope_id),
+                "values": metadata,
+            }
+            for telescope_id, metadata in telescope_metadata.items()
+        }
+        self.input_metadata.append(
+            {
+                "file_id": file_id,
+                "file_name": str(file),
+                "run_number": run_info.get("run", run_info.get("run_number")),
+                "run_header": self._current_run_header,
+                "mc_run_header": self._current_mc_run_header,
+                "sim_telarray_global_metadata": global_metadata,
+                "sim_telarray_telescope_metadata": telescope_metadata,
+            }
+        )
+
+    def get_simulation_input_metadata(self):
+        """Return rich provenance records for processed input files."""
+        return list(self.input_metadata)
+
     def _process_file_info(self, file_id, file, run_info=None):
         """Process file information and append to file info list."""
+        run_number = (
+            run_info.get("run", run_info.get("run_number"))
+            if run_info
+            else self._get_corsika_run_number(file)
+        )
+        run_number = 0 if run_number is None else run_number
         if run_info:  # sim_telarray file
             corsika7_id = PrimaryParticle(
                 particle_id_type="eventio_id",
@@ -369,6 +419,7 @@ class EventDataWriter:
             {
                 "file_name": str(file),
                 "file_id": file_id,
+                "run_number": run_number,
                 "particle_id": corsika7_id,
                 "spectral_index": spectral_index,
                 "energy_min": e_min,
@@ -382,6 +433,15 @@ class EventDataWriter:
                 "nsb_level": nsb,
             }
         )
+
+    @staticmethod
+    def _get_corsika_run_number(file):
+        """Return the run number from a CORSIKA header when available."""
+        try:
+            run_header, event_header = get_corsika_run_and_event_headers(file)
+            return event_header.get("run_number", run_header.get("run_number"))
+        except KeyError, TypeError:
+            return None
 
     @staticmethod
     def _extract_spectral_index(run_info=None, event_header=None):

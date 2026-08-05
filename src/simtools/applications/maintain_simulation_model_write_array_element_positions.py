@@ -10,9 +10,9 @@
 
     Command line arguments
 
-    input : str
+    array_element_positions_file : str
         File containing a table of array element positions.
-    simulation_models_directory : Path
+    simulation_models_path : Path
         Path of local copy of model parameter repository.
     parameter_version : str
         Parameter version.
@@ -26,8 +26,8 @@
     .. code-block:: console
 
         simtools-maintain-simulation-model-write-array-element-positions \
-            --input tests/resources/telescope_positions-North-ground.ecsv \
-            --simulation_models_directory /path/to/repository \
+            --array_element_positions_file tests/resources/telescope_positions-North-ground.ecsv \
+            --simulation_models_path /path/to/repository \
             --parameter_version 0.1.0 \
             --coordinate_system ground
 
@@ -36,14 +36,12 @@
     .. code-block:: console
 
         simtools-maintain-simulation-model-write-array-element-positions \
-            --input tests/resources/telescope_positions-North-utm.ecsv \
-            --simulation_models_directory /path/to/repository \
+            --array_element_positions_file tests/resources/telescope_positions-North-utm.ecsv \
+            --simulation_models_path /path/to/repository \
             --parameter_version 0.1.0 \
             --coordinate_system utm
 
 """
-
-from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
@@ -51,14 +49,11 @@ from simtools.layout.array_layout_utils import write_array_elements_from_file_to
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
-        "input", help="File containing a table of array element positions.", required=False
-    ),
-    cli.ArgumentDefinition(
-        "simulation_models_directory",
-        help="Local simulation-model repository to update.",
-        type=Path,
+        "array_element_positions_file",
+        help="File containing a table of array element positions.",
         required=True,
     ),
+    cli.SIMULATION_MODELS_PATH(required=True),
     cli.ArgumentDefinition(
         "coordinate_system",
         help="Coordinate system of array element positions (utm or ground).",
@@ -76,9 +71,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         cli.PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
-        cli.IGNORE_MISSING_DESIGN_MODEL,
     ),
-    database=True,
 )
 
 
@@ -88,8 +81,8 @@ def main():
 
     write_array_elements_from_file_to_repository(
         coordinate_system=app_context.args["coordinate_system"],
-        input_file=app_context.args["input"],
-        repository_path=app_context.args["simulation_models_directory"],
+        input_file=app_context.args["array_element_positions_file"],
+        repository_path=app_context.args["simulation_models_path"],
         parameter_version=app_context.args["parameter_version"],
     )
 

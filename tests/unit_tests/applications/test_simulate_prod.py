@@ -78,7 +78,7 @@ def _mock_application_context(mock_application_start, label="test"):
     mock_application_start.return_value = MagicMock(
         args={
             "label": label,
-            "save_reduced_event_lists": False,
+            "reduced_event_lists": True,
             "save_file_lists": False,
             "grid_output_path": None,
         }

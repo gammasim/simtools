@@ -4,7 +4,7 @@ applications:
   configuration:
     model_version: 6.0.2
     telescope_type: SST
-    n_telescopes: 1
+    number_of_telescopes: 1
     telescope_distance: 50.
     output_file: generate_regular_arrays.ecsv
     output_path: simtools-output
