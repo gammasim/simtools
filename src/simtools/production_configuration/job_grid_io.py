@@ -45,7 +45,6 @@ SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS = frozenset(
     }
 )
 _SIMULATE_PROD_OPERATIONAL_FIELDS = (
-    "env_file",
     "log_level",
     "label",
     "simulation_software",
@@ -61,6 +60,15 @@ _SIMULATE_PROD_OPERATIONAL_FIELDS = (
     "reduced_event_lists",
     "corsika_seeds",
     "sequential",
+    "overwrite_model_parameters",
+)
+_SIMULATE_PROD_PATH_FIELDS = (
+    "grid_output_path",
+    "sim_telarray_path",
+    "corsika_path",
+    "corsika_interaction_table_path",
+    "simulation_models_path",
+    "model_path",
     "overwrite_model_parameters",
 )
 
@@ -414,7 +422,7 @@ def build_simulate_prod_job_specs(args_dict, rows, metadata=None):
         Ordered command jobs that force local execution inside each worker.
     """
     metadata = metadata or {}
-    output_root = Path(args_dict["output_path"])
+    output_root = Path(args_dict["output_path"]).expanduser().resolve()
     jobs = []
     for index, row in enumerate(rows):
         job_args = {key: args_dict.get(key) for key in _SIMULATE_PROD_OPERATIONAL_FIELDS}
@@ -427,6 +435,10 @@ def build_simulate_prod_job_specs(args_dict, rows, metadata=None):
         if row.get("scan_label"):
             label = job_args.get("label") or "simulate-prod"
             job_args["label"] = f"{label}_{row['scan_label']}"
+
+        for key in _SIMULATE_PROD_PATH_FIELDS:
+            if job_args.get(key):
+                job_args[key] = str(Path(job_args[key]).expanduser().resolve())
 
         command = [
             sys.executable,

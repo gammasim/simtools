@@ -312,10 +312,11 @@ def test_job_grid_row_to_simulate_prod_args_skips_empty_metadata():
 
 def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory):
     """Build unique backend-neutral commands while forcing nested execution local."""
+    overwrite_path = Path(tmp_test_directory) / "overwrite.yml"
     row = {
         **_job_rows()[0],
         "scan_label": "high_nsb",
-        "overwrite_model_parameters": "overwrite.yml",
+        "overwrite_model_parameters": str(overwrite_path),
     }
     args = {
         "output_path": tmp_test_directory / "output",
@@ -335,7 +336,7 @@ def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory
         "local",
     )
     assert "prod_high_nsb" in command
-    assert "overwrite.yml" in command
+    assert str(overwrite_path) in command
     assert str(tmp_test_directory / "models") in command
     assert str(tmp_test_directory / "output" / "job-000000") in command
     assert str(tmp_test_directory / "grid" / "job-000000") in command
