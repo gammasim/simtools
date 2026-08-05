@@ -24,7 +24,6 @@ class ArgumentDefinition:
     exclusive_group: str | None
     exclusive_group_required: bool
     preserve_by_version: bool
-    aliases: tuple[str, ...]
     kwargs: Mapping
 
     def __init__(
@@ -35,7 +34,6 @@ class ArgumentDefinition:
         exclusive_group=None,
         exclusive_group_required=False,
         preserve_by_version=False,
-        aliases=(),
         **kwargs,
     ):
         if not name or name.startswith("-"):
@@ -45,7 +43,6 @@ class ArgumentDefinition:
         object.__setattr__(self, "exclusive_group", exclusive_group)
         object.__setattr__(self, "exclusive_group_required", exclusive_group_required)
         object.__setattr__(self, "preserve_by_version", preserve_by_version)
-        object.__setattr__(self, "aliases", tuple(aliases))
         object.__setattr__(self, "kwargs", MappingProxyType(dict(kwargs)))
 
     def __call__(self, **overrides):
@@ -56,7 +53,6 @@ class ArgumentDefinition:
             exclusive_group=self.exclusive_group,
             exclusive_group_required=self.exclusive_group_required,
             preserve_by_version=self.preserve_by_version,
-            aliases=self.aliases,
             **{**self.kwargs, **overrides},
         )
 
@@ -71,7 +67,6 @@ class ArgumentDefinition:
             exclusive_group=self.exclusive_group,
             exclusive_group_required=False,
             preserve_by_version=self.preserve_by_version,
-            aliases=self.aliases,
             **kwargs,
         )
 
@@ -383,6 +378,14 @@ SIMULATION_MODELS_PATH = _argument(
     default=None,
 )
 
+DATABASE_NAME = _argument(
+    "database_name",
+    "application",
+    help="Database name.",
+    type=str,
+    default=None,
+)
+
 DB_API_PW = _argument(
     "db_api_pw",
     _DATABASE_CONFIGURATION_GROUP,
@@ -439,7 +442,7 @@ DATABASE_ARGUMENTS = (
 MODEL_VERSION = _argument(
     "model_version",
     _SIMULATION_MODEL_GROUP,
-    help="Simulation production model version(s). Use --show-options model_version.",
+    help="Simulation production model version(s). Use --show_options model_version.",
     type=str,
     default=None,
     nargs="+",
@@ -471,7 +474,7 @@ OVERWRITE_MODEL_PARAMETERS = _argument(
 SITE = _argument(
     "site",
     _SIMULATION_MODEL_GROUP,
-    help="Observatory site (e.g., North, South). Use --show-options site.",
+    help="Observatory site (e.g., North, South). Use --show_options site.",
     type=helpers.site,
 )
 
@@ -496,7 +499,7 @@ ARRAY_LAYOUT_NAME = _argument(
     help=(
         "Array layout name(s) (e.g., CTAO-North-Alpha, LSTN-01). "
         "Telescope names are assumed as single-telescope layouts. "
-        "Use --show-options array_layout_name."
+        "Use --show_options array_layout_name."
     ),
     nargs="+",
     type=str,
@@ -557,7 +560,7 @@ PRIMARY = _argument(
     _SIMULATION_CONFIGURATION_GROUP,
     help=(
         "Primary particle(s) to simulate. Common names: "
-        f"{', '.join(PrimaryParticle.particle_names().keys())}. Use --show-options primary."
+        f"{', '.join(PrimaryParticle.particle_names().keys())}. Use --show_options primary."
     ),
     type=str.lower,
     action=helpers.OneOrManyAction,
@@ -621,6 +624,14 @@ RUN_NUMBER = _argument(
     default=1,
 )
 
+NUMBER_OF_RUNS = _argument(
+    "number_of_runs",
+    _SIMULATION_CONFIGURATION_GROUP,
+    help="Number of runs.",
+    type=helpers.scientific_int,
+    default=None,
+)
+
 EVENT_NUMBER_FIRST_SHOWER = _argument(
     "event_number_first_shower",
     _SIMULATION_CONFIGURATION_GROUP,
@@ -632,8 +643,8 @@ EVENT_NUMBER_FIRST_SHOWER = _argument(
 CORRECT_FOR_B_FIELD_ALIGNMENT = _argument(
     "correct_for_b_field_alignment",
     _SIMULATION_CONFIGURATION_GROUP,
-    help="Correct for B-field alignment",
-    action="store_true",
+    help="Align North with geographic North (and not magnetic North).",
+    action=argparse.BooleanOptionalAction,
     default=True,
 )
 
@@ -704,7 +715,7 @@ CORSIKA_HE_INTERACTION = _argument(
     help=(
         "High-energy interaction model for CORSIKA "
         f"(default fallback: {defaults.CORSIKA_HE_INTERACTION}). "
-        "Use --show-options corsika_he_interaction."
+        "Use --show_options corsika_he_interaction."
     ),
     type=str,
     action=helpers.OneOrManyAction,
@@ -718,7 +729,7 @@ CORSIKA_LE_INTERACTION = _argument(
     help=(
         "Low-energy interaction model for CORSIKA "
         f"(default fallback: {defaults.CORSIKA_LE_INTERACTION}). "
-        "Use --show-options corsika_le_interaction."
+        "Use --show_options corsika_le_interaction."
     ),
     type=str,
     action=helpers.OneOrManyAction,
@@ -856,8 +867,8 @@ EVENT_DATA_FILE = _argument(
     required=True,
 )
 
-TELESCOPE_IDS = _argument(
-    "telescope_ids",
+TELESCOPE_CONFIG_FILE = _argument(
+    "telescope_config_file",
     "application",
     help="Path to a file containing telescope configurations.",
     type=str,
@@ -867,7 +878,6 @@ SHOW_OPTIONS = _argument(
     "show_options",
     "application",
     help="Print available values for a supported option and exit.",
-    aliases=("--show-options",),
     type=str,
     default=None,
 )
@@ -894,7 +904,6 @@ def _layout_argument(argument, *, required):
         exclusive_group="array layout",
         exclusive_group_required=required,
         preserve_by_version=argument.preserve_by_version,
-        aliases=argument.aliases,
         **argument.kwargs,
     )
 

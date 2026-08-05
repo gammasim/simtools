@@ -9,7 +9,7 @@ descriptions.
 
 Command line arguments
 ----------------------
-production_models_directory (Path)
+simulation_models_path (Path)
     Path to the simulation-models repository root.
 output_path (Path)
     Directory for the output file.
@@ -21,26 +21,17 @@ Example
 .. code-block:: console
 
     simtools-docs-produce-production-summary \\
-        --production_models_directory ../simulation-models \\
+        --simulation_models_path ../simulation-models \\
         --output_path simtools-output/reports/productions \\
         --output_file production_version_descriptions.md
 
 """
 
-from pathlib import Path
-
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.reporting.docs_production_summary import write_production_summary_markdown
 
-_ARGUMENTS = (
-    cli.ArgumentDefinition(
-        "production_models_directory",
-        help="Local simulation-model repository containing production info files.",
-        type=Path,
-        required=True,
-    ),
-)
+_ARGUMENTS = (cli.SIMULATION_MODELS_PATH(required=True),)
 
 
 APPLICATION = ApplicationDefinition.for_module(
@@ -63,9 +54,7 @@ def main():
         raise ValueError("Missing required argument output_file.")
 
     output_file_path = app_context.io_handler.get_output_file(output_file)
-    write_production_summary_markdown(
-        app_context.args["production_models_directory"], output_file_path
-    )
+    write_production_summary_markdown(app_context.args["simulation_models_path"], output_file_path)
 
     app_context.logger.info(f"Production summary written to {output_file_path}")
 

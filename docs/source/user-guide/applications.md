@@ -46,8 +46,8 @@ with the `--help` option.
 A configuration file must use the same option names displayed by that command's `--help`;
 unsupported path keys are rejected.
 
-To inspect the available values for an option, use `--show-options <option>`; for example,
-`simtools-simulate-prod --show-options primary` lists the configured primary-particle names.
+To inspect the available values for an option, use `--show_options <option>`; for example,
+`simtools-simulate-prod --show_options primary` lists the configured primary-particle names.
 This also works for options without a dedicated provider: simtools prints the option help and any
 finite choices declared by argparse.
 

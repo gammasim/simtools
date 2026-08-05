@@ -17,7 +17,7 @@ from simtools.utils import names
 
 @dataclass(frozen=True)
 class ShowOptionsResult:
-    """Normalized output for ``--show-options``."""
+    """Normalized output for ``--show_options``."""
 
     option_name: str
     help_text: str | None = None
@@ -43,7 +43,7 @@ def handle_show_options(args_dict, parser):
 
 
 def resolve_show_options(args_dict, parser=None):
-    """Resolve ``--show-options`` using a custom provider or parser metadata."""
+    """Resolve ``--show_options`` using a custom provider or parser metadata."""
     option_name = args_dict["show_options"]
     provider = _SHOW_OPTION_PROVIDERS.get(option_name)
     if provider is not None:
@@ -52,7 +52,7 @@ def resolve_show_options(args_dict, parser=None):
         return _show_argparse_option(option_name, parser)
     supported = ", ".join(sorted(_SHOW_OPTION_PROVIDERS))
     raise ValueError(
-        f"Unsupported option for '--show-options': {option_name}. Supported values: {supported}."
+        f"Unsupported option for '--show_options': {option_name}. Supported values: {supported}."
     )
 
 
@@ -93,7 +93,7 @@ def _find_argparse_action(parser, option_name):
     for action in parser._actions:  # pylint: disable=protected-access
         if action.dest == destination:
             return action
-    raise ValueError(f"Unknown command-line option for --show-options: {option_name}.")
+    raise ValueError(f"Unknown command-line option for --show_options: {option_name}.")
 
 
 def _action_help(action):
@@ -177,6 +177,36 @@ def _show_corsika_le_interaction(args_dict):
     return _show_corsika_interaction(args_dict, interaction_level="low")
 
 
+def _show_corsika_hadronic_transition_energy(args_dict):
+    """Show CORSIKA HILOW defaults recorded for installed build variants."""
+    variants, resolved_path = _get_corsika_variants(args_dict)
+    grouped_values = {}
+    missing_variants = []
+    for variant in variants:
+        variant_name = (
+            f"{variant.he_hadronic_model}/{variant.le_hadronic_model}/{variant.atmosphere_geometry}"
+        )
+        transition_energy = getattr(variant, "hadronic_transition_energy_default_gev", None)
+        if transition_energy is None:
+            missing_variants.append(variant_name)
+        else:
+            grouped_values[variant_name] = (f"{transition_energy:g} GeV",)
+
+    notes = ()
+    if missing_variants:
+        notes = (
+            "The installed CORSIKA build metadata does not declare HILOW for: "
+            + ", ".join(missing_variants)
+            + ".",
+        )
+    return ShowOptionsResult(
+        option_name="corsika_hadronic_transition_energy",
+        environment=_get_corsika_environment(resolved_path, variants),
+        grouped_values=grouped_values,
+        notes=notes,
+    )
+
+
 def _show_corsika_interaction(args_dict, interaction_level):
     variants, resolved_path = _get_corsika_variants(args_dict)
     if interaction_level == "high":
@@ -221,11 +251,11 @@ def _resolve_corsika_path(args_dict):
 def _get_single_model_version(args_dict, option_name):
     model_version = args_dict.get("model_version")
     if model_version is None:
-        raise ValueError(f"'--show-options {option_name}' requires '--model_version'.")
+        raise ValueError(f"'--show_options {option_name}' requires '--model_version'.")
     if isinstance(model_version, list):
         if len(model_version) != 1:
             raise ValueError(
-                f"'--show-options {option_name}' requires exactly one '--model_version' value."
+                f"'--show_options {option_name}' requires exactly one '--model_version' value."
             )
         return model_version[0]
     return model_version
@@ -236,6 +266,7 @@ _SHOW_OPTION_PROVIDERS = {
     "corsika_he_interaction": _show_corsika_he_interaction,
     "corsika_le_interaction": _show_corsika_le_interaction,
     "model_version": _show_model_versions,
+    "corsika_hadronic_transition_energy": _show_corsika_hadronic_transition_energy,
     "primary": _show_primary,
     "site": _show_sites,
 }

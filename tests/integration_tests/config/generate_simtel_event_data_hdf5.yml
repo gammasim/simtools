@@ -2,14 +2,13 @@
 applications:
 - application: simtools-generate-simtel-event-data
   configuration:
-    input: ${generated:proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.simtel.zst}
+    simtel_file: ${generated:proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.simtel.zst}
     max_files: 2
     output_file: output_file.hdf5
     output_path: simtools-output
     print_dataset_information: 5
   integration_tests:
   - output_file: output_file.hdf5
-  - output_file: output_file.meta.yml
   test_name: hdf5
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

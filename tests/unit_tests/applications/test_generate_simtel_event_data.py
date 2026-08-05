@@ -9,5 +9,5 @@ def test_max_files_default_and_explicit_value():
     parser = CommandLineParser()
     parser.add_argument_definitions(generate_simtel_event_data._ARGUMENTS)
 
-    assert parser.parse_args(["--input", "*.simtel.zst"]).max_files is None
-    assert parser.parse_args(["--input", "*.simtel.zst", "--max_files", "12"]).max_files == 12
+    assert parser.parse_args(["--simtel_file", "*.simtel.zst"]).max_files is None
+    assert parser.parse_args(["--simtel_file", "*.simtel.zst", "--max_files", "12"]).max_files == 12

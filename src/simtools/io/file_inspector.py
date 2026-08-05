@@ -1,5 +1,6 @@
 """Inspect simtools-related files and return structured summaries."""
 
+import json
 from importlib import import_module
 from pathlib import Path
 
@@ -8,10 +9,11 @@ from astropy.table import Table
 
 from simtools.io import ascii_handler
 from simtools.io.file_type import is_file_type, looks_like_text_file, validate_file_type
+from simtools.io.table_handler import read_metadata_document, read_table_from_hdf5
 from simtools.simtel import simtel_io_metadata
 
 
-def inspect_file(file_path, max_entries=50, format_report=True):
+def inspect_file(file_path, max_entries=50, format_report=True, entry_name=None):
     """
     Inspect one supported file and return one or more reports.
 
@@ -23,6 +25,8 @@ def inspect_file(file_path, max_entries=50, format_report=True):
         Maximum number of entries to include in collection-style summaries.
     format_report : bool, optional
         Return formatted strings instead of raw dictionaries.
+    entry_name : str, optional
+        Print one root HDF5 dataset instead of the structure report.
 
     Returns
     -------
@@ -32,6 +36,8 @@ def inspect_file(file_path, max_entries=50, format_report=True):
     """
     file_path = Path(file_path)
     max_entries = _normalize_max_entries(max_entries)
+    if entry_name is not None:
+        return [inspect_hdf5_entry(file_path, entry_name, max_entries)]
     inspector = _select_inspector(file_path)
     reports = [inspector(file_path, max_entries=max_entries, format_report=format_report)]
 
@@ -66,6 +72,64 @@ def inspect_hdf5_file(file_path, max_entries=50, format_report=True):
         "total_entries": len(entries),
     }
     return _format_hdf5_report(report) if format_report else report
+
+
+def inspect_hdf5_entry(file_path, entry_name, max_entries=50):
+    """Return the content of one HDF5 root dataset.
+
+    JSON metadata datasets are decoded as formatted JSON. Compound datasets are read through
+    the existing HDF5 table reader; other datasets are displayed using their scalar or array
+    representation.
+
+    Parameters
+    ----------
+    file_path : str or Path
+        Path to the HDF5 file.
+    entry_name : str
+        Root dataset name to read.
+    max_entries : int, optional
+        Maximum number of table rows to print. Non-positive values disable truncation.
+
+    Returns
+    -------
+    str
+        Formatted dataset content.
+
+    Raises
+    ------
+    ValueError
+        If the file is not a valid HDF5 container or the root entry is not a dataset.
+    KeyError
+        If the requested root entry does not exist.
+    """
+    file_path = validate_file_type(file_path, "hdf5")
+    if not h5py.is_hdf5(file_path):
+        raise ValueError(f"File '{file_path}' is not a valid HDF5 container.")
+
+    with h5py.File(file_path, "r") as hdf5_file:
+        if entry_name not in hdf5_file:
+            raise KeyError(f"HDF5 root dataset '{entry_name}' not found in {file_path}.")
+        dataset = hdf5_file[entry_name]
+        if not isinstance(dataset, h5py.Dataset):
+            raise ValueError(f"HDF5 root entry '{entry_name}' is not a dataset.")
+        data_format = dataset.attrs.get("format")
+        if isinstance(data_format, bytes):
+            data_format = data_format.decode("utf-8")
+        is_table = dataset.dtype.names is not None
+
+    if data_format == "json":
+        return json.dumps(read_metadata_document(file_path, entry_name), indent=2, sort_keys=True)
+    if is_table:
+        table = read_table_from_hdf5(file_path, entry_name)
+        max_entries = _normalize_max_entries(max_entries)
+        table = table if max_entries is None else table[:max_entries]
+        return "\n".join(table.pformat(max_lines=-1, max_width=-1))
+
+    with h5py.File(file_path, "r") as hdf5_file:
+        value = hdf5_file[entry_name][()]
+    if isinstance(value, bytes):
+        value = value.decode("utf-8")
+    return str(value)
 
 
 def inspect_json_or_yaml_file(file_path, max_entries=50, format_report=True):

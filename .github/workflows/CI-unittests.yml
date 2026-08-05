@@ -38,7 +38,7 @@ jobs:
           fetch-depth: 0
 
       - name: Python setup
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.14"
           check-latest: true
@@ -82,7 +82,7 @@ jobs:
           fetch-depth: 0
 
       - name: Python setup
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true

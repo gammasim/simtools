@@ -7,7 +7,7 @@ applications:
     model_version: 7.0.0
     output_path: simtools-output
     site: South
-    telescope: LSTS-04
+    telescopes: LSTS-04
     run_number: 10
     flasher_photons: 1e6
     log_level: DEBUG

@@ -8,6 +8,7 @@ implementation of the observatory metadata model.
 
 import getpass
 import logging
+import re
 from copy import deepcopy
 from pathlib import Path
 
@@ -20,6 +21,14 @@ from simtools.data_model import metadata_model, schema
 from simtools.io import ascii_handler, io_handler
 from simtools.settings import config
 from simtools.utils import names
+
+_SENSITIVE_CONFIGURATION_ASSIGNMENT = re.compile(
+    r"(?<![\w-])(?P<option>--)?"
+    r"(?P<key>[A-Za-z_][A-Za-z0-9_-]*(?:password|passwd|pw|pwd|secret|token|api[_-]?key)"
+    r"[A-Za-z0-9_-]*)(?P<separator>=|:)"
+    r"(?P<value>\"[^\"]*\"|'[^']*'|[^\s]+)",
+    re.IGNORECASE,
+)
 
 
 class MetadataCollector:
@@ -184,9 +193,9 @@ class MetadataCollector:
 
         """
         # from command line
-        if self.args_dict.get("schema"):
-            self._logger.debug(f"Schema file from command line: {self.args_dict['schema']}")
-            return self.args_dict["schema"]
+        if self.args_dict.get("schema_file"):
+            self._logger.debug(f"Schema file from command line: {self.args_dict['schema_file']}")
+            return self.args_dict["schema_file"]
 
         # from metadata
         try:
@@ -324,6 +333,65 @@ class MetadataCollector:
                 )
 
         self._append_context_note_from_value_table(context_dict)
+        self._fill_application_configuration(context_dict)
+
+    def _fill_application_configuration(self, context_dict):
+        """Add the resolved, sanitized application configuration to metadata context."""
+        if "application_configuration" not in context_dict:
+            return
+
+        arguments = {key: value for key, value in self.args_dict.items() if not key.startswith("_")}
+        context_dict["application_configuration"] = {
+            "schema_version": "1.0.0",
+            "application": self.args_dict.get("application_label") or self.args_dict.get("label"),
+            "arguments": self._sanitize_configuration(arguments),
+            "sources": {
+                source: sorted(keys)
+                for source, keys in self.args_dict.get(
+                    "_metadata_configuration_sources", {}
+                ).items()
+            },
+        }
+
+    @classmethod
+    def _sanitize_configuration(cls, value, key=None):
+        """Convert configuration values to serializable types and redact secrets."""
+        if key is not None and cls._is_sensitive_configuration_key(key):
+            return "***REDACTED***" if value is not None else None
+        if isinstance(value, dict):
+            return {
+                str(item_key): cls._sanitize_configuration(item_value, str(item_key))
+                for item_key, item_value in value.items()
+            }
+        if isinstance(value, (list, tuple)):
+            return [cls._sanitize_configuration(item) for item in value]
+        if isinstance(value, str):
+            return cls._sanitize_configuration_string(value)
+        return ascii_handler.to_builtin(value)
+
+    @staticmethod
+    def _sanitize_configuration_string(value):
+        """Redact sensitive values embedded in command-option strings."""
+
+        def redact_assignment(match):
+            assignment_value = match.group("value")
+            quote = assignment_value[0] if assignment_value[0] in "\"'" else ""
+            redacted_value = f"{quote}***REDACTED***{quote}" if quote else "***REDACTED***"
+            option = match.group("option") or ""
+            return f"{option}{match.group('key')}{match.group('separator')}{redacted_value}"
+
+        return _SENSITIVE_CONFIGURATION_ASSIGNMENT.sub(redact_assignment, value)
+
+    @staticmethod
+    def _is_sensitive_configuration_key(key):
+        """Return whether a configuration key may contain a secret."""
+        return key.casefold() == "db_api_pw" or bool(
+            re.search(
+                r"password|passwd|(^|[_-])(pw|pwd)($|[_-])|secret|token|api[_-]?key",
+                key,
+                re.I,
+            )
+        )
 
     def _append_context_note_from_value_table(self, context_dict):
         """Append context note from table metadata in value file, if available."""

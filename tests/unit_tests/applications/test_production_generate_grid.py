@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+import simtools.applications.plot_array_layout as plot_array_layout_app
 import simtools.applications.production_generate_grid as app
 from simtools.configuration.commandline_parser import CommandLineParser
 
@@ -19,8 +20,9 @@ def _full_parser():
 
 
 @patch("simtools.applications.production_generate_grid.generate_job_grid")
+@patch("simtools.applications.production_generate_grid.MetadataCollector")
 @patch("simtools.application.definition.ApplicationDefinition.start")
-def test_main_generates_job_grid(mock_start, mock_generate_job_grid):
+def test_main_generates_job_grid(mock_start, mock_metadata_collector, mock_generate_job_grid):
     io_handler = Mock()
     io_handler.get_output_file.return_value = Path("job_grid.ecsv")
     args = {
@@ -28,9 +30,12 @@ def test_main_generates_job_grid(mock_start, mock_generate_job_grid):
         "run_number_offset": 10,
     }
     mock_start.return_value = SimpleNamespace(args=args, io_handler=io_handler)
+    metadata = {"cta": {"activity": {"name": "production_generate_grid"}}}
+    mock_metadata_collector.return_value.get_top_level_metadata.return_value = metadata
     app.main()
 
-    mock_generate_job_grid.assert_called_once_with(args, Path("job_grid.ecsv"))
+    mock_metadata_collector.assert_called_once_with(args)
+    mock_generate_job_grid.assert_called_once_with(args, Path("job_grid.ecsv"), metadata=metadata)
     mock_start.assert_called_once_with()
 
 
@@ -40,7 +45,6 @@ def test_full_parser_retains_supported_shared_arguments():
 
     expected = {
         "array_layout_name",
-        "array_element_list",
         "azimuth_angle",
         "correct_for_b_field_alignment",
         "core_scatter",
@@ -48,7 +52,6 @@ def test_full_parser_retains_supported_shared_arguments():
         "energy_range",
         "eslope",
         "event_number_first_shower",
-        "ignore_missing_design_model",
         "model_version",
         "output_file",
         "output_path",
@@ -65,8 +68,15 @@ def test_full_parser_retains_supported_shared_arguments():
         "zenith_angle",
     }
     assert expected <= set(actions)
+    assert "array_element_list" not in actions
     assert actions["output_file"].default == "job_grid.ecsv"
     assert actions["output_file"].help == "Output ECSV production job grid."
+
+
+def test_plot_array_layout_parser_retains_ignore_missing_design_model():
+    actions = {action.dest for action in plot_array_layout_app.APPLICATION.build_parser()._actions}
+
+    assert "ignore_missing_design_model" in actions
 
 
 def test_full_parser_accepts_minimum_direct_configuration():
@@ -89,6 +99,40 @@ def test_full_parser_accepts_minimum_direct_configuration():
     assert args.site == "North"
     assert args.array_layout_name == ["LSTN-01"]
     assert args.output_file == "job_grid.ecsv"
+
+
+def test_full_parser_requires_array_layout_name():
+    with pytest.raises(SystemExit):
+        _full_parser().parse_args(
+            [
+                "--model_version",
+                "7.0.0",
+                "--site",
+                "North",
+                "--primary",
+                "gamma",
+                "--showers_per_run",
+                "1000",
+            ]
+        )
+
+
+def test_full_parser_rejects_array_element_list():
+    with pytest.raises(SystemExit):
+        _full_parser().parse_args(
+            [
+                "--model_version",
+                "7.0.0",
+                "--site",
+                "North",
+                "--array_element_list",
+                "LSTN-01",
+                "--primary",
+                "gamma",
+                "--showers_per_run",
+                "1000",
+            ]
+        )
 
 
 def test_add_arguments_accepts_compact_axis_definitions():
@@ -171,10 +215,33 @@ def test_add_arguments_accepts_energy_max_scaling():
 def test_application_parse_allows_show_options_without_required_runtime_arguments(
     monkeypatch, capsys
 ):
-    monkeypatch.setattr("sys.argv", ["production_generate_grid.py", "--show-options", "site"])
+    monkeypatch.setattr("sys.argv", ["production_generate_grid.py", "--show_options", "site"])
 
     with pytest.raises(SystemExit) as exc:
         app.APPLICATION._parse()
 
     assert exc.value.code == 0
     assert "Available values:" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("option", ["--show-options", "--show_option", "--show-option"])
+def test_application_parser_rejects_show_options_aliases(option):
+    argv = [
+        "--model_version",
+        "7.0.0",
+        "--site",
+        "North",
+        "--array_layout_name",
+        "LSTN-01",
+        "--primary",
+        "gamma",
+        "--showers_per_run",
+        "1000",
+        option,
+        "site",
+    ]
+
+    with pytest.raises(SystemExit) as exc:
+        _full_parser().parse_args(argv)
+
+    assert exc.value.code == 2

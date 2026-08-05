@@ -2,6 +2,7 @@
 
 r"""Generate simulation configuration and run simulations."""
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -61,14 +62,14 @@ _ARGUMENTS = (
         default=False,
     ),
     cli.ArgumentDefinition(
-        "save_reduced_event_lists",
+        "reduced_event_lists",
         help=(
             "Save reduced event lists with event data on simulated and triggered events. "
             "Saved with the same name as the sim_telarray output file (different extension). "
         ),
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         required=False,
-        default=False,
+        default=True,
     ),
     cli.ArgumentDefinition(
         "corsika_seeds",
@@ -170,7 +171,6 @@ APPLICATION = ApplicationDefinition.for_module(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
-        cli.IGNORE_MISSING_DESIGN_MODEL,
         cli.SITE,
         cli.TELESCOPE,
         *cli.layout_selection_arguments(),
@@ -197,7 +197,7 @@ def main():
     simulator = Simulator(label=app_context.args.get("label"))
 
     simulator.simulate()
-    if app_context.args["save_reduced_event_lists"]:
+    if app_context.args["reduced_event_lists"]:
         simulator.save_reduced_event_lists()
 
     simulator.validate_simulations()

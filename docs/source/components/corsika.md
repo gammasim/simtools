@@ -70,7 +70,12 @@ from the low-energy to the high-energy hadronic interaction model. Configure it 
 `--corsika_hadronic_transition_energy`; values without a unit are interpreted as GeV.
 
 When this option is set, simtools writes `HILOW` explicitly. When it is omitted, no `HILOW` card is
-written and the selected CORSIKA executable determines the transition. This avoids encoding a
-model-specific value in simtools. The supplied CORSIKA 7.8010 run logs report 80 GeV for QGSJet-III
-and 30 GeV for EPOS when no explicit card is present; these values are observations from those
-builds, not simtools defaults.
+written and the selected CORSIKA executable determines the transition. CORSIKA container builds
+record this value for every executable variant in `build_opts.yml`; inspect it with:
+
+```console
+simtools-simulate-prod --show_options corsika_hadronic_transition_energy
+```
+
+Older build manifests do not contain this metadata. In that case, the command reports the affected
+variants without failing.

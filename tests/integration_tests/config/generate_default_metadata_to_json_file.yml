@@ -4,7 +4,7 @@ applications:
   configuration:
     output_file: test.json
     output_path: simtools-output
-    schema: src/simtools/schemas/metadata.metaschema.yml
+    schema_file: src/simtools/schemas/metadata.metaschema.yml
   integration_tests:
   - output_file: test.json
   - file_type: json

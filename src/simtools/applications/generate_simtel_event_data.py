@@ -100,7 +100,7 @@ Generate a reduced dataset from input files and save the result.
 
     simtools-production-extract-mc-event-data \\
     simtools-generate-simtel-event-data \\
-        --input 'path/to/input_files/gamma_*dark*.simtel.zst' \\
+        --simtel_file 'path/to/input_files/gamma_*dark*.simtel.zst' \\
         --output_file output_file.hdf5 \\
         --max_files 50 \\
         --print_dataset_information 10
@@ -125,13 +125,13 @@ from pathlib import Path
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.io import io_handler, table_handler
+from simtools.sim_events.metadata import build_simulation_metadata, build_standard_metadata
 from simtools.sim_events.writer import EventDataWriter
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
-        "input",
+        "simtel_file",
         type=str,
         required=True,
         help="Input file path (wildcards allowed; e.g., '/path/to/gamma_*dark*.simtel.zst')",
@@ -166,9 +166,9 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-    app_context.logger.info(f"Loading input files from: {app_context.args['input']}")
+    app_context.logger.info(f"Loading input files from: {app_context.args['simtel_file']}")
 
-    input_pattern = Path(app_context.args["input"])
+    input_pattern = Path(app_context.args["simtel_file"])
     files = list(input_pattern.parent.glob(input_pattern.name))
     if not files:
         app_context.logger.warning("No matching input files found.")
@@ -182,9 +182,17 @@ def main():
         )
     generator = EventDataWriter(files, app_context.args["max_files"])
     tables = generator.process_files()
-    table_handler.write_tables(tables, output_filepath, overwrite_existing=True, file_type="HDF5")
-    MetadataCollector.dump(
-        args_dict=app_context.args, output_file=output_filepath.with_suffix(".yml")
+    table_handler.write_tables(
+        tables,
+        output_filepath,
+        overwrite_existing=True,
+        file_type="HDF5",
+        metadata_documents={
+            "METADATA": build_standard_metadata(app_context.args, output_filepath),
+            "SIMULATION_METADATA": build_simulation_metadata(
+                generator.get_simulation_input_metadata()
+            ),
+        },
     )
 
     if app_context.args["print_dataset_information"] > 0:

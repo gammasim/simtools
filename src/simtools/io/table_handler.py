@@ -1,5 +1,6 @@
 """IO operations on astropy tables."""
 
+import json
 import logging
 from pathlib import Path
 
@@ -9,6 +10,8 @@ import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 
+from simtools.io import ascii_handler
+from simtools.io.ascii_handler import to_builtin
 from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
@@ -258,7 +261,23 @@ def read_table_from_hdf5(file, table_name, columns=None):
     return table
 
 
-def write_tables(tables, output_file, overwrite_existing=True, file_type=None):
+def read_metadata_document(file, document_name):
+    """Read one embedded JSON metadata document from an HDF5 file."""
+    with h5py.File(file, "r") as hdf5_file:
+        if document_name not in hdf5_file:
+            raise KeyError(f"Metadata document '{document_name}' not found in {file}.")
+        dataset = hdf5_file[document_name]
+        if dataset.shape != (1,):
+            raise ValueError(f"Metadata document '{document_name}' must contain one record.")
+        value = dataset[0]
+        if isinstance(value, bytes):
+            value = value.decode("utf-8")
+        return json.loads(value)
+
+
+def write_tables(
+    tables, output_file, overwrite_existing=True, file_type=None, metadata_documents=None
+):
     """
     Write tables to file (overwriting if exists).
 
@@ -277,6 +296,9 @@ def write_tables(tables, output_file, overwrite_existing=True, file_type=None):
         If True, overwrite the output file if it exists.
     file_type : str
         Type of the output file ('HDF5' or 'FITS').
+    metadata_documents : dict or callable, optional
+        Named JSON documents to embed in an HDF5 output. A callable is evaluated
+        after all table chunks have been consumed.
 
     Returns
     -------
@@ -292,7 +314,12 @@ def write_tables(tables, output_file, overwrite_existing=True, file_type=None):
     if isinstance(tables, dict):
         tables = list(tables.values())
     if file_type == "HDF5":
-        write_table_chunks(tables, output_file)
+        write_table_chunks(
+            tables,
+            output_file,
+            overwrite_existing=overwrite_existing,
+            metadata_documents=metadata_documents,
+        )
         return
     for table in tables:
         _table_name = table.meta.get("EXTNAME")
@@ -306,13 +333,14 @@ def write_tables(tables, output_file, overwrite_existing=True, file_type=None):
         fits.HDUList(hdus).writeto(output_file, checksum=False)
 
 
-def write_table_chunks(table_chunks, output_file, overwrite_existing=True):
-    """Write table chunks to an atomic HDF5 output with bounded memory use."""
+def write_table_chunks(table_chunks, output_file, overwrite_existing=True, metadata_documents=None):
+    """Write table chunks and optional JSON documents to atomic HDF5 output."""
     output_file = Path(output_file)
     if output_file.exists() and not overwrite_existing:
         raise FileExistsError(f"Output file {output_file} already exists.")
     incomplete_file = output_file.with_name(f"{output_file.name}.incomplete-{general.get_uuid()}")
     expected_tables = {}
+    metadata_names = set()
 
     try:
         with h5py.File(incomplete_file, "w") as hdf5_file:
@@ -328,8 +356,10 @@ def write_table_chunks(table_chunks, output_file, overwrite_existing=True):
                     chunk_table_names.add(table_name)
                     expected_tables[table_name] = expected_tables.get(table_name, 0) + len(table)
                     _write_table_to_hdf5_file(table, hdf5_file, table_name)
+            documents = metadata_documents() if callable(metadata_documents) else metadata_documents
+            metadata_names = _write_metadata_documents(hdf5_file, documents)
 
-        _validate_written_hdf5(incomplete_file, expected_tables)
+        _validate_written_hdf5(incomplete_file, expected_tables, metadata_names)
         with h5py.File(incomplete_file, "r+") as hdf5_file:
             hdf5_file.attrs["simtools_write_status"] = "complete"
             hdf5_file.flush()
@@ -352,7 +382,7 @@ def _iter_table_chunks(table_chunks):
         yield chunk
 
 
-def _validate_written_hdf5(output_file, expected_tables):
+def _validate_written_hdf5(output_file, expected_tables, metadata_names=None):
     """Verify that all requested tables were persisted with the expected row counts."""
     if not expected_tables:
         raise ValueError("Cannot publish an HDF5 file without tables.")
@@ -371,6 +401,40 @@ def _validate_written_hdf5(output_file, expected_tables):
                     f"Output table '{table_name}' has {len(dataset)} row(s), "
                     f"expected {expected_rows}."
                 )
+        for document_name in metadata_names or set():
+            read_metadata_document(output_file, document_name)
+
+
+def _write_metadata_documents(hdf5_file, metadata_documents):
+    """Write named JSON metadata documents to an open HDF5 file."""
+    if metadata_documents is None:
+        return set()
+    if not isinstance(metadata_documents, dict):
+        raise TypeError("metadata_documents must be a mapping or callable returning a mapping.")
+
+    document_names = set()
+    for document_name, document in metadata_documents.items():
+        if (
+            not isinstance(document_name, str)
+            or not document_name
+            or "/" in document_name
+            or document_name in hdf5_file
+        ):
+            raise ValueError(f"Invalid or duplicate metadata document name '{document_name}'.")
+        encoded = json.dumps(
+            to_builtin(document),
+            cls=ascii_handler.JsonNumpyEncoder,
+            sort_keys=True,
+        )
+        dataset = hdf5_file.create_dataset(
+            document_name,
+            shape=(1,),
+            dtype=h5py.string_dtype(encoding="utf-8"),
+            data=[encoded],
+        )
+        dataset.attrs["format"] = "json"
+        document_names.add(document_name)
+    return document_names
 
 
 def _prepare_string_columns_for_hdf5(table):

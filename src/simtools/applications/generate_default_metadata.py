@@ -4,7 +4,7 @@ r"""
 
     Command line arguments
     ----------------------
-    schema (str, optional)
+    schema_file (str, optional)
         Schema file describing the input data
         (default: simtools/schemas/metadata.metaschema.yml)
     output_file (str, optional)
@@ -15,7 +15,7 @@ r"""
     .. code-block:: console
 
         simtools-generate-default-metadata \\
-            --schema simtools/schemas/metadata.metaschema.yml \\
+            --schema_file simtools/schemas/metadata.metaschema.yml \\
             --output_file default_metadata.yml
 
 
@@ -28,7 +28,7 @@ from simtools.io import ascii_handler
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
-        "schema", help="schema file describing input data", type=str, required=True
+        "schema_file", help="Schema file describing input data", type=str, required=True
     ),
     cli.ArgumentDefinition(
         "output_file",
@@ -52,7 +52,7 @@ def main():
     """See CLI description."""
     app_context = APPLICATION.start()
 
-    default_values = metadata_model.get_default_metadata_dict(app_context.args["schema"])
+    default_values = metadata_model.get_default_metadata_dict(app_context.args["schema_file"])
 
     if app_context.args["output_file"] is None:
         print(default_values)
