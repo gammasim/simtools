@@ -506,7 +506,8 @@ class HTCondorBackend:
         """Update remaining processes from one scheduler event."""
         if int(getattr(event, "cluster", -1)) != scheduler_id:
             return []
-        event_name = str(getattr(event, "type", "")).upper().rsplit(".", maxsplit=1)[-1]
+        event_type = getattr(event, "type", "")
+        event_name = getattr(event_type, "name", str(event_type)).upper()
         if event_name == "CLUSTER_REMOVE":
             failures = [f"process {proc}: CLUSTER_REMOVE" for proc in sorted(remaining)]
             remaining.clear()

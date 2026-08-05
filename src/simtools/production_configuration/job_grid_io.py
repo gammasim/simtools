@@ -389,6 +389,11 @@ def _append_command_argument(command, key, value):
     command.append(f"--{key}")
     if value is True:
         return
+    # Tuples represent structured values parsed from one option, while lists
+    # represent repeated CLI values.
+    if isinstance(value, tuple):
+        command.append(" ".join(str(item) for item in value))
+        return
     values = value if isinstance(value, (list, tuple)) else [value]
     command.extend(str(item) for item in values)
 

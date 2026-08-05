@@ -50,8 +50,8 @@ Each submission creates a private run directory containing `submission.json`, pe
 results, scheduler output streams, application logs, and one scheduler event log. The manifest
 records the cluster and process mapping, job order, expected outputs, resource requests, and the
 current controller state. It can be loaded with
-{func}`simtools.job_execution.load_submission` and passed to
-{func}`simtools.job_execution.wait_for_submission` after a detached controller exits.
+{func}`job_execution.execution.load_submission` and passed to
+{func}`job_execution.execution.wait_for_submission` after a detached controller exits.
 
 The controller tracks the shared event log until every process terminates or the timeout expires.
 Evicted jobs remain active because HTCondor may restart them. Held, removed, aborted, signalled,

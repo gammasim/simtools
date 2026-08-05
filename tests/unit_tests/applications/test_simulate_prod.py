@@ -42,7 +42,15 @@ def job_grid_file(tmp_test_directory):
         "corsika_he_interaction": "epos",
     }
     job_grid_io.serialize_job_grid(
-        [row, {**row, "run_number": 11, "zenith_angle": 40 * u.deg}],
+        [
+            row,
+            {
+                **row,
+                "run_number": 11,
+                "zenith_angle": 40 * u.deg,
+                "array_layout_name": "CTAO-North-Beta",
+            },
+        ],
         grid_file,
         metadata={"site": "North", "simulation_software": "corsika_sim_telarray"},
     )
@@ -173,6 +181,51 @@ def test_parse_job_grid_file_selects_row(
     assert args["simulation_software"] == "corsika_sim_telarray"
 
 
+@pytest.mark.parametrize("backend", ["local", "htcondor"])
+def test_parse_job_grid_reads_array_layout_from_selected_row(
+    monkeypatch, job_grid_file, tmp_test_directory, backend
+):
+    """Grid execution uses the selected row's layout without a global fallback."""
+    args = _parse_with_args(
+        monkeypatch,
+        _job_grid_args(
+            job_grid_file,
+            "--backend",
+            backend,
+            "--job_grid_row",
+            2,
+            "--output_path",
+            tmp_test_directory,
+        ),
+    )
+
+    if backend == "local":
+        assert args["array_layout_name"] == "CTAO-North-Beta"
+    else:
+        assert args.get("array_layout_name") is None
+        assert len(args["_job_grid_rows"]) == 1
+        assert args["_job_grid_rows"][0]["array_layout_name"] == "CTAO-North-Beta"
+
+
+def test_parse_job_grid_preserves_layout_per_row(monkeypatch, job_grid_file, tmp_test_directory):
+    args = _parse_with_args(
+        monkeypatch,
+        _job_grid_args(
+            job_grid_file,
+            "--backend",
+            "htcondor",
+            "--output_path",
+            tmp_test_directory,
+        ),
+    )
+
+    assert args.get("array_layout_name") is None
+    assert [row["array_layout_name"] for row in args["_job_grid_rows"]] == [
+        "CTAO-North-Alpha",
+        "CTAO-North-Beta",
+    ]
+
+
 def test_parse_accepts_simulation_models_path(monkeypatch, job_grid_file, tmp_test_directory):
     args = _parse_with_args(
         monkeypatch,
@@ -204,6 +257,13 @@ def test_sim_telarray_only_does_not_require_primary(monkeypatch):
     )
 
     assert args["primary"] is None
+
+
+def test_parse_without_job_grid_requires_array_layout(monkeypatch, capsys):
+    with pytest.raises(SystemExit):
+        _parse_with_args(monkeypatch, ["--simulation_software", "sim_telarray"])
+
+    assert "--array_layout_name/--array_element_list" in capsys.readouterr().err
 
 
 def test_corsika_requires_primary(monkeypatch, capsys):

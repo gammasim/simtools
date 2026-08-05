@@ -343,3 +343,9 @@ def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory
     assert str(tmp_test_directory / "models") in command
     assert str(tmp_test_directory / "output" / "job-000000") in command
     assert str(tmp_test_directory / "grid" / "job-000000") in command
+    energy_range_index = command.index("--energy_range")
+    assert command[energy_range_index + 1] == "30.0 GeV 10.0 TeV"
+    core_scatter_index = command.index("--core_scatter")
+    assert command[core_scatter_index + 1] == "10 200.0 m"
+    view_cone_index = command.index("--view_cone")
+    assert command[view_cone_index + 1] == "0.0 deg 5.0 deg"

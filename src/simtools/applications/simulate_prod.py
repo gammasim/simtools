@@ -18,7 +18,6 @@ from simtools.production_configuration.job_grid_io import (
     build_simulate_prod_job_specs,
     job_grid_row_to_simulate_prod_args,
     read_job_grid,
-    read_job_grid_row,
 )
 from simtools.production_configuration.job_metadata import build_simulation_job_metadata
 from simtools.simulator import Simulator
@@ -148,6 +147,7 @@ def _resolve_job_grid_arguments(args_dict, config_sources, parser):
     if not args_dict.get("job_grid_file"):
         if job_grid_row_is_explicit:
             parser.error("'--job_grid_row' requires '--job_grid_file'.")
+        _validate_layout_selection(args_dict, parser)
         _validate_simulation_arguments(args_dict, parser)
         return
 
@@ -158,23 +158,42 @@ def _resolve_job_grid_arguments(args_dict, config_sources, parser):
             + ", ".join(conflicting_keys)
         )
 
+    rows, metadata = read_job_grid(args_dict["job_grid_file"])
+    if not rows:
+        parser.error("Job grid contains no rows to process.")
+
+    missing_layout_rows = [
+        index + 1 for index, row in enumerate(rows) if not row.get("array_layout_name")
+    ]
+    if missing_layout_rows:
+        parser.error(
+            "Job grid row(s) missing array_layout_name: " + ", ".join(map(str, missing_layout_rows))
+        )
+
+    selected_row = None
+    if args_dict.get("backend", "local") == "local" or job_grid_row_is_explicit:
+        row_index = args_dict.get("job_grid_row") or 1
+        if row_index < 1 or row_index > len(rows):
+            parser.error(
+                f"Row index {row_index} is out of range for a grid with {len(rows)} row(s)."
+            )
+        selected_row = rows[row_index - 1]
+        rows = [selected_row]
+
     if args_dict.get("backend", "local") != "local":
-        rows, metadata = read_job_grid(args_dict["job_grid_file"])
-        if job_grid_row_is_explicit:
-            row_index = args_dict.get("job_grid_row") or 1
-            if row_index < 1 or row_index > len(rows):
-                parser.error(
-                    f"Row index {row_index} is out of range for a grid with {len(rows)} row(s)."
-                )
-            rows = [rows[row_index - 1]]
         args_dict["_job_grid_rows"] = rows
         args_dict["_job_grid_metadata"] = metadata
         return
 
-    row_index = args_dict.get("job_grid_row") or 1
-    job_row, metadata = read_job_grid_row(args_dict["job_grid_file"], row_index)
-    args_dict.update(job_grid_row_to_simulate_prod_args(job_row, metadata))
+    args_dict.update(job_grid_row_to_simulate_prod_args(selected_row, metadata))
     _validate_simulation_arguments(args_dict, parser)
+
+
+def _validate_layout_selection(args_dict, parser):
+    """Require a direct array-layout selection when no job grid supplies one."""
+    if args_dict.get("array_layout_name") or args_dict.get("array_element_list"):
+        return
+    parser.error("the following arguments are required: --array_layout_name/--array_element_list")
 
 
 def _execute_job_grid(args_dict):
@@ -206,7 +225,7 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         cli.TELESCOPE,
-        *cli.layout_selection_arguments(),
+        *cli.layout_selection_arguments(required=False),
         cli.SIMULATION_SOFTWARE,
         *cli.corsika_configuration_arguments(primary_required=False),
         *cli.SHOWER_ARGUMENTS,

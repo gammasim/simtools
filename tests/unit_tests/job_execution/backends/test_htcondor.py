@@ -38,10 +38,16 @@ def test_htcondor_rejects_invalid_environment_entries(tmp_test_directory):
 def test_htcondor_process_event_tracks_success_and_failure():
     """Terminal scheduler events update remaining processes and failures."""
 
+    class _EventType:
+        name = "JOB_TERMINATED"
+
+        def __str__(self):
+            return "5"
+
     class _Event(dict):
         cluster = 17
         proc = 0
-        type = "JOB_TERMINATED"
+        type = _EventType()
 
     remaining = {0, 1}
     assert (
