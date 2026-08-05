@@ -1048,9 +1048,16 @@ def test_create_new_model_parameter_entry_with_existing_file(
     }
     mock_check_version.return_value = "2.0.0"
 
-    model_repository._create_new_model_parameter_entry(
-        telescope, param, param_data, model_parameters_dir
-    )
+    # Avoid loading the complete parameter schema through the patched file reader. The
+    # behavior under test only needs the collection path for this parameter.
+    with patch.object(
+        model_repository.names,
+        "get_collection_name_from_parameter_name",
+        return_value="telescopes",
+    ):
+        model_repository._create_new_model_parameter_entry(
+            telescope, param, param_data, model_parameters_dir
+        )
 
     # Verify that existing file data was processed
     mock_collect_data.assert_called_once_with("/path/to/existing/file.json")
