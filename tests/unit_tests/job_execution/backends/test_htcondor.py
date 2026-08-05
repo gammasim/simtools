@@ -7,7 +7,7 @@ import pytest
 
 from simtools.job_execution.backends.base import BackendConfigurationError
 from simtools.job_execution.backends.htcondor import HTCondorBackend
-from simtools.job_execution.job import JobSpec, SubmissionHandle
+from simtools.job_execution.job import ExecutionOptions, JobSpec, SubmissionHandle
 
 
 def test_htcondor_validates_resource_sizes():
@@ -46,6 +46,22 @@ def test_htcondor_uses_container_python_command(tmp_test_directory):
     )
     assert submit_values["universe"] == "container"
     assert submit_values["container_target_dir"] == "/simtools-run"
+
+
+def test_htcondor_rewrites_controller_python_in_container_commands():
+    """Nested commands use the configured container Python executable."""
+    job = JobSpec(
+        "job-000000",
+        0,
+        command=(sys.executable, "-m", "simtools.applications.simulate_prod"),
+    )
+    options = ExecutionOptions()
+
+    prepared = HTCondorBackend._prepare_jobs(
+        [job], options, {"container_image": "/shared/simtools.sif", "python_executable": "python3"}
+    )
+
+    assert prepared[0].command[0] == "python3"
 
 
 def test_htcondor_uses_configured_container_target_directory(tmp_test_directory):

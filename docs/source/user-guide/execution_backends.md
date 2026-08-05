@@ -57,6 +57,8 @@ environment, such as `/workdir` in the production image.
 The image must also contain `simtools.job_execution.worker`; an older production image built
 before the generic execution backend was added cannot execute these jobs. Check an image before
 submitting with `apptainer exec IMAGE python -c "import simtools.job_execution.worker"`.
+For nested command jobs, the backend replaces the submit-host `sys.executable` with
+`python_executable`, so controller virtual-environment paths are not passed into the container.
 
 ## Manifests, logs, and failures
 

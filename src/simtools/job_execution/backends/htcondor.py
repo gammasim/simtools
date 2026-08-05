@@ -218,7 +218,9 @@ class HTCondorBackend:
 
     def submit(self, job_specs, options):
         """Create and submit a shared-filesystem HTCondor cluster."""
-        jobs = self._prepare_jobs(job_specs, options)
+        config = self._build_config(options)
+        self._validate_config(config)
+        jobs = self._prepare_jobs(job_specs, options, config)
         if not jobs:
             return SubmissionHandle(
                 backend="htcondor",
@@ -226,8 +228,6 @@ class HTCondorBackend:
                 job_ids=(),
             )
         htcondor = self._load_htcondor()
-        config = self._build_config(options)
-        self._validate_config(config)
         self._validate_job_resources(jobs, config)
         work_dir = self._create_work_dir(options)
         self._serialize_jobs(jobs, work_dir)
@@ -246,7 +246,7 @@ class HTCondorBackend:
         return handle
 
     @staticmethod
-    def _prepare_jobs(job_specs, options):
+    def _prepare_jobs(job_specs, options, config):
         """Materialize jobs and normalize worker-specific settings."""
         jobs = list(job_specs)
         prepared = []
@@ -258,8 +258,21 @@ class HTCondorBackend:
                 )
             initializer = job.initializer if job.initializer is not None else options.initializer
             initargs = job.initargs if job.initializer is not None else tuple(options.initargs)
+            command = job.command
+            uses_container = bool(config.get("container_image") or resources.get("container_image"))
+            if uses_container and command and command[0] == sys.executable:
+                command = (
+                    config.get("python_executable", _DEFAULT_CONTAINER_PYTHON),
+                    *command[1:],
+                )
             prepared.append(
-                replace(job, resources=resources, initializer=initializer, initargs=initargs)
+                replace(
+                    job,
+                    command=command,
+                    resources=resources,
+                    initializer=initializer,
+                    initargs=initargs,
+                )
             )
         return prepared
 
