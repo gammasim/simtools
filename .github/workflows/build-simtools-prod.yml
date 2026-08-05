@@ -90,7 +90,9 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             simtools_version="${GITHUB_REF_NAME#v}"
           else
-            simtools_version="0.0.0+g${GITHUB_SHA:0:7}"
+            python -m pip install --quiet "setuptools-scm[toml]>=8"
+            simtools_version=$(python -c \
+              'from setuptools_scm import get_version; print(get_version())')
           fi
           simtools_git_revision="$GITHUB_SHA"
           echo "SIMTOOLS_VERSION=${simtools_version}" >> "$GITHUB_ENV"

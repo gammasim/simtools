@@ -96,12 +96,13 @@ def test_htcondor_uses_submission_python_without_container(tmp_test_directory):
 def test_htcondor_reads_dotenv_entries(tmp_test_directory):
     """Simple environment files are converted to scheduler syntax."""
     environment = Path(tmp_test_directory) / "environment"
-    environment.write_text("# comment\nexport FOO='bar baz'\nBAZ=qux\n", encoding="utf-8")
+    environment.write_text(
+        "# comment\nexport FOO='bar baz'\nBAZ=qux # inline comment\n", encoding="utf-8"
+    )
 
     result = HTCondorBackend._read_environment_file(environment)
 
-    assert "FOO=bar baz" in result
-    assert "BAZ=qux" in result
+    assert result == "FOO=bar baz;BAZ=qux"
 
 
 def test_htcondor_rejects_invalid_environment_entries(tmp_test_directory):

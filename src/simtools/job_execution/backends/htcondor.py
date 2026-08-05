@@ -210,11 +210,46 @@ class HTCondorBackend:
                 )
             key, value = line.split("=", 1)
             key = key.strip()
-            value = value.strip().strip("\"'")
+            value = HTCondorBackend._strip_environment_comment(value).strip().strip("\"'")
             if not key:
                 raise BackendConfigurationError(f"Invalid empty environment key in {path}.")
             entries.append(f"{key}={value}")
-        return " ".join(shlex.quote(entry) for entry in entries)
+        return ";".join(entries)
+
+    @staticmethod
+    def _strip_environment_comment(value):
+        """Remove an unquoted inline comment from an environment value."""
+        quote = None
+        escaped = False
+        for index, character in enumerate(value):
+            if escaped:
+                escaped = False
+            elif character == "\\" and quote == '"':
+                escaped = True
+            else:
+                quote = HTCondorBackend._update_environment_quote(quote, character)
+            if HTCondorBackend._is_environment_comment(value, index, character, quote, escaped):
+                return value[:index]
+        return value
+
+    @staticmethod
+    def _update_environment_quote(quote, character):
+        """Update the active quote character for an environment value."""
+        if character not in "\"'":
+            return quote
+        if quote == character:
+            return None
+        return character if quote is None else quote
+
+    @staticmethod
+    def _is_environment_comment(value, index, character, quote, escaped):
+        """Return whether a character starts an unquoted environment comment."""
+        return (
+            character == "#"
+            and quote is None
+            and not escaped
+            and (index == 0 or value[index - 1].isspace())
+        )
 
     def submit(self, job_specs, options):
         """Create and submit a shared-filesystem HTCondor cluster."""
