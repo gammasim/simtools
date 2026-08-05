@@ -46,6 +46,10 @@ def test_htcondor_uses_container_python_command(tmp_test_directory):
     )
     assert submit_values["universe"] == "container"
     assert submit_values["container_target_dir"] == "/simtools-run"
+    assert (
+        submit_values["environment"]
+        == f"APPTAINER_BINDPATH={Path(tmp_test_directory).resolve().parent}"
+    )
 
 
 def test_htcondor_rewrites_controller_python_in_container_commands():
@@ -103,6 +107,21 @@ def test_htcondor_reads_dotenv_entries(tmp_test_directory):
     result = HTCondorBackend._read_environment_file(environment)
 
     assert result == "FOO=bar baz;BAZ=qux"
+
+
+def test_htcondor_binds_corsika_interaction_tables(tmp_test_directory):
+    """CORSIKA interaction tables are bound into container jobs automatically."""
+    environment = Path(tmp_test_directory) / "environment"
+    table_path = "/shared/corsika-interaction-tables"
+    environment.write_text(
+        f"SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH={table_path}\n", encoding="utf-8"
+    )
+
+    result = HTCondorBackend._read_environment_file(environment)
+
+    assert result == (
+        f"SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH={table_path};APPTAINER_BINDPATH={table_path}"
+    )
 
 
 def test_htcondor_rejects_invalid_environment_entries(tmp_test_directory):

@@ -193,28 +193,62 @@ class HTCondorBackend:
                 raise BackendConfigurationError(f"Configured {key} does not exist: {value}")
 
     @staticmethod
-    def _read_environment_file(path):
+    def _read_environment_file(path, bind_paths=()):
         """Convert a simple dotenv file into an HTCondor environment value."""
-        if path is None:
+        if path is None and not bind_paths:
             return None
-        entries = []
+        entries = HTCondorBackend._read_environment_entries(path) if path is not None else {}
+        HTCondorBackend._add_corsika_interaction_table_bind(entries)
+        for bind_path in bind_paths:
+            HTCondorBackend._add_apptainer_bind_path(entries, bind_path)
+        return ";".join(f"{key}={value}" for key, value in entries.items())
+
+    @staticmethod
+    def _read_environment_entries(path):
+        """Read and normalize entries from a dotenv file."""
+        entries = {}
         for line in Path(path).read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            if line.startswith("export "):
-                line = line[7:].lstrip()
-            if "=" not in line:
-                raise BackendConfigurationError(
-                    f"Invalid environment entry in {path}: expected KEY=VALUE."
-                )
-            key, value = line.split("=", 1)
-            key = key.strip()
-            value = HTCondorBackend._strip_environment_comment(value).strip().strip("\"'")
-            if not key:
-                raise BackendConfigurationError(f"Invalid empty environment key in {path}.")
-            entries.append(f"{key}={value}")
-        return ";".join(entries)
+            entry = HTCondorBackend._parse_environment_line(line, path)
+            if entry is not None:
+                entries[entry[0]] = entry[1]
+        return entries
+
+    @staticmethod
+    def _parse_environment_line(line, path):
+        """Parse one dotenv line, returning ``None`` for comments and blanks."""
+        line = line.strip()
+        if not line or line.startswith("#"):
+            return None
+        if line.startswith("export "):
+            line = line[7:].lstrip()
+        if "=" not in line:
+            raise BackendConfigurationError(
+                f"Invalid environment entry in {path}: expected KEY=VALUE."
+            )
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = HTCondorBackend._strip_environment_comment(value).strip().strip("\"'")
+        if not key:
+            raise BackendConfigurationError(f"Invalid empty environment key in {path}.")
+        return key, value
+
+    @staticmethod
+    def _add_corsika_interaction_table_bind(entries):
+        """Make CORSIKA interaction tables visible inside Apptainer jobs."""
+        table_path = entries.get("SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH")
+        if not table_path:
+            return
+        HTCondorBackend._add_apptainer_bind_path(entries, table_path)
+
+    @staticmethod
+    def _add_apptainer_bind_path(entries, bind_path):
+        """Add a same-path Apptainer bind without duplicating existing paths."""
+        if not bind_path:
+            return
+        bind_paths = [path for path in entries.get("APPTAINER_BINDPATH", "").split(",") if path]
+        if bind_path not in bind_paths:
+            bind_paths.append(str(bind_path))
+        entries["APPTAINER_BINDPATH"] = ",".join(bind_paths)
 
     @staticmethod
     def _strip_environment_comment(value):
@@ -454,7 +488,17 @@ class HTCondorBackend:
         if uses_container:
             submit_values["universe"] = "container"
             submit_values["container_target_dir"] = container_target_dir
-        environment = self._read_environment_file(config.get("environment_file"))
+        bind_paths = ()
+        if uses_container:
+            bind_paths = [work_dir.parent]
+            bind_paths.extend(
+                Path(output_path).expanduser().resolve().parent
+                for job in jobs
+                for output_path in job.output_paths
+            )
+        environment = self._read_environment_file(
+            config.get("environment_file"), bind_paths=bind_paths
+        )
         if environment:
             submit_values["environment"] = environment
         submit_values.update(config.get("extra_submit_attributes", {}))
