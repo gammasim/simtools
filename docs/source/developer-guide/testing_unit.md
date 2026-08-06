@@ -69,7 +69,3 @@ pytest --cov-branch --cov-report=html --cov-report=json tests/unit_tests/
 ```
 
 Open the file `htmlcov/index.html` in your browser to see the coverage report.
-The CI quality gate preserves at least 97.32% statement coverage and requires
-at least 92% branch coverage. It also checks that tracked Python code in
-`tests/unit_tests/` stays below the consolidation budget and that each test has
-an explicit outcome check.
