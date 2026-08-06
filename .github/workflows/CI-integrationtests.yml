@@ -30,6 +30,11 @@ on:
         required: false
         type: string
         default: '["7.0.0","6.0.2","5.0.0","6.0.2,6.1.1"]'
+      runner_labels:
+        description: 'GitHub-hosted runner labels to test'
+        required: false
+        type: string
+        default: '["ubuntu-latest"]'
     secrets:
       DB_SERVER:
         required: false
@@ -261,7 +266,7 @@ jobs:
 
   integration_tests:
     needs: [prepare_interaction_tables, prepare_simulation_models]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
     container:
@@ -287,6 +292,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        runner: ${{ fromJSON(inputs.runner_labels || '["ubuntu-latest"]') }}
         model_version: ${{ fromJSON(inputs.model_versions || '["7.0.0","6.0.2","5.0.0","6.0.2,6.1.1"]') }}
 
     defaults:
