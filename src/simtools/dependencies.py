@@ -22,6 +22,7 @@ from pathlib import Path
 import yaml
 
 from simtools import settings
+from simtools.configuration import defaults
 from simtools.io import ascii_handler
 from simtools.utils import general as gen
 from simtools.version import __version__
@@ -61,13 +62,8 @@ def validate_simulation_dependencies(simulation_software):
         If the selection or CORSIKA interaction-table manifest is invalid, or
         if a required dependency is unavailable.
     """
-    required_software = {
-        "sim_telarray": {"sim_telarray"},
-        "corsika": {"corsika"},
-        "corsika_sim_telarray": {"corsika", "sim_telarray"},
-    }
     try:
-        required = required_software[simulation_software]
+        required = defaults.SIMULATION_SOFTWARE_DEPENDENCIES[simulation_software]
     except KeyError as exc:
         raise ValueError(f"Unknown simulation software: {simulation_software}") from exc
 
