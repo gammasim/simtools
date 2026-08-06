@@ -99,3 +99,5 @@ jobs:
           file: ./docker/Dockerfile-simtools-dev
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=simtools-dev
+          cache-to: type=gha,mode=min,scope=simtools-dev
