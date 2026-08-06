@@ -10,9 +10,8 @@ The dependency information is maintained in two places with distinct responsibil
 
 - `[project.dependencies]` and `[project.optional-dependencies]` in `pyproject.toml` declare the
   supported direct Python requirements.
-- `[tool.gammasimtools.dependency-versions]` declares the supported Python version, container base images,
-  scientific software releases, archive checksums, and the default
-  simulation-model version.
+- `dependency_versions.yml` declares the supported Python version, container base images, scientific
+  software releases, archive checksums, and the default simulation-model version.
 
 Dockerfiles do not provide independent version defaults. GitHub Actions reads the catalog with
 
@@ -24,7 +23,8 @@ and supplies the resulting image references and build arguments.
 
 ## Updating versions
 
-Change the compatible Python requirements or the external component entry in `pyproject.toml`.
+Change the compatible Python requirements in `pyproject.toml` or the external component entry in
+`dependency_versions.yml`.
 For external sources, update the human-readable release. An optional Git revision, OCI image
 digest, or archive SHA-256 can be added when an immutable build input is required. Dockerfiles
 always record the archive checksum and source revisions actually used for a build.

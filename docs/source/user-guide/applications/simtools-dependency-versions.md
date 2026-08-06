@@ -8,8 +8,8 @@
 
 ## Overview
 
-The application reads the dependency catalog from `[tool.gammasimtools.dependency-versions]` in
-`pyproject.toml`. It validates the catalog and exports the declared Python version, component
+The application reads the dependency catalog from the root-level `dependency_versions.yml` file.
+It validates the catalog and exports the declared Python version, component
 releases, optional revisions or digests, archive checksums, and image-build matrices.
 
 Use `--format github-output` in GitHub Actions or local image-build scripts. Use `--format summary`
