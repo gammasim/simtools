@@ -73,7 +73,7 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             simtools_version="${GITHUB_REF_NAME#v}"
           else
-            base_version="$(git describe --tags --match 'v[0-9]*' --abbrev=0)"
+            base_version="$(git describe --tags --match 'v[0-9]*' --abbrev=0 2>/dev/null || echo 'v0.0.0')"
             simtools_version="${base_version#v}+g${GITHUB_SHA:0:7}"
           fi
           simtools_git_revision="$GITHUB_SHA"
