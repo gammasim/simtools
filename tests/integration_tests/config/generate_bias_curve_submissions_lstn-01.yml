@@ -120,9 +120,9 @@ applications:
         - job_grid_format_version
         row_count: job_grid_summary.simulation_rows
       data_product_schema: src/simtools/schemas/job_grid_density.schema.yml
-    reference_output_file: tests/resources/generated/nsb/overwrite_nsb_asum220.yaml
+    reference_output_file: tests/resources/generated/bias_curve_scan_grids/nsb/overwrite_nsb_asum220.yaml
     test_output_file: nsb/overwrite_nsb_asum220.yaml
-  - reference_output_file: tests/resources/generated/proton/overwrite_proton_asum220.yaml
+  - reference_output_file: tests/resources/generated/bias_curve_scan_grids/proton/overwrite_proton_asum220.yaml
     test_output_file: proton/overwrite_proton_asum220.yaml
   model_version_use_current: true
   test_name: generate_bias_curve_submissions_lstn-01
