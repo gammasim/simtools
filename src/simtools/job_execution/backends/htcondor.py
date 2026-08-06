@@ -492,6 +492,11 @@ class HTCondorBackend:
         if uses_container:
             bind_paths = [work_dir.parent]
             bind_paths.extend(
+                Path(mount_path).expanduser().resolve()
+                for job in jobs
+                for mount_path in job.mount_paths
+            )
+            bind_paths.extend(
                 Path(output_path).expanduser().resolve().parent
                 for job in jobs
                 for output_path in job.output_paths
@@ -573,7 +578,7 @@ class HTCondorBackend:
             f"job {job_id}: missing expected output {path}"
             for job_id, paths in expected.items()
             for path in paths
-            if not Path(path).is_file()
+            if not Path(path).exists()
         ]
 
     @staticmethod

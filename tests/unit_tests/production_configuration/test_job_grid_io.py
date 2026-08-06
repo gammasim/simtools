@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from astropy.table import Table
 
+import simtools.applications.simulate_prod as app
 from simtools.constants import SCHEMA_PATH
 from simtools.io import ascii_handler
 from simtools.production_configuration import job_grid_io
@@ -323,9 +324,17 @@ def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory
         "grid_output_path": tmp_test_directory / "grid",
         "label": "prod",
         "simulation_models_path": tmp_test_directory / "models",
+        "reduced_event_lists": False,
+        "correct_for_b_field_alignment": False,
+        "corsika_file": tmp_test_directory / "corsika.input",
     }
 
-    jobs = job_grid_io.build_simulate_prod_job_specs(args, [row], _metadata())
+    jobs = job_grid_io.build_simulate_prod_job_specs(
+        args,
+        [row],
+        app.APPLICATION.build_parser(),
+        _metadata(),
+    )
 
     assert len(jobs) == 1
     command = jobs[0].command
@@ -340,6 +349,18 @@ def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory
     assert str(tmp_test_directory / "models") in command
     assert str(tmp_test_directory / "output" / "job-000000") in command
     assert str(tmp_test_directory / "grid" / "job-000000") in command
+    assert "--no-reduced_event_lists" in command
+    assert "--no-correct_for_b_field_alignment" in command
+    assert str(tmp_test_directory / "corsika.input") in command
+    assert jobs[0].mount_paths == (
+        tmp_test_directory / "output" / "job-000000",
+        tmp_test_directory / "grid" / "job-000000",
+    )
+    assert jobs[0].output_paths == jobs[0].mount_paths
+    nested_args = app.APPLICATION.build_parser().parse_args(command[5:])
+    assert nested_args.reduced_event_lists is False
+    assert nested_args.correct_for_b_field_alignment is False
+    assert nested_args.corsika_file == str(tmp_test_directory / "corsika.input")
     energy_range_index = command.index("--energy_range")
     assert command[energy_range_index + 1] == "30.0 GeV 10.0 TeV"
     core_scatter_index = command.index("--core_scatter")

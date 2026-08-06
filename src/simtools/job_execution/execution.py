@@ -142,7 +142,7 @@ def _validate_manifest_outputs(submission):
     if isinstance(expected, list):
         expected = {"unknown": expected}
     missing_outputs = [
-        path for paths in expected.values() for path in paths if not Path(path).is_file()
+        path for paths in expected.values() for path in paths if not Path(path).exists()
     ]
     if missing_outputs:
         raise FileNotFoundError(

@@ -9,6 +9,7 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
+from simtools.configuration.configurator import Configurator
 from simtools.constants import SCHEMA_PATH, SCHEMA_URL
 from simtools.data_model import validate_data
 from simtools.io.ascii_handler import collect_data_from_file
@@ -44,32 +45,29 @@ SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS = frozenset(
         "simulation_software",
     }
 )
-_SIMULATE_PROD_OPERATIONAL_FIELDS = (
-    "log_level",
-    "label",
-    "simulation_software",
-    "site",
+_SIMULATE_PROD_PATH_FIELDS = (
+    "corsika_file",
     "grid_output_path",
     "sim_telarray_path",
     "corsika_path",
     "corsika_interaction_table_path",
     "simulation_models_path",
     "model_path",
-    "save_file_lists",
-    "save_corsika_output",
-    "reduced_event_lists",
-    "corsika_seeds",
-    "sequential",
     "overwrite_model_parameters",
 )
-_SIMULATE_PROD_PATH_FIELDS = (
-    "grid_output_path",
-    "sim_telarray_path",
-    "corsika_path",
-    "corsika_interaction_table_path",
-    "simulation_models_path",
-    "model_path",
-    "overwrite_model_parameters",
+_SIMULATE_PROD_CONTROLLER_FIELDS = frozenset(
+    {
+        "activity_id",
+        "application_label",
+        "backend",
+        "backend_config",
+        "config",
+        "data_search_path",
+        "env_file",
+        "job_grid_file",
+        "job_grid_row",
+        "list_available_corsika_models",
+    }
 )
 
 
@@ -388,23 +386,7 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
     return args
 
 
-def _append_command_argument(command, key, value):
-    """Append one value using the standard simtools CLI argument shape."""
-    if value in (None, False):
-        return
-    command.append(f"--{key}")
-    if value is True:
-        return
-    # Tuples represent structured values parsed from one option, while lists
-    # represent repeated CLI values.
-    if isinstance(value, tuple):
-        command.append(" ".join(str(item) for item in value))
-        return
-    values = value if isinstance(value, (list, tuple)) else [value]
-    command.extend(str(item) for item in values)
-
-
-def build_simulate_prod_job_specs(args_dict, rows, metadata=None):
+def build_simulate_prod_job_specs(args_dict, rows, parser, metadata=None):
     """Build backend-neutral command jobs for production-grid rows.
 
     Parameters
@@ -413,6 +395,8 @@ def build_simulate_prod_job_specs(args_dict, rows, metadata=None):
         Controller application arguments.
     rows : list[dict]
         Deserialized production-grid rows.
+    parser : argparse.ArgumentParser
+        Parser defining the nested ``simulate_prod`` command.
     metadata : dict, optional
         Production-grid metadata.
 
@@ -425,13 +409,22 @@ def build_simulate_prod_job_specs(args_dict, rows, metadata=None):
     output_root = Path(args_dict["output_path"]).expanduser().resolve()
     jobs = []
     for index, row in enumerate(rows):
-        job_args = {key: args_dict.get(key) for key in _SIMULATE_PROD_OPERATIONAL_FIELDS}
+        job_args = {
+            key: value
+            for key, value in args_dict.items()
+            if key not in _SIMULATE_PROD_CONTROLLER_FIELDS
+            and f"--{key}" in parser._option_string_actions  # pylint: disable=protected-access
+        }
         job_args.update(job_grid_row_to_simulate_prod_args(row, metadata))
-        job_args["output_path"] = str(output_root / f"job-{index:06d}")
+        output_path = output_root / f"job-{index:06d}"
+        job_args["output_path"] = str(output_path)
+        mount_paths = [output_path]
+        output_paths = [output_path]
         if job_args.get("grid_output_path"):
-            job_args["grid_output_path"] = str(
-                Path(job_args["grid_output_path"]) / f"job-{index:06d}"
-            )
+            grid_output_path = Path(job_args["grid_output_path"]) / f"job-{index:06d}"
+            job_args["grid_output_path"] = str(grid_output_path)
+            mount_paths.append(grid_output_path)
+            output_paths.append(grid_output_path)
         if row.get("scan_label"):
             label = job_args.get("label") or "simulate-prod"
             job_args["label"] = f"{label}_{row['scan_label']}"
@@ -439,6 +432,10 @@ def build_simulate_prod_job_specs(args_dict, rows, metadata=None):
         for key in _SIMULATE_PROD_PATH_FIELDS:
             if job_args.get(key):
                 job_args[key] = str(Path(job_args[key]).expanduser().resolve())
+        job_args = {
+            key: " ".join(map(str, value)) if isinstance(value, tuple) else value
+            for key, value in job_args.items()
+        }
 
         command = [
             sys.executable,
@@ -447,7 +444,14 @@ def build_simulate_prod_job_specs(args_dict, rows, metadata=None):
             "--backend",
             "local",
         ]
-        for key, value in job_args.items():
-            _append_command_argument(command, key, value)
-        jobs.append(JobSpec(f"job-{index:06d}", index, command=tuple(command)))
+        command.extend(Configurator.arglist_from_dict(job_args, parser=parser))
+        jobs.append(
+            JobSpec(
+                f"job-{index:06d}",
+                index,
+                command=tuple(command),
+                mount_paths=tuple(mount_paths),
+                output_paths=tuple(output_paths),
+            )
+        )
     return jobs

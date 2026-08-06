@@ -205,6 +205,7 @@ def _execute_job_grid(args_dict):
     job_specs = build_simulate_prod_job_specs(
         args_dict,
         args_dict["_job_grid_rows"],
+        APPLICATION.build_parser(),
         args_dict.get("_job_grid_metadata"),
     )
     options = options_from_args(

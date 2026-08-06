@@ -18,6 +18,7 @@ class JobSpec:
     initargs: tuple[Any, ...] = ()
     metadata: dict[str, Any] = field(default_factory=dict)
     resources: dict[str, Any] = field(default_factory=dict)
+    mount_paths: tuple[Path, ...] = ()
     output_paths: tuple[Path, ...] = ()
 
     def __post_init__(self):
