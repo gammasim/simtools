@@ -8,7 +8,9 @@ import subprocess
 import traceback
 from pathlib import Path
 
+from simtools.io import io_handler
 from simtools.job_execution.job import JobSpec
+from simtools.settings import config
 
 logger = logging.getLogger(__name__)
 
@@ -45,11 +47,23 @@ def _configure_worker_logging(log_file):
 
 def execute_job_spec(job_spec):
     """Execute one Python or command job specification."""
+    _initialize_runtime(job_spec)
     if job_spec.initializer is not None:
         job_spec.initializer(*job_spec.initargs)
     if job_spec.function is not None:
         return job_spec.function(job_spec.item)
     return subprocess.run(list(job_spec.command), check=True).returncode
+
+
+def _initialize_runtime(job_spec):
+    """Restore the submitting application's runtime for function jobs."""
+    if job_spec.runtime_args is None:
+        return
+    config.load(job_spec.runtime_args, job_spec.runtime_db_config)
+    io_handler.IOHandler().set_paths(
+        output_path=job_spec.runtime_args.get("output_path"),
+        model_path=job_spec.runtime_args.get("model_path"),
+    )
 
 
 def write_job_payload(job_spec, path):

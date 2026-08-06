@@ -8,6 +8,7 @@ import yaml
 
 from simtools.job_execution.backends.registry import get_backend
 from simtools.job_execution.job import ExecutionOptions, JobSpec, SubmissionHandle
+from simtools.settings import config
 
 logger = logging.getLogger(__name__)
 
@@ -163,6 +164,8 @@ def map_ordered(
     work_dir=None,
 ):
     """Apply ``function`` to items and return values in input order."""
+    runtime_args = dict(config.args) if backend != "local" else None
+    runtime_db_config = dict(config.db_config) if backend != "local" else None
     job_specs = [
         JobSpec(
             job_id=f"job-{index:06d}",
@@ -171,17 +174,19 @@ def map_ordered(
             item=item,
             initializer=initializer if backend != "local" else None,
             initargs=tuple(initargs) if backend != "local" else (),
+            runtime_args=runtime_args,
+            runtime_db_config=runtime_db_config,
         )
         for index, item in enumerate(items)
     ]
-    config = _load_backend_config(backend_config)
+    execution_config = _load_backend_config(backend_config)
     if backend == "local":
-        config.setdefault("mp_start_method", mp_start_method)
+        execution_config.setdefault("mp_start_method", mp_start_method)
     options = ExecutionOptions(
         backend=backend,
         max_workers=max_workers,
         work_dir=Path(work_dir) if work_dir else None,
-        backend_config=config,
+        backend_config=execution_config,
         initializer=initializer,
         initargs=tuple(initargs),
     )
