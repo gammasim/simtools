@@ -16,7 +16,7 @@ from simtools.configuration.argument_helpers import bounded_int
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.build_options import get_corsika_build_report
 from simtools.io.ascii_handler import write_data_to_file
-from simtools.job_execution import execute_jobs, options_from_args
+from simtools.job_execution import execute_jobs, options_from_args, submit_jobs
 from simtools.production_configuration.job_grid_io import (
     SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS,
     build_simulate_prod_job_specs,
@@ -115,6 +115,12 @@ _ARGUMENTS = (
         required=False,
         default=1,
     ),
+    cli.ArgumentDefinition(
+        "wait",
+        action="store_true",
+        default=False,
+        help="Wait for submitted backend jobs to finish before exiting.",
+    ),
 )
 
 
@@ -212,7 +218,10 @@ def _execute_job_grid(args_dict):
         args_dict,
         work_dir=Path(args_dict["output_path"]),
     )
-    execute_jobs(job_specs, options)
+    if args_dict.get("wait", False):
+        execute_jobs(job_specs, options)
+    else:
+        submit_jobs(job_specs, options)
 
 
 def _validate_simulation_arguments(args_dict, parser):

@@ -46,3 +46,6 @@ extra_submit_attributes: {}
 For container jobs, the backend runs `python` inside the image by default. Set
 `python_executable` only when the image uses a different command, such as `python3` or
 `/opt/conda/bin/python`.
+
+`poll_interval` is used only when an application waits for submitted jobs, for example with
+`simtools-simulate-prod --wait`.

@@ -110,6 +110,7 @@ def test_add_arguments_job_grid_row_defaults_to_one():
     assert args.job_grid_file is None
     assert args.job_grid_row == 1
     assert args.save_corsika_output is False
+    assert args.wait is False
 
 
 def test_application_parser_includes_show_options():
@@ -320,6 +321,31 @@ def test_job_grid_file_allows_operational_parameters(job_grid_file):
 
     assert args["run_number"] == 7
     assert args["primary"] == "gamma"
+
+
+@pytest.mark.parametrize("wait", [False, True])
+def test_execute_job_grid_submits_or_waits(mocker, tmp_test_directory, wait):
+    """HTCondor grid jobs detach unless explicitly asked to wait."""
+    job_specs = [MagicMock()]
+    mocker.patch(
+        "simtools.applications.simulate_prod.build_simulate_prod_job_specs", return_value=job_specs
+    )
+    mocker.patch("simtools.applications.simulate_prod.options_from_args")
+    execute = mocker.patch("simtools.applications.simulate_prod.execute_jobs")
+    submit = mocker.patch("simtools.applications.simulate_prod.submit_jobs")
+
+    app._execute_job_grid(
+        {
+            "_job_grid_rows": [{}],
+            "_job_grid_metadata": {},
+            "output_path": tmp_test_directory,
+            "wait": wait,
+        }
+    )
+
+    expected = execute if wait else submit
+    expected.assert_called_once()
+    (submit if wait else execute).assert_not_called()
 
 
 @patch("simtools.applications.simulate_prod.Simulator")
