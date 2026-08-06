@@ -1,6 +1,9 @@
 #!/usr/bin/python3
 
-"""Write reduced event lists from sim_telarray output files."""
+"""Write reduced event lists from sim_telarray output files.
+
+This application supports the ``local`` (default) and ``htcondor`` execution backends.
+"""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

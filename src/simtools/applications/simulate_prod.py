@@ -1,6 +1,10 @@
 #!/usr/bin/python3
 
-r"""Generate simulation configuration and run simulations."""
+r"""Generate simulation configuration and run simulations.
+
+With ``--job_grid_file``, this application supports the ``local`` (default) and ``htcondor``
+execution backends.
+"""
 
 import argparse
 import sys

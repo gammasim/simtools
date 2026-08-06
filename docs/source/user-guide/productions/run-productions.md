@@ -68,18 +68,8 @@ Example integration configurations are available in `tests/integration_tests/con
 
 ## Running simtools on HTCondor using Apptainers
 
-Large productions can be submitted directly from `simtools-simulate-prod` using the generic
-HTCondor backend. The application reads the ECSV job grid written by
-[simtools-production-generate-grid](../applications/simtools-production-generate-grid), submits one
-job per row, waits for completion, and writes scheduler logs. See
-[Execution backends](../execution_backends.md) for runtime assumptions, configuration details,
-manifest recovery, and failure behavior.
-
-Install the optional scheduler extra on the submission host:
-
-```bash
-pip install "gammasimtools[htcondor]"
-```
+`simtools-simulate-prod` can submit the rows of an ECSV job grid to HTCondor. See
+[Execution backends](../execution_backends.md) for installation and configuration.
 
 Apptainer images can be pulled directly from the GitHub package registry. Use the image tag
 specified by the production configuration or production release notes:
@@ -88,34 +78,3 @@ specified by the production configuration or production release notes:
 apptainer pull --force \
   oras://ghcr.io/gammasim/simtools-prod:v0.27.1-v78010-v2025-11-30-rc-avx2-apptainer
 ```
-
-Create an HTCondor backend configuration on the shared filesystem:
-
-```yaml
-request_cpus: 1
-request_memory: 4GB
-request_disk: 10GB
-container_image: /shared/containers/simtools.sif
-container_target_dir: /simtools-run
-environment_file: /shared/config/simtools.env
-poll_interval: 60
-# timeout: 86400
-# cancel_on_interrupt: true
-```
-
-The submit host and execute nodes must share the job grid, output, container, and log paths. The
-controller waits for all submitted processes; failures include the cluster and process IDs and
-retain their diagnostic artifacts.
-
-Submit all rows in the grid:
-
-```bash
-simtools-simulate-prod \
-    --backend htcondor \
-    --backend_config htcondor.yml \
-    --job_grid_file production_grid_points_horizontal.ecsv \
-    --output_path simulation_output
-```
-
-Monitor the jobs with `condor_q` and inspect the generated log directories for errors. Simulation
-data products are written below the configured output path, with one directory per grid row.

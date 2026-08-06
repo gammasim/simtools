@@ -3,6 +3,8 @@
 r"""
 Fill and write trigger-histogram products from reduced event lists.
 
+This application supports the ``local`` (default) and ``htcondor`` execution backends.
+
 This application reads reduced event-data files, accumulates the common simulated and
 triggered-event histogram set, and writes a HDF5 histogram file for e.g.,
 plotting, CORSIKA-limit derivation, and Monte Carlo statistics estimation.

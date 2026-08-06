@@ -1,5 +1,8 @@
 # simtools-write-reduced-event-lists
 
+This application supports the `local` (default) and `htcondor` execution backends. See
+[Execution backends](../execution_backends.md) for HTCondor setup and configuration.
+
 ```{eval-rst}
 .. automodule:: write_reduced_event_lists
    :members:
@@ -14,22 +17,6 @@ data while retaining the event-level quantities needed for trigger-rate,
 effective-area, and Monte Carlo statistics studies. Input files can be supplied
 directly or through a text file; several input files can be combined into one
 output file.
-
-Independent output batches can run locally or on HTCondor. Local execution is the default; select
-the scheduler with `--backend htcondor` and provide a shared-filesystem backend configuration.
-HTCondor submission returns after queueing the independent batches; add `--wait` to keep the
-controller attached until all outputs are complete.
-Each remote batch writes its INFO-level application log to `logs/job-*.log` below the submitted
-HTCondor work directory. See [Execution backends](../execution_backends.md) for backend
-configuration, manifests, and recovery after interruption.
-
-```bash
-simtools-write-reduced-event-lists \
-    --input_file_list simtel_files.txt \
-    --files_per_reduced_event_file 10 \
-    --backend htcondor \
-    --backend_config htcondor.yml
-```
 
 Each output file contains the following root-level datasets:
 

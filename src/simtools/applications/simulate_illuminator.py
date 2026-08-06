@@ -3,6 +3,9 @@
 r"""
 Simulate illuminator (distant calibration light source).
 
+With ``--simulate_all``, this application supports the ``local`` (default) and ``htcondor``
+execution backends.
+
 Illuminators are calibration light sources not attached to a particular telescope.
 Three modes of operation are supported:
 

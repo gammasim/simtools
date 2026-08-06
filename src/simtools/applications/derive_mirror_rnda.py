@@ -2,6 +2,8 @@
 
 r"""Derive mirror random reflection angle based on per-mirror PSF diameter optimization.
 
+This application supports the ``local`` (default) and ``htcondor`` execution backends.
+
 Description
 -----------
 
