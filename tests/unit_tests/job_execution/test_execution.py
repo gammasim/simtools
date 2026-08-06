@@ -38,6 +38,11 @@ def _log_square(value):
     return value * value
 
 
+def _raise_keyboard_interrupt(_submission):
+    """Raise an interrupt from a backend wait operation."""
+    raise KeyboardInterrupt
+
+
 class _RemoteBackend:
     """Small scheduler-like backend for facade tests."""
 
@@ -182,7 +187,7 @@ def test_wait_for_submission_marks_failure_when_expected_output_is_missing(tmp_t
 def test_wait_for_submission_cancels_interrupted_configured_submission(tmp_test_directory):
     """Interrupt handling records the state and invokes the configured cancellation policy."""
     backend = _RemoteBackend()
-    backend.wait = lambda _submission: (_ for _ in ()).throw(KeyboardInterrupt)
+    backend.wait = _raise_keyboard_interrupt
     submission = SubmissionHandle(
         backend="remote", work_dir=Path(tmp_test_directory), job_ids=("job-000000",)
     )

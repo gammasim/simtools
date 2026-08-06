@@ -16,6 +16,16 @@ from simtools.job_execution.backends.htcondor import HTCondorBackend
 from simtools.job_execution.job import ExecutionOptions, JobSpec, SubmissionHandle
 
 
+def _raise_submission_error(*_args, **_kwargs):
+    """Raise a scheduler submission failure."""
+    raise RuntimeError("denied")
+
+
+def _raise_cancellation_error(*_args, **_kwargs):
+    """Raise a scheduler cancellation failure."""
+    raise RuntimeError("unavailable")
+
+
 def test_htcondor_validates_resource_sizes():
     """Memory and disk requests must be non-empty expressions."""
     with pytest.raises(BackendConfigurationError, match="request_memory"):
@@ -285,9 +295,7 @@ def test_htcondor_wait_cleans_transient_artifacts_after_success(monkeypatch, tmp
 def test_htcondor_submission_failure_is_wrapped(monkeypatch, tmp_test_directory):
     """Scheduler submission errors retain an actionable backend exception."""
     backend = HTCondorBackend()
-    fake_schedd = types.SimpleNamespace(
-        submit=lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("denied"))
-    )
+    fake_schedd = types.SimpleNamespace(submit=_raise_submission_error)
     backend._htcondor = types.SimpleNamespace(Submit=dict)
     backend._schedd = fake_schedd
     monkeypatch.setattr(backend, "_load_htcondor", lambda: backend._htcondor)
@@ -303,9 +311,7 @@ def test_htcondor_cancel_wraps_scheduler_errors():
     """Cancellation failures are reported through the backend execution error."""
     backend = HTCondorBackend()
     backend._htcondor = types.SimpleNamespace(JobAction=types.SimpleNamespace(Remove="remove"))
-    backend._schedd = types.SimpleNamespace(
-        act=lambda *_args: (_ for _ in ()).throw(RuntimeError("unavailable"))
-    )
+    backend._schedd = types.SimpleNamespace(act=_raise_cancellation_error)
 
     with pytest.raises(BackendExecutionError, match="unavailable"):
         backend.cancel(SubmissionHandle("htcondor", Path("run"), (), scheduler_id=17))
