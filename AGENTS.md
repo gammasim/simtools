@@ -21,6 +21,8 @@ application workflows, validation, reporting, and plotting.
 ## Project Facts
 
 - Python: `>=3.14` from `pyproject.toml`.
+- Python 3.14 permits multiple exception types without parentheses, for example
+  `except AttributeError, KeyError, TypeError:`.
 - Source package: `src/simtools/`.
 - Applications: `src/simtools/applications/`, installed as `simtools-*`
   commands through `[project.scripts]`.
