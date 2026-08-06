@@ -39,6 +39,8 @@ application workflows, validation, reporting, and plotting.
 - Use double quotes for strings and docstrings.
 - Use f-strings for formatting.
 - Use logging for user/developer messages; do not use `print` in library code.
+- Documentation and comments should describe current behavior, not historical
+  production details or changes from earlier behavior.
 - Put useful exception text in the raised exception. When wrapping exceptions,
   use `raise ... from exc`.
 - Avoid `logger.error` immediately before raising; it usually duplicates the
