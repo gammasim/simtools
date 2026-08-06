@@ -7,6 +7,7 @@ import types
 from pathlib import Path
 
 import pytest
+import yaml
 
 from simtools.job_execution import (
     ExecutionOptions,
@@ -17,6 +18,7 @@ from simtools.job_execution import (
     map_ordered,
     options_from_args,
     submit_jobs,
+    wait_for_submission,
 )
 from simtools.job_execution.backends.base import BackendConfigurationError, BackendExecutionError
 from simtools.job_execution.backends.htcondor import HTCondorBackend
@@ -34,6 +36,29 @@ def _log_square(value):
     """Log one worker message and return the square of one value."""
     logging.getLogger(__name__).info("processing value %s", value)
     return value * value
+
+
+class _RemoteBackend:
+    """Small scheduler-like backend for facade tests."""
+
+    supports_submit_only = True
+
+    def __init__(self, results=()):
+        self.results = list(results)
+        self.cancelled = []
+
+    def submit(self, jobs, options):
+        return SubmissionHandle(
+            backend="remote",
+            work_dir=Path(options.work_dir),
+            job_ids=tuple(job.job_id for job in jobs),
+        )
+
+    def wait(self, _submission):
+        return self.results
+
+    def cancel(self, submission):
+        self.cancelled.append(submission)
 
 
 def test_map_ordered_returns_input_order():
@@ -63,6 +88,116 @@ def test_execute_jobs_empty_input_does_not_resolve_backend():
     assert execute_jobs([], ExecutionOptions(backend="not-installed")) == []
 
 
+def test_execute_jobs_persists_remote_manifest_and_sorts_results(mocker, tmp_test_directory):
+    """Remote execution records expected outputs and completes its manifest."""
+    output = Path(tmp_test_directory) / "output.txt"
+    output.touch()
+    backend = _RemoteBackend(
+        [
+            types.SimpleNamespace(index=1, value="second"),
+            types.SimpleNamespace(index=0, value="first"),
+        ]
+    )
+    mocker.patch("simtools.job_execution.execution.get_backend", return_value=backend)
+    jobs = [
+        JobSpec("job-000000", 0, function=_square, item=1, output_paths=(output,)),
+        JobSpec("job-000001", 1, function=_square, item=2),
+    ]
+
+    results = execute_jobs(jobs, ExecutionOptions(backend="remote", work_dir=tmp_test_directory))
+
+    assert [result.value for result in results] == ["first", "second"]
+    manifest = load_submission(Path(tmp_test_directory) / "submission.json")
+    assert manifest.metadata["state"] == "completed"
+    assert manifest.metadata["expected_outputs"] == {"job-000000": [str(output.resolve())]}
+
+
+def test_submit_jobs_returns_immediately_for_scheduler_backend(mocker, tmp_test_directory):
+    """Submit-only backends leave a submitted manifest for later waiting."""
+    backend = _RemoteBackend()
+    mocker.patch("simtools.job_execution.execution.get_backend", return_value=backend)
+
+    submission = submit_jobs(
+        [JobSpec("job-000000", 0, function=_square, item=1)],
+        ExecutionOptions(backend="remote", work_dir=tmp_test_directory),
+    )
+
+    assert submission.metadata["state"] == "submitted"
+    assert Path(tmp_test_directory, "submission.json").is_file()
+
+
+@pytest.mark.parametrize(
+    ("jobs", "message"),
+    [
+        (
+            [
+                JobSpec("same", 0, function=_square, item=1),
+                JobSpec("same", 1, function=_square, item=2),
+            ],
+            "job IDs",
+        ),
+        (
+            [
+                JobSpec("first", 0, function=_square, item=1),
+                JobSpec("second", 0, function=_square, item=2),
+            ],
+            "indices",
+        ),
+    ],
+)
+def test_execute_jobs_rejects_duplicate_identifiers(jobs, message):
+    """Execution plans must provide unique job IDs and input indices."""
+    with pytest.raises(ValueError, match=message):
+        execute_jobs(jobs)
+
+
+def test_execute_jobs_rejects_duplicate_output_paths(tmp_test_directory):
+    """Two jobs cannot declare the same expected output."""
+    output = Path(tmp_test_directory) / "output.txt"
+    jobs = [
+        JobSpec("first", 0, function=_square, item=1, output_paths=(output,)),
+        JobSpec("second", 1, function=_square, item=2, output_paths=(output,)),
+    ]
+
+    with pytest.raises(ValueError, match="duplicate expected output"):
+        execute_jobs(jobs)
+
+
+def test_wait_for_submission_marks_failure_when_expected_output_is_missing(tmp_test_directory):
+    """Missing outputs fail a remote submission and preserve its manifest state."""
+    backend = _RemoteBackend([types.SimpleNamespace(index=0, value=1)])
+    submission = SubmissionHandle(
+        backend="remote",
+        work_dir=Path(tmp_test_directory),
+        job_ids=("job-000000",),
+        metadata={"expected_outputs": {"job-000000": [str(Path(tmp_test_directory) / "missing")]}},
+    )
+
+    with pytest.raises(FileNotFoundError, match="missing"):
+        wait_for_submission(submission, backend=backend)
+
+    assert submission.metadata["state"] == "failed"
+
+
+def test_wait_for_submission_cancels_interrupted_configured_submission(tmp_test_directory):
+    """Interrupt handling records the state and invokes the configured cancellation policy."""
+    backend = _RemoteBackend()
+    backend.wait = lambda _submission: (_ for _ in ()).throw(KeyboardInterrupt)
+    submission = SubmissionHandle(
+        backend="remote", work_dir=Path(tmp_test_directory), job_ids=("job-000000",)
+    )
+
+    with pytest.raises(KeyboardInterrupt):
+        wait_for_submission(
+            submission,
+            backend=backend,
+            options=ExecutionOptions(cancel_on_interrupt=True),
+        )
+
+    assert submission.metadata["state"] == "interrupted"
+    assert backend.cancelled == [submission]
+
+
 def test_options_from_args_reads_yaml(tmp_test_directory):
     """Backend options can be loaded from a YAML file."""
     config_file = Path(tmp_test_directory) / "backend.yml"
@@ -76,6 +211,25 @@ def test_options_from_args_reads_yaml(tmp_test_directory):
     assert options.backend == "htcondor"
     assert options.backend_config["request_cpus"] == 2
     assert options.work_dir == Path(tmp_test_directory)
+
+
+@pytest.mark.parametrize("config_value", [None, {"request_cpus": 2}])
+def test_options_from_args_accepts_empty_and_inline_configuration(config_value):
+    """Options preserve empty and inline backend configuration values."""
+    options = options_from_args({"backend_config": config_value})
+
+    assert options.backend == "local"
+    assert options.backend_config == (config_value or {})
+
+
+@pytest.mark.parametrize("content", ["- request_cpus\n", "request_cpus: ["])
+def test_options_from_args_rejects_invalid_yaml_configuration(tmp_test_directory, content):
+    """Backend configuration files must contain valid YAML mappings."""
+    config_file = Path(tmp_test_directory) / "backend.yml"
+    config_file.write_text(content, encoding="utf-8")
+
+    with pytest.raises((ValueError, yaml.YAMLError)):
+        options_from_args({"backend_config": config_file})
 
 
 def test_submit_jobs_keeps_local_execution_blocking():
