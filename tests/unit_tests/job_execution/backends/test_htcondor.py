@@ -52,8 +52,8 @@ def test_htcondor_uses_container_python_command(tmp_test_directory):
     )
 
 
-def test_htcondor_binds_declared_job_mount_paths(tmp_test_directory):
-    """Container jobs bind the directories explicitly declared by their specifications."""
+def test_htcondor_avoids_nested_container_bind_paths(tmp_test_directory):
+    """Container jobs do not duplicate a bind already covered by the work directory."""
     work_dir = Path(tmp_test_directory) / "work"
     output_dir = Path(tmp_test_directory) / "output" / "job-000000"
     job = JobSpec("job-000000", 0, command=("echo", "ok"), mount_paths=(output_dir,))
@@ -65,9 +65,7 @@ def test_htcondor_binds_declared_job_mount_paths(tmp_test_directory):
         work_dir / "scheduler.log",
     )
 
-    assert submit_values["environment"] == (
-        f"APPTAINER_BINDPATH={work_dir.resolve().parent},{output_dir.resolve()}"
-    )
+    assert submit_values["environment"] == f"APPTAINER_BINDPATH={work_dir.resolve().parent}"
 
 
 def test_htcondor_rewrites_controller_python_in_container_commands():

@@ -501,6 +501,7 @@ class HTCondorBackend:
                 for job in jobs
                 for output_path in job.output_paths
             )
+            bind_paths = self._minimize_bind_paths(bind_paths)
         environment = self._read_environment_file(
             config.get("environment_file"), bind_paths=bind_paths
         )
@@ -508,6 +509,17 @@ class HTCondorBackend:
             submit_values["environment"] = environment
         submit_values.update(config.get("extra_submit_attributes", {}))
         return submit_values, resource_defaults, resource_keys
+
+    @staticmethod
+    def _minimize_bind_paths(bind_paths):
+        """Remove duplicate and nested paths from container bind paths."""
+        minimized = []
+        for bind_path in sorted(
+            {Path(path) for path in bind_paths}, key=lambda path: len(path.parts)
+        ):
+            if not any(bind_path.is_relative_to(parent) for parent in minimized):
+                minimized.append(bind_path)
+        return minimized
 
     @staticmethod
     def _build_itemdata(jobs, resource_defaults, resource_keys):
