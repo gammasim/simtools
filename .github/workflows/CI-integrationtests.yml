@@ -152,7 +152,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: corsika-interaction-tables
-          path: ${{ env.IT_NAME }}/interaction-tables
+          path: ${{ env.IT_NAME }}
           if-no-files-found: error
           retention-days: 30
 
@@ -337,10 +337,17 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: corsika-interaction-tables
-          path: ${{ env.SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH }}
+          path: ${{ env.SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH }}/..
 
       - name: Verify CORSIKA interaction tables
-        run: test -f "$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH/manifest.yaml"
+        run: |
+          if ! test -f "$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH/manifest.yaml"; then
+            echo "Interaction-table directory:"
+            ls -la "$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH" || true
+            echo "Interaction-table parent directory:"
+            ls -la "$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH/.." || true
+            exit 1
+          fi
 
       - name: Download simulation models repository
         # if: github.event_name != 'schedule'
