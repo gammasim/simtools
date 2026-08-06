@@ -37,7 +37,7 @@ jobs:
       simtel_matrix: ${{ steps.config.outputs.simtel_matrix }}
       simtel_build_matrix: ${{ steps.config.outputs.simtel_build_matrix }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
       - id: config
         run: |
           python -m pip install packaging pyyaml
@@ -55,7 +55,7 @@ jobs:
            "${{ env.CLOUD_URL }}/${{ secrets.CLOUD_GSL }}/download" \
            -o gsl.tar.gz
       - name: upload-auxiliary-files
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: upload-auxiliary-files
           path: |
@@ -80,19 +80,19 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Download auxiliary files
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
           name: upload-auxiliary-files
           path: .
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c  # v4
 
       - name: Log in to the Container registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -100,7 +100,7 @@ jobs:
 
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302  # v6
         with:
           tags: |
             type=raw,value=${{ env.BASE_TAG }}-${{ env.ARCH }}-${{ env.RUN_TAG }}
@@ -111,7 +111,7 @@ jobs:
           flavor: latest=false
 
       - name: Build and push
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7
         with:
           context: .
           platforms: ${{ matrix.platform }}
@@ -156,10 +156,10 @@ jobs:
 
     steps:
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c  # v4
 
       - name: Log in to the Container registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -167,7 +167,7 @@ jobs:
 
       - name: Extract final metadata
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302  # v6
         with:
           tags: |
             type=raw,value=${{ env.BASE_TAG }}
