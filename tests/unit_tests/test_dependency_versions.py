@@ -9,11 +9,16 @@ import yaml
 from simtools import dependency_versions
 
 
-def test_load_dependency_catalog_and_build_matrices(simtools_root_path):
-    """Test catalog loading and matrix construction."""
-    catalog = dependency_versions.load_dependency_catalog(
+def _load_catalog(simtools_root_path):
+    return dependency_versions.load_dependency_catalog(
         simtools_root_path / "dependency_versions.yml"
     )
+
+
+def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypatch):
+    """Test catalog loading and matrix construction."""
+    monkeypatch.chdir(simtools_root_path)
+    catalog = dependency_versions.load_dependency_catalog()
     matrices = dependency_versions.build_workflow_matrices(catalog)
 
     assert catalog["python"] == "3.14"
@@ -27,18 +32,9 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path):
     )
 
 
-def test_load_dependency_catalog_discovers_root_file(simtools_root_path, monkeypatch):
-    """Test catalog loading defaults to the visible root-level YAML file."""
-    monkeypatch.chdir(simtools_root_path)
-
-    catalog = dependency_versions.load_dependency_catalog()
-
-    assert catalog["schema_version"] == "0.1.0"
-
-
 def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
     """Test optional digests do not affect the current catalog references."""
-    catalog = dependency_versions.load_dependency_catalog(simtools_root_path / "pyproject.toml")
+    catalog = _load_catalog(simtools_root_path)
     summary = dependency_versions.dependency_catalog_summary(catalog)
 
     assert summary["base_image"] == "docker.io/library/almalinux:9.8-minimal"
@@ -49,14 +45,14 @@ def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
 
 def test_env_template_matches_catalog(simtools_root_path):
     """Test the documented environment defaults match the catalog."""
-    catalog = dependency_versions.load_dependency_catalog(simtools_root_path / "pyproject.toml")
+    catalog = _load_catalog(simtools_root_path)
 
     dependency_versions.validate_env_template(catalog, simtools_root_path / ".env_template")
 
 
 def test_env_template_rejects_mismatched_model_version(tmp_test_directory, simtools_root_path):
     """Test invalid model-version defaults are rejected."""
-    catalog = dependency_versions.load_dependency_catalog(simtools_root_path / "pyproject.toml")
+    catalog = _load_catalog(simtools_root_path)
     template = tmp_test_directory / ".env_template"
     template.write_text(
         "SIMTOOLS_DB_SIMULATION_MODEL=CTAO-Simulation-Model\n"
@@ -100,7 +96,7 @@ def test_env_template_rejects_mismatched_model_version(tmp_test_directory, simto
 )
 def test_validate_dependency_catalog_rejects_invalid_values(simtools_root_path, mutator, error):
     """Test catalog validation rejects invalid optional and required values."""
-    catalog = dependency_versions.load_dependency_catalog(simtools_root_path / "pyproject.toml")
+    catalog = _load_catalog(simtools_root_path)
     invalid = copy.deepcopy(catalog)
     mutator(invalid)
 
@@ -144,7 +140,7 @@ def test_find_dependency_versions_raises_when_missing(mocker, tmp_test_directory
 
 def test_build_workflow_matrices_uses_optional_image_digests(simtools_root_path):
     """Test optional immutable image references are propagated to production matrices."""
-    catalog = dependency_versions.load_dependency_catalog(simtools_root_path / "pyproject.toml")
+    catalog = _load_catalog(simtools_root_path)
     digest = "sha256:" + "a" * 64
     catalog["corsika"][0]["image-digests"] = {"generic": digest}
     catalog["sim-telarray"][0]["image-digest"] = digest
@@ -158,7 +154,7 @@ def test_build_workflow_matrices_uses_optional_image_digests(simtools_root_path)
 
 def test_production_matrix_uses_global_cpu_variants_by_default(simtools_root_path):
     """Test production combinations inherit the catalog CPU variants."""
-    catalog = dependency_versions.load_dependency_catalog(simtools_root_path / "pyproject.toml")
+    catalog = _load_catalog(simtools_root_path)
     expected = dependency_versions.build_workflow_matrices(catalog)["production_matrix"]
     catalog["production-combinations"][0].pop("cpu-variants", None)
 
@@ -178,7 +174,7 @@ def test_validate_dependency_catalog_rejects_unknown_production_components(
     simtools_root_path, field, value, error
 ):
     """Test production combinations must use catalogued component versions."""
-    catalog = dependency_versions.load_dependency_catalog(simtools_root_path / "pyproject.toml")
+    catalog = _load_catalog(simtools_root_path)
     catalog["production-combinations"][0][field] = value
 
     with pytest.raises(ValueError, match=error):
@@ -195,21 +191,6 @@ def test_export_dependency_configuration_returns_github_outputs(simtools_root_pa
     assert "python_version=3.14" in output
 
 
-def test_export_catalog_does_not_require_pyproject(mocker, simtools_root_path):
-    """Test catalog-only output works with an explicit catalog file."""
-    mocker.patch(
-        "simtools.dependency_versions.find_pyproject",
-        side_effect=AssertionError("pyproject should not be needed"),
-    )
-
-    output = dependency_versions.export_dependency_configuration(
-        output_format="summary",
-        dependency_path=simtools_root_path / "dependency_versions.yml",
-    )
-
-    assert '"python_version": "3.14"' in output
-
-
 def test_export_dependency_configuration_returns_python_requirements(simtools_root_path):
     """Test the catalog library returns optional Python dependencies."""
     requirements = dependency_versions.export_dependency_configuration(
@@ -223,9 +204,7 @@ def test_export_dependency_configuration_returns_python_requirements(simtools_ro
 @pytest.mark.parametrize("output_format", ["catalog", "summary"])
 def test_export_dependency_configuration_returns_json(simtools_root_path, output_format):
     """Test JSON export formats return parseable serialized data."""
-    output = dependency_versions.export_dependency_configuration(
-        simtools_root_path / "pyproject.toml", output_format
-    )
+    output = dependency_versions.export_dependency_configuration(output_format=output_format)
 
     assert json.loads(output)
 
@@ -242,7 +221,7 @@ def test_catalog_matches_yaml_schema(simtools_root_path):
     """Test the YAML catalog conforms to the project schema."""
     import jsonschema
 
-    catalog = dependency_versions.load_dependency_catalog(simtools_root_path / "pyproject.toml")
+    catalog = _load_catalog(simtools_root_path)
     schema_path = simtools_root_path / "src/simtools/schemas/dependency_versions.schema.yml"
     schema = yaml.safe_load(schema_path.read_text(encoding="utf-8"))
 

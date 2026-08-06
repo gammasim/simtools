@@ -20,15 +20,6 @@ if __package__:
                 default=None,
             ),
             cli.ArgumentDefinition(
-                "dependency_file",
-                help=(
-                    "Explicit dependency_versions.yml file "
-                    "(the repository is searched when omitted)."
-                ),
-                type=Path,
-                default=None,
-            ),
-            cli.ArgumentDefinition(
                 "format",
                 help="Output format.",
                 choices=("catalog", "github-output", "python-requirements", "summary"),
@@ -52,9 +43,7 @@ def main():
         raise RuntimeError("The dependency-versions application must be imported as simtools.")
     args = APPLICATION.start().args
     sys.stdout.write(
-        _export_dependency_configuration(
-            args["pyproject"], args["format"], args["extras"], args.get("dependency_file")
-        )
+        _export_dependency_configuration(args["pyproject"], args["format"], args["extras"])
     )
 
 
@@ -64,7 +53,6 @@ def _main_standalone():
     sys.path.insert(0, str(source_root))
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pyproject", type=Path)
-    parser.add_argument("--dependency-file", type=Path)
     parser.add_argument(
         "--format",
         choices=("catalog", "github-output", "python-requirements", "summary"),
@@ -72,19 +60,15 @@ def _main_standalone():
     )
     parser.add_argument("--extras", nargs="*", default=[])
     args = parser.parse_args()
-    sys.stdout.write(
-        _export_dependency_configuration(
-            args.pyproject, args.format, args.extras, args.dependency_file
-        )
-    )
+    sys.stdout.write(_export_dependency_configuration(args.pyproject, args.format, args.extras))
 
 
-def _export_dependency_configuration(pyproject_path, output_format, extras, dependency_path=None):
+def _export_dependency_configuration(pyproject_path, output_format, extras):
     """Load the library exporter without requiring the full application stack."""
     # pylint: disable=import-outside-toplevel
     from simtools.dependency_versions import export_dependency_configuration
 
-    return export_dependency_configuration(pyproject_path, output_format, extras, dependency_path)
+    return export_dependency_configuration(pyproject_path, output_format, extras)
 
 
 if __name__ == "__main__":

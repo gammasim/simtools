@@ -36,8 +36,6 @@ def find_dependency_versions(start_path=None):
     configured_path = os.getenv("SIMTOOLS_DEPENDENCY_VERSIONS")
     candidates = [Path(configured_path)] if configured_path else []
     start = Path(start_path or Path.cwd()).resolve()
-    if start.is_file():
-        start = start.parent
     candidates.extend(parent / DEPENDENCY_VERSIONS_FILENAME for parent in (start, *start.parents))
     candidates.append(Path(__file__).resolve().parents[2] / DEPENDENCY_VERSIONS_FILENAME)
     for candidate in candidates:
@@ -51,8 +49,6 @@ def find_pyproject(start_path=None):
     configured_path = os.getenv("SIMTOOLS_PYPROJECT")
     candidates = [Path(configured_path)] if configured_path else []
     start = Path(start_path or Path.cwd()).resolve()
-    if start.is_file():
-        start = start.parent
     candidates.extend(parent / PYPROJECT_FILENAME for parent in (start, *start.parents))
     candidates.append(Path(__file__).resolve().parents[2] / PYPROJECT_FILENAME)
     for candidate in candidates:
@@ -67,9 +63,7 @@ def load_dependency_catalog(catalog_path=None, validate=True):
     Parameters
     ----------
     catalog_path : str or Path, optional
-        Explicit catalog file, directory, or project file. A project file is
-        accepted for backwards compatibility and resolves to its sibling
-        ``dependency_versions.yml``. The repository is searched when omitted.
+        Explicit catalog file. The repository is searched when omitted.
     validate : bool, optional
         Validate the catalog structure when True.
 
@@ -78,26 +72,11 @@ def load_dependency_catalog(catalog_path=None, validate=True):
     dict
         Dependency version catalog.
     """
-    catalog_file = _resolve_catalog_path(catalog_path)
-    try:
-        catalog = yaml.safe_load(catalog_file.read_text(encoding="utf-8"))
-    except OSError as exc:
-        raise FileNotFoundError(f"Could not read dependency catalog: {catalog_file}") from exc
+    catalog_file = Path(catalog_path) if catalog_path else find_dependency_versions()
+    catalog = yaml.safe_load(catalog_file.read_text(encoding="utf-8"))
     if not isinstance(catalog, dict):
         raise ValueError(f"Dependency catalog must contain a mapping: {catalog_file}")
     return validate_dependency_catalog(catalog) if validate else catalog
-
-
-def _resolve_catalog_path(catalog_path):
-    """Resolve an explicit catalog, project, or directory path."""
-    if catalog_path is None:
-        return find_dependency_versions()
-    path = Path(catalog_path)
-    if path.is_dir():
-        return path / DEPENDENCY_VERSIONS_FILENAME
-    if path.name == PYPROJECT_FILENAME:
-        return path.with_name(DEPENDENCY_VERSIONS_FILENAME)
-    return path
 
 
 def validate_dependency_catalog(catalog):
@@ -378,9 +357,7 @@ def project_requirements(pyproject_path, extras):
     return requirements
 
 
-def export_dependency_configuration(
-    pyproject_path=None, output_format="catalog", extras=None, dependency_path=None
-):
+def export_dependency_configuration(pyproject_path=None, output_format="catalog", extras=None):
     """Return dependency configuration in a selected export format.
 
     Parameters
@@ -392,9 +369,6 @@ def export_dependency_configuration(
         One of ``catalog``, ``github-output``, ``python-requirements``, or ``summary``.
     extras : list of str, optional
         Optional dependency groups included in ``python-requirements`` output.
-    dependency_path : str or Path, optional
-        Explicit dependency catalog file or directory. The repository is
-        searched when omitted.
 
     Returns
     -------
@@ -402,8 +376,11 @@ def export_dependency_configuration(
         Serialized dependency configuration, including a trailing newline.
     """
     project_file = Path(pyproject_path) if pyproject_path else None
-    catalog_path = dependency_path or (project_file.parent if project_file else None)
-    catalog_file = _resolve_catalog_path(catalog_path)
+    catalog_file = (
+        project_file.with_name(DEPENDENCY_VERSIONS_FILENAME)
+        if project_file
+        else find_dependency_versions()
+    )
     catalog = load_dependency_catalog(catalog_file)
     env_template = catalog_file.parent / ".env_template"
     if env_template.is_file():
