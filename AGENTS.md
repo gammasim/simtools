@@ -21,6 +21,7 @@ application workflows, validation, reporting, and plotting.
 ## Project Facts
 
 - Python: `>=3.14` from `pyproject.toml`.
+- Python 3.14 allows multiple exception types without parentheses (PEP 758) when not using `as`, e.g. `except AttributeError, KeyError, TypeError:`; use parentheses for `except (AttributeError, KeyError, TypeError) as exc:`.
 - Source package: `src/simtools/`.
 - Applications: `src/simtools/applications/`, installed as `simtools-*`
   commands through `[project.scripts]`.
@@ -38,6 +39,8 @@ application workflows, validation, reporting, and plotting.
 - Use double quotes for strings and docstrings.
 - Use f-strings for formatting.
 - Use logging for user/developer messages; do not use `print` in library code.
+- Documentation and comments should describe current behavior, not historical
+  production details or changes from earlier behavior.
 - Put useful exception text in the raised exception. When wrapping exceptions,
   use `raise ... from exc`.
 - Avoid `logger.error` immediately before raising; it usually duplicates the
