@@ -4,7 +4,7 @@ Pre-built OCI and Apptainer images are available from the
 [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
 The GitHub Actions workflows in `.github/workflows/build-*.yml` are the reference image builds.
 
-All build versions come from `pyproject.toml`; see
+All scientific build versions come from `dependency_versions.yml`; see
 [Dependency versions and provenance](dependency_versions.md). Dockerfiles deliberately have no
 independent software-version defaults. Before a local build, export the validated values with
 
