@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@v7
       - id: config
         run: |
-          python -m pip install packaging
+          python -m pip install packaging pyyaml
           python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
 
   download-auxiliary-files:

@@ -12,6 +12,7 @@ on:
       - docker/Dockerfile-simtools-dev
       - pyproject.toml
       - dependency_versions.yml
+      - .github/scripts/pyproject_build_relevance.py
       - src/simtools/applications/dependency_versions.py
       - src/simtools/dependency_versions.py
       - src/simtools/schemas/dependency_versions.schema.yml
@@ -31,7 +32,30 @@ env:
 permissions: {}
 
 jobs:
+  build-inputs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      relevant: ${{ steps.check.outputs.relevant }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: check
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            relevant=$(python .github/scripts/pyproject_build_relevance.py "$BASE_SHA")
+          else
+            relevant=true
+          fi
+          echo "relevant=$relevant" >> "$GITHUB_OUTPUT"
+
   dependency-config:
+    needs: build-inputs
+    if: ${{ github.event_name != 'pull_request' || needs.build-inputs.outputs.relevant == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -44,7 +68,7 @@ jobs:
       - uses: actions/checkout@v7
       - id: config
         run: |
-          python -m pip install packaging
+          python -m pip install packaging pyyaml
           python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
 
   build-simtools-dev:

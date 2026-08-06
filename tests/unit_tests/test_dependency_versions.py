@@ -195,6 +195,21 @@ def test_export_dependency_configuration_returns_github_outputs(simtools_root_pa
     assert "python_version=3.14" in output
 
 
+def test_export_catalog_does_not_require_pyproject(mocker, simtools_root_path):
+    """Test catalog-only output works with an explicit catalog file."""
+    mocker.patch(
+        "simtools.dependency_versions.find_pyproject",
+        side_effect=AssertionError("pyproject should not be needed"),
+    )
+
+    output = dependency_versions.export_dependency_configuration(
+        output_format="summary",
+        dependency_path=simtools_root_path / "dependency_versions.yml",
+    )
+
+    assert '"python_version": "3.14"' in output
+
+
 def test_export_dependency_configuration_returns_python_requirements(simtools_root_path):
     """Test the catalog library returns optional Python dependencies."""
     requirements = dependency_versions.export_dependency_configuration(

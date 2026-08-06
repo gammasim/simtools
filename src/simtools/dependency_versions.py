@@ -385,24 +385,31 @@ def export_dependency_configuration(
     Parameters
     ----------
     pyproject_path : str or Path, optional
-        Explicit project file. The repository is searched when omitted.
+        Explicit project file, required for ``python-requirements`` output.
+        The repository is searched when omitted for that output format.
     output_format : str, optional
         One of ``catalog``, ``github-output``, ``python-requirements``, or ``summary``.
     extras : list of str, optional
         Optional dependency groups included in ``python-requirements`` output.
+    dependency_path : str or Path, optional
+        Explicit dependency catalog file or directory. The repository is
+        searched when omitted.
 
     Returns
     -------
     str
         Serialized dependency configuration, including a trailing newline.
     """
-    project_file = Path(pyproject_path) if pyproject_path else find_pyproject()
-    catalog = load_dependency_catalog(dependency_path or project_file.parent)
-    env_template = project_file.parent / ".env_template"
+    project_file = Path(pyproject_path) if pyproject_path else None
+    catalog_path = dependency_path or (project_file.parent if project_file else None)
+    catalog_file = _resolve_catalog_path(catalog_path)
+    catalog = load_dependency_catalog(catalog_file)
+    env_template = catalog_file.parent / ".env_template"
     if env_template.is_file():
         validate_env_template(catalog, env_template)
     extras = extras or []
     if output_format == "python-requirements":
+        project_file = project_file or find_pyproject()
         return "\n".join(project_requirements(project_file, extras)) + "\n"
     if output_format == "catalog":
         return json.dumps(catalog, indent=2, sort_keys=True) + "\n"
