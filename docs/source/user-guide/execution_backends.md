@@ -34,8 +34,6 @@ request_disk: 10GB
 container_image: /shared/containers/simtools.sif
 # Keep the HTCondor scratch mount away from the image's /workdir environment.
 container_target_dir: /simtools-run
-# Python command available inside the container; use an absolute path if needed.
-python_executable: python
 environment_file: /shared/config/simtools.env
 log_path: scheduler.log
 poll_interval: 60
@@ -44,3 +42,7 @@ cancel_on_interrupt: false
 keep_successful_artifacts: false
 extra_submit_attributes: {}
 ```
+
+For container jobs, the backend runs `python` inside the image by default. Set
+`python_executable` only when the image uses a different command, such as `python3` or
+`/opt/conda/bin/python`.
