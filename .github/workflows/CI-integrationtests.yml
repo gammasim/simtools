@@ -72,6 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IT_NAME: "corsika7-interaction-tables"
+      CORSIKA_TABLES: "main"
 
     steps:
       - uses: actions/checkout@v7
