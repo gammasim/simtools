@@ -21,8 +21,7 @@ application workflows, validation, reporting, and plotting.
 ## Project Facts
 
 - Python: `>=3.14` from `pyproject.toml`.
-- Python 3.14 permits multiple exception types without parentheses, for example
-  `except AttributeError, KeyError, TypeError:`.
+- Python 3.14 allows multiple exception types without parentheses (PEP 758) when not using `as`, e.g. `except AttributeError, KeyError, TypeError:`; use parentheses for `except (AttributeError, KeyError, TypeError) as exc:`.
 - Source package: `src/simtools/`.
 - Applications: `src/simtools/applications/`, installed as `simtools-*`
   commands through `[project.scripts]`.
