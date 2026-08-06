@@ -9,6 +9,7 @@ from pathlib import Path
 import yaml
 
 DEPENDENCY_VERSIONS_FILENAME = "dependency_versions.yml"
+PYPROJECT_FILENAME = "pyproject.toml"
 SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 ARCHIVE_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
@@ -52,12 +53,12 @@ def find_pyproject(start_path=None):
     start = Path(start_path or Path.cwd()).resolve()
     if start.is_file():
         start = start.parent
-    candidates.extend(parent / "pyproject.toml" for parent in (start, *start.parents))
-    candidates.append(Path(__file__).resolve().parents[2] / "pyproject.toml")
+    candidates.extend(parent / PYPROJECT_FILENAME for parent in (start, *start.parents))
+    candidates.append(Path(__file__).resolve().parents[2] / PYPROJECT_FILENAME)
     for candidate in candidates:
         if candidate.is_file():
             return candidate
-    raise FileNotFoundError("Could not find pyproject.toml.")
+    raise FileNotFoundError(f"Could not find {PYPROJECT_FILENAME}.")
 
 
 def load_dependency_catalog(catalog_path=None, validate=True):
@@ -94,7 +95,7 @@ def _resolve_catalog_path(catalog_path):
     path = Path(catalog_path)
     if path.is_dir():
         return path / DEPENDENCY_VERSIONS_FILENAME
-    if path.name == "pyproject.toml":
+    if path.name == PYPROJECT_FILENAME:
         return path.with_name(DEPENDENCY_VERSIONS_FILENAME)
     return path
 
