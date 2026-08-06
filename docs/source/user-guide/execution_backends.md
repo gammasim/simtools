@@ -1,9 +1,15 @@
 # Execution backends
 
-Applications that split work into independent jobs accept `--backend` and
-`--backend_config`. The default `local` backend uses worker processes on the controller host;
-`max_workers` affects only this backend. The `htcondor` backend submits one scheduler process per
+Compute intensive application can be execution in parallel, either locally or on backends
+like the HTCondor system.
+The backend is selected with `--backend` and configured with `--backend_config`.
+
+The following backends are available:
+
+- Local execution `local` backend uses `--max_workers` processes on the controller host (default)
+- HTCondor is selected with the `htcondor`. It submits one scheduler process per
 job and does not use `max_workers` as a queue limit.
+
 
 ## HTCondor installation and runtime
 
@@ -17,9 +23,6 @@ The initial backend uses a shared filesystem. Input payloads, application output
 containers, and environment files must be visible at the same absolute paths on the submit and
 execute hosts must provide a compatible Python environment and the dependencies required by the
 serialized job, either directly or through the configured container.
-
-Worker payloads use Python pickle and are executable data. Keep the backend work directory private
-and load submission manifests only from trusted runs created by simtools.
 
 ## Backend configuration
 
@@ -43,22 +46,6 @@ cancel_on_interrupt: false
 keep_successful_artifacts: false
 extra_submit_attributes: {}
 ```
-
-Unknown keys and protected scheduler fields fail before submission. The environment file accepts
-`KEY=VALUE` entries; its contents are passed to HTCondor but are not copied into the durable
-manifest or simtools logs.
-
-When `container_image` is configured, HTCondor starts `/usr/bin/env` inside the image and resolves
-`python_executable` through the image's environment. It defaults to `python`; set it to `python3` or
-an absolute path such as `/opt/conda/bin/python` when the image uses a different Python location.
-`container_target_dir` defaults to `/simtools-run`. This is where HTCondor mounts the job scratch
-directory inside the container; it must not replace a directory containing the image's Python
-environment, such as `/workdir` in the production image.
-The image must also contain `simtools.job_execution.worker`; an older production image built
-before the generic execution backend was added cannot execute these jobs. Check an image before
-submitting with `apptainer exec IMAGE python -c "import simtools.job_execution.worker"`.
-For nested command jobs, the backend replaces the submit-host `sys.executable` with
-`python_executable`, so controller virtual-environment paths are not passed into the container.
 
 ## Manifests, logs, and failures
 
