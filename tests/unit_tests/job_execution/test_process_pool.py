@@ -11,7 +11,7 @@ def _process_pools_available():
     """Return whether the host permits multiprocessing semaphore creation."""
     try:
         os.sysconf("SC_SEM_NSEMS_MAX")
-    except OSError, PermissionError:
+    except OSError:
         return False
     return True
 
