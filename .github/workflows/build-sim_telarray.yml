@@ -35,6 +35,7 @@ jobs:
       gsl_version: ${{ steps.config.outputs.gsl_version }}
       gsl_sha256: ${{ steps.config.outputs.gsl_sha256 }}
       simtel_matrix: ${{ steps.config.outputs.simtel_matrix }}
+      simtel_build_matrix: ${{ steps.config.outputs.simtel_build_matrix }}
     steps:
       - uses: actions/checkout@v7
       - id: config
@@ -68,14 +69,14 @@ jobs:
       packages: write
     strategy:
       matrix:
-        include: ${{ fromJSON(needs.dependency-config.outputs.simtel_matrix) }}
-        platform: [linux/amd64, linux/arm64/v8]
+        include: ${{ fromJSON(needs.dependency-config.outputs.simtel_build_matrix) }}
     env:
       BASE_LABEL: "sim_telarray"
       BASE_TAG: "${{ matrix.simtel_version }}"
-      ARCH: "${{ matrix.platform == 'linux/arm64/v8' && 'arm64' || 'amd64' }}"
+      ARCH: "${{ matrix.arch }}"
+      RUN_TAG: "${{ github.run_id }}-${{ github.run_attempt }}"
 
-    runs-on: ${{ matrix.platform == 'linux/arm64/v8' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - name: Checkout repository
@@ -102,10 +103,10 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           tags: |
-            type=raw,value=${{ env.BASE_TAG }}-${{ env.ARCH }}
-            type=ref,event=pr,suffix=-${{ env.BASE_TAG }}-${{ env.ARCH }}
-            type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}-${{ env.ARCH }}
-            type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}-${{ env.ARCH }}
+            type=raw,value=${{ env.BASE_TAG }}-${{ env.ARCH }}-${{ env.RUN_TAG }}
+            type=ref,event=pr,suffix=-${{ env.BASE_TAG }}-${{ env.ARCH }}-${{ env.RUN_TAG }}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}-${{ env.ARCH }}-${{ env.RUN_TAG }}
+            type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}-${{ env.ARCH }}-${{ env.RUN_TAG }}
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: latest=false
 
@@ -136,8 +137,6 @@ jobs:
           file: ./docker/Dockerfile-simtel_array
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=simtel-${{ matrix.simtel_version }}-${{ env.ARCH }}
-          cache-to: ${{ github.event_name != 'pull_request' && format('type=gha,mode=max,scope=simtel-{0}-{1}', matrix.simtel_version, env.ARCH) || '' }}
 
   publish-sim_telarray:
     if: github.event_name == 'workflow_dispatch'
@@ -153,6 +152,7 @@ jobs:
       BASE_LABEL: "sim_telarray"
       BASE_TAG: "${{ matrix.simtel_version }}"
       IMAGE: "ghcr.io/gammasim/sim_telarray"
+      RUN_TAG: "${{ github.run_id }}-${{ github.run_attempt }}"
 
     steps:
       - name: Set up Docker Buildx
@@ -185,6 +185,6 @@ jobs:
             test -z "$tag" && continue
             docker buildx imagetools create \
               --tag "$tag" \
-              "${IMAGE}:${BASE_TAG}-amd64" \
-              "${IMAGE}:${BASE_TAG}-arm64"
+              "${IMAGE}:${BASE_TAG}-amd64-${RUN_TAG}" \
+              "${IMAGE}:${BASE_TAG}-arm64-${RUN_TAG}"
           done <<< "$FINAL_TAGS"

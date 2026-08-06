@@ -37,6 +37,7 @@ jobs:
       autoconf_version: ${{ steps.config.outputs.autoconf_version }}
       autoconf_sha256: ${{ steps.config.outputs.autoconf_sha256 }}
       corsika_matrix: ${{ steps.config.outputs.corsika_matrix }}
+      corsika_build_matrix: ${{ steps.config.outputs.corsika_build_matrix }}
       corsika_source_matrix: ${{ steps.config.outputs.corsika_source_matrix }}
     steps:
       - uses: actions/checkout@v7
@@ -131,21 +132,14 @@ jobs:
       packages: write
     strategy:
       matrix:
-        include: ${{ fromJSON(needs.dependency-config.outputs.corsika_matrix) }}
-        platform: [linux/amd64, linux/arm64/v8]
-        exclude:
-          - avx_flag: avx2
-            platform: linux/arm64/v8
-          - avx_flag: avx512f
-            platform: linux/arm64/v8
-          - avx_flag: sse4
-            platform: linux/arm64/v8
+        include: ${{ fromJSON(needs.dependency-config.outputs.corsika_build_matrix) }}
     env:
       BASE_LABEL: "corsika7"
       BASE_TAG: "v${{ matrix.corsika }}-${{ matrix.avx_flag }}"
-      ARCH: "${{ matrix.platform == 'linux/arm64/v8' && 'arm64' || 'amd64' }}"
+      ARCH: "${{ matrix.arch }}"
+      RUN_TAG: "${{ github.run_id }}-${{ github.run_attempt }}"
 
-    runs-on: ${{ matrix.platform == 'linux/arm64/v8' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - name: Checkout repository
@@ -182,10 +176,10 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           tags: |
-            type=raw,value=${{ env.BASE_TAG }}-${{ env.ARCH }}
-            type=ref,event=pr,suffix=-${{ env.BASE_TAG }}-${{ env.ARCH }}
-            type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}-${{ env.ARCH }}
-            type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}-${{ env.ARCH }}
+            type=raw,value=${{ env.BASE_TAG }}-${{ env.ARCH }}-${{ env.RUN_TAG }}
+            type=ref,event=pr,suffix=-${{ env.BASE_TAG }}-${{ env.ARCH }}-${{ env.RUN_TAG }}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}-${{ env.BASE_TAG }}-${{ env.ARCH }}-${{ env.RUN_TAG }}
+            type=schedule,pattern={{date 'YYYYMMDD'}}-${{ env.BASE_TAG }}-${{ env.ARCH }}-${{ env.RUN_TAG }}
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: latest=false
 
@@ -212,8 +206,6 @@ jobs:
           file: ./docker/Dockerfile-corsika7
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=corsika-${{ matrix.corsika }}-${{ matrix.avx_flag }}-${{ env.ARCH }}
-          cache-to: ${{ github.event_name != 'pull_request' && format('type=gha,mode=max,scope=corsika-{0}-{1}-{2}', matrix.corsika, matrix.avx_flag, env.ARCH) || '' }}
 
   publish-corsika7:
     if: github.event_name == 'workflow_dispatch'
@@ -229,6 +221,7 @@ jobs:
       BASE_LABEL: "corsika7"
       BASE_TAG: "v${{ matrix.corsika }}-${{ matrix.avx_flag }}"
       IMAGE: "ghcr.io/gammasim/corsika7"
+      RUN_TAG: "${{ github.run_id }}-${{ github.run_attempt }}"
 
     steps:
       - name: Set up Docker Buildx
@@ -262,11 +255,11 @@ jobs:
             if [ "${{ matrix.avx_flag }}" = "generic" ]; then
               docker buildx imagetools create \
                 --tag "$tag" \
-                "${IMAGE}:${BASE_TAG}-amd64" \
-                "${IMAGE}:${BASE_TAG}-arm64"
+                "${IMAGE}:${BASE_TAG}-amd64-${RUN_TAG}" \
+                "${IMAGE}:${BASE_TAG}-arm64-${RUN_TAG}"
             else
               docker buildx imagetools create \
                 --tag "$tag" \
-                "${IMAGE}:${BASE_TAG}-amd64"
+                "${IMAGE}:${BASE_TAG}-amd64-${RUN_TAG}"
             fi
           done <<< "$FINAL_TAGS"
