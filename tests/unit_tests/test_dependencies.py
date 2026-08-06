@@ -8,8 +8,15 @@ import yaml
 from astropy import units as u
 
 from simtools.dependencies import (
+    _collect_dependency_error,
     _get_build_options_from_file,
     _get_package_path,
+    _is_git_lfs_pointer,
+    _manifest_entries,
+    _validate_corsika_interaction_tables,
+    _validate_table_entry,
+    _validate_table_file,
+    _validate_table_manifest_structure,
     build_dependency_manifest,
     canonical_manifest_bytes,
     export_build_info,
@@ -92,6 +99,19 @@ def test_validate_simulation_dependencies_uses_curved_corsika_executable(
         validate_simulation_dependencies("corsika")
 
 
+def test_validate_simulation_dependencies_uses_flat_corsika_executable(tmp_test_directory, mocker):
+    """Flat simulations do not require the curved CORSIKA executable."""
+    _write_interaction_table_manifest(tmp_test_directory)
+    mock_config = _mock_corsika_config(mocker, tmp_test_directory)
+    mock_config.args = {
+        "zenith_angle": 20 * u.deg,
+        "curved_atmosphere_min_zenith_angle": 65 * u.deg,
+    }
+    mock_config.corsika_exe_curved = None
+
+    validate_simulation_dependencies("corsika")
+
+
 def test_validate_simulation_dependencies_rejects_missing_and_unhydrated_tables(
     tmp_test_directory, mocker
 ):
@@ -139,6 +159,104 @@ def test_validate_simulation_dependencies_requires_both_for_combined_mode(mocker
 
     with pytest.raises(ValueError, match="sim_telarray: not configured"):
         validate_simulation_dependencies("corsika_sim_telarray")
+
+
+def test_validate_simulation_dependencies_rejects_unknown_software():
+    """Unknown simulation software selections are rejected explicitly."""
+    with pytest.raises(ValueError, match="Unknown simulation software: unknown"):
+        validate_simulation_dependencies("unknown")
+
+
+@pytest.mark.parametrize("error_type", [FileNotFoundError, PermissionError, TypeError, ValueError])
+def test_collect_dependency_error_reports_access_errors(error_type):
+    """Dependency access errors are collected with their dependency name."""
+    errors = []
+
+    def raise_error():
+        raise error_type("bad")
+
+    _collect_dependency_error(errors, "test", raise_error)
+
+    assert errors == ["test: bad"]
+
+
+@pytest.mark.parametrize(
+    ("manifest", "message"),
+    [
+        ([], "manifest root is not a mapping"),
+        ({"schema_version": "invalid"}, "invalid schema_version"),
+        ({"schema_version": "2.0", "files": {}}, "unsupported schema_version"),
+        ({"schema_version": "1.0", "files": []}, "manifest.files is not a mapping"),
+        ({"schema_version": "1.0", "files": {}}, "missing category group"),
+    ],
+)
+def test_validate_table_manifest_structure_rejects_invalid_manifests(
+    manifest, message, tmp_test_directory
+):
+    """Malformed manifests produce actionable structure errors."""
+    with pytest.raises(ValueError, match=message):
+        _validate_table_manifest_structure(manifest, Path(tmp_test_directory) / "manifest.yaml")
+
+
+@pytest.mark.parametrize(
+    ("manifest", "category", "model", "message"),
+    [
+        ({"files": {"common": {}}}, "common", None, "manifest group is not a list"),
+        (
+            {"files": {"high_energy": {}}},
+            "high_energy",
+            "qgs3",
+            "manifest model group is missing",
+        ),
+        (
+            {"files": {"high_energy": {"qgs3": {}}}},
+            "high_energy",
+            "qgs3",
+            "manifest group is not a list",
+        ),
+    ],
+)
+def test_manifest_entries_rejects_invalid_groups(manifest, category, model, message):
+    """Selected manifest groups must exist and contain lists."""
+    with pytest.raises(ValueError, match=message):
+        _manifest_entries(manifest, category, model)
+
+
+@pytest.mark.parametrize(
+    ("entry", "message"),
+    [
+        (None, "invalid manifest table entry"),
+        ({"path": "nested/file", "size": 1}, "invalid manifest table path"),
+        ({"path": "file", "size": -1}, "invalid manifest table size"),
+        ({"path": "file", "size": "1"}, "invalid manifest table size"),
+    ],
+)
+def test_validate_table_entry_rejects_invalid_entries(entry, message, tmp_test_directory):
+    """Manifest entries must contain safe filenames and non-negative sizes."""
+    assert message in _validate_table_entry(entry, Path(tmp_test_directory))
+
+
+def test_validate_table_file_reports_unreadable_file(tmp_test_directory, mocker):
+    """Unreadable table files are reported before content validation."""
+    table_file = Path(tmp_test_directory) / "table.dat"
+    table_file.write_bytes(b"x")
+    mocker.patch("simtools.dependencies.os.access", return_value=False)
+
+    assert "file is not readable" in _validate_table_file(table_file, 1)
+
+
+def test_is_git_lfs_pointer_handles_read_errors(mocker):
+    """An unreadable file is not mistaken for an LFS pointer."""
+    path = mocker.Mock()
+    path.open.side_effect = OSError("cannot open")
+
+    assert _is_git_lfs_pointer(path) is False
+
+
+def test_validate_corsika_interaction_tables_reports_manifest_read_error(tmp_test_directory):
+    """A missing manifest is reported as a table validation error."""
+    with pytest.raises(ValueError, match="cannot read manifest"):
+        _validate_corsika_interaction_tables(Path(tmp_test_directory) / "missing")
 
 
 def test_get_version_string(mocker):
