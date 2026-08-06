@@ -11,10 +11,13 @@ on:
     paths:
       - docker/Dockerfile-simtools-dev
       - pyproject.toml
+      - dependency_versions.yml
       - src/simtools/applications/dependency_versions.py
+      - src/simtools/dependency_versions.py
       - src/simtools/schemas/dependency_versions.schema.yml
       - src/simtools/applications/dependency_manifest.py
       - src/simtools/dependencies.py
+      - .github/workflows/build-simtools-dev.yml
   release:
     types: [published]
   schedule:
@@ -41,7 +44,7 @@ jobs:
       - uses: actions/checkout@v7
       - id: config
         run: |
-          python -m pip install packaging
+          python -m pip install packaging pyyaml
           python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
 
   build-simtools-dev:
