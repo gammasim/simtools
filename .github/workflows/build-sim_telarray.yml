@@ -44,6 +44,7 @@ jobs:
           python src/simtools/applications/dependency_versions.py --format github-output >> "$GITHUB_OUTPUT"
 
   download-auxiliary-files:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
 
     steps:
@@ -63,6 +64,7 @@ jobs:
           retention-days: 1
 
   build-sim_telarray:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     needs: [dependency-config, download-auxiliary-files]
     permissions:
       contents: read
