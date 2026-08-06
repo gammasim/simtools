@@ -82,18 +82,22 @@ jobs:
         run: python -m pip install packaging pyyaml
 
       - name: Read CORSIKA interaction tables version
+        id: interaction_table_version
         run: |
-          python src/simtools/applications/dependency_versions.py --format github-output \
-            | grep '^corsika_tables_version=' >> "$GITHUB_ENV"
+          CORSIKA_TABLES=$(python src/simtools/applications/dependency_versions.py \
+            --format github-output | sed -n 's/^corsika_tables_version=//p')
+          test -n "$CORSIKA_TABLES"
+          echo "CORSIKA_TABLES=$CORSIKA_TABLES" >> "$GITHUB_ENV"
+          echo "version=$CORSIKA_TABLES" >> "$GITHUB_OUTPUT"
 
       - name: Restore cached CORSIKA interaction tables
         id: restore_interaction_tables
         uses: actions/cache/restore@v6
         with:
           path: ${{ env.IT_NAME }}
-          key: corsika-interaction-tables-${{ env.CORSIKA_TABLES }}
+          key: corsika-interaction-tables-${{ steps.interaction_table_version.outputs.version }}
           restore-keys: |
-            corsika-interaction-tables-${{ env.CORSIKA_TABLES }}-
+            corsika-interaction-tables-${{ steps.interaction_table_version.outputs.version }}-
 
       - name: Clone CORSIKA interaction tables (exclude QGSJet tables)
         run: |
@@ -146,7 +150,7 @@ jobs:
         uses: actions/cache/save@v6
         with:
           path: ${{ env.IT_NAME }}
-          key: corsika-interaction-tables-${{ env.CORSIKA_TABLES }}
+          key: corsika-interaction-tables-${{ steps.interaction_table_version.outputs.version }}
 
       - name: Upload CORSIKA interaction tables
         uses: actions/upload-artifact@v7
