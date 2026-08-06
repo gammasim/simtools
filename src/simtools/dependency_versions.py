@@ -6,14 +6,16 @@ import re
 import tomllib
 from pathlib import Path
 
-CATALOG_KEYS = ("tool", "gammasimtools", "dependency-versions")
+import yaml
+
+DEPENDENCY_VERSIONS_FILENAME = "dependency_versions.yml"
 SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 ARCHIVE_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 
 
-def find_pyproject(start_path=None):
-    """Find the nearest pyproject.toml containing the dependency catalog.
+def find_dependency_versions(start_path=None):
+    """Find the nearest root-level dependency version catalog.
 
     Parameters
     ----------
@@ -23,51 +25,50 @@ def find_pyproject(start_path=None):
     Returns
     -------
     pathlib.Path
-        Path to the matching ``pyproject.toml`` file.
+        Path to the matching ``dependency_versions.yml`` file.
 
     Raises
     ------
     FileNotFoundError
         If no matching project file can be found.
     """
+    configured_path = os.getenv("SIMTOOLS_DEPENDENCY_VERSIONS")
+    candidates = [Path(configured_path)] if configured_path else []
+    start = Path(start_path or Path.cwd()).resolve()
+    if start.is_file():
+        start = start.parent
+    candidates.extend(parent / DEPENDENCY_VERSIONS_FILENAME for parent in (start, *start.parents))
+    candidates.append(Path(__file__).resolve().parents[2] / DEPENDENCY_VERSIONS_FILENAME)
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    raise FileNotFoundError(f"Could not find {DEPENDENCY_VERSIONS_FILENAME}.")
+
+
+def find_pyproject(start_path=None):
+    """Find the nearest ``pyproject.toml`` file."""
     configured_path = os.getenv("SIMTOOLS_PYPROJECT")
     candidates = [Path(configured_path)] if configured_path else []
     start = Path(start_path or Path.cwd()).resolve()
+    if start.is_file():
+        start = start.parent
     candidates.extend(parent / "pyproject.toml" for parent in (start, *start.parents))
     candidates.append(Path(__file__).resolve().parents[2] / "pyproject.toml")
     for candidate in candidates:
-        if candidate.is_file() and _contains_catalog(candidate):
+        if candidate.is_file():
             return candidate
-    raise FileNotFoundError("Could not find pyproject.toml with simtools dependency versions.")
+    raise FileNotFoundError("Could not find pyproject.toml.")
 
 
-def _contains_catalog(pyproject_path):
-    """Return whether a project file contains the simtools catalog."""
-    try:
-        with pyproject_path.open("rb") as file:
-            data = tomllib.load(file)
-        return _nested_value(data, CATALOG_KEYS) is not None
-    except (OSError, tomllib.TOMLDecodeError):  # fmt: skip
-        return False
-
-
-def _nested_value(data, keys):
-    """Return a nested mapping value or None."""
-    value = data
-    for key in keys:
-        if not isinstance(value, dict) or key not in value:
-            return None
-        value = value[key]
-    return value
-
-
-def load_dependency_catalog(pyproject_path=None, validate=True):
-    """Load the dependency version catalog from pyproject.toml.
+def load_dependency_catalog(catalog_path=None, validate=True):
+    """Load the dependency version catalog from YAML.
 
     Parameters
     ----------
-    pyproject_path : str or Path, optional
-        Explicit project file. The repository is searched when omitted.
+    catalog_path : str or Path, optional
+        Explicit catalog file, directory, or project file. A project file is
+        accepted for backwards compatibility and resolves to its sibling
+        ``dependency_versions.yml``. The repository is searched when omitted.
     validate : bool, optional
         Validate the catalog structure when True.
 
@@ -76,13 +77,26 @@ def load_dependency_catalog(pyproject_path=None, validate=True):
     dict
         Dependency version catalog.
     """
-    project_file = Path(pyproject_path) if pyproject_path else find_pyproject()
-    with project_file.open("rb") as file:
-        project_data = tomllib.load(file)
-    catalog = _nested_value(project_data, CATALOG_KEYS)
-    if catalog is None:
-        raise KeyError("Missing [tool.gammasimtools.dependency-versions] table.")
+    catalog_file = _resolve_catalog_path(catalog_path)
+    try:
+        catalog = yaml.safe_load(catalog_file.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise FileNotFoundError(f"Could not read dependency catalog: {catalog_file}") from exc
+    if not isinstance(catalog, dict):
+        raise ValueError(f"Dependency catalog must contain a mapping: {catalog_file}")
     return validate_dependency_catalog(catalog) if validate else catalog
+
+
+def _resolve_catalog_path(catalog_path):
+    """Resolve an explicit catalog, project, or directory path."""
+    if catalog_path is None:
+        return find_dependency_versions()
+    path = Path(catalog_path)
+    if path.is_dir():
+        return path / DEPENDENCY_VERSIONS_FILENAME
+    if path.name == "pyproject.toml":
+        return path.with_name(DEPENDENCY_VERSIONS_FILENAME)
+    return path
 
 
 def validate_dependency_catalog(catalog):
@@ -363,7 +377,9 @@ def project_requirements(pyproject_path, extras):
     return requirements
 
 
-def export_dependency_configuration(pyproject_path=None, output_format="catalog", extras=None):
+def export_dependency_configuration(
+    pyproject_path=None, output_format="catalog", extras=None, dependency_path=None
+):
     """Return dependency configuration in a selected export format.
 
     Parameters
@@ -381,7 +397,7 @@ def export_dependency_configuration(pyproject_path=None, output_format="catalog"
         Serialized dependency configuration, including a trailing newline.
     """
     project_file = Path(pyproject_path) if pyproject_path else find_pyproject()
-    catalog = load_dependency_catalog(project_file)
+    catalog = load_dependency_catalog(dependency_path or project_file.parent)
     env_template = project_file.parent / ".env_template"
     if env_template.is_file():
         validate_env_template(catalog, env_template)

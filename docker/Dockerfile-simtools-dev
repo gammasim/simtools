@@ -52,6 +52,7 @@ RUN { \
 # Install the simtools development environment without installing simtools itself.
 WORKDIR /workdir
 COPY pyproject.toml /workdir/pyproject.toml
+COPY dependency_versions.yml /workdir/dependency_versions.yml
 COPY src /workdir/src
 RUN python"${PYTHON_VERSION}" -m pip install --no-cache-dir packaging && \
     python"${PYTHON_VERSION}" /workdir/src/simtools/applications/dependency_versions.py \

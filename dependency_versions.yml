@@ -1,0 +1,52 @@
+---
+schema_version: 0.1.0
+python: "3.14"
+apptainer: "1.5.0"
+cpu-variants:
+  - generic
+  - avx2
+  - avx512f
+  - sse4
+archives:
+  autoconf:
+    version: "2.71"
+    sha256: 431075ad0bf529ef13cb41e9042c542381103e80015686222b8a9d4abef42a1c
+  gsl:
+    version: "2.8"
+    sha256: 6a99eeed15632c6354895b1dd542ed5a855c0f15d9ad1326c6fe2b2c9e423190
+base-image:
+  name: docker.io/library/almalinux
+  runtime-version: 9.8-minimal
+  build-version: "9.8"
+corsika-interaction-tables:
+  version: v0.1.0
+model-database:
+  name: CTAO-Simulation-Model
+  default-version: "0.16.0"
+production-combinations:
+  - corsika: "78010"
+    sim-telarray: v2025-11-30-rc
+  - corsika: "78050"
+    sim-telarray: v2025-11-30-rc
+corsika:
+  - version: "78010"
+    source-ref: v7.8010
+    source-url: https://gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git
+    config-version: v0.1.0
+    config-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git
+    opt-patch-version: v1.1.0
+    opt-patch-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git
+  - version: "78050"
+    source-ref: v7.8050
+    source-url: https://gitlab.iap.kit.edu/AirShowerPhysics/corsika-legacy/corsika7.git
+    config-version: v1.0.0
+    config-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika7-config.git
+    opt-patch-version: v1.2.0
+    opt-patch-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/corsika-opt-patches.git
+sim-telarray:
+  - version: v2025-11-30-rc
+    source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/sim_telarray.git
+    hessio-version: v2025-12-01-rc
+    hessio-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/hessio.git
+    stdtools-version: v2025-06-16-rc
+    stdtools-source-url: https://gitlab.cta-observatory.org/cta-computing/dpps/simpipe/simulation_software/stdtools.git

@@ -11,7 +11,9 @@ from simtools import dependency_versions
 
 def test_load_dependency_catalog_and_build_matrices(simtools_root_path):
     """Test catalog loading and matrix construction."""
-    catalog = dependency_versions.load_dependency_catalog(simtools_root_path / "pyproject.toml")
+    catalog = dependency_versions.load_dependency_catalog(
+        simtools_root_path / "dependency_versions.yml"
+    )
     matrices = dependency_versions.build_workflow_matrices(catalog)
 
     assert catalog["python"] == "3.14"
@@ -23,6 +25,15 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path):
         item["corsika_image"].startswith("ghcr.io/gammasim/corsika7:v")
         for item in matrices["production_matrix"]
     )
+
+
+def test_load_dependency_catalog_discovers_root_file(simtools_root_path, monkeypatch):
+    """Test catalog loading defaults to the visible root-level YAML file."""
+    monkeypatch.chdir(simtools_root_path)
+
+    catalog = dependency_versions.load_dependency_catalog()
+
+    assert catalog["schema_version"] == "0.1.0"
 
 
 def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
@@ -97,12 +108,12 @@ def test_validate_dependency_catalog_rejects_invalid_values(simtools_root_path, 
         dependency_versions.validate_dependency_catalog(invalid)
 
 
-def test_load_dependency_catalog_missing_table(tmp_test_directory):
-    """Test a project without the custom table fails clearly."""
-    project_file = tmp_test_directory / "pyproject.toml"
-    project_file.write_text('[project]\nname = "example"\n', encoding="utf-8")
+def test_load_dependency_catalog_rejects_non_mapping(tmp_test_directory):
+    """Test a catalog without a top-level mapping fails clearly."""
+    project_file = tmp_test_directory / "dependency_versions.yml"
+    project_file.write_text("[]\n", encoding="utf-8")
 
-    with pytest.raises(KeyError, match="Missing"):
+    with pytest.raises(ValueError, match="mapping"):
         dependency_versions.load_dependency_catalog(project_file)
 
 
@@ -114,22 +125,21 @@ def test_find_pyproject_from_environment(monkeypatch, simtools_root_path):
     assert dependency_versions.find_pyproject("/") == project_file
 
 
-@pytest.mark.parametrize("content", ["invalid = [", '[project]\nname = "example"\n'])
-def test_contains_catalog_rejects_invalid_or_unrelated_projects(tmp_test_directory, content):
-    """Test catalog discovery ignores malformed and unrelated project files."""
-    project_file = tmp_test_directory / "pyproject.toml"
-    project_file.write_text(content, encoding="utf-8")
+def test_find_dependency_versions_from_environment(monkeypatch, tmp_test_directory):
+    """Test an explicit catalog-file environment setting wins."""
+    catalog_file = tmp_test_directory / "dependency_versions.yml"
+    catalog_file.write_text("schema_version: 0.1.0\n", encoding="utf-8")
+    monkeypatch.setenv("SIMTOOLS_DEPENDENCY_VERSIONS", str(catalog_file))
 
-    assert dependency_versions._contains_catalog(project_file) is False
+    assert dependency_versions.find_dependency_versions("/") == catalog_file
 
 
-def test_find_pyproject_raises_when_no_catalog_can_be_found(mocker, tmp_test_directory):
-    """Test catalog discovery reports a clear error when every candidate is invalid."""
-    mocker.patch("simtools.dependency_versions._contains_catalog", return_value=False)
-    mocker.patch("simtools.dependency_versions.Path.is_file", return_value=True)
+def test_find_dependency_versions_raises_when_missing(mocker, tmp_test_directory):
+    """Test catalog discovery reports a clear error when no file is available."""
+    mocker.patch("simtools.dependency_versions.Path.is_file", return_value=False)
 
     with pytest.raises(FileNotFoundError, match="Could not find"):
-        dependency_versions.find_pyproject(tmp_test_directory)
+        dependency_versions.find_dependency_versions(tmp_test_directory)
 
 
 def test_build_workflow_matrices_uses_optional_image_digests(simtools_root_path):
@@ -214,7 +224,7 @@ def test_export_dependency_configuration_rejects_unknown_format(simtools_root_pa
 
 
 def test_catalog_matches_yaml_schema(simtools_root_path):
-    """Test the TOML catalog conforms to the project YAML schema."""
+    """Test the YAML catalog conforms to the project schema."""
     import jsonschema
 
     catalog = dependency_versions.load_dependency_catalog(simtools_root_path / "pyproject.toml")
