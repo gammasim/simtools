@@ -20,12 +20,11 @@ on:
   release:
     types: [published]
 
-permissions:
-  contents: read
-
 jobs:
   check_unit_test_files:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     defaults:
       run:
@@ -63,6 +62,8 @@ jobs:
   unit_tests:
     needs: check_unit_test_files
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -132,6 +133,8 @@ jobs:
     needs: unit_tests
     if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       SONAR_SCANNER_VERSION: 8.1.0.6389
       SONAR_SCANNER_PLATFORM: linux-x64

@@ -300,7 +300,7 @@ class Configurator:
             return Configurator._arglist_from_dict(input_var, parser=parser)
 
         try:
-            return [str(value) for value in list(input_var) if value != "None"]
+            return [str(value) for value in input_var if value != "None"]
         except TypeError:
             return []
 
