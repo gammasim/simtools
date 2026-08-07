@@ -151,7 +151,7 @@ def test_validate_optics_no_images(tmp_test_directory):
         "offset_file": None,
         "offset_directions": "N,S,E,W",
         "plot_images": False,
-        "export_effective_focal_length": False,
+        "export_model_parameters": False,
         "label": "validate_optics",
         "test": True,
     }
@@ -198,7 +198,7 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
         "offset_file": None,
         "offset_directions": None,
         "plot_images": True,
-        "export_effective_focal_length": False,
+        "export_model_parameters": False,
         "label": None,
         "test": True,
     }
@@ -272,7 +272,7 @@ def test_validate_optics_exports_effective_focal_length_model_parameter(tmp_test
         "offset_file": None,
         "offset_directions": "N,S,E,W",
         "plot_images": False,
-        "export_effective_focal_length": True,
+        "export_model_parameters": True,
         "label": "validate_optics",
         "test": True,
     }
@@ -314,5 +314,4 @@ def test_validate_optics_exports_effective_focal_length_model_parameter(tmp_test
     assert call_kwargs["parameter_version"] == "5.0.1"
     assert call_kwargs["metadata_input_dict"] == args_dict
     assert call_kwargs["unit"] == ["cm", "cm", "cm", "cm", "cm"]
-    np.testing.assert_allclose(call_kwargs["value"][:3], [2925.0, 2920.0, 2930.0])
-    np.testing.assert_allclose(call_kwargs["value"][3:], [0.0, 0.0])
+    np.testing.assert_allclose(call_kwargs["value"], [2925.0, 0.0, 0.0, 0.0, 0.0])
