@@ -1243,6 +1243,7 @@ def test_epos_flags(corsika_config_mock_array_model, mocker):
         key = f"EPOPAR fname {epos_file}"
         assert key in epos_flags
         assert epos_flags[key] == [f"/path/to/corsika/epos/epos.{epos_file}"]
+    assert epos_flags["EPOPAR fname hpf"] == ["/path/to/corsika/epos/tables.dat"]
 
 
 def test_epos_flags_with_different_paths(corsika_config_mock_array_model, mocker):

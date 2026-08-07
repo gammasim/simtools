@@ -97,6 +97,7 @@ def test_start_delegates_to_common_startup(mocker):
     assert startup.call_args.kwargs == {
         "setup_io_handler": False,
         "resolve_sim_software_executables": True,
+        "validate_simulation_dependencies": False,
     }
 
 

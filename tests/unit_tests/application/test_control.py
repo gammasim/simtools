@@ -204,6 +204,52 @@ def test_initialize_runtime_without_resolving_sim_software_executables():
     )
 
 
+def test_initialize_runtime_validates_simulation_dependencies_after_loading():
+    """Dependency validation runs after settings load and before logging."""
+    mock_args_dict = {"log_level": "info", "simulation_software": "corsika"}
+    mock_db_config = {}
+    with (
+        patch("simtools.application.control.config.load") as mock_load,
+        patch(
+            "simtools.application.control.dependencies.validate_simulation_dependencies"
+        ) as validate,
+        patch("simtools.application.control.setup_logging") as setup_logging,
+    ):
+        _initialize_runtime(
+            mock_args_dict,
+            mock_db_config,
+            setup_io_handler=False,
+            validate_simulation_dependencies=True,
+        )
+
+    mock_load.assert_called_once()
+    validate.assert_called_once_with("corsika")
+    setup_logging.assert_called_once()
+
+
+def test_initialize_runtime_stops_when_dependencies_are_unavailable():
+    """Dependency failures prevent the rest of application startup."""
+    mock_args_dict = {"log_level": "info", "simulation_software": "corsika"}
+    mock_db_config = {}
+    with (
+        patch("simtools.application.control.config.load"),
+        patch(
+            "simtools.application.control.dependencies.validate_simulation_dependencies",
+            side_effect=ValueError("missing dependency"),
+        ),
+        patch("simtools.application.control.setup_logging") as setup_logging,
+    ):
+        with pytest.raises(ValueError, match="missing dependency"):
+            _initialize_runtime(
+                mock_args_dict,
+                mock_db_config,
+                setup_io_handler=False,
+                validate_simulation_dependencies=True,
+            )
+
+    setup_logging.assert_not_called()
+
+
 def test_initialize_runtime_prepares_runtime_environment_from_cli():
     """Test runtime startup prepares the requested runtime environment."""
     mock_args_dict = {

@@ -185,6 +185,7 @@ APPLICATION = ApplicationDefinition.for_module(
     ),
     database=True,
     setup_io_handler=False,
+    validate_simulation_dependencies=True,
     post_parse=_post_parse,
     defer_required_validation=True,
 )

@@ -247,6 +247,7 @@ def test_main_uses_explicit_application_definition(mock_application_start, mock_
 
     mock_application_start.assert_called_once_with()
     assert app.APPLICATION.setup_io_handler is False
+    assert app.APPLICATION.validate_simulation_dependencies is True
     assert app.APPLICATION.post_parse == app._post_parse
 
 

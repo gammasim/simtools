@@ -19,7 +19,7 @@ base-image:
   runtime-version: 9.8-minimal
   build-version: "9.8"
 corsika-interaction-tables:
-  version: v0.1.0
+  version: v1.0.0
 model-database:
   name: CTAO-Simulation-Model
   default-version: "0.16.0"
