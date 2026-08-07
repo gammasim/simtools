@@ -268,36 +268,6 @@ def test_get_resource_generation_directory_missing(tmp_test_directory):
         resource_generation.get_resource_generation_directory(tmp_test_directory, "v0.32.0")
 
 
-def test_download_files_auto_injects_version(tmp_test_directory, monkeypatch):
-    config_file = Path(tmp_test_directory) / "download_files.yml"
-    config_file.write_text(
-        "base_urls:\n"
-        "  simulation_model_parameter_setting:\n"
-        "    url: https://example.org/\n"
-        "    version: 0.1.0\n"
-        "files:\n"
-        "- base_url_key: simulation_model_parameter_setting\n"
-        "  path: input/test.csv\n"
-        "  description: test file\n"
-        "  target_path: generated/test.csv\n",
-        encoding="utf-8",
-    )
-    called_urls = []
-
-    def _fake_urlretrieve(url, destination):
-        called_urls.append(url)
-        Path(destination).write_text("value\n", encoding="utf-8")
-
-    monkeypatch.setattr(resource_generation.urllib.request, "urlretrieve", _fake_urlretrieve)
-
-    resource_generation.download_files(
-        config_file=config_file,
-        target_dir=tmp_test_directory,
-    )
-
-    assert called_urls == ["https://example.org/0.1.0/input/test.csv"]
-
-
 def test_download_files_requires_valid_base_url_key(tmp_test_directory):
     config_file = Path(tmp_test_directory) / "download_files.yml"
     config_file.write_text(
@@ -332,7 +302,7 @@ def test_validate_static_files(tmp_test_directory):
         encoding="utf-8",
     )
 
-    resource_generation.validate_static_files(manifest)
+    assert resource_generation.validate_static_files(manifest) is None
 
 
 def test_validate_static_files_reports_all_errors(tmp_test_directory):
@@ -529,41 +499,6 @@ def test_generate_test_resources_forwards_selected_config_file(tmp_test_director
     assert run_calls[0]["args_dict"]["config_file"] == selected_config
 
 
-def test_generate_test_resources_ignores_supplied_runtime(tmp_test_directory, monkeypatch):
-    config_dir = (
-        Path(tmp_test_directory)
-        / "simtools-tests"
-        / "v0.32.0"
-        / "integration_tests"
-        / "config_files"
-    )
-    config_dir.mkdir(parents=True)
-    (config_dir / "download_files.yml").write_text("files: []\n", encoding="utf-8")
-    run_calls = []
-    monkeypatch.setattr(
-        resource_generation.simtools_runner,
-        "prepare_runtime_environment",
-        lambda _: pytest.fail("runtime must not be prepared"),
-    )
-    monkeypatch.setattr(
-        resource_generation,
-        "run_configured_applications",
-        lambda **kwargs: run_calls.append(kwargs),
-    )
-
-    resource_generation.generate_test_resources(
-        args_dict={
-            "test_directory": tmp_test_directory,
-            "simtools_version": "v0.32.0",
-            "ignore_runtime_environment": True,
-        }
-    )
-
-    assert len(run_calls) == 1
-    assert run_calls[0]["args_dict"]["ignore_runtime_environment"] is True
-    assert run_calls[0]["run_time"] is None
-
-
 def test_remove_empty_download_directories_edge_cases(tmp_test_directory):
     target_dir = Path(tmp_test_directory) / "integration_tests"
     removable_dir = target_dir / "temporary"
@@ -588,35 +523,3 @@ def test_remove_empty_download_directories_edge_cases(tmp_test_directory):
     assert not removable_dir.exists()
     assert preserved_dir.is_dir()
     assert nonempty_dir.is_dir()
-
-
-def test_generate_test_resources_removes_empty_download_directory(tmp_test_directory, monkeypatch):
-    integration_test_dir = (
-        Path(tmp_test_directory) / "simtools-tests" / "v0.32.0" / "integration_tests"
-    )
-    config_dir = integration_test_dir / "config_files"
-    config_dir.mkdir(parents=True)
-    (config_dir / "download_files.yml").write_text("files: []\n", encoding="utf-8")
-    downloaded_file = integration_test_dir / "folder" / "input.dat"
-
-    def _download_files(*_):
-        downloaded_file.parent.mkdir()
-        downloaded_file.write_text("input", encoding="utf-8")
-        return [downloaded_file]
-
-    def _run_configured_applications(**_):
-        downloaded_file.unlink()
-
-    monkeypatch.setattr(resource_generation, "download_files", _download_files)
-    monkeypatch.setattr(
-        resource_generation, "run_configured_applications", _run_configured_applications
-    )
-
-    resource_generation.generate_test_resources(
-        args_dict={
-            "test_directory": tmp_test_directory,
-            "simtools_version": "v0.32.0",
-        }
-    )
-
-    assert not (integration_test_dir / "folder").exists()

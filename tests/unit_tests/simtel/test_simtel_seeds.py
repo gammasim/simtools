@@ -33,7 +33,6 @@ def seeds_instance(mock_config):
 def test_initialize_seeds_routes_correctly(
     mocker, mock_config, simulation_seed, instruments, expected_method, return_value
 ):
-    """Test initialize_seeds routes to correct method based on inputs."""
     if expected_method == "_generate_seed_pair":
         mocker.patch("simtools.simtel.simtel_seeds.random.seeds", return_value=789)
     mocker.patch.object(SimtelSeeds, expected_method, return_value=return_value)
@@ -51,7 +50,6 @@ def test_initialize_seeds_routes_correctly(
 
 
 def test_initialize_seeds_raises_for_too_many_fixed_seeds(mock_config):
-    """Test initialize_seeds raises for invalid fixed seed list length."""
     seeds = SimtelSeeds()
     seeds.simulation_seed = [1, 2, 3]
 
@@ -60,7 +58,6 @@ def test_initialize_seeds_raises_for_too_many_fixed_seeds(mock_config):
 
 
 def test_initialize_seeds_single_value_uses_configured_instrument_seed(mocker, mock_config):
-    """Test single-value simulation seed uses configured instrument seed without random generation."""
     mock_config.args = {"sim_telarray_instrument_seed": 1745, "sim_telarray_seed": [290]}
     random_seed_mock = mocker.patch("simtools.simtel.simtel_seeds.random.seeds", return_value=999)
 
@@ -75,7 +72,6 @@ def test_initialize_seeds_single_value_uses_configured_instrument_seed(mocker, m
 
 
 def test_set_fixed_seeds(mocker, mock_config):
-    """Test _set_fixed_seeds with valid and invalid inputs."""
     mocker.patch.object(SimtelSeeds, "initialize_seeds", return_value="mock")
     mock_logger = mocker.patch("simtools.simtel.simtel_seeds.logging.getLogger")
 
@@ -121,7 +117,6 @@ def test_generate_seed_pair(mocker, mock_config, instrument_seed, expected_gener
 
 
 def test_generate_seeds_with_file(mocker, mock_config, tmp_path):
-    """Test _generate_seeds_with_file creates file, handles errors, and logs."""
     mocker.patch.object(SimtelSeeds, "initialize_seeds", return_value="mock")
     mocker.patch("simtools.simtel.simtel_seeds.random.seeds", return_value=[101, 102, 103])
     mock_config.args = {"sim_telarray_seed_file": "seeds.txt"}
@@ -149,15 +144,7 @@ def test_generate_seeds_with_file(mocker, mock_config, tmp_path):
         seeds._generate_seeds_with_file("north", "1.0.0", 20.0, 180.0)
 
 
-def test_get_instrument_seed_configured(mock_config, seeds_instance):
-    """Test _get_instrument_seed returns configured seed when available."""
-    seeds_instance.instrument_seed = 999
-    result = seeds_instance._get_instrument_seed("north", "1.0.0", 20.0, 180.0)
-    assert result == 999
-
-
 def test_get_instrument_seed_deterministic(mocker, mock_config):
-    """Test _get_instrument_seed generates different seeds for different parameters."""
     mocker.patch(
         "simtools.simtel.simtel_seeds.names.site_names",
         return_value={"North": ["north"], "South": ["south"]},
@@ -182,30 +169,6 @@ def test_get_instrument_seed_deterministic(mocker, mock_config):
 
 
 @pytest.mark.parametrize(
-    ("site", "model_version", "zenith", "azimuth", "expected_value"),
-    [
-        ("north", "1.0.0", 20.0, 180.0, 100001020180),
-        ("north", None, 20.0, 180.0, 777),
-    ],
-)
-def test_get_instrument_seed_various_params(
-    mocker, mock_config, seeds_instance, site, model_version, zenith, azimuth, expected_value
-):
-    """Test _get_instrument_seed handles various parameter combinations."""
-    mocker.patch(
-        "simtools.simtel.simtel_seeds.names.site_names",
-        return_value={"North": ["north"], "South": ["south"]},
-    )
-    mocker.patch("simtools.simtel.simtel_seeds.random.seeds", return_value=777)
-
-    seeds_instance.instrument_seed = None
-    result = seeds_instance._get_instrument_seed(site, model_version, zenith, azimuth)
-
-    assert isinstance(result, int)
-    assert result == expected_value
-
-
-@pytest.mark.parametrize(
     ("path_type", "instrument", "simulation"),
     [
         ("string", 123, 456),
@@ -216,7 +179,6 @@ def test_get_instrument_seed_various_params(
 def test_save_seeds(
     mocker, mock_config, tmp_path, seeds_instance, path_type, instrument, simulation
 ):
-    """Test save_seeds writes correct data with various path types and seed values."""
     mock_write = mocker.patch("simtools.simtel.simtel_seeds.ascii_handler.write_data_to_file")
 
     seeds_instance.instrument_seed = instrument

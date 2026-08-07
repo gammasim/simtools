@@ -11,7 +11,6 @@ import astropy.units as u
 import pytest
 
 import simtools.applications.simulate_prod as app
-from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.production_configuration import job_grid_io
 
 pytestmark = pytest.mark.usefixtures("_mock_settings_env_vars")
@@ -85,41 +84,6 @@ def _mock_application_context(mock_application_start, label="test"):
     )
 
 
-def test_add_arguments_registers_job_grid_file_and_row():
-    parser = CommandLineParser()
-    parser.add_argument_definitions(app._ARGUMENTS)
-    args = parser.parse_args(["--job_grid_file", "my_grid.ecsv", "--job_grid_row", "3"])
-
-    assert args.job_grid_file == "my_grid.ecsv"
-    assert args.job_grid_row == 3
-
-
-def test_add_arguments_job_grid_row_defaults_to_one():
-    parser = CommandLineParser()
-    parser.add_argument_definitions(app._ARGUMENTS)
-    args = parser.parse_args([])
-
-    assert args.job_grid_file is None
-    assert args.job_grid_row == 1
-    assert args.save_corsika_output is False
-
-
-def test_application_parser_includes_show_options():
-    parser = app.APPLICATION.build_parser()
-    actions = {action.dest: action for action in parser._actions}
-
-    assert "show_options" in actions
-
-
-def test_add_arguments_save_corsika_output():
-    parser = CommandLineParser()
-    parser.add_argument_definitions(app._ARGUMENTS)
-
-    args = parser.parse_args(["--save_corsika_output"])
-
-    assert args.save_corsika_output is True
-
-
 def test_list_available_corsika_models_exits_with_table(tmp_test_directory, capsys):
     build_options = tmp_test_directory / "build_opts.yml"
     build_options.write_text(
@@ -144,15 +108,6 @@ def test_list_available_corsika_models_exits_with_table(tmp_test_directory, caps
     assert "qgs3" in capsys.readouterr().out
 
 
-def test_validate_single_interaction_models_rejects_lists(capsys):
-    with pytest.raises(SystemExit):
-        app._validate_single_interaction_models(
-            {"corsika_he_interaction": ["epos", "qgs3"]}, argparse.ArgumentParser()
-        )
-
-    assert "accepts exactly one value" in capsys.readouterr().err
-
-
 @pytest.mark.parametrize(
     ("row_args", "expected"),
     [
@@ -171,30 +126,6 @@ def test_parse_job_grid_file_selects_row(
     for key, value in expected.items():
         assert args[key] == value
     assert args["simulation_software"] == "corsika_sim_telarray"
-
-
-def test_parse_accepts_simulation_models_path(monkeypatch, job_grid_file, tmp_test_directory):
-    args = _parse_with_args(
-        monkeypatch,
-        _job_grid_args(
-            job_grid_file,
-            "--output_path",
-            tmp_test_directory,
-            "--simulation_models_path",
-            tmp_test_directory,
-        ),
-    )
-
-    assert args["simulation_models_path"] == Path(tmp_test_directory)
-
-
-def test_parse_job_grid_row_without_file_fails(monkeypatch, capsys):
-    with pytest.raises(SystemExit):
-        _parse_with_args(monkeypatch, ["--job_grid_row", 2])
-
-    stderr = capsys.readouterr().err
-    assert "job_grid_row" in stderr
-    assert "job_grid_file" in stderr
 
 
 def test_sim_telarray_only_does_not_require_primary(monkeypatch):

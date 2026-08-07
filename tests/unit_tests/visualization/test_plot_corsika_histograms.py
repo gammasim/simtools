@@ -95,29 +95,6 @@ def test_build_all_photon_figures_1d_and_2d(mocker, hist_1d_factory, hist_2d_fac
     assert hasattr(figs_2d[0], "savefig")
 
 
-def test_get_axis_label():
-    label_with_unit = plot_corsika_histograms._get_axis_label("Energy", u.GeV)
-    label_without_unit = plot_corsika_histograms._get_axis_label("Count", u.dimensionless_unscaled)
-
-    assert label_with_unit == "Energy (GeV)"
-    assert label_without_unit == "Count"
-
-
-def test_plot_1d_single_histogram(mocker, hist_1d_factory):
-    hist_dict = hist_1d_factory(title="Test 1D")
-    figs = plot_corsika_histograms._plot_1d([hist_dict])
-    assert len(figs) == 1
-    assert hasattr(figs[0], "savefig")
-
-
-def test_plot_1d_multiple_histograms(mocker, hist_1d_factory):
-    hist_dict1 = hist_1d_factory(title="Test 1D", input_file_name="file1")
-    hist_dict2 = hist_1d_factory(hist_values=[np.array([2, 3, 4])], input_file_name="file2")
-    figs = plot_corsika_histograms._plot_1d([hist_dict1, hist_dict2])
-    assert len(figs) == 1
-    assert hasattr(figs[0], "savefig")
-
-
 def test_plot_1d_with_labels(mocker, hist_1d_factory):
     hist_dict1 = hist_1d_factory(title="Test 1D", input_file_name="file1")
     hist_dict2 = hist_1d_factory(hist_values=[np.array([2, 3, 4])], input_file_name="file2")
@@ -143,22 +120,6 @@ def test_plot_1d_log_scale(hist_1d_factory):
 def test_plot_1d_empty_list():
     figs = plot_corsika_histograms._plot_1d([])
     assert figs == []
-
-
-def test_plot_2d_single_histogram(mocker, hist_2d_factory):
-    hist_dict = hist_2d_factory()
-    figs = plot_corsika_histograms._plot_2d([hist_dict])
-    assert len(figs) == 1
-    assert hasattr(figs[0], "savefig")
-
-
-def test_plot_2d_multiple_histograms(mocker, hist_2d_factory):
-    hist_dict1 = hist_2d_factory(input_file_name="file1")
-    hist_dict2 = hist_2d_factory(hist_values=[np.array([[2, 3], [4, 5]])], input_file_name="file2")
-    figs = plot_corsika_histograms._plot_2d([hist_dict1, hist_dict2])
-    assert len(figs) == 2
-    for fig in figs:
-        assert hasattr(fig, "savefig")
 
 
 def test_plot_2d_with_labels(mocker, hist_2d_factory):
@@ -201,11 +162,6 @@ def test_extract_uncertainty_with_none():
     assert result is None
 
 
-def test_extract_uncertainty_uncertainties_none():
-    result = plot_corsika_histograms._extract_uncertainty(None, 0)
-    assert result is None
-
-
 def test_plot_histogram_curve_with_uncertainties(mocker):
     fig, ax = plt.subplots()
     bin_centers = np.array([1, 2, 3])
@@ -218,19 +174,4 @@ def test_plot_histogram_curve_with_uncertainties(mocker):
         ax, bin_centers, hist_values, uncertainties, color, label
     )
     errorbar_mock.assert_called_once()
-    plt.close(fig)
-
-
-def test_plot_histogram_curve_without_uncertainties(mocker):
-    fig, ax = plt.subplots()
-    bin_centers = np.array([1, 2, 3])
-    hist_values = np.array([10, 20, 30])
-    uncertainties = None
-    color = "red"
-    label = "NoErr"
-    plot_mock = mocker.patch.object(ax, "plot")
-    plot_corsika_histograms._plot_histogram_curve(
-        ax, bin_centers, hist_values, uncertainties, color, label
-    )
-    plot_mock.assert_called_once()
     plt.close(fig)

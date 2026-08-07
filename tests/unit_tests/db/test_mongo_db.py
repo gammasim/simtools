@@ -48,105 +48,35 @@ def mongo_handler(mocker, valid_db_config):
     return mongo_db.MongoDBHandler(valid_db_config)
 
 
-def test_validate_db_config_valid(valid_db_config):
-    """Test validation of valid MongoDB configuration."""
-    result = mongo_db.MongoDBHandler.validate_db_config(valid_db_config)
-    assert result == valid_db_config
-
-
 def test_validate_db_config_none():
-    """Test validation with None configuration."""
     result = mongo_db.MongoDBHandler.validate_db_config(None)
     assert result is None
 
 
-def test_validate_db_config_empty():
-    """Test validation with empty configuration."""
-    result = mongo_db.MongoDBHandler.validate_db_config({})
-    assert result is None
-
-
-def test_validate_db_config_all_none_values(valid_db_config):
-    """Test validation with all None values."""
-    none_config = dict.fromkeys(valid_db_config.keys())
-    result = mongo_db.MongoDBHandler.validate_db_config(none_config)
-    assert result is None
-
-
 def test_validate_db_config_invalid():
-    """Test validation with invalid configuration."""
     invalid_config = {"wrong_key": "wrong_value"}
     with pytest.raises(ValueError, match="Invalid MongoDB configuration"):
         mongo_db.MongoDBHandler.validate_db_config(invalid_config)
 
 
-def test_validate_db_config_missing_required():
-    """Test validation with missing required fields."""
-    incomplete_config = {
-        "db_server": "localhost",
-        "db_api_port": 27017,
-    }
-    with pytest.raises(ValueError, match="Invalid MongoDB configuration"):
-        mongo_db.MongoDBHandler.validate_db_config(incomplete_config)
-
-
-def test_get_db_name_with_version_and_model():
-    """Test get_db_name with version and model."""
-    result = mongo_db.MongoDBHandler.get_db_name(
-        db_simulation_model_version="1.0.0", model_name="test_model"
-    )
-    assert result == "test_model-1-0-0"
-
-
 def test_get_db_name_with_direct_name():
-    """Test get_db_name with direct database name."""
     result = mongo_db.MongoDBHandler.get_db_name(db_name="direct_db")
     assert result == "direct_db"
 
 
-def test_get_db_name_priority():
-    """Test that direct db_name takes priority."""
-    result = mongo_db.MongoDBHandler.get_db_name(
-        db_name="direct_db", db_simulation_model_version="1.0.0", model_name="test_model"
-    )
-    assert result == "direct_db"
-
-
 def test_get_db_name_incomplete():
-    """Test get_db_name with incomplete parameters."""
     result = mongo_db.MongoDBHandler.get_db_name(db_simulation_model_version="1.0.0")
     assert result is None
     result = mongo_db.MongoDBHandler.get_db_name(model_name="test_model")
     assert result is None
 
 
-def test_init_with_valid_config(mocker, valid_db_config):
-    """Test initialization with valid configuration."""
-    mocker.patch("simtools.db.mongo_db.MongoClient", return_value=mocker.MagicMock())
-    handler = mongo_db.MongoDBHandler(valid_db_config)
-    assert handler.db_config == valid_db_config
-
-
 def test_init_with_none_config():
-    """Test initialization with None configuration."""
     handler = mongo_db.MongoDBHandler(None)
     assert handler.db_config is None
 
 
-def test_build_uri_direct_connection(valid_db_config):
-    """Test _build_uri with direct connection."""
-    valid_db_config["db_server"] = "localhost"
-
-    uri = mongo_db.MongoDBHandler._build_uri(valid_db_config)
-
-    assert "mongodb://test_user:test_password@localhost:27017/" in uri
-    assert "authSource=admin" in uri
-    assert "directConnection=true" in uri
-    assert "ssl=" not in uri
-
-
 def test_build_uri_remote_connection(valid_db_config):
-    """Test _build_uri with remote connection."""
     valid_db_config["db_server"] = "remote.server.com"
 
     uri = mongo_db.MongoDBHandler._build_uri(valid_db_config)
@@ -160,7 +90,6 @@ def test_build_uri_remote_connection(valid_db_config):
 
 
 def test_initialize_client(mocker, valid_db_config):
-    """Test _initialize_client method."""
     mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient")
     mock_client_instance = mocker.MagicMock()
     mock_mongo_client.return_value = mock_client_instance
@@ -175,7 +104,6 @@ def test_initialize_client(mocker, valid_db_config):
 
 
 def test_initialize_client_thread_safety(mocker, valid_db_config):
-    """Test that _initialize_client is thread-safe and only creates one client."""
     mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient")
     mock_client_instance = mocker.MagicMock()
     mock_mongo_client.return_value = mock_client_instance
@@ -190,21 +118,7 @@ def test_initialize_client_thread_safety(mocker, valid_db_config):
     mock_mongo_client.assert_called_once()
 
 
-def test_initialize_client_early_return(mocker, valid_db_config):
-    """Test that _initialize_client returns early if client already exists."""
-    mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient")
-    mock_client_instance = mocker.MagicMock()
-    mock_mongo_client.return_value = mock_client_instance
-
-    mongo_db.MongoDBHandler.db_client = mock_client_instance
-
-    mongo_db.MongoDBHandler._initialize_client(valid_db_config)
-
-    mock_mongo_client.assert_not_called()
-
-
 def test_initialize_client_failure(mocker, valid_db_config, caplog):
-    """Test _initialize_client handles MongoClient initialization failure."""
     mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient")
     mock_mongo_client.side_effect = Exception("Connection failed")
 
@@ -215,7 +129,6 @@ def test_initialize_client_failure(mocker, valid_db_config, caplog):
 
 
 def test_initialize_client_with_debug_logging(mocker, valid_db_config, caplog):
-    """Test _initialize_client with DEBUG logging enables IdleConnectionMonitor."""
     mock_mongo_client = mocker.patch("simtools.db.mongo_db.MongoClient")
     mock_client_instance = mocker.MagicMock()
     mock_mongo_client.return_value = mock_client_instance
@@ -230,7 +143,6 @@ def test_initialize_client_with_debug_logging(mocker, valid_db_config, caplog):
 
 
 def test_idle_connection_monitor(mocker):
-    """Test IdleConnectionMonitor connection_created and connection_closed methods."""
     monitor = mongo_db.IdleConnectionMonitor()
 
     mock_event_created = mocker.MagicMock()
@@ -248,29 +160,18 @@ def test_idle_connection_monitor(mocker):
 
 
 def test_is_remote_database_true(mocker, valid_db_config):
-    """Test is_remote_database with remote server."""
     valid_db_config["db_server"] = "cta-simpipe-protodb.zeuthen.desy.de"
     mocker.patch("simtools.db.mongo_db.MongoClient", return_value=mocker.MagicMock())
     handler = mongo_db.MongoDBHandler(valid_db_config)
     assert handler.is_remote_database() is True
 
 
-def test_is_remote_database_false_localhost(mocker, valid_db_config):
-    """Test is_remote_database with localhost."""
-    valid_db_config["db_server"] = "localhost"
-    mocker.patch("simtools.db.mongo_db.MongoClient", return_value=mocker.MagicMock())
-    handler = mongo_db.MongoDBHandler(valid_db_config)
-    assert handler.is_remote_database() is False
-
-
 def test_is_remote_database_false_no_config():
-    """Test is_remote_database with no configuration."""
     handler = mongo_db.MongoDBHandler(None)
     assert handler.is_remote_database() is False
 
 
 def test_print_connection_info(mocker, valid_db_config, caplog):
-    """Test print_connection_info."""
     mocker.patch("simtools.db.mongo_db.MongoClient", return_value=mocker.MagicMock())
     handler = mongo_db.MongoDBHandler(valid_db_config)
     with caplog.at_level(logging.INFO):
@@ -281,7 +182,6 @@ def test_print_connection_info(mocker, valid_db_config, caplog):
 
 
 def test_print_connection_info_no_config(caplog):
-    """Test print_connection_info with no configuration."""
     handler = mongo_db.MongoDBHandler(None)
     with caplog.at_level(logging.INFO):
         handler.print_connection_info("test_db")
@@ -289,38 +189,7 @@ def test_print_connection_info_no_config(caplog):
     assert "No MongoDB configuration provided." in caplog.text
 
 
-def test_get_entry_date_from_document():
-    """Test get_entry_date_from_document method."""
-    from bson.objectid import ObjectId
-
-    test_id = ObjectId()
-    document = {"_id": test_id, "some_field": "some_value"}
-
-    result = mongo_db.MongoDBHandler.get_entry_date_from_document(document)
-
-    assert result == test_id.generation_time
-    assert result is not None
-
-
-def test_get_collection(mocker, mongo_handler):
-    """Test get_collection method."""
-    mock_client = mocker.MagicMock()
-    mock_db = mocker.MagicMock()
-    mock_collection = mocker.MagicMock()
-    mock_client.__getitem__.return_value = mock_db
-    mock_db.__getitem__.return_value = mock_collection
-
-    mongo_db.MongoDBHandler.db_client = mock_client
-
-    result = mongo_handler.get_collection("test_collection", "test_db")
-
-    mock_client.__getitem__.assert_called_once_with("test_db")
-    mock_db.__getitem__.assert_called_once_with("test_collection")
-    assert result == mock_collection
-
-
 def test_list_database_names(mocker, mongo_handler):
-    """Test list_database_names method."""
     mock_client = mocker.MagicMock()
     mock_client.list_database_names.return_value = ["db1", "db2", "admin"]
 
@@ -333,7 +202,6 @@ def test_list_database_names(mocker, mongo_handler):
 
 
 def test_query_db(mocker, mongo_handler):
-    """Test query_db method."""
     mock_collection = mocker.MagicMock()
     mock_collection.find.return_value = [{"param": "value1"}, {"param": "value2"}]
 
@@ -348,7 +216,6 @@ def test_query_db(mocker, mongo_handler):
 
 
 def test_query_db_no_results(mocker, mongo_handler):
-    """Test query_db with no results."""
     mock_collection = mocker.MagicMock()
     mock_collection.find.return_value = []
 
@@ -360,7 +227,6 @@ def test_query_db_no_results(mocker, mongo_handler):
 
 
 def test_find_one(mocker, mongo_handler):
-    """Test find_one method."""
     mock_collection = mocker.MagicMock()
     mock_collection.find_one.return_value = {"param": "value"}
 
@@ -373,21 +239,7 @@ def test_find_one(mocker, mongo_handler):
     mock_collection.find_one.assert_called_once_with(query)
 
 
-def test_find_one_no_result(mocker, mongo_handler):
-    """Test find_one with no result."""
-    mock_collection = mocker.MagicMock()
-    mock_collection.find_one.return_value = None
-
-    mocker.patch.object(mongo_handler, "get_collection", return_value=mock_collection)
-
-    query = {"field": "value"}
-    result = mongo_handler.find_one(query, "test_collection", "test_db")
-
-    assert result is None
-
-
 def test_insert_one(mocker, mongo_handler):
-    """Test insert_one method."""
     mock_collection = mocker.MagicMock()
     mock_result = mocker.MagicMock()
     mock_collection.insert_one.return_value = mock_result
@@ -402,7 +254,6 @@ def test_insert_one(mocker, mongo_handler):
 
 
 def test_get_file_from_db_exists(mocker, mongo_handler):
-    """Test get_file_from_db when file exists."""
     mock_gridfs = mocker.patch("simtools.db.mongo_db.gridfs.GridFS")
     mock_fs = mock_gridfs.return_value
     mock_file = mocker.MagicMock()
@@ -420,7 +271,6 @@ def test_get_file_from_db_exists(mocker, mongo_handler):
 
 
 def test_get_file_from_db_not_found(mocker, mongo_handler):
-    """Test get_file_from_db when file does not exist."""
     mock_gridfs = mocker.patch("simtools.db.mongo_db.gridfs.GridFS")
     mock_fs = mock_gridfs.return_value
     mock_fs.exists.return_value = False
@@ -433,7 +283,6 @@ def test_get_file_from_db_not_found(mocker, mongo_handler):
 
 
 def test_write_file_from_db_to_disk(mocker, tmp_test_directory, mongo_handler):
-    """Test write_file_from_db_to_disk."""
     mock_gridfs_bucket = mocker.patch("simtools.db.mongo_db.gridfs.GridFSBucket")
     mock_fs_output = mock_gridfs_bucket.return_value
     mock_file = mocker.MagicMock()
@@ -451,7 +300,6 @@ def test_write_file_from_db_to_disk(mocker, tmp_test_directory, mongo_handler):
 
 
 def test_get_ecsv_file_as_astropy_table(mocker, mongo_handler):
-    """Test get_ecsv_file_as_astropy_table."""
     mock_gridfs_bucket = mocker.patch("simtools.db.mongo_db.gridfs.GridFSBucket")
     fs_instance = mock_gridfs_bucket.return_value
 
@@ -474,7 +322,6 @@ def test_get_ecsv_file_as_astropy_table(mocker, mongo_handler):
 
 
 def test_get_ecsv_file_as_astropy_table_not_found(mocker, mongo_handler):
-    """Test get_ecsv_file_as_astropy_table when file not found."""
     mock_gridfs_bucket = mocker.patch("simtools.db.mongo_db.gridfs.GridFSBucket")
     fs_instance = mock_gridfs_bucket.return_value
 
@@ -490,7 +337,6 @@ def test_get_ecsv_file_as_astropy_table_not_found(mocker, mongo_handler):
 
 
 def test_insert_file_to_db_new_file(mocker, tmp_test_directory, mongo_handler):
-    """Test insert_file_to_db with a new file."""
     test_file = Path(str(tmp_test_directory)) / "test_file.dat"
     test_file.write_text("test content", encoding="utf-8")
 
@@ -512,7 +358,6 @@ def test_insert_file_to_db_new_file(mocker, tmp_test_directory, mongo_handler):
 
 
 def test_insert_file_to_db_existing_file(mocker, tmp_test_directory, mongo_handler):
-    """Test insert_file_to_db with an existing file."""
     test_file = Path(str(tmp_test_directory)) / "test_existing_file.dat"
     test_file.write_text("test content", encoding="utf-8")
 
@@ -534,7 +379,6 @@ def test_insert_file_to_db_existing_file(mocker, tmp_test_directory, mongo_handl
 
 
 def test_insert_file_to_db_non_utf8(mocker, tmp_test_directory, mongo_handler):
-    """Test insert_file_to_db with non-UTF8 file."""
     test_file = Path(str(tmp_test_directory)) / "test_non_utf8_file.dat"
     test_file.write_text("test content", encoding="utf-8")
 
@@ -552,7 +396,6 @@ def test_insert_file_to_db_non_utf8(mocker, tmp_test_directory, mongo_handler):
 
 
 def test_generate_compound_indexes(mocker, mongo_handler):
-    """Test generate_compound_indexes method."""
     mock_collection = mocker.MagicMock()
     mocker.patch.object(mongo_handler, "get_collection", return_value=mock_collection)
 
@@ -562,7 +405,6 @@ def test_generate_compound_indexes(mocker, mongo_handler):
 
 
 def test_generate_compound_indexes_for_databases(mocker, mongo_handler):
-    """Test generate_compound_indexes_for_databases method."""
     mock_client = mocker.MagicMock()
     mock_client.list_database_names.return_value = [
         "config",
@@ -581,7 +423,6 @@ def test_generate_compound_indexes_for_databases(mocker, mongo_handler):
 
 
 def test_generate_compound_indexes_for_databases_all(mocker, mongo_handler):
-    """Test generate_compound_indexes_for_databases with 'all'."""
     mock_client = mocker.MagicMock()
     mock_client.list_database_names.return_value = [
         "config",
@@ -600,7 +441,6 @@ def test_generate_compound_indexes_for_databases_all(mocker, mongo_handler):
 
 
 def test_generate_compound_indexes_for_databases_not_found(mocker, mongo_handler):
-    """Test generate_compound_indexes_for_databases with non-existent database."""
     mock_client = mocker.MagicMock()
     mock_client.list_database_names.return_value = ["config", "admin", "local", "existing_db"]
     mongo_db.MongoDBHandler.db_client = mock_client

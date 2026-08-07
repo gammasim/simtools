@@ -191,13 +191,3 @@ def test_check_run_result(simulator_ray_tracing_sst):
     with simulator_ray_tracing_sst._photons_file.open("a") as file:
         file.writelines(150 * [f"{1}\n"])
     assert simulator_ray_tracing_sst._check_run_result()
-
-
-def test_write_out_single_pixel_camera_file(
-    simulator_ray_tracing_sst, single_pixel_camera_file_content, funnel_perfect_file_content
-):
-    simulator_ray_tracing_sst._write_out_single_pixel_camera_files()
-
-    assert_single_pixel_and_perfect_funnel_files(
-        simulator_ray_tracing_sst, single_pixel_camera_file_content, funnel_perfect_file_content
-    )

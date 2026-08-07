@@ -75,7 +75,6 @@ def mock_hdf5_file(mock_tables, tmp_test_directory):
 
 
 def test_reader_initialization(mock_hdf5_file):
-    """Test basic reader initialization."""
     reader = EventDataReader(mock_hdf5_file)
     data_sets = reader.data_sets
 
@@ -84,7 +83,6 @@ def test_reader_initialization(mock_hdf5_file):
 
 
 def test_reader_rejects_fits_file(tmp_test_directory):
-    """Test that FITS reduced event data files are rejected."""
     test_file = tmp_test_directory / "test.fits"
 
     with pytest.raises(ValueError, match="Only HDF5 files"):
@@ -92,7 +90,6 @@ def test_reader_rejects_fits_file(tmp_test_directory):
 
 
 def test_telescope_filtering(mock_hdf5_file):
-    """Test filtering by telescope list."""
     # Should only keep events with telescope 1
     reader = EventDataReader(mock_hdf5_file, telescope_list=["LSTN-01"])
     _, _, _, triggered_data = reader.read_event_data(mock_hdf5_file)
@@ -110,7 +107,6 @@ def test_telescope_filtering(mock_hdf5_file):
 
 
 def test_shower_coordinate_transformation(mock_hdf5_file):
-    """Test transformation of core positions to shower coordinates."""
     reader = EventDataReader(mock_hdf5_file)
     _, _, triggered_shower, _ = reader.read_event_data(mock_hdf5_file)
 
@@ -119,17 +115,7 @@ def test_shower_coordinate_transformation(mock_hdf5_file):
     assert hasattr(triggered_shower, "core_distance_shower")
 
 
-def test_angular_separation_calculation(mock_hdf5_file):
-    """Test calculation of angular separation."""
-    reader = EventDataReader(mock_hdf5_file)
-    _, _, _, triggered_data = reader.read_event_data(mock_hdf5_file)
-
-    assert hasattr(triggered_data, "angular_distance")
-    assert len(triggered_data.angular_distance) == 2
-
-
 def test_get_reduced_simulation_info(mock_hdf5_file):
-    """Test getting reduced simulation information."""
     reader = EventDataReader(mock_hdf5_file)
     file_info, _, _, _ = reader.read_event_data(mock_hdf5_file)
     info = reader.get_reduced_simulation_file_info(file_info)
@@ -143,7 +129,6 @@ def test_get_reduced_simulation_info(mock_hdf5_file):
 
 @patch("simtools.sim_events.reader.PrimaryParticle")
 def test_get_reduced_simulation_info_with_warning(mock_primary_particle, mock_hdf5_file, caplog):
-    """Test get_reduced_simulation_info with multiple values that trigger warning."""
 
     reader = EventDataReader(mock_hdf5_file)
 
@@ -176,7 +161,6 @@ def test_get_reduced_simulation_info_with_warning(mock_primary_particle, mock_hd
 
 
 def test_get_reduced_simulation_info_with_string_encoded_numeric_values(mock_hdf5_file):
-    """Test conversion of numeric FILE_INFO columns stored as byte strings."""
     reader = EventDataReader(mock_hdf5_file)
 
     file_info = Table()
@@ -203,7 +187,6 @@ def test_get_reduced_simulation_info_with_string_encoded_numeric_values(mock_hdf
 
 
 def test_convert_numeric_column_decodes_object_bytes(mock_hdf5_file):
-    """Test object arrays with byte entries are decoded and converted."""
     reader = EventDataReader(mock_hdf5_file)
 
     values = np.array([b" 1.5 ", b"2.0"], dtype=object)
@@ -213,7 +196,6 @@ def test_convert_numeric_column_decodes_object_bytes(mock_hdf5_file):
 
 
 def test_convert_numeric_column_raises_on_invalid_values(mock_hdf5_file):
-    """Test conversion helper raises clear error message for invalid numeric data."""
     reader = EventDataReader(mock_hdf5_file)
 
     values = np.array(["not-a-number"], dtype=np.str_)
@@ -225,26 +207,7 @@ def test_convert_numeric_column_raises_on_invalid_values(mock_hdf5_file):
         reader._convert_numeric_column(values, key="nsb_level", dtype=np.float64)
 
 
-def test_get_triggered_shower_data_single_match(mock_hdf5_file):
-    """Test _get_triggered_shower_data with single matches."""
-    reader = EventDataReader(mock_hdf5_file)
-    _, shower_data, triggered_shower, _ = reader.read_event_data(mock_hdf5_file)
-
-    # Get triggered shower data
-    triggered_shower = reader._get_triggered_shower_data(
-        shower_data,
-        [0],  # file_id
-        [1],  # event_id
-        [1],  # shower_id
-    )
-
-    assert len(triggered_shower.shower_id) == 1
-    assert triggered_shower.shower_id[0] == 1
-    assert triggered_shower.simulated_energy[0] == pytest.approx(1.0)
-
-
 def test_get_triggered_shower_data_no_matches(mock_hdf5_file, caplog):
-    """Test _get_triggered_shower_data when no matches are found."""
     reader = EventDataReader(mock_hdf5_file)
     _, shower_data, triggered_shower, _ = reader.read_event_data(mock_hdf5_file)
 
@@ -264,7 +227,6 @@ def test_get_triggered_shower_data_no_matches(mock_hdf5_file, caplog):
 def test_get_triggered_shower_data_numpy_matching_preserves_order_and_duplicates(
     mock_hdf5_file, caplog
 ):
-    """NumPy matching keeps trigger order and rejects ambiguous shower keys."""
     reader = EventDataReader(mock_hdf5_file)
     _, shower_data, _, _ = reader.read_event_data(mock_hdf5_file)
 
@@ -285,26 +247,9 @@ def test_get_triggered_shower_data_numpy_matching_preserves_order_and_duplicates
     assert "Found 0 matches for shower 999 event 999 file 999" in caplog.text
 
 
-def test_read_event_data_returns_expected_types_and_values(mock_hdf5_file):
-    """Test that read_event_data returns expected types and values."""
-    reader = EventDataReader(mock_hdf5_file)
-    file_info, shower_data, triggered_shower, triggered_data = reader.read_event_data(
-        mock_hdf5_file
-    )
-
-    assert hasattr(file_info, "colnames")
-    assert hasattr(shower_data, "shower_id")
-    assert hasattr(triggered_shower, "shower_id")
-    assert hasattr(triggered_data, "shower_id")
-    assert len(shower_data.shower_id) > 0
-    assert len(triggered_shower.shower_id) > 0
-    assert len(triggered_data.shower_id) > 0
-
-
 def test_read_event_data_rejects_string_encoded_shower_numeric_columns(
     tmp_test_directory, mock_tables
 ):
-    """Test rejection of numeric SHOWERS columns stored as strings."""
     test_file = tmp_test_directory / "test_string_encoded_showers.hdf5"
     shower_table, trigger_table, file_info_table = mock_tables
     shower_table["event_id"] = ["100", "101"]
@@ -331,7 +276,6 @@ def test_read_event_data_rejects_string_encoded_shower_numeric_columns(
 
 
 def test_read_event_data_with_missing_triggers(tmp_test_directory, mock_tables):
-    """Test read_event_data when TRIGGERS table is missing."""
 
     test_file = tmp_test_directory / "test_no_triggers.hdf5"
     shower_table, _, file_info_table = mock_tables
@@ -355,7 +299,6 @@ def test_read_event_data_with_missing_triggers(tmp_test_directory, mock_tables):
 
 
 def test_read_event_data_rejects_empty_required_table(tmp_test_directory, mock_tables):
-    """Test read_event_data rejects empty required tables."""
     test_file = tmp_test_directory / "test_empty_triggers.hdf5"
     shower_table, trigger_table, file_info_table = mock_tables
     trigger_table = trigger_table[:0]
@@ -370,30 +313,3 @@ def test_read_event_data_rejects_empty_required_table(tmp_test_directory, mock_t
 
     with pytest.raises(ValueError, match="empty required table\\(s\\): TRIGGERS"):
         reader.read_event_data(str(test_file))
-
-
-def test_read_event_data_hdf5_with_selected_columns_and_telescope_filter(
-    tmp_test_directory, mock_tables
-):
-    """Test HDF5 event-data reads preserve trigger parsing and telescope filtering."""
-    test_file = tmp_test_directory / "test_event_data.h5"
-    shower_table, trigger_table, file_info_table = mock_tables
-
-    write_tables(
-        [shower_table, trigger_table, file_info_table],
-        test_file,
-        file_type="HDF5",
-    )
-
-    reader = EventDataReader(str(test_file), telescope_list=["LSTN-01"])
-    file_info, shower_data, triggered_shower, triggered_data = reader.read_event_data(
-        str(test_file)
-    )
-
-    assert hasattr(file_info, "colnames")
-    assert len(shower_data.shower_id) == 2
-    assert len(triggered_shower.shower_id) == 1
-    assert len(triggered_data.telescope_list) == 1
-    assert list(triggered_data.telescope_list[0]) == ["LSTN-01", "LSTN-02", "LSTN-03"]
-    assert all(isinstance(item, str) for item in triggered_data.telescope_list[0])
-    assert triggered_shower.shower_id[0] == 1

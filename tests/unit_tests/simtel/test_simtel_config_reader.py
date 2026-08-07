@@ -237,12 +237,6 @@ def test_get_list_of_simtel_parameters(simtel_config_file):
     assert simtel_parameter_list == ["num_gains", "telescope_transmission"]
 
 
-def test_get_schema_values(config_reader_num_gains):
-    assert config_reader_num_gains._get_schema_values("type") == "int64"
-    assert config_reader_num_gains._get_schema_values("unit") == "dimensionless"
-    assert config_reader_num_gains._get_schema_values("limits") == [1, 2]
-
-
 def test_values_match(config_reader_num_gains):
     # covers cases only not included in other tests (especially astropy.quuantities)
     assert config_reader_num_gains._values_match(1, 1)

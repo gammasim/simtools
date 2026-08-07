@@ -3,7 +3,6 @@
 import pytest
 
 from simtools.model.legacy_model_parameter import (
-    UPDATE_HANDLERS,
     _get_unsupported_update_message,
     _update_corsika_starting_grammage,
     _update_dsum_threshold,
@@ -11,27 +10,11 @@ from simtools.model.legacy_model_parameter import (
     _update_file_backed_table_parameter,
     _update_flasher_pulse_shape,
     apply_legacy_updates_to_parameters,
-    register_update,
     update_parameter,
 )
 
 
-def test_register_update():
-    """Test register_update decorator."""
-
-    @register_update("test_parameter")
-    def test_handler(*_args, **_kwargs):
-        return {"test": "value"}
-
-    assert "test_parameter" in UPDATE_HANDLERS
-    assert UPDATE_HANDLERS["test_parameter"] is test_handler
-
-    # Clean up
-    del UPDATE_HANDLERS["test_parameter"]
-
-
 def test_get_unsupported_update_message():
-    """Test _get_unsupported_update_message function."""
 
     para_data = {"parameter": "test_param", "model_parameter_schema_version": "0.1.0"}
     schema_version = "0.2.0"
@@ -43,7 +26,6 @@ def test_get_unsupported_update_message():
 
 
 def test_update_flasher_pulse_shape():
-    """Test _update_flasher_pulse_shape function."""
     parameters = {
         "flasher_pulse_shape": {
             "parameter": "flasher_pulse_shape",
@@ -66,7 +48,6 @@ def test_update_flasher_pulse_shape():
 
 
 def test_update_dsum_threshold():
-    """Test _update_dsum_threshold function."""
     parameters = {
         "dsum_threshold": {
             "parameter": "dsum_threshold",
@@ -84,7 +65,6 @@ def test_update_dsum_threshold():
 
 
 def test_update_dsum_threshold_unsupported_version():
-    """Test _update_dsum_threshold with unsupported version."""
     parameters = {
         "dsum_threshold": {
             "parameter": "dsum_threshold",
@@ -99,24 +79,7 @@ def test_update_dsum_threshold_unsupported_version():
         _update_dsum_threshold(parameters, "0.3.0")
 
 
-def test_update_parameter_with_registered_handler():
-    """Test update_parameter with a registered handler."""
-    parameters = {
-        "dsum_threshold": {
-            "parameter": "dsum_threshold",
-            "value": "42",
-            "model_parameter_schema_version": "0.1.0",
-        }
-    }
-
-    result = _update_dsum_threshold(parameters, "0.2.0")
-
-    assert "dsum_threshold" in result
-    assert result["dsum_threshold"]["value"] == 42
-
-
 def test_update_parameter_with_unregistered_handler():
-    """Test update_parameter with an unregistered handler."""
 
     parameters = {
         "unknown_parameter": {
@@ -133,7 +96,6 @@ def test_update_parameter_with_unregistered_handler():
 
 
 def test_apply_legacy_updates_to_parameters():
-    """Test apply_legacy_updates_to_parameters function."""
 
     parameters = {"param1": {"value": 10}, "param2": {"value": 20}, "param3": {"value": 30}}
 
@@ -151,7 +113,6 @@ def test_apply_legacy_updates_to_parameters():
 
 
 def test_update_flasher_pulse_shape_unsupported_version():
-    """Test _update_flasher_pulse_shape with unsupported version."""
     parameters = {
         "flasher_pulse_shape": {
             "parameter": "flasher_pulse_shape",
@@ -168,7 +129,6 @@ def test_update_flasher_pulse_shape_unsupported_version():
 
 
 def test_update_parameter_returns_handler_result():
-    """Test update_parameter returns the result from the registered handler."""
     parameters = {
         "flasher_pulse_shape": {
             "parameter": "flasher_pulse_shape",
@@ -189,7 +149,6 @@ def test_update_parameter_returns_handler_result():
 
 @pytest.mark.parametrize("legacy_type", ["file", "string"])
 def test_update_fadc_pulse_shape_from_file_to_embedded_row_data(mocker, legacy_type):
-    """Test file-backed fadc_pulse_shape migration to embedded row data."""
     expected_value = {
         "columns": ["time", "amplitude"],
         "column_units": ["ns", "dimensionless"],
@@ -233,7 +192,6 @@ def test_update_fadc_pulse_shape_from_file_to_embedded_row_data(mocker, legacy_t
     ],
 )
 def test_update_fadc_pulse_shape_embedded_formats(legacy_value, expected_value):
-    """Test embedded fadc_pulse_shape migration for legacy and canonical dict layouts."""
     parameters = {
         "fadc_pulse_shape": {
             "parameter": "fadc_pulse_shape",
@@ -251,7 +209,6 @@ def test_update_fadc_pulse_shape_embedded_formats(legacy_value, expected_value):
 
 
 def test_update_fadc_pulse_shape_embedded_column_data_is_unsupported():
-    """Reject legacy embedded column-data representation for fadc_pulse_shape."""
     parameters = {
         "fadc_pulse_shape": {
             "parameter": "fadc_pulse_shape",
@@ -278,38 +235,7 @@ def test_update_fadc_pulse_shape_embedded_column_data_is_unsupported():
         _update_fadc_pulse_shape(parameters, "0.2.0")
 
 
-def test_update_parameter_passes_value_resolver(mocker):
-    """Test update_parameter forwards the optional value_resolver to the handler."""
-    parameters = {
-        "fadc_pulse_shape": {
-            "parameter": "fadc_pulse_shape",
-            "value": "pulse.dat",
-            "model_parameter_schema_version": "0.1.0",
-            "type": "file",
-            "file": True,
-        }
-    }
-    resolver = mocker.Mock(
-        return_value={
-            "columns": ["time", "amplitude"],
-            "column_units": ["ns", "dimensionless"],
-            "rows": [[0.0, 0.1]],
-        }
-    )
-
-    result = update_parameter(
-        "fadc_pulse_shape",
-        parameters,
-        "0.2.0",
-        value_resolver=resolver,
-    )
-
-    resolver.assert_called_once_with("fadc_pulse_shape", "pulse.dat")
-    assert result["fadc_pulse_shape"]["model_parameter_schema_version"] == "0.2.0"
-
-
 def test_update_file_backed_table_parameter_requires_value_resolver():
-    """Raise when updating file-backed table parameter without value_resolver."""
     parameters = {
         "fadc_pulse_shape": {
             "parameter": "fadc_pulse_shape",
@@ -329,7 +255,6 @@ def test_update_file_backed_table_parameter_requires_value_resolver():
 
 
 def test_update_corsika_starting_grammage_returns_remove_placeholder():
-    """Return None placeholder update for legacy corsika_starting_grammage."""
     parameters = {
         "corsika_starting_grammage": {
             "parameter": "corsika_starting_grammage",

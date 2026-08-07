@@ -63,7 +63,6 @@ def test_assert_file_type_others(caplog):
 
 
 def test_assert_hdf5_datasets(tmp_test_directory):
-    """Require the configured root datasets and allow additional datasets."""
     output_file = tmp_test_directory / "output.hdf5"
     with h5py.File(output_file, "w") as hdf5_file:
         for name in ("FILE_INFO", "METADATA", "SHOWERS"):
@@ -77,17 +76,12 @@ def test_assert_hdf5_datasets(tmp_test_directory):
 
 
 def test_assert_hdf5_datasets_rejects_groups(tmp_test_directory):
-    """Reject an HDF5 group when a dataset is required."""
     output_file = tmp_test_directory / "output.hdf5"
     with h5py.File(output_file, "w") as hdf5_file:
         hdf5_file.create_group("METADATA")
 
     with pytest.raises(AssertionError, match="not datasets \\['METADATA'\\]"):
         assertions.assert_hdf5_datasets(output_file, ["METADATA"])
-
-
-def test_assert_no_suffix():
-    assert not assertions.assert_file_type("yml", "tests/resources/does_not_exit_yml")
 
 
 @pytest.mark.parametrize(

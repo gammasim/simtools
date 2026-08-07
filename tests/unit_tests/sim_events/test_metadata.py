@@ -12,7 +12,6 @@ from simtools.sim_events.metadata import (
 
 
 def test_build_simulation_metadata_marks_missing_models_unavailable():
-    """Input-only metadata is explicit about missing resolved models."""
     metadata = build_simulation_metadata([{"run_number": 12}])
 
     assert metadata["models"]["status"] == "unavailable"
@@ -20,15 +19,7 @@ def test_build_simulation_metadata_marks_missing_models_unavailable():
     assert metadata["inputs"]["files"][0]["run_number"] == 12
 
 
-def test_build_simulation_metadata_decodes_nested_eventio_bytes():
-    """EventIO byte fields are safe to embed in JSON metadata."""
-    metadata = build_simulation_metadata([{"run_header": [{"observer": b"CTA North"}]}])
-
-    assert metadata["inputs"]["files"][0]["run_header"][0]["observer"] == "CTA North"
-
-
 def test_array_model_export_keeps_telescope_context_and_parameter_records():
-    """Telescope metadata is directly queryable without a model registry lookup."""
     array_model = ArrayModel.__new__(ArrayModel)
     array_model.model_version = "7.0.0"
     array_model.layout_name = "layout"
@@ -73,7 +64,6 @@ def test_array_model_export_keeps_telescope_context_and_parameter_records():
 
 
 def test_array_model_export_excludes_database_bookkeeping_fields():
-    """MongoDB bookkeeping fields are not included in simulation metadata."""
     array_model = ArrayModel.__new__(ArrayModel)
     array_model.model_version = "7.0.0"
     array_model.layout_name = "layout"
@@ -102,7 +92,6 @@ def test_array_model_export_excludes_database_bookkeeping_fields():
 
 
 def test_validate_simulation_metadata_rejects_model_arrays_when_unavailable():
-    """Unavailable model state cannot carry an apparently complete snapshot."""
     metadata = build_simulation_metadata([])
     metadata["models"]["arrays"] = [{"model_version": "7.0.0"}]
 

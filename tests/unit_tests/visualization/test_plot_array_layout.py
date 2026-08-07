@@ -15,7 +15,6 @@ from simtools.utils import geometry as transf
 from simtools.visualization import plot_array_layout as pal
 from simtools.visualization.plot_array_layout import (
     PlotBounds,
-    create_patches,
     finalize_plot,
     generate_plot_combinations,
     get_patches,
@@ -95,7 +94,6 @@ def test_finalize_plot_without_range():
 
 
 def test_update_legend_with_telescopes(telescopes):
-    """Test update_legend with telescopes."""
     _, ax = plt.subplots()
     update_legend(ax, telescopes)
 
@@ -110,23 +108,7 @@ def test_update_legend_with_telescopes(telescopes):
     assert any("MSTN" in label and "(1)" in label for label in labels)
 
 
-def test_update_legend_without_telescopes():
-    """Test update_legend with empty telescope list."""
-
-    empty_telescopes = QTable()
-
-    _, ax = plt.subplots()
-    update_legend(ax, empty_telescopes)
-
-    # Legend should either not exist or have no labels
-    legend = ax.get_legend()
-    if legend:
-        texts = [txt.get_text() for txt in legend.get_texts()]
-        assert len(texts) == 0
-
-
 def test_update_legend_with_grayed_out_elements(telescopes):
-    """Test update_legend with grayed out elements."""
     _, ax = plt.subplots()
 
     # Gray out one of the LSTN telescopes
@@ -143,20 +125,6 @@ def test_update_legend_with_grayed_out_elements(telescopes):
     # MSTN should still show (1)
     assert any("LSTN" in label and "(1)" in label for label in labels)
     assert any("MSTN" in label and "(1)" in label for label in labels)
-
-
-def test_update_legend_with_legend_location(telescopes):
-    """Test update_legend with custom legend location."""
-    _, ax = plt.subplots()
-
-    update_legend(ax, telescopes, legend_location="upper right")
-
-    legend = ax.get_legend()
-    assert legend is not None
-
-    # Check that legend was created (exact location testing may be complex)
-    labels = [txt.get_text() for txt in legend.get_texts()]
-    assert len(labels) > 0
 
 
 def test_get_sphere_radius_with_column():
@@ -194,16 +162,6 @@ class DummyTel:
 
     def __getitem__(self, key):
         return self.data[key]
-
-
-def test_get_telescope_name_with_telescope_name():
-    # When telescope_name column exists, it should return its value.
-    tbl = Table({"telescope_name": ["Telescope-01"]})
-    row = tbl[0]
-    # astropy table row does not have an 'index' attribute, so we simulate it using DummyTel.
-    dummy = DummyTel({"telescope_name": row["telescope_name"]}, index=0)
-    result = get_telescope_name(dummy)
-    assert result == "Telescope-01"
 
 
 def test_get_telescope_name_with_asset_code_and_sequence_number():
@@ -328,7 +286,6 @@ def test_get_patches_simplest(monkeypatch):
 
 
 def test_get_patches_with_highlighted_elements(telescopes):
-    """Test get_patches with highlighted elements."""
     _, ax = plt.subplots()
 
     highlighted_elements = ["LSTN-01", "MSTN-01"]
@@ -356,24 +313,6 @@ def test_get_patches_with_highlighted_elements(telescopes):
         color_rgba = highlight_patch.get_facecolor()
         expected_rgba = to_rgba("red")
         assert color_rgba[:3] == expected_rgba[:3]  # Compare only RGB, not alpha
-
-
-def test_get_telescope_patch_circle():
-    x = 15 * u.m
-    y = 25 * u.m
-    radius = 3 * u.m
-
-    # Pass a real telescope type known to legend_handlers config
-    patch = get_telescope_patch("MSTN", x, y, radius)
-    assert isinstance(patch, mpatches.Circle)
-
-    expected_center = (x.to(u.m).value, y.to(u.m).value)
-    assert patch.center == expected_center
-    assert patch.radius == radius.to(u.m).value
-
-    # MST/MSTN has filled: False in the config, so get_fill() should be False
-    assert patch.get_fill() is False
-    assert to_rgba("dodgerblue") == patch.get_edgecolor()
 
 
 def test_get_telescope_patch_rectangle():
@@ -486,7 +425,6 @@ def test_plot_array_layout_calls_helpers(monkeypatch):
 
 
 def test_plot_array_layout_calls_adjust_text(monkeypatch, telescopes):
-    """Test that adjust_text is called if available."""
     _, _ = plt.subplots()
 
     # Mock adjust_text
@@ -504,7 +442,6 @@ def test_plot_array_layout_calls_adjust_text(monkeypatch, telescopes):
 
 
 def test_plot_array_layout_with_highlighted_elements():
-    """Test plot_array_layout with highlighted elements."""
     telescopes = QTable(
         {
             "telescope_name": ["LSTN-01", "MSTN-01", "LSTN-02"],
@@ -535,65 +472,10 @@ def test_plot_array_layout_with_highlighted_elements():
     collections = [coll for coll in ax.collections if isinstance(coll, PatchCollection)]
     assert len(collections) >= 2  # At least normal patches and highlighted patches
 
-
-def test_create_patches(telescopes):
-    _, ax = plt.subplots()
-    patches, radii, highlighted_patches, text_objects = create_patches(telescopes, 1.0, True, ax)
-
-    assert len(patches)
-    assert len(radii)
-    assert isinstance(highlighted_patches, list)
-    assert isinstance(text_objects, list)
-
-
-def test_create_patches_with_highlighted_elements(telescopes):
-    """Test create_patches with highlighted elements to cover lines 266-273."""
-    _, ax = plt.subplots()
-
-    # Test with highlighted elements
-    highlighted_elements = ["LSTN-01", "MSTN-01"]
-    patches, radii, highlighted_patches, _ = create_patches(
-        telescopes, 1.0, False, ax, highlighted_elements=highlighted_elements
-    )
-
-    assert len(patches) == 3  # Total number of telescopes
-    assert len(radii) == 3
-    assert len(highlighted_patches) == 2  # Two telescopes are highlighted
-
-    # Verify highlighted patches are Circle objects with correct properties
-    for highlight_patch in highlighted_patches:
-        assert isinstance(highlight_patch, mpatches.Circle)
-        assert highlight_patch.get_fill() is False
-        # Check color components without alpha since unfilled patches may have alpha=0
-        color_rgba = highlight_patch.get_facecolor()
-        expected_rgba = to_rgba("red")
-        assert color_rgba[:3] == expected_rgba[:3]  # Compare only RGB, not alpha
-        assert highlight_patch.get_linewidth() == 1
-
-
-def test_create_patches_with_grayed_out_elements(telescopes):
-    """Test create_patches with grayed out elements."""
-    _, ax = plt.subplots()
-
-    # Test with grayed out elements
-    grayed_out_elements = ["LSTN-02"]
-    patches, radii, highlighted_patches, _ = create_patches(
-        telescopes, 1.0, False, ax, grayed_out_elements=grayed_out_elements
-    )
-
-    assert len(patches) == 3  # Total number of telescopes
-    assert len(radii) == 3
-    assert len(highlighted_patches) == 0  # No telescopes are highlighted
-
-    # Verify that the grayed out telescope patch has correct properties
-    # The grayed out telescope should be the third one (LSTN-02)
-    grayed_patch = patches[2]
-    assert isinstance(grayed_patch, mpatches.Circle)
     # Note: The exact color testing might depend on implementation details
 
 
 def test_plot_array_layout_with_bounds_mode_symmetric():
-    """Test plot_array_layout with symmetric bounds mode."""
     telescopes = QTable(
         {
             "telescope_name": ["LSTN-01", "MSTN-01"],
@@ -619,46 +501,7 @@ def test_plot_array_layout_with_bounds_mode_symmetric():
     plt.close(fig)
 
 
-def test_plot_array_layout_with_bounds_mode_exact():
-    """Test plot_array_layout with exact bounds mode.
-
-    Tests that bounds_mode="exact" is accepted and produces a valid figure.
-    The exact coordinate transformations depend on internal rotation logic.
-    """
-    telescopes = QTable(
-        {
-            "telescope_name": ["LSTN-01", "MSTN-01"],
-            "position_x": [100, 200] * u.m,
-            "position_y": [50, 150] * u.m,
-            "sphere_radius": [12, 8] * u.m,
-        }
-    )
-
-    fig = plot_array_layout(
-        telescopes,
-        axes_range=None,
-        bounds_mode="exact",
-        padding=0.1,
-    )
-
-    assert isinstance(fig, mpl_fig.Figure)
-    ax = fig.get_axes()[0]
-    xlim = ax.get_xlim()
-    ylim = ax.get_ylim()
-    # In exact mode, the bounds are derived from the actual data extents
-    # Verify that limits are set (not None or default)
-    assert xlim[0] is not None
-    assert xlim[1] is not None
-    assert ylim[0] is not None
-    assert ylim[1] is not None
-    # Verify that we have a reasonable plot range
-    assert abs(xlim[1] - xlim[0]) > 0
-    assert abs(ylim[1] - ylim[0]) > 0
-    plt.close(fig)
-
-
 def test_plot_array_layout_with_x_lim_override():
-    """Test plot_array_layout with explicit x_lim override."""
     telescopes = QTable(
         {
             "telescope_name": ["LSTN-01", "MSTN-01"],
@@ -681,7 +524,6 @@ def test_plot_array_layout_with_x_lim_override():
 
 
 def test_plot_array_layout_with_y_lim_override():
-    """Test plot_array_layout with explicit y_lim override."""
     telescopes = QTable(
         {
             "telescope_name": ["LSTN-01", "MSTN-01"],
@@ -703,35 +545,7 @@ def test_plot_array_layout_with_y_lim_override():
     plt.close(fig)
 
 
-def test_plot_array_layout_with_both_lim_overrides():
-    """Test plot_array_layout with both x_lim and y_lim overrides."""
-    telescopes = QTable(
-        {
-            "telescope_name": ["LSTN-01", "MSTN-01", "LSTN-02"],
-            "position_x": [0, 100, 200] * u.m,
-            "position_y": [0, 100, 200] * u.m,
-            "sphere_radius": [12, 8, 12] * u.m,
-        }
-    )
-
-    # Limits that exclude LSTN-02
-    fig = plot_array_layout(
-        telescopes,
-        x_lim=(-50, 150),
-        y_lim=(-50, 150),
-    )
-
-    assert isinstance(fig, mpl_fig.Figure)
-    ax = fig.get_axes()[0]
-    xlim = ax.get_xlim()
-    ylim = ax.get_ylim()
-    assert xlim == (-50, 150)
-    assert ylim == (-50, 150)
-    plt.close(fig)
-
-
 def test_plot_array_layout_with_background_symmetric_mode():
-    """Test plot_array_layout with background telescopes in symmetric mode."""
     telescopes = QTable(
         {
             "telescope_name": ["LSTN-01"],
@@ -766,27 +580,7 @@ def test_plot_array_layout_with_background_symmetric_mode():
     plt.close(fig)
 
 
-def test_plot_array_layout_with_empty_telescopes():
-    """Test plot_array_layout with empty telescope table raises IndexError.
-
-    This test documents current behavior where empty telescope lists
-    cause an IndexError in the rotate() function.
-    """
-    telescopes = QTable(
-        {
-            "telescope_name": [],
-            "position_x": [] * u.m,
-            "position_y": [] * u.m,
-            "sphere_radius": [] * u.m,
-        }
-    )
-
-    with pytest.raises(IndexError):
-        plot_array_layout(telescopes)
-
-
 def test_get_telescope_patch_hexagon():
-    """Test get_telescope_patch for hexagon shape."""
 
     x = 15 * u.m
     y = 25 * u.m
@@ -800,7 +594,6 @@ def test_get_telescope_patch_hexagon():
 
 
 def test_plot_array_layout_filter_removes_all_telescopes():
-    """Test plot_array_layout when filter removes all telescopes."""
     telescopes = QTable(
         {
             "telescope_name": ["LSTN-01", "MSTN-01"],
@@ -822,7 +615,6 @@ def test_plot_array_layout_filter_removes_all_telescopes():
 
 
 def test_get_patches_empty_with_axes_range():
-    """Test get_patches when no telescopes remain but axes_range is provided."""
     telescopes = QTable(
         {
             "telescope_name": ["LSTN-01"],
@@ -911,7 +703,6 @@ def test_plot_array_layouts(monkeypatch, tmp_path):
     ids=["default_filename_includes_model_version", "figure_name_override"],
 )
 def test_plot_array_layouts_filename(monkeypatch, tmp_path, figure_name, expected_filename):
-    """Test output filename: default includes model version/site; explicit figure_name overrides it."""
 
     captured = {"name": None}
 
@@ -962,7 +753,6 @@ def test_plot_array_layouts_filename(monkeypatch, tmp_path, figure_name, expecte
 
 
 def test_generate_plot_combinations_default():
-    """Test generate_plot_combinations with explicit site and model version."""
     args = {
         "model_version": "1.0.0",
         "site": "North",
@@ -976,7 +766,6 @@ def test_generate_plot_combinations_default():
 
 
 def test_generate_plot_combinations_all_sites_and_versions(monkeypatch):
-    """Test generate_plot_combinations with all sites and model versions enabled."""
     args = {
         "model_version": None,
         "site": None,

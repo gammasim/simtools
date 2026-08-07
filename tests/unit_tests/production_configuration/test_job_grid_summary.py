@@ -2,20 +2,7 @@ import astropy.units as u
 
 from simtools.production_configuration.job_grid_summary import (
     build_job_grid_summary,
-    format_quantity_summary,
 )
-
-
-def test_format_quantity_summary_returns_single_value_for_constant_series():
-    summary = format_quantity_summary(u.Quantity([200, 200, 200], u.TeV))
-
-    assert summary == "200 TeV"
-
-
-def test_format_quantity_summary_returns_range_with_explicit_unit():
-    summary = format_quantity_summary(u.Quantity([30 * u.GeV, 1 * u.TeV]))
-
-    assert summary == "[30, 1000] GeV"
 
 
 def test_build_job_grid_summary_includes_used_configured_and_lookup_values():

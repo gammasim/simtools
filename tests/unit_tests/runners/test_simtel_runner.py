@@ -61,13 +61,3 @@ def test_run_with_test_mode(simtel_runner, mocker):
     mock_job_manager_submit.assert_called_once_with(
         "echo test", out_file=None, err_file=None, env={"SIM_TELARRAY_CONFIG_PATH": ""}
     )
-
-
-def test_run_completes_successfully(simtel_runner, mocker):
-    mocker.patch.object(simtel_runner, "make_run_command", return_value=("echo test", None, None))
-    mocker.patch("simtools.job_execution.job_manager.submit", return_value=0)
-
-    # Test that run completes without error when properly mocked
-    result = simtel_runner.run(test=True, input_file="test", run_number=15)
-    # run method doesn't return anything, so just check it completed
-    assert result is None

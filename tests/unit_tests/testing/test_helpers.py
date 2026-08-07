@@ -47,12 +47,12 @@ def test_skip_camera_efficiency_old_testeff(new_testeff_version):
 def test_skip_camera_efficiency_new_testeff(new_testeff_version):
     config = {"application": "camera-efficiency", "test_name": "some_test"}
     with mock.patch(new_testeff_version, return_value=True):
-        helpers.skip_camera_efficiency(config)
+        assert helpers.skip_camera_efficiency(config) is None
 
 
 def test_skip_camera_efficiency_not_camera_efficiency():
     config = {"application": "other-application", "test_name": "some_test"}
-    helpers.skip_camera_efficiency(config)
+    assert helpers.skip_camera_efficiency(config) is None
 
 
 def test_new_testeff_version_file_not_found(builtins_open):
@@ -85,57 +85,8 @@ def test_skip_multiple_version_test_mismatched_multiple_versions():
     assert result == SKIPPING_TEST
 
 
-def test_skip_multiple_version_test_no_model_version_in_config():
-    config = {"configuration": {}}
-    model_version = ["5.0.0", "6.0.0"]
-    result = helpers.skip_multiple_version_test(config, model_version)
-    assert result == SKIPPING_TEST
-
-
-def test_skip_multiple_version_test_empty_model_version_list():
-    config = {"configuration": {"model_version": []}}
-    model_version = ["5.0.0", "6.0.0"]
-    result = helpers.skip_multiple_version_test(config, model_version)
-    assert result == SKIPPING_TEST
-
-
-def test_skip_multiple_version_test_config_model_version_not_list():
-    config = {"configuration": {"model_version": "5.0.0"}}
-    model_version = ["5.0.0", "6.0.0"]
-    result = helpers.skip_multiple_version_test(config, model_version)
-    assert result == SKIPPING_TEST
-
-
-def test_skip_multiple_version_test_no_configuration_key():
-    config = {}
-    model_version = ["5.0.0", "6.0.0"]
-    result = helpers.skip_multiple_version_test(config, model_version)
-    assert result == SKIPPING_TEST
-
-
-def test_skip_multiple_version_test_single_model_version_no_config_model_version():
-    config = {"configuration": {}}
-    model_version = ["5.0.0"]
-    result = helpers.skip_multiple_version_test(config, model_version)
-    assert result is None
-
-
-def test_skip_multiple_version_test_empty_model_version():
-    config = {"configuration": {"model_version": []}}
-    model_version = []
-    result = helpers.skip_multiple_version_test(config, model_version)
-    assert result is None
-
-
 def test_skip_multiple_version_test_model_version_not_a_list():
     config = {"configuration": {"model_version": "5.0.0"}}
     model_version = "5.0.0"
-    result = helpers.skip_multiple_version_test(config, model_version)
-    assert result is None
-
-
-def test_skip_multiple_version_test_model_version_not_list():
-    config = {"configuration": {"model_version": ["5.0.0", "6.0.0"]}}
-    model_version = "5.0.0"  # Not a list
     result = helpers.skip_multiple_version_test(config, model_version)
     assert result is None

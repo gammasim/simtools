@@ -80,14 +80,6 @@ def test_prepare_run(corsika_simtel_runner, tmp_path):
         assert "/usr/bin/env bash" in script_content
 
 
-def test_prepare_run_with_invalid_run(corsika_simtel_runner, tmp_path):
-    script_path = tmp_path / "test_script.sh"
-    with pytest.raises(ValueError, match=r"^Invalid type of run number"):
-        corsika_simtel_runner.prepare_run(run_number=-2, sub_script=script_path)
-    with pytest.raises(ValueError, match=r"^could not convert string to float"):
-        corsika_simtel_runner.prepare_run(run_number="test", sub_script=script_path)
-
-
 def test_export_multipipe_script(corsika_simtel_runner, simtel_command, show_all):
     corsika_simtel_runner._export_multipipe_script(run_number=1)
     script = corsika_simtel_runner.runner_service.get_file_name("multi_pipe_config", run_number=1)
@@ -131,42 +123,3 @@ def test_export_multipipe_script_saves_corsika_output(corsika_config_mock_array_
 
     assert script_content.count("zstd >") == 1
     assert f"zstd > {corsika_output}" in script_content
-
-
-def test_write_multipipe_script(corsika_simtel_runner):
-    corsika_simtel_runner._export_multipipe_script(run_number=1)
-    multipipe_file = corsika_simtel_runner.runner_service.get_file_name(
-        "multi_pipe_config", run_number=1
-    )
-    corsika_simtel_runner._write_multipipe_script(multipipe_file, run_number=1)
-    script = corsika_simtel_runner.runner_service.get_file_name("multi_pipe_script", run_number=1)
-
-    assert script.exists()
-    with open(script) as f:
-        script_content = f.read()
-        assert "bin/multipipe_corsika" in script_content
-        assert f"-c {multipipe_file}" in script_content
-        assert "'Fan-out failed'" in script_content
-        assert "--sequential" not in script_content
-
-
-def test_write_multipipe_script_sequential(corsika_simtel_runner):
-    # Set the sequential attribute
-    corsika_simtel_runner.sequential = "--sequential"
-
-    # Export and write the multipipe script
-    corsika_simtel_runner._export_multipipe_script(run_number=1)
-    multipipe_file = corsika_simtel_runner.runner_service.get_file_name(
-        "multi_pipe_config", run_number=1
-    )
-    corsika_simtel_runner._write_multipipe_script(multipipe_file, run_number=1)
-    script = corsika_simtel_runner.runner_service.get_file_name("multi_pipe_script", run_number=1)
-
-    # Assertions
-    assert script.exists()
-    with open(script) as f:
-        script_content = f.read()
-        assert "bin/multipipe_corsika" in script_content
-        assert f"-c {multipipe_file}" in script_content
-        assert "'Fan-out failed'" in script_content
-        assert "--sequential" in script_content

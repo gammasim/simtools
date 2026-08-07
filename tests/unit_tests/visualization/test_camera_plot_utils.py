@@ -14,7 +14,6 @@ from simtools.visualization.camera_plot_utils import (
 
 
 def test_pixel_shape_hexagon():
-    """Test hexagonal pixel shape."""
     camera = mock.MagicMock()
     camera.pixels = {
         "pixel_shape": 1,
@@ -27,7 +26,6 @@ def test_pixel_shape_hexagon():
 
 
 def test_pixel_shape_square():
-    """Test square pixel shape."""
     camera = mock.MagicMock()
     camera.pixels = {
         "pixel_shape": 2,
@@ -40,7 +38,6 @@ def test_pixel_shape_square():
 
 
 def test_pixel_shape_invalid():
-    """Test invalid pixel shape returns None."""
     camera = mock.MagicMock()
     camera.pixels = {
         "pixel_shape": 99,
@@ -53,7 +50,6 @@ def test_pixel_shape_invalid():
 
 
 def test_create_pixel_patches_by_type():
-    """Test patch creation by pixel type."""
     camera = mock.MagicMock()
     camera.pixels = {
         "x": [0.0, 1.0, 2.0],
@@ -73,14 +69,12 @@ def test_create_pixel_patches_by_type():
 
 
 def test_add_pixel_legend_empty():
-    """Test add_pixel_legend with empty on pixels."""
     ax = mock.MagicMock()
     add_pixel_legend(ax, [], [])
     ax.legend.assert_not_called()
 
 
 def test_add_pixel_legend_with_off_pixels():
-    """Test add_pixel_legend with off pixels."""
     ax = mock.MagicMock()
     on_pixels = [mpatches.RegularPolygon((0, 0), numVertices=6, radius=0.5)]
     off_pixels = [mpatches.RegularPolygon((1, 1), numVertices=6, radius=0.5)]
@@ -90,7 +84,6 @@ def test_add_pixel_legend_with_off_pixels():
 
 
 def test_add_pixel_patch_collections():
-    """Test patch collection addition."""
     ax = mock.MagicMock()
     on_pixels = [mpatches.RegularPolygon((0, 0), numVertices=6, radius=0.5)]
     edge_pixels = [mpatches.RegularPolygon((1, 1), numVertices=6, radius=0.5)]
@@ -102,7 +95,6 @@ def test_add_pixel_patch_collections():
 
 
 def test_setup_camera_axis_properties_grid_alpha():
-    """Test axis setup with grid alpha."""
     ax = mock.MagicMock()
     camera = mock.MagicMock()
     camera.pixels = {"x": [0.0, 1.0], "y": [0.0, 1.0]}
@@ -113,7 +105,6 @@ def test_setup_camera_axis_properties_grid_alpha():
 
 
 def test_setup_camera_axis_properties_padding():
-    """Test axis setup with padding."""
     ax = mock.MagicMock()
     camera = mock.MagicMock()
     camera.pixels = {"x": [0.0, 1.0], "y": [0.0, 1.0]}

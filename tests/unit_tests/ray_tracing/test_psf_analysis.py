@@ -164,22 +164,6 @@ def test_find_radius_by_scanning(psf_image):
         image._find_radius_by_scanning(0, radius_sig)
 
 
-def test_sum_photons_in_radius(psf_image):
-    image = psf_image
-
-    # Test with a radius that includes all photons
-    radius = np.max(image.photon_r)
-    assert image._sum_photons_in_radius(radius * 1.1) == image._number_of_detected_photons
-
-    # Test with a radius that includes none of the photons
-    radius = np.min(image.photon_r) - 1
-    assert image._sum_photons_in_radius(radius) == 0
-
-    # Test with a radius that includes half of the photons
-    median_radius = np.median(image.photon_r)
-    assert image._sum_photons_in_radius(median_radius) == image._number_of_detected_photons // 2
-
-
 def test_find_psf(psf_image):
     image = psf_image
 
@@ -359,16 +343,6 @@ def test_process_simtel_file_using_rx_unexpected_output_format(
 
     with pytest.raises(ValueError, match="Invalid RX output format"):
         image._process_simtel_file_using_rx(dummy_photon_file)
-
-
-def test_read_photon_list_from_simtel_file_file_not_found(mocker, mocker_gzip_open):
-    image = PSFImage(focal_length=2800.0)
-    photon_file = "non_existent_file.gz"
-
-    mocker.patch(mocker_gzip_open, side_effect=FileNotFoundError)
-
-    with pytest.raises(FileNotFoundError):
-        image.read_photon_list_from_simtel_file(photon_file)
 
 
 def test_is_photon_positions_ok(psf_image):

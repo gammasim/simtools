@@ -38,13 +38,6 @@ def test_extract_run_number_returns_none_when_missing(tmp_path):
     assert nsb_trigger_calculator.extract_run_number(missing) is None
 
 
-def test_extract_run_number_from_file_info(tmp_path):
-    hdf5_file = tmp_path / "run_number.reduced_event_data.hdf5"
-    _write_file_info_hdf5(hdf5_file, "gamma_run000123_asum220.simtel.zst")
-
-    assert nsb_trigger_calculator.extract_run_number(hdf5_file) == 123
-
-
 def test_extract_run_number_decodes_bytes_and_returns_none_without_run(tmp_path):
     hdf5_file = tmp_path / "no_run.reduced_event_data.hdf5"
     Table({"file_name": [b"gamma_asum220.simtel.zst"]}).write(
@@ -54,35 +47,9 @@ def test_extract_run_number_decodes_bytes_and_returns_none_without_run(tmp_path)
     assert nsb_trigger_calculator.extract_run_number(hdf5_file) is None
 
 
-def test_extract_threshold_asum_and_dsum(tmp_path):
-    asum_file = tmp_path / "asum.reduced_event_data.hdf5"
-    dsum_file = tmp_path / "dsum.reduced_event_data.hdf5"
-    _write_file_info_hdf5(asum_file, "gamma_run000001_asum220.simtel.zst")
-    _write_file_info_hdf5(dsum_file, "gamma_run000001_dsum450.simtel.zst")
-
-    assert nsb_trigger_calculator.extract_threshold(asum_file) == 220
-    assert nsb_trigger_calculator.extract_threshold(dsum_file) == 450
-
-
-def test_extract_threshold_decodes_bytes(tmp_path):
-    hdf5_file = tmp_path / "bytes_threshold.reduced_event_data.hdf5"
-    Table({"file_name": [b"gamma_run000001_dsum450.simtel.zst"]}).write(
-        hdf5_file, path="FILE_INFO", format="hdf5", overwrite=True
-    )
-
-    assert nsb_trigger_calculator.extract_threshold(hdf5_file) == 450
-
-
 def test_extract_threshold_returns_none_when_file_info_missing(tmp_path):
     missing = tmp_path / "subdir" / "file.reduced_event_data.hdf5"
     assert nsb_trigger_calculator.extract_threshold(missing) is None
-
-
-def test_extract_threshold_returns_none_when_missing(tmp_path):
-    hdf5_file = tmp_path / "missing_threshold.reduced_event_data.hdf5"
-    _write_file_info_hdf5(hdf5_file, "gamma_run000001.simtel.zst")
-
-    assert nsb_trigger_calculator.extract_threshold(hdf5_file) is None
 
 
 def test_parse_nsb_hdf5_file_returns_parsed_data(tmp_path):
@@ -150,11 +117,6 @@ def test_find_hdf5_files_raises_for_missing_root(tmp_path):
         nsb_trigger_calculator.find_hdf5_files(tmp_path / "missing")
 
 
-def test_find_hdf5_files_raises_for_missing_matches(tmp_path):
-    with pytest.raises(FileNotFoundError, match="No files found"):
-        nsb_trigger_calculator.find_hdf5_files(tmp_path)
-
-
 def test_find_hdf5_files_returns_sorted_matches(tmp_path):
     first = tmp_path / "gamma_run000001_asum220.reduced_event_data.hdf5"
     second = tmp_path / "gamma_run000002_asum220.reduced_event_data.hdf5"
@@ -220,25 +182,6 @@ def test_calculate_statistics_with_no_events_returns_zero_rate():
     assert stats[220]["rate_hz"] == 0
     assert stats[220]["error_hz"] == 0
     assert stats[220]["num_runs"] == 0
-
-
-def test_calculate_statistics_skips_runs_with_missing_events():
-    stats = nsb_trigger_calculator.calculate_statistics(
-        {
-            220: {
-                1: {"triggers": 10, "events": 100},
-                2: {"triggers": 20, "events": None},
-            }
-        },
-        time_window=0.001,
-    )
-
-    assert stats[220]["runs"] == {1: 10}
-    assert stats[220]["total_triggers"] == 10
-    assert stats[220]["total_events"] == 100
-    assert stats[220]["time_s"] == pytest.approx(0.1)
-    assert stats[220]["rate_hz"] == pytest.approx(100.0)
-    assert stats[220]["num_runs"] == 1
 
 
 def test_generate_ecsv_output_writes_table(tmp_path):

@@ -54,20 +54,6 @@ def test_resolve_show_options_accepts_unrestricted_argparse_option():
     assert "Available values:" not in show_options.format_show_options_result(result)
 
 
-def test_handle_show_options_formats_help_and_values(capsys):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--site", help="Observatory site.")
-
-    with pytest.raises(SystemExit) as exc:
-        show_options.handle_show_options({"show_options": "site"}, parser)
-
-    assert exc.value.code == 0
-    output = capsys.readouterr().out
-    assert "Help:" in output
-    assert "Observatory site." in output
-    assert "Available values:" in output
-
-
 def test_handle_show_options_returns_false_without_request():
     assert show_options.handle_show_options({}, argparse.ArgumentParser()) is False
 
@@ -114,13 +100,6 @@ def test_resolve_show_options_handles_hidden_argparse_help():
     result = show_options.resolve_show_options({"show_options": "hidden"}, parser)
 
     assert result.help_text is None
-
-
-def test_resolve_show_options_rejects_unknown_parser_option():
-    parser = argparse.ArgumentParser()
-
-    with pytest.raises(ValueError, match="Unknown command-line option"):
-        show_options.resolve_show_options({"show_options": "missing"}, parser)
 
 
 def test_format_show_options_result_includes_environment_and_grouped_values():

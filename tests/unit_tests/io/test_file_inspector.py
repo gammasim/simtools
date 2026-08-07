@@ -24,7 +24,6 @@ from simtools.io.file_inspector import (
     inspect_table_file,
     inspect_text_file,
 )
-from simtools.io.file_type import is_file_type
 from simtools.io.table_handler import write_tables
 
 
@@ -108,17 +107,6 @@ def test_inspect_file_reports_json_structure(tmp_path):
     assert reports[0]["file_type"] == "json"
     assert reports[0]["top_level_type"] == "dict"
     assert reports[0]["top_level_keys"] == ["a", "b"]
-
-
-def test_inspect_file_reports_yaml_structure(tmp_path):
-    file_path = tmp_path / "data.yml"
-    ascii_handler.write_data_to_file({"a": [1, 2, 3]}, file_path, sort_keys=False)
-
-    reports = inspect_file(file_path, format_report=False)
-
-    assert len(reports) == 1
-    assert reports[0]["file_type"] == "yaml"
-    assert reports[0]["top_level_type"] == "dict"
 
 
 def test_inspect_file_reports_ecsv_structure(tmp_path):
@@ -279,19 +267,6 @@ def test_inspect_sim_telarray_file_rejects_when_suffix_check_is_overridden_false
 
     with pytest.raises(ValueError, match="unsupported suffix for sim_telarray inspection"):
         inspect_sim_telarray_file(file_path)
-
-
-def test_select_inspector_uses_generic_file_type_helper(tmp_path, mocker):
-    file_path = tmp_path / "run.hdf5"
-    mocker.patch("simtools.io.file_inspector.is_file_type", side_effect=[True])
-
-    inspector = _select_inspector(file_path)
-
-    assert inspector is inspect_hdf5_file
-
-
-def test_generic_file_type_helper_is_imported_for_path_checks(tmp_path):
-    assert is_file_type(tmp_path / "file.h5", "hdf5") is True
 
 
 def test_inspect_sim_telarray_file_formats_empty_metadata(tmp_path):

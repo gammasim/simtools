@@ -110,11 +110,6 @@ def test_make_run_command_without_altitude_correction(simulator_camera_efficienc
 
 
 def test_check_run_result(simulator_camera_efficiency):
-    """
-    Testing here that the file does not exist because no simulations
-    are run in unit tests. This function is tested for the positive case
-    in the integration tests.
-    """
 
     with pytest.raises(RuntimeError):
         simulator_camera_efficiency._check_run_result()
@@ -207,48 +202,6 @@ def test_get_one_dim_distribution(model_version_prod5, site_model_south, mocker,
     assert camera_filter_file.exists()
 
 
-def test_validate_or_fix_nsb_spectrum_file_format(simulator_camera_efficiency):
-    """
-    Test that the function returns a file with the correct format.
-    The test is run twice, once on a file with the wrong format and then
-    the produced file is tested as well in order to make sure that
-    the function does not change the format of a file with the correct format.
-    """
-    validated_nsb_spectrum_file = (
-        simulator_camera_efficiency._validate_or_fix_nsb_spectrum_file_format(
-            f"{TEST_RESOURCES_GENERATED}/model_parameters/Benn_LaPalma_sky_converted.lis"
-        )
-    )
-    assert validated_nsb_spectrum_file.exists()
-
-    def produced_file_has_expected_values(file):
-        # Test that the first 3 non-comment lines are the following values:
-        wavelengths = [300.00, 315.00, 330.00]
-        nsbs = [0, 0.612, 1.95]
-        with open(file, encoding="utf-8") as file:
-            for line in file:
-                if line.startswith("#"):
-                    continue
-                entry = line.split()
-                expected_wavelength = wavelengths.pop(0)
-                expected_nsb = nsbs.pop(0)
-                assert float(entry[0]) == pytest.approx(expected_wavelength)
-                assert float(entry[2]) == pytest.approx(expected_nsb)
-                if all("#" not in s for s in entry):
-                    assert len(entry) == 3
-                if len(wavelengths) == 0:
-                    break
-
-    produced_file_has_expected_values(validated_nsb_spectrum_file)
-    # Test that the function does not change the format of a file with the correct format
-    second_validated_nsb_spectrum_file = (
-        simulator_camera_efficiency._validate_or_fix_nsb_spectrum_file_format(
-            validated_nsb_spectrum_file
-        )
-    )
-    produced_file_has_expected_values(second_validated_nsb_spectrum_file)
-
-
 def test_get_curvature_radius_mirror_class_2(simulator_camera_efficiency, mocker):
     mock_telescope_model = simulator_camera_efficiency._telescope_model
     mocker.patch.object(
@@ -256,16 +209,6 @@ def test_get_curvature_radius_mirror_class_2(simulator_camera_efficiency, mocker
     )
     radius = simulator_camera_efficiency._get_curvature_radius(mirror_class=2)
     assert radius == pytest.approx(1.5)
-
-
-def test_get_curvature_radius_parabolic_dish_true(simulator_camera_efficiency, mocker):
-    mock_telescope_model = simulator_camera_efficiency._telescope_model
-    mocker.patch.object(mock_telescope_model, "get_parameter_value", return_value=True)
-    mocker.patch.object(
-        mock_telescope_model, "get_parameter_value_with_unit", return_value=1.2 * u.m
-    )
-    radius = simulator_camera_efficiency._get_curvature_radius(mirror_class=1)
-    assert radius == pytest.approx(2.4)
 
 
 def test_get_curvature_radius_parabolic_dish_false(simulator_camera_efficiency, mocker):

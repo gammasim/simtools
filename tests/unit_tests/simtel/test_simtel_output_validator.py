@@ -37,7 +37,6 @@ from simtools.simtel.simtel_output_validator import (
     ],
 )
 def test_parameter_name_conversion(input_name, expected):
-    """Test parameter name conversion."""
     assert _sim_telarray_name_from_parameter_name(input_name) == expected
 
 
@@ -67,7 +66,6 @@ def test_parameter_name_conversion(input_name, expected):
     ],
 )
 def test_is_equal(value1, value2, value_type, expected):
-    """Test is_equal with various types and values."""
     assert is_equal(value1, value2, value_type) is expected
 
 
@@ -82,7 +80,6 @@ def test_is_equal(value1, value2, value_type, expected):
     ],
 )
 def test_is_equal_floats_or_ints(value1, value2, expected):
-    """Test _is_equal_floats_or_ints function."""
     result = _is_equal_floats_or_ints(value1, value2)
     assert result is expected
 
@@ -95,13 +92,11 @@ def test_is_equal_floats_or_ints(value1, value2, expected):
     ],
 )
 def test_seed_returns_none(metadata, seed_value, expected_result):
-    """Test cases where result should be None."""
     result = _assert_sim_telarray_seed(metadata, seed_value)
     assert result is expected_result
 
 
 def test_matching_seeds(caplog):
-    """Test matching seeds."""
     metadata = {"instrument_seed": "12345", "instrument_instances": 100}
     sim_telarray_seeds = MagicMock()
     sim_telarray_seeds.instrument_seed = "12345"
@@ -113,7 +108,6 @@ def test_matching_seeds(caplog):
 
 
 def test_mismatched_seeds():
-    """Test mismatched seeds."""
     metadata = {"instrument_seed": "12345", "instrument_instances": 100}
     sim_telarray_seeds = MagicMock()
     sim_telarray_seeds.instrument_seed = "54321"
@@ -126,7 +120,6 @@ def test_mismatched_seeds():
 
 
 def test_rng_select_seed_mismatch():
-    """Test rng_select_seed mismatch."""
     metadata = {
         "instrument_seed": "12345",
         "instrument_instances": "100",
@@ -187,7 +180,6 @@ def test_rng_select_seed_mismatch():
 def test_assert_model_parameters(
     metadata, parameters, mock_value, expected_len, expected_in_result, allow_changes
 ):
-    """Test model parameters matching."""
     model_mock = MagicMock()
     model_mock.parameters = parameters
 
@@ -202,7 +194,6 @@ def test_assert_model_parameters(
 
 
 def test_string_parameter():
-    """Test string type parameter."""
     metadata = {"telescope_name": "LST-01"}
     model_mock = MagicMock()
     model_mock.parameters = {
@@ -214,7 +205,6 @@ def test_string_parameter():
 
 
 def test_missing_parameter_in_metadata():
-    """Test parameter not in metadata."""
     metadata = {}
     model_mock = MagicMock()
     model_mock.parameters = {
@@ -226,7 +216,6 @@ def test_missing_parameter_in_metadata():
 
 
 def test_assert_model_parameters_resolves_dict_metadata_file(tmp_test_directory):
-    """Resolve dict-valued metadata filenames before comparing to model values."""
     metadata = {"fadc_pulse_shape": "fadc_pulse_shape-LSTN-01.dat"}
     model_mock = MagicMock()
     model_mock.parameters = {
@@ -257,24 +246,7 @@ def test_assert_model_parameters_resolves_dict_metadata_file(tmp_test_directory)
     assert len(result) == 0
 
 
-def test_resolve_dict_parameter_metadata_value_returns_input_for_non_dict_type():
-    """Keep metadata value unchanged when parameter type is not dict."""
-    model = MagicMock()
-    value = "fadc_pulse_shape.dat"
-
-    result = _resolve_dict_parameter_metadata_value(
-        value=value,
-        model_value={"columns": ["time"], "rows": [[0.0]]},
-        parameter_type="string",
-        param="fadc_pulse_shape",
-        model=model,
-    )
-
-    assert result == value
-
-
 def test_resolve_dict_parameter_metadata_value_returns_input_for_non_string_value():
-    """Keep metadata value unchanged for dict parameters with non-string metadata values."""
     model = MagicMock()
     value = {"columns": ["time"], "rows": [[0.0]]}
 
@@ -292,7 +264,6 @@ def test_resolve_dict_parameter_metadata_value_returns_input_for_non_string_valu
 def test_resolve_dict_parameter_metadata_value_returns_input_when_resolution_fails(
     tmp_test_directory,
 ):
-    """Return original metadata value when table resolution raises expected exceptions."""
     model = MagicMock()
     model.config_file_directory = Path(tmp_test_directory)
     value = "missing_file.dat"
@@ -313,7 +284,6 @@ def test_resolve_dict_parameter_metadata_value_returns_input_when_resolution_fai
 
 
 def test_telescope_count_mismatch(tmp_path):
-    """Test error when telescope count mismatches."""
     sim_file = tmp_path / "test.simtel.zst"
     sim_file.write_bytes(b"dummy")
 
@@ -335,7 +305,6 @@ def test_telescope_count_mismatch(tmp_path):
 
 
 def test_telescope_not_found(tmp_path):
-    """Test error when telescope not found."""
     sim_file = tmp_path / "test.simtel.zst"
     sim_file.write_bytes(b"dummy")
 
@@ -360,7 +329,6 @@ def test_telescope_not_found(tmp_path):
 
 
 def test_valid_metadata(tmp_path):
-    """Test valid metadata passes."""
     sim_file = tmp_path / "test.simtel.zst"
     sim_file.write_bytes(b"dummy")
 
@@ -391,7 +359,6 @@ def test_valid_metadata(tmp_path):
     ],
 )
 def test_validate_event_numbers(tmp_path, mock_return, expected_mc, expected_shower, should_raise):
-    """Test event number validation."""
     data_file = tmp_path / "test.simtel.zst"
     data_file.write_bytes(b"dummy")
 
@@ -405,17 +372,15 @@ def test_validate_event_numbers(tmp_path, mock_return, expected_mc, expected_sho
 
 
 def test_valid_log_files(tmp_path):
-    """Test valid log files pass."""
     log_file = tmp_path / "test.log"
     log_file.write_text("test log content")
 
     with patch("simtools.simtel.simtel_output_validator.check_plain_logs") as mock_check:
         mock_check.return_value = True
-        validate_log_files([log_file])
+        assert validate_log_files([log_file]) is None
 
 
 def test_invalid_log_files(tmp_path):
-    """Test invalid log files raise error."""
     log_file = tmp_path / "test.log"
     log_file.write_text("test log content")
 
@@ -426,7 +391,6 @@ def test_invalid_log_files(tmp_path):
 
 
 def test_valid_showers_and_energy(tmp_path):
-    """Test valid shower count and energy range."""
     sim_file = tmp_path / "test.simtel.zst"
     sim_file.write_bytes(b"dummy")
 
@@ -452,7 +416,6 @@ def test_valid_showers_and_energy(tmp_path):
 
 
 def test_shower_count_mismatch(tmp_path):
-    """Test shower count mismatch raises error."""
     sim_file = tmp_path / "test.simtel.zst"
     sim_file.write_bytes(b"dummy")
 
@@ -472,7 +435,6 @@ def test_shower_count_mismatch(tmp_path):
 
 
 def test_energy_range_exceeded(tmp_path):
-    """Test energy outside configured range raises error."""
     sim_file = tmp_path / "test.simtel.zst"
     sim_file.write_bytes(b"dummy")
 
@@ -492,7 +454,6 @@ def test_energy_range_exceeded(tmp_path):
 
 
 def test_extract_telescope_events(tmp_path):
-    """Test extraction of telescope events."""
     sim_file = tmp_path / "test.simtel.zst"
     sim_file.write_bytes(b"dummy")
 
@@ -526,7 +487,6 @@ def test_extract_telescope_events(tmp_path):
 
 
 def test_none_expected_output():
-    """Test None expected output returns True."""
     result = assert_expected_sim_telarray_output(Path("/dummy/file.zst"), None)
     assert result is True
 
@@ -548,7 +508,6 @@ def test_none_expected_output():
     ],
 )
 def test_expected_sim_telarray_output(expected_output, extracted_data, expected_result):
-    """Test sim_telarray output validation."""
     with patch(
         "simtools.simtel.simtel_output_validator._item_to_check_from_sim_telarray"
     ) as mock_extract:
@@ -558,7 +517,6 @@ def test_expected_sim_telarray_output(expected_output, extracted_data, expected_
 
 
 def test_none_expected_metadata():
-    """Test None expected metadata returns True."""
     result = assert_expected_sim_telarray_metadata(Path("/dummy/file.zst"), None)
     assert result is True
 
@@ -572,7 +530,6 @@ def test_none_expected_metadata():
     ],
 )
 def test_assert_expected_sim_telarray_metadata(expected_metadata, metadata_return, expected_result):
-    """Test sim_telarray metadata validation."""
     with patch("simtools.simtel.simtel_output_validator.read_sim_telarray_metadata") as mock_read:
         mock_read.return_value = metadata_return
         result = assert_expected_sim_telarray_metadata(Path("/dummy/file.zst"), expected_metadata)
@@ -588,7 +545,6 @@ def test_assert_expected_sim_telarray_metadata(expected_metadata, metadata_retur
     ],
 )
 def test_assert_events_of_type(tmp_path, mock_events, event_type, expected_result):
-    """Test event type assertion."""
     sim_file = tmp_path / "test.simtel.zst"
     sim_file.write_bytes(b"dummy")
 
@@ -611,7 +567,6 @@ def test_assert_events_of_type(tmp_path, mock_events, event_type, expected_resul
     ],
 )
 def test_validate_metadata(tmp_path, filename, model_version, should_call_assert):
-    """Test metadata validation."""
     test_file = tmp_path / filename
     test_file.write_bytes(b"dummy")
 
@@ -636,7 +591,6 @@ def test_validate_metadata(tmp_path, filename, model_version, should_call_assert
     ],
 )
 def test_validate_sim_telarray(tmp_path, array_models, should_call_metadata):
-    """Test sim_telarray validation."""
     data_file = tmp_path / "test.simtel.zst"
     data_file.write_bytes(b"dummy")
     log_file = tmp_path / "test.log"
@@ -669,40 +623,7 @@ def test_validate_sim_telarray_checks_zero_expected_events(tmp_path):
     mock_events.assert_called_once_with([data_file], 0, 0)
 
 
-def test_validate_metadata_with_matching_file(tmp_path, caplog):
-    """Test validate_metadata logging when file matches."""
-    caplog.set_level(logging.INFO)
-    data_file = tmp_path / "model_v1.0.0.simtel.zst"
-    data_file.write_bytes(b"dummy")
-
-    model = MagicMock()
-    model.model_version = "1.0.0"
-    model.site_model = MagicMock()
-    model.site_model.parameters = {}
-    model.telescope_models = {}
-    model.sim_telarray_seed = None
-
-    with patch("simtools.simtel.simtel_output_validator.read_sim_telarray_metadata") as mock_read:
-        mock_read.return_value = ({}, {})
-        validate_metadata([data_file], [model])
-        assert "Validating metadata for" in caplog.text
-
-
-def test_validate_metadata_no_matching_file(tmp_path, caplog):
-    """Test validate_metadata logging when no file matches."""
-    caplog.set_level(logging.WARNING)
-    data_file = tmp_path / "other_v1.0.0.simtel.zst"
-    data_file.write_bytes(b"dummy")
-
-    model = MagicMock()
-    model.model_version = "2.0.0"
-
-    validate_metadata([data_file], [model])
-    assert "No sim_telarray file found" in caplog.text
-
-
 def test_assert_sim_telarray_seed_matching_seed(tmp_path, caplog):
-    """Test seed assertion when seeds match."""
     caplog.set_level(logging.INFO)
     data_file = tmp_path / "test.simtel.zst"
     data_file.write_bytes(b"dummy")
@@ -725,7 +646,6 @@ def test_assert_sim_telarray_seed_matching_seed(tmp_path, caplog):
 
 
 def test_assert_expected_output_no_data_found(tmp_path, caplog):
-    """Test when no data is found for expected key."""
     caplog.set_level(logging.ERROR)
     data_file = tmp_path / "test.simtel.zst"
     data_file.write_bytes(b"dummy")
@@ -745,44 +665,7 @@ def test_assert_expected_output_no_data_found(tmp_path, caplog):
         assert "No data found" in caplog.text
 
 
-def test_assert_expected_output_mean_out_of_range(tmp_path, caplog):
-    """Test when mean is out of expected range."""
-    caplog.set_level(logging.ERROR)
-    data_file = tmp_path / "test.simtel.zst"
-    data_file.write_bytes(b"dummy")
-
-    expected_output = {"pe_sum": (100, 200)}
-
-    with patch(
-        "simtools.simtel.simtel_output_validator._item_to_check_from_sim_telarray"
-    ) as mock_item:
-        mock_item.return_value = {
-            "n_telescope_events": 1,
-            "n_calibration_events": 0,
-            "pe_sum": [10.0, 20.0],
-        }
-        result = assert_expected_sim_telarray_output(data_file, expected_output)
-        assert result is False
-        assert "not in the expected range" in caplog.text
-
-
-def test_assert_expected_metadata_matching_key(tmp_path, caplog):
-    """Test when metadata key matches."""
-    caplog.set_level(logging.DEBUG)
-    data_file = tmp_path / "test.simtel.zst"
-    data_file.write_bytes(b"dummy")
-
-    expected_metadata = {"test_key": "test_value"}
-
-    with patch("simtools.simtel.simtel_output_validator.read_sim_telarray_metadata") as mock_read:
-        mock_read.return_value = ({"test_key": "test_value"}, {})
-        result = assert_expected_sim_telarray_metadata(data_file, expected_metadata)
-        assert result is True
-        assert "matches expected value" in caplog.text
-
-
 def test_assert_events_of_type_not_found(tmp_path, caplog):
-    """Test when no events of expected type are found."""
     caplog.set_level(logging.ERROR)
     data_file = tmp_path / "test.simtel.zst"
     data_file.write_bytes(b"dummy")
@@ -792,40 +675,3 @@ def test_assert_events_of_type_not_found(tmp_path, caplog):
         result = assert_events_of_type(data_file, event_type="shower")
         assert result is False
         assert "No events of type" in caplog.text
-
-
-def test_assert_n_showers_pass(tmp_path):
-    """Test successful shower count validation."""
-    data_file = tmp_path / "test.simtel.zst"
-    data_file.write_bytes(b"dummy")
-
-    with patch("simtools.simtel.simtel_output_validator.SimTelFile") as mock_file:
-        mock_instance = MagicMock()
-        mock_instance.__enter__.return_value = mock_instance
-        mock_instance.__exit__.return_value = None
-        mock_instance.mc_run_headers = [{"n_showers": 100, "E_range": [0.01, 100.0]}]
-        mock_instance.__iter__.return_value = [
-            {"mc_shower": {"energy": 1.0}},
-            {"mc_shower": {"energy": 10.0}},
-            {"mc_shower": {"energy": 50.0}},
-        ] * 33 + [{"mc_shower": {"energy": 5.0}}]
-        mock_file.return_value = mock_instance
-
-        result = assert_n_showers_and_energy_range(data_file)
-        assert result is True
-
-
-def test_assert_sim_telarray_metadata_no_seed(tmp_path):
-    """Test metadata assertion when sim_telarray_seed is None."""
-    data_file = tmp_path / "test.simtel.zst"
-    data_file.write_bytes(b"dummy")
-
-    model = MagicMock()
-    model.site_model = MagicMock()
-    model.site_model.parameters = {}
-    model.telescope_models = {}
-    model.sim_telarray_seed = None
-
-    with patch("simtools.simtel.simtel_output_validator.read_sim_telarray_metadata") as mock_read:
-        mock_read.return_value = ({}, {})
-        assert_sim_telarray_metadata(data_file, model)

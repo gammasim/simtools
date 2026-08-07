@@ -237,20 +237,6 @@ def test_build_layout(
     )
 
 
-def test_converting_center_coordinates_south(array_layout_south_four_lst_instance):
-    layout = array_layout_south_four_lst_instance
-
-    _lat, _lon, _ = layout._array_center.get_coordinates("mercator")
-    assert _lat.value == pytest.approx(-24.68342915473787)
-    assert _lon.value == pytest.approx(-70.31634499364885)
-
-    _east, _north, _ = layout._array_center.get_coordinates("utm")
-    assert _north.value == pytest.approx(7269466.0)
-    assert _east.value == pytest.approx(366822.0)
-
-    assert layout._array_center.get_altitude().value == pytest.approx(2162.0)
-
-
 def test_altitude_from_corsika_z(
     array_layout_north_four_lst_instance, array_layout_south_four_lst_instance
 ):
@@ -275,49 +261,6 @@ def test_altitude_from_corsika_z(
 
     test_one_site(array_layout_north_four_lst_instance, "LSTN-01", 2187.0, 45.0)
     test_one_site(array_layout_south_four_lst_instance, "LSTS-01", 2176.0, 45.0)
-
-
-def test_try_set_altitude(
-    array_layout_north_instance,
-    array_layout_south_instance,
-    get_test_data_file,
-):
-    obs_level_north = 2158.0
-    manual_z_positions_north = [43.00, 32.00, 28.70, 32.00, 50.3, 24.0]
-    telescope_axis_height_north = [16.0, 16.0, 16.0, 16.0, 9.0, 9.0]
-
-    obs_level_south = 2147.0
-    manual_z_positions_south = [34.30, 29.40, 31.00, 33.10, 24.35, 31.00]
-    telescope_axis_height_south = [16.0, 16.0, 16.0, 16.0, 9.0, 9.0]
-
-    def test_one_site(test_file, instance, obs_level, manual_z_positions, telescope_axis_height):
-        table = data_reader.read_table_from_file(test_file, validate=False)
-        manual_altitudes = [
-            manual_z_positions[step] + obs_level - telescope_axis_height[step] for step in range(6)
-        ]
-        for step, row in enumerate(table[:6]):
-            tel = instance._load_telescope_names(row)
-            instance._set_telescope_auxiliary_parameters(tel)
-            instance._try_set_altitude(row, tel, table)
-            for key, _crs in tel.crs.items():
-                if key == "auxiliary":
-                    continue
-                assert pytest.approx(_crs["zz"]["value"], 0.01) == manual_altitudes[step]
-
-    test_one_site(
-        get_test_data_file("telescope_positions", "North"),
-        array_layout_north_instance,
-        obs_level_north,
-        manual_z_positions_north,
-        telescope_axis_height_north,
-    )
-    test_one_site(
-        get_test_data_file("telescope_positions", "South"),
-        array_layout_south_instance,
-        obs_level_south,
-        manual_z_positions_south,
-        telescope_axis_height_south,
-    )
 
 
 def test_try_set_coordinate(

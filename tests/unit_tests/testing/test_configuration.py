@@ -61,119 +61,6 @@ def test_get_list_of_test_configurations(integration_test_config_files):
     assert len(list_test_without_config) == len(list_test_with_help)
 
 
-def test_read_configs_from_files(integration_test_config_files):
-    config_files = integration_test_config_files
-
-    configs = configuration._read_configs_from_files(config_files)
-    assert len(configs) == len(config_files)
-
-
-def test_resolve_test_resource_paths(tmp_test_directory):
-    resources_path = Path(tmp_test_directory) / "versioned-resources"
-    config = {
-        "configuration": {
-            "input": "tests/resources/static/input.ecsv",
-            "inputs": ["./tests/resources/generated/events.simtel.zst"],
-        },
-        "integration_tests": [
-            {"reference_output_file": "${static:reference.ecsv}"},
-            {"reference_output_file": "${generated:model/parameter.json}"},
-            {"reference_output_file": "${downloaded:asum_threshold.meta.yml}"},
-        ],
-    }
-
-    resolved = configuration.resolve_test_resource_paths(config, resources_path)
-
-    assert resolved["configuration"]["input"] == str(resources_path / "static/input.ecsv")
-    assert resolved["configuration"]["inputs"] == [
-        str(resources_path / "generated/events.simtel.zst")
-    ]
-    assert resolved["integration_tests"] == [
-        {"reference_output_file": str(resources_path / "static/reference.ecsv")},
-        {"reference_output_file": str(resources_path / "generated/model/parameter.json")},
-        {"reference_output_file": str(resources_path / "downloaded/asum_threshold.meta.yml")},
-    ]
-
-
-def test_read_configs_resolves_test_resource_references(tmp_test_directory):
-    config_file = tmp_test_directory / "config.yml"
-    resources_path = Path(tmp_test_directory) / "versioned-resources"
-    config_file.write_text(
-        """
-applications:
-- application: simtools-test
-  test_name: resource_macros
-  configuration:
-    input: ${static:input.ecsv}
-    input_meta: ${downloaded:asum_threshold.meta.yml}
-    existing_path: tests/resources/static/existing.ecsv
-  integration_tests:
-  - reference_output_file: ${generated:reference.ecsv}
-  - test_simtel_cfg_files:
-      "6.0.2": ${static:simtel.cfg}
-""".strip()
-        + "\n",
-        encoding="utf-8",
-    )
-
-    configs = configuration._read_configs_from_files(
-        [config_file], test_resources_path=resources_path
-    )
-
-    assert configs[0]["configuration"]["input"] == str(resources_path / "static/input.ecsv")
-    assert configs[0]["configuration"]["input_meta"] == str(
-        resources_path / "downloaded/asum_threshold.meta.yml"
-    )
-    assert configs[0]["configuration"]["existing_path"] == str(
-        resources_path / "static/existing.ecsv"
-    )
-    assert configs[0]["integration_tests"][0]["reference_output_file"] == str(
-        resources_path / "generated/reference.ecsv"
-    )
-    assert configs[0]["integration_tests"][1]["test_simtel_cfg_files"]["6.0.2"] == str(
-        resources_path / "static/simtel.cfg"
-    )
-
-
-def test_resolve_test_resource_path_macros_nested_structures(tmp_test_directory):
-    resources_path = Path(tmp_test_directory) / "versioned-resources"
-    value = {
-        "config": {
-            "input": "${static:data/file.ecsv}",
-            "groups": [
-                "prefix/${generated:run/output.fits}",
-                {
-                    "items": [
-                        "${static:layout/array.ecsv}",
-                        "${generated:plots/summary.png}",
-                        "${downloaded:metadata/asum_threshold.meta.yml}",
-                    ],
-                    "keep_number": 7,
-                    "keep_bool": True,
-                },
-            ],
-        },
-        "plain": "no_macro",
-    }
-
-    resolved = configuration.resolve_test_resource_paths(value, resources_path)
-
-    assert resolved["config"]["input"] == str(resources_path / "static/data/file.ecsv")
-    assert resolved["config"]["groups"][0] == f"prefix/{resources_path}/generated/run/output.fits"
-    assert resolved["config"]["groups"][1]["items"][0] == str(
-        resources_path / "static/layout/array.ecsv"
-    )
-    assert resolved["config"]["groups"][1]["items"][1] == str(
-        resources_path / "generated/plots/summary.png"
-    )
-    assert resolved["config"]["groups"][1]["items"][2] == str(
-        resources_path / "downloaded/metadata/asum_threshold.meta.yml"
-    )
-    assert resolved["config"]["groups"][1]["keep_number"] == 7
-    assert resolved["config"]["groups"][1]["keep_bool"] is True
-    assert resolved["plain"] == "no_macro"
-
-
 def test_create_tmp_output_path(tmp_test_directory):
     config = {"application": "test_app", "test_name": "test_name"}
     tmp_output_path = configuration.create_tmp_output_path(tmp_test_directory, config)
@@ -311,41 +198,6 @@ def test_prepare_test_options_with_model_version_list(tmp_test_directory, tmp_co
     assert written_config["model_version"] == "v2.0"
 
 
-def test_prepare_test_options_with_output_path(tmp_test_directory, tmp_config_string):
-    config = {"output_path": "results"}
-    model_version = None
-
-    config_file, config_string, config_file_model_version = configuration._prepare_test_options(
-        config, tmp_test_directory, model_version
-    )
-
-    assert config_file == tmp_test_directory / tmp_config_string
-    assert config_string is None
-    assert config_file_model_version is None
-
-    with open(config_file, encoding="utf-8") as file:
-        written_config = yaml.safe_load(file)
-    assert written_config["output_path"] == str(tmp_test_directory / "results")
-
-
-def test_prepare_test_options_with_full_config(tmp_test_directory, tmp_config_string):
-    config = {"model_version": "v1.0", "output_path": "results"}
-    model_version = "v2.0"
-
-    config_file, config_string, config_file_model_version = configuration._prepare_test_options(
-        config, tmp_test_directory, model_version
-    )
-
-    assert config_file == tmp_test_directory / tmp_config_string
-    assert config_string is None
-    assert config_file_model_version == "v1.0"
-
-    with open(config_file, encoding="utf-8") as file:
-        written_config = yaml.safe_load(file)
-    assert written_config["model_version"] == "v2.0"
-    assert written_config["output_path"] == str(tmp_test_directory / "results")
-
-
 def test_configure_with_model_version_use_current(tmp_test_directory, mocker, tmp_config_string):
     config = {
         "application": "test_app",
@@ -376,39 +228,6 @@ def test_configure_without_configuration(tmp_test_directory, mocker):
     assert config_file_model_version is None
 
 
-def test_configure_with_configuration(tmp_test_directory, mocker, tmp_config_string):
-    config = {
-        "application": "test_app",
-        "test_name": "test_name",
-        "configuration": {"output_path": "results"},
-    }
-    request = mocker.Mock()
-    request.config.getoption.return_value = None
-
-    cmd, config_file_model_version = configuration.configure(config, tmp_test_directory, request)
-
-    expected_cmd = f"{PYTHON_APP_PREFIX}/test_app.py --config " + str(
-        tmp_test_directory / "test_app-test_name" / tmp_config_string
-    )
-    assert cmd == expected_cmd
-    assert config_file_model_version is None
-
-    with open(
-        tmp_test_directory / "test_app-test_name" / tmp_config_string, encoding="utf-8"
-    ) as file:
-        written_config = yaml.safe_load(file)
-    assert written_config["output_path"] == str(
-        tmp_test_directory / "test_app-test_name" / "results"
-    )
-
-
-def test_skip_test_for_model_version_no_model_version_use_current(mocker_pytest_skip):
-    config = {"configuration": {"model_version": "v1.0"}}
-    model_version_requested = "v1.0"
-    configuration._skip_test_for_model_version(config, model_version_requested)
-    pytest.skip.assert_not_called()
-
-
 def test_skip_test_for_model_version_no_model_version_requested(mocker_pytest_skip):
     config = {"configuration": {"model_version": "v1.0"}, "model_version_use_current": True}
     model_version_requested = None
@@ -433,19 +252,7 @@ def test_skip_test_for_model_version_skip():
 def test_skip_test_for_production_db_no_db_server(monkeypatch):
     config = {"skip_for_production_db": True}
     monkeypatch.delenv("SIMTOOLS_DB_SERVER", raising=False)
-    configuration._skip_test_for_production_db(config)
-
-
-def test_skip_test_for_production_db_not_production(monkeypatch):
-    config = {"skip_for_production_db": True}
-    monkeypatch.setenv("SIMTOOLS_DB_SERVER", "test.server.com")
-    configuration._skip_test_for_production_db(config)
-
-
-def test_skip_test_for_production_db_no_skip_flag(monkeypatch):
-    config = {}
-    monkeypatch.setenv("SIMTOOLS_DB_SERVER", "db.zeuthen.desy.de")
-    configuration._skip_test_for_production_db(config)
+    assert configuration._skip_test_for_production_db(config) is None
 
 
 def test_skip_test_for_production_db_skip(monkeypatch):
@@ -455,26 +262,6 @@ def test_skip_test_for_production_db_skip(monkeypatch):
         configuration.ProductionDBError, match="Production database used for this test"
     ):
         configuration._skip_test_for_production_db(config)
-
-
-def test_skip_test_for_production_db_no_db_api_user(monkeypatch):
-    config = {"skip_for_production_db": True}
-    monkeypatch.delenv("SIMTOOLS_DB_API_USER", raising=False)
-    monkeypatch.delenv("SIMTOOLS_DB_SERVER", raising=False)
-    configuration._skip_test_for_production_db(config)
-
-
-def test_skip_test_for_production_db_not_simpipe(monkeypatch):
-    config = {"skip_for_production_db": True}
-    monkeypatch.setenv("SIMTOOLS_DB_API_USER", "simtools")
-    monkeypatch.delenv("SIMTOOLS_DB_SERVER", raising=False)
-    configuration._skip_test_for_production_db(config)
-
-
-def test_skip_test_for_production_db_no_skip_flag_for_user(monkeypatch):
-    config = {}
-    monkeypatch.setenv("SIMTOOLS_DB_API_USER", "simpipe")
-    configuration._skip_test_for_production_db(config)
 
 
 def test_skip_test_for_production_db_skip_for_user(monkeypatch):

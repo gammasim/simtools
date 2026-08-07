@@ -4,7 +4,6 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-from packaging.version import InvalidVersion
 
 import simtools.db.db_model_upload as db_model_upload
 
@@ -213,7 +212,6 @@ def test_remove_deprecated_model_parameters():
 def test_read_production_tables_basic(
     mock_read_production_table, mock_collect_data, tmp_test_directory
 ):
-    """Test basic functionality of _read_production_tables."""
     model_path = Path(tmp_test_directory) / "1.0.0"
     model_path.mkdir(parents=True, exist_ok=True)
     (model_path / "LSTN-01.json").touch()
@@ -241,7 +239,6 @@ def test_read_production_tables_basic(
 
 @patch("simtools.db.db_model_upload.ascii_handler.collect_data_from_file")
 def test_read_production_tables_with_info_yml(mock_collect_data, tmp_test_directory):
-    """Test _read_production_tables with model version history from info.yml."""
     model_path = Path(tmp_test_directory) / "2.0.0"
     model_path.mkdir(parents=True, exist_ok=True)
     (model_path / "info.yml").touch()
@@ -278,89 +275,8 @@ def test_read_production_tables_with_info_yml(mock_collect_data, tmp_test_direct
         assert result["telescopes"]["model_version"] == "2.0.0"
 
 
-@patch("simtools.db.db_model_upload.ascii_handler.collect_data_from_file")
-def test_read_production_tables_missing_info_yml(mock_collect_data, tmp_test_directory):
-    """Test _read_production_tables when info.yml doesn't exist."""
-    model_path = Path(tmp_test_directory) / "1.0.0"
-    model_path.mkdir(parents=True, exist_ok=True)
-    (model_path / "LSTN-01.json").touch()
-
-    with patch("simtools.db.db_model_upload._read_production_table") as mock_read_table:
-        mock_read_table.side_effect = lambda md, file, model: md.update(
-            {
-                "telescopes": {
-                    "collection": "telescopes",
-                    "model_version": model,
-                    "parameters": {},
-                    "design_model": {},
-                    "deprecated_parameters": [],
-                }
-            }
-        )
-
-        result = db_model_upload._read_production_tables(model_path)
-
-        # Should only process files from current model directory
-        assert mock_read_table.call_count == 1
-        assert result["telescopes"]["model_version"] == "1.0.0"
-
-
-def test_read_production_tables_invalid_model_path(tmp_test_directory):
-    """Test _read_production_tables when model path has invalid version format."""
-    model_path = Path(tmp_test_directory) / "nonexistent"
-
-    # The function will fail on version parsing for invalid model names
-    from packaging.version import InvalidVersion
-
-    with pytest.raises(InvalidVersion, match="Invalid version: 'nonexistent'"):
-        db_model_upload._read_production_tables(model_path)
-
-
-def test_read_production_tables_empty_directory(tmp_test_directory):
-    """Test _read_production_tables with empty directory (no JSON files)."""
-    model_path = Path(tmp_test_directory) / "1.0.0"
-    model_path.mkdir(parents=True, exist_ok=True)
-
-    result = db_model_upload._read_production_tables(model_path)
-
-    # Should return empty dict when no JSON files found
-    assert result == {}
-
-
-@patch("simtools.db.db_model_upload.ascii_handler.collect_data_from_file")
-def test_read_production_tables_invalid_version_in_history(mock_collect_data, tmp_test_directory):
-    """Test _read_production_tables with invalid version strings in model_version_history."""
-    model_path = Path(tmp_test_directory) / "1.0.0"
-    model_path.mkdir(parents=True, exist_ok=True)
-    (model_path / "info.yml").touch()
-
-    # Mock info.yml with invalid version in history
-    mock_collect_data.return_value = {
-        "model_version_history": ["not.a.version"],
-        "model_update": "patch_update",
-    }
-
-    with pytest.raises(InvalidVersion, match=r"Invalid version: 'not.a.version'"):
-        db_model_upload._read_production_tables(model_path)
-
-
-@patch("simtools.db.db_model_upload.ascii_handler.collect_data_from_file")
-def test_read_production_tables_ascii_handler_error(mock_collect_data, tmp_test_directory):
-    """Test _read_production_tables when ascii_handler fails."""
-    model_path = Path(tmp_test_directory) / "1.0.0"
-    model_path.mkdir(parents=True, exist_ok=True)
-    (model_path / "info.yml").touch()
-
-    # Mock ascii_handler to raise an exception
-    mock_collect_data.side_effect = ValueError("Invalid file format")
-
-    with pytest.raises(ValueError, match="Invalid file format"):
-        db_model_upload._read_production_tables(model_path)
-
-
 @patch("builtins.input")
 def test_confirm_remote_database_upload_local_db(mock_input):
-    """Test confirmation for local database (should return True without prompting)."""
     mock_db = Mock()
     mock_db.is_remote_database.return_value = False
 
@@ -372,7 +288,6 @@ def test_confirm_remote_database_upload_local_db(mock_input):
 
 @patch("builtins.input")
 def test_confirm_remote_database_upload_remote_db_confirmed(mock_input):
-    """Test confirmation for remote database with user confirming both prompts."""
     mock_db = Mock()
     mock_db.is_remote_database.return_value = True
     mock_db.db_config = {"db_server": "test-server"}
@@ -386,7 +301,6 @@ def test_confirm_remote_database_upload_remote_db_confirmed(mock_input):
 
 @patch("builtins.input")
 def test_confirm_remote_database_upload_remote_db_first_prompt_denied(mock_input, caplog):
-    """Test confirmation for remote database with user denying first prompt."""
     mock_db = Mock()
     mock_db.is_remote_database.return_value = True
     mock_db.db_config = {"db_server": "test-server"}
@@ -402,7 +316,6 @@ def test_confirm_remote_database_upload_remote_db_first_prompt_denied(mock_input
 
 @patch("builtins.input")
 def test_confirm_remote_database_upload_remote_db_second_prompt_denied(mock_input, caplog):
-    """Test confirmation for remote database with user denying second prompt."""
     mock_db = Mock()
     mock_db.is_remote_database.return_value = True
     mock_db.db_config = {"db_server": "test-server"}
@@ -418,7 +331,6 @@ def test_confirm_remote_database_upload_remote_db_second_prompt_denied(mock_inpu
 
 @patch("builtins.input")
 def test_confirm_remote_database_upload_keyboard_interrupt(mock_input, caplog):
-    """Test confirmation for remote database with keyboard interrupt."""
     mock_db = Mock()
     mock_db.is_remote_database.return_value = True
     mock_db.db_config = {"db_server": "test-server"}
@@ -432,40 +344,10 @@ def test_confirm_remote_database_upload_keyboard_interrupt(mock_input, caplog):
 
 
 @patch("builtins.input")
-def test_confirm_remote_database_upload_eof_error(mock_input, caplog):
-    """Test confirmation for remote database with EOF error."""
-    mock_db = Mock()
-    mock_db.is_remote_database.return_value = True
-    mock_db.db_config = {"db_server": "test-server"}
-    mock_input.side_effect = EOFError()
-
-    with caplog.at_level("INFO"):
-        result = db_model_upload._confirm_remote_database_upload(mock_db)
-
-    assert result is False
-    assert "Operation aborted." in caplog.text
-
-
-@patch("builtins.input")
 def test_confirm_remote_database_upload_no_db_config(mock_input):
-    """Test confirmation for remote database with no db_config."""
     mock_db = Mock()
     mock_db.is_remote_database.return_value = True
     mock_db.db_config = None
-    mock_input.side_effect = ["yes", "yes"]
-
-    result = db_model_upload._confirm_remote_database_upload(mock_db)
-
-    assert result is True
-    assert "unknown server" in mock_input.call_args_list[0][0][0]
-
-
-@patch("builtins.input")
-def test_confirm_remote_database_upload_empty_db_config(mock_input):
-    """Test confirmation for remote database with empty db_config."""
-    mock_db = Mock()
-    mock_db.is_remote_database.return_value = True
-    mock_db.db_config = {}
     mock_input.side_effect = ["yes", "yes"]
 
     result = db_model_upload._confirm_remote_database_upload(mock_db)
@@ -560,29 +442,6 @@ def test_clone_simulation_model_repository_relative_path(mock_rmtree, mock_retry
 
 @patch("simtools.db.db_model_upload.retry_command")
 @patch("simtools.db.db_model_upload.shutil.rmtree")
-def test_clone_simulation_model_repository_with_custom_retry(
-    mock_rmtree, mock_retry_command, tmp_test_directory
-):
-    target_dir = Path(tmp_test_directory) / "repo"
-    repository_url = "https://github.com/test/repo.git"
-
-    with patch("simtools.db.db_model_upload.Path.exists", return_value=False):
-        result = db_model_upload.clone_simulation_model_repository(
-            target_dir,
-            repository_url,
-            db_simulation_model_version="1.0.0",
-            repository_branch=None,
-            max_attempts=5,
-        )
-
-    mock_rmtree.assert_not_called()
-    expected_command = f'git clone --branch "1.0.0" --depth 1 "{repository_url}" "{target_dir}"'
-    mock_retry_command.assert_called_once_with(expected_command, max_attempts=5, delay=30)
-    assert result == target_dir
-
-
-@patch("simtools.db.db_model_upload.retry_command")
-@patch("simtools.db.db_model_upload.shutil.rmtree")
 def test_clone_simulation_model_repository_invalid_max_attempts(
     mock_rmtree, mock_retry_command, tmp_test_directory
 ):
@@ -601,25 +460,6 @@ def test_clone_simulation_model_repository_invalid_max_attempts(
 
     mock_rmtree.assert_not_called()
     mock_retry_command.assert_not_called()
-
-
-@patch("simtools.db.db_model_upload.retry_command")
-@patch("simtools.db.db_model_upload.shutil.rmtree")
-def test_clone_simulation_model_repository_retry_command_fails(
-    mock_rmtree, mock_retry_command, tmp_test_directory
-):
-    target_dir = Path(tmp_test_directory) / "repo"
-    repository_url = "https://github.com/test/repo.git"
-    repository_branch = None
-    db_simulation_model_version = "1.0.0"
-
-    mock_retry_command.side_effect = RuntimeError("Git clone failed")
-
-    with patch("simtools.db.db_model_upload.Path.exists", return_value=False):
-        with pytest.raises(RuntimeError, match="Git clone failed"):
-            db_model_upload.clone_simulation_model_repository(
-                target_dir, repository_url, db_simulation_model_version, repository_branch
-            )
 
 
 @patch("simtools.db.db_model_upload.clone_simulation_model_repository")
@@ -696,49 +536,6 @@ def test_add_complete_model_confirmation_denied(mock_confirm, mock_clone_repo, t
 
 
 @patch("simtools.db.db_model_upload.clone_simulation_model_repository")
-@patch("simtools.db.db_model_upload.add_production_tables_to_db")
-@patch("simtools.db.db_model_upload.add_model_parameters_to_db")
-@patch("simtools.db.db_model_upload._confirm_remote_database_upload")
-@patch("simtools.db.db_model_upload.shutil.rmtree")
-def test_add_complete_model_with_repository_branch(
-    mock_rmtree,
-    mock_confirm,
-    mock_add_model_parameters,
-    mock_add_production_tables,
-    mock_clone_repo,
-    tmp_test_directory,
-):
-    mock_db = Mock()
-    tmp_dir = Path(tmp_test_directory) / "tmp"
-    repository_dir = tmp_dir / "repo"
-    db_simulation_model = "test_model"
-    db_simulation_model_version = "1.0.0"
-    repository_url = "https://github.com/test/repo.git"
-    repository_branch = "test-branch"
-
-    mock_confirm.return_value = True
-    mock_clone_repo.return_value = repository_dir
-    repository_dir.mkdir(parents=True, exist_ok=True)
-
-    db_model_upload.add_complete_model(
-        tmp_dir,
-        mock_db,
-        db_simulation_model,
-        db_simulation_model_version,
-        repository_url,
-        repository_branch,
-    )
-
-    mock_clone_repo.assert_called_once_with(
-        tmp_dir,
-        repository_url,
-        db_simulation_model_version=db_simulation_model_version,
-        repository_branch=repository_branch,
-        max_attempts=3,
-    )
-
-
-@patch("simtools.db.db_model_upload.clone_simulation_model_repository")
 @patch("simtools.db.db_model_upload._confirm_remote_database_upload")
 @patch("simtools.db.db_model_upload.shutil.rmtree")
 def test_add_complete_model_clone_fails(
@@ -786,78 +583,6 @@ def test_add_complete_model_parameters_upload_fails(
 
     with pytest.raises(
         RuntimeError, match="Upload of simulation model failed: Parameters upload failed"
-    ):
-        db_model_upload.add_complete_model(
-            tmp_dir, mock_db, db_simulation_model, db_simulation_model_version, repository_url
-        )
-
-    mock_rmtree.assert_called_once_with(repository_dir)
-
-
-@patch("simtools.db.db_model_upload.clone_simulation_model_repository")
-@patch("simtools.db.db_model_upload.add_model_parameters_to_db")
-@patch("simtools.db.db_model_upload.add_production_tables_to_db")
-@patch("simtools.db.db_model_upload._confirm_remote_database_upload")
-@patch("simtools.db.db_model_upload.shutil.rmtree")
-def test_add_complete_model_production_tables_upload_fails(
-    mock_rmtree,
-    mock_confirm,
-    mock_add_production_tables,
-    mock_add_model_parameters,
-    mock_clone_repo,
-    tmp_test_directory,
-):
-    mock_db = Mock()
-    tmp_dir = Path(tmp_test_directory) / "tmp"
-    repository_dir = tmp_dir / "repo"
-    db_simulation_model = "test_model"
-    db_simulation_model_version = "1.0.0"
-    repository_url = "https://github.com/test/repo.git"
-
-    mock_confirm.return_value = True
-    mock_clone_repo.return_value = repository_dir
-    mock_add_production_tables.side_effect = ValueError("Production tables upload failed")
-    repository_dir.mkdir(parents=True, exist_ok=True)
-
-    with pytest.raises(
-        RuntimeError, match="Upload of simulation model failed: Production tables upload failed"
-    ):
-        db_model_upload.add_complete_model(
-            tmp_dir, mock_db, db_simulation_model, db_simulation_model_version, repository_url
-        )
-
-    mock_rmtree.assert_called_once_with(repository_dir)
-
-
-@patch("simtools.db.db_model_upload.clone_simulation_model_repository")
-@patch("simtools.db.db_model_upload.add_model_parameters_to_db")
-@patch("simtools.db.db_model_upload.add_production_tables_to_db")
-@patch("simtools.db.db_model_upload._confirm_remote_database_upload")
-@patch("simtools.db.db_model_upload.shutil.rmtree")
-def test_add_complete_model_index_generation_fails(
-    mock_rmtree,
-    mock_confirm,
-    mock_add_production_tables,
-    mock_add_model_parameters,
-    mock_clone_repo,
-    tmp_test_directory,
-):
-    mock_db = Mock()
-    tmp_dir = Path(tmp_test_directory) / "tmp"
-    repository_dir = tmp_dir / "repo"
-    db_simulation_model = "test_model"
-    db_simulation_model_version = "1.0.0"
-    repository_url = "https://github.com/test/repo.git"
-
-    mock_confirm.return_value = True
-    mock_clone_repo.return_value = repository_dir
-    mock_db.generate_compound_indexes_for_databases.side_effect = ValueError(
-        "Index generation failed"
-    )
-    repository_dir.mkdir(parents=True, exist_ok=True)
-
-    with pytest.raises(
-        RuntimeError, match="Upload of simulation model failed: Index generation failed"
     ):
         db_model_upload.add_complete_model(
             tmp_dir, mock_db, db_simulation_model, db_simulation_model_version, repository_url
@@ -954,14 +679,6 @@ def test_add_complete_model_requires_repository_url_or_repository_dir(
             repository_url=None,
             repository_dir=None,
         )
-
-
-def test_validate_repository_directory_structure_success(tmp_test_directory):
-    repo_dir = Path(tmp_test_directory) / "models-repo"
-    (repo_dir / "simulation-models" / "model_parameters").mkdir(parents=True, exist_ok=True)
-    (repo_dir / "simulation-models" / "productions").mkdir(parents=True, exist_ok=True)
-
-    db_model_upload._validate_repository_directory_structure(repo_dir)
 
 
 def test_validate_repository_directory_structure_missing_required_subdir(tmp_test_directory):

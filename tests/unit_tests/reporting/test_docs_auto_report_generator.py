@@ -107,7 +107,6 @@ def test__filter_telescopes_by_site(io_handler):
     ],
 )
 def test__generate_array_element_report_combinations(io_handler, test_case):
-    """Test array element report combinations generation with different flag combinations."""
     report_generator = ReportGenerator(test_case["args"], io_handler.get_output_directory())
 
     with (
@@ -140,7 +139,6 @@ def test__generate_array_element_report_combinations(io_handler, test_case):
 
 
 def test__get_telescopes_from_layout(io_handler):
-    """Test getting telescopes from layout for both all_telescopes=True and False cases."""
     test_cases = [
         # Test case 1: all_telescopes=True
         {
@@ -195,7 +193,6 @@ def test__get_telescopes_from_layout(io_handler):
 
 
 def test__generate_parameter_report_combinations(io_handler):
-    """Test parameter report combinations generation for both specific and all telescopes."""
 
     test_cases = [
         # Test case 1: Specific telescope (all_telescopes=False)
@@ -256,7 +253,6 @@ def test__generate_parameter_report_combinations(io_handler):
 
 
 def test_auto_generate_array_element_reports(io_handler):
-    """Test array element report generation with all observatory options enabled."""
     # Test observatory path with all options enabled
     args = {"observatory": True, "all_sites": True, "all_model_versions": True}
     output_path = io_handler.get_output_directory()
@@ -309,7 +305,6 @@ def test_auto_generate_array_element_reports(io_handler):
 
 
 def test_auto_generate_parameter_reports(io_handler):
-    """Test parameter report generation for multiple telescopes and sites."""
     args = {"all_telescopes": True, "all_sites": True}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(args, output_path)
@@ -352,7 +347,6 @@ def test_auto_generate_parameter_reports(io_handler):
 
 
 def test_auto_generate_parameter_reports_no_all_telescopes(io_handler):
-    """Test parameter report generation when all_telescopes is False."""
     args = {"all_telescopes": False, "telescope": "LSTN-01", "site": "North"}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(args, output_path)
@@ -386,7 +380,6 @@ def test_auto_generate_parameter_reports_no_all_telescopes(io_handler):
 
 
 def test__generate_single_array_element_report(io_handler):
-    """Test generation of a single array element report."""
     # Initialize ReportGenerator with basic args
     args = {"all_telescopes": True, "all_sites": True}
     output_path = io_handler.get_output_directory()
@@ -424,7 +417,6 @@ def test__generate_single_array_element_report(io_handler):
 
 
 def test__get_valid_sites_for_telescope(io_handler):
-    """Test getting valid sites for different telescope types."""
     args = {"all_telescopes": True, "all_sites": True}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(args, output_path)
@@ -460,7 +452,6 @@ def test__get_valid_sites_for_telescope(io_handler):
 
 
 def test__generate_observatory_report_combinations(io_handler):
-    """Test generation of observatory report combinations."""
     test_cases = [
         # Case 1: All sites and all model versions
         {
@@ -500,7 +491,6 @@ def test__generate_observatory_report_combinations(io_handler):
 
 
 def test__generate_single_observatory_report(io_handler):
-    """Test generation of a single observatory report."""
     args = {"site": "North", "model_version": "6.0.0"}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(args, output_path)
@@ -528,7 +518,6 @@ def test__generate_single_observatory_report(io_handler):
 
 
 def test_auto_generate_observatory_reports(io_handler):
-    """Test generation of all observatory reports."""
     args = {"all_sites": True, "all_model_versions": True}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(args, output_path)
@@ -565,7 +554,6 @@ def test_auto_generate_observatory_reports(io_handler):
 
 
 def test__generate_calibration_device_parameter_reports(io_handler):
-    """Test generation of calibration device parameter reports across all model versions."""
     args = {"all_telescopes": True, "all_sites": True}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(args, output_path)
@@ -586,7 +574,6 @@ def test__generate_calibration_device_parameter_reports(io_handler):
 
 
 def test__process_calibration_devices_for_version_with_devices(io_handler):
-    """Test processing calibration devices for a specific model version when devices exist."""
     args = {"all_telescopes": True, "all_sites": True, "model_version": "6.0.0"}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(args, output_path)
@@ -631,7 +618,6 @@ def test__process_calibration_devices_for_version_with_devices(io_handler):
 
 
 def test__process_calibration_devices_for_version_no_devices(io_handler):
-    """Test processing calibration devices when no devices exist for the model version."""
     args = {"all_telescopes": True, "all_sites": True}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(args, output_path)
@@ -663,7 +649,6 @@ def test__process_calibration_devices_for_version_no_devices(io_handler):
 
 
 def test__process_calibration_devices_for_version_unexpected_error(io_handler):
-    """Test handling of unexpected ValueError."""
     args = {"all_telescopes": True, "all_sites": True}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(args, output_path)
@@ -678,7 +663,6 @@ def test__process_calibration_devices_for_version_unexpected_error(io_handler):
 
 
 def test_auto_generate_simulation_configuration_reports(io_handler):
-    """Test generation of simulation configuration reports."""
     args = {"all_model_versions": True}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(args, output_path)
@@ -710,7 +694,6 @@ def test_auto_generate_simulation_configuration_reports(io_handler):
 
 
 def test_auto_generate_simulation_configuration_reports_single_version(io_handler):
-    """Test generation of simulation configuration reports for single version."""
     args = {"all_model_versions": False, "model_version": "6.0.0"}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(args, output_path)
@@ -734,7 +717,6 @@ def test_auto_generate_simulation_configuration_reports_single_version(io_handle
 
 
 def test_auto_generate_calibration_reports(io_handler):
-    """Test generation of calibration reports."""
     args = {"all_model_versions": True}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(args, output_path)
@@ -760,7 +742,6 @@ def test_auto_generate_calibration_reports(io_handler):
 
 
 def test_auto_generate_calibration_reports_with_valueerror(io_handler):
-    """Test generation of calibration reports with ValueError handling."""
     args = {"all_model_versions": True}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(args, output_path)
@@ -795,7 +776,6 @@ def test_auto_generate_calibration_reports_with_valueerror(io_handler):
 
 
 def test_auto_generate_calibration_reports_unexpected_valueerror(io_handler):
-    """Test generation of calibration reports with unexpected ValueError."""
     args = {"all_model_versions": True}
     output_path = io_handler.get_output_directory()
     report_generator = ReportGenerator(args, output_path)

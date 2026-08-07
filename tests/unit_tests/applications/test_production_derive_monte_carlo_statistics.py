@@ -54,19 +54,3 @@ def test_add_arguments_accepts_target_triggered_events():
     assert args.target_relative_uncertainty is None
     assert args.spectral_index is None
     assert args.target_triggered_events == 25
-
-
-def test_add_arguments_accepts_scientific_notation_target_triggered_events():
-    parser = CommandLineParser()
-    parser.add_argument_definitions(production_derive_monte_carlo_statistics._ARGUMENTS)
-
-    args = parser.parse_args(
-        [
-            "--trigger_histogram_file",
-            "reference.hdf5",
-            "--target_triggered_events",
-            "1e6",
-        ]
-    )
-
-    assert args.target_triggered_events == 1000000

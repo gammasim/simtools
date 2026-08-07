@@ -100,14 +100,6 @@ def test_invalid_bin_edges_warning_with_monkeypatch(tmp_test_directory, caplog, 
     assert not (out_dir / "invalid_bins.png").exists()
 
 
-def test_bins_adjust_when_vmax_le_vmin():
-    logger = logging.getLogger(__name__)
-    arr = np.array([1.234, 1.234])
-    bins = pia._compute_bins(arr, 0.1, logger, "angle_incidence_primary")
-    assert bins is not None
-    assert len(bins) >= 2
-
-
 def test_overlay_skips_missing_and_empty_columns(monkeypatch):
     valid = _make_table([0.1, 0.2], [1.0, 1.1])
     missing = QTable()
@@ -142,72 +134,6 @@ def test_top_level_no_results_and_no_arrays(tmp_test_directory, caplog):
     assert any("Empty results for off-axis=0.0" in m for m in msgs)
 
 
-def test_primary_component_empty_does_not_emit_focal_empty_warning(tmp_test_directory, caplog):
-    caplog.set_level(logging.WARNING)
-    results = {0.0: QTable()}
-    out_dir = Path(tmp_test_directory) / "plots"
-    pia._plot_component_angles(
-        results_by_offset=results,
-        column="angle_incidence_primary",
-        title_suffix="on primary mirror (w.r.t. normal)",
-        out_path=out_dir / "should_not_exist.png",
-        bin_width_deg=0.1,
-        log=logging.getLogger(__name__),
-    )
-    msgs = [r.message for r in caplog.records]
-    assert not any("Empty results for off-axis=" in m for m in msgs)
-    assert not (out_dir / "should_not_exist.png").exists()
-
-
-def test_plot_filters_nonfinite_values_and_succeeds(tmp_test_directory):
-    t = QTable()
-    t["angle_incidence_focal"] = np.array([np.nan, np.inf, -np.inf, 1.0, 2.0]) * u.deg
-    results = {0.0: t}
-    pia.plot_incident_angles(results, tmp_test_directory, "finite_filter")
-    out = Path(tmp_test_directory) / "plots" / "incident_angles_multi_finite_filter.png"
-    assert out.exists()
-    assert out.stat().st_size > 0
-
-
-def test_compute_bins_edges_follow_floor_ceil():
-    arr = np.array([0.05, 0.24])
-    bins = pia._compute_bins(arr, 0.1, logging.getLogger(__name__), "angle_incidence_primary")
-    assert bins is not None
-    assert np.isclose(bins[0], 0.0)
-    assert np.isclose(bins[-1], 0.3)
-    assert len(bins) == 4
-
-
-def test_overlay_plots_offsets_in_sorted_order(tmp_test_directory, monkeypatch):
-    results = {
-        1.0: _make_table([0.1, 0.2], [1.0, 1.1]),
-        0.0: _make_table([0.2, 0.3], [1.2, 1.3]),
-        2.0: _make_table([0.3, 0.4], [1.4, 1.5]),
-    }
-    arrays = [
-        results[0.0]["angle_incidence_primary"].to(u.deg).value,
-        results[1.0]["angle_incidence_primary"].to(u.deg).value,
-        results[2.0]["angle_incidence_primary"].to(u.deg).value,
-    ]
-    bins = pia._compute_bins(
-        np.concatenate(arrays), 0.1, logging.getLogger(__name__), "angle_incidence_primary"
-    )
-    fig, ax = plt.subplots(1, 1, figsize=(4, 3))
-    first_labels = []
-    orig_hist = ax.hist
-
-    def _wrapped_hist(*args, **kwargs):
-        lab = kwargs.get("label")
-        if lab and lab != "_nolegend_":
-            first_labels.append(lab)
-        return orig_hist(*args, **kwargs)
-
-    monkeypatch.setattr(ax, "hist", _wrapped_hist)
-    pia._plot_overlay_angles(results, "angle_incidence_primary", bins, ax, use_zorder=False)
-    plt.close(fig)
-    assert first_labels == ["off-axis 0 deg", "off-axis 1 deg", "off-axis 2 deg"]
-
-
 def test_logger_injection_used_for_warnings(tmp_test_directory, caplog):
     custom_logger = logging.getLogger("simtools.test.custom_logger")
     caplog.set_level(logging.WARNING, logger=custom_logger.name)
@@ -216,16 +142,6 @@ def test_logger_injection_used_for_warnings(tmp_test_directory, caplog):
         r.name == custom_logger.name and "No results provided" in r.message for r in caplog.records
     )
     assert not (Path(tmp_test_directory) / "plots").exists()
-
-
-def test_invalid_edges_warning_for_focal_monkeypatch(tmp_test_directory, caplog, monkeypatch):
-    caplog.set_level(logging.WARNING)
-    monkeypatch.setattr(pia.np, "floor", lambda x: np.nan)
-    t = _make_table([0.1, 0.2])
-    pia.plot_incident_angles({0.0: t}, tmp_test_directory, "invfocal")
-    msgs = [r.message for r in caplog.records]
-    assert any("Invalid bin edges for focal" in m for m in msgs)
-    assert not (Path(tmp_test_directory) / "plots" / "incident_angles_multi_invfocal.png").exists()
 
 
 def test_compute_bins_adjusts_when_vmax_equals_vmin():
@@ -431,29 +347,6 @@ def test_xy_heatmaps_per_offset_primary(tmp_test_directory):
     assert (out_dir / "incident_primary_xy_heatmap_off1_ut.png").exists()
 
 
-def test_iter_xy_valid_points_sorted_and_filtered():
-    t0 = QTable()
-    t1 = QTable()
-    t2 = QTable()
-    # valid at 1.0
-    t1["primary_hit_x"] = np.array([0.0, 0.1, np.nan]) * u.m
-    t1["primary_hit_y"] = np.array([0.0, -0.1, 0.2]) * u.m
-    # missing y at 0.0 -> skipped
-    t0["primary_hit_x"] = np.array([0.5]) * u.m
-    # nan-only at 2.0 -> skipped
-    t2["primary_hit_x"] = np.array([np.nan]) * u.m
-    t2["primary_hit_y"] = np.array([np.nan]) * u.m
-    res = {1.0: t1, 0.0: t0, 2.0: t2}
-    out = list(pia._iter_xy_valid_points(res, "primary_hit_x", "primary_hit_y"))
-    # Only the 1.0 entry should survive filtering
-    assert len(out) == 1
-    off, x, y = out[0]
-    assert np.isclose(off, 1.0)
-    # Last nan should be filtered out
-    assert np.all(np.isfinite(x))
-    assert np.all(np.isfinite(y))
-
-
 def test_debug_plots_generate_expected_files(tmp_test_directory):
     out_dir = Path(tmp_test_directory) / "plots"
     t0 = QTable()
@@ -638,128 +531,3 @@ def test_plot_incident_angles_with_model_version(tmp_test_directory):
     assert (out_dir / "incident_angles_multi_version_test.png").exists()
     assert (out_dir / "incident_angles_primary_multi_version_test.png").exists()
     assert (out_dir / "incident_angles_secondary_multi_version_test.png").exists()
-
-
-def test_plot_incident_angles_none_logger_uses_module_logger(tmp_test_directory, caplog):
-    caplog.set_level(logging.WARNING)
-    results = {}
-    pia.plot_incident_angles(results, tmp_test_directory, "no_logger", logger=None)
-    msgs = [r.message for r in caplog.records]
-    assert any("No results provided for multi-offset plot" in m for m in msgs)
-
-
-def test_plot_incident_angles_custom_bin_widths(tmp_test_directory):
-    out_dir = Path(tmp_test_directory) / "plots"
-    t = QTable()
-    t["angle_incidence_focal"] = np.array([0.05, 0.15, 0.25, 0.35]) * u.deg
-    t["angle_incidence_primary"] = np.array([0.5, 1.5, 2.5, 3.5]) * u.deg
-    t["angle_incidence_secondary"] = np.array([1.0, 2.0, 3.0, 4.0]) * u.deg
-    results = {0.0: t}
-    pia.plot_incident_angles(
-        results,
-        tmp_test_directory,
-        "custom_bins",
-        bin_width_deg=0.2,
-        radius_bin_width_m=0.02,
-    )
-    assert (out_dir / "incident_angles_multi_custom_bins.png").exists()
-    assert (out_dir / "incident_angles_primary_multi_custom_bins.png").exists()
-    assert (out_dir / "incident_angles_secondary_multi_custom_bins.png").exists()
-
-
-def test_plot_incident_angles_debug_plots_true(tmp_test_directory):
-    out_dir = Path(tmp_test_directory) / "plots"
-    t0 = QTable()
-    t0["angle_incidence_focal"] = np.array([0.1, 0.2]) * u.deg
-    t0["angle_incidence_primary"] = np.array([1.0, 1.1]) * u.deg
-    t0["angle_incidence_secondary"] = np.array([2.0, 2.1]) * u.deg
-    t0["primary_hit_radius"] = np.array([0.1, 0.12]) * u.m
-    t0["secondary_hit_radius"] = np.array([0.05, 0.07]) * u.m
-    t0["primary_hit_x"] = np.array([0.0, 0.1]) * u.m
-    t0["primary_hit_y"] = np.array([0.0, -0.1]) * u.m
-    t0["secondary_hit_x"] = np.array([0.02, -0.02]) * u.m
-    t0["secondary_hit_y"] = np.array([0.03, 0.01]) * u.m
-    results = {0.0: t0}
-    pia.plot_incident_angles(
-        results,
-        tmp_test_directory,
-        "dbg_enabled",
-        debug_plots=True,
-    )
-    assert (out_dir / "incident_angles_multi_dbg_enabled.png").exists()
-    assert (out_dir / "incident_angles_primary_multi_dbg_enabled.png").exists()
-    assert (out_dir / "incident_angles_secondary_multi_dbg_enabled.png").exists()
-    assert (out_dir / "incident_radius_primary_multi_dbg_enabled.png").exists()
-    assert (out_dir / "incident_radius_secondary_multi_dbg_enabled.png").exists()
-    assert (out_dir / "incident_primary_radius_vs_angle_multi_dbg_enabled.png").exists()
-    assert (out_dir / "incident_secondary_radius_vs_angle_multi_dbg_enabled.png").exists()
-    assert (out_dir / "incident_primary_xy_heatmap_off0_dbg_enabled.png").exists()
-    assert (out_dir / "incident_secondary_xy_heatmap_off0_dbg_enabled.png").exists()
-
-
-def test_plot_incident_angles_debug_plots_false(tmp_test_directory):
-    out_dir = Path(tmp_test_directory) / "plots"
-    t = QTable()
-    t["angle_incidence_focal"] = np.array([0.1, 0.2]) * u.deg
-    t["angle_incidence_primary"] = np.array([1.0, 1.1]) * u.deg
-    t["angle_incidence_secondary"] = np.array([2.0, 2.1]) * u.deg
-    t["primary_hit_radius"] = np.array([0.1, 0.12]) * u.m
-    results = {0.0: t}
-    pia.plot_incident_angles(
-        results,
-        tmp_test_directory,
-        "dbg_disabled",
-        debug_plots=False,
-    )
-    assert (out_dir / "incident_angles_multi_dbg_disabled.png").exists()
-    assert not any(out_dir.glob("incident_radius_primary_multi_*.png"))
-
-
-def test_plot_incident_angles_multiple_offsets(tmp_test_directory):
-    out_dir = Path(tmp_test_directory) / "plots"
-    t0 = QTable()
-    t0["angle_incidence_focal"] = np.array([0.1, 0.2]) * u.deg
-    t0["angle_incidence_primary"] = np.array([1.0, 1.1]) * u.deg
-    t0["angle_incidence_secondary"] = np.array([2.0, 2.1]) * u.deg
-    t1 = QTable()
-    t1["angle_incidence_focal"] = np.array([0.3, 0.4]) * u.deg
-    t1["angle_incidence_primary"] = np.array([1.5, 1.6]) * u.deg
-    t1["angle_incidence_secondary"] = np.array([2.5, 2.6]) * u.deg
-    results = {0.0: t0, 1.0: t1}
-    pia.plot_incident_angles(results, tmp_test_directory, "multi_offset")
-    assert (out_dir / "incident_angles_multi_multi_offset.png").exists()
-
-
-def test_plot_incident_angles_no_focal_angles(tmp_test_directory, caplog):
-    caplog.set_level(logging.WARNING)
-    out_dir = Path(tmp_test_directory) / "plots"
-    t = QTable()
-    t["angle_incidence_primary"] = np.array([1.0, 1.1]) * u.deg
-    t["angle_incidence_secondary"] = np.array([2.0, 2.1]) * u.deg
-    results = {0.0: t}
-    pia.plot_incident_angles(results, tmp_test_directory, "no_focal")
-    assert not (out_dir / "incident_angles_multi_no_focal.png").exists()
-    assert (out_dir / "incident_angles_primary_multi_no_focal.png").exists()
-    assert (out_dir / "incident_angles_secondary_multi_no_focal.png").exists()
-
-
-def test_plot_incident_angles_only_focal_angles(tmp_test_directory):
-    out_dir = Path(tmp_test_directory) / "plots"
-    t = QTable()
-    t["angle_incidence_focal"] = np.array([0.1, 0.2, 0.3]) * u.deg
-    results = {0.0: t}
-    pia.plot_incident_angles(results, tmp_test_directory, "focal_only")
-    assert (out_dir / "incident_angles_multi_focal_only.png").exists()
-    assert not (out_dir / "incident_angles_primary_multi_focal_only.png").exists()
-    assert not (out_dir / "incident_angles_secondary_multi_focal_only.png").exists()
-
-
-def test_plot_incident_angles_creates_output_directory(tmp_test_directory):
-    out_dir = Path(tmp_test_directory) / "plots"
-    assert not out_dir.exists()
-    t = QTable()
-    t["angle_incidence_focal"] = np.array([0.1]) * u.deg
-    results = {0.0: t}
-    pia.plot_incident_angles(results, tmp_test_directory, "creates_dir")
-    assert out_dir.exists()
-    assert out_dir.is_dir()

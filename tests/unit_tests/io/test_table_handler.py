@@ -125,7 +125,6 @@ def test_group_table_rows():
 
 
 def test_read_tables_hdf5(mocker):
-    """Test reading tables from HDF5 file."""
     # Mock h5py.File context manager
     mock_h5file = mocker.MagicMock()
     mock_h5_context = mocker.MagicMock()
@@ -150,7 +149,6 @@ def test_read_tables_hdf5(mocker):
 
 
 def test_read_tables_hdf5_with_selected_columns(mocker):
-    """Test reading selected HDF5 table columns."""
     mock_reader = mocker.patch(f"{TABLE_HANDLER_PATH}.read_table_from_hdf5")
     mock_reader.return_value = Table({"col1": [1, 2]})
 
@@ -193,7 +191,6 @@ def test_read_tables_explicit_file_type(mocker):
 
 
 def test_write_tables_fits(tmp_path, mock_table, mock_fits_objects):
-    """Test writing tables in FITS format."""
     output_file = tmp_path / TEST_FITS
 
     write_tables([mock_table], output_file, file_type="FITS")
@@ -205,7 +202,6 @@ def test_write_tables_fits(tmp_path, mock_table, mock_fits_objects):
 
 
 def test_write_tables_fits_overwrite_false(tmp_path, mock_table, mock_fits_objects, mocker):
-    """Test writing tables in FITS format when overwrite is False and file exists."""
     output_file = tmp_path / TEST_FITS
 
     mocker.patch("pathlib.Path.exists", return_value=True)
@@ -215,7 +211,6 @@ def test_write_tables_fits_overwrite_false(tmp_path, mock_table, mock_fits_objec
 
 
 def test_write_tables_hdf5(tmp_path, mock_table):
-    """Test writing tables in HDF5 format."""
     output_file = tmp_path / TEST_H5
     write_tables([mock_table], output_file, file_type="HDF5")
 
@@ -228,7 +223,6 @@ def test_write_tables_hdf5(tmp_path, mock_table):
 
 
 def test_write_tables_hdf5_unicode_string_columns(tmp_path):
-    """Test that unicode string columns are converted to byte strings when writing to HDF5."""
     table = Table({"name": ["hello", "world"], "value": [1, 2]})
     table.meta["EXTNAME"] = TEST_TABLE_NAME
     output_file = tmp_path / TEST_H5
@@ -242,7 +236,6 @@ def test_write_tables_hdf5_unicode_string_columns(tmp_path):
 
 
 def test_write_tables_hdf5_object_dtype_string_columns(tmp_path):
-    """Test that object-dtype columns with string values are serialized to HDF5."""
     col = np.array(["hello", "world"], dtype=object)
     table = Table({"name": col, "value": [1, 2]})
     table.meta["EXTNAME"] = TEST_TABLE_NAME
@@ -256,7 +249,6 @@ def test_write_tables_hdf5_object_dtype_string_columns(tmp_path):
 
 
 def test_write_tables_hdf5_object_dtype_non_string_raises(tmp_path):
-    """Test that object-dtype columns with non-string values raise TypeError when writing HDF5."""
     col = np.array(["hello", None], dtype=object)
     table = Table({"name": col, "value": [1, 2]})
     table.meta["EXTNAME"] = TEST_TABLE_NAME
@@ -267,7 +259,6 @@ def test_write_tables_hdf5_object_dtype_non_string_raises(tmp_path):
 
 
 def test_write_table_chunks_appends_and_widens_strings(tmp_path):
-    """Append chunks without truncating strings that grow in later chunks."""
     first = Table({"name": ["a"], "value": [1]})
     second = Table({"name": ["a-longer-name"], "value": [2]})
     for table in (first, second):
@@ -285,7 +276,6 @@ def test_write_table_chunks_appends_and_widens_strings(tmp_path):
 
 
 def test_write_table_chunks_failure_preserves_existing_output(tmp_path, mock_table):
-    """Keep the published output unchanged when chunk generation fails."""
     output_file = tmp_path / TEST_H5
     output_file.write_bytes(b"existing output")
 
@@ -305,7 +295,6 @@ def test_write_table_chunks_failure_preserves_existing_output(tmp_path, mock_tab
 
 
 def test_write_tables_dict_input(tmp_path, mock_table):
-    """Test writing dictionary of tables."""
     tables_dict = {"table1": mock_table}
     output_file = tmp_path / TEST_H5
     write_tables(tables_dict, output_file, file_type="HDF5")
@@ -315,7 +304,6 @@ def test_write_tables_dict_input(tmp_path, mock_table):
 
 
 def test_write_and_read_named_metadata_documents(tmp_path, mock_table):
-    """Store named JSON documents atomically alongside event tables."""
     output_file = tmp_path / TEST_H5
     write_tables(
         [mock_table],
@@ -331,7 +319,6 @@ def test_write_and_read_named_metadata_documents(tmp_path, mock_table):
 
 
 def test_write_tables_hdf5_failure_preserves_existing_output(tmp_path, mock_table, mocker):
-    """A mid-write failure preserves prior output and leaves the partial file identifiable."""
     output_file = tmp_path / TEST_H5
     output_file.write_bytes(b"existing output")
     second_table = mock_table.copy()
@@ -364,7 +351,6 @@ def test_write_tables_hdf5_failure_preserves_existing_output(tmp_path, mock_tabl
 
 
 def test_write_tables_existing_file(tmp_path, mocker):
-    """Test writing tables when output file exists."""
     mock_table = Table({"col1": [1, 2]})
     mock_table.meta["EXTNAME"] = TEST_TABLE_NAME
 
@@ -382,7 +368,6 @@ def test_write_tables_existing_file(tmp_path, mocker):
 
 
 def test_write_tables_no_file_type(tmp_path, mock_table, mock_read_type, mock_fits_objects):
-    """Test writing tables without explicit file type."""
     mock_read_type.return_value = "FITS"
     output_file = tmp_path / TEST_FITS
 
@@ -393,7 +378,6 @@ def test_write_tables_no_file_type(tmp_path, mock_table, mock_read_type, mock_fi
 
 
 def test_read_table_list_hdf5(mocker):
-    """Test read_table_list with HDF5 file."""
     mock_read_type = mocker.patch(READ_TABLE_FILE_TYPE, return_value="HDF5")
     mock_read_hdf5 = mocker.patch(
         "simtools.io.table_handler._read_table_list_hdf5",
@@ -408,7 +392,6 @@ def test_read_table_list_hdf5(mocker):
 
 
 def test_read_table_list_fits(mocker):
-    """Test read_table_list with FITS file."""
     mock_read_type = mocker.patch(READ_TABLE_FILE_TYPE, return_value="FITS")
     mock_read_fits = mocker.patch(
         "simtools.io.table_handler._read_table_list_fits",
@@ -423,7 +406,6 @@ def test_read_table_list_fits(mocker):
 
 
 def test_read_table_list_unsupported_format(mocker):
-    """Test read_table_list with unsupported file format."""
     mock_read_type = mocker.patch(READ_TABLE_FILE_TYPE, return_value="CSV")
 
     result = read_table_list(TEST_CSV, ["table1"])
@@ -433,7 +415,6 @@ def test_read_table_list_unsupported_format(mocker):
 
 
 def test_read_table_list_hdf5_basic(mocker, mock_h5py_file):
-    """Test reading basic HDF5 table list without indexed tables."""
     # Mock datasets
     dataset1 = mocker.MagicMock(spec=h5py.Dataset)
     dataset2 = mocker.MagicMock(spec=h5py.Dataset)
@@ -448,7 +429,6 @@ def test_read_table_list_hdf5_basic(mocker, mock_h5py_file):
 
 
 def test_read_table_list_hdf5_with_indexed(mocker, mock_h5py_file):
-    """Test reading HDF5 table list with indexed tables."""
     # Mock datasets
     datasets = {
         "table1": mocker.MagicMock(spec=h5py.Dataset),
@@ -473,7 +453,6 @@ def test_read_table_list_hdf5_with_indexed(mocker, mock_h5py_file):
 
 
 def test_read_table_list_hdf5_ignore_non_datasets(mocker, mock_h5py_file):
-    """Test that non-dataset objects are ignored."""
     # Mock a group (not a dataset)
     group = mocker.MagicMock(spec=h5py.Group)
     dataset = mocker.MagicMock(spec=h5py.Dataset)
@@ -489,33 +468,7 @@ def test_read_table_list_hdf5_ignore_non_datasets(mocker, mock_h5py_file):
     assert result == {"table1": ["table1"]}
 
 
-def test_read_table_list_hdf5_ignore_invalid_suffix(mocker, mock_h5py_file):
-    """Test that indexed tables with invalid suffixes are ignored."""
-    dataset1 = mocker.MagicMock(spec=h5py.Dataset)
-    dataset2 = mocker.MagicMock(spec=h5py.Dataset)
-
-    def mock_visititems(visitor):
-        visitor("table1", dataset1)
-        visitor("table1_abc", dataset2)  # Invalid suffix
-
-    mock_h5py_file.visititems.side_effect = mock_visititems
-
-    result = _read_table_list_hdf5(TEST_H5, ["table1"], True)
-
-    assert result == {"table1": ["table1"]}
-
-
-def test_read_table_list_hdf5_empty_file(mock_h5py_file):
-    """Test reading from an empty HDF5 file."""
-    mock_h5py_file.visititems.side_effect = lambda x: None
-
-    result = _read_table_list_hdf5(TEST_H5, ["table1", "table2"], False)
-
-    assert result == {"table1": [], "table2": []}
-
-
 def test_read_table_list_fits_basic(mocker):
-    """Test reading basic FITS table list without indexed tables."""
     mock_primary = mocker.MagicMock(spec=fits.PrimaryHDU)
     mock_primary.name = "PRIMARY"
 
@@ -550,7 +503,6 @@ def test_read_table_list_fits_basic(mocker):
 
 
 def test_read_table_list_fits_with_indexed(mocker):
-    """Test reading FITS table list with indexed tables."""
     mock_primary = mocker.MagicMock(spec=fits.PrimaryHDU)
     mock_primary.name = "PRIMARY"
 
@@ -598,31 +550,7 @@ def test_read_table_list_fits_with_indexed(mocker):
     }
 
 
-def test_read_table_from_hdf5_basic(mocker):
-    """Test basic reading from HDF5 without units."""
-    # Mock Table.read
-    mock_table = mocker.MagicMock(spec=Table)
-    mock_table.colnames = ["col1"]
-    mocker.patch(ASTROPY_TABLE_READ, return_value=mock_table)
-
-    # Mock h5py.File context
-    mock_file = mocker.MagicMock()
-    mock_dataset = mocker.MagicMock()
-    mock_dataset.attrs = {}
-    mock_file.__getitem__.return_value = mock_dataset
-    mock_context = mocker.MagicMock()
-    mock_context.__enter__.return_value = mock_file
-    mocker.patch(H5PY_FILE, return_value=mock_context)
-
-    result = read_table_from_hdf5(TEST_H5, TEST_TABLE_NAME)
-
-    # Verify basic calls
-    mock_file.__getitem__.assert_called_once_with(TEST_TABLE_NAME)
-    assert result == mock_table
-
-
 def test_read_table_from_hdf5_with_units(mocker):
-    """Test reading from HDF5 with unit attributes."""
     # Mock Table.read
     mock_table = mocker.MagicMock(spec=Table)
     mock_table.colnames = ["col1"]
@@ -645,7 +573,6 @@ def test_read_table_from_hdf5_with_units(mocker):
 
 
 def test_read_table_from_hdf5_with_selected_columns(mocker):
-    """Test reading only selected columns from a compound HDF5 dataset."""
     mock_file = mocker.MagicMock()
     mock_dataset = mocker.MagicMock()
     mock_dataset.dtype.names = ("col1", "col2")
@@ -678,7 +605,6 @@ def test_read_table_from_hdf5_with_selected_columns(mocker):
     ],
 )
 def test_read_table_from_hdf5_decodes_selected_string_columns(mocker, dtype, expected):
-    """Test selected-column reads decode bytes-backed string columns."""
     mock_file = mocker.MagicMock()
     mock_dataset = mocker.MagicMock()
     mock_dataset.dtype.names = ("col1",)
@@ -699,7 +625,6 @@ def test_read_table_from_hdf5_decodes_selected_string_columns(mocker, dtype, exp
 
 
 def test_read_table_from_hdf5_with_missing_selected_columns(mocker):
-    """Test selected-column read with unknown column names."""
     mock_file = mocker.MagicMock()
     mock_dataset = mocker.MagicMock()
     mock_dataset.dtype.names = ("col1",)

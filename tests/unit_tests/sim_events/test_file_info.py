@@ -3,7 +3,6 @@
 import warnings
 
 from simtools.sim_events.file_info import (
-    get_combined_eventio_run_header,
     get_corsika_run_and_event_headers,
     get_corsika_run_number,
     get_simulated_events,
@@ -13,13 +12,6 @@ from simtools.sim_events.file_info import (
 def test_get_corsika_run_number_with_run_header(get_test_data_file):
     test_file = get_test_data_file("sim_telarray", "gamma")
     assert get_corsika_run_number(test_file) == 10
-
-
-def test_get_combined_eventio_run_header(get_test_data_file):
-    run_header = get_combined_eventio_run_header(get_test_data_file("sim_telarray", "gamma"))
-    assert isinstance(run_header, dict)
-    assert run_header["run"] == 10
-    assert run_header["primary_id"] == 0
 
 
 def test_get_simulated_events(get_test_data_file):

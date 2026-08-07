@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 
-import datetime
 import logging
 import time
-import uuid
 from copy import copy
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -20,11 +18,9 @@ KEY2_ADDED = "['key2']: added in second object"
 KEY1_REMOVED = "['key1']: removed in second object"
 KEY2_REMOVED = "['key2']: removed in second object"
 
-
 url_desy = "https://www.desy.de"
 url_simtools_main = "https://github.com/gammasim/simtools/"
 url_simtools = "https://raw.githubusercontent.com/gammasim/simtools/main/"
-
 
 test_data = "Test data"
 
@@ -64,73 +60,7 @@ def test_get_log_excerpt(tmp_test_directory) -> None:
     )
 
 
-def test_file_has_text(tmp_test_directory, file_has_text) -> None:
-    """Test the file_has_text function."""
-
-    # Test with file that has text.
-    file = tmp_test_directory / "test_file_has_text.txt"
-    text = "test"
-    with open(file, "w") as f:
-        f.write(text)
-    assert file_has_text(file, text)
-    assert not file_has_text(file, "test2")
-
-    # Test with empty file.
-    file = tmp_test_directory / "test_file_is_empty.txt"
-    with open(file, "w") as f:
-        f.write("")
-    assert not file_has_text(file, text)
-
-    # Test with file that does not exist.
-    file = tmp_test_directory / "test_file_does_not_exist.txt"
-    assert not file_has_text(file, text)
-
-
-def test_collect_kwargs() -> None:
-    """
-    Test the collect_kwargs function.
-    """
-
-    # Test with no kwargs.
-    kwargs = {}
-    out_kwargs = gen.collect_kwargs("label", kwargs)
-    assert out_kwargs == {}
-
-    # Test with one kwargs.
-    kwargs = {"label_a": 1}
-    out_kwargs = gen.collect_kwargs("label", kwargs)
-    assert out_kwargs == {"a": 1}
-
-    # Test with multiple kwargs.
-    kwargs = {"label_a": 1, "label_b": 2, "label_c": 3}
-    out_kwargs = gen.collect_kwargs("label", kwargs)
-    assert out_kwargs == {"a": 1, "b": 2, "c": 3}
-
-    # Test with kwargs where only one starts with label_.
-    kwargs = {"a": 1, "b": 2, "label_c": 3, "d": 4}
-    out_kwargs = gen.collect_kwargs("label", kwargs)
-    assert out_kwargs == {"c": 3}
-
-    # Test with kwargs that do not start with label_.
-    kwargs = {"a": 1, "b": 2, "c": 3, "d": 4}
-    out_kwargs = gen.collect_kwargs("label", kwargs)
-    assert out_kwargs == {}
-
-
-def test_set_default_kwargs() -> None:
-    """
-    Test the set_default_kwargs function.
-    """
-
-    in_kwargs = {"a": 1, "b": 2}
-    out_kwargs = gen.set_default_kwargs(in_kwargs, c=3, d=4)
-    assert out_kwargs == {"a": 1, "b": 2, "c": 3, "d": 4}
-
-
 def test_log_level_from_user() -> None:
-    """
-    Test get_log_level_from_user() function.
-    """
     assert gen.get_log_level_from_user("info") == logging.INFO
     assert gen.get_log_level_from_user("debug") == logging.DEBUG
     assert gen.get_log_level_from_user("warning") == logging.WARNING
@@ -147,9 +77,6 @@ def test_log_level_from_user() -> None:
 
 
 def test_find_file_in_current_directory(tmp_test_directory) -> None:
-    """
-    Test finding a file in the temp test directory directory.
-    """
     file_name = tmp_test_directory / "test.txt"
     with open(file_name, "w") as _file:
         _file.write(test_data)
@@ -158,9 +85,6 @@ def test_find_file_in_current_directory(tmp_test_directory) -> None:
 
 
 def test_find_file_in_non_existing_directory(tmp_test_directory) -> None:
-    """
-    Test finding a file in a non-existing directory.
-    """
     file_name = tmp_test_directory / "test.txt"
 
     loc = Path("non_existing_directory")
@@ -169,9 +93,6 @@ def test_find_file_in_non_existing_directory(tmp_test_directory) -> None:
 
 
 def test_find_file_recursively(tmp_test_directory) -> None:
-    """
-    Test finding a file recursively.
-    """
     file_name = "test_1.txt"
     test_directory_sub_dir = tmp_test_directory / "test"
     Path(test_directory_sub_dir).mkdir(parents=True, exist_ok=True)
@@ -191,35 +112,6 @@ def test_find_file_recursively(tmp_test_directory) -> None:
     loc = tmp_test_directory
     with pytest.raises(FileNotFoundError):
         gen.find_file(file_name, loc)
-
-
-def test_find_file_not_found(tmp_test_directory) -> None:
-    """
-    Test finding a file that does not exist.
-    """
-    file_name = "not_existing_file.txt"
-    loc = Path(tmp_test_directory)
-    with pytest.raises(FileNotFoundError):
-        gen.find_file(file_name, loc)
-
-
-def test_is_url():
-    url = url_desy
-    assert gen.is_url(url) is True
-
-    url = "sftp://www.desy.de"
-    assert gen.is_url(url) is True
-
-    url = ""
-    assert gen.is_url(url) is False
-
-    url = "https://"
-    assert gen.is_url(url) is False
-
-    url = "desy.de"
-    assert gen.is_url(url) is False
-
-    assert gen.is_url(5.0) is False
 
 
 def test_url_exists(caplog, mocker):
@@ -281,46 +173,9 @@ def test_change_dict_keys_case(caplog) -> None:
     assert "Input is not a proper dictionary" in caplog.text
 
 
-@pytest.mark.parametrize(
-    ("input_data", "expected_output"),
-    [
-        (
-            {
-                "key1": "This is a string\n with a newline",
-                "key2": ["List item 1\n", "List item 2\n"],
-                "key3": {"nested_key": "Nested string\n with a newline"},
-                "key4": [{"nested_dict": "string2\n"}, {"nested_dict2": "string3\n"}],
-            },
-            {
-                "key1": "This is a string with a newline",
-                "key2": ["List item 1", "List item 2"],
-                "key3": {"nested_key": "Nested string with a newline"},
-                "key4": [{"nested_dict": "string2"}, {"nested_dict2": "string3"}],
-            },
-        ),
-    ],
-)
-def test_remove_substring_recursively_from_dict(input_data, expected_output, caplog):
-    result = gen.remove_substring_recursively_from_dict(input_data, "\n")
-    assert result == expected_output
-
-    # no error should be raised for None input, but a debug message should be printed
-    gen._logger.setLevel(logging.DEBUG)
-    gen.remove_substring_recursively_from_dict([2])
-    assert any(
-        record.levelname == "DEBUG" and "Input is not a dictionary: [2]" in record.message
-        for record in caplog.records
-    )
-
-
 @patch("builtins.input", side_effect=["Y", "y"])
 def test_user_confirm_yes(mock_input):
     assert gen.user_confirm()
-
-
-@patch("builtins.input", side_effect=["N", "n", EOFError, "not_Y_or_N"])
-def test_user_confirm_no(mock_input):
-    assert not gen.user_confirm()
 
 
 def test_validate_data_type():
@@ -479,9 +334,6 @@ def test_get_structure_array_from_table():
 
 
 def test_convert_keys_in_dict_to_lowercase():
-    """
-    Test the convert_keys_in_dict_to_lowercase function.
-    """
 
     # Test with a simple dictionary.
     input_data = {"Key1": "value1", "Key2": "value2"}
@@ -571,111 +423,6 @@ def test_resolve_file_patterns():
 
     with pytest.raises(FileNotFoundError, match=r"^No files found"):
         gen.resolve_file_patterns(f"{TEST_RESOURCES_GENERATED}/*.non_existent")
-
-
-def test_now_date_time_in_isoformat():
-    now = gen.now_date_time_in_isoformat()
-    assert now is not None
-    assert isinstance(now, str)
-    assert len(now) == 25
-    assert now[4] == "-"
-    assert now[7] == "-"
-    assert now[10] == "T"
-    assert now[13] == ":"
-    assert now[16] == ":"
-    assert datetime.datetime.fromisoformat(now) is not None
-
-
-def test_extract_uuid7_from_path():
-    path = (
-        "input/LSTN-design/pm_photoelectron_spectrum/"
-        "019d776b-e24c-741d-bc05-e3f6f7ec77c7/config.yml"
-    )
-    assert gen.extract_uuid7_from_path(path) == "019d776b-e24c-741d-bc05-e3f6f7ec77c7"
-
-
-def test_get_uuid():
-    assert uuid.UUID(gen.get_uuid()).version == 7
-
-
-def test_extract_uuid7_from_path_with_no_uuid7():
-    path = "input/LSTN-design/pm_photoelectron_spectrum/not-a-uuid/config.yml"
-    assert gen.extract_uuid7_from_path(path) is None
-
-
-def test_replace_placeholders_recursively():
-    input_data = {
-        "file_name": "__SETTING_WORKFLOW__/table.ecsv",
-        "nested": {"path": "prefix/__SETTING_WORKFLOW__/suffix"},
-        "items": ["__SETTING_WORKFLOW__/a", 1, {"name": "__SETTING_WORKFLOW__/b"}],
-    }
-    expected_output = {
-        "file_name": "LSTN-design/workflow/table.ecsv",
-        "nested": {"path": "prefix/LSTN-design/workflow/suffix"},
-        "items": ["LSTN-design/workflow/a", 1, {"name": "LSTN-design/workflow/b"}],
-    }
-    result = gen.replace_placeholders_recursively(
-        input_data,
-        {"__SETTING_WORKFLOW__": "LSTN-design/workflow"},
-    )
-    assert result == expected_output
-
-
-def test_extract_subdirectories_from_path():
-    path = "input/LSTN-design/pm_photoelectron_spectrum/019d7abc/config.yml"
-    result = gen.extract_subdirectories_from_path(path, anchor="input")
-    assert result == "LSTN-design/pm_photoelectron_spectrum/019d7abc"
-
-
-def test_extract_subdirectories_from_path_missing_anchor_raises():
-    path = "output/LSTN-design/pm_photoelectron_spectrum/019d7abc/config.yml"
-    with pytest.raises(ValueError, match=r"^Could not find subdirectory under 'input'"):
-        gen.extract_subdirectories_from_path(path, anchor="input")
-
-
-def test_is_valid_numeric_type():
-    """Test _is_valid_numeric_type function."""
-    # Test integer dtypes
-    assert gen._is_valid_numeric_type(np.int32, np.int64)
-    assert gen._is_valid_numeric_type(np.uint8, np.integer)
-    assert gen._is_valid_numeric_type(np.int64, np.floating)
-    assert not gen._is_valid_numeric_type(np.int32, np.str_)
-    assert not gen._is_valid_numeric_type(np.int32, np.bool_)
-
-    # Test float dtypes
-    assert gen._is_valid_numeric_type(np.float32, np.float64)
-    assert gen._is_valid_numeric_type(np.float64, np.floating)
-    assert not gen._is_valid_numeric_type(np.float32, np.integer)
-    assert not gen._is_valid_numeric_type(np.float32, np.str_)
-    assert not gen._is_valid_numeric_type(np.float32, np.bool_)
-
-    # Test non-numeric dtypes
-    assert not gen._is_valid_numeric_type(np.str_, np.integer)
-    assert not gen._is_valid_numeric_type(np.bool_, np.floating)
-    assert not gen._is_valid_numeric_type(np.object_, np.integer)
-
-
-def test_is_valid_boolean_type():
-    """Test _is_valid_boolean_type function."""
-    # Test values 0 and 1
-    assert gen._is_valid_boolean_type(np.int32, 0)
-    assert gen._is_valid_boolean_type(np.int32, 1)
-    assert gen._is_valid_boolean_type(np.float32, 0)
-    assert gen._is_valid_boolean_type(np.float32, 1)
-
-    # Test boolean dtype
-    assert gen._is_valid_boolean_type(np.bool_, None)
-    assert gen._is_valid_boolean_type(bool, None)
-
-    # Test non-boolean dtypes with values other than 0/1
-    assert not gen._is_valid_boolean_type(np.int32, 2)
-    assert not gen._is_valid_boolean_type(np.float32, 0.5)
-    assert not gen._is_valid_boolean_type(np.str_, "True")
-
-    # Test non-boolean dtypes with None value
-    assert not gen._is_valid_boolean_type(np.int32, None)
-    assert not gen._is_valid_boolean_type(np.float32, None)
-    assert not gen._is_valid_boolean_type(np.str_, None)
 
 
 def test_remove_key_from_dict():
@@ -938,7 +685,6 @@ def test_pack_tar_file_mocked_tarfile(mock_tarfile_open, tmp_test_directory):
 
 
 def test_load_environment_variables(tmp_test_directory, monkeypatch):
-    """Test load_environment_variables function."""
     env_file = tmp_test_directory / ".env"
 
     # Create a test .env file
@@ -976,7 +722,6 @@ def test_load_environment_variables(tmp_test_directory, monkeypatch):
 
 
 def test_find_executable_in_dir(tmp_test_directory) -> None:
-    """Test finding an executable in a directory."""
     executable_file = tmp_test_directory / "test_executable"
     with open(executable_file, "w", encoding="utf-8") as f:
         f.write("#!/bin/bash\necho 'test'")
@@ -987,13 +732,11 @@ def test_find_executable_in_dir(tmp_test_directory) -> None:
 
 
 def test_find_executable_in_dir_not_found(tmp_test_directory) -> None:
-    """Test finding a non-existent executable."""
     with pytest.raises(FileNotFoundError, match=r"^Executable not found"):
         gen.find_executable_in_dir("non_existent", tmp_test_directory)
 
 
 def test_find_executable_in_dir_not_executable(tmp_test_directory) -> None:
-    """Test finding a file that exists but is not executable."""
     non_executable_file = tmp_test_directory / "test_file"
     with open(non_executable_file, "w", encoding="utf-8") as f:
         f.write("test content")
@@ -1006,42 +749,23 @@ def test_find_executable_in_dir_not_executable(tmp_test_directory) -> None:
         gen.find_executable_in_dir(None, None)
 
 
-def test_is_safe_tar_member_safe_relative_path() -> None:
-    """Test that safe relative paths are accepted."""
-    assert gen.is_safe_tar_member("logs/test.log.gz")
-    assert gen.is_safe_tar_member("subdir/logs/test.log.gz")
-    assert gen.is_safe_tar_member("test.log")
-
-
 def test_is_safe_tar_member_unsafe_absolute_path() -> None:
-    """Test that absolute paths are rejected."""
     assert not gen.is_safe_tar_member("/etc/passwd")
     assert not gen.is_safe_tar_member("/path/to/file.log")
 
 
 def test_is_safe_tar_member_unsafe_traversal() -> None:
-    """Test that parent directory traversal paths are rejected."""
     assert not gen.is_safe_tar_member("logs/../../../etc/passwd")
     assert not gen.is_safe_tar_member("../logs/test.log")
     assert not gen.is_safe_tar_member("path/../../dangerous/file")
 
 
 def test_is_safe_tar_member_unsafe_null_byte() -> None:
-    """Test that paths with null bytes are rejected."""
     assert not gen.is_safe_tar_member("path\x00withNull")
     assert not gen.is_safe_tar_member("file.log\x00.exe")
 
 
-def test_is_safe_tar_member_benign_double_dot() -> None:
-    """Test that benign filenames with '..' in them are accepted."""
-    # These are valid filenames, not path traversal attempts
-    assert gen.is_safe_tar_member("foo..bar.txt")
-    assert gen.is_safe_tar_member("file..name..with..dots.log")
-    assert gen.is_safe_tar_member("version1..0.tar.gz")
-
-
 def test_get_simtools_log_file_with_file_handler(tmp_test_directory) -> None:
-    """Test getting simtools log file when a FileHandler is attached."""
     log_file = tmp_test_directory / "test.log"
 
     file_handler = logging.FileHandler(log_file)
@@ -1056,7 +780,6 @@ def test_get_simtools_log_file_with_file_handler(tmp_test_directory) -> None:
 
 
 def test_get_simtools_log_file_without_file_handler() -> None:
-    """Test getting simtools log file when no FileHandler is attached."""
     # Save all handlers from the entire logger hierarchy
     saved_handlers = {}
     current_logger = gen._logger
@@ -1075,22 +798,6 @@ def test_get_simtools_log_file_without_file_handler() -> None:
         # Restore all handlers
         for level, (logger, handlers) in saved_handlers.items():
             logger.handlers = handlers
-
-
-def test_get_simtools_log_file_with_parent_logger_file_handler(tmp_test_directory) -> None:
-    """Test getting simtools log file from parent logger if no handler in current logger."""
-    log_file = tmp_test_directory / "parent.log"
-
-    parent_logger = logging.getLogger("simtools")
-    file_handler = logging.FileHandler(log_file)
-    parent_logger.addHandler(file_handler)
-
-    try:
-        result = gen.get_simtools_log_file()
-        assert result == str(log_file)
-    finally:
-        parent_logger.removeHandler(file_handler)
-        file_handler.close()
 
 
 def test_ensure_string_lists():

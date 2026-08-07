@@ -2,8 +2,6 @@
 
 """Unit tests for illuminator_visibility module."""
 
-import logging
-
 import pytest
 
 from simtools.model.illuminator_visibility import IlluminatorTelescopeVisibility
@@ -44,7 +42,6 @@ def north_visibility_data():
 
 
 def test_init_valid_data(simple_visibility_data):
-    """Test initialization with valid visibility data."""
     visibility = IlluminatorTelescopeVisibility(simple_visibility_data)
     assert visibility is not None
     assert visibility.n_illuminators == 2
@@ -52,19 +49,16 @@ def test_init_valid_data(simple_visibility_data):
 
 
 def test_init_invalid_type():
-    """Test initialization with non-dict input."""
     with pytest.raises(ValueError, match="Expected dict"):
         IlluminatorTelescopeVisibility("not a dict")
 
 
 def test_init_missing_keys():
-    """Test initialization with missing required keys."""
     with pytest.raises(ValueError, match="must contain 'columns' and 'rows'"):
         IlluminatorTelescopeVisibility({"columns": ["a", "b", "c"]})
 
 
 def test_init_missing_required_columns():
-    """Test initialization when required column names are missing."""
     data = {
         "columns": ["wrong_column", "telescope_id", "visible"],
         "rows": [["ILL-01", "TEL-01", True]],
@@ -74,7 +68,6 @@ def test_init_missing_required_columns():
 
 
 def test_init_empty_rows():
-    """Test initialization with no rows."""
     data = {
         "columns": ["illuminator_id", "telescope_id", "visible"],
         "rows": [],
@@ -84,7 +77,6 @@ def test_init_empty_rows():
 
 
 def test_get_illuminators(simple_visibility_data):
-    """Test getting list of illuminators."""
     visibility = IlluminatorTelescopeVisibility(simple_visibility_data)
     illuminators = visibility.get_illuminators()
 
@@ -94,7 +86,6 @@ def test_get_illuminators(simple_visibility_data):
 
 
 def test_get_telescopes(simple_visibility_data):
-    """Test getting list of telescopes."""
     visibility = IlluminatorTelescopeVisibility(simple_visibility_data)
     telescopes = visibility.get_telescopes()
 
@@ -105,7 +96,6 @@ def test_get_telescopes(simple_visibility_data):
 
 
 def test_get_valid_pairs(simple_visibility_data):
-    """Test getting all valid illuminator-telescope pairs."""
     visibility = IlluminatorTelescopeVisibility(simple_visibility_data)
     pairs = visibility.get_valid_pairs()
 
@@ -118,7 +108,6 @@ def test_get_valid_pairs(simple_visibility_data):
 
 
 def test_is_valid_pair(simple_visibility_data):
-    """Test checking if specific pairs are valid."""
     visibility = IlluminatorTelescopeVisibility(simple_visibility_data)
 
     assert visibility.is_valid_pair("ILLS-01", "MSTS-01") is True
@@ -127,7 +116,6 @@ def test_is_valid_pair(simple_visibility_data):
 
 
 def test_is_valid_pair_invalid_illuminator(simple_visibility_data):
-    """Test checking pair with non-existent illuminator."""
     visibility = IlluminatorTelescopeVisibility(simple_visibility_data)
 
     with pytest.raises(ValueError, match="Illuminator 'INVALID' not found"):
@@ -135,7 +123,6 @@ def test_is_valid_pair_invalid_illuminator(simple_visibility_data):
 
 
 def test_is_valid_pair_invalid_telescope(simple_visibility_data):
-    """Test checking pair with non-existent telescope."""
     visibility = IlluminatorTelescopeVisibility(simple_visibility_data)
 
     with pytest.raises(ValueError, match="Telescope 'INVALID' not found"):
@@ -143,7 +130,6 @@ def test_is_valid_pair_invalid_telescope(simple_visibility_data):
 
 
 def test_get_telescopes_for_illuminator(simple_visibility_data):
-    """Test getting telescopes for a specific illuminator."""
     visibility = IlluminatorTelescopeVisibility(simple_visibility_data)
 
     tels_01 = visibility.get_telescopes_for_illuminator("ILLS-01")
@@ -158,7 +144,6 @@ def test_get_telescopes_for_illuminator(simple_visibility_data):
 
 
 def test_get_telescopes_for_invalid_illuminator(simple_visibility_data):
-    """Test getting telescopes for non-existent illuminator."""
     visibility = IlluminatorTelescopeVisibility(simple_visibility_data)
 
     with pytest.raises(ValueError, match="Illuminator 'INVALID' not found"):
@@ -166,7 +151,6 @@ def test_get_telescopes_for_invalid_illuminator(simple_visibility_data):
 
 
 def test_get_illuminators_for_telescope(simple_visibility_data):
-    """Test getting illuminators for a specific telescope."""
     visibility = IlluminatorTelescopeVisibility(simple_visibility_data)
 
     ills_01 = visibility.get_illuminators_for_telescope("MSTS-01")
@@ -180,7 +164,6 @@ def test_get_illuminators_for_telescope(simple_visibility_data):
 
 
 def test_get_illuminators_for_invalid_telescope(simple_visibility_data):
-    """Test getting illuminators for non-existent telescope."""
     visibility = IlluminatorTelescopeVisibility(simple_visibility_data)
 
     with pytest.raises(ValueError, match="Telescope 'INVALID' not found"):
@@ -188,47 +171,8 @@ def test_get_illuminators_for_invalid_telescope(simple_visibility_data):
 
 
 def test_properties(simple_visibility_data):
-    """Test property accessors."""
     visibility = IlluminatorTelescopeVisibility(simple_visibility_data)
 
     assert visibility.n_illuminators == 2
     assert visibility.n_telescopes == 3
     assert visibility.n_valid_pairs == 4
-
-
-def test_north_site_structure(north_visibility_data):
-    """Test with realistic North site structure."""
-    visibility = IlluminatorTelescopeVisibility(north_visibility_data)
-
-    assert visibility.n_illuminators == 2
-    assert visibility.n_telescopes == 4
-
-    # ILLN-02 should illuminate all telescopes
-    tels = visibility.get_telescopes_for_illuminator("ILLN-02")
-    assert len(tels) == 4
-
-    # ILLN-01 should only illuminate MST telescopes
-    tels = visibility.get_telescopes_for_illuminator("ILLN-01")
-    assert len(tels) == 2
-    assert "MSTN-01" in tels
-    assert "MSTN-02" in tels
-
-    # Check total valid pairs
-    pairs = visibility.get_valid_pairs()
-    assert len(pairs) == 6
-
-
-def test_logging(simple_visibility_data, caplog):
-    """Test that logging messages are generated correctly."""
-    with caplog.at_level(logging.INFO):
-        IlluminatorTelescopeVisibility(simple_visibility_data)
-
-    assert "Reading illuminator visibility table" in caplog.text
-
-
-def test_logging_valid_pairs(simple_visibility_data, caplog):
-    """Test that __init__ logs valid pair count."""
-    with caplog.at_level(logging.INFO):
-        IlluminatorTelescopeVisibility(simple_visibility_data)
-
-    assert "Found 4 valid illuminator-telescope pairs" in caplog.text

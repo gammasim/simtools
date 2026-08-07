@@ -24,7 +24,6 @@ from simtools.visualization import plot_pixels
 def test_plot_rotate_angle_kwarg(
     mock_db_handler, mock_save, mock_plot_layout, rotate_angle, expected_extra_kwargs
 ):
-    """Test plot passes rotate_angle kwarg only when configured."""
     config = {
         "parameter": "pixel_layout",
         "site": "North",
@@ -60,10 +59,6 @@ def test_plot_rotate_angle_kwarg(
 
 
 def test_plot_pixel_layout_from_file_smoke():
-    """Smoke test plot_pixel_layout_from_file without reading a config file.
-
-    Exercises plot_pixel_layout_from_file -> _create_pixel_plot -> _configure_plot -> _add_coordinate_axes.
-    """
     camera = mock.MagicMock()
     camera.telescope_name = "LSTN-01"
     camera.pixels = {
@@ -128,13 +123,6 @@ def test_apply_telescope_specific_pixel_transform(
     expect_y_flip,
     expected_orientation,
 ):
-    """Validate pixel flip/rotation and orientation update.
-
-    Covers:
-    - one-mirror vs two-mirror y-flip
-    - Quantity rotate_angle vs numeric rotate_angle branch
-    - pixel_shape/orientation branch
-    """
     camera = mock.MagicMock()
     camera.telescope_name = telescope_name
     camera.pixels = {"pixel_shape": pixel_shape}

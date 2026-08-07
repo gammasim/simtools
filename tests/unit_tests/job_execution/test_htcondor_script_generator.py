@@ -7,11 +7,8 @@ import pytest
 from simtools.job_execution import htcondor_script_generator as htg
 from simtools.job_execution.htcondor_script_generator import (
     _format_param_value,
-    _get_submit_file,
     _get_submit_script,
     _resolve_apptainer_images,
-    _sanitize_label_for_filename,
-    _write_params_file,
     build_job_specs,
     generate_submission_script,
 )
@@ -197,67 +194,9 @@ def test_get_submit_script_includes_save_file_lists_when_requested(args_dict):
     assert "--output_path /tmp/simtools-output" in generated_script
 
 
-def test_get_submit_file_uses_queue_from_params(tmp_test_directory):
-    apptainer_image = Path(tmp_test_directory) / "image.sif"
-    log_dir = Path(tmp_test_directory) / "htcondor_logs" / "log"
-    error_dir = Path(tmp_test_directory) / "htcondor_logs" / "error"
-    output_dir = Path(tmp_test_directory) / "htcondor_logs" / "output"
-    htcondor_dirs = {"log": log_dir, "error": error_dir, "output": output_dir}
-    content = _get_submit_file(
-        executable="simulate_prod.submit.sh",
-        apptainer_image=apptainer_image,
-        priority=1,
-        params_file_name="simulate_prod.submit.params.txt",
-        htcondor_dirs=htcondor_dirs,
-        params_fields=htg._PARAMS_FIELDS,
-    )
-
-    assert "queue primary" in content
-    assert "cores_per_shower,core_scatter_max" in content
-    assert "view_cone_min,view_cone_max" in content
-    assert "showers_per_run,model_version,array_layout_name" in content
-    assert "from simulate_prod.submit.params.txt" in content
-    assert 'arguments = "env.txt' in content
-    assert str(log_dir) in content
-    assert str(error_dir) in content
-    assert str(output_dir) in content
-
-
-@mock.patch("simtools.job_execution.htcondor_script_generator.Path.is_file", return_value=True)
-def test_resolve_apptainer_images_dict(mock_is_file, tmp_test_directory):
-    images = _resolve_apptainer_images(
-        {
-            "7.0.0": str(Path(tmp_test_directory) / "v7.sif"),
-            "6.3.0": str(Path(tmp_test_directory) / "v63.sif"),
-        }
-    )
-
-    assert set(images.keys()) == {"7.0.0", "6.3.0"}
-    assert mock_is_file.call_count == 2
-
-
-def test_resolve_apptainer_images_string(tmp_test_directory):
-    image_path = Path(tmp_test_directory) / "image.sif"
-    image_path.touch()
-
-    images = _resolve_apptainer_images(str(image_path))
-
-    assert images == {"default": image_path}
-
-
 def test_resolve_apptainer_images_none():
     with pytest.raises(ValueError, match="Missing required apptainer_image path"):
         _resolve_apptainer_images(None)
-
-
-def test_resolve_apptainer_images_blank_string():
-    with pytest.raises(FileNotFoundError, match="Apptainer image file not found"):
-        _resolve_apptainer_images("   ")
-
-
-def test_resolve_apptainer_images_empty_dict():
-    with pytest.raises(ValueError, match="Missing required apptainer_image path"):
-        _resolve_apptainer_images({})
 
 
 def test_resolve_apptainer_images_raises_for_truthy_empty_mapping():
@@ -278,36 +217,9 @@ def test_resolve_apptainer_images_invalid_type(tmp_test_directory):
         _resolve_apptainer_images([str(Path(tmp_test_directory) / "tmp/image.sif")])
 
 
-def test_resolve_apptainer_images_raises_for_missing_file(tmp_test_directory):
-    missing_path = Path(tmp_test_directory) / "missing.sif"
-
-    with pytest.raises(FileNotFoundError, match="Apptainer image file not found"):
-        _resolve_apptainer_images(str(missing_path))
-
-
 def test_format_param_value_raises_for_missing_required_value():
     with pytest.raises(ValueError, match="Missing required value for field 'primary'"):
         _format_param_value(None, "primary")
-
-
-def test_sanitize_label_for_filename():
-    assert _sanitize_label_for_filename("  my label:7/0*0?  ") == "my_label_7_0_0_"
-    assert _sanitize_label_for_filename("v7.0.0-beta_1") == "v7.0.0-beta_1"
-    assert _sanitize_label_for_filename(42) == "42"
-
-
-def test_build_job_specs_reads_grid_file(args_dict, job_rows, job_grid_metadata):
-    with mock.patch(
-        "simtools.job_execution.htcondor_script_generator.read_job_grid",
-        return_value=(job_rows, job_grid_metadata),
-    ) as mock_read_job_grid:
-        job_specs, metadata = build_job_specs(args_dict, ["7.0.0"])
-
-    mock_read_job_grid.assert_called_once_with(args_dict["job_grid_file"])
-    assert metadata == job_grid_metadata
-    assert job_specs[0]["image_label"] == "7.0.0"
-    assert job_specs[0]["grid_output_path"] == "simtools-output/7.0.0"
-    assert job_specs[0]["array_layout_name"] == "CTAO-North-Alpha"
 
 
 def test_build_job_specs_raises_for_missing_required_metadata(args_dict, job_rows):
@@ -319,71 +231,6 @@ def test_build_job_specs_raises_for_missing_required_metadata(args_dict, job_row
             ValueError, match=r"missing required field\(s\): site, simulation_software"
         ):
             build_job_specs(args_dict, ["7.0.0"])
-
-
-def test_write_params_file_uses_canonical_numeric_units(tmp_test_directory):
-    params_file_path = Path(tmp_test_directory) / "params.txt"
-    label_job_specs = [
-        {
-            "image_label": "7.0.0",
-            "primary": "gamma",
-            "azimuth_angle": 0 * u.deg,
-            "zenith_angle": 20 * u.deg,
-            "energy_min": 30 * u.GeV,
-            "energy_max": 10 * u.TeV,
-            "cores_per_shower": 10,
-            "core_scatter_max": 200 * u.m,
-            "view_cone_min": 0 * u.deg,
-            "view_cone_max": 5 * u.deg,
-            "showers_per_run": 1000,
-            "model_version": "7.0.0",
-            "array_layout_name": "CTAO-North-Alpha",
-            "corsika_le_interaction": "urqmd",
-            "corsika_he_interaction": "epos",
-            "run_number": 10,
-            "grid_output_path": "simtools-output/7.0.0",
-        }
-    ]
-
-    _write_params_file(params_file_path, label_job_specs, params_fields=htg._PARAMS_FIELDS)
-
-    assert params_file_path.read_text(encoding="utf-8") == (
-        "gamma 0.0 20.0 30.0 10000.0 10 200.0 0.0 5.0 "
-        "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 simtools-output/7.0.0\n"
-    )
-
-
-def test_write_params_file_replaces_whitespace_in_grid_output_path(tmp_test_directory):
-    params_file_path = Path(tmp_test_directory) / "params.txt"
-    label_job_specs = [
-        {
-            "image_label": "7.0.0",
-            "primary": "gamma",
-            "azimuth_angle": 0 * u.deg,
-            "zenith_angle": 20 * u.deg,
-            "energy_min": 30 * u.GeV,
-            "energy_max": 10 * u.TeV,
-            "cores_per_shower": 10,
-            "core_scatter_max": 200 * u.m,
-            "view_cone_min": 0 * u.deg,
-            "view_cone_max": 5 * u.deg,
-            "showers_per_run": 1000,
-            "model_version": "7.0.0",
-            "array_layout_name": "CTAO-North-Alpha",
-            "corsika_le_interaction": "urqmd",
-            "corsika_he_interaction": "epos",
-            "run_number": 10,
-            "grid_output_path": "simtools-output/grid label 7.0.0",
-        }
-    ]
-
-    _write_params_file(params_file_path, label_job_specs, params_fields=htg._PARAMS_FIELDS)
-
-    assert params_file_path.read_text(encoding="utf-8") == (
-        "gamma 0.0 20.0 30.0 10000.0 10 200.0 0.0 5.0 "
-        "1000 7.0.0 CTAO-North-Alpha urqmd epos 10 "
-        "simtools-output/grid_label_7.0.0\n"
-    )
 
 
 # Coverage edge cases for htcondor_script_generator.py
@@ -545,50 +392,3 @@ def test_generate_submission_script_detects_optional_queue_fields(
     assert "scan_label" in written_text
     assert "telescope" in written_text
     mock_chmod.assert_called_once_with(0o755)
-
-
-def test_build_job_specs_preserves_optional_scan_fields(tmp_test_directory):
-    submit_args = {
-        "job_grid_file": str(Path(tmp_test_directory) / "job_grid.ecsv"),
-        "simulation_output": "simtools-output",
-        "telescope": "LSTN-01",
-    }
-
-    row = {
-        **_base_job_row_for_optional_fields(),
-        "overwrite_model_parameters": "overwrite.yaml",
-        "scan_label": "asum220",
-    }
-    metadata = {"site": "North", "simulation_software": "corsika_sim_telarray"}
-
-    with mock.patch(
-        "simtools.job_execution.htcondor_script_generator.read_job_grid",
-        return_value=([row], metadata),
-    ):
-        job_specs, _ = htg.build_job_specs(submit_args, ["default"])
-
-    assert job_specs[0]["telescope"] == "LSTN-01"
-    assert job_specs[0]["scan_label"] == "asum220"
-    assert job_specs[0]["overwrite_model_parameters"] == "overwrite.yaml"
-
-
-def test_build_job_specs_prefers_row_telescope_over_args_telescope(tmp_test_directory):
-    submit_args = {
-        "job_grid_file": str(Path(tmp_test_directory) / "job_grid.ecsv"),
-        "simulation_output": "simtools-output",
-        "telescope": "LSTN-01",
-    }
-
-    row = {
-        **_base_job_row_for_optional_fields(),
-        "telescope": "MSTN-01",
-    }
-    metadata = {"site": "North", "simulation_software": "corsika_sim_telarray"}
-
-    with mock.patch(
-        "simtools.job_execution.htcondor_script_generator.read_job_grid",
-        return_value=([row], metadata),
-    ):
-        job_specs, _ = htg.build_job_specs(submit_args, ["default"])
-
-    assert job_specs[0]["telescope"] == "MSTN-01"

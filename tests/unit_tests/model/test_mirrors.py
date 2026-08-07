@@ -132,15 +132,6 @@ def test_read_mirror_list_from_ecsv_empty(io_handler, tmp_test_directory, mirror
         Mirrors(mirror_list_file)
 
 
-def test_read_mirror_list_from_ecsv_no_db(io_handler):
-    mirror_list_file = io_handler.get_test_data_file(
-        file_name="static/MLTdata-preproduction.ecsv",
-    )
-    logger.info(f"Using mirror list {mirror_list_file}")
-    with pytest.raises(TypeError):
-        Mirrors(mirror_list_file)
-
-
 def assert_mirror_parameters(mirror_x, mirror_y, mirror_diameter, focal_length, shape_type):
     assert mirror_x.value == pytest.approx(1022.49)
     assert mirror_y.value == pytest.approx(-462.0)

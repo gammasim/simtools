@@ -41,7 +41,6 @@ def create_test_table(
 
 @patch("simtools.visualization.plot_corsika_limits.plt.savefig")
 def test_plot_grid_coverage(mock_savefig, tmp_test_directory):
-    """Test generating grid coverage plots."""
     table = vstack(
         [
             create_test_table(20, 0, "dark", "layout1"),
@@ -84,7 +83,6 @@ def test_plot_grid_coverage(mock_savefig, tmp_test_directory):
 @patch("simtools.visualization.plot_corsika_limits.plt.savefig")
 @patch("simtools.visualization.plot_corsika_limits.plt.suptitle")
 def test_plot_limits(mock_suptitle, mock_savefig, tmp_test_directory):
-    """Test generating CORSIKA limits plots."""
     table = vstack(
         [
             create_test_table(20, 0, "dark", "layout1"),
@@ -102,7 +100,6 @@ def test_plot_limits(mock_suptitle, mock_savefig, tmp_test_directory):
 
 @patch("simtools.visualization.plot_corsika_limits.plt.savefig")
 def test_plot_limits_with_broad_range_overlay(mock_savefig, tmp_test_directory):
-    """Test plotting broad-range limits as gray dashed overlays."""
     table = vstack(
         [
             create_test_table(

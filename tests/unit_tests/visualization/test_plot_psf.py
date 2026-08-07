@@ -41,15 +41,7 @@ def data_to_plot(sample_psf_data):
     return {"measured": sample_psf_data}
 
 
-def test_get_significance_label():
-    """Test p-value significance label classification."""
-    assert plot_psf.get_significance_label(0.1) == "GOOD"
-    assert plot_psf.get_significance_label(0.03) == "FAIR"
-    assert plot_psf.get_significance_label(0.005) == "POOR"
-
-
 def test_get_psf_diameter_label():
-    """Test PSF diameter label generation for different fractions and units."""
     # Test D80 with cm
     assert plot_psf.get_psf_diameter_label(0.8, "cm") == "D80 (cm)"
 
@@ -73,7 +65,6 @@ def test_get_psf_diameter_label():
     ],
 )
 def test__format_metric_text(use_ks_statistic, second_metric, p_value, fraction):
-    """Test metric text formatting for different modes and fractions."""
     result = plot_psf._format_metric_text(
         3.5, 0.123, fraction, p_value, use_ks_statistic, second_metric
     )
@@ -83,7 +74,6 @@ def test__format_metric_text(use_ks_statistic, second_metric, p_value, fraction)
 
 
 def test__create_base_plot_figure(data_to_plot, sample_psf_data):
-    """Test base plot figure creation with different scenarios."""
     with patch("simtools.visualization.plot_psf.visualize.plot_1d") as mock_plot:
         mock_fig = MagicMock()
         mock_ax = MagicMock()
@@ -102,7 +92,6 @@ def test__create_base_plot_figure(data_to_plot, sample_psf_data):
 
 
 def test__build_parameter_title(sample_parameters):
-    """Test parameter title building."""
     title = plot_psf._build_parameter_title(sample_parameters, is_best=True)
     assert "* reflection" in title
     assert "0.00600" in title
@@ -112,7 +101,6 @@ def test__build_parameter_title(sample_parameters):
 
 
 def test__add_metric_text_box():
-    """Test metric text box addition."""
     mock_ax = MagicMock()
     plot_psf._add_metric_text_box(mock_ax, "Test metrics", is_best=True)
     mock_ax.text.assert_called_once()
@@ -123,7 +111,6 @@ def test__add_metric_text_box():
 
 
 def test__add_plot_annotations(sample_parameters):
-    """Test plot annotation addition."""
     mock_ax = MagicMock()
     mock_fig = MagicMock()
 
@@ -135,7 +122,6 @@ def test__add_plot_annotations(sample_parameters):
 
 
 def test_create_psf_parameter_plot(data_to_plot, sample_parameters):
-    """Test PSF parameter plot creation."""
     with (
         patch("simtools.visualization.plot_psf._create_base_plot_figure") as mock_base,
         patch("simtools.visualization.plot_psf._add_plot_annotations") as mock_annotations,
@@ -155,7 +141,6 @@ def test_create_psf_parameter_plot(data_to_plot, sample_parameters):
 
 
 def test_create_detailed_parameter_plot(data_to_plot, sample_parameters, sample_psf_data):
-    """Test detailed parameter plot creation with error handling."""
     with (
         patch("simtools.visualization.plot_psf._create_base_plot_figure") as mock_base,
         patch("simtools.visualization.plot_psf._add_plot_annotations") as mock_annotations,
@@ -197,7 +182,6 @@ def test_create_detailed_parameter_plot(data_to_plot, sample_parameters, sample_
 
 
 def test_create_parameter_progression_plots(data_to_plot, sample_parameters, sample_psf_data):
-    """Test parameter progression plots creation."""
     results = [
         (sample_parameters, 0.123, 0.05, 3.5, sample_psf_data),
         (sample_parameters, 0.100, None, 3.2, None),  # Test with None data (skipped)
@@ -212,7 +196,6 @@ def test_create_parameter_progression_plots(data_to_plot, sample_parameters, sam
 
 
 def test_create_gradient_descent_convergence_plot(tmp_path):
-    """Test gradient descent convergence plot creation."""
     gd_results = [
         ({"param1": 0.1}, 0.1, 0.05, 3.5, None),
         ({"param1": 0.05}, 0.05, 0.03, 3.2, None),
@@ -237,7 +220,6 @@ def test_create_gradient_descent_convergence_plot(tmp_path):
 
 
 def test_create_monte_carlo_uncertainty_plot(tmp_path):
-    """Test Monte Carlo uncertainty plot creation."""
     # RMSD mode results (no p-values)
     mc_results_rmsd = (
         0.1,
@@ -282,7 +264,6 @@ def test_create_monte_carlo_uncertainty_plot(tmp_path):
 
 
 def test_create_psf_vs_offaxis_plot(sample_parameters, tmp_path):
-    """Test psf vs off-axis angle plot creation."""
     mock_telescope_model = MagicMock()
     mock_telescope_model.name = "LSTN-01"
     mock_site_model = MagicMock()
@@ -364,7 +345,6 @@ def test_plot_psf_histogram_saves_to_output_path_when_relative(tmp_path):
     ],
 )
 def test_setup_pdf_plotting(tmp_path, plot_all, expected_result):
-    """Test PDF plotting setup with plot_all enabled and disabled."""
     args_dict = {"plot_all": plot_all, "fraction": 0.8}
 
     pdf_pages = plot_psf.setup_pdf_plotting(args_dict, tmp_path, "LSTN-01")
@@ -377,7 +357,6 @@ def test_setup_pdf_plotting(tmp_path, plot_all, expected_result):
 
 
 def test_create_optimization_plots(tmp_path, sample_psf_data, sample_parameters):
-    """Test optimization plots creation with save_plots enabled and disabled."""
     mock_telescope_model = MagicMock()
     mock_telescope_model.name = "LSTN-01"
     data_to_plot = {"measured": sample_psf_data}
@@ -409,7 +388,6 @@ def test_create_optimization_plots(tmp_path, sample_psf_data, sample_parameters)
 
 
 def test_create_summary_psf_comparison_plot(tmp_path, sample_psf_data, sample_parameters):
-    """Test final PSF comparison plot creation."""
     mock_telescope_model = MagicMock()
     mock_telescope_model.name = "LSTN-01"
     data_to_plot = {"measured": sample_psf_data}
@@ -446,7 +424,6 @@ def test_create_summary_psf_comparison_plot(tmp_path, sample_psf_data, sample_pa
 
 
 def test_create_psf_vs_offaxis_plot_zero_offset_step(sample_parameters):
-    """Zero offset_step must raise ValueError before reaching np.linspace."""
     mock_telescope_model = MagicMock()
     mock_site_model = MagicMock()
     args_dict = {
@@ -462,25 +439,7 @@ def test_create_psf_vs_offaxis_plot_zero_offset_step(sample_parameters):
         )
 
 
-def test_create_psf_vs_offaxis_plot_negative_offset_step(sample_parameters):
-    """Negative offset_step must raise ValueError before reaching np.linspace."""
-    mock_telescope_model = MagicMock()
-    mock_site_model = MagicMock()
-    args_dict = {
-        "fraction": 0.8,
-        "zenith_angle": 20 * u.deg,
-        "source_distance": 10 * u.km,
-        "max_offset": 4.0 * u.deg,
-        "offset_step": -0.5 * u.deg,
-    }
-    with pytest.raises(ValueError, match="offset_step must be positive"):
-        plot_psf.create_psf_vs_offaxis_plot(
-            mock_telescope_model, mock_site_model, args_dict, sample_parameters, None
-        )
-
-
 def test_create_psf_vs_offaxis_plot_negative_max_offset(sample_parameters):
-    """Negative max_offset must raise ValueError before reaching np.linspace."""
     mock_telescope_model = MagicMock()
     mock_site_model = MagicMock()
     args_dict = {

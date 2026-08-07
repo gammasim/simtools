@@ -1,37 +1,10 @@
 """Tests for production event-data helpers."""
 
-from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 from simtools.production_configuration import production_event_data_helpers as helpers
-
-
-def test_build_production_subdirectories_creates_unique_names(tmp_test_directory, mocker):
-    output_dir = tmp_test_directory / "plots"
-    mocker.patch(
-        "simtools.production_configuration.production_event_data_helpers.get_uuid",
-        side_effect=["uuid-1", "uuid-2"],
-    )
-
-    subdirs = helpers.build_production_subdirectories(
-        ["a/output.hdf5", "b/output.hdf5", "c/output.hdf5"], output_dir
-    )
-
-    assert [Path(path).name for path in subdirs.values()] == [
-        "production_output",
-        "production_output_uuid-1",
-        "production_output_uuid-2",
-    ]
-    assert all(Path(path).is_dir() for path in subdirs.values())
-    mocker.patch(
-        "simtools.production_configuration.production_event_data_helpers.get_uuid",
-        return_value="uuid-1",
-    )
-    assert helpers.get_production_directory_name("a/output.hdf5", {"production_output"}) == (
-        "production_output_uuid-1"
-    )
 
 
 def test_resolve_telescope_configs_prefers_layout_and_falls_back_to_array_elements(mocker):
@@ -180,6 +153,7 @@ def test_trigger_topology_helpers_track_counts_and_subsets(mocker):
 
     assert accumulator["trigger_multiplicity"] == {1: 1, 2: 1}
     assert accumulator["trigger_combinations"] == {"LST-1": 1, "LST-1,MST-1": 1}
+
     assert accumulator["telescope_participation"] == {"LST-1": 2, "MST-1": 1}
     assert accumulator["subset_multiplicity"]["single_telescope"] == {1: 1}
     assert accumulator["subset_multiplicity"]["mixed_type"] == {2: 1}

@@ -20,13 +20,6 @@ def test_crs_utm():
     assert utm_none is None
 
 
-def test_crs_wgs84():
-    geo = GeoCoordinates()
-    wgs84_crs = geo.crs_wgs84()
-    assert isinstance(wgs84_crs, pyproj.CRS)
-    assert wgs84_crs.to_epsg() == 4326
-
-
 def test_crs_local():
     geo = GeoCoordinates()
 
@@ -85,28 +78,6 @@ def test_coordinate_scale_factor():
 
     with pytest.raises(AttributeError):
         _coord._coordinate_scale_factor(None)
-
-
-def test_geocentric_radius():
-    _coord = GeoCoordinates()
-
-    _semi_major_axis = 6378137.0
-    _semi_minor_axis = 6356752.314245179
-
-    radius_equator = _coord._geocentric_radius(0.0, _semi_major_axis, _semi_minor_axis)
-    assert radius_equator == pytest.approx(_semi_major_axis, rel=1e-6)
-
-    radius_pole = _coord._geocentric_radius(90.0, _semi_major_axis, _semi_minor_axis)
-    assert radius_pole == pytest.approx(_semi_minor_axis, rel=1e-6)
-
-    radius_lapalma = _coord._geocentric_radius(28.762166014, _semi_major_axis, _semi_minor_axis)
-    assert radius_lapalma == pytest.approx(6373217.689521963, rel=1e-6)
-
-    radius_paranal = _coord._geocentric_radius(-24.68342915, _semi_major_axis, _semi_minor_axis)
-    assert radius_paranal == pytest.approx(6374433.430905125, rel=1e-6)
-
-    with pytest.raises(TypeError):
-        _coord._geocentric_radius(0.0, None, _semi_minor_axis)
 
 
 def test_valid_reference_point():

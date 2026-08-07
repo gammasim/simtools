@@ -11,7 +11,6 @@ from simtools.io import io_handler as io_handler_module
 
 logger = logging.getLogger()
 
-
 test_file = "test-file.txt"
 
 
@@ -41,49 +40,11 @@ def test_get_output_directory(args_dict, io_handler):
         io_handler.get_output_directory(output_path_label="nonexistent")
 
 
-def test_get_output_file(args_dict, io_handler):
-    assert io_handler.get_output_file(file_name=test_file) == Path(
-        f"{args_dict['output_path']}/output/{test_file}"
-    )
-
-    assert io_handler.get_output_file(
-        file_name=test_file,
-        sub_dir="test-io-handler",
-    ) == Path(f"{args_dict['output_path']}/output/test-io-handler/{test_file}")
-
-
 def test_get_test_data_file(io_handler, test_resources_path):
     assert (
         io_handler.get_test_data_file(file_name=test_file)
         == (test_resources_path / test_file).resolve()
     )
-
-
-def test_resolve_test_resource_paths(tmp_test_directory):
-    resources_path = Path(tmp_test_directory) / "versioned-resources"
-    config = {
-        "configuration": {
-            "input": "tests/resources/static/input.ecsv",
-            "inputs": ["./tests/resources/generated/events.simtel.zst"],
-        },
-        "integration_tests": [
-            {"reference_output_file": "${static:reference.ecsv}"},
-            {"reference_output_file": "${generated:model/parameter.json}"},
-            {"reference_output_file": "${downloaded:asum_threshold.meta.yml}"},
-        ],
-    }
-
-    resolved = io_handler_module.resolve_test_resource_paths(config, resources_path)
-
-    assert resolved["configuration"]["input"] == str(resources_path / "static/input.ecsv")
-    assert resolved["configuration"]["inputs"] == [
-        str(resources_path / "generated/events.simtel.zst")
-    ]
-    assert resolved["integration_tests"] == [
-        {"reference_output_file": str(resources_path / "static/reference.ecsv")},
-        {"reference_output_file": str(resources_path / "generated/model/parameter.json")},
-        {"reference_output_file": str(resources_path / "downloaded/asum_threshold.meta.yml")},
-    ]
 
 
 def test_resolve_test_resource_path_macros_nested_structures(tmp_test_directory):

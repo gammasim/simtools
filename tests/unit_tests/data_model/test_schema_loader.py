@@ -19,6 +19,16 @@ def clear_schema_loader_cache():
     schema_loader.clear_cache()
 
 
+@pytest.mark.parametrize("schema_directory", ["missing", None])
+def test_get_model_parameter_schema_files_raises_for_missing_schemas(
+    schema_directory, tmp_test_directory
+):
+    directory = tmp_test_directory / schema_directory if schema_directory else tmp_test_directory
+
+    with pytest.raises(FileNotFoundError, match=r"^No schema files found"):
+        schema_loader.get_model_parameter_schema_files(directory)
+
+
 def test_get_model_parameter_schema_files(tmp_test_directory):
     tmp_test_directory = Path(tmp_test_directory)
     schema_files = [
@@ -35,16 +45,6 @@ def test_get_model_parameter_schema_files(tmp_test_directory):
 
     assert parameters == ["first.schema", "second.schema"]
     assert files == sorted(schema_files)
-
-
-@pytest.mark.parametrize("schema_directory", ["missing", None])
-def test_get_model_parameter_schema_files_raises_for_missing_schemas(
-    schema_directory, tmp_test_directory
-):
-    directory = tmp_test_directory / schema_directory if schema_directory else tmp_test_directory
-
-    with pytest.raises(FileNotFoundError, match=r"^No schema files found"):
-        schema_loader.get_model_parameter_schema_files(directory)
 
 
 def test_load_schema_caches_parsed_source_across_versions(mocker):

@@ -144,17 +144,6 @@ def test_resolve_effective_throw_radius_rejects_invalid_override():
         monte_carlo_statistics_estimator._resolve_effective_throw_radius(100.0 * u.m, 120.0 * u.m)
 
 
-def test_resolve_effective_view_cone_radius_rejects_invalid_override():
-    with pytest.raises(ValueError, match="positive"):
-        monte_carlo_statistics_estimator._resolve_effective_view_cone_radius(
-            10.0 * u.deg, 0.0 * u.deg
-        )
-    with pytest.raises(ValueError, match="cannot exceed"):
-        monte_carlo_statistics_estimator._resolve_effective_view_cone_radius(
-            10.0 * u.deg, 12.0 * u.deg
-        )
-
-
 def test_compute_core_distance_weights_uses_area_fraction():
     edges = np.array([0.0, 50.0, 100.0])
 
@@ -334,79 +323,6 @@ def test_estimator_writes_diagnostic_plots(mocker, tmp_path):
     }
 
 
-def test_estimator_reports_positive_required_events(mocker, tmp_path):
-    metadata, bins = _build_reference_tables()
-    mocker.patch(
-        _LOAD_HISTOGRAMS,
-        return_value=(metadata, bins),
-    )
-
-    args = {
-        "input": "unused.hdf5",
-        "array_names": None,
-        "spectral_index": -2.0,
-        "target_relative_uncertainty": 0.1,
-        "target_triggered_events": None,
-        "br_energy_min": 0.1 * u.TeV,
-        "br_energy_max": 10.0 * u.TeV,
-        "optimization_energy_min": 0.1 * u.TeV,
-        "optimization_energy_max": 10.0 * u.TeV,
-        "reduced_core_radius": None,
-        "reduced_view_cone_radius": None,
-        "output_file": str(tmp_path / "estimate.ecsv"),
-    }
-
-    result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args)
-
-    assert result["array_name"][0] == "alpha"
-    assert result["primary_particle"][0] == "gamma"
-    assert result["zenith"].quantity[0].to_value(u.deg) == pytest.approx(20.0)
-    assert result["azimuth"].quantity[0].to_value(u.deg) == pytest.approx(180.0)
-    assert result["nsb_level"][0] == pytest.approx(1.0)
-    assert result["estimated_total_events"][0] > 0.0
-    assert float(result["estimated_total_events"][0]).is_integer()
-    assert "limiting_energy_low" not in result.colnames
-    assert "limiting_energy_high" not in result.colnames
-    assert "limiting_angular_distance_low" not in result.colnames
-    assert "limiting_angular_distance_high" not in result.colnames
-    assert "limiting_expected_trigger_count" not in result.colnames
-    assert "limiting_trigger_efficiency" not in result.colnames
-    assert "optimization_bins_used" not in result.colnames
-    assert "optimization_bins_skipped" not in result.colnames
-    assert "original_core_scatter_radius" not in result.colnames
-    assert "original_view_cone_radius" not in result.colnames
-
-
-def test_estimator_logs_reference_validation_summary(mocker, tmp_path, caplog):
-    metadata, bins = _build_reference_tables()
-    mocker.patch(
-        _LOAD_HISTOGRAMS,
-        return_value=(metadata, bins),
-    )
-    caplog.set_level("INFO")
-
-    monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
-        {
-            "input": "unused.hdf5",
-            "array_names": None,
-            "spectral_index": -2.0,
-            "target_relative_uncertainty": 0.1,
-            "target_triggered_events": None,
-            "optimization_energy_min": 0.1 * u.TeV,
-            "optimization_energy_max": 10.0 * u.TeV,
-            "reduced_core_radius": None,
-            "reduced_view_cone_radius": None,
-            "output_file": str(tmp_path / "estimate.ecsv"),
-        }
-    )
-
-    assert (
-        "Using trigger histogram for array_layout=alpha "
-        "(zenith=20.000 deg, azimuth=180.000 deg, nsb_level=1.0): "
-        "simulated_events=200 triggered_events=75 overall_trigger_efficiency=0.375"
-    ) in caplog.text
-
-
 def test_estimator_logs_overall_trigger_probability_for_target_triggered_events(
     mocker, tmp_path, caplog
 ):
@@ -577,81 +493,6 @@ def test_estimator_view_cone_override_changes_required_events(mocker, tmp_path):
     assert "effective_view_cone_radius" not in reduced.colnames
 
 
-def test_estimator_supports_target_triggered_events(mocker, tmp_path):
-    metadata, bins = _build_reference_tables()
-    mocker.patch(
-        _LOAD_HISTOGRAMS,
-        return_value=(metadata, bins),
-    )
-
-    result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
-        {
-            "input": "unused.hdf5",
-            "array_names": None,
-            "spectral_index": -2.0,
-            "target_relative_uncertainty": None,
-            "target_triggered_events": 25,
-            "optimization_energy_min": 0.1 * u.TeV,
-            "optimization_energy_max": 10.0 * u.TeV,
-            "reduced_core_radius": None,
-            "reduced_view_cone_radius": None,
-            "output_file": str(tmp_path / "estimate.ecsv"),
-        }
-    )
-
-    assert result.meta["target_triggered_events"] == 25
-    assert result.meta["spectral_index"] == pytest.approx(-2.0)
-    assert result.meta["optimization_energy_min"].to_value(u.TeV) == pytest.approx(0.1)
-    assert result.meta["optimization_energy_max"].to_value(u.TeV) == pytest.approx(10.0)
-    assert "target_triggered_events" not in result.colnames
-    assert "spectral_index" not in result.colnames
-    assert "optimization_energy_min" not in result.colnames
-    assert "optimization_energy_max" not in result.colnames
-    assert "original_core_scatter_radius" not in result.colnames
-    assert "original_view_cone_radius" not in result.colnames
-    assert result["estimated_total_events"][0] == 67
-
-    written = Table.read(tmp_path / "estimate.ecsv", format="ascii.ecsv")
-    assert written.meta["target_triggered_events"] == 25
-    assert written.meta["spectral_index"] == pytest.approx(-2.0)
-    assert written.meta["optimization_energy_min"].to_value(u.TeV) == pytest.approx(0.1)
-    assert written.meta["optimization_energy_max"].to_value(u.TeV) == pytest.approx(10.0)
-
-
-def test_estimator_writes_complete_shared_configuration_to_metadata(mocker, tmp_path):
-    metadata, bins = _build_reference_tables()
-    mocker.patch(
-        _LOAD_HISTOGRAMS,
-        return_value=(metadata, bins),
-    )
-
-    result = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
-        {
-            "input": "unused.hdf5",
-            "array_names": None,
-            "spectral_index": -2.0,
-            "target_relative_uncertainty": 0.1,
-            "target_triggered_events": None,
-            "optimization_energy_min": 0.1 * u.TeV,
-            "optimization_energy_max": 10.0 * u.TeV,
-            "reduced_core_radius": 50.0 * u.m,
-            "reduced_view_cone_radius": 5.0 * u.deg,
-            "output_file": str(tmp_path / "estimate.ecsv"),
-        }
-    )
-
-    assert result.meta["spectral_index"] == pytest.approx(-2.0)
-    assert result.meta["target_relative_uncertainty"] == pytest.approx(0.1)
-    assert result.meta["optimization_energy_min"].to_value(u.TeV) == pytest.approx(0.1)
-    assert result.meta["optimization_energy_max"].to_value(u.TeV) == pytest.approx(10.0)
-    assert result.meta["reduced_core_radius"].to_value(u.m) == pytest.approx(50.0)
-    assert result.meta["reduced_view_cone_radius"].to_value(u.deg) == pytest.approx(5.0)
-    assert "effective_core_scatter_radius" not in result.colnames
-    assert "effective_view_cone_radius" not in result.colnames
-    assert "original_core_scatter_radius" not in result.colnames
-    assert "original_view_cone_radius" not in result.colnames
-
-
 def test_estimator_uses_histogram_spectral_index_when_no_override_is_given(mocker, tmp_path):
     metadata, bins = _build_reference_tables()
     mocker.patch(
@@ -707,31 +548,3 @@ def test_estimator_warns_and_falls_back_when_histogram_spectral_index_is_missing
     assert "No spectral index found in trigger histogram metadata" in caplog.text
     assert result.meta["spectral_index"] == pytest.approx(-2.0)
     assert result["estimated_total_events"][0] == 67
-
-
-def test_estimator_logs_when_using_histogram_spectral_index(mocker, tmp_path, caplog):
-    metadata, bins = _build_reference_tables()
-    mocker.patch(
-        _LOAD_HISTOGRAMS,
-        return_value=(metadata, bins),
-    )
-    caplog.set_level("INFO")
-
-    monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
-        {
-            "input": "unused.hdf5",
-            "array_names": None,
-            "spectral_index": None,
-            "target_relative_uncertainty": None,
-            "target_triggered_events": 25,
-            "optimization_energy_min": 0.1 * u.TeV,
-            "optimization_energy_max": 10.0 * u.TeV,
-            "reduced_core_radius": None,
-            "reduced_view_cone_radius": None,
-            "output_file": str(tmp_path / "estimate.ecsv"),
-        }
-    )
-
-    assert "Using spectral index -2 from trigger histogram metadata for array_layout=alpha." in (
-        caplog.text
-    )

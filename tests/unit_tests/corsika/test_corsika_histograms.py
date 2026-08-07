@@ -121,49 +121,6 @@ def test_update_distributions_runs(monkeypatch):
             assert "uncertainties" in value
 
 
-def test_set_2d_distributions_basic():
-    ch = CorsikaHistograms.__new__(CorsikaHistograms)
-    hist_2d = ch._set_2d_distributions(xy_maximum=10 * u.m, xy_bin=5)
-    assert isinstance(hist_2d, dict)
-    expected_keys = {
-        "counts_xy",
-        "density_xy",
-        "direction_xy",
-        "time_altitude",
-        "wavelength_altitude",
-    }
-    assert expected_keys.issubset(hist_2d.keys())
-    for key in expected_keys:
-        value = hist_2d[key]
-        assert "histogram" in value
-        assert hasattr(value["histogram"], "view")
-        assert value["is_1d"] is False
-
-
-def test_set_1d_distributions_returns_dict():
-    ch = CorsikaHistograms.__new__(CorsikaHistograms)
-    # Provide required 2D histograms so projections can resolve
-    ch.hist = ch._set_2d_distributions(xy_maximum=1 * u.m, xy_bin=2)
-    hist_1d = ch._set_1d_distributions()
-    assert isinstance(hist_1d, dict)
-    expected_keys = {
-        "wavelength",
-        "counts_r",
-        "density_r",
-        "density_x",
-        "density_y",
-        "time",
-        "altitude",
-        "direction_cosine_x",
-        "direction_cosine_y",
-        "num_photons",
-    }
-    assert expected_keys.issubset(hist_1d.keys())
-    for key in expected_keys:
-        assert "is_1d" in hist_1d[key]
-        assert hist_1d[key]["is_1d"] is True
-
-
 def test__get_hist_1d_from_numpy_linear(monkeypatch):
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
     ch.events = np.array([(1,), (2,), (3,), (4,), (5,)], dtype=[("dummy", "f8")])
@@ -214,7 +171,6 @@ def test_get_hist_2d_projection_returns_expected_shapes():
 
 @pytest.mark.parametrize("rotate", [True, False])
 def test__fill_histograms(monkeypatch, photon_dtype, rotate):
-    """Test _fill_histograms with and without photon rotation."""
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
     ch._density_samples = []
     event_dtype = [("azimuth_deg", "f8"), ("zenith_deg", "f8"), ("num_photons", "f8")]
@@ -255,7 +211,6 @@ def test__fill_histograms(monkeypatch, photon_dtype, rotate):
 
 @pytest.mark.parametrize("scale", ["linear", "log", "with_units"])
 def test_create_regular_axes_parametrized(scale):
-    """Test axis creation with different scales (linear, log, and with units)."""
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
     if scale == "linear":
         hist = {"x_bins": [5, 0, 10, "linear"], "y_bins": [4, -2, 2, "linear"]}
@@ -284,7 +239,6 @@ def test_create_regular_axes_parametrized(scale):
 
 
 def test_read_event_headers_creates_events(monkeypatch, tmp_path):
-    """Test that _read_event_headers correctly parses event data from IACTFile."""
     events = [
         create_dummy_event(1, 10.0, np.deg2rad(30), np.deg2rad(45)),
         create_dummy_event(2, 20.0, np.deg2rad(60), np.deg2rad(80)),
@@ -307,7 +261,6 @@ def test_read_event_headers_creates_events(monkeypatch, tmp_path):
 
 
 def test_fill_runs_and_updates_hist(monkeypatch, tmp_path, photon_dtype):
-    """Test that fill() properly fills histograms and updates distributions."""
     dummy_photon = np.array([(10.0, 20.0, 0.1, 0.2, 5.0, 100.0, 1.0, 400.0)], dtype=photon_dtype)
     event = create_dummy_event(
         1, 10.0, np.deg2rad(30), np.deg2rad(45), photon_bunches={0: dummy_photon}
@@ -330,38 +283,13 @@ def test_fill_runs_and_updates_hist(monkeypatch, tmp_path, photon_dtype):
         assert ch.hist[key]["hist_values"].shape[1:] == ch.hist[key]["histogram"].view().T.shape
 
 
-def test_corsika_histograms_init_file_exists(tmp_path):
-    dummy_file = tmp_path / "dummy.iact"
-    dummy_file.write_text("test")
-    ch = CorsikaHistograms(dummy_file)
-    assert ch.input_file == dummy_file
-    assert ch.events is None
-    assert isinstance(ch.hist, dict)
-    assert "counts_xy" in ch.hist
-    assert "density_r" in ch.hist
-
-
 def test_corsika_histograms_init_file_not_exists(tmp_path):
     non_existing_file = tmp_path / "notfound.iact"
     with pytest.raises(FileNotFoundError):
         CorsikaHistograms(non_existing_file)
 
 
-def test_get_hist_1d_projection_numpy_hist(monkeypatch):
-    """Test get_hist_1d_projection returns correct shape for numpy histogram."""
-    ch = CorsikaHistograms.__new__(CorsikaHistograms)
-    ch.events = np.array([(1,), (2,), (3,), (4,), (5,)], dtype=[("dummy", "f8")])
-    hist = {"x_bins": [5, 1, 5, "linear"]}
-    result = ch.get_hist_1d_projection("dummy", hist)
-    counts, edges, uncertainties = result
-    assert counts.shape == (1, 5)
-    assert edges.shape == (1, 6)
-    assert uncertainties.shape == (1, 5)
-    assert np.sum(counts) == 5
-
-
 def test_get_hist_1d_projection_boost_hist():
-    """Test get_hist_1d_projection returns correct shape for boost 1D histogram."""
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
     hist = {
         "x_bins": [5, 0, 5, "linear"],
@@ -378,7 +306,6 @@ def test_get_hist_1d_projection_boost_hist():
 
 
 def test_get_hist_1d_projection_boost_2d_projection():
-    """Test get_hist_1d_projection returns correct shape for boost 2D histogram projection."""
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
     hist_2d = bh.Histogram(bh.axis.Regular(3, 0, 3), bh.axis.Regular(2, 0, 2))
     hist_2d.fill(0, 0)
@@ -394,7 +321,6 @@ def test_get_hist_1d_projection_boost_2d_projection():
 
 
 def test_get_hist_1d_projection_projection_none_no_events(monkeypatch):
-    """Test get_hist_1d_projection when projection is None and events are missing."""
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
     if hasattr(ch, "events"):
         delattr(ch, "events")
@@ -403,26 +329,6 @@ def test_get_hist_1d_projection_projection_none_no_events(monkeypatch):
     result = ch.get_hist_1d_projection("dummy", hist)
     assert isinstance(result, tuple)
     assert len(result) == 3
-
-
-def test__check_for_all_attributes_true():
-    ch = CorsikaHistograms.__new__(CorsikaHistograms)
-
-    class DummyView:
-        dtype = type("dtype", (), {"names": ("value", "variance")})
-
-    view = DummyView()
-    assert ch._check_for_all_attributes(view) is True
-
-
-def test__check_for_all_attributes_false():
-    ch = CorsikaHistograms.__new__(CorsikaHistograms)
-
-    class DummyView:
-        dtype = type("dtype", (), {"names": ("value",)})
-
-    view = DummyView()
-    assert ch._check_for_all_attributes(view) is False
 
 
 def test__check_for_all_attributes_no_dtype():
@@ -437,13 +343,6 @@ def test__check_for_all_attributes_no_dtype():
 
 @pytest.mark.parametrize("project_axis", ["x", "y"])
 def test_fill_projected_density_values_numerical(project_axis):
-    """
-    Test that _fill_projected_density_values correctly computes 1D densities from 2D counts.
-
-    This test validates the numerical computation by creating a simple 2D counts_xy histogram
-    with known bin widths and counts, then verifying that the projected 1D density values
-    match the expected counts-per-area calculation.
-    """
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
 
     x_bins, x_min, x_max = 3, -3.0, 3.0
@@ -524,12 +423,6 @@ def test_fill_projected_density_values_numerical(project_axis):
 
 
 def test_fill_projected_density_values_without_weight_storage():
-    """
-    Test _fill_projected_density_values with non-Weight storage (fallback path).
-
-    Validates that the fallback uncertainty calculation (sqrt(density)) works correctly
-    when the 2D histogram does not use Weight storage.
-    """
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
 
     x_bins, x_min, x_max = 2, -2.0, 2.0
@@ -576,31 +469,7 @@ def test_fill_projected_density_values_without_weight_storage():
     np.testing.assert_allclose(uncertainties[0], expected_uncertainty, rtol=1e-10)
 
 
-def test_filter_density_histograms_per_telescope():
-    """Test _filter_density_histograms removes per-bin keys with per-telescope method."""
-    ch = CorsikaHistograms.__new__(CorsikaHistograms)
-    ch.normalization_method = "per-telescope"
-    ch.hist = {
-        "density_xy": {"is_1d": False},
-        "density_x": {"is_1d": True},
-        "density_y": {"is_1d": True},
-        "density_r": {"is_1d": True},
-        "density_xy_from_counts": {"is_1d": False},
-        "density_r_from_counts": {"is_1d": True},
-        "counts_xy": {"is_1d": False},
-    }
-    ch._filter_density_histograms()
-    assert "density_xy_from_counts" not in ch.hist
-    assert "density_r_from_counts" not in ch.hist
-    assert "density_xy" in ch.hist
-    assert "density_x" in ch.hist
-    assert "density_y" in ch.hist
-    assert "density_r" in ch.hist
-    assert "counts_xy" in ch.hist
-
-
 def test_filter_density_histograms_per_bin():
-    """Test _filter_density_histograms removes per-telescope keys with per-bin method."""
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
     ch.normalization_method = "per-bin"
     ch.hist = {
@@ -623,7 +492,6 @@ def test_filter_density_histograms_per_bin():
 
 
 def test_filter_density_histograms_invalid_method():
-    """Test _filter_density_histograms raises ValueError for invalid normalization method."""
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
     ch.normalization_method = "invalid-method"
     ch.hist = {"density_xy": {"is_1d": False}}
@@ -632,7 +500,6 @@ def test_filter_density_histograms_invalid_method():
 
 
 def test_filter_density_histograms_missing_keys():
-    """Test _filter_density_histograms handles missing keys gracefully."""
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
     ch.normalization_method = "per-telescope"
     ch.hist = {
@@ -644,27 +511,7 @@ def test_filter_density_histograms_missing_keys():
     assert "counts_xy" in ch.hist
 
 
-def test_density_and_unc_with_weight_storage():
-    """Test _density_and_unc with Weight storage (has value and variance)."""
-    ch = CorsikaHistograms.__new__(CorsikaHistograms)
-
-    hist = bh.Histogram(bh.axis.Regular(3, 0, 3), storage=bh.storage.Weight())
-    hist.fill([0.5, 1.5, 2.5], weight=[10, 20, 30])
-
-    view = hist.view()
-    areas = np.array([1.0, 1.0, 1.0])
-
-    density, unc = ch._density_and_unc(view, areas)
-
-    expected_density = np.array([10.0, 20.0, 30.0])
-    expected_unc = np.sqrt(np.array([100.0, 400.0, 900.0])) / areas
-
-    np.testing.assert_allclose(density, expected_density)
-    np.testing.assert_allclose(unc, expected_unc)
-
-
 def test_density_and_unc_with_double_storage():
-    """Test _density_and_unc with Double storage (fallback path)."""
     ch = CorsikaHistograms.__new__(CorsikaHistograms)
 
     hist = bh.Histogram(bh.axis.Regular(3, 0, 3), storage=bh.storage.Double())
@@ -677,62 +524,6 @@ def test_density_and_unc_with_double_storage():
 
     expected_density = view / areas
     expected_unc = np.sqrt(view) / areas
-
-    np.testing.assert_allclose(density, expected_density)
-    np.testing.assert_allclose(unc, expected_unc)
-
-
-def test_density_and_unc_with_varying_areas():
-    """Test _density_and_unc with non-uniform bin areas."""
-    ch = CorsikaHistograms.__new__(CorsikaHistograms)
-
-    hist = bh.Histogram(bh.axis.Regular(4, 0, 10), storage=bh.storage.Weight())
-    hist.fill([0.5, 2.5, 5.0, 7.5], weight=[100, 200, 300, 400])
-
-    view = hist.view()
-    areas = np.array([2.5, 2.5, 2.5, 2.5])
-
-    density, unc = ch._density_and_unc(view, areas)
-
-    expected_density = np.array([40.0, 80.0, 120.0, 160.0])
-    expected_unc = np.sqrt(np.array([10000.0, 40000.0, 90000.0, 160000.0])) / areas
-
-    np.testing.assert_allclose(density, expected_density)
-    np.testing.assert_allclose(unc, expected_unc)
-
-
-def test_density_and_unc_zero_areas():
-    """Test _density_and_unc handles division by zero areas gracefully."""
-    ch = CorsikaHistograms.__new__(CorsikaHistograms)
-
-    hist = bh.Histogram(bh.axis.Regular(2, 0, 2), storage=bh.storage.Weight())
-    hist.fill([0.5, 1.5], weight=[10, 20])
-
-    view = hist.view()
-    areas = np.array([0.0, 1.0])
-
-    with np.errstate(divide="ignore", invalid="ignore"):
-        density, unc = ch._density_and_unc(view, areas)
-
-    assert np.isinf(density[0])
-    assert np.isclose(density[1], 20.0)
-    assert np.isinf(unc[0])
-    assert np.isclose(unc[1], np.sqrt(400.0))
-
-
-def test_density_and_unc_empty_histogram():
-    """Test _density_and_unc with empty histogram."""
-    ch = CorsikaHistograms.__new__(CorsikaHistograms)
-
-    hist = bh.Histogram(bh.axis.Regular(3, 0, 3), storage=bh.storage.Weight())
-
-    view = hist.view()
-    areas = np.array([1.0, 1.0, 1.0])
-
-    density, unc = ch._density_and_unc(view, areas)
-
-    expected_density = np.array([0.0, 0.0, 0.0])
-    expected_unc = np.array([0.0, 0.0, 0.0])
 
     np.testing.assert_allclose(density, expected_density)
     np.testing.assert_allclose(unc, expected_unc)

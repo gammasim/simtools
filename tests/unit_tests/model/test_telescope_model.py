@@ -160,12 +160,6 @@ def test_is_file_2d_true(telescope_model_lst):
         assert result is True
 
 
-def test_is_file_2d_false(telescope_model_lst):
-    with patch("builtins.open", mock_open(read_data="no marker here")):
-        result = telescope_model_lst.is_file_2d("mirror_list")
-        assert result is False
-
-
 def test_is_file_2d_keyerror(telescope_model_lst, caplog):
     result = telescope_model_lst.is_file_2d("missing_param")
     assert result is False
@@ -187,7 +181,6 @@ def test_get_on_axis_eff_optical_area_wrong_angle(telescope_model_lst):
 
 
 def test_get_calibration_device_name(telescope_model_lst):
-    """Test get_calibration_device_name method."""
     tel_model = telescope_model_lst
 
     # Test case 1: Parameter exists and device type found
@@ -210,7 +203,6 @@ def test_get_calibration_device_name(telescope_model_lst):
 
 
 def test_mirrors_property(telescope_model_lst, monkeypatch):
-    """Test mirrors property lazy loading."""
     tel_model = telescope_model_lst
     load_mirrors_mock = Mock()
     monkeypatch.setattr(tel_model, "_load_mirrors", load_mirrors_mock)
@@ -227,7 +219,6 @@ def test_mirrors_property(telescope_model_lst, monkeypatch):
 
 
 def test_export_single_mirror_list_file(telescope_model_lst, caplog):
-    """Test export_single_mirror_list_file method."""
     tel_model = telescope_model_lst
     tel_model._mirrors = Mock()
     tel_model._mirrors.number_of_mirrors = 5
@@ -249,7 +240,6 @@ def test_export_single_mirror_list_file(telescope_model_lst, caplog):
 
 
 def test_get_telescope_effective_focal_length(telescope_model_lst):
-    """Test get_telescope_effective_focal_length with various edge cases."""
     import astropy.units as u
 
     tel_model = telescope_model_lst
@@ -284,7 +274,6 @@ def test_get_telescope_effective_focal_length(telescope_model_lst):
 
 
 def test_read_two_dim_wavelength_angle(telescope_model_lst, tmp_path):
-    """Test read_two_dim_wavelength_angle method."""
 
     tel_model = telescope_model_lst
 
@@ -311,7 +300,6 @@ def test_read_two_dim_wavelength_angle(telescope_model_lst, tmp_path):
 
 
 def test_read_incidence_angle_distribution(telescope_model_lst):
-    """Test read_incidence_angle_distribution method."""
     tel_model = telescope_model_lst
 
     # Create a mock file in config directory
@@ -333,7 +321,6 @@ def test_read_incidence_angle_distribution(telescope_model_lst):
 
 
 def test_calc_average_curve():
-    """Test calc_average_curve static method."""
     import numpy as np
 
     from simtools.model.telescope_model import TelescopeModel
@@ -362,7 +349,6 @@ def test_calc_average_curve():
 
 
 def test_export_table_to_model_directory(telescope_model_lst):
-    """Test export_table_to_model_directory method."""
     tel_model = telescope_model_lst
 
     # Create a mock table

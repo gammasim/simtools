@@ -18,7 +18,6 @@ def db_handler_mock(mocker):
 
 
 def test_export_parameter_data_writes_ecsv_for_dict_parameter(mocker, db_handler_mock):
-    """Export dict-typed parameter values as ECSV using output_file."""
     db_handler_mock.get_model_parameter.return_value = {
         "fadc_pulse_shape": {
             "type": "dict",
@@ -67,7 +66,6 @@ def test_export_parameter_data_writes_ecsv_for_dict_parameter(mocker, db_handler
 
 
 def test_export_parameter_data_requires_output_file_for_dict_parameter(db_handler_mock):
-    """Require output_file for dict-typed export."""
     db_handler_mock.get_model_parameter.return_value = {
         "fadc_pulse_shape": {
             "type": "dict",
@@ -94,7 +92,6 @@ def test_export_parameter_data_requires_output_file_for_dict_parameter(db_handle
 
 
 def test_export_parameter_data_exports_original_file_only(mocker, db_handler_mock):
-    """Export only the original model file when export_model_file is set."""
     db_handler_mock.get_model_parameter.return_value = {
         "mirror_reflectivity": {"type": "file", "value": "ref_LST1_2022_04_01.dat"}
     }
@@ -133,7 +130,6 @@ def test_export_parameter_data_exports_original_file_only(mocker, db_handler_moc
 
 
 def test_export_parameter_data_allows_output_file_for_file_parameter(mocker, db_handler_mock):
-    """Allow overriding output file name for file-backed table export."""
     db_handler_mock.get_model_parameter.return_value = {
         "mirror_reflectivity": {"type": "file", "value": "ref_LST1_2022_04_01.dat"}
     }
@@ -170,7 +166,6 @@ def test_export_parameter_data_allows_output_file_for_file_parameter(mocker, db_
 
 
 def test_export_parameter_data_returns_only_table_output(mocker, db_handler_mock):
-    """Return only ECSV output for file-backed table export."""
     db_handler_mock.get_model_parameter.return_value = {
         "mirror_reflectivity": {"type": "file", "value": "ref_LST1_2022_04_01.dat"}
     }
@@ -213,7 +208,6 @@ def test_export_parameter_data_returns_only_table_output(mocker, db_handler_mock
 
 
 def test_export_parameter_data_returns_file_and_table_outputs(mocker, db_handler_mock):
-    """Return both original and ECSV outputs when both export flags are set."""
     db_handler_mock.get_model_parameter.return_value = {
         "mirror_reflectivity": {"type": "file", "value": "ref_LST1_2022_04_01.dat"}
     }
@@ -244,7 +238,6 @@ def test_export_parameter_data_returns_file_and_table_outputs(mocker, db_handler
 
 
 def test_export_model_files_requires_destination(db_handler_mock):
-    """Require destination path for exporting files from DB."""
     with pytest.raises(ValueError, match="Destination path is required"):
         parameter_exporter.export_model_files(
             db=db_handler_mock,
@@ -254,14 +247,12 @@ def test_export_model_files_requires_destination(db_handler_mock):
 
 
 def test_normalize_file_names_returns_empty_list_for_no_inputs():
-    """Return empty file list when neither file_names nor parameters are provided."""
     assert parameter_exporter._normalize_file_names() == []
 
 
 def test_export_parameter_data_file_parameter_ecsv_suffix_skips_table_conversion(
     mocker, db_handler_mock
 ):
-    """Write ECSV output even when source payload filename already has .ecsv suffix."""
     db_handler_mock.get_model_parameter.return_value = {
         "mirror_reflectivity": {"type": "file", "value": "mirror_reflectivity.ecsv"}
     }
@@ -290,7 +281,6 @@ def test_export_parameter_data_file_parameter_ecsv_suffix_skips_table_conversion
 
 
 def test_export_parameter_data_no_export_returns_empty_list(db_handler_mock):
-    """No export flags returns empty list."""
     result = parameter_exporter.export_parameter_data(
         db=db_handler_mock,
         parameter="test_param",

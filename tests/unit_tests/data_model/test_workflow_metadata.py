@@ -69,10 +69,13 @@ def test_update_model_parameter_metadata_file(tmp_test_directory):
 
 
 def test_update_model_parameter_metadata_file_missing_file():
-    workflow_metadata.update_model_parameter_metadata_file(
-        metadata_file=Path("missing.meta.yml"),
-        workflow_activity={"id": "workflow-id"},
-        associated_activities=[],
+    assert (
+        workflow_metadata.update_model_parameter_metadata_file(
+            metadata_file=Path("missing.meta.yml"),
+            workflow_activity={"id": "workflow-id"},
+            associated_activities=[],
+        )
+        is None
     )
 
 

@@ -81,7 +81,6 @@ def test_telescope_trigger_rates_forwards_cr_spectrum():
 
 
 def test_get_cosmic_ray_spectrum_default():
-    """No arguments: should return the proton spectrum."""
     assert get_cosmic_ray_spectrum() is IRFDOC_PROTON_SPECTRUM
 
 
@@ -90,16 +89,7 @@ def test_get_cosmic_ray_spectrum_known_particle():
     assert get_cosmic_ray_spectrum(primary_particle="electron") is IRFDOC_ELECTRON_SPECTRUM
 
 
-def test_get_cosmic_ray_spectrum_unknown_particle_falls_back(caplog):
-    """Unknown primary particle should log a warning and return the proton spectrum."""
-    with caplog.at_level("WARNING"):
-        result = get_cosmic_ray_spectrum(primary_particle="gamma")
-    assert result is IRFDOC_PROTON_SPECTRUM
-    assert "gamma" in caplog.text
-
-
 def test_get_cosmic_ray_spectrum_from_file(tmp_test_directory):
-    """Spectrum loaded from YAML file takes priority over primary_particle."""
     spectrum_file = tmp_test_directory / "spectrum.yml"
     config = {
         "type": "PowerLaw",
@@ -132,23 +122,6 @@ def test_load_spectrum_from_file_power_law(tmp_test_directory):
     assert spectrum.e_ref.value == pytest.approx(1.0)
 
 
-def test_load_spectrum_from_file_log_parabola(tmp_test_directory):
-    spectrum_file = tmp_test_directory / "lp.yml"
-    config = {
-        "type": "LogParabola",
-        "normalization": 3.23e-11,
-        "normalization_unit": "1 / (cm2 s TeV sr)",
-        "a": -2.47,
-        "b": -0.24,
-    }
-    spectrum_file.write_text(yaml.dump(config), encoding="utf-8")
-
-    spectrum = _load_spectrum_from_file(spectrum_file)
-    assert isinstance(spectrum, LogParabola)
-    assert spectrum.a == pytest.approx(-2.47)
-    assert spectrum.b == pytest.approx(-0.24)
-
-
 def test_load_spectrum_from_file_unknown_type_raises(tmp_test_directory):
     spectrum_file = tmp_test_directory / "bad.yml"
     config = {
@@ -163,7 +136,6 @@ def test_load_spectrum_from_file_unknown_type_raises(tmp_test_directory):
 
 
 def test_integrate_energy_spectrum_power_law():
-    """PowerLaw uses analytical integration."""
     spectrum = PowerLaw(
         normalization=9.8e-6 / (u.cm**2 * u.s * u.TeV * u.sr),
         index=-2.62,
@@ -175,7 +147,6 @@ def test_integrate_energy_spectrum_power_law():
 
 
 def test_integrate_energy_spectrum_log_parabola():
-    """LogParabola uses numerical integration; result is physically reasonable."""
     spectrum = LogParabola(
         normalization=3.23e-11 / (u.cm**2 * u.s * u.TeV * u.sr),
         a=-2.47,

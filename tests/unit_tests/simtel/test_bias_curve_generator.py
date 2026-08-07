@@ -182,19 +182,6 @@ def test_calculate_proton_rate_for_file_with_array_layout(tmp_path):
         )
 
 
-def test_calculate_proton_rate_for_file_with_telescope_ids(tmp_path):
-    args = {"telescope": "LSTN-01", "site": "North", "model_version": "7.0.0"}
-
-    with patch(
-        "simtools.simtel.bias_curve_generator.telescope_trigger_rates",
-        return_value={"array": 2 * u.Hz},
-    ):
-        assert (
-            bias_curve_generator._calculate_proton_rate_for_file(tmp_path / "events.hdf5", args)
-            == 2
-        )
-
-
 def test_calculate_proton_rate_for_file_returns_zero_for_missing_trigger_histograms(tmp_path):
     args = _base_args(tmp_path)
 

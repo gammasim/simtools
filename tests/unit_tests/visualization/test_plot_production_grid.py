@@ -80,7 +80,6 @@ def test_normalize_altaz_point(tmp_test_directory):
 
 
 def test_normalize_job_grid_altaz_columns(tmp_test_directory):
-    """Handle semantic job-grid coordinate columns."""
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_altaz_flattened.ecsv",
@@ -158,7 +157,6 @@ def test_normalize_hadec_point_without_altaz_projection(tmp_test_directory):
 
 
 def test_plot_sky_projection_creates_output_altaz_only(tmp_test_directory):
-    """Write the sky projection plot with Alt/Az data only."""
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_altaz_only.ecsv",
@@ -196,7 +194,6 @@ def test_plot_sky_projection_creates_output_with_hadec_panel(tmp_test_directory)
 
 
 def test_plot_altaz_projection_with_limits_creates_outputs(tmp_test_directory):
-    """Write Alt/Az color-scale plots and zenith profiles for all supported limits."""
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_energy_flattened.ecsv",
@@ -242,7 +239,6 @@ def test_plot_altaz_projection_with_limits_creates_outputs(tmp_test_directory):
 
 
 def test_load_grid_points_file_not_found(tmp_test_directory):
-    """Raise when the grid points file does not exist."""
     missing_file = Path(tmp_test_directory) / "does_not_exist.ecsv"
 
     with pytest.raises(FileNotFoundError, match="Grid points file not found"):
@@ -253,7 +249,6 @@ def test_load_grid_points_file_not_found(tmp_test_directory):
 
 
 def test_load_grid_points_wrong_suffix(tmp_test_directory):
-    """Raise when the grid points file is not ECSV."""
     wrong_file = Path(tmp_test_directory) / "grid_points.txt"
     wrong_file.write_text("dummy", encoding="utf-8")
 
@@ -265,7 +260,6 @@ def test_load_grid_points_wrong_suffix(tmp_test_directory):
 
 
 def test_extract_quantity_value_dict_branches():
-    """Cover value/lower/None extraction paths."""
     point_with_value = {"x": {"value": 12.3, "unit": "deg"}}
     assert ProductionGridPlotter._extract_quantity_value(point_with_value, "x") == pytest.approx(
         12.3
@@ -317,7 +311,6 @@ def test_configure_hadec_axis_expands_flat_ranges(tmp_test_directory):
 
 
 def test_plot_frame_points_logs_no_valid_points(tmp_test_directory, caplog):
-    """Log warning and return zero when no points can be plotted."""
     grid_file = _write_grid_file(tmp_test_directory, "grid_empty.ecsv", [])
     plotter = _create_plotter(
         grid_file=grid_file,
@@ -373,7 +366,6 @@ def test_plot_altaz_points_logs_hidden_hadec_points(tmp_test_directory, caplog):
 
 
 def test_plot_sky_projection_writes_grid_density_subtitle(tmp_test_directory, monkeypatch):
-    """Render direction grid density in subtitle when present in metadata."""
     grid_file = _write_grid_file(
         tmp_test_directory,
         "grid_with_density_meta.ecsv",

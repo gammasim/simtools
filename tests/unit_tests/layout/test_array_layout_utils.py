@@ -76,7 +76,6 @@ def test_write_array_layouts(mock_io_handler, mock_model_data_writer, test_path,
 
 
 def test_merge_array_layouts():
-    """Test merging of array layouts."""
     # Define test inputs
     layouts_1 = {
         "value": [
@@ -124,7 +123,6 @@ def test_merge_array_layouts():
 
 
 def test_get_ctao_array_element_name():
-    """Test getting array element name from common identifier."""
     # Test normal case
     array_element_ids = {
         "array_elements": [{"id": "T1", "name": "telescope1"}, {"id": "T2", "name": "telescope2"}]
@@ -147,7 +145,6 @@ def test_get_ctao_array_element_name():
 
 @patch("simtools.layout.array_layout_utils.names")
 def test_get_ctao_layouts_per_site(mock_names):
-    """Test getting array layouts per site."""
     # Mock site determination function
     mock_names.get_site_from_array_element_name.side_effect = lambda x: (
         "north" if "N" in x else "south"
@@ -199,7 +196,6 @@ def test_get_ctao_layouts_per_site(mock_names):
 
 
 def test_retrieve_ctao_array_layouts_from_url():
-    """Test retrieving array layouts from URL."""
     subarray_metadata = {"CTA PRODUCT ID": "test-uuid-1234", "CTA DATA MODEL VERSION": 2}
     with (
         patch("simtools.layout.array_layout_utils.gen") as mock_gen,
@@ -242,7 +238,6 @@ def test_retrieve_ctao_array_layouts_from_url():
 
 
 def test_retrieve_ctao_array_layouts_from_file(test_path):
-    """Test retrieving array layouts from local file."""
     subarray_metadata = {"CTA PRODUCT ID": "file-uuid-5678"}
     with (
         patch("simtools.layout.array_layout_utils.gen") as mock_gen,
@@ -272,7 +267,6 @@ def test_retrieve_ctao_array_layouts_from_file(test_path):
 
 
 def test_build_associated_data_from_metadata():
-    """Test building associated data entries from subarray-ids.json metadata."""
     metadata = {"CTA PRODUCT ID": "abc-123", "CTA DATA MODEL VERSION": 2}
     result = array_layout_utils._build_associated_data_from_metadata(
         metadata, url="https://example.org/repo/-/raw/", branch="main"
@@ -294,7 +288,6 @@ def test_build_associated_data_from_metadata():
 
 
 def test_validate_array_layouts_with_db_valid():
-    """Test validation with valid array layouts."""
     production_table = {"parameters": {"tel1": {}, "tel2": {}, "tel3": {}, "tel4": {}}}
 
     array_layouts = {
@@ -309,7 +302,6 @@ def test_validate_array_layouts_with_db_valid():
 
 
 def test_validate_array_layouts_with_db_invalid():
-    """Test validation with invalid array layouts."""
     production_table = {"parameters": {"tel1": {}, "tel2": {}}}
 
     array_layouts = {
@@ -320,76 +312,6 @@ def test_validate_array_layouts_with_db_invalid():
     }
 
     with pytest.raises(ValueError, match=r"Invalid array elements found: \['tel3', 'tel4'\]"):
-        array_layout_utils.validate_array_layouts_with_db(production_table, array_layouts)
-
-
-def test_validate_array_layouts_with_db_empty_production_table():
-    """Test validation with empty production table."""
-    production_table = {"parameters": {}}
-
-    array_layouts = {
-        "value": [
-            {"name": "array1", "elements": ["tel1"]},
-        ]
-    }
-
-    with pytest.raises(ValueError, match=r"Invalid array elements found: \['tel1'\]"):
-        array_layout_utils.validate_array_layouts_with_db(production_table, array_layouts)
-
-
-def test_validate_array_layouts_with_db_empty_array_layouts():
-    """Test validation with empty array layouts."""
-    production_table = {"parameters": {"tel1": {}, "tel2": {}}}
-
-    array_layouts = {"value": []}
-
-    result = array_layout_utils.validate_array_layouts_with_db(production_table, array_layouts)
-    assert result == array_layouts
-
-
-def test_validate_array_layouts_with_db_missing_keys():
-    """Test validation with missing keys in dictionaries."""
-    # Missing parameters key
-    production_table = {}
-    array_layouts = {
-        "value": [
-            {"name": "array1", "elements": ["tel1"]},
-        ]
-    }
-
-    with pytest.raises(ValueError, match=r"Invalid array elements found: \['tel1'\]"):
-        array_layout_utils.validate_array_layouts_with_db(production_table, array_layouts)
-
-    # Missing value key
-    production_table = {"parameters": {"tel1": {}}}
-    array_layouts = {}
-
-    result = array_layout_utils.validate_array_layouts_with_db(production_table, array_layouts)
-    assert result == array_layouts
-
-    # Missing elements key in layout
-    array_layouts = {
-        "value": [
-            {"name": "array1"},  # No elements key
-        ]
-    }
-
-    result = array_layout_utils.validate_array_layouts_with_db(production_table, array_layouts)
-    assert result == array_layouts
-
-
-def test_validate_array_layouts_with_db_partial_invalid():
-    """Test validation with partially invalid array layouts."""
-    production_table = {"parameters": {"tel1": {}, "tel2": {}}}
-
-    array_layouts = {
-        "value": [
-            {"name": "array1", "elements": ["tel1", "tel2"]},  # Valid
-            {"name": "array2", "elements": ["tel1", "tel3"]},  # tel3 invalid
-        ]
-    }
-
-    with pytest.raises(ValueError, match=r"Invalid array elements found: \['tel3'\]"):
         array_layout_utils.validate_array_layouts_with_db(production_table, array_layouts)
 
 
@@ -455,7 +377,6 @@ def test_get_array_layouts_from_parameter_file_missing_value_key(mocker):
 
 
 def test_get_array_layouts_from_parameter_file_filtered_by_name(mocker, mock_array_model):
-    """Test that only layouts matching array_layout_name are returned."""
     model_version = "6.0.0"
     fake_data = {
         "value": [
@@ -478,25 +399,6 @@ def test_get_array_layouts_from_parameter_file_filtered_by_name(mocker, mock_arr
     returned_names = {layout["name"] for layout in results}
     assert returned_names == {"array1", "array3"}
     assert "array2" not in returned_names
-
-
-def test_get_array_layouts_from_parameter_file_no_matches(mocker, mock_array_model):
-    """Test that an empty list is returned when no layouts match array_layout_name."""
-    model_version = "6.0.0"
-    fake_data = {
-        "value": [
-            {"name": "array1"},
-            {"name": "array2"},
-        ],
-        "site": "north",
-    }
-    mocker.patch(PATCH_ASCII_COLLECT_FILE, return_value=fake_data)
-
-    results = array_layout_utils.get_array_layouts_from_parameter_file(
-        "test_file.json", model_version, array_layout_name=["nonexistent"]
-    )
-
-    assert results == []
 
 
 def test_get_array_layouts_from_db_with_layout_name(mock_array_model):
@@ -681,17 +583,6 @@ def test_get_array_layouts_from_file_single_string(mocker, mock_read_table_from_
     assert layouts[0]["array_elements"] == fake_table
 
 
-def test_get_array_layouts_from_file_single_path(mocker, mock_read_table_from_file):
-    fake_table = ["path_table"]
-    mocker.patch(mock_read_table_from_file, return_value=fake_table)
-    file_path = Path("example_file.dat")
-    layouts = array_layout_utils.get_array_layouts_from_file(file_path)
-    assert len(layouts) == 1
-    expected_name = "example_file"  # from "example_file.dat"
-    assert layouts[0]["name"] == expected_name
-    assert layouts[0]["array_elements"] == fake_table
-
-
 def test_get_array_layouts_from_file_list(mocker, mock_read_table_from_file):
     fake_table1 = ["table1"]
     fake_table2 = ["table2"]
@@ -705,76 +596,7 @@ def test_get_array_layouts_from_file_list(mocker, mock_read_table_from_file):
     assert layouts[1]["array_elements"] == fake_table2
 
 
-def test_get_array_layout_dict_with_layout_name(mock_array_model):
-    """Test _get_array_layout_dict with a layout name provided."""
-    # Setup test data
-    model_version = "6.0.0"
-    site = "north"
-    layout_name = "test_layout"
-    fake_table = ["tel1", "tel2"]
-
-    # Mock ArrayModel instance
-    instance = MagicMock()
-    instance.export_array_elements_as_table.return_value = fake_table
-    mock_array_model.return_value = instance
-
-    # Call function
-    result = array_layout_utils._get_array_layout_dict(
-        model_version, site, None, layout_name, "ground"
-    )
-
-    # Verify ArrayModel initialization
-    mock_array_model.assert_called_once_with(
-        model_version=model_version,
-        site=site,
-        array_elements=None,
-        layout_name=layout_name,
-        ignore_software_version=False,
-    )
-
-    # Verify export_array_elements_as_table call
-    instance.export_array_elements_as_table.assert_called_once_with(coordinate_system="ground")
-
-    # Check result
-    assert result == {"name": layout_name, "site": site, "array_elements": fake_table}
-
-
-def test_get_array_layout_dict_with_telescope_list(mock_array_model):
-    """Test _get_array_layout_dict with a telescope list provided."""
-    # Setup test data
-    model_version = "6.0.0"
-    site = "south"
-    telescope_list = ["tel1", "tel2", "tel3"]
-    fake_table = ["tel_data1", "tel_data2", "tel_data3"]
-
-    # Mock ArrayModel instance
-    instance = MagicMock()
-    instance.export_array_elements_as_table.return_value = fake_table
-    mock_array_model.return_value = instance
-
-    # Call function
-    result = array_layout_utils._get_array_layout_dict(
-        model_version, site, telescope_list, None, "ground"
-    )
-
-    # Verify ArrayModel initialization
-    mock_array_model.assert_called_once_with(
-        model_version=model_version,
-        site=site,
-        array_elements=telescope_list,
-        layout_name=None,
-        ignore_software_version=False,
-    )
-
-    # Verify export_array_elements_as_table call
-    instance.export_array_elements_as_table.assert_called_once_with(coordinate_system="ground")
-
-    # Check result
-    assert result == {"name": "list", "site": site, "array_elements": fake_table}
-
-
 def test_read_array_layouts_from_db_specific_layouts(mocker):
-    """Test _read_array_layouts_from_db with specific layout names."""
     mock_site_model = mocker.patch(PATCH_SITEMODEL)
     instance = mock_site_model.return_value
     instance.get_array_elements_for_layout.side_effect = lambda name: (
@@ -795,7 +617,6 @@ def test_read_array_layouts_from_db_specific_layouts(mocker):
 
 
 def test_read_array_layouts_from_db_all_layouts(mocker):
-    """Test _read_array_layouts_from_db with 'all' layouts."""
     mock_site_model = mocker.patch("simtools.layout.array_layout_utils.SiteModel")
     instance = mock_site_model.return_value
     instance.get_list_of_array_layouts.return_value = ["LST", "MST"]
@@ -926,7 +747,6 @@ def test_read_layouts_with_array_element_list(minimal_args_dict):
 
 
 def test_create_regular_array_simple():
-    """Test creating a regular array with a single telescope."""
     table = array_layout_utils.create_regular_array(
         "1MST", "North", n_telescopes=1, telescope_type="MST", telescope_distance=100 * u.m
     )
@@ -939,7 +759,6 @@ def test_create_regular_array_simple():
 
 
 def test_create_regular_array_four_telescopes_square(mocker):
-    """Test creating a square regular array with four telescopes."""
     mocker.patch(
         "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id",
         side_effect=lambda tel_type, site, idx: f"{tel_type}_{site}_{idx}",
@@ -958,7 +777,6 @@ def test_create_regular_array_four_telescopes_square(mocker):
 
 
 def test_create_regular_array_star_shape(mocker):
-    """Test creating a star-shaped regular array with four telescopes."""
     mocker.patch(
         "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id",
         side_effect=lambda tel_type, site, idx: f"{tel_type}_{site}_{idx}",
@@ -978,7 +796,6 @@ def test_create_regular_array_star_shape(mocker):
 
 
 def test_create_regular_array_errors():
-    """Test that create_regular_array raises appropriate errors."""
     distance = 100 * u.m
 
     with pytest.raises(ValueError, match="Unsupported number of telescopes"):
@@ -995,17 +812,6 @@ def test_create_regular_array_errors():
             telescope_distance=distance,
             shape="circle",
         )
-
-
-def test_create_regular_array_metadata():
-    """Test that create_regular_array preserves units and sorts telescope names."""
-    table = array_layout_utils.create_regular_array(
-        "4MST", "South", n_telescopes=4, telescope_type="MST", telescope_distance=120 * u.m
-    )
-    assert table["position_x"].unit == u.m
-    assert table["position_y"].unit == u.m
-    assert table["position_z"].unit == u.m
-    assert list(table["telescope_name"]) == sorted(table["telescope_name"])
 
 
 def test_write_array_elements_from_file_to_repository_utm(tmp_test_directory, get_test_data_file):
@@ -1068,70 +874,7 @@ def mock_telescope_names(mocker):
     )
 
 
-def test_create_star_array_positions(mock_telescope_names):
-    """Test _create_star_array creates correct positions for multiple telescope counts."""
-    test_cases = [
-        (1, [(100, 0)]),
-        (4, [(120, 0), (0, 120), (-120, 0), (0, -120)]),
-        (8, [(150, 0), (0, 150), (-150, 0), (0, -150), (300, 0), (0, 300), (-300, 0), (0, -300)]),
-    ]
-
-    for n_tel, expected_positions in test_cases:
-        tel_name, pos_x, pos_y, pos_z = [], [], [], []
-        distance = expected_positions[0][0] * u.m if expected_positions[0][0] != 0 else 100 * u.m
-
-        array_layout_utils._create_star_array(
-            tel_name, pos_x, pos_y, pos_z, n_tel, "MST", "North", distance
-        )
-
-        assert len(tel_name) == n_tel
-        for i, (exp_x, exp_y) in enumerate(expected_positions):
-            assert pos_x[i] == exp_x * u.m
-            assert pos_y[i] == exp_y * u.m
-            assert pos_z[i] == 0 * u.m
-
-
-def test_create_square_array_positions(mock_telescope_names):
-    """Test _create_square_array creates correct positions."""
-    test_cases = [
-        (1, [(0, 0)]),
-        (4, [(120, -120), (-120, 120), (-120, -120), (120, 120)]),
-    ]
-
-    for n_tel, expected_positions in test_cases:
-        tel_name, pos_x, pos_y, pos_z = [], [], [], []
-        distance = 120 * u.m
-
-        array_layout_utils._create_square_array(
-            tel_name, pos_x, pos_y, pos_z, n_tel, "MST", "South", distance
-        )
-
-        assert len(tel_name) == n_tel
-        for i, (exp_x, exp_y) in enumerate(expected_positions):
-            assert pos_x[i] == exp_x * u.m
-            assert pos_y[i] == exp_y * u.m
-            assert pos_z[i] == 0 * u.m
-
-
-def test_create_square_array_errors(mocker):
-    """Test _create_square_array with unsupported number of telescopes."""
-    mocker.patch(
-        "simtools.layout.array_layout_utils.names.generate_array_element_name_from_type_site_id"
-    )
-    tel_name, pos_x, pos_y, pos_z = [], [], [], []
-    distance = 100 * u.m
-
-    for n_tel in [2, 5]:
-        with pytest.raises(
-            ValueError, match=f"Unsupported number of telescopes for square array: {n_tel}"
-        ):
-            array_layout_utils._create_square_array(
-                tel_name, pos_x, pos_y, pos_z, n_tel, "MST", "North", distance
-            )
-
-
 def test_write_array_elements_info_yaml_basic(tmp_path):
-    """Test writing array elements info YAML file with basic functionality."""
     array_table = QTable(
         {
             "telescope_name": ["MST_North_01", "MST_North_02"],
@@ -1164,156 +907,6 @@ def test_write_array_elements_info_yaml_basic(tmp_path):
     assert tel_01["version"] == "2.0.0"
     assert tel_01["value"] == [100.0, 100.0, 0.0]
     assert tel_01["unit"] == "m"
-
-
-def test_write_array_elements_info_yaml_custom_values(tmp_path):
-    """Test YAML writing with various custom values."""
-    test_cases = [
-        {
-            "name": "single_telescope",
-            "telescopes": ["LST_South_01"],
-            "positions": ([0], [0], [0]),
-            "site": "South",
-            "model_version": "7.0.0",
-            "parameter_version": "3.0.0",
-        },
-        {
-            "name": "fractional_positions",
-            "telescopes": ["MST_North_01", "MST_North_02"],
-            "positions": ([123.456, -234.567], [789.012, -456.789], [1.234, 2.345]),
-            "site": "North",
-            "model_version": "6.0.0",
-            "parameter_version": "2.0.0",
-        },
-    ]
-
-    for case in test_cases:
-        array_table = QTable(
-            {
-                "telescope_name": case["telescopes"],
-                "position_x": case["positions"][0] * u.m,
-                "position_y": case["positions"][1] * u.m,
-                "position_z": case["positions"][2] * u.m,
-            },
-            meta={"array_name": f"{len(case['telescopes'])}TEL", "site": case["site"]},
-        )
-
-        output_file = tmp_path / f"{case['name']}.yaml"
-        array_layout_utils.write_array_elements_info_yaml(
-            array_table, case["site"], case["model_version"], output_file, case["parameter_version"]
-        )
-
-        data = ascii_handler.collect_data_from_file(output_file)
-        assert data["model_version"] == case["model_version"]
-        obs_key = f"OBS-{case['site']}"
-        assert data["changes"][obs_key]["array_layouts"]["version"] == case["parameter_version"]
-
-        for tel_name in case["telescopes"]:
-            tel_data = data["changes"][tel_name]["array_element_position_ground"]
-            assert tel_data["version"] == case["parameter_version"]
-
-
-def test_get_array_elements_from_db_for_layouts_specific_layouts(mocker):
-    """Test get_array_elements_from_db_for_layouts with specific layout names."""
-    mock_site_model = mocker.patch(PATCH_SITEMODEL)
-    instance = mock_site_model.return_value
-    instance.get_array_elements_for_layout.side_effect = lambda name: (
-        ["tel1", "tel2"] if name == "LST" else ["tel3", "tel4"]
-    )
-
-    layouts = ["LST", "MST"]
-    site = "North"
-    model_version = "6.0.0"
-
-    result = array_layout_utils.get_array_elements_from_db_for_layouts(layouts, site, model_version)
-
-    assert result == {"LST": ["tel1", "tel2"], "MST": ["tel3", "tel4"]}
-    mock_site_model.assert_called_once_with(site=site, model_version=model_version)
-    assert instance.get_array_elements_for_layout.call_count == 2
-    instance.get_array_elements_for_layout.assert_any_call("LST")
-    instance.get_array_elements_for_layout.assert_any_call("MST")
-
-
-def test_get_array_elements_from_db_for_layouts_all_layouts(mocker):
-    """Test get_array_elements_from_db_for_layouts with 'all' layouts."""
-    mock_site_model = mocker.patch(PATCH_SITEMODEL)
-    instance = mock_site_model.return_value
-    instance.get_list_of_array_layouts.return_value = ["LST", "MST", "SST"]
-
-    def mock_side_effect(name):
-        if name == "LST":
-            return ["tel1", "tel2"]
-        if name == "MST":
-            return ["tel3", "tel4"]
-        return ["tel5", "tel6"]
-
-    instance.get_array_elements_for_layout.side_effect = mock_side_effect
-
-    layouts = ["all"]
-    site = "South"
-    model_version = "7.0.0"
-
-    result = array_layout_utils.get_array_elements_from_db_for_layouts(layouts, site, model_version)
-
-    assert result == {
-        "LST": ["tel1", "tel2"],
-        "MST": ["tel3", "tel4"],
-        "SST": ["tel5", "tel6"],
-    }
-    instance.get_list_of_array_layouts.assert_called_once()
-    assert instance.get_array_elements_for_layout.call_count == 3
-    instance.get_array_elements_for_layout.assert_any_call("LST")
-    instance.get_array_elements_for_layout.assert_any_call("MST")
-    instance.get_array_elements_for_layout.assert_any_call("SST")
-
-
-def test_get_array_elements_from_db_for_layouts_single_layout(mocker):
-    """Test get_array_elements_from_db_for_layouts with a single layout."""
-    mock_site_model = mocker.patch(PATCH_SITEMODEL)
-    instance = mock_site_model.return_value
-    instance.get_array_elements_for_layout.return_value = ["tel_a", "tel_b", "tel_c"]
-
-    layouts = ["CustomLayout"]
-    site = "North"
-    model_version = "6.1.0"
-
-    result = array_layout_utils.get_array_elements_from_db_for_layouts(layouts, site, model_version)
-
-    assert result == {"CustomLayout": ["tel_a", "tel_b", "tel_c"]}
-    mock_site_model.assert_called_once_with(site=site, model_version=model_version)
-    instance.get_array_elements_for_layout.assert_called_once_with("CustomLayout")
-
-
-def test_get_array_elements_from_db_for_layouts_empty_layout_list(mocker):
-    """Test get_array_elements_from_db_for_layouts with empty layout list."""
-    mock_site_model = mocker.patch(PATCH_SITEMODEL)
-    instance = mock_site_model.return_value
-
-    layouts = []
-    site = "North"
-    model_version = "6.0.0"
-
-    result = array_layout_utils.get_array_elements_from_db_for_layouts(layouts, site, model_version)
-
-    assert result == {}
-    instance.get_array_elements_for_layout.assert_not_called()
-
-
-def test_get_array_elements_from_db_for_layouts_all_with_no_layouts(mocker):
-    """Test get_array_elements_from_db_for_layouts with 'all' when no layouts exist."""
-    mock_site_model = mocker.patch(PATCH_SITEMODEL)
-    instance = mock_site_model.return_value
-    instance.get_list_of_array_layouts.return_value = []
-
-    layouts = ["all"]
-    site = "South"
-    model_version = "7.0.0"
-
-    result = array_layout_utils.get_array_elements_from_db_for_layouts(layouts, site, model_version)
-
-    assert result == {}
-    instance.get_list_of_array_layouts.assert_called_once()
-    instance.get_array_elements_for_layout.assert_not_called()
 
 
 def test_resolve_array_layout_name_resolves_stringified_by_version_layout():

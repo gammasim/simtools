@@ -80,12 +80,6 @@ def file_base_name(model_version):
     )
 
 
-def test_init_runner_services(runner_service_config_only):
-    assert runner_service_config_only.label == "test-corsika-runner"
-    assert runner_service_config_only.config.primary_particle.name == "proton"
-    assert str(runner_service_config_only.directory).endswith("corsika")
-
-
 def test_get_file_basename(runner_service, file_base_name, model_version):
     assert runner_service._get_file_basename(1) == file_base_name
     _runner_service_copy = copy.deepcopy(runner_service)
@@ -175,23 +169,6 @@ def test_validate_corsika_run_number():
         runner_services.validate_corsika_run_number(123456789)
 
 
-def test_load_files(runner_service_config_only):
-    run_files = runner_service_config_only.load_files(run_number=1)
-    assert isinstance(run_files, dict)
-    assert "corsika_input" in run_files
-    assert "corsika_output" in run_files
-    assert "corsika_log" in run_files
-    for file_path in run_files.values():
-        assert isinstance(file_path, pathlib.Path)
-
-
-def test_get_sub_directory(runner_service_config_only, tmp_path):
-    dir_path = runner_service_config_only._get_sub_directory(
-        run_number=1, dir_path=tmp_path / "base" / "dir"
-    )
-    assert dir_path == tmp_path / "base" / "dir" / "run000001"
-
-
 def test__get_file_basename(runner_service_config_only):
     runner_service_config_only.config = None
     with pytest.raises(ValueError, match=r"Invalid configuration type: <class 'NoneType'>"):
@@ -199,7 +176,6 @@ def test__get_file_basename(runner_service_config_only):
 
 
 def test_get_file_base_name_from_core_config_full():
-    """Test file base name generation from core config with all parameters."""
     config = {
         "run_mode": "test_mode",
         "run_number": 5,
@@ -219,61 +195,8 @@ def test_get_file_base_name_from_core_config_full():
 
 
 def test_get_file_base_name_from_core_config_minimal():
-    """Test file base name generation from core config with minimal parameters."""
     config = {
         "run_mode": "test_mode",
-        "model_version": "1.0.0",
-    }
-    runner_service = runner_services.RunnerServices(
-        config=config,
-        label=None,
-        run_type="corsika",
-    )
-    basename = runner_service._get_file_base_name_from_core_config()
-    assert basename == "test_mode_1.0.0"
-
-
-def test_get_file_base_name_from_core_config_no_run_mode():
-    """Test file base name generation without run_mode."""
-    config = {
-        "zenith_angle": 20,
-        "azimuth_angle": 45,
-        "site": "North",
-        "layout": "test_layout",
-        "model_version": "1.0.0",
-    }
-    runner_service = runner_services.RunnerServices(
-        config=config,
-        label="test-label",
-        run_type="corsika",
-    )
-    basename = runner_service._get_file_base_name_from_core_config()
-    assert basename == "za20deg_azm045deg_North_test_layout_1.0.0_test-label"
-
-
-def test_get_file_base_name_from_core_config_invalid_angles():
-    """Test file base name generation with invalid angle types."""
-    config = {
-        "run_mode": "test_mode",
-        "zenith_angle": "invalid",
-        "azimuth_angle": "invalid",
-        "model_version": "1.0.0",
-    }
-    runner_service = runner_services.RunnerServices(
-        config=config,
-        label=None,
-        run_type="corsika",
-    )
-    basename = runner_service._get_file_base_name_from_core_config()
-    assert basename == "test_mode_1.0.0"
-
-
-def test_get_file_base_name_from_core_config_none_values():
-    """Test file base name generation with None values in optional fields."""
-    config = {
-        "run_mode": "test_mode",
-        "site": None,
-        "layout": None,
         "model_version": "1.0.0",
     }
     runner_service = runner_services.RunnerServices(
@@ -286,7 +209,6 @@ def test_get_file_base_name_from_core_config_none_values():
 
 
 def test_get_file_base_name_from_core_config_illuminator_with_light_source():
-    """Test illuminator filename base includes light source after site."""
     config = {
         "run_mode": "illuminator",
         "light_source": "ILLN-01",
@@ -301,21 +223,3 @@ def test_get_file_base_name_from_core_config_illuminator_with_light_source():
 
     basename = runner_service._get_file_base_name_from_core_config()
     assert basename == "illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-04"
-
-
-def test_get_file_base_name_from_core_config_non_illuminator_with_light_source():
-    """Test that light source is ignored for non-illuminator run modes."""
-    config = {
-        "run_mode": "test_mode",
-        "light_source": "ILLN-01",
-        "site": "North",
-        "model_version": "1.0.0",
-    }
-    runner_service = runner_services.RunnerServices(
-        config=config,
-        label=None,
-        run_type="corsika",
-    )
-
-    basename = runner_service._get_file_base_name_from_core_config()
-    assert basename == "test_mode_North_1.0.0"

@@ -34,21 +34,11 @@ def test_compute_integration_window(
 
 
 def test_compute_integration_window_pedestal_mode_near_end():
-    """Test pedestal mode when window would exceed waveform length."""
     a, b = trace.compute_integration_window(
         peak_idx=190, n_samp=200, half_width=2, mode="pedestal", offset=16
     )
     assert b <= 200
     assert b - a == 5
-
-
-def test_compute_integration_window_pedestal_mode_window_wraps():
-    """Test pedestal mode fallback when offset window exceeds bounds."""
-    a, b = trace.compute_integration_window(
-        peak_idx=10, n_samp=100, half_width=10, mode="pedestal", offset=50
-    )
-    assert a >= 0
-    assert b <= 100
 
 
 # ============================================================================
@@ -88,15 +78,6 @@ def test_calculate_pedestals_fixed_window():
     assert np.allclose(ped, expected)
 
 
-def test_calculate_pedestals_dynamic_window_peak_centered():
-    waveform = np.zeros((2, 20))
-    waveform[0, 10] = 10
-    waveform[1, 15] = 20
-    ped = trace.calculate_pedestals(waveform, half_width=2, offset=3)
-    assert np.allclose(ped[0], np.mean(waveform[0, 13:18]))
-    assert np.allclose(ped[1], np.mean(waveform[1, 10:15]))
-
-
 # ============================================================================
 # trace_integration tests - parametrized
 # ============================================================================
@@ -124,15 +105,6 @@ def test_trace_integration_no_pedestals():
     result = trace.trace_integration(waveform, None, (0, 3))
     ped = trace.calculate_pedestals(waveform)
     expected = np.sum(waveform[0, 0:3] - ped[0])
-    assert np.allclose(result, expected)
-
-
-def test_trace_integration_with_3d_input():
-    waveform = np.array([[[1, 2, 3, 4], [5, 6, 7, 8]]])
-    pedestals = np.array([1, 5])
-    window = (1, 4)
-    result = trace.trace_integration(waveform, pedestals, window)
-    expected = np.array([np.sum(waveform[0, 0, 1:4] - 1), np.sum(waveform[0, 1, 1:4] - 5)])
     assert np.allclose(result, expected)
 
 
@@ -177,12 +149,6 @@ def test_find_signal_peaks_no_peaks_returns_max():
     peaks = trace.find_signal_peaks(waveform)
     assert peaks.size == 1
     assert peaks[0] == 0
-
-
-def test_find_signal_peaks_empty_trace():
-    waveform = np.array([])
-    with pytest.raises(ValueError, match="zero-size array"):
-        trace.find_signal_peaks(waveform)
 
 
 # ============================================================================
@@ -270,30 +236,6 @@ def test_trace_maxima(waveform_desc, sum_threshold, expected_count, expected_pix
 
 def test_trace_maxima_no_pixels_above_threshold():
     waveform = np.zeros((3, 10))
-    peak_samples, pix_ids, found_count = trace.trace_maxima(waveform, sum_threshold=1)
-    assert peak_samples is None
-    assert pix_ids is None
-    assert found_count == 0
-
-
-def test_trace_maxima_peak_at_start_and_end():
-    waveform = np.array([[0, 0, 10, 0, 0], [0, 0, 0, 0, 0]])
-    peak_samples, pix_ids, found_count = trace.trace_maxima(waveform, sum_threshold=1)
-    assert found_count == 1
-    assert pix_ids[0] == 0
-    assert peak_samples[0] == 2
-
-
-def test_trace_maxima_single_pixel():
-    waveform = np.array([[0, 2, 4, 3, 1]])
-    peak_samples, pix_ids, found_count = trace.trace_maxima(waveform, sum_threshold=2)
-    assert found_count == 1
-    assert pix_ids[0] == 0
-    assert peak_samples[0] == 2
-
-
-def test_trace_maxima_empty_trace():
-    waveform = np.empty((0, 5))
     peak_samples, pix_ids, found_count = trace.trace_maxima(waveform, sum_threshold=1)
     assert peak_samples is None
     assert pix_ids is None

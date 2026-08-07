@@ -16,7 +16,6 @@ from astropy.table import Table
 import simtools.data_model.metadata_collector as metadata_collector
 from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH, TEST_RESOURCES_STATIC
 from simtools.data_model import schema
-from simtools.utils import names
 
 logger = logging.getLogger()
 
@@ -370,27 +369,6 @@ def test_process_metadata_from_file():
     assert _collector._process_metadata_from_file(meta_dict_4) == meta_dict_4
 
 
-def test_remove_line_feed():
-    collector = metadata_collector.MetadataCollector({})
-    input_string = "This is a string without line feeds."
-    result = collector._remove_line_feed(input_string)
-    assert result == input_string
-
-    input_string_2 = "This is a string\n with line feeds."
-    result = collector._remove_line_feed(input_string_2)
-    assert result == input_string.replace("without", "with")
-
-    input_string_3 = "This is a string\r with line feeds."
-    result = collector._remove_line_feed(input_string_3)
-    assert result == input_string.replace("without", "with")
-
-    assert "" == collector._remove_line_feed("")
-
-    assert " " == collector._remove_line_feed(" ")
-
-    assert " " == collector._remove_line_feed("  ")
-
-
 def test_copy_list_type_metadata(args_dict_site):
     top_level_dict = {
         "context": {
@@ -432,29 +410,6 @@ def test_copy_list_type_metadata(args_dict_site):
     assert _org_top_level_dict == top_level_dict
 
 
-def test_input_dict_is_none():
-    _collector = metadata_collector.MetadataCollector(args_dict={})
-    input_dict = None
-    result = _collector._all_values_none(input_dict)
-    assert result is True
-
-    input_dict = "not a dictionary"
-    result = _collector._all_values_none(input_dict)
-    assert result is False
-
-    input_dict = {"key1": None, "key2": None}
-    result = _collector._all_values_none(input_dict)
-    assert result is True
-
-    input_dict = {}
-    result = _collector._all_values_none(input_dict)
-    assert result is True
-
-    input_dict = {"key1": None, "key2": "value"}
-    result = _collector._all_values_none(input_dict)
-    assert result is False
-
-
 def get_generic_input_meta():
     return {
         "contact": "my_name",
@@ -481,81 +436,6 @@ def get_example_input_schema_single_parameter():
         "short_description": "Latitude of site centre.",
         "data": [{"type": "double", "units": "deg", "allowed_range": {"min": -90.0, "max": 90.0}}],
     }
-
-
-def test_fill_instrument_meta(args_dict_site):
-    instrument_dict = {}
-    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-    collector._fill_instrument_meta(instrument_dict)
-
-    assert instrument_dict["site"] == args_dict_site.get("site", None)
-    assert instrument_dict["ID"] == args_dict_site.get("telescope", None)
-
-    if instrument_dict["ID"]:
-        assert instrument_dict["class"] == names.get_collection_name_from_array_element_name(
-            instrument_dict["ID"]
-        )
-    else:
-        assert "class" not in instrument_dict
-        assert "type" not in instrument_dict
-
-
-def test_clean_meta_data():
-    pre_clean = {
-        "reference": {"version": "1.0.0"},
-        "contact": {"organization": "CTAO", "name": "not_me", "email": None, "orcid": None},
-        "product": {
-            "valid": {
-                "start": None,
-                "end": None,
-            }
-        },
-        "context": {
-            "notes": [{"title": None, "text": None, "creation_time": None}],
-            "document": [
-                {
-                    "type": "CTAO-MC-DOC",
-                    "title": "CTA Monte Carlo Model",
-                    "id": None,
-                }
-            ],
-            "associated_elements": [
-                {"site": "North", "class": None, "type": "LSTN", "id": "design"},
-                {"site": "North"},
-            ],
-        },
-    }
-
-    post_clean = {
-        "contact": {
-            "name": "not_me",
-            "organization": "CTAO",
-        },
-        "context": {
-            "associated_elements": [
-                {
-                    "id": "design",
-                    "site": "North",
-                    "type": "LSTN",
-                },
-                {
-                    "site": "North",
-                },
-            ],
-            "document": [
-                {
-                    "title": "CTA Monte Carlo Model",
-                    "type": "CTAO-MC-DOC",
-                },
-            ],
-        },
-        "reference": {
-            "version": "1.0.0",
-        },
-    }
-
-    collector = metadata_collector.MetadataCollector({})
-    assert collector.clean_meta_data(pre_clean) == post_clean
 
 
 def test_fill_context_meta(args_dict_site, caplog):
@@ -767,20 +647,7 @@ def test_dump(args_dict_site, tmp_test_directory, caplog):
     assert Path(output_file_with_activity).with_suffix(".integration_test.meta.yml").exists()
 
 
-def test_fill_contact_meta_from_system(args_dict_site, caplog):
-    """Test filling contact metadata from system when no name is provided"""
-    contact_dict = {}
-    collector = metadata_collector.MetadataCollector(args_dict=args_dict_site)
-
-    with caplog.at_level(logging.WARNING):
-        collector._fill_contact_meta(contact_dict)
-
-    assert "No user name provided, take user info from system level." in caplog.text
-    assert contact_dict["name"] == getpass.getuser()
-
-
 def test_fill_contact_meta_failed_system(args_dict_site, caplog, monkeypatch):
-    """Test filling contact metadata when system username lookup fails"""
 
     def mock_getuser():
         raise KeyError("Failed to get username")

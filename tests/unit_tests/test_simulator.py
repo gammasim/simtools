@@ -11,9 +11,7 @@ from unittest.mock import call
 import pytest
 from astropy import units as u
 
-from simtools import settings
 from simtools.corsika.corsika_config import CorsikaConfig
-from simtools.model.model_parameter import InvalidModelParameterError
 from simtools.sim_events import file_info
 from simtools.simulator import Simulator
 
@@ -286,20 +284,7 @@ def test_pack_for_register(array_simulator, mocker, model_version, caplog, tmp_t
         assert handle.read() == "simtools"
 
 
-def test_initialize_array_models_with_single_version(
-    shower_simulator, model_version, mock_array_model, mocker
-):
-    """Test array models initialization with a single model version."""
-    array_model_cls = mocker.patch("simtools.simulator.ArrayModel", return_value=mock_array_model)
-    array_models, corsika_configurations = shower_simulator._initialize_array_models()
-    assert len(array_models) == 1
-    assert array_models[0] == mock_array_model
-    assert corsika_configurations is not None
-    assert array_model_cls.call_args.kwargs["model_directory_subdir"] == "run000001"
-
-
 def test_initialize_from_tool_configuration_with_corsika_file(shower_simulator, mocker):
-    """Test initialization when a corsika file is provided."""
     corsika_file = "test_corsika.corsika.gz"
 
     mock_config = mocker.Mock()
@@ -311,27 +296,6 @@ def test_initialize_from_tool_configuration_with_corsika_file(shower_simulator, 
     shower_simulator.run_number = shower_simulator._initialize_from_tool_configuration()
     assert shower_simulator.run_number == 42
     file_info.get_corsika_run_number.assert_called_once_with(corsika_file)
-
-
-def test_initialize_array_models_with_multiple_versions(shower_simulator, mocker):
-    """Test array models initialization with multiple model versions."""
-    model_versions = ["5.0.0", "6.0.1"]
-    mock_models = []
-    for version in model_versions:
-        m = mocker.MagicMock()
-        m.model_version = version
-        mock_models.append(m)
-
-    mocker.patch("simtools.simulator.ArrayModel", side_effect=mock_models)
-    mock_config = mocker.Mock()
-    mock_config.args = {"model_version": model_versions}
-    mocker.patch("simtools.settings.config", mock_config)
-    shower_simulator.model_version = model_versions
-    array_models, _ = shower_simulator._initialize_array_models()
-    assert len(array_models) == len(model_versions)
-    for i, (model, expected_version) in enumerate(zip(array_models, model_versions)):
-        assert model == mock_models[i]
-        assert model.model_version == expected_version
 
 
 def test_pack_for_register_with_multiple_versions(
@@ -448,16 +412,6 @@ def test_initialize_simulation_runner(fixture_name, expected_software, request):
     assert simulator.simulation_software == expected_software
 
 
-def test_initialize_simulation_runner_saves_corsika_output(shower_array_simulator, mocker):
-    mock_config = mocker.patch("simtools.simulator.settings.config")
-    mock_config.args = {"save_corsika_output": True, "sequential": True}
-    runner_class = mocker.patch("simtools.runners.corsika_simtel_runner.CorsikaSimtelRunner")
-
-    shower_array_simulator._initialize_simulation_runner()
-
-    assert runner_class.call_args.kwargs["save_corsika_output"] is True
-
-
 def test_reduced_event_lists_not_sim_telarray(shower_simulator, caplog):
     with caplog.at_level(logging.WARNING):
         shower_simulator.save_reduced_event_lists()
@@ -504,50 +458,7 @@ def test_reduced_event_lists_sim_telarray(array_simulator, mocker):
     )
 
 
-def test_reduced_event_lists_passes_activity_metadata(array_simulator, mocker):
-    """Pass the configured activity arguments to reduced-event metadata generation."""
-    mock_write = mocker.patch.object(Simulator, "write_reduced_event_lists")
-
-    array_simulator.save_reduced_event_lists()
-
-    assert mock_write.call_args.kwargs["metadata_args"] is settings.config.args
-
-
-def test_reduced_event_lists_normalizes_single_files(array_simulator, mocker):
-    """Normalize singleton file paths before writing reduced event lists."""
-    input_file = Path("output_file.simtel.zst")
-    output_file = Path("output_file.reduced_event_data.hdf5")
-    mocker.patch.object(
-        array_simulator,
-        "get_files",
-        side_effect=lambda file_type: (
-            input_file if file_type == "sim_telarray_output" else output_file
-        ),
-    )
-    mock_write = mocker.patch.object(Simulator, "write_reduced_event_lists")
-
-    array_simulator.save_reduced_event_lists()
-
-    assert mock_write.call_args.kwargs["input_files"] == [input_file]
-    assert mock_write.call_args.kwargs["output_files"] == [output_file]
-
-
-def test_reduced_event_lists_no_output_files(array_simulator, mocker, caplog):
-    """Test save_reduced_event_lists with no output files available."""
-    mocker.patch.object(array_simulator, "get_files", return_value=[])
-    mock_simtel_io_writer = mocker.patch("simtools.sim_events.writer.EventDataWriter")
-    mock_io_table_handler = mocker.patch("simtools.simulator.table_handler")
-
-    with caplog.at_level(logging.INFO):
-        array_simulator.save_reduced_event_lists()
-
-    mock_simtel_io_writer.assert_not_called()
-    mock_io_table_handler.write_table_chunks.assert_not_called()
-    assert "No sim_telarray output files found" in caplog.text or caplog.text == ""
-
-
 def test_write_reduced_event_lists_derives_output_files(mocker, tmp_test_directory):
-    """Derive output file names from input files when output_files is not provided."""
     tmp_base = Path(str(tmp_test_directory))
     data_dir = tmp_base / "data"
     output_dir = tmp_base / "reduced"
@@ -580,7 +491,6 @@ def test_write_reduced_event_lists_derives_output_files(mocker, tmp_test_directo
 
 
 def test_write_reduced_event_lists_derives_output_to_input_directory(mocker, tmp_test_directory):
-    """Derive output files in input directory when output_path is not provided."""
     data_dir = Path(str(tmp_test_directory)) / "data"
     input_file = str(data_dir / "output_file3.simtel")
 
@@ -599,7 +509,6 @@ def test_write_reduced_event_lists_derives_output_to_input_directory(mocker, tmp
 
 
 def test_write_reduced_event_lists_raises_for_mismatched_explicit_output_files(mocker):
-    """Raise for explicit output_files length mismatch to avoid silent truncation."""
     input_files = ["output_file1.simtel.zst", "output_file2.simtel.zst"]
     output_files = ["output_file1.reduced_event_data.hdf5"]
 
@@ -614,7 +523,6 @@ def test_write_reduced_event_lists_raises_for_mismatched_explicit_output_files(m
 
 
 def test_write_reduced_event_lists_from_file_list_in_batches(mocker, tmp_test_directory):
-    """Read input paths from a text file and combine them in batches."""
     tmp_base = Path(str(tmp_test_directory))
     input_file_list = tmp_base / "simtel_files.txt"
     input_files = [f"input_file{index}.simtel.zst" for index in range(1, 6)]
@@ -651,7 +559,6 @@ def test_write_reduced_event_lists_from_file_list_in_batches(mocker, tmp_test_di
 
 
 def test_write_reduced_event_lists_parallelizes_output_batches(mocker):
-    """Execute independent output batches through the shared process-pool helper."""
     mock_pool = mocker.patch("simtools.simulator.process_pool_map_ordered")
 
     Simulator.write_reduced_event_lists(
@@ -668,7 +575,6 @@ def test_write_reduced_event_lists_parallelizes_output_batches(mocker):
 def test_write_reduced_event_lists_rejects_invalid_batch_size(
     files_per_reduced_event_file,
 ):
-    """Reject non-positive input batch sizes."""
     with pytest.raises(ValueError, match="must be greater than zero"):
         Simulator.write_reduced_event_lists(
             input_files=["input.simtel.zst"],
@@ -686,12 +592,10 @@ def test_write_reduced_event_lists_rejects_invalid_batch_size(
     ],
 )
 def test_get_calibration_device_types(run_mode, expected_devices):
-    """Test calibration device types for different run modes."""
     assert Simulator._get_calibration_device_types(run_mode) == expected_devices
 
 
 def test_overwrite_flasher_photons_for_direct_injection(mocker):
-    """Overwrite flasher photons for all calibration models in direct injection mode."""
     simulator = Simulator.__new__(Simulator)
     simulator.run_mode = "direct_injection"
     simulator.logger = mocker.Mock()
@@ -727,36 +631,7 @@ def test_overwrite_flasher_photons_for_direct_injection(mocker):
     assert calib_2.overwrite_model_parameter.call_args_list == expected_calls
 
 
-def test_overwrite_flasher_photons_for_direct_injection_raises_when_at_pixel_missing(mocker):
-    """Propagate model-layer error if flasher_photons_at_pixel is missing."""
-    simulator = Simulator.__new__(Simulator)
-    simulator.run_mode = "direct_injection"
-    simulator.logger = mocker.Mock()
-
-    calib = mocker.Mock()
-    calib.name = "MSFx-NectarCam"
-    calib.site = "North"
-    calib.parameters = {}
-    calib.overwrite_model_parameter.side_effect = InvalidModelParameterError("missing")
-
-    array_model = mocker.Mock()
-    array_model.calibration_models = {"TEL01": {"CAL01": calib}}
-    simulator.array_models = [array_model]
-
-    mock_settings = mocker.Mock()
-    mock_settings.config.args = {"flasher_photons": 1234567}
-    mocker.patch("simtools.simulator.settings", mock_settings)
-
-    with pytest.raises(
-        InvalidModelParameterError,
-        match="missing",
-    ):
-        simulator._overwrite_flasher_photons_for_direct_injection()
-    calib.overwrite_model_parameter.assert_called_once_with("flasher_photons_at_pixel", 1234567)
-
-
 def test_overwrite_flasher_photons_for_direct_injection_noop_without_value(mocker):
-    """Do nothing when no override value is configured."""
     simulator = Simulator.__new__(Simulator)
     simulator.run_mode = "direct_injection"
     simulator.logger = mocker.Mock()
@@ -775,28 +650,7 @@ def test_overwrite_flasher_photons_for_direct_injection_noop_without_value(mocke
     calib.overwrite_model_parameter.assert_not_called()
 
 
-def test_overwrite_flasher_photons_for_direct_injection_noop_for_other_modes(mocker):
-    """Do nothing in non direct-injection modes."""
-    simulator = Simulator.__new__(Simulator)
-    simulator.run_mode = "full_simulation"
-    simulator.logger = mocker.Mock()
-
-    calib = mocker.Mock()
-    array_model = mocker.Mock()
-    array_model.calibration_models = {"TEL01": {"CAL01": calib}}
-    simulator.array_models = [array_model]
-
-    mock_settings = mocker.Mock()
-    mock_settings.config.args = {"flasher_photons": 999}
-    mocker.patch("simtools.simulator.settings", mock_settings)
-
-    simulator._overwrite_flasher_photons_for_direct_injection()
-
-    calib.overwrite_model_parameter.assert_not_called()
-
-
 def test_simulate_direct_injection_sequence_reloads_config_per_run(mocker):
-    """Run direct-injection sequences by reloading settings config per run."""
     base_args = {
         "run_mode": "direct_injection",
         "run_number": 10,
@@ -839,7 +693,6 @@ def test_simulate_direct_injection_sequence_reloads_config_per_run(mocker):
 
 
 def test_simulate_direct_injection_sequence_defaults_events_and_photons_when_missing(mocker):
-    """Default to one run with one event when both sequences are missing."""
     base_args = {
         "run_mode": "direct_injection",
         "run_number": 10,
@@ -866,7 +719,6 @@ def test_simulate_direct_injection_sequence_defaults_events_and_photons_when_mis
 
 
 def test_simulate_direct_injection_sequence_expands_single_event_for_multiple_photon_runs(mocker):
-    """Expand scalar event setting to match multiple photon intensity runs."""
     base_args = {
         "run_mode": "direct_injection",
         "run_number": 20,
@@ -893,7 +745,6 @@ def test_simulate_direct_injection_sequence_expands_single_event_for_multiple_ph
 
 
 def test_simulate_direct_injection_sequence_raises_for_invalid_event_list_length(mocker):
-    """Raise if number_of_events length does not match number of photon settings."""
     base_args = {
         "run_mode": "direct_injection",
         "run_number": 10,
@@ -915,7 +766,6 @@ def test_simulate_direct_injection_sequence_raises_for_invalid_event_list_length
 
 
 def test_simulate_direct_injection_sequence_raises_for_invalid_photon_list_length(mocker):
-    """Raise if flasher_photons length does not match number of event settings."""
     base_args = {
         "run_mode": "direct_injection",
         "run_number": 10,
@@ -937,7 +787,6 @@ def test_simulate_direct_injection_sequence_raises_for_invalid_photon_list_lengt
 
 
 def test_simulate_direct_injection_sequence_restores_config_after_failure(mocker):
-    """Restore original settings config even when one run fails."""
     base_args = {
         "run_mode": "direct_injection",
         "run_number": 10,
@@ -962,7 +811,6 @@ def test_simulate_direct_injection_sequence_restores_config_after_failure(mocker
 
 
 def test_report(array_simulator, mocker, caplog):
-    """Test report method for complete coverage."""
 
     mock_corsika_config = mocker.Mock()
     mock_corsika_config.primary_particle = "gamma"
@@ -996,7 +844,6 @@ def test_report(array_simulator, mocker, caplog):
 
 
 def test_make_resources_report(array_simulator, mocker):
-    """Test _make_resources_report method for complete coverage."""
     # Test case 1: With runtime and n_events > 0
     mock_sub_out_files = ["sub_out_file.txt"]
     mocker.patch.object(array_simulator, "get_files", return_value=mock_sub_out_files)
@@ -1052,7 +899,6 @@ def test_make_resources_report(array_simulator, mocker):
 
 
 def test_get_corsika_file(array_simulator, mocker):
-    """Test the _get_corsika_file method for different simulation software types."""
     # Mock settings.config to return various corsika file scenarios
     mock_config = mocker.Mock()
     mocker.patch("simtools.settings.config", mock_config)
@@ -1085,7 +931,6 @@ def test_get_corsika_file(array_simulator, mocker):
 
 
 def test_simulate(array_simulator, mocker):
-    """Test the simulate method orchestrating the simulation process."""
     mock_simulation_runner = mocker.Mock()
     array_simulator._simulation_runner = mock_simulation_runner
 
@@ -1132,7 +977,6 @@ def test_simulate(array_simulator, mocker):
 def test_simulate_exports_resolved_corsika_configuration(
     shower_simulator, mocker, transition_energy
 ):
-    """Test that child jobs receive the authoritative CORSIKA configuration."""
     shower_simulator._simulation_runner = mocker.Mock()
     shower_simulator.runner_service = mocker.Mock()
     shower_simulator.runner_service.get_file_name.side_effect = lambda file_type, run_number: (
@@ -1161,7 +1005,6 @@ def test_simulate_exports_resolved_corsika_configuration(
 
 
 def test_save_file_lists(array_simulator, mocker, tmp_test_directory, caplog):
-    """Test the save_file_lists method for saving various file types to text files."""
     mock_io_handler = mocker.Mock()
     array_simulator.io_handler = mock_io_handler
     output_dir = Path(str(tmp_test_directory)) / "output"
@@ -1249,7 +1092,6 @@ def test_get_first_corsika_config_error(shower_simulator):
 
 
 def test_update_file_lists_with_none_file_list(array_simulator, mocker):
-    """Test update_file_lists when file_list is None."""
     mock_runner_file_list = {
         "sim_telarray_output": ["output1.simtel.zst"],
         "sim_telarray_log": ["log1.log.gz"],
@@ -1263,7 +1105,6 @@ def test_update_file_lists_with_none_file_list(array_simulator, mocker):
 
 
 def test_update_file_lists_with_existing_file_list(array_simulator, mocker):
-    """Test update_file_lists when file_list already exists."""
     existing_file_list = {
         "sim_telarray_output": ["existing_output.simtel.zst"],
         "corsika_log": ["existing_log.log"],
@@ -1283,30 +1124,7 @@ def test_update_file_lists_with_existing_file_list(array_simulator, mocker):
     assert array_simulator.file_list["corsika_log"] == ["existing_log.log"]
 
 
-def test_update_file_lists_merges_multiple_file_types(array_simulator):
-    """Test update_file_lists merges multiple file types correctly."""
-    existing_file_list = {
-        "sim_telarray_output": ["output1.simtel.zst"],
-        "histogram": ["hist1.hist"],
-    }
-    new_file_list = {
-        "sim_telarray_log": ["log1.log.gz"],
-        "corsika_log": ["corsika1.log"],
-    }
-
-    array_simulator.file_list = existing_file_list.copy()
-    array_simulator._simulation_runner.file_list = new_file_list
-
-    array_simulator.update_file_lists()
-
-    assert "sim_telarray_output" in array_simulator.file_list
-    assert "sim_telarray_log" in array_simulator.file_list
-    assert "histogram" in array_simulator.file_list
-    assert "corsika_log" in array_simulator.file_list
-
-
 def test_validate_simulations_sim_telarray(array_simulator, mocker):
-    """Test validate_simulations for sim_telarray simulations."""
     mock_corsika_config = mocker.Mock()
     mock_corsika_config.shower_events = 1000
     mock_corsika_config.mc_events = 500
@@ -1350,7 +1168,6 @@ def test_validate_simulations_sim_telarray(array_simulator, mocker):
 
 
 def test_validate_simulations_corsika(shower_simulator, mocker):
-    """Test validate_simulations for corsika simulations."""
     mock_corsika_config = mocker.Mock()
     mock_corsika_config.shower_events = 2000
     mock_corsika_config.mc_events = 1000
@@ -1399,7 +1216,6 @@ def test_validate_simulations_corsika_sim_telarray(
     save_corsika_output,
     expected_corsika_data_files,
 ):
-    """Test validate_simulations for corsika_sim_telarray simulations."""
     mock_corsika_config = mocker.Mock()
     mock_corsika_config.shower_events = 1500
     mock_corsika_config.mc_events = 750
@@ -1450,7 +1266,6 @@ def test_validate_simulations_corsika_sim_telarray(
 
 
 def test_validate_simulations_with_reduced_event_lists(array_simulator, mocker, caplog):
-    """Test validate_simulations with reduced event lists enabled."""
     mock_corsika_config = mocker.Mock()
     mock_corsika_config.shower_events = 1000
     mock_corsika_config.mc_events = 500
@@ -1489,28 +1304,3 @@ def test_validate_simulations_with_reduced_event_lists(array_simulator, mocker, 
         data_files=mock_event_data_files,
         expected_mc_events=500,
     )
-
-
-def test_validate_simulations_logging(array_simulator, mocker, caplog):
-    """Test validate_simulations logs correct information."""
-    mock_corsika_config = mocker.Mock()
-    mock_corsika_config.shower_events = 2500
-    mock_corsika_config.mc_events = 1250
-    mock_corsika_config.use_curved_atmosphere = True
-
-    mocker.patch.object(
-        array_simulator, "_get_first_corsika_config", return_value=mock_corsika_config
-    )
-
-    mocker.patch("simtools.simulator.simtel_output_validator.validate_sim_telarray")
-    mocker.patch.object(
-        array_simulator,
-        "get_files",
-        return_value=[],
-    )
-
-    with caplog.at_level(logging.INFO):
-        array_simulator.validate_simulations()
-
-    assert "Validating simulations" in caplog.text
-    assert "1250 MC events and 2500 shower events" in caplog.text

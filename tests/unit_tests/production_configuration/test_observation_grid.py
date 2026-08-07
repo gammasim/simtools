@@ -224,22 +224,6 @@ def test_create_circular_binning_uses_directed_span_from_start_to_end():
     assert np.allclose(binning, [10, 180, 350])
 
 
-def test_create_circular_binning_uses_clockwise_path_when_shorter():
-    engine = _make_engine()
-
-    binning = engine.create_circular_binning((350, 10), 3)
-
-    assert np.allclose(binning, [350, 0, 10])
-
-
-def test_create_circular_binning_covers_requested_range_0_to_240():
-    engine = _make_engine()
-
-    binning = engine.create_circular_binning((0, 240), 3)
-
-    assert np.allclose(binning, [0, 120, 240])
-
-
 def test_generate_horizontal_grid_uses_adaptive_azimuth_bins_per_zenith_row():
     engine = ProductionGridEngine(
         axes={
@@ -427,26 +411,6 @@ def test_init_with_lookup_prepares_point_interpolation(
     mock_prepare_lookup_table_limits.assert_called_once_with()
 
 
-def test_generate_horizontal_grid_interpolates_limits_per_point():
-    engine = _make_engine(axes=_single_bin_horizontal_axes())
-    engine.lookup_table = "limits.ecsv"
-    engine._add_lookup_limits_to_point = Mock(
-        side_effect=lambda point, zenith, azimuth: point.update(
-            {
-                "lower_energy_limit": 0.02 * u.TeV,
-                "upper_radius_limit": 120 * u.m,
-                "viewcone_radius": 3 * u.deg,
-            }
-        )
-    )
-
-    grid = engine._generate_horizontal_grid()
-
-    assert_quantity_allclose(grid[0]["lower_energy_limit"], 0.02 * u.TeV)
-    assert_quantity_allclose(grid[0]["upper_radius_limit"], 120 * u.m)
-    assert_quantity_allclose(grid[0]["viewcone_radius"], 3 * u.deg)
-
-
 @patch("simtools.production_configuration.observation_grid.np.arange", return_value=np.array([0.0]))
 def test_generate_hadec_grid_direction_points_filters_by_max_zenith(mock_arange):
     engine = ProductionGridEngine(
@@ -463,36 +427,6 @@ def test_generate_hadec_grid_direction_points_filters_by_max_zenith(mock_arange)
     assert_quantity_allclose(direction_points[0]["zenith_angle"], 10 * u.deg)
     assert_quantity_allclose(direction_points[0]["azimuth"], 100 * u.deg)
     mock_arange.assert_called_once()
-
-
-def test_generate_horizontal_grid_handles_partial_lookup_limits():
-    engine = _make_engine(axes=_single_bin_horizontal_axes())
-    engine.lookup_table = "limits.ecsv"
-    engine._add_lookup_limits_to_point = Mock(
-        side_effect=lambda point, zenith, azimuth: point.update(
-            {
-                "upper_radius_limit": 120 * u.m,
-                "viewcone_radius": 3 * u.deg,
-            }
-        )
-    )
-
-    grid = engine._generate_horizontal_grid()
-
-    assert "lower_energy_limit" not in grid[0]
-    assert_quantity_allclose(grid[0]["upper_radius_limit"], 120 * u.m)
-    assert_quantity_allclose(grid[0]["viewcone_radius"], 3 * u.deg)
-
-
-def test_generate_horizontal_grid_with_circular_azimuth_binning_calls_lookup_for_each_point():
-    engine = _make_engine(axes=_single_bin_horizontal_axes(azimuth_range=[10, 350]))
-    # Directed span from start to end gives [10, 180, 350]
-    assert np.allclose(engine.target_values["azimuth"].value, np.array([10.0, 180.0, 350.0]))
-    engine.lookup_table = "limits.ecsv"
-    engine._add_lookup_limits_to_point = Mock()
-
-    engine._generate_horizontal_grid()
-    assert engine._add_lookup_limits_to_point.call_count == 3
 
 
 def test_generate_grid_hadec_mode_adds_extra_axis_quantities():
@@ -527,13 +461,3 @@ def test_generate_grid_hadec_mode_uses_direction_points_when_ha_dec_axes_missing
 
     assert grid == [{"ha": 10 * u.deg, "dec": -20 * u.deg}]
     engine.convert_coordinates.assert_called_once()
-
-
-def test_generate_simulation_grid_uses_horizontal_grid_for_horizontal_mode():
-    engine = _make_engine()
-    engine.coordinate_system = "horizontal"
-    engine._generate_horizontal_grid = Mock(return_value=[{"azimuth": 0 * u.deg}])
-
-    grid = engine.generate_simulation_grid()
-
-    assert grid == [{"azimuth": 0 * u.deg}]

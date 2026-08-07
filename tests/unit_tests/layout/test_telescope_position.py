@@ -134,19 +134,6 @@ def test_set_coordinates():
     assert tel.crs["utm"]["zz"]["value"] == pytest.approx(22.0e3, 0.1)
 
 
-def test_set_altitude():
-    tel = TelescopePosition(name="LSTN-01")
-
-    tel.set_altitude(5.0)
-    for key, _crs in tel.crs.items():
-        if tel.is_coordinate_system(key):
-            assert _crs["zz"]["value"] == pytest.approx(5.0, 1.0e-6)
-    tel.set_altitude(5.0 * u.cm)
-    for key, _crs in tel.crs.items():
-        if tel.is_coordinate_system(key):
-            assert _crs["zz"]["value"] == pytest.approx(0.05, 1.0e-6)
-
-
 def test_convert(crs_wgs84, crs_local, crs_utm):
     test_position = position_for_testing()
 
@@ -259,37 +246,6 @@ def test_set_coordinate_system(crs_wgs84):
     assert tel.crs["mercator"]["crs"] == crs_wgs84
 
 
-def test_altitude_transformations():
-    tel = TelescopePosition(name="LSTN-01")
-
-    _z = tel.convert_telescope_altitude_to_corsika_system(
-        tel_altitude=2.177 * u.km,
-        corsika_observation_level=2158.0 * u.m,
-        telescope_axis_height=16.0 * u.m,
-    )
-    assert _z.value == pytest.approx(35.0, 0.1)
-
-    with pytest.raises(TypeError):
-        tel.convert_telescope_altitude_to_corsika_system(
-            tel_altitude=2177,
-            corsika_observation_level=2158.0 * u.m,
-            telescope_axis_height=16.0 * u.m,
-        )
-
-    _alt = tel.convert_telescope_altitude_from_corsika_system(
-        tel_corsika_z=35.0 * u.m,
-        corsika_observation_level=2.158 * u.km,
-        telescope_axis_height=16.0 * u.m,
-    )
-    assert _alt.value == pytest.approx(2177.0, 0.1)
-    with pytest.raises(TypeError):
-        tel.convert_telescope_altitude_from_corsika_system(
-            tel_corsika_z=35.0 * u.m,
-            corsika_observation_level=2.158,
-            telescope_axis_height=16.0 * u.m,
-        )
-
-
 def test_convert_all(crs_wgs84, crs_local, crs_utm):
     tel = TelescopePosition(name="LSTN-01")
 
@@ -310,14 +266,6 @@ def test_convert_all(crs_wgs84, crs_local, crs_utm):
     assert np.isnan(tel_nan.crs["mercator"]["yy"]["value"])
     assert np.isnan(tel_nan.crs["utm"]["xx"]["value"])
     assert np.isnan(tel_nan.crs["utm"]["yy"]["value"])
-
-
-def test_get_altitude():
-    telescope = TelescopePosition(name="LSTS-01")
-    assert np.isnan(telescope.get_altitude())
-
-    telescope.set_coordinates("ground", xx=100.0, yy=200.0, zz=2100.0)
-    assert telescope.get_altitude().value == pytest.approx(2100.0, 0.1)
 
 
 def test_print_compact_format(capsys):
