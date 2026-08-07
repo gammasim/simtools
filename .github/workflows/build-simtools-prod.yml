@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       avx_flag:
-        description: "Build only this AVX variant"
+        description: "Build only this CPU variant"
         required: false
         default: all
         type: choice
