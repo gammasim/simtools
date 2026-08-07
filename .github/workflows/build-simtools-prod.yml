@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       avx_flag:
-        description: "Build only this AVX variant"
+        description: "Build only this CPU variant"
         required: false
         default: all
         type: choice
@@ -56,7 +56,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
       - id: config
         env:
-          AVX_FLAG: ${{ inputs.avx_flag || 'all' }}
+          AVX_FLAG: ${{ github.event.inputs.avx_flag || 'all' }}
         run: |
           python -m pip install packaging pyyaml
           python src/simtools/applications/dependency_versions.py --format github-output > dependency-output
