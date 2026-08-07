@@ -350,6 +350,9 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
     }
     if job_row.get("corsika_hadronic_transition_energy") is not None:
         args["corsika_hadronic_transition_energy"] = job_row["corsika_hadronic_transition_energy"]
+    for coordinate in ("ha", "dec"):
+        if job_row.get(coordinate) is not None:
+            args[coordinate] = job_row[coordinate]
     if metadata:
         for key in ("site", "simulation_software"):
             if metadata.get(key):

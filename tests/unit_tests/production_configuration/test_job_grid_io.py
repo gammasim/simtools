@@ -278,8 +278,21 @@ def test_job_grid_row_to_simulate_prod_args_maps_fields():
     assert args["corsika_le_interaction"] == "urqmd"
     assert args["corsika_he_interaction"] == "epos"
     assert "corsika_hadronic_transition_energy" not in args
+    assert args["ha"] == 123 * u.deg
+    assert args["dec"] == -45 * u.deg
     assert args["run_number"] == 10
     assert "site" not in args
+
+
+def test_job_grid_row_to_simulate_prod_args_omits_missing_hadec_coordinates():
+    row = _job_rows()[0]
+    row.pop("ha")
+    row.pop("dec")
+
+    args = job_grid_io.job_grid_row_to_simulate_prod_args(row)
+
+    assert "ha" not in args
+    assert "dec" not in args
 
 
 def test_job_grid_row_to_simulate_prod_args_includes_explicit_transition_energy():

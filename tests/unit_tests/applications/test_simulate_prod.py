@@ -156,7 +156,16 @@ def test_validate_single_interaction_models_rejects_lists(capsys):
 @pytest.mark.parametrize(
     ("row_args", "expected"),
     [
-        ((), {"run_number": 7, "primary": "gamma", "site": "North"}),
+        (
+            (),
+            {
+                "run_number": 7,
+                "primary": "gamma",
+                "site": "North",
+                "ha": 123 * u.deg,
+                "dec": -45 * u.deg,
+            },
+        ),
         (("--job_grid_row", 2), {"run_number": 11, "zenith_angle": 40 * u.deg}),
     ],
 )
