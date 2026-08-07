@@ -127,7 +127,8 @@ RUN set -e; ls ../config_*.h; for config_file in ../config_*.h; do \
         # Optimization config options
         else \
             optimization="$AVX_FLAG"; \
-            BASE_FLAGS="-g -DCERENKOPT -DVLIBM -O3 ${AVX_FLAG:+-m${AVX_FLAG}} ${AVX_EXTRA_FLAG} \
+            AVX_COMPILER_FLAG="-m${AVX_FLAG}"; \
+            BASE_FLAGS="-g -DCERENKOPT -DVLIBM -O3 ${AVX_COMPILER_FLAG} ${AVX_EXTRA_FLAG} \
                 -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
             { \
                 echo "#define __CERENKOPT__ 1"; \
