@@ -95,8 +95,6 @@ applications:
           allowed_values: [gamma]
         scan_label:
           allowed_values: [asum220]
-        telescope:
-          allowed_values: [LSTN-01]
       metadata:
         required_keys:
         - job_grid_summary
@@ -112,8 +110,6 @@ applications:
           allowed_values: [proton]
         scan_label:
           allowed_values: [asum220]
-        telescope:
-          allowed_values: [LSTN-01]
       metadata:
         required_keys:
         - job_grid_summary
