@@ -72,7 +72,7 @@ jobs:
           pip check
 
       - name: Dotenv linter
-        uses: dotenv-linter/action-dotenv-linter@v3
+        uses: dotenv-linter/action-dotenv-linter@afde61cfda2ecffe7bea35837b6f20b956c88689  # v3
         with:
           dotenv_linter_flags: check -i UnorderedKey .env*
 
