@@ -10,8 +10,13 @@ CORSIKA_LE_INTERACTION = "urqmd"
 # Minimum zenith angle (degrees) above which CORSIKA uses a curved-atmosphere binary.
 CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG = 65
 
-# Valid simulation software identifiers and the default choice.
-SIMULATION_SOFTWARE_CHOICES = ("corsika", "sim_telarray", "corsika_sim_telarray")
+# Simulation software identifiers and the external executables each requires.
+SIMULATION_SOFTWARE_DEPENDENCIES = {
+    "corsika": frozenset({"corsika"}),
+    "sim_telarray": frozenset({"sim_telarray"}),
+    "corsika_sim_telarray": frozenset({"corsika", "sim_telarray"}),
+}
+SIMULATION_SOFTWARE_CHOICES = tuple(SIMULATION_SOFTWARE_DEPENDENCIES)
 SIMULATION_SOFTWARE_DEFAULT = "corsika_sim_telarray"
 
 # Default exponential factor for zenith-dependent total shower scaling

@@ -144,6 +144,13 @@ scripts.simtools-write-trigger-histograms = "simtools.applications.write_trigger
 packages.find.where = [ "src" ]
 packages.find.exclude = [ "simtools._dev_version.*" ]
 package-dir = { "" = "src" }
+package-data.simtools = [
+  "resources/*.json",
+  "resources/*.yml",
+  "schemas/*.yml",
+  "schemas/input/*.yml",
+  "schemas/model_parameters/*.yml",
+]
 
 [tool.setuptools_scm]
 write_to = "src/simtools/_version.py"

@@ -148,6 +148,87 @@ def test_initialize_runtime_basic():
     assert app_context.logger.level == logging.INFO
 
 
+def test_initialize_runtime_without_io_handler():
+    """Test application runtime startup without IOHandler."""
+    mock_args_dict = {"log_level": "debug"}
+    mock_db_config = {}
+    app_context = _initialize_runtime(mock_args_dict, mock_db_config, setup_io_handler=False)
+
+    # Verify returned values
+    assert app_context.args == mock_args_dict
+    assert app_context.db_config == mock_db_config
+    assert isinstance(app_context.logger, logging.Logger)
+    assert app_context.io_handler is None
+
+    # Verify logger level was set to debug
+    assert app_context.logger.level == logging.DEBUG
+
+
+def test_initialize_runtime_without_resolving_sim_software_executables():
+    """Test runtime startup forwards executable-resolution flag to settings load."""
+    mock_args_dict = {"log_level": "info"}
+    mock_db_config = {}
+    with patch("simtools.application.control.config.load") as mock_load:
+        _initialize_runtime(
+            mock_args_dict,
+            mock_db_config,
+            setup_io_handler=False,
+            resolve_sim_software_executables=False,
+        )
+
+    mock_load.assert_called_once_with(
+        mock_args_dict,
+        mock_db_config,
+        resolve_sim_software_executables=False,
+    )
+
+
+def test_initialize_runtime_validates_simulation_dependencies_after_loading():
+    """Dependency validation runs after settings load and before logging."""
+    mock_args_dict = {"log_level": "info", "simulation_software": "corsika"}
+    mock_db_config = {}
+    with (
+        patch("simtools.application.control.config.load") as mock_load,
+        patch(
+            "simtools.application.control.dependencies.validate_simulation_dependencies"
+        ) as validate,
+        patch("simtools.application.control.setup_logging") as setup_logging,
+    ):
+        _initialize_runtime(
+            mock_args_dict,
+            mock_db_config,
+            setup_io_handler=False,
+            validate_simulation_dependencies=True,
+        )
+
+    mock_load.assert_called_once()
+    validate.assert_called_once_with("corsika")
+    setup_logging.assert_called_once()
+
+
+def test_initialize_runtime_stops_when_dependencies_are_unavailable():
+    """Dependency failures prevent the rest of application startup."""
+    mock_args_dict = {"log_level": "info", "simulation_software": "corsika"}
+    mock_db_config = {}
+    with (
+        patch("simtools.application.control.config.load"),
+        patch(
+            "simtools.application.control.dependencies.validate_simulation_dependencies",
+            side_effect=ValueError("missing dependency"),
+        ),
+        patch("simtools.application.control.setup_logging") as setup_logging,
+    ):
+        with pytest.raises(ValueError, match="missing dependency"):
+            _initialize_runtime(
+                mock_args_dict,
+                mock_db_config,
+                setup_io_handler=False,
+                validate_simulation_dependencies=True,
+            )
+
+    setup_logging.assert_not_called()
+
+
 def test_initialize_runtime_prepares_runtime_environment_from_cli():
     mock_args_dict = {
         "log_level": "info",

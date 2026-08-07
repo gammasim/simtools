@@ -809,3 +809,86 @@ def test_write_seeds_invalid_seed_count_wrong(corsika_config_mock_array_model):
         with patch.dict(settings.config.args, {"corsika_seeds": [1, 2, 3, 4, 5]}):
             with pytest.raises(ValueError, match="Exactly 4 CORSIKA seeds must be provided"):
                 corsika_config_mock_array_model._write_seeds(mock_file)
+
+
+def test_write_seeds_random_generation(corsika_config_mock_array_model):
+    """Test that _write_seeds generates random seeds when none are provided."""
+    mock_file = Mock()
+    corsika_config_mock_array_model.run_number = 10
+    corsika_config_mock_array_model.config = {"USER_INPUT": {"PRMPAR": [14]}}
+
+    with patch("io.open", return_value=mock_file):
+        corsika_config_mock_array_model._write_seeds(mock_file)
+
+    assert mock_file.write.call_count == 4
+    expected_calls = [_call.args[0] for _call in mock_file.write.call_args_list]
+    for _call in expected_calls:
+        assert _call.startswith("SEED ")
+        assert _call.endswith(" 0 0\n")
+        seed_value = int(_call.split()[1])
+        assert 0 < seed_value < 900_000_000
+
+
+def test_epos_flags(corsika_config_mock_array_model, mocker):
+    """Test EPOS interaction model flags generation."""
+    mocker.patch.object(
+        corsika_config_mock_array_model,
+        "corsika_exec",
+        "/path/to/corsika77-epos",
+    )
+    mocker.patch.object(
+        corsika_config_mock_array_model,
+        "interaction_table_path",
+        "/path/to/corsika/epos",
+    )
+
+    epos_flags = corsika_config_mock_array_model._epos_flags()
+
+    assert isinstance(epos_flags, dict)
+    assert "EPOPAR fname pathnx" in epos_flags
+    assert epos_flags["EPOPAR fname pathnx"] == ["/path/to/corsika/epos/"]
+
+    for epos_file in ["inics", "iniev", "inirj", "initl"]:
+        key = f"EPOPAR fname {epos_file}"
+        assert key in epos_flags
+        assert epos_flags[key] == [f"/path/to/corsika/epos/epos.{epos_file}"]
+    assert epos_flags["EPOPAR fname hpf"] == ["/path/to/corsika/epos/tables.dat"]
+
+
+def test_epos_flags_with_different_paths(corsika_config_mock_array_model, mocker):
+    """Test EPOS flags with different interaction table paths."""
+    mocker.patch.object(
+        corsika_config_mock_array_model,
+        "corsika_exec",
+        "/custom/corsika77-epos",
+    )
+    mocker.patch.object(
+        corsika_config_mock_array_model,
+        "interaction_table_path",
+        "/custom/tables",
+    )
+
+    epos_flags = corsika_config_mock_array_model._epos_flags()
+
+    assert epos_flags["EPOPAR fname pathnx"] == ["/custom/tables/"]
+    assert epos_flags["EPOPAR fname inics"] == ["/custom/tables/epos.inics"]
+    assert epos_flags["EPOPAR fname check"] == ["none"]
+
+
+def test_corsika_configuration_interaction_flags_with_epos(
+    corsika_config_mock_array_model, get_standard_corsika_parameters, mocker
+):
+    """Test interaction flags generation includes EPOS parameters."""
+    mocker.patch.object(
+        corsika_config_mock_array_model,
+        "corsika_exec",
+        "/path/to/corsika77-epos",
+    )
+
+    interaction_flags = corsika_config_mock_array_model._corsika_configuration_interaction_flags(
+        get_standard_corsika_parameters
+    )
+
+    assert isinstance(interaction_flags, dict)
+    assert "EPOPAR fname pathnx" in interaction_flags
+    assert any("EPOPAR fname" in key for key in interaction_flags.keys())
