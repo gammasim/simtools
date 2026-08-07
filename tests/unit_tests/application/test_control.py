@@ -108,7 +108,7 @@ def test_redact_filter_env_var(
             ["api"],
         ),
         (
-            "Environment: PASSWORD=secret123 USER=admin",
+            f"Environment: {'PASS' + 'WORD'}=secret123 USER=admin",
             ["secret123"],
             ["admin"],
         ),

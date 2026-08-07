@@ -35,15 +35,6 @@ on:
         required: false
         type: string
         default: '["ubuntu-latest"]'
-    secrets:
-      DB_SERVER:
-        required: false
-      DB_API_USER:
-        required: false
-      DB_API_PW:
-        required: false
-      DB_API_PORT:
-        required: false
   pull_request:
     types: [opened, synchronize]
     paths-ignore:
@@ -322,14 +313,6 @@ jobs:
               DB_API_USER="api"
               DB_API_PW="password"
               DB_API_PORT="27017"
-              # DISABLED: avoid failing test due to network issue when running on schedule.
-              if [ "${{ github.event_name }}" = "schedule" ] && false; then
-                DB_SERVER="${{ secrets.DB_SERVER }}"
-                DB_API_USER="${{ secrets.DB_API_USER }}"
-                DB_API_PW="${{ secrets.DB_API_PW }}"
-                DB_API_PORT="${{ secrets.DB_API_PORT }}"
-              fi
-
               SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
               echo "SIMTOOLS_DB_SERVER=$DB_SERVER"
               echo "SIMTOOLS_DB_API_USER=$DB_API_USER"
