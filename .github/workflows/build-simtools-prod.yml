@@ -234,7 +234,6 @@ jobs:
     needs: build-simtools-prod
     if: ${{ (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc'))) && (github.event_name != 'workflow_dispatch' || contains(fromJSON('["all","generic"]'), github.event.inputs.avx_flag || 'all')) }}
     uses: ./.github/workflows/CI-integrationtests.yml
-    secrets: inherit
     with:
       container_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.generic_tag }}
       model_versions: '["7.0.0"]'

@@ -168,7 +168,8 @@ jobs:
         if: steps.sonar_scanner_cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p "$SONAR_SCANNER_CACHE_DIR"
-          curl --fail --location --retry 5 --retry-delay 20 --retry-all-errors \
+          curl --fail --location --proto '=https' --proto-redir '=https' \
+            --retry 5 --retry-delay 20 --retry-all-errors \
             "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-${SONAR_SCANNER_PLATFORM}.zip" \
             --output sonar-scanner.zip
           unzip -q sonar-scanner.zip -d "$SONAR_SCANNER_CACHE_DIR"
