@@ -13,7 +13,7 @@ from simtools.configuration.configurator import Configurator
 from simtools.constants import SCHEMA_PATH, SCHEMA_URL
 from simtools.data_model import validate_data
 from simtools.io.ascii_handler import collect_data_from_file
-from simtools.job_execution import JobSpec
+from simtools.job_execution.job import JobSpec
 from simtools.production_configuration.job_grid_summary import build_job_grid_summary
 from simtools.utils.value_conversion import get_value_as_quantity, get_value_in_unit
 

@@ -16,7 +16,7 @@ from simtools.configuration.argument_helpers import bounded_int
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.build_options import get_corsika_build_report
 from simtools.io.ascii_handler import write_data_to_file
-from simtools.job_execution import execute_jobs, options_from_args, submit_jobs
+from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
 from simtools.production_configuration.job_grid_io import (
     SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS,
     build_simulate_prod_job_specs,

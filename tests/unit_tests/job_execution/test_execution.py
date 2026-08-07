@@ -9,10 +9,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-from simtools.job_execution import (
-    ExecutionOptions,
-    JobSpec,
-    SubmissionHandle,
+from simtools.job_execution.backends.base import BackendConfigurationError, BackendExecutionError
+from simtools.job_execution.backends.htcondor import HTCondorBackend
+from simtools.job_execution.execution import (
     execute_jobs,
     load_submission,
     map_ordered,
@@ -20,8 +19,7 @@ from simtools.job_execution import (
     submit_jobs,
     wait_for_submission,
 )
-from simtools.job_execution.backends.base import BackendConfigurationError, BackendExecutionError
-from simtools.job_execution.backends.htcondor import HTCondorBackend
+from simtools.job_execution.job import ExecutionOptions, JobSpec, SubmissionHandle
 from simtools.job_execution.worker import run as run_worker
 from simtools.job_execution.worker import write_job_payload
 from simtools.settings import config

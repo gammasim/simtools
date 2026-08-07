@@ -11,7 +11,7 @@ from astropy.table import Table, vstack
 import simtools.utils.general as gen
 from simtools.io import io_handler, table_handler
 from simtools.io.file_type import validate_file_type
-from simtools.job_execution import map_ordered
+from simtools.job_execution.execution import map_ordered
 from simtools.production_configuration.production_event_data_helpers import (
     accumulate_histograms_by_telescope_config,
     normalize_telescope_configs,

@@ -12,13 +12,9 @@ from simtools.configuration import defaults
 from simtools.corsika import corsika_output_validator
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler, table_handler
-from simtools.job_execution import (
-    JobSpec,
-    execute_jobs,
-    job_manager,
-    options_from_args,
-    submit_jobs,
-)
+from simtools.job_execution import job_manager
+from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
+from simtools.job_execution.job import JobSpec
 from simtools.model.array_model import ArrayModel
 from simtools.runners import corsika_runner, corsika_simtel_runner, runner_services, simtel_runner
 from simtools.sim_events import file_info, output_validator, writer

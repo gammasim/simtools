@@ -2,7 +2,7 @@
 
 import logging
 
-from simtools.job_execution import map_ordered
+from simtools.job_execution.execution import map_ordered
 from simtools.model.illuminator_visibility import IlluminatorTelescopeVisibility
 from simtools.simtel.simulator_light_emission import SimulatorLightEmission
 from simtools.utils import general
