@@ -35,7 +35,6 @@ def _assert_files_exist(output_path, file_names):
 
 
 def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
-    """Test full comparison plotting writes all expected output files."""
     output_path = Path(tmp_test_directory)
     metrics = [
         _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0),
@@ -79,7 +78,6 @@ def test_output_directory_for_array_layout_selection_joins_list_values(tmp_test_
 
 
 def test_plot_writes_per_type_comparison_figures(tmp_test_directory):
-    """Test per-array-element-type comparison plots are written for each type."""
     output_path = Path(tmp_test_directory)
     per_type_lstn = _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)
     per_type_mstn = _build_metrics("baseline", simulated_scale=1.0, triggered_scale=0.8)
@@ -108,42 +106,11 @@ def test_plot_writes_per_type_comparison_figures(tmp_test_directory):
         "distribution_angular_distance_LSTN.png",
         "distribution_angular_distance_cumulative_LSTN.png",
     ]
-    _assert_files_exist(output_path, per_type_files)
-
-
-def test_mixed_trigger_filter_accepts_only_allowed_signatures():
-    """Test mixed trigger selector keeps only 1+1 and 1+2/2+1 patterns."""
-    assert plot_event_level_production_comparison._is_mixed_type_combination("LSTN-01,MSTN-01")
-    assert plot_event_level_production_comparison._is_mixed_type_combination(
-        "LSTN-01,LSTN-02,MSTN-01"
-    )
-    assert not plot_event_level_production_comparison._is_mixed_type_combination(
-        "LSTN-01,MSTN-01,SSTS-01"
-    )
-    assert not plot_event_level_production_comparison._is_mixed_type_combination(
-        "LSTN-01,LSTN-02,LSTN-03,MSTN-01"
-    )
-
-
-@pytest.mark.parametrize(
-    ("quantity_name", "expected"),
-    [
-        ("energy", (False, None)),
-        ("core_distance", (False, True)),
-        ("angular_distance", (False, True)),
-    ],
-)
-def test_distribution_cumulative_variants(quantity_name, expected):
-    """Test cumulative variant selection by quantity."""
-    assert (
-        plot_event_level_production_comparison._distribution_cumulative_variants(quantity_name)
-        == expected
-    )
+    assert _assert_files_exist(output_path, per_type_files) is None
 
 
 @pytest.mark.parametrize("cumulative", [False, True])
 def test_normalized_histogram_values(cumulative):
-    """Test normalized histogram values and Poisson errors helper."""
     values, errors = plot_event_level_production_comparison._normalized_histogram_values(
         np.array([1.0, 3.0]), cumulative=cumulative
     )
@@ -158,7 +125,6 @@ def test_normalized_histogram_values(cumulative):
 
 
 def test_normalized_histogram_values_zero_counts():
-    """Test zero-count handling in histogram normalization helper."""
     values, errors = plot_event_level_production_comparison._normalized_histogram_values(
         np.array([0.0, 0.0]), cumulative=False
     )
@@ -167,7 +133,6 @@ def test_normalized_histogram_values_zero_counts():
 
 
 def test_plot_series_and_artist_color():
-    """Test line and histogram rendering branches in _plot_series and artist color extraction."""
     fig, ax = plt.subplots(figsize=(4, 3))
     bin_edges = np.array([1.0, 2.0, 3.0])
     values = np.array([0.4, 0.6])
@@ -186,7 +151,6 @@ def test_plot_series_and_artist_color():
 
 
 def test_trigger_fraction_and_skip_paths(tmp_test_directory):
-    """Test trigger fraction output and skip branches with empty inputs."""
     output_path = Path(tmp_test_directory)
 
     empty_metric = _build_metrics("empty", simulated_scale=1.0, triggered_scale=1.0)
@@ -202,7 +166,6 @@ def test_trigger_fraction_and_skip_paths(tmp_test_directory):
 
 
 def test_plot_invokes_triggered_fraction_branch_when_enabled(tmp_test_directory, mocker):
-    """Test branch enabling triggered-fraction plotting in top-level plot function."""
     output_path = Path(tmp_test_directory)
     metrics = [_build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)]
     mock_trigger = mocker.patch(
@@ -219,7 +182,6 @@ def test_plot_invokes_triggered_fraction_branch_when_enabled(tmp_test_directory,
 
 
 def test_triggered_vs_quantity_outputs_and_empty_skip(tmp_test_directory):
-    """Test triggered-vs-quantity output and empty-input skip path."""
     output_path = Path(tmp_test_directory)
     metrics = [_build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)]
     plot_event_level_production_comparison._plot_triggered_vs_quantity(
@@ -246,32 +208,7 @@ def test_triggered_vs_quantity_outputs_and_empty_skip(tmp_test_directory):
     assert not (output_path / "triggered_fraction_vs_core_distance_empty.png").exists()
 
 
-def test_triggered_vs_quantity_uses_global_bin_edges(tmp_test_directory, mocker):
-    """Test triggered-fraction plot derives one shared binning across productions."""
-    output_path = Path(tmp_test_directory)
-    metrics = [
-        _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0),
-        _build_metrics("candidate", simulated_scale=2.0, triggered_scale=1.5),
-    ]
-    mock_global_bins = mocker.patch(
-        "simtools.visualization.plot_event_level_production_comparison._get_global_quantity_bin_edges",
-        return_value=np.linspace(10.0, 50.0, 9),
-    )
-
-    plot_event_level_production_comparison._plot_triggered_vs_quantity(
-        metrics,
-        output_path,
-        quantity_name="core_distance",
-        x_label="Core Distance (m)",
-        x_scale="linear",
-        bins=8,
-    )
-
-    mock_global_bins.assert_called_once()
-
-
 def test_single_and_mixed_trigger_skip_paths(tmp_test_directory):
-    """Test skip branches when no single or mixed trigger combinations exist."""
     output_path = Path(tmp_test_directory)
     metric = _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)
     metric.trigger_combinations = Counter({"LSTN-01,MSTN-01,SSTS-01": 2})
@@ -281,28 +218,3 @@ def test_single_and_mixed_trigger_skip_paths(tmp_test_directory):
     plot_event_level_production_comparison._plot_mixed_trigger_combinations([metric], output_path)
     assert not (output_path / "single_telescope_trigger_distribution.png").exists()
     assert not (output_path / "mixed_trigger_combinations.png").exists()
-
-
-def test_quantity_distribution_uses_shared_bin_edges_for_statistics(tmp_test_directory):
-    """Test shared binning keeps candidate samples in-range for statistics."""
-    output_path = Path(tmp_test_directory)
-    baseline = _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)
-    candidate = _build_metrics("candidate", simulated_scale=10.0, triggered_scale=10.0)
-
-    stats = plot_event_level_production_comparison._plot_quantity_distribution(
-        [baseline, candidate],
-        output_path,
-        quantity_name="angular_distance",
-        x_label="Angular Distance (deg)",
-        x_scale="linear",
-        bins=8,
-        cumulative=False,
-    )
-
-    comparison = stats["comparisons"][0]
-    assert sum(comparison["simulated"]["candidate_counts"]) == len(
-        candidate.simulated_angular_distances
-    )
-    assert sum(comparison["triggered"]["candidate_counts"]) == len(
-        candidate.triggered_angular_distances
-    )

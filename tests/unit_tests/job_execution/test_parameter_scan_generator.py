@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 import yaml
-from jsonschema import ValidationError
+from jsonschema.exceptions import ValidationError
 
 from simtools.job_execution import parameter_scan_generator
 

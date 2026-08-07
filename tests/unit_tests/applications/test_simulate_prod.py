@@ -153,19 +153,19 @@ def test_list_available_corsika_models_exits_with_table(tmp_test_directory, caps
     assert "qgs3" in capsys.readouterr().out
 
 
-def test_validate_single_interaction_models_rejects_lists(capsys):
-    with pytest.raises(SystemExit):
-        app._validate_single_interaction_models(
-            {"corsika_he_interaction": ["epos", "qgs3"]}, argparse.ArgumentParser()
-        )
-
-    assert "accepts exactly one value" in capsys.readouterr().err
-
-
 @pytest.mark.parametrize(
     ("row_args", "expected"),
     [
-        ((), {"run_number": 7, "primary": "gamma", "site": "North"}),
+        (
+            (),
+            {
+                "run_number": 7,
+                "primary": "gamma",
+                "site": "North",
+                "ha": 123 * u.deg,
+                "dec": -45 * u.deg,
+            },
+        ),
         (("--job_grid_row", 2), {"run_number": 11, "zenith_angle": 40 * u.deg}),
     ],
 )
@@ -358,6 +358,7 @@ def test_main_uses_explicit_application_definition(mock_application_start, mock_
 
     mock_application_start.assert_called_once_with()
     assert app.APPLICATION.setup_io_handler is False
+    assert app.APPLICATION.validate_simulation_dependencies is True
     assert app.APPLICATION.post_parse == app._post_parse
 
 

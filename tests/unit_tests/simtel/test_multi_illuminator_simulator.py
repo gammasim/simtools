@@ -53,7 +53,6 @@ def base_config():
 
 
 def test_initialization(simple_visibility_data, base_config):
-    """Test MultiIlluminatorSimulator initialization."""
     simulator = MultiIlluminatorSimulator(
         visibility_data=simple_visibility_data,
         config=base_config,
@@ -72,7 +71,6 @@ def test_initialization(simple_visibility_data, base_config):
 
 
 def test_initialization_default_label(simple_visibility_data, base_config):
-    """Test initialization with default label."""
     simulator = MultiIlluminatorSimulator(
         visibility_data=simple_visibility_data,
         config=base_config,
@@ -116,7 +114,6 @@ def test_max_workers_all_cores_is_resolved_by_backend(simple_visibility_data, ba
 
 @patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_simulate_all_pairs(mock_pool, simple_visibility_data, base_config):
-    """Test simulate() runs all valid pairs."""
     # Mock successful results
     mock_pool.return_value = [
         {"illuminator": "ILLS-01", "telescope": "MSTS-01", "success": True, "error": None},
@@ -167,7 +164,6 @@ def test_simulate_all_pairs(mock_pool, simple_visibility_data, base_config):
 def test_simulate_filter_by_illuminators(
     mock_pool, mock_get_wavelengths, simple_visibility_data, base_config
 ):
-    """Test simulate() with illuminator filtering and auto-fetch wavelengths."""
     # Mock wavelengths from model
     mock_get_wavelengths.return_value = [355 * u.nm]
 
@@ -202,7 +198,6 @@ def test_simulate_filter_by_illuminators(
 def test_simulate_filter_by_telescopes(
     mock_pool, mock_get_wavelengths, simple_visibility_data, base_config
 ):
-    """Test simulate() with telescope filtering and auto-fetch wavelengths."""
     # Mock wavelengths from model
     mock_get_wavelengths.return_value = [355 * u.nm]
 
@@ -252,7 +247,6 @@ def test_simulate_filter_both(mock_pool, simple_visibility_data, base_config):
 
 @patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_simulate_no_valid_pairs_after_filtering(mock_pool, simple_visibility_data, base_config):
-    """Test simulate() when filtering results in no valid pairs."""
     simulator = MultiIlluminatorSimulator(
         visibility_data=simple_visibility_data,
         config=base_config,
@@ -269,7 +263,6 @@ def test_simulate_no_valid_pairs_after_filtering(mock_pool, simple_visibility_da
 
 @patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_get_summary_success(mock_pool, simple_visibility_data, base_config):
-    """Test get_summary() with successful simulations."""
     mock_pool.return_value = [
         {"illuminator": "ILLS-01", "telescope": "MSTS-01", "success": True, "error": None},
         {"illuminator": "ILLS-01", "telescope": "MSTS-02", "success": True, "error": None},
@@ -292,7 +285,6 @@ def test_get_summary_success(mock_pool, simple_visibility_data, base_config):
 
 
 def test_get_summary_before_simulation(simple_visibility_data, base_config):
-    """Test get_summary() raises error when called before simulate()."""
     simulator = MultiIlluminatorSimulator(
         visibility_data=simple_visibility_data,
         config=base_config,
@@ -304,7 +296,6 @@ def test_get_summary_before_simulation(simple_visibility_data, base_config):
 
 @patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_get_failed_pairs(mock_pool, simple_visibility_data, base_config):
-    """Test get_failed_pairs() returns correct failures."""
     mock_pool.return_value = [
         {"illuminator": "ILLS-01", "telescope": "MSTS-01", "success": True, "error": None},
         {"illuminator": "ILLS-01", "telescope": "MSTS-02", "success": False, "error": "Error 1"},
@@ -326,7 +317,6 @@ def test_get_failed_pairs(mock_pool, simple_visibility_data, base_config):
 
 
 def test_get_failed_pairs_before_simulation(simple_visibility_data, base_config):
-    """Test get_failed_pairs() raises error when called before simulate()."""
     simulator = MultiIlluminatorSimulator(
         visibility_data=simple_visibility_data,
         config=base_config,
@@ -338,7 +328,6 @@ def test_get_failed_pairs_before_simulation(simple_visibility_data, base_config)
 
 @patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_get_failed_results(mock_pool, simple_visibility_data, base_config):
-    """Test get_failed_results() returns detailed failure information."""
     mock_pool.return_value = [
         {"illuminator": "ILLS-01", "telescope": "MSTS-01", "success": True, "error": None},
         {"illuminator": "ILLS-01", "telescope": "MSTS-02", "success": False, "error": "Error 1"},
@@ -361,7 +350,6 @@ def test_get_failed_results(mock_pool, simple_visibility_data, base_config):
 
 
 def test_get_failed_results_before_simulation(simple_visibility_data, base_config):
-    """Test get_failed_results() raises error when called before simulate()."""
     simulator = MultiIlluminatorSimulator(
         visibility_data=simple_visibility_data,
         config=base_config,
@@ -373,7 +361,6 @@ def test_get_failed_results_before_simulation(simple_visibility_data, base_confi
 
 @patch("simtools.simtel.multi_illuminator_simulator.SimulatorLightEmission")
 def test_simulate_illuminator_telescope_pair_success(mock_sim_class):
-    """Test _simulate_illuminator_telescope_pair() worker function with successful simulation."""
     # Mock SimulatorLightEmission instance
     mock_sim = MagicMock()
     mock_sim.simulate.return_value = None
@@ -412,7 +399,6 @@ def test_simulate_illuminator_telescope_pair_success(mock_sim_class):
 
 @patch("simtools.simtel.multi_illuminator_simulator.SimulatorLightEmission")
 def test_simulate_illuminator_telescope_pair_failure(mock_sim_class):
-    """Test _simulate_illuminator_telescope_pair() worker function with failed simulation."""
     # Mock SimulatorLightEmission to raise an exception
     mock_sim_class.side_effect = ValueError("Simulation failed")
 
@@ -461,7 +447,6 @@ def test_simulate_empty_visibility_table(mock_pool, base_config):
 
 @patch("simtools.model.site_model.SiteModel")
 def test_load_visibility_from_site_model(mock_site_model_class, base_config):
-    """Test that visibility data is loaded from SiteModel when not provided."""
     mock_site_model = MagicMock()
     mock_site_model.get_parameter_value.return_value = {
         "columns": ["illuminator_id", "telescope_id", "visible"],
@@ -595,7 +580,6 @@ def test_simulate_with_wavelengths_from_model(
 
 @patch("simtools.simtel.multi_illuminator_simulator.map_ordered")
 def test_simulate_with_wavelength_in_config(mock_pool, simple_visibility_data, base_config):
-    """Test simulate() uses wavelength from base_config if present."""
 
     # Add wavelength to config
     config_with_wl = base_config.copy()

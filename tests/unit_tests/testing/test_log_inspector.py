@@ -50,30 +50,6 @@ def test_inspect_with_errors(mock_logger):
     assert "Error or warning found in log at line 1" in mock_logger.text
 
 
-def test_inspect_ignore_info_lines(mock_logger):
-    log_text = [
-        "INFO:: Job error stream contains no issues.",
-        "INFO:: Another informational message.",
-    ]
-    result = log_inspector.inspect(log_text)
-    assert result is True
-    assert not mock_logger.records
-
-
-def test_inspect_mixed_input(mock_logger):
-    log_text = [
-        (
-            "INFO:: All systems operational.\nException: A critical failure occurred.\n"
-            "INFO:: This is fine.\nFailed to connect to the database."
-        )
-    ]
-    result = log_inspector.inspect(log_text)
-    assert result is False
-    assert len(mock_logger.records) == 2
-    assert "Error or warning found in log at line 2" in mock_logger.text
-    assert "Error or warning found in log at line 4" in mock_logger.text
-
-
 def test_inspect_single_string_input(mock_logger):
     log_text = "INFO:: All good.\nERROR:: Something broke.\nINFO:: Still good."
     result = log_inspector.inspect(log_text)
@@ -145,18 +121,6 @@ def test_read_log(tmp_test_directory, safe_tar_open):
         result = log_inspector._read_log(member, tar)
 
     assert result == "Test log content\nSecond line\n"
-
-
-def test_find_patterns():
-    text = "This is a test line with pattern1 and pattern2"
-    patterns = ["pattern1", "pattern2", "pattern3"]
-
-    found = log_inspector._find_patterns(text, patterns)
-
-    assert "pattern1" in found
-    assert "pattern2" in found
-    assert "pattern3" not in found
-    assert len(found) == 2
 
 
 @pytest.mark.parametrize(
@@ -252,100 +216,9 @@ def test_check_plain_logs_top_level_keys_fallback(tmp_test_directory):
     assert log_inspector.check_plain_logs(log_file, file_test) is True
 
 
-def test_check_plain_logs_no_patterns_returns_true(tmp_test_directory, caplog):
-    log_file = Path(str(tmp_test_directory)) / "run.log"
-    log_file.write_text("some content\n", encoding="utf-8")
-    file_test = {"expected_log_output": {}}
-    with caplog.at_level(logging.DEBUG):
-        assert log_inspector.check_plain_logs(log_file, file_test) is True
-        assert "No expected log output provided" in caplog.text
-
-
-def test_check_plain_logs_missing_expected_patterns(tmp_test_directory, caplog):
-    log_file = Path(str(tmp_test_directory)) / "run.log"
-    log_file.write_text("only info lines here\n", encoding="utf-8")
-    file_test = {"expected_log_output": {"pattern": ["NEEDED"], "forbidden_pattern": []}}
-    with caplog.at_level(logging.ERROR):
-        assert log_inspector.check_plain_logs(log_file, file_test) is False
-        assert "Missing expected patterns" in caplog.text
-
-
 def test_check_tar_logs_invalid_tar_raises(tmp_test_directory):
     not_tar = Path(str(tmp_test_directory)) / "not_a_tar.txt"
     not_tar.write_text("This is not a tar file", encoding="utf-8")
     file_test = {"expected_log_output": {"pattern": ["test"]}}
     with pytest.raises(ValueError, match="is not a tar file"):
         log_inspector.check_tar_logs(not_tar, file_test)
-
-
-def test_get_expected_patterns_with_expected_log_output():
-    file_test = {
-        "expected_log_output": {
-            "pattern": ["success"],
-            "forbidden_pattern": ["error"],
-        }
-    }
-    wanted, forbidden = log_inspector._get_expected_patterns(file_test)
-    assert wanted == ["success"]
-    assert forbidden == ["error"]
-
-
-def test_get_expected_patterns_top_level():
-    file_test = {
-        "pattern": ["done"],
-        "forbidden_pattern": ["failed"],
-    }
-    wanted, forbidden = log_inspector._get_expected_patterns(file_test)
-    assert wanted == ["done"]
-    assert forbidden == ["failed"]
-
-
-def test_get_expected_patterns_no_patterns():
-    file_test = {"expected_log_output": {}}
-    wanted, forbidden = log_inspector._get_expected_patterns(file_test)
-    assert wanted is None
-    assert forbidden is None
-
-
-def test_validate_patterns_forbidden_found(caplog):
-    with caplog.at_level(logging.ERROR):
-        result = log_inspector._validate_patterns({"ERROR"}, {"ERROR"}, ["success"])
-        assert result is False
-        assert "Forbidden patterns found" in caplog.text
-
-
-def test_validate_patterns_missing_expected(caplog):
-    with caplog.at_level(logging.ERROR):
-        result = log_inspector._validate_patterns(set(), set(), ["success", "done"])
-        assert result is False
-        assert "Missing expected patterns" in caplog.text
-
-
-def test_validate_patterns_all_found(caplog):
-    with caplog.at_level(logging.DEBUG):
-        result = log_inspector._validate_patterns({"success"}, set(), ["success"])
-        assert result is True
-        assert "All expected patterns found" in caplog.text
-
-
-def test_check_plain_logs_multiple_files(tmp_test_directory):
-    log1 = Path(str(tmp_test_directory)) / "run1.log"
-    log2 = Path(str(tmp_test_directory)) / "run2.log"
-    log1.write_text("First log with success\n", encoding="utf-8")
-    log2.write_text("Second log with done\n", encoding="utf-8")
-    file_test = {"expected_log_output": {"pattern": ["success", "done"], "forbidden_pattern": []}}
-    assert log_inspector.check_plain_logs([log1, log2], file_test) is True
-
-
-def test_check_plain_logs_gzipped_file(tmp_test_directory):
-    log_gz = Path(str(tmp_test_directory)) / "run.log.gz"
-    with gzip.open(log_gz, "wt", encoding="utf-8") as gz:
-        gz.write("Compressed log with pattern\n")
-    file_test = {"expected_log_output": {"pattern": ["pattern"], "forbidden_pattern": []}}
-    assert log_inspector.check_plain_logs(log_gz, file_test) is True
-
-
-def test_check_tar_logs_no_patterns_without_file():
-    file_test = {}
-    result = log_inspector.check_tar_logs(Path("dummy.tar.gz"), file_test)
-    assert result

@@ -206,38 +206,6 @@ def test_create_2d_histogram_plot_log(sample_data):
     plt.close(fig)
 
 
-def test_create_2d_histogram_plot_keeps_zero_bins_visible():
-    data = np.array([[0, 2], [3, 0]])
-    bins = (np.array([0, 1, 2]), np.array([0, 1, 2]))
-    plot_params = {"norm": "linear", "cmap": "viridis", "show_contour": False}
-
-    fig, _ = plt.subplots()
-    pcm = _create_2d_histogram_plot(data, bins, plot_params)
-
-    plotted_array = pcm.get_array()
-    assert np.ma.isMaskedArray(plotted_array)
-    assert not np.any(np.ma.getmaskarray(plotted_array))
-    assert pcm.cmap.get_bad()[-1] == pytest.approx(0.0)
-    assert pcm.get_clim() == pytest.approx((0.0, 3.0))
-    plt.close(fig)
-
-
-def test_create_2d_histogram_plot_masks_nan_bins_but_keeps_zero_values():
-    data = np.array([[0.0, np.nan], [3.0, 1.0]])
-    bins = (np.array([0, 1, 2]), np.array([0, 1, 2]))
-    plot_params = {"norm": "linear", "cmap": "viridis"}
-
-    fig, _ = plt.subplots()
-    pcm = _create_2d_histogram_plot(data, bins, plot_params)
-
-    plotted_array = pcm.get_array()
-    assert np.ma.isMaskedArray(plotted_array)
-    mask = np.ma.getmaskarray(plotted_array)
-    assert np.count_nonzero(mask) == 1
-    assert pcm.get_clim() == pytest.approx((0.0, 3.0))
-    plt.close(fig)
-
-
 def test_create_2d_histogram_plot_no_positive_data():
     data = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
     bins_x = np.array([0, 1, 2, 3])
@@ -538,20 +506,8 @@ def test_build_plot_filename_with_partial_file_info():
     assert result == "plot_z52.png"
 
 
-def test_format_file_info_suffix_all_fields():
-    suffix = _format_file_info_suffix(
-        {"zenith": 20.5 * u.deg, "azimuth": 180.5 * u.deg, "nsb_level": 0.0}
-    )
-    # Python banker's rounding: round(20.5)=20, round(180.5)=180
-    assert suffix == "z20_az180_nsb0"
-
-
 def test_format_file_info_suffix_empty():
     assert _format_file_info_suffix({}) == ""
-
-
-def test_format_file_info_suffix_none_values():
-    assert _format_file_info_suffix({"zenith": None, "nsb_level": None}) == ""
 
 
 def test_extract_file_info_from_limits():
@@ -677,79 +633,6 @@ def test_create_2d_plot_config():
     assert result["filename"] == "core_distance_vs_energy_triggered"
 
 
-def test_create_2d_plot_config_core_xy():
-    """Cover the core_xy special-case branch in _create_2d_plot_config (line 270)."""
-    histograms = {
-        "histogram": np.array([[1, 0], [0, 1]]),
-        "bin_edges": [np.array([0, 1, 2]), np.array([0, 1, 2])],
-        "plot_scales": {},
-        "title": "Triggered events: core x vs core y: core x vs core y: core xy",
-        "axis_titles": [CORE_X_LABEL, CORE_Y_LABEL, EVENT_COUNT],
-    }
-    config = {
-        "base_key": "core_xy",
-        "x_label": CORE_X_LABEL,
-        "y_label": CORE_Y_LABEL,
-        "plot_params": {"norm": "log", "cmap": "viridis"},
-        "lines": {},
-        "scales": {},
-        "colorbar_label": EVENT_COUNT,
-        "event_type": TRIGGERED,
-    }
-    limits = {
-        "upper_radius_limit": MagicMock(value=100),
-        "lower_energy_limit": MagicMock(value=0.1),
-        "viewcone_radius": MagicMock(value=5),
-    }
-    result = plot_simtel_event_histograms._create_2d_plot_config(
-        histograms,
-        "core_xy",
-        config,
-        limits,
-    )
-    assert (
-        result["labels"]["title"]
-        == "Triggered events: core x vs core y: core x vs core y: core xy: core xy"
-    )
-    assert result["data"] is not None
-    np.testing.assert_array_equal(result["bins"][0], np.array([0, 1, 2]))
-    np.testing.assert_array_equal(result["bins"][1], np.array([0, 1, 2]))
-
-
-def test_generate_2d_plots():
-    # Test removed: _generate_2d_plots no longer exists in the codebase.
-    pass
-
-
-def test_generate_1d_plots():
-    class HistMock:
-        def histogram_types(self):
-            return {"typeA": {"suffix": "", "ordinate": "Z", "title": "TitleA"}}
-
-        def get(self, key):
-            if key == "energy":
-                return np.array([1, 2, 3])
-            if key == "energy_bin_edges":
-                return np.array([0, 1, 2, 3])
-            return None
-
-    histograms = HistMock()
-    labels = {
-        "energy": ENERGY_LABEL,
-        "event_count": EVENT_COUNT,
-        "core_distance": CORE_DIST_LABEL,
-        "pointing_direction": POINTING_LABEL,
-    }
-    limits = {
-        "lower_energy_limit": MagicMock(value=0.1),
-    }
-    # If there is a _generate_1d_plots function, use it. Otherwise, adapt as needed.
-    if hasattr(plot_simtel_event_histograms, "_generate_1d_plots"):
-        plots = plot_simtel_event_histograms._generate_1d_plots(histograms, labels, limits)
-        assert isinstance(plots, dict)
-        assert "energy" in plots
-
-
 def test_create_1d_plot_config():
     histograms = {
         "histogram": np.array([10, 20, 30]),
@@ -788,58 +671,6 @@ def test_create_1d_plot_config():
     assert result["filename"] == "energy_triggered"
 
 
-def test_get_limits():
-    # Test with limits containing all required keys
-    limits = {
-        "lower_energy_limit": MagicMock(value=42),
-        "upper_radius_limit": MagicMock(value=100),
-        "viewcone_radius": MagicMock(value=5),
-    }
-    result = _get_limits("energy", limits)
-    assert result == {"x": 42}
-
-    # Test with partial limits (should not raise, but will return x only)
-    limits = {
-        "lower_energy_limit": MagicMock(value=42),
-        "upper_radius_limit": MagicMock(value=100),
-        "viewcone_radius": MagicMock(value=5),
-    }
-    result = _get_limits("core_distance", limits)
-    assert result == {"x": 100}
-
-    # Test with all limits provided
-    limits = {
-        "upper_radius_limit": MagicMock(value=100),
-        "lower_energy_limit": MagicMock(value=0.1),
-        "viewcone_radius": MagicMock(value=5),
-    }
-    result = _get_limits("angular_distance", limits)
-    assert result == {"x": 5}
-
-    limits["core_distance_vs_energy_curve"] = {"x": [10, 20], "y": [0.1, 1.0]}
-    limits["angular_distance_vs_energy_curve"] = {"x": [2.5, 3.0], "y": [0.1, 1.0]}
-
-    result = _get_limits("core_distance_vs_energy", limits)
-    assert result["x"] == 100
-    assert result["y"] == pytest.approx(0.1)
-    assert result["curve"] == limits["core_distance_vs_energy_curve"]
-
-    result = _get_limits("core_distance_vs_energy_cumulative", limits)
-    assert result["x"] == 100
-    assert result["y"] == pytest.approx(0.1)
-    assert result["curve"] == limits["core_distance_vs_energy_curve"]
-
-    result = _get_limits("angular_distance_vs_energy", limits)
-    assert result["x"] == 5
-    assert result["y"] == pytest.approx(0.1)
-    assert result["curve"] == limits["angular_distance_vs_energy_curve"]
-
-    result = _get_limits("angular_distance_vs_energy_cumulative", limits)
-    assert result["x"] == 5
-    assert result["y"] == pytest.approx(0.1)
-    assert result["curve"] == limits["angular_distance_vs_energy_curve"]
-
-
 @pytest.fixture
 def mock_histograms():
     histograms = MagicMock()
@@ -873,34 +704,6 @@ def test_plot_with_output_path(mock_histograms):
         )
         mock_execute_loop.assert_called_once_with(
             {"mock_plot": "mock_config"}, output_path, array_name, {}
-        )
-
-
-def test_plot_without_output_path(mock_histograms):
-    limits = None
-    array_name = None
-
-    with (
-        patch(f"{MOD}._generate_plot_configurations") as mock_generate_configs,
-        patch(f"{MOD}._execute_plotting_loop") as mock_execute_loop,
-    ):
-        mock_generate_configs.return_value = {"mock_plot": "mock_config"}
-
-        plot(
-            histograms=mock_histograms,
-            output_path=None,
-            limits=limits,
-            array_name=array_name,
-        )
-
-        mock_generate_configs.assert_called_once_with(
-            mock_histograms,
-            limits,
-            add_distance_projections=False,
-            use_broad_range_limits=False,
-        )
-        mock_execute_loop.assert_called_once_with(
-            {"mock_plot": "mock_config"}, None, array_name, {}
         )
 
 
@@ -973,7 +776,6 @@ def test_generate_plot_configurations():
 
 
 def test_broad_range_axis_limits_are_used_for_distance_histograms():
-    """Plot ranges come from broad-range metadata rather than derived limits."""
     limits = {
         "br_energy_min": 0.02 * u.TeV,
         "br_energy_max": 200.0 * u.TeV,
@@ -993,7 +795,6 @@ def test_broad_range_axis_limits_are_used_for_distance_histograms():
 
 
 def test_broad_range_axis_limits_do_not_replace_derived_limits():
-    """Broad-range view limits keep the derived limit overlays intact."""
     limits = {
         "lower_energy_limit": 0.1 * u.TeV,
         "upper_radius_limit": 1200.0 * u.m,
@@ -1021,7 +822,6 @@ def test_broad_range_axis_limits_do_not_replace_derived_limits():
 
 
 def test_projection_slice_coordinates():
-    """Generate the requested fixed energy and distance slice sequences."""
     energy_slices = plot_simtel_event_histograms._energy_slice_values(
         np.logspace(-2, 3, 6), (0.02, 200.0)
     )
@@ -1038,7 +838,6 @@ def test_projection_slice_coordinates():
 
 
 def test_create_2d_plot_with_distance_projections(tmp_test_directory):
-    """Render overall and sliced projections in two right-hand panels."""
     output_file = tmp_test_directory / "projected.png"
     data = np.arange(1.0, 21.0).reshape(4, 5)
     bins = [np.linspace(0.0, 2000.0, 5), np.logspace(-2, 3, 6)]

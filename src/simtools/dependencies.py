@@ -22,6 +22,7 @@ from pathlib import Path
 import yaml
 
 from simtools import settings
+from simtools.configuration import defaults
 from simtools.io import ascii_handler
 from simtools.utils import general as gen
 from simtools.version import __version__
@@ -42,6 +43,173 @@ SIMTEL_METADATA_BUILD_OPTION_KEYS = {
     "simtel_version",
     "stdtools_version",
 }
+_CORSIKA_TABLE_MANIFEST_SCHEMA_MAJOR = 1
+_GIT_LFS_POINTER_PREFIX = b"version https://git-lfs.github.com/spec/v1\n"
+
+
+def validate_simulation_dependencies(simulation_software):
+    """Validate external software and data required by a simulation.
+
+    Parameters
+    ----------
+    simulation_software : str
+        Simulation software selection: ``sim_telarray``, ``corsika``, or
+        ``corsika_sim_telarray``.
+
+    Raises
+    ------
+    ValueError
+        If the selection or CORSIKA interaction-table manifest is invalid, or
+        if a required dependency is unavailable.
+    """
+    try:
+        required = defaults.SIMULATION_SOFTWARE_DEPENDENCIES[simulation_software]
+    except KeyError as exc:
+        raise ValueError(f"Unknown simulation software: {simulation_software}") from exc
+
+    errors = []
+    if "sim_telarray" in required:
+        _collect_dependency_error(errors, "sim_telarray", lambda: settings.config.sim_telarray_exe)
+    if "corsika" in required:
+        geometry = "curved" if _uses_curved_atmosphere() else "flat"
+        _collect_dependency_error(
+            errors, f"CORSIKA ({geometry})", lambda: _corsika_executable(geometry)
+        )
+        try:
+            table_path = settings.config.corsika_interaction_table_path
+            errors.extend(_validate_corsika_interaction_tables(table_path))
+        except (FileNotFoundError, PermissionError, TypeError, ValueError) as exc:
+            errors.append(f"CORSIKA interaction tables: {exc}")
+
+    if errors:
+        raise ValueError("Simulation dependencies are unavailable:\n- " + "\n- ".join(errors))
+
+
+def _collect_dependency_error(errors, name, getter):
+    """Append a dependency access error to a shared validation result."""
+    try:
+        if getter() is None:
+            raise FileNotFoundError("not configured")
+    except (FileNotFoundError, PermissionError, TypeError, ValueError) as exc:
+        errors.append(f"{name}: {exc}")
+
+
+def _uses_curved_atmosphere():
+    """Return whether the configured zenith angle selects curved CORSIKA."""
+    try:
+        args = settings.config.args
+        return args.get("zenith_angle").to_value("deg") >= args[
+            "curved_atmosphere_min_zenith_angle"
+        ].to_value("deg")
+    except AttributeError, KeyError, TypeError:
+        return False
+
+
+def _corsika_executable(geometry):
+    """Return the configured CORSIKA executable for an atmosphere geometry."""
+    if geometry == "curved":
+        return settings.config.corsika_exe_curved
+    return settings.config.corsika_exe
+
+
+def _validate_corsika_interaction_tables(table_path):
+    """Return errors for the selected CORSIKA interaction-table files."""
+    manifest_path = Path(table_path) / "manifest.yaml"
+    try:
+        with manifest_path.open(encoding="utf-8") as stream:
+            manifest = yaml.safe_load(stream)
+    except (OSError, yaml.YAMLError) as exc:
+        raise ValueError(f"cannot read manifest {manifest_path}: {exc}") from exc
+
+    _validate_table_manifest_structure(manifest, manifest_path)
+    he_model, le_model = settings.config.corsika_interaction_models
+    entries = [
+        *_manifest_entries(manifest, "common"),
+        *_manifest_entries(manifest, "electromagnetic", "egs4"),
+        *_manifest_entries(manifest, "low_energy", le_model),
+        *_manifest_entries(manifest, "high_energy", he_model),
+    ]
+    return _validate_table_entries(entries, Path(table_path))
+
+
+def _validate_table_manifest_structure(manifest, manifest_path):
+    """Validate the manifest structure needed by simtools."""
+    if not isinstance(manifest, dict):
+        raise ValueError(f"manifest root is not a mapping: {manifest_path}")
+    schema_version = manifest.get("schema_version")
+    try:
+        schema_major = int(str(schema_version).split(".", maxsplit=1)[0])
+    except (AttributeError, TypeError, ValueError) as exc:
+        raise ValueError(f"invalid schema_version in {manifest_path}: {schema_version!r}") from exc
+    if schema_major != _CORSIKA_TABLE_MANIFEST_SCHEMA_MAJOR:
+        raise ValueError(f"unsupported schema_version in {manifest_path}: {schema_version!r}")
+    files = manifest.get("files")
+    if not isinstance(files, dict):
+        raise ValueError(f"manifest.files is not a mapping: {manifest_path}")
+    required_categories = {"common", "electromagnetic", "low_energy", "high_energy"}
+    missing_categories = required_categories - files.keys()
+    if missing_categories:
+        missing = ", ".join(sorted(missing_categories))
+        raise ValueError(f"manifest.files is missing category group(s): {missing}")
+
+
+def _manifest_entries(manifest, category, model=None):
+    """Return one manifest entry group after validating its container type."""
+    value = manifest["files"].get(category)
+    if model is not None:
+        if not isinstance(value, dict) or model not in value:
+            raise ValueError(f"manifest model group is missing: files.{category}.{model}")
+        value = value[model]
+    if not isinstance(value, list):
+        location = f"files.{category}" if model is None else f"files.{category}.{model}"
+        raise ValueError(f"manifest group is not a list: {location}")
+    return value
+
+
+def _validate_table_entries(entries, table_path):
+    """Return missing, truncated, or unhydrated interaction-table files."""
+    errors = []
+    for entry in entries:
+        error = _validate_table_entry(entry, table_path)
+        if error:
+            errors.append(error)
+    return errors
+
+
+def _validate_table_entry(entry, table_path):
+    """Return an error for one manifest table entry, if any."""
+    if not isinstance(entry, dict):
+        return "invalid manifest table entry"
+    path_value = entry.get("path")
+    expected_size = entry.get("size")
+    if not isinstance(path_value, str) or Path(path_value).name != path_value:
+        return f"invalid manifest table path: {path_value!r}"
+    if not isinstance(expected_size, int) or expected_size < 0:
+        return f"invalid manifest table size for {path_value}"
+    return _validate_table_file(table_path / path_value, expected_size)
+
+
+def _validate_table_file(table_file, expected_size):
+    """Return an error for one installed interaction-table file, if any."""
+    if not table_file.is_file():
+        return f"missing file: {table_file}"
+    if not os.access(table_file, os.R_OK):
+        return f"file is not readable: {table_file}"
+    if _is_git_lfs_pointer(table_file):
+        return f"Git LFS pointer is not hydrated: {table_file}"
+    actual_size = table_file.stat().st_size
+    if actual_size != expected_size:
+        return f"size mismatch for {table_file}: {actual_size} != {expected_size}"
+    return None
+
+
+def _is_git_lfs_pointer(path):
+    """Return whether a file contains an unhydrated Git LFS pointer."""
+    try:
+        with path.open("rb") as stream:
+            return stream.read(len(_GIT_LFS_POINTER_PREFIX)) == _GIT_LFS_POINTER_PREFIX
+    except OSError:
+        return False
 
 
 def get_version_string(run_time=None, include_software_versions=True):

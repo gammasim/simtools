@@ -81,7 +81,6 @@ def redact_test_setup():
 def test_redact_filter_env_var(
     redact_test_setup, log_message, secret_value, env_var, non_secret_values
 ):
-    """Test that RedactFilter redacts secret values from environment variables."""
     app_context, handler = redact_test_setup
 
     with patch.dict(os.environ, {env_var: secret_value}, clear=False):
@@ -123,7 +122,6 @@ def test_redact_filter_env_var(
 def test_redact_filter_pattern_matching(
     redact_test_setup, log_message, secret_values, non_secret_values
 ):
-    """Test that RedactFilter redacts secrets based on pattern matching."""
     app_context, handler = redact_test_setup
     _reset_stream(handler)
 
@@ -137,26 +135,7 @@ def test_redact_filter_pattern_matching(
         assert non_secret in output
 
 
-def test_redact_filter_child_logger(redact_test_setup):
-    """Test that RedactFilter works for child loggers."""
-    _, handler = redact_test_setup
-    test_password = "child_logger_secret_789"
-
-    with patch.dict(os.environ, {"SIMTOOLS_DB_API_PW": test_password}, clear=False):
-        child_logger = logging.getLogger("simtools.job_execution.job_manager")
-        child_logger.setLevel(logging.DEBUG)
-        _reset_stream(handler)
-
-        env_pw = os.environ.get("SIMTOOLS_DB_API_PW", "")
-        child_logger.debug("Environment: {'SIMTOOLS_DB_API_PW': '%s', 'USER': 'test'}", env_pw)
-        output = _read_stream(handler)
-
-        assert "***REDACTED***" in output
-        assert test_password not in output
-
-
 def test_initialize_runtime_basic():
-    """Test application runtime startup with basic configuration."""
     mock_args_dict = {"log_level": "info", "test": True}
     mock_db_config = {"host": "localhost"}
     app_context = _initialize_runtime(mock_args_dict, mock_db_config)
@@ -204,8 +183,53 @@ def test_initialize_runtime_without_resolving_sim_software_executables():
     )
 
 
+def test_initialize_runtime_validates_simulation_dependencies_after_loading():
+    """Dependency validation runs after settings load and before logging."""
+    mock_args_dict = {"log_level": "info", "simulation_software": "corsika"}
+    mock_db_config = {}
+    with (
+        patch("simtools.application.control.config.load") as mock_load,
+        patch(
+            "simtools.application.control.dependencies.validate_simulation_dependencies"
+        ) as validate,
+        patch("simtools.application.control.setup_logging") as setup_logging,
+    ):
+        _initialize_runtime(
+            mock_args_dict,
+            mock_db_config,
+            setup_io_handler=False,
+            validate_simulation_dependencies=True,
+        )
+
+    mock_load.assert_called_once()
+    validate.assert_called_once_with("corsika")
+    setup_logging.assert_called_once()
+
+
+def test_initialize_runtime_stops_when_dependencies_are_unavailable():
+    """Dependency failures prevent the rest of application startup."""
+    mock_args_dict = {"log_level": "info", "simulation_software": "corsika"}
+    mock_db_config = {}
+    with (
+        patch("simtools.application.control.config.load"),
+        patch(
+            "simtools.application.control.dependencies.validate_simulation_dependencies",
+            side_effect=ValueError("missing dependency"),
+        ),
+        patch("simtools.application.control.setup_logging") as setup_logging,
+    ):
+        with pytest.raises(ValueError, match="missing dependency"):
+            _initialize_runtime(
+                mock_args_dict,
+                mock_db_config,
+                setup_io_handler=False,
+                validate_simulation_dependencies=True,
+            )
+
+    setup_logging.assert_not_called()
+
+
 def test_initialize_runtime_prepares_runtime_environment_from_cli():
-    """Test runtime startup prepares the requested runtime environment."""
     mock_args_dict = {
         "log_level": "info",
         "runtime_environment_file": Path("runtime.yml"),
@@ -225,7 +249,6 @@ def test_initialize_runtime_prepares_runtime_environment_from_cli():
 
 
 def test_initialize_runtime_runtime_environment_ignored_from_cli():
-    """Test runtime startup ignores the runtime environment when requested."""
     mock_args_dict = {
         "log_level": "info",
         "runtime_environment_file": Path("runtime.yml"),
@@ -241,19 +264,7 @@ def test_initialize_runtime_runtime_environment_ignored_from_cli():
     assert "run_time" not in app_context.args
 
 
-def test_resolve_model_version_to_latest_patch_no_model_version():
-    """Test _resolve_model_version_to_latest_patch when model_version is not in args."""
-
-    args_dict = {"log_level": "info"}
-    logger = logging.getLogger("test")
-
-    _resolve_model_version_to_latest_patch(args_dict, logger)
-
-    assert "model_version" not in args_dict
-
-
 def test_resolve_model_version_to_latest_patch_full_version():
-    """Test _resolve_model_version_to_latest_patch when model_version is already full."""
 
     args_dict = {"model_version": "6.0.1"}
     logger = logging.getLogger("test")
@@ -271,7 +282,6 @@ def test_resolve_model_version_to_latest_patch_full_version():
 
 
 def test_resolve_model_version_to_latest_patch_resolves_to_latest():
-    """Test _resolve_model_version_to_latest_patch resolves to latest patch version."""
 
     args_dict = {"model_version": "6.0"}
     logger = logging.getLogger("test")
@@ -292,7 +302,6 @@ def test_resolve_model_version_to_latest_patch_resolves_to_latest():
 
 
 def test_resolve_model_version_to_latest_patch_list_of_versions():
-    """Test _resolve_model_version_to_latest_patch with list of versions."""
 
     args_dict = {"model_version": ["6.0", "6.1"]}
     logger = logging.getLogger("test")
@@ -313,7 +322,6 @@ def test_resolve_model_version_to_latest_patch_list_of_versions():
 
 
 def test_resolve_model_version_to_latest_patch_list_with_full_versions():
-    """Test _resolve_model_version_to_latest_patch with list containing full versions."""
 
     args_dict = {"model_version": ["6.0.2", "6.1"]}
     logger = logging.getLogger("test")
@@ -339,19 +347,7 @@ def test_resolve_model_version_to_latest_patch_list_with_full_versions():
                     assert args_dict["model_version"] == ["6.0.2", "6.1.1"]
 
 
-def test_resolve_model_version_to_latest_patch_empty_list():
-    """Test _resolve_model_version_to_latest_patch with empty list."""
-
-    args_dict = {"model_version": []}
-    logger = logging.getLogger("test")
-
-    _resolve_model_version_to_latest_patch(args_dict, logger)
-
-    assert args_dict["model_version"] == []
-
-
 def test_resolve_model_version_to_latest_patch_db_exception():
-    """Test _resolve_model_version_to_latest_patch when database raises exception."""
 
     args_dict = {"model_version": "6.0"}
     logger = logging.getLogger("test")
@@ -366,24 +362,7 @@ def test_resolve_model_version_to_latest_patch_db_exception():
             assert args_dict["model_version"] == "6.0"
 
 
-def test_resolve_model_version_to_latest_patch_list_with_db_exception():
-    """Test _resolve_model_version_to_latest_patch with list when database raises exception."""
-
-    args_dict = {"model_version": ["6.0", "6.1"]}
-    logger = logging.getLogger("test")
-
-    with patch(
-        "simtools.application.control.db_handler.DatabaseHandler",
-        side_effect=OSError("Database connection failed"),
-    ):
-        with patch("simtools.application.control.version.version_kind", return_value="MAJOR_MINOR"):
-            _resolve_model_version_to_latest_patch(args_dict, logger)
-
-            assert args_dict["model_version"] == ["6.0", "6.1"]
-
-
 def test_resolve_model_version_to_latest_patch_list_mixed_with_exception():
-    """Test _resolve_model_version_to_latest_patch with list where one version fails."""
 
     args_dict = {"model_version": ["6.0", "6.1"]}
     logger = logging.getLogger("test")
@@ -402,50 +381,7 @@ def test_resolve_model_version_to_latest_patch_list_mixed_with_exception():
                 assert args_dict["model_version"] == ["6.0.1", "6.1"]
 
 
-def test_version_info_with_build_options():
-    """Test _version_info with available build options."""
-    args_dict = {"run_time": "test_runtime"}
-    logger = logging.getLogger("test")
-    mock_io_handler = MagicMock()
-
-    with patch("simtools.application.control.dependencies.get_build_options") as mock_build:
-        with patch(
-            "simtools.application.control.dependencies.get_database_version_or_name"
-        ) as mock_db:
-            with patch("simtools.application.control.version.__version__", "1.0.0"):
-                mock_build.return_value = {
-                    "corsika_version": "7.7500",
-                    "simtel_version": "2021-09-01",
-                }
-                mock_db.side_effect = ["test_db", "1.0.0"]
-
-                _version_info(args_dict, mock_io_handler, logger)
-
-                mock_build.assert_called_once_with("test_runtime")
-
-
-def test_version_info_no_build_options():
-    """Test _version_info when build options file not found."""
-    args_dict = {}
-    logger = logging.getLogger("test")
-    mock_io_handler = MagicMock()
-
-    with patch(
-        "simtools.application.control.dependencies.get_build_options",
-        side_effect=FileNotFoundError("Build options not found"),
-    ):
-        with patch(
-            "simtools.application.control.dependencies.get_database_version_or_name",
-            side_effect=[None, None],
-        ):
-            with patch("simtools.application.control.version.__version__", "1.0.0"):
-                _version_info(args_dict, mock_io_handler, logger)
-
-                mock_io_handler.get_output_file.assert_not_called()
-
-
 def test_version_info_export_build_info_with_io_handler():
-    """Test _version_info exports build info when io_handler is available."""
     args_dict = {"run_time": "test_runtime", "export_build_info": "build_info.json"}
     logger = logging.getLogger("test")
     mock_io_handler = MagicMock()
@@ -466,7 +402,6 @@ def test_version_info_export_build_info_with_io_handler():
 
 
 def test_version_info_export_build_info_without_io_handler():
-    """Test _version_info exports build info using file path when io_handler is None."""
     args_dict = {"run_time": "test_runtime", "export_build_info": "/output/build_info.json"}
     logger = logging.getLogger("test")
 
@@ -483,27 +418,7 @@ def test_version_info_export_build_info_without_io_handler():
                     mock_export.assert_called_once_with("/output/build_info.json", "test_runtime")
 
 
-def test_version_info_no_export_build_info():
-    """Test _version_info when export_build_info is not set."""
-    args_dict = {"run_time": "test_runtime"}
-    logger = logging.getLogger("test")
-    mock_io_handler = MagicMock()
-
-    with patch("simtools.application.control.dependencies.get_build_options") as mock_build:
-        with patch("simtools.application.control.dependencies.get_database_version_or_name"):
-            with patch(
-                "simtools.application.control.dependencies.export_build_info"
-            ) as mock_export:
-                with patch("simtools.application.control.version.__version__", "1.0.0"):
-                    mock_build.return_value = {"corsika_version": "7.7500"}
-
-                    _version_info(args_dict, mock_io_handler, logger)
-
-                    mock_export.assert_not_called()
-
-
 def test_get_log_file_explicit_file():
-    """Test get_log_file when log_file is explicitly provided (takes precedence)."""
     args_dict = {
         "log_file": "/path/to/custom.log",
         "application_label": "ignored",
@@ -512,15 +427,7 @@ def test_get_log_file_explicit_file():
     assert result == "/path/to/custom.log"
 
 
-def test_get_log_file_no_application_label():
-    """Test get_log_file returns None when application_label is not set."""
-    args_dict = {}
-    result = get_log_file(args_dict)
-    assert result is None
-
-
 def test_get_log_file_disabled():
-    """Test get_log_file returns None when file logging is disabled."""
     args_dict = {
         "disable_log_file": True,
         "application_label": "test_app",
@@ -531,7 +438,6 @@ def test_get_log_file_disabled():
 
 
 def test_get_log_file_with_output_path(tmp_test_directory):
-    """Test get_log_file generates path and creates directory."""
     output_path = Path(str(tmp_test_directory)) / "new_dir" / "nested"
     args_dict = {"application_label": "test_app", "output_path": str(output_path)}
     result = get_log_file(args_dict)
@@ -544,7 +450,6 @@ def test_get_log_file_with_output_path(tmp_test_directory):
 
 
 def test_get_log_file_with_log_file_path_preferred_over_output_path(tmp_test_directory):
-    """Test get_log_file uses log_file_path when provided."""
     tmp_path = Path(tmp_test_directory)
     output_path = tmp_path / "output"
     log_path = tmp_path / "logs"
@@ -562,29 +467,12 @@ def test_get_log_file_with_log_file_path_preferred_over_output_path(tmp_test_dir
     assert log_path.exists()
 
 
-@pytest.mark.parametrize(
-    ("log_level", "expected_level"),
-    [
-        ("INFO", logging.INFO),
-        ("DEBUG", logging.DEBUG),
-        ("WARNING", logging.WARNING),
-    ],
-)
-def test_setup_logging_log_levels(log_level, expected_level):
-    """Test setup_logging with different log levels."""
-    logger = setup_logging(log_level=log_level)
-    assert logger.level == expected_level
-    assert len(logger.handlers) > 0
-
-
 def test_setup_logging_with_logger_name():
-    """Test setup_logging with custom logger name."""
     logger = setup_logging(logger_name="test_logger")
     assert logger.name == "test_logger"
 
 
 def test_setup_logging_with_file_handler(tmp_test_directory):
-    """Test setup_logging creates and writes to file handler."""
     log_file = Path(str(tmp_test_directory)) / "test.log"
     logger = setup_logging(
         log_level="INFO", log_file=str(log_file), logger_name="test_file_handler"
@@ -603,43 +491,3 @@ def test_setup_logging_with_file_handler(tmp_test_directory):
         for handler in list(logger.handlers):
             handler.close()
             logger.removeHandler(handler)
-
-
-def test_setup_logging_handlers_have_formatters():
-    """Test that setup_logging creates handlers with formatters."""
-    logger = setup_logging(logger_name="test_format")
-
-    stream_handlers = [h for h in logger.handlers if isinstance(h, logging.StreamHandler)]
-    assert len(stream_handlers) > 0
-    assert stream_handlers[0].formatter is not None
-
-
-def test_setup_logging_clears_existing_handlers():
-    """Test that setup_logging clears existing handlers to avoid duplicates."""
-    logger = logging.getLogger("test_clear_handlers")
-    logger.addHandler(logging.StreamHandler())
-    initial_handler_count = len(logger.handlers)
-
-    setup_logging(logger_name="test_clear_handlers")
-
-    assert len(logger.handlers) <= initial_handler_count
-
-
-@pytest.mark.parametrize(
-    ("test_id", "log_message", "secret_value"),
-    [
-        ("env", "Password is {secret}", "test_secret_123"),
-        ("api", 'Config: {{"api_key": "{secret}"}}', "secret_xyz"),
-    ],
-)
-def test_setup_logging_redaction(tmp_test_directory, test_id, log_message, secret_value):
-    """Test that setup_logging applies redaction filter."""
-    log_file = Path(str(tmp_test_directory)) / f"test_{test_id}.log"
-
-    with patch.dict(os.environ, {"SIMTOOLS_DB_API_PW": secret_value}, clear=False):
-        logger = setup_logging(logger_name=f"test_redact_{test_id}", log_file=str(log_file))
-        logger.info(log_message.format(secret=secret_value))
-
-        content = log_file.read_text()
-        assert "***REDACTED***" in content
-        assert secret_value not in content

@@ -377,6 +377,9 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
     }
     if job_row.get("corsika_hadronic_transition_energy") is not None:
         args["corsika_hadronic_transition_energy"] = job_row["corsika_hadronic_transition_energy"]
+    for coordinate in ("ha", "dec"):
+        if job_row.get(coordinate) is not None:
+            args[coordinate] = job_row[coordinate]
     if metadata:
         for key in ("site", "simulation_software"):
             if metadata.get(key):
@@ -416,6 +419,11 @@ def build_simulate_prod_job_specs(args_dict, rows, parser, metadata=None):
             and f"--{key}" in parser._option_string_actions  # pylint: disable=protected-access
         }
         job_args.update(job_grid_row_to_simulate_prod_args(row, metadata))
+        job_args = {
+            key: value
+            for key, value in job_args.items()
+            if f"--{key}" in parser._option_string_actions  # pylint: disable=protected-access
+        }
         output_path = output_root / f"job-{index:06d}"
         job_args["output_path"] = str(output_path)
         mount_paths = [output_path]

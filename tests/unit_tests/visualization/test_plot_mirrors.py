@@ -18,7 +18,6 @@ from simtools.visualization import plot_mirrors
 @mock.patch("simtools.visualization.plot_mirrors.Mirrors")
 @mock.patch("simtools.visualization.plot_mirrors.TelescopeModel")
 def test_plot(mock_telescope_model, mock_mirrors, mock_save, mock_plot_layout, tmp_path):
-    """Test the main plot function."""
     config = {
         "parameter": "mirror_list",
         "site": "North",
@@ -83,7 +82,6 @@ def test_plot(mock_telescope_model, mock_mirrors, mock_save, mock_plot_layout, t
 def test_plot_segmentation_types(
     mock_telescope_model, mock_save, tmp_path, telescope, file_name, file_content, plot_function
 ):
-    """Test the main plot function for different segmentation types."""
     config = {
         "parameter": "primary_mirror_segmentation",
         "site": "South",
@@ -124,7 +122,6 @@ def test_plot_segmentation_types(
 
 
 def test__create_single_mirror_patch():
-    """Test patch creation for different mirror shapes."""
     x, y = 100.0, 100.0
     diameter = 150.0
 
@@ -144,7 +141,6 @@ def test__create_single_mirror_patch():
 
 
 def test__create_mirror_patches():
-    """Test creation of mirror patches."""
     x_pos = np.array([100.0, 200.0, 300.0])
     y_pos = np.array([100.0, 200.0, 300.0])
     diameter = 150.0
@@ -163,7 +159,6 @@ def test__create_mirror_patches():
 
 @mock.patch("matplotlib.pyplot.subplots")
 def test_plot_mirror_layout(mock_subplots, tmp_path):
-    """Test mirror layout plotting."""
     mock_fig = mock.MagicMock()
     mock_ax = mock.MagicMock()
     mock_ax.get_xlim.return_value = (-1000, 1000)
@@ -197,6 +192,7 @@ def test_plot_mirror_layout(mock_subplots, tmp_path):
         )
 
         assert fig is not None
+
         mock_ax.set_aspect.assert_called_once_with("equal")
         mock_ax.add_collection.assert_called_once()
         mock_colorbar.assert_called_once()
@@ -204,7 +200,6 @@ def test_plot_mirror_layout(mock_subplots, tmp_path):
 
 
 def test__add_mirror_labels():
-    """Test adding mirror labels to plot."""
     mock_ax = mock.MagicMock()
     x_pos = np.array([100.0, 200.0, 300.0, 400.0, 500.0])
     y_pos = np.array([100.0, 200.0, 300.0, 400.0, 500.0])
@@ -216,7 +211,6 @@ def test__add_mirror_labels():
 
 
 def test__configure_mirror_plot():
-    """Test mirror plot configuration."""
     mock_ax = mock.MagicMock()
     mock_ax.get_xlim.return_value = (-1000, 1000)
     mock_ax.get_ylim.return_value = (-1000, 1000)
@@ -249,7 +243,6 @@ def test__configure_mirror_plot():
     ],
 )
 def test__add_mirror_statistics_various_shapes(shape_type, n_mirrors, diameter, tmp_path):
-    """Test mirror statistics with different shape types."""
     mock_ax = mock.MagicMock()
     mock_mirrors = mock.MagicMock()
     mock_mirrors.number_of_mirrors = n_mirrors
@@ -270,7 +263,6 @@ def test__add_mirror_statistics_various_shapes(shape_type, n_mirrors, diameter, 
 
 
 def test__read_segmentation_file(tmp_path):
-    """Test reading segmentation file."""
     seg_file = tmp_path / "test_segmentation.dat"
     seg_file.write_text(
         "# Test segmentation file\n"
@@ -291,7 +283,6 @@ def test__read_segmentation_file(tmp_path):
 
 
 def test__extract_segment_id():
-    """Test segment ID extraction."""
     parts_with_id = ["100.0", "200.0", "150.0", "2800.0", "3", "0.0", "#%", "id=5"]
     assert plot_mirrors._extract_segment_id(parts_with_id, 0) == 5
 
@@ -315,7 +306,6 @@ def test__detect_segmentation_type(tmp_path):
 
 
 def test__read_ring_segmentation_data(tmp_path):
-    """Test reading ring segmentation data."""
     ring_file = tmp_path / "ring_seg.dat"
     ring_file.write_text(
         "# Ring segmentation file\nring 6 100.0 200.0 60.0 15.0\nring 12 200.0 300.0 30.0 0.0\n"
@@ -336,7 +326,6 @@ def test__read_ring_segmentation_data(tmp_path):
 
 @mock.patch("matplotlib.pyplot.subplots")
 def test_plot_mirror_ring_segmentation(mock_subplots, tmp_path):
-    """Test ring segmentation plotting."""
     mock_fig = mock.MagicMock()
     mock_ax = mock.MagicMock()
     mock_subplots.return_value = (mock_fig, mock_ax)
@@ -360,7 +349,6 @@ def test_plot_mirror_ring_segmentation(mock_subplots, tmp_path):
 
 @mock.patch("matplotlib.pyplot.subplots")
 def test_plot_mirror_shape_segmentation(mock_subplots, tmp_path):
-    """Test shape segmentation plotting."""
     mock_fig = mock.MagicMock()
     mock_ax = mock.MagicMock()
     mock_subplots.return_value = (mock_fig, mock_ax)
@@ -389,7 +377,6 @@ def test_plot_mirror_shape_segmentation(mock_subplots, tmp_path):
 
 
 def test__read_segmentation_file_with_invalid_data(tmp_path):
-    """Test reading segmentation file with invalid numeric data (ValueError handling)."""
     data_file = tmp_path / "invalid_seg.dat"
     data_file.write_text("invalid_x invalid_y 100.0 50.0\n")
 
@@ -410,7 +397,6 @@ def test__read_segmentation_file_empty_warning(tmp_path, caplog):
 
 
 def test_plot_mirror_ring_segmentation_empty_data(tmp_path, caplog):
-    """Test ring segmentation with empty data file."""
     data_file = tmp_path / "empty_ring.dat"
     data_file.write_text("# No data\n")
 
@@ -425,13 +411,11 @@ def test_plot_mirror_ring_segmentation_empty_data(tmp_path, caplog):
 
 
 def test__parse_segment_id_line_invalid():
-    """Test _parse_segment_id_line with invalid input."""
     assert plot_mirrors._parse_segment_id_line("invalid line") == 0
     assert plot_mirrors._parse_segment_id_line("") == 0
 
 
 def test__is_skippable_line():
-    """Test _is_skippable_line function."""
     assert plot_mirrors._is_skippable_line("")
     assert plot_mirrors._is_skippable_line("# comment")
     assert plot_mirrors._is_skippable_line("% comment")
@@ -439,7 +423,6 @@ def test__is_skippable_line():
 
 
 def test__read_shape_segmentation_file_with_segment_id(tmp_path):
-    """Test reading shape segmentation file with segment ID marker."""
     data_file = tmp_path / "shape_with_id.dat"
     data_file.write_text("# segment id 5\nhex 1 100.0 0.0 50.0 0.0\nhex 2 200.0 0.0 50.0 0.0\n")
 
@@ -450,7 +433,6 @@ def test__read_shape_segmentation_file_with_segment_id(tmp_path):
 
 
 def test_plot_mirror_shape_segmentation_stats_variations(tmp_path):
-    """Test shape segmentation plot with different stats text variations."""
     data_file = tmp_path / "shape_stats.dat"
 
     data_file.write_text("hex 1 100.0 0.0 50.0 0.0\n")
@@ -496,7 +478,6 @@ def test_plot_mirror_ring_segmentation_various_ring_counts(tmp_path, ring_count,
 
 
 def test__configure_mirror_plot_empty_data():
-    """Test mirror plot configuration with empty data."""
     mock_ax = mock.MagicMock()
     plot_mirrors._configure_mirror_plot(mock_ax, np.array([]), np.array([]))
     mock_ax.text.assert_called_once()
@@ -504,7 +485,6 @@ def test__configure_mirror_plot_empty_data():
 
 
 def test_plot_mirror_shape_segmentation_no_segment_ids(tmp_path):
-    """Test shape segmentation with segments but no segment IDs."""
     data_file = tmp_path / "shape_no_ids.dat"
     data_file.write_text(
         "# Shape file without segment IDs\nhex 1 100.0 0.0 50.0 0.0\nhex 2 200.0 0.0 50.0 0.0\n"
@@ -532,7 +512,6 @@ def test_plot_mirror_shape_segmentation_no_segment_ids(tmp_path):
 
 
 def test__read_segmentation_file_with_invalid_x_y(tmp_path):
-    """Test reading segmentation file where x,y are invalid but other parts are valid."""
     seg_file = tmp_path / "test_segmentation_invalid_xy.dat"
     seg_file.write_text(
         "# Test segmentation file\n"
@@ -549,7 +528,6 @@ def test__read_segmentation_file_with_invalid_x_y(tmp_path):
 
 
 def test__extract_float_after_keyword():
-    """Test extracting float values after keywords."""
     # Parse after colon
     line = "# Total surface area: 107.2 m**2"
     assert plot_mirrors._extract_float_after_keyword(line, ":") == pytest.approx(107.2)
@@ -573,7 +551,6 @@ def test__extract_float_after_keyword():
 
 
 def test__read_mirror_file_metadata(tmp_path):
-    """Test reading mirror file metadata."""
     # MST format
     mst_file = tmp_path / "mst_mirror.dat"
     mst_file.write_text(
@@ -607,7 +584,6 @@ def test__read_mirror_file_metadata(tmp_path):
 
 
 def test_plot_mirror_layout_mst_mirror_ids(tmp_path):
-    """Test that MST mirror IDs are reversed (N to 1) with mirror #1 at the bottom."""
     mock_fig = mock.MagicMock()
     mock_ax = mock.MagicMock()
     mock_ax.get_xlim.return_value = (-1000, 1000)
@@ -678,7 +654,6 @@ def test_plot_mirror_layout_mst_mirror_ids(tmp_path):
 )
 @mock.patch("matplotlib.pyplot.subplots")
 def test_telescope_rotation(mock_subplots, tmp_path, telescope, plot_function, file_content):
-    """Test telescope-specific rotation for different plot types."""
     mock_fig = mock.MagicMock()
     mock_ax = mock.MagicMock()
     mock_ax.get_xlim.return_value = (-1000, 1000)

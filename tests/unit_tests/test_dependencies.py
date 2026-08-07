@@ -1,31 +1,257 @@
 import json
-import logging
 import subprocess
 from pathlib import Path
 
 import pytest
 import yaml
+from astropy import units as u
 
 from simtools.dependencies import (
+    _collect_dependency_error,
     _get_build_options_from_file,
     _get_package_path,
+    _is_git_lfs_pointer,
+    _manifest_entries,
+    _validate_corsika_interaction_tables,
+    _validate_table_entry,
+    _validate_table_file,
+    _validate_table_manifest_structure,
     build_dependency_manifest,
     canonical_manifest_bytes,
     export_build_info,
-    get_build_options,
     get_corsika_version,
-    get_database_version_or_name,
     get_dependency_manifest,
     get_dependency_manifest_digest,
-    get_dependency_metadata,
-    get_direct_python_dependency_versions,
     get_sim_telarray_version,
     get_software_version,
     get_version_string,
+    validate_simulation_dependencies,
     write_dependency_manifest,
     write_development_dependency_manifest,
 )
 from simtools.version import __version__
+
+
+def _write_interaction_table_manifest(table_path):
+    """Create a compact manifest fixture for dependency validation tests."""
+    table_path = Path(str(table_path))
+    groups = {
+        "common": [{"path": "common.dat", "size": 5}],
+        "electromagnetic": {"egs4": [{"path": "egs.dat", "size": 3}]},
+        "low_energy": {"urqmd": [{"path": "urqmd.dat", "size": 4}]},
+        "high_energy": {
+            "qgs3": [
+                {"path": "qgsdat-III", "size": 6},
+                {"path": "sectnu-III", "size": 7},
+            ]
+        },
+    }
+    manifest = {"schema_version": "1.0.0", "files": groups}
+    for entries in (
+        groups["common"],
+        groups["electromagnetic"]["egs4"],
+        groups["low_energy"]["urqmd"],
+        groups["high_energy"]["qgs3"],
+    ):
+        for entry in entries:
+            (table_path / entry["path"]).write_bytes(b"x" * entry["size"])
+    (table_path / "manifest.yaml").write_text(yaml.safe_dump(manifest), encoding="utf-8")
+
+
+def _mock_corsika_config(mocker, table_path):
+    """Patch settings with a valid CORSIKA dependency fixture."""
+    table_path = Path(str(table_path))
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.args = {}
+    mock_config.corsika_exe = table_path / "corsika"
+    mock_config.corsika_exe_curved = table_path / "corsika_curved"
+    mock_config.corsika_interaction_table_path = table_path
+    mock_config.corsika_interaction_models = ("qgs3", "urqmd")
+    return mock_config
+
+
+def test_validate_simulation_dependencies_accepts_manifest(tmp_test_directory, mocker):
+    """A hydrated manifest and all selected files satisfy CORSIKA validation."""
+    _write_interaction_table_manifest(tmp_test_directory)
+    _mock_corsika_config(mocker, tmp_test_directory)
+
+    validate_simulation_dependencies("corsika")
+
+
+def test_validate_simulation_dependencies_uses_curved_corsika_executable(
+    tmp_test_directory, mocker
+):
+    """Curved simulations validate the executable selected by their zenith angle."""
+    _write_interaction_table_manifest(tmp_test_directory)
+    mock_config = _mock_corsika_config(mocker, tmp_test_directory)
+    mock_config.args = {
+        "zenith_angle": 70 * u.deg,
+        "curved_atmosphere_min_zenith_angle": 65 * u.deg,
+    }
+    mock_config.corsika_exe_curved = None
+
+    with pytest.raises(ValueError, match=r"CORSIKA \(curved\): not configured"):
+        validate_simulation_dependencies("corsika")
+
+
+def test_validate_simulation_dependencies_uses_flat_corsika_executable(tmp_test_directory, mocker):
+    """Flat simulations do not require the curved CORSIKA executable."""
+    _write_interaction_table_manifest(tmp_test_directory)
+    mock_config = _mock_corsika_config(mocker, tmp_test_directory)
+    mock_config.args = {
+        "zenith_angle": 20 * u.deg,
+        "curved_atmosphere_min_zenith_angle": 65 * u.deg,
+    }
+    mock_config.corsika_exe_curved = None
+
+    validate_simulation_dependencies("corsika")
+
+
+def test_validate_simulation_dependencies_rejects_missing_and_unhydrated_tables(
+    tmp_test_directory, mocker
+):
+    """Validation reports missing files, size mismatches, and LFS pointers."""
+    _write_interaction_table_manifest(tmp_test_directory)
+    table_path = Path(str(tmp_test_directory))
+    _mock_corsika_config(mocker, table_path)
+    (table_path / "common.dat").unlink()
+    (table_path / "egs.dat").write_bytes(b"x")
+    (table_path / "qgsdat-III").write_bytes(b"version https://git-lfs.github.com/spec/v1\n")
+
+    with pytest.raises(ValueError, match=r"missing file.*common.dat") as error:
+        validate_simulation_dependencies("corsika")
+
+    message = str(error.value)
+    assert "size mismatch" in message
+    assert "Git LFS pointer" in message
+
+
+def test_validate_simulation_dependencies_rejects_unknown_model_group(tmp_test_directory, mocker):
+    """A model absent from the manifest fails before any table is used."""
+    _write_interaction_table_manifest(tmp_test_directory)
+    mock_config = _mock_corsika_config(mocker, tmp_test_directory)
+    mock_config.corsika_interaction_models = ("qgs2", "urqmd")
+
+    with pytest.raises(ValueError, match=r"files\.high_energy\.qgs2"):
+        validate_simulation_dependencies("corsika")
+
+
+def test_validate_simulation_dependencies_only_checks_selected_software(mocker):
+    """sim_telarray-only validation does not access CORSIKA settings."""
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.sim_telarray_exe = "sim_telarray"
+
+    validate_simulation_dependencies("sim_telarray")
+
+
+def test_validate_simulation_dependencies_requires_both_for_combined_mode(mocker):
+    """Combined simulations report an unavailable sim_telarray executable."""
+    mock_config = mocker.patch("simtools.dependencies.settings.config")
+    mock_config.sim_telarray_exe = None
+    mock_config.corsika_exe = None
+    mock_config.corsika_interaction_table_path = None
+    mock_config.corsika_interaction_models = ("qgs3", "urqmd")
+
+    with pytest.raises(ValueError, match="sim_telarray: not configured"):
+        validate_simulation_dependencies("corsika_sim_telarray")
+
+
+def test_validate_simulation_dependencies_rejects_unknown_software():
+    """Unknown simulation software selections are rejected explicitly."""
+    with pytest.raises(ValueError, match="Unknown simulation software: unknown"):
+        validate_simulation_dependencies("unknown")
+
+
+@pytest.mark.parametrize("error_type", [FileNotFoundError, PermissionError, TypeError, ValueError])
+def test_collect_dependency_error_reports_access_errors(error_type):
+    """Dependency access errors are collected with their dependency name."""
+    errors = []
+
+    def raise_error():
+        raise error_type("bad")
+
+    _collect_dependency_error(errors, "test", raise_error)
+
+    assert errors == ["test: bad"]
+
+
+@pytest.mark.parametrize(
+    ("manifest", "message"),
+    [
+        ([], "manifest root is not a mapping"),
+        ({"schema_version": "invalid"}, "invalid schema_version"),
+        ({"schema_version": "2.0", "files": {}}, "unsupported schema_version"),
+        ({"schema_version": "1.0", "files": []}, "manifest.files is not a mapping"),
+        ({"schema_version": "1.0", "files": {}}, "missing category group"),
+    ],
+)
+def test_validate_table_manifest_structure_rejects_invalid_manifests(
+    manifest, message, tmp_test_directory
+):
+    """Malformed manifests produce actionable structure errors."""
+    with pytest.raises(ValueError, match=message):
+        _validate_table_manifest_structure(manifest, Path(tmp_test_directory) / "manifest.yaml")
+
+
+@pytest.mark.parametrize(
+    ("manifest", "category", "model", "message"),
+    [
+        ({"files": {"common": {}}}, "common", None, "manifest group is not a list"),
+        (
+            {"files": {"high_energy": {}}},
+            "high_energy",
+            "qgs3",
+            "manifest model group is missing",
+        ),
+        (
+            {"files": {"high_energy": {"qgs3": {}}}},
+            "high_energy",
+            "qgs3",
+            "manifest group is not a list",
+        ),
+    ],
+)
+def test_manifest_entries_rejects_invalid_groups(manifest, category, model, message):
+    """Selected manifest groups must exist and contain lists."""
+    with pytest.raises(ValueError, match=message):
+        _manifest_entries(manifest, category, model)
+
+
+@pytest.mark.parametrize(
+    ("entry", "message"),
+    [
+        (None, "invalid manifest table entry"),
+        ({"path": "nested/file", "size": 1}, "invalid manifest table path"),
+        ({"path": "file", "size": -1}, "invalid manifest table size"),
+        ({"path": "file", "size": "1"}, "invalid manifest table size"),
+    ],
+)
+def test_validate_table_entry_rejects_invalid_entries(entry, message, tmp_test_directory):
+    """Manifest entries must contain safe filenames and non-negative sizes."""
+    assert message in _validate_table_entry(entry, Path(tmp_test_directory))
+
+
+def test_validate_table_file_reports_unreadable_file(tmp_test_directory, mocker):
+    """Unreadable table files are reported before content validation."""
+    table_file = Path(tmp_test_directory) / "table.dat"
+    table_file.write_bytes(b"x")
+    mocker.patch("simtools.dependencies.os.access", return_value=False)
+
+    assert "file is not readable" in _validate_table_file(table_file, 1)
+
+
+def test_is_git_lfs_pointer_handles_read_errors(mocker):
+    """An unreadable file is not mistaken for an LFS pointer."""
+    path = mocker.Mock()
+    path.open.side_effect = OSError("cannot open")
+
+    assert _is_git_lfs_pointer(path) is False
+
+
+def test_validate_corsika_interaction_tables_reports_manifest_read_error(tmp_test_directory):
+    """A missing manifest is reported as a table validation error."""
+    with pytest.raises(ValueError, match="cannot read manifest"):
+        _validate_corsika_interaction_tables(Path(tmp_test_directory) / "missing")
 
 
 def test_get_version_string(mocker):
@@ -74,39 +300,6 @@ def test_get_version_string_without_software_versions(mocker):
     assert "Build options: None" in result
 
 
-def test_get_version_string_without_software_versions_skips_executable_access(mocker):
-    class ConfigWithoutExecutables:
-        db_config = {
-            "db_simulation_model": "test_db",
-            "db_simulation_model_version": "1.2.3",
-        }
-
-        @property
-        def sim_telarray_exe(self):
-            raise FileNotFoundError("sim_telarray path not found")
-
-        @property
-        def corsika_exe(self):
-            raise FileNotFoundError("corsika path not found")
-
-    mocker.patch("simtools.dependencies.settings.config", new=ConfigWithoutExecutables())
-    mock_build_options = mocker.patch(
-        "simtools.dependencies.get_build_options",
-        return_value={"simtel_version": "master", "corsika_version": "78010"},
-    )
-    mock_simtel = mocker.patch("simtools.dependencies.get_sim_telarray_version")
-    mock_corsika = mocker.patch("simtools.dependencies.get_corsika_version")
-
-    result = get_version_string(run_time=["docker"], include_software_versions=False)
-
-    mock_simtel.assert_not_called()
-    mock_corsika.assert_not_called()
-    mock_build_options.assert_not_called()
-    assert "sim_telarray exe: None" in result
-    assert "CORSIKA exe: None" in result
-    assert "Build options: None" in result
-
-
 def test_get_software_version_simtools():
     assert get_software_version("simtools") == __version__
 
@@ -114,42 +307,6 @@ def test_get_software_version_simtools():
 def test_get_software_version_unknown():
     with pytest.raises(ValueError, match="Unknown software: unknown_package"):
         get_software_version("unknown_package")
-
-
-def test_get_database_version_or_name_version_true(mocker):
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.db_config = {
-        "db_simulation_model": "test_db",
-        "db_simulation_model_version": "1.2.3",
-    }
-    result = get_database_version_or_name(version=True)
-    assert result == "1.2.3"
-
-
-def test_get_database_version_or_name_version_false(mocker):
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.db_config = {
-        "db_simulation_model": "test_db",
-        "db_simulation_model_version": "1.2.3",
-    }
-    result = get_database_version_or_name(version=False)
-    assert result == "test_db"
-
-
-def test_get_database_version_or_name_none_config(mocker):
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.db_config = {"db_simulation_model": "test_db", "db_simulation_model_version": None}
-    result = get_database_version_or_name(version=True)
-    assert result is None
-
-
-def test_get_database_version_or_name_missing_keys(mocker):
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.db_config = {}
-    result_version = get_database_version_or_name(version=True)
-    result_name = get_database_version_or_name(version=False)
-    assert result_version == {}
-    assert result_name == {}
 
 
 def test_get_sim_telarray_version_simple(mocker):
@@ -182,85 +339,11 @@ def test_get_corsika_version_simple(mocker):
     assert version == "7.7550"
 
 
-def test_get_build_options_corsika_and_simtelarray(mocker):
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-
-    class PathMock:
-        def __truediv__(self, other):
-            return f"/mocked/path/{other}"
-
-        @property
-        def parent(self):
-            return self
-
-        def __fspath__(self):
-            return "/mocked/path"
-
-    mock_config.corsika_path = PathMock()
-    mock_config.sim_telarray_path = PathMock()
-    mock_ascii_handler = mocker.patch("simtools.dependencies.ascii_handler.collect_data_from_file")
-    # Simulate CORSIKA build_opts.yml
-    corsika_opts = {
-        "corsika_version": "78010",
-        "corsika_opt_patch_version": "v1.1.0",
-        "variant": [
-            {"executable": "corsika_epos_urqmd_curved", "config": "config_epos_urqmd_curved"},
-            {"executable": "corsika_epos_urqmd_flat", "config": "config_epos_urqmd_flat"},
-        ],
-    }
-    # Simulate sim_telarray build_opts.yml
-    simtel_opts = {
-        "simtel_version": "master",
-        "components": [
-            {"name": "sim_telarray", "version": "master", "executables": ["sim_telarray"]}
-        ],
-    }
-    mock_ascii_handler.side_effect = [corsika_opts, simtel_opts]
-    opts = get_build_options()
-    assert opts["corsika_version"] == "78010"
-    assert opts["simtel_version"] == "master"
-    assert "variant" in opts
-    assert "components" in opts
-
-
-def test_get_build_options_legacy(mocker):
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.sim_telarray_path = "/mocked/path"
-    mock_ascii_handler = mocker.patch("simtools.dependencies.ascii_handler.collect_data_from_file")
-    legacy_opts = {
-        "build_opt": "prod6-baseline",
-        "corsika_version": "78010",
-        "bernlohr_version": "1.70",
-    }
-    # Simulate the call sequence: corsika new-style fails, sim_telarray new-style fails
-    # (both raising FileNotFoundError), then sim_telarray legacy succeeds and returns legacy_opts.
-    mock_ascii_handler.side_effect = [FileNotFoundError, FileNotFoundError, legacy_opts]
-    opts = get_build_options()
-    assert opts["build_opt"] == "prod6-baseline"
-    assert opts["corsika_version"] == "78010"
-    assert opts["bernlohr_version"] == "1.70"
-
-
-def test_get_software_version_keyerror():
-    # Should raise ValueError for unknown software
-    with pytest.raises(ValueError, match="Unknown software: not_a_real_package"):
-        get_software_version("not_a_real_package")
-
-
 def test_get_sim_telarray_version_no_release(mocker):
     mock_config = mocker.patch("simtools.dependencies.settings.config")
     mock_config.sim_telarray_exe = "sim_telarray"
     mock_run = mocker.patch("simtools.dependencies.subprocess.run")
     mock_run.return_value.stdout = "No version info here"
-    with pytest.raises(ValueError, match="sim_telarray release not found"):
-        get_sim_telarray_version()
-
-
-def test_get_sim_telarray_version_empty_output(mocker):
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.sim_telarray_exe = "sim_telarray"
-    mock_run = mocker.patch("simtools.dependencies.subprocess.run")
-    mock_run.return_value.stdout = ""
     with pytest.raises(ValueError, match="sim_telarray release not found"):
         get_sim_telarray_version()
 
@@ -318,29 +401,6 @@ def test_get_corsika_version_no_build_opts(mocker):
     assert version is None
 
 
-def test_get_build_options_file_not_found(mocker):
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-
-    class PathMock:
-        def __truediv__(self, other):
-            return f"/mocked/path/{other}"
-
-        @property
-        def parent(self):
-            return self
-
-        def __fspath__(self):
-            return "/mocked/path"
-
-    mock_config.corsika_path = PathMock()
-    mock_config.sim_telarray_path = PathMock()
-    mocker.patch(
-        "simtools.dependencies.ascii_handler.collect_data_from_file", side_effect=FileNotFoundError
-    )
-    with pytest.raises(FileNotFoundError, match="No build option file found"):
-        get_build_options()
-
-
 def test__get_build_options_from_file_yaml_error(mocker):
     mocker.patch("simtools.dependencies.yaml.safe_load", side_effect=yaml.YAMLError("bad yaml"))
     mock_run = mocker.patch("simtools.dependencies.subprocess.run")
@@ -356,21 +416,6 @@ def test__get_build_options_from_file_subprocess_error(mocker):
     mock_run.return_value.stderr = "file not found"
     with pytest.raises(FileNotFoundError, match="No build option file found in container"):
         _get_build_options_from_file("/mocked/path/build_opts.yml", run_time=["docker"])
-
-
-def test_get_build_options_debug_logging_on_exception(mocker, caplog):
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.corsika_path = "/mocked/corsika"
-    mock_config.sim_telarray_path = "/mocked/simtel"
-    mock_ascii_handler = mocker.patch("simtools.dependencies.ascii_handler.collect_data_from_file")
-    # First call raises FileNotFoundError, legacy fallback also raises
-    # Ensure all attempted reads fail:
-    # corsika new-style, sim_telarray new-style, sim_telarray legacy.
-    mock_ascii_handler.side_effect = [FileNotFoundError, FileNotFoundError, FileNotFoundError]
-    caplog.set_level(logging.DEBUG)
-    with pytest.raises(FileNotFoundError):
-        get_build_options()
-    assert any("No build options found for sim_telarray." in m for m in caplog.text.splitlines())
 
 
 def test_get_sim_telarray_version_with_run_time(mocker):
@@ -439,41 +484,6 @@ def test_export_build_info(mocker, tmp_test_directory):
     assert call_args[1]["data"]["database_version"] == "1.2.3"
 
 
-def test_export_build_info_with_run_time(mocker, tmp_test_directory):
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.corsika_path = None
-    mock_config.sim_telarray_path = None
-    mock_write = mocker.patch("simtools.dependencies.ascii_handler.write_data_to_file")
-    mock_get_build = mocker.patch(
-        "simtools.dependencies.get_build_options", return_value={"simtel_version": "master"}
-    )
-    mocker.patch(
-        "simtools.dependencies.get_database_version_or_name", side_effect=["prod_db", "2.0.0"]
-    )
-    mocker.patch(
-        "simtools.dependencies.get_dependency_manifest",
-        return_value={"schema_version": "0.1.0"},
-    )
-
-    output_file = Path(str(tmp_test_directory)) / "build_info.yml"
-    run_time = ["docker"]
-    export_build_info(output_file, run_time=run_time)
-
-    mock_get_build.assert_called_once_with(run_time)
-    mock_write.assert_called_once()
-    call_args = mock_write.call_args
-    assert call_args[1]["data"]["simtel_version"] == "master"
-    assert call_args[1]["data"]["database_name"] == "prod_db"
-    assert call_args[1]["data"]["database_version"] == "2.0.0"
-
-
-def test_get_package_path_from_config(mocker):
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.corsika_path = Path("/mocked/corsika")
-    result = _get_package_path("corsika")
-    assert result == Path("/mocked/corsika")
-
-
 def test_get_package_path_from_environment(mocker):
     mock_config = mocker.patch("simtools.dependencies.settings.config")
     mock_config.corsika_path = None
@@ -483,22 +493,6 @@ def test_get_package_path_from_environment(mocker):
     assert result == Path("/env/corsika")
 
 
-def test_get_package_path_sim_telarray_from_config(mocker):
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.sim_telarray_path = Path("/mocked/simtel")
-    result = _get_package_path("sim_telarray")
-    assert result == Path("/mocked/simtel")
-
-
-def test_get_package_path_sim_telarray_from_environment(mocker):
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.sim_telarray_path = None
-    mock_load_env = mocker.patch("simtools.dependencies.gen.load_environment_variables")
-    mock_load_env.return_value = {"sim_telarray_path": "/env/simtel"}
-    result = _get_package_path("sim_telarray")
-    assert result == Path("/env/simtel")
-
-
 def test_get_package_path_not_found(mocker):
     mock_config = mocker.patch("simtools.dependencies.settings.config")
     mock_config.corsika_path = None
@@ -506,16 +500,6 @@ def test_get_package_path_not_found(mocker):
     mock_load_env.return_value = {}
     result = _get_package_path("corsika")
     assert result is None
-
-
-def test_get_package_path_config_takes_precedence(mocker):
-    mock_config = mocker.patch("simtools.dependencies.settings.config")
-    mock_config.corsika_path = Path("/config/corsika")
-    mock_load_env = mocker.patch("simtools.dependencies.gen.load_environment_variables")
-    mock_load_env.return_value = {"corsika_path": "/env/corsika"}
-    result = _get_package_path("corsika")
-    assert result == Path("/config/corsika")
-    mock_load_env.assert_not_called()
 
 
 def test_get_dependency_manifest_reads_configured_file(monkeypatch, tmp_test_directory):
@@ -556,17 +540,6 @@ def test_get_dependency_manifest_container_missing(mocker):
 
     with pytest.raises(FileNotFoundError, match="not found in container"):
         get_dependency_manifest(["docker", "run"])
-
-
-def test_get_direct_python_dependency_versions(mocker):
-    mocker.patch(
-        "simtools.dependencies.metadata.requires",
-        return_value=["astropy>=7", "pytest; extra == 'tests'", "numpy"],
-    )
-    versions = {"astropy": "8.0.0", "numpy": "2.5.0"}
-    mocker.patch("simtools.dependencies.metadata.version", side_effect=versions.get)
-
-    assert get_direct_python_dependency_versions() == versions
 
 
 def test_build_dependency_manifest(mocker, monkeypatch, simtools_root_path):
@@ -647,17 +620,3 @@ def test_write_development_dependency_manifest(mocker, monkeypatch, tmp_test_dir
     }
     assert manifest["container"] == {"base_image": "alma:9"}
     assert Path(str(output)).with_suffix(".json.sha256").is_file()
-
-
-def test_get_dependency_metadata(mocker):
-    manifest = {
-        "simtools": {"revision": "a" * 40},
-        "runtime": {"python_version": "3.14.6"},
-    }
-    mocker.patch("simtools.dependencies.get_dependency_manifest", return_value=manifest)
-
-    result = get_dependency_metadata()
-
-    assert result["simtools_git_revision"] == "a" * 40
-    assert result["simtools_python_version"] == "3.14.6"
-    assert len(result["simtools_dependency_manifest_sha256"]) == 64

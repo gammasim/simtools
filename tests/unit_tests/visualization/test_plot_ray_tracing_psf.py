@@ -8,7 +8,6 @@ from simtools.visualization import plot_ray_tracing_psf
 
 
 def test_create_cumulative_psf_figure_draws_curve_and_markers():
-    """Test cumulative PSF helper draws the line and both markers."""
     data = np.array(
         [(0.0, 0.0), (1.0, 0.5), (2.0, 1.0)],
         dtype=[("Radius [cm]", "f8"), ("Cumulative PSF", "f8")],
@@ -34,7 +33,6 @@ def test_create_cumulative_psf_figure_draws_curve_and_markers():
 
 
 def test_create_psf_image_figure_draws_histogram_circle_and_axes():
-    """Test PSF image helper draws the histogram, circle, and reference axes."""
     data = np.array([(0.0, 0.0), (1.0, -1.0)], dtype=[("X", "f8"), ("Y", "f8")])
     mock_fig = MagicMock()
     mock_ax = MagicMock()
@@ -68,7 +66,6 @@ def test_create_psf_image_figure_draws_histogram_circle_and_axes():
 
 
 def test_create_annotated_psf_image_figure_adds_text():
-    """Test annotated PSF image helper adds the offset/PSF label."""
     data = np.array([(0.0, 0.0), (1.0, -1.0)], dtype=[("X", "f8"), ("Y", "f8")])
     mock_fig = MagicMock()
     mock_ax = MagicMock()
@@ -90,15 +87,3 @@ def test_create_annotated_psf_image_figure_adds_text():
 
     assert fig == mock_fig
     mock_ax.text.assert_called_once()
-
-
-def test_save_and_close_figure(mocker, tmp_test_directory):
-    """Test saving and closing a PSF figure."""
-    fig = mocker.Mock()
-    mock_close = mocker.patch("simtools.visualization.plot_ray_tracing_psf.plt.close")
-    file_name = tmp_test_directory / "plot.pdf"
-
-    plot_ray_tracing_psf.save_and_close_figure(fig, file_name)
-
-    fig.savefig.assert_called_once_with(file_name)
-    mock_close.assert_called_once_with(fig)

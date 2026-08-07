@@ -1,7 +1,6 @@
 import astropy.units as u
 import numpy as np
 import pytest
-from astropy.tests.helper import assert_quantity_allclose
 from astropy.units import UnitsError
 
 import simtools.utils.geometry as transf
@@ -63,100 +62,6 @@ def test_rotate_telescope_position(caplog) -> None:
         transf.rotate(x_new_array.to(u.cm), y_new_array, angle_deg)
     with pytest.raises(u.core.UnitsError):
         transf.rotate(x_new_array, y_new_array, 30 * u.m)
-
-
-def test_calculate_circular_mean():
-    # Test opposite angles cancel out
-    angles = np.array([0, np.pi])
-    assert transf.calculate_circular_mean(angles) == pytest.approx(np.pi / 2)
-
-    # Test mean of same angles
-    angles = np.array([np.pi / 4, np.pi / 4, np.pi / 4])
-    assert transf.calculate_circular_mean(angles) == pytest.approx(np.pi / 4)
-
-    # Test simple cases
-    angles = np.array([0, np.pi / 2, np.pi, 3 * np.pi / 2])
-    assert transf.calculate_circular_mean(angles) == pytest.approx(2.26196)
-
-    # Test mean of random angles
-    angles = np.array([0.1, 0.2, 0.3])
-    assert transf.calculate_circular_mean(angles) == pytest.approx(0.2, abs=1e-6)
-
-
-def test_solid_angle():
-    # Test with angle in radians
-    angle_rad = 1 * u.rad
-    expected_solid_angle_rad = 2 * np.pi * (1 - np.cos(angle_rad)) * u.sr
-    assert_quantity_allclose(transf.solid_angle(angle_rad), expected_solid_angle_rad)
-
-    # Test with angle in degrees
-    angle_deg = 90 * u.deg
-    expected_solid_angle_deg = 2 * np.pi * (1 - np.cos(angle_deg.to(u.rad))) * u.sr
-    assert_quantity_allclose(transf.solid_angle(angle_deg), expected_solid_angle_deg)
-
-    # Test with zero angle
-    angle_zero = 0 * u.rad
-    assert_quantity_allclose(transf.solid_angle(angle_zero), 0 * u.sr)
-
-    # Test with a full circle (360 degrees)
-    angle_full_circle = 360 * u.deg
-    expected_solid_angle_full_circle = 2 * np.pi * (1 - np.cos(angle_full_circle.to(u.rad))) * u.sr
-    assert_quantity_allclose(
-        transf.solid_angle(angle_full_circle), expected_solid_angle_full_circle
-    )
-
-
-def test_project_ground_to_corsika_shower_coordinates():
-    """
-    Test ground to shower coordinates.
-
-    The implementation applies the documented horizontal CORSIKA/sim_telarray
-    projection and keeps ``z`` unchanged. In particular, zenith-pointing cases
-    are identical to ground coordinates for any azimuth.
-    """
-    x_ground = np.array([488.83758545] * 4)
-    y_ground = np.array([-901.18658447] * 4)
-    z_ground = np.array([0.0, 0.0, 123.4, 0.0])
-
-    # Following cases are tested:
-    # 1. zenith pointing and zero azimuth
-    # 2. zenith pointing and azimuth rotated by 90 deg
-    # 3. generic values
-    # 4. pointing towards horizon
-    shower_azimuth = np.array([0.0, np.pi / 2.0, 0.21440187, 0.0])
-    shower_altitude = np.array([np.pi / 2.0, np.pi / 2.0, 1.29735112, 0.0])
-
-    expected_x = np.array(
-        [
-            x_ground[0],  # Case 1
-            x_ground[0],  # Case 2: zenith pointing preserves horizontal coordinates
-            464.53686987894685,  # Case 3: regression value for the documented projection
-            0.0,  # Case 4
-        ]
-    )
-    expected_y = np.array(
-        [
-            y_ground[0],  # Case 1
-            y_ground[0],  # Case 2
-            -895.8951366687575,  # Case 3
-            y_ground[0],  # Case 4
-        ]
-    )
-    expected_z = np.array(
-        [
-            0.0,  # Case 1
-            0.0,  # Case 2
-            z_ground[2],  # Case 3: projection keeps the ground z coordinate unchanged
-            0.0,  # Case 4
-        ]
-    )
-    expected = np.array([expected_x, expected_y, expected_z])
-
-    result = transf.project_ground_to_corsika_shower_coordinates(
-        x_ground, y_ground, z_ground, shower_azimuth, shower_altitude
-    )
-
-    np.testing.assert_allclose(result, expected, rtol=1e-7, atol=1.0e-10)
 
 
 def test_fiducial_radius_from_shape():

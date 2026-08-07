@@ -13,7 +13,6 @@ from simtools.ray_tracing import optics_validation
 
 
 def test_load_data_normalizes_and_converts_ecsv_radius(tmp_test_directory):
-    """Test loading/scaling of cumulative PSF data from ECSV."""
     data_file = Path(str(tmp_test_directory)) / "measured.ecsv"
     table = Table(
         {
@@ -31,7 +30,6 @@ def test_load_data_normalizes_and_converts_ecsv_radius(tmp_test_directory):
 
 
 def test_load_data_normalizes_legacy_ascii_data(tmp_test_directory):
-    """Test loading/scaling of legacy cumulative PSF data without a header."""
     data_file = Path(str(tmp_test_directory)) / "measured.dat"
     data_file.write_text("10.0 1.0 2.0\n20.0 2.0 -4.0\n", encoding="utf-8")
 
@@ -42,7 +40,6 @@ def test_load_data_normalizes_legacy_ascii_data(tmp_test_directory):
 
 
 def test_load_data_raises_for_missing_integral_column(tmp_test_directory):
-    """Test loading cumulative PSF data fails if integral data are missing."""
     data_file = Path(str(tmp_test_directory)) / "measured.dat"
     data_file.write_text("radius differential_value\n10.0 1.0\n", encoding="utf-8")
 
@@ -51,7 +48,6 @@ def test_load_data_raises_for_missing_integral_column(tmp_test_directory):
 
 
 def test_validate_cumulative_psf_raises_without_radius_data():
-    """Test cumulative validation fails if no measured radius data are provided."""
     args_dict = {
         "site": "North",
         "telescope": "LSTN-01",
@@ -83,7 +79,6 @@ def test_validate_cumulative_psf_raises_without_radius_data():
 
 
 def test_validate_cumulative_psf_saves_cumulative_and_image_plots(tmp_test_directory):
-    """Test cumulative validation success path and produced plots."""
     args_dict = {
         "site": "North",
         "telescope": "LSTN-01",
@@ -145,7 +140,6 @@ def test_validate_cumulative_psf_saves_cumulative_and_image_plots(tmp_test_direc
 
 
 def test_validate_optics_no_images(tmp_test_directory):
-    """Test optics validation without image PDF generation."""
     args_dict = {
         "site": "North",
         "telescope": "LSTN-01",
@@ -185,7 +179,6 @@ def test_validate_optics_no_images(tmp_test_directory):
 
 
 def test_validate_optics_with_images_and_default_label(tmp_test_directory):
-    """Test optics validation image-PDF branch and default label behavior."""
     args_dict = {
         "site": "North",
         "telescope": "LSTN-01",

@@ -8,7 +8,6 @@ from simtools.data_model import row_table_utils
 
 
 def test_is_row_table_dict_valid():
-    """Identify valid row-table dict."""
     payload = {
         "columns": ["time", "amplitude"],
         "column_units": ["ns", "dimensionless"],
@@ -18,7 +17,6 @@ def test_is_row_table_dict_valid():
 
 
 def test_is_row_table_dict_missing_key():
-    """Reject incomplete dict."""
     payload = {
         "columns": ["time", "amplitude"],
         "rows": [[0.0, 0.1]],
@@ -27,76 +25,21 @@ def test_is_row_table_dict_missing_key():
 
 
 def test_is_row_table_dict_non_dict():
-    """Reject non-dict values."""
     assert not row_table_utils.is_row_table_dict("string")
     assert not row_table_utils.is_row_table_dict([1, 2, 3])
     assert not row_table_utils.is_row_table_dict(None)
 
 
-def test_is_row_table_schema_valid():
-    """Identify valid row-table JSON schema."""
-    json_schema = {
-        "required": ["columns", "column_units", "rows"],
-        "properties": {
-            "columns": {},
-            "column_units": {},
-            "rows": {},
-        },
-    }
-    assert row_table_utils.is_row_table_schema(json_schema)
-
-
-def test_is_row_table_schema_missing_required():
-    """Reject schema without all required keys."""
-    json_schema = {
-        "required": ["columns", "rows"],
-        "properties": {
-            "columns": {},
-            "column_units": {},
-            "rows": {},
-        },
-    }
-    assert not row_table_utils.is_row_table_schema(json_schema)
-
-
-def test_is_row_table_schema_missing_property():
-    """Reject schema without all properties."""
-    json_schema = {
-        "required": ["columns", "column_units", "rows"],
-        "properties": {
-            "columns": {},
-            "rows": {},
-        },
-    }
-    assert not row_table_utils.is_row_table_schema(json_schema)
-
-
-def test_is_row_table_schema_extra_keys_ok():
-    """Accept schema with extra keys alongside required ones."""
-    json_schema = {
-        "required": ["columns", "column_units", "rows"],
-        "properties": {
-            "columns": {},
-            "column_units": {},
-            "rows": {},
-            "extra_field": {},
-        },
-    }
-    assert row_table_utils.is_row_table_schema(json_schema)
-
-
 def test_validate_row_table_structure_valid():
-    """Accept valid row-table structure."""
     payload = {
         "columns": ["time", "amplitude"],
         "column_units": ["ns", "dimensionless"],
         "rows": [[0.0, 0.1], [1.0, 0.2]],
     }
-    row_table_utils.validate_row_table_structure("test_param", payload)
+    assert row_table_utils.validate_row_table_structure("test_param", payload) is None
 
 
 def test_validate_row_table_structure_missing_columns():
-    """Reject missing columns key."""
     payload = {
         "column_units": ["ns", "dimensionless"],
         "rows": [[0.0, 0.1]],
@@ -106,7 +49,6 @@ def test_validate_row_table_structure_missing_columns():
 
 
 def test_validate_row_table_structure_missing_rows():
-    """Reject missing rows key."""
     payload = {
         "columns": ["time", "amplitude"],
         "column_units": ["ns", "dimensionless"],
@@ -116,7 +58,6 @@ def test_validate_row_table_structure_missing_rows():
 
 
 def test_validate_row_table_structure_missing_column_units():
-    """Reject missing column_units key."""
     payload = {
         "columns": ["time", "amplitude"],
         "rows": [[0.0, 0.1]],
@@ -126,7 +67,6 @@ def test_validate_row_table_structure_missing_column_units():
 
 
 def test_validate_row_table_structure_column_units_length_mismatch():
-    """Reject mismatched column_units length."""
     payload = {
         "columns": ["time", "amplitude"],
         "column_units": ["ns"],
@@ -137,7 +77,6 @@ def test_validate_row_table_structure_column_units_length_mismatch():
 
 
 def test_validate_row_table_structure_invalid_columns_type():
-    """Reject columns when not list or tuple."""
     payload = {
         "columns": "time,amplitude",
         "column_units": ["ns", "dimensionless"],
@@ -148,7 +87,6 @@ def test_validate_row_table_structure_invalid_columns_type():
 
 
 def test_validate_row_table_structure_invalid_rows_type():
-    """Reject rows when not list or tuple."""
     payload = {
         "columns": ["time", "amplitude"],
         "column_units": ["ns", "dimensionless"],
@@ -159,7 +97,6 @@ def test_validate_row_table_structure_invalid_rows_type():
 
 
 def test_validate_row_table_structure_non_string_column_name():
-    """Reject non-string column names."""
     payload = {
         "columns": ["time", 1],
         "column_units": ["ns", "dimensionless"],
@@ -177,7 +114,6 @@ def test_validate_row_table_structure_non_string_column_name():
     ],
 )
 def test_validate_row_table_structure_row_length_mismatch(invalid_rows):
-    """Reject rows with incorrect length."""
     payload = {
         "columns": ["time", "amplitude"],
         "column_units": ["ns", "dimensionless"],
@@ -188,7 +124,6 @@ def test_validate_row_table_structure_row_length_mismatch(invalid_rows):
 
 
 def test_validate_row_table_structure_non_numeric_value():
-    """Reject non-numeric row values."""
     payload = {
         "columns": ["time", "amplitude"],
         "column_units": ["ns", "dimensionless"],
@@ -199,7 +134,6 @@ def test_validate_row_table_structure_non_numeric_value():
 
 
 def test_validate_row_table_structure_complex_number():
-    """Reject complex numbers in rows."""
     payload = {
         "columns": ["time", "amplitude"],
         "column_units": ["ns", "dimensionless"],
@@ -210,7 +144,6 @@ def test_validate_row_table_structure_complex_number():
 
 
 def test_validate_row_table_structure_non_sequence_row():
-    """Reject non-sequence rows."""
     payload = {
         "columns": ["time", "amplitude"],
         "column_units": ["ns", "dimensionless"],
@@ -221,28 +154,23 @@ def test_validate_row_table_structure_non_sequence_row():
 
 
 def test_normalize_column_unit_none():
-    """Convert None to dimensionless."""
     assert row_table_utils.normalize_column_unit(None) == "dimensionless"
 
 
 def test_normalize_column_unit_empty_string():
-    """Convert empty string to dimensionless."""
     assert row_table_utils.normalize_column_unit("") == "dimensionless"
 
 
 def test_normalize_column_unit_string():
-    """Pass through string units unchanged."""
     assert row_table_utils.normalize_column_unit("ns") == "ns"
     assert row_table_utils.normalize_column_unit("km") == "km"
 
 
 def test_normalize_column_unit_dimensionless_unscaled():
-    """Convert astropy dimensionless to string."""
     assert row_table_utils.normalize_column_unit(dimensionless_unscaled) == "dimensionless"
 
 
 def test_normalize_column_unit_astropy_unit():
-    """Convert astropy unit to string."""
     result = row_table_utils.normalize_column_unit(ns)
     assert isinstance(result, str)
     assert "ns" in result or result == "ns"

@@ -229,6 +229,7 @@ APPLICATION = ApplicationDefinition.for_module(
         *cli.SIM_TELARRAY_PATH_ARGUMENTS,
     ),
     database=True,
+    validate_simulation_dependencies=True,
 )
 
 
