@@ -59,6 +59,8 @@ class PSFImage:
         self.photon_r = []
         self.centroid_x = None
         self.centroid_y = None
+        self.centroid_x_error = 0.0
+        self.centroid_y_error = 0.0
         self._total_area = total_scattered_area
         self.cos_camera_rotation = 1.0
         self.sin_camera_rotation = 0.0
@@ -130,6 +132,8 @@ class PSFImage:
                 )
                 self.centroid_x = float(rx_output[1])
                 self.centroid_y = float(rx_output[2])
+                self.centroid_x_error = 0.0
+                self.centroid_y_error = 0.0
                 self._effective_area = float(rx_output[5])
 
             finally:
@@ -219,6 +223,8 @@ class PSFImage:
 
         self.centroid_x = np.mean(self.photon_pos_x)
         self.centroid_y = np.mean(self.photon_pos_y)
+        self.centroid_x_error = self._compute_centroid_standard_error(self.photon_pos_x)
+        self.centroid_y_error = self._compute_centroid_standard_error(self.photon_pos_y)
         self._number_of_detected_photons = len(self.photon_pos_x)
         self._effective_area = (
             self._number_of_detected_photons * self._total_area / self._total_photons
@@ -229,6 +235,14 @@ class PSFImage:
                 + (self.photon_pos_y - self.centroid_y) ** 2
             )
         )
+
+    @staticmethod
+    def _compute_centroid_standard_error(photon_positions):
+        """Return standard error of the centroid estimate for one image axis."""
+        n_positions = len(photon_positions)
+        if n_positions <= 1:
+            return 0.0
+        return float(np.std(photon_positions, ddof=1) / np.sqrt(n_positions))
 
     def _is_photon_positions_ok(self):
         """
