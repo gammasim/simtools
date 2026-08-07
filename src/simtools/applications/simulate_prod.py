@@ -172,7 +172,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
-        cli.TELESCOPE,
         *cli.layout_selection_arguments(),
         cli.SIMULATION_SOFTWARE,
         *cli.corsika_configuration_arguments(primary_required=False),

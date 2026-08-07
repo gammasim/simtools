@@ -10,7 +10,7 @@ def _required_arguments():
         "North",
         "--model_version",
         "7.0.0",
-        "--telescope",
+        "--array_layout_name",
         "LSTN-01",
         "--azimuth_angle",
         "0",
@@ -39,3 +39,5 @@ def test_add_arguments_uses_bias_curve_defaults():
     assert args.trigger_thresholds is None
     assert args.core_scatter == (20, 1900 * u.m)
     assert args.view_cone == (0 * u.deg, 5 * u.deg)
+    assert args.array_layout_name == ["LSTN-01"]
+    assert not hasattr(args, "telescope")

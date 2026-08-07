@@ -38,7 +38,6 @@ _OPTIONAL_QUEUE_FIELDS = (
     "corsika_hadronic_transition_energy",
     "overwrite_model_parameters",
     "scan_label",
-    "telescope",
 )
 
 _PARAMS_JOB_SPEC_FIELDS = {field: field for field in _PARAMS_FIELDS}
@@ -343,18 +342,6 @@ def _get_submit_script(args_dict, params_fields=None):
         )
         transition_energy_argument = '"${corsika_hadronic_transition_energy_args[@]}"'
 
-    telescope_block = ""
-    telescope_argument = ""
-    if "telescope" in params_fields:
-        telescope_block = (
-            f'telescope="{bash_indices["telescope"]}"\n'
-            "telescope_args=()\n"
-            'if [ -n "$telescope" ]; then\n'
-            '    telescope_args+=(--telescope "$telescope")\n'
-            "fi\n"
-        )
-        telescope_argument = '"${telescope_args[@]}"'
-
     job_label = (
         f"{label}_{bash_indices['corsika_he_interaction']}_"
         f"{bash_indices['corsika_le_interaction']}_"
@@ -394,8 +381,6 @@ def _get_submit_script(args_dict, params_fields=None):
         command_parts.append("--save_file_lists")
     if transition_energy_argument:
         command_parts.append(transition_energy_argument.rstrip())
-    if telescope_argument:
-        command_parts.append(telescope_argument.rstrip())
     if overwrite_parameters_argument:
         command_parts.append(overwrite_parameters_argument.rstrip())
     command_parts.extend(
@@ -414,7 +399,6 @@ def _get_submit_script(args_dict, params_fields=None):
         scan_label_block.rstrip(),
         transition_energy_block.rstrip(),
         overwrite_parameters_block.rstrip(),
-        telescope_block.rstrip(),
         "",
         "simtools-simulate-prod \\",
         *_format_multiline_command(command_parts),
@@ -447,7 +431,7 @@ def _add_optional_job_spec_field(job_spec, field_name, value):
         job_spec[field_name] = value
 
 
-def _build_job_spec(row, label, base_pack_dir, args_dict):
+def _build_job_spec(row, label, base_pack_dir):
     """Build one job spec from one job-grid row and one image label."""
     job_spec = {
         "image_label": str(label),
@@ -455,11 +439,6 @@ def _build_job_spec(row, label, base_pack_dir, args_dict):
         "grid_output_path": f"{base_pack_dir}/{label!s}",
     }
 
-    _add_optional_job_spec_field(
-        job_spec,
-        "telescope",
-        row.get("telescope") or args_dict.get("telescope"),
-    )
     _add_optional_job_spec_field(job_spec, "scan_label", row.get("scan_label"))
     _add_optional_job_spec_field(
         job_spec,
@@ -478,7 +457,7 @@ def build_job_specs(args_dict, image_labels):
     _validate_job_grid_metadata(job_grid_metadata)
 
     job_specs = [
-        _build_job_spec(row, label, base_pack_dir, args_dict)
+        _build_job_spec(row, label, base_pack_dir)
         for label in image_labels
         for row in normalized_rows
     ]
