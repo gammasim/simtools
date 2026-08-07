@@ -172,6 +172,7 @@ def _initialize_runtime(
     db_config,
     setup_io_handler=True,
     resolve_sim_software_executables=True,
+    validate_simulation_dependencies=False,
 ):
     """Initialize common runtime services for parsed application configuration.
 
@@ -186,6 +187,9 @@ def _initialize_runtime(
     resolve_sim_software_executables : bool, optional
         Resolve simulation software executable paths during settings load.
         Set to False for applications that only orchestrate other applications.
+    validate_simulation_dependencies : bool, optional
+        Validate simulation executables and CORSIKA interaction tables after settings load.
+        Set to True for applications that run simulations.
 
     Returns
     -------
@@ -201,6 +205,9 @@ def _initialize_runtime(
         db_config,
         resolve_sim_software_executables=resolve_sim_software_executables,
     )
+    if validate_simulation_dependencies:
+        simulation_software = args_dict.get("simulation_software", "sim_telarray")
+        dependencies.validate_simulation_dependencies(simulation_software)
 
     logger = setup_logging(log_level=args_dict["log_level"], log_file=get_log_file(args_dict))
     logger.info(

@@ -72,6 +72,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IT_NAME: "corsika7-interaction-tables"
+      # For testing, overwrite CORSIKA_TABLES with branch name
+      # CORSIKA_TABLES: "main"
 
     steps:
       - uses: actions/checkout@v7
@@ -80,18 +82,22 @@ jobs:
         run: python -m pip install packaging pyyaml
 
       - name: Read CORSIKA interaction tables version
+        id: interaction_table_version
         run: |
-          python src/simtools/applications/dependency_versions.py --format github-output \
-            | grep '^corsika_tables_version=' >> "$GITHUB_ENV"
+          CORSIKA_TABLES=$(python src/simtools/applications/dependency_versions.py \
+            --format github-output | sed -n 's/^corsika_tables_version=//p')
+          test -n "$CORSIKA_TABLES"
+          echo "CORSIKA_TABLES=$CORSIKA_TABLES" >> "$GITHUB_ENV"
+          echo "version=$CORSIKA_TABLES" >> "$GITHUB_OUTPUT"
 
       - name: Restore cached CORSIKA interaction tables
         id: restore_interaction_tables
         uses: actions/cache/restore@v6
         with:
           path: ${{ env.IT_NAME }}
-          key: corsika-interaction-tables-${{ env.CORSIKA_TABLES }}
+          key: corsika-interaction-tables-${{ steps.interaction_table_version.outputs.version }}
           restore-keys: |
-            corsika-interaction-tables-${{ env.CORSIKA_TABLES }}-
+            corsika-interaction-tables-${{ steps.interaction_table_version.outputs.version }}-
 
       - name: Clone CORSIKA interaction tables (exclude QGSJet tables)
         run: |
@@ -144,7 +150,7 @@ jobs:
         uses: actions/cache/save@v6
         with:
           path: ${{ env.IT_NAME }}
-          key: corsika-interaction-tables-${{ env.CORSIKA_TABLES }}
+          key: corsika-interaction-tables-${{ steps.interaction_table_version.outputs.version }}
 
       - name: Upload CORSIKA interaction tables
         uses: actions/upload-artifact@v7
@@ -336,6 +342,16 @@ jobs:
         with:
           name: corsika-interaction-tables
           path: ${{ env.SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH }}/..
+
+      - name: Verify CORSIKA interaction tables
+        run: |
+          if ! test -f "$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH/manifest.yaml"; then
+            echo "Interaction-table directory:"
+            ls -la "$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH" || true
+            echo "Interaction-table parent directory:"
+            ls -la "$SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH/.." || true
+            exit 1
+          fi
 
       - name: Download simulation models repository
         # if: github.event_name != 'schedule'

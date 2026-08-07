@@ -32,6 +32,7 @@ class ApplicationDefinition:
     post_parse: PostParseHook | None = None
     defer_required_validation: bool = False
     usage: str | None = None
+    validate_simulation_dependencies: bool = False
 
     @classmethod
     def for_module(cls, module_name, **kwargs):
@@ -156,4 +157,5 @@ class ApplicationDefinition:
             db_config,
             setup_io_handler=self.setup_io_handler,
             resolve_sim_software_executables=self.resolve_sim_software_executables,
+            validate_simulation_dependencies=self.validate_simulation_dependencies,
         )
