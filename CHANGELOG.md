@@ -7,6 +7,98 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.35.0](https://github.com/gammasim/simtools/releases/tag/v0.35.0) - 2026-08-07
+
+### API Changes
+
+- Set writing of reduced event lists to true by default.
+  Change command line parameter from `--save_reduced_event_lists` to `--reduced_event_lists`. Change `--event_data_file` command line parameter to `--event_data_files`. ([#2398](https://github.com/gammasim/simtools/pull/2398))
+- Add `--show_options` to list available values for selected command-line options (including those depending on the workspace environment or simulation models). ([#2384](https://github.com/gammasim/simtools/pull/2384))
+- Rename ambiguous simtools application CLI and YAML configuration keys, reuse
+  shared argument definitions, and align affected integration-test configurations. ([#2403](https://github.com/gammasim/simtools/pull/2403))
+- Remove 'telescope' command line parameter and replace it by `array_layout_name` for
+  the following applications:
+
+  - generate_bias_curve_submissions.py
+  - production_generate_grid.py
+  - simulate_pedestals.py
+  - simulate_prod.py
+
+  This resolves the ambiguous usage of single-telescope layout names.
+
+  ([#2420](https://github.com/gammasim/simtools/pull/2420))
+
+### Bugfixes
+
+- Fix `production_generate_grid_horizontal_explicit` grid generation so fixed-energy simulations produce non-empty production tables. ([#2357](https://github.com/gammasim/simtools/pull/2357))
+- Fixed simtools-prod container provenance generation to preserve the canonical dependency manifest while ensuring dependency-manifest.json.sha256 is present for verification in branch/release builds. ([#2382](https://github.com/gammasim/simtools/pull/2382))
+- Fix Python package and add resources and schema files.
+  Fix simtools version settings for non-release builds. ([#2413](https://github.com/gammasim/simtools/pull/2413))
+- Fix writing of HA/Dec to metadata. ([#2415](https://github.com/gammasim/simtools/pull/2415))
+
+### Documentation
+
+- Improve developer documentation for simtools releases. ([#2353](https://github.com/gammasim/simtools/pull/2353))
+- Generalize application documentation and introduce input/output descriptions. ([#2359](https://github.com/gammasim/simtools/pull/2359))
+- Improve documentation for metadata and calibration. ([#2390](https://github.com/gammasim/simtools/pull/2390))
+
+### New Features
+
+- Added a sim_telarray logfile crawler and functionality to calculate and plot bias curves. ([#2202](https://github.com/gammasim/simtools/pull/2202))
+- Add metric 'total number of expected triggered events' to `simtools-production-derive-monte-carlo-statistics`. Add viewcone restriction as additional CL. ([#2346](https://github.com/gammasim/simtools/pull/2346))
+- Expand integration testing of generated ECSV tables with schema, content, and metadata validation. ([#2356](https://github.com/gammasim/simtools/pull/2356))
+- Add a filesystem simulation model source for all database-backed applications. ([#2367](https://github.com/gammasim/simtools/pull/2367))
+- Run `simulate_prod` with `CORSIKA` / `sim_telarray` and keep `CORSIKA` output. ([#2370](https://github.com/gammasim/simtools/pull/2370))
+- Centralize dependency versions in `pyproject.toml` and record dependency provenance in built images. ([#2376](https://github.com/gammasim/simtools/pull/2376))
+- Write a per-job metadata YAML after simulation completes (e.g., for the DIRAC file catalog). ([#2377](https://github.com/gammasim/simtools/pull/2377))
+- Add rich metadata and simulation model to reduced event list output.
+  Improve `simtools-inspect-file` application and allow printout of table and data content. ([#2396](https://github.com/gammasim/simtools/pull/2396))
+- Retrieve and store transition energy between high- and low-energy interaction model directly from CORSIKA7 code and store it in `build_opts.yml`.
+  Takes into account differences between interaction models. ([#2399](https://github.com/gammasim/simtools/pull/2399))
+- Improve integration tests for HDF5 output.
+  Improve documentation of write-reduced-event-lists. ([#2402](https://github.com/gammasim/simtools/pull/2402))
+- Add application configuration to simtools metadata. ([#2404](https://github.com/gammasim/simtools/pull/2404))
+- Add checks that simtools fails fast when the required software is not available (mostly for `simulate*` applications). ([#2408](https://github.com/gammasim/simtools/pull/2408))
+- Build CORSIKA7 and sim_telarray natively on ARM (no QEMU). ([#2414](https://github.com/gammasim/simtools/pull/2414))
+- Allow selecting a CPU variant when manually triggering production image builds. ([#2417](https://github.com/gammasim/simtools/pull/2417))
+
+### Maintenance
+
+- Finalize isolation of plotting (matplotlib) routines into the visualization module. ([#2344](https://github.com/gammasim/simtools/pull/2344))
+- Use the non-root `simtools` user in runtime containers while retaining root in the development
+  container for bind-mounted editable installs. Update the base image to AlmaLinux 9.8 and Python to
+  version 3.14. ([#2351](https://github.com/gammasim/simtools/pull/2351))
+- Replace bash runtime determination of simulation jobs with Python's time module. ([#2354](https://github.com/gammasim/simtools/pull/2354))
+- Change the minimum supported Python version to 3.14. ([#2361](https://github.com/gammasim/simtools/pull/2361))
+- Improve efficiency for reading model schema files (avoid multiple reading of the same files). ([#2362](https://github.com/gammasim/simtools/pull/2362))
+- Correct camera coordinate documentation and plotting tests while preventing camera plots from mutating pixel coordinates. ([#2369](https://github.com/gammasim/simtools/pull/2369))
+- Major refactoring of command-line interface (simplification, generalization). No changes expected on user-faced API. ([#2371](https://github.com/gammasim/simtools/pull/2371))
+- Improve SonarQube response and indicate soft fails for network errors. ([#2372](https://github.com/gammasim/simtools/pull/2372))
+- Add build validation for CORSIKA7 build scripts. Improve robustness of docker build scripts. ([#2373](https://github.com/gammasim/simtools/pull/2373))
+- Improve version and hadronic interaction model handling for CORSIKA.
+  The `build_opts.yml` file (typically in `/workdir/simulation_software/corsika7/build_opts.yml`) is the main source now.
+  Introduce command line parameter to change transition energy from low-to-high energy interaction model.
+  Add a new option to print available models:
+  ```
+  simtools-simulate-prod --list_available_corsika_models
+  HE model  LE model  geometry  executable
+  epos      urqmd     curved    corsika_epos_urqmd_curved
+  epos      urqmd     flat      corsika_epos_urqmd_flat
+  qgs3      urqmd     curved    corsika_qgs3_urqmd_curved
+  qgs3      urqmd     flat      corsika_qgs3_urqmd_flat
+  ```
+  ([#2374](https://github.com/gammasim/simtools/pull/2374))
+- Disable Git LFS checkout in CI to avoid consuming the GitHub LFS bandwidth quota. ([#2378](https://github.com/gammasim/simtools/pull/2378))
+- Use reduced event-data HDF5 files instead of log files when calculating the NSB trigger rate. ([#2386](https://github.com/gammasim/simtools/pull/2386))
+- Cleanup of path-related command line parameters and improved and consistent usage of paths. ([#2387](https://github.com/gammasim/simtools/pull/2387))
+- Remove obsolete `simtools-merge-tables` application and associated `merge_tables`, `_merge`, `write_table_in_hdf5`, and `copy_metadata_to_hdf5` functions from `simtools.io.table_handler`. ([#2388](https://github.com/gammasim/simtools/pull/2388))
+- Remove obsolete application `simtools-db-inspect-databases` and its corresponding tests and documentation. ([#2389](https://github.com/gammasim/simtools/pull/2389))
+- Large refactoring of unit tests with improve assert statements. ([#2410](https://github.com/gammasim/simtools/pull/2410))
+- Move dependency into `dependency_versions.yml` from `pyproject.toml`. ([#2412](https://github.com/gammasim/simtools/pull/2412))
+- Upload SonarQube report when triggering unit tests manually. ([#2418](https://github.com/gammasim/simtools/pull/2418))
+- Address several SonarQube issues reported on the main branch. ([#2419](https://github.com/gammasim/simtools/pull/2419))
+
+
 ## [v0.34.0](https://github.com/gammasim/simtools/releases/tag/v0.34.0) - 2026-07-15
 
 ### API Changes
