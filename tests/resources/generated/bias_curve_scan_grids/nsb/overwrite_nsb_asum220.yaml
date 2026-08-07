@@ -1,0 +1,17 @@
+---
+model_version: 7.0.0
+model_update: patch_update
+model_version_history:
+- 7.0.0
+description: Tune for NSB telescope trigger scan - asum_threshold=220
+changes:
+  LSTN-01:
+    min_photons:
+      value: 0
+    min_photoelectrons:
+      value: 0
+    asum_threshold:
+      value: 220
+  OBS-North:
+    nsb_scaling_factor:
+      value: 2.0
