@@ -227,6 +227,10 @@ def validate_env_template(catalog, template_path):
 def build_workflow_matrices(catalog):
     """Build GitHub Actions matrices from the dependency catalog."""
     variants = catalog["cpu-variants"]
+    platform_matrix = [
+        {"platform": "linux/amd64", "arch": "amd64", "runner": "ubuntu-latest"},
+        {"platform": "linux/arm64/v8", "arch": "arm64", "runner": "ubuntu-24.04-arm"},
+    ]
     corsika_components = {item["version"]: item for item in catalog["corsika"]}
     simtel_components = {item["version"]: item for item in catalog["sim-telarray"]}
     corsika_matrix = [
@@ -266,6 +270,12 @@ def build_workflow_matrices(catalog):
     ]
     return {
         "corsika_matrix": corsika_matrix,
+        "corsika_build_matrix": [
+            {**item, **platform}
+            for item in corsika_matrix
+            for platform in platform_matrix
+            if item["avx_flag"] == "generic" or platform["arch"] == "amd64"
+        ],
         "corsika_source_matrix": [
             {
                 "corsika": component["version"],
@@ -275,6 +285,9 @@ def build_workflow_matrices(catalog):
             for component in catalog["corsika"]
         ],
         "simtel_matrix": simtel_matrix,
+        "simtel_build_matrix": [
+            {**item, **platform} for item in simtel_matrix for platform in platform_matrix
+        ],
         "production_matrix": production_matrix,
     }
 

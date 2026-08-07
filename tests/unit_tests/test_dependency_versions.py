@@ -23,9 +23,19 @@ def test_load_dependency_catalog_and_build_matrices(simtools_root_path, monkeypa
 
     assert catalog["python"] == "3.14"
     assert len(matrices["corsika_matrix"]) == 8
+    assert len(matrices["corsika_build_matrix"]) == 10
     assert len(matrices["corsika_source_matrix"]) == 2
     assert len(matrices["simtel_matrix"]) == 1
+    assert len(matrices["simtel_build_matrix"]) == 2
     assert len(matrices["production_matrix"]) == 8
+    assert {(item["avx_flag"], item["arch"]) for item in matrices["corsika_build_matrix"]} == {
+        ("generic", "amd64"),
+        ("generic", "arm64"),
+        ("avx2", "amd64"),
+        ("avx512f", "amd64"),
+        ("sse4", "amd64"),
+    }
+    assert {item["arch"] for item in matrices["simtel_build_matrix"]} == {"amd64", "arm64"}
     assert all(
         item["corsika_image"].startswith("ghcr.io/gammasim/corsika7:v")
         for item in matrices["production_matrix"]

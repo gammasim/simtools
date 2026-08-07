@@ -41,7 +41,7 @@ jobs:
       apptainer_version: ${{ steps.config.outputs.apptainer_version }}
       production_matrix: ${{ steps.config.outputs.production_matrix }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
       - id: config
         run: |
           python -m pip install packaging pyyaml
@@ -63,7 +63,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           fetch-depth: 0
 
@@ -73,7 +73,7 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             simtools_version="${GITHUB_REF_NAME#v}"
           else
-            base_version="$(git describe --tags --match 'v[0-9]*' --abbrev=0)"
+            base_version="$(git describe --tags --match 'v[0-9]*' --abbrev=0 2>/dev/null || echo 'v0.0.0')"
             simtools_version="${base_version#v}+g${GITHUB_SHA:0:7}"
           fi
           simtools_git_revision="$GITHUB_SHA"
@@ -83,10 +83,10 @@ jobs:
           echo "simtools_git_revision=${simtools_git_revision}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c  # v4
 
       - name: Log in to the Container registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -94,7 +94,7 @@ jobs:
 
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302  # v6
         with:
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: |
@@ -118,7 +118,7 @@ jobs:
 
       - name: Build and push
         id: build
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7
         with:
           context: .
           platforms: ${{ matrix.avx_flag == 'generic' && 'linux/amd64,linux/arm64/v8' || 'linux/amd64' }}
@@ -133,6 +133,8 @@ jobs:
           file: ./docker/Dockerfile-simtools-prod
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=simtools-prod-${{ matrix.corsika }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
+          cache-to: type=gha,mode=min,scope=simtools-prod-${{ matrix.corsika }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
 
       - name: Install Apptainer
         if: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
@@ -199,7 +201,7 @@ jobs:
 
       - name: Upload container provenance
         if: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: container-provenance-${{ matrix.corsika }}-${{ matrix.avx_flag }}
           path: container-provenance.ndjson
@@ -213,4 +215,5 @@ jobs:
     secrets: inherit
     with:
       container_image: ghcr.io/gammasim/simtools-prod:${{ needs.build-simtools-prod.outputs.generic_tag }}
-      model_versions: '["7.0.0","6.0.2"]'
+      model_versions: '["7.0.0"]'
+      runner_labels: '["ubuntu-latest","ubuntu-24.04-arm"]'
