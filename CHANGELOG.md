@@ -86,7 +86,8 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
   epos      urqmd     flat      corsika_epos_urqmd_flat
   qgs3      urqmd     curved    corsika_qgs3_urqmd_curved
   qgs3      urqmd     flat      corsika_qgs3_urqmd_flat
-  ``` ([#2374](https://github.com/gammasim/simtools/pull/2374))
+  ```
+  ([#2374](https://github.com/gammasim/simtools/pull/2374))
 - Disable Git LFS checkout in CI to avoid consuming the GitHub LFS bandwidth quota. ([#2378](https://github.com/gammasim/simtools/pull/2378))
 - Use reduced event-data HDF5 files instead of log files when calculating the NSB trigger rate. ([#2386](https://github.com/gammasim/simtools/pull/2386))
 - Cleanup of path-related command line parameters and improved and consistent usage of paths. ([#2387](https://github.com/gammasim/simtools/pull/2387))
