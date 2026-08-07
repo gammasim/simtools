@@ -125,7 +125,7 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         Dictionary with the MongoDB configuration (see jsonschema_db_dict for details).
     """
 
-    db_client: MongoClient = None
+    db_client: MongoClient | None = None
     _lock = _Lock()
     _logger = logging.getLogger(__name__)
 

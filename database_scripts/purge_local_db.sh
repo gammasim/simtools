@@ -12,13 +12,13 @@ if command -v podman &> /dev/null; then
 elif command -v docker &> /dev/null; then
     CMD=docker
 else
-    echo "Error: Neither podman nor docker is available."
+    echo "Error: Neither podman nor docker is available." >&2
     exit 1
 fi
 
 # ask for confirmation, as this script removes items
 read -r -p "Do you really want to continue? This script removes items. Type 'yes' to confirm: " user_input
-if [ "$user_input" != "yes" ]; then
+if [[ "$user_input" != "yes" ]]; then
     echo "Operation aborted."
     exit 1
 fi
@@ -30,6 +30,7 @@ remove_container() {
         echo "Removing existing container $container_name"
         $CMD rm -f "${container_name}"
     fi
+    return 0
 }
 
 # Remove network
@@ -39,6 +40,7 @@ remove_network() {
         echo "Removing existing network $network_name"
         $CMD network rm "$network_name"
     fi
+    return 0
 }
 
 # Cleanup existing containers and network
