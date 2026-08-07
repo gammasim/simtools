@@ -457,22 +457,20 @@ class HTCondorBackend:
         python_executable = config.get("python_executable", _DEFAULT_CONTAINER_PYTHON)
         container_target_dir = config.get("container_target_dir", _DEFAULT_CONTAINER_TARGET_DIR)
         worker_executable = _CONTAINER_LAUNCHER if uses_container else sys.executable
-        worker_python = python_executable if uses_container else sys.executable
+        worker_arguments = [
+            *([shlex.quote(python_executable)] if uses_container else []),
+            shlex.quote("-m"),
+            shlex.quote("simtools.job_execution.worker"),
+            shlex.quote("--run-directory"),
+            shlex.quote(str(work_dir)),
+            shlex.quote("--job-id"),
+            "$(job_id)",
+            shlex.quote("--log-file"),
+            str(work_dir / "logs" / "$(job_id).log"),
+        ]
         submit_values = {
             "executable": worker_executable,
-            "arguments": " ".join(
-                [
-                    shlex.quote(worker_python),
-                    shlex.quote("-m"),
-                    shlex.quote("simtools.job_execution.worker"),
-                    shlex.quote("--run-directory"),
-                    shlex.quote(str(work_dir)),
-                    shlex.quote("--job-id"),
-                    "$(job_id)",
-                    shlex.quote("--log-file"),
-                    str(work_dir / "logs" / "$(job_id).log"),
-                ]
-            ),
+            "arguments": " ".join(worker_arguments),
             "initialdir": str(work_dir),
             "output": str(work_dir / "stdout" / "$(job_id).out"),
             "error": str(work_dir / "stderr" / "$(job_id).err"),

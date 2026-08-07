@@ -142,7 +142,8 @@ def test_htcondor_uses_submission_python_without_container(tmp_test_directory):
     )
 
     assert submit_values["executable"] == sys.executable
-    assert submit_values["arguments"].startswith(f"{sys.executable} -m")
+    assert submit_values["arguments"].startswith("-m simtools.job_execution.worker")
+    assert sys.executable not in submit_values["arguments"]
     assert "universe" not in submit_values
 
 
