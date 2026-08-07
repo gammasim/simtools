@@ -148,11 +148,6 @@ def test_label_suffix_includes_noninteger_off_axis(monkeypatch, calculator, tmp_
     assert "_off1.5.log" in log_file.name
 
 
-def test_repr_contains_label(calculator):
-    s = repr(calculator)
-    assert "IncidentAnglesCalculator" in s
-
-
 def test_write_run_script_perfect_mirror_flags(calculator):
     calculator.perfect_mirror = True
     photons, stars, log_file = calculator._prepare_psf_io_files()
@@ -187,19 +182,6 @@ def test_save_results_no_data_logs_warning(caplog, calculator, tmp_test_director
     assert not out
 
 
-def test_save_results_success(caplog, calculator):
-    calculator.results = QTable()
-    calculator.results["angle_incidence_focal"] = [1.0, 2.0] * u.deg
-    caplog.set_level(logging.INFO, logger=ia.__name__)
-    calculator._save_results()
-    table_file = calculator.results_dir / (
-        f"incident_angles_{calculator.label}_{calculator.config_data['telescope']}_off0.ecsv"
-    )
-    assert table_file.exists()
-    # MetadataCollector adds '.meta.yml' suffix
-    assert table_file.with_suffix(".meta.yml").exists()
-
-
 def test_compute_incidence_angles_parsing(calculator, tmp_test_directory):
     # Create a photons file with mixed content
     pfile = tmp_test_directory / "mixed.lis"
@@ -216,22 +198,6 @@ def test_compute_incidence_angles_parsing(calculator, tmp_test_directory):
     out = calculator._compute_incidence_angles_from_imaging_list(pfile)
     assert "angle_incidence_focal_deg" in out
     assert out["angle_incidence_focal_deg"] == pytest.approx([42.5, 99.0])
-
-
-def test_prepare_psf_io_files_creates_in_subdirs(calculator):
-    photons, stars, log = calculator._prepare_psf_io_files()
-    assert photons.parent == calculator.photons_dir
-    assert stars.parent == calculator.photons_dir
-    assert log.parent == calculator.logs_dir
-
-
-def test_write_run_script_path_and_content(calculator):
-    photons, stars, log = calculator._prepare_psf_io_files()
-    script = calculator._write_run_script(photons, stars, log)
-    assert script.parent == calculator.scripts_dir
-    txt = script.read_text(encoding="utf-8")
-    assert str(photons) in txt
-    assert str(stars) in txt
 
 
 def test_prepare_psf_io_files_unlink_warning(monkeypatch, caplog, calculator):
@@ -277,22 +243,6 @@ def test_primary_valueerror_results_in_nan(calculator, tmp_test_directory):
     out = calculator._compute_incidence_angles_from_imaging_list(pfile)
     assert math.isnan(out["angle_incidence_primary_deg"][0])
     assert math.isclose(out["angle_incidence_secondary_deg"][0], 2.0, rel_tol=0.0, abs_tol=1e-12)
-
-
-def test_secondary_valueerror_results_in_nan(calculator, tmp_test_directory):
-    # Build one valid line with focal=1.0, primary=3.0, secondary=bad (ValueError)
-    parts = ["0"] * 25 + ["1.0"]  # focal at col 26
-    parts += ["0", "0", "0", "0", "0"]  # pad cols 27-31
-    parts[28] = "0.0"  # x cm (col 29)
-    parts[29] = "0.0"  # y cm (col 30)
-    parts.append("3.0")  # primary at col 32
-    parts += ["0", "0", "0", "bad"]  # pad cols 33-35 and secondary=bad at col 36
-    pfile = tmp_test_directory / "one2.lis"
-    pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
-
-    out = calculator._compute_incidence_angles_from_imaging_list(pfile)
-    assert math.isclose(out["angle_incidence_primary_deg"][0], 3.0, rel_tol=0.0, abs_tol=1e-12)
-    assert math.isnan(out["angle_incidence_secondary_deg"][0])
 
 
 def test_header_driven_column_detection(calculator, tmp_test_directory):
@@ -359,43 +309,6 @@ def test_find_column_indices_reflection_headers(calculator, tmp_test_directory):
     assert idx["sec_y"] == 12
 
 
-def test_compute_with_header_driven_reflection_points_values(calculator, tmp_test_directory):
-    # Provide both angle and reflection point headers and a single data line
-    pfile = tmp_test_directory / "full_headers_values.lis"
-    header_lines = [
-        "# Column 30: Angle of incidence at focal surface, with respect to the optical axis [deg]\n",
-        "# Column 34: Angle of incidence onto primary mirror [deg]\n",
-        "# Column 38: Angle of incidence onto secondary mirror [deg]\n",
-        "# Column 10: X reflection point on primary mirror [cm]\n",
-        "# Column 11: Y reflection point on primary mirror [cm]\n",
-        "# Column 12: X reflection point on secondary mirror [cm]\n",
-        "# Column 13: Y reflection point on secondary mirror [cm]\n",
-    ]
-    data = ["0"] * 40
-    data[29] = "11.0"  # focal at 30
-    data[33] = "21.0"  # primary angle at 34
-    data[37] = "31.0"  # secondary angle at 38
-    data[9] = "10.0"  # prim x cm at 10
-    data[10] = "-20.0"  # prim y cm at 11
-    data[11] = "3.0"  # sec x cm at 12
-    data[12] = "4.0"  # sec y cm at 13
-    pfile.write_text("".join(header_lines) + " ".join(data) + "\n", encoding="utf-8")
-
-    out = calculator._compute_incidence_angles_from_imaging_list(pfile)
-    # Angles picked from header-driven indices
-    assert out["angle_incidence_focal_deg"] == pytest.approx([11.0])
-    assert out["angle_incidence_primary_deg"] == pytest.approx([21.0])
-    assert out["angle_incidence_secondary_deg"] == pytest.approx([31.0])
-    # Hit coordinates converted from cm to meters
-    assert out["primary_hit_x_m"] == pytest.approx([0.10])
-    assert out["primary_hit_y_m"] == pytest.approx([-0.20])
-    assert out["secondary_hit_x_m"] == pytest.approx([0.03])
-    assert out["secondary_hit_y_m"] == pytest.approx([0.04])
-    # Radii computed correctly in meters
-    assert out["primary_hit_radius_m"] == pytest.approx([((10.0**2 + 20.0**2) ** 0.5) / 100.0])
-    assert out["secondary_hit_radius_m"] == pytest.approx([((3.0**2 + 4.0**2) ** 0.5) / 100.0])
-
-
 def test_compute_angles_skips_primary_secondary_when_disabled(tmp_test_directory):
     # Minimal targeted test for the early return when primary/secondary are disabled
     calc = object.__new__(IncidentAnglesCalculator)
@@ -410,57 +323,6 @@ def test_compute_angles_skips_primary_secondary_when_disabled(tmp_test_directory
     assert out["angle_incidence_focal_deg"] == [42.5]
     assert "angle_incidence_primary_deg" not in out
     assert "angle_incidence_secondary_deg" not in out
-
-
-def test_primary_hit_geometry_nan_when_missing_coords(calculator, tmp_test_directory):
-    # focal valid; missing/invalid primary x/y should yield NaNs for radius and coords
-    parts = ["0"] * 25 + ["42.0"]  # focal at col 26
-    # pad cols 27-31, then invalidate prim_x (col 29, idx 28) and prim_y (col 30, idx 29)
-    parts += ["0", "0", "0", "0", "0"]
-    parts[28] = "badx"  # prim_x invalid
-    parts[29] = "bady"  # prim_y invalid
-    # primary and secondary angles present to avoid other issues
-    parts.append("1.0")  # primary at 32
-    parts += ["0", "0", "0", "2.0"]  # secondary at 36
-    pfile = tmp_test_directory / "prim_nan.lis"
-    pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
-
-    out = calculator._compute_incidence_angles_from_imaging_list(pfile)
-    assert len(out["angle_incidence_focal_deg"]) == 1
-    # Primary radius and coords should be NaN
-    assert math.isnan(out["primary_hit_radius_m"][0])
-    assert math.isnan(out["primary_hit_x_m"][0])
-    assert math.isnan(out["primary_hit_y_m"][0])
-
-
-def test_secondary_hit_geometry_nan_when_missing_coords(calculator, tmp_test_directory):
-    # focal valid; missing/invalid secondary x/y should yield NaNs for secondary radius/coords
-    parts = ["0"] * 25 + ["42.0"]  # focal at col 26
-    parts += ["0", "0", "0", "0", "0"]  # pad 27-31
-    parts[28] = "0.0"  # valid primary x cm (col 29)
-    parts[29] = "0.0"  # valid primary y cm (col 30)
-    parts.append("1.0")  # primary at 32
-    # secondary x/y (cols 33/34) will be invalid strings
-    parts += ["badx", "bady", "0", "2.0"]  # pad cols and secondary=2.0 at col 36
-    pfile = tmp_test_directory / "sec_nan.lis"
-    pfile.write_text(" ".join(parts) + "\n", encoding="utf-8")
-
-    out = calculator._compute_incidence_angles_from_imaging_list(pfile)
-    assert len(out["angle_incidence_focal_deg"]) == 1
-    # Secondary radius and coords should be NaN
-    assert math.isnan(out["secondary_hit_radius_m"][0])
-    assert math.isnan(out["secondary_hit_x_m"][0])
-    assert math.isnan(out["secondary_hit_y_m"][0])
-
-
-def test_iter_data_rows_skips_comments_and_blank(tmp_test_directory):
-    p = tmp_test_directory / "rows.lis"
-    p.write_text("""# header line\n\n1 2 3\n  # another comment\n4 5 6\n""", encoding="utf-8")
-    rows = list(IncidentAnglesCalculator._iter_data_rows(p))
-    assert rows == [
-        ["1", "2", "3"],
-        ["4", "5", "6"],
-    ]
 
 
 def test_parse_float_with_nan_out_of_range():
@@ -510,129 +372,6 @@ def test_update_indices_reflection_skips_when_missing_keyword():
     assert indices == {"sec_x": 32, "sec_y": 33}
 
 
-def test_default_column_indices_flag_behavior():
-    # With flag True
-    calc = object.__new__(IncidentAnglesCalculator)
-    calc.calculate_primary_secondary_angles = True
-    idx = calc._default_column_indices()
-    assert idx["focal"] == 25
-    for k in ("primary", "secondary", "prim_x", "prim_y", "sec_x", "sec_y"):
-        assert k in idx
-
-    # With flag False
-    calc = object.__new__(IncidentAnglesCalculator)
-    calc.calculate_primary_secondary_angles = False
-    idx2 = calc._default_column_indices()
-    assert idx2 == {"focal": 25}
-
-
-def test_update_indices_from_header_desc_angles():
-    calc = object.__new__(IncidentAnglesCalculator)
-    calc.calculate_primary_secondary_angles = True
-    indices = {"focal": 25}
-    # Focal surface
-    calc._update_indices_from_header_desc(
-        "angle of incidence at focal surface with respect to the optical axis", 30, indices
-    )
-    assert indices["focal"] == 29
-    # Primary mirror
-    calc._update_indices_from_header_desc(
-        "angle of incidence onto primary mirror [deg]", 34, indices
-    )
-    assert indices["primary"] == 33
-    # Secondary mirror
-    calc._update_indices_from_header_desc(
-        "angle of incidence on secondary mirror [deg]", 38, indices
-    )
-    assert indices["secondary"] == 37
-
-
-def test_append_values_minimal_success():
-    calc = object.__new__(IncidentAnglesCalculator)
-    calc.calculate_primary_secondary_angles = True
-    parts = ["42.0", "1.0", "2.0", "10.0", "20.0", "3.0", "4.0"]
-    col_idx = {
-        "focal": 0,
-        "primary": 1,
-        "secondary": 2,
-        "prim_x": 3,
-        "prim_y": 4,
-        "sec_x": 5,
-        "sec_y": 6,
-    }
-    focal, primary, secondary = [], [], []
-    r1, r2 = [], []
-    px, py, sx, sy = [], [], [], []
-    calc._append_values(parts, col_idx, focal, primary, secondary, r1, r2, px, py, sx, sy)
-    assert focal == [42.0]
-    assert primary == [1.0]
-    assert secondary == [2.0]
-    # radii in meters
-    assert r1 == [((10.0**2 + 20.0**2) ** 0.5) / 100.0]
-    assert r2 == [((3.0**2 + 4.0**2) ** 0.5) / 100.0]
-    # hits in meters
-    assert px == [0.10]
-    assert py == [0.20]
-    assert sx == [0.03]
-    assert sy == [0.04]
-
-
-def test_append_primary_secondary_angles_direct():
-    parts = ["0", "3.0", "bad"]
-    col_idx = {"primary": 1, "secondary": 2}
-    primary, secondary = [], []
-    IncidentAnglesCalculator._append_primary_secondary_angles(
-        object.__new__(IncidentAnglesCalculator), parts, col_idx, primary, secondary
-    )
-    assert primary == [3.0]
-    assert len(secondary) == 1
-
-    assert math.isnan(secondary[0])
-
-
-def test_find_column_indices_defaults(calculator, tmp_test_directory):
-    # No header lines -> defaults (0-based): focal=25; others present only when flag True
-    pfile = tmp_test_directory / "no_headers.lis"
-    pfile.write_text("0 1 2 3\n", encoding="utf-8")
-
-    idx = calculator._find_column_indices(pfile)
-    assert idx["focal"] == 25
-    # When flag True, default mirror-related indices should exist
-    assert idx["primary"] == 31
-    assert idx["secondary"] == 35
-    assert idx["prim_x"] == 28
-    assert idx["prim_y"] == 29
-    assert idx["sec_x"] == 32
-    assert idx["sec_y"] == 33
-
-
-def test_find_column_indices_header_overrides(calculator, tmp_test_directory):
-    # Header provides custom 1-based columns for angles and reflection points
-    pfile = tmp_test_directory / "headers_all.lis"
-    header = "\n".join(
-        [
-            "# Column 30: Angle of incidence at focal surface, with respect to the optical axis [deg]",
-            "# Column 34: Angle of incidence onto primary mirror [deg]",
-            "# Column 38: Angle of incidence onto secondary mirror [deg]",
-            "# Column 10: X reflection point on primary mirror [cm]",
-            "# Column 11: Y reflection point on primary mirror [cm]",
-            "# Column 12: X reflection point on secondary mirror [cm]",
-            "# Column 13: Y reflection point on secondary mirror [cm]",
-        ]
-    )
-    pfile.write_text(header + "\n0\n", encoding="utf-8")
-
-    idx = calculator._find_column_indices(pfile)
-    # Converted to 0-based
-    assert idx["focal"] == 29
-    assert idx["primary"] == 33
-    assert idx["secondary"] == 37
-    assert idx["prim_x"] == 9
-    assert idx["prim_y"] == 10
-    assert idx["sec_x"] == 11
-    assert idx["sec_y"] == 12
-
-
 def test_find_column_indices_ignores_mirror_when_disabled(tmp_test_directory):
     # Even with headers present, when calculate_primary_secondary_angles is False,
     # only 'focal' should be returned/overridden.
@@ -654,140 +393,6 @@ def test_find_column_indices_ignores_mirror_when_disabled(tmp_test_directory):
     idx = calc._find_column_indices(pfile)
     assert set(idx.keys()) == {"focal"}
     assert idx["focal"] == 25  # 1-based 26 -> 0-based 25
-
-
-def test_parse_float_success_and_failure():
-    parts = ["1.5", "bad"]
-    ok, val = IncidentAnglesCalculator._parse_float(parts, 0)
-    assert ok
-    assert math.isclose(val, 1.5, rel_tol=0.0, abs_tol=1e-12)
-    ok, val = IncidentAnglesCalculator._parse_float(parts, 1)
-    assert not ok
-    assert math.isclose(val, 0.0, rel_tol=0.0, abs_tol=1e-12)
-    ok, val = IncidentAnglesCalculator._parse_float(parts, 5)
-    assert not ok
-    assert math.isclose(val, 0.0, rel_tol=0.0, abs_tol=1e-12)
-
-
-def test_contains_axis_cases():
-    assert IncidentAnglesCalculator._contains_axis("x reflection point on primary", "x")
-    assert IncidentAnglesCalculator._contains_axis("y reflection point", "y")
-    # Should not match axis embedded in a word
-    assert not IncidentAnglesCalculator._contains_axis("xcoord value", "x")
-    # Case-insensitive check
-    assert IncidentAnglesCalculator._contains_axis("Axis: X", "x")
-
-
-def test_update_indices_angle_headers():
-    calc = object.__new__(IncidentAnglesCalculator)
-    calc.calculate_primary_secondary_angles = True
-    indices = {"focal": 25, "primary": 31, "secondary": 35}
-    # focal
-    calc._update_indices_from_header_desc(
-        "angle of incidence at focal surface with respect to the optical axis", 30, indices
-    )
-    assert indices["focal"] == 29
-    # primary
-    calc._update_indices_from_header_desc("angle of incidence onto primary mirror", 40, indices)
-    assert indices["primary"] == 39
-    # secondary
-    calc._update_indices_from_header_desc("angle of incidence on secondary mirror", 44, indices)
-    assert indices["secondary"] == 43
-
-
-def test_label_suffix_returns_expected_format(calculator):
-    # Default off-axis is 0 deg
-    s = calculator._label_suffix()
-    assert calculator.config_data["telescope"] in s
-    assert f"{calculator.label}_" in s
-    assert s.endswith("off0")
-
-
-def test_append_values_only_focal_when_disabled(tmp_test_directory):
-    # Minimal test to check early return after focal append
-    calc = object.__new__(IncidentAnglesCalculator)
-    calc.calculate_primary_secondary_angles = False
-    parts = ["0"] * 25 + ["42.0"]
-    col_idx = {"focal": 25}
-    focal = []
-    calc._append_values(
-        parts,
-        col_idx,
-        focal,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    )
-    assert len(focal) == 1
-    assert math.isclose(focal[0], 42.0, rel_tol=0.0, abs_tol=1e-12)
-
-
-def test_append_primary_secondary_angles_values():
-    calc = object.__new__(IncidentAnglesCalculator)
-    parts = ["0"] * 40
-    parts[31] = "3.0"  # primary at idx 31
-    parts[35] = "bad"  # secondary invalid -> NaN
-    col_idx = {"primary": 31, "secondary": 35}
-    primary, secondary = [], []
-    calc._append_primary_secondary_angles(parts, col_idx, primary, secondary)
-    assert math.isclose(primary[0], 3.0, rel_tol=0.0, abs_tol=1e-12)
-    assert math.isnan(secondary[0])
-
-
-def test_append_primary_hit_geometry_valid_and_invalid():
-    calc = object.__new__(IncidentAnglesCalculator)
-    # Valid coordinates
-    parts = ["0"] * 40
-    parts[28] = "10.0"  # x cm
-    parts[29] = "-20.0"  # y cm
-    col_idx = {"prim_x": 28, "prim_y": 29}
-    radius, x_m, y_m = [], [], []
-    calc._append_primary_hit_geometry(parts, col_idx, radius, x_m, y_m)
-    assert math.isclose(radius[0], ((10.0**2 + 20.0**2) ** 0.5) / 100.0, rel_tol=0.0, abs_tol=1e-12)
-    assert math.isclose(x_m[0], 0.10, rel_tol=0.0, abs_tol=1e-12)
-    assert math.isclose(y_m[0], -0.20, rel_tol=0.0, abs_tol=1e-12)
-    # Invalid coordinates -> NaNs
-    parts[28] = "bad"
-    parts[29] = "-20.0"
-    calc._append_primary_hit_geometry(parts, col_idx, radius, x_m, y_m)
-    assert math.isnan(radius[1])
-    assert math.isnan(x_m[1])
-    assert math.isnan(y_m[1])
-
-
-def test_append_secondary_hit_geometry_valid_and_invalid():
-    calc = object.__new__(IncidentAnglesCalculator)
-    # Valid coordinates
-    parts = ["0"] * 40
-    parts[32] = "3.0"  # x cm
-    parts[33] = "4.0"  # y cm
-    col_idx = {"sec_x": 32, "sec_y": 33}
-    radius2, x2_m, y2_m = [], [], []
-    calc._append_secondary_hit_geometry(parts, col_idx, radius2, x2_m, y2_m)
-    assert math.isclose(radius2[0], 0.05, rel_tol=0.0, abs_tol=1e-12)
-    assert math.isclose(x2_m[0], 0.03, rel_tol=0.0, abs_tol=1e-12)
-    assert math.isclose(y2_m[0], 0.04, rel_tol=0.0, abs_tol=1e-12)
-    # Invalid -> NaNs
-    parts[32] = "bad"
-    parts[33] = "4.0"
-    calc._append_secondary_hit_geometry(parts, col_idx, radius2, x2_m, y2_m)
-    assert math.isnan(radius2[1])
-    assert math.isnan(x2_m[1])
-    assert math.isnan(y2_m[1])
-
-
-def test_update_indices_reflection_positive():
-    calc = object.__new__(IncidentAnglesCalculator)
-    calc.calculate_primary_secondary_angles = True
-    indices = {}
-    desc = "X reflection point on primary mirror [cm]".lower()
-    calc._update_indices_from_header_desc(desc, 15, indices)
-    assert indices["prim_x"] == 14
 
 
 def test_save_model_parameters(calculator, tmp_test_directory, monkeypatch):

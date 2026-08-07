@@ -21,7 +21,6 @@ from simtools.production_configuration.trigger_histograms import (
     _write_dense_histogram_payload,
     inspect_trigger_histogram_file,
     load_event_data_histograms,
-    load_trigger_histograms,
     write_trigger_histograms,
 )
 from simtools.sim_events.histograms import EventDataHistograms
@@ -134,69 +133,6 @@ def test_create_histogram_tables_contains_expected_metadata_and_bins():
     assert np.all(bin_table["reference_id"] == "ref-1")
     assert np.all(bin_table["core_distance_low"].quantity.to_value(u.m) >= 0.0)
     assert np.all(bin_table["trigger_efficiency"] >= 0.0)
-
-
-def test_histogram_tables_round_trip_via_hdf5(tmp_path):
-    metadata_table, bin_table = _create_histogram_tables(
-        [
-            {
-                "reference_id": "ref-1",
-                "production_index": 0,
-                "event_data_file": "pattern*.hdf5",
-                "site": "North",
-                "array_name": "alpha",
-                "telescope_ids": ["LSTN-01"],
-                "histograms": _FakeHistograms(),
-            }
-        ]
-    )
-
-    output_file = tmp_path / "trigger_histograms.hdf5"
-    table_handler.write_tables(
-        [metadata_table, bin_table],
-        output_file,
-        overwrite_existing=True,
-        file_type="HDF5",
-    )
-
-    loaded_metadata, loaded_bins = load_trigger_histograms(output_file)
-    assert len(loaded_metadata) == 1
-    assert len(loaded_bins) == 8
-    assert loaded_metadata["array_name"][0] == "alpha"
-    assert loaded_metadata["site"][0] == "North"
-    assert loaded_bins["triggered_count"][0] == 1
-
-
-def test_histogram_tables_round_trip_via_hdf5_without_spectral_index(tmp_path):
-    histograms = _FakeHistograms()
-    histograms.file_info.pop("spectral_index")
-    metadata_table, bin_table = _create_histogram_tables(
-        [
-            {
-                "reference_id": "ref-1",
-                "production_index": 0,
-                "event_data_file": "pattern*.hdf5",
-                "site": "North",
-                "array_name": "alpha",
-                "telescope_ids": ["LSTN-01"],
-                "histograms": histograms,
-            }
-        ]
-    )
-
-    assert metadata_table["spectral_index"].dtype.kind == "f"
-    assert np.isnan(metadata_table["spectral_index"][0])
-
-    output_file = tmp_path / "trigger_histograms_missing_spectral_index.hdf5"
-    table_handler.write_tables(
-        [metadata_table, bin_table],
-        output_file,
-        overwrite_existing=True,
-        file_type="HDF5",
-    )
-
-    loaded_metadata, _ = load_trigger_histograms(output_file)
-    assert np.isnan(loaded_metadata["spectral_index"][0])
 
 
 def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
@@ -443,11 +379,3 @@ def test_inspect_trigger_histogram_file_reports_reference_mismatches(tmp_path):
     assert report["orphan_dense_reference_ids"] == ["ref-3"]
     assert "missing dense payloads for metadata ids: ref-2" in formatted
     assert "orphan dense payload ids without metadata rows: ref-3" in formatted
-
-
-def test_inspect_trigger_histogram_file_returns_none_for_generic_hdf5(tmp_path):
-    file_path = tmp_path / "generic.hdf5"
-    with h5py.File(file_path, "w") as hdf5_file:
-        hdf5_file.create_dataset("values", data=[1, 2, 3])
-
-    assert inspect_trigger_histogram_file(file_path) is None

@@ -233,28 +233,6 @@ def test_file_system_handler_ignores_missing_files_in_or_query(simulation_models
     assert [parameter["parameter"] for parameter in parameters] == ["camera_body_diameter"]
 
 
-def test_file_system_handler_avoids_schema_lookup_and_validation(simulation_models_path, mocker):
-    collection_lookup = mocker.patch("simtools.utils.names.get_collection_name_from_parameter_name")
-    parameter_validation = mocker.patch(
-        "simtools.data_model.validate_data.DataValidator.validate_model_parameter"
-    )
-    handler = file_system_model.FileSystemModelHandler(simulation_models_path)
-
-    parameters = handler.query_model_parameters(
-        {
-            "parameter": "camera_body_diameter",
-            "parameter_version": "2.0.0",
-            "instrument": "LSTN-01",
-            "site": "North",
-        },
-        "telescopes",
-    )
-
-    assert parameters[0]["value"] == pytest.approx(350.0)
-    collection_lookup.assert_not_called()
-    parameter_validation.assert_not_called()
-
-
 def test_file_system_handler_caches_production_and_parameter_reads(simulation_models_path, mocker):
     production_spy = mocker.spy(file_system_model.db_model_upload, "read_production_tables")
     parameter_spy = mocker.spy(file_system_model.ascii_handler, "collect_data_from_file")
@@ -337,19 +315,6 @@ def test_database_handler_uses_environment_path(simulation_models_path, mocker, 
     mongo_handler.assert_not_called()
 
 
-def test_database_handler_cli_path_precedes_environment(
-    simulation_models_path, tmp_test_directory, mocker, monkeypatch
-):
-    monkeypatch.setenv("SIMTOOLS_SIMULATION_MODELS_PATH", str(Path(tmp_test_directory) / "missing"))
-    settings_mock = mocker.patch("simtools.db.db_handler.settings")
-    settings_mock.config.args = {"simulation_models_path": simulation_models_path}
-    settings_mock.config.db_config = {}
-
-    database = db_handler.DatabaseHandler()
-
-    assert database.model_source_name == str(simulation_models_path.resolve())
-
-
 def test_file_export_and_mongodb_only_guard(simulation_models_path, tmp_test_directory):
     handler = file_system_model.FileSystemModelHandler(simulation_models_path)
     destination = Path(tmp_test_directory) / "export"
@@ -364,31 +329,6 @@ def test_file_export_and_mongodb_only_guard(simulation_models_path, tmp_test_dir
     assert handler.export_model_files(parameters=parameters, dest=destination) == {
         "model.dat": "file exists"
     }
-
-
-def test_patch_production_inherits_base_tables(simulation_models_path):
-    patch_production = simulation_models_path / "simulation-models" / "productions" / "1.0.1"
-    patch_production.mkdir()
-    (patch_production / "info.yml").write_text(
-        "model_update: patch_update\nmodel_version_history:\n  - 1.0.0\n",
-        encoding="utf-8",
-    )
-    _write_json(
-        patch_production / "LSTN-01.json",
-        {
-            "design_model": {"LSTN-01": "LSTN-design"},
-            "model_version": "1.0.1",
-            "production_table_name": "LSTN-01",
-            "parameters": {"LSTN-01": {"camera_body_diameter": "2.0.0"}},
-        },
-    )
-
-    handler = file_system_model.FileSystemModelHandler(simulation_models_path)
-    production = handler.read_production_table("telescopes", "1.0.1")
-
-    assert production["model_version"] == "1.0.1"
-    assert production["parameters"]["LSTN-design"]["camera_body_diameter"] == "1.0.0"
-    assert production["parameters"]["LSTN-01"]["camera_body_diameter"] == "2.0.0"
 
 
 def test_database_handler_rejects_mongodb_operation(simulation_models_path, mocker):

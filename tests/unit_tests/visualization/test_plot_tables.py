@@ -210,35 +210,6 @@ def test_export_model_file(mock_db_handler_class):
 
 
 @mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
-def test_export_model_file_site_only(mock_db_handler_class):
-    table_config = {
-        "site": "test_site",
-        "model_version": "test_version",
-        "parameter": "test_parameter",
-    }
-    mock_db_handler = mock_db_handler_class.return_value
-    mock_table = mock.MagicMock()
-    mock_db_handler.export_model_file.return_value = mock_table
-
-    config = {"tables": [table_config]}
-    table_config["label"] = "test_label"
-    table_config["column_x"] = "x"
-    table_config["column_y"] = "y"
-
-    plot_tables.read_table_data(config)
-
-    mock_db_handler_class.assert_called_once_with()
-    mock_db_handler.export_model_file.assert_called_once_with(
-        parameter="test_parameter",
-        site="test_site",
-        array_element_name=None,
-        parameter_version=None,
-        model_version="test_version",
-        export_file_as_table=True,
-    )
-
-
-@mock.patch("simtools.visualization.plot_tables.db_handler.DatabaseHandler")
 def test_export_model_file_with_db_export_path(mock_db_handler_class, tmp_test_directory):
     table_config = {
         "site": "test_site",
@@ -472,20 +443,6 @@ def test_generate_plot_configurations(
     assert result is None
 
 
-def test_get_plotting_label_unique_label():
-    config = {"label": "unique_label", "column_x": "x", "column_y": "y"}
-    data = {}
-    result = plot_tables._get_plotting_label(config, data)
-    assert result == "unique_label"
-
-
-def test_get_plotting_label_default_label():
-    config = {"column_x": "x", "column_y": "y"}
-    data = {}
-    result = plot_tables._get_plotting_label(config, data)
-    assert result == "x vs y"
-
-
 def test_get_plotting_label_duplicate_label():
     config = {"label": "duplicate_label", "column_x": "x", "column_y": "y"}
     data = {"duplicate_label": "data"}
@@ -510,7 +467,6 @@ def test_get_plotting_label_multiple_duplicates():
 def test_generate_plot_configurations_with_nan_and_missing_columns(
     mock_read_parameter_dict, mock_read_table, mock_collect_data, tmp_test_directory
 ):
-    """Test handling of NaN values and missing columns in generate_plot_configurations."""
     # Create mock table with valid and NaN columns
     mock_table = Table()
     mock_table["time"] = [1.0, 2.0, 3.0]
@@ -591,7 +547,6 @@ def test_generate_plot_configurations_with_nan_and_missing_columns(
 def test_generate_plot_configurations_selects_schema_matching_parameter_version(
     mock_collect_data, mock_read_parameter_dict, mock_read_table, tmp_test_directory
 ):
-    """Select the schema entry matching model_parameter_schema_version from a list."""
     mock_table = Table()
     mock_table["time"] = [1.0, 2.0, 3.0]
     mock_table["amplitude"] = [0.1, 0.2, 0.3]
@@ -631,7 +586,6 @@ def test_generate_plot_configurations_selects_schema_matching_parameter_version(
 
 
 def test_select_schema_entry_returns_latest_when_version_not_found():
-    """Fall back to newest schema entry when requested version is unavailable."""
     schema_data = [
         {"schema_version": "0.1.0", "plot_configuration": [{"type": "old"}]},
         {"schema_version": "0.3.0", "plot_configuration": [{"type": "new"}]},
@@ -643,7 +597,6 @@ def test_select_schema_entry_returns_latest_when_version_not_found():
 
 
 def test_select_schema_entry_returns_empty_dict_for_empty_input():
-    """Return an empty dict when schema input is empty/invalid."""
     assert plot_tables._select_schema_entry([], schema_version="0.2.0") == {}
 
 

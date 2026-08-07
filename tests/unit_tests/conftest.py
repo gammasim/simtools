@@ -970,64 +970,6 @@ def simple_test_file(tmp_test_directory):
     return str(test_file_path)
 
 
-# ============================================================================
-# Shared fixtures for row-table and export testing (Phase 3 consolidation)
-# ============================================================================
-
-
-@pytest.fixture
-def row_table_payload():
-    """Valid row-table dict with all required keys."""
-    return {
-        "columns": ["time", "amplitude"],
-        "column_units": ["ns", "dimensionless"],
-        "rows": [[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]],
-    }
-
-
-@pytest.fixture
-def row_table_payload_without_units():
-    """Row-table dict without column_units key."""
-    return {
-        "columns": ["time", "amplitude"],
-        "rows": [[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]],
-    }
-
-
-@pytest.fixture
-def invalid_row_table_payloads():
-    """Collection of invalid row-table payloads for parametrized testing."""
-    return {
-        "missing_columns": {
-            "column_units": ["ns", "dimensionless"],
-            "rows": [[0.0, 0.0]],
-        },
-        "missing_rows": {
-            "columns": ["time", "amplitude"],
-            "column_units": ["ns", "dimensionless"],
-        },
-        "missing_column_units": {
-            "columns": ["time", "amplitude"],
-            "rows": [[0.0, 0.0]],
-        },
-        "column_units_length_mismatch": {
-            "columns": ["time", "amplitude"],
-            "column_units": ["ns"],
-            "rows": [[0.0, 0.0]],
-        },
-        "row_length_mismatch": {
-            "columns": ["time", "amplitude"],
-            "column_units": ["ns", "dimensionless"],
-            "rows": [[0.0]],
-        },
-        "non_numeric_value": {
-            "columns": ["time", "amplitude"],
-            "column_units": ["ns", "dimensionless"],
-            "rows": [["not", "numeric"]],
-        },
-    }
-
-
 @pytest.fixture
 def model_parameter_json(test_resources_path):
     """Fixture that returns the path to an example model parameter JSON file."""

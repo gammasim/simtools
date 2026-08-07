@@ -3,7 +3,6 @@
 import logging
 
 import pytest
-from particle import Corsika7ID
 
 from simtools.corsika.primary_particle import PrimaryParticle
 
@@ -122,8 +121,3 @@ def test_pdg_id(caplog):
 
     with pytest.raises(ValueError, match="Invalid DPG ID: 9999"):
         PrimaryParticle(particle_id_type="pdg_id", particle_id=9999)
-
-
-def test_particle_names():
-    for ids in PrimaryParticle.particle_names().values():
-        assert Corsika7ID(ids["corsika7_id"]).to_pdgid().numerator

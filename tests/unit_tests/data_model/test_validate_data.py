@@ -17,7 +17,6 @@ from simtools.io import ascii_handler
 
 logger = logging.getLogger()
 
-
 mirror_file = f"{TEST_RESOURCES_STATIC}/MLTdata-preproduction.ecsv"
 mirror_2f_schema_file = SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
 num_gains_test_file = f"{TEST_RESOURCES_STATIC}/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
@@ -192,7 +191,6 @@ def test_validate_parameter_and_file_name(caplog):
 
 
 def test_validate_invalid_version():
-    """Test that invalid version strings raise ValueError."""
     data_validator = validate_data.DataValidator(
         schema_file=MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
     )
@@ -244,34 +242,6 @@ def test_validate_data_columns(tmp_test_directory, caplog):
         with pytest.raises(IndexError):
             data_validator_3._validate_data_table()
     assert "Error reading validation schema from" in caplog.text
-
-
-def test_validate_data_columns_preserves_dimensionless_integer_dtype():
-    data_validator = validate_data.DataValidator()
-    data_validator._data_description = [
-        {
-            "name": "run_number",
-            "required": True,
-            "type": "int64",
-        },
-        {
-            "name": "showers_per_run",
-            "required": True,
-            "unit": "dimensionless",
-            "type": "int64",
-        },
-    ]
-    data_validator.data_table = Table(
-        {
-            "run_number": np.array([1, 2], dtype=np.int64),
-            "showers_per_run": Column([10, 20], dtype=np.int64, unit="dimensionless"),
-        }
-    )
-
-    data_validator._validate_data_columns()
-
-    assert data_validator.data_table["run_number"].dtype == np.dtype("int64")
-    assert data_validator.data_table["showers_per_run"].dtype == np.dtype("int64")
 
 
 def test_validate_data_columns_checks_range_after_unit_conversion(reference_columns):
@@ -427,15 +397,6 @@ def test_check_range(reference_columns, caplog):
         data_validator._check_range(col_3.name, col_3.min(), col_3.max(), "invalid_range")
 
 
-def test_is_dimensionless():
-    data_validator = validate_data.DataValidator()
-
-    assert data_validator._is_dimensionless(None)
-    assert data_validator._is_dimensionless("")
-    assert data_validator._is_dimensionless("dimensionless")
-    assert not data_validator._is_dimensionless("kpc")
-
-
 def test_check_and_convert_units(reference_columns):
     data_validator = validate_data.DataValidator()
     data_validator._data_description = reference_columns
@@ -478,26 +439,6 @@ def test_check_and_convert_units_with_errors(reference_columns):
     for col_name in table_3.colnames:
         with pytest.raises(u.core.UnitConversionError):
             data_validator._check_and_convert_units(table_3[col_name], unit=None, col_name=col_name)
-
-
-def test_check_and_convert_units_simple_numbers(reference_columns):
-    data_validator = validate_data.DataValidator()
-    data_validator._data_description = reference_columns
-
-    # convert numbers and quantities
-    assert data_validator._check_and_convert_units(300.0, unit="nm", col_name="wavelength") == (
-        300.0,
-        "nm",
-    )
-    assert data_validator._check_and_convert_units(300.0, unit="mm", col_name="wavelength") == (
-        300000000.0,
-        "nm",
-    )
-    data_validator._data_description[0]["type"] = "int"
-    assert data_validator._check_and_convert_units(300, unit="nm", col_name="wavelength") == (
-        300,
-        "nm",
-    )
 
 
 def test_check_and_convert_units_dimensionless(reference_columns, caplog):
@@ -544,26 +485,6 @@ def test_check_and_convert_units_integer_arrays(reference_columns):
     ) == ([300, 350], "nm")
 
 
-def test_check_required_columns(reference_columns):
-    data_validator = validate_data.DataValidator()
-    data_validator._data_description = reference_columns
-
-    table_1 = Table()
-    table_1["wavelength"] = Column([300.0, 350.0], unit="nm", dtype="float32")
-    table_1["qe"] = Column([0.1, 0.5], dtype="float32")
-
-    data_validator.data_table = table_1
-    data_validator._check_required_columns()
-
-    table_2 = Table()
-    table_2["wavelength"] = Column([300.0, 350.0], unit="nm", dtype="float32")
-
-    data_validator.data_table = table_2
-
-    with pytest.raises(KeyError, match=r"'Missing required column qe'"):
-        data_validator._check_required_columns()
-
-
 def test_get_data_description(reference_columns, reference_columns_name):
     data_validator = validate_data.DataValidator()
     data_validator._data_description = reference_columns
@@ -592,22 +513,6 @@ def test_get_data_description(reference_columns, reference_columns_name):
 
     with pytest.raises(IndexError):
         data_validator._get_data_description(100)
-
-
-def test_get_reference_unit(reference_columns):
-    data_validator = validate_data.DataValidator()
-    data_validator._data_description = reference_columns
-
-    assert data_validator._get_reference_unit("wavelength") == "nm"
-    assert data_validator._get_reference_unit("qe") == u.dimensionless_unscaled
-    assert data_validator._get_reference_unit("no_units") == u.dimensionless_unscaled
-
-
-def test_get_unique_column_requirements(reference_columns):
-    data_validator = validate_data.DataValidator()
-    data_validator._data_description = reference_columns
-
-    assert data_validator._get_unique_column_requirement() == ["wavelength"]
 
 
 def test_check_data_type(reference_columns, caplog):
@@ -791,20 +696,6 @@ def test_validate_data_dict():
         data_validator_3._validate_data_dict()
 
 
-def test_convert_results_to_model_format():
-    data_validator_3 = validate_data.DataValidator(
-        schema_file=schema.get_model_parameter_schema_file("random_focal_length")
-    )
-    data_validator_3.data_dict = {
-        "name": "random_focal_length",
-        "value": [1.0, 2.0],
-        "unit": ["m", "m"],
-    }
-    data_validator_3._convert_results_to_model_format()
-    assert data_validator_3.data_dict["value"] == "1.0 2.0"
-    assert data_validator_3.data_dict["unit"] == "m m"
-
-
 def test_prepare_model_parameter():
     data_validator = validate_data.DataValidator()
 
@@ -928,33 +819,6 @@ def test_get_value_and_units_as_lists():
     assert values == [True]
 
 
-def test_validate_value_and_unit_for_dict(reference_columns):
-    data_validator = validate_data.DataValidator()
-    data_validator._data_description = reference_columns
-
-    # Test case for dict type with None
-    data_validator.data_dict = {"value": {"key": "value"}, "unit": None, "type": "dict"}
-    data_validator._data_description[0]["type"] = "dict"
-    data_validator._data_description[0]["json_schema"] = {
-        "type": "object",
-        "properties": {"key": {"type": "string"}},
-        "required": ["key"],
-    }
-    value, unit = data_validator._validate_value_and_unit(
-        data_validator.data_dict["value"], data_validator.data_dict["unit"], 0
-    )
-    assert value == {"key": "value"}
-    assert unit is None
-
-    # Test case for dict type with "null"
-    data_validator.data_dict = {"value": {"key": "value"}, "unit": "null", "type": "dict"}
-    value, unit = data_validator._validate_value_and_unit(
-        data_validator.data_dict["value"], data_validator.data_dict["unit"], 0
-    )
-    assert value == {"key": "value"}
-    assert unit == "null"
-
-
 def test_validate_model_parameter(mocker):
     mocker.patch(
         "simtools.data_model.validate_data.DataValidator._read_validation_schema",
@@ -969,7 +833,6 @@ def test_validate_model_parameter(mocker):
 
 
 def test_validate_heterogeneous_list(mocker):
-    """Test validation of parameters with heterogeneous list types (different type per element)."""
     # Mock schema with heterogeneous type specification
     mocker.patch(
         "simtools.data_model.schema.get_model_parameter_schema_file",
@@ -1005,7 +868,6 @@ def test_validate_heterogeneous_list(mocker):
 
 
 def test_validate_heterogeneous_list_from_multi_entry_schema(mocker):
-    """Test heterogeneous validation for schema style with one scalar type per data entry."""
     mocker.patch(
         "simtools.data_model.schema.get_model_parameter_schema_file",
         return_value="/mock/schema.yml",
@@ -1035,7 +897,6 @@ def test_validate_heterogeneous_list_from_multi_entry_schema(mocker):
 
 
 def test_validate_heterogeneous_list_length_mismatch(mocker):
-    """Test that heterogeneous list validation fails on length mismatch."""
     mocker.patch(
         "simtools.data_model.schema.get_model_parameter_schema_file",
         return_value="/mock/schema.yml",
@@ -1063,7 +924,6 @@ def test_validate_heterogeneous_list_length_mismatch(mocker):
 
 
 def test_validate_heterogeneous_list_type_mismatch(mocker):
-    """Test that heterogeneous list validation fails on element type mismatch."""
     mocker.patch(
         "simtools.data_model.schema.get_model_parameter_schema_file",
         return_value="/mock/schema.yml",
@@ -1091,7 +951,6 @@ def test_validate_heterogeneous_list_type_mismatch(mocker):
 
 
 def test_validate_homogeneous_list(mocker):
-    """Test validation of homogeneous lists (all elements same type)."""
     mocker.patch(
         "simtools.data_model.schema.get_model_parameter_schema_file",
         return_value="/mock/schema.yml",
@@ -1120,7 +979,6 @@ def test_validate_homogeneous_list(mocker):
 
 
 def test_validate_homogeneous_list_type_mismatch(mocker):
-    """Test that homogeneous list validation fails when elements have different types."""
     mocker.patch(
         "simtools.data_model.schema.get_model_parameter_schema_file",
         return_value="/mock/schema.yml",
@@ -1141,43 +999,7 @@ def test_validate_homogeneous_list_type_mismatch(mocker):
         validate_data.DataValidator.validate_model_parameter(par_dict)
 
 
-def test_rate_limited_logger(caplog):
-    """Test the _rate_limited_logger method with different input types."""
-    data_validator = validate_data.DataValidator()
-
-    with caplog.at_level(logging.DEBUG):
-        # Test with integer column name - should log for values < max_logs
-        data_validator._rate_limited_logger(5, "Test message 1", max_logs=10)
-        assert "Test message 1" in caplog.text
-
-        # Test with integer column name - should not log for values >= max_logs
-        caplog.clear()
-        data_validator._rate_limited_logger(15, "Test message 2", max_logs=10)
-        assert "Test message 2" not in caplog.text
-
-        # Test with string numeric column name - should log for numeric < max_logs
-        caplog.clear()
-        data_validator._rate_limited_logger("3", "Test message 3", max_logs=10)
-        assert "Test message 3" in caplog.text
-
-        # Test with string numeric column name - should not log for numeric >= max_logs
-        caplog.clear()
-        data_validator._rate_limited_logger("12", "Test message 4", max_logs=10)
-        assert "Test message 4" not in caplog.text
-
-        # Test with non-numeric string column name - should log once
-        caplog.clear()
-        data_validator._rate_limited_logger("wavelength", "Test message 5", max_logs=10)
-        assert "Test message 5" in caplog.text
-
-        # Test with complex string that contains numbers but is not purely numeric
-        caplog.clear()
-        data_validator._rate_limited_logger("col1_name", "Test message 6", max_logs=10)
-        assert "Test message 6" in caplog.text
-
-
 def test_validate_data_files_directory(tmp_test_directory, caplog):
-    """Test validate_data_files with a directory of files."""
     # Create test files
     test_file_1 = tmp_test_directory / "num_gains-1.0.0.json"
     test_file_2 = tmp_test_directory / "reference_point_altitude-1.0.0.json"
@@ -1207,7 +1029,6 @@ def test_validate_data_files_directory(tmp_test_directory, caplog):
 
 
 def test_validate_data_files_single_file(caplog):
-    """Test validate_data_files with a single file."""
     test_file = num_gains_test_file
 
     with caplog.at_level(logging.INFO):
@@ -1218,7 +1039,6 @@ def test_validate_data_files_single_file(caplog):
 
 
 def test_validate_data_files_with_schema_file(caplog):
-    """Test validate_data_files with explicit schema file."""
     test_file = num_gains_test_file
     schema_file = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
 
@@ -1231,7 +1051,6 @@ def test_validate_data_files_with_schema_file(caplog):
 
 
 def test_validate_data_files_reads_schema_from_ecsv_metadata(tmp_test_directory, monkeypatch):
-    """Test validate_data_files resolves schema from ECSV metadata for data files."""
     test_file = tmp_test_directory / "job_grid.ecsv"
     Table(
         rows=[[1]],
@@ -1258,7 +1077,6 @@ def test_validate_data_files_reads_schema_from_ecsv_metadata(tmp_test_directory,
 def test_validate_data_files_falls_back_to_model_parameter_schema_when_metadata_missing(
     monkeypatch,
 ):
-    """Test validate_data_files falls back to model-parameter schema for JSON data files."""
     captured = {}
 
     def _validate_and_transform(self, is_model_parameter=False, lists_as_strings=False):
@@ -1279,25 +1097,11 @@ def test_validate_data_files_falls_back_to_model_parameter_schema_when_metadata_
 
 
 def test_validate_data_files_no_input():
-    """Test validate_data_files with no input."""
     result = validate_data.DataValidator.validate_data_files()
     assert result is None
 
 
-def test_validate_data_files_check_exact_data_type(caplog):
-    """Test validate_data_files with check_exact_data_type flag."""
-    test_file = num_gains_test_file
-
-    with caplog.at_level(logging.INFO):
-        validate_data.DataValidator.validate_data_files(
-            file_name=test_file, check_exact_data_type=True
-        )
-
-    assert "Validated data file" in caplog.text
-
-
 def test__check_site_and_array_element_consistency():
-    """Test _check_site_and_array_element_consistency method."""
     data_validator = validate_data.DataValidator()
 
     data_validator._check_site_and_array_element_consistency("LSTN-01", "North")

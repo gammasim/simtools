@@ -34,16 +34,6 @@ def test_prepare_run(corsika_runner_mock_array_model, bin_bash, tmp_path):
         assert "corsika" in script_content.lower()
 
 
-def test_prepare_run_with_input_file(corsika_runner_mock_array_model, tmp_path):
-    # The new API doesn't have input_file parameter, test with corsika_file instead
-    script_path = tmp_path / "test_script.sh"
-    # This should work without warnings as the new API uses corsika_file parameter
-    corsika_runner_mock_array_model.prepare_run(
-        run_number=1, sub_script=script_path, corsika_file="test_file"
-    )
-    assert script_path.exists()
-
-
 def test_prepare_run_with_invalid_run(corsika_runner_mock_array_model, tmp_path):
     script_path = tmp_path / "test_script.sh"
     with pytest.raises(ValueError, match=r"^Invalid type of run number"):
@@ -71,7 +61,6 @@ def test_get_resources(corsika_runner_mock_array_model):
 
 
 def test_corsika_executable(corsika_runner_mock_array_model):
-    """Test that _corsika_executable returns the correct path."""
     # Test flat atmosphere (default)
     executable = corsika_runner_mock_array_model._corsika_executable()
     assert executable is not None

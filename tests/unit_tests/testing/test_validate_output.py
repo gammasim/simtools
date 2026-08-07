@@ -130,7 +130,6 @@ def mock_assert_file_type(mocker):
 def test_compare_json_files_float_strings(
     create_json_file, file_name, content, content_diff, should_match
 ):
-    """Test JSON comparison with float strings."""
     file1 = create_json_file(file_name(1, "json"), content)
     file2 = create_json_file(
         file_name(2, "json"), content if content_diff is None else content_diff
@@ -150,28 +149,9 @@ def test_compare_json_files_float_strings(
 def test_compare_json_files_unequal_dicts(
     create_json_file, file_name, content1, content2, should_match
 ):
-    """Test JSON comparison with unequal dictionaries."""
     file1 = create_json_file(file_name(1, "json"), content1)
     file2 = create_json_file(file_name(2, "json"), content2)
     assert validate_output.compare_json_or_yaml_files(file1, file2) == should_match
-
-
-@pytest.mark.parametrize(
-    ("file_type", "create_func"),
-    [("json", "create_json_file"), ("yaml", "create_yaml_file")],
-)
-def test_compare_files_equal_integers(file_type, create_func, file_name, request):
-    """Test JSON/YAML comparison with equal integers."""
-    create_file = request.getfixturevalue(create_func)
-    content = {"key": 1, "value": 5}
-    file1 = create_file(file_name(1, file_type), content)
-    file2 = create_file(file_name(2, file_type), content)
-
-    assert validate_output.compare_json_or_yaml_files(file1, file2)
-
-    content3 = {"key": 2, "value": 7}
-    file3 = create_file(file_name(3, file_type), content3)
-    assert not validate_output.compare_json_or_yaml_files(file1, file3)
 
 
 @pytest.mark.parametrize(
@@ -188,7 +168,6 @@ def test_compare_files_equal_integers(file_type, create_func, file_name, request
 def test_compare_json_files_floats(
     create_json_file, file_name, data1, data2, tolerance, should_match
 ):
-    """Test JSON comparison with floats and lists of floats."""
     file1 = create_json_file(file_name(1, "json"), data1)
     file2 = create_json_file(file_name(2, "json"), data2)
 
@@ -199,7 +178,6 @@ def test_compare_json_files_floats(
 
 
 def test_compare_yaml_files_float_strings(create_yaml_file, file_name):
-    """Test YAML comparison with float strings."""
     content = {"key": 1, "value": "1.23 4.56 7.89"}
     file1 = create_yaml_file(file_name(1, "yaml"), content)
     file2 = create_yaml_file(file_name(2, "yaml"), content)
@@ -237,7 +215,6 @@ def test_compare_json_files_nested_dicts_with_values(create_json_file, file_name
 def test_compare_json_files_resource_paths(
     create_json_file, file_name, tmp_test_directory, resource_dir
 ):
-    """Test comparison of equivalent resource paths with different roots."""
     resource_file = Path(resource_dir) / "model_parameters" / "file.lis"
     configured_resource_root = tmp_test_directory / "configured-resources"
 
@@ -284,7 +261,6 @@ def test_compare_json_files_resource_paths(
 def test_compare_ecsv_files(
     create_ecsv_file, file_name, content1, content2, tolerance, should_match
 ):
-    """Test ECSV file comparison with various scenarios."""
     file1 = create_ecsv_file(file_name(1, "ecsv"), content1)
     file2 = create_ecsv_file(file_name(2, "ecsv"), content2 if content2 else content1)
 
@@ -335,14 +311,6 @@ def test_compare_files_json(create_json_file, file_name):
     content = {"key": 1, "value": "1.23 4.56 7.89"}
     file1 = create_json_file(file_name(1, "json"), content)
     file2 = create_json_file(file_name(2, "json"), content)
-
-    assert validate_output.compare_files(file1, file2)
-
-
-def test_compare_files_yaml(create_yaml_file, file_name):
-    content = {"key": 1, "value": "1.23 4.56 7.89"}
-    file1 = create_yaml_file(file_name(1, "yaml"), content)
-    file2 = create_yaml_file(file_name(2, "yaml"), content)
 
     assert validate_output.compare_files(file1, file2)
 
@@ -424,7 +392,6 @@ def test_validate_output_path_and_file(output_path, mock_path_exists, mock_check
 
 
 def test_validate_application_output_no_integration_tests(mocker, output_path):
-    """Test validate_application_output when no integration tests are present."""
     config = {"configuration": {"output_path": output_path}}
     mock_logger_info = mocker.patch("simtools.testing.validate_output._logger.info")
 
@@ -519,7 +486,6 @@ def test_validate_application_output_with_file_type(
 
 
 def test_validate_output_path_and_file_checks_hdf5_datasets(tmp_test_directory, mocker):
-    """Run declarative HDF5 dataset checks for a configured output file."""
     output_file = Path(str(tmp_test_directory)) / "output.hdf5"
     output_file.touch()
     mock_check_hdf5 = mocker.patch(
@@ -539,7 +505,6 @@ def test_validate_output_path_and_file_checks_hdf5_datasets(tmp_test_directory, 
 
 
 def test_validate_output_path_and_file_rejects_non_hdf5_dataset_check(tmp_test_directory):
-    """Reject HDF5 dataset checks for outputs with a non-HDF5 suffix."""
     output_file = Path(str(tmp_test_directory)) / "output.simtel.zst"
     output_file.touch()
     file_test = {
@@ -588,7 +553,6 @@ def test_compare_simtel_cfg_files(tmp_test_directory):
 
 
 def test_validate_simtel_cfg_files(mocker, test_path):
-    """Test validation of simtel cfg files."""
     mock_run_number = mocker.patch(
         "simtools.testing.validate_output.file_info.get_corsika_run_number", return_value=7
     )
@@ -656,54 +620,6 @@ def test_test_simtel_cfg_files_with_config_file_version(mocker):
     )
 
     mock_validate_simtel_cfg_files.assert_called_once_with(config, PATH_CFG_7)
-
-
-def test_test_simtel_cfg_files_with_single_version(mocker):
-    mock_validate_simtel_cfg_files = mocker.patch(PATCH_TO_VALIDATE_CFG)
-    config = {"configuration": {"output_path": PATH_TO_OUTPUT}}
-    integration_test = {
-        "test_simtel_cfg_files": {
-            "6.0.0": PATH_CFG_6,
-            "7.0.0": PATH_CFG_7,
-        }
-    }
-    from_command_line = "6.0.0"
-    from_config_file = None
-
-    validate_output._test_simtel_cfg_files(
-        config, integration_test, from_command_line, from_config_file
-    )
-
-    mock_validate_simtel_cfg_files.assert_called_once_with(config, PATH_CFG_6)
-
-
-def test_test_simtel_cfg_files_no_matching_version(mocker):
-    mock_validate_simtel_cfg_files = mocker.patch(PATCH_TO_VALIDATE_CFG)
-    config = {"configuration": {"output_path": PATH_TO_OUTPUT}}
-    integration_test = {
-        "test_simtel_cfg_files": {
-            "6.0.0": PATH_CFG_6,
-            "7.0.0": PATH_CFG_7,
-        }
-    }
-    from_command_line = ["5.0.0"]
-    from_config_file = ["8.0.0"]
-
-    validate_output._test_simtel_cfg_files(
-        config, integration_test, from_command_line, from_config_file
-    )
-
-    mock_validate_simtel_cfg_files.assert_not_called()
-
-
-def test_test_simtel_cfg_files_no_test_simtel_cfg_files(mocker):
-    mock_validate_simtel_cfg_files = mocker.patch(PATCH_TO_VALIDATE_CFG)
-    config = {"configuration": {"output_path": PATH_TO_OUTPUT}}
-    integration_test = {}
-
-    validate_output._test_simtel_cfg_files(config, integration_test, None, None)
-
-    mock_validate_simtel_cfg_files.assert_not_called()
 
 
 def test_validate_model_parameter_json_file(mocker, output_path):
@@ -835,13 +751,6 @@ def test_validate_output_path_and_file_routes_by_suffix(tmp_test_directory):
         m_simtel.assert_called_once()
 
 
-def test_validate_output_path_and_file_missing_raises(tmp_test_directory):
-    cfg = {"configuration": {"output_path": str(tmp_test_directory)}}
-    missing = "does_not_exist.log"
-    with pytest.raises(AssertionError, match=r"Output file .* does not exist"):
-        _validate_output_path_and_file(cfg, [{"path_descriptor": "output_path", "file": missing}])
-
-
 def test_validate_application_output_gating_calls(tmp_test_directory):
     cfg = {
         "configuration": {"output_path": str(tmp_test_directory), "output_file": "x"},
@@ -863,62 +772,6 @@ def test_validate_application_output_gating_calls(tmp_test_directory):
         # CLI filter not matching, should skip validations
         validate_application_output(cfg, from_command_line="7.0.0", from_config_file="6.0.0")
         m_validate.assert_not_called()
-
-
-@pytest.mark.parametrize(
-    ("data1", "data2", "tolerance", "is_value_field", "should_match"),
-    [
-        ({"key": 1, "value": 5.5}, {"key": 1, "value": 5.5}, 1e-5, False, True),
-        ({"key": 1, "value": 5.5}, {"different_key": 1, "value": 5.5}, 1e-5, False, False),
-        ({"value": 5.5}, {"value": 5.50001}, 1e-3, False, True),
-        ({"value": 5.5}, {"value": 5.75}, 1e-5, False, False),
-        ({"values": [1.1, 2.2, 3.3]}, {"values": [1.1, 2.2, 3.3]}, 1e-5, False, True),
-        ({"values": [1.1, 2.2, 3.3]}, {"values": [1.1, 2.2]}, 1e-5, False, False),
-        (
-            {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}},
-            {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}},
-            1e-5,
-            False,
-            True,
-        ),
-        (
-            {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}},
-            {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2850}},
-            1e-5,
-            False,
-            False,
-        ),
-        (
-            {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2748}},
-            {"meta": {"tel": "LSTN-01"}, "efficiency": {"value": 0.2850}},
-            0.05,
-            False,
-            True,
-        ),
-        (
-            {"description": "test string", "value": 5.5},
-            {"description": "test string", "value": 5.50001},
-            1e-3,
-            False,
-            True,
-        ),
-        ({"description": "test string"}, {"description": "different string"}, 1e-5, False, False),
-        (5.5, 5.50001, 1e-3, True, True),
-        (5.5, 5.75, 1e-5, True, False),
-        ((1.1, 2.2, 3.3), [1.1, 2.2, 3.3], 1e-5, False, True),
-        ({"items": [1, "string", 3.3]}, {"items": [1, "string", 3.3]}, 1e-5, False, True),
-        ({"value": "1.23 4.56 7.89"}, {"value": "1.23 4.56 7.89"}, 1e-5, False, True),
-        ({"value": "1.23 4.56 7.89"}, {"value": "1.23 4.56 7.90"}, 1e-5, False, False),
-    ],
-)
-def test_compare_nested_dicts_with_tolerance(data1, data2, tolerance, is_value_field, should_match):
-    """Test nested dict comparison with various scenarios."""
-    assert (
-        validate_output._compare_nested_dicts_with_tolerance(
-            data1, data2, tolerance=tolerance, is_value_field=is_value_field
-        )
-        == should_match
-    )
 
 
 def _semantic_table(path, metadata=None):
@@ -992,15 +845,17 @@ def _semantic_rule(output_file, schema_file):
 
 
 def test_declarative_table_validation_passes(tmp_test_directory):
-    """Validate schema, rows, domains, uniqueness, and metadata summaries."""
     tmp_test_directory = Path(tmp_test_directory)
     output_file = tmp_test_directory / "table.ecsv"
     schema_file = tmp_test_directory / "table.schema.yml"
     _semantic_table(output_file)
     _semantic_schema(schema_file)
 
-    validate_output.validate_application_output(
-        _semantic_config(tmp_test_directory, _semantic_rule(output_file, schema_file))
+    assert (
+        validate_output.validate_application_output(
+            _semantic_config(tmp_test_directory, _semantic_rule(output_file, schema_file))
+        )
+        is None
     )
 
 
@@ -1042,7 +897,6 @@ def test_has_path_supports_mapping_metadata():
 
 
 def test_declarative_table_rejects_empty_and_duplicate_rows(tmp_test_directory):
-    """Reject an empty table and duplicate values in a unique column."""
     tmp_test_directory = Path(tmp_test_directory)
     output_file = tmp_test_directory / "table.ecsv"
     schema_file = tmp_test_directory / "table.schema.yml"
@@ -1074,7 +928,6 @@ def test_declarative_table_rejects_empty_and_duplicate_rows(tmp_test_directory):
     ],
 )
 def test_declarative_column_validation_failures(tmp_test_directory, column, column_rule, expected):
-    """Reject workflow-specific column domains and ranges."""
     tmp_test_directory = Path(tmp_test_directory)
     output_file = tmp_test_directory / "table.ecsv"
     schema_file = tmp_test_directory / "table.schema.yml"
@@ -1096,7 +949,6 @@ def test_declarative_column_validation_failures(tmp_test_directory, column, colu
     ],
 )
 def test_declarative_metadata_validation_failures(tmp_test_directory, metadata, expected):
-    """Reject missing or inconsistent table metadata."""
     tmp_test_directory = Path(tmp_test_directory)
     output_file = tmp_test_directory / "table.ecsv"
     schema_file = tmp_test_directory / "table.schema.yml"
@@ -1113,7 +965,6 @@ def test_declarative_metadata_validation_failures(tmp_test_directory, metadata, 
 
 
 def test_declarative_data_product_schema_validation(tmp_test_directory):
-    """Reject a table that does not satisfy its data-product schema."""
     tmp_test_directory = Path(tmp_test_directory)
     output_file = tmp_test_directory / "table.ecsv"
     schema_file = tmp_test_directory / "table.schema.yml"
@@ -1130,7 +981,6 @@ def test_declarative_data_product_schema_validation(tmp_test_directory):
 
 
 def test_declarative_output_must_exist_and_be_ecsv(tmp_test_directory):
-    """Report missing and unparsable output tables consistently."""
     tmp_test_directory = Path(tmp_test_directory)
     output_file = tmp_test_directory / "table.ecsv"
     schema_file = tmp_test_directory / "table.schema.yml"

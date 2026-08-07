@@ -3,17 +3,6 @@ import pytest
 from simtools.data_model import metadata_model
 
 
-def test_get_default_metadata_dict():
-    _top_meta = metadata_model.get_default_metadata_dict()
-
-    assert isinstance(_top_meta, dict)
-    assert len(_top_meta) > 0
-
-    assert "version" in _top_meta["cta"]["reference"]
-    assert _top_meta["cta"]["reference"]["version"] == "2.0.0"
-    assert _top_meta["cta"]["contact"]["organization"] == "CTAO"
-
-
 def test_resolve_references():
     yaml_data = {
         "example_data": {

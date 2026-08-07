@@ -121,7 +121,6 @@ def _write_minimal_dense_trigger_histogram_file(output_file):
 
 
 def test_collect_production_metrics_from_dense_trigger_histogram_file(tmp_path):
-    """Collect comparison metrics from trigger histogram files with dense payloads."""
     trigger_histogram_file = tmp_path / "trigger_histograms_dense.hdf5"
     _write_minimal_dense_trigger_histogram_file(trigger_histogram_file)
 

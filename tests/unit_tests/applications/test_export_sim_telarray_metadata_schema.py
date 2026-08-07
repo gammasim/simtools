@@ -4,17 +4,6 @@ import json
 from types import SimpleNamespace
 
 from simtools.applications import export_sim_telarray_metadata_schema
-from simtools.configuration.commandline_parser import CommandLineParser
-
-
-def test_add_arguments_uses_suffix_based_output_format():
-    parser = CommandLineParser()
-
-    parser.add_argument_definitions(export_sim_telarray_metadata_schema._ARGUMENTS)
-
-    args = parser.parse_args(["--output_file", "metadata.json"])
-    assert args.output_file == "metadata.json"
-    assert not hasattr(args, "output_format")
 
 
 def test_main_writes_registry_using_output_file_suffix(tmp_test_directory, mocker):

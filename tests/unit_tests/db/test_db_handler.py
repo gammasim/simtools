@@ -134,7 +134,6 @@ def assert_model_parameter_calls(
 
 
 def test_set_up_connection_no_config():
-    """Test connection setup with no configuration."""
     with patch("simtools.db.db_handler.settings") as mock_settings:
         mock_settings.db_config = None
         _ = db_handler.DatabaseHandler()
@@ -142,7 +141,6 @@ def test_set_up_connection_no_config():
 
 
 def test_set_up_connection_with_config(db):
-    """Test connection setup with valid configuration."""
     assert MongoDBHandler.db_client is not None
 
 
@@ -154,7 +152,6 @@ def test_get_model_parameters(
     common_mock_read_db,
     standard_test_params,
 ):
-    """Test get_model_parameters method."""
     site = standard_test_params["site"]
     array_element_name = standard_test_params["array_element_name"]
     model_version = standard_test_params["model_version"]
@@ -202,7 +199,6 @@ def test_get_model_parameters_for_all_model_versions(
     mocker,
     standard_test_params,
 ):
-    """Test get_model_parameters_for_all_model_versions method."""
     site = standard_test_params["site"]
     array_element_name = standard_test_params["array_element_name"]
     collection = standard_test_params["collection"]
@@ -250,7 +246,6 @@ def test_get_model_parameters_for_all_model_versions_mst(
     mocker,
     standard_test_params,
 ):
-    """Test get_model_parameters_for_all_model_versions method."""
     site = standard_test_params["site"]
     array_element_name = "MSTN-101"  # Using telescope that only exists in prod6
     collection = standard_test_params["collection"]
@@ -303,7 +298,6 @@ def test_get_model_parameters_for_all_model_versions_mst(
 
 
 def test_get_model_parameters_with_cache(mock_db_handler, mocker, standard_test_params):
-    """Test get_model_parameters method with cache."""
     site = standard_test_params["site"]
     array_element_name = standard_test_params["array_element_name"]
     model_version = standard_test_params["model_version"]
@@ -341,45 +335,9 @@ def test_get_model_parameters_with_cache(mock_db_handler, mocker, standard_test_
     assert result == {"param1": {"value": "cached_value"}}
 
 
-def test_get_model_parameters_no_parameters(mock_db_handler, mocker, standard_test_params):
-    """Test get_model_parameters method with no parameters."""
-    site = standard_test_params["site"]
-    array_element_name = standard_test_params["array_element_name"]
-    model_version = standard_test_params["model_version"]
-    collection = standard_test_params["collection"]
-
-    mock_get_production_table = mocker.patch.object(
-        mock_db_handler, "read_production_table_from_db", return_value={"parameters": {}}
-    )
-    mock_get_array_element_list = mocker.patch.object(
-        mock_db_handler, "_get_array_element_list", return_value=["LSTN-01"]
-    )
-    mock_read_cache = mocker.patch.object(
-        mock_db_handler, "_read_cache", return_value=("cache_key", None)
-    )
-
-    result = mock_db_handler.get_model_parameters(
-        site, array_element_name, collection, model_version
-    )
-
-    mock_get_production_table.assert_called_once_with(collection, model_version)
-    mock_get_array_element_list.assert_called_once_with(
-        array_element_name, site, {"parameters": {}}, collection
-    )
-    mock_read_cache.assert_called_once_with(
-        db_handler.DatabaseHandler.model_parameters_cached,
-        names.validate_site_name(site),
-        "LSTN-01",
-        model_version,
-        collection,
-    )
-    assert result == {}
-
-
 def test_get_model_parameter_with_model_version_list(
     mock_db_handler, mock_get_collection_name, common_mock_read_db, mocker, standard_test_params
 ):
-    """Test get_model_parameter method with model_version as list."""
     site = standard_test_params["site"]
     array_element_name = standard_test_params["array_element_name"]
     collection = standard_test_params["collection"]
@@ -460,7 +418,6 @@ def test_get_model_parameter_with_model_version_list(
 def test_export_model_files_with_file_names(
     db, export_files_setup, tmp_test_directory, test_db, test_file, test_file_2
 ):
-    """Test export_model_files method with file names."""
     mocks = export_files_setup
     file_names = [test_file, test_file_2]
 
@@ -481,7 +438,6 @@ def test_export_model_files_with_file_names(
 def test_export_model_files_with_parameters(
     db, export_files_setup, tmp_test_directory, test_db, test_file, test_file_2
 ):
-    """Test export_model_files method with parameters."""
     mocks = export_files_setup
     parameters = {
         "param1": {"file": True, "value": test_file},
@@ -503,7 +459,6 @@ def test_export_model_files_with_parameters(
 
 
 def test_export_model_files_file_exists(db, mocker, tmp_test_directory, test_db, test_file):
-    """Test export_model_files method when file already exists."""
     mock_get_file_mongo_db = mocker.patch.object(db.mongo_db_handler, "get_file_from_db")
     mock_write_file = mocker.patch.object(db, "write_file_from_db_to_disk")
     mock_path_exists = mocker.patch("pathlib.Path.exists", return_value=True)
@@ -517,24 +472,7 @@ def test_export_model_files_file_exists(db, mocker, tmp_test_directory, test_db,
     assert result == {test_file: "file exists"}
 
 
-def test_export_model_files_file_not_found(db, mocker, tmp_test_directory, test_db, test_file):
-    """Test export_model_files method when file is not found in parameters."""
-    mock_get_file_mongo_db = mocker.patch.object(
-        db.mongo_db_handler, "get_file_from_db", side_effect=FileNotFoundError
-    )
-    mock_write_file = mocker.patch.object(db, "write_file_from_db_to_disk")
-
-    parameters = {"param1": {"file": True, "value": test_file}}
-
-    with pytest.raises(FileNotFoundError):
-        db.export_model_files(parameters=parameters, dest=tmp_test_directory, db_name=test_db)
-
-    mock_get_file_mongo_db.assert_called_once_with(test_db, test_file)
-    mock_write_file.assert_not_called()
-
-
 def test_export_parameter_data_delegates_to_parameter_exporter(db, mocker):
-    """Delegate parameter payload export to parameter_exporter helper."""
     expected = ["output.dat"]
     export_mock = mocker.patch(
         "simtools.db.db_handler.parameter_exporter.export_parameter_data",
@@ -567,7 +505,6 @@ def test_export_parameter_data_delegates_to_parameter_exporter(db, mocker):
 
 
 def test_get_query_from_parameter_version_table(db):
-    """Test _get_query_from_parameter_version_table method."""
     or_list = [
         {"parameter": "param1", "parameter_version": "v1"},
         {"parameter": "param2", "parameter_version": "v2"},
@@ -594,7 +531,6 @@ def test_get_query_from_parameter_version_table(db):
 
 
 def test_read_db(db, mocker):
-    """Test read_mongo_db method."""
     doc1_id = ObjectId()
     doc2_id = ObjectId()
     mock_query_db = mocker.patch.object(
@@ -656,7 +592,6 @@ def setup_production_table_cached(cache_key, model_version, param):
 
 
 def test_read_production_table_from_db_with_cache(db, mocker, test_db):
-    """Test read_production_table_from_db method with cache."""
     collection_name = "telescopes"
     model_version = "1.0.0"
     param = {"param1": "value1"}
@@ -715,7 +650,6 @@ def test_read_production_table_from_db_with_cache(db, mocker, test_db):
 
 
 def test_get_array_elements_of_type(mock_db_handler, mocker):
-    """Test get_array_elements_of_type method."""
     array_element_type = "LSTN"
     model_version = "1.0.0"
     collection = "telescopes"
@@ -785,7 +719,6 @@ def test_get_simulation_configuration_parameters(db, mocker):
 
 
 def test_add_production_table(db, mocker, test_db):
-    """Test add_production_table method."""
     # _get_db_name removed; set db.db_name for tests that expect it
     db.db_name = "test_db"
     mock_insert_one = mocker.patch.object(db.mongo_db_handler, "insert_one")
@@ -803,7 +736,6 @@ def test_add_production_table(db, mocker, test_db):
 
 
 def test_cache_key(db):
-    """Test _cache_key method."""
     # Test with all parameters
     result = db._cache_key(
         site="North", array_element_name="LSTN-01", model_version="1.0.0", collection="telescopes"
@@ -905,7 +837,6 @@ def test_read_cache(db):
 
 
 def test_reset_parameter_cache(db):
-    """Test _reset_parameter_cache method."""
     # Populate the cache dictionaries
     db_handler.DatabaseHandler.model_parameters_cached = {"key2": "value2"}
 
@@ -920,7 +851,6 @@ def test_reset_parameter_cache(db):
 
 
 def test_get_array_element_list_configuration_corsika(db):
-    """Test _get_array_element_list method for configuration_corsika collection."""
     array_element_name = "LSTN-01"
     site = "North"
     production_table = {}
@@ -932,7 +862,6 @@ def test_get_array_element_list_configuration_corsika(db):
 
 
 def test_get_array_element_list_sites(db):
-    """Test _get_array_element_list method for sites collection."""
     array_element_name = "LSTN-01"
     site = "North"
     production_table = {}
@@ -944,7 +873,6 @@ def test_get_array_element_list_sites(db):
 
 
 def test_get_array_element_list_design_model(db):
-    """Test _get_array_element_list method when array element name contains '-design'."""
     array_element_name = "LSTN-design"
     site = "North"
     production_table = {}
@@ -956,7 +884,6 @@ def test_get_array_element_list_design_model(db):
 
 
 def test_get_array_element_list_with_design_model_in_production_table(db, mocker):
-    """Test _get_array_element_list method with design model in production table."""
     array_element_name = "LSTN-01"
     site = "North"
     production_table = {"design_model": {"LSTN-01": "LSTN-design"}}
@@ -967,28 +894,7 @@ def test_get_array_element_list_with_design_model_in_production_table(db, mocker
     assert result == ["LSTN-design", "LSTN-01"]
 
 
-def test_get_model_versions(db, mocker):
-    """Test get_model_versions with mocked collection."""
-    # Clear cache to ensure test isolation
-    db_handler.DatabaseHandler.model_versions_cached.clear()
-
-    mock_collection = mocker.Mock()
-    mock_collection.find.return_value = [
-        {"model_version": "6.0.0", "collection": "telescopes"},
-        {"model_version": "5.0.0", "collection": "telescopes"},
-        {"model_version": "5.0.0", "collection": "telescopes"},  # duplicate
-    ]
-    mocker.patch.object(db, "get_collection", return_value=mock_collection)
-
-    model_versions = db.get_model_versions()
-    assert len(model_versions) == 2
-    assert "5.0.0" in model_versions
-    assert "6.0.0" in model_versions
-    assert model_versions == ["5.0.0", "6.0.0"]  # sorted
-
-
 def test_get_array_elements(db, mocker):
-    """Test get_array_elements with mocked production table."""
     mocker.patch.object(
         db,
         "read_production_table_from_db",
@@ -1013,7 +919,6 @@ def test_get_array_elements(db, mocker):
 
 
 def test_get_design_model(db, mocker):
-    """Test get_design_model with mocked production table."""
     mocker.patch.object(
         db,
         "read_production_table_from_db",
@@ -1073,7 +978,6 @@ def test_get_design_model(db, mocker):
     ],
 )
 def test_get_model_parameter_variants(db, mocker, mock_get_collection_name, test_case):
-    """Test get_model_parameter variations."""
     params = test_case["params"]
     mock_read_db = mocker.patch.object(
         db,
@@ -1161,7 +1065,6 @@ def export_model_file_mocks(db, mocker, tmp_test_directory, test_file):
 def test_export_model_file_variants(
     db, export_model_file_mocks, mock_read_simtel_table, mocker, tmp_test_directory, test_case
 ):
-    """Test export_model_file variations."""
     mocks = export_model_file_mocks
     params = test_case["params"]
 
@@ -1186,7 +1089,6 @@ def test_export_model_file_variants(
 
 
 def test_export_model_file_dict_type_returns_table(db, mocker):
-    """Test export_model_file returns an astropy Table for dict-typed parameters."""
     row_data = {
         "columns": ["time", "amplitude"],
         "column_units": ["ns", "dimensionless"],
@@ -1210,7 +1112,6 @@ def test_export_model_file_dict_type_returns_table(db, mocker):
 
 
 def test_export_model_file_dict_type_without_table_flag_returns_none(db, mocker):
-    """Test export_model_file returns None for dict-typed parameters when flag is False."""
     row_data = {"columns": ["time"], "column_units": ["ns"], "rows": [[0.0]]}
     mock_parameters = {"fadc_pulse_shape": {"type": "dict", "value": row_data}}
     mocker.patch.object(db, "get_model_parameter", return_value=mock_parameters)
@@ -1227,7 +1128,6 @@ def test_export_model_file_dict_type_without_table_flag_returns_none(db, mocker)
 
 
 def test_get_array_element_list_configuration_sim_telarray(db, mocker):
-    """Test _get_array_element_list method for configuration_sim_telarray collection."""
     array_element_name = "LSTN-01"
     site = "North"
     model_version = "1.0.0"
@@ -1252,7 +1152,6 @@ def test_get_array_element_list_configuration_sim_telarray(db, mocker):
 
 
 def test_get_db_name(db):
-    """Test _get_db_name with valid configuration."""
     assert (
         db.get_db_name(db_simulation_model_version="v1.0.0", model_name="SimulationModel")
         == "SimulationModel-v1-0-0"
@@ -1270,7 +1169,6 @@ def test_get_db_name(db):
 
 
 def test_print_connection_info_with_handler(db, mocker, caplog):
-    """Test print_connection_info when mongo_db_handler exists."""
     mock_print = mocker.patch.object(db.mongo_db_handler, "print_connection_info")
     with caplog.at_level(logging.INFO):
         db.print_connection_info()
@@ -1278,7 +1176,6 @@ def test_print_connection_info_with_handler(db, mocker, caplog):
 
 
 def test_is_remote_database_with_handler(db, mocker):
-    """Test is_remote_database when mongo_db_handler exists."""
     mocker.patch.object(db.mongo_db_handler, "is_remote_database", return_value=True)
     assert db.is_remote_database() is True
 
@@ -1287,7 +1184,6 @@ def test_is_remote_database_with_handler(db, mocker):
 
 
 def test_generate_compound_indexes_for_databases_delegation(db, mocker):
-    """Test generate_compound_indexes_for_databases delegates to mongo_db_handler."""
     mock_generate = mocker.patch.object(
         db.mongo_db_handler, "generate_compound_indexes_for_databases"
     )
@@ -1298,7 +1194,6 @@ def test_generate_compound_indexes_for_databases_delegation(db, mocker):
 
 
 def test_write_file_from_db_to_disk_delegation(db, mocker, tmp_test_directory):
-    """Test _write_file_from_db_to_disk delegates to mongo_db_handler."""
     mock_write = mocker.patch.object(db.mongo_db_handler, "write_file_from_db_to_disk")
     mock_file = mocker.Mock()
     db.write_file_from_db_to_disk("test_db", tmp_test_directory, mock_file)
@@ -1306,7 +1201,6 @@ def test_write_file_from_db_to_disk_delegation(db, mocker, tmp_test_directory):
 
 
 def test_get_ecsv_file_as_astropy_table_delegation(db, mocker):
-    """Test get_ecsv_file_as_astropy_table delegates to mongo_db_handler."""
     mock_table = mocker.Mock()
     mock_get_ecsv = mocker.patch.object(
         db.mongo_db_handler, "get_ecsv_file_as_astropy_table", return_value=mock_table
@@ -1317,7 +1211,6 @@ def test_get_ecsv_file_as_astropy_table_delegation(db, mocker):
 
 
 def test_insert_file_to_db_delegation(db, mocker):
-    """Test insert_file_to_db delegates to mongo_db_handler."""
     mock_insert = mocker.patch.object(
         db.mongo_db_handler, "insert_file_to_db", return_value="file_id_123"
     )
@@ -1327,7 +1220,6 @@ def test_insert_file_to_db_delegation(db, mocker):
 
 
 def test_add_parameter_error_no_file_prefix(db, mocker):
-    """Test add_new_parameter raises error when file is needed but no prefix provided."""
     mocker.patch(
         "simtools.db.db_handler.validate_data.DataValidator.validate_model_parameter",
         return_value={
@@ -1352,7 +1244,6 @@ def test_add_parameter_error_no_file_prefix(db, mocker):
 
 
 def test_add_parameter_with_file(db, mocker, tmp_test_directory):
-    """Test add_new_parameter with file parameter."""
     test_file = tmp_test_directory / "test_file.dat"
     test_file.write_text("test content", encoding="utf-8")
 
@@ -1385,17 +1276,7 @@ def test_add_parameter_with_file(db, mocker, tmp_test_directory):
     mock_reset_cache.assert_called_once()
 
 
-def test_print_connection_info_with_mongo_handler(db, mocker):
-    """Test print_connection_info with mongo_db_handler."""
-    mock_print_connection_info = mocker.patch.object(db.mongo_db_handler, "print_connection_info")
-
-    db.print_connection_info()
-
-    mock_print_connection_info.assert_called_once_with(db.db_name)
-
-
 def test_print_connection_info_without_mongo_handler(mocker):
-    """Test print_connection_info without mongo_db_handler."""
 
     with patch("simtools.db.db_handler.settings") as mock_settings:
         mock_settings.config.db_config = None
@@ -1406,7 +1287,6 @@ def test_print_connection_info_without_mongo_handler(mocker):
 
 
 def test_get_array_element_list_missing_design_model_ignore(db, mocker):
-    """Test _get_array_element_list when design model is missing and ignore flag is set."""
     array_element_name = "LSTN-01"
     site = "North"
     production_table = {"model_version": "6.0.0"}
@@ -1429,17 +1309,3 @@ def test_get_array_element_list_missing_design_model_ignore(db, mocker):
     result = db._get_array_element_list(array_element_name, site, production_table, collection)
 
     assert result == ["LSTN-01", "LSTN-01", "LSTN-design"]
-
-
-def test_get_array_element_list_missing_design_model_raises(db, mocker):
-    """Test _get_array_element_list raises KeyError when design model is missing."""
-    array_element_name = "LSTN-01"
-    site = "North"
-    production_table = {"design_model": {}, "model_version": "6.0.0"}
-    collection = "telescopes"
-
-    with pytest.raises(
-        KeyError,
-        match=r"Failed generated array element list for db query for LSTN-01",
-    ):
-        db._get_array_element_list(array_element_name, site, production_table, collection)

@@ -303,8 +303,10 @@ ini_options.norecursedirs = [
 ]
 ini_options.addopts = [
   "-v",
+  "--cov-branch",
   "--cov=simtools",
   "--cov-report=xml",
+  "--cov-report=json",
   "--cov-report=term",
   "-p",
   "pytest_requirements",

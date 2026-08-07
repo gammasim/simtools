@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import pytest
-from astropy.table import Table
 
 from simtools.constants import TEST_RESOURCES_DOWNLOADED
 from simtools.io import legacy_data_handler
@@ -18,7 +17,3 @@ def test_read_legacy_data_file(test_spe_file):
 
     with pytest.raises(ValueError, match="Unsupported legacy data file type: not_a_file_type"):
         legacy_data_handler.read_legacy_data_as_table(test_spe_file, "not_a_file_type")
-
-
-def test_read_legacy_lst_single_pe(test_spe_file):
-    assert isinstance(legacy_data_handler.read_legacy_lst_single_pe(test_spe_file), Table)

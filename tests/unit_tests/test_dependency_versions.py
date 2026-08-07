@@ -47,7 +47,10 @@ def test_env_template_matches_catalog(simtools_root_path):
     """Test the documented environment defaults match the catalog."""
     catalog = _load_catalog(simtools_root_path)
 
-    dependency_versions.validate_env_template(catalog, simtools_root_path / ".env_template")
+    assert (
+        dependency_versions.validate_env_template(catalog, simtools_root_path / ".env_template")
+        is None
+    )
 
 
 def test_env_template_rejects_mismatched_model_version(tmp_test_directory, simtools_root_path):
@@ -114,7 +117,6 @@ def test_load_dependency_catalog_rejects_non_mapping(tmp_test_directory):
 
 
 def test_find_pyproject_from_environment(monkeypatch, simtools_root_path):
-    """Test an explicit project-file environment setting wins."""
     project_file = simtools_root_path / "pyproject.toml"
     monkeypatch.setenv("SIMTOOLS_PYPROJECT", str(project_file))
 
@@ -182,7 +184,6 @@ def test_validate_dependency_catalog_rejects_unknown_production_components(
 
 
 def test_export_dependency_configuration_returns_github_outputs(simtools_root_path):
-    """Test the catalog library returns GitHub Actions outputs."""
     output = dependency_versions.export_dependency_configuration(
         simtools_root_path / "pyproject.toml", "github-output"
     )
@@ -192,7 +193,6 @@ def test_export_dependency_configuration_returns_github_outputs(simtools_root_pa
 
 
 def test_export_dependency_configuration_returns_python_requirements(simtools_root_path):
-    """Test the catalog library returns optional Python dependencies."""
     requirements = dependency_versions.export_dependency_configuration(
         simtools_root_path / "pyproject.toml", "python-requirements", ["tests"]
     )

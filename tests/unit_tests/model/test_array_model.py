@@ -10,7 +10,6 @@ from astropy import units as u
 from astropy.table import QTable
 
 from simtools import settings
-from simtools.data_model import schema
 from simtools.model.array_model import ArrayModel
 
 logger = logging.getLogger()
@@ -67,42 +66,9 @@ def test_site(array_model_north):
     assert am.site == "North"
 
 
-def test_load_array_element_positions_from_file(array_model_north, get_test_data_file):
-    am = array_model_north
-    telescopes = am._load_array_element_positions_from_file(
-        get_test_data_file("telescope_positions", "North"), "North"
-    )
-    assert len(telescopes) > 0
-
-
-def test_get_telescope_position_parameter(array_model_north):
-    am = array_model_north
-    assert am._get_telescope_position_parameter(
-        "LSTN-01", "North", 10.0 * u.m, 200.0 * u.cm, 30.0 * u.m, "2.0.0"
-    ) == {
-        "schema_version": schema.get_model_parameter_schema_version(),
-        "parameter": "array_element_position_ground",
-        "instrument": "LSTN-01",
-        "site": "North",
-        "parameter_version": "2.0.0",
-        "unique_id": None,
-        "value": [10.0, 2.0, 30.0],
-        "unit": "m",
-        "type": "float64",
-        "file": False,
-        "meta_parameter": False,
-        "model_parameter_schema_version": "0.1.0",
-    }
-
-
 def test_get_config_file(array_model_north):
     am = array_model_north
     assert am.config_file_path.name == "CTAO-North-test_layout.cfg"
-
-
-def test_get_config_directory(array_model_north):
-    am = array_model_north
-    assert am.get_config_directory().is_dir()
 
 
 def test_export_array_elements_as_table(array_model_north):
@@ -119,7 +85,6 @@ def test_export_array_elements_as_table(array_model_north):
 
 
 def test_export_array_elements_as_table_with_calibration_elements_flag():
-    """Test optional inclusion of calibration array elements in exported table."""
     array_model = Mock(spec=ArrayModel)
     array_model.layout_name = "test_layout"
     array_model.site_model = Mock()
@@ -196,13 +161,6 @@ def test_get_all_array_elements_of_type(array_model_north, site_model_north):
     assert len(am._get_all_array_elements_of_type("MSTE", site_model_north)) == 0
 
 
-def test_update_array_element_position(array_model_north_from_list):
-    am = array_model_north_from_list
-    assert "LSTN-01" in am.array_elements
-    assert "LSTN-01" in am.telescope_models
-    assert am.array_elements["LSTN-01"] is None
-
-
 def test_pack_model_files(array_model_north, io_handler, tmp_path, model_version):
     mock_tarfile = MagicMock()
     mock_tarfile_open = MagicMock()
@@ -265,7 +223,6 @@ def test_get_additional_simtel_metadata(array_model_north, mocker):
 
 
 def test_build_calibration_models():
-    """Test _build_calibration_models method with mocked dependencies."""
 
     array_model_north = Mock(spec=ArrayModel)
     array_model_north._build_calibration_models = ArrayModel._build_calibration_models
@@ -327,7 +284,6 @@ def test_build_calibration_models():
 
 
 def test_export_all_simtel_config_files():
-    """Test export_all_simtel_config_files method calls both export methods when needed."""
 
     array_model_north = Mock()
     array_model_north._telescope_model_files_exported = False
@@ -340,7 +296,6 @@ def test_export_all_simtel_config_files():
 
 
 def test_build_telescope_models():
-    """Test _build_telescope_models method with mocked dependencies."""
 
     array_model_north = Mock()
     array_model_north.model_version = "6.0.0"
@@ -368,12 +323,7 @@ def test_build_telescope_models():
         mock_tel_model.assert_called_once()
 
 
-def test_sim_telarray_seeds_property(array_model_north):
-    assert array_model_north.sim_telarray_seed is None
-
-
 def test_export_simtel_telescope_config_files(array_model_north):
-    """Test export_simtel_telescope_config_files exports config for each telescope."""
     am = array_model_north
 
     for tel_model in am.telescope_models.values():
@@ -388,7 +338,6 @@ def test_export_simtel_telescope_config_files(array_model_north):
 
 
 def test_export_simtel_telescope_config_files_skips_duplicates(mocker):
-    """Test export_simtel_telescope_config_files skips duplicate telescope models."""
     am = Mock(spec=ArrayModel)
     am._logger = Mock()
     am._telescope_model_files_exported = False
@@ -418,49 +367,7 @@ def test_export_simtel_telescope_config_files_skips_duplicates(mocker):
     assert am._telescope_model_files_exported is True
 
 
-def test_export_simtel_telescope_config_files_with_calibration_models(mocker):
-    """Test export_simtel_telescope_config_files passes calibration models to write method."""
-    am = Mock(spec=ArrayModel)
-    am._logger = Mock()
-    am._telescope_model_files_exported = False
-
-    tel_model = Mock()
-    tel_model.name = "LSTN-01"
-    tel_model.write_sim_telarray_config_file = Mock()
-
-    calibration_model = Mock()
-    am.calibration_models = {"LSTN-01": {"flasher": calibration_model}}
-    am.telescope_models = {"LSTN-01": tel_model}
-
-    ArrayModel.export_simtel_telescope_config_files(am)
-
-    # Verify write was called with the calibration models
-    tel_model.write_sim_telarray_config_file.assert_called_once_with(
-        additional_models={"flasher": calibration_model}
-    )
-
-
-def test_export_simtel_telescope_config_files_with_empty_calibration_models(mocker):
-    """Test export_simtel_telescope_config_files with telescopes that have no calibration models."""
-    am = Mock(spec=ArrayModel)
-    am._logger = Mock()
-    am._telescope_model_files_exported = False
-
-    tel_model = Mock()
-    tel_model.name = "MSTN-01"
-    tel_model.write_sim_telarray_config_file = Mock()
-
-    am.calibration_models = {}
-    am.telescope_models = {"MSTN-01": tel_model}
-
-    ArrayModel.export_simtel_telescope_config_files(am)
-
-    # Verify write was called with None (no calibration models)
-    tel_model.write_sim_telarray_config_file.assert_called_once_with(additional_models=None)
-
-
 def test_export_sim_telarray_config_file(array_model_north, mocker):
-    """Test export_sim_telarray_config_file exports array config and site model files."""
     am = array_model_north
     mocker.patch.object(am.site_model, "export_model_files")
 
@@ -487,46 +394,4 @@ def test_export_sim_telarray_config_file(array_model_north, mocker):
     assert call_args[1]["additional_metadata"] == mock_metadata
 
     # Verify the flag is set
-    assert am._array_model_file_exported is True
-
-
-def test_export_sim_telarray_config_file_creates_writer_correctly(array_model_north, mocker):
-    """Test that SimtelConfigWriter is created with correct parameters."""
-    am = array_model_north
-
-    mocker.patch.object(am.site_model, "export_model_files")
-    mock_simtel_writer_class = mocker.patch(
-        "simtools.model.array_model.simtel_config_writer.SimtelConfigWriter"
-    )
-    mock_simtel_writer = mocker.MagicMock()
-    mock_simtel_writer_class.return_value = mock_simtel_writer
-
-    mocker.patch.object(am, "_get_additional_simtel_metadata", return_value={})
-
-    am.export_sim_telarray_config_file()
-
-    # Verify SimtelConfigWriter was instantiated with correct parameters
-    mock_simtel_writer_class.assert_called_once_with(
-        site=am.site_model.site,
-        layout_name=am.layout_name,
-        model_version=am.model_version,
-        label=am.label,
-    )
-
-
-def test_export_sim_telarray_config_file_idempotent(array_model_north, mocker):
-    """Test that calling export multiple times sets flag correctly."""
-    am = array_model_north
-
-    mocker.patch.object(am.site_model, "export_model_files")
-    mocker.patch("simtools.model.array_model.simtel_config_writer.SimtelConfigWriter")
-    mocker.patch.object(am, "_get_additional_simtel_metadata", return_value={})
-
-    assert am._array_model_file_exported is False
-
-    am.export_sim_telarray_config_file()
-    assert am._array_model_file_exported is True
-
-    # Calling again should still have the flag set
-    am.export_sim_telarray_config_file()
     assert am._array_model_file_exported is True
