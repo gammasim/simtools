@@ -92,7 +92,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
-        cli.TELESCOPE,
         *cli.layout_selection_arguments(),
         cli.RUN_NUMBER,
         cli.AZIMUTH_ANGLE,

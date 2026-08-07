@@ -63,7 +63,6 @@ def test_full_parser_retains_supported_shared_arguments():
         "showers_per_run",
         "show_options",
         "site",
-        "telescope",
         "view_cone",
         "zenith_angle",
     }
@@ -98,6 +97,7 @@ def test_full_parser_accepts_minimum_direct_configuration():
     assert args.model_version == ["7.0.0"]
     assert args.site == "North"
     assert args.array_layout_name == ["LSTN-01"]
+    assert not hasattr(args, "telescope")
     assert args.output_file == "job_grid.ecsv"
 
 
