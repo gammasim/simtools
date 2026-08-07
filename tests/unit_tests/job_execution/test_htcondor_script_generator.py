@@ -259,7 +259,6 @@ def _base_job_row_for_optional_fields():
 def test_format_param_value_optional_missing_is_empty():
     assert htg._format_param_value(None, "overwrite_model_parameters") == ""
     assert htg._format_param_value(None, "scan_label") == ""
-    assert htg._format_param_value(None, "telescope") == ""
 
 
 def test_write_params_file_includes_optional_queue_fields(tmp_test_directory):
@@ -273,13 +272,12 @@ def test_write_params_file_includes_optional_queue_fields(tmp_test_directory):
         "corsika_hadronic_transition_energy": 120 * u.GeV,
         "overwrite_model_parameters": "overwrite.yaml",
         "scan_label": "asum 220",
-        "telescope": "LSTN-01",
     }
 
     htg._write_params_file(params_file_path, [job_spec], params_fields=params_fields)
 
     row = params_file_path.read_text(encoding="utf-8").strip().split()
-    assert row[-4:] == ["120.0", "overwrite.yaml", "asum_220", "LSTN-01"]
+    assert row[-3:] == ["120.0", "overwrite.yaml", "asum_220"]
 
 
 def test_write_params_file_preserves_missing_optional_queue_field_in_mixed_rows(
@@ -344,12 +342,6 @@ def test_get_submit_script_with_optional_queue_fields():
     assert 'scan_label="${20}"' in script
     assert 'job_label="${job_label}_${scan_label}"' in script
 
-    assert 'telescope="${21}"' in script
-    assert "telescope_args=()" in script
-    assert 'telescope_args+=(--telescope "$telescope")' in script
-    assert '    "${telescope_args[@]}" \\' in script
-    assert '    "${telescope_args[@]}" \\\n    "${overwrite_model_parameters_args[@]}" \\' in script
-
 
 @mock.patch("simtools.job_execution.htcondor_script_generator.read_job_grid")
 @mock.patch("simtools.job_execution.htcondor_script_generator.Path.mkdir")
@@ -368,7 +360,6 @@ def test_generate_submission_script_detects_optional_queue_fields(
         **_base_job_row_for_optional_fields(),
         "overwrite_model_parameters": "overwrite.yaml",
         "scan_label": "asum220",
-        "telescope": "LSTN-01",
     }
     metadata = {"site": "North", "simulation_software": "corsika_sim_telarray"}
     mock_read_job_grid.return_value = ([row], metadata)
@@ -390,5 +381,5 @@ def test_generate_submission_script_detects_optional_queue_fields(
     written_text = "".join(call.args[0] for call in mock_open().write.call_args_list)
     assert "overwrite_model_parameters" in written_text
     assert "scan_label" in written_text
-    assert "telescope" in written_text
+    assert "telescope" not in written_text
     mock_chmod.assert_called_once_with(0o755)

@@ -130,7 +130,6 @@ APPLICATION = ApplicationDefinition.for_module(
         cli.MODEL_VERSION(required=True),
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE(required=True),
-        cli.TELESCOPE,
         cli.ARRAY_LAYOUT_NAME(required=True),
         cli.SIMULATION_SOFTWARE,
         cli.PRIMARY,

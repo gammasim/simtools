@@ -16,10 +16,10 @@ jobs:
   pre-commit-auto-update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
         with:
           python-version: "3.14"
 
@@ -28,7 +28,7 @@ jobs:
           pip install -e '.[tests,dev,doc]'
           pip install pylint
 
-      - uses: browniebroke/pre-commit-autoupdate-action@main
+      - uses: browniebroke/pre-commit-autoupdate-action@d5663279643bd228226e60a4fe4fa9efc30c03eb  # main
 
       - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8
         if: always()

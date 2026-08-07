@@ -1,6 +1,114 @@
 %YAML 1.2
 ---
 title: Schema for production_generate_grid density output
+schema_version: 0.4.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: production_generate_grid_density
+description: |-
+  Job grid for simulation production (including CORSIKA/sim_telarray) with
+  configuration parameters.
+data:
+  - type: data_table
+    table_columns:
+      - name: run_number
+        description: Run index within each grid point.
+        required: true
+        type: int64
+      - name: primary
+        description: Primary particle type.
+        required: true
+        type: string
+      - name: azimuth_angle
+        description: Azimuth pointing angle.
+        required: true
+        type: float64
+        unit: deg
+      - name: zenith_angle
+        description: Zenith pointing angle.
+        required: true
+        type: float64
+        unit: deg
+      - name: ha
+        description: Hour angle coordinate value in degrees (positive westward).
+        required: false
+        type: float64
+        unit: deg
+      - name: dec
+        description: Declination coordinate value in degrees.
+        required: false
+        type: float64
+        unit: deg
+      - name: energy_min
+        description: Minimum primary energy.
+        required: true
+        type: float64
+        unit: GeV
+      - name: energy_max
+        description: Maximum primary energy.
+        required: true
+        type: float64
+        unit: GeV
+      - name: cores_per_shower
+        description: Number of core scatter samples per shower.
+        required: true
+        type: int64
+      - name: core_scatter_max
+        description: Maximum core scatter radius.
+        required: true
+        type: float64
+        unit: m
+      - name: view_cone_min
+        description: Minimum view cone radius.
+        required: true
+        type: float64
+        unit: deg
+      - name: view_cone_max
+        description: Maximum view cone radius.
+        required: true
+        type: float64
+        unit: deg
+      - name: showers_per_run
+        description: Number of showers simulated per run.
+        required: true
+        type: int64
+      - name: nsb_rate
+        description: Integrated night-sky-background flux from the site model.
+        required: true
+        type: float64
+        unit: 1 / (cm2 ns sr)
+      - name: model_version
+        description: Simulation model version.
+        required: true
+        type: string
+      - name: array_layout_name
+        description: Array layout identifier.
+        required: true
+        type: string
+      - name: corsika_le_interaction
+        description: CORSIKA low-energy interaction model.
+        required: true
+        type: string
+      - name: corsika_he_interaction
+        description: CORSIKA high-energy interaction model.
+        required: true
+        type: string
+      - name: corsika_hadronic_transition_energy
+        description: Transition energy between low- and high-energy hadronic models.
+        required: false
+        type: float64
+        unit: GeV
+      - name: overwrite_model_parameters
+        description: File containing model parameter values that overwrite production defaults.
+        required: false
+        type: string
+      - name: scan_label
+        description: Label identifying a parameter-scan grid point.
+        required: false
+        type: string
+---
+title: Schema for production_generate_grid density output
 schema_version: 0.3.0
 meta_schema: simpipe-schema
 meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
