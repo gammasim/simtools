@@ -638,9 +638,38 @@ class RayTracing:
         Returns
         -------
         tuple
-            (off_x, off_y, theta_offset, psf_cm, psf_deg, eff_area, eff_focal_length)
+            (
+                off_x,
+                off_y,
+                theta_offset,
+                psf_cm,
+                psf_deg,
+                eff_area,
+                centroid_x_error,
+                centroid_y_error,
+                eff_focal_length,
+                eff_focal_length_error,
+            )
         """
         r = np.hypot(image.centroid_x, image.centroid_y)
+        centroid_x_error = float(getattr(image, "centroid_x_error", 0.0) or 0.0)
+        centroid_y_error = float(getattr(image, "centroid_y_error", 0.0) or 0.0)
+
+        if np.isclose(theta_offset, 0.0):
+            eff_focal_length = np.nan
+            eff_focal_length_error = np.nan
+        else:
+            tan_theta = tan(theta_offset * pi / 180.0)
+            eff_focal_length = r / tan_theta
+            if np.isclose(r, 0.0):
+                radius_error = np.hypot(centroid_x_error, centroid_y_error)
+            else:
+                radius_error = np.sqrt(
+                    ((image.centroid_x / r) * centroid_x_error) ** 2
+                    + ((image.centroid_y / r) * centroid_y_error) ** 2
+                )
+            eff_focal_length_error = radius_error / tan_theta
+
         return (
             off_x * u.deg,
             off_y * u.deg,
@@ -648,7 +677,10 @@ class RayTracing:
             image.get_psf(containment_fraction, "cm") * u.cm,
             image.get_psf(containment_fraction, "deg") * u.deg,
             image.get_effective_area(tel_transmission) * u.m * u.m,
-            np.nan if theta_offset == 0 else r / tan(theta_offset * pi / 180.0),
+            centroid_x_error * u.cm,
+            centroid_y_error * u.cm,
+            eff_focal_length,
+            eff_focal_length_error,
         )
 
     def _store_results(self, _rows):
@@ -660,8 +692,18 @@ class RayTracing:
         _rows: list
             List of rows containing analysis results.
         """
-        _columns = ["off_x", "off_y", "off axis angle"]
-        _columns.extend(list(self.YLABEL.keys()))
+        _columns = [
+            "off_x",
+            "off_y",
+            "off axis angle",
+            "psf_cm",
+            "psf_deg",
+            "eff_area",
+            "centroid_x_err",
+            "centroid_y_err",
+            "eff_flen",
+            "eff_flen_err",
+        ]
         if self.single_mirror_mode:
             _columns.append("mirror_number")
         self._results = QTable(rows=_rows, names=_columns)

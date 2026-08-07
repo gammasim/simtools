@@ -167,7 +167,10 @@ def test_export_results(ray_tracing_lst, caplog, mocker):
             4.256768651160611 * u.cm,
             0.1 * u.deg,
             100.0 * u.m * u.m,
+            0.01 * u.cm,
+            0.02 * u.cm,
             200.0,
+            2.0,
         ),
         (
             0.0 * u.deg,
@@ -176,7 +179,10 @@ def test_export_results(ray_tracing_lst, caplog, mocker):
             4.356768651160611 * u.cm,
             0.2 * u.deg,
             110.0 * u.m * u.m,
+            0.03 * u.cm,
+            0.04 * u.cm,
             210.0,
+            3.0,
         ),
     ]
     ray._store_results(_rows)
@@ -315,7 +321,10 @@ def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode, off_
             4.256768651160611 * u.cm,
             0.1 * u.deg,
             100.0 * u.m * u.m,
+            0.01 * u.cm,
+            0.02 * u.cm,
             200.0,
+            2.0,
         ),
         (
             0.0 * u.deg,
@@ -324,7 +333,10 @@ def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode, off_
             4.356768651160611 * u.cm,
             0.2 * u.deg,
             110.0 * u.m * u.m,
+            0.03 * u.cm,
+            0.04 * u.cm,
             210.0,
+            3.0,
         ),
     ]
     ray_tracing_lst._store_results(_rows)
@@ -338,7 +350,10 @@ def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode, off_
         "psf_cm",
         "psf_deg",
         "eff_area",
+        "centroid_x_err",
+        "centroid_y_err",
         "eff_flen",
+        "eff_flen_err",
     ]
 
     # single mirror mode
@@ -350,7 +365,10 @@ def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode, off_
             4.256768651160611 * u.cm,
             0.1 * u.deg,
             100.0 * u.m * u.m,
+            0.01 * u.cm,
+            0.02 * u.cm,
             200.0,
+            2.0,
             1,
         ),
         (
@@ -360,7 +378,10 @@ def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode, off_
             4.356768651160611 * u.cm,
             0.2 * u.deg,
             110.0 * u.m * u.m,
+            0.03 * u.cm,
+            0.04 * u.cm,
             210.0,
+            3.0,
             2,
         ),
     ]
@@ -488,6 +509,8 @@ def test_analyze_image(ray_tracing_lst, mocker):
     mock_image.get_effective_area.return_value = 100.0
     mock_image.centroid_x = 0.5
     mock_image.centroid_y = 0.2
+    mock_image.centroid_x_error = 0.05
+    mock_image.centroid_y_error = 0.02
 
     off_x = 1.0
     off_y = 1.5
@@ -504,6 +527,14 @@ def test_analyze_image(ray_tracing_lst, mocker):
         tel_transmission=tel_transmission,
     )
 
+    radius = np.hypot(mock_image.centroid_x, mock_image.centroid_y)
+    radius_error = np.sqrt(
+        ((mock_image.centroid_x / radius) * mock_image.centroid_x_error) ** 2
+        + ((mock_image.centroid_y / radius) * mock_image.centroid_y_error) ** 2
+    )
+    expected_eff_flen = radius / tan(theta_offset * pi / 180.0)
+    expected_eff_flen_error = radius_error / tan(theta_offset * pi / 180.0)
+
     assert result == (
         1.0 * u.deg,
         1.5 * u.deg,
@@ -511,7 +542,10 @@ def test_analyze_image(ray_tracing_lst, mocker):
         5.0 * u.cm,
         0.1 * u.deg,
         100.0 * u.m * u.m,
-        np.hypot(mock_image.centroid_x, mock_image.centroid_y) / tan(theta_offset * pi / 180.0),
+        0.05 * u.cm,
+        0.02 * u.cm,
+        expected_eff_flen,
+        expected_eff_flen_error,
     )
     mock_image.get_psf.assert_has_calls(
         [call(containment_fraction, "cm"), call(containment_fraction, "deg")]
@@ -529,7 +563,10 @@ def test_get_mean_std(ray_tracing_lst):
             4.256768651160611 * u.cm,
             0.1 * u.deg,
             100.0 * u.m * u.m,
+            0.01 * u.cm,
+            0.02 * u.cm,
             200.0,
+            2.0,
         ),
         (
             0.0 * u.deg,
@@ -538,7 +575,10 @@ def test_get_mean_std(ray_tracing_lst):
             4.356768651160611 * u.cm,
             0.2 * u.deg,
             110.0 * u.m * u.m,
+            0.03 * u.cm,
+            0.04 * u.cm,
             210.0,
+            3.0,
         ),
     ]
     ray_tracing._store_results(_rows)
