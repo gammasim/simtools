@@ -5,6 +5,8 @@ import pytest
 from astropy.table import Table
 
 import simtools.applications.simulate_prod as app
+from simtools.constants import SCHEMA_PATH
+from simtools.io.ascii_handler import collect_data_from_file
 from simtools.production_configuration import job_grid_io
 
 
@@ -41,6 +43,14 @@ def _metadata():
     }
 
 
+def test_job_grid_schema_keeps_previous_format_document():
+    schemas = collect_data_from_file(SCHEMA_PATH / "job_grid_density.schema.yml")
+
+    assert [schema["schema_version"] for schema in schemas] == ["0.4.0", "0.3.0"]
+    assert "telescope" not in job_grid_io.JOB_GRID_SCHEMA.columns
+    assert "telescope" in {column["name"] for column in schemas[1]["data"][0]["table_columns"]}
+
+
 def test_serialize_job_grid_writes_empty_grid_header(tmp_test_directory):
     output_file = Path(tmp_test_directory) / "empty_job_grid.ecsv"
 
@@ -52,6 +62,8 @@ def test_serialize_job_grid_writes_empty_grid_header(tmp_test_directory):
         *job_grid_io.JOB_GRID_SCHEMA.optional_columns,
     ]
     assert output_table.meta["job_grid_summary"]["simulation_rows"] == 0
+    assert output_table.meta["job_grid_format_version"] == "0.4.0"
+    assert "telescope" not in output_table.colnames
 
 
 def test_serialize_and_read_job_grid_with_optional_string_fields(tmp_test_directory):

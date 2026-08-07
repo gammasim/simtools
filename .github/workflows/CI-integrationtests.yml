@@ -35,15 +35,6 @@ on:
         required: false
         type: string
         default: '["ubuntu-latest"]'
-    secrets:
-      DB_SERVER:
-        required: false
-      DB_API_USER:
-        required: false
-      DB_API_PW:
-        required: false
-      DB_API_PORT:
-        required: false
   pull_request:
     types: [opened, synchronize]
     paths-ignore:
@@ -65,7 +56,7 @@ jobs:
         shell: bash -leo pipefail {0}
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Build package
         run: |
@@ -81,7 +72,7 @@ jobs:
       # CORSIKA_TABLES: "main"
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Install dependency exporter prerequisites
         run: python -m pip install packaging pyyaml
@@ -97,7 +88,7 @@ jobs:
 
       - name: Restore cached CORSIKA interaction tables
         id: restore_interaction_tables
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: ${{ env.IT_NAME }}
           key: corsika-interaction-tables-${{ steps.interaction_table_version.outputs.version }}
@@ -152,13 +143,13 @@ jobs:
 
       - name: Save cached CORSIKA interaction tables
         if: steps.restore_interaction_tables.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: ${{ env.IT_NAME }}
           key: corsika-interaction-tables-${{ steps.interaction_table_version.outputs.version }}
 
       - name: Upload CORSIKA interaction tables
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: corsika-interaction-tables
           path: ${{ env.IT_NAME }}
@@ -176,7 +167,7 @@ jobs:
         shell: bash -leo pipefail {0}
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Determine simulation model branch
         id: simulation_model_branch
@@ -208,7 +199,7 @@ jobs:
       - name: Restore cached simulation models repository
         # if: github.event_name != 'schedule'
         id: restore_simulation_models
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: simulation-models
           key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}
@@ -256,14 +247,14 @@ jobs:
 
       - name: Save cached simulation models repository
         if: steps.restore_simulation_models.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: simulation-models
           key: simulation-models-${{ steps.simulation_model_branch.outputs.branch }}
 
       - name: Upload simulation models repository
         # if: github.event_name != 'schedule'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: simulation-models-repo
           path: simulation-models
@@ -306,7 +297,7 @@ jobs:
         shell: bash -leo pipefail {0}
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           fetch-depth: 0
 
@@ -322,14 +313,6 @@ jobs:
               DB_API_USER="api"
               DB_API_PW="password"
               DB_API_PORT="27017"
-              # DISABLED: avoid failing test due to network issue when running on schedule.
-              if [ "${{ github.event_name }}" = "schedule" ] && false; then
-                DB_SERVER="${{ secrets.DB_SERVER }}"
-                DB_API_USER="${{ secrets.DB_API_USER }}"
-                DB_API_PW="${{ secrets.DB_API_PW }}"
-                DB_API_PORT="${{ secrets.DB_API_PORT }}"
-              fi
-
               SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
               echo "SIMTOOLS_DB_SERVER=$DB_SERVER"
               echo "SIMTOOLS_DB_API_USER=$DB_API_USER"
@@ -344,7 +327,7 @@ jobs:
           } | tee .env >> "$GITHUB_ENV"
 
       - name: Download CORSIKA interaction tables
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
           name: corsika-interaction-tables
           path: ${{ env.SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH }}/..
@@ -361,7 +344,7 @@ jobs:
 
       - name: Download simulation models repository
         # if: github.event_name != 'schedule'
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
           name: simulation-models-repo
           path: ../simulation-models

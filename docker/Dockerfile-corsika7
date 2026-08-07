@@ -42,7 +42,7 @@ RUN git config --global advice.detachedHead false && \
     if [ -n "${CORSIKA_CONFIG_REVISION}" ]; then \
         test "$(cat /src/corsika_config_revision)" = "${CORSIKA_CONFIG_REVISION}"; \
     fi && \
-    cp -v corsika7-config/config/${CORSIKA_VERSION}/*.h . && \
+    cp -v corsika7-config/config/"${CORSIKA_VERSION}"/*.h . && \
     rm -rf corsika7-config
 
 # CORSIKA source is downloaded once per release by the GitHub workflow.
@@ -56,7 +56,7 @@ RUN git config --global advice.detachedHead false && \
     if [ -n "${CORSIKA_OPT_PATCH_REVISION}" ]; then \
         test "$(cat /src/corsika_opt_patch_revision)" = "${CORSIKA_OPT_PATCH_REVISION}"; \
     fi && \
-    cp -rL corsika-opt-patches/build_opt/corsikaOptPatch-$CORSIKA_VERSION/* corsika7/ && \
+    cp -rL corsika-opt-patches/build_opt/"corsikaOptPatch-${CORSIKA_VERSION}"/* corsika7/ && \
     rm -rf corsika-opt-patches
 
 # autoconf archive (tar file needs to be present in the build context)
@@ -127,7 +127,9 @@ RUN set -e; ls ../config_*.h; for config_file in ../config_*.h; do \
         # Optimization config options
         else \
             optimization="$AVX_FLAG"; \
-            BASE_FLAGS="-g -DCERENKOPT -DVLIBM -O3 ${AVX_FLAG:+-m$AVX_FLAG} ${AVX_EXTRA_FLAG} -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
+            AVX_COMPILER_FLAG="-m${AVX_FLAG}"; \
+            BASE_FLAGS="-g -DCERENKOPT -DVLIBM -O3 ${AVX_COMPILER_FLAG} ${AVX_EXTRA_FLAG} \
+                -DVECTOR_SIZE=8 -DVECTOR_LENGTH=8"; \
             { \
                 echo "#define __CERENKOPT__ 1"; \
                 echo "#define __VLIBM__ 1"; \
@@ -160,7 +162,14 @@ RUN set -e; ls ../config_*.h; for config_file in ../config_*.h; do \
 
 # Generate build_opts.yml with build information
 RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
-    IACT_ATMO_VERSION=$(awk '/#[[:space:]]*define[[:space:]]+IACT_ATMO_VERSION[[:space:]]+"/{match($0, /"[^"]*"/); if (RSTART) {print substr($0, RSTART + 1, RLENGTH - 2); exit}}' /tmp/iact.c) && \
+    IACT_ATMO_VERSION=$(awk '\
+        /#[[:space:]]*define[[:space:]]+IACT_ATMO_VERSION[[:space:]]+"/ {\
+            match($0, /"[^"]*"/);\
+            if (RSTART) {\
+                print substr($0, RSTART + 1, RLENGTH - 2);\
+                exit;\
+            }\
+        }' /tmp/iact.c) && \
     if [ -z "${IACT_ATMO_VERSION}" ]; then \
         IACT_ATMO_VERSION="unknown"; \
     fi && \
@@ -179,7 +188,7 @@ RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
         echo "avx_flag: \"${AVX_FLAG}\""; \
         echo "iact_atmo_version: \"${IACT_ATMO_VERSION}\""; \
         echo "variant:"; \
-    } > ${CORSIKA_RUN_DIR}/build_opts.yml && \
+    } > "${CORSIKA_RUN_DIR}/build_opts.yml" && \
     for config_file in ../config_*.h; do \
         basename_file=$(basename "$config_file" .h); \
         corsika_name=$(echo "$basename_file" | sed 's/^config_/corsika_/'); \
@@ -201,7 +210,7 @@ RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
             echo "    optimization: \"${optimization}\""; \
             echo "    cerenkopt: $([ "$optimization" = "generic" ] && echo false || echo true)"; \
             echo "    vlibm: $([ "$optimization" = "generic" ] && echo false || echo true)"; \
-        } >> ${CORSIKA_RUN_DIR}/build_opts.yml; \
+        } >> "${CORSIKA_RUN_DIR}/build_opts.yml"; \
         rm -f "${CORSIKA_RUN_DIR}/.${corsika_name}.hilow_default"; \
     done
 

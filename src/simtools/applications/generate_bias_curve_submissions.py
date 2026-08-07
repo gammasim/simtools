@@ -24,8 +24,8 @@ site (str, required)
     Observation site (e.g., North, South).
 model_version (str, required)
     Simulation model version.
-telescope (str, required)
-    Telescope name for simulations.
+array_layout_name (str, required)
+    Single-telescope array layout name for simulations.
 simulation_software (str)
     Simulation software (default: corsika_sim_telarray).
 azimuth_angle (float, required)
@@ -68,7 +68,7 @@ Example
     simtools-generate-bias-curve-submissions \
         --site North \
         --model_version 7.0.0 \
-        --telescope LSTN-01 \
+        --array_layout_name LSTN-01 \
         --azimuth_angle 0.0 \
         --zenith_angle 20.0 \
         --showers_per_run 10000 \
@@ -102,7 +102,7 @@ from simtools.job_execution import bias_curve_submissions
 _ARGUMENTS = (
     cli.SITE(required=True),
     cli.MODEL_VERSION(required=True, nargs=None),
-    cli.TELESCOPE(required=True),
+    cli.ARRAY_LAYOUT_NAME(required=True),
     cli.SIMULATION_SOFTWARE,
     cli.AZIMUTH_ANGLE(required=True, action="store", nargs=None, default=None),
     cli.ZENITH_ANGLE(required=True, action="store", nargs=None, default=None),

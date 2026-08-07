@@ -292,6 +292,13 @@ def test_parse_rejects_telescope(monkeypatch, capsys):
     assert "unrecognized arguments: --telescope" in capsys.readouterr().err
 
 
+def test_parser_excludes_redundant_telescope_argument():
+    actions = {action.dest for action in app.APPLICATION.build_parser()._actions}
+
+    assert "array_layout_name" in actions
+    assert "telescope" not in actions
+
+
 def test_corsika_requires_primary(monkeypatch, capsys):
     with pytest.raises(SystemExit):
         _parse_with_args(

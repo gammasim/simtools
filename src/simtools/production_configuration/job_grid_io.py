@@ -85,6 +85,8 @@ class JobGridSchema:
 def _load_job_grid_schema():
     """Load the job-grid format definition from its YAML schema."""
     schema = collect_data_from_file(SCHEMA_PATH / _JOB_GRID_SCHEMA_FILE)
+    if isinstance(schema, list):
+        schema = schema[0]
     table_definition = next(item for item in schema["data"] if item["type"] == "data_table")
     column_definitions = table_definition["table_columns"]
     column_units = {

@@ -20,12 +20,11 @@ on:
   release:
     types: [published]
 
-permissions:
-  contents: read
-
 jobs:
   check_unit_test_files:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     defaults:
       run:
@@ -33,12 +32,12 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           fetch-depth: 0
 
       - name: Python setup
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
         with:
           python-version: "3.14"
           check-latest: true
@@ -63,6 +62,8 @@ jobs:
   unit_tests:
     needs: check_unit_test_files
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -77,12 +78,12 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           fetch-depth: 0
 
       - name: Python setup
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -111,7 +112,7 @@ jobs:
 
       - name: Upload coverage report
         if: matrix.python-version == '3.14'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: coverage-python-3.14
           path: coverage.xml
@@ -132,6 +133,8 @@ jobs:
     needs: unit_tests
     if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       SONAR_SCANNER_VERSION: 8.1.0.6389
       SONAR_SCANNER_PLATFORM: linux-x64
@@ -143,12 +146,12 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           fetch-depth: 0
 
       - name: Download coverage report
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
           name: coverage-python-3.14
           path: .
@@ -156,7 +159,7 @@ jobs:
       # CTAO-DPPS-SonarQube
       - name: Restore Sonar scanner cache
         id: sonar_scanner_cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: ${{ env.SONAR_SCANNER_CACHE_DIR }}
           key: sonar-scanner-${{ runner.os }}-${{ runner.arch }}-${{ env.SONAR_SCANNER_VERSION }}
@@ -165,7 +168,8 @@ jobs:
         if: steps.sonar_scanner_cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p "$SONAR_SCANNER_CACHE_DIR"
-          curl --fail --location --retry 5 --retry-delay 20 --retry-all-errors \
+          curl --fail --location --proto '=https' --proto-redir '=https' \
+            --retry 5 --retry-delay 20 --retry-all-errors \
             "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-${SONAR_SCANNER_PLATFORM}.zip" \
             --output sonar-scanner.zip
           unzip -q sonar-scanner.zip -d "$SONAR_SCANNER_CACHE_DIR"
@@ -251,7 +255,7 @@ jobs:
 
       - name: Upload soft-failed Sonar logs
         if: steps.sonar_scan.outputs.soft_failed == 'true'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: sonar-scanner-logs
           path: sonar-scanner-attempt-*.log

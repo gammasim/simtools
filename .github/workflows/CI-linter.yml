@@ -25,10 +25,10 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
         with:
           python-version: "3.14"
 
@@ -62,7 +62,7 @@ jobs:
           python src/simtools/applications/dependency_versions.py --format summary
 
       - name: Check CITATION.cff metadata
-        uses: citation-file-format/cffconvert-github-action@2.0.0
+        uses: citation-file-format/cffconvert-github-action@4cf11baa70a673bfdf9dad0acc7ee33b3f4b6084  # v2.0.0
         with:
           args: "--validate"
 
@@ -72,12 +72,12 @@ jobs:
           pip check
 
       - name: Dotenv linter
-        uses: dotenv-linter/action-dotenv-linter@v3
+        uses: dotenv-linter/action-dotenv-linter@afde61cfda2ecffe7bea35837b6f20b956c88689  # v3
         with:
           dotenv_linter_flags: check -i UnorderedKey .env*
 
       - name: Restore pre-commit cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         id: precommit-cache
         with:
           path: ~/.cache/pre-commit
@@ -91,7 +91,7 @@ jobs:
 
       - name: Save pre-commit cache
         if: success()  # only save if previous steps succeeded
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: ~/.cache/pre-commit
           key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}

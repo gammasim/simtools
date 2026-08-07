@@ -23,12 +23,11 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   CLOUD_URL: "https://syncandshare.desy.de/index.php/s/"
 
-permissions:
-  contents: read
-
 jobs:
   dependency-config:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       base_image: ${{ steps.config.outputs.base_image }}
       build_base_image: ${{ steps.config.outputs.build_base_image }}
@@ -49,11 +48,13 @@ jobs:
 
     steps:
       - name: download-auxiliary-files
+        env:
+          CLOUD_GSL: ${{ secrets.CLOUD_GSL }}
         run: |
-          curl -L --fail \
+          curl -L --fail --proto '=https' --proto-redir '=https' \
             --retry 5 --retry-delay 10 --retry-connrefused \
             --connect-timeout 30 \
-           "${{ env.CLOUD_URL }}/${{ secrets.CLOUD_GSL }}/download" \
+           "${CLOUD_URL}/${CLOUD_GSL}/download" \
            -o gsl.tar.gz
       - name: upload-auxiliary-files
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7

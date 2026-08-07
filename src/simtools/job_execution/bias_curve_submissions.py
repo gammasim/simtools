@@ -18,6 +18,7 @@ trigger response in both simulations.
 
 from simtools.io import ascii_handler
 from simtools.job_execution import parameter_scan_generator
+from simtools.layout.array_layout_utils import resolve_array_layout_name
 from simtools.model.telescope_model import TelescopeModel
 from simtools.production_configuration.simulation_jobs import generate_job_grid
 
@@ -43,7 +44,7 @@ def _threshold_param_name(args):
     """Return the threshold parameter selected by the telescope model."""
     telescope_model = TelescopeModel(
         site=args["site"],
-        telescope_name=args["telescope"],
+        telescope_name=_telescope_from_layout(args),
         model_version=args["model_version"],
     )
     if telescope_model.get_parameter_value("default_trigger") == "AnalogSum":
@@ -124,7 +125,6 @@ def _scan_config(curve_name, telescope, args):
                     args.get("trigger_thresholds"),
                 )
             ],
-            "job_grid_updates": {"array_layout_name": telescope},
         },
     }
 
@@ -138,7 +138,7 @@ def _production_grid_configuration(args, curve_definition, curve_label):
     }
     configuration.update(
         {
-            "array_layout_name": args["telescope"],
+            "array_layout_name": args["array_layout_name"],
             "primary": curve_definition["primary"],
             "energy_range": curve_definition["energy_range"],
             "label": curve_label,
@@ -151,7 +151,7 @@ def _generate_scan_grid(curve_name, curve_definition, args, io_handler):
     """Generate base grid, scan config, and scan grid for one curve."""
     curve_directory = io_handler.get_output_directory(sub_dir=curve_name)
 
-    telescope = args["telescope"]
+    telescope = _telescope_from_layout(args)
     base_grid_file = curve_directory / "base_grid.ecsv"
     scan_config_file = curve_directory / "scan_config.yaml"
     scan_grid_file = curve_directory / "scan_grid.ecsv"
@@ -175,7 +175,7 @@ def _validate_required_args(args):
     required_args = [
         "site",
         "model_version",
-        "telescope",
+        "array_layout_name",
         "azimuth_angle",
         "zenith_angle",
         "showers_per_run",
@@ -187,6 +187,11 @@ def _validate_required_args(args):
     for key in required_args:
         if args.get(key) in (None, ""):
             raise ValueError(f"Missing required argument: --{key}")
+
+
+def _telescope_from_layout(args):
+    """Resolve the single-telescope layout name used for trigger scans."""
+    return resolve_array_layout_name(args["array_layout_name"], args["model_version"])
 
 
 def _curve_definitions(args):
