@@ -192,7 +192,7 @@ def validate_optics(app_context):
         plot_file = io_handler.get_output_file(plot_file_name)
         visualize.save_figure(fig, plot_file, close=True)
 
-    if args_dict.get("export_effective_focal_length", False):
+    if args_dict.get("export_model_parameters", False):
         _export_effective_focal_length_model_parameter(
             ray=ray,
             telescope_name=tel_model.name,
@@ -247,14 +247,12 @@ def validate_optics(app_context):
 
 
 def _effective_focal_length_value_from_results(results):
-    """Build effective_focal_length parameter value from ray-tracing result rows."""
+    """Build effective_focal_length from average over all non-zero-offset stars."""
     off_x_values = np.asarray(results["off_x"].to_value(), dtype=float)
     off_y_values = np.asarray(results["off_y"].to_value(), dtype=float)
     eff_flen_values = np.asarray(results["eff_flen"], dtype=float)
 
     non_zero_mask = ~(np.isclose(off_x_values, 0.0) & np.isclose(off_y_values, 0.0))
-    x_plane_mask = np.isclose(off_y_values, 0.0) & ~np.isclose(off_x_values, 0.0)
-    y_plane_mask = np.isclose(off_x_values, 0.0) & ~np.isclose(off_y_values, 0.0)
 
     def _masked_nanmean(mask):
         masked_values = eff_flen_values[mask]
@@ -262,10 +260,12 @@ def _effective_focal_length_value_from_results(results):
             return 0.0
         return float(np.nanmean(masked_values))
 
+    mean_effective_focal_length = _masked_nanmean(non_zero_mask)
+
     return [
-        _masked_nanmean(non_zero_mask),
-        _masked_nanmean(x_plane_mask),
-        _masked_nanmean(y_plane_mask),
+        mean_effective_focal_length,
+        0.0,
+        0.0,
         0.0,
         0.0,
     ]

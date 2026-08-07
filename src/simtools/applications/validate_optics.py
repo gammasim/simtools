@@ -102,7 +102,7 @@ _ARGUMENTS = (
         action="store_true",
     ),
     cli.ArgumentDefinition(
-        "export_effective_focal_length",
+        "export_model_parameters",
         help="Export effective focal length as a model parameter.",
         action="store_true",
     ),
