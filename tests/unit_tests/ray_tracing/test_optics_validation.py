@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import astropy.units as u
 import numpy as np
 import pytest
-from astropy.table import Table
+from astropy.table import QTable, Table
 
 from simtools.ray_tracing import optics_validation
 
@@ -151,6 +151,7 @@ def test_validate_optics_no_images(tmp_test_directory):
         "offset_file": None,
         "offset_directions": "N,S,E,W",
         "plot_images": False,
+        "export_effective_focal_length": False,
         "label": "validate_optics",
         "test": True,
     }
@@ -170,8 +171,14 @@ def test_validate_optics_no_images(tmp_test_directory):
         ),
         patch("simtools.ray_tracing.optics_validation.RayTracing", return_value=mock_ray),
         patch("simtools.ray_tracing.optics_validation.visualize.save_figure"),
+        patch(
+            "simtools.ray_tracing.optics_validation."
+            "model_data_writer.ModelDataWriter.write_model_parameter"
+        ) as mock_write_model_parameter,
     ):
         optics_validation.validate_optics(app_context)
+
+        mock_write_model_parameter.assert_not_called()
 
         mock_ray.simulate.assert_called_once_with(test=True, force=False)
         mock_ray.analyze.assert_called_once_with(force=True)
@@ -183,6 +190,7 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
         "site": "North",
         "telescope": "LSTN-01",
         "model_version": "5.0.0",
+        "parameter_version": "5.0.1",
         "zenith_angle": 20.0 * u.deg,
         "source_distance": 10.0 * u.km,
         "max_offset": 1.0 * u.deg,
@@ -190,6 +198,7 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
         "offset_file": None,
         "offset_directions": None,
         "plot_images": True,
+        "export_effective_focal_length": False,
         "label": None,
         "test": True,
     }
@@ -231,6 +240,10 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
             "simtools.ray_tracing.optics_validation.visualize.save_figures_to_single_document"
         ) as mock_save_pdf,
         patch("simtools.ray_tracing.optics_validation.visualize.save_figure") as mock_save,
+        patch(
+            "simtools.ray_tracing.optics_validation."
+            "model_data_writer.ModelDataWriter.write_model_parameter"
+        ) as mock_write_model_parameter,
     ):
         optics_validation.validate_optics(app_context)
 
@@ -243,3 +256,63 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
     assert all(call.kwargs["close"] is True for call in mock_save.call_args_list)
     assert mock_create_figure.call_count == 2
     assert mock_save_pdf.call_args.kwargs["close"] is True
+    mock_write_model_parameter.assert_not_called()
+
+
+def test_validate_optics_exports_effective_focal_length_model_parameter(tmp_test_directory):
+    args_dict = {
+        "site": "North",
+        "telescope": "LSTN-01",
+        "model_version": "5.0.0",
+        "parameter_version": "5.0.1",
+        "zenith_angle": 20.0 * u.deg,
+        "source_distance": 10.0 * u.km,
+        "max_offset": 1.0 * u.deg,
+        "offset_step": 0.5 * u.deg,
+        "offset_file": None,
+        "offset_directions": "N,S,E,W",
+        "plot_images": False,
+        "export_effective_focal_length": True,
+        "label": "validate_optics",
+        "test": True,
+    }
+    io_handler = MagicMock()
+    io_handler.get_output_file.return_value = Path(str(tmp_test_directory)) / "output.png"
+    io_handler.get_output_directory.return_value = Path(str(tmp_test_directory))
+    app_context = SimpleNamespace(args=args_dict, io_handler=io_handler)
+
+    mock_tel_model = MagicMock()
+    mock_tel_model.name = "LSTN-01"
+    mock_site_model = MagicMock()
+    mock_ray = MagicMock()
+    mock_ray._results = QTable(
+        {
+            "off_x": [0.0, 1.0, -1.0, 0.0, 0.0] * u.deg,
+            "off_y": [0.0, 0.0, 0.0, 1.0, -1.0] * u.deg,
+            "eff_flen": [np.nan, 2930.0, 2910.0, 2920.0, 2940.0],
+        }
+    )
+
+    with (
+        patch(
+            "simtools.ray_tracing.optics_validation.initialize_simulation_models",
+            return_value=(mock_tel_model, mock_site_model, None),
+        ),
+        patch("simtools.ray_tracing.optics_validation.RayTracing", return_value=mock_ray),
+        patch("simtools.ray_tracing.optics_validation.visualize.save_figure"),
+        patch(
+            "simtools.ray_tracing.optics_validation."
+            "model_data_writer.ModelDataWriter.write_model_parameter"
+        ) as mock_write_model_parameter,
+    ):
+        optics_validation.validate_optics(app_context)
+
+    mock_write_model_parameter.assert_called_once()
+    call_kwargs = mock_write_model_parameter.call_args.kwargs
+    assert call_kwargs["parameter_name"] == "effective_focal_length"
+    assert call_kwargs["instrument"] == "LSTN-01"
+    assert call_kwargs["parameter_version"] == "5.0.1"
+    assert call_kwargs["metadata_input_dict"] == args_dict
+    assert call_kwargs["unit"] == ["cm", "cm", "cm", "cm", "cm"]
+    np.testing.assert_allclose(call_kwargs["value"][:3], [2925.0, 2920.0, 2930.0])
+    np.testing.assert_allclose(call_kwargs["value"][3:], [0.0, 0.0])

@@ -32,6 +32,10 @@ r"""
         Telescope model name (e.g. LST-1, SST-D, ...).
     model_version (str, optional)
         Model version.
+    parameter_version (str, optional)
+        Parameter version for exporting effective_focal_length as model parameter json.
+    export_model_parameters (activation mode, optional)
+        Export effective focal length as a model parameter json when enabled.
     source_distance (float or quantity, optional)
         Source distance in km.
     zenith_angle (float or quantity, optional)
@@ -97,6 +101,11 @@ _ARGUMENTS = (
         help="Produce a multiple pages pdf file with the image plots.",
         action="store_true",
     ),
+    cli.ArgumentDefinition(
+        "export_effective_focal_length",
+        help="Export effective focal length as a model parameter.",
+        action="store_true",
+    ),
 )
 
 
@@ -105,6 +114,7 @@ APPLICATION = ApplicationDefinition.for_module(
     arguments=(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
+        cli.PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         cli.TELESCOPE,
