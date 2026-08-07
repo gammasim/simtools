@@ -488,6 +488,6 @@ def test_setup_logging_with_file_handler(tmp_test_directory):
         assert "Test message" in content
         assert config.activity_id in content
     finally:
-        for handler in list(logger.handlers):
+        for handler in logger.handlers[:]:
             handler.close()
             logger.removeHandler(handler)

@@ -13,7 +13,7 @@ if command -v podman &> /dev/null; then
 elif command -v docker &> /dev/null; then
     CMD=docker
 else
-    echo "Error: Neither podman nor docker is available."
+    echo "Error: Neither podman nor docker is available." >&2
     exit 1
 fi
 
@@ -37,12 +37,12 @@ $CMD run -d \
 
 echo "Waiting for MongoDB to be fully ready and root user to be available..."
 RETRIES=30
-until $CMD exec $CONTAINER_NAME mongosh admin -u root -p example --eval "db.runCommand({ connectionStatus: 1 })" >/dev/null 2>&1 || [ $RETRIES -eq 0 ]; do
+until $CMD exec $CONTAINER_NAME mongosh admin -u root -p example --eval "db.runCommand({ connectionStatus: 1 })" >/dev/null 2>&1 || [[ $RETRIES -eq 0 ]]; do
   echo "Waiting for MongoDB to be ready and root authable... ($((RETRIES--)) retries left)"
   sleep 2
 done
-if [ $RETRIES -eq 0 ]; then
-  echo "MongoDB did not start in time."
+if [[ $RETRIES -eq 0 ]]; then
+  echo "MongoDB did not start in time." >&2
   $CMD logs $CONTAINER_NAME
   exit 1
 fi
@@ -62,7 +62,7 @@ db.createUser({
   ]
 });
 "; then
-  echo "Error: Failed to create 'api' user. Check root credentials or MongoDB logs."
+  echo "Error: Failed to create 'api' user. Check root credentials or MongoDB logs." >&2
   $CMD logs $CONTAINER_NAME
   exit 1
 fi

@@ -93,7 +93,7 @@ def parse_nsb_hdf5_file(file_path):
     threshold = extract_threshold(file_path)
     events = len(events_table)
 
-    if run_number is None or threshold is None or triggers is None:
+    if run_number is None or threshold is None:
         _logger.warning(
             f"Skipping {file_path}: missing critical info "
             f"(run={run_number}, threshold={threshold}, triggers={triggers})"

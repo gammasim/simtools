@@ -310,7 +310,8 @@ class SimtelConfigReader:
                 column += default[len(column):]  # fmt: skip
             except TypeError:
                 # extend array to required length using previous value
-                column.extend([column[-1]] * (n_dim - len(column)))
+                repetitions = n_dim - len(column)
+                column.extend([column[-1]] * repetitions)
         for index, value in except_from_all.items():
             column[int(index)] = value
         if dtype == "bool":

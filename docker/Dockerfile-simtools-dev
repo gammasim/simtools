@@ -38,9 +38,8 @@ RUN microdnf update -y && microdnf install -y \
   rm -rf /var/cache/dnf/* /tmp/* /var/tmp/* && \
   ln -sf /usr/bin/python"${PYTHON_VERSION}" /usr/bin/python && \
   echo /usr/local/lib > /etc/ld.so.conf.d/local.conf && \
-  ldconfig
-
-RUN { \
+  ldconfig && \
+  { \
     printf '%s\n' "if [ -n \"\${GITHUB_WORKSPACE:-}\" ]; then"; \
     printf '%s\n' "    git config --global --add safe.directory \"\${GITHUB_WORKSPACE}\""; \
     printf '%s\n' "fi"; \
