@@ -146,6 +146,13 @@ def test_sim_telarray_only_does_not_require_primary(monkeypatch):
     assert args["primary"] is None
 
 
+def test_parser_excludes_redundant_telescope_argument():
+    actions = {action.dest for action in app.APPLICATION.build_parser()._actions}
+
+    assert "array_layout_name" in actions
+    assert "telescope" not in actions
+
+
 def test_corsika_requires_primary(monkeypatch, capsys):
     with pytest.raises(SystemExit):
         _parse_with_args(

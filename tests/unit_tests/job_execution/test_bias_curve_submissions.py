@@ -12,7 +12,7 @@ def _base_args(tmp_test_directory):
     return {
         "site": "North",
         "model_version": "7.0.0",
-        "telescope": "LSTN-01",
+        "array_layout_name": "LSTN-01",
         "threshold_parameter": "asum_threshold",
         "simulation_software": "corsika_sim_telarray",
         "azimuth_angle": 0.0,
@@ -54,7 +54,7 @@ def test_generate_scan_grids_uses_configured_curve_definitions_without_mutating_
         "proton",
     ]
     assert all(
-        item.kwargs["args"]["telescope"] == "LSTN-01"
+        item.kwargs["args"]["array_layout_name"] == "LSTN-01"
         for item in mock_generate_scan_grid.call_args_list
     )
     assert (
