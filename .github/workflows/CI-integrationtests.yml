@@ -191,7 +191,7 @@ jobs:
           fi
           if [[ "$CURRENT_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]*$ ]]; then
             echo "Detected RC version branch: $CURRENT_REF - setting branch to $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
-            BRANCH="$SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
+            BRANCH="v${SIMTOOLS_DB_SIMULATION_MODEL_VERSION#v}"
           fi
           echo "SIMTOOLS_DB_SIMULATION_MODEL_BRANCH=$BRANCH" >> "$GITHUB_ENV"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
