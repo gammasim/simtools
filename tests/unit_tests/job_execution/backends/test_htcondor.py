@@ -56,10 +56,21 @@ def test_htcondor_validates_container_target_directory():
 @pytest.mark.parametrize(
     ("config", "message"),
     [
+        ({"unknown": True}, "Unknown HTCondor configuration"),
+        ({"request_cpus": "invalid"}, "request_cpus"),
+        ({"request_cpus": 0}, "request_cpus"),
         ({"request_cpus": 1.5}, "request_cpus"),
         ({"request_cpus": True}, "request_cpus"),
+        ({"priority": "invalid"}, "priority"),
+        ({"priority": 1.5}, "priority"),
+        ({"priority": "01"}, "priority"),
+        ({"request_memory": 4}, "request_memory"),
+        ({"extra_submit_attributes": []}, "extra_submit_attributes"),
+        ({"container_target_dir": ""}, "container_target_dir"),
         ({"poll_interval": 0}, "poll_interval"),
+        ({"poll_interval": "invalid"}, "poll_interval"),
         ({"timeout": 0}, "timeout"),
+        ({"timeout": "invalid"}, "timeout"),
         ({"cancel_on_interrupt": "yes"}, "cancel_on_interrupt"),
         ({"extra_submit_attributes": {"output": "other"}}, "Protected submit attribute"),
     ],
@@ -280,6 +291,294 @@ def test_htcondor_environment_parsing_preserves_quoted_comment_and_bind_paths():
     HTCondorBackend._add_apptainer_bind_path(entries, "/two")
 
     assert entries == {"APPTAINER_BINDPATH": "/one,/two"}
+    assert HTCondorBackend._parse_environment_line('VALUE="one\\" # two"', "environment") == (
+        "VALUE",
+        'one\\" # two',
+    )
+
+
+def test_htcondor_environment_parsing_rejects_empty_key_and_ignores_empty_bind():
+    """Environment keys are required and empty bind paths are harmless."""
+    with pytest.raises(BackendConfigurationError, match="empty environment key"):
+        HTCondorBackend._parse_environment_line("=value", "environment")
+
+    entries = {}
+    HTCondorBackend._add_apptainer_bind_path(entries, "")
+    assert entries == {}
+    assert HTCondorBackend._read_environment_file(None) is None
+
+
+@pytest.mark.parametrize("key", ["container_image", "environment_file"])
+def test_htcondor_rejects_missing_shared_paths(key):
+    """Configured shared files must exist before submission."""
+    with pytest.raises(BackendConfigurationError, match=key):
+        HTCondorBackend._validate_config({key: "/missing/path"})
+
+
+def test_htcondor_loads_and_caches_scheduler_bindings(monkeypatch):
+    """The HTCondor bindings and schedd are initialized once."""
+    schedd = object()
+    module = types.SimpleNamespace(Schedd=lambda: schedd)
+    monkeypatch.setitem(sys.modules, "htcondor2", module)
+    backend = HTCondorBackend()
+
+    assert backend._load_htcondor() is module
+    assert backend._schedd is schedd
+    assert backend._load_htcondor() is module
+
+
+@pytest.mark.parametrize(
+    "module_factory",
+    [
+        lambda: None,
+        lambda: types.SimpleNamespace(
+            Schedd=lambda: (_ for _ in ()).throw(RuntimeError("offline"))
+        ),
+    ],
+)
+def test_htcondor_load_reports_binding_errors(monkeypatch, module_factory):
+    """Missing bindings and unavailable schedds become configuration errors."""
+    module = module_factory()
+    if module is None:
+        monkeypatch.setitem(sys.modules, "htcondor2", None)
+    else:
+        monkeypatch.setitem(sys.modules, "htcondor2", module)
+
+    with pytest.raises(BackendConfigurationError):
+        HTCondorBackend()._load_htcondor()
+
+
+def test_htcondor_submit_empty_job_list_returns_handle(tmp_test_directory):
+    """Empty submissions do not require an HTCondor installation."""
+    handle = HTCondorBackend().submit([], ExecutionOptions(work_dir=tmp_test_directory))
+
+    assert handle.backend == "htcondor"
+    assert handle.job_ids == ()
+
+
+def test_htcondor_submit_success_builds_handle(monkeypatch, tmp_test_directory):
+    """A successful scheduler submission returns cluster and process metadata."""
+
+    class _Result:
+        def cluster(self):
+            return 17
+
+        first_proc = 4
+
+    module = types.SimpleNamespace(Submit=lambda values: values)
+    schedd = types.SimpleNamespace(submit=lambda *_args, **_kwargs: _Result())
+    backend = HTCondorBackend()
+    backend._htcondor = module
+    backend._schedd = schedd
+    work_dir = Path(tmp_test_directory)
+    monkeypatch.setattr(backend, "_load_htcondor", lambda: module)
+    monkeypatch.setattr(backend, "_create_work_dir", lambda _options: work_dir)
+    monkeypatch.setattr(backend, "_serialize_jobs", lambda *_args: None)
+    monkeypatch.setattr(backend, "_resolve_event_log", lambda _config, _work: work_dir / "events")
+
+    jobs = [JobSpec("job-000000", 3, command=("echo", "ok"))]
+    handle = backend.submit(jobs, ExecutionOptions(work_dir=work_dir))
+
+    assert handle.scheduler_id == 17
+    assert handle.process_ids == {"job-000000": 4}
+    assert handle.metadata["indices"] == {"job-000000": 3}
+
+
+def test_htcondor_resource_overrides_build_itemdata(tmp_test_directory):
+    """Per-job resource overrides are emitted as item data."""
+    job = JobSpec(
+        "job-000000",
+        0,
+        command=("echo", "ok"),
+        resources={"request_cpus": 2, "request_memory": "4GB", "priority": 3},
+    )
+    backend = HTCondorBackend()
+    values, defaults, keys = backend._build_submit_values(
+        {}, [job], Path(tmp_test_directory), Path(tmp_test_directory) / "events"
+    )
+
+    assert values["request_cpus"] == "$(request_cpus)"
+    assert set(keys) == {"request_cpus", "request_memory", "priority"}
+    assert backend._build_itemdata([job], defaults, keys) == [
+        {"job_id": "job-000000", "request_cpus": "2", "request_memory": "4GB", "priority": "3"}
+    ]
+
+
+def test_htcondor_normalizes_job_and_configured_paths(tmp_test_directory):
+    """Per-job and backend file paths are normalized before use."""
+    image = Path(tmp_test_directory) / "image.sif"
+    environment = Path(tmp_test_directory) / "environment"
+    image.touch()
+    environment.touch()
+    job = JobSpec(
+        "job-000000",
+        0,
+        command=("echo", "ok"),
+        resources={"container_image": str(image)},
+    )
+    options = ExecutionOptions(
+        backend_config={"container_image": str(image), "environment_file": str(environment)}
+    )
+
+    prepared = HTCondorBackend._prepare_jobs([job], options, {})
+    config = HTCondorBackend._build_config(options)
+
+    assert prepared[0].resources["container_image"] == str(image.resolve())
+    assert config["container_image"] == str(image.resolve())
+    assert config["environment_file"] == str(environment.resolve())
+
+
+@pytest.mark.parametrize(
+    ("resources", "config", "message"),
+    [
+        ({"unsupported": 1}, {}, "Unknown resource"),
+        ({"container_image": "/missing.sif"}, {}, "container_image does not exist"),
+        ({"container_image": None}, {}, "Every job must define"),
+    ],
+)
+def test_htcondor_rejects_invalid_job_resources(resources, config, message):
+    """Invalid per-job resource overrides fail before scheduler submission."""
+    job = JobSpec("job-000000", 0, command=("echo", "ok"), resources=resources)
+
+    with pytest.raises(BackendConfigurationError, match=message):
+        HTCondorBackend._validate_job_resources([job], config)
+
+
+def test_htcondor_creates_work_directory_and_serializes_jobs(tmp_test_directory):
+    """Work directories contain isolated scheduler subdirectories and payloads."""
+    options = ExecutionOptions(work_dir=tmp_test_directory)
+    work_dir = HTCondorBackend._create_work_dir(options)
+    job = JobSpec("job-000000", 0, command=("echo", "ok"))
+
+    HTCondorBackend._serialize_jobs([job], work_dir)
+
+    assert all(
+        (work_dir / name).is_dir() for name in ("inputs", "results", "stdout", "stderr", "logs")
+    )
+    assert (work_dir / "inputs" / "job-000000.pkl").is_file()
+
+
+def test_htcondor_resolves_relative_event_log(tmp_test_directory):
+    """Relative event-log paths are placed below the shared work directory."""
+    work_dir = Path(tmp_test_directory)
+
+    event_log = HTCondorBackend._resolve_event_log({"log_path": "events/scheduler.log"}, work_dir)
+
+    assert event_log == work_dir / "events" / "scheduler.log"
+    assert event_log.parent.is_dir()
+
+
+def test_htcondor_serialization_errors_are_wrapped(monkeypatch, tmp_test_directory):
+    """Payload serialization failures identify the affected job."""
+    monkeypatch.setattr(
+        "simtools.job_execution.backends.htcondor.write_job_payload",
+        lambda *_args: (_ for _ in ()).throw(TypeError("bad payload")),
+    )
+    job = JobSpec("job-000000", 0, command=("echo", "ok"))
+
+    with pytest.raises(BackendSubmissionError, match=r"job-000000.*bad payload"):
+        HTCondorBackend._serialize_jobs([job], Path(tmp_test_directory))
+
+
+def test_htcondor_wait_handles_cluster_remove_and_event_log_errors(monkeypatch, tmp_test_directory):
+    """Cluster removal and event-log failures are reported as execution errors."""
+
+    class _EventLog:
+        def events(self, stop_after):
+            yield types.SimpleNamespace(cluster=17, type="CLUSTER_REMOVE")
+
+    backend = HTCondorBackend()
+    backend._htcondor = types.SimpleNamespace(JobEventLog=lambda _path: _EventLog())
+    submission = SubmissionHandle(
+        "htcondor",
+        Path(tmp_test_directory),
+        ("job-000000",),
+        scheduler_id=17,
+        process_ids={"job-000000": 0},
+        metadata={"poll_interval": 1},
+    )
+    assert backend._wait_for_processes(submission) == ["process 0: CLUSTER_REMOVE"]
+
+    monkeypatch.setattr(
+        backend._htcondor,
+        "JobEventLog",
+        lambda _path: (_ for _ in ()).throw(RuntimeError("missing log")),
+    )
+    with pytest.raises(BackendExecutionError, match="missing log"):
+        backend._wait_for_processes(submission)
+
+
+def test_htcondor_wait_timeout_and_expected_output_failures(tmp_test_directory):
+    """Timeouts and missing declared outputs remain actionable failures."""
+    submission = SubmissionHandle(
+        "htcondor",
+        Path(tmp_test_directory),
+        ("job-000000",),
+        scheduler_id=17,
+        process_ids={"job-000000": 0},
+        metadata={"expected_outputs": ["missing.dat"]},
+    )
+    assert HTCondorBackend._missing_output_failures(submission) == [
+        "job unknown: missing expected output missing.dat"
+    ]
+
+    backend = HTCondorBackend()
+    backend._htcondor = types.SimpleNamespace(JobEventLog=lambda _path: object())
+    submission.metadata.update({"poll_interval": 1, "timeout": 0})
+    assert backend._wait_for_processes(submission) == ["process 0: timeout"]
+
+
+def test_htcondor_wait_reports_scheduler_failures_and_preserves_artifacts(
+    monkeypatch, tmp_test_directory
+):
+    """Scheduler failures are raised and successful-artifact retention is honored."""
+    backend = HTCondorBackend()
+    submission = SubmissionHandle(
+        "htcondor",
+        Path(tmp_test_directory),
+        ("job-000000",),
+        scheduler_id=17,
+        process_ids={"job-000000": 0},
+        metadata={"keep_successful_artifacts": True},
+    )
+    monkeypatch.setattr(backend, "_load_htcondor", lambda: object())
+    monkeypatch.setattr(backend, "_wait_for_processes", lambda _submission: ["process 0: failed"])
+
+    with pytest.raises(BackendExecutionError, match="process 0: failed"):
+        backend.wait(submission)
+
+    (submission.work_dir / "results").mkdir()
+    HTCondorBackend._cleanup_successful_artifacts(submission)
+    assert (submission.work_dir / "results").is_dir()
+
+
+def test_htcondor_wait_returns_empty_for_empty_submission():
+    """Waiting on an empty submission is a no-op."""
+    assert HTCondorBackend().wait(SubmissionHandle("htcondor", Path("run"), ())) == []
+
+
+def test_htcondor_next_event_returns_none_when_log_is_empty():
+    """An empty event stream is treated as a polling interval."""
+
+    class _EventLog:
+        def events(self, stop_after):
+            return iter(())
+
+    assert HTCondorBackend._next_event(_EventLog(), 0) is None
+
+
+def test_htcondor_process_event_ignores_unrelated_events():
+    """Events from other clusters and non-terminal processes are ignored."""
+
+    class _Event:
+        cluster = 99
+        proc = 4
+        type = "JOB_SUBMITTED"
+
+    remaining = {0}
+    assert HTCondorBackend._process_event(_Event(), 17, remaining, {"JOB_TERMINATED"}) == []
+    _Event.cluster = 17
+    assert HTCondorBackend._process_event(_Event(), 17, remaining, {"JOB_TERMINATED"}) == []
 
 
 def test_htcondor_process_event_tracks_success_and_failure():
