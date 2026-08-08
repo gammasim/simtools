@@ -33,7 +33,7 @@ is used as the repository tag.
 
 ## Examples
 
-Upload a released repository version:
+Upload a released repository version (includes cloning the simulations-models repository):
 
 ```console
 simtools-db-upload-model-repository \
