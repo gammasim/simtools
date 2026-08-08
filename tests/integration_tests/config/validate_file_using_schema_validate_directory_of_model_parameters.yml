@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-validate-file-using-schema
+  docs:
+    title: Validate a directory of model parameters
+    summary: Validate model-parameter files in a directory with bundled schemas.
   configuration:
     file_directory: tests/resources/generated/model_parameters
   test_name: validate_directory_of_model_parameters

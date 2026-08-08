@@ -1,56 +1,8 @@
 #!/usr/bin/python3
-r"""
-    Validate a file or files in a directory using a schema.
-
-    Input files can be metadata, schema, or data files in yaml, json, or ecsv format.
-    For model parameters, the schema files are taken from the simtools model parameter
-    schema directory by default.
-
-    Command line arguments
-    ----------------------
-    file_name (str)
-      input file to be validated
-    file_directory (str)
-        directory with json files of model parameters to be validated
-    schema_file (str)
-      schema file (jsonschema format) used for validation
-    data_type (str)
-        type of input data (allowed types: metadata, schema, data, model_parameter)
-
-    Example
-    -------
-
-    Validate metadata of a file:
-
-    .. code-block:: console
-
-        simtools-validate-file-using-schema \\
-         --file_name tests/resources/MLTdata-preproduction.meta.yml \\
-         --schema_file simtools/schemas/metadata.metaschema.yml \\
-         --data_type metadata
-
-    Validate schema of a file:
-
-    .. code-block:: console
-
-        simtools-validate-file-using-schema \\
-         --file_name tests/resources/model_parameters/schema-0.3.0/num_gains-1.0.0.json \\
-         --schema_file src/simtools/schemas/model_parameter.metaschema.yml \\
-         --data_type schema
-
-    Validate all model parameter files in a directory:
-
-    .. code-block:: console
-
-        simtools-validate-file-using-schema \\
-         --file_directory tests/resources/model_parameters \\
-         --data_type model_parameter
-
-"""
+r"""Validate data, metadata, and schemas against simtools schemas."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
-from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.data_model import metadata_collector, schema, validate_data
 
 _ARGUMENTS = (
@@ -63,8 +15,7 @@ _ARGUMENTS = (
         "file_directory",
         help=(
             "Directory with files to validate. Without a schema file, model parameters are "
-            "assumed and schemas are read from "
-            f"{MODEL_PARAMETER_SCHEMA_PATH}."
+            "assumed and the bundled model-parameter schemas are used."
         ),
     ),
     cli.ArgumentDefinition("schema_file", help="Schema file", required=False),

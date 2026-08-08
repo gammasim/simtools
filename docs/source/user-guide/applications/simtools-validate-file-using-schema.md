@@ -35,23 +35,63 @@ checks where appropriate.
 
 ## Examples
 
-Validate an ECSV data file:
+### Data and metadata
 
 ```{eval-rst}
 .. simtools-integration-example::
     :file: validate_file_using_schema_ecsv_validate_data.yml
 ```
 
-Validate a JSON schema document:
+```{eval-rst}
+.. simtools-integration-example::
+    :file: validate_file_using_schema_ecsv_validate_metadata.yml
+```
+
+```{eval-rst}
+.. simtools-integration-example::
+    :file: validate_file_using_schema_json_validate_data.yml
+```
+
+```{eval-rst}
+.. simtools-integration-example::
+    :file: validate_file_using_schema_json_validate_data_schema_from_meta.yml
+```
+
+### Model parameters
+
+```{eval-rst}
+.. simtools-integration-example::
+    :file: validate_file_using_schema_json_validate_model_parameter.yml
+```
+
+```{eval-rst}
+.. simtools-integration-example::
+    :file: validate_file_using_schema_json_validate_data_from_directory.yml
+```
+
+```{eval-rst}
+.. simtools-integration-example::
+    :file: validate_file_using_schema_validate_directory_of_model_parameters.yml
+```
+
+### Schemas
 
 ```{eval-rst}
 .. simtools-integration-example::
     :file: validate_file_using_schema_json_validate_schema-0.2.0.yml
 ```
 
-Validate a directory of model parameters:
+```{eval-rst}
+.. simtools-integration-example::
+    :file: validate_file_using_schema_json_validate_schema-0.3.0.yml
+```
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: validate_file_using_schema_validate_directory_of_model_parameters.yml
+    :file: validate_file_using_schema_yml_validate_schema.yml
+```
+
+```{eval-rst}
+.. simtools-integration-example::
+    :file: validate_file_using_schema_yml_validate_schema_schema_from_meta.yml
 ```
