@@ -8,6 +8,7 @@
 
 ```{eval-rst}
 **Command line arguments**
+
 schema_file (str, optional)
     Schema file describing the input data
     (default: simtools/schemas/metadata.metaschema.yml)
@@ -15,6 +16,7 @@ output_file (str, optional)
     Output file name.
 
 **Example**
+
 .. code-block:: console
 
     simtools-generate-default-metadata \\

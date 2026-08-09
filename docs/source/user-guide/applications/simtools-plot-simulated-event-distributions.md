@@ -11,6 +11,7 @@ Reads reduced event data files and generate histogram plots e.g. for energy or
 core distance distributions.
 
 **Command line arguments**
+
 trigger_histogram_file (str, required)
     Precomputed trigger-histogram HDF5 file from ``simtools-write-trigger-histograms``.
 array_layout_name (str, optional)
@@ -19,6 +20,7 @@ output_path (str, required)
     Output directory for the generated plots.
 
 **Examples**
+
 Generate plots from a precomputed trigger-histogram file:
 
 .. code-block:: console

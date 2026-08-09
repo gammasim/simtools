@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-db-get-array-layouts-from-db
+  docs:
+    title: Export a named North array layout
+    summary: >-
+      Resolve the version-appropriate North Alpha layout and export its array-element positions.
   configuration:
     array_layout_name:
       by_version:

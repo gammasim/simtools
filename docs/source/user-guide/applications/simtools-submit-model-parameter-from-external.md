@@ -12,6 +12,7 @@ the model parameter schemas. Model parameter data is written in the simtools-sty
 json format, metadata as a yaml file.
 
 **Command line arguments**
+
 parameter (str)
     model parameter name
 value (str, value)

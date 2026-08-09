@@ -11,6 +11,7 @@ For known simulation products, the application can append specialized
 inspection sections on top of the generic file-structure report.
 
 **Command line arguments**
+
 input_file (str, required)
     Simulation-related file to inspect.
 max_entries (int, optional)

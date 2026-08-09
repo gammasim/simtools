@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-export-sim-telarray-metadata-schema
+  docs:
+    title: Export the sim_telarray metadata schema
+    summary: >-
+      Collect all registered sim_telarray metadata fields and write their validation schema as JSON.
   configuration:
     output_file: sim_telarray_metadata_schema.json
     output_path: simtools-output

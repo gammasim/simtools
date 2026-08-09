@@ -38,6 +38,7 @@ Example of a layout plot:
     :width: 49 %
 
 **Command line arguments**
+
 figure_name : str
     File name for the output figure.
 array_layout_file : str
@@ -78,6 +79,7 @@ y_lim : tuple(float, float), optional
     and filters plotted elements by y.
 
 **Examples**
+
 Plot "alpha" layout for the North site with model version 6.0.0:
 
 .. code-block:: console

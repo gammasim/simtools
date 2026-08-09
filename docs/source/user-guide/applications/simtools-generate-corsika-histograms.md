@@ -24,6 +24,7 @@ The following 1D histograms are generated:
     - Lateral distribution of Cherenkov photons (distance from shower core in m)
 
 **Command line arguments**
+
 input_files (str, required)
     The name(s) of the CORSIKA IACT file(s) resulted from the CORSIKA simulation.
 
@@ -36,6 +37,7 @@ file_labels (str, optional)
     the file names are used as labels.
 
 **Example**
+
 Fill and plot histograms for a test IACT file:
 
  .. code-block:: console
@@ -53,6 +55,7 @@ Fill and plot histograms for several files:
         --pdf_file_name test.pdf
 
 **Notes**
+
 The typical use case of this application is to generate lateral photon density distribution
 to compare different CORSIKA simulation settings or different CORSIKA versions. The following
 steps are recommended:

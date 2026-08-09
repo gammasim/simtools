@@ -23,6 +23,7 @@ The resulting scan grids can be consumed by a backend-specific submission genera
 for example ``simtools-simulate-prod-htcondor-generator``.
 
 **Command line arguments**
+
 site (str, required)
     Observation site (e.g., North, South).
 model_version (str, required)
@@ -65,6 +66,7 @@ output_path (Path)
     (provided by framework, default: ./simtools-output/).
 
 **Example**
+
 .. code-block:: console
 
     simtools-generate-bias-curve-submissions \

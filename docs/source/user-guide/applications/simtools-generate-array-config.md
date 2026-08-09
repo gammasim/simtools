@@ -11,6 +11,7 @@ The applications generates the sim_telarray configuration files for a given arra
 and model_version using the model parameters stored in the database.
 
 **Command line arguments**
+
 site : str
     Site name (e.g., North, South).
 array_layout_name : str
@@ -19,6 +20,7 @@ array_element_list : list
     List of array elements (e.g., telescopes) to plot (e.g., ``LSTN-01 LSTN-02 MSTN``).
 
 **Example**
+
 North - 5.0.0:
 
 .. code-block:: console

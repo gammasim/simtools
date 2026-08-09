@@ -17,6 +17,7 @@ An example of the camera plot can be found below.
 
 
 **Command line arguments**
+
 site (str, required)
     North or South.
 telescope (str, required)
@@ -31,6 +32,7 @@ print_pixels_id (bool, optional)
      (--print_pixels_id 0). To print all pixels, set to 'All'."
 
 **Example**
+
 LST - 5.0.0
 
 .. code-block:: console

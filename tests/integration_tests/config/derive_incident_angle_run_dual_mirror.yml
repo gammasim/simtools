@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-derive-incident-angle
+  docs:
+    title: Derive photon incidence angles for an SST
+    summary: >-
+      Ray-trace an off-axis source through a dual-mirror SST and derive camera photon-incidence
+      angles.
   configuration:
     site: South
     telescope: SSTS-01

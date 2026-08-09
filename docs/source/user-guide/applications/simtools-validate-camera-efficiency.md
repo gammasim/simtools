@@ -18,6 +18,7 @@ and NSB light (right) as a function of wavelength are plotted. See examples belo
   :width: 49 %
 
 **Command line arguments**
+
 site (str, required)
     North or South.
 telescope (str, required)
@@ -32,6 +33,7 @@ nsb_spectrum (str, optional)
     File with NSB spectrum to use for the efficiency simulation.
 
 **Example**
+
 MSTN-01 5.0.0
 
 Runtime < 1 min.

@@ -45,6 +45,7 @@ The executable job grid must be prepared first, for example using
 ``simtools-production-generate-grid``.
 
 **Command line arguments**
+
 output_path (str, required)
     Directory where the HTCondor submission files are written.
 apptainer_image (str or dict, required)
@@ -67,7 +68,8 @@ run_number_offset (int, optional)
 priority (int, optional)
     Job priority (default: 1).
 
-(all other command line arguments are identical to those of :ref:`simulate_prod`).
+(All other command line arguments are identical to those of
+:doc:`simtools-simulate-prod <simtools-simulate-prod>`.)
 ```
 
 ## Command line arguments

@@ -25,6 +25,7 @@ coordinate_system : str
     Coordinate system of array element positions (ground or utm).
 
 **Examples**
+
 Add array element positions to repository (ground coordinates):
 
 .. code-block:: console

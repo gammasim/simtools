@@ -12,6 +12,7 @@ as function of zenith angle.
 
 
 **Command line arguments**
+
 corsika_limits_file (str, required)
     Path to a CORSIKA limits table in ECSV format.
 

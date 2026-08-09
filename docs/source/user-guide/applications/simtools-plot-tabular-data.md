@@ -11,6 +11,7 @@ Uses a configuration file to define the data to be plotted and all
 plotting details.
 
 **Command line arguments**
+
 config_file (str, required)
     Configuration file name for plotting.
 output_file (str, required)

@@ -12,6 +12,7 @@ and writes a markdown table of production model versions and their short
 descriptions.
 
 **Command line arguments**
+
 simulation_models_path (Path)
     Path to the simulation-models repository root.
 output_path (Path)
@@ -20,6 +21,7 @@ output_file (str)
     Output markdown file name.
 
 **Example**
+
 .. code-block:: console
 
     simtools-docs-produce-production-summary \\

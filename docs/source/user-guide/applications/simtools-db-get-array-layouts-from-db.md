@@ -18,6 +18,7 @@ Listing of array elements follows this logic:
 * listing of types: e.g, ``-array_element_list MSTN`` plots all telescopes of type MSTN.
 
 **Command line arguments**
+
 list_available_layouts : bool, optional
     List available layouts in the database.
 include_calibration_array_elements : bool, optional
@@ -32,6 +33,7 @@ output_file : str, optional
     Name of the output file to be saved as astropy table (ecsv file)
 
 **Examples**
+
 List pre-defined array layouts.
 
 .. code-block:: console

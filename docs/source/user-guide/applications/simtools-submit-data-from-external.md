@@ -11,6 +11,7 @@ Input data and metadata is validated, and if necessary enriched
 and converted following a pre-described schema.
 
 **Command line arguments**
+
 input_meta (str, optional)
     input meta data file (yml format)
 input_data_file (str, optional)

@@ -14,6 +14,7 @@ in sim_telarray configuration file and parameters which are not found in simtool
 Note that all parameters are assigned the same parameter version.
 
 **Command line arguments**
+
 simtel_cfg_file (str)
     File name of sim_telarray configuration file containing all simulation model parameters.
 

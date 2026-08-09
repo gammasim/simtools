@@ -30,6 +30,7 @@ nominal value. A list of stars can be provided to simulate additional contributi
 
 
 **Command Line Arguments**
+
 run_mode (str, required)
     Run mode, e.g. "pedestals"
 run_number (int, required)

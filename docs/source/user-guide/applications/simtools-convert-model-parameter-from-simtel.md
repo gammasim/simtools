@@ -10,6 +10,7 @@
 Check value, type, and range and write a json file ready to be submitted to the model database.
 
 **Command line arguments**
+
 parameter (str, required)
     Parameter name (as used in simtools)
 

@@ -86,6 +86,7 @@ The output consists of an HDF5 file containing the following tables:
 +-----------------+---------+-----------------------------------------------+
 
 **Command line arguments**
+
 prefix (str, required)
     Path prefix for the input files.
 output_file (str, required)
@@ -96,6 +97,7 @@ print_dataset_information (int, optional, default=0)
     Print information about the datasets in the generated reduced event dataset.
 
 **Example**
+
 Generate a reduced dataset from input files and save the result.
 
 .. code-block:: console

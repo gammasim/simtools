@@ -12,6 +12,7 @@ Significantly accelerates database querying (at least a factor
 of 5 in query time with a factor of 10 less documents examined).
 
 **Command line arguments**
+
 database_name (str, optional)
     Database name (use "all" for all databases)
 ```

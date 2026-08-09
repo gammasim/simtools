@@ -19,6 +19,7 @@ Available coordinate systems are:
 3. Mercator system
 
 **Command line arguments**
+
 array_element_positions_file (str)
     File name with list of array element positions.
     Input can be given as astropy table file (ecsv) or a single array element in
@@ -32,6 +33,7 @@ select_assets (str)
     Select a subset of array elements / telescopes (e.g., MSTN, LSTN)
 
 **Example**
+
 Convert a list of array elements using a list of telescope positions in UTM coordinates.
 
 .. code-block:: console

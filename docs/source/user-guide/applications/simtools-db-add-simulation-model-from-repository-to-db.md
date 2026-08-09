@@ -24,6 +24,7 @@ type (str, optional)
     Type of data to be uploaded to the DB. Options are: model_parameters, production_tables.
 
 **Examples**
+
 Upload model data repository to the DB
 Loops over all subdirectories in 'input_path' and uploads all json files to the
 database (or updates an existing database with the same name):

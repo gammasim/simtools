@@ -100,6 +100,7 @@ Three modes of operation are supported:
         simtools-simulate-illuminator --config illuminator_config.yml
 
 **Command Line Arguments**
+
 light_source (str, optional)
     Illuminator in array, e.g., ILLN-01. Required for single-pair mode.
     In multi-pair mode, used as a filter (simulate only pairs with this illuminator).

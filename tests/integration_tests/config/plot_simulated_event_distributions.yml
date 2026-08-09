@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-plot-simulated-event-distributions
+  docs:
+    title: Plot simulated gamma-ray event distributions
+    summary: >-
+      Visualize energy, core-distance, angular-distance, and trigger distributions from a
+      North-array histogram file.
   configuration:
     trigger_histogram_file: ${generated:gamma_diffuse_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test.trigger_histograms.hdf5}
     array_layout_name: CTAO-North-Alpha

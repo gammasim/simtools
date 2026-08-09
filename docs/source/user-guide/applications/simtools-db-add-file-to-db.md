@@ -12,6 +12,7 @@ This application should complement the ones for updating parameters, \
 adding entries to the DB and getting files from the DB.
 
 **Command line arguments**
+
 file_name (str or list of str, required)
     Name of the file to upload including the full path. \
     A list of files is also allowed, in which case only one -file_name is necessary, \
@@ -24,6 +25,7 @@ database_name (str)
     The DB to insert the files to.
 
 **Example**
+
 uploading a dummy file.
 
 .. code-block:: console

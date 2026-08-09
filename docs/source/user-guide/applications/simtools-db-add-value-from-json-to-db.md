@@ -8,6 +8,7 @@
 
 ```{eval-rst}
 **Command line arguments**
+
 file_name (str, required)
     Name of the file to upload including the full path.
 db_collection (str, required)

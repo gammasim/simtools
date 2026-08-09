@@ -10,6 +10,7 @@
 Uses plotting configurations as defined in the model parameters schema files.
 
 **Command line arguments**
+
 parameter (str, required)
     Model parameter to plot (e.g., 'atmospheric_profile').
 parameter_version (str, required)

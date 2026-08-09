@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-plot-array-layout
+  docs:
+    title: Plot a layout from one position file
+    summary: Read a North-site ground-position table and plot its telescope layout as PDF and PNG.
   configuration:
     array_layout_file: ${static:telescope_positions-North-ground.ecsv}
     figure_format:

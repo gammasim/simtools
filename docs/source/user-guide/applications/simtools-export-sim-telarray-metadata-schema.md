@@ -12,6 +12,7 @@ The exported schema combines generated metadata definitions from
 model-parameter schemas.
 
 **Command line arguments**
+
 output_file (str)
     Output file name.
 source_type (str, optional)
@@ -20,6 +21,7 @@ schema_version (str, optional)
     Registry schema version.
 
 **Example**
+
 .. code-block:: console
 
     simtools-export-sim-telarray-metadata-schema --output_file metadata.yml

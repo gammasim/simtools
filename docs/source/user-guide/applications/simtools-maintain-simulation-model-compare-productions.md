@@ -10,6 +10,7 @@
 This script should be used to support the maintenance the simulation model repository.
 
 **Example**
+
 .. code-block:: console
 
     simtools-maintain-simulation-model-compare-productions \\

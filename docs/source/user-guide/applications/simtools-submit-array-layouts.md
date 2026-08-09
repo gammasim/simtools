@@ -12,6 +12,7 @@ specified model version. Prepares both JSON-style model parameters and correspon
 metadata for submission.
 
 **Command line arguments**
+
 array_layouts (str, required)
     Array layouts file.
 updated_parameter_version (str, optional)

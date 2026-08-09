@@ -23,6 +23,7 @@ For file-backed parameters, export_model_file_as_table can be added to also writ
 ECSV representation next to the exported file.
 
 **Command line arguments**
+
 parameter (str, required)
     Parameter name
 
@@ -52,9 +53,11 @@ export_model_file_as_table (bool, optional)
     original file export. Use together with export_model_file.
 
 **Raises**
+
 KeyError in case the parameter requested does not exist in the model parameters.
 
 **Example**
+
 Print the mirror_list parameter entry used for a given model_version.
 
 .. code-block:: console

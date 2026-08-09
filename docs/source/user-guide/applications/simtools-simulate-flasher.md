@@ -52,6 +52,7 @@ visualized using e.g. the 'simtools-plot-simtel-events' application.
         --run_number 3
 
 **Command Line Arguments**
+
 run_mode (str, required)
     Run mode, either "direct_injection" or "full_simulation".
 telescopes (str, optional)

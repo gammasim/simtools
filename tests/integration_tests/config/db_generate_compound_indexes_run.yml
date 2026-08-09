@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-db-generate-compound-indexes
+  docs:
+    title: Create database indexes for simulation models
+    summary: >-
+      Create the compound MongoDB indexes used to query model parameters, files, and production
+      tables efficiently.
   configuration:
     database_name: all
   requires_mongodb: true

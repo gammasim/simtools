@@ -15,6 +15,7 @@ Output files are saved as astropy tables in ASCII ECSV format and in the simtool
 required to be used for the overwrite model parameter configuration.
 
 **Command line arguments**
+
 telescope_type (str)
     Type of telescope (e.g., LST, MST, SST).
 number_of_telescopes (int)
@@ -29,6 +30,7 @@ model_version (str, optional)
     Model version to use (e.g., 6.0.0). If not provided, the latest version is used.
 
 **Example**
+
 Runtime < 10 s.
 
 .. code-block:: console

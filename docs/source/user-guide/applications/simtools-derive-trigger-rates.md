@@ -12,6 +12,7 @@ Input is reduced event data generated from simulations for the given configurati
 
 
 **Command line arguments**
+
 event_data_file (str, required)
     Event data file containing reduced event data.
 array_layout_name (list, optional)

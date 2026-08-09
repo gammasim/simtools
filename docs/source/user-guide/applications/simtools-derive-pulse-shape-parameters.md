@@ -12,6 +12,7 @@ pulse matches user-provided rise and fall widths between fractional amplitude
 levels (e.g. 0.1-0.9 rise, 0.9-0.1 fall).
 
 **Command line arguments**
+
 site (str, required)
         North or South.
 telescope (str, required)
@@ -35,6 +36,7 @@ time_margin_ns (float, optional)
 
 
 **Example**
+
 Derive parameters for a pulse with 2.5 ns rise (10-90%) and
  5 ns fall (90-10%) for LSTN-01:
 

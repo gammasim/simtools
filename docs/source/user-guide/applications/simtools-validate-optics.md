@@ -29,6 +29,7 @@ area (left) and the effective focal length (right) vs off-axis angle are shown.
 
 
 **Command line arguments**
+
 site (str, required)
     North or South.
 telescope (str, required)
@@ -49,6 +50,7 @@ test (activation mode, optional)
     If activated, application will be faster by simulating fewer photons.
 
 **Example**
+
 LST-1 5.0.0
 
 .. code-block:: console

@@ -15,6 +15,7 @@ Requires access to the CTAO common identifiers repository. Future versions of th
 common identifiers might be stored in a CTAO technical database.
 
 **Command line arguments**
+
 site (str)
     CTAO site (North or South).
 parameter_version (str)

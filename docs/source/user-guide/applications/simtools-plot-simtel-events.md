@@ -12,12 +12,14 @@ Meant to run after simulations (e.g., simtools-simulate-flasher,
 simtools-simulate-illuminator).
 
 **What it does**
+
 - Loads the provided sim_telarray file
 - Generates selected plots (signals, pedestals, time traces, waveforms, peak timing, etc.)
 - Saves all figures to a single multi-page PDF
 - Optionally also saves individual PNG files per figure
 
 **Command line arguments**
+
 simtel_file (str, required)
     A sim_telarray file to visualize (.simtel.zst).
 telescope (str, required)
@@ -52,6 +54,7 @@ output_path (str, optional)
     Directory for output files.
 
 **Examples**
+
 1) Plot signals and time traces for a telescope:
 
    simtools-plot-simtel-events \\
