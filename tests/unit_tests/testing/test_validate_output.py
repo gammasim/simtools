@@ -889,6 +889,20 @@ def test_output_validation_profile_rejects_unknown_name():
         validate_output._expand_output_validation_profile({"profile": "missing"})
 
 
+def test_monte_carlo_statistics_output_validation_profile():
+    """Expose result-table and standard metadata validation for statistics estimates."""
+    rule = validate_output._expand_output_validation_profile(
+        {"profile": "monte_carlo_statistics", "file": "mc_statistics.ecsv"}
+    )
+
+    assert rule["path_descriptor"] == "output_path"
+    assert rule["data_product_schema"] == SCHEMA_PATH / "monte_carlo_statistics.schema.yml"
+    assert rule["columns"]["estimated_total_events"] == {"range": {"minimum": 1.0}}
+    assert rule["metadata"] == {
+        "required_keys": ["cta.activity", "cta.context", "cta.product"],
+    }
+
+
 def test_has_path_supports_mapping_metadata():
     """Accept mapping implementations used for ordered metadata."""
     metadata = UserDict({"summary": UserDict({"rows": 2})})
