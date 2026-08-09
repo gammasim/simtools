@@ -3,6 +3,7 @@ applications:
 - application: simtools-write-reduced-event-lists
   docs:
     title: Read event data from sim_telarray files and write reduced event list data.
+    summary: Convert sim_telarray event streams to compact HDF5 event lists.
   configuration:
     input_files:
     - ${generated:proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.simtel.zst}
@@ -17,6 +18,7 @@ applications:
       - SHOWERS
       - SIMULATION_METADATA
       - TRIGGERS
+      hdf5_schema: reduced_event_data
   test_name: write_reduced_event_lists
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

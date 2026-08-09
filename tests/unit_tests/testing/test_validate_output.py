@@ -889,6 +889,18 @@ def test_output_validation_profile_rejects_unknown_name():
         validate_output._expand_output_validation_profile({"profile": "missing"})
 
 
+def test_hdf5_schema_validation_dispatches_reduced_event_validator(mocker):
+    """Dispatch reduced-event HDF5 validation through the integration-test hook."""
+    output_file = Path("reduced_event_data.hdf5")
+    mock_validate = mocker.patch(
+        "simtools.testing.validate_output.output_validator.validate_reduced_event_data_file"
+    )
+
+    validate_output._validate_hdf5_schema(output_file, "reduced_event_data")
+
+    mock_validate.assert_called_once_with(output_file)
+
+
 def test_monte_carlo_statistics_output_validation_profile():
     """Expose result-table and standard metadata validation for statistics estimates."""
     rule = validate_output._expand_output_validation_profile(

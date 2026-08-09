@@ -2,10 +2,22 @@
 
 import logging
 
+import numpy as np
+
+from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH
+from simtools.data_model import schema, validate_data
 from simtools.io import table_handler
+from simtools.sim_events.metadata import validate_simulation_metadata
 from simtools.utils import general
 
 _logger = logging.getLogger(__name__)
+
+_REDUCED_EVENT_TABLE_SCHEMAS = {
+    "SHOWERS": SCHEMA_PATH / "reduced_event_showers.schema.yml",
+    "TRIGGERS": SCHEMA_PATH / "reduced_event_triggers.schema.yml",
+    "FILE_INFO": SCHEMA_PATH / "reduced_event_file_info.schema.yml",
+}
+_REDUCED_EVENT_METADATA_DOCUMENTS = ("METADATA", "SIMULATION_METADATA")
 
 
 def validate_sim_events(data_files, expected_mc_events):
@@ -73,3 +85,64 @@ def validate_event_numbers(data_files, expected_mc_events):
             f" - {error}" for error in event_errors
         )
         raise ValueError(error_message)
+
+
+def validate_reduced_event_data_file(data_file):
+    """Validate the structure, tables, metadata, and references of one reduced-event file."""
+    if table_handler.read_table_file_type([data_file]) != "HDF5":
+        raise ValueError(f"Reduced event data file '{data_file}' must be an HDF5 file.")
+
+    required_entries = [*_REDUCED_EVENT_TABLE_SCHEMAS, *_REDUCED_EVENT_METADATA_DOCUMENTS]
+    available_entries = table_handler.read_table_list(data_file, required_entries)
+    missing_entries = [name for name, entries in available_entries.items() if not entries]
+    if missing_entries:
+        raise ValueError(
+            f"Reduced event data file '{data_file}' is missing required entries: "
+            f"{', '.join(missing_entries)}."
+        )
+
+    tables = table_handler.read_tables(
+        data_file, list(_REDUCED_EVENT_TABLE_SCHEMAS), file_type="HDF5"
+    )
+    for table_name, schema_file in _REDUCED_EVENT_TABLE_SCHEMAS.items():
+        validate_data.DataValidator(
+            schema_file=schema_file,
+            data_table=tables[table_name],
+        ).validate_and_transform()
+
+    standard_metadata = table_handler.read_metadata_document(data_file, "METADATA")
+    schema.validate_dict_using_schema(standard_metadata, schema_file=METADATA_JSON_SCHEMA)
+    validate_simulation_metadata(
+        table_handler.read_metadata_document(data_file, "SIMULATION_METADATA")
+    )
+    _validate_reduced_event_table_references(tables, data_file)
+    return True
+
+
+def _validate_reduced_event_table_references(tables, data_file):
+    """Validate file and event references between reduced-event tables."""
+    file_ids = set(np.asarray(tables["FILE_INFO"]["file_id"], dtype=int))
+    for table_name in ("SHOWERS", "TRIGGERS"):
+        unknown_file_ids = set(np.asarray(tables[table_name]["file_id"], dtype=int)).difference(
+            file_ids
+        )
+        if unknown_file_ids:
+            raise ValueError(
+                f"Reduced event data file '{data_file}' table '{table_name}' references unknown "
+                f"file_id values: {sorted(map(int, unknown_file_ids))}."
+            )
+
+    shower_ids = {
+        tuple(int(row[name]) for name in ("file_id", "event_id", "shower_id"))
+        for row in tables["SHOWERS"]
+    }
+    trigger_ids = {
+        tuple(int(row[name]) for name in ("file_id", "event_id", "shower_id"))
+        for row in tables["TRIGGERS"]
+    }
+    unknown_showers = trigger_ids.difference(shower_ids)
+    if unknown_showers:
+        raise ValueError(
+            f"Reduced event data file '{data_file}' contains triggers without matching showers: "
+            f"{sorted(unknown_showers)}."
+        )

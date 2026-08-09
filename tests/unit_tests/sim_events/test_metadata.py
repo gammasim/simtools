@@ -4,11 +4,22 @@ import astropy.units as u
 import pytest
 from bson.objectid import ObjectId
 
+from simtools.constants import METADATA_JSON_SCHEMA
+from simtools.data_model import schema
 from simtools.model.array_model import ArrayModel
 from simtools.sim_events.metadata import (
     build_simulation_metadata,
+    build_standard_metadata,
     validate_simulation_metadata,
 )
+
+
+def test_build_standard_metadata_keeps_required_metadata_fields():
+    """Produce a complete standard metadata document for embedded HDF5 output."""
+    metadata = build_standard_metadata({}, "reduced_event_data.hdf5")
+
+    schema.validate_dict_using_schema(metadata, schema_file=METADATA_JSON_SCHEMA)
+    assert "instrument" in metadata["cta"]
 
 
 def test_build_simulation_metadata_marks_missing_models_unavailable():

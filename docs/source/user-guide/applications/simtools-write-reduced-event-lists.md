@@ -8,7 +8,7 @@
 
 ## Overview
 
-The application converts sim_telarray event streams (``*.simtel.zst``) into a
+Converts sim_telarray event files (``*.simtel.zst``) into a
 compact, analysis-oriented HDF5 product. It removes waveform- and pixel-level
 data while retaining the event-level quantities needed for trigger-rate,
 effective-area, and Monte Carlo statistics studies. Input files can be supplied
@@ -30,6 +30,16 @@ The ``file_id`` column joins ``SHOWERS`` and ``TRIGGERS`` to ``FILE_INFO``;
 ``TRIGGERS`` can contain fewer rows than ``SHOWERS`` because it records only
 triggered events. Tables are stored as HDF5 compound datasets, with physical
 columns carrying their Astropy units.
+
+## Input and output
+
+| Role | Argument | Format | Description |
+| --- | --- | --- | --- |
+| Input | `input_files` | sim_telarray | One or more `*.simtel.zst` files or glob patterns. |
+| Output | `output_path` | Directory | Reduced-event HDF5 files with embedded metadata. |
+
+Provide either `input_files` or `input_file_list`, but not both. Use `max_workers` to control
+parallel output-file processing.
 
 ## Command line arguments
 

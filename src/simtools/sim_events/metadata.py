@@ -18,7 +18,11 @@ def build_standard_metadata(args_dict, output_file):
             "metadata_product_data_name": "reduced_event_data",
         }
     )
-    return MetadataCollector(args_dict=metadata_args).get_top_level_metadata()
+    metadata = MetadataCollector(args_dict=metadata_args, clean_meta=False).get_top_level_metadata()
+    instrument = metadata.get("cta", {}).get("instrument", {})
+    if "ID" in instrument:
+        instrument["id"] = instrument.pop("ID")
+    return metadata
 
 
 def build_simulation_metadata(

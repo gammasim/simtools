@@ -4,6 +4,7 @@ r"""Validate data, metadata, and schemas against simtools schemas."""
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.data_model import metadata_collector, schema, validate_data
+from simtools.sim_events import output_validator
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -22,7 +23,7 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "data_type",
         help="Type of input data",
-        choices=["metadata", "schema", "data", "model_parameter"],
+        choices=["metadata", "schema", "data", "model_parameter", "reduced_event_data"],
         default="data",
     ),
     cli.ArgumentDefinition(
@@ -61,6 +62,9 @@ def main():
             schema_file=schema_file,
             ignore_software_version=app_context.args.get("ignore_software_version", False),
         )
+    elif data_type == "reduced_event_data":
+        output_validator.validate_reduced_event_data_file(file_name)
+        app_context.logger.info(f"Successful validation of reduced event data {file_name}")
     else:
         validate_data.DataValidator.validate_data_files(
             file_name=file_name,
