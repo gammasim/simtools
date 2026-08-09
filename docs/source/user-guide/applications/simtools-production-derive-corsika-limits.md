@@ -8,7 +8,7 @@
 
 ## Overview
 
-This application derives usable CORSIKA limits from broad-range trigger histograms. The limits
+This application derives CORSIKA limits from broad-range trigger histograms. The limits
 cover the lower energy bound (`ERANGE`), the maximum core distance (`CSCAT`), and the viewcone
 radius (`VIEWCONE`).
 
@@ -19,16 +19,15 @@ using `energy_threshold_fraction`.
 
 ## Input and output
 
-| Role | Argument or file | Format | Description |
+| Role | Argument | Format | Description |
 | --- | --- | --- | --- |
 | Input | `trigger_histogram_file` | HDF5 | Product from `simtools-write-trigger-histograms`. |
-| Input | `allowed_losses` | Text | `axis,fraction,min_events` values for each limit axis. |
 | Output | `output_file` | ECSV | Derived limits, including the production index. |
-| Output | `output_path` | Directory | Limits, metadata, and optional diagnostic plots. |
+| Output | `output_path` | Directory | Limits and optional diagnostic plots. |
 
 The output table includes the selected particle, array layout, pointing, NSB level, derived limits,
-and the broad-range values used for the derivation. With multiple productions, plots are grouped
-into production-specific subdirectories.
+the broad-range values used for the derivation, and standard simtools metadata in its ECSV header.
+With multiple productions, plots are grouped into production-specific subdirectories.
 
 ## Command line arguments
 

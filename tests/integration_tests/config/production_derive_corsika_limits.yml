@@ -1,0 +1,63 @@
+---
+applications:
+- application: simtools-production-derive-corsika-limits
+  docs:
+    title: Derive CORSIKA limits from trigger histograms
+    summary: Estimate ERANGE, CSCAT, and VIEWCONE limits with differential loss bins.
+  configuration:
+    trigger_histogram_file: ${generated:gamma_diffuse_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test.trigger_histograms.hdf5}
+    allowed_losses:
+    - core_distance,0.001,10
+    - angular_distance,0.001,10
+    energy_threshold_fraction: 0.01
+    output_file: corsika_simulation_limits.ecsv
+    output_path: simtools-output
+    plot_histograms: false
+    differential_loss_bins_per_decade: 5
+  integration_tests:
+  - output_file: corsika_simulation_limits.ecsv
+    output_validation:
+    - name: corsika_limits_content
+      path_descriptor: output_path
+      file: corsika_simulation_limits.ecsv
+      data_product_schema: src/simtools/schemas/corsika_limits_table.schema.yml
+      minimum_rows: 1
+      columns:
+        primary_particle:
+          allowed_values: [gamma]
+        array_name:
+          allowed_values: [CTAO-North-Alpha]
+        zenith:
+          range:
+            minimum: 19.0
+            maximum: 21.0
+            unit: deg
+        azimuth:
+          range:
+            minimum: -1.0
+            maximum: 1.0
+            unit: deg
+        nsb_level:
+          range:
+            minimum: 0.2
+            maximum: 0.3
+        lower_energy_limit:
+          range:
+            minimum: 0.7
+            maximum: 0.9
+            unit: TeV
+        upper_radius_limit:
+          range:
+            minimum: 45.0
+            maximum: 55.0
+            unit: m
+        viewcone_radius:
+          range:
+            minimum: 5.5
+            maximum: 6.0
+            unit: deg
+      metadata:
+        required_keys: [cta.activity, cta.context, cta.product]
+  test_name: hdf5
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
