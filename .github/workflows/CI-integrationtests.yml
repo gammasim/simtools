@@ -35,6 +35,11 @@ on:
         required: false
         type: string
         default: '["ubuntu-latest"]'
+      benchmark:
+        description: 'Run serial resource measurements and upload benchmark artifacts'
+        required: false
+        type: boolean
+        default: false
   pull_request:
     types: [opened, synchronize]
     paths-ignore:
@@ -356,7 +361,7 @@ jobs:
       - name: Install Python dependencies (prod container)
         if: contains(inputs.container_image, 'simtools-prod')
         run: |
-          pip install --no-cache-dir pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry
+          pip install --no-cache-dir pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry psutil
 
       - name: Install Python dependencies (dev container)
         if: ${{ !contains(inputs.container_image, 'simtools-prod') }}
@@ -372,6 +377,7 @@ jobs:
             --repository_dir ../simulation-models
 
       - name: Integration tests
+        if: ${{ !inputs.benchmark }}
         shell: bash -l {0}
         run: |
           cat .env
@@ -385,3 +391,25 @@ jobs:
           pytest --model_version=${{ matrix.model_version }} --color=yes --durations=20 \
             "${MODEL_SOURCE_ARGS[@]}" \
             -n 4 --dist loadscope --retries 2 --retry-delay 5 --no-cov tests/integration_tests/
+
+      - name: Integration resource benchmark
+        if: ${{ inputs.benchmark }}
+        shell: bash -l {0}
+        run: |
+          MODEL_SOURCE_ARGS=()
+          if [ -n "$SIMULATION_MODELS_PATH" ]; then
+            MODEL_SOURCE_ARGS+=(--simulation-models-path="$SIMULATION_MODELS_PATH")
+          fi
+          simtools-test-resources-run-integration-benchmark \
+            --model-version=${{ matrix.model_version }} \
+            --output-dir=resource-benchmark-${{ matrix.model_version }} \
+            "${MODEL_SOURCE_ARGS[@]}"
+
+      - name: Upload integration resource benchmark
+        if: ${{ always() && inputs.benchmark }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        with:
+          name: resource-benchmark-${{ matrix.model_version }}
+          path: resource-benchmark-${{ matrix.model_version }}
+          if-no-files-found: error
+          retention-days: 30

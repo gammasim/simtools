@@ -195,6 +195,31 @@ def test_application_workflow_schema_accepts_output_validation_rules():
     )
 
 
+def test_application_workflow_schema_accepts_resource_benchmark_exclusion():
+    """Allow a reasoned opt-out from CI resource benchmarking."""
+    workflow_config = _output_validation_workflow()
+    workflow_config["applications"][0].pop("integration_tests")
+    workflow_config["applications"][0]["exclude_from_resource_benchmark"] = "unstable service"
+
+    schema.validate_dict_using_schema(
+        workflow_config,
+        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+    )
+
+
+def test_application_workflow_schema_rejects_empty_resource_benchmark_exclusion():
+    """Require a non-empty reason for a resource benchmark opt-out."""
+    workflow_config = _output_validation_workflow()
+    workflow_config["applications"][0].pop("integration_tests")
+    workflow_config["applications"][0]["exclude_from_resource_benchmark"] = ""
+
+    with pytest.raises(jsonschema.ValidationError):
+        schema.validate_dict_using_schema(
+            workflow_config,
+            schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+        )
+
+
 def test_application_workflow_schema_accepts_profiled_output_validation_rule():
     """Allow profiles to provide shared output-validation fields."""
     workflow_config = _output_validation_workflow({"profile": "job_grid", "file": "job_grid.ecsv"})

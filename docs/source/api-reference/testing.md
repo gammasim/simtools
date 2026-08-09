@@ -72,3 +72,12 @@ The Testing module provides tools for testing the code. This might be part of th
 .. automodule:: testing.helpers
    :members:
 ```
+
+(resourcebenchmarkmodule)=
+
+## resource_benchmark
+
+```{eval-rst}
+.. automodule:: testing.resource_benchmark
+   :members:
+```
