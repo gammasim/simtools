@@ -1,7 +1,7 @@
 # simtools-validate-file-using-schema
 
 ```{eval-rst}
-.. automodule:: validate_file_using_schema
+.. automodule:: simtools.applications.validate_file_using_schema
    :members:
    :exclude-members: main
 ```
@@ -35,8 +35,6 @@ checks where appropriate.
 
 ## Examples
 
-### Data and metadata
-
 ```{eval-rst}
 .. simtools-integration-example::
     :file: validate_file_using_schema_ecsv_validate_data.yml
@@ -54,27 +52,18 @@ checks where appropriate.
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: validate_file_using_schema_json_validate_data_schema_from_meta.yml
-```
-
-### Model parameters
-
-```{eval-rst}
-.. simtools-integration-example::
-    :file: validate_file_using_schema_json_validate_model_parameter.yml
-```
-
-```{eval-rst}
-.. simtools-integration-example::
     :file: validate_file_using_schema_json_validate_data_from_directory.yml
 ```
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: validate_file_using_schema_validate_directory_of_model_parameters.yml
+    :file: validate_file_using_schema_json_validate_data_schema_from_meta.yml
 ```
 
-### Schemas
+```{eval-rst}
+.. simtools-integration-example::
+    :file: validate_file_using_schema_json_validate_model_parameter.yml
+```
 
 ```{eval-rst}
 .. simtools-integration-example::
@@ -84,6 +73,11 @@ checks where appropriate.
 ```{eval-rst}
 .. simtools-integration-example::
     :file: validate_file_using_schema_json_validate_schema-0.3.0.yml
+```
+
+```{eval-rst}
+.. simtools-integration-example::
+    :file: validate_file_using_schema_validate_directory_of_model_parameters.yml
 ```
 
 ```{eval-rst}

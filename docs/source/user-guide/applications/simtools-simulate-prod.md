@@ -1,11 +1,9 @@
-```{eval-rst}
-.. _simulate_prod:
-```
-
 # simtools-simulate-prod
 
 ```{eval-rst}
-.. automodule:: simulate_prod
+.. _simulate_prod:
+
+.. automodule:: simtools.applications.simulate_prod
    :members:
    :exclude-members: main
 ```
@@ -31,21 +29,25 @@ low- and high-energy models. If omitted, the selected CORSIKA build default is r
 
 ## Examples
 
-To read the simulation model from files instead of MongoDB, pass the root directory containing
-the nested `simulation-models` directory:
-
-```console
-simtools-simulate-prod \
-    --simulation_models_path /path/to/model-files \
-    --model_version 7.0.0 \
-    --site North \
-    --array_layout_name CTAO-North-Alpha \
-    --simulation_software corsika_sim_telarray \
-    --config production.yml
+```{eval-rst}
+.. simtools-integration-example::
+    :file: simulate_prod_gamma_20_deg_south_multiple_model_versions.yml
 ```
 
-The explicitly configured path takes precedence over MongoDB environment settings. Filesystem
-access is read-only.
+```{eval-rst}
+.. simtools-integration-example::
+    :file: simulate_prod_gamma_40_deg_south_corsika_only.yml
+```
+
+```{eval-rst}
+.. simtools-integration-example::
+    :file: simulate_prod_gamma_40_deg_south_sim_telarray_only.yml
+```
+
+```{eval-rst}
+.. simtools-integration-example::
+    :file: simulate_prod_gamma_62_deg_south_check_output.yml
+```
 
 ```{eval-rst}
 .. simtools-integration-example::
