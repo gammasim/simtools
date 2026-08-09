@@ -1,27 +1,6 @@
 #!/usr/bin/python3
 
-r"""
-Fill and write trigger-histogram products from reduced event lists.
-
-This application reads reduced event-data files, accumulates the common simulated and
-triggered-event histogram set, and writes a HDF5 histogram file for e.g.,
-plotting, CORSIKA-limit derivation, and Monte Carlo statistics estimation.
-
-Typical histograms include triggered event counts as a function of energy, core distance,
-and angular distance from the source position or trigger multiplicity for each trigger type.
-
-Example
--------
-Fill trigger histograms from reduced event-data files:
-
-.. code-block:: console
-
-    simtools-write-trigger-histograms \
-        --event_data_files simtools-output/reduced_event_data_*.hdf5 \
-        --energy_bins_per_decade 10 \
-        --angular_distance_bin_width 0.5 deg
-
-"""
+r"""Create trigger-histogram products from reduced event lists."""
 
 import astropy.units as u
 

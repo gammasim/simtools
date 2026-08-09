@@ -486,9 +486,14 @@ def _validate_hdf5_output(output_file_path, file_test):
 
 def _validate_hdf5_schema(output_file_path, schema_name):
     """Validate a supported structured HDF5 product using its named schema."""
-    if schema_name != "reduced_event_data":
-        raise ValueError(f"Unsupported HDF5 schema '{schema_name}'.")
-    output_validator.validate_reduced_event_data_file(output_file_path)
+    validators = {
+        "reduced_event_data": output_validator.validate_reduced_event_data_file,
+        "trigger_histograms": output_validator.validate_trigger_histogram_file,
+    }
+    try:
+        validators[schema_name](output_file_path)
+    except KeyError as exc:
+        raise ValueError(f"Unsupported HDF5 schema '{schema_name}'.") from exc
 
 
 def _validate_model_parameter_json_file(config, model_parameter_validation):

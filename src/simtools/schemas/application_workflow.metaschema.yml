@@ -168,7 +168,7 @@ definitions:
             hdf5_schema:
               description: "Named schema validator for a structured HDF5 output file."
               type: string
-              enum: [reduced_event_data]
+              enum: [reduced_event_data, trigger_histograms]
           required: ["path_descriptor", "file"]
       file_type:
         description: |

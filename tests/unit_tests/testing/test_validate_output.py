@@ -916,8 +916,18 @@ def test_hdf5_schema_validation_dispatches_reduced_event_validator(mocker):
     )
 
     validate_output._validate_hdf5_schema(output_file, "reduced_event_data")
-
     mock_validate.assert_called_once_with(output_file)
+
+
+def test_hdf5_schema_validation_dispatches_trigger_histogram_validator(mocker):
+    output_file = Path("trigger_histograms.hdf5")
+    mock_validator = mocker.patch(
+        "simtools.testing.validate_output.output_validator.validate_trigger_histogram_file"
+    )
+
+    validate_output._validate_hdf5_schema(output_file, "trigger_histograms")
+
+    mock_validator.assert_called_once_with(output_file)
 
 
 def test_monte_carlo_statistics_output_validation_profile():

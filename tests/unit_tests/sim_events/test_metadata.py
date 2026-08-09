@@ -22,6 +22,15 @@ def test_build_standard_metadata_keeps_required_metadata_fields():
     assert "instrument" in metadata["cta"]
 
 
+def test_build_standard_metadata_uses_requested_product_data_name():
+    """Allow products other than reduced-event lists to identify themselves."""
+    metadata = build_standard_metadata(
+        {}, "trigger_histograms.hdf5", product_data_name="trigger_histograms"
+    )
+
+    assert metadata["cta"]["product"]["data"]["model"]["name"] == "trigger_histograms"
+
+
 def test_build_simulation_metadata_marks_missing_models_unavailable():
     metadata = build_simulation_metadata([{"run_number": 12}])
 

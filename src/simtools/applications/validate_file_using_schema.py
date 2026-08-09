@@ -23,7 +23,14 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "data_type",
         help="Type of input data",
-        choices=["metadata", "schema", "data", "model_parameter", "reduced_event_data"],
+        choices=[
+            "metadata",
+            "schema",
+            "data",
+            "model_parameter",
+            "reduced_event_data",
+            "trigger_histograms",
+        ],
         default="data",
     ),
     cli.ArgumentDefinition(
@@ -65,6 +72,9 @@ def main():
     elif data_type == "reduced_event_data":
         output_validator.validate_reduced_event_data_file(file_name)
         app_context.logger.info(f"Successful validation of reduced event data {file_name}")
+    elif data_type == "trigger_histograms":
+        output_validator.validate_trigger_histogram_file(file_name)
+        app_context.logger.info(f"Successful validation of trigger histograms {file_name}")
     else:
         validate_data.DataValidator.validate_data_files(
             file_name=file_name,

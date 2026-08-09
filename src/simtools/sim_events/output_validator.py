@@ -2,11 +2,19 @@
 
 import logging
 
+import h5py
 import numpy as np
 
 from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH
 from simtools.data_model import schema, validate_data
 from simtools.io import table_handler
+from simtools.production_configuration.trigger_histograms import (
+    TRIGGER_HISTOGRAM_BINS_TABLE,
+    TRIGGER_HISTOGRAM_DENSE_GROUP,
+    TRIGGER_HISTOGRAM_METADATA_TABLE,
+    TRIGGER_SUBSET_HISTOGRAMS_TABLE,
+    TRIGGER_TOPOLOGY_COUNTS_TABLE,
+)
 from simtools.sim_events.metadata import validate_simulation_metadata
 from simtools.utils import general
 
@@ -18,6 +26,12 @@ _REDUCED_EVENT_TABLE_SCHEMAS = {
     "FILE_INFO": SCHEMA_PATH / "reduced_event_file_info.schema.yml",
 }
 _REDUCED_EVENT_METADATA_DOCUMENTS = ("METADATA", "SIMULATION_METADATA")
+_TRIGGER_HISTOGRAM_TABLES = (
+    TRIGGER_HISTOGRAM_METADATA_TABLE,
+    TRIGGER_HISTOGRAM_BINS_TABLE,
+    TRIGGER_TOPOLOGY_COUNTS_TABLE,
+    TRIGGER_SUBSET_HISTOGRAMS_TABLE,
+)
 
 
 def validate_sim_events(data_files, expected_mc_events):
@@ -117,6 +131,112 @@ def validate_reduced_event_data_file(data_file):
     )
     _validate_reduced_event_table_references(tables, data_file)
     return True
+
+
+def validate_trigger_histogram_file(data_file):
+    """Validate the structure, metadata, and references of one trigger-histogram file."""
+    if table_handler.read_table_file_type([data_file]) != "HDF5":
+        raise ValueError(f"Trigger histogram file '{data_file}' must be an HDF5 file.")
+
+    available_entries = table_handler.read_table_list(data_file, list(_TRIGGER_HISTOGRAM_TABLES))
+    missing_entries = [name for name, entries in available_entries.items() if not entries]
+    if missing_entries:
+        raise ValueError(
+            f"Trigger histogram file '{data_file}' is missing required entries: "
+            f"{', '.join(missing_entries)}."
+        )
+
+    standard_metadata = table_handler.read_metadata_document(data_file, "METADATA")
+    schema.validate_dict_using_schema(standard_metadata, schema_file=METADATA_JSON_SCHEMA)
+    tables = table_handler.read_tables(data_file, list(_TRIGGER_HISTOGRAM_TABLES), file_type="HDF5")
+    reference_ids = _validate_trigger_histogram_table_references(tables, data_file)
+    _validate_trigger_histogram_dense_payload(data_file, reference_ids)
+    return True
+
+
+def _validate_trigger_histogram_table_references(tables, data_file):
+    """Validate reference IDs used by trigger-histogram tables."""
+    reference_ids = {str(row["reference_id"]) for row in tables[TRIGGER_HISTOGRAM_METADATA_TABLE]}
+    metadata_row_count = len(tables[TRIGGER_HISTOGRAM_METADATA_TABLE])
+    if not reference_ids:
+        raise ValueError(f"Trigger histogram file '{data_file}' has no reference metadata rows.")
+    if len(reference_ids) != metadata_row_count:
+        raise ValueError(f"Trigger histogram file '{data_file}' has duplicate reference IDs.")
+
+    for table_name in _TRIGGER_HISTOGRAM_TABLES[1:]:
+        table_reference_ids = {str(row["reference_id"]) for row in tables[table_name]}
+        unknown_ids = table_reference_ids.difference(reference_ids)
+        if unknown_ids:
+            raise ValueError(
+                f"Trigger histogram file '{data_file}' table '{table_name}' references unknown "
+                f"reference IDs: {sorted(unknown_ids)}."
+            )
+
+    bin_reference_ids = {str(row["reference_id"]) for row in tables[TRIGGER_HISTOGRAM_BINS_TABLE]}
+    missing_bin_ids = reference_ids.difference(bin_reference_ids)
+    if missing_bin_ids:
+        raise ValueError(
+            f"Trigger histogram file '{data_file}' has references without histogram bins: "
+            f"{sorted(missing_bin_ids)}."
+        )
+    return reference_ids
+
+
+def _validate_trigger_histogram_dense_payload(data_file, reference_ids):
+    """Validate dense histogram groups and their links to reference metadata."""
+    with h5py.File(data_file, "r") as hdf5_file:
+        dense_group = _get_dense_histogram_group(hdf5_file, data_file)
+        _validate_dense_reference_ids(dense_group, reference_ids, data_file)
+        for reference_id, reference_group in dense_group.items():
+            _validate_dense_reference_payload(reference_id, reference_group, data_file)
+
+
+def _get_dense_histogram_group(hdf5_file, data_file):
+    """Return the dense payload group from a trigger-histogram file."""
+    if TRIGGER_HISTOGRAM_DENSE_GROUP not in hdf5_file:
+        raise ValueError(f"Trigger histogram file '{data_file}' has no dense payload group.")
+    dense_group = hdf5_file[TRIGGER_HISTOGRAM_DENSE_GROUP]
+    if not isinstance(dense_group, h5py.Group):
+        raise ValueError(f"Trigger histogram file '{data_file}' dense payload is not a group.")
+    return dense_group
+
+
+def _validate_dense_reference_ids(dense_group, reference_ids, data_file):
+    """Validate that dense payload groups correspond to reference metadata."""
+    dense_reference_ids = set(dense_group.keys())
+    if dense_reference_ids != reference_ids:
+        raise ValueError(
+            f"Trigger histogram file '{data_file}' dense reference IDs do not match metadata: "
+            f"metadata={sorted(reference_ids)}, dense={sorted(dense_reference_ids)}."
+        )
+
+
+def _validate_dense_reference_payload(reference_id, reference_group, data_file):
+    """Validate all dense histograms for one reference ID."""
+    if not isinstance(reference_group, h5py.Group) or not reference_group:
+        raise ValueError(
+            f"Trigger histogram file '{data_file}' reference '{reference_id}' has no payload."
+        )
+    for histogram_name, histogram_group in reference_group.items():
+        _validate_dense_histogram_payload(histogram_name, histogram_group, data_file)
+
+
+def _validate_dense_histogram_payload(histogram_name, histogram_group, data_file):
+    """Validate one dense histogram's values and bin-edge datasets."""
+    if not isinstance(histogram_group, h5py.Group):
+        raise ValueError(
+            f"Trigger histogram file '{data_file}' payload '{histogram_name}' is not a group."
+        )
+    if "values" not in histogram_group or not isinstance(histogram_group["values"], h5py.Dataset):
+        raise ValueError(
+            f"Trigger histogram file '{data_file}' payload '{histogram_name}' "
+            "has no values dataset."
+        )
+    if not any(name.startswith("edges_") for name in histogram_group):
+        raise ValueError(
+            f"Trigger histogram file '{data_file}' payload '{histogram_name}' "
+            "has no bin-edge dataset."
+        )
 
 
 def _validate_reduced_event_table_references(tables, data_file):

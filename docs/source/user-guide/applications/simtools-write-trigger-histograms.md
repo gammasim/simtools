@@ -8,7 +8,7 @@
 
 ## Overview
 
-This application reads reduced event-data HDF5 files and writes trigger histograms. The products
+Reads reduced event-data HDF5 files and writes trigger histograms. The products
 contain simulated and triggered event distributions used for production checks, CORSIKA-limit
 derivation, and Monte Carlo statistics estimates.
 
@@ -18,11 +18,9 @@ simulation model associated with the input data.
 
 ## Input and output
 
-| Role | Argument or file | Format | Description |
+| Role | Argument | Format | Description |
 | --- | --- | --- | --- |
 | Input | `event_data_files` | HDF5 | Reduced event-data files or glob patterns. |
-| Configuration | `energy_bins_per_decade` | Integer | Number of log-energy bins per decade. |
-| Configuration | `angular_distance_bin_width` | Quantity | Angular-distance bin width. |
 | Output | `output_file` | HDF5 | Trigger-histogram product. |
 
 The output can be passed to the CORSIKA-limit and Monte Carlo-statistics applications.

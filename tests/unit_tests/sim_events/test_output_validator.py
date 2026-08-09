@@ -1,11 +1,15 @@
+from pathlib import Path
+
 import numpy as np
 import pytest
 from astropy.table import Table
 
+from simtools.io import table_handler
 from simtools.sim_events.output_validator import (
     validate_event_numbers,
     validate_reduced_event_data_file,
     validate_sim_events,
+    validate_trigger_histogram_file,
 )
 
 
@@ -92,6 +96,60 @@ def test_validate_reduced_event_data_file_rejects_unknown_file_id(mocker):
 
     with pytest.raises(ValueError, match=r"references unknown file_id values: \[3\]"):
         validate_reduced_event_data_file("events.hdf5")
+
+
+def _write_trigger_histogram_file(output_file, topology_reference_id="reference_0"):
+    """Write a minimal, structurally valid trigger-histogram file."""
+    table_names = (
+        "TRIGGER_REFERENCE_METADATA",
+        "TRIGGER_REFERENCE_BINS",
+        "TRIGGER_TOPOLOGY_COUNTS",
+        "TRIGGER_SUBSET_HISTOGRAMS",
+    )
+    tables = []
+    for table_name in table_names:
+        reference_id = (
+            topology_reference_id if table_name == "TRIGGER_TOPOLOGY_COUNTS" else "reference_0"
+        )
+        table = Table({"reference_id": [reference_id]})
+        table.meta["EXTNAME"] = table_name
+        tables.append(table)
+    table_handler.write_tables(
+        tables,
+        output_file,
+        file_type="HDF5",
+        metadata_documents={"METADATA": {"cta": {}}},
+    )
+    import h5py
+
+    with h5py.File(output_file, "a") as hdf5_file:
+        histogram_group = hdf5_file.create_group("TRIGGER_HISTOGRAM_DENSE/reference_0/energy")
+        histogram_group.create_dataset("values", data=[1])
+        histogram_group.create_dataset("edges_0", data=[0.1, 1.0])
+
+
+def test_validate_trigger_histogram_file_validates_references_and_payload(
+    tmp_test_directory, mocker
+):
+    output_file = Path(tmp_test_directory) / "trigger_histograms.hdf5"
+    _write_trigger_histogram_file(output_file)
+    mocker.patch("simtools.sim_events.output_validator.schema.validate_dict_using_schema")
+
+    assert validate_trigger_histogram_file(output_file) is True
+
+
+def test_validate_trigger_histogram_file_rejects_unknown_table_reference(
+    tmp_test_directory, mocker
+):
+    output_file = Path(tmp_test_directory) / "trigger_histograms.hdf5"
+    _write_trigger_histogram_file(output_file, topology_reference_id="missing")
+    mocker.patch("simtools.sim_events.output_validator.schema.validate_dict_using_schema")
+
+    with pytest.raises(
+        ValueError,
+        match=r"TRIGGER_TOPOLOGY_COUNTS.*unknown reference IDs: \['missing'\]",
+    ):
+        validate_trigger_histogram_file(output_file)
 
 
 def test_validate_sim_events_calls_validate_event_numbers(tmp_path, monkeypatch):

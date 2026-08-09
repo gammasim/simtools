@@ -29,3 +29,28 @@ def test_main_validates_reduced_event_data(mock_start, mock_output_validator):
     logger.info.assert_called_once_with(
         "Successful validation of reduced event data reduced_event_data.hdf5"
     )
+
+
+@patch("simtools.applications.validate_file_using_schema.output_validator")
+@patch("simtools.application.definition.ApplicationDefinition.start")
+def test_main_validates_trigger_histograms(mock_start, mock_output_validator):
+    logger = Mock()
+    mock_start.return_value = SimpleNamespace(
+        args={
+            "file_name": "trigger_histograms.hdf5",
+            "file_directory": None,
+            "schema_file": None,
+            "data_type": "trigger_histograms",
+            "check_exact_data_type": False,
+        },
+        logger=logger,
+    )
+
+    validate_file_using_schema.main()
+
+    mock_output_validator.validate_trigger_histogram_file.assert_called_once_with(
+        "trigger_histograms.hdf5"
+    )
+    logger.info.assert_called_once_with(
+        "Successful validation of trigger histograms trigger_histograms.hdf5"
+    )
