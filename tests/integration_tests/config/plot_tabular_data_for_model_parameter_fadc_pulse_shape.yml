@@ -10,7 +10,9 @@ applications:
     site: North
     telescope: LSTN-design
   integration_tests:
-  - output_file: fadc_pulse_shape_1.0.0_North_LSTN-design.pdf
+  - test_outputs:
+    - path_descriptor: output_path
+      file: fadc_pulse_shape_1.0.0_North_LSTN-design.pdf
   test_name: fadc_pulse_shape
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

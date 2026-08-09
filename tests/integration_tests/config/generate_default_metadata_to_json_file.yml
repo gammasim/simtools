@@ -6,8 +6,12 @@ applications:
     output_path: simtools-output
     schema_file: src/simtools/schemas/metadata.metaschema.yml
   integration_tests:
-  - output_file: test.json
-  - file_type: json
+  - test_outputs:
+    - path_descriptor: output_path
+      file: test.json
+      validations:
+      - type: format
+        format: json
   test_name: test-json
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

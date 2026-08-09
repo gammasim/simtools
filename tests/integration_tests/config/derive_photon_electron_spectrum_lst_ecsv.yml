@@ -18,11 +18,17 @@ applications:
     output_file: test_single_pe_lst.ecsv
     output_path: simtools-output
   integration_tests:
-  - output_file: test_single_pe_lst.dat
-  - output_file: test_single_pe_lst.ecsv
-  - reference_output_file: ${downloaded:spe_LSTN_01_2025-04-03.ecsv}
-    tolerance: 0.01
+  - test_outputs:
+    - path_descriptor: output_path
+      file: test_single_pe_lst.dat
+    - path_descriptor: output_path
+      file: test_single_pe_lst.ecsv
+      validations:
+      - type: reference
+        file: ${downloaded:spe_LSTN_01_2025-04-03.ecsv}
+        tolerance: 0.01
+        columns: [amplitude, frequency (prompt), frequency (prompt+afterpulsing)]
   test_name: LST_ecsv
   test_use_case: UC-150-2.1.2
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

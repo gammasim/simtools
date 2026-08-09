@@ -154,6 +154,11 @@ def validate_trigger_histogram_file(data_file):
     return True
 
 
+def validate_trigger_histograms_file(data_file):
+    """Validate a trigger-histogram product using its registered product name."""
+    return validate_trigger_histogram_file(data_file)
+
+
 def _validate_trigger_histogram_table_references(tables, data_file):
     """Validate reference IDs used by trigger-histogram tables."""
     reference_ids = {str(row["reference_id"]) for row in tables[TRIGGER_HISTOGRAM_METADATA_TABLE]}

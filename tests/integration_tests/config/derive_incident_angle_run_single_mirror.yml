@@ -9,9 +9,16 @@ applications:
     model_version: 6.0.2
     output_path: simtools-output
   integration_tests:
-  - output_file: incident_angles/incident_angles_derive_incident_angle_LSTS-04_off1.ecsv
-  - output_file: plots/incident_angles_multi_derive_incident_angle_LSTS-04.png
-  - output_file: logs/incident_angles_derive_incident_angle_LSTS-04_off1.log
+  - test_outputs:
+    - path_descriptor: output_path
+      file: incident_angles_derive_incident_angle_LSTS-04_off1.ecsv
+      output_sub_path: incident_angles
+    - path_descriptor: output_path
+      file: incident_angles_multi_derive_incident_angle_LSTS-04.png
+      output_sub_path: plots
+    - path_descriptor: output_path
+      file: incident_angles_derive_incident_angle_LSTS-04_off1.log
+      output_sub_path: logs
   test_name: incident_angles_single_mirror
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

@@ -11,8 +11,11 @@ applications:
     plot_type: refractive_index_vs_altitude
     site: North
   integration_tests:
-  - output_file: atmospheric_profile_1.0.0_North_refractive_index_vs_altitude.pdf
-  - output_file: atmospheric_profile_1.0.0_North_refractive_index_vs_altitude.png
+  - test_outputs:
+    - path_descriptor: output_path
+      file: atmospheric_profile_1.0.0_North_refractive_index_vs_altitude.pdf
+    - path_descriptor: output_path
+      file: atmospheric_profile_1.0.0_North_refractive_index_vs_altitude.png
   test_name: atmospheric_profile_one_type
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

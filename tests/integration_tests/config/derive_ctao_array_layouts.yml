@@ -8,9 +8,14 @@ applications:
     site: North
     updated_parameter_version: 1.0.99
   integration_tests:
-  - output_file: array_layouts/array_layouts-1.0.99.json
-  - output_file: array_layouts/array_layouts-1.0.99.meta.yml
+  - test_outputs:
+    - path_descriptor: output_path
+      file: array_layouts-1.0.99.json
+      output_sub_path: array_layouts
+    - path_descriptor: output_path
+      file: array_layouts-1.0.99.meta.yml
+      output_sub_path: array_layouts
   test_name: run
   xfail_network_error: true
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

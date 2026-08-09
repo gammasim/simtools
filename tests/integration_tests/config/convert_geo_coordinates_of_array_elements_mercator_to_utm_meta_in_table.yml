@@ -15,8 +15,14 @@ applications:
     skip_input_validation: true
     skip_output_validation: true
   integration_tests:
-  - reference_output_file: ${static:telescope_positions-North-utm.ecsv}
-    tolerance: 0.01
+  - test_outputs:
+    - path_descriptor: output_path
+      file: test.ecsv
+      validations:
+      - type: reference
+        file: ${static:telescope_positions-North-utm.ecsv}
+        tolerance: 0.01
+        columns: [utm_east, utm_north, altitude]
   test_name: mercator_to_utm_in_table
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

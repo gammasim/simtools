@@ -14,11 +14,12 @@ applications:
     number_of_mirrors_to_test: 1
     test: true
   integration_tests:
-  - test_output_files:
-    - file: LSTN-01/mirror_reflection_random_angle-1.0.0.json
-      path_descriptor: output_path
-    - file: psf_distributions.png
-      path_descriptor: output_path
+  - test_outputs:
+    - path_descriptor: output_path
+      file: mirror_reflection_random_angle-1.0.0.json
+      output_sub_path: LSTN-01
+    - path_descriptor: output_path
+      file: psf_distributions.png
   test_name: psf_measurement
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

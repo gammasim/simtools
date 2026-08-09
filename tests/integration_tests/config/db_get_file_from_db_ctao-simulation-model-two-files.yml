@@ -7,8 +7,11 @@ applications:
     - ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv
     output_path: simtools-output
   integration_tests:
-  - output_file: mirror_CTA-S-LST_v2020-04-07.dat
-  - output_file: ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv
+  - test_outputs:
+    - path_descriptor: output_path
+      file: mirror_CTA-S-LST_v2020-04-07.dat
+    - path_descriptor: output_path
+      file: ray-tracing-North-LST-1-d10.0-za20.0_validate_optics.ecsv
   test_name: CTA-Simulation-Model-two-files
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

@@ -5,4 +5,4 @@ applications:
     input_file: ${generated:gamma_diffuse_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test.reduced_event_data.hdf5}
   test_name: inspect_hdf5
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

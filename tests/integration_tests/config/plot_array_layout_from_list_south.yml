@@ -13,8 +13,11 @@ applications:
     model_version: 6.0.2
     output_path: simtools-output
   integration_tests:
-  - output_file: array_layout_list_South_ground_6-0-2.png
-  - output_file: array_layout_list_South_ground_6-0-2.pdf
+  - test_outputs:
+    - path_descriptor: output_path
+      file: array_layout_list_South_ground_6-0-2.png
+    - path_descriptor: output_path
+      file: array_layout_list_South_ground_6-0-2.pdf
   test_name: from_list_south
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

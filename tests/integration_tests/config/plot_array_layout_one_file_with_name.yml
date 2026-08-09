@@ -9,8 +9,11 @@ applications:
     figure_name: test
     output_path: simtools-output
   integration_tests:
-  - output_file: test.pdf
-  - output_file: test.png
+  - test_outputs:
+    - path_descriptor: output_path
+      file: test.pdf
+    - path_descriptor: output_path
+      file: test.png
   test_name: one_file_with_name
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

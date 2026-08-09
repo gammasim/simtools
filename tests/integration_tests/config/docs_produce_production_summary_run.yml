@@ -6,7 +6,9 @@ applications:
     output_path: simtools-output/reports/productions/
     output_file: production_version_descriptions.md
   integration_tests:
-  - output_file: production_version_descriptions.md
+  - test_outputs:
+    - path_descriptor: output_path
+      file: production_version_descriptions.md
   test_name: run
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

@@ -62,6 +62,9 @@ The Testing module provides tools for testing the code. This might be part of th
 ```{eval-rst}
 .. automodule:: testing.validate_output
    :members:
+
+.. automodule:: testing.output_validation
+   :members:
 ```
 
 (helpersmodule)=

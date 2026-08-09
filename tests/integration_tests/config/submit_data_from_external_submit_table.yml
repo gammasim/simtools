@@ -8,7 +8,9 @@ applications:
     output_path: simtools-output
     schema_file: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml
   integration_tests:
-  - output_file: test.ecsv
+  - test_outputs:
+    - path_descriptor: output_path
+      file: test.ecsv
   test_name: submit_table
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

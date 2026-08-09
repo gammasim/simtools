@@ -11,9 +11,13 @@ applications:
     parameter_version: 2.0.0
     site: North
   integration_tests:
-  - reference_output_file: |
-     ${generated:model_parameters/array_element_position_utm-2.0.0.json}
-    tolerance: 0.01
+  - test_outputs:
+    - path_descriptor: output_path
+      file: test.json
+      validations:
+      - type: reference
+        file: ${generated:model_parameters/array_element_position_utm-2.0.0.json}
+        tolerance: 0.01
   test_name: ground_to_utm_json
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

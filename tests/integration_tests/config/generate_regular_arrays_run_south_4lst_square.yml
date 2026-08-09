@@ -5,13 +5,16 @@ applications:
     model_version: 6.0.2
     telescope_type: LST
     number_of_telescopes: 4
-    telescope_distance: 50.
+    telescope_distance: 50.0
     output_file: generate_regular_arrays.ecsv
     output_path: simtools-output
     site: South
   integration_tests:
-  - output_file: generate_regular_arrays-South-4LST-square.ecsv
-  - output_file: generate_regular_arrays-South-4LST-square.info.yml
+  - test_outputs:
+    - path_descriptor: output_path
+      file: generate_regular_arrays-South-4LST-square.ecsv
+    - path_descriptor: output_path
+      file: generate_regular_arrays-South-4LST-square.info.yml
   test_name: run-south-4LST-square
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0
