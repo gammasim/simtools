@@ -40,6 +40,11 @@ on:
         required: false
         type: boolean
         default: false
+      benchmark_min_wall_time:
+        description: 'Minimum integration-test wall time published as an individual chart'
+        required: false
+        type: number
+        default: 5.0
   pull_request:
     types: [opened, synchronize]
     paths-ignore:
@@ -361,7 +366,11 @@ jobs:
       - name: Install Python dependencies (prod container)
         if: contains(inputs.container_image, 'simtools-prod')
         run: |
-          pip install --no-cache-dir pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry psutil
+          pip install --no-cache-dir pytest pytest-cov pytest-mock pytest-requirements pytest-xdist pytest-retry
+
+      - name: Install resource benchmark dependency (prod container)
+        if: ${{ inputs.benchmark && contains(inputs.container_image, 'simtools-prod') }}
+        run: pip install --no-cache-dir psutil
 
       - name: Install Python dependencies (dev container)
         if: ${{ !contains(inputs.container_image, 'simtools-prod') }}
@@ -398,12 +407,18 @@ jobs:
         run: |
           MODEL_SOURCE_ARGS=()
           if [ -n "$SIMULATION_MODELS_PATH" ]; then
+            for variable in ${!SIMTOOLS_DB_@}; do
+              unset "$variable"
+            done
             MODEL_SOURCE_ARGS+=(--simulation-models-path="$SIMULATION_MODELS_PATH")
           fi
-          simtools-test-resources-run-integration-benchmark \
-            --model-version=${{ matrix.model_version }} \
-            --output-dir=resource-benchmark-${{ matrix.model_version }} \
-            "${MODEL_SOURCE_ARGS[@]}"
+          pytest --model_version=${{ matrix.model_version }} --color=yes \
+            "${MODEL_SOURCE_ARGS[@]}" \
+            -n 0 --no-cov \
+            --resource-benchmark-output=resource-benchmark-${{ matrix.model_version }} \
+            --resource-benchmark-mode=integration \
+            --resource-benchmark-min-wall-time=${{ inputs.benchmark_min_wall_time }} \
+            tests/integration_tests/
 
       - name: Upload integration resource benchmark
         if: ${{ always() && inputs.benchmark }}

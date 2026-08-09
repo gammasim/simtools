@@ -4,7 +4,6 @@ import logging
 import os
 import shutil
 import sys
-from collections import Counter, defaultdict
 from pathlib import Path
 
 import simtools.utils.general as gen
@@ -70,71 +69,6 @@ def get_list_of_test_configurations(config_files, test_resources_path=None):
             for item in configs
         ],
     )
-
-
-def get_resource_benchmark_configurations(configs):
-    """Split integration configurations included in resource benchmarking.
-
-    Parameters
-    ----------
-    configs: list[dict]
-        Resolved application configurations returned by
-        :func:`get_list_of_test_configurations`.
-
-    Returns
-    -------
-    tuple[list[dict], list[dict]]
-        Included configurations and exclusion records containing ``id`` and
-        ``reason`` keys.
-    """
-    included = []
-    excluded = []
-    for config in configs:
-        reason = config.get("exclude_from_resource_benchmark")
-        config_id = (
-            f"{config.get('application', 'no-app-name')}_{config.get('test_name', 'no-test-name')}"
-        )
-        if reason:
-            excluded.append({"id": config_id, "reason": reason})
-        else:
-            included.append(config)
-    return included, excluded
-
-
-def get_resource_benchmark_test_ids(configs):
-    """Return pytest IDs for included resource benchmark configurations.
-
-    Duplicate IDs receive the same numeric suffix that pytest assigns during
-    parametrized test collection.
-
-    Parameters
-    ----------
-    configs: list[dict]
-        Resolved application configurations returned by
-        :func:`get_list_of_test_configurations`.
-
-    Returns
-    -------
-    list[str]
-        Stable pytest parameter IDs for configurations not excluded from
-        resource benchmarking.
-    """
-    included, _ = get_resource_benchmark_configurations(configs)
-    included_objects = {id(config) for config in included}
-    base_ids = [
-        f"{config.get('application', 'no-app-name')}_{config.get('test_name', 'no-test-name')}"
-        for config in configs
-    ]
-    counts = Counter(base_ids)
-    occurrences = defaultdict(int)
-    test_ids = []
-    for config, base_id in zip(configs, base_ids):
-        occurrence = occurrences[base_id]
-        occurrences[base_id] += 1
-        test_id = base_id if counts[base_id] == 1 else f"{base_id}{occurrence}"
-        if id(config) in included_objects:
-            test_ids.append(test_id)
-    return test_ids
 
 
 def _read_configs_from_files(config_files, test_resources_path=None):

@@ -61,32 +61,6 @@ def test_get_list_of_test_configurations(integration_test_config_files):
     assert len(list_test_without_config) == len(list_test_with_help)
 
 
-def test_get_resource_benchmark_configurations():
-    configs = [
-        {"application": "simtools-run", "test_name": "included"},
-        {
-            "application": "simtools-run",
-            "test_name": "excluded",
-            "exclude_from_resource_benchmark": "requires external service",
-        },
-    ]
-
-    included, excluded = configuration.get_resource_benchmark_configurations(configs)
-
-    assert included == [configs[0]]
-    assert excluded == [{"id": "simtools-run_excluded", "reason": "requires external service"}]
-
-
-def test_get_resource_benchmark_test_ids_preserves_duplicate_suffixes():
-    first = {"application": "simtools-example", "test_name": "run"}
-    second = {"application": "simtools-example", "test_name": "run"}
-
-    assert configuration.get_resource_benchmark_test_ids([first, second]) == [
-        "simtools-example_run0",
-        "simtools-example_run1",
-    ]
-
-
 def test_create_tmp_output_path(tmp_test_directory):
     config = {"application": "test_app", "test_name": "test_name"}
     tmp_output_path = configuration.create_tmp_output_path(tmp_test_directory, config)
