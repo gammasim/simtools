@@ -81,3 +81,17 @@ def test_compare_samples_with_statistics_empty_samples():
     result = compare_samples_with_statistics([], [], [0.0, 1.0])
     assert result["ks_statistic"] is None
     assert result["ks_pvalue"] is None
+
+
+def test_compare_samples_with_statistics_uses_wasserstein_distance():
+    result = compare_samples_with_statistics(
+        baseline_samples=[1.1, 1.2],
+        candidate_samples=[2.1, 2.2],
+        bin_edges=[1.0, 2.0, 3.0],
+        metric="wasserstein",
+    )
+
+    assert result["metric"] == "wasserstein"
+    assert result["wasserstein_distance"] == pytest.approx(1.0)
+    assert result["baseline_counts"] == [2, 0]
+    assert result["candidate_counts"] == [0, 2]

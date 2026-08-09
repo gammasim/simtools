@@ -55,6 +55,8 @@ def test_plot_writes_one_set_per_telescope(tmp_test_directory):
         "candidate"
     )
     assert statistics["plot_statistics"]["signals"]["comparisons"][0]["valid"]
+    assert statistics["plot_statistics"]["signals"]["metric"] == "ks"
+    assert statistics["plot_statistics"]["triggered_pixels"]["metric"] == "wasserstein"
 
 
 def test_plot_skips_observable_without_values(tmp_test_directory):

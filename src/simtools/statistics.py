@@ -129,8 +129,8 @@ def _validate_bin_edges(bin_edges, count_size):
     return bin_edges
 
 
-def compare_samples_with_statistics(baseline_samples, candidate_samples, bin_edges):
-    """Compute KS statistics for two sample arrays using provided bin edges.
+def compare_samples_with_statistics(baseline_samples, candidate_samples, bin_edges, metric="ks"):
+    """Compare two sample arrays using the selected metric and provided bin edges.
 
     Parameters
     ----------
@@ -139,17 +139,33 @@ def compare_samples_with_statistics(baseline_samples, candidate_samples, bin_edg
     candidate_samples : np.ndarray
         Candidate sample values.
     bin_edges : np.ndarray
-        Histogram bin edges
+        Histogram bin edges.
+    metric : {"ks", "jensen_shannon", "wasserstein"}, optional
+        Metric used for the comparison.
 
     Returns
     -------
     dict
-        KS statistics, p-values, and histogram metadata.
+        Comparison statistics and histogram metadata.
     """
     baseline_samples = np.asarray(baseline_samples)
     candidate_samples = np.asarray(candidate_samples)
+    if metric != "ks":
+        baseline_counts, _ = np.histogram(baseline_samples, bins=bin_edges)
+        candidate_counts, _ = np.histogram(candidate_samples, bins=bin_edges)
+        result = compare_histogram_counts(
+            baseline_counts,
+            candidate_counts,
+            metric=metric,
+            bin_edges=bin_edges,
+        )
+        result["baseline_counts"] = baseline_counts.astype(int).tolist()
+        result["candidate_counts"] = candidate_counts.astype(int).tolist()
+        result["bin_edges"] = np.asarray(bin_edges, dtype=float).tolist()
+        return result
+
     result = {
-        "metric": "ks",
+        "metric": metric,
         "value": None,
         "ks_statistic": None,
         "ks_pvalue": None,

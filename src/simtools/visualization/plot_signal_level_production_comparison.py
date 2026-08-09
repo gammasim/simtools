@@ -12,10 +12,10 @@ from simtools.statistics import compare_samples_with_statistics
 _logger = logging.getLogger(__name__)
 
 _OBSERVABLES = (
-    ("pedestals", "Pedestal", "pedestals.png"),
-    ("signals", "Integrated signal", "signals.png"),
-    ("peak_timing", "Peak sample", "peak_timing.png"),
-    ("triggered_pixels", "Triggered pixels per event", "triggered_pixels.png"),
+    ("pedestals", "Pedestal", "pedestals.png", "ks"),
+    ("signals", "Integrated signal", "signals.png", "ks"),
+    ("peak_timing", "Peak sample", "peak_timing.png", "ks"),
+    ("triggered_pixels", "Triggered pixels per event", "triggered_pixels.png", "wasserstein"),
 )
 
 
@@ -57,13 +57,14 @@ def _plot_telescope_comparisons(metrics, output_path, bins):
         "comparison_sets": [_production_summary(item) for item in metrics[1:]],
         "plot_statistics": {},
     }
-    for observable, x_label, filename in _OBSERVABLES:
+    for observable, x_label, filename, metric in _OBSERVABLES:
         plot_statistics = _plot_observable(
             metrics,
             output_path,
             observable,
             x_label,
             filename,
+            metric,
             bins,
         )
         if plot_statistics is not None:
@@ -82,7 +83,7 @@ def _production_summary(metrics):
     }
 
 
-def _plot_observable(metrics, output_path, observable, x_label, filename, bins):
+def _plot_observable(metrics, output_path, observable, x_label, filename, metric, bins):
     """Plot one observable and calculate candidate statistics."""
     samples = [np.asarray(getattr(item, observable)) for item in metrics]
     non_empty = [values for values in samples if values.size]
@@ -110,13 +111,13 @@ def _plot_observable(metrics, output_path, observable, x_label, filename, bins):
     for item, values in zip(metrics[1:], samples[1:]):
         if not values.size or not samples[0].size:
             continue
-        comparison = compare_samples_with_statistics(samples[0], values, bin_edges)
+        comparison = compare_samples_with_statistics(samples[0], values, bin_edges, metric=metric)
         comparison["candidate_label"] = item.label
         comparisons.append(comparison)
     return {
         "baseline_label": metrics[0].label,
         "metric_type": "aligned_counts",
-        "metric": "ks",
+        "metric": metric,
         "metadata": {"bin_edges": bin_edges.tolist()},
         "comparisons": comparisons,
     }
