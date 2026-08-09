@@ -41,5 +41,5 @@ With multiple productions, plots are grouped into production-specific subdirecto
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: production_derive_corsika_limits_hdf5_db_arrays.yml
+    :file: production_derive_corsika_limits.yml
 ```
