@@ -467,13 +467,18 @@ def _validate_special_output(output_file_path, file_test):
 
 def _validate_hdf5_output(output_file_path, file_test):
     """Run configured HDF5 dataset and schema checks."""
-    if "expected_hdf5_datasets" in file_test:
+    if "expected_hdf5_datasets" in file_test or "expected_hdf5_min_rows" in file_test:
         if output_file_path.suffix.lower() not in (".hdf5", ".h5"):
             raise AssertionError(
-                f"expected_hdf5_datasets requires an HDF5 output file, got {output_file_path}."
+                f"HDF5 dataset checks require an HDF5 output file, got {output_file_path}."
             )
+    if "expected_hdf5_datasets" in file_test:
         assert assertions.assert_hdf5_datasets(
             output_file_path, file_test["expected_hdf5_datasets"]
+        )
+    if "expected_hdf5_min_rows" in file_test:
+        assert assertions.assert_hdf5_dataset_min_rows(
+            output_file_path, file_test["expected_hdf5_min_rows"]
         )
     if "hdf5_schema" in file_test:
         _validate_hdf5_schema(output_file_path, file_test["hdf5_schema"])

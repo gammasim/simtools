@@ -92,6 +92,25 @@ def assert_hdf5_datasets(file_name, expected_datasets):
     return True
 
 
+def assert_hdf5_dataset_min_rows(file_name, expected_min_rows):
+    """Assert that named HDF5 datasets contain at least the requested number of rows."""
+    with h5py.File(file_name, "r") as hdf5_file:
+        for dataset_name, minimum_rows in expected_min_rows.items():
+            if dataset_name not in hdf5_file or not isinstance(
+                hdf5_file[dataset_name], h5py.Dataset
+            ):
+                raise AssertionError(
+                    f"HDF5 file {file_name} has no dataset named '{dataset_name}'."
+                )
+            actual_rows = len(hdf5_file[dataset_name])
+            if actual_rows < minimum_rows:
+                raise AssertionError(
+                    f"HDF5 dataset '{dataset_name}' in {file_name} has {actual_rows} row(s), "
+                    f"expected at least {minimum_rows}."
+                )
+    return True
+
+
 def check_output_from_sim_telarray(file, file_test):
     """
     Check that the sim_telarray simulation result is reasonable and matches the expected output.

@@ -504,6 +504,25 @@ def test_validate_output_path_and_file_checks_hdf5_datasets(tmp_test_directory, 
     mock_check_hdf5.assert_called_once_with(output_file, file_test["expected_hdf5_datasets"])
 
 
+def test_validate_output_path_and_file_checks_hdf5_min_rows(tmp_test_directory, mocker):
+    output_file = Path(str(tmp_test_directory)) / "output.hdf5"
+    output_file.touch()
+    mock_check_hdf5 = mocker.patch(
+        "simtools.testing.assertions.assert_hdf5_dataset_min_rows", return_value=True
+    )
+    file_test = {
+        "path_descriptor": "output_path",
+        "file": output_file.name,
+        "expected_hdf5_min_rows": {"SHOWERS": 1},
+    }
+
+    validate_output._validate_output_path_and_file(
+        {"configuration": {"output_path": str(tmp_test_directory)}}, [file_test]
+    )
+
+    mock_check_hdf5.assert_called_once_with(output_file, {"SHOWERS": 1})
+
+
 def test_validate_output_path_and_file_rejects_non_hdf5_dataset_check(tmp_test_directory):
     output_file = Path(str(tmp_test_directory)) / "output.simtel.zst"
     output_file.touch()
@@ -515,7 +534,7 @@ def test_validate_output_path_and_file_rejects_non_hdf5_dataset_check(tmp_test_d
 
     with pytest.raises(
         AssertionError,
-        match="expected_hdf5_datasets requires an HDF5 output file",
+        match="HDF5 dataset checks require an HDF5 output file",
     ):
         validate_output._validate_output_path_and_file(
             {"configuration": {"output_path": str(tmp_test_directory)}}, [file_test]
