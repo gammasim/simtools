@@ -40,4 +40,6 @@ KS statistic for continuous quantities, Jensen-Shannon distance for categorical 
 telescope distributions, and Wasserstein-1 distance for ordered trigger multiplicities. Distances
 compare normalized distribution shapes, so differing production event totals do not directly set
 the result. A `comparison_statistics.meta.yml` sidecar records the application configuration and
-provenance. The report file contains diagnostics; simtools does not apply acceptance thresholds.
+provenance. The report format is described by
+`src/simtools/schemas/production_comparison_statistics.schema.yml`. The report file contains
+diagnostics; simtools does not apply acceptance thresholds.

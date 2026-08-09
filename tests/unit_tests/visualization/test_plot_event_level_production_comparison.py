@@ -2,10 +2,13 @@ import json
 from collections import Counter
 from pathlib import Path
 
+import jsonschema
 import numpy as np
 import pytest
 from matplotlib import pyplot as plt
 
+from simtools.constants import SCHEMA_PATH
+from simtools.io import ascii_handler
 from simtools.sim_events.production_comparison import ProductionEventMetrics
 from simtools.visualization import plot_event_level_production_comparison
 
@@ -61,6 +64,11 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
 
     with (output_path / "comparison_statistics.json").open(encoding="utf-8") as file_handle:
         stats_payload = json.load(file_handle)
+    comparison_schema = ascii_handler.collect_data_from_file(
+        SCHEMA_PATH / "production_comparison_statistics.schema.yml"
+    )
+    jsonschema.Draft6Validator.check_schema(comparison_schema)
+    jsonschema.validate(stats_payload, comparison_schema)
     assert stats_payload["baseline"]["label"] == "baseline"
     assert stats_payload["format_version"] == 1
     assert [item["label"] for item in stats_payload["comparison_sets"]] == ["candidate"]
@@ -74,6 +82,21 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
         stats_payload["plot_statistics"]["trigger_combination"]["comparisons"][0]["metric"]
         == "jensen_shannon"
     )
+
+
+def test_comparison_statistics_schema_rejects_unknown_format_version(tmp_test_directory):
+    output_path = Path(tmp_test_directory)
+    metrics = [_build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)]
+    plot_event_level_production_comparison.plot(metrics, output_path=output_path, bins=8)
+    with (output_path / "comparison_statistics.json").open(encoding="utf-8") as file_handle:
+        statistics = json.load(file_handle)
+    comparison_schema = ascii_handler.collect_data_from_file(
+        SCHEMA_PATH / "production_comparison_statistics.schema.yml"
+    )
+    statistics["format_version"] = 2
+
+    with pytest.raises(jsonschema.ValidationError, match="2 is not one of"):
+        jsonschema.validate(statistics, comparison_schema)
 
 
 def test_output_directory_for_array_layout_selection_joins_list_values(tmp_test_directory):
