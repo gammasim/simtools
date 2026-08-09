@@ -34,3 +34,10 @@ simtools-compare-productions \
 
 Keep the comparison configuration and output reports with the production records so that later
 checks can identify the exact baseline, production image, model version, and input files used.
+
+Event-level comparison writes `comparison_statistics.json` alongside the plots. The report uses the
+KS statistic for continuous quantities, Jensen-Shannon distance for categorical trigger and
+telescope distributions, and Wasserstein-1 distance for ordered trigger multiplicities. Distances
+compare normalized distribution shapes, so differing production event totals do not directly set
+the result. A `comparison_statistics.meta.yml` sidecar records the application configuration and
+provenance. The report file contains diagnostics; simtools does not apply acceptance thresholds.

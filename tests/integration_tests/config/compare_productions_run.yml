@@ -15,6 +15,8 @@ applications:
   - output_file: CTAO-North-Alpha/trigger_multiplicity.png
   - output_file: CTAO-North-Alpha/trigger_combination.png
   - output_file: CTAO-North-Alpha/telescope_participation_fraction.png
+  - output_file: CTAO-North-Alpha/comparison_statistics.json
+  - output_file: CTAO-North-Alpha/comparison_statistics.meta.yml
   test_name: run
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0

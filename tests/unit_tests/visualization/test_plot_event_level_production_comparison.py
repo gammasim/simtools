@@ -41,7 +41,9 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
         _build_metrics("candidate", simulated_scale=1.2, triggered_scale=1.1),
     ]
 
-    plot_event_level_production_comparison.plot(metrics, output_path=output_path, bins=8)
+    statistics_file = plot_event_level_production_comparison.plot(
+        metrics, output_path=output_path, bins=8
+    )
 
     expected_files = [
         "comparison_statistics.json",
@@ -55,13 +57,23 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
         "telescope_participation_fraction.png",
     ]
     _assert_files_exist(output_path, expected_files)
+    assert statistics_file == output_path / "comparison_statistics.json"
 
     with (output_path / "comparison_statistics.json").open(encoding="utf-8") as file_handle:
         stats_payload = json.load(file_handle)
     assert stats_payload["baseline"]["label"] == "baseline"
+    assert stats_payload["format_version"] == 1
     assert [item["label"] for item in stats_payload["comparison_sets"]] == ["candidate"]
     assert "distribution_energy" in stats_payload["plot_statistics"]
     assert "trigger_multiplicity" in stats_payload["plot_statistics"]
+    assert (
+        stats_payload["plot_statistics"]["trigger_multiplicity"]["comparisons"][0]["metric"]
+        == "wasserstein"
+    )
+    assert (
+        stats_payload["plot_statistics"]["trigger_combination"]["comparisons"][0]["metric"]
+        == "jensen_shannon"
+    )
 
 
 def test_output_directory_for_array_layout_selection_joins_list_values(tmp_test_directory):
@@ -218,3 +230,66 @@ def test_single_and_mixed_trigger_skip_paths(tmp_test_directory):
     plot_event_level_production_comparison._plot_mixed_trigger_combinations([metric], output_path)
     assert not (output_path / "single_telescope_trigger_distribution.png").exists()
     assert not (output_path / "mixed_trigger_combinations.png").exists()
+
+
+def test_trigger_combination_metric_uses_categories_outside_top_n(tmp_test_directory):
+    output_path = Path(tmp_test_directory)
+    baseline = _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)
+    candidate = _build_metrics("candidate", simulated_scale=1.0, triggered_scale=1.0)
+    baseline.trigger_combinations = Counter({"LSTN-01": 100, "MSTN-01": 1})
+    candidate.trigger_combinations = Counter({"LSTN-01": 100, "MSTN-01": 100})
+
+    statistics = plot_event_level_production_comparison._plot_trigger_combinations(
+        [baseline, candidate], output_path, top_n=1
+    )
+
+    comparison = statistics["comparisons"][0]
+    assert comparison["metric"] == "jensen_shannon"
+    assert comparison["jensen_shannon_distance"] > 0
+    assert statistics["metadata"]["categories"] == ["LSTN-01", "MSTN-01"]
+    assert statistics["metadata"]["display_categories"] == ["LSTN-01"]
+
+
+def test_histogram_quantity_comparison_uses_binned_ks():
+    baseline = {
+        "simulated": np.array([3.0, 1.0]),
+        "triggered": np.array([3.0, 1.0]),
+        "simulated_samples": None,
+        "triggered_samples": None,
+    }
+    candidate = {
+        "simulated": np.array([1.0, 3.0]),
+        "triggered": np.array([1.0, 3.0]),
+        "simulated_samples": None,
+        "triggered_samples": None,
+    }
+
+    result = plot_event_level_production_comparison._compare_distribution_data(
+        baseline, candidate, "simulated", np.array([0.0, 1.0, 2.0])
+    )
+
+    assert result["metric"] == "ks"
+    assert result["ks_statistic"] == pytest.approx(0.5)
+
+
+def test_global_quantity_bin_edges_union_histogram_supports():
+    baseline = _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)
+    candidate = _build_metrics("candidate", simulated_scale=1.0, triggered_scale=1.0)
+    baseline.quantity_histograms = {
+        "energy": {
+            "simulated": (np.array([1.0, 1.0]), np.array([0.0, 1.0, 3.0])),
+            "triggered": (np.array([1.0, 1.0]), np.array([0.0, 1.0, 3.0])),
+        }
+    }
+    candidate.quantity_histograms = {
+        "energy": {
+            "simulated": (np.array([1.0, 1.0]), np.array([0.0, 2.0, 3.0])),
+            "triggered": (np.array([1.0, 1.0]), np.array([0.0, 2.0, 3.0])),
+        }
+    }
+
+    edges = plot_event_level_production_comparison._get_global_quantity_bin_edges(
+        [baseline, candidate], "energy", "log", bins=4
+    )
+
+    np.testing.assert_array_equal(edges, np.array([0.0, 1.0, 2.0, 3.0]))
