@@ -3,6 +3,9 @@
 import numpy as np
 from scipy import signal
 
+PEDESTAL_WINDOW_START = -10
+INTEGRATION_WINDOW_START = 4
+
 
 def compute_integration_window(peak_idx, n_samp, half_width, mode, offset=None):
     """
@@ -168,6 +171,36 @@ def get_adc_samples_per_gain(adc_samples, low_gain=False):
     if adc_samples.ndim == 3:
         return np.asarray(adc_samples[1 if low_gain else 0])
     return np.asarray(adc_samples)
+
+
+def get_trace_data(adc_samples):
+    """Prepare gain-selected samples, pedestals, and integrated signal values.
+
+    Parameters
+    ----------
+    adc_samples : array-like
+        ADC samples with shape ``(n_gains, n_pixels, n_samples)`` or
+        ``(n_pixels, n_samples)``.
+
+    Returns
+    -------
+    tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]
+        Gain-selected ADC samples, pedestal values per pixel, and integrated
+        pedestal-subtracted signal values per pixel.
+    """
+    samples = get_adc_samples_per_gain(adc_samples)
+    n_samples = samples.shape[-1]
+    pedestals = calculate_pedestals(
+        samples,
+        start=n_samples + PEDESTAL_WINDOW_START,
+        end=n_samples,
+    )
+    integrated_signal = trace_integration(
+        samples,
+        pedestals=pedestals,
+        window=(INTEGRATION_WINDOW_START, n_samples),
+    )
+    return samples, pedestals, integrated_signal
 
 
 def trace_maxima(trace, sum_threshold):

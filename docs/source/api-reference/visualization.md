@@ -84,6 +84,13 @@ the visualization module.
    :members:
 ```
 
+## plot_signal_level_production_comparison
+
+```{eval-rst}
+.. automodule:: simtools.visualization.plot_signal_level_production_comparison
+   :members:
+```
+
 ## plot_psf
 
 ```{eval-rst}

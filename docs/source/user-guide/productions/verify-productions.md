@@ -43,3 +43,8 @@ the result. A `comparison_statistics.meta.yml` sidecar records the application c
 provenance. The report format is described by
 `src/simtools/schemas/production_comparison_statistics.schema.yml`. The report file contains
 diagnostics; simtools does not apply acceptance thresholds.
+
+For telescope-level diagnostics, use `--comparison_level signal` with one
+`--array_layout_name` and sim_telarray files as the production inputs. The application discovers
+the telescopes in the input layout and writes pedestal, integrated-signal, peak-sample, and
+triggered-pixel distributions under one output directory per telescope.

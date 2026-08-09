@@ -10,17 +10,24 @@ Command line arguments
 production (repeated, required)
     Production descriptor in two fields:
     1) label
-    2) comma-separated trigger histogram HDF5 file patterns
+    2) comma-separated input file patterns. Event comparisons use trigger histogram
+       HDF5 files; signal comparisons use sim_telarray files.
 comparison_level (str, optional)
     Comparison level selector. Supported values are:
     - events
-    - signals
+    - signal
     - compute
 output_path (str, required)
     Output directory for generated comparison plots.
 array_layout_name (str, optional)
-    Restrict comparison inputs to one or more array layout names stored in the
-    trigger histogram HDF5 metadata.
+    Event-level array layout filter, or the single layout to process for signal-level
+    comparisons.
+
+Signal-level outputs
+--------------------
+For each telescope discovered in the sim_telarray inputs, writes pedestal, integrated
+signal, peak-sample, and triggered-pixel PNG plots plus comparison statistics JSON and
+metadata under ``<output_path>/<telescope_name>/``.
 """
 
 from simtools.application.definition import ApplicationDefinition
@@ -28,32 +35,36 @@ from simtools.configuration import arguments as cli
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.sim_events.production_comparison import (
     collect_production_metrics,
+    collect_signal_metrics,
     parse_production_arguments,
 )
-from simtools.visualization import plot_event_level_production_comparison
+from simtools.visualization import (
+    plot_event_level_production_comparison,
+    plot_signal_level_production_comparison,
+)
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
         "production",
         action="append",
         nargs="+",
-        metavar=("LABEL", "TRIGGER_HISTOGRAM_FILES"),
+        metavar=("LABEL", "INPUT_FILES"),
         required=True,
         help=(
             "Production descriptor: --production <label> <comma-separated file patterns>. "
-            "Repeat for multiple trigger histogram files."
+            "Repeat for multiple input files."
         ),
     ),
     cli.ArgumentDefinition(
         "comparison_level",
-        choices=["events", "signals", "compute"],
+        choices=["events", "signal", "compute"],
         default="events",
         help="Comparison level to execute.",
     ),
     cli.ArgumentDefinition(
         "array_layout_name",
         nargs="+",
-        help="Restrict trigger histogram references to the selected array layout name(s).",
+        help="Array layout filter, or the single layout for signal comparison.",
         required=False,
     ),
 )
@@ -76,26 +87,56 @@ def main():
 
     comparison_level = app_context.args["comparison_level"]
     if comparison_level == "events":
-        metrics_per_production = collect_production_metrics(
-            parse_production_arguments(app_context.args["production"]),
-            array_names=app_context.args.get("array_layout_name"),
-        )
-        comparison_statistics_file = plot_event_level_production_comparison.plot(
+        output_files = _run_event_comparison(app_context)
+    elif comparison_level == "signal":
+        output_files = _run_signal_comparison(app_context)
+    else:
+        raise NotImplementedError(f"Comparison level '{comparison_level}' is not implemented yet.")
+
+    for output_file in output_files:
+        _dump_comparison_metadata(app_context.args, output_file)
+
+
+def _run_event_comparison(app_context):
+    """Run event-level comparison and return generated statistics files."""
+    metrics_per_production = collect_production_metrics(
+        parse_production_arguments(app_context.args["production"]),
+        array_names=app_context.args.get("array_layout_name"),
+    )
+    return [
+        plot_event_level_production_comparison.plot(
             metrics_per_production,
             output_path=app_context.io_handler.get_output_directory(),
             array_layout_name=app_context.args.get("array_layout_name"),
         )
-        metadata_args = dict(app_context.args)
-        metadata_args.update(
-            {
-                "output_file": str(comparison_statistics_file),
-                "output_file_format": "JSON",
-                "metadata_product_data_name": "production_comparison_statistics",
-            }
-        )
-        MetadataCollector.dump(metadata_args, comparison_statistics_file)
-    else:
-        raise NotImplementedError(f"Comparison level '{comparison_level}' is not implemented yet.")
+    ]
+
+
+def _run_signal_comparison(app_context):
+    """Run signal-level comparison and return generated statistics files."""
+    production_descriptors = parse_production_arguments(app_context.args["production"])
+    metrics_by_telescope = collect_signal_metrics(
+        production_descriptors,
+        array_layout_name=app_context.args.get("array_layout_name"),
+    )
+    return plot_signal_level_production_comparison.plot(
+        metrics_by_telescope,
+        output_path=app_context.io_handler.get_output_directory(),
+        array_layout_name=app_context.args.get("array_layout_name"),
+    )
+
+
+def _dump_comparison_metadata(args, output_file):
+    """Write comparison metadata for one generated statistics file."""
+    metadata_args = dict(args)
+    metadata_args.update(
+        {
+            "output_file": str(output_file),
+            "output_file_format": "JSON",
+            "metadata_product_data_name": "production_comparison_statistics",
+        }
+    )
+    MetadataCollector.dump(metadata_args, output_file)
 
 
 if __name__ == "__main__":
