@@ -58,7 +58,23 @@ _OUTPUT_VALIDATION_PROFILES = {
             "row_count": "job_grid_summary.simulation_rows",
             "column_sums": {"showers_per_run": "job_grid_summary.total_showers"},
         },
-    }
+    },
+    "monte_carlo_statistics": {
+        "name": "monte_carlo_statistics_content",
+        "path_descriptor": "output_path",
+        "data_product_schema": SCHEMA_PATH / "monte_carlo_statistics.schema.yml",
+        "minimum_rows": 1,
+        "columns": {
+            "estimated_total_events": {"range": {"minimum": 1.0}},
+            "br_energy_min": {"range": {"minimum": 0.0, "unit": "TeV"}},
+            "br_energy_max": {"range": {"minimum": 0.0, "unit": "TeV"}},
+            "br_core_scatter_max": {"range": {"minimum": 0.0, "unit": "m"}},
+            "br_viewcone_max": {"range": {"minimum": 0.0, "unit": "deg"}},
+        },
+        "metadata": {
+            "required_keys": ["cta.activity", "cta.context", "cta.product"],
+        },
+    },
 }
 
 
