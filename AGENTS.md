@@ -36,6 +36,7 @@ application workflows, validation, reporting, and plotting.
 ## Development Conventions
 
 - Use `pathlib` for paths.
+- Do not add `__init__.py` files; this project uses implicit namespace packages.
 - Use double quotes for strings and docstrings.
 - Use f-strings for formatting.
 - Use logging for user/developer messages; do not use `print` in library code.
