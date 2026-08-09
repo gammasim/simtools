@@ -47,6 +47,8 @@ application workflows, validation, reporting, and plotting.
   failure.
 - Use `astropy.units` for physical quantities.
 - Validate CTAO names through existing helpers in `simtools.utils.names`.
+- When introducing a new schema version in `src/simtools/schemas`, add a new
+  YAML document and preserve the existing version; do not replace it.
 - Use semantic model versions without a leading `v` in new configs.
 - Do not add type hints to function signatures unless the surrounding module
   already deliberately uses them.
