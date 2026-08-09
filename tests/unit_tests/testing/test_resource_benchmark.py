@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-
-import tests.resource_benchmark as resource_benchmark
+import resource_benchmark
 
 
 def _measurement(wall_time, cpu_time=1.0, peak_rss=10.0):
@@ -183,7 +183,7 @@ def test_excluded(config):
             "-m",
             "pytest",
             "-p",
-            "tests.resource_benchmark",
+            "resource_benchmark",
             "--override-ini=addopts=",
             "--resource-benchmark-output",
             str(output),
@@ -197,6 +197,7 @@ def test_excluded(config):
         ],
         capture_output=True,
         cwd=simtools_root_path,
+        env={**os.environ, "PYTHONPATH": str(simtools_root_path / "tests")},
         text=True,
     )
 

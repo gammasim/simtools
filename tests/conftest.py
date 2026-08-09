@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-pytest_plugins = ("tests.resource_benchmark",)
+pytest_plugins = ("resource_benchmark",)
 
 SIMTOOLS_ROOT_PATH = Path(__file__).resolve().parent.parent
 
