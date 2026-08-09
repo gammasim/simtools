@@ -5,6 +5,7 @@ from scipy import signal
 
 PEDESTAL_WINDOW_START = -10
 INTEGRATION_WINDOW_START = 4
+DEFAULT_SUM_THRESHOLD = 10.0
 
 
 def compute_integration_window(peak_idx, n_samp, half_width, mode, offset=None):

@@ -56,6 +56,17 @@ class ProductionEventMetrics:
         return self.triggered_event_count / self.simulated_event_count
 
 
+@dataclass
+class ProductionSignalMetrics:
+    """Aggregated signal metrics for one production and telescope."""
+
+    label: str
+    pedestals: np.ndarray
+    signals: np.ndarray
+    peak_timing: np.ndarray
+    triggered_pixels: np.ndarray
+
+
 def parse_production_arguments(production_arguments):
     """Parse repeated production arguments into validated descriptors.
 
@@ -96,7 +107,7 @@ def parse_production_arguments(production_arguments):
     return descriptors
 
 
-def ensure_single_array_layout_name(array_layout_name):
+def _ensure_single_array_layout_name(array_layout_name):
     """Return one array layout name for telescope-level comparisons.
 
     Parameters
@@ -429,20 +440,6 @@ def _build_per_type_histogram_metrics(label, simulated_histograms, accumulators)
     return per_type
 
 
-SIGNAL_SUM_THRESHOLD = 10.0
-
-
-@dataclass
-class ProductionSignalMetrics:
-    """Aggregated signal metrics for one production and telescope."""
-
-    label: str
-    pedestals: np.ndarray
-    signals: np.ndarray
-    peak_timing: np.ndarray
-    triggered_pixels: np.ndarray
-
-
 def collect_signal_metrics(production_descriptors, array_layout_name):
     """Collect telescope-level signal metrics for each production.
 
@@ -464,7 +461,7 @@ def collect_signal_metrics(production_descriptors, array_layout_name):
         If the layout selection is invalid, a required telescope is absent, or
         no event data is available for a telescope.
     """
-    layout_name = ensure_single_array_layout_name(array_layout_name)
+    layout_name = _ensure_single_array_layout_name(array_layout_name)
     telescope_names = _discover_telescope_names(production_descriptors, layout_name)
     if not telescope_names:
         raise ValueError(f"Array layout '{layout_name}' contains no telescopes.")
@@ -479,21 +476,23 @@ def collect_signal_metrics(production_descriptors, array_layout_name):
 
 def _discover_telescope_names(production_descriptors, layout_name):
     """Discover and validate the telescope set represented by all input files."""
-    if not production_descriptors or not production_descriptors[0].input_files:
+    input_files = [
+        input_file for production in production_descriptors for input_file in production.input_files
+    ]
+    if not input_files:
         raise ValueError(f"Array layout '{layout_name}' has no sim_telarray input files.")
 
-    first_file = production_descriptors[0].input_files[0]
-    first_mapping = get_sim_telarray_telescope_id_to_telescope_name_mapping(first_file)
-    expected = {str(name) for name in first_mapping.values()}
-    for production in production_descriptors:
-        for input_file in production.input_files:
-            mapping = get_sim_telarray_telescope_id_to_telescope_name_mapping(input_file)
-            available = {str(name) for name in mapping.values()}
-            if available != expected:
-                raise ValueError(
-                    f"Input '{input_file}' has telescope set {sorted(available)}; expected "
-                    f"the layout telescope set {sorted(expected)}."
-                )
+    expected = None
+    for input_file in input_files:
+        mapping = get_sim_telarray_telescope_id_to_telescope_name_mapping(input_file)
+        available = {str(name) for name in mapping.values()}
+        if expected is None:
+            expected = available
+        elif available != expected:
+            raise ValueError(
+                f"Input '{input_file}' has telescope set {sorted(available)}; expected "
+                f"the layout telescope set {sorted(expected)}."
+            )
     return sorted(expected)
 
 
@@ -541,9 +540,9 @@ def _collect_file_metrics(input_file, telescope_name, values):
         try:
             samples, pedestals, signals = trace.get_trace_data(event["adc_samples"])
             peak_samples, _pixel_ids, _found_count = trace.trace_maxima(
-                samples, sum_threshold=SIGNAL_SUM_THRESHOLD
+                samples, sum_threshold=trace.DEFAULT_SUM_THRESHOLD
             )
-            trigger_pixels = event.get("pixel_lists", {}).get(0, {"pixels": 0})["pixels"]
+            trigger_pixels = _get_triggered_pixel_count(event)
         except (AttributeError, KeyError, TypeError, ValueError) as exc:
             raise ValueError(
                 f"Input '{input_file}' has incomplete signal data for telescope '{telescope_name}'."
@@ -554,3 +553,14 @@ def _collect_file_metrics(input_file, telescope_name, values):
         if peak_samples is not None:
             values["peak_timing"].append(np.asarray(peak_samples))
         values["triggered_pixels"].append(np.asarray([trigger_pixels]))
+
+
+def _get_triggered_pixel_count(event):
+    """Return the triggered pixel count, falling back to the selected pixel list."""
+    pixel_lists = event["pixel_lists"]
+    pixel_list = pixel_lists.get(0)
+    if pixel_list is None:
+        pixel_list = pixel_lists.get(1)
+    if pixel_list is None:
+        raise ValueError("Event contains no triggered or selected pixel list.")
+    return pixel_list["pixels"]

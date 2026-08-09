@@ -116,9 +116,7 @@ def test_main_writes_comparison_statistics_metadata(mocker, tmp_test_directory):
 
 def test_main_runs_signal_comparison_for_layout(mocker, tmp_test_directory):
     output_directory = Path(tmp_test_directory) / "comparison"
-    statistics_file = (
-        output_directory / "CTAO-North-Alpha" / "LSTN-01" / "comparison_statistics.json"
-    )
+    statistics_file = output_directory / "LSTN-01" / "comparison_statistics.json"
     app_context = mocker.MagicMock()
     app_context.args = {
         "comparison_level": "signal",

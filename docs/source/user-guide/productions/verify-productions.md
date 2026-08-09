@@ -47,4 +47,5 @@ diagnostics; simtools does not apply acceptance thresholds.
 For telescope-level diagnostics, use `--comparison_level signal` with one
 `--array_layout_name` and sim_telarray files as the production inputs. The application discovers
 the telescopes in the input layout and writes pedestal, integrated-signal, peak-sample, and
-triggered-pixel distributions under one output directory per telescope.
+triggered-pixel distributions under one output directory per telescope. If an input does not
+contain a triggered-pixel list, the selected-pixel list is used instead.

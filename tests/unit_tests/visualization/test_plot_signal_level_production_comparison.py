@@ -25,7 +25,6 @@ def test_plot_writes_one_set_per_telescope(tmp_test_directory):
             "MSTN-01": [_metrics("baseline"), _metrics("candidate", 1.1)],
         },
         output_path,
-        ["CTAO-North-Alpha"],
         bins=4,
     )
 
@@ -56,3 +55,22 @@ def test_plot_writes_one_set_per_telescope(tmp_test_directory):
         "candidate"
     )
     assert statistics["plot_statistics"]["signals"]["comparisons"][0]["valid"]
+
+
+def test_plot_skips_observable_without_values(tmp_test_directory):
+    metrics = [_metrics("baseline"), _metrics("candidate")]
+    for item in metrics:
+        item.peak_timing = np.array([])
+
+    output_path = Path(tmp_test_directory)
+    plot_signal_level_production_comparison.plot(
+        {"LSTN-01": metrics},
+        output_path,
+        bins=4,
+    )
+
+    telescope_path = output_path / "LSTN-01"
+    assert not (telescope_path / "peak_timing.png").exists()
+    with (telescope_path / "comparison_statistics.json").open(encoding="utf-8") as file_handle:
+        statistics = json.load(file_handle)
+    assert "peak_timing" not in statistics["plot_statistics"]

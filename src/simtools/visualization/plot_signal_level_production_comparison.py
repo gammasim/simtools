@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools.io import ascii_handler
-from simtools.sim_events.production_comparison import ensure_single_array_layout_name
 from simtools.statistics import compare_samples_with_statistics
 
 _logger = logging.getLogger(__name__)
@@ -20,7 +19,7 @@ _OBSERVABLES = (
 )
 
 
-def plot(metrics_by_telescope, output_path, array_layout_name, bins=40):
+def plot(metrics_by_telescope, output_path, bins=40):
     """Create signal comparison plots for every telescope in a layout.
 
     Parameters
@@ -29,8 +28,6 @@ def plot(metrics_by_telescope, output_path, array_layout_name, bins=40):
         Metrics grouped by telescope name and ordered by production.
     output_path : pathlib.Path
         Base output directory.
-    array_layout_name : str
-        Array layout name used to validate the signal comparison selection.
     bins : int, optional
         Number of histogram bins.
 
@@ -39,7 +36,6 @@ def plot(metrics_by_telescope, output_path, array_layout_name, bins=40):
     list[pathlib.Path]
         Paths to the comparison statistics JSON files.
     """
-    ensure_single_array_layout_name(array_layout_name)
     statistics_files = []
     for telescope_name, metrics in metrics_by_telescope.items():
         telescope_path = Path(output_path) / telescope_name

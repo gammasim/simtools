@@ -122,7 +122,6 @@ def _run_signal_comparison(app_context):
     return plot_signal_level_production_comparison.plot(
         metrics_by_telescope,
         output_path=app_context.io_handler.get_output_directory(),
-        array_layout_name=app_context.args.get("array_layout_name"),
     )
 
 
