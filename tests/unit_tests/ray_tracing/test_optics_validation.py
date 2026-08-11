@@ -151,7 +151,7 @@ def test_validate_optics_no_images(tmp_test_directory):
         "offset_file": None,
         "offset_directions": "N,S,E,W",
         "plot_images": False,
-        "export_model_parameters": False,
+        "export_model_parameter": False,
         "label": "validate_optics",
         "test": True,
     }
@@ -198,7 +198,7 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
         "offset_file": None,
         "offset_directions": None,
         "plot_images": True,
-        "export_model_parameters": False,
+        "export_model_parameter": False,
         "label": None,
         "test": True,
     }
@@ -272,7 +272,7 @@ def test_validate_optics_exports_effective_focal_length_model_parameter(tmp_test
         "offset_file": None,
         "offset_directions": "N,S,E,W",
         "plot_images": False,
-        "export_model_parameters": True,
+        "export_model_parameter": True,
         "label": "validate_optics",
         "test": True,
     }
