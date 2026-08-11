@@ -50,6 +50,17 @@ def test_build_simulation_job_metadata_uses_catalog_conventions():
     }
 
 
+def test_build_simulation_job_metadata_rounds_angles_to_two_decimal_places():
+    metadata = build_simulation_job_metadata(
+        _args(zenith_angle=20.123 * u.deg, dec=-45.987 * u.deg, ha=10.0056 * u.deg),
+        _simulator("MSTS-01"),
+    )
+
+    assert metadata["thetaP"] == pytest.approx(20.12)
+    assert metadata["dec"] == pytest.approx(-45.99)
+    assert metadata["ha"] == pytest.approx(10.01)
+
+
 def test_build_simulation_job_metadata_omits_missing_coordinates_and_sets_sct_false():
     metadata = build_simulation_job_metadata(
         _args(site="North", azimuth_angle=180 * u.deg),
