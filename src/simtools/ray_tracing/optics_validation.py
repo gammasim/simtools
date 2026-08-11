@@ -253,6 +253,8 @@ def _effective_focal_length_value_from_results(results):
     eff_flen_values = np.asarray(results["eff_flen"], dtype=float)
 
     non_zero_mask = ~(np.isclose(off_x_values, 0.0) & np.isclose(off_y_values, 0.0))
+    xz_plane_mask = np.isclose(off_y_values, 0.0) & ~np.isclose(off_x_values, 0.0)
+    yz_plane_mask = np.isclose(off_x_values, 0.0) & ~np.isclose(off_y_values, 0.0)
 
     def _masked_nanmean(mask):
         masked_values = eff_flen_values[mask]
@@ -261,11 +263,13 @@ def _effective_focal_length_value_from_results(results):
         return float(np.nanmean(masked_values))
 
     mean_effective_focal_length = _masked_nanmean(non_zero_mask)
+    mean_effective_focal_length_xz = _masked_nanmean(xz_plane_mask)
+    mean_effective_focal_length_yz = _masked_nanmean(yz_plane_mask)
 
     return [
         mean_effective_focal_length,
-        0.0,
-        0.0,
+        mean_effective_focal_length_xz,
+        mean_effective_focal_length_yz,
         0.0,
         0.0,
     ]

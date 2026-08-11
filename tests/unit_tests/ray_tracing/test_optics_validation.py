@@ -314,4 +314,4 @@ def test_validate_optics_exports_effective_focal_length_model_parameter(tmp_test
     assert call_kwargs["parameter_version"] == "5.0.1"
     assert call_kwargs["metadata_input_dict"] == args_dict
     assert call_kwargs["unit"] == ["cm", "cm", "cm", "cm", "cm"]
-    np.testing.assert_allclose(call_kwargs["value"], [2925.0, 0.0, 0.0, 0.0, 0.0])
+    np.testing.assert_allclose(call_kwargs["value"], [2925.0, 2920.0, 2930.0, 0.0, 0.0])
