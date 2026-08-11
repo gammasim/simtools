@@ -16,6 +16,41 @@ from simtools.constants import TEST_RESOURCES_STATIC
 from simtools.ray_tracing.ray_tracing import INVALID_KEY_TO_PLOT, RayTracing
 
 
+def _example_rows():
+    return [
+        (
+            0.0 * u.deg,
+            0.0 * u.deg,
+            0.0 * u.deg,
+            4.256768651160611 * u.cm,
+            0.1 * u.deg,
+            100.0 * u.m * u.m,
+            0.01 * u.cm,
+            0.02 * u.cm,
+            200.0,
+            2.0,
+        ),
+        (
+            0.0 * u.deg,
+            2.0 * u.deg,
+            2.0 * u.deg,
+            4.356768651160611 * u.cm,
+            0.2 * u.deg,
+            110.0 * u.m * u.m,
+            0.03 * u.cm,
+            0.04 * u.cm,
+            210.0,
+            3.0,
+        ),
+    ]
+
+
+def _example_rows_single_mirror():
+    return [
+        (*row, mirror_number) for row, mirror_number in zip(_example_rows(), [1, 2], strict=True)
+    ]
+
+
 @pytest.fixture
 def test_photons_file():
     return Path(
@@ -159,32 +194,7 @@ def test_export_results(ray_tracing_lst, caplog, mocker):
     ray.export_results()
     assert "No results to export" in caplog.text
 
-    _rows = [
-        (
-            0.0 * u.deg,
-            0.0 * u.deg,
-            0.0 * u.deg,
-            4.256768651160611 * u.cm,
-            0.1 * u.deg,
-            100.0 * u.m * u.m,
-            0.01 * u.cm,
-            0.02 * u.cm,
-            200.0,
-            2.0,
-        ),
-        (
-            0.0 * u.deg,
-            2.0 * u.deg,
-            2.0 * u.deg,
-            4.356768651160611 * u.cm,
-            0.2 * u.deg,
-            110.0 * u.m * u.m,
-            0.03 * u.cm,
-            0.04 * u.cm,
-            210.0,
-            3.0,
-        ),
-    ]
+    _rows = _example_rows()
     ray._store_results(_rows)
     mock_write = mocker.patch("astropy.io.ascii.write")
     with caplog.at_level(logging.INFO):
@@ -313,32 +323,7 @@ def test_images_with_psf_images(ray_tracing_lst, mocker):
 
 
 def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode, off_axis_string):
-    _rows = [
-        (
-            0.0 * u.deg,
-            0.0 * u.deg,
-            0.0 * u.deg,
-            4.256768651160611 * u.cm,
-            0.1 * u.deg,
-            100.0 * u.m * u.m,
-            0.01 * u.cm,
-            0.02 * u.cm,
-            200.0,
-            2.0,
-        ),
-        (
-            0.0 * u.deg,
-            2.0 * u.deg,
-            2.0 * u.deg,
-            4.356768651160611 * u.cm,
-            0.2 * u.deg,
-            110.0 * u.m * u.m,
-            0.03 * u.cm,
-            0.04 * u.cm,
-            210.0,
-            3.0,
-        ),
-    ]
+    _rows = _example_rows()
     ray_tracing_lst._store_results(_rows)
 
     assert isinstance(ray_tracing_lst._results, QTable)
@@ -357,34 +342,7 @@ def test_store_results(ray_tracing_lst, ray_tracing_lst_single_mirror_mode, off_
     ]
 
     # single mirror mode
-    _rows = [
-        (
-            0.0 * u.deg,
-            0.0 * u.deg,
-            0.0 * u.deg,
-            4.256768651160611 * u.cm,
-            0.1 * u.deg,
-            100.0 * u.m * u.m,
-            0.01 * u.cm,
-            0.02 * u.cm,
-            200.0,
-            2.0,
-            1,
-        ),
-        (
-            0.0 * u.deg,
-            2.0 * u.deg,
-            2.0 * u.deg,
-            4.356768651160611 * u.cm,
-            0.2 * u.deg,
-            110.0 * u.m * u.m,
-            0.03 * u.cm,
-            0.04 * u.cm,
-            210.0,
-            3.0,
-            2,
-        ),
-    ]
+    _rows = _example_rows_single_mirror()
     ray_tracing_lst_single_mirror_mode._store_results(_rows)
     assert len(ray_tracing_lst_single_mirror_mode._results) == len(_rows)
 
@@ -555,32 +513,7 @@ def test_analyze_image(ray_tracing_lst, mocker):
 
 def test_get_mean_std(ray_tracing_lst):
     ray_tracing = copy.deepcopy(ray_tracing_lst)
-    _rows = [
-        (
-            0.0 * u.deg,
-            0.0 * u.deg,
-            0.0 * u.deg,
-            4.256768651160611 * u.cm,
-            0.1 * u.deg,
-            100.0 * u.m * u.m,
-            0.01 * u.cm,
-            0.02 * u.cm,
-            200.0,
-            2.0,
-        ),
-        (
-            0.0 * u.deg,
-            2.0 * u.deg,
-            2.0 * u.deg,
-            4.356768651160611 * u.cm,
-            0.2 * u.deg,
-            110.0 * u.m * u.m,
-            0.03 * u.cm,
-            0.04 * u.cm,
-            210.0,
-            3.0,
-        ),
-    ]
+    _rows = _example_rows()
     ray_tracing._store_results(_rows)
     mean_value = ray_tracing.get_mean(key="psf_cm")
     std_value = ray_tracing.get_std_dev(key="psf_cm")
