@@ -34,7 +34,7 @@ r"""
         Model version.
     parameter_version (str, optional)
         Parameter version for exporting effective_focal_length as model parameter json.
-    export_model_parameters (activation mode, optional)
+    export_model_parameter (activation mode, optional)
         Export effective focal length as a model parameter json when enabled.
     source_distance (float or quantity, optional)
         Source distance in km.
@@ -102,7 +102,7 @@ _ARGUMENTS = (
         action="store_true",
     ),
     cli.ArgumentDefinition(
-        "export_model_parameters",
+        "export_model_parameter",
         help="Export effective focal length as a model parameter.",
         action="store_true",
     ),

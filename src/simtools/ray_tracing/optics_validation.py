@@ -192,7 +192,7 @@ def validate_optics(app_context):
         plot_file = io_handler.get_output_file(plot_file_name)
         visualize.save_figure(fig, plot_file, close=True)
 
-    if args_dict.get("export_model_parameters", False):
+    if args_dict.get("export_model_parameter", False):
         _export_effective_focal_length_model_parameter(
             ray=ray,
             telescope_name=tel_model.name,
