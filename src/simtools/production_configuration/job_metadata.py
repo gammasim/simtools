@@ -29,7 +29,7 @@ def build_simulation_job_metadata(args_dict, simulator):
         "site": CATALOG_SITE_NAMES[args_dict["site"]],
         "particle": args_dict["primary"].lower(),
         "phiP": round((azimuth_angle + 180.0) % 360.0, 2),
-        "thetaP": float(args_dict["zenith_angle"].to_value(u.deg)),
+        "thetaP": round(float(args_dict["zenith_angle"].to_value(u.deg)), 2),
         "sct": str(_has_sct(simulator.array_models)),
         "view_cone": _format_view_cone(view_cone_min, view_cone_max),
         "runNumber": int(simulator.run_number),
@@ -59,4 +59,4 @@ def _format_view_cone(view_cone_min, view_cone_max):
 def _add_optional_coordinate(metadata, key, value):
     """Add one optional angular coordinate in degrees to metadata."""
     if value is not None:
-        metadata[key] = float(value.to_value(u.deg))
+        metadata[key] = round(float(value.to_value(u.deg)), 2)
