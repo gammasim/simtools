@@ -112,6 +112,20 @@ def _prepare_table(table, filters, key_columns):
     return prepared
 
 
+def _compare_column(left, right, tolerance):
+    """Compare two ECSV columns, including their dtype and unit."""
+    if left.dtype != right.dtype or left.unit != right.unit:
+        return False
+    if np.issubdtype(left.dtype, np.number):
+        return np.allclose(left, right, rtol=tolerance, equal_nan=True)
+    return np.array_equal(np.asarray(left), np.asarray(right))
+
+
+def _compare_selected_columns(first, second, selected, tolerance):
+    """Compare selected columns from two ECSV tables."""
+    return all(_compare_column(first[name], second[name], tolerance) for name in selected)
+
+
 def compare_ecsv_files(
     first_file,
     second_file,
@@ -131,17 +145,9 @@ def compare_ecsv_files(
         name not in first.colnames or name not in second.colnames for name in selected
     ):
         return False
-    for name in selected:
-        left = first[name]
-        right = second[name]
-        if left.unit != right.unit:
-            return False
-        if np.issubdtype(left.dtype, np.number):
-            if not np.allclose(left, right, rtol=tolerance, equal_nan=True):
-                return False
-        elif not np.array_equal(np.asarray(left), np.asarray(right)):
-            return False
-    return not metadata or first.meta == second.meta
+    return _compare_selected_columns(first, second, selected, tolerance) and (
+        not metadata or first.meta == second.meta
+    )
 
 
 def compare_files(

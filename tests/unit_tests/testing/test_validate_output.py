@@ -135,6 +135,15 @@ def test_reference_comparison_all_column_types_and_metadata(tmp_test_directory):
     assert not reference.compare_files(first, second)
 
 
+def test_reference_comparison_rejects_different_column_dtypes(tmp_test_directory):
+    first = Path(tmp_test_directory) / "first.ecsv"
+    second = Path(tmp_test_directory) / "second.ecsv"
+    Table({"id": [1, 2]}).write(first, format="ascii.ecsv")
+    Table({"id": [1.0, 2.0]}).write(second, format="ascii.ecsv")
+
+    assert not reference.compare_files(first, second)
+
+
 def test_reference_comparison_typed_filters_and_key_order(tmp_test_directory):
     first = Path(tmp_test_directory) / "first.ecsv"
     second = Path(tmp_test_directory) / "second.ecsv"

@@ -20,6 +20,10 @@ from simtools.constants import (
 from simtools.data_model import schema, schema_loader
 from simtools.io import ascii_handler
 
+_INTEGRATION_CONFIG_FILES = sorted(
+    (Path(__file__).parents[2] / "integration_tests" / "config").glob("*.yml")
+)
+
 
 def test_get_model_parameter_schema_files(tmp_test_directory):
     par, files = schema.get_model_parameter_schema_files()
@@ -276,6 +280,15 @@ def test_application_workflow_schema_accepts_typed_reference_options():
 
     schema.validate_dict_using_schema(
         workflow_config,
+        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+    )
+
+
+@pytest.mark.parametrize("config_file", _INTEGRATION_CONFIG_FILES, ids=lambda path: path.stem)
+def test_integration_configs_match_application_workflow_schema(config_file):
+    """Validate every maintained integration configuration against its workflow schema."""
+    schema.validate_dict_using_schema(
+        ascii_handler.collect_data_from_file(config_file),
         schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
     )
 
