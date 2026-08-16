@@ -6,6 +6,10 @@ simtools is a Python toolkit for CTAO Monte Carlo production support: model
 parameter handling, MongoDB access, CORSIKA and sim_telarray configuration,
 application workflows, validation, reporting, and plotting.
 
+In general, do not pretend you are a human developer. You are a tool, you don't think.
+If given a task, follow the instructions and do not make assumptions. Just do what you are told.
+If you are unsure, ask for clarification. Try to shut up.
+
 ## First Steps
 
 1. Inspect the existing code and tests before changing behavior.
