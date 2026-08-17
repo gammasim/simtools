@@ -44,6 +44,8 @@ array_layout_name : str
     Use 'plot_all' to plot all layouts from the database for the given site and model version.
 array_layout_parameter_file : str, optional
     File with array layouts similar in the model parameter file format (typically JSON).
+array_layout_name_from_parameter_file : list, optional
+    Name(s) of the array layout(s) to plot from ``array_layout_parameter_file``.
 array_layout_name_background: str, optional
     Name of the background layout array (e.g., test_layout, alpha, 4mst, etc.).
 array_element_list : list
@@ -122,6 +124,15 @@ Plot layout from a parameter file with a list of telescopes:
         --array_layout_parameter_file tests/resources/model_parameters/array_layouts-2.0.2.json
         --model_version 6.0.0
 
+Plot one layout from a parameter file:
+
+.. code-block:: console
+
+    simtools-plot-array-layout
+        --array_layout_parameter_file tests/resources/model_parameters/array_layouts-2.0.2.json
+        --array_layout_name_from_parameter_file alpha
+        --model_version 6.0.0
+
 
 Plot all layouts for the North site and model version 6.0.0:
 
@@ -148,6 +159,17 @@ from simtools.visualization.plot_array_layout import (
     generate_plot_combinations,
     plot_array_layouts,
 )
+
+
+def _validate_parameter_file_layout_selection(args_dict, _config_sources, parser):
+    """Reject a parameter-file layout selector without a parameter file."""
+    if args_dict.get("array_layout_name_from_parameter_file") and not args_dict.get(
+        "array_layout_parameter_file"
+    ):
+        parser.error(
+            "--array_layout_name_from_parameter_file requires --array_layout_parameter_file"
+        )
+
 
 _ARGUMENTS = (
     cli.ALL_MODEL_VERSIONS,
@@ -271,9 +293,11 @@ APPLICATION = ApplicationDefinition.for_module(
             include_parameter_file=True,
             include_plot_all=True,
         ),
+        cli.ARRAY_LAYOUT_NAME_FROM_PARAMETER_FILE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
     database=True,
+    post_parse=_validate_parameter_file_layout_selection,
     usage="Use '--plot_all_layouts' to plot all layouts for the given site and model version.",
 )
 

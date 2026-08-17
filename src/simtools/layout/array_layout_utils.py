@@ -681,6 +681,13 @@ def read_layouts(args_dict):
             - list: List of array layouts.
             - list or None: Background layout or None if not provided.
     """
+    if args_dict.get("array_layout_name_from_parameter_file") and not args_dict.get(
+        "array_layout_parameter_file"
+    ):
+        raise ValueError(
+            "array_layout_name_from_parameter_file requires array_layout_parameter_file."
+        )
+
     background_layout = None
     ignore_software_version = args_dict.get("ignore_software_version", False)
     if args_dict.get("array_layout_name_background"):
@@ -698,7 +705,7 @@ def read_layouts(args_dict):
             args_dict["array_layout_parameter_file"],
             args_dict["model_version"],
             args_dict["coordinate_system"],
-            args_dict["array_layout_name"],
+            args_dict.get("array_layout_name_from_parameter_file"),
         ), background_layout
 
     if args_dict["array_layout_name"] is not None or args_dict["plot_all_layouts"]:
