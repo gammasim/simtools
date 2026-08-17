@@ -438,6 +438,7 @@ class RayTracing:
         use_rx=False,
         no_tel_transmission=False,
         containment_fraction=0.8,
+        save_photons=False,
     ):
         """
         Analyze ray tracing simulation results.
@@ -461,6 +462,9 @@ class RayTracing:
         containment_fraction: float
             Containment fraction for PSF containment calculation. Allowed values are in the
             interval [0,1]
+        save_photons: bool
+            If True, retain compressed photon list files after analysis. By default, photon
+            list files are removed after successful analysis.
         """
         do_analyze = not self._file_results.exists() or force
         if not do_analyze:
@@ -475,6 +479,7 @@ class RayTracing:
             do_analyze,
             use_rx,
             containment_fraction,
+            save_photons,
         )
 
         if do_analyze:
@@ -488,6 +493,7 @@ class RayTracing:
         do_analyze,
         use_rx,
         containment_fraction,
+        save_photons,
     ):
         """
         Process off-axis angles and mirrors for RayTracing analysis.
@@ -502,6 +508,8 @@ class RayTracing:
             Flag indicating whether to use the RX method for analysis.
         containment_fraction: float
             Containment fraction for PSF containment calculation.
+        save_photons: bool
+            If True, retain compressed photon list files after analysis.
 
         Returns
         -------
@@ -524,6 +532,15 @@ class RayTracing:
                     )
                 )
                 photons_file_gz = photons_file_lis.with_suffix(photons_file_lis.suffix + ".gz")
+                stars_file = self.output_directory.joinpath(
+                    self._generate_file_name(
+                        "stars",
+                        ".lis",
+                        off_axis_x=off_x,
+                        off_axis_y=off_y,
+                        mirror_number=mirror_number,
+                    )
+                )
                 photons_file = photons_file_gz
                 if not (use_rx and photons_file_gz.exists()) and photons_file_lis.exists():
                     photons_file = photons_file_lis
@@ -559,7 +576,19 @@ class RayTracing:
 
                     _rows.append(_current_results)
 
+                self._remove_photon_files(
+                    photons_file_lis, photons_file_gz, stars_file, save_photons
+                )
+
         return _rows
+
+    @staticmethod
+    def _remove_photon_files(photons_file_lis, photons_file_gz, stars_file, save_photons):
+        """Remove ray-tracing input and output lists unless retention was requested."""
+        if not save_photons:
+            photons_file_lis.unlink(missing_ok=True)
+            photons_file_gz.unlink(missing_ok=True)
+            stars_file.unlink(missing_ok=True)
 
     def _get_telescope_transmission_params(self, no_tel_transmission):
         """
@@ -776,9 +805,23 @@ class RayTracing:
         self._logger.info(f"Plotting {key} vs off-axis angle")
 
         try:
-            plot = visualize.plot_table(
-                self._results["off axis angle", key], self.YLABEL[key], no_legend=True, **kwargs
-            )
+            columns = ["off axis angle", key]
+            if key == "eff_flen":
+                columns.append("eff_flen_err")
+                plot = visualize.plot_1d(
+                    {"Effective focal length": self._results[columns]},
+                    xtitle="Off-axis angle",
+                    ytitle=self.YLABEL[key],
+                    no_legend=kwargs.pop("no_legend", True),
+                    **kwargs,
+                )
+            else:
+                plot = visualize.plot_table(
+                    self._results[columns],
+                    self.YLABEL[key],
+                    no_legend=kwargs.pop("no_legend", True),
+                    **kwargs,
+                )
         except KeyError as exc:
             raise KeyError(INVALID_KEY_TO_PLOT) from exc
 

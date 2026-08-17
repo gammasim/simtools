@@ -269,10 +269,7 @@ def test_process_off_axis_and_mirror(ray_tracing_lst, mocker):
     containment_fraction = 0.8
 
     results = ray_tracing_lst._process_off_axis_and_mirror(
-        tel_transmission_pars,
-        do_analyze,
-        use_rx,
-        containment_fraction,
+        tel_transmission_pars, do_analyze, use_rx, containment_fraction, save_photons=False
     )
 
     assert len(results) == len(ray_tracing_lst.off_axis_angle) * len(all_mirrors)
@@ -297,10 +294,7 @@ def test_process_off_axis_and_mirror_no_analyze(ray_tracing_lst, mocker):
     containment_fraction = 0.8
 
     results = ray_tracing_lst._process_off_axis_and_mirror(
-        tel_transmission_pars,
-        do_analyze,
-        use_rx,
-        containment_fraction,
+        tel_transmission_pars, do_analyze, use_rx, containment_fraction, save_photons=False
     )
 
     assert len(results) == 0
@@ -308,6 +302,34 @@ def test_process_off_axis_and_mirror_no_analyze(ray_tracing_lst, mocker):
     mock_generate_file_name.assert_called()
     mock_create_psf_image.assert_called()
     mock_analyze_image.assert_not_called()
+
+
+def test_remove_photon_files_removes_stars_by_default(tmp_test_directory):
+    photons_file_lis = Path(str(tmp_test_directory)) / "photons.lis"
+    photons_file_gz = Path(str(tmp_test_directory)) / "photons.lis.gz"
+    stars_file = Path(str(tmp_test_directory)) / "stars.lis"
+    for file_path in [photons_file_lis, photons_file_gz, stars_file]:
+        file_path.touch()
+
+    RayTracing._remove_photon_files(photons_file_lis, photons_file_gz, stars_file, False)
+
+    assert not photons_file_lis.exists()
+    assert not photons_file_gz.exists()
+    assert not stars_file.exists()
+
+
+def test_remove_photon_files_retains_stars_when_requested(tmp_test_directory):
+    photons_file_lis = Path(str(tmp_test_directory)) / "photons.lis"
+    photons_file_gz = Path(str(tmp_test_directory)) / "photons.lis.gz"
+    stars_file = Path(str(tmp_test_directory)) / "stars.lis"
+    for file_path in [photons_file_lis, photons_file_gz, stars_file]:
+        file_path.touch()
+
+    RayTracing._remove_photon_files(photons_file_lis, photons_file_gz, stars_file, True)
+
+    assert photons_file_lis.exists()
+    assert photons_file_gz.exists()
+    assert stars_file.exists()
 
 
 def test_images_with_psf_images(ray_tracing_lst, mocker):
@@ -612,6 +634,7 @@ def test_plot_valid_key(ray_tracing_lst, mocker):
             "psf_deg": [0.1, 0.2],
             "eff_area": [100.0, 110.0],
             "eff_flen": [200.0, 210.0],
+            "eff_flen_err": [2.0, 3.0],
         }
     )
 
@@ -627,6 +650,31 @@ def test_plot_valid_key(ray_tracing_lst, mocker):
     mock_savefig.assert_called_once_with(
         ray_tracing_lst.output_directory.joinpath("figures").joinpath("plot_file.pdf")
     )
+
+
+def test_plot_effective_focal_length_includes_error_column(ray_tracing_lst, mocker):
+    mock_plot_1d = mocker.patch("simtools.ray_tracing.ray_tracing.visualize.plot_1d")
+    ray_tracing_lst._results = QTable(
+        {
+            "off axis angle": [0.0, 2.0],
+            "eff_flen": [200.0, 210.0],
+            "eff_flen_err": [2.0, 3.0],
+        }
+    )
+
+    ray_tracing_lst.plot(
+        key="eff_flen",
+        error_type="errorbar",
+        error_label="Uncertainty",
+        no_legend=False,
+    )
+
+    data = mock_plot_1d.call_args.args[0]
+    table = data["Effective focal length"]
+    assert table.colnames == ["off axis angle", "eff_flen", "eff_flen_err"]
+    assert mock_plot_1d.call_args.kwargs["error_type"] == "errorbar"
+    assert mock_plot_1d.call_args.kwargs["error_label"] == "Uncertainty"
+    assert mock_plot_1d.call_args.kwargs["no_legend"] is False
 
 
 def test_plot_invalid_key(ray_tracing_lst, off_axis_string):
