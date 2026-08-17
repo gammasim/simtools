@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-r"""Estimate required Monte Carlo statistics from trigger histograms."""
+"""Estimate required Monte Carlo statistics from trigger histograms."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

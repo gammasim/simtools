@@ -1,44 +1,5 @@
 #!/usr/bin/python3
-r"""
-    Submit a model parameter value and corresponding metadata through the command line.
-
-    Input and metadata is validated, and if necessary enriched and converted following
-    the model parameter schemas. Model parameter data is written in the simtools-style
-    json format, metadata as a yaml file.
-
-    Command line arguments
-    ----------------------
-    parameter (str)
-        model parameter name
-    value (str, value)
-        input value (number, string, string-type lists)
-    instrument (str)
-        instrument name.
-    site (str)
-        site location.
-    parameter_version (str)
-        Parameter version.
-    model_parameter_schema_version (str, optional)
-        Version of the model-parameter schema to use for validation and value interpretation.
-    input_meta (str, optional)
-        input meta data file (yml format)
-
-    Example
-    -------
-
-    Submit the number of gains for the LSTN-design readout chain:
-
-    .. code-block:: console
-
-        simtools-submit-model-parameter-from-external \
-            --parameter num_gains \\
-            --value 2 \\
-            --instrument LSTN-design \\
-            --site North \\
-            --parameter_version 0.1.0 \\
-            --input_meta num_gains.metadata.yml
-
-"""
+"""Submit a model parameter value and corresponding metadata through the command line."""
 
 from pathlib import Path
 

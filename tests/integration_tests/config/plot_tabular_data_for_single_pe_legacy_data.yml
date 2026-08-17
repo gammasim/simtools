@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-plot-tabular-data
+  docs:
+    title: Plot a legacy single-photoelectron spectrum
+    summary: >-
+      Read legacy CSV camera-response data through a plotting configuration and write PDF and PNG
+      figures.
   configuration:
     figure_format:
     - pdf
@@ -10,8 +15,11 @@ applications:
     plot_config: ${static:plot_single_pe_config_data_from_legacy_csv.yml}
     table_data_path: tests/resources/downloaded
   integration_tests:
-  - output_file: single_pe_data.pdf
-  - output_file: single_pe_data.png
+  - test_outputs:
+    - path_descriptor: output_path
+      file: single_pe_data.pdf
+    - path_descriptor: output_path
+      file: single_pe_data.png
   test_name: single_pe_legacy_data
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

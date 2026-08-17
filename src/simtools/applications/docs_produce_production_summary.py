@@ -1,31 +1,6 @@
 #!/usr/bin/python3
 
-r"""
-Produce a markdown file with production version descriptions.
-
-Reads ``info.yml`` files from the simulation-models productions directory
-and writes a markdown table of production model versions and their short
-descriptions.
-
-Command line arguments
-----------------------
-simulation_models_path (Path)
-    Path to the simulation-models repository root.
-output_path (Path)
-    Directory for the output file.
-output_file (str)
-    Output markdown file name.
-
-Example
--------
-.. code-block:: console
-
-    simtools-docs-produce-production-summary \\
-        --simulation_models_path ../simulation-models \\
-        --output_path simtools-output/reports/productions \\
-        --output_file production_version_descriptions.md
-
-"""
+"""Produce a markdown file with production version descriptions."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

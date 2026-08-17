@@ -1,7 +1,7 @@
 # simtools-production-derive-corsika-limits
 
 ```{eval-rst}
-.. automodule:: production_derive_corsika_limits
+.. automodule:: simtools.applications.production_derive_corsika_limits
    :members:
    :exclude-members: main
 ```

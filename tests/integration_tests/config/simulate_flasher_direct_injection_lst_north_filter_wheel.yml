@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-flasher
+  docs:
+    title: Inject an LST filter-wheel intensity sequence
+    summary: >-
+      Generate North-LST camera calibration events at two photon intensities by direct signal
+      injection.
   configuration:
     run_mode: direct_injection
     light_source_type: flat_fielding
@@ -20,8 +25,13 @@ applications:
     sim_telarray_random_instrument_instances: 100
     site: North
   integration_tests:
-  - output_file: sim_telarray/run000010/direct_injection_run000010_za20deg_azm000deg_North_7.0.0_test-flasher-direct-injection-lst-north-filter-wheel.simtel.zst
-  - output_file: sim_telarray/run000011/direct_injection_run000011_za20deg_azm000deg_North_7.0.0_test-flasher-direct-injection-lst-north-filter-wheel.simtel.zst
+  - test_outputs:
+    - path_descriptor: output_path
+      file: direct_injection_run000010_za20deg_azm000deg_North_7.0.0_test-flasher-direct-injection-lst-north-filter-wheel.simtel.zst
+      output_sub_path: sim_telarray/run000010
+    - path_descriptor: output_path
+      file: direct_injection_run000011_za20deg_azm000deg_North_7.0.0_test-flasher-direct-injection-lst-north-filter-wheel.simtel.zst
+      output_sub_path: sim_telarray/run000011
   test_name: direct_injection_lstn_filter_wheel_sequence
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-convert-model-parameter-from-simtel
+  docs:
+    title: Convert the number of camera gains from sim_telarray
+    summary: >-
+      Extract the CT1 camera-gain count from a sim_telarray configuration and write a validated
+      LSTN-01 parameter file.
   configuration:
     output_file: num_gains.json
     output_path: simtools-output
@@ -11,4 +16,4 @@ applications:
     telescope: LSTN-01
   test_name: num_gains
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

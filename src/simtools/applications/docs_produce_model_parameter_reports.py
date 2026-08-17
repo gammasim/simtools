@@ -1,12 +1,6 @@
 #!/usr/bin/python3
 
-r"""
-Produce a model parameter report per array element.
-
-The markdown reports include detailed information on each parameter,
-comparing their values over various model versions.
-Currently only implemented for telescopes.
-"""
+"""Produce a model parameter report per array element."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
