@@ -12,7 +12,9 @@ applications:
     output_path: simtools-output
     print_dataset_information: 5
   integration_tests:
-  - output_file: output_file.hdf5
+  - test_outputs:
+    - path_descriptor: output_path
+      file: output_file.hdf5
   test_name: hdf5
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

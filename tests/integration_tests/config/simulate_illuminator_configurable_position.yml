@@ -9,13 +9,13 @@ applications:
   configuration:
     light_source: ILLN-01
     light_source_position:
-    - 0.
-    - 0.
-    - 1000.
+    - 0.0
+    - 0.0
+    - 1000.0
     light_source_pointing:
-    - 0.
-    - 0.
-    - -1.
+    - 0.0
+    - 0.0
+    - -1.0
     model_version: 7.0.0
     output_path: simtools-output/illuminator-variable
     site: North
@@ -23,21 +23,23 @@ applications:
     flasher_photons: 1e9
     log_level: DEBUG
   integration_tests:
-  - test_output_files:
-    - file: sim_telarray/illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-02_300nm.simtel.zst
-      path_descriptor: output_path
-    - expected_sim_telarray_output:
-        pe_sum:
-        - 1000
-        - 10000
-        photons:
-        - 5000
-        - 13000
-        event_type: illuminator
+  - test_outputs:
+    - path_descriptor: output_path
       file: illuminator_North_ILLN-01_7.0.0_simulate_illuminator_MSTN-02_300nm.simtel.zst
-      path_descriptor: output_path
       output_sub_path: sim_telarray
+      validations:
+      - type: simtel
+        event_type: illuminator
+        event:
+          pe_sum:
+            range:
+            - 1000
+            - 10000
+          photons:
+            range:
+            - 5000
+            - 13000
   model_version_use_current: true
   test_name: run-configurable-position
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

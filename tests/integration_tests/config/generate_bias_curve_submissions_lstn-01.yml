@@ -16,116 +16,136 @@ applications:
     core_scatter: 20 1900 m
     view_cone: 0 deg 5 deg
     number_of_runs: 1
-    trigger_thresholds: [220, 1, 10]
+    trigger_thresholds:
+    - 220
+    - 1
+    - 10
     output_path: simtools-output
   integration_tests:
-  - test_output_files:
-    - file: base_grid.ecsv
-      path_descriptor: output_path
+  - test_outputs:
+    - path_descriptor: output_path
       output_sub_path: nsb
-    - file: scan_config.yaml
-      path_descriptor: output_path
-      output_sub_path: nsb
-    - file: scan_grid.ecsv
-      path_descriptor: output_path
-      output_sub_path: nsb
-    - file: overwrite_nsb_asum220.yaml
-      path_descriptor: output_path
-      output_sub_path: nsb
-    - file: base_grid.ecsv
-      path_descriptor: output_path
-      output_sub_path: proton
-    - file: scan_config.yaml
-      path_descriptor: output_path
-      output_sub_path: proton
-    - file: scan_grid.ecsv
-      path_descriptor: output_path
-      output_sub_path: proton
-    - file: overwrite_proton_asum220.yaml
-      path_descriptor: output_path
-      output_sub_path: proton
-    output_validation:
-    - name: nsb_base_grid_content
-      path_descriptor: output_path
-      file: nsb/base_grid.ecsv
-      minimum_rows: 1
-      columns:
-        primary:
-          allowed_values: [gamma]
-        energy_min:
-          range:
-            minimum: 0.02
-            maximum: 0.02
-            unit: GeV
-        energy_max:
-          range:
-            minimum: 0.025
-            maximum: 0.025
-            unit: GeV
-      metadata:
+      file: base_grid.ecsv
+      validations:
+      - type: data_schema
+        schema: src/simtools/schemas/job_grid_density.schema.yml
+      - type: table
+        minimum_rows: 1
+        columns:
+          primary:
+            allowed_values:
+            - gamma
+          energy_min:
+            range:
+              minimum: 0.02
+              maximum: 0.02
+              unit: GeV
+          energy_max:
+            range:
+              minimum: 0.025
+              maximum: 0.025
+              unit: GeV
+      - type: metadata
         required_keys:
         - job_grid_summary
         - job_grid_format_version
-        row_count: job_grid_summary.simulation_rows
-      data_product_schema: src/simtools/schemas/job_grid_density.schema.yml
-    - name: proton_base_grid_content
-      path_descriptor: output_path
-      file: proton/base_grid.ecsv
-      minimum_rows: 1
-      columns:
-        primary:
-          allowed_values: [proton]
-        energy_min:
-          range:
-            minimum: 2.0
-            maximum: 2.0
-            unit: GeV
-        energy_max:
-          range:
-            minimum: 2000.0
-            maximum: 2000.0
-            unit: GeV
-      metadata:
+        relations:
+        - left: job_grid_summary.simulation_rows
+          equals: table.row_count
+    - path_descriptor: output_path
+      output_sub_path: nsb
+      file: scan_config.yaml
+    - path_descriptor: output_path
+      output_sub_path: nsb
+      file: scan_grid.ecsv
+      validations:
+      - type: data_schema
+        schema: src/simtools/schemas/job_grid_density.schema.yml
+      - type: table
+        minimum_rows: 1
+        columns:
+          primary:
+            allowed_values:
+            - gamma
+          scan_label:
+            allowed_values:
+            - asum220
+      - type: metadata
         required_keys:
         - job_grid_summary
         - job_grid_format_version
-        row_count: job_grid_summary.simulation_rows
-      data_product_schema: src/simtools/schemas/job_grid_density.schema.yml
-    - name: nsb_scan_grid_content
-      path_descriptor: output_path
-      file: nsb/scan_grid.ecsv
-      minimum_rows: 1
-      columns:
-        primary:
-          allowed_values: [gamma]
-        scan_label:
-          allowed_values: [asum220]
-      metadata:
+        relations:
+        - left: job_grid_summary.simulation_rows
+          equals: table.row_count
+    - path_descriptor: output_path
+      output_sub_path: nsb
+      file: overwrite_nsb_asum220.yaml
+      validations:
+      - type: reference
+        file: tests/resources/generated/bias_curve_scan_grids/nsb/overwrite_nsb_asum220.yaml
+        tolerance: 1.0e-05
+    - path_descriptor: output_path
+      output_sub_path: proton
+      file: base_grid.ecsv
+      validations:
+      - type: data_schema
+        schema: src/simtools/schemas/job_grid_density.schema.yml
+      - type: table
+        minimum_rows: 1
+        columns:
+          primary:
+            allowed_values:
+            - proton
+          energy_min:
+            range:
+              minimum: 2.0
+              maximum: 2.0
+              unit: GeV
+          energy_max:
+            range:
+              minimum: 2000.0
+              maximum: 2000.0
+              unit: GeV
+      - type: metadata
         required_keys:
         - job_grid_summary
         - job_grid_format_version
-        row_count: job_grid_summary.simulation_rows
-      data_product_schema: src/simtools/schemas/job_grid_density.schema.yml
-    - name: proton_scan_grid_content
-      path_descriptor: output_path
-      file: proton/scan_grid.ecsv
-      minimum_rows: 1
-      columns:
-        primary:
-          allowed_values: [proton]
-        scan_label:
-          allowed_values: [asum220]
-      metadata:
+        relations:
+        - left: job_grid_summary.simulation_rows
+          equals: table.row_count
+    - path_descriptor: output_path
+      output_sub_path: proton
+      file: scan_config.yaml
+    - path_descriptor: output_path
+      output_sub_path: proton
+      file: scan_grid.ecsv
+      validations:
+      - type: data_schema
+        schema: src/simtools/schemas/job_grid_density.schema.yml
+      - type: table
+        minimum_rows: 1
+        columns:
+          primary:
+            allowed_values:
+            - proton
+          scan_label:
+            allowed_values:
+            - asum220
+      - type: metadata
         required_keys:
         - job_grid_summary
         - job_grid_format_version
-        row_count: job_grid_summary.simulation_rows
-      data_product_schema: src/simtools/schemas/job_grid_density.schema.yml
-    reference_output_file: tests/resources/generated/bias_curve_scan_grids/nsb/overwrite_nsb_asum220.yaml
-    test_output_file: nsb/overwrite_nsb_asum220.yaml
-  - reference_output_file: tests/resources/generated/bias_curve_scan_grids/proton/overwrite_proton_asum220.yaml
-    test_output_file: proton/overwrite_proton_asum220.yaml
+        relations:
+        - left: job_grid_summary.simulation_rows
+          equals: table.row_count
+    - path_descriptor: output_path
+      output_sub_path: proton
+      file: overwrite_proton_asum220.yaml
+      validations:
+      - type: reference
+        file: tests/resources/generated/bias_curve_scan_grids/proton/overwrite_proton_asum220.yaml
+        tolerance: 1.0e-05
   model_version_use_current: true
   test_name: generate_bias_curve_submissions_lstn-01
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

@@ -9,4 +9,4 @@ applications:
     schema_file: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml
   test_name: ecsv_validate_data
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

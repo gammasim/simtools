@@ -7,15 +7,24 @@ applications:
       Select one production-grid row and generate the corresponding 40 deg gamma-ray air showers
       with CORSIKA.
   configuration:
-    corsika_seeds: [534, 220, 1104, 382]
+    corsika_seeds:
+    - 534
+    - 220
+    - 1104
+    - 382
     job_grid_file: ${generated:production_grid_points_horizontal.ecsv}
     job_grid_row: 3
     label: test
     log_level: DEBUG
     output_path: simtools-output
-    sim_telarray_seed: [1745, 290]
+    sim_telarray_seed:
+    - 1745
+    - 290
   integration_tests:
-  - output_file: sim_telarray/run000003/gamma_diffuse_run000003_za40deg_azm310deg_North_LSTN-01_7.0.0_test.simtel.zst
+  - test_outputs:
+    - path_descriptor: output_path
+      file: gamma_diffuse_run000003_za40deg_azm310deg_North_LSTN-01_7.0.0_test.simtel.zst
+      output_sub_path: sim_telarray/run000003
   test_name: gamma_40_deg_south_corsika_only
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

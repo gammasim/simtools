@@ -16,11 +16,13 @@ applications:
     parameter_version: 1.3.0
     label: validate_optics_horizontal_scan
   integration_tests:
-  - output_file: results/ray_tracing_North_LSTN-01_d11.0km_za20.0deg_validate_optics_horizontal_scan.ecsv
-  - test_output_files:
+  - test_outputs:
+    - path_descriptor: output_path
+      output_sub_path: results
+      file: ray_tracing_North_LSTN-01_d11.0km_za20.0deg_validate_optics_horizontal_scan.ecsv
     - file: effective_focal_length-1.3.0.json
       path_descriptor: output_path
       output_sub_path: LSTN-01
   test_name: run-offset-directions-horizontal
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

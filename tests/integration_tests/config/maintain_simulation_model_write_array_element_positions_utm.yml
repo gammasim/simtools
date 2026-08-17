@@ -11,11 +11,13 @@ applications:
     simulation_models_path: simtools-output
     parameter_version: 0.1.0
   integration_tests:
-  - test_output_files:
-    - file: LSTN-04/array_element_position_utm.json
-      path_descriptor: simulation_models_path
-    - file: MSTN-15/array_element_position_utm.json
-      path_descriptor: simulation_models_path
+  - test_outputs:
+    - path_descriptor: simulation_models_path
+      file: array_element_position_utm.json
+      output_sub_path: LSTN-04
+    - path_descriptor: simulation_models_path
+      file: array_element_position_utm.json
+      output_sub_path: MSTN-15
   test_name: utm
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

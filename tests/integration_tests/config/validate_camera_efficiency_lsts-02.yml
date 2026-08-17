@@ -13,17 +13,23 @@ applications:
     telescope: LSTS-02
     parameter_version: 0.0.99
     write_reference_nsb_rate_as_parameter: true
-    zenith_angle: 0.
+    zenith_angle: 0.0
   integration_tests:
-  - model_parameter_validation:
-      parameter_file: nsb_pixel_rate/nsb_pixel_rate-0.0.99.json
-      reference_parameter_name: nsb_pixel_rate
-      tolerance: 1.e-1
-  - reference_output_file: |
-      ${generated:camera_efficiency/camera_efficiency_summary_South_LSTS-02_za0.0deg_azm000deg.yml}
-    tolerance: 1.e-3
-    test_output_file: camera_efficiency_summary_South_LSTS-02_za0.0deg_azm000deg.yml
+  - test_outputs:
+    - path_descriptor: output_path
+      output_sub_path: LSTS-02/nsb_pixel_rate
+      file: nsb_pixel_rate-0.0.99.json
+      validations:
+      - type: model_parameter
+        reference_parameter_name: nsb_pixel_rate
+        tolerance: 0.1
+    - path_descriptor: output_path
+      file: camera_efficiency_summary_South_LSTS-02_za0.0deg_azm000deg.yml
+      validations:
+      - type: reference
+        file: ${generated:camera_efficiency/camera_efficiency_summary_South_LSTS-02_za0.0deg_azm000deg.yml}
+        tolerance: 0.001
   model_version_use_current: true
   test_name: LSTS
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

@@ -16,4 +16,4 @@ applications:
   test_name: submit_reference_point_altitude
   test_use_case: UC-150-2.1.1
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

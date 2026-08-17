@@ -15,8 +15,11 @@ applications:
     site: North
     telescope: MSTx-NectarCam
   integration_tests:
-  - output_file: plot_camera_pixel_layout_MSTx-NectarCam_pixel_layout.pdf
-  - output_file: plot_camera_pixel_layout_MSTx-NectarCam_pixel_layout.png
+  - test_outputs:
+    - path_descriptor: output_path
+      file: plot_camera_pixel_layout_MSTx-NectarCam_pixel_layout.pdf
+    - path_descriptor: output_path
+      file: plot_camera_pixel_layout_MSTx-NectarCam_pixel_layout.png
   test_name: fov-run
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0
