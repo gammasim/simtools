@@ -28,7 +28,7 @@ Events can be re-weighted to a different power-law spectrum using the `spectral_
 | Output | `output_file` | ECSV | Estimated Monte Carlo statistics. |
 | Output | `output_path` | Directory | Result and optional diagnostic plots. |
 
-Set `plot_diagnostics` to generated plots of expected events and relative uncertainty.
+Set `plot_diagnostics` to generate plots of expected events and relative uncertainty.
 
 ## Command line arguments
 
