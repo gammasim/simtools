@@ -310,6 +310,7 @@ ini_options.addopts = [
   "--cov-report=xml",
   "--cov-report=json",
   "--cov-report=term",
+  "--import-mode=importlib",
   "-p",
   "pytest_requirements",
 ]
