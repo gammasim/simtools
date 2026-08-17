@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-plot-tabular-data-for-model-parameter
+  docs:
+    title: Plot all atmospheric-profile quantities
+    summary: >-
+      Plot density, thickness, refractive index, and related quantities from the North atmospheric
+      model.
   configuration:
     figure_format:
     - pdf

@@ -2,8 +2,10 @@
 applications:
 - application: simtools-production-generate-grid
   docs:
-    title: Production grid defined by grid density on horizontal axes.
-    summary: Production grid densities are typically set to below 1 /deg^2.
+    title: Generate a density-based horizontal production grid
+    summary: >-
+      Sample zenith and azimuth according to a configured sky density to create executable
+      simulation jobs.
   configuration:
     array_layout_name:
       by_version:

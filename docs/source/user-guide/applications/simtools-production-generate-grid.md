@@ -1,7 +1,7 @@
 # simtools-production-generate-grid
 
 ```{eval-rst}
-.. automodule:: production_generate_grid
+.. automodule:: simtools.applications.production_generate_grid
    :members:
    :exclude-members: main
 ```
@@ -73,7 +73,12 @@ a zenith-dependent job size, after which the application rounds the number of jo
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: production_generate_grid_horizontal_explicit.yml
+    :file: production_generate_grid_ha_dec.yml
+```
+
+```{eval-rst}
+.. simtools-integration-example::
+    :file: production_generate_grid_ha_dec_density.yml
 ```
 
 ```{eval-rst}
@@ -88,5 +93,5 @@ a zenith-dependent job size, after which the application rounds the number of jo
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: production_generate_grid_ha_dec_density.yml
+    :file: production_generate_grid_horizontal_explicit.yml
 ```

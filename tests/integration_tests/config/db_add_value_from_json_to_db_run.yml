@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-db-add-value-from-json-to-db
+  docs:
+    title: Store array layouts in the model database
+    summary: >-
+      Add array-layout values from a JSON model-parameter file to the sandbox telescope collection.
   configuration:
     db_collection: telescopes
     db_simulation_model: sandbox

@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-validate-optics
+  docs:
+    title: Validate the LST optical model
+    summary: >-
+      Ray-trace an LST across field angles and compare effective focal length and PSF quantities
+      with reference data.
   configuration:
     max_offset: 1.5
     offset_step: 0.5

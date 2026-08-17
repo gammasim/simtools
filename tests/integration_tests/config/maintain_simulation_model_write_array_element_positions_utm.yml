@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-maintain-simulation-model-write-array-element-positions
+  docs:
+    title: Write UTM array-element positions to a model repository
+    summary: >-
+      Convert a North-site UTM position table into versioned array-element model-parameter files.
   configuration:
     array_element_positions_file: ${static:telescope_positions-North-utm.ecsv}
     coordinate_system: utm

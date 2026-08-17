@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-submit-data-from-external
+  docs:
+    title: Prepare mirror measurements for submission
+    summary: >-
+      Validate an external MST mirror-measurement table and metadata against the input-data schema.
   configuration:
     input_data_file: tests/resources/static/MLTdata-preproduction.ecsv
     input_meta: tests/resources/static/MLTdata-preproduction.meta.yml

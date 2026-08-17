@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-validate-camera-efficiency
+  docs:
+    title: Validate the LSTN-02 camera efficiency
+    summary: >-
+      Calculate LSTN-02 optical throughput and derive its reference night-sky-background rate.
   configuration:
     log_level: info
     model_version: 7.0.0

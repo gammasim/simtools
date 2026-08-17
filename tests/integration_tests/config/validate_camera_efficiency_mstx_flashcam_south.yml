@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-validate-camera-efficiency
+  docs:
+    title: Validate the MSTx-FlashCam camera efficiency
+    summary: >-
+      Calculate South FlashCam optical throughput and reference NSB rate using the configured sky
+      spectrum.
   configuration:
     figure_format:
     - pdf

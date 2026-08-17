@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-validate-cumulative-psf
+  docs:
+    title: Validate the cumulative LST point-spread function
+    summary: Compare ray-traced LST containment radii at 20 deg zenith angle with measured PSF data.
   configuration:
     data: ${downloaded:PSFcurve_data_v2.ecsv}
     model_version: 6.0.2

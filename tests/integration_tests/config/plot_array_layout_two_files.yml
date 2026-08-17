@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-plot-array-layout
+  docs:
+    title: Compare North and South array layouts
+    summary: >-
+      Read two ground-position tables and plot the North and South telescope layouts together.
   configuration:
     array_layout_file:
     - ${static:telescope_positions-North-ground.ecsv}

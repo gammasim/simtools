@@ -2,9 +2,10 @@
 applications:
 - application: simtools-production-generate-grid
   docs:
-    title: Grid defined in HA/Dec.
-    summary: Point-like simulations with fixed offsets. Use corsika limits files to adjust energy ranges,
-      view cone, and core scatter settings.
+    title: Generate an HA/Dec production grid
+    summary: >-
+      Generate point-source simulation jobs at fixed hour-angle and declination offsets, applying
+      tabulated CORSIKA limits.
   configuration:
     array_layout_name: LSTN-01
     axis:

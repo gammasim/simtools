@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-illuminator
+  docs:
+    title: Simulate an illuminator for all North telescopes
+    summary: >-
+      Generate 300 nm calibration-light events for every telescope illuminated by the North-site
+      source.
   configuration:
     model_version: 7.0.0
     output_path: simtools-output

@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-simulate-flasher
+  docs:
+    title: Simulate an LSFS flash for a South LST
+    summary: Propagate an LSFS calibration pulse through the optics and camera of LSTS-04.
   configuration:
     run_mode: full_simulation
     light_source: LSFS-design

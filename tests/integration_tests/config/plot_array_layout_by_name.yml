@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-plot-array-layout
+  docs:
+    title: Plot a named North LST layout
+    summary: >-
+      Resolve a versioned North LST subarray by name and plot its telescope positions as PDF and
+      PNG.
   configuration:
     array_layout_name:
       by_version:

@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-generate-regular-arrays
+  docs:
+    title: Generate a single-SST array
+    summary: Create a South-site simulation layout containing one small-sized telescope.
   configuration:
     model_version: 6.0.2
     telescope_type: SST

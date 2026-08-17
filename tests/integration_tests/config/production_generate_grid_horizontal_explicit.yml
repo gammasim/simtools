@@ -2,9 +2,10 @@
 applications:
 - application: simtools-production-generate-grid
   docs:
-    title: Explicit definition of all grid parameters (horizontal coordinates)
-    summary: Explicit definition of all grid parameters along all axes. Fixed energy grid. Number of events
-      scaled by energy and zenith.
+    title: Generate an explicit horizontal production grid
+    summary: >-
+      Expand explicitly configured horizontal, energy, particle, and model axes into simulation jobs
+      with energy-and zenith-scaled event counts.
   configuration:
     array_layout_name:
       by_version:

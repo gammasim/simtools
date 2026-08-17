@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-illuminator
+  docs:
+    title: Simulate a positioned North illuminator
+    summary: >-
+      Ray-trace a calibration illuminator from a user-defined position and pointing direction to
+      MSTN-02.
   configuration:
     light_source: ILLN-01
     light_source_position:

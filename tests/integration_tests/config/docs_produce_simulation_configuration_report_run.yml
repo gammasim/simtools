@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-docs-produce-simulation-configuration-report
+  docs:
+    title: Document the CORSIKA configuration
+    summary: >-
+      Generate a reference report for the CORSIKA configuration parameters supported by simtools.
   configuration:
     model_version: 6.0.2
     output_path: simtools-output/reports/productions/

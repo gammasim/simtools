@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-prod
+  docs:
+    title: Simulate high-zenith gamma rays for South
+    summary: >-
+      Run CORSIKA and sim_telarray for 62 deg gamma rays using curved-atmosphere settings and the
+      South Beta layout.
   configuration:
     array_layout_name:
       by_version:

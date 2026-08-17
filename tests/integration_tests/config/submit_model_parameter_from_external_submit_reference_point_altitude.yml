@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-submit-model-parameter-from-external
+  docs:
+    title: Prepare a reference altitude for model submission
+    summary: >-
+      Convert the North observatory reference altitude into a validated site model-parameter file.
   configuration:
     input_meta: null
     instrument: OBS-North

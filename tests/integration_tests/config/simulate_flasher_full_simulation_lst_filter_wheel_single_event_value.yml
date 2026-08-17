@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-flasher
+  docs:
+    title: Simulate LST flashes with a shared event count
+    summary: >-
+      Propagate two flat-fielding intensities through a South LST using the same event count for
+      each setting.
   configuration:
     run_mode: full_simulation
     light_source_type: flat_fielding

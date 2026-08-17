@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-flasher
+  docs:
+    title: Simulate a flasher for a North subarray
+    summary: >-
+      Propagate flat-fielding light through the optics and cameras of a North layout containing LSTs
+      and an MST.
   configuration:
     run_mode: full_simulation
     light_source_type: flat_fielding

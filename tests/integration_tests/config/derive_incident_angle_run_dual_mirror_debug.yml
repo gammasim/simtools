@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-derive-incident-angle
+  docs:
+    title: Inspect dual-mirror photon incidence angles
+    summary: >-
+      Ray-trace an SST and plot photon incidence on its primary, secondary, and camera surfaces.
   configuration:
     site: South
     telescope: SSTS-01

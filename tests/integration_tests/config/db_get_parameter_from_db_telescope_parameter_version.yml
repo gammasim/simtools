@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-db-get-parameter-from-db
+  docs:
+    title: Retrieve a versioned LST mirror list
+    summary: >-
+      Read version 2.0.0 of the LSTN-01 mirror-list parameter from the simulation-model database.
   configuration:
     log_level: DEBUG
     output_file: test.json

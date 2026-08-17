@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-convert-geo-coordinates-of-array-elements
+  docs:
+    title: Convert UTM positions using separate metadata
+    summary: >-
+      Convert North-site UTM telescope positions to ground coordinates using a separate metadata
+      file.
   configuration:
     export: ground
     array_element_positions_file: ${static:telescope_positions-North-utm-without-cta-meta.ecsv}
