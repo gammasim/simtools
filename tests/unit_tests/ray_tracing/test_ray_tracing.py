@@ -533,6 +533,28 @@ def test_analyze_image(ray_tracing_lst, mocker):
     mock_image.get_effective_area.assert_called_once_with(tel_transmission)
 
 
+def test_analyze_image_zero_theta_offset(ray_tracing_lst, mocker):
+    mock_image = mocker.Mock()
+    mock_image.get_psf.side_effect = [5.0, 0.1]
+    mock_image.get_effective_area.return_value = 100.0
+    mock_image.centroid_x = 0.5
+    mock_image.centroid_y = 0.2
+    mock_image.centroid_x_error = 0.05
+    mock_image.centroid_y_error = 0.02
+
+    result = ray_tracing_lst._analyze_image(
+        image=mock_image,
+        off_x=0.0,
+        off_y=0.0,
+        theta_offset=0.0,
+        containment_fraction=0.8,
+        tel_transmission=0.9,
+    )
+
+    assert np.isnan(result[-2])
+    assert np.isnan(result[-1])
+
+
 def test_get_mean_std(ray_tracing_lst):
     ray_tracing = copy.deepcopy(ray_tracing_lst)
     _rows = _example_rows()
