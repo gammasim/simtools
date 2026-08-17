@@ -10,4 +10,4 @@ applications:
     site: North
   test_name: site_parameter
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0
