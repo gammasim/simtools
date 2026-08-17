@@ -90,9 +90,14 @@ def _load_job_payload(path):
 
 def _job_file(run_directory, directory, job_id):
     """Resolve a job-owned path below the private run directory."""
-    if not _JOB_ID_PATTERN.fullmatch(job_id):
-        raise ValueError(f"Invalid job ID: {job_id!r}.")
+    validate_job_id(job_id)
     return Path(run_directory) / directory / f"{job_id}.pkl"
+
+
+def validate_job_id(job_id):
+    """Validate a job ID used in worker-owned file names."""
+    if not isinstance(job_id, str) or not _JOB_ID_PATTERN.fullmatch(job_id):
+        raise ValueError(f"Invalid job ID: {job_id!r}.")
 
 
 def _write_result(path, payload):

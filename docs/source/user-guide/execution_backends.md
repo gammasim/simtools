@@ -1,6 +1,6 @@
 # Execution backends
 
-Compute intensive application can be executed in parallel, either locally or on backends
+Compute-intensive applications can be executed in parallel, either locally or on backends
 like the HTCondor system.
 The backend is selected with `--backend` and configured with `--backend_config`.
 

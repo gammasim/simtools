@@ -79,10 +79,27 @@ def test_htcondor_uses_container_python_command(tmp_test_directory):
     )
     assert submit_values["universe"] == "container"
     assert submit_values["container_target_dir"] == "/simtools-run"
-    assert (
-        submit_values["environment"]
-        == f"APPTAINER_BINDPATH={Path(tmp_test_directory).resolve().parent}"
+    bind_paths = submit_values["environment"].split("=", 1)[1].split(",")
+    assert Path(tmp_test_directory).resolve().parent.as_posix() in bind_paths
+    assert Path.cwd().resolve().as_posix() in bind_paths
+
+
+def test_htcondor_preserves_submission_working_directory_for_containers(tmp_test_directory):
+    """Container jobs retain the submitter working directory and bind it."""
+    work_dir = Path(tmp_test_directory) / "work"
+    working_directory = Path.cwd().resolve()
+    job = JobSpec("job-000000", 0, command=("echo", "ok"))
+
+    submit_values, _, _ = HTCondorBackend()._build_submit_values(
+        {"container_image": "/shared/simtools.sif"},
+        [job],
+        work_dir,
+        work_dir / "scheduler.log",
+        working_directory,
     )
+
+    assert submit_values["initialdir"] == str(working_directory)
+    assert str(working_directory) in submit_values["environment"].split("=", 1)[1].split(",")
 
 
 def test_htcondor_avoids_nested_container_bind_paths(tmp_test_directory):
@@ -98,7 +115,9 @@ def test_htcondor_avoids_nested_container_bind_paths(tmp_test_directory):
         work_dir / "scheduler.log",
     )
 
-    assert submit_values["environment"] == f"APPTAINER_BINDPATH={work_dir.resolve().parent}"
+    bind_paths = submit_values["environment"].split("=", 1)[1].split(",")
+    assert work_dir.resolve().parent.as_posix() in bind_paths
+    assert Path.cwd().resolve().as_posix() in bind_paths
 
 
 def test_htcondor_rewrites_controller_python_in_container_commands():
@@ -145,6 +164,39 @@ def test_htcondor_uses_submission_python_without_container(tmp_test_directory):
     assert submit_values["arguments"].startswith("-m simtools.job_execution.worker")
     assert sys.executable not in submit_values["arguments"]
     assert "universe" not in submit_values
+
+
+def test_htcondor_rejects_job_ids_that_escape_the_run_directory(tmp_test_directory):
+    """Job IDs must be safe before payload paths are constructed."""
+    work_dir = Path(tmp_test_directory)
+    (work_dir / "inputs").mkdir()
+    job = JobSpec("../../target", 0, command=("echo", "ok"))
+
+    with pytest.raises(BackendSubmissionError, match="Invalid job ID"):
+        HTCondorBackend._serialize_jobs([job], work_dir)
+
+    assert not (work_dir.parent / "target.pkl").exists()
+
+
+def test_htcondor_build_config_preserves_explicit_falsey_options():
+    """Zero, false, and empty mapping options remain available for validation."""
+    options = ExecutionOptions(
+        request_cpus=0,
+        timeout=0,
+        cancel_on_interrupt=False,
+        keep_successful_artifacts=False,
+        extra_submit_attributes={},
+    )
+
+    config = HTCondorBackend._build_config(options)
+
+    assert config["request_cpus"] == 0
+    assert config["timeout"] == 0
+    assert config["cancel_on_interrupt"] is False
+    assert config["keep_successful_artifacts"] is False
+    assert config["extra_submit_attributes"] == {}
+    with pytest.raises(BackendConfigurationError, match="request_cpus"):
+        HTCondorBackend._validate_config(config)
 
 
 def test_htcondor_reads_dotenv_entries(tmp_test_directory):
@@ -316,3 +368,24 @@ def test_htcondor_cancel_wraps_scheduler_errors():
 
     with pytest.raises(BackendExecutionError, match="unavailable"):
         backend.cancel(SubmissionHandle("htcondor", Path("run"), (), scheduler_id=17))
+
+
+def test_htcondor_cancel_loads_scheduler_for_detached_submission(monkeypatch):
+    """Cancellation loads HTCondor bindings when using a fresh backend instance."""
+    backend = HTCondorBackend()
+    calls = []
+    scheduler = types.SimpleNamespace(
+        act=lambda action, constraint: calls.append((action, constraint))
+    )
+    htcondor = types.SimpleNamespace(JobAction=types.SimpleNamespace(Remove="remove"))
+
+    def load_htcondor():
+        backend._htcondor = htcondor
+        backend._schedd = scheduler
+        return htcondor
+
+    monkeypatch.setattr(backend, "_load_htcondor", load_htcondor)
+
+    backend.cancel(SubmissionHandle("htcondor", Path("run"), (), scheduler_id=17))
+
+    assert calls == [("remove", "ClusterId == 17")]

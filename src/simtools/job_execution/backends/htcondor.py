@@ -17,7 +17,7 @@ from simtools.job_execution.backends.base import (
     BackendSubmissionError,
 )
 from simtools.job_execution.job import JobResult, SubmissionHandle
-from simtools.job_execution.worker import write_job_payload
+from simtools.job_execution.worker import validate_job_id, write_job_payload
 
 logger = logging.getLogger(__name__)
 
@@ -290,6 +290,7 @@ class HTCondorBackend:
         config = self._build_config(options)
         self._validate_config(config)
         jobs = self._prepare_jobs(job_specs, options, config)
+        working_directory = Path.cwd().resolve()
         if not jobs:
             return SubmissionHandle(
                 backend="htcondor",
@@ -302,7 +303,7 @@ class HTCondorBackend:
         self._serialize_jobs(jobs, work_dir)
         event_log = self._resolve_event_log(config, work_dir)
         submit_values, resource_defaults, resource_keys = self._build_submit_values(
-            config, jobs, work_dir, event_log
+            config, jobs, work_dir, event_log, working_directory
         )
         itemdata = self._build_itemdata(jobs, resource_defaults, resource_keys)
         try:
@@ -310,7 +311,7 @@ class HTCondorBackend:
             result = self._schedd.submit(submission, itemdata=iter(itemdata))
         except Exception as exc:  # pylint: disable=broad-exception-caught
             raise BackendSubmissionError(f"HTCondor submission failed: {exc}") from exc
-        handle = self._make_handle(result, jobs, work_dir, event_log, config)
+        handle = self._make_handle(result, jobs, work_dir, event_log, config, working_directory)
         logger.info("Submitted %d HTCondor jobs as cluster %d", len(jobs), handle.scheduler_id)
         return handle
 
@@ -363,7 +364,7 @@ class HTCondorBackend:
             "extra_submit_attributes": options.extra_submit_attributes,
         }
         for key, value in option_values.items():
-            if value not in (None, {}, False) and key not in config:
+            if value is not None and key not in config:
                 config[key] = value
         for key in ("container_image", "environment_file"):
             if config.get(key):
@@ -426,8 +427,9 @@ class HTCondorBackend:
         """Serialize one payload per job."""
         for job in jobs:
             try:
+                validate_job_id(job.job_id)
                 write_job_payload(job, work_dir / "inputs" / f"{job.job_id}.pkl")
-            except (OSError, pickle.PickleError, TypeError, AttributeError) as exc:
+            except (OSError, pickle.PickleError, TypeError, AttributeError, ValueError) as exc:
                 raise BackendSubmissionError(
                     f"Cannot serialize HTCondor job {job.job_id}: {exc}"
                 ) from exc
@@ -441,8 +443,9 @@ class HTCondorBackend:
         event_log.parent.mkdir(parents=True, exist_ok=True)
         return event_log
 
-    def _build_submit_values(self, config, jobs, work_dir, event_log):
+    def _build_submit_values(self, config, jobs, work_dir, event_log, working_directory=None):
         """Build the submit description and per-job resource metadata."""
+        working_directory = Path(working_directory or Path.cwd()).resolve()
         resource_defaults = {
             "request_cpus": config.get("request_cpus", 1),
             "request_memory": config.get("request_memory") or "",
@@ -471,7 +474,7 @@ class HTCondorBackend:
         submit_values = {
             "executable": worker_executable,
             "arguments": " ".join(worker_arguments),
-            "initialdir": str(work_dir),
+            "initialdir": str(working_directory),
             "output": str(work_dir / "stdout" / "$(job_id).out"),
             "error": str(work_dir / "stderr" / "$(job_id).err"),
             "log": str(event_log),
@@ -488,7 +491,7 @@ class HTCondorBackend:
             submit_values["container_target_dir"] = container_target_dir
         bind_paths = ()
         if uses_container:
-            bind_paths = [work_dir.parent]
+            bind_paths = [work_dir.parent, working_directory]
             bind_paths.extend(
                 Path(mount_path).expanduser().resolve()
                 for job in jobs
@@ -531,7 +534,7 @@ class HTCondorBackend:
         return itemdata
 
     @staticmethod
-    def _make_handle(result, jobs, work_dir, event_log, config):
+    def _make_handle(result, jobs, work_dir, event_log, config, working_directory):
         """Create a submission handle from a scheduler result."""
         cluster_id = int(result.cluster())
         first_proc = getattr(result, "first_proc", 0)
@@ -559,6 +562,7 @@ class HTCondorBackend:
                 else None,
                 "job_log_dir": str(work_dir / "logs"),
                 "event_log": str(event_log),
+                "working_directory": str(working_directory),
                 "submitted_at": datetime.now(UTC).isoformat(),
                 "indices": {job.job_id: job.index for job in jobs},
             },
@@ -690,8 +694,9 @@ class HTCondorBackend:
 
     def cancel(self, submission):
         """Remove all processes in an active cluster."""
-        if self._schedd is None or submission.scheduler_id is None:
+        if submission.scheduler_id is None:
             return
+        self._load_htcondor()
         try:
             self._schedd.act(
                 self._htcondor.JobAction.Remove, f"ClusterId == {submission.scheduler_id}"
