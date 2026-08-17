@@ -315,6 +315,101 @@ def test_validate_array_layouts_with_db_invalid():
         array_layout_utils.validate_array_layouts_with_db(production_table, array_layouts)
 
 
+def test_get_array_layout_elements():
+    layouts = {
+        "value": [
+            {"name": "hyper_array", "elements": ["MSTS-01", "MSTS-301"]},
+        ]
+    }
+
+    assert array_layout_utils.get_array_layout_elements(layouts, "hyper_array") == [
+        "MSTS-01",
+        "MSTS-301",
+    ]
+
+    with pytest.raises(ValueError, match="Reference array layout 'missing' not found"):
+        array_layout_utils.get_array_layout_elements(layouts, "missing")
+
+
+def test_validate_array_layout_subset_of_reference_valid():
+    result = array_layout_utils.validate_array_layout_subset_of_reference(
+        layout_name="dual-camera",
+        elements=["MSTS-301", "MSTS-01"],
+        reference_elements=["MSTS-01", "MSTS-301", "SSTS-01"],
+        reference_layout_name="hyper_array",
+    )
+
+    assert result == {
+        "name": "dual-camera",
+        "elements": ["MSTS-301", "MSTS-01"],
+    }
+
+
+def test_validate_array_layout_subset_of_reference_invalid_element():
+    with pytest.raises(ValueError, match="outside reference layout 'hyper_array'"):
+        array_layout_utils.validate_array_layout_subset_of_reference(
+            layout_name="invalid",
+            elements=["MSTS-01", "MSTS-999"],
+            reference_elements=["MSTS-01", "MSTS-301"],
+            reference_layout_name="hyper_array",
+        )
+
+
+def test_validate_array_layout_subset_of_reference_duplicate_or_empty():
+    with pytest.raises(ValueError, match="duplicate telescopes"):
+        array_layout_utils.validate_array_layout_subset_of_reference(
+            layout_name="duplicate",
+            elements=["MSTS-01", "MSTS-01"],
+            reference_elements=["MSTS-01"],
+            reference_layout_name="hyper_array",
+        )
+
+
+def test_prepare_array_layouts_for_submission_direct(mocker):
+    db = mocker.Mock()
+    db.get_model_parameter.return_value = {
+        "array_layouts": {
+            "site": "South",
+            "value": [
+                {"name": "hyper_array", "elements": ["MSTS-01", "MSTS-301"]},
+            ],
+        }
+    }
+    args = {
+        "array_layouts": None,
+        "array_layout_name": "dual-camera",
+        "array_element_list": ["MSTS-01", "MSTS-301"],
+        "reference_array_layout": "hyper_array",
+        "site": "South",
+        "model_version": ["7.0.0"],
+        "parameter_version": "3.0.0",
+        "updated_parameter_version": "3.0.99",
+    }
+
+    result, model_version = array_layout_utils.prepare_array_layouts_for_submission(db, args)
+
+    assert model_version == "7.0.0"
+    assert result["value"][-1] == {
+        "name": "dual-camera",
+        "elements": ["MSTS-01", "MSTS-301"],
+    }
+    db.get_model_parameter.assert_called_once_with(
+        parameter="array_layouts",
+        site="South",
+        array_element_name=None,
+        parameter_version="3.0.0",
+        model_version="7.0.0",
+    )
+
+    with pytest.raises(ValueError, match="requires a non-empty telescope list"):
+        array_layout_utils.validate_array_layout_subset_of_reference(
+            layout_name="empty",
+            elements=[],
+            reference_elements=["MSTS-01"],
+            reference_layout_name="hyper_array",
+        )
+
+
 def test_get_array_layouts_from_parameter_file_valid(mocker, mock_array_model):
     model_version = "6.0.0"
     fake_data = {
