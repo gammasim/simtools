@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-flasher
+  docs:
+    title: Simulate a flasher for a North subarray
+    summary: >-
+      Propagate flat-fielding light through the optics and cameras of a North layout containing LSTs
+      and an MST.
   configuration:
     run_mode: full_simulation
     light_source_type: flat_fielding
@@ -12,27 +17,35 @@ applications:
     flasher_photons: 1e6
     log_level: DEBUG
   integration_tests:
-  - output_file: sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher_LSTN-01.simtel.zst
-  - output_file: sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher_LSTN-02.simtel.zst
-  - output_file: sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher_LSTN-03.simtel.zst
-  - output_file: sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher_LSTN-04.simtel.zst
-  - output_file: sim_telarray/full_simulation_run000010_North_7.0.0_simulate_flasher_MSTN-03.simtel.zst
-  - test_output_files:
-    - expected_sim_telarray_output:
-        pe_sum:
-        - 1000
-        - 500000
-        photons:
-        - 90
-        - 500000
-        # trigger_time:
-        # - 0
-        # - 50
-        event_type: flasher
+  - test_outputs:
+    - path_descriptor: output_path
       file: full_simulation_run000010_North_7.0.0_simulate_flasher_LSTN-01.simtel.zst
-      path_descriptor: output_path
+      output_sub_path: sim_telarray
+      validations:
+      - type: simtel
+        event_type: flasher
+        event:
+          pe_sum:
+            range:
+            - 1000
+            - 500000
+          photons:
+            range:
+            - 90
+            - 500000
+    - path_descriptor: output_path
+      file: full_simulation_run000010_North_7.0.0_simulate_flasher_LSTN-02.simtel.zst
+      output_sub_path: sim_telarray
+    - path_descriptor: output_path
+      file: full_simulation_run000010_North_7.0.0_simulate_flasher_LSTN-03.simtel.zst
+      output_sub_path: sim_telarray
+    - path_descriptor: output_path
+      file: full_simulation_run000010_North_7.0.0_simulate_flasher_LSTN-04.simtel.zst
+      output_sub_path: sim_telarray
+    - path_descriptor: output_path
+      file: full_simulation_run000010_North_7.0.0_simulate_flasher_MSTN-03.simtel.zst
       output_sub_path: sim_telarray
   model_version_use_current: true
   test_name: full_simulation_alpha_north
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

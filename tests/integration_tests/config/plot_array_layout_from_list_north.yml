@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-plot-array-layout
+  docs:
+    title: Plot a selected North telescope layout
+    summary: Plot labeled North-site positions for LSTN-01 and the selected MST elements.
   configuration:
     array_element_list:
     - LSTN-01
@@ -13,7 +16,9 @@ applications:
     show_labels: true
     log_level: DEBUG
   integration_tests:
-  - output_file: array_layout_list_North_ground_6-0-2.png
+  - test_outputs:
+    - path_descriptor: output_path
+      file: array_layout_list_North_ground_6-0-2.png
   test_name: from_list_north
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

@@ -1,20 +1,6 @@
 #!/usr/bin/python3
 
-"""
-Inspect simulation-related files and prints out a structured report of their contents.
-
-For known simulation products, the application can append specialized
-inspection sections on top of the generic file-structure report.
-
-Command line arguments
-----------------------
-input_file (str, required)
-    Simulation-related file to inspect.
-max_entries (int, optional)
-    Maximum number of entries or preview lines to print. Use 0 for no limit.
-show_entry (str, optional)
-    Print the content of one HDF5 root dataset instead of the file structure report.
-"""
+"""Inspect simulation-related files and prints out a structured report of their contents."""
 
 from pathlib import Path
 

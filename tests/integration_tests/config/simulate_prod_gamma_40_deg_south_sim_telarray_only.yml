@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-prod
+  docs:
+    title: Run sim_telarray on South gamma showers
+    summary: >-
+      Read an existing CORSIKA gamma-ray file and simulate detector response for the South LST
+      subarray.
   configuration:
     corsika_file: ${generated:gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_7.0.0_test.corsika.zst}
     array_layout_name: subsystem_lsts
@@ -11,27 +16,38 @@ applications:
     model_version: 7.0.0
     output_path: simtools-output
     sim_telarray_instrument_seed: 1745
-    sim_telarray_seed: [290]
+    sim_telarray_seed:
+    - 290
     simulation_software: sim_telarray
     site: South
   integration_tests:
-  - output_file: sim_telarray/run000007/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_7.0.0_test.simtel.zst
-  - test_simtel_cfg_files:
-      "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-LSTS-02.cfg}
-  - test_output_files:
-    - expected_sim_telarray_output:
-        pe_sum:
-        - 20
-        - 1000
-        photons:
-        - 90
-        - 1000
-        trigger_time:
-        - 0
-        - 50
+  - test_outputs:
+    - path_descriptor: output_path
       file: gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_7.0.0_test.simtel.zst
-      path_descriptor: output_path
       output_sub_path: sim_telarray/run000007
+      validations:
+      - type: simtel
+        event:
+          pe_sum:
+            range:
+            - 20
+            - 1000
+          photons:
+            range:
+            - 90
+            - 1000
+          trigger_time:
+            range:
+            - 0
+            - 50
+    - path_descriptor: output_path
+      output_sub_path: model/run000007/7.0.0
+      file: CTAO-LSTS-02.cfg
+      model_versions:
+      - 7.0.0
+      validations:
+      - type: simtel_config
+        reference: ${generated:sim_telarray_configurations/7.0.0/CTAO-LSTS-02.cfg}
   test_name: gamma_40_deg_south_sim_telarray_only
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

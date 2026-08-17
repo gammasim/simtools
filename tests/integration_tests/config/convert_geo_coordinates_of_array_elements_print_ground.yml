@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-convert-geo-coordinates-of-array-elements
+  docs:
+    title: Print ground-coordinate positions
+    summary: >-
+      Read North-site ground-coordinate array positions and print their compact telescope
+      representation.
   configuration:
     array_element_positions_file: ${static:telescope_positions-North-ground.ecsv}
     log_level: DEBUG
@@ -9,4 +14,4 @@ applications:
     print: ground
   test_name: print_ground
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0
