@@ -1,9 +1,14 @@
 ---
 applications:
 - application: simtools-inspect-file
+  docs:
+    title: Inspect a sim_telarray configuration
+    summary: >-
+      Display the structure and first entries of a generated North-array sim_telarray configuration
+      file.
   configuration:
     input_file: ${generated:sim_telarray_configurations/7.0.0/CTAO-North-CTAO-North-Alpha.cfg}
     max_entries: 5
   test_name: inspect_cfg
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

@@ -1,27 +1,5 @@
 #!/usr/bin/python3
-"""
-Plot tabular data read from file or from model parameter database.
-
-Uses a configuration file to define the data to be plotted and all
-plotting details.
-
-Command line arguments
-----------------------
-config_file (str, required)
-    Configuration file name for plotting.
-output_file (str, required)
-    Output file name (without suffix).
-
-Example
--------
-
-Plot tabular data using a configuration file.
-
-.. code-block:: console
-
-    simtools-plot-tabular-data --plot_config config_file_name --output_file output_file_name
-
-"""
+"""Plot tabular data read from file or from model parameter database."""
 
 import simtools.utils.general as gen
 from simtools.application.definition import ApplicationDefinition

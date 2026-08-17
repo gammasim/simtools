@@ -15,20 +15,23 @@ applications:
     energy_bins_per_decade: 10
     angular_distance_bin_width: 0.5
   integration_tests:
-  - test_output_files:
+  - test_outputs:
     - path_descriptor: output_path
       file: trigger_histograms.hdf5
-      expected_hdf5_datasets:
-      - METADATA
-      - TRIGGER_REFERENCE_METADATA
-      - TRIGGER_REFERENCE_BINS
-      - TRIGGER_TOPOLOGY_COUNTS
-      - TRIGGER_SUBSET_HISTOGRAMS
-      expected_hdf5_min_rows:
-        METADATA: 1
-        TRIGGER_REFERENCE_METADATA: 1
-        TRIGGER_REFERENCE_BINS: 1
-      hdf5_schema: trigger_histograms
-  test_name: test
+      validations:
+      - type: hdf5_datasets
+        required:
+        - METADATA
+        - TRIGGER_REFERENCE_METADATA
+        - TRIGGER_REFERENCE_BINS
+        - TRIGGER_TOPOLOGY_COUNTS
+        - TRIGGER_SUBSET_HISTOGRAMS
+        minimum_rows:
+          METADATA: 1
+          TRIGGER_REFERENCE_METADATA: 1
+          TRIGGER_REFERENCE_BINS: 1
+      - type: hdf5_product
+        product: trigger_histograms
+  test_name: write_trigger_histograms
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

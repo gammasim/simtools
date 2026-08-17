@@ -1,25 +1,5 @@
 #!/usr/bin/python3
-r"""
-    Generate a default simtools metadata file from a json schema.
-
-    Command line arguments
-    ----------------------
-    schema_file (str, optional)
-        Schema file describing the input data
-        (default: simtools/schemas/metadata.metaschema.yml)
-    output_file (str, optional)
-        Output file name.
-
-    Example
-    -------
-    .. code-block:: console
-
-        simtools-generate-default-metadata \\
-            --schema_file simtools/schemas/metadata.metaschema.yml \\
-            --output_file default_metadata.yml
-
-
-    """
+"""Generate a default simtools metadata file from a json schema."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

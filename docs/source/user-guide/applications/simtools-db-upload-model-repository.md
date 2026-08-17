@@ -1,7 +1,7 @@
 # simtools-db-upload-model-repository
 
 ```{eval-rst}
-.. automodule:: db_upload_model_repository
+.. automodule:: simtools.applications.db_upload_model_repository
    :members:
    :exclude-members: main
 ```

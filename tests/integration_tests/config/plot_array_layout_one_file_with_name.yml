@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-plot-array-layout
+  docs:
+    title: Plot a named layout from one position file
+    summary: >-
+      Read a North-site ground-position table and write the layout plot with an explicit figure
+      name.
   configuration:
     array_layout_file: tests/resources/static/telescope_positions-North-ground.ecsv
     figure_format:
@@ -9,8 +14,11 @@ applications:
     figure_name: test
     output_path: simtools-output
   integration_tests:
-  - output_file: test.pdf
-  - output_file: test.png
+  - test_outputs:
+    - path_descriptor: output_path
+      file: test.pdf
+    - path_descriptor: output_path
+      file: test.png
   test_name: one_file_with_name
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

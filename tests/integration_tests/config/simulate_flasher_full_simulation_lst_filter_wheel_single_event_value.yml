@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-flasher
+  docs:
+    title: Simulate LST flashes with a shared event count
+    summary: >-
+      Propagate two flat-fielding intensities through a South LST using the same event count for
+      each setting.
   configuration:
     run_mode: full_simulation
     light_source_type: flat_fielding
@@ -16,14 +21,14 @@ applications:
     - 2e6
     log_level: DEBUG
   integration_tests:
-  - output_file: sim_telarray/full_simulation_run000020_South_7.0.0_simulate_flasher_LSTS-01.simtel.zst
-  - test_output_files:
-    - expected_sim_telarray_output:
-        event_type: flasher
+  - test_outputs:
+    - path_descriptor: output_path
       file: full_simulation_run000020_South_7.0.0_simulate_flasher_LSTS-01.simtel.zst
-      path_descriptor: output_path
       output_sub_path: sim_telarray
+      validations:
+      - type: simtel
+        event_type: flasher
   model_version_use_current: true
   test_name: full_simulation_lst_filter_wheel_single_event_value
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

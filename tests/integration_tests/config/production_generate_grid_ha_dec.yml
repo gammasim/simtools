@@ -2,11 +2,10 @@
 applications:
 - application: simtools-production-generate-grid
   docs:
-    title: Grid defined in HA/Dec.
-    summary: >
-      Point-like simulations with fixed offsets.
-      Use corsika limits files to adjust energy ranges, view cone, and
-      core scatter settings.
+    title: Generate an HA/Dec production grid
+    summary: >-
+      Generate point-source simulation jobs at fixed hour-angle and declination offsets, applying
+      tabulated CORSIKA limits.
   configuration:
     array_layout_name: LSTN-01
     axis:
@@ -29,59 +28,87 @@ applications:
     site: North
     view_cone: 0 deg 10 deg
   integration_tests:
-  - output_file: job_grid_ha_dec.ecsv
-    output_validation:
-    - profile: job_grid
+  - test_outputs:
+    - path_descriptor: output_path
       file: job_grid_ha_dec.ecsv
-      columns:
-        primary:
-          allowed_values: [gamma]
-        zenith_angle:
-          range:
-            minimum: 0.0
-            maximum: 180.0
-            unit: deg
-        ha:
-          range:
-            minimum: 0.0
-            maximum: 360.0
-            unit: deg
-        dec:
-          range:
-            minimum: -90.0
-            maximum: 90.0
-            unit: deg
-        energy_min:
-          range:
-            minimum: 0.0
-            maximum: 300.0
-            unit: GeV
-        energy_max:
-          range:
-            minimum: 30.0
-            maximum: 300.0
-            unit: GeV
-        core_scatter_max:
-          range:
-            minimum: 0.0
-            maximum: 500.0
-            unit: m
-        view_cone_min:
-          range:
-            minimum: 0.0
-            maximum: 10.0
-            unit: deg
-        view_cone_max:
-          range:
-            minimum: 0.0
-            maximum: 10.0
-            unit: deg
-        model_version:
-          allowed_values: ["7.0.0"]
-        corsika_le_interaction:
-          allowed_values: [urqmd]
-        corsika_he_interaction:
-          allowed_values: [epos]
+      validations:
+      - type: data_schema
+        schema: src/simtools/schemas/job_grid_density.schema.yml
+      - type: table
+        minimum_rows: 1
+        unique_columns:
+        - run_number
+        columns:
+          azimuth_angle:
+            range:
+              minimum: 0.0
+              maximum: 360.0
+              unit: deg
+          energy_min:
+            range:
+              minimum: 0.0
+              unit: GeV
+              maximum: 300.0
+          energy_max:
+            range:
+              minimum: 30.0
+              unit: GeV
+              maximum: 300.0
+          core_scatter_max:
+            range:
+              minimum: 0.0
+              unit: m
+              maximum: 500.0
+          view_cone_min:
+            range:
+              minimum: 0.0
+              unit: deg
+              maximum: 10.0
+          view_cone_max:
+            range:
+              minimum: 0.0
+              unit: deg
+              maximum: 10.0
+          showers_per_run:
+            range:
+              minimum: 1.0
+          primary:
+            allowed_values:
+            - gamma
+          zenith_angle:
+            range:
+              minimum: 0.0
+              maximum: 180.0
+              unit: deg
+          ha:
+            range:
+              minimum: 0.0
+              maximum: 360.0
+              unit: deg
+          dec:
+            range:
+              minimum: -90.0
+              maximum: 90.0
+              unit: deg
+          model_version:
+            allowed_values:
+            - 7.0.0
+          corsika_le_interaction:
+            allowed_values:
+            - urqmd
+          corsika_he_interaction:
+            allowed_values:
+            - epos
+      - type: metadata
+        required_keys:
+        - job_grid_summary
+        - job_grid_format_version
+        relations:
+        - left: job_grid_summary.simulation_rows
+          equals: table.row_count
+        - left: job_grid_summary.total_showers
+          equals: table.column_sum
+          column: showers_per_run
   test_name: production_generate_grid_ha_dec
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

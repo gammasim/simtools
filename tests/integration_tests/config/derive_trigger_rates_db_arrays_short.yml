@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-derive-trigger-rates
+  docs:
+    title: Derive proton trigger rates for North arrays
+    summary: >-
+      Use reduced proton events and database array layouts to derive trigger rates for an LST and
+      the North Alpha array.
   configuration:
     array_layout_name:
       by_version:
@@ -17,4 +22,4 @@ applications:
     site: North
   test_name: protons_short
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

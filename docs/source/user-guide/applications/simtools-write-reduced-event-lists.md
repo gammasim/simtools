@@ -1,7 +1,7 @@
 # simtools-write-reduced-event-lists
 
 ```{eval-rst}
-.. automodule:: write_reduced_event_lists
+.. automodule:: simtools.applications.write_reduced_event_lists
    :members:
    :exclude-members: main
 ```
@@ -49,7 +49,7 @@ parallel output-file processing.
    :no-heading:
 ```
 
-## Examples
+## Example
 
 ```{eval-rst}
 .. simtools-integration-example::

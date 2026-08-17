@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-derive-psf-parameters
+  docs:
+    title: Derive LST optical PSF parameters
+    summary: >-
+      Fit ray-tracing parameters to measured LST point-spread-function data at 20 deg zenith angle.
   configuration:
     data: ${downloaded:PSFcurve_data_v2.ecsv}
     model_version: 6.0.2
@@ -12,7 +16,10 @@ applications:
     rmsd_threshold: 0.1
     max_iterations: 20
   integration_tests:
-  - output_file: results/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_derive_psf_parameters.ecsv
+  - test_outputs:
+    - path_descriptor: output_path
+      file: ray_tracing_North_LSTN-01_d10.0km_za20.0deg_derive_psf_parameters.ecsv
+      output_sub_path: results
   test_name: run
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

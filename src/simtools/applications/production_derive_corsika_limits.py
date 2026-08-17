@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-r"""Derive CORSIKA limits from trigger histograms."""
+"""Derive CORSIKA limits from trigger histograms."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

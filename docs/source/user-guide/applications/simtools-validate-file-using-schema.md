@@ -1,7 +1,7 @@
 # simtools-validate-file-using-schema
 
 ```{eval-rst}
-.. automodule:: validate_file_using_schema
+.. automodule:: simtools.applications.validate_file_using_schema
    :members:
    :exclude-members: main
 ```

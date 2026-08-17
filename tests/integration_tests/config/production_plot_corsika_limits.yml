@@ -1,14 +1,24 @@
 ---
 applications:
 - application: simtools-plot-corsika-limits
+  docs:
+    title: Plot production CORSIKA limits
+    summary: >-
+      Visualize energy range, core-scatter radius, and view-cone limits from a production limits
+      table.
   configuration:
     corsika_limits_file: ${downloaded:corsika_limits.ecsv}
     output_path: simtools-output
   integration_tests:
-  - output_file: limits_LSTN-01_azimuth0.0.png
-  - output_file: limits_LSTN-01_azimuth180.0.png
-  - output_file: limits_CTAO-North-4-LSTs-1-MSTs_azimuth0.0.png
-  - output_file: limits_CTAO-North-4-LSTs-1-MSTs_azimuth180.0.png
+  - test_outputs:
+    - path_descriptor: output_path
+      file: limits_LSTN-01_azimuth0.0.png
+    - path_descriptor: output_path
+      file: limits_LSTN-01_azimuth180.0.png
+    - path_descriptor: output_path
+      file: limits_CTAO-North-4-LSTs-1-MSTs_azimuth0.0.png
+    - path_descriptor: output_path
+      file: limits_CTAO-North-4-LSTs-1-MSTs_azimuth180.0.png
   test_name: plot_corsika_limits
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

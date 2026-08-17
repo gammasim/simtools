@@ -1,29 +1,5 @@
 #!/usr/bin/python3
-"""
-Generate sim_telarray configuration files for a given array.
-
-The applications generates the sim_telarray configuration files for a given array, site,
-and model_version using the model parameters stored in the database.
-
-Command line arguments
-----------------------
-site : str
-    Site name (e.g., North, South).
-array_layout_name : str
-    Name of the layout array (e.g., test_layout, alpha, 4mst, etc.).
-array_element_list : list
-    List of array elements (e.g., telescopes) to plot (e.g., ``LSTN-01 LSTN-02 MSTN``).
-
-Example
--------
-North - 5.0.0:
-
-.. code-block:: console
-
-    simtools-generate-array-config --site North --array_layout_name alpha --model_version 5.0.0
-
-The output is saved in simtools-output/test/model.
-"""
+"""Generate sim_telarray configuration files for a given array."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

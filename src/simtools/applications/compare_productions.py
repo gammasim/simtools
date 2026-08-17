@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-r"""Compare trigger-histogram products from simulation productions."""
+"""Compare trigger-histogram products from simulation productions."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

@@ -1,39 +1,5 @@
 #!/usr/bin/python3
-r"""
-    Convert simulation model parameter from sim_telarray format using the corresponding schema file.
-
-    Check value, type, and range and write a json file ready to be submitted to the model database.
-
-    Command line arguments
-    ----------------------
-    parameter (str, required)
-        Parameter name (as used in simtools)
-
-    simtel_cfg_file (str)
-        File name of sim_telarray configuration file containing all simulation model parameters.
-
-    simtel_telescope_name (str)
-        Name of the telescope in the sim_telarray configuration file.
-
-    telescope (str, optional)
-        Telescope model name (e.g. LST-1, SST-D, ...)
-
-    Example
-    -------
-
-    Extract the num_gains parameter from a sim_telarray configuration file for LSTN-01
-    and write a json file in the same format as the model parameter database:
-
-    .. code-block:: console
-
-       simtools-convert-model-parameter-from-simtel \\
-          --simtel_telescope_name CT1 \\
-          --telescope LSTN-01 \\
-          --schema_file tests/resources/num_gains.schema.yml \\
-          --simtel_cfg_file tests/resources/simtel_config_test_la_palma.cfg \\
-          --output_file num_gains.json
-
-"""
+"""Convert a sim_telarray parameter to the simulation-model format."""
 
 import simtools.data_model.model_data_writer as writer
 from simtools.application.definition import ApplicationDefinition

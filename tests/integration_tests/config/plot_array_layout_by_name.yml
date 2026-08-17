@@ -1,11 +1,16 @@
 ---
 applications:
 - application: simtools-plot-array-layout
+  docs:
+    title: Plot a named North LST layout
+    summary: >-
+      Resolve a versioned North LST subarray by name and plot its telescope positions as PDF and
+      PNG.
   configuration:
     array_layout_name:
       by_version:
-        "<7.0.0": subsystem_lsts
-        ">=7.0.0": CTAO-North-LSTs
+        <7.0.0: subsystem_lsts
+        '>=7.0.0': CTAO-North-LSTs
     figure_format:
     - pdf
     - png
@@ -13,8 +18,11 @@ applications:
     output_path: simtools-output
     site: North
   integration_tests:
-  - output_file: array_layout_subsystem_lsts_North_ground_6-0-2.png
-  - output_file: array_layout_subsystem_lsts_North_ground_6-0-2.pdf
+  - test_outputs:
+    - path_descriptor: output_path
+      file: array_layout_subsystem_lsts_North_ground_6-0-2.png
+    - path_descriptor: output_path
+      file: array_layout_subsystem_lsts_North_ground_6-0-2.pdf
   test_name: layout_by_name
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

@@ -1,7 +1,7 @@
 # simtools-compare-productions
 
 ```{eval-rst}
-.. automodule:: compare_productions
+.. automodule:: simtools.applications.compare_productions
    :members:
    :exclude-members: main
 ```

@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-validate-camera-efficiency
+  docs:
+    title: Validate the LSTN-02 camera efficiency
+    summary: >-
+      Calculate the LSTN-02 optical throughput and reference NSB rate after applying model-parameter
+      overrides.
   configuration:
     log_level: debug
     model_version: 6.0.2
@@ -10,13 +15,17 @@ applications:
     overwrite_model_parameters: tests/resources/static/info_test_camera_efficiency_change_LSTN-02.yml
     parameter_version: 0.0.99
     write_reference_nsb_rate_as_parameter: true
-    zenith_angle: 0.
+    zenith_angle: 0.0
   integration_tests:
-  - model_parameter_validation:
-      parameter_file: nsb_pixel_rate/nsb_pixel_rate-0.0.99.json
-      reference_parameter_name: nsb_pixel_rate
-      tolerance: 1.e-1
-      scaling: 10.0  # camera efficiency changed by factor 0.1
+  - test_outputs:
+    - path_descriptor: output_path
+      output_sub_path: LSTN-02/nsb_pixel_rate
+      file: nsb_pixel_rate-0.0.99.json
+      validations:
+      - type: model_parameter
+        reference_parameter_name: nsb_pixel_rate
+        tolerance: 0.1
+        scaling: 10.0
   test_name: LSTN_overwrite
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

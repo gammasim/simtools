@@ -1,11 +1,16 @@
 ---
 applications:
 - application: simtools-db-get-file-from-db
+  docs:
+    title: Download a telescope mirror definition
+    summary: Retrieve an LST mirror-definition file from the simulation-model database.
   configuration:
     file_name: mirror_CTA-S-LST_v2020-04-07.dat
     output_path: simtools-output
   integration_tests:
-  - output_file: mirror_CTA-S-LST_v2020-04-07.dat
+  - test_outputs:
+    - path_descriptor: output_path
+      file: mirror_CTA-S-LST_v2020-04-07.dat
   test_name: CTA-Simulation-Model
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

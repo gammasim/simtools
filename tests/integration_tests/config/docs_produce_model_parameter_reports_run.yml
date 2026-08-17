@@ -1,13 +1,21 @@
 ---
 applications:
 - application: simtools-docs-produce-model-parameter-reports
+  docs:
+    title: Produce telescope model-parameter reports
+    summary: >-
+      Generate documentation for the model parameters associated with the North-site LSTN-01
+      telescope.
   configuration:
     output_path: simtools-output/reports/
     site: North
     telescope: LSTN-01
   integration_tests:
-  - output_file: LSTN-01/quantum_efficiency.md
+  - test_outputs:
+    - path_descriptor: output_path
+      file: quantum_efficiency.md
+      output_sub_path: LSTN-01
   test_name: run
   test_use_case: UC-150-2.3
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

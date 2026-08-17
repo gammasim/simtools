@@ -126,48 +126,52 @@ named release.
 
 ## Validation
 
-Prefer explicit validation blocks over exit-code-only tests. Common patterns:
+Declare generated artifacts in `test_outputs`. Every declared artifact must
+exist. Add an ordered `validations` list when content also needs validation.
+Validator selection is explicit and does not depend on the filename suffix.
 
-- `output_file` for required outputs
-- `file_type` for parseable JSON or YAML outputs
-- `reference_output_file` with `tolerance` for numerical regression checks
-- `model_parameter_validation` for DB-backed parameter checks
-- `test_output_files` with `expected_log_output`,
-  `expected_sim_telarray_output`, or `expected_simtel_metadata`
-- `test_simtel_cfg_files` for version-dependent sim_telarray configuration
+Available validator types are `format`, `reference`, `data_schema`, `table`,
+`metadata`, `hdf5_datasets`, `hdf5_product`, `log`, `simtel`,
+`simtel_config`, and `model_parameter`.
+
+The validation interface has no legacy aliases: output checks must use
+`test_outputs` and explicit validator types.
 
 Keep generated outputs deterministic by fixing seeds, labels, event counts,
 worker counts, and version-specific expectations.
 
-## Declarative output validation
+## Composable output validation
 
-An integration test may include an optional `output_validation` list for
-generated ECSV tables. Each rule declares the output location and its
-data-product schema. The schema validates required columns, types, units, and
-finite numerical values; keep the workflow rule focused on invariants specific
-to the integration-test configuration.
+Each output owns its location and validation rules. Product schemas validate
+stable structure such as columns, types, and units. Table and metadata rules
+describe expectations specific to the tested workflow.
 
 ```yaml
-output_validation:
-- name: job_grid_content
+test_outputs:
+- file: job_grid.ecsv
   path_descriptor: output_path
-  file: job_grid.ecsv
-  data_product_schema: src/simtools/schemas/job_grid_density.schema.yml
-  minimum_rows: 1
-  unique_columns: [run_number]
-  columns:
-    primary:
-      allowed_values: [gamma, proton]
-    energy_min:
-      range:
-        minimum: 30.0
-        maximum: 300.0
-        unit: GeV
-  metadata:
+  validations:
+  - type: data_schema
+    schema: src/simtools/schemas/job_grid_density.schema.yml
+  - type: table
+    minimum_rows: 1
+    unique_columns: [run_number]
+    columns:
+      primary:
+        allowed_values: [gamma, proton]
+      energy_min:
+        range:
+          minimum: 30.0
+          maximum: 300.0
+          unit: GeV
+  - type: metadata
     required_keys: [job_grid_summary]
-    row_count: job_grid_summary.simulation_rows
-    column_sums:
-      showers_per_run: job_grid_summary.total_showers
+    relations:
+    - left: job_grid_summary.simulation_rows
+      equals: table.row_count
+    - left: job_grid_summary.total_showers
+      equals: table.column_sum
+      column: showers_per_run
 ```
 
 `minimum_rows` rejects empty or unexpectedly short tables. `unique_columns`
@@ -175,6 +179,26 @@ checks complete columns for duplicate values. Column rules support
 `allowed_values` and inclusive or exclusive numerical `range` bounds, with an
 optional unit. Metadata paths use dotted mapping notation.
 
-`metadata.row_count` names a metadata value that must equal the number of table
-rows. Each `metadata.column_sums` entry maps a table column to metadata that
-must equal that column's sum.
+Metadata relations compare a dotted metadata path with either the table row
+count or a named column sum.
+
+Table and metadata validators use Astropy table format auto-detection, so they
+can validate any table format supported by the installed Astropy I/O registry.
+
+The `simtel` validator defaults to shower events and accepts explicit event
+ranges without exposing the underlying reader API:
+
+```yaml
+- type: simtel
+  event_type: shower
+  event:
+    pe_sum: {range: [20, 1000]}
+    trigger_time: {range: [0, 50]}
+```
+
+The `reference` validator compares JSON, YAML, or ECSV files. ECSV comparisons
+check row order, column values and units by default. Use `columns` to select a
+subset, `key_columns` to compare rows in deterministic key order, `metadata`
+to include table metadata, and typed `filters` with operators such as `equal`,
+`less`, `greater_equal`, `in`, or `not_in`. Reference filtering never executes
+configuration text as code.

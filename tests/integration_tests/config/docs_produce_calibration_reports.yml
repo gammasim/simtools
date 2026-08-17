@@ -1,13 +1,21 @@
 ---
 applications:
 - application: simtools-docs-produce-calibration-reports
+  docs:
+    title: Produce calibration-device reports
+    summary: >-
+      Generate documentation tables and pages for calibration devices defined in the simulation
+      model.
   configuration:
     model_version: 6.0.2
     output_path: simtools-output/reports/productions/
   integration_tests:
-  - output_file: 6.0.2/ILLN-01.md
+  - test_outputs:
+    - path_descriptor: output_path
+      file: ILLN-01.md
+      output_sub_path: 6.0.2
   model_version_use_current: true
   test_name: run
   test_use_case: UC-150-2.3
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

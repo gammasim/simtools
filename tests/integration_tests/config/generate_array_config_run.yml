@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-generate-array-config
+  docs:
+    title: Generate a North Alpha array configuration
+    summary: >-
+      Resolve the version-appropriate North Alpha layout and write its sim_telarray array
+      configuration.
   configuration:
     array_layout_name:
       by_version:
@@ -11,4 +16,4 @@ applications:
     site: North
   test_name: run
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

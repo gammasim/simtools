@@ -2,16 +2,22 @@
 applications:
 - application: simtools-simulate-prod
   docs:
-    title: Run a small proton production (North).
-    summary: Reduced-runtime example for Alpha array layout.
+    title: Simulate a North proton production
+    summary: >-
+      Run a compact CORSIKA and sim_telarray proton production for the North Alpha array and write
+      reduced event data.
   configuration:
     array_layout_name:
       by_version:
-        "<7.0.0": alpha
-        ">=7.0.0": CTAO-North-Alpha
+        <7.0.0: alpha
+        '>=7.0.0': CTAO-North-Alpha
     azimuth_angle: South
     core_scatter: 5 500 m
-    corsika_seeds: [534, 220, 1104, 382]
+    corsika_seeds:
+    - 534
+    - 220
+    - 1104
+    - 382
     corsika_he_interaction: epos
     corsika_le_interaction: urqmd
     energy_range: 200 GeV 500 GeV
@@ -23,41 +29,100 @@ applications:
     grid_output_path: simtools-grid-output
     primary: proton
     run_number: 1
-    sim_telarray_seed: [1745, 290]
+    sim_telarray_seed:
+    - 1745
+    - 290
     simulation_software: corsika_sim_telarray
     site: North
     view_cone: 0 deg 5 deg
     zenith_angle: 20
   integration_tests:
-  - test_simtel_cfg_files:
-      "5.0.0": ${generated:sim_telarray_configurations/5.0.0/CTAO-LSTN-01.cfg}
-      "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-LSTN-01.cfg}
-  - test_simtel_cfg_files:
-      "5.0.0": ${generated:sim_telarray_configurations/5.0.0/CTAO-LSTN-02.cfg}
-      "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-LSTN-02.cfg}
-  - test_simtel_cfg_files:
-      "5.0.0": ${generated:sim_telarray_configurations/5.0.0/CTAO-MSTN-01.cfg}
-      "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-MSTN-01.cfg}
-  - test_simtel_cfg_files:
-      "5.0.0": ${generated:sim_telarray_configurations/5.0.0/CTAO-North-alpha.cfg}
-      "7.0.0": ${generated:sim_telarray_configurations/7.0.0/CTAO-North-CTAO-North-Alpha.cfg}
-  - test_output_files:
-    - file: proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.simtel.log.gz
-      path_descriptor: grid_output_path
-    - file: proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.hdata.zst
-      path_descriptor: grid_output_path
-    - expected_sim_telarray_output:
-        pe_sum:
-        - 20
-        - 1000
-        photons:
-        - 90
-        - 1000
-        trigger_time:
-        - 0
-        - 50
+  - test_outputs:
+    - path_descriptor: output_path
+      output_sub_path: model/run000001/5.0.0
+      file: CTAO-LSTN-01.cfg
+      model_versions:
+      - 5.0.0
+      validations:
+      - type: simtel_config
+        reference: ${generated:sim_telarray_configurations/5.0.0/CTAO-LSTN-01.cfg}
+    - path_descriptor: output_path
+      output_sub_path: model/run000001/7.0.0
+      file: CTAO-LSTN-01.cfg
+      model_versions:
+      - 7.0.0
+      validations:
+      - type: simtel_config
+        reference: ${generated:sim_telarray_configurations/7.0.0/CTAO-LSTN-01.cfg}
+    - path_descriptor: output_path
+      output_sub_path: model/run000001/5.0.0
+      file: CTAO-LSTN-02.cfg
+      model_versions:
+      - 5.0.0
+      validations:
+      - type: simtel_config
+        reference: ${generated:sim_telarray_configurations/5.0.0/CTAO-LSTN-02.cfg}
+    - path_descriptor: output_path
+      output_sub_path: model/run000001/7.0.0
+      file: CTAO-LSTN-02.cfg
+      model_versions:
+      - 7.0.0
+      validations:
+      - type: simtel_config
+        reference: ${generated:sim_telarray_configurations/7.0.0/CTAO-LSTN-02.cfg}
+    - path_descriptor: output_path
+      output_sub_path: model/run000001/5.0.0
+      file: CTAO-MSTN-01.cfg
+      model_versions:
+      - 5.0.0
+      validations:
+      - type: simtel_config
+        reference: ${generated:sim_telarray_configurations/5.0.0/CTAO-MSTN-01.cfg}
+    - path_descriptor: output_path
+      output_sub_path: model/run000001/7.0.0
+      file: CTAO-MSTN-01.cfg
+      model_versions:
+      - 7.0.0
+      validations:
+      - type: simtel_config
+        reference: ${generated:sim_telarray_configurations/7.0.0/CTAO-MSTN-01.cfg}
+    - path_descriptor: output_path
+      output_sub_path: model/run000001/5.0.0
+      file: CTAO-North-alpha.cfg
+      model_versions:
+      - 5.0.0
+      validations:
+      - type: simtel_config
+        reference: ${generated:sim_telarray_configurations/5.0.0/CTAO-North-alpha.cfg}
+    - path_descriptor: output_path
+      output_sub_path: model/run000001/7.0.0
+      file: CTAO-North-CTAO-North-Alpha.cfg
+      model_versions:
+      - 7.0.0
+      validations:
+      - type: simtel_config
+        reference: ${generated:sim_telarray_configurations/7.0.0/CTAO-North-CTAO-North-Alpha.cfg}
+    - path_descriptor: grid_output_path
+      file: proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.simtel.log.gz
+    - path_descriptor: grid_output_path
+      file: proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.hdata.zst
+    - path_descriptor: grid_output_path
       file: proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.simtel.zst
-      path_descriptor: grid_output_path
+      validations:
+      - type: simtel
+        event:
+          pe_sum:
+            range:
+            - 20
+            - 1000
+          photons:
+            range:
+            - 90
+            - 1000
+          trigger_time:
+            range:
+            - 0
+            - 50
   test_name: proton_20_deg_north_check_output
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

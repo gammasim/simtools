@@ -9,4 +9,4 @@ applications:
     file_name: tests/resources/static/telescope_positions-North-utm.ecsv
   test_name: ecsv_validate_metadata
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0
