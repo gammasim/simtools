@@ -1,0 +1,26 @@
+%YAML 1.2
+---
+title: Schema for reduced-event file information
+schema_version: 0.4.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: reduced_event_file_info
+description: Per-input-file simulation information in a reduced-event HDF5 product.
+data:
+  - type: data_table
+    table_columns:
+      - {name: file_name, description: Input file name., required: true, type: string}
+      - {name: file_id, description: Input file identifier., required: true, type: uint32}
+      - {name: run_number, description: Simulation run number., required: true, type: uint32}
+      - {name: particle_id, description: CORSIKA particle identifier., required: true, type: uint32}
+      - {name: spectral_index, description: Simulated spectral index., required: true, type: float64}
+      - {name: energy_min, description: Minimum simulated energy., required: true, type: float64, unit: TeV}
+      - {name: energy_max, description: Maximum simulated energy., required: true, type: float64, unit: TeV}
+      - {name: viewcone_min, description: Minimum view-cone radius., required: true, type: float64, unit: deg}
+      - {name: viewcone_max, description: Maximum view-cone radius., required: true, type: float64, unit: deg}
+      - {name: core_scatter_min, description: Minimum core-scatter radius., required: true, type: float64, unit: m}
+      - {name: core_scatter_max, description: Maximum core-scatter radius., required: true, type: float64, unit: m}
+      - {name: zenith, description: Zenith angle., required: true, type: float64, unit: deg}
+      - {name: azimuth, description: Azimuth angle., required: true, type: float64, unit: deg}
+      - {name: nsb_level, description: Night-sky-background level., required: true, type: float64}

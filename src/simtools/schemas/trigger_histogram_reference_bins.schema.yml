@@ -1,0 +1,27 @@
+%YAML 1.2
+---
+title: Schema for trigger-histogram reference bins
+schema_version: 0.4.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: trigger_histogram_reference_bins
+description: Per-bin trigger-histogram values.
+data:
+  - type: data_table
+    table_columns:
+      - {name: reference_id, description: Stable histogram reference identifier., required: true, type: string}
+      - {name: production_index, description: Production pattern index., required: true, type: int64}
+      - {name: array_name, description: Array layout name., required: true, type: string}
+      - {name: angular_distance_bin_index, description: Angular-distance bin index., required: true, type: int64}
+      - {name: energy_bin_index, description: Energy bin index., required: true, type: int64}
+      - {name: core_distance_bin_index, description: Core-distance bin index., required: true, type: int64}
+      - {name: angular_distance_low, description: Lower angular-distance bin edge., required: true, type: float64, unit: deg}
+      - {name: angular_distance_high, description: Upper angular-distance bin edge., required: true, type: float64, unit: deg}
+      - {name: energy_low, description: Lower energy bin edge., required: true, type: float64, unit: TeV}
+      - {name: energy_high, description: Upper energy bin edge., required: true, type: float64, unit: TeV}
+      - {name: core_distance_low, description: Lower core-distance bin edge., required: true, type: float64, unit: m}
+      - {name: core_distance_high, description: Upper core-distance bin edge., required: true, type: float64, unit: m}
+      - {name: simulated_count, description: Simulated event count., required: true, type: int64}
+      - {name: triggered_count, description: Triggered event count., required: true, type: int64}
+      - {name: trigger_efficiency, description: Trigger efficiency., required: true, type: float64}

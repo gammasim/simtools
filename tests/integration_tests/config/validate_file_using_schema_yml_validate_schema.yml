@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-validate-file-using-schema
+  docs:
+    title: Validate a YAML schema explicitly
+    summary: Check a YAML data schema against the shared data-and-model-parameter metaschema.
   configuration:
     data_type: schema
     file_name: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml

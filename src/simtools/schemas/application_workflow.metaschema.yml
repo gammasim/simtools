@@ -158,6 +158,17 @@ definitions:
               items:
                 type: string
                 minLength: 1
+            expected_hdf5_min_rows:
+              description: "Minimum row count required for named root-level HDF5 datasets."
+              type: object
+              minProperties: 1
+              additionalProperties:
+                type: integer
+                minimum: 1
+            hdf5_schema:
+              description: "Named schema validator for a structured HDF5 output file."
+              type: string
+              enum: [reduced_event_data, trigger_histograms]
           required: ["path_descriptor", "file"]
       file_type:
         description: |

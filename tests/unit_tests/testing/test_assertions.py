@@ -84,6 +84,27 @@ def test_assert_hdf5_datasets_rejects_groups(tmp_test_directory):
         assertions.assert_hdf5_datasets(output_file, ["METADATA"])
 
 
+def test_assert_hdf5_dataset_min_rows(tmp_test_directory):
+    output_file = tmp_test_directory / "output.hdf5"
+    with h5py.File(output_file, "w") as hdf5_file:
+        hdf5_file.create_dataset("SHOWERS", data=[1, 2])
+
+    assert assertions.assert_hdf5_dataset_min_rows(output_file, {"SHOWERS": 2})
+    with pytest.raises(AssertionError, match=r"has 2 row\(s\), expected at least 3"):
+        assertions.assert_hdf5_dataset_min_rows(output_file, {"SHOWERS": 3})
+
+
+def test_assert_hdf5_dataset_min_rows_rejects_missing_or_group(tmp_test_directory):
+    output_file = tmp_test_directory / "output.hdf5"
+    with h5py.File(output_file, "w") as hdf5_file:
+        hdf5_file.create_group("SHOWERS")
+
+    with pytest.raises(AssertionError, match="no dataset named 'MISSING'"):
+        assertions.assert_hdf5_dataset_min_rows(output_file, {"MISSING": 1})
+    with pytest.raises(AssertionError, match="no dataset named 'SHOWERS'"):
+        assertions.assert_hdf5_dataset_min_rows(output_file, {"SHOWERS": 1})
+
+
 @pytest.mark.parametrize(
     ("filename", "file_content", "mock_function", "expected_result"),
     [

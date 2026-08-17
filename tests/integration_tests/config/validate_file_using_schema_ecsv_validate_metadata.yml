@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-validate-file-using-schema
+  docs:
+    title: Validate ECSV metadata
+    summary: Validate telescope-position metadata with the metadata schema selected by the file.
   configuration:
     data_type: metadata
     file_name: tests/resources/static/telescope_positions-North-utm.ecsv

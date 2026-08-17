@@ -430,6 +430,7 @@ def write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
         allowed_losses,
         energy_threshold_fraction,
     )
+    table.meta.update(MetadataCollector(args_dict).get_top_level_metadata())
 
     io = io_handler.IOHandler()
     output_file_arg = args_dict.get("output_file")
@@ -442,8 +443,6 @@ def write_results(results, args_dict, allowed_losses, energy_threshold_fraction)
 
     table.write(output_file, format="ascii.ecsv", overwrite=True)
     _logger.info(f"Results saved to {output_file}")
-
-    MetadataCollector.dump(args_dict, output_file)
 
 
 def _create_results_table(results, allowed_losses, energy_threshold_fraction):

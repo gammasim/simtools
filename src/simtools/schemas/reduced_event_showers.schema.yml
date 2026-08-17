@@ -1,0 +1,21 @@
+%YAML 1.2
+---
+title: Schema for reduced-event shower records
+schema_version: 0.4.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: reduced_event_showers
+description: Simulated shower records in a reduced-event HDF5 product.
+data:
+  - type: data_table
+    table_columns:
+      - {name: shower_id, description: Shower identifier., required: true, type: uint32}
+      - {name: event_id, description: Event identifier., required: true, type: uint32}
+      - {name: file_id, description: Input file identifier., required: true, type: uint32}
+      - {name: simulated_energy, description: Simulated energy., required: true, type: float64, unit: TeV}
+      - {name: x_core, description: Shower core x coordinate., required: true, type: float64, unit: m}
+      - {name: y_core, description: Shower core y coordinate., required: true, type: float64, unit: m}
+      - {name: shower_azimuth, description: Shower azimuth., required: true, type: float64, unit: deg}
+      - {name: shower_altitude, description: Shower altitude., required: true, type: float64, unit: deg}
+      - {name: area_weight, description: Shower area weight., required: true, type: float64}

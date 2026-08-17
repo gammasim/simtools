@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-validate-file-using-schema
+  docs:
+    title: Validate a current model-parameter schema
+    summary: Check a schema-version 0.3 model-parameter document against the metaschema.
   configuration:
     data_type: schema
     file_name: tests/resources/generated/model_parameters/array_layouts-2.0.2.json

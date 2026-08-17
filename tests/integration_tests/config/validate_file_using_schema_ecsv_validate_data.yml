@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-validate-file-using-schema
+  docs:
+    title: Validate ECSV data against a schema
+    summary: Check an ECSV input file against an explicit simtools schema.
   configuration:
     file_name: tests/resources/static/MLTdata-preproduction.ecsv
     schema_file: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml

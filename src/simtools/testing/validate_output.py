@@ -15,7 +15,7 @@ from simtools.constants import SCHEMA_PATH
 from simtools.data_model import validate_data
 from simtools.db import db_handler
 from simtools.io import ascii_handler
-from simtools.sim_events import file_info
+from simtools.sim_events import file_info, output_validator
 from simtools.simtel import simtel_validate_metadata
 from simtools.testing import assertions
 
@@ -58,7 +58,23 @@ _OUTPUT_VALIDATION_PROFILES = {
             "row_count": "job_grid_summary.simulation_rows",
             "column_sums": {"showers_per_run": "job_grid_summary.total_showers"},
         },
-    }
+    },
+    "monte_carlo_statistics": {
+        "name": "monte_carlo_statistics_content",
+        "path_descriptor": "output_path",
+        "data_product_schema": SCHEMA_PATH / "monte_carlo_statistics.schema.yml",
+        "minimum_rows": 1,
+        "columns": {
+            "estimated_total_events": {"range": {"minimum": 1.0}},
+            "br_energy_min": {"range": {"minimum": 0.0, "unit": "TeV"}},
+            "br_energy_max": {"range": {"minimum": 0.0, "unit": "TeV"}},
+            "br_core_scatter_max": {"range": {"minimum": 0.0, "unit": "m"}},
+            "br_viewcone_max": {"range": {"minimum": 0.0, "unit": "deg"}},
+        },
+        "metadata": {
+            "required_keys": ["cta.activity", "cta.context", "cta.product"],
+        },
+    },
 }
 
 
@@ -410,38 +426,75 @@ def _validate_output_path_and_file(config, integration_file_tests):
     """Check if output paths and files exist."""
     for file_test in integration_file_tests:
         _logger.info(f"Validating output file for test: {file_test}")
-        try:
-            output_path = config["configuration"][file_test["path_descriptor"]]
-        except KeyError as exc:
-            raise KeyError(
-                f"Path {file_test['path_descriptor']} not found in integration test configuration."
-            ) from exc
-        output_file_path = (
-            Path(output_path) / file_test.get("output_sub_path", "") / file_test["file"]
-        )
+        output_file_path = _get_output_file_path(config, file_test)
         _logger.info(f"Checking path: {output_file_path}")
-        try:
-            assert output_file_path.exists()
-        except AssertionError as exc:
-            raise AssertionError(
-                f"Output file {output_file_path} does not exist. "
-                f"Directory contents: {list(output_file_path.parent.iterdir())}"
-            ) from exc
+        _assert_output_file_exists(output_file_path)
+        _validate_special_output(output_file_path, file_test)
 
-        if output_file_path.name.endswith(".simtel.zst"):
-            assert assertions.check_output_from_sim_telarray(output_file_path, file_test)
-        elif output_file_path.name.endswith(".log_hist.tar.gz") or output_file_path.name.endswith(
-            ".log"
-        ):
-            assert assertions.check_log_files(output_file_path, file_test)
-        if "expected_hdf5_datasets" in file_test:
-            if output_file_path.suffix.lower() not in (".hdf5", ".h5"):
-                raise AssertionError(
-                    f"expected_hdf5_datasets requires an HDF5 output file, got {output_file_path}."
-                )
-            assert assertions.assert_hdf5_datasets(
-                output_file_path, file_test["expected_hdf5_datasets"]
+
+def _get_output_file_path(config, file_test):
+    """Resolve an integration-test output descriptor to a file path."""
+    try:
+        output_path = config["configuration"][file_test["path_descriptor"]]
+    except KeyError as exc:
+        raise KeyError(
+            f"Path {file_test['path_descriptor']} not found in integration test configuration."
+        ) from exc
+    return Path(output_path) / file_test.get("output_sub_path", "") / file_test["file"]
+
+
+def _assert_output_file_exists(output_file_path):
+    """Raise a diagnostic error when an expected output file is missing."""
+    try:
+        assert output_file_path.exists()
+    except AssertionError as exc:
+        raise AssertionError(
+            f"Output file {output_file_path} does not exist. "
+            f"Directory contents: {list(output_file_path.parent.iterdir())}"
+        ) from exc
+
+
+def _validate_special_output(output_file_path, file_test):
+    """Run format-specific integration-test validations for an existing output file."""
+    if output_file_path.name.endswith(".simtel.zst"):
+        assert assertions.check_output_from_sim_telarray(output_file_path, file_test)
+    elif output_file_path.name.endswith(".log_hist.tar.gz") or output_file_path.name.endswith(
+        ".log"
+    ):
+        assert assertions.check_log_files(output_file_path, file_test)
+    _validate_hdf5_output(output_file_path, file_test)
+
+
+def _validate_hdf5_output(output_file_path, file_test):
+    """Run configured HDF5 dataset and schema checks."""
+    if "expected_hdf5_datasets" in file_test or "expected_hdf5_min_rows" in file_test:
+        if output_file_path.suffix.lower() not in (".hdf5", ".h5"):
+            raise AssertionError(
+                f"HDF5 dataset checks require an HDF5 output file, got {output_file_path}."
             )
+    if "expected_hdf5_datasets" in file_test:
+        assert assertions.assert_hdf5_datasets(
+            output_file_path, file_test["expected_hdf5_datasets"]
+        )
+    if "expected_hdf5_min_rows" in file_test:
+        assert assertions.assert_hdf5_dataset_min_rows(
+            output_file_path, file_test["expected_hdf5_min_rows"]
+        )
+    if "hdf5_schema" in file_test:
+        _validate_hdf5_schema(output_file_path, file_test["hdf5_schema"])
+
+
+def _validate_hdf5_schema(output_file_path, schema_name):
+    """Validate a supported structured HDF5 product using its named schema."""
+    validators = {
+        "reduced_event_data": output_validator.validate_reduced_event_data_file,
+        "trigger_histograms": output_validator.validate_trigger_histogram_file,
+    }
+    try:
+        validator = validators[schema_name]
+    except KeyError as exc:
+        raise ValueError(f"Unsupported HDF5 schema '{schema_name}'.") from exc
+    validator(output_file_path)
 
 
 def _validate_model_parameter_json_file(config, model_parameter_validation):
