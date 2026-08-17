@@ -59,6 +59,7 @@ RUN python"${PYTHON_VERSION}" -m pip install --no-cache-dir packaging pyyaml && 
       --extras dev doc tests > /workdir/requirements-dev.txt && \
     python"${PYTHON_VERSION}" -m venv env && \
     . env/bin/activate && \
+    python -m pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir --requirement /workdir/requirements-dev.txt && \
     SIMTOOLS_CONTAINER_BUILD=1 \
       SIMTOOLS_GIT_REVISION="${SIMTOOLS_GIT_REVISION}" \
