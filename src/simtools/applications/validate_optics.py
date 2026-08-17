@@ -34,6 +34,11 @@ _ARGUMENTS = (
         help="Produce a multiple pages pdf file with the image plots.",
         action="store_true",
     ),
+    cli.ArgumentDefinition(
+        "save_photons",
+        help="Retain compressed photon list files after analysis.",
+        action="store_true",
+    ),
 )
 
 
@@ -42,6 +47,7 @@ APPLICATION = ApplicationDefinition.for_module(
     arguments=(
         *_ARGUMENTS,
         cli.MODEL_VERSION,
+        cli.PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
         cli.TELESCOPE,

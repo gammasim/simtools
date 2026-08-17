@@ -36,6 +36,8 @@ telescope (str, required)
     Telescope model name (e.g. LST-1, SST-D, ...).
 model_version (str, optional)
     Model version.
+parameter_version (str, optional)
+    Parameter version for exporting effective_focal_length as model parameter json.
 source_distance (float or quantity, optional)
     Source distance in km.
 zenith_angle (float or quantity, optional)
@@ -46,6 +48,8 @@ offset_step (float or quantity, optional)
     Offset angle step size.
 plot_images (activation mode, optional)
     Produce a multiple pages pdf file with the image plots.
+save_photons (activation mode, optional)
+    Retain compressed photon list files after analysis.
 test (activation mode, optional)
     If activated, application will be faster by simulating fewer photons.
 
@@ -56,7 +60,8 @@ LST-1 5.0.0
 .. code-block:: console
 
     simtools-validate-optics --site North --telescope LST-1 --max_offset 1.0 \\
-    --zenith_angle 20 --source_distance 10 --test
+    --zenith_angle 20 --source_distance 10 --test \\
+    --model_version 6.0.1 --parameter_version 0.0.0
 
 The output is saved in simtools-output/validate_optics
 
