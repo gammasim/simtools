@@ -26,6 +26,21 @@ def _raise_cancellation_error(*_args, **_kwargs):
     raise RuntimeError("unavailable")
 
 
+def _raise_offline_error(*_args, **_kwargs):
+    """Raise a scheduler connection failure."""
+    raise RuntimeError("offline")
+
+
+def _raise_payload_error(*_args, **_kwargs):
+    """Raise a payload serialization failure."""
+    raise TypeError("bad payload")
+
+
+def _raise_event_log_error(*_args, **_kwargs):
+    """Raise an event-log access failure."""
+    raise RuntimeError("missing log")
+
+
 def _environment_entries(environment):
     """Parse the semicolon-separated HTCondor environment representation."""
     return {
@@ -331,9 +346,7 @@ def test_htcondor_loads_and_caches_scheduler_bindings(monkeypatch):
     "module_factory",
     [
         lambda: None,
-        lambda: types.SimpleNamespace(
-            Schedd=lambda: (_ for _ in ()).throw(RuntimeError("offline"))
-        ),
+        lambda: types.SimpleNamespace(Schedd=_raise_offline_error),
     ],
 )
 def test_htcondor_load_reports_binding_errors(monkeypatch, module_factory):
@@ -472,7 +485,7 @@ def test_htcondor_serialization_errors_are_wrapped(monkeypatch, tmp_test_directo
     """Payload serialization failures identify the affected job."""
     monkeypatch.setattr(
         "simtools.job_execution.backends.htcondor.write_job_payload",
-        lambda *_args: (_ for _ in ()).throw(TypeError("bad payload")),
+        _raise_payload_error,
     )
     job = JobSpec("job-000000", 0, command=("echo", "ok"))
 
@@ -502,7 +515,7 @@ def test_htcondor_wait_handles_cluster_remove_and_event_log_errors(monkeypatch, 
     monkeypatch.setattr(
         backend._htcondor,
         "JobEventLog",
-        lambda _path: (_ for _ in ()).throw(RuntimeError("missing log")),
+        _raise_event_log_error,
     )
     with pytest.raises(BackendExecutionError, match="missing log"):
         backend._wait_for_processes(submission)
