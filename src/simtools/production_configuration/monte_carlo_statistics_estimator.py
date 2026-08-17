@@ -714,9 +714,16 @@ def _build_result_row(
     }
 
 
-def estimate_monte_carlo_statistics(args_dict=None):
+def estimate_monte_carlo_statistics(args_dict=None, metadata=None):
     """
     Estimate required total thrown events for one or more trigger histograms.
+
+    Parameters
+    ----------
+    args_dict : dict, optional
+        Estimator configuration. Uses the active application configuration when omitted.
+    metadata : dict, optional
+        Top-level product metadata to include in the ECSV header.
 
     Returns
     -------
@@ -755,6 +762,7 @@ def estimate_monte_carlo_statistics(args_dict=None):
         for metadata_row in selected_references
     ]
     results = Table(rows=output_rows)
+    results.meta.update(metadata or {})
     results.meta.update(_build_table_metadata(args_dict))
     resolved_spectral_index = _resolved_table_spectral_index(
         selected_references,
