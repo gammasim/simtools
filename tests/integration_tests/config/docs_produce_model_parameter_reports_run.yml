@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-docs-produce-model-parameter-reports
+  docs:
+    title: Produce telescope model-parameter reports
+    summary: >-
+      Generate documentation for the model parameters associated with the North-site LSTN-01
+      telescope.
   configuration:
     output_path: simtools-output/reports/
     site: North

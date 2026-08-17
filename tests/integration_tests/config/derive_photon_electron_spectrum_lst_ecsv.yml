@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-derive-photon-electron-spectrum
+  docs:
+    title: Derive an LST photoelectron spectrum
+    summary: >-
+      Combine single-photoelectron and afterpulse measurements to derive an LST camera response
+      spectrum.
   configuration:
     input_spectrum: ${downloaded:SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv}
     afterpulse_spectrum: ${downloaded:Afterpulsing-probability_LST1-11PMTs_2023Oct_differential_used_pmts.ecsv}

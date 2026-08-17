@@ -1,7 +1,7 @@
 # simtools-write-trigger-histograms
 
 ```{eval-rst}
-.. automodule:: write_trigger_histograms
+.. automodule:: simtools.applications.write_trigger_histograms
    :members:
    :exclude-members: main
 ```

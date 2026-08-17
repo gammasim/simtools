@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-inspect-file
+  docs:
+    title: Inspect reduced event data
+    summary: Display datasets and metadata stored in a reduced gamma-ray event-data HDF5 file.
   configuration:
     input_file: ${generated:gamma_diffuse_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test.reduced_event_data.hdf5}
   test_name: inspect_hdf5

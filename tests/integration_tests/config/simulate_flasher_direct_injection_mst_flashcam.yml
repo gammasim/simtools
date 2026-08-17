@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-flasher
+  docs:
+    title: Inject flasher signals into a South FlashCam
+    summary: >-
+      Generate calibration events by injecting an MSFx-FlashCam signal directly into South MST
+      cameras.
   configuration:
     run_mode: direct_injection
     light_source: MSFx-FlashCam

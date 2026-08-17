@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-plot-tabular-data-for-model-parameter
+  docs:
+    title: Plot atmospheric refractive index
+    summary: >-
+      Plot refractive index versus altitude from the North-site atmospheric-profile model parameter.
   configuration:
     figure_format:
     - pdf

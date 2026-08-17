@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-flasher
+  docs:
+    title: Inject flasher signals into a North NectarCam
+    summary: >-
+      Generate calibration events by injecting an MSFx-NectarCam signal directly into a North MST
+      camera.
   configuration:
     run_mode: direct_injection
     light_source: MSFx-NectarCam

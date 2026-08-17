@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-derive-mirror-rnda
+  docs:
+    title: Derive LST mirror reflection-angle spread
+    summary: >-
+      Fit the random mirror reflection-angle parameter to measured LST point-spread-function data.
   configuration:
     log_level: DEBUG
     model_version: 7.0.0

@@ -1,29 +1,6 @@
 #!/usr/bin/python3
 
-r"""
-Add a user-defined array layout to an existing array-layout parameter.
-
-The new layout can be supplied directly with ``--array_layout_name`` and
-``--array_element_list``. Its elements must be a subset of the selected
-reference layout (``hyper_array`` by default). The existing parameter is
-read using the configured model source, merged with the new layout, and
-written using ``updated_parameter_version``.
-
-The legacy ``--array_layouts`` file input remains supported for submitting
-a complete canonical parameter without subset expansion.
-
-Example
--------
-
-.. code-block:: console
-
-    simtools-submit-array-layouts \\
-        --site South --model_version 7.0.0 \\
-        --parameter_version 3.0.0 \\
-        --updated_parameter_version 3.0.99 \\
-        --array_layout_name South-dual-camera-example \\
-        --array_element_list MSTS-01 MSTS-301
-"""
+"""Submit an array-layout parameter after validating its telescope elements."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

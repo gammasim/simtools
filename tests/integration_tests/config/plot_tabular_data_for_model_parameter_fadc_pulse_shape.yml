@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-plot-tabular-data-for-model-parameter
+  docs:
+    title: Plot an LST camera pulse shape
+    summary: Retrieve the LST camera FADC pulse-shape parameter and plot its sampled waveform.
   configuration:
     figure_format: pdf
     output_path: simtools-output

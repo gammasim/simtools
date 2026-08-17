@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-simulate-illuminator
+  docs:
+    title: Simulate the North illuminator layout
+    summary: >-
+      Use the modelled ILLN-01 position and orientation to ray-trace calibration light to MSTN-02.
   configuration:
     light_source: ILLN-01
     model_version: 7.0.0

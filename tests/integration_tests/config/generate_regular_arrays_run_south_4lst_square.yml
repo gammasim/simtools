@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-generate-regular-arrays
+  docs:
+    title: Generate a four-LST square array
+    summary: >-
+      Place four large-sized telescopes in a regular square pattern for a South-site simulation
+      layout.
   configuration:
     model_version: 6.0.2
     telescope_type: LST

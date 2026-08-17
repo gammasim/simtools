@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-r"""Compare, sync, and prune test resources from a versioned simtools-tests bundle."""
+"""Compare, sync, and prune test resources from a versioned simtools-tests bundle."""
 
 from pathlib import Path
 
