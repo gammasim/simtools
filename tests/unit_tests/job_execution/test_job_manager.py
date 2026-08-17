@@ -202,6 +202,10 @@ def test_submit_command_failure(mocker, tmp_path, with_app_log):
         ({"files": ["file1.txt", "file2.txt"]}, ["--files", "file1.txt", "file2.txt"]),
         ({"file": ["file1.txt"]}, ["--file", "file1.txt"]),
         ({"count": 42, "threshold": 3.14}, ["--count", "42", "--threshold", "3.14"]),
+        (
+            {"value": [{"name": "A", "x": 1}, {"name": "B", "x": 2}]},
+            ["--value", '[{"name": "A", "x": 1}, {"name": "B", "x": 2}]'],
+        ),
     ],
 )
 def test_convert_dict_to_args(input_dict, expected):
