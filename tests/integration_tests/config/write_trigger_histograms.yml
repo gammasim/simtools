@@ -6,7 +6,7 @@ applications:
     summary: Aggregate reduced event data into an HDF5 product for limit and statistics studies.
   configuration:
     array_element_list:
-    - MSTS-01
+    - MSTN-03
     event_data_files: ${generated:proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.reduced_event_data.hdf5}
     model_version: 7.0.0
     output_file: trigger_histograms.hdf5
@@ -29,6 +29,6 @@ applications:
         TRIGGER_REFERENCE_METADATA: 1
         TRIGGER_REFERENCE_BINS: 1
       hdf5_schema: trigger_histograms
-  test_name: write_trigger_histograms
+  test_name: test
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
