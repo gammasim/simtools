@@ -930,6 +930,22 @@ def test_hdf5_schema_validation_dispatches_trigger_histogram_validator(mocker):
     mock_validator.assert_called_once_with(output_file)
 
 
+def test_hdf5_schema_validation_preserves_validator_key_error(mocker):
+    output_file = Path("trigger_histograms.hdf5")
+    mocker.patch(
+        "simtools.testing.validate_output.output_validator.validate_trigger_histogram_file",
+        side_effect=KeyError("missing column"),
+    )
+
+    with pytest.raises(KeyError, match="missing column"):
+        validate_output._validate_hdf5_schema(output_file, "trigger_histograms")
+
+
+def test_hdf5_schema_validation_rejects_unknown_schema():
+    with pytest.raises(ValueError, match="Unsupported HDF5 schema 'missing'"):
+        validate_output._validate_hdf5_schema(Path("output.hdf5"), "missing")
+
+
 def test_monte_carlo_statistics_output_validation_profile():
     """Expose result-table and standard metadata validation for statistics estimates."""
     rule = validate_output._expand_output_validation_profile(

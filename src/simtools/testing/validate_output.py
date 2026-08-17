@@ -491,9 +491,10 @@ def _validate_hdf5_schema(output_file_path, schema_name):
         "trigger_histograms": output_validator.validate_trigger_histogram_file,
     }
     try:
-        validators[schema_name](output_file_path)
+        validator = validators[schema_name]
     except KeyError as exc:
         raise ValueError(f"Unsupported HDF5 schema '{schema_name}'.") from exc
+    validator(output_file_path)
 
 
 def _validate_model_parameter_json_file(config, model_parameter_validation):

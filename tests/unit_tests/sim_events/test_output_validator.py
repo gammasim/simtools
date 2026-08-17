@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import astropy.units as u
 import numpy as np
 import pytest
 from astropy.table import Table
@@ -13,11 +14,16 @@ from simtools.sim_events.output_validator import (
 )
 
 
-def _reduced_event_tables(trigger_shower_id=1):
+def _reduced_event_tables(trigger_shower_id=1, duplicate_shower=False):
     """Return minimal linked reduced-event tables for structural validation tests."""
+    shower_ids = [1, 1] if duplicate_shower else [1]
     return {
         "SHOWERS": Table(
-            {"file_id": np.array([1], dtype=np.uint32), "event_id": [2], "shower_id": [1]}
+            {
+                "file_id": np.array([1] * len(shower_ids), dtype=np.uint32),
+                "event_id": [2] * len(shower_ids),
+                "shower_id": shower_ids,
+            }
         ),
         "TRIGGERS": Table(
             {
@@ -98,24 +104,91 @@ def test_validate_reduced_event_data_file_rejects_unknown_file_id(mocker):
         validate_reduced_event_data_file("events.hdf5")
 
 
+def test_validate_reduced_event_data_file_rejects_duplicate_shower_key(mocker):
+    _mock_reduced_event_dependencies(mocker, _reduced_event_tables(duplicate_shower=True))
+
+    with pytest.raises(ValueError, match="duplicate shower composite keys"):
+        validate_reduced_event_data_file("events.hdf5")
+
+
 def _write_trigger_histogram_file(output_file, topology_reference_id="reference_0"):
     """Write a minimal, structurally valid trigger-histogram file."""
-    table_names = (
-        "TRIGGER_REFERENCE_METADATA",
-        "TRIGGER_REFERENCE_BINS",
-        "TRIGGER_TOPOLOGY_COUNTS",
-        "TRIGGER_SUBSET_HISTOGRAMS",
+    metadata = Table(
+        {
+            "reference_id": ["reference_0"],
+            "production_index": np.array([0], dtype=np.int64),
+            "event_data_file": ["events.hdf5"],
+            "site": ["North"],
+            "array_name": ["alpha"],
+            "telescope_ids": ["LSTN-01"],
+            "primary_particle": ["gamma"],
+            "zenith": u.Quantity([20.0], u.deg),
+            "azimuth": u.Quantity([0.0], u.deg),
+            "nsb_level": np.array([0.0], dtype=np.float64),
+            "spectral_index": np.array([-2.0], dtype=np.float64),
+            "energy_min": u.Quantity([0.01], u.TeV),
+            "energy_max": u.Quantity([100.0], u.TeV),
+            "viewcone_min": u.Quantity([0.0], u.deg),
+            "viewcone_max": u.Quantity([5.0], u.deg),
+            "core_scatter_min": u.Quantity([0.0], u.m),
+            "core_scatter_max": u.Quantity([500.0], u.m),
+            "scatter_area": u.Quantity([1.0], u.cm**2),
+            "solid_angle": u.Quantity([1.0], u.sr),
+            "angular_distance_min": u.Quantity([0.0], u.deg),
+            "angular_distance_max": u.Quantity([5.0], u.deg),
+            "energy_bins_per_decade": np.array([5], dtype=np.int64),
+            "angular_distance_bin_width": u.Quantity([1.0], u.deg),
+            "angular_distance_bin_count": np.array([5], dtype=np.int64),
+            "core_distance_bin_count": np.array([1], dtype=np.int64),
+            "total_simulated_events": np.array([1], dtype=np.int64),
+            "total_triggered_events": np.array([1], dtype=np.int64),
+        }
     )
-    tables = []
-    for table_name in table_names:
-        reference_id = (
-            topology_reference_id if table_name == "TRIGGER_TOPOLOGY_COUNTS" else "reference_0"
-        )
-        table = Table({"reference_id": [reference_id]})
-        table.meta["EXTNAME"] = table_name
-        tables.append(table)
+    metadata.meta["EXTNAME"] = "TRIGGER_REFERENCE_METADATA"
+    bins = Table(
+        {
+            "reference_id": ["reference_0"],
+            "production_index": np.array([0], dtype=np.int64),
+            "array_name": ["alpha"],
+            "angular_distance_bin_index": np.array([0], dtype=np.int64),
+            "energy_bin_index": np.array([0], dtype=np.int64),
+            "core_distance_bin_index": np.array([0], dtype=np.int64),
+            "angular_distance_low": u.Quantity([0.0], u.deg),
+            "angular_distance_high": u.Quantity([1.0], u.deg),
+            "energy_low": u.Quantity([0.01], u.TeV),
+            "energy_high": u.Quantity([0.1], u.TeV),
+            "core_distance_low": u.Quantity([0.0], u.m),
+            "core_distance_high": u.Quantity([500.0], u.m),
+            "simulated_count": np.array([1], dtype=np.int64),
+            "triggered_count": np.array([1], dtype=np.int64),
+            "trigger_efficiency": np.array([1.0], dtype=np.float64),
+        }
+    )
+    bins.meta["EXTNAME"] = "TRIGGER_REFERENCE_BINS"
+    topology = Table(
+        {
+            "reference_id": [topology_reference_id],
+            "count_type": ["trigger_multiplicity"],
+            "subset": [""],
+            "key": ["1"],
+            "count": np.array([1], dtype=np.int64),
+        }
+    )
+    topology.meta["EXTNAME"] = "TRIGGER_TOPOLOGY_COUNTS"
+    subset = Table(
+        {
+            "reference_id": ["reference_0"],
+            "subset": ["all"],
+            "quantity": ["energy"],
+            "bin_index": np.array([0], dtype=np.int64),
+            "bin_low": np.array([0.01], dtype=np.float64),
+            "bin_high": np.array([0.1], dtype=np.float64),
+            "count": np.array([1], dtype=np.int64),
+        }
+    )
+    subset.meta["EXTNAME"] = "TRIGGER_SUBSET_HISTOGRAMS"
     table_handler.write_tables(
-        tables,
+        [metadata, bins, topology, subset],
         output_file,
         file_type="HDF5",
         metadata_documents={"METADATA": {"cta": {}}},
@@ -149,6 +222,55 @@ def test_validate_trigger_histogram_file_rejects_unknown_table_reference(
         ValueError,
         match=r"TRIGGER_TOPOLOGY_COUNTS.*unknown reference IDs: \['missing'\]",
     ):
+        validate_trigger_histogram_file(output_file)
+
+
+def test_validate_trigger_histogram_file_rejects_missing_table_column(tmp_test_directory, mocker):
+    output_file = Path(tmp_test_directory) / "trigger_histograms.hdf5"
+    table_names = (
+        "TRIGGER_REFERENCE_METADATA",
+        "TRIGGER_REFERENCE_BINS",
+        "TRIGGER_TOPOLOGY_COUNTS",
+        "TRIGGER_SUBSET_HISTOGRAMS",
+    )
+    tables = []
+    for table_name in table_names:
+        table = Table({"reference_id": ["reference_0"]})
+        table.meta["EXTNAME"] = table_name
+        tables.append(table)
+    table_handler.write_tables(
+        tables,
+        output_file,
+        file_type="HDF5",
+        metadata_documents={"METADATA": {"cta": {}}},
+    )
+    mocker.patch("simtools.sim_events.output_validator.schema.validate_dict_using_schema")
+
+    with pytest.raises(KeyError, match="Missing required column production_index"):
+        validate_trigger_histogram_file(output_file)
+
+
+@pytest.mark.parametrize("malformation", ["name", "length", "group"])
+def test_validate_trigger_histogram_file_rejects_malformed_edges(
+    tmp_test_directory, mocker, malformation
+):
+    output_file = Path(tmp_test_directory) / f"trigger_histograms_{malformation}.hdf5"
+    _write_trigger_histogram_file(output_file)
+    mocker.patch("simtools.sim_events.output_validator.schema.validate_dict_using_schema")
+
+    import h5py
+
+    with h5py.File(output_file, "a") as hdf5_file:
+        histogram_group = hdf5_file["TRIGGER_HISTOGRAM_DENSE/reference_0/energy"]
+        del histogram_group["edges_0"]
+        if malformation == "name":
+            histogram_group.create_dataset("edges_bad", data=[0.1, 1.0])
+        elif malformation == "length":
+            histogram_group.create_dataset("edges_0", data=[0.1])
+        else:
+            histogram_group.create_group("edges_0")
+
+    with pytest.raises(ValueError, match=r"bin-edge|one-dimensional|expected"):
         validate_trigger_histogram_file(output_file)
 
 

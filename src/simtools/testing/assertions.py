@@ -93,7 +93,27 @@ def assert_hdf5_datasets(file_name, expected_datasets):
 
 
 def assert_hdf5_dataset_min_rows(file_name, expected_min_rows):
-    """Assert that named HDF5 datasets contain at least the requested number of rows."""
+    """Assert that named HDF5 datasets contain at least the requested number of rows.
+
+    Parameters
+    ----------
+    file_name : str or pathlib.Path
+        HDF5 file to inspect.
+    expected_min_rows : mapping
+        Mapping from HDF5 dataset names to their minimum required row counts.
+
+    Returns
+    -------
+    bool
+        ``True`` when every requested dataset meets its minimum row count.
+
+    Raises
+    ------
+    AssertionError
+        If a requested item is missing, is not an HDF5 dataset, or contains too few rows.
+    OSError
+        If ``file_name`` is not a readable HDF5 file.
+    """
     with h5py.File(file_name, "r") as hdf5_file:
         for dataset_name, minimum_rows in expected_min_rows.items():
             if dataset_name not in hdf5_file or not isinstance(
