@@ -28,7 +28,12 @@ def _raise_cancellation_error(*_args, **_kwargs):
 
 def _environment_entries(environment):
     """Parse the semicolon-separated HTCondor environment representation."""
-    return dict(item.split("=", maxsplit=1) for item in environment.split(";") if "=" in item)
+    return {  # noqa: C416 - required by the Sonar maintainability rule
+        key: value
+        for key, value in (
+            item.split("=", maxsplit=1) for item in environment.split(";") if "=" in item
+        )
+    }
 
 
 def test_htcondor_validates_resource_sizes():
@@ -99,11 +104,14 @@ def test_htcondor_exposes_source_checkout_to_container_python(tmp_test_directory
         Path(tmp_test_directory) / "scheduler.log",
     )
 
-    entries = dict(
-        item.split("=", maxsplit=1)
-        for item in submit_values["environment"].split(";")
-        if "=" in item
-    )
+    entries = {  # noqa: C416 - required by the Sonar maintainability rule
+        key: value
+        for key, value in (
+            item.split("=", maxsplit=1)
+            for item in submit_values["environment"].split(";")
+            if "=" in item
+        )
+    }
     source_path = Path(__file__).resolve().parents[4] / "src"
     assert source_path.as_posix() in entries["PYTHONPATH"].split(":")
     assert source_path.parent.as_posix() in entries["APPTAINER_BINDPATH"].split(",")
