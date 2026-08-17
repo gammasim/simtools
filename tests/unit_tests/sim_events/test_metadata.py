@@ -31,12 +31,39 @@ def test_build_standard_metadata_uses_requested_product_data_name():
     assert metadata["cta"]["product"]["data"]["model"]["name"] == "trigger_histograms"
 
 
+def test_build_standard_metadata_normalizes_instrument_id(mocker):
+    mocker.patch(
+        "simtools.sim_events.metadata.MetadataCollector",
+        return_value=type(
+            "Collector",
+            (),
+            {"get_top_level_metadata": lambda self: {"cta": {"instrument": {"ID": "CTA"}}}},
+        )(),
+    )
+
+    metadata = build_standard_metadata({}, "output.hdf5")
+
+    assert metadata["cta"]["instrument"] == {"id": "CTA"}
+
+
 def test_build_simulation_metadata_marks_missing_models_unavailable():
     metadata = build_simulation_metadata([{"run_number": 12}])
 
     assert metadata["models"]["status"] == "unavailable"
     assert metadata["models"]["arrays"] == []
     assert metadata["inputs"]["files"][0]["run_number"] == 12
+
+
+def test_build_simulation_metadata_marks_supplied_models_complete():
+    metadata = build_simulation_metadata(
+        [{"run_number": 12}], array_models=[{"layout_name": "alpha"}], simulation_software="corsika"
+    )
+
+    assert metadata["models"] == {
+        "status": "complete",
+        "arrays": [{"layout_name": "alpha"}],
+    }
+    assert metadata["provenance"]["simulation_software"] == {"name": "corsika"}
 
 
 def test_array_model_export_keeps_telescope_context_and_parameter_records():
@@ -116,4 +143,35 @@ def test_validate_simulation_metadata_rejects_model_arrays_when_unavailable():
     metadata["models"]["arrays"] = [{"model_version": "7.0.0"}]
 
     with pytest.raises(ValueError, match="must not contain model arrays"):
+        validate_simulation_metadata(metadata)
+
+
+@pytest.mark.parametrize(
+    ("metadata", "message"),
+    [
+        ({}, "missing required field"),
+        (
+            {
+                "schema_name": "other",
+                "schema_version": "1.0.0",
+                "provenance": {},
+                "inputs": {},
+                "models": {"status": "complete"},
+            },
+            "Unsupported simulation metadata schema",
+        ),
+        (
+            {
+                "schema_name": "simtools.reduced_event_list.simulation_metadata",
+                "schema_version": "1.0.0",
+                "provenance": {},
+                "inputs": {},
+                "models": {"status": "invalid"},
+            },
+            "models.status",
+        ),
+    ],
+)
+def test_validate_simulation_metadata_rejects_invalid_documents(metadata, message):
+    with pytest.raises(ValueError, match=message):
         validate_simulation_metadata(metadata)

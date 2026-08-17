@@ -9,7 +9,23 @@ SIMULATION_METADATA_SCHEMA_VERSION = "1.0.0"
 
 
 def build_standard_metadata(args_dict, output_file, product_data_name="reduced_event_data"):
-    """Collect standard metadata for an embedded HDF5 product."""
+    """
+    Collect standard metadata for an embedded HDF5 product.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Application configuration used to populate metadata.
+    output_file : str or pathlib.Path
+        Output HDF5 file represented by the metadata.
+    product_data_name : str, optional
+        Product data-model name.
+
+    Returns
+    -------
+    dict
+        Standard top-level metadata.
+    """
     metadata_args = dict(args_dict or {})
     metadata_args.update(
         {
