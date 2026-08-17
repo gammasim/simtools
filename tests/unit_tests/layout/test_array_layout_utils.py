@@ -659,6 +659,18 @@ def test_read_layouts_returns_empty_lists_when_no_inputs(minimal_args_dict):
     assert background is None
 
 
+def test_read_layouts_rejects_parameter_file_selector_without_parameter_file(minimal_args_dict):
+    args = minimal_args_dict.copy()
+    args["array_layout_name"] = ["alpha"]
+    args["array_layout_name_from_parameter_file"] = ["beta"]
+
+    with pytest.raises(
+        ValueError,
+        match="array_layout_name_from_parameter_file requires array_layout_parameter_file",
+    ):
+        array_layout_utils.read_layouts(args)
+
+
 def test_read_layouts_with_array_layout_name_background(minimal_args_dict):
     args = minimal_args_dict.copy()
     args["array_layout_name_background"] = "bg_layout"

@@ -517,6 +517,13 @@ def read_layouts(args_dict):
             - list: List of array layouts.
             - list or None: Background layout or None if not provided.
     """
+    if args_dict.get("array_layout_name_from_parameter_file") and not args_dict.get(
+        "array_layout_parameter_file"
+    ):
+        raise ValueError(
+            "array_layout_name_from_parameter_file requires array_layout_parameter_file."
+        )
+
     background_layout = None
     ignore_software_version = args_dict.get("ignore_software_version", False)
     if args_dict.get("array_layout_name_background"):
