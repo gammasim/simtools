@@ -59,6 +59,7 @@ ENV SIMTOOLS_SIMTEL_IMAGE=${SIMTEL_IMAGE}
 # hadolint ignore=DL4006
 RUN python"${PYTHON_VERSION}" -m venv env \
   && . env/bin/activate \
+  && python -m pip install --no-cache-dir --upgrade pip \
   && SETUPTOOLS_SCM_PRETEND_VERSION_FOR_GAMMASIMTOOLS="${SIMTOOLS_VERSION}" \
     pip install --no-cache-dir /workdir/simtools \
   && SIMTOOLS_CONTAINER_BUILD=1 simtools-dependency-manifest \

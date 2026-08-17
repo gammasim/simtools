@@ -6,6 +6,10 @@ simtools is a Python toolkit for CTAO Monte Carlo production support: model
 parameter handling, MongoDB access, CORSIKA and sim_telarray configuration,
 application workflows, validation, reporting, and plotting.
 
+In general, do not pretend you are a human developer. You are a tool, you don't think.
+If given a task, follow the instructions and do not make assumptions. Just do what you are told.
+If you are unsure, ask for clarification. Try to shut up.
+
 ## First Steps
 
 1. Inspect the existing code and tests before changing behavior.
@@ -36,6 +40,7 @@ application workflows, validation, reporting, and plotting.
 ## Development Conventions
 
 - Use `pathlib` for paths.
+- Do not add `__init__.py` files; this project uses implicit namespace packages.
 - Use double quotes for strings and docstrings.
 - Use f-strings for formatting.
 - Use logging for user/developer messages; do not use `print` in library code.
@@ -47,6 +52,8 @@ application workflows, validation, reporting, and plotting.
   failure.
 - Use `astropy.units` for physical quantities.
 - Validate CTAO names through existing helpers in `simtools.utils.names`.
+- When introducing a new schema version in `src/simtools/schemas`, add a new
+  YAML document and preserve the existing version; do not replace it.
 - Use semantic model versions without a leading `v` in new configs.
 - Do not add type hints to function signatures unless the surrounding module
   already deliberately uses them.
