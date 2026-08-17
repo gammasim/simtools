@@ -1,49 +1,5 @@
 #!/usr/bin/python3
-r"""
-Upload model parameters from simulation model repository to a local or remote database.
-
-This script clones the CTAO simulation model repository and uploads model parameters
-and production tables to a MongoDB database. It includes retry functionality for
-network operations and confirmation prompts for remote database uploads.
-
-Command line arguments
-----------------------
-db_simulation_model (str, required)
-    Name of the database simulation model.
-db_simulation_model_version (str, required)
-    Version of the database simulation model.
-branch (str, optional)
-    Repository branch to clone (if not provided, uses the version tag).
-tmp_dir (str, optional)
-    Temporary directory for cloning the repository (default: ./tmp_model_parameters).
-max_attempts (int, optional)
-    Maximum number of attempts to clone the repository in case of network failures (default: 3).
-repository_dir (str, optional)
-    Path to an existing simulation-models repository directory. If provided,
-    cloning is skipped and this path is used directly.
-
-Examples
---------
-Upload model repository to database using a version tag
-(see simulation model repository for available tags):
-
-.. code-block:: console
-
-    simtools-db-upload-model-repository \\
-        --db_simulation_model CTAO-Simulation-Model \\
-        --db_simulation_model_version v10.10.10
-
-Upload model repository using specific branch (the version tag is
-used to name the database, but no tag checkout is done):
-
-.. code-block:: console
-
-    simtools-db-upload-model-repository \\
-        --db_simulation_model CTAO-Simulation-Model \\
-        --db_simulation_model_version v10.10.10 \\
-        --branch main
-
-"""
+r"""Upload a simulation-model repository to MongoDB."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

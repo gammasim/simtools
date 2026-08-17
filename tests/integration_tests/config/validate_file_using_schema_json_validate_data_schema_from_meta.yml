@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-validate-file-using-schema
+  docs:
+    title: Resolve a schema from JSON metadata
+    summary: Validate JSON data after resolving its model-parameter schema from document metadata.
   configuration:
     data_type: data
     file_name: tests/resources/static/model_parameters/schema-0.2.0/num_gains-1.0.0.json

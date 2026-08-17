@@ -234,6 +234,10 @@ def test_compare_json_files_resource_paths(
     assert not validate_output.compare_json_or_yaml_files(file1, file3)
 
 
+def test_resource_path_suffixes_ignores_plain_values():
+    assert validate_output._resource_path_suffixes("plain-value") == set()
+
+
 @pytest.mark.parametrize(
     ("content1", "content2", "tolerance", "should_match"),
     [
@@ -504,6 +508,38 @@ def test_validate_output_path_and_file_checks_hdf5_datasets(tmp_test_directory, 
     mock_check_hdf5.assert_called_once_with(output_file, file_test["expected_hdf5_datasets"])
 
 
+def test_validate_output_path_and_file_checks_hdf5_min_rows(tmp_test_directory, mocker):
+    output_file = Path(str(tmp_test_directory)) / "output.hdf5"
+    output_file.touch()
+    mock_check_hdf5 = mocker.patch(
+        "simtools.testing.assertions.assert_hdf5_dataset_min_rows", return_value=True
+    )
+    file_test = {
+        "path_descriptor": "output_path",
+        "file": output_file.name,
+        "expected_hdf5_min_rows": {"SHOWERS": 1},
+    }
+
+    validate_output._validate_output_path_and_file(
+        {"configuration": {"output_path": str(tmp_test_directory)}}, [file_test]
+    )
+
+    mock_check_hdf5.assert_called_once_with(output_file, {"SHOWERS": 1})
+
+
+def test_validate_output_files_accepts_single_test_output_file_mapping(mocker):
+    mock_validate = mocker.patch("simtools.testing.validate_output._validate_output_path_and_file")
+    config = {"configuration": {"output_path": "output"}}
+
+    validate_output._validate_output_files(
+        config, {"test_output_files": {"path_descriptor": "output_path", "file": "output.hdf5"}}
+    )
+
+    mock_validate.assert_called_once_with(
+        config, [{"path_descriptor": "output_path", "file": "output.hdf5"}]
+    )
+
+
 def test_validate_output_path_and_file_rejects_non_hdf5_dataset_check(tmp_test_directory):
     output_file = Path(str(tmp_test_directory)) / "output.simtel.zst"
     output_file.touch()
@@ -515,11 +551,38 @@ def test_validate_output_path_and_file_rejects_non_hdf5_dataset_check(tmp_test_d
 
     with pytest.raises(
         AssertionError,
-        match="expected_hdf5_datasets requires an HDF5 output file",
+        match="HDF5 dataset checks require an HDF5 output file",
     ):
         validate_output._validate_output_path_and_file(
             {"configuration": {"output_path": str(tmp_test_directory)}}, [file_test]
         )
+
+
+def test_find_repo_root_falls_back_to_current_directory(mocker):
+    mocker.patch("simtools.testing.validate_output.Path.exists", return_value=False)
+
+    assert validate_output._find_repo_root() == Path.cwd()
+
+
+def test_validate_range_without_unit_and_maximum():
+    validate_output._validate_range(
+        "table.ecsv",
+        {},
+        "value",
+        [1.0, 2.0],
+        {"range": {"minimum": 0.0}},
+    )
+
+
+def test_validate_metadata_without_row_count():
+    table = Table({"value": [1.0]})
+    table.meta = {"summary": {"total": 1.0}}
+
+    validate_output._validate_metadata(
+        "table.ecsv",
+        {"metadata": {"column_sums": {"value": "summary.total"}}},
+        table,
+    )
 
 
 def test_compare_simtel_cfg_files(tmp_test_directory):
@@ -552,6 +615,18 @@ def test_compare_simtel_cfg_files(tmp_test_directory):
     assert not validate_output._compare_simtel_cfg_files(file1, file5)
 
 
+def test_compare_simtel_cfg_files_reports_parameter_key_and_value_mismatches(tmp_test_directory):
+    reference_file = tmp_test_directory / "reference.cfg"
+    different_key_file = tmp_test_directory / "different_key.cfg"
+    different_value_file = tmp_test_directory / "different_value.cfg"
+    reference_file.write_text("parameter_a = 1\n", encoding="utf-8")
+    different_key_file.write_text("parameter_b = 1\n", encoding="utf-8")
+    different_value_file.write_text("parameter_a = 2\n", encoding="utf-8")
+
+    assert not validate_output._compare_simtel_cfg_files(reference_file, different_key_file)
+    assert not validate_output._compare_simtel_cfg_files(reference_file, different_value_file)
+
+
 def test_validate_simtel_cfg_files(mocker, test_path):
     mock_run_number = mocker.patch(
         "simtools.testing.validate_output.file_info.get_corsika_run_number", return_value=7
@@ -582,6 +657,35 @@ def test_compare_value_from_parameter_dict():
     data_3 = "pixel_list.dat"
     assert validate_output._compare_value_from_parameter_dict(data_1, data_2)
     assert not validate_output._compare_value_from_parameter_dict(data_1, data_3)
+
+
+def test_compare_nested_dicts_falls_back_after_invalid_value_comparison():
+    with patch(
+        "simtools.testing.validate_output._compare_value_from_parameter_dict",
+        side_effect=TypeError,
+    ):
+        assert not validate_output._compare_nested_dicts_with_tolerance(
+            {"value": "not-a-number"}, {"value": [1.0]}, tolerance=1.0e-5
+        )
+
+
+def test_compare_json_or_yaml_files_handles_non_dict_documents(mocker):
+    mocker.patch(
+        "simtools.testing.validate_output.ascii_handler.collect_data_from_file",
+        side_effect=[UserDict({"value": 1}), UserDict({"value": 2})],
+    )
+
+    assert not validate_output.compare_json_or_yaml_files("first.json", "second.json")
+
+
+def test_compare_ecsv_files_accepts_non_float_columns(create_ecsv_file, file_name):
+    content = {"run_number": [1, 2]}
+    file1 = create_ecsv_file(file_name(1, "ecsv"), content)
+    file2 = create_ecsv_file(file_name(2, "ecsv"), content)
+
+    assert validate_output.compare_ecsv_files(
+        file1, file2, test_columns=[{"test_column_name": "run_number"}]
+    )
 
 
 def test_test_simtel_cfg_files_with_command_line_version(mocker):
@@ -887,6 +991,68 @@ def test_output_validation_profile_rejects_unknown_name():
     """Reject validation profiles that have not been defined."""
     with pytest.raises(ValueError, match="Unknown output validation profile: missing"):
         validate_output._expand_output_validation_profile({"profile": "missing"})
+
+
+def test_hdf5_schema_validation_dispatches_reduced_event_validator(mocker):
+    """Dispatch reduced-event HDF5 validation through the integration-test hook."""
+    output_file = Path("reduced_event_data.hdf5")
+    mock_validate = mocker.patch(
+        "simtools.testing.validate_output.output_validator.validate_reduced_event_data_file"
+    )
+
+    validate_output._validate_hdf5_schema(output_file, "reduced_event_data")
+    mock_validate.assert_called_once_with(output_file)
+
+
+def test_hdf5_schema_validation_dispatches_trigger_histogram_validator(mocker):
+    output_file = Path("trigger_histograms.hdf5")
+    mock_validator = mocker.patch(
+        "simtools.testing.validate_output.output_validator.validate_trigger_histogram_file"
+    )
+
+    validate_output._validate_hdf5_schema(output_file, "trigger_histograms")
+
+    mock_validator.assert_called_once_with(output_file)
+
+
+def test_hdf5_schema_validation_preserves_validator_key_error(mocker):
+    output_file = Path("trigger_histograms.hdf5")
+    mocker.patch(
+        "simtools.testing.validate_output.output_validator.validate_trigger_histogram_file",
+        side_effect=KeyError("missing column"),
+    )
+
+    with pytest.raises(KeyError, match="missing column"):
+        validate_output._validate_hdf5_schema(output_file, "trigger_histograms")
+
+
+def test_hdf5_output_validation_dispatches_schema_validator(mocker):
+    mock_validator = mocker.patch("simtools.testing.validate_output._validate_hdf5_schema")
+
+    validate_output._validate_hdf5_output(
+        Path("trigger_histograms.hdf5"), {"hdf5_schema": "trigger_histograms"}
+    )
+
+    mock_validator.assert_called_once_with(Path("trigger_histograms.hdf5"), "trigger_histograms")
+
+
+def test_hdf5_schema_validation_rejects_unknown_schema():
+    with pytest.raises(ValueError, match="Unsupported HDF5 schema 'missing'"):
+        validate_output._validate_hdf5_schema(Path("output.hdf5"), "missing")
+
+
+def test_monte_carlo_statistics_output_validation_profile():
+    """Expose result-table and standard metadata validation for statistics estimates."""
+    rule = validate_output._expand_output_validation_profile(
+        {"profile": "monte_carlo_statistics", "file": "mc_statistics.ecsv"}
+    )
+
+    assert rule["path_descriptor"] == "output_path"
+    assert rule["data_product_schema"] == SCHEMA_PATH / "monte_carlo_statistics.schema.yml"
+    assert rule["columns"]["estimated_total_events"] == {"range": {"minimum": 1.0}}
+    assert rule["metadata"] == {
+        "required_keys": ["cta.activity", "cta.context", "cta.product"],
+    }
 
 
 def test_has_path_supports_mapping_metadata():

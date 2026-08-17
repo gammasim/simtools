@@ -1,0 +1,39 @@
+%YAML 1.2
+---
+title: Schema for trigger-histogram reference metadata
+schema_version: 0.4.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: trigger_histogram_reference_metadata
+description: Reference metadata for trigger-histogram products.
+data:
+  - type: data_table
+    table_columns:
+      - {name: reference_id, description: Stable histogram reference identifier., required: true, type: string}
+      - {name: production_index, description: Production pattern index., required: true, type: int64}
+      - {name: event_data_file, description: Event-data input pattern., required: true, type: string}
+      - {name: site, description: Simulation site., required: true, type: string}
+      - {name: array_name, description: Array layout name., required: true, type: string}
+      - {name: telescope_ids, description: Comma-separated telescope identifiers., required: true, type: string}
+      - {name: primary_particle, description: Simulated primary particle., required: true, type: string}
+      - {name: zenith, description: Pointing zenith angle., required: true, type: float64, unit: deg}
+      - {name: azimuth, description: Pointing azimuth angle., required: true, type: float64, unit: deg}
+      - {name: nsb_level, description: Night-sky-background level., required: true, type: float64}
+      - {name: spectral_index, description: Simulated spectral index., required: true, type: float64}
+      - {name: energy_min, description: Minimum simulated energy., required: true, type: float64, unit: TeV}
+      - {name: energy_max, description: Maximum simulated energy., required: true, type: float64, unit: TeV}
+      - {name: viewcone_min, description: Minimum view-cone radius., required: true, type: float64, unit: deg}
+      - {name: viewcone_max, description: Maximum view-cone radius., required: true, type: float64, unit: deg}
+      - {name: core_scatter_min, description: Minimum core-scatter radius., required: true, type: float64, unit: m}
+      - {name: core_scatter_max, description: Maximum core-scatter radius., required: true, type: float64, unit: m}
+      - {name: scatter_area, description: Core-scatter area., required: true, type: float64, unit: cm2}
+      - {name: solid_angle, description: Simulated solid angle., required: true, type: float64, unit: sr}
+      - {name: angular_distance_min, description: Minimum angular distance., required: true, type: float64, unit: deg}
+      - {name: angular_distance_max, description: Maximum angular distance., required: true, type: float64, unit: deg}
+      - {name: energy_bins_per_decade, description: Energy bins per decade., required: true, type: int64}
+      - {name: angular_distance_bin_width, description: Angular-distance bin width., required: true, type: float64, unit: deg}
+      - {name: angular_distance_bin_count, description: Number of angular-distance bins., required: true, type: int64}
+      - {name: core_distance_bin_count, description: Number of core-distance bins., required: true, type: int64}
+      - {name: total_simulated_events, description: Total simulated events., required: true, type: int64}
+      - {name: total_triggered_events, description: Total triggered events., required: true, type: int64}
