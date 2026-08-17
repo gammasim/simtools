@@ -19,4 +19,4 @@ applications:
     skip_output_validation: true
   test_name: print_compact_corsika_telescopeheights
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

@@ -9,8 +9,8 @@ applications:
   configuration:
     array_layout_name:
       by_version:
-        "<7.0.0": 1lst
-        ">=7.0.0": LSTN-01
+        <7.0.0: 1lst
+        '>=7.0.0': LSTN-01
     axis:
     - azimuth 0 deg 360 deg 0 linear
     - zenith 0 deg 70 deg 0 linear
@@ -30,53 +30,81 @@ applications:
     output_path: simtools-output
     primary: gamma
     simulation_software: corsika_sim_telarray
-    site: North  # CTAO site
+    site: North
     view_cone: 0 deg 10 deg
   integration_tests:
-  - output_file: job_grid_horizontal_grid_density.ecsv
-    output_validation:
-    - profile: job_grid
+  - test_outputs:
+    - path_descriptor: output_path
       file: job_grid_horizontal_grid_density.ecsv
-      columns:
-        primary:
-          allowed_values: [gamma]
-        zenith_angle:
-          range:
-            minimum: 0.0
-            maximum: 70.0
-            unit: deg
-        energy_min:
-          range:
-            minimum: 0.0
-            maximum: 500000.0
-            unit: GeV
-        energy_max:
-          range:
-            minimum: 0.0
-            maximum: 500000.0
-            unit: GeV
-        core_scatter_max:
-          range:
-            minimum: 0.0
-            maximum: 2500.0
-            unit: m
-        view_cone_min:
-          range:
-            minimum: 0.0
-            maximum: 10.0
-            unit: deg
-        view_cone_max:
-          range:
-            minimum: 0.0
-            maximum: 10.0
-            unit: deg
-        model_version:
-          allowed_values: ["7.0.0"]
-        corsika_le_interaction:
-          allowed_values: [urqmd]
-        corsika_he_interaction:
-          allowed_values: [epos]
+      validations:
+      - type: data_schema
+        schema: src/simtools/schemas/job_grid_density.schema.yml
+      - type: table
+        minimum_rows: 1
+        unique_columns:
+        - run_number
+        columns:
+          azimuth_angle:
+            range:
+              minimum: 0.0
+              maximum: 360.0
+              unit: deg
+          energy_min:
+            range:
+              minimum: 0.0
+              unit: GeV
+              maximum: 500000.0
+          energy_max:
+            range:
+              minimum: 0.0
+              unit: GeV
+              maximum: 500000.0
+          core_scatter_max:
+            range:
+              minimum: 0.0
+              unit: m
+              maximum: 2500.0
+          view_cone_min:
+            range:
+              minimum: 0.0
+              unit: deg
+              maximum: 10.0
+          view_cone_max:
+            range:
+              minimum: 0.0
+              unit: deg
+              maximum: 10.0
+          showers_per_run:
+            range:
+              minimum: 1.0
+          primary:
+            allowed_values:
+            - gamma
+          zenith_angle:
+            range:
+              minimum: 0.0
+              maximum: 70.0
+              unit: deg
+          model_version:
+            allowed_values:
+            - 7.0.0
+          corsika_le_interaction:
+            allowed_values:
+            - urqmd
+          corsika_he_interaction:
+            allowed_values:
+            - epos
+      - type: metadata
+        required_keys:
+        - job_grid_summary
+        - job_grid_format_version
+        relations:
+        - left: job_grid_summary.simulation_rows
+          equals: table.row_count
+        - left: job_grid_summary.total_showers
+          equals: table.column_sum
+          column: showers_per_run
   model_version_use_current: true
   test_name: production_generate_grid_horizontal_density
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

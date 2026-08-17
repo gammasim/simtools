@@ -10,7 +10,9 @@ applications:
     grid_points_file: tests/resources/generated/production_grid_points_horizontal.ecsv
     output_path: simtools-output
   integration_tests:
-  - output_file: production_grid_sky_projection.png
+  - test_outputs:
+    - path_descriptor: output_path
+      file: production_grid_sky_projection.png
   test_name: default
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0
