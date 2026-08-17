@@ -314,3 +314,32 @@ def test_validate_optics_exports_effective_focal_length_model_parameter(tmp_test
     assert call_kwargs["metadata_input_dict"] == args_dict
     assert call_kwargs["unit"] == ["cm", "cm", "cm", "cm", "cm"]
     np.testing.assert_allclose(call_kwargs["value"], [2925.0, 2920.0, 2930.0, 0.0, 0.0])
+
+
+def test_effective_focal_length_value_from_results_empty_mask_returns_zero():
+    results = QTable(
+        {
+            "off_x": [0.0] * u.deg,
+            "off_y": [0.0] * u.deg,
+            "eff_flen": [np.nan],
+        }
+    )
+
+    value = optics_validation._effective_focal_length_value_from_results(results)
+
+    assert value == [0.0, 0.0, 0.0, 0.0, 0.0]
+
+
+def test_export_effective_focal_length_model_parameter_without_results(caplog):
+    mock_ray = MagicMock(spec=[])
+
+    optics_validation._export_effective_focal_length_model_parameter(
+        ray=mock_ray,
+        telescope_name="LSTN-01",
+        model_version="5.0.0",
+        parameter_version="5.0.1",
+        output_directory=Path("dummy"),
+        metadata_input_dict={},
+    )
+
+    assert "No ray-tracing results available to export effective_focal_length" in caplog.text

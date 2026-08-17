@@ -13,7 +13,6 @@ applications:
     test: true
     zenith_angle: 20
     plot_images: false
-    export_model_parameter: true
     parameter_version: 1.3.0
     label: validate_optics_horizontal_scan
   integration_tests:
