@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-validate-file-using-schema
+  docs:
+    title: Validate one model parameter
+    summary: >
+      Validate a generated model-parameter file with its bundled schema and filename convention.
   configuration:
     data_type: model_parameter
     file_name: tests/resources/generated/model_parameters/array_layouts-2.0.2.json

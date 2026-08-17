@@ -1,0 +1,17 @@
+%YAML 1.2
+---
+title: Schema for trigger-histogram topology counts
+schema_version: 0.4.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: trigger_histogram_topology_counts
+description: Trigger topology count records.
+data:
+  - type: data_table
+    table_columns:
+      - {name: reference_id, description: Stable histogram reference identifier., required: true, type: string}
+      - {name: count_type, description: Topology count category., required: true, type: string}
+      - {name: subset, description: Trigger subset name., required: true, type: string}
+      - {name: key, description: Topology key., required: true, type: string}
+      - {name: count, description: Topology count., required: true, type: int64}

@@ -18,6 +18,7 @@ from simtools.production_configuration.production_event_data_helpers import (
     resolve_telescope_configs,
 )
 from simtools.sim_events.histograms import EventDataHistograms
+from simtools.sim_events.metadata import build_standard_metadata
 
 _logger = logging.getLogger(__name__)
 
@@ -547,7 +548,7 @@ def write_trigger_histograms(args_dict):
         backend_config=args_dict.get("backend_config"),
     ):
         for spec in production_result:
-            reference_specs.append(spec | {"reference_id": gen.get_uuid()})
+            reference_specs.append(spec | {"reference_id": f"reference_{len(reference_specs)}"})
 
     metadata_table, bin_table = _create_histogram_tables(reference_specs)
     topology_count_table = _create_trigger_topology_count_table(reference_specs)
@@ -562,6 +563,13 @@ def write_trigger_histograms(args_dict):
         output_file,
         overwrite_existing=True,
         file_type="HDF5",
+        metadata_documents={
+            "METADATA": build_standard_metadata(
+                args_dict,
+                output_file,
+                product_data_name="trigger_histograms",
+            ),
+        },
     )
     _write_dense_histogram_payload(reference_specs, output_file)
     return metadata_table, bin_table
