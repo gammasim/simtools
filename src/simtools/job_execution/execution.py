@@ -132,7 +132,6 @@ def _cancel_if_requested(backend, submission, options):
     configured = submission.metadata.get("cancel_on_interrupt", False)
     if options is not None:
         configured = configured or (options.backend_config or {}).get("cancel_on_interrupt", False)
-        configured = configured or options.cancel_on_interrupt
     if configured:
         backend.cancel(submission)
 

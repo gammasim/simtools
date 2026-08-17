@@ -194,7 +194,7 @@ def test_wait_for_submission_cancels_interrupted_configured_submission(tmp_test_
         wait_for_submission(
             submission,
             backend=backend,
-            options=ExecutionOptions(cancel_on_interrupt=True),
+            options=ExecutionOptions(backend_config={"cancel_on_interrupt": True}),
         )
 
     assert submission.metadata["state"] == "interrupted"

@@ -87,7 +87,6 @@ def test_htcondor_validates_container_target_directory():
         ({"timeout": 0}, "timeout"),
         ({"timeout": "invalid"}, "timeout"),
         ({"cancel_on_interrupt": "yes"}, "cancel_on_interrupt"),
-        ({"extra_submit_attributes": {"output": "other"}}, "Protected submit attribute"),
     ],
 )
 def test_htcondor_rejects_invalid_execution_configuration(config, message):
@@ -236,14 +235,16 @@ def test_htcondor_rejects_job_ids_that_escape_the_run_directory(tmp_test_directo
     assert not (work_dir.parent / "target.pkl").exists()
 
 
-def test_htcondor_build_config_preserves_explicit_falsey_options():
-    """Zero, false, and empty mapping options remain available for validation."""
+def test_htcondor_build_config_uses_the_single_backend_configuration_source():
+    """HTCondor options come exclusively from the backend configuration mapping."""
     options = ExecutionOptions(
-        request_cpus=0,
-        timeout=0,
-        cancel_on_interrupt=False,
-        keep_successful_artifacts=False,
-        extra_submit_attributes={},
+        backend_config={
+            "request_cpus": 0,
+            "timeout": 0,
+            "cancel_on_interrupt": False,
+            "keep_successful_artifacts": False,
+            "extra_submit_attributes": {},
+        }
     )
 
     config = HTCondorBackend._build_config(options)
@@ -255,6 +256,25 @@ def test_htcondor_build_config_preserves_explicit_falsey_options():
     assert config["extra_submit_attributes"] == {}
     with pytest.raises(BackendConfigurationError, match="request_cpus"):
         HTCondorBackend._validate_config(config)
+
+
+@pytest.mark.parametrize("attribute", ["output", "environment", "universe", "request_cpus"])
+def test_htcondor_rejects_extra_attributes_overriding_generated_values(
+    tmp_test_directory, attribute
+):
+    """Custom submit attributes cannot replace backend-generated settings."""
+    job = JobSpec("job-000000", 0, command=("echo", "ok"))
+
+    with pytest.raises(BackendConfigurationError, match="Protected submit attribute"):
+        HTCondorBackend()._build_submit_values(
+            {
+                "container_image": "/shared/simtools.sif",
+                "extra_submit_attributes": {attribute: "x"},
+            },
+            [job],
+            Path(tmp_test_directory),
+            Path(tmp_test_directory) / "scheduler.log",
+        )
 
 
 def test_htcondor_reads_dotenv_entries(tmp_test_directory):

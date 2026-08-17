@@ -43,17 +43,6 @@ class ExecutionOptions:
     backend_config: dict[str, Any] = field(default_factory=dict)
     initializer: Any = None
     initargs: tuple[Any, ...] = ()
-    request_cpus: int = 1
-    request_memory: str | None = None
-    request_disk: str | None = None
-    priority: int | None = None
-    container_image: str | None = None
-    environment_file: Path | None = None
-    poll_interval: float = 60
-    timeout: float | None = None
-    cancel_on_interrupt: bool = False
-    keep_successful_artifacts: bool = False
-    extra_submit_attributes: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

@@ -22,16 +22,7 @@ from simtools.job_execution.worker import validate_job_id, write_job_payload
 
 logger = logging.getLogger(__name__)
 
-_PROTECTED_ATTRIBUTES = {
-    "executable",
-    "arguments",
-    "output",
-    "error",
-    "log",
-    "queue",
-    "initialdir",
-    "container_target_dir",
-}
+_RESERVED_SUBMIT_ATTRIBUTES = {"queue"}
 _CONFIG_KEYS = {
     "request_cpus",
     "request_memory",
@@ -157,10 +148,17 @@ class HTCondorBackend:
         extra_attributes = config.get("extra_submit_attributes", {})
         if not isinstance(extra_attributes, dict):
             raise BackendConfigurationError("extra_submit_attributes must be a mapping.")
-        protected = _PROTECTED_ATTRIBUTES & {str(name).lower() for name in extra_attributes}
+        return extra_attributes
+
+    @staticmethod
+    def _add_extra_submit_attributes(submit_values, extra_attributes):
+        """Add custom attributes without allowing fixed values to be replaced."""
+        protected = _RESERVED_SUBMIT_ATTRIBUTES | {name.lower() for name in submit_values}
+        protected &= {str(name).lower() for name in extra_attributes}
         if protected:
             names = ", ".join(sorted(protected))
             raise BackendConfigurationError(f"Protected submit attribute(s): {names}.")
+        submit_values.update(extra_attributes)
 
     @staticmethod
     def _validate_timing(config):
@@ -368,24 +366,8 @@ class HTCondorBackend:
 
     @staticmethod
     def _build_config(options):
-        """Merge explicit execution options into backend configuration."""
+        """Normalize filesystem paths in HTCondor backend configuration."""
         config = dict(options.backend_config)
-        option_values = {
-            "request_cpus": options.request_cpus,
-            "request_memory": options.request_memory,
-            "request_disk": options.request_disk,
-            "priority": options.priority,
-            "container_image": options.container_image,
-            "environment_file": options.environment_file,
-            "poll_interval": options.poll_interval,
-            "timeout": options.timeout,
-            "cancel_on_interrupt": options.cancel_on_interrupt,
-            "keep_successful_artifacts": options.keep_successful_artifacts,
-            "extra_submit_attributes": options.extra_submit_attributes,
-        }
-        for key, value in option_values.items():
-            if value is not None and key not in config:
-                config[key] = value
         for key in ("container_image", "environment_file"):
             if config.get(key):
                 config[key] = str(Path(config[key]).expanduser().resolve())
@@ -484,7 +466,7 @@ class HTCondorBackend:
         )
         if environment:
             submit_values["environment"] = environment
-        submit_values.update(config.get("extra_submit_attributes", {}))
+        self._add_extra_submit_attributes(submit_values, self._validate_extra_attributes(config))
         return submit_values, resource_defaults, resource_keys
 
     @staticmethod

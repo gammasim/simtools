@@ -55,6 +55,7 @@ _SIMULATE_PROD_PATH_FIELDS = (
     "model_path",
     "overwrite_model_parameters",
 )
+_SIMULATE_PROD_FILE_PATH_FIELDS = frozenset(("corsika_file", "overwrite_model_parameters"))
 _SIMULATE_PROD_CONTROLLER_FIELDS = frozenset(
     {
         "activity_id",
@@ -428,6 +429,7 @@ def _build_simulate_prod_job_spec(args_dict, row, index, output_root, parser, me
     _add_grid_output_path(job_args, index, mount_paths, output_paths)
     _add_scan_label(job_args, row)
     _normalize_simulate_prod_paths(job_args, args_dict)
+    _add_simulate_prod_input_mount_paths(job_args, mount_paths)
     job_args = {
         key: " ".join(map(str, value)) if isinstance(value, tuple) else value
         for key, value in job_args.items()
@@ -489,6 +491,15 @@ def _normalize_simulate_prod_paths(job_args, args_dict):
             job_args.pop(key, None)
         elif job_args.get(key):
             job_args[key] = str(Path(job_args[key]).expanduser().resolve())
+
+
+def _add_simulate_prod_input_mount_paths(job_args, mount_paths):
+    """Add forwarded input paths needed by containerized production jobs."""
+    for key in _SIMULATE_PROD_PATH_FIELDS:
+        if key == "grid_output_path" or not job_args.get(key):
+            continue
+        path = Path(job_args[key])
+        mount_paths.append(path.parent if key in _SIMULATE_PROD_FILE_PATH_FIELDS else path)
 
 
 def _should_forward_path(args_dict, key):
