@@ -1,0 +1,26 @@
+---
+applications:
+- application: simtools-validate-optics
+  configuration:
+    max_offset: 1.5
+    offset_step: 0.5
+    offset_directions: E,W
+    model_version: 6.0.1
+    output_path: simtools-output
+    site: North
+    source_distance: 11.0
+    telescope: LSTN-01
+    test: true
+    zenith_angle: 20
+    plot_images: false
+    parameter_version: 1.3.0
+    label: validate_optics_horizontal_scan
+  integration_tests:
+  - output_file: results/ray_tracing_North_LSTN-01_d11.0km_za20.0deg_validate_optics_horizontal_scan.ecsv
+  - test_output_files:
+    - file: effective_focal_length-1.3.0.json
+      path_descriptor: output_path
+      output_sub_path: LSTN-01
+  test_name: run-offset-directions-horizontal
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
