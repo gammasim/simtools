@@ -10,6 +10,17 @@ from simtools.visualization.plot_array_layout import (
     plot_array_layouts,
 )
 
+
+def _validate_parameter_file_layout_selection(args_dict, _config_sources, parser):
+    """Reject a parameter-file layout selector without a parameter file."""
+    if args_dict.get("array_layout_name_from_parameter_file") and not args_dict.get(
+        "array_layout_parameter_file"
+    ):
+        parser.error(
+            "--array_layout_name_from_parameter_file requires --array_layout_parameter_file"
+        )
+
+
 _ARGUMENTS = (
     cli.ALL_MODEL_VERSIONS,
     cli.ArgumentDefinition("all_sites", action="store_true", help="Plot layouts for all sites."),
@@ -132,9 +143,11 @@ APPLICATION = ApplicationDefinition.for_module(
             include_parameter_file=True,
             include_plot_all=True,
         ),
+        cli.ARRAY_LAYOUT_NAME_FROM_PARAMETER_FILE,
         *cli.OUTPUT_PATH_ARGUMENTS,
     ),
     database=True,
+    post_parse=_validate_parameter_file_layout_selection,
     usage="Use '--plot_all_layouts' to plot all layouts for the given site and model version.",
 )
 

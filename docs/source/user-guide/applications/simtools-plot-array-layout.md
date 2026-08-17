@@ -48,6 +48,8 @@ array_layout_name : str
     Use 'plot_all' to plot all layouts from the database for the given site and model version.
 array_layout_parameter_file : str, optional
     File with array layouts similar in the model parameter file format (typically JSON).
+array_layout_name_from_parameter_file : list, optional
+    Name(s) of the array layout(s) to plot from ``array_layout_parameter_file``.
 array_layout_name_background: str, optional
     Name of the background layout array (e.g., test_layout, alpha, 4mst, etc.).
 array_element_list : list
@@ -122,6 +124,15 @@ Plot layout from a parameter file with a list of telescopes:
 
     simtools-plot-array-layout
         --array_layout_parameter_file tests/resources/model_parameters/array_layouts-2.0.2.json
+        --model_version 6.0.0
+
+Plot one layout from a parameter file:
+
+.. code-block:: console
+
+    simtools-plot-array-layout
+        --array_layout_parameter_file tests/resources/model_parameters/array_layouts-2.0.2.json
+        --array_layout_name_from_parameter_file alpha
         --model_version 6.0.0
 
 
