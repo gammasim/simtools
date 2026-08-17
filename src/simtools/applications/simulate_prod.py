@@ -1,10 +1,6 @@
 #!/usr/bin/python3
 
-r"""Generate simulation configuration and run simulations.
-
-With ``--job_grid_file``, this application supports the ``local`` (default) and ``htcondor``
-execution backends.
-"""
+"""Generate simulation configuration and run simulations."""
 
 import argparse
 import sys
@@ -16,12 +12,10 @@ from simtools.configuration.argument_helpers import bounded_int
 from simtools.constants import CORSIKA_MAX_SEED
 from simtools.corsika.build_options import get_corsika_build_report
 from simtools.io.ascii_handler import write_data_to_file
-from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
 from simtools.production_configuration.job_grid_io import (
     SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS,
-    build_simulate_prod_job_specs,
     job_grid_row_to_simulate_prod_args,
-    read_job_grid,
+    read_job_grid_row,
 )
 from simtools.production_configuration.job_metadata import build_simulation_job_metadata
 from simtools.simulator import Simulator
@@ -108,18 +102,11 @@ _ARGUMENTS = (
         "job_grid_row",
         help=(
             "1-based index of the row to read from the file given by '--job_grid_file'. "
-            "When omitted with '--backend htcondor', all rows are submitted; "
-            "otherwise row 1 is used."
+            "Defaults to 1 (first row)."
         ),
         type=int,
         required=False,
         default=1,
-    ),
-    cli.ArgumentDefinition(
-        "wait",
-        action="store_true",
-        default=False,
-        help="Wait for submitted backend jobs to finish before exiting.",
     ),
 )
 
@@ -147,9 +134,6 @@ def _post_parse(args_dict, config_sources, parser):
         _list_available_corsika_models(args_dict, parser)
     _resolve_job_grid_arguments(args_dict, config_sources, parser)
     _validate_single_interaction_models(args_dict, parser)
-    args_dict["_defer_simulation_dependency_validation"] = bool(
-        args_dict.get("backend", "local") != "local" and args_dict.get("_job_grid_rows")
-    )
 
 
 def _resolve_job_grid_arguments(args_dict, config_sources, parser):
@@ -160,7 +144,6 @@ def _resolve_job_grid_arguments(args_dict, config_sources, parser):
     if not args_dict.get("job_grid_file"):
         if job_grid_row_is_explicit:
             parser.error("'--job_grid_row' requires '--job_grid_file'.")
-        _validate_layout_selection(args_dict, parser)
         _validate_simulation_arguments(args_dict, parser)
         return
 
@@ -171,60 +154,9 @@ def _resolve_job_grid_arguments(args_dict, config_sources, parser):
             + ", ".join(conflicting_keys)
         )
 
-    rows, metadata = read_job_grid(args_dict["job_grid_file"])
-    if not rows:
-        parser.error("Job grid contains no rows to process.")
-
-    missing_layout_rows = [
-        index + 1 for index, row in enumerate(rows) if not row.get("array_layout_name")
-    ]
-    if missing_layout_rows:
-        parser.error(
-            "Job grid row(s) missing array_layout_name: " + ", ".join(map(str, missing_layout_rows))
-        )
-
-    selected_row = None
-    if args_dict.get("backend", "local") == "local" or job_grid_row_is_explicit:
-        row_index = args_dict.get("job_grid_row") or 1
-        if row_index < 1 or row_index > len(rows):
-            parser.error(
-                f"Row index {row_index} is out of range for a grid with {len(rows)} row(s)."
-            )
-        selected_row = rows[row_index - 1]
-        rows = [selected_row]
-
-    if args_dict.get("backend", "local") != "local":
-        args_dict["_job_grid_rows"] = rows
-        args_dict["_job_grid_metadata"] = metadata
-        return
-
-    args_dict.update(job_grid_row_to_simulate_prod_args(selected_row, metadata))
+    job_row, metadata = read_job_grid_row(args_dict["job_grid_file"], args_dict["job_grid_row"])
+    args_dict.update(job_grid_row_to_simulate_prod_args(job_row, metadata))
     _validate_simulation_arguments(args_dict, parser)
-
-
-def _validate_layout_selection(args_dict, parser):
-    """Require a direct array-layout selection when no job grid supplies one."""
-    if args_dict.get("array_layout_name"):
-        return
-    parser.error("the following argument is required: --array_layout_name")
-
-
-def _execute_job_grid(args_dict):
-    """Execute all selected production-grid rows through the configured backend."""
-    job_specs = build_simulate_prod_job_specs(
-        args_dict,
-        args_dict["_job_grid_rows"],
-        APPLICATION.build_parser(),
-        args_dict.get("_job_grid_metadata"),
-    )
-    options = options_from_args(
-        args_dict,
-        work_dir=Path(args_dict["output_path"]),
-    )
-    if args_dict.get("wait", False):
-        execute_jobs(job_specs, options)
-    else:
-        submit_jobs(job_specs, options)
 
 
 def _validate_simulation_arguments(args_dict, parser):
@@ -237,11 +169,10 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
-        *cli.BACKEND_ARGUMENTS,
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
-        cli.ARRAY_LAYOUT_NAME(required=False),
+        *cli.layout_selection_arguments(),
         cli.SIMULATION_SOFTWARE,
         *cli.corsika_configuration_arguments(primary_required=False),
         *cli.SHOWER_ARGUMENTS,
@@ -262,10 +193,6 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
-
-    if app_context.args.get("_job_grid_rows") is not None:
-        _execute_job_grid(app_context.args)
-        return
 
     simulator = Simulator(label=app_context.args.get("label"))
 

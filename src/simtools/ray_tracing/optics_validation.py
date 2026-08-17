@@ -9,6 +9,7 @@ import numpy as np
 from astropy.table import Table
 
 import simtools.utils.general as gen
+from simtools.data_model import model_data_writer
 from simtools.model.model_utils import initialize_simulation_models
 from simtools.ray_tracing.ray_tracing import RayTracing
 from simtools.visualization import plot_ray_tracing_psf, visualize
@@ -183,13 +184,31 @@ def validate_optics(app_context):
         offset_directions=offset_directions,
     )
     ray.simulate(test=args_dict["test"], force=False)
-    ray.analyze(force=True)
+    ray.analyze(force=True, save_photons=args_dict.get("save_photons", False))
 
     for key in ["psf_deg", "psf_cm", "eff_area", "eff_flen"]:
-        fig = ray.plot(key, marker="o", linestyle="none", color="k")
+        plot_kwargs = {"marker": "o", "linestyle": "none", "color": "k"}
+        if key == "eff_flen":
+            plot_kwargs.update(
+                {
+                    "error_type": "errorbar",
+                    "error_label": "Uncertainty",
+                    "markersize": 4,
+                }
+            )
+        fig = ray.plot(key, **plot_kwargs)
         plot_file_name = "_".join((label, tel_model.name, key))
         plot_file = io_handler.get_output_file(plot_file_name)
         visualize.save_figure(fig, plot_file, close=True)
+
+    _export_effective_focal_length_model_parameter(
+        ray=ray,
+        telescope_name=tel_model.name,
+        model_version=args_dict["model_version"],
+        parameter_version=args_dict.get("parameter_version"),
+        output_directory=io_handler.get_output_directory(),
+        metadata_input_dict=args_dict,
+    )
 
     if args_dict["plot_images"]:
         plot_file_name = "_".join((label, tel_model.name, "images.pdf"))
@@ -233,3 +252,69 @@ def validate_optics(app_context):
                 )
             )
         visualize.save_figures_to_single_document(figures, plot_file, close=True)
+
+
+def _effective_focal_length_value_from_results(results):
+    """Build effective_focal_length from average over all non-zero-offset stars."""
+    off_x_values = np.asarray(results["off_x"].to_value(), dtype=float)
+    off_y_values = np.asarray(results["off_y"].to_value(), dtype=float)
+    eff_flen_values = np.asarray(results["eff_flen"], dtype=float)
+
+    non_zero_mask = ~(np.isclose(off_x_values, 0.0) & np.isclose(off_y_values, 0.0))
+    xz_plane_mask = np.isclose(off_y_values, 0.0) & ~np.isclose(off_x_values, 0.0)
+    yz_plane_mask = np.isclose(off_x_values, 0.0) & ~np.isclose(off_y_values, 0.0)
+
+    def _masked_nanmean(mask):
+        masked_values = eff_flen_values[mask]
+        if masked_values.size == 0 or np.all(np.isnan(masked_values)):
+            return 0.0
+        return float(np.nanmean(masked_values))
+
+    mean_effective_focal_length = _masked_nanmean(non_zero_mask)
+    mean_effective_focal_length_xz = _masked_nanmean(xz_plane_mask)
+    mean_effective_focal_length_yz = _masked_nanmean(yz_plane_mask)
+
+    return [
+        mean_effective_focal_length,
+        mean_effective_focal_length_xz,
+        mean_effective_focal_length_yz,
+        0.0,
+        0.0,
+    ]
+
+
+def _export_effective_focal_length_model_parameter(
+    ray,
+    telescope_name,
+    model_version,
+    parameter_version,
+    output_directory,
+    metadata_input_dict,
+):
+    """Export effective_focal_length as a model parameter JSON and metadata YAML."""
+    results = getattr(ray, "_results", None)
+    if results is None or "eff_flen" not in results.colnames:
+        logger.warning("No ray-tracing results available to export effective_focal_length")
+        return
+
+    effective_focal_length_value = _effective_focal_length_value_from_results(results)
+    export_version = str(parameter_version or model_version)
+    output_path = Path(output_directory).joinpath(telescope_name)
+    output_file = f"effective_focal_length-{export_version}.json"
+
+    model_data_writer.ModelDataWriter.write_model_parameter(
+        parameter_name="effective_focal_length",
+        value=effective_focal_length_value,
+        instrument=telescope_name,
+        parameter_version=export_version,
+        output_file=output_file,
+        output_path=output_path,
+        metadata_input_dict=metadata_input_dict,
+        unit=["cm", "cm", "cm", "cm", "cm"],
+        check_db_for_existing_parameter=False,
+    )
+    logger.info(
+        "Exported effective_focal_length model parameter (%s) to %s",
+        export_version,
+        output_path,
+    )

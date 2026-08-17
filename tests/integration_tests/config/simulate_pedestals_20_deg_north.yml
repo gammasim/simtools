@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-pedestals
+  docs:
+    title: Simulate North-array pedestal events
+    summary: >-
+      Generate pedestal events for the North Alpha layout with electronics noise and twice the
+      nominal NSB level.
   configuration:
     run_mode: pedestals
     array_layout_name:

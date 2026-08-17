@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-validate-camera-efficiency
+  docs:
+    title: Validate the LSTN-02 camera efficiency
+    summary: >-
+      Calculate the LSTN-02 optical throughput and reference NSB rate after applying model-parameter
+      overrides.
   configuration:
     log_level: debug
     model_version: 6.0.2

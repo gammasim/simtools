@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-convert-geo-coordinates-of-array-elements
+  docs:
+    title: Convert Mercator positions to UTM
+    summary: >-
+      Convert North-site telescope positions from Mercator to UTM coordinates and retain LST and MST
+      elements.
   configuration:
     export: utm
     array_element_positions_file: ${static:telescope_positions-North-mercator.ecsv}

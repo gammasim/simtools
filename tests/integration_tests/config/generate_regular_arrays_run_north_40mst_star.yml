@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-generate-regular-arrays
+  docs:
+    title: Generate a 40-MST star array
+    summary: >-
+      Place 40 medium-sized telescopes in a regular star pattern for a North-site simulation layout.
   configuration:
     model_version: 6.0.2
     telescope_type: MST

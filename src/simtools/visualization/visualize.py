@@ -425,6 +425,10 @@ def _plot_error_plots(kwargs, data_now, x_col, y_col, x_err_col, y_err_col, colo
             yerr=data_now[y_err_col] if y_err_col else None,
             fmt=".",
             color=color,
+            capsize=4,
+            elinewidth=1.5,
+            capthick=1.5,
+            label=kwargs.get("error_label"),
         )
 
 

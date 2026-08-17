@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-validate-camera-efficiency
+  docs:
+    title: Validate the SSTS-design camera efficiency
+    summary: >-
+      Calculate South SST camera optical throughput and reference NSB rate at 20 deg zenith angle.
   configuration:
     figure_format:
     - pdf

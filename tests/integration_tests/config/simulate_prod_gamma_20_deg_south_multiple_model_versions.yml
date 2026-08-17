@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-prod
+  docs:
+    title: Simulate South gamma rays across model versions
+    summary: >-
+      Run a small CORSIKA and sim_telarray gamma-ray production for the version-appropriate South
+      Alpha layout.
   configuration:
     array_layout_name:
       by_version:

@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-flasher
+  docs:
+    title: Inject flasher signals into a South LST
+    summary: >-
+      Generate calibration events by injecting an LSFS light-source signal directly into a
+      South-site LST camera.
   configuration:
     run_mode: direct_injection
     light_source: LSFS-design

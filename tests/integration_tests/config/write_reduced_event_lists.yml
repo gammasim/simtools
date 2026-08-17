@@ -2,7 +2,7 @@
 applications:
 - application: simtools-write-reduced-event-lists
   docs:
-    title: Read event data from sim_telarray files and write reduced event list data.
+    title: Write reduced event lists from sim_telarray data
     summary: Convert sim_telarray event streams to compact HDF5 event lists.
   configuration:
     input_files:

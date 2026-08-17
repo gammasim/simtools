@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-db-get-array-layouts-from-db
+  docs:
+    title: Export a layout with calibration devices
+    summary: >-
+      Build a South-site ground-coordinate layout containing LSTs and illuminators, including
+      calibration elements.
   configuration:
     array_element_list:
     - LSTS

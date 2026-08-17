@@ -2,11 +2,10 @@
 applications:
 - application: simtools-production-generate-grid
   docs:
-    title: Production grid defined by horizontal coordinate axes.
-    summary: >
-      Number of events scaled by energy and zenith.
-      Use corsika limits files to adjust energy ranges, view cone, and
-      core scatter settings.
+    title: Generate a zenith-azimuth production grid
+    summary: >-
+      Generate horizontal-coordinate simulation jobs with event counts scaled by energy and zenith
+      angle and with tabulated CORSIKA limits.
   configuration:
     array_layout_name: LSTN-01
     axis:

@@ -4,7 +4,7 @@ This application supports the `local` (default) and `htcondor` execution backend
 [Execution backends](../execution_backends.md) for HTCondor setup and configuration.
 
 ```{eval-rst}
-.. automodule:: write_reduced_event_lists
+.. automodule:: simtools.applications.write_reduced_event_lists
    :members:
    :exclude-members: main
 ```
@@ -52,7 +52,7 @@ parallel output-file processing.
    :no-heading:
 ```
 
-## Examples
+## Example
 
 ```{eval-rst}
 .. simtools-integration-example::

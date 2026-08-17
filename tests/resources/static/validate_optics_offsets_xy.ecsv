@@ -1,0 +1,12 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - {name: x, unit: deg, datatype: float64}
+# - {name: y, unit: deg, datatype: float64}
+# schema: astropy-2.0
+x y
+0.0 0.0
+0.5 0.0
+1.0 0.5
+-0.5 0.25
+0.0 -1.0

@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-convert-geo-coordinates-of-array-elements
+  docs:
+    title: Convert UTM positions to ground coordinates
+    summary: >-
+      Convert a North-site array-element model parameter from UTM to local ground coordinates.
   configuration:
     export: ground
     array_element_positions_file: ${generated:model_parameters/array_element_position_utm-2.0.0.json}

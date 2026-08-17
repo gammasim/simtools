@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-r"""Produces a markdown file for calibration reports."""
+"""Produces a markdown file for calibration reports."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

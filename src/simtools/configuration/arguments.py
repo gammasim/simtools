@@ -549,6 +549,15 @@ ARRAY_LAYOUT_PARAMETER_FILE = _argument(
     default=None,
 )
 
+ARRAY_LAYOUT_NAME_FROM_PARAMETER_FILE = _argument(
+    "array_layout_name_from_parameter_file",
+    _SIMULATION_MODEL_GROUP,
+    help="Array layout name(s) to plot from an array layout parameter file.",
+    nargs="+",
+    type=str,
+    default=None,
+)
+
 PLOT_ALL_LAYOUTS = _argument(
     "plot_all_layouts",
     _SIMULATION_MODEL_GROUP,
