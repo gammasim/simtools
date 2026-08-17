@@ -534,7 +534,7 @@ def read_layouts(args_dict):
             args_dict["array_layout_parameter_file"],
             args_dict["model_version"],
             args_dict["coordinate_system"],
-            args_dict["array_layout_name"],
+            args_dict.get("array_layout_name_from_parameter_file"),
         ), background_layout
 
     if args_dict["array_layout_name"] is not None or args_dict["plot_all_layouts"]:

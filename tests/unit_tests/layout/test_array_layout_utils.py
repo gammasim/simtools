@@ -644,6 +644,7 @@ def minimal_args_dict():
         "array_layout_name": None,
         "plot_all_layouts": False,
         "array_layout_parameter_file": None,
+        "array_layout_name_from_parameter_file": None,
         "array_layout_file": None,
         "array_element_list": None,
         "site": "North",
@@ -720,6 +721,26 @@ def test_read_layouts_with_array_layout_parameter_file(minimal_args_dict):
         assert isinstance(layouts, list)
         assert layouts[0]["name"] == "layout_param"
         assert background is None
+
+
+def test_read_layouts_selects_array_layout_from_parameter_file(minimal_args_dict):
+    args = minimal_args_dict.copy()
+    args["array_layout_parameter_file"] = "param_file.json"
+    args["array_layout_name_from_parameter_file"] = ["layout_param"]
+    with patch(
+        "simtools.layout.array_layout_utils.get_array_layouts_from_parameter_file"
+    ) as mock_get:
+        mock_get.return_value = [{"name": "layout_param", "array_elements": ["telA"]}]
+        layouts, background = array_layout_utils.read_layouts(args)
+
+    assert layouts == [{"name": "layout_param", "array_elements": ["telA"]}]
+    assert background is None
+    mock_get.assert_called_once_with(
+        "param_file.json",
+        "1.0.0",
+        "ground",
+        ["layout_param"],
+    )
 
 
 def test_read_layouts_with_array_layout_file(minimal_args_dict):
