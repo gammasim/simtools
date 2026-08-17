@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import astropy.units as u
 import numpy as np
 import pytest
@@ -48,17 +50,22 @@ def _pool_result(
 
 
 def test_write_results(mocker, mock_args_dict, mock_results, tmp_test_directory):
+    tmp_test_directory = Path(tmp_test_directory)
     mock_io = mocker.patch("simtools.io.io_handler.IOHandler")
     mock_io.return_value.get_output_directory.return_value = tmp_test_directory
-
-    mock_dump = mocker.patch("simtools.data_model.metadata_collector.MetadataCollector.dump")
+    metadata = {"cta": {"activity": {"name": "production_derive_corsika_limits"}}}
+    mock_metadata_collector = mocker.patch(
+        "simtools.production_configuration.derive_corsika_limits.MetadataCollector"
+    )
+    mock_metadata_collector.return_value.get_top_level_metadata.return_value = metadata
 
     derive_corsika_limits.write_results(mock_results, mock_args_dict, DEFAULT_ALLOWED_LOSSES, 0.1)
 
-    # Verify metadata was written
-    mock_dump.assert_called_once()
-    args = mock_dump.call_args[0]
-    assert args[0] == mock_args_dict
+    output_file = tmp_test_directory / "corsika_limits.ecsv"
+    output_table = Table.read(output_file, format="ascii.ecsv")
+    assert output_table.meta["cta"] == metadata["cta"]
+    assert not output_file.with_suffix(".meta.yml").exists()
+    mock_metadata_collector.assert_called_once_with(mock_args_dict)
 
 
 def test_load_output_table_configuration_from_schema_raises_without_data(mocker):

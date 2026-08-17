@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-validate-file-using-schema
+  docs:
+    title: Resolve a YAML schema from metadata
+    summary: Validate a YAML schema using the metaschema URL declared in its metadata.
   configuration:
     data_type: schema
     file_name: ./src/simtools/schemas/input/MST_mirror_2f_measurements.schema.yml
