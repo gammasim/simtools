@@ -1,0 +1,19 @@
+%YAML 1.2
+---
+title: Schema for trigger-subset histograms
+schema_version: 0.4.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: trigger_histogram_subset_histograms
+description: Per-bin histograms for trigger subsets.
+data:
+  - type: data_table
+    table_columns:
+      - {name: reference_id, description: Stable histogram reference identifier., required: true, type: string}
+      - {name: subset, description: Trigger subset name., required: true, type: string}
+      - {name: quantity, description: Histogram quantity name., required: true, type: string}
+      - {name: bin_index, description: Histogram bin index., required: true, type: int64}
+      - {name: bin_low, description: Lower histogram bin edge., required: true, type: float64}
+      - {name: bin_high, description: Upper histogram bin edge., required: true, type: float64}
+      - {name: count, description: Histogram count., required: true, type: int64}

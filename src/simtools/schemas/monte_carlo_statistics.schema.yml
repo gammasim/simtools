@@ -1,0 +1,58 @@
+%YAML 1.2
+---
+title: Schema for production-derived Monte Carlo statistics
+schema_version: 0.4.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: monte_carlo_statistics
+description: Required thrown-event estimates derived from trigger histograms.
+data:
+  - type: data_table
+    table_columns:
+      - name: primary_particle
+        description: Simulated primary particle.
+        required: true
+        type: string
+      - name: zenith
+        description: Zenith angle of the trigger-histogram reference.
+        required: true
+        type: float64
+        unit: deg
+      - name: azimuth
+        description: Azimuth angle of the trigger-histogram reference.
+        required: true
+        type: float64
+        unit: deg
+      - name: nsb_level
+        description: Night-sky-background level of the reference.
+        required: true
+        type: float64
+      - name: br_energy_min
+        description: Minimum thrown primary energy.
+        required: true
+        type: float64
+        unit: TeV
+      - name: br_energy_max
+        description: Maximum thrown primary energy.
+        required: true
+        type: float64
+        unit: TeV
+      - name: br_core_scatter_max
+        description: Maximum thrown core-scatter radius.
+        required: true
+        type: float64
+        unit: m
+      - name: br_viewcone_max
+        description: Maximum thrown view-cone radius.
+        required: true
+        type: float64
+        unit: deg
+      - name: array_name
+        description: Array layout of the trigger-histogram reference.
+        required: true
+        type: string
+      - name: estimated_total_events
+        description: Required total number of thrown events.
+        required: true
+        type: int64

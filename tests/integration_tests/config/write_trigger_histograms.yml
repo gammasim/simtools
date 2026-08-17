@@ -1,9 +1,12 @@
 ---
 applications:
 - application: simtools-write-trigger-histograms
+  docs:
+    title: Build trigger histograms from reduced events
+    summary: Aggregate reduced event data into an HDF5 product for limit and statistics studies.
   configuration:
     array_element_list:
-    - MSTS-01
+    - MSTN-03
     event_data_files: ${generated:proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.reduced_event_data.hdf5}
     model_version: 7.0.0
     output_file: trigger_histograms.hdf5
@@ -12,7 +15,20 @@ applications:
     energy_bins_per_decade: 10
     angular_distance_bin_width: 0.5
   integration_tests:
-  - output_file: trigger_histograms.hdf5
-  test_name: write_trigger_histograms
+  - test_output_files:
+    - path_descriptor: output_path
+      file: trigger_histograms.hdf5
+      expected_hdf5_datasets:
+      - METADATA
+      - TRIGGER_REFERENCE_METADATA
+      - TRIGGER_REFERENCE_BINS
+      - TRIGGER_TOPOLOGY_COUNTS
+      - TRIGGER_SUBSET_HISTOGRAMS
+      expected_hdf5_min_rows:
+        METADATA: 1
+        TRIGGER_REFERENCE_METADATA: 1
+        TRIGGER_REFERENCE_BINS: 1
+      hdf5_schema: trigger_histograms
+  test_name: test
 schema_name: application_workflow.metaschema
 schema_version: 0.4.0
