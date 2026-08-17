@@ -1,17 +1,4 @@
-r"""
-Compare two directories with model production tables in JSON format.
-
-This script should be used to support the maintenance the simulation model repository.
-
-Example
--------
-.. code-block:: console
-
-    simtools-maintain-simulation-model-compare-productions \\
-        --directory_1 ../simulation-models-dev/simulation-models/6.0.0/ \\
-        --directory_2 ../simulation-models-dev/simulation-models/6.2.0
-
-"""
+"""Compare two directories with model production tables in JSON format."""
 
 from pathlib import Path
 

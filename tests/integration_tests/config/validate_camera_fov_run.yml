@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-validate-camera-fov
+  docs:
+    title: Validate the NectarCam field of view
+    summary: >-
+      Compare the MST NectarCam pixel layout with the simulated camera field of view and produce
+      diagnostic plots.
   configuration:
     figure_format:
     - pdf

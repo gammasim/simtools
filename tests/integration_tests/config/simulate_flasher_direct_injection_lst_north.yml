@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-flasher
+  docs:
+    title: Inject flasher signals into North cameras
+    summary: >-
+      Generate flat-fielding events by injecting calibration signals directly into North-site LST
+      and MST cameras.
   configuration:
     run_mode: direct_injection
     telescopes:

@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-convert-geo-coordinates-of-array-elements
+  docs:
+    title: Select North-site telescopes in ground coordinates
+    summary: >-
+      Read ground-coordinate array positions, select LST and MST elements, and export a
+      ground-coordinate table.
   configuration:
     export: ground
     array_element_positions_file: ${static:telescope_positions-North-ground.ecsv}

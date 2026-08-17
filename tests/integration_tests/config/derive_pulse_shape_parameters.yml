@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-derive-pulse-shape-parameters
+  docs:
+    title: Derive a NectarCam pulse-shape parameter
+    summary: >-
+      Generate a normalized camera pulse shape from configured rise and fall widths for an MST
+      NectarCam model.
   configuration:
     rise_width_ns: 2.5
     fall_width_ns: 5.0

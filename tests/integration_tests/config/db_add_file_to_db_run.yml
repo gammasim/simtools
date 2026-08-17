@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-db-add-file-to-db
+  docs:
+    title: Store mirror measurements in the database
+    summary: >-
+      Upload an ECSV mirror-measurement table and its metadata to the sandbox file collection.
   configuration:
     database_name: sandbox
     file_name:

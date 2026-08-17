@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-docs-produce-production-summary
+  docs:
+    title: Summarize simulation-model productions
+    summary: >-
+      Read a simulation-model repository and generate a report of its available production
+      configurations.
   configuration:
     simulation_models_path: ../simulation-models
     output_path: simtools-output/reports/productions/

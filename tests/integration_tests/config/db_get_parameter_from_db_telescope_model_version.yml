@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-db-get-parameter-from-db
+  docs:
+    title: Export LST mirror reflectivity
+    summary: >-
+      Retrieve the LSTN-01 mirror-reflectivity table for the selected model version and export it as
+      a table.
   configuration:
     export_model_file: true
     export_model_file_as_table: true

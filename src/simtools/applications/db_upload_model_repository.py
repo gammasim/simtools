@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-r"""Upload a simulation-model repository to MongoDB."""
+"""Upload a simulation-model repository to MongoDB."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

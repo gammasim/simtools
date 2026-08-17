@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-generate-default-metadata
+  docs:
+    title: Generate default metadata as YAML
+    summary: >-
+      Create a YAML metadata document populated with defaults from the simtools metadata metaschema.
   configuration:
     output_file: test.yml
     output_path: simtools-output

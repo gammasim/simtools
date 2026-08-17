@@ -1,38 +1,6 @@
 #!/usr/bin/python3
 
-r"""
-    Read array layouts from file, validate with telescopes in DB, and prepare for submission.
-
-    Validates that all telescope defined in the array layouts exist in the database for the
-    specified model version. Prepares both JSON-style model parameters and corresponding
-    metadata for submission.
-
-    Command line arguments
-    ----------------------
-    array_layouts (str, required)
-        Array layouts file.
-    updated_parameter_version (str, optional)
-        Updated parameter version.
-    input_meta (str, optional)
-        Input meta data file(s) associated to input data (wildcards or list of files allowed).
-    model_version (str, required)
-        Model version.
-
-    Example
-    -------
-
-    Submit and validate a new array layout dictionary:
-
-    .. code-block:: console
-
-        simtools-submit-array-layouts \
-            --array_layouts array_layouts.json \\
-            --model_version 6.0.0 \\
-            --updated_parameter_version 0.1.0 \\
-            --input_meta array_layouts.metadata.yml
-
-
-    """
+"""Read array layouts from file, validate with telescopes in DB, and prepare for submission."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

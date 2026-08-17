@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-simulate-pedestals
+  docs:
+    title: Simulate dark-camera LST pedestals
+    summary: >-
+      Generate North-LST pedestal events without night-sky background or photoelectron pulses.
   configuration:
     run_mode: pedestals_dark
     array_layout_name: LSTN-01

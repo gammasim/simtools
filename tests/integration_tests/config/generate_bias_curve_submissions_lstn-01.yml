@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-generate-bias-curve-submissions
+  docs:
+    title: Generate LST bias-curve simulation grids
+    summary: >-
+      Create NSB and proton submission grids that scan trigger thresholds for a North-site LST bias
+      curve.
   configuration:
     site: North
     model_version: 7.0.0

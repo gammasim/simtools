@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-submit-array-layouts
+  docs:
+    title: Prepare array layouts for model submission
+    summary: >-
+      Validate externally generated array-layout definitions and write them with an updated
+      parameter version.
   configuration:
     array_layouts: ${generated:model_parameters/array_layouts-2.0.2.json}
     model_version: 7.0.0

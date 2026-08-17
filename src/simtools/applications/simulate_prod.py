@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-r"""Generate simulation configuration and run simulations."""
+"""Generate simulation configuration and run simulations."""
 
 import argparse
 import sys

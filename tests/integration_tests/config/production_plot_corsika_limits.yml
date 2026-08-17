@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-plot-corsika-limits
+  docs:
+    title: Plot production CORSIKA limits
+    summary: >-
+      Visualize energy range, core-scatter radius, and view-cone limits from a production limits
+      table.
   configuration:
     corsika_limits_file: ${downloaded:corsika_limits.ecsv}
     output_path: simtools-output

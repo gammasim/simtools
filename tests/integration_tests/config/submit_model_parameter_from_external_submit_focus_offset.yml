@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-submit-model-parameter-from-external
+  docs:
+    title: Prepare focus offset for model submission
+    summary: >-
+      Convert an LST focus-offset value with physical units into a validated model-parameter file.
   configuration:
     input_meta: null
     instrument: LSTN-01

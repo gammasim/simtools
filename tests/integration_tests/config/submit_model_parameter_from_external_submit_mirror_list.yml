@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-submit-model-parameter-from-external
+  docs:
+    title: Prepare mirror list for model submission
+    summary: >-
+      Convert a South FlashCam MST mirror-list filename into a validated model-parameter file.
   configuration:
     input_meta: null
     instrument: MSTx-FlashCam

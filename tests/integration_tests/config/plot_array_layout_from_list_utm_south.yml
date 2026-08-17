@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-plot-array-layout
+  docs:
+    title: Plot a South layout in UTM coordinates
+    summary: Plot UTM positions of selected South-site LST, MST, and SST elements.
   configuration:
     array_element_list:
     - LSTS

@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-generate-simtel-event-data
+  docs:
+    title: Convert sim_telarray events to HDF5
+    summary: >-
+      Read proton sim_telarray events and export event, telescope, and metadata datasets to HDF5.
   configuration:
     simtel_file: ${generated:proton_run000001_za20deg_azm180deg_North_CTAO-North-Alpha_7.0.0_test.simtel.zst}
     max_files: 2

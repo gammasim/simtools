@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-prod
+  docs:
+    title: Run the CORSIKA stage of a South gamma production
+    summary: >-
+      Select one production-grid row and generate the corresponding 40 deg gamma-ray air showers
+      with CORSIKA.
   configuration:
     corsika_seeds: [534, 220, 1104, 382]
     job_grid_file: ${generated:production_grid_points_horizontal.ecsv}

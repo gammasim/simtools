@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-db-get-array-layouts-from-db
+  docs:
+    title: Export a South array from telescope classes
+    summary: >-
+      Build a South-site ground-coordinate layout containing the selected LST, MST, and SST classes.
   configuration:
     array_element_list:
     - LSTS

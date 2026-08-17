@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-plot-array-layout
+  docs:
+    title: Plot a selected North telescope layout
+    summary: Plot labeled North-site positions for LSTN-01 and the selected MST elements.
   configuration:
     array_element_list:
     - LSTN-01

@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-plot-tabular-data
+  docs:
+    title: Plot a legacy single-photoelectron spectrum
+    summary: >-
+      Read legacy CSV camera-response data through a plotting configuration and write PDF and PNG
+      figures.
   configuration:
     figure_format:
     - pdf

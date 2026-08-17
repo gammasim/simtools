@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-simulate-flasher
+  docs:
+    title: Simulate an LST filter-wheel intensity sequence
+    summary: Propagate two LSFS photon intensities through a South LST optics and camera model.
   configuration:
     run_mode: full_simulation
     light_source: LSFS-design

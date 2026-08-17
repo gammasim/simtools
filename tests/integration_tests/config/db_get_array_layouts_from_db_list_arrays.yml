@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-db-get-array-layouts-from-db
+  docs:
+    title: List available North array layouts
+    summary: Query the simulation-model database for the array layouts available at the North site.
   configuration:
     list_available_layouts: true
     model_version: 6.0.2

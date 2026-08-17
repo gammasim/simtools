@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-derive-incident-angle
+  docs:
+    title: Derive photon incidence angles for an LST
+    summary: >-
+      Ray-trace an off-axis source through a single-mirror LST and derive camera photon-incidence
+      angles.
   configuration:
     site: South
     telescope: LSTS-04

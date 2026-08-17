@@ -1,26 +1,6 @@
 #!/usr/bin/python3
 
-r"""
-Plot CORSIKA limits from a ECSV table.
-
-This application reads a CORSIKA limits table and plots the limits
-as function of zenith angle.
-
-
-Command line arguments
-----------------------
-corsika_limits_file (str, required)
-    Path to a CORSIKA limits table in ECSV format.
-
-Example
--------
-
-.. code-block:: console
-
-   simtools-production-plot-corsika-limits \
-       --corsika_limits_file simtools-output/merged_corsika_limits.ecsv \
-       --output_path simtools-output
-"""
+"""Plot CORSIKA limits from a ECSV table."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

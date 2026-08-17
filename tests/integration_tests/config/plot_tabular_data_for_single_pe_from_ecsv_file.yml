@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-plot-tabular-data
+  docs:
+    title: Plot a single-photoelectron spectrum from ECSV
+    summary: >-
+      Apply a plotting configuration to ECSV camera-response data and write PDF and PNG figures.
   configuration:
     figure_format:
     - pdf

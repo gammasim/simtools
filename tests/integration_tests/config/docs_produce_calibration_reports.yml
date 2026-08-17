@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-docs-produce-calibration-reports
+  docs:
+    title: Produce calibration-device reports
+    summary: >-
+      Generate documentation tables and pages for calibration devices defined in the simulation
+      model.
   configuration:
     model_version: 6.0.2
     output_path: simtools-output/reports/productions/

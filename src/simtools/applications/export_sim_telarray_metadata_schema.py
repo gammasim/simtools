@@ -1,27 +1,5 @@
 #!/usr/bin/python3
-r"""
-Export the expanded sim_telarray metadata schema.
-
-The exported schema combines generated metadata definitions from
-``sim_telarray_meta_parameters.schema.yml`` with metadata derived from
-model-parameter schemas.
-
-Command line arguments
-----------------------
-output_file (str)
-    Output file name.
-source_type (str, optional)
-    Export all metadata, only generated metadata, or only model-parameter-derived metadata.
-schema_version (str, optional)
-    Registry schema version.
-
-Example
--------
-.. code-block:: console
-
-    simtools-export-sim-telarray-metadata-schema --output_file metadata.yml
-
-"""
+"""Export the expanded sim_telarray metadata schema."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

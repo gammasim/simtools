@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-prod-htcondor-generator
+  docs:
+    title: Generate versioned HTCondor production jobs
+    summary: >-
+      Create separate HTCondor submissions for a horizontal production grid and two simtools
+      container versions.
   configuration:
     apptainer_image:
       0.30.0: ${static:dummy_apptainer_image.sif}

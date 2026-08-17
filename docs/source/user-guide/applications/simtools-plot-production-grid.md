@@ -1,7 +1,7 @@
 # simtools-plot-production-grid
 
 ```{eval-rst}
-.. automodule:: plot_production_grid
+.. automodule:: simtools.applications.plot_production_grid
    :members:
    :exclude-members: main
 ```
@@ -35,11 +35,6 @@ the [job grid schema](https://github.com/gammasim/simtools/blob/main/src/simtool
 ```
 
 ## Example
-
-```console
-simtools-plot-production-grid --grid_points_file path/to/production_grid.ecsv \
-    --output_path simtools-output
-```
 
 ```{eval-rst}
 .. simtools-integration-example::

@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-generate-corsika-histograms
+  docs:
+    title: Plot CORSIKA shower distributions
+    summary: >-
+      Read a gamma-ray CORSIKA event file and produce diagnostic histograms of the simulated
+      showers.
   configuration:
     input_files: ${generated:gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_7.0.0_test.corsika.zst}
     output_path: simtools-output

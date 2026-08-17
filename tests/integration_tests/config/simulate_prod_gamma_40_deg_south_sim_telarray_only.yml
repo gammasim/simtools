@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-prod
+  docs:
+    title: Run sim_telarray on South gamma showers
+    summary: >-
+      Read an existing CORSIKA gamma-ray file and simulate detector response for the South LST
+      subarray.
   configuration:
     corsika_file: ${generated:gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_7.0.0_test.corsika.zst}
     array_layout_name: subsystem_lsts

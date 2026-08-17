@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-generate-default-metadata
+  docs:
+    title: Generate default metadata as JSON
+    summary: >-
+      Create a JSON metadata document populated with defaults from the simtools metadata metaschema.
   configuration:
     output_file: test.json
     output_path: simtools-output

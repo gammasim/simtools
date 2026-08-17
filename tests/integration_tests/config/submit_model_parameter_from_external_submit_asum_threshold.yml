@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-submit-model-parameter-from-external
+  docs:
+    title: Prepare an analogue-sum threshold for model submission
+    summary: >-
+      Update analogue-sum trigger threshold into a versioned model parameter with
+      supplied metadata.
   configuration:
     instrument: LSTN-design
     input_meta: ${downloaded:asum_threshold.meta.yml}

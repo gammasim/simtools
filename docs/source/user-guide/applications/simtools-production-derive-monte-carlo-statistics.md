@@ -1,7 +1,7 @@
 # simtools-production-derive-monte-carlo-statistics
 
 ```{eval-rst}
-.. automodule:: production_derive_monte_carlo_statistics
+.. automodule:: simtools.applications.production_derive_monte_carlo_statistics
    :members:
    :exclude-members: main
 ```
@@ -42,10 +42,10 @@ Set `plot_diagnostics` to generate plots of expected events and relative uncerta
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: production_derive_monte_carlo_statistics_target_uncertainty.yml
+    :file: production_derive_monte_carlo_statistics_target_triggered_events.yml
 ```
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: production_derive_monte_carlo_statistics_target_triggered_events.yml
+    :file: production_derive_monte_carlo_statistics_target_uncertainty.yml
 ```

@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-validate-camera-efficiency
+  docs:
+    title: Validate the MSTx-NectarCam camera efficiency
+    summary: >-
+      Calculate North NectarCam optical throughput and derive its reference night-sky-background
+      rate.
   configuration:
     figure_format:
     - pdf

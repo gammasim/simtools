@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-db-get-file-from-db
+  docs:
+    title: Download multiple simulation-model files
+    summary: >-
+      Retrieve a mirror definition and ray-tracing reference table from the simulation-model
+      database.
   configuration:
     file_name:
     - mirror_CTA-S-LST_v2020-04-07.dat

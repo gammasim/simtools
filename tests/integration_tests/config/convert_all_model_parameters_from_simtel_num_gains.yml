@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-convert-all-model-parameters-from-simtel
+  docs:
+    title: Convert an LST sim_telarray configuration to model parameters
+    summary: >-
+      Extract all recognized CT1 parameters from a sim_telarray configuration and write versioned
+      LSTN-01 model files.
   configuration:
     output_path: simtools-output
     parameter_version: 0.0.1
