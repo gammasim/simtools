@@ -15,6 +15,7 @@ def validate(path, rule, configuration):
         parameter=parameter_name,
         site=configuration.get("site"),
         array_element_name=configuration.get("telescope"),
+        parameter_version=configuration.get("parameter_version"),
         model_version=configuration.get("model_version"),
     )
     generated_value = ascii_handler.collect_data_from_file(path)["value"]

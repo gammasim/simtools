@@ -19,8 +19,21 @@ def test_validate_model_parameter_reports_mismatch(tmp_test_directory, mocker):
         model_parameters.validate(
             output,
             {"reference_parameter_name": "parameter", "tolerance": 1.0e-5},
-            {"site": "North", "telescope": "LSTN-01", "model_version": "7.0.0"},
+            {
+                "site": "North",
+                "telescope": "LSTN-01",
+                "parameter_version": "0.0.99",
+                "model_version": "7.0.0",
+            },
         )
+
+    database.return_value.get_model_parameter.assert_called_once_with(
+        parameter="parameter",
+        site="North",
+        array_element_name="LSTN-01",
+        parameter_version="0.0.99",
+        model_version="7.0.0",
+    )
 
 
 def test_validate_model_parameter_applies_scaling(tmp_test_directory, mocker):

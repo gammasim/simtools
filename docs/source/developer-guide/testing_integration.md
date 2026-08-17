@@ -182,6 +182,9 @@ optional unit. Metadata paths use dotted mapping notation.
 Metadata relations compare a dotted metadata path with either the table row
 count or a named column sum.
 
+Table and metadata validators use Astropy table format auto-detection, so they
+can validate any table format supported by the installed Astropy I/O registry.
+
 The `simtel` validator defaults to shower events and accepts explicit event
 ranges without exposing the underlying reader API:
 

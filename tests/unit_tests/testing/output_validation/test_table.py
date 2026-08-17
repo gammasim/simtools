@@ -1,4 +1,4 @@
-"""Tests for ECSV table validators."""
+"""Tests for table validators."""
 
 from pathlib import Path
 
@@ -41,8 +41,19 @@ def test_read_table_reports_parse_failure(tmp_test_directory):
     output = Path(tmp_test_directory) / "table.ecsv"
     output.write_text("not an ECSV table\n", encoding="utf-8")
 
-    with pytest.raises(AssertionError, match="not a parseable ECSV table"):
+    with pytest.raises(AssertionError, match="not a parseable table"):
         table.read_table(output)
+
+
+def test_read_table_autodetects_csv(tmp_test_directory):
+    """Read a supported non-ECSV table format."""
+    output = Path(tmp_test_directory) / "table.csv"
+    Table({"id": [1, 2], "value": [1.0, 2.0]}).write(output, format="ascii.csv")
+
+    parsed = table.read_table(output)
+
+    assert parsed.colnames == ["id", "value"]
+    assert list(parsed["id"]) == [1, 2]
 
 
 def test_table_and_metadata_validators(tmp_test_directory):

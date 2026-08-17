@@ -1,4 +1,4 @@
-"""Generic ECSV table and metadata validators."""
+"""Generic table and metadata validators."""
 
 from collections.abc import Mapping
 
@@ -10,11 +10,11 @@ from simtools.data_model import validate_data
 
 
 def read_table(path):
-    """Read an ECSV output table."""
+    """Read an Astropy-supported output table using format auto-detection."""
     try:
-        return Table.read(path, format="ascii.ecsv")
+        return Table.read(path)
     except Exception as exc:
-        raise AssertionError(f"Output '{path}' is not a parseable ECSV table: {exc}") from exc
+        raise AssertionError(f"Output '{path}' is not a parseable table: {exc}") from exc
 
 
 def get_path(value, dotted_path):
