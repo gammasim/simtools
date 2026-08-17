@@ -330,6 +330,11 @@ def test_get_array_layout_elements():
     with pytest.raises(ValueError, match="Reference array layout 'missing' not found"):
         array_layout_utils.get_array_layout_elements(layouts, "missing")
 
+    with pytest.raises(ValueError, match="Reference array layout 'empty' has no elements"):
+        array_layout_utils.get_array_layout_elements(
+            {"value": [{"name": "empty", "elements": []}]}, "empty"
+        )
+
 
 def test_validate_array_layout_subset_of_reference_valid():
     result = array_layout_utils.validate_array_layout_subset_of_reference(
@@ -351,6 +356,14 @@ def test_validate_array_layout_subset_of_reference_invalid_element():
             layout_name="invalid",
             elements=["MSTS-01", "MSTS-999"],
             reference_elements=["MSTS-01", "MSTS-301"],
+            reference_layout_name="hyper_array",
+        )
+
+    with pytest.raises(ValueError, match="must be a non-empty string"):
+        array_layout_utils.validate_array_layout_subset_of_reference(
+            layout_name=" ",
+            elements=["MSTS-01"],
+            reference_elements=["MSTS-01"],
             reference_layout_name="hyper_array",
         )
 
@@ -393,12 +406,15 @@ def test_prepare_array_layouts_for_submission_direct(mocker):
         "name": "dual-camera",
         "elements": ["MSTS-01", "MSTS-301"],
     }
+    assert result["value"][0] == {
+        "name": "hyper_array",
+        "elements": ["MSTS-01", "MSTS-301"],
+    }
     db.get_model_parameter.assert_called_once_with(
         parameter="array_layouts",
         site="South",
         array_element_name=None,
         parameter_version="3.0.0",
-        model_version="7.0.0",
     )
 
     with pytest.raises(ValueError, match="requires a non-empty telescope list"):
@@ -408,6 +424,86 @@ def test_prepare_array_layouts_for_submission_direct(mocker):
             reference_elements=["MSTS-01"],
             reference_layout_name="hyper_array",
         )
+
+
+def test_prepare_array_layouts_for_submission_rejects_existing_name(mocker):
+    db = mocker.Mock()
+    db.get_model_parameter.return_value = {
+        "array_layouts": {
+            "site": "South",
+            "value": [
+                {"name": "hyper_array", "elements": ["MSTS-01", "MSTS-301"]},
+                {"name": "existing-layout", "elements": ["MSTS-01"]},
+            ],
+        }
+    }
+    args = {
+        "array_layouts": None,
+        "array_layout_name": "existing layout",
+        "array_element_list": ["MSTS-01"],
+        "reference_array_layout": "hyper_array",
+        "site": "South",
+        "model_version": ["7.0.0"],
+        "parameter_version": "3.0.0",
+        "updated_parameter_version": "3.0.99",
+    }
+
+    with pytest.raises(ValueError, match="already exists"):
+        array_layout_utils.prepare_array_layouts_for_submission(db, args)
+
+
+def test_prepare_array_layouts_for_submission_file_input(mocker):
+    db = mocker.Mock()
+    layouts = {"value": [{"name": "existing", "elements": ["MSTS-01"]}]}
+    mocker.patch.object(
+        array_layout_utils.ascii_handler, "collect_data_from_file", return_value=layouts
+    )
+    args = {
+        "array_layouts": "array_layouts.json",
+        "array_layout_name": None,
+        "array_element_list": None,
+        "model_version": "7.0.0",
+    }
+
+    result, model_version = array_layout_utils.prepare_array_layouts_for_submission(db, args)
+
+    assert result is layouts
+    assert model_version == "7.0.0"
+    db.get_model_parameter.assert_not_called()
+
+
+def test_prepare_array_layouts_for_submission_rejects_mixed_input(mocker):
+    args = {
+        "array_layouts": "array_layouts.json",
+        "array_layout_name": "new-layout",
+        "array_element_list": None,
+        "model_version": "7.0.0",
+    }
+
+    with pytest.raises(ValueError, match="Use either array_layouts"):
+        array_layout_utils.prepare_array_layouts_for_submission(mocker.Mock(), args)
+
+
+def test_prepare_array_layouts_for_submission_rejects_missing_direct_arguments(mocker):
+    with pytest.raises(ValueError, match="Direct layout input requires"):
+        array_layout_utils.prepare_array_layouts_for_submission(
+            mocker.Mock(), {"array_layouts": None}
+        )
+
+
+def test_prepare_array_layouts_for_submission_rejects_multiple_model_versions(mocker):
+    args = {
+        "array_layouts": "array_layouts.json",
+        "array_layout_name": None,
+        "array_element_list": None,
+        "model_version": ["7.0.0", "7.0.1"],
+    }
+    mocker.patch.object(
+        array_layout_utils.ascii_handler, "collect_data_from_file", return_value={"value": []}
+    )
+
+    with pytest.raises(ValueError, match="exactly one model version"):
+        array_layout_utils.prepare_array_layouts_for_submission(mocker.Mock(), args)
 
 
 def test_get_array_layouts_from_parameter_file_valid(mocker, mock_array_model):

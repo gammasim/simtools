@@ -353,7 +353,7 @@ def prepare_array_layouts_for_submission(db, args_dict):
 
     The legacy file input is returned unchanged. Direct input reads the base
     parameter, validates the requested layout against its reference layout,
-    and merges the new layout into the base value.
+    and adds the new layout to the base value.
 
     Parameters
     ----------
@@ -406,7 +406,6 @@ def prepare_array_layouts_for_submission(db, args_dict):
         site=args_dict["site"],
         array_element_name=None,
         parameter_version=args_dict["parameter_version"],
-        model_version=model_version,
     )
     base_layouts = parameter_data["array_layouts"]
     base_layouts.pop("_id", None)
@@ -425,7 +424,17 @@ def prepare_array_layouts_for_submission(db, args_dict):
         reference_elements=get_array_layout_elements(base_layouts, reference_name),
         reference_layout_name=reference_name,
     )
-    return merge_array_layouts(base_layouts, [new_layout]), model_version
+    normalized_name = _normalize_array_layout_name(new_layout["name"])
+    existing_names = {
+        _normalize_array_layout_name(layout.get("name")) for layout in base_layouts.get("value", [])
+    }
+    if normalized_name in existing_names:
+        raise ValueError(f"Array layout '{new_layout['name']}' already exists.")
+
+    base_layouts.setdefault("value", []).append(
+        {"name": normalized_name, "elements": new_layout["elements"]}
+    )
+    return base_layouts, model_version
 
 
 def _get_single_model_version(model_version):
