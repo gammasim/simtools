@@ -1,11 +1,13 @@
 from pathlib import Path
 
 import astropy.units as u
+import h5py
 import numpy as np
 import pytest
 from astropy.table import Table
 
 from simtools.io import table_handler
+from simtools.sim_events import output_validator
 from simtools.sim_events.output_validator import (
     validate_event_numbers,
     validate_reduced_event_data_file,
@@ -225,6 +227,107 @@ def test_validate_trigger_histogram_file_rejects_unknown_table_reference(
         validate_trigger_histogram_file(output_file)
 
 
+def test_validate_trigger_histogram_file_rejects_non_hdf5_input(mocker):
+    mocker.patch(
+        "simtools.sim_events.output_validator.table_handler.read_table_file_type",
+        return_value="FITS",
+    )
+
+    with pytest.raises(ValueError, match="must be an HDF5 file"):
+        validate_trigger_histogram_file("trigger_histograms.fits")
+
+
+def test_validate_trigger_histogram_file_rejects_missing_entries(mocker):
+    mocker.patch(
+        "simtools.sim_events.output_validator.table_handler.read_table_file_type",
+        return_value="HDF5",
+    )
+    mocker.patch(
+        "simtools.sim_events.output_validator.table_handler.read_table_list",
+        return_value={
+            "TRIGGER_REFERENCE_METADATA": [],
+            "TRIGGER_REFERENCE_BINS": ["TRIGGER_REFERENCE_BINS"],
+            "TRIGGER_TOPOLOGY_COUNTS": ["TRIGGER_TOPOLOGY_COUNTS"],
+            "TRIGGER_SUBSET_HISTOGRAMS": ["TRIGGER_SUBSET_HISTOGRAMS"],
+        },
+    )
+
+    with pytest.raises(ValueError, match="missing required entries: TRIGGER_REFERENCE_METADATA"):
+        validate_trigger_histogram_file("trigger_histograms.hdf5")
+
+
+@pytest.mark.parametrize(
+    ("metadata_ids", "bin_ids", "message"),
+    [
+        ([], ["reference_0"], "no reference metadata rows"),
+        (["reference_0", "reference_0"], ["reference_0"], "duplicate reference IDs"),
+        (["reference_0"], [], "references without histogram bins"),
+    ],
+)
+def test_validate_trigger_histogram_table_references_rejects_invalid_ids(
+    metadata_ids, bin_ids, message
+):
+    tables = {
+        "TRIGGER_REFERENCE_METADATA": Table({"reference_id": metadata_ids}),
+        "TRIGGER_REFERENCE_BINS": Table({"reference_id": bin_ids}),
+        "TRIGGER_TOPOLOGY_COUNTS": Table({"reference_id": metadata_ids[:1]}),
+        "TRIGGER_SUBSET_HISTOGRAMS": Table({"reference_id": metadata_ids[:1]}),
+    }
+
+    with pytest.raises(ValueError, match=message):
+        output_validator._validate_trigger_histogram_table_references(tables, "output.hdf5")
+
+
+def test_dense_histogram_group_validation_rejects_missing_group(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "missing_group.hdf5"
+    with h5py.File(output_file, "w") as hdf5_file:
+        with pytest.raises(ValueError, match="no dense payload group"):
+            output_validator._get_dense_histogram_group(hdf5_file, output_file)
+
+
+def test_dense_histogram_group_validation_rejects_non_group(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "invalid_group.hdf5"
+    with h5py.File(output_file, "w") as hdf5_file:
+        hdf5_file.create_dataset("TRIGGER_HISTOGRAM_DENSE", data=[1])
+        with pytest.raises(ValueError, match="dense payload is not a group"):
+            output_validator._get_dense_histogram_group(hdf5_file, output_file)
+
+
+def test_dense_histogram_validation_rejects_reference_mismatch(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "reference_mismatch.hdf5"
+    with h5py.File(output_file, "w") as hdf5_file:
+        dense_group = hdf5_file.create_group("dense")
+        dense_group.create_group("other")
+        with pytest.raises(ValueError, match="do not match metadata"):
+            output_validator._validate_dense_reference_ids(
+                dense_group, {"reference_0"}, output_file
+            )
+
+
+def test_dense_histogram_validation_rejects_empty_reference_payload(tmp_test_directory):
+    output_file = Path(tmp_test_directory) / "empty_reference.hdf5"
+    with pytest.raises(ValueError, match="has no payload"):
+        output_validator._validate_dense_reference_payload("reference_0", None, output_file)
+
+
+@pytest.mark.parametrize("payload_kind", ["not_group", "no_values", "invalid_values"])
+def test_dense_histogram_validation_rejects_invalid_payload(tmp_test_directory, payload_kind):
+    output_file = Path(tmp_test_directory) / f"{payload_kind}.hdf5"
+    with h5py.File(output_file, "w") as hdf5_file:
+        if payload_kind == "not_group":
+            payload = hdf5_file.create_dataset("payload", data=[1])
+            expected_message = "is not a group"
+        else:
+            payload = hdf5_file.create_group("payload")
+            if payload_kind == "invalid_values":
+                payload.create_dataset("values", data=1)
+                expected_message = "invalid values data"
+            else:
+                expected_message = "has no values dataset"
+        with pytest.raises(ValueError, match=expected_message):
+            output_validator._validate_dense_histogram_payload("histogram", payload, output_file)
+
+
 def test_validate_trigger_histogram_file_rejects_missing_table_column(tmp_test_directory, mocker):
     output_file = Path(tmp_test_directory) / "trigger_histograms.hdf5"
     table_names = (
@@ -250,7 +353,7 @@ def test_validate_trigger_histogram_file_rejects_missing_table_column(tmp_test_d
         validate_trigger_histogram_file(output_file)
 
 
-@pytest.mark.parametrize("malformation", ["name", "length", "group"])
+@pytest.mark.parametrize("malformation", ["name", "length", "group", "nonnumeric"])
 def test_validate_trigger_histogram_file_rejects_malformed_edges(
     tmp_test_directory, mocker, malformation
 ):
@@ -267,10 +370,12 @@ def test_validate_trigger_histogram_file_rejects_malformed_edges(
             histogram_group.create_dataset("edges_bad", data=[0.1, 1.0])
         elif malformation == "length":
             histogram_group.create_dataset("edges_0", data=[0.1])
+        elif malformation == "nonnumeric":
+            histogram_group.create_dataset("edges_0", data=np.array(["a", "b"], dtype="S1"))
         else:
             histogram_group.create_group("edges_0")
 
-    with pytest.raises(ValueError, match=r"bin-edge|one-dimensional|expected"):
+    with pytest.raises(ValueError, match=r"bin-edge|one-dimensional|expected|numeric"):
         validate_trigger_histogram_file(output_file)
 
 
