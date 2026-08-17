@@ -183,9 +183,12 @@ def test_plot_error_plots():
     plt.close(fig1)
 
     fig2, ax2 = plt.subplots()
-    kwargs_errorbar = {"error_type": "errorbar"}
+    kwargs_errorbar = {"error_type": "errorbar", "error_label": "Uncertainty"}
     visualize._plot_error_plots(kwargs_errorbar, data_xy_err, "x", "y", "x_err", "y_err", "red")
     assert len(ax2.containers) > 0
+    assert ax2.containers[0].has_xerr
+    assert ax2.containers[0].has_yerr
+    assert ax2.containers[0].get_label() == "Uncertainty"
     plt.close(fig2)
 
     fig3, ax3 = plt.subplots()
