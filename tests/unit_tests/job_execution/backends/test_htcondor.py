@@ -28,11 +28,11 @@ def _raise_cancellation_error(*_args, **_kwargs):
 
 def _environment_entries(environment):
     """Parse the semicolon-separated HTCondor environment representation."""
-    return {  # noqa: C416 - required by the Sonar maintainability rule
+    return {
         key: value
-        for key, value in (
-            item.split("=", maxsplit=1) for item in environment.split(";") if "=" in item
-        )
+        for item in environment.split(";")
+        for key, separator, value in (item.partition("="),)
+        if separator
     }
 
 
@@ -104,13 +104,11 @@ def test_htcondor_exposes_source_checkout_to_container_python(tmp_test_directory
         Path(tmp_test_directory) / "scheduler.log",
     )
 
-    entries = {  # noqa: C416 - required by the Sonar maintainability rule
+    entries = {
         key: value
-        for key, value in (
-            item.split("=", maxsplit=1)
-            for item in submit_values["environment"].split(";")
-            if "=" in item
-        )
+        for item in submit_values["environment"].split(";")
+        for key, separator, value in (item.partition("="),)
+        if separator
     }
     source_path = Path(__file__).resolve().parents[4] / "src"
     assert source_path.as_posix() in entries["PYTHONPATH"].split(":")
