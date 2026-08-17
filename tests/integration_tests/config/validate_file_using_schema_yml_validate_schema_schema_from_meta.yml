@@ -10,4 +10,4 @@ applications:
     log_level: DEBUG
   test_name: yml_validate_schema_schema_from_meta
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

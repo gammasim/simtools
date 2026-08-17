@@ -12,8 +12,11 @@ applications:
     site: North
     telescope: LSTN-01
   integration_tests:
-  - output_file: 6.0.2/LSTN-01.md
+  - test_outputs:
+    - path_descriptor: output_path
+      file: LSTN-01.md
+      output_sub_path: 6.0.2
   test_name: run
   test_use_case: UC-150-2.3
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0
