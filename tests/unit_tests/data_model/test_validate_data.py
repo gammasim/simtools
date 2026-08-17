@@ -162,7 +162,7 @@ def test_validate_parameter_and_file_name(caplog):
     data_validator.validate_parameter_and_file_name()
 
     data_validator.data_file_name = (
-        "tests/resources/model_parameters/schema-0.2.0/incorrect_name-1.0.0.json"
+        "tests/unit_tests/resources/model_parameters/schema-0.2.0/incorrect_name-1.0.0.json"
     )
     data_validator.data_dict = {
         "parameter": parameter,
@@ -174,7 +174,7 @@ def test_validate_parameter_and_file_name(caplog):
         data_validator.validate_parameter_and_file_name()
 
     data_validator.data_file_name = (
-        "tests/resources/model_parameters/schema-0.2.0/num_gains-2.0.0.json"
+        "tests/unit_tests/resources/model_parameters/schema-0.2.0/num_gains-2.0.0.json"
     )
     data_validator.data_dict = {
         "parameter": parameter,
@@ -183,7 +183,9 @@ def test_validate_parameter_and_file_name(caplog):
     with pytest.raises(ValueError, match=r"Mismatch: version '1.0.0' vs. file 'num_gains-2.0.0'"):
         data_validator.validate_parameter_and_file_name()
 
-    data_validator.data_file_name = "tests/resources/model_parameters/schema-0.2.0/num_gains.json"
+    data_validator.data_file_name = (
+        "tests/unit_tests/resources/model_parameters/schema-0.2.0/num_gains.json"
+    )
     data_validator.data_dict = {"parameter": parameter, "parameter_version": None}
     with caplog.at_level(logging.WARNING):
         data_validator.validate_parameter_and_file_name()

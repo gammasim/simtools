@@ -88,8 +88,8 @@ def _is_db_unit_test(request):
 
 
 @functools.lru_cache
-def _load_mock_db_json(test_resources_path, file_name):
-    mock_db_dir = Path(test_resources_path) / "static" / "mock_db"
+def _load_mock_db_json(file_name):
+    mock_db_dir = Path(__file__).parent / "resources" / "mock_db"
     file_path = mock_db_dir / file_name
     with file_path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -483,7 +483,7 @@ def db_config():
 
 
 @pytest.fixture
-def mock_db_handler(request, test_resources_path):
+def mock_db_handler(request):
     """
     Mock DatabaseHandler for unit tests.
 
@@ -495,17 +495,15 @@ def mock_db_handler(request, test_resources_path):
         return request.getfixturevalue("db")
 
     # Load mock data from JSON files
-    mock_parameters = _apply_mock_param_defaults(
-        _load_mock_db_json(test_resources_path, "mock_parameters.json")
-    )
+    mock_parameters = _apply_mock_param_defaults(_load_mock_db_json("mock_parameters.json"))
     mock_sim_config_params = _apply_mock_param_defaults(
-        _load_mock_db_json(test_resources_path, "mock_sim_config_params.json")
+        _load_mock_db_json("mock_sim_config_params.json")
     )
     site_specific_params_north = _apply_mock_param_defaults(
-        _load_mock_db_json(test_resources_path, "site_params_north.json")
+        _load_mock_db_json("site_params_north.json")
     )
     site_specific_params_south = _apply_mock_param_defaults(
-        _load_mock_db_json(test_resources_path, "site_params_south.json")
+        _load_mock_db_json("site_params_south.json")
     )
 
     # Create closures for mock functions with captured data

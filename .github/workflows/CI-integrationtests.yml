@@ -301,6 +301,24 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set test resource version
+        id: test_resources
+        run: |
+          SIMTOOLS_TESTS_VERSION=$(grep '^SIMTOOLS_TESTS_VERSION=' .env_template | cut -d '=' -f2-)
+          echo "version=$SIMTOOLS_TESTS_VERSION" >> "$GITHUB_OUTPUT"
+          {
+            echo "SIMTOOLS_TEST_PATH=$GITHUB_WORKSPACE/simtools-tests/simtools-tests"
+            echo "SIMTOOLS_TESTS_VERSION=$SIMTOOLS_TESTS_VERSION"
+            echo "SIMTOOLS_TEST_RESOURCES=$GITHUB_WORKSPACE/simtools-tests/simtools-tests/$SIMTOOLS_TESTS_VERSION/integration_tests"
+          } >> "$GITHUB_ENV"
+
+      - name: checkout test resources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          repository: gammasim/simtools-tests
+          path: simtools-tests
+          sparse-checkout: simtools-tests/${{ steps.test_resources.outputs.version }}
+
       - name: Create runtime environment (.env)
         run: |
           set -a
@@ -380,7 +398,7 @@ jobs:
             for variable in ${!SIMTOOLS_DB_@}; do
               unset "$variable"
             done
-            MODEL_SOURCE_ARGS+=(--simulation-models-path="$SIMULATION_MODELS_PATH")
+            MODEL_SOURCE_ARGS+=(--simulation_models_path="$SIMULATION_MODELS_PATH")
           fi
           pytest --model_version=${{ matrix.model_version }} --color=yes --durations=20 \
             "${MODEL_SOURCE_ARGS[@]}" \

@@ -71,7 +71,7 @@ To run the integration tests without MongoDB, pass the directory containing
 ```bash
 pytest --no-cov -v \
   --model_version 7.0.0 \
-  --simulation-models-path ../simulation-models \
+  --simulation_models_path ../simulation-models \
   tests/integration_tests/test_applications_from_config.py
 ```
 
@@ -80,7 +80,7 @@ The integration harness passes the path to each application subprocess. To run o
 ```bash
 pytest --no-cov -vv \
   --model_version 7.0.0 \
-  --simulation-models-path ../simulation-models \
+  --simulation_models_path ../simulation-models \
   'tests/integration_tests/test_applications_from_config.py::test_applications_from_config[simtools-docs-produce-array-element-report_run]'
 ```
 
@@ -89,10 +89,15 @@ The filesystem source takes precedence over MongoDB settings. Integration workfl
 
 ## Resources
 
-By default, tests resolve resources from `tests/resources`:
+Tests resolve resources from the path in `SIMTOOLS_TEST_RESOURCES`. If no full
+resource path is configured, `SIMTOOLS_TEST_PATH` identifies the
+`simtools-tests` checkout and `SIMTOOLS_TESTS_VERSION` selects its version. The
+command-line options are
+`--test_resources_path` and `--simtools_tests_version`, respectively.
+The default version is maintained in `.env_template`.
 
 ```text
-tests/resources/
+<simtools-tests>/simtools-tests/<SIMTOOLS_TESTS_VERSION>/integration_tests/
   static/
   generated/
   downloaded/
@@ -104,7 +109,14 @@ Use `${downloaded:path/to/file}` for externally downloaded resources.
 To run against a different resource set:
 
 ```bash
-pytest --test-resources-path /full/path/to/resources \
+pytest --test_resources_path /full/path/to/resources \
+  tests/integration_tests/test_applications_from_config.py
+```
+
+To select a version instead of a path:
+
+```bash
+pytest --simtools_tests_version "$SIMTOOLS_TESTS_VERSION" \
   tests/integration_tests/test_applications_from_config.py
 ```
 
@@ -114,15 +126,11 @@ the resource applications to create and synchronize these bundles:
 
 - [`simtools-resources-test-generate`](../user-guide/applications/simtools-resources-test-generate.md)
   generates versioned test resources and validates configured static files.
-- [`simtools-resources-test-sync`](../user-guide/applications/simtools-resources-test-sync.md)
-  compares a versioned bundle against `tests/resources` and optionally syncs it.
-
 The resource generation and release workflow is documented in
 [Test resources](testing_resources.md).
 
-Use `tests/resources` for normal development and PR CI. Use archived resource
-sets from `simtools-tests` explicitly when validating compatibility against a
-named release.
+Use the current versioned resource set from `simtools-tests` for development,
+PR CI, and compatibility checks.
 
 ## Validation
 

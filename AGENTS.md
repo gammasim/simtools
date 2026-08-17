@@ -32,7 +32,8 @@ If you are unsure, ask for clarification. Try to shut up.
 - Unit tests: `tests/unit_tests/`, mirroring `src/simtools/`.
 - Integration tests: `tests/integration_tests/config/*.yml`, executed through
   `tests/integration_tests/test_applications_from_config.py`.
-- Test resources: `tests/resources/static` and `tests/resources/generated`.
+- Test resources: versioned integration resources in `simtools-tests`; unit-only
+  resources in `tests/unit_tests/resources`.
 - Documentation: Sphinx in `docs/source/`, built from MyST Markdown plus some
   RST autodoc pages.
 - Changelog fragments: `docs/changes/<pr-number>.<type>.md`.
@@ -127,10 +128,14 @@ Important mechanics:
 - Generated paths such as `output_path`, `grid_output_path`, and
   `pack_for_grid_register` should be relative; the harness rewrites them into
   `tmp_test_directory`.
+- Set `SIMTOOLS_TEST_PATH` and `SIMTOOLS_TESTS_VERSION`, or use
+  `--simtools_tests_version`, to select a versioned `simtools-tests` resource
+  bundle when `SIMTOOLS_TEST_RESOURCES` or `--test_resources_path` is not
+  provided.
 - Use `${static:path/to/file}` for maintained resources and
   `${generated:path/to/file}` for generated resources. Pytest resolves these
-  against `--test_resources_path` / `--test-resources-path`, defaulting to
-  `tests/resources`.
+  against `--test_resources_path`, defaulting to `SIMTOOLS_TEST_RESOURCES` or
+  `--test_resources_path`.
 - Put `expected_sim_telarray_output` and `expected_sim_telarray_metadata`
   directly on the relevant `test_output_files` item.
 - Use `test_simtel_cfg_files` for version-specific sim_telarray cfg
@@ -147,7 +152,7 @@ pytest -v -k "simtools-<app-name>_<test_name>" \
   tests/integration_tests/test_applications_from_config.py
 pytest -v --model_version 6.0.2 -k "<test_name>" \
   tests/integration_tests/test_applications_from_config.py
-pytest -v --test-resources-path /full/path/to/resources \
+pytest -v --test_resources_path /full/path/to/resources \
   tests/integration_tests/test_applications_from_config.py
 ```
 
