@@ -225,6 +225,18 @@ def test_parse_job_grid_preserves_layout_per_row(monkeypatch, job_grid_file, tmp
         "CTAO-North-Alpha",
         "CTAO-North-Beta",
     ]
+    assert args["_defer_simulation_dependency_validation"] is True
+
+
+def test_parse_local_job_grid_keeps_dependency_validation_local(
+    monkeypatch, job_grid_file, tmp_test_directory
+):
+    args = _parse_with_args(
+        monkeypatch,
+        _job_grid_args(job_grid_file, "--output_path", tmp_test_directory),
+    )
+
+    assert args["_defer_simulation_dependency_validation"] is False
 
 
 def test_parse_accepts_simulation_models_path(monkeypatch, job_grid_file, tmp_test_directory):

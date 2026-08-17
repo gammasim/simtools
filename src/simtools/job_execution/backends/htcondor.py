@@ -1,6 +1,7 @@
 """HTCondor execution backend using the Python bindings."""
 
 import logging
+import os
 import pickle
 import shlex
 import shutil
@@ -193,15 +194,34 @@ class HTCondorBackend:
                 raise BackendConfigurationError(f"Configured {key} does not exist: {value}")
 
     @staticmethod
-    def _read_environment_file(path, bind_paths=()):
+    def _read_environment_file(path, bind_paths=(), python_path=None):
         """Convert a simple dotenv file into an HTCondor environment value."""
-        if path is None and not bind_paths:
+        if path is None and not bind_paths and python_path is None:
             return None
         entries = HTCondorBackend._read_environment_entries(path) if path is not None else {}
         HTCondorBackend._add_corsika_interaction_table_bind(entries)
+        if python_path is not None:
+            HTCondorBackend._add_python_path(entries, python_path)
         for bind_path in bind_paths:
             HTCondorBackend._add_apptainer_bind_path(entries, bind_path)
         return ";".join(f"{key}={value}" for key, value in entries.items())
+
+    @staticmethod
+    def _source_checkout_path():
+        """Return the current source checkout path when simtools runs from one."""
+        source_path = Path(__file__).resolve().parents[3]
+        project_file = source_path.parent / "pyproject.toml"
+        if project_file.is_file() and (source_path / "simtools").is_dir():
+            return source_path
+        return None
+
+    @staticmethod
+    def _add_python_path(entries, source_path):
+        """Prepend the source checkout to the container Python module path."""
+        paths = [str(source_path)]
+        if entries.get("PYTHONPATH"):
+            paths.extend(path for path in entries["PYTHONPATH"].split(os.pathsep) if path)
+        entries["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(paths))
 
     @staticmethod
     def _read_environment_entries(path):
@@ -446,6 +466,30 @@ class HTCondorBackend:
     def _build_submit_values(self, config, jobs, work_dir, event_log, working_directory=None):
         """Build the submit description and per-job resource metadata."""
         working_directory = Path(working_directory or Path.cwd()).resolve()
+        resource_defaults, resource_keys = self._get_resource_data(config, jobs)
+        uses_container = bool(config.get("container_image") or "container_image" in resource_keys)
+        submit_values = self._build_worker_submit_values(
+            config, work_dir, event_log, working_directory, uses_container
+        )
+        self._add_resource_submit_values(submit_values, config, resource_keys)
+        self._add_container_submit_values(submit_values, config, uses_container)
+        source_path = self._source_checkout_path() if uses_container else None
+        bind_paths = self._build_container_bind_paths(
+            uses_container, source_path, work_dir, working_directory, jobs
+        )
+        environment = self._read_environment_file(
+            config.get("environment_file"),
+            bind_paths=bind_paths,
+            python_path=source_path,
+        )
+        if environment:
+            submit_values["environment"] = environment
+        submit_values.update(config.get("extra_submit_attributes", {}))
+        return submit_values, resource_defaults, resource_keys
+
+    @staticmethod
+    def _get_resource_data(config, jobs):
+        """Return default and per-job resource settings."""
         resource_defaults = {
             "request_cpus": config.get("request_cpus", 1),
             "request_memory": config.get("request_memory") or "",
@@ -456,10 +500,12 @@ class HTCondorBackend:
         resource_keys = tuple(
             key for key in resource_defaults if any(key in job.resources for job in jobs)
         )
-        uses_container = bool(config.get("container_image") or "container_image" in resource_keys)
+        return resource_defaults, resource_keys
+
+    @staticmethod
+    def _build_worker_submit_values(config, work_dir, event_log, working_directory, uses_container):
+        """Build the fixed HTCondor submit attributes for the worker process."""
         python_executable = config.get("python_executable", _DEFAULT_CONTAINER_PYTHON)
-        container_target_dir = config.get("container_target_dir", _DEFAULT_CONTAINER_TARGET_DIR)
-        worker_executable = _CONTAINER_LAUNCHER if uses_container else sys.executable
         worker_arguments = [
             *([shlex.quote(python_executable)] if uses_container else []),
             shlex.quote("-m"),
@@ -471,8 +517,8 @@ class HTCondorBackend:
             shlex.quote("--log-file"),
             str(work_dir / "logs" / "$(job_id).log"),
         ]
-        submit_values = {
-            "executable": worker_executable,
+        return {
+            "executable": _CONTAINER_LAUNCHER if uses_container else sys.executable,
             "arguments": " ".join(worker_arguments),
             "initialdir": str(working_directory),
             "output": str(work_dir / "stdout" / "$(job_id).out"),
@@ -481,35 +527,44 @@ class HTCondorBackend:
             "should_transfer_files": "NO",
             "request_cpus": str(config.get("request_cpus", 1)),
         }
+
+    @staticmethod
+    def _add_resource_submit_values(submit_values, config, resource_keys):
+        """Add resource defaults and explicit values to a submit description."""
         for key in resource_keys:
             submit_values[key] = f"$({key})"
         for key in ("request_memory", "request_disk", "priority", "container_image"):
             if config.get(key) is not None:
                 submit_values[key] = str(config[key])
+
+    @staticmethod
+    def _add_container_submit_values(submit_values, config, uses_container):
+        """Add container-specific submit attributes when a container is used."""
         if uses_container:
             submit_values["universe"] = "container"
-            submit_values["container_target_dir"] = container_target_dir
-        bind_paths = ()
-        if uses_container:
-            bind_paths = [work_dir.parent, working_directory]
-            bind_paths.extend(
-                Path(mount_path).expanduser().resolve()
-                for job in jobs
-                for mount_path in job.mount_paths
+            submit_values["container_target_dir"] = config.get(
+                "container_target_dir", _DEFAULT_CONTAINER_TARGET_DIR
             )
-            bind_paths.extend(
-                Path(output_path).expanduser().resolve().parent
-                for job in jobs
-                for output_path in job.output_paths
-            )
-            bind_paths = self._minimize_bind_paths(bind_paths)
-        environment = self._read_environment_file(
-            config.get("environment_file"), bind_paths=bind_paths
+
+    @staticmethod
+    def _build_container_bind_paths(uses_container, source_path, work_dir, working_directory, jobs):
+        """Return minimized bind paths needed by container jobs."""
+        if not uses_container:
+            return ()
+        bind_paths = [work_dir.parent, working_directory]
+        if source_path is not None:
+            bind_paths.append(source_path)
+        bind_paths.extend(
+            Path(mount_path).expanduser().resolve()
+            for job in jobs
+            for mount_path in job.mount_paths
         )
-        if environment:
-            submit_values["environment"] = environment
-        submit_values.update(config.get("extra_submit_attributes", {}))
-        return submit_values, resource_defaults, resource_keys
+        bind_paths.extend(
+            Path(output_path).expanduser().resolve().parent
+            for job in jobs
+            for output_path in job.output_paths
+        )
+        return HTCondorBackend._minimize_bind_paths(bind_paths)
 
     @staticmethod
     def _minimize_bind_paths(bind_paths):

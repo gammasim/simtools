@@ -253,3 +253,33 @@ def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory
     assert command[core_scatter_index + 1] == "10 200.0 m"
     view_cone_index = command.index("--view_cone")
     assert command[view_cone_index + 1] == "0.0 deg 5.0 deg"
+
+
+def test_build_simulate_prod_job_specs_uses_remote_environment_paths(tmp_test_directory):
+    """Remote jobs do not override backend-provided simulation software paths."""
+    args = {
+        "backend": "htcondor",
+        "output_path": tmp_test_directory / "output",
+        "sim_telarray_path": Path("/controller/sim_telarray"),
+        "corsika_path": Path("/controller/corsika7"),
+        "corsika_interaction_table_path": Path("/controller/tables"),
+        "_metadata_configuration_sources": {
+            "environment": {
+                "sim_telarray_path",
+                "corsika_path",
+                "corsika_interaction_table_path",
+            }
+        },
+    }
+
+    jobs = job_grid_io.build_simulate_prod_job_specs(
+        args,
+        _job_rows(),
+        app.APPLICATION.build_parser(),
+        _metadata(),
+    )
+
+    command = jobs[0].command
+    assert "--sim_telarray_path" not in command
+    assert "--corsika_path" not in command
+    assert "--corsika_interaction_table_path" not in command

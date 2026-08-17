@@ -147,6 +147,9 @@ def _post_parse(args_dict, config_sources, parser):
         _list_available_corsika_models(args_dict, parser)
     _resolve_job_grid_arguments(args_dict, config_sources, parser)
     _validate_single_interaction_models(args_dict, parser)
+    args_dict["_defer_simulation_dependency_validation"] = bool(
+        args_dict.get("backend", "local") != "local" and args_dict.get("_job_grid_rows")
+    )
 
 
 def _resolve_job_grid_arguments(args_dict, config_sources, parser):

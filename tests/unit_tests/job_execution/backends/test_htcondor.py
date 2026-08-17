@@ -26,6 +26,11 @@ def _raise_cancellation_error(*_args, **_kwargs):
     raise RuntimeError("unavailable")
 
 
+def _environment_entries(environment):
+    """Parse the semicolon-separated HTCondor environment representation."""
+    return dict(item.split("=", maxsplit=1) for item in environment.split(";") if "=" in item)
+
+
 def test_htcondor_validates_resource_sizes():
     """Memory and disk requests must be non-empty expressions."""
     with pytest.raises(BackendConfigurationError, match="request_memory"):
@@ -79,9 +84,29 @@ def test_htcondor_uses_container_python_command(tmp_test_directory):
     )
     assert submit_values["universe"] == "container"
     assert submit_values["container_target_dir"] == "/simtools-run"
-    bind_paths = submit_values["environment"].split("=", 1)[1].split(",")
+    bind_paths = _environment_entries(submit_values["environment"])["APPTAINER_BINDPATH"].split(",")
     assert Path(tmp_test_directory).resolve().parent.as_posix() in bind_paths
     assert Path.cwd().resolve().as_posix() in bind_paths
+
+
+def test_htcondor_exposes_source_checkout_to_container_python(tmp_test_directory):
+    """Container workers can import the source checkout used for submission."""
+    job = JobSpec("job-000000", 0, command=("echo", "ok"))
+    submit_values, _, _ = HTCondorBackend()._build_submit_values(
+        {"container_image": "/shared/simtools.sif"},
+        [job],
+        Path(tmp_test_directory),
+        Path(tmp_test_directory) / "scheduler.log",
+    )
+
+    entries = dict(
+        item.split("=", maxsplit=1)
+        for item in submit_values["environment"].split(";")
+        if "=" in item
+    )
+    source_path = Path(__file__).resolve().parents[4] / "src"
+    assert source_path.as_posix() in entries["PYTHONPATH"].split(":")
+    assert source_path.parent.as_posix() in entries["APPTAINER_BINDPATH"].split(",")
 
 
 def test_htcondor_preserves_submission_working_directory_for_containers(tmp_test_directory):
@@ -99,7 +124,8 @@ def test_htcondor_preserves_submission_working_directory_for_containers(tmp_test
     )
 
     assert submit_values["initialdir"] == str(working_directory)
-    assert str(working_directory) in submit_values["environment"].split("=", 1)[1].split(",")
+    bind_paths = _environment_entries(submit_values["environment"])["APPTAINER_BINDPATH"]
+    assert str(working_directory) in bind_paths.split(",")
 
 
 def test_htcondor_avoids_nested_container_bind_paths(tmp_test_directory):
@@ -115,7 +141,7 @@ def test_htcondor_avoids_nested_container_bind_paths(tmp_test_directory):
         work_dir / "scheduler.log",
     )
 
-    bind_paths = submit_values["environment"].split("=", 1)[1].split(",")
+    bind_paths = _environment_entries(submit_values["environment"])["APPTAINER_BINDPATH"].split(",")
     assert work_dir.resolve().parent.as_posix() in bind_paths
     assert Path.cwd().resolve().as_posix() in bind_paths
 

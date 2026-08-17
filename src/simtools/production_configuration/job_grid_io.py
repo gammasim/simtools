@@ -412,56 +412,90 @@ def build_simulate_prod_job_specs(args_dict, rows, parser, metadata=None):
     """
     metadata = metadata or {}
     output_root = Path(args_dict["output_path"]).expanduser().resolve()
-    jobs = []
-    for index, row in enumerate(rows):
-        job_args = {
-            key: value
-            for key, value in args_dict.items()
-            if key not in _SIMULATE_PROD_CONTROLLER_FIELDS
-            and f"--{key}" in parser._option_string_actions  # pylint: disable=protected-access
-        }
-        job_args.update(job_grid_row_to_simulate_prod_args(row, metadata))
-        job_args = {
-            key: value
-            for key, value in job_args.items()
-            if f"--{key}" in parser._option_string_actions  # pylint: disable=protected-access
-        }
-        output_path = output_root / f"job-{index:06d}"
-        job_args["output_path"] = str(output_path)
-        mount_paths = [output_path]
-        output_paths = [output_path]
-        if job_args.get("grid_output_path"):
-            grid_output_path = Path(job_args["grid_output_path"]) / f"job-{index:06d}"
-            job_args["grid_output_path"] = str(grid_output_path)
-            mount_paths.append(grid_output_path)
-            output_paths.append(grid_output_path)
-        if row.get("scan_label"):
-            label = job_args.get("label") or "simulate-prod"
-            job_args["label"] = f"{label}_{row['scan_label']}"
+    return [
+        _build_simulate_prod_job_spec(args_dict, row, index, output_root, parser, metadata)
+        for index, row in enumerate(rows)
+    ]
 
-        for key in _SIMULATE_PROD_PATH_FIELDS:
-            if job_args.get(key):
-                job_args[key] = str(Path(job_args[key]).expanduser().resolve())
-        job_args = {
-            key: " ".join(map(str, value)) if isinstance(value, tuple) else value
-            for key, value in job_args.items()
-        }
 
-        command = [
-            sys.executable,
-            "-m",
-            "simtools.applications.simulate_prod",
-            "--backend",
-            "local",
-        ]
-        command.extend(Configurator.arglist_from_dict(job_args, parser=parser))
-        jobs.append(
-            JobSpec(
-                f"job-{index:06d}",
-                index,
-                command=tuple(command),
-                mount_paths=tuple(mount_paths),
-                output_paths=tuple(output_paths),
-            )
-        )
-    return jobs
+def _build_simulate_prod_job_spec(args_dict, row, index, output_root, parser, metadata):
+    """Build one local command job for a production-grid row."""
+    job_args = _job_args_for_simulate_prod(args_dict, row, parser, metadata)
+    output_path = output_root / f"job-{index:06d}"
+    job_args["output_path"] = str(output_path)
+    mount_paths = [output_path]
+    output_paths = [output_path]
+    _add_grid_output_path(job_args, index, mount_paths, output_paths)
+    _add_scan_label(job_args, row)
+    _normalize_simulate_prod_paths(job_args, args_dict)
+    job_args = {
+        key: " ".join(map(str, value)) if isinstance(value, tuple) else value
+        for key, value in job_args.items()
+    }
+    command = [
+        sys.executable,
+        "-m",
+        "simtools.applications.simulate_prod",
+        "--backend",
+        "local",
+    ]
+    command.extend(Configurator.arglist_from_dict(job_args, parser=parser))
+    return JobSpec(
+        f"job-{index:06d}",
+        index,
+        command=tuple(command),
+        mount_paths=tuple(mount_paths),
+        output_paths=tuple(output_paths),
+    )
+
+
+def _job_args_for_simulate_prod(args_dict, row, parser, metadata):
+    """Return parser-supported controller and row arguments for one job."""
+    job_args = {
+        key: value
+        for key, value in args_dict.items()
+        if key not in _SIMULATE_PROD_CONTROLLER_FIELDS
+        and f"--{key}" in parser._option_string_actions  # pylint: disable=protected-access
+    }
+    job_args.update(job_grid_row_to_simulate_prod_args(row, metadata))
+    return {
+        key: value
+        for key, value in job_args.items()
+        if f"--{key}" in parser._option_string_actions  # pylint: disable=protected-access
+    }
+
+
+def _add_grid_output_path(job_args, index, mount_paths, output_paths):
+    """Add a per-job grid output path and its expected output mount."""
+    if not job_args.get("grid_output_path"):
+        return
+    grid_output_path = Path(job_args["grid_output_path"]) / f"job-{index:06d}"
+    job_args["grid_output_path"] = str(grid_output_path)
+    mount_paths.append(grid_output_path)
+    output_paths.append(grid_output_path)
+
+
+def _add_scan_label(job_args, row):
+    """Append an optional scan label to the job label."""
+    if row.get("scan_label"):
+        label = job_args.get("label") or "simulate-prod"
+        job_args["label"] = f"{label}_{row['scan_label']}"
+
+
+def _normalize_simulate_prod_paths(job_args, args_dict):
+    """Normalize paths while allowing remote environments to provide them."""
+    for key in _SIMULATE_PROD_PATH_FIELDS:
+        if not _should_forward_path(args_dict, key):
+            job_args.pop(key, None)
+        elif job_args.get(key):
+            job_args[key] = str(Path(job_args[key]).expanduser().resolve())
+
+
+def _should_forward_path(args_dict, key):
+    """Return whether a simulation path should be passed to a remote job."""
+    if args_dict.get("backend", "local") == "local":
+        return True
+
+    sources = args_dict.get("_metadata_configuration_sources", {})
+    explicit_sources = ("cli", "yaml", "constructor")
+    return any(key in sources.get(source, ()) for source in explicit_sources)
