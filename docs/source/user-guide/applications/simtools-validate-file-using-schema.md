@@ -8,8 +8,9 @@
 
 ## Overview
 
-This application validates YAML, JSON, and ECSV files against simtools schemas. Use `file_name`
-for one file or a filename pattern, or use `file_directory` to validate files in a directory.
+This application validates YAML, JSON, ECSV, and supported structured HDF5 products against
+simtools schemas. Use `file_name` for one file, or use `file_directory` where supported to validate
+files in a directory.
 
 When `schema_file` is omitted for model-parameter validation, simtools uses its bundled
 model-parameter schemas. The `data_type` option selects the validation mode:
@@ -20,6 +21,8 @@ model-parameter schemas. The `data_type` option selects the validation mode:
 | `metadata` | Validate metadata files. |
 | `schema` | Validate a schema document against a metaschema. |
 | `model_parameter` | Validate model-parameter files using the model-parameter schemas. |
+| `reduced_event_data` | Validate a reduced-event HDF5 product. |
+| `trigger_histograms` | Validate a trigger-histogram HDF5 product. |
 
 Pass `schema_file` when the schema is not selected automatically. Use `check_exact_data_type` to
 require the exact declared data type, and `ignore_software_version` to skip software-version

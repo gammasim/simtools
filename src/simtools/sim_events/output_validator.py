@@ -32,6 +32,13 @@ _TRIGGER_HISTOGRAM_TABLES = (
     TRIGGER_TOPOLOGY_COUNTS_TABLE,
     TRIGGER_SUBSET_HISTOGRAMS_TABLE,
 )
+_TRIGGER_HISTOGRAM_TABLE_SCHEMAS = {
+    TRIGGER_HISTOGRAM_METADATA_TABLE: SCHEMA_PATH
+    / "trigger_histogram_reference_metadata.schema.yml",
+    TRIGGER_HISTOGRAM_BINS_TABLE: SCHEMA_PATH / "trigger_histogram_reference_bins.schema.yml",
+    TRIGGER_TOPOLOGY_COUNTS_TABLE: SCHEMA_PATH / "trigger_histogram_topology_counts.schema.yml",
+    TRIGGER_SUBSET_HISTOGRAMS_TABLE: SCHEMA_PATH / "trigger_histogram_subset_histograms.schema.yml",
+}
 
 
 def validate_sim_events(data_files, expected_mc_events):
@@ -102,7 +109,27 @@ def validate_event_numbers(data_files, expected_mc_events):
 
 
 def validate_reduced_event_data_file(data_file):
-    """Validate the structure, tables, metadata, and references of one reduced-event file."""
+    """Validate the structure, tables, metadata, and references of one reduced-event file.
+
+    Parameters
+    ----------
+    data_file : str or pathlib.Path
+        HDF5 reduced-event file to validate.
+
+    Returns
+    -------
+    bool
+        ``True`` when the file passes all structural and semantic checks.
+
+    Raises
+    ------
+    ValueError
+        If the file format, required entries, metadata, or references are invalid.
+    KeyError
+        If a required table column is missing.
+    OSError
+        If ``data_file`` is not a readable HDF5 file.
+    """
     if table_handler.read_table_file_type([data_file]) != "HDF5":
         raise ValueError(f"Reduced event data file '{data_file}' must be an HDF5 file.")
 
@@ -134,7 +161,27 @@ def validate_reduced_event_data_file(data_file):
 
 
 def validate_trigger_histogram_file(data_file):
-    """Validate the structure, metadata, and references of one trigger-histogram file."""
+    """Validate the structure, tables, metadata, and references of one trigger-histogram file.
+
+    Parameters
+    ----------
+    data_file : str or pathlib.Path
+        HDF5 trigger-histogram file to validate.
+
+    Returns
+    -------
+    bool
+        ``True`` when the file passes all structural and semantic checks.
+
+    Raises
+    ------
+    ValueError
+        If the file format, required entries, metadata, table contents, or references are invalid.
+    KeyError
+        If a required table column is missing.
+    OSError
+        If ``data_file`` is not a readable HDF5 file.
+    """
     if table_handler.read_table_file_type([data_file]) != "HDF5":
         raise ValueError(f"Trigger histogram file '{data_file}' must be an HDF5 file.")
 
@@ -149,6 +196,11 @@ def validate_trigger_histogram_file(data_file):
     standard_metadata = table_handler.read_metadata_document(data_file, "METADATA")
     schema.validate_dict_using_schema(standard_metadata, schema_file=METADATA_JSON_SCHEMA)
     tables = table_handler.read_tables(data_file, list(_TRIGGER_HISTOGRAM_TABLES), file_type="HDF5")
+    for table_name, schema_file in _TRIGGER_HISTOGRAM_TABLE_SCHEMAS.items():
+        validate_data.DataValidator(
+            schema_file=schema_file,
+            data_table=tables[table_name],
+        ).validate_and_transform()
     reference_ids = _validate_trigger_histogram_table_references(tables, data_file)
     _validate_trigger_histogram_dense_payload(data_file, reference_ids)
     return True
@@ -227,16 +279,44 @@ def _validate_dense_histogram_payload(histogram_name, histogram_group, data_file
         raise ValueError(
             f"Trigger histogram file '{data_file}' payload '{histogram_name}' is not a group."
         )
-    if "values" not in histogram_group or not isinstance(histogram_group["values"], h5py.Dataset):
+    values = histogram_group.get("values")
+    if not isinstance(values, h5py.Dataset):
         raise ValueError(
             f"Trigger histogram file '{data_file}' payload '{histogram_name}' "
             "has no values dataset."
         )
-    if not any(name.startswith("edges_") for name in histogram_group):
+    if values.ndim == 0 or not np.issubdtype(values.dtype, np.number):
         raise ValueError(
             f"Trigger histogram file '{data_file}' payload '{histogram_name}' "
-            "has no bin-edge dataset."
+            "has invalid values data."
         )
+
+    edge_names = [name for name in histogram_group if name != "values"]
+    expected_edge_names = [f"edges_{axis_index}" for axis_index in range(values.ndim)]
+    if set(edge_names) != set(expected_edge_names):
+        raise ValueError(
+            f"Trigger histogram file '{data_file}' payload '{histogram_name}' "
+            f"has invalid bin-edge datasets: expected {expected_edge_names}, "
+            f"found {sorted(edge_names)}."
+        )
+    for axis_index, edge_name in enumerate(expected_edge_names):
+        edges = histogram_group[edge_name]
+        if not isinstance(edges, h5py.Dataset) or edges.ndim != 1:
+            raise ValueError(
+                f"Trigger histogram file '{data_file}' payload '{histogram_name}' "
+                f"edge dataset '{edge_name}' is not a one-dimensional dataset."
+            )
+        if not np.issubdtype(edges.dtype, np.number):
+            raise ValueError(
+                f"Trigger histogram file '{data_file}' payload '{histogram_name}' "
+                f"edge dataset '{edge_name}' is not numeric."
+            )
+        expected_length = values.shape[axis_index] + 1
+        if len(edges) != expected_length:
+            raise ValueError(
+                f"Trigger histogram file '{data_file}' payload '{histogram_name}' "
+                f"edge dataset '{edge_name}' has {len(edges)} values, expected {expected_length}."
+            )
 
 
 def _validate_reduced_event_table_references(tables, data_file):
@@ -256,6 +336,10 @@ def _validate_reduced_event_table_references(tables, data_file):
         tuple(int(row[name]) for name in ("file_id", "event_id", "shower_id"))
         for row in tables["SHOWERS"]
     }
+    if len(shower_ids) != len(tables["SHOWERS"]):
+        raise ValueError(
+            f"Reduced event data file '{data_file}' contains duplicate shower composite keys."
+        )
     trigger_ids = {
         tuple(int(row[name]) for name in ("file_id", "event_id", "shower_id"))
         for row in tables["TRIGGERS"]
