@@ -151,7 +151,7 @@ def test_validate_optics_no_images(tmp_test_directory):
         "offset_file": None,
         "offset_directions": "N,S,E,W",
         "plot_images": False,
-        "export_model_parameter": False,
+        "save_photons": False,
         "label": "validate_optics",
         "test": True,
     }
@@ -172,17 +172,17 @@ def test_validate_optics_no_images(tmp_test_directory):
         patch("simtools.ray_tracing.optics_validation.RayTracing", return_value=mock_ray),
         patch("simtools.ray_tracing.optics_validation.visualize.save_figure"),
         patch(
-            "simtools.ray_tracing.optics_validation."
-            "model_data_writer.ModelDataWriter.write_model_parameter"
-        ) as mock_write_model_parameter,
+            "simtools.ray_tracing.optics_validation._export_effective_focal_length_model_parameter"
+        ) as mock_export_model_parameter,
     ):
         optics_validation.validate_optics(app_context)
 
-        mock_write_model_parameter.assert_not_called()
+        mock_export_model_parameter.assert_called_once()
 
         mock_ray.simulate.assert_called_once_with(test=True, force=False)
-        mock_ray.analyze.assert_called_once_with(force=True)
+        mock_ray.analyze.assert_called_once_with(force=True, save_photons=False)
         assert mock_ray.plot.call_count == 4
+        assert mock_ray.plot.call_args_list[-1].kwargs["error_type"] == "errorbar"
 
 
 def test_validate_optics_with_images_and_default_label(tmp_test_directory):
@@ -198,7 +198,7 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
         "offset_file": None,
         "offset_directions": None,
         "plot_images": True,
-        "export_model_parameter": False,
+        "save_photons": False,
         "label": None,
         "test": True,
     }
@@ -241,9 +241,8 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
         ) as mock_save_pdf,
         patch("simtools.ray_tracing.optics_validation.visualize.save_figure") as mock_save,
         patch(
-            "simtools.ray_tracing.optics_validation."
-            "model_data_writer.ModelDataWriter.write_model_parameter"
-        ) as mock_write_model_parameter,
+            "simtools.ray_tracing.optics_validation._export_effective_focal_length_model_parameter"
+        ) as mock_export_model_parameter,
     ):
         optics_validation.validate_optics(app_context)
 
@@ -256,7 +255,7 @@ def test_validate_optics_with_images_and_default_label(tmp_test_directory):
     assert all(call.kwargs["close"] is True for call in mock_save.call_args_list)
     assert mock_create_figure.call_count == 2
     assert mock_save_pdf.call_args.kwargs["close"] is True
-    mock_write_model_parameter.assert_not_called()
+    mock_export_model_parameter.assert_called_once()
 
 
 def test_validate_optics_exports_effective_focal_length_model_parameter(tmp_test_directory):

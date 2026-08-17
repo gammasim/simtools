@@ -184,23 +184,31 @@ def validate_optics(app_context):
         offset_directions=offset_directions,
     )
     ray.simulate(test=args_dict["test"], force=False)
-    ray.analyze(force=True)
+    ray.analyze(force=True, save_photons=args_dict.get("save_photons", False))
 
     for key in ["psf_deg", "psf_cm", "eff_area", "eff_flen"]:
-        fig = ray.plot(key, marker="o", linestyle="none", color="k")
+        plot_kwargs = {"marker": "o", "linestyle": "none", "color": "k"}
+        if key == "eff_flen":
+            plot_kwargs.update(
+                {
+                    "error_type": "errorbar",
+                    "error_label": "Uncertainty",
+                    "markersize": 4,
+                }
+            )
+        fig = ray.plot(key, **plot_kwargs)
         plot_file_name = "_".join((label, tel_model.name, key))
         plot_file = io_handler.get_output_file(plot_file_name)
         visualize.save_figure(fig, plot_file, close=True)
 
-    if args_dict.get("export_model_parameter", False):
-        _export_effective_focal_length_model_parameter(
-            ray=ray,
-            telescope_name=tel_model.name,
-            model_version=args_dict["model_version"],
-            parameter_version=args_dict.get("parameter_version"),
-            output_directory=io_handler.get_output_directory(),
-            metadata_input_dict=args_dict,
-        )
+    _export_effective_focal_length_model_parameter(
+        ray=ray,
+        telescope_name=tel_model.name,
+        model_version=args_dict["model_version"],
+        parameter_version=args_dict.get("parameter_version"),
+        output_directory=io_handler.get_output_directory(),
+        metadata_input_dict=args_dict,
+    )
 
     if args_dict["plot_images"]:
         plot_file_name = "_".join((label, tel_model.name, "images.pdf"))
