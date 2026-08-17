@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-simulate-flasher
+  docs:
+    title: Simulate an MSFx flash for a North NectarCam
+    summary: Propagate an MSFx calibration pulse through the optics and NectarCam camera of MSTN-04.
   configuration:
     run_mode: full_simulation
     light_source: MSFx-NectarCam

@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-simulate-flasher
+  docs:
+    title: Simulate an MSFx flash for a South FlashCam
+    summary: Propagate an MSFx calibration pulse through the optics and FlashCam camera of MSTS-04.
   configuration:
     run_mode: full_simulation
     light_source: MSFx-FlashCam

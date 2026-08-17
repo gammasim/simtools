@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-r"""Validate data, metadata, and schemas against simtools schemas."""
+"""Validate data, metadata, and schemas against simtools schemas."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

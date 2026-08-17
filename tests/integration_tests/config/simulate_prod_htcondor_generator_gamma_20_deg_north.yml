@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-simulate-prod-htcondor-generator
+  docs:
+    title: Generate HTCondor jobs for a North gamma production
+    summary: Convert a horizontal gamma-ray job grid into HTCondor submission and parameter files.
   configuration:
     apptainer_image: tests/resources/static/dummy_apptainer_image.sif
     job_grid_file: tests/resources/generated/production_grid_points_horizontal.ecsv

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-r"""Generate and check versioned integration-test resources for a simtools release."""
+"""Generate and check versioned integration-test resources for a simtools release."""
 
 from pathlib import Path
 

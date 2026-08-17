@@ -3,8 +3,7 @@ applications:
 - application: simtools-production-derive-monte-carlo-statistics
   docs:
     title: Estimate Monte Carlo statistics from uncertainty
-    summary: >
-      Determine event statistics for a target relative uncertainty over an energy range.
+    summary: Determine event statistics for a target relative uncertainty over an energy range.
   configuration:
     trigger_histogram_file: ${generated:gamma_diffuse_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test.trigger_histograms.hdf5}
     optimization_energy_max: 100 TeV

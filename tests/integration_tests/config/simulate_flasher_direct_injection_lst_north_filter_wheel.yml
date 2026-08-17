@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-simulate-flasher
+  docs:
+    title: Inject an LST filter-wheel intensity sequence
+    summary: >-
+      Generate North-LST camera calibration events at two photon intensities by direct signal
+      injection.
   configuration:
     run_mode: direct_injection
     light_source_type: flat_fielding

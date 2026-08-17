@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-convert-geo-coordinates-of-array-elements
+  docs:
+    title: Print UTM positions in ground coordinates
+    summary: >-
+      Convert North-site UTM array positions to ground coordinates and print the compact telescope
+      list.
   configuration:
     array_element_positions_file: ${static:telescope_positions-North-utm.ecsv}
     model_version: 6.0.2

@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-simulate-prod-htcondor-generator
+  docs:
+    title: Generate HTCondor jobs for an NSB threshold scan
+    summary: >-
+      Translate a bias-curve NSB scan grid into HTCondor submission, parameter, and execution files.
   configuration:
     apptainer_image: ${static:dummy_apptainer_image.sif}
     job_grid_file: ${generated:bias_curve_scan_grids/nsb/scan_grid.ecsv}
