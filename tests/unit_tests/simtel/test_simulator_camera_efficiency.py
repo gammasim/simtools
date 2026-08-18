@@ -7,7 +7,6 @@ import astropy.units as u
 import pytest
 
 from simtools.camera.camera_efficiency import CameraEfficiency
-from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 
 logger = logging.getLogger()
@@ -78,11 +77,18 @@ def test_make_run_command(simulator_camera_efficiency):
     assert std_err_file is None
 
 
-def test_make_run_command_with_nsb_spectrum(simulator_camera_efficiency):
-    # With mocked database, just verify make_run_command() executes without errors
-    simulator_camera_efficiency.nsb_spectrum = (
-        f"{TEST_RESOURCES_GENERATED}/model_parameters/Benn_LaPalma_sky_converted.lis"
+def test_make_run_command_with_nsb_spectrum(
+    simulator_camera_efficiency, mocker, tmp_test_directory
+):
+    # Use a compact local spectrum; this test verifies command construction, not file parsing.
+    nsb_spectrum = Path(tmp_test_directory) / "nsb_spectrum.lis"
+    nsb_spectrum.write_text("300 1\n650 1\n", encoding="utf-8")
+    mocker.patch.object(
+        simulator_camera_efficiency,
+        "_validate_or_fix_nsb_spectrum_file_format",
+        return_value=nsb_spectrum,
     )
+    simulator_camera_efficiency.nsb_spectrum = nsb_spectrum
     command, _, _ = simulator_camera_efficiency.make_run_command()
 
     # Verify command is a list
@@ -93,7 +99,7 @@ def test_make_run_command_with_nsb_spectrum(simulator_camera_efficiency):
     assert "-fnsb" in command
     assert "-alt" in command
     # Verify the nsb spectrum file is in the command
-    assert any("Benn_LaPalma_sky_converted.lis" in str(cmd) for cmd in command)
+    assert any(str(nsb_spectrum) in str(cmd) for cmd in command)
 
 
 def test_make_run_command_without_altitude_correction(simulator_camera_efficiency):
