@@ -595,8 +595,13 @@ def _apply_changes_to_model_parameters(
                     _create_new_model_parameter_entry(
                         telescope, param, param_data, simulation_models_path
                     )
-            except (KeyError, TypeError, ValueError) as exc:
-                entry_details = ", ".join(f"{key}={value!r}" for key, value in param_data.items())
+            except (KeyError, TypeError, ValueError, AttributeError) as exc:
+                if isinstance(param_data, dict):
+                    entry_details = ", ".join(
+                        f"{key}={value!r}" for key, value in param_data.items()
+                    )
+                else:
+                    entry_details = f"param_data={param_data!r}"
                 raise type(exc)(
                     f"Failed to process info.yml entry '{telescope} -> {param}' "
                     f"({entry_details}): {exc}"
