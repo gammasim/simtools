@@ -57,29 +57,22 @@ def prepare_results_file(camera_efficiency_lst, mocker, tmp_test_directory):
     )
 
     wavelength = np.arange(200.0, 1001.0)
-    c1 = np.full(wavelength.size, 2.0)
-    c2 = c1 * 0.75 * 1.25
-    c3 = c1 * 0.5
-    c4 = c1 * 0.3
-    c4x = c1 * 0.4
-    n1 = np.full(wavelength.size, 3.0)
-    n2 = n1 * 0.9
-    n3 = n1 * 0.4
-    n4 = n1 * 0.2
-    n4x = n1 * 0.25
+    efficiencies = {
+        "C1": 2.0,
+        "C2": 2.0 * 0.75 * 1.25,
+        "C3": 2.0 * 0.5,
+        "C4": 2.0 * 0.3,
+        "C4x": 2.0 * 0.4,
+        "N1": 3.0,
+        "N2": 3.0 * 0.9,
+        "N3": 3.0 * 0.4,
+        "N4": 3.0 * 0.2,
+        "N4x": 3.0 * 0.25,
+    }
     result_table = Table(
         {
             "wl": wavelength,
-            "C1": c1,
-            "C2": c2,
-            "C3": c3,
-            "C4": c4,
-            "C4x": c4x,
-            "N1": n1,
-            "N2": n2,
-            "N3": n3,
-            "N4": n4,
-            "N4x": n4x,
+            **{name: np.full(wavelength.size, value) for name, value in efficiencies.items()},
             "masts": np.full(wavelength.size, 1.25),
         }
     )

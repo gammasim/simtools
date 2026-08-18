@@ -10,17 +10,19 @@ from simtools.model.mirrors import InvalidMirrorListFileError, Mirrors
 
 logger = logging.getLogger()
 
+MIRROR_COUNT = 6
+MIRROR_PANEL_ID = MIRROR_COUNT - 1
+
 
 def _write_mirror_table(tmp_test_directory):
-    number_of_mirrors = 198
     mirror_table = Table(
         {
-            "mirror_x": [1022.49] * number_of_mirrors,
-            "mirror_y": [-462.0] * number_of_mirrors,
-            "mirror_diameter": [151.0] * number_of_mirrors,
-            "focal_length": [2920.0] * number_of_mirrors,
-            "shape_type": [3] * number_of_mirrors,
-            "mirror_panel_id": list(range(number_of_mirrors)),
+            "mirror_x": [1022.49] * MIRROR_COUNT,
+            "mirror_y": [-462.0] * MIRROR_COUNT,
+            "mirror_diameter": [151.0] * MIRROR_COUNT,
+            "focal_length": [2920.0] * MIRROR_COUNT,
+            "shape_type": [3] * MIRROR_COUNT,
+            "mirror_panel_id": list(range(MIRROR_COUNT)),
         }
     )
     for column_name in ("mirror_x", "mirror_y", "mirror_diameter", "focal_length"):
@@ -41,7 +43,8 @@ def mirror_template_ecsv(tmp_test_directory):
 def mirror_template_simtel(tmp_test_directory):
     mirror_list_file = tmp_test_directory / "mirrors.dat"
     rows = [
-        f"1022.49 -462.0 151.0 2920.0 3 0 0 mirror_panel_{mirror_id}\n" for mirror_id in range(198)
+        f"1022.49 -462.0 151.0 2920.0 3 0 0 mirror_panel_{mirror_id}\n"
+        for mirror_id in range(MIRROR_COUNT)
     ]
     Path(mirror_list_file).write_text("".join(rows), encoding="utf-8")
     logger.info(f"Using mirror list with simtel format {mirror_list_file}")
@@ -64,7 +67,7 @@ def write_tmp_mirror_list(tmp_test_directory, incomplete_mirror_table):
 
 def test_read_mirror_list_from_sim_telarray(mirror_template_simtel, tmp_test_directory):
     mirrors = mirror_template_simtel
-    assert 198 == mirrors.number_of_mirrors
+    assert MIRROR_COUNT == mirrors.number_of_mirrors
     assert mirrors.mirror_diameter.value == pytest.approx(151.0)
     assert 3 == mirrors.shape_type
 
@@ -74,7 +77,7 @@ def test_read_mirror_list_from_sim_telarray(mirror_template_simtel, tmp_test_dir
     mirrors.mirror_table[columns_to_write].write(tmp_mirror_list, format="ascii.no_header")
 
     red_mirrors = Mirrors(mirror_list_file=tmp_mirror_list)
-    assert 198 == red_mirrors.number_of_mirrors
+    assert MIRROR_COUNT == red_mirrors.number_of_mirrors
     assert red_mirrors.mirror_table["mirror_panel_id"][0] == 0
     assert red_mirrors.mirror_table["mirror_panel_id"][5] == 5
     assert "mirror_z" not in red_mirrors.mirror_table.columns
@@ -82,7 +85,7 @@ def test_read_mirror_list_from_sim_telarray(mirror_template_simtel, tmp_test_dir
 
 def test_read_mirror_list_from_ecsv(mirror_template_ecsv):
     mirrors = mirror_template_ecsv
-    assert 198 == mirrors.number_of_mirrors
+    assert MIRROR_COUNT == mirrors.number_of_mirrors
     assert mirrors.mirror_diameter.value == pytest.approx(151.0)
     assert 3 == mirrors.shape_type
 
@@ -147,12 +150,12 @@ def assert_mirror_parameters(mirror_x, mirror_y, mirror_diameter, focal_length, 
 
 def test_get_single_mirror_parameters_ecsv(mirror_template_ecsv):
     mirrors = mirror_template_ecsv
-    assert_mirror_parameters(*mirrors.get_single_mirror_parameters(198))
+    assert_mirror_parameters(*mirrors.get_single_mirror_parameters(MIRROR_PANEL_ID))
 
 
 def test_get_single_mirror_parameters_simtel(mirror_template_simtel):
     mirrors = mirror_template_simtel
-    assert_mirror_parameters(*mirrors.get_single_mirror_parameters(198))
+    assert_mirror_parameters(*mirrors.get_single_mirror_parameters(MIRROR_PANEL_ID))
 
 
 def test_get_single_mirror_parameters_simtel_wrong_id(mirror_template_simtel):
@@ -171,6 +174,6 @@ def test_get_single_mirror_parameters_simtel_missing_column(mirror_template_simt
         _mirror_diameter,
         focal_length,
         _shape_type,
-    ) = mirrors.get_single_mirror_parameters(198)
+    ) = mirrors.get_single_mirror_parameters(MIRROR_PANEL_ID)
     assert 0 == mirror_x
     assert focal_length.value == pytest.approx(2920.0)

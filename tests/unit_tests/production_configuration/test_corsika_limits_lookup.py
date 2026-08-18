@@ -20,7 +20,7 @@ def corsika_limits_for_test_file(tmp_test_directory):
     table_columns = schema["data"][0]["table_columns"]
     column_names = [column["name"] for column in table_columns]
     rows = []
-    for array_name in [ARRAY_LAYOUT_NAME, *[f"other-layout-{index}" for index in range(5)]]:
+    for array_name in (ARRAY_LAYOUT_NAME, "other-layout"):
         for zenith, azimuth, nsb_level in product(
             (20.0, 40.0), (0.0, 180.0, 90.0, 270.0), (0.24, 0.84)
         ):
@@ -78,7 +78,7 @@ def test_load_matching_lookup_arrays_without_layout_returns_all_rows(corsika_lim
 
     arrays = lookup.load_matching_lookup_arrays()
 
-    assert len(arrays["points"]) == 96
+    assert len(arrays["points"]) == 32
 
 
 def test_prepare_point_interpolators_builds_interpolator_state(corsika_limits_for_test_file):

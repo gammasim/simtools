@@ -11,15 +11,13 @@ from astropy import units as u
 from astropy.table import Column, Table
 from astropy.utils.diff import report_diff_values
 
-from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH, TEST_RESOURCES_STATIC
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
 from simtools.data_model import schema, validate_data
 from simtools.io import ascii_handler
 
 logger = logging.getLogger()
 
-mirror_file = f"{TEST_RESOURCES_STATIC}/MLTdata-preproduction.ecsv"
 mirror_2f_schema_file = SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
-num_gains_test_file = f"{TEST_RESOURCES_STATIC}/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
 
 
 def _write_mirror_file(tmp_test_directory):
@@ -1101,7 +1099,7 @@ def test_validate_data_files_reads_schema_from_ecsv_metadata(tmp_test_directory,
 
 
 def test_validate_data_files_falls_back_to_model_parameter_schema_when_metadata_missing(
-    monkeypatch,
+    monkeypatch, tmp_test_directory
 ):
     captured = {}
 
@@ -1113,13 +1111,11 @@ def test_validate_data_files_falls_back_to_model_parameter_schema_when_metadata_
         validate_data.DataValidator, "validate_and_transform", _validate_and_transform
     )
 
-    validate_data.DataValidator.validate_data_files(
-        file_name=num_gains_test_file,
-        is_model_parameter=False,
-    )
+    test_file = tmp_test_directory / "num_gains-1.0.0.json"
+    validate_data.DataValidator.validate_data_files(file_name=test_file, is_model_parameter=False)
 
     assert captured["schema_file"] == MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
-    assert captured["data_file"] == Path(num_gains_test_file)
+    assert captured["data_file"] == test_file
 
 
 def test_validate_data_files_no_input():

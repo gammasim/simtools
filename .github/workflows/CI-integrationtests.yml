@@ -274,6 +274,8 @@ jobs:
   prepare_test_resources:
     name: download test resources
     runs-on: ubuntu-latest
+    outputs:
+      test_resources_version: ${{ steps.test_resources.outputs.version }}
 
     defaults:
       run:
@@ -343,11 +345,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set test resource version
-        id: test_resources
+      - name: Configure test resources
         run: |
-          SIMTOOLS_TESTS_VERSION=$(grep '^SIMTOOLS_TESTS_VERSION=' .env_template | cut -d '=' -f2-)
-          echo "version=$SIMTOOLS_TESTS_VERSION" >> "$GITHUB_OUTPUT"
+          SIMTOOLS_TESTS_VERSION="${{ needs.prepare_test_resources.outputs.test_resources_version }}"
           {
             echo "SIMTOOLS_TESTS_PATH=$GITHUB_WORKSPACE/simtools-tests/simtools-tests"
             echo "SIMTOOLS_TESTS_VERSION=$SIMTOOLS_TESTS_VERSION"
