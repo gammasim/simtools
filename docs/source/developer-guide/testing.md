@@ -14,6 +14,7 @@
 
 testing_unit.md
 testing_integration.md
+testing_benchmarks.md
 testing_science.md
 testing_resources.md
 ```
