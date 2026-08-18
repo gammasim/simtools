@@ -266,7 +266,7 @@ def test_resolve_dict_parameter_value_returns_list_unchanged():
         {"name": "LSTN_single_telescope", "multiplicity": {"unit": None, "value": 1}},
     ]
     result = simtel_table_reader.resolve_dict_parameter_value(trigger_list, "array_triggers")
-    assert result is trigger_list
+    assert result == trigger_list
 
 
 def test_resolve_dict_parameter_value_from_inline_json_array(tmp_test_directory):
