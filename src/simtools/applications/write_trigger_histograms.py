@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-r"""Create trigger-histogram products from reduced event lists."""
+"""Create trigger-histogram products from reduced event lists."""
 
 import astropy.units as u
 

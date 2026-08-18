@@ -20,6 +20,10 @@ from simtools.constants import (
 from simtools.data_model import schema, schema_loader
 from simtools.io import ascii_handler
 
+_INTEGRATION_CONFIG_FILES = sorted(
+    (Path(__file__).parents[2] / "integration_tests" / "config").glob("*.yml")
+)
+
 
 def test_get_model_parameter_schema_files(tmp_test_directory):
     par, files = schema.get_model_parameter_schema_files()
@@ -148,28 +152,35 @@ def test_validate_dict_using_schema(tmp_test_directory, caplog):
         schema.validate_dict_using_schema(invalid_data, schema_file)
 
 
-def _output_validation_workflow(*rules):
-    """Build a minimal workflow containing declarative output rules."""
+def _output_validation_workflow(*validations):
+    """Build a minimal workflow containing composable output validators."""
     return {
-        "schema_version": "0.4.0",
+        "schema_version": "0.5.0",
         "schema_name": "application_workflow.metaschema",
         "applications": [
             {
                 "application": "simtools-test",
                 "configuration": {"output_path": "output"},
-                "integration_tests": [{"output_validation": list(rules)}],
+                "integration_tests": [
+                    {
+                        "test_outputs": [
+                            {
+                                "path_descriptor": "output_path",
+                                "file": "output.ecsv",
+                                "validations": list(validations),
+                            }
+                        ]
+                    }
+                ],
             }
         ],
     }
 
 
 def _valid_output_validation_rule():
-    """Build a representative table rule for metaschema tests."""
+    """Build a representative table validator for metaschema tests."""
     return {
-        "name": "table",
-        "path_descriptor": "output_path",
-        "file": "output.ecsv",
-        "data_product_schema": "schema.yml",
+        "type": "table",
         "minimum_rows": 1,
         "unique_columns": ["id"],
         "columns": {
@@ -177,17 +188,20 @@ def _valid_output_validation_rule():
                 "range": {"minimum": 1.0, "unit": "GeV"},
             },
         },
-        "metadata": {
-            "required_keys": ["summary"],
-            "row_count": "summary.rows",
-            "column_sums": {"energy": "summary.total"},
-        },
     }
 
 
-def test_application_workflow_schema_accepts_output_validation_rules():
-    """Test the table output-validation configuration shape."""
-    workflow_config = _output_validation_workflow(_valid_output_validation_rule())
+def test_application_workflow_schema_accepts_output_validators():
+    """Test composable output-validator configuration shapes."""
+    workflow_config = _output_validation_workflow(
+        {"type": "data_schema", "schema": "schema.yml"},
+        _valid_output_validation_rule(),
+        {
+            "type": "metadata",
+            "required_keys": ["summary"],
+            "relations": [{"left": "summary.rows", "equals": "table.row_count"}],
+        },
+    )
 
     schema.validate_dict_using_schema(
         workflow_config,
@@ -239,11 +253,10 @@ def test_application_workflow_schema_accepts_profiled_output_validation_rule():
         lambda rule: rule["columns"]["energy"].update({"range": {"minimum": "bad"}}),
         lambda rule: rule["columns"]["energy"].update({"range": {"unit": "GeV"}}),
         lambda rule: rule["columns"].update({"id": {}}),
-        lambda rule: rule["metadata"].update({"unknown": "value"}),
     ],
 )
-def test_application_workflow_schema_rejects_malformed_output_validation(change):
-    """Reject unknown properties and malformed declarative validation rules."""
+def test_application_workflow_schema_rejects_malformed_output_validator(change):
+    """Reject unknown properties and malformed output validators."""
     rule = _valid_output_validation_rule()
     change(rule)
     workflow_config = _output_validation_workflow(rule)
@@ -253,6 +266,66 @@ def test_application_workflow_schema_rejects_malformed_output_validation(change)
             workflow_config,
             schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
         )
+
+
+def test_application_workflow_schema_rejects_legacy_output_fields():
+    """Reject the removed output-validation interface."""
+    workflow_config = _output_validation_workflow(_valid_output_validation_rule())
+    integration_test = workflow_config["applications"][0]["integration_tests"][0]
+    integration_test["output_file"] = "legacy.ecsv"
+
+    with pytest.raises(jsonschema.ValidationError):
+        schema.validate_dict_using_schema(
+            workflow_config,
+            schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+        )
+
+
+def test_application_workflow_schema_preserves_previous_version():
+    """Load the newest workflow schema first while retaining version 0.4.0."""
+    schema_file = SCHEMA_PATH / "application_workflow.metaschema.yml"
+
+    assert schema.load_schema(schema_file)["schema_version"] == "0.5.0"
+    assert schema.load_schema(schema_file, "0.4.0")["schema_version"] == "0.4.0"
+
+    legacy_workflow = {
+        "schema_version": "0.4.0",
+        "schema_name": "application_workflow.metaschema",
+        "applications": [
+            {
+                "application": "simtools-test",
+                "configuration": {"output_path": "output"},
+                "integration_tests": [{"output_file": "legacy.ecsv"}],
+            }
+        ],
+    }
+    schema.validate_dict_using_schema(legacy_workflow, schema_file=schema_file)
+
+
+def test_application_workflow_schema_accepts_typed_reference_options():
+    """Accept explicit filtering and key-based ECSV reference comparison."""
+    workflow_config = _output_validation_workflow(
+        {
+            "type": "reference",
+            "file": "reference.ecsv",
+            "key_columns": ["id"],
+            "filters": [{"column": "primary", "operator": "equal", "value": "gamma"}],
+        }
+    )
+
+    schema.validate_dict_using_schema(
+        workflow_config,
+        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+    )
+
+
+@pytest.mark.parametrize("config_file", _INTEGRATION_CONFIG_FILES, ids=lambda path: path.stem)
+def test_integration_configs_match_application_workflow_schema(config_file):
+    """Validate every maintained integration configuration against its workflow schema."""
+    schema.validate_dict_using_schema(
+        ascii_handler.collect_data_from_file(config_file),
+        schema_file=SCHEMA_PATH / "application_workflow.metaschema.yml",
+    )
 
 
 def test_validate_dict_using_schema_remote(tmp_test_directory, mocker):

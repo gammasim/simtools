@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-submit-model-parameter-from-external
+  docs:
+    title: Prepare a camera gain count for model submission
+    summary: >-
+      Convert an LST camera gain count into a versioned model parameter using matching metadata
+      files.
   configuration:
     input_meta: tests/resources/static/*.meta.yml
     instrument: LSTN-design
@@ -11,4 +16,4 @@ applications:
     value: 2
   test_name: submit_num_gains_wildcards
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

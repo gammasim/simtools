@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-convert-all-model-parameters-from-simtel
+  docs:
+    title: Convert an LST sim_telarray configuration to model parameters
+    summary: >-
+      Extract all recognized CT1 parameters from a sim_telarray configuration and write versioned
+      LSTN-01 model files.
   configuration:
     output_path: simtools-output
     parameter_version: 0.0.1
@@ -8,8 +13,13 @@ applications:
     simtel_telescope_name: CT1
     telescope: LSTN-01
   integration_tests:
-  - output_file: LSTN-01/num_gains/num_gains-0.0.1.json
-  - output_file: LSTN-01/telescope_transmission/telescope_transmission-0.0.1.json
+  - test_outputs:
+    - path_descriptor: output_path
+      file: num_gains-0.0.1.json
+      output_sub_path: LSTN-01/num_gains
+    - path_descriptor: output_path
+      file: telescope_transmission-0.0.1.json
+      output_sub_path: LSTN-01/telescope_transmission
   test_name: num_gains
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

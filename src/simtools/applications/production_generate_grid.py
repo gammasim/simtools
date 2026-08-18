@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-r"""Generate a simulation production grid for a wide range of simulation parameters."""
+"""Generate a simulation production grid for a wide range of simulation parameters."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
