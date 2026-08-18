@@ -1,11 +1,13 @@
 # Test Resources
 
-Test resources are the maintained input and reference files used by unit and
-integration tests. Integration-test resources are maintained in the versioned
-`simtools-tests` repository. Unit-test-only fixtures stay in
-`tests/unit_tests/resources`.
+Test resources are maintained input and reference files for integration and
+resource-management tests. Integration-test resources are maintained in the
+versioned `simtools-tests` repository. Ordinary unit tests must not depend on
+repository-local, downloaded, or external resource files; generate minimal
+inputs in `tmp_test_directory` instead.
 
-Resource files require updates, e.g., when file formats change or new features are added to the software.
+Resource files require updates, e.g., when file formats change or new features
+are added to the software.
 
 ## Types of resource files
 

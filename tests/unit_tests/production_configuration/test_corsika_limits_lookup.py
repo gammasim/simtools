@@ -1,12 +1,54 @@
+from itertools import product
+from pathlib import Path
+
 import numpy as np
 import pytest
 from astropy import units as u
 from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 
+from simtools.constants import SCHEMA_PATH
+from simtools.io import ascii_handler
 from simtools.production_configuration.corsika_limits_lookup import CorsikaLimitsLookup
 
 ARRAY_LAYOUT_NAME = "CTAO-North-LSTs"
+
+
+@pytest.fixture
+def corsika_limits_for_test_file(tmp_test_directory):
+    schema = ascii_handler.collect_data_from_file(SCHEMA_PATH / "corsika_limits_table.schema.yml")
+    table_columns = schema["data"][0]["table_columns"]
+    column_names = [column["name"] for column in table_columns]
+    rows = []
+    for array_name in [ARRAY_LAYOUT_NAME, *[f"other-layout-{index}" for index in range(5)]]:
+        for zenith, azimuth, nsb_level in product(
+            (20.0, 40.0), (0.0, 180.0, 90.0, 270.0), (0.24, 0.84)
+        ):
+            row = {
+                "production_index": 0,
+                "primary_particle": "gamma",
+                "array_name": array_name,
+                "zenith": zenith,
+                "azimuth": azimuth,
+                "nsb_level": nsb_level,
+                "lower_energy_limit": 0.003,
+                "upper_radius_limit": 1225.0,
+                "viewcone_radius": 10.0,
+                "br_energy_min": 0.003,
+                "br_energy_max": 330.0,
+                "br_core_scatter_max": 1225.0,
+                "br_viewcone_max": 10.0,
+            }
+            rows.append(tuple(row[column] for column in column_names))
+
+    table = Table(rows=rows, names=column_names)
+    for column in table_columns:
+        if column["unit"] != "dimensionless":
+            table[column["name"]].unit = column["unit"]
+
+    lookup_file = Path(tmp_test_directory) / "corsika_limits.ecsv"
+    table.write(lookup_file, format="ascii.ecsv", overwrite=True)
+    return lookup_file
 
 
 def test_load_matching_lookup_arrays_filters_by_array_layout_name(corsika_limits_for_test_file):

@@ -2,7 +2,7 @@
 
 import gzip
 import logging
-import shutil
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -51,35 +51,31 @@ def test_init_zero_focal_length(caplog):
     assert "Focal length is zero; no conversion from cm to deg possible." in caplog.text
 
 
-def test_reading_simtel_file(io_handler, tmp_test_directory, mocker, caplog):
-    test_file = io_handler.get_test_data_file(
-        file_name=(
-            "ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000deg_validate_optics.lis.gz"
-        ),
+def test_reading_simtel_file(tmp_test_directory, mocker, caplog):
+    test_file = tmp_test_directory / "photons.lis.gz"
+    photon_data = (
+        b"# Telescope 1 with 8 photons from 1 star(s) falling on an area of 100. m^2\n"
+        b"0 0 -1.0 -1.0\n"
+        b"0 0 -1.0 1.0\n"
+        b"0 0 1.0 -1.0\n"
+        b"0 0 1.0 1.0\n"
     )
+    with gzip.open(test_file, "wb") as output_file:
+        output_file.write(photon_data)
     image = PSFImage(focal_length=2800.0)
     image.read_photon_list_from_simtel_file(test_file)
-    image.get_psf(0.8, "cm")
 
-    assert image.get_psf(0.8, "cm") == pytest.approx(3.343415291615846)
+    assert image.get_psf(0.8, "cm") > 0
+    assert image.get_effective_area() == pytest.approx(50.0)
 
-    # Copy the file to the temporary test directory
-    shutil.copy(test_file, tmp_test_directory)
-
-    # Unzip the file in the temporary test directory
-    unzipped_file_path = (
-        tmp_test_directory
-        / "ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000deg_validate_optics.lis"
-    )
-    with gzip.open(tmp_test_directory / test_file.name, "rb") as f_in:
-        with open(unzipped_file_path, "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    unzipped_file_path = Path(tmp_test_directory) / "photons.lis"
+    unzipped_file_path.write_bytes(photon_data)
 
     image_unzipped = PSFImage(focal_length=2800.0)
     image_unzipped.read_photon_list_from_simtel_file(unzipped_file_path)
-    image_unzipped.get_psf(0.8, "cm")
 
-    assert image_unzipped.get_psf(0.8, "cm") == pytest.approx(3.343415291615846)
+    assert image_unzipped.get_psf(0.8, "cm") == pytest.approx(image.get_psf(0.8, "cm"))
+    assert image_unzipped.get_effective_area() == pytest.approx(image.get_effective_area())
 
     image_not_ok = PSFImage(focal_length=2800.0)
     mocker.patch.object(image_not_ok, "_is_photon_positions_ok", return_value=False)

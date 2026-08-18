@@ -33,12 +33,15 @@ def tar_with_log(tmp_test_directory, safe_tar_open):
     return _create_tar
 
 
-def test_assert_file_type_json(model_parameter_json, test_yaml_file):
-    assert assertions.assert_file_type("json", Path(model_parameter_json))
+def test_assert_file_type_json(tmp_test_directory, test_yaml_file):
+    json_file = tmp_test_directory / "model_parameter.json"
+    json_file.write_text('{"value": 1}\n', encoding="utf-8")
+
+    assert assertions.assert_file_type("json", json_file)
     assert not assertions.assert_file_type("json", "tests/unit_tests/resources/does_not_exist.json")
     assert not assertions.assert_file_type("json", test_yaml_file)
 
-    assert assertions.assert_file_type("json", Path(model_parameter_json))
+    assert assertions.assert_file_type("json", json_file)
 
 
 def test_assert_file_type_yaml(test_yaml_file):

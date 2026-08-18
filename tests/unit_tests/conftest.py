@@ -969,6 +969,28 @@ def simple_test_file(tmp_test_directory):
 
 
 @pytest.fixture
+def simtel_spe_test_file(tmp_test_directory):
+    """Create a minimal sim_telarray single-photoelectron table."""
+    test_file_path = Path(tmp_test_directory) / "spe.dat"
+    test_file_path.write_text(
+        "# Norm_spe processing of single-p.e. response.\n0.0 0.1 0.2\n1.0 0.2 0.3\n2.0 0.3 0.4\n",
+        encoding="utf-8",
+    )
+    return test_file_path
+
+
+@pytest.fixture
+def simtel_mirror_list_test_file(tmp_test_directory):
+    """Create a minimal sim_telarray mirror-list table."""
+    test_file_path = Path(tmp_test_directory) / "mirror_list.dat"
+    test_file_path.write_text(
+        "1022.49 -462.00 100.0 2800.0 1 0.0 #% id=198\n",
+        encoding="utf-8",
+    )
+    return test_file_path
+
+
+@pytest.fixture
 def model_parameter_json(test_resources_path):
     """Fixture that returns the path to an example model parameter JSON file."""
     return str(
