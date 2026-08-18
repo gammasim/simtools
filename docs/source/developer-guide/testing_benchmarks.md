@@ -1,7 +1,7 @@
 # Test resource benchmarks
 
 Simtools records the resource requirements of its test suites in a separate
-[benchmark dashboard](https://gammasim.github.io/simtools/dev/test-benchmarks/).
+[benchmark dashboard](https://gammasim.github.io/simtools/dev/test-resources/).
 The dashboard is updated by the scheduled and post-merge
 `CI-test-benchmarks` workflow. It contains the unit and integration suite totals
 and the slower integration-test nodes, separated by model version.

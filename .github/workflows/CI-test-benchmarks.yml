@@ -115,7 +115,7 @@ jobs:
           summary = [
               "## Test resource benchmark",
               "",
-              "[Open the benchmark dashboard](https://gammasim.github.io/simtools/dev/test-benchmarks/).",
+              "[Open the benchmark dashboard](https://gammasim.github.io/simtools/dev/test-resources/).",
               "",
           ]
           for unit in ("wall_time_s", "cpu_time_s", "peak_rss_mib"):
@@ -143,6 +143,6 @@ jobs:
           output-file-path: benchmark-results.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gh-pages-branch: gh-pages
-          benchmark-data-dir-path: dev/test-benchmarks
+          benchmark-data-dir-path: dev/test-resources
           auto-push: true
           max-items-in-chart: 365

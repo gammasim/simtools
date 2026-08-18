@@ -49,7 +49,7 @@ The CI Integration tests is defined in the [CI-integrationtests.yml](.github/wor
 The `CI-test-benchmarks` workflow runs serial unit and integration test
 invocations on `ubuntu-latest` and publishes wall-time, CPU-time, and peak-RSS
 histories to the
-[test resource benchmark dashboard](https://gammasim.github.io/simtools/dev/test-benchmarks/).
+[test resource benchmark dashboard](https://gammasim.github.io/simtools/dev/test-resources/).
 It runs after merges and nightly; it does not affect pull-request correctness
 status.
 
