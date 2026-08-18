@@ -24,7 +24,6 @@ EXTERNAL_RESOURCE_TESTS = {
     "tests/unit_tests/data_model/test_validate_data.py::test_validate_data_files_single_file",
     "tests/unit_tests/data_model/test_validate_data.py::test_validate_data_files_with_schema_file",
     "tests/unit_tests/io/test_ascii_handler.py::test_collect_dict_data",
-    "tests/unit_tests/model/test_array_model.py::test_array_model_north_from_file",
     "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_load_matching_lookup_arrays_filters_by_array_layout_name",
     "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_load_matching_lookup_arrays_raises_for_unknown_array_layout",
     "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_load_matching_lookup_arrays_without_layout_returns_all_rows",
