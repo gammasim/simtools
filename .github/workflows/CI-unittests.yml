@@ -37,10 +37,10 @@ jobs:
           fetch-depth: 0
 
       - name: Python setup
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        uses: ./.github/actions/setup-simtools-tests
         with:
-          python-version: "3.14"
-          check-latest: true
+          install-dependencies: "false"
+          extract-simulation-model: "false"
 
       - name: Check unit test files exist
         run: |
@@ -82,24 +82,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Python setup
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+      - name: Set up simtools tests
+        uses: ./.github/actions/setup-simtools-tests
         with:
           python-version: ${{ matrix.python-version }}
-          check-latest: true
-
-      - name: Python dependencies
-        run: |
-          pip install -e '.[tests]'
-
-      - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
-        run: |
-          SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL_VERSION=' .env_template | cut -d '=' -f2- | tr -d '"')
-          SIMTOOLS_DB_SIMULATION_MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')
-          SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
-          echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
-          echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION" >> "$GITHUB_ENV"
-          echo "Simulation model set to: $SIMTOOLS_DB_SIMULATION_MODEL version $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
 
       - name: Unit tests
         shell: bash -l {0}
