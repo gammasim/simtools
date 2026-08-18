@@ -15,6 +15,26 @@ PATCH_ASCII_COLLECT_FILE = "simtools.layout.array_layout_utils.ascii_handler.col
 PATCH_SITEMODEL = "simtools.layout.array_layout_utils.SiteModel"
 
 
+def _write_position_file(tmp_test_directory, coordinate_system):
+    table = QTable()
+    if coordinate_system == "utm":
+        table["asset_code"] = ["MSTN"]
+        table["sequence_number"] = ["03"]
+        table["utm_east"] = [217401.1] * u.m
+        table["utm_north"] = [3185000.0] * u.m
+        table["altitude"] = [2200.0] * u.m
+        file_name = "north-utm.ecsv"
+    else:
+        table["telescope_name"] = ["MSTN-03"]
+        table["position_x"] = [26.86] * u.m
+        table["position_y"] = [-12.5] * u.m
+        table["position_z"] = [2200.0] * u.m
+        file_name = "north-ground.ecsv"
+    file_path = tmp_test_directory / file_name
+    table.write(file_path, format="ascii.ecsv", overwrite=True)
+    return file_path
+
+
 @pytest.fixture
 def mock_read_table_from_file():
     return "simtools.layout.array_layout_utils.data_reader.read_table_from_file"
@@ -1038,10 +1058,10 @@ def test_create_regular_array_errors():
         )
 
 
-def test_write_array_elements_from_file_to_repository_utm(tmp_test_directory, get_test_data_file):
+def test_write_array_elements_from_file_to_repository_utm(tmp_test_directory):
     array_layout_utils.write_array_elements_from_file_to_repository(
         coordinate_system="utm",
-        input_file=get_test_data_file("telescope_positions", "North-utm"),
+        input_file=_write_position_file(tmp_test_directory, "utm"),
         repository_path=tmp_test_directory,
         parameter_version="5.7.0",
     )
@@ -1057,12 +1077,10 @@ def test_write_array_elements_from_file_to_repository_utm(tmp_test_directory, ge
     assert para["value"][0] == pytest.approx(217401.1)
 
 
-def test_write_array_elements_from_file_to_repository_ground(
-    tmp_test_directory, get_test_data_file
-):
+def test_write_array_elements_from_file_to_repository_ground(tmp_test_directory):
     array_layout_utils.write_array_elements_from_file_to_repository(
         coordinate_system="ground",
-        input_file=get_test_data_file("telescope_positions", "North"),
+        input_file=_write_position_file(tmp_test_directory, "ground"),
         repository_path=tmp_test_directory,
         parameter_version="5.7.0",
     )
@@ -1077,13 +1095,13 @@ def test_write_array_elements_from_file_to_repository_ground(
     assert para["value"][0] == pytest.approx(26.86)
 
 
-def test_write_array_elements_from_file_to_repository_error(tmp_test_directory, get_test_data_file):
+def test_write_array_elements_from_file_to_repository_error(tmp_test_directory):
     with pytest.raises(
         ValueError, match=r"Unsupported coordinate system: invalid. Allowed are 'utm' and 'ground'."
     ):
         array_layout_utils.write_array_elements_from_file_to_repository(
             coordinate_system="invalid",
-            input_file=get_test_data_file("telescope_positions", "North"),
+            input_file=_write_position_file(tmp_test_directory, "ground"),
             repository_path=tmp_test_directory,
             parameter_version="5.7.0",
         )
