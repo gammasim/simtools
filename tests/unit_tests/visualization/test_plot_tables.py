@@ -60,12 +60,12 @@ def test_read_astropy_table_data_from_file(mock_read_simtel_table):
     np.testing.assert_array_equal(result["test_table"]["y"], np.array([2.0]))
 
 
-def test_read_simtel_table_data_from_file():
+def test_read_simtel_table_data_from_file(simtel_spe_test_file):
     config = {
         "tables": [
             {
                 "label": "test_table",
-                "file_name": "spe_LST_2022-04-27_AP2.0e-4.dat",
+                "file_name": simtel_spe_test_file.name,
                 "parameter": "pm_photoelectron_spectrum",
                 "column_x": "amplitude",
                 "column_y": "response",
@@ -73,11 +73,9 @@ def test_read_simtel_table_data_from_file():
         ]
     }
 
-    result = plot_tables.read_table_data(
-        config, Path(TEST_RESOURCES_GENERATED) / "model_parameters"
-    )
+    result = plot_tables.read_table_data(config, simtel_spe_test_file.parent)
 
-    assert len(result["test_table"]) == 2101
+    assert len(result["test_table"]) == 3
     assert result["test_table"].dtype.names == ("amplitude", "response")
 
 

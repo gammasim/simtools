@@ -12,24 +12,7 @@ SIMTOOLS_TEST_PATH = (
     else None
 )
 
-EXTERNAL_RESOURCE_TESTS = {
-    "tests/unit_tests/ray_tracing/test_psf_analysis.py::test_reading_simtel_file",
-    "tests/unit_tests/sim_events/test_file_info.py::test_get_corsika_run_number_with_run_header",
-    "tests/unit_tests/sim_events/test_file_info.py::test_get_simulated_events",
-    "tests/unit_tests/sim_events/test_file_info.py::test_get_simulated_events_corsika_iact",
-    "tests/unit_tests/sim_events/test_file_info.py::test_get_corsika_run_and_event_headers",
-    "tests/unit_tests/sim_events/test_writer.py::test_chunked_output_matches_non_chunked_output",
-    "tests/unit_tests/simtel/test_simtel_io_metadata.py::test_read_sim_telarray_metadata",
-    "tests/unit_tests/simtel/test_simtel_io_metadata.py::test_read_sim_telarray_metadata_attribute_error",
-    "tests/unit_tests/simtel/test_simtel_io_metadata.py::test_get_sim_telarray_telescope_id",
-    "tests/unit_tests/simtel/test_simtel_io_metadata.py::test_get_sim_telarray_telescope_id_to_telescope_name_mapping",
-    "tests/unit_tests/simtel/test_simtel_table_reader.py::test_read_simtel_data",
-    "tests/unit_tests/simtel/test_simtel_table_reader.py::test_read_simtel_table_to_table",
-    "tests/unit_tests/simtel/test_simtel_table_reader.py::test_read_simtel_table_for_mirror_list",
-    "tests/unit_tests/simtel/test_simtel_table_reader.py::test_read_simtel_table_as_row_data_for_mirror_list",
-    "tests/unit_tests/testing/test_validate_output.py::test_compare_simtel_cfg_files",
-    "tests/unit_tests/visualization/test_plot_tables.py::test_read_simtel_table_data_from_file",
-}
+EXTERNAL_RESOURCE_TESTS = {}
 
 
 def _versioned_test_resources_path(version):
