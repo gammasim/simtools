@@ -273,6 +273,179 @@ def validate_array_layouts_with_db(production_table, array_layouts):
     return array_layouts
 
 
+def get_array_layout_elements(array_layouts, layout_name):
+    """Return the elements for a named layout in an array-layout parameter.
+
+    Parameters
+    ----------
+    array_layouts : dict
+        Canonical ``array_layouts`` model parameter.
+    layout_name : str
+        Name of the reference layout.
+
+    Returns
+    -------
+    list
+        Elements in the named layout, preserving their stored order.
+
+    Raises
+    ------
+    ValueError
+        If the reference layout does not exist or has no elements.
+    """
+    for layout in array_layouts.get("value", []):
+        if layout.get("name") == layout_name:
+            elements = layout.get("elements", [])
+            if not elements:
+                raise ValueError(f"Reference array layout '{layout_name}' has no elements.")
+            return list(elements)
+
+    raise ValueError(f"Reference array layout '{layout_name}' not found.")
+
+
+def validate_array_layout_subset_of_reference(
+    layout_name, elements, reference_elements, reference_layout_name
+):
+    """Validate and return one array layout constrained by a reference layout.
+
+    Parameters
+    ----------
+    layout_name : str
+        Name of the new layout.
+    elements : list
+        Telescope names selected for the new layout.
+    reference_elements : list
+        Telescope names allowed by the reference layout.
+    reference_layout_name : str
+        Name used in validation error messages.
+
+    Returns
+    -------
+    dict
+        Canonical one-layout dictionary.
+
+    Raises
+    ------
+    ValueError
+        If the name or element list is invalid, contains duplicates, or is not
+        a subset of the reference layout.
+    """
+    if not isinstance(layout_name, str) or not layout_name.strip():
+        raise ValueError("Array layout name must be a non-empty string.")
+    if not isinstance(elements, list) or not elements:
+        raise ValueError(f"Array layout '{layout_name}' requires a non-empty telescope list.")
+    if len(elements) != len(set(elements)):
+        raise ValueError(f"Array layout '{layout_name}' contains duplicate telescopes.")
+
+    reference_set = set(reference_elements)
+    invalid_elements = [element for element in elements if element not in reference_set]
+    if invalid_elements:
+        raise ValueError(
+            f"Array layout '{layout_name}' contains elements outside reference layout "
+            f"'{reference_layout_name}': {invalid_elements}."
+        )
+
+    return {"name": layout_name, "elements": list(elements)}
+
+
+def prepare_array_layouts_for_submission(db, args_dict):
+    """Read or construct array layouts for the submit application.
+
+    The legacy file input is returned unchanged. Direct input reads the base
+    parameter, validates the requested layout against its reference layout,
+    and adds the new layout to the base value.
+
+    Parameters
+    ----------
+    db : DatabaseHandler
+        Configured model parameter database or filesystem handler.
+    args_dict : dict
+        Parsed application arguments.
+
+    Returns
+    -------
+    tuple
+        Array-layout parameter and the single model version used for
+        production-table validation.
+
+    Raises
+    ------
+    ValueError
+        If the input mode or required direct-layout arguments are invalid.
+    """
+    file_input = args_dict.get("array_layouts")
+    layout_name = args_dict.get("array_layout_name")
+    element_list = args_dict.get("array_element_list")
+    if file_input:
+        if layout_name or element_list:
+            raise ValueError(
+                "Use either array_layouts or array_layout_name/array_element_list, not both."
+            )
+        return ascii_handler.collect_data_from_file(file_input), _get_single_model_version(
+            args_dict.get("model_version")
+        )
+
+    missing = [
+        name
+        for name in (
+            "array_layout_name",
+            "array_element_list",
+            "site",
+            "model_version",
+            "parameter_version",
+            "updated_parameter_version",
+        )
+        if not args_dict.get(name)
+    ]
+    if missing:
+        raise ValueError("Direct layout input requires: " + ", ".join(missing))
+
+    model_version = _get_single_model_version(args_dict["model_version"])
+    parameter_data = db.get_model_parameter(
+        parameter="array_layouts",
+        site=args_dict["site"],
+        array_element_name=None,
+        parameter_version=args_dict["parameter_version"],
+    )
+    base_layouts = parameter_data["array_layouts"]
+    base_layouts.pop("_id", None)
+    base_layouts.pop("entry_date", None)
+    parameter_site = base_layouts.get("site")
+    if parameter_site and parameter_site != args_dict["site"]:
+        raise ValueError(
+            f"Array-layout parameter site '{parameter_site}' does not match requested site "
+            f"'{args_dict['site']}'."
+        )
+
+    reference_name = args_dict.get("reference_array_layout", "hyper_array")
+    new_layout = validate_array_layout_subset_of_reference(
+        layout_name=layout_name,
+        elements=element_list,
+        reference_elements=get_array_layout_elements(base_layouts, reference_name),
+        reference_layout_name=reference_name,
+    )
+    normalized_name = _normalize_array_layout_name(new_layout["name"])
+    existing_names = {
+        _normalize_array_layout_name(layout.get("name")) for layout in base_layouts.get("value", [])
+    }
+    if normalized_name in existing_names:
+        raise ValueError(f"Array layout '{new_layout['name']}' already exists.")
+
+    base_layouts.setdefault("value", []).append(
+        {"name": normalized_name, "elements": new_layout["elements"]}
+    )
+    return base_layouts, model_version
+
+
+def _get_single_model_version(model_version):
+    """Return the single model version accepted by array-layout submission."""
+    if isinstance(model_version, list):
+        if len(model_version) != 1:
+            raise ValueError("submit-array-layouts accepts exactly one model version.")
+        return model_version[0]
+    return model_version
+
+
 def get_array_layouts_from_parameter_file(
     file_path, model_version, coordinate_system="ground", array_layout_name=None
 ):
