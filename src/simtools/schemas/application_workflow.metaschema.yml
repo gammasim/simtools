@@ -84,6 +84,10 @@ definitions:
         skip_integration_test:
           type: string
           description: "Skip test with the given skip message."
+        exclude_from_resource_benchmark:
+          type: string
+          minLength: 1
+          description: "Exclude this test from CI resource benchmarking with the given reason."
         model_version_use_current:
           type: boolean
           description: |

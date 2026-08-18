@@ -236,7 +236,19 @@ def test_application_workflow_schema_rejects_empty_resource_benchmark_exclusion(
 
 def test_application_workflow_schema_accepts_profiled_output_validation_rule():
     """Allow profiles to provide shared output-validation fields."""
-    workflow_config = _output_validation_workflow({"profile": "job_grid", "file": "job_grid.ecsv"})
+    workflow_config = {
+        "schema_version": "0.4.0",
+        "schema_name": "application_workflow.metaschema",
+        "applications": [
+            {
+                "application": "simtools-test",
+                "configuration": {"output_path": "output"},
+                "integration_tests": [
+                    {"output_validation": [{"profile": "job_grid", "file": "job_grid.ecsv"}]}
+                ],
+            }
+        ],
+    }
 
     schema.validate_dict_using_schema(
         workflow_config,
