@@ -13,12 +13,6 @@ SIMTOOLS_TEST_PATH = (
 )
 
 EXTERNAL_RESOURCE_TESTS = {
-    "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_load_matching_lookup_arrays_filters_by_array_layout_name",
-    "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_load_matching_lookup_arrays_raises_for_unknown_array_layout",
-    "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_load_matching_lookup_arrays_without_layout_returns_all_rows",
-    "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_prepare_point_interpolators_builds_interpolator_state",
-    "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_interpolate_grid_limits_returns_requested_grid_shape",
-    "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_interpolate_point_returns_interpolated_values",
     "tests/unit_tests/ray_tracing/test_psf_analysis.py::test_reading_simtel_file",
     "tests/unit_tests/sim_events/test_file_info.py::test_get_corsika_run_number_with_run_header",
     "tests/unit_tests/sim_events/test_file_info.py::test_get_simulated_events",
