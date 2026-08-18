@@ -386,7 +386,6 @@ jobs:
             --repository_dir ../simulation-models
 
       - name: Integration tests
-        if: ${{ !inputs.benchmark }}
         shell: bash -l {0}
         run: |
           cat .env
@@ -397,28 +396,19 @@ jobs:
             done
             MODEL_SOURCE_ARGS+=(--simulation-models-path="$SIMULATION_MODELS_PATH")
           fi
-          pytest --model_version=${{ matrix.model_version }} --color=yes --durations=20 \
-            "${MODEL_SOURCE_ARGS[@]}" \
-            -n 4 --dist loadscope --retries 2 --retry-delay 5 --no-cov tests/integration_tests/
-
-      - name: Integration resource benchmark
-        if: ${{ inputs.benchmark }}
-        shell: bash -l {0}
-        run: |
-          MODEL_SOURCE_ARGS=()
-          if [ -n "$SIMULATION_MODELS_PATH" ]; then
-            for variable in ${!SIMTOOLS_DB_@}; do
-              unset "$variable"
-            done
-            MODEL_SOURCE_ARGS+=(--simulation-models-path="$SIMULATION_MODELS_PATH")
+          if [[ "${{ inputs.benchmark }}" == "true" ]]; then
+            pytest --model_version=${{ matrix.model_version }} --color=yes \
+              "${MODEL_SOURCE_ARGS[@]}" \
+              -n 0 --no-cov \
+              --resource-benchmark-output=resource-benchmark-${{ matrix.model_version }} \
+              --resource-benchmark-mode=integration \
+              --resource-benchmark-min-wall-time=${{ inputs.benchmark_min_wall_time }} \
+              tests/integration_tests/
+          else
+            pytest --model_version=${{ matrix.model_version }} --color=yes --durations=20 \
+              "${MODEL_SOURCE_ARGS[@]}" \
+              -n 4 --dist loadscope --retries 2 --retry-delay 5 --no-cov tests/integration_tests/
           fi
-          pytest --model_version=${{ matrix.model_version }} --color=yes \
-            "${MODEL_SOURCE_ARGS[@]}" \
-            -n 0 --no-cov \
-            --resource-benchmark-output=resource-benchmark-${{ matrix.model_version }} \
-            --resource-benchmark-mode=integration \
-            --resource-benchmark-min-wall-time=${{ inputs.benchmark_min_wall_time }} \
-            tests/integration_tests/
 
       - name: Upload integration resource benchmark
         if: ${{ always() && inputs.benchmark }}

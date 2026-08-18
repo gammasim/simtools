@@ -34,22 +34,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
-      - name: Python setup
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
-        with:
-          python-version: "3.14"
-          check-latest: true
-
-      - name: Install test dependencies
-        run: python -m pip install -e '.[tests]'
-
-      - name: Extract SIMTOOLS_DB_SIMULATION_MODEL
-        run: |
-          SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL_VERSION=' .env_template | cut -d '=' -f2- | tr -d '"')
-          SIMTOOLS_DB_SIMULATION_MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')
-          SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
-          echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
-          echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION" >> "$GITHUB_ENV"
+      - name: Set up simtools tests
+        uses: ./.github/actions/setup-simtools-tests
 
       - name: Run unit resource benchmark
         env:
