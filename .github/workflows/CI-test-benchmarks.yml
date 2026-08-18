@@ -63,7 +63,7 @@ jobs:
       contents: read
     with:
       benchmark: true
-      benchmark_min_wall_time: ${{ inputs.integration_min_wall_time || 5.0 }}
+      benchmark_min_wall_time: ${{ fromJSON(inputs.integration_min_wall_time || '5.0') }}
       model_versions: ${{ inputs.model_versions || '["7.0.0"]' }}
       runner_labels: '["ubuntu-latest"]'
 
