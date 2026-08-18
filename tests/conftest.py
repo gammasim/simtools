@@ -13,7 +13,6 @@ SIMTOOLS_TEST_PATH = (
 )
 
 EXTERNAL_RESOURCE_TESTS = {
-    "tests/unit_tests/data_model/test_data_reader.py::test_read_table_from_file",
     "tests/unit_tests/data_model/test_data_reader.py::test_read_table_from_file_and_validate",
     "tests/unit_tests/data_model/test_metadata_collector.py::test_get_site",
     "tests/unit_tests/data_model/test_metadata_collector.py::test_read_input_metadata_from_file",
@@ -25,7 +24,6 @@ EXTERNAL_RESOURCE_TESTS = {
     "tests/unit_tests/data_model/test_validate_data.py::test_validate_data_files_single_file",
     "tests/unit_tests/data_model/test_validate_data.py::test_validate_data_files_with_schema_file",
     "tests/unit_tests/io/test_ascii_handler.py::test_collect_dict_data",
-    "tests/unit_tests/io/test_legacy_data_handler.py::test_read_legacy_data_file",
     "tests/unit_tests/layout/test_array_layout.py::test_select_assets",
     "tests/unit_tests/layout/test_array_layout.py::test_try_set_coordinate",
     "tests/unit_tests/layout/test_array_layout.py::test_len",
@@ -54,7 +52,6 @@ EXTERNAL_RESOURCE_TESTS = {
     "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_interpolate_grid_limits_returns_requested_grid_shape",
     "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_interpolate_point_returns_interpolated_values",
     "tests/unit_tests/ray_tracing/test_psf_analysis.py::test_reading_simtel_file",
-    "tests/unit_tests/reporting/test_docs_read_parameters.py::test__convert_to_md",
     "tests/unit_tests/sim_events/test_file_info.py::test_get_corsika_run_number_with_run_header",
     "tests/unit_tests/sim_events/test_file_info.py::test_get_simulated_events",
     "tests/unit_tests/sim_events/test_file_info.py::test_get_simulated_events_corsika_iact",
@@ -79,9 +76,7 @@ EXTERNAL_RESOURCE_TESTS = {
     "tests/unit_tests/simtel/test_simtel_table_reader.py::test_read_simtel_table_to_table",
     "tests/unit_tests/simtel/test_simtel_table_reader.py::test_read_simtel_table_for_mirror_list",
     "tests/unit_tests/simtel/test_simtel_table_reader.py::test_read_simtel_table_as_row_data_for_mirror_list",
-    "tests/unit_tests/testing/test_assertions.py::test_assert_file_type_json",
     "tests/unit_tests/testing/test_validate_output.py::test_compare_simtel_cfg_files",
-    "tests/unit_tests/utils/test_general.py::test_resolve_file_patterns",
     "tests/unit_tests/visualization/test_plot_tables.py::test_read_simtel_table_data_from_file",
     "tests/unit_tests/visualization/test_plot_tables.py::test_read_table_and_normalize",
     "tests/unit_tests/visualization/test_visualize.py::test_plot_table",

@@ -8,9 +8,12 @@ from simtools.constants import TEST_RESOURCES_STATIC
 from simtools.data_model import data_reader
 
 
-def test_read_table_from_file(get_test_data_file):
+def test_read_table_from_file(tmp_test_directory):
+    table_file = tmp_test_directory / "table.ecsv"
+    Table({"value": [1, 2]}).write(table_file, format="ascii.ecsv")
+
     assert isinstance(
-        data_reader.read_table_from_file(get_test_data_file("telescope_positions", "North")),
+        data_reader.read_table_from_file(table_file),
         Table,
     )
 
