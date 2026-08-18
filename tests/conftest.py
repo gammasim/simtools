@@ -14,8 +14,6 @@ SIMTOOLS_TEST_PATH = (
     else None
 )
 
-EXTERNAL_RESOURCE_TESTS = {}
-
 
 def _versioned_test_resources_path(version):
     """Return the selected local version of the integration test resources."""
@@ -63,21 +61,6 @@ def pytest_configure(config):
     simtools.constants.TEST_RESOURCES_STATIC = str(test_resources_path / "static")
     simtools.constants.TEST_RESOURCES_GENERATED = str(test_resources_path / "generated")
     simtools.constants.TEST_RESOURCES_DOWNLOADED = str(test_resources_path / "downloaded")
-
-
-def pytest_collection_modifyitems(config, items):
-    """Mark unit tests requiring the external resource bundle as expected failures."""
-    local_resources_path = (SIMTOOLS_ROOT_PATH / "tests" / "unit_tests" / "resources").resolve()
-    if _configured_test_resources_path(config) != local_resources_path:
-        return
-
-    marker = pytest.mark.xfail(
-        reason="Requires external test resources from simtools-tests",
-        strict=False,
-    )
-    for item in items:
-        if item.nodeid in EXTERNAL_RESOURCE_TESTS:
-            item.add_marker(marker)
 
 
 @pytest.fixture(scope="session")
