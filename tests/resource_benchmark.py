@@ -112,7 +112,7 @@ class _ResourceSampler:
         processes = [self.process]
         try:
             processes.extend(self.process.children(recursive=True))
-        except self.psutil.NoSuchProcess, self.psutil.AccessDenied, OSError:
+        except self.psutil.NoSuchProcess, self.psutil.AccessDenied, OSError, TypeError:
             pass
 
         cpu_by_process = {}
@@ -122,7 +122,7 @@ class _ResourceSampler:
                 identity = (process.pid, process.create_time())
                 cpu_times = process.cpu_times()
                 memory = process.memory_info()
-            except self.psutil.NoSuchProcess, self.psutil.AccessDenied, OSError:
+            except self.psutil.NoSuchProcess, self.psutil.AccessDenied, OSError, TypeError:
                 continue
             cpu_by_process[identity] = cpu_times.user + cpu_times.system
             rss_bytes += memory.rss
