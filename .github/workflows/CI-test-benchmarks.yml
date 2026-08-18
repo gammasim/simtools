@@ -24,13 +24,12 @@ on:
   schedule:
     - cron: "30 0 * * *"
 
-permissions:
-  contents: read
-
 jobs:
   benchmark_unit:
     name: Benchmark unit-test suite
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
@@ -74,6 +73,8 @@ jobs:
   benchmark_integration:
     name: Benchmark integration-test suites
     uses: ./.github/workflows/CI-integrationtests.yml
+    permissions:
+      contents: read
     with:
       benchmark: true
       benchmark_min_wall_time: ${{ inputs.integration_min_wall_time || 5.0 }}

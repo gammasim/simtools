@@ -237,7 +237,7 @@ class ResourceBenchmarkPlugin:
         elif report.when == "call":
             self.outcomes.setdefault(report.nodeid, "passed")
 
-    def pytest_sessionfinish(self, session, exitstatus):
+    def pytest_sessionfinish(self, exitstatus):
         """Finish sampling and write raw and chart-ready JSON files."""
         suite = self.sampler.finish()
         self.sampler = None
