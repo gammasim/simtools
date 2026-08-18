@@ -51,7 +51,7 @@ def camera_efficiency_lst(config_data_lst, mocker):
 
 @pytest.fixture
 def prepare_results_file(camera_efficiency_lst, mocker, tmp_test_directory):
-    """Create a compact camera-efficiency result table for analysis tests."""
+    """Create a minimal camera-efficiency result table for analysis tests."""
     test_results_file = (
         Path(tmp_test_directory) / "camera_efficiency_North_LSTN-02_za0.0deg_azm000deg_shower.ecsv"
     )

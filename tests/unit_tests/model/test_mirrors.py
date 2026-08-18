@@ -79,7 +79,7 @@ def test_read_mirror_list_from_sim_telarray(mirror_template_simtel, tmp_test_dir
     red_mirrors = Mirrors(mirror_list_file=tmp_mirror_list)
     assert MIRROR_COUNT == red_mirrors.number_of_mirrors
     assert red_mirrors.mirror_table["mirror_panel_id"][0] == 0
-    assert red_mirrors.mirror_table["mirror_panel_id"][5] == 5
+    assert red_mirrors.mirror_table["mirror_panel_id"][MIRROR_PANEL_ID] == MIRROR_PANEL_ID
     assert "mirror_z" not in red_mirrors.mirror_table.columns
 
 
