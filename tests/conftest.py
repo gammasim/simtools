@@ -13,7 +13,6 @@ SIMTOOLS_TEST_PATH = (
 )
 
 EXTERNAL_RESOURCE_TESTS = {
-    "tests/unit_tests/io/test_ascii_handler.py::test_collect_dict_data",
     "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_load_matching_lookup_arrays_filters_by_array_layout_name",
     "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_load_matching_lookup_arrays_raises_for_unknown_array_layout",
     "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_load_matching_lookup_arrays_without_layout_returns_all_rows",
@@ -47,8 +46,6 @@ EXTERNAL_RESOURCE_TESTS = {
     "tests/unit_tests/simtel/test_simtel_table_reader.py::test_read_simtel_table_as_row_data_for_mirror_list",
     "tests/unit_tests/testing/test_validate_output.py::test_compare_simtel_cfg_files",
     "tests/unit_tests/visualization/test_plot_tables.py::test_read_simtel_table_data_from_file",
-    "tests/unit_tests/visualization/test_plot_tables.py::test_read_table_and_normalize",
-    "tests/unit_tests/visualization/test_visualize.py::test_plot_table",
 }
 
 

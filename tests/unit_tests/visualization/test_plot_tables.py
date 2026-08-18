@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from astropy.table import Table
 
-from simtools.constants import TEST_RESOURCES_DOWNLOADED, TEST_RESOURCES_GENERATED
+from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.visualization import plot_tables
 
 
@@ -235,13 +235,13 @@ def test_export_model_file_with_db_export_path(mock_db_handler_class, tmp_test_d
     mock_db_handler.io_handler.set_paths.assert_any_call(output_path="output/default")
 
 
-def test_read_table_and_normalize():
+def test_read_table_and_normalize(tmp_test_directory):
+    test_file = Path(tmp_test_directory) / "single_pe.csv"
+    test_file.write_text("0.0,0.5\n1.0,1.0\n", encoding="utf-8")
     config = {
         "tables": [
             {
-                "file_name": (
-                    f"{TEST_RESOURCES_DOWNLOADED}/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv"
-                ),
+                "file_name": test_file.name,
                 "type": "legacy_lst_single_pe",
                 "label": "test_table",
                 "column_x": "amplitude",
@@ -250,7 +250,7 @@ def test_read_table_and_normalize():
             }
         ]
     }
-    data = plot_tables.read_table_data(config, None)
+    data = plot_tables.read_table_data(config, tmp_test_directory)
     assert isinstance(data, dict)
     assert data["test_table"]["response"].max() == pytest.approx(1.0)
 
