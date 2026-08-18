@@ -4,22 +4,37 @@ import os
 from pathlib import Path
 
 import pytest
+from dotenv import load_dotenv
 
 pytest_plugins = ("resource_benchmark",)
 
 SIMTOOLS_ROOT_PATH = Path(__file__).resolve().parent.parent
-SIMTOOLS_TEST_PATH = (
-    Path(os.environ["SIMTOOLS_TEST_PATH"]).expanduser()
-    if os.environ.get("SIMTOOLS_TEST_PATH")
-    else None
-)
+
+
+def _is_integration_test_argument(argument):
+    """Return whether a pytest argument points into the integration tests."""
+    argument_path = Path(str(argument).split("::", maxsplit=1)[0])
+    if not argument_path.is_absolute():
+        argument_path = Path.cwd() / argument_path
+    try:
+        argument_path.resolve().relative_to(SIMTOOLS_ROOT_PATH / "tests" / "integration_tests")
+    except ValueError:
+        return False
+    return True
+
+
+def _load_integration_environment(config):
+    """Load the repository .env before integration test collection."""
+    if any(_is_integration_test_argument(argument) for argument in config.args):
+        load_dotenv(SIMTOOLS_ROOT_PATH / ".env")
 
 
 def _versioned_test_resources_path(version):
     """Return the selected local version of the integration test resources."""
-    if SIMTOOLS_TEST_PATH is None or not version:
+    test_path = os.environ.get("SIMTOOLS_TEST_PATH")
+    if not test_path or not version:
         return None
-    return SIMTOOLS_TEST_PATH / version / "integration_tests"
+    return Path(test_path).expanduser() / version / "integration_tests"
 
 
 def _configured_test_resources_path(config):
@@ -55,6 +70,7 @@ def pytest_configure(config):
     """Configure test resource constants before test modules are imported."""
     import simtools.constants
 
+    _load_integration_environment(config)
     test_resources_path = _configured_test_resources_path(config)
     config.option.test_resources_path = test_resources_path
     simtools.constants.TEST_RESOURCES_ROOT = test_resources_path
