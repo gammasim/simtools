@@ -572,25 +572,35 @@ def _apply_changes_to_model_parameters(
     """
     for telescope, parameters in changes.items():
         for param, param_data in parameters.items():
-            if param_data.get("activity_id") is not None and param_data.get("value") is not None:
-                raise ValueError(
-                    f"Both activity_id and value are set for '{telescope} - {param}'. "
-                    "Provide only one source for model parameter content."
-                )
+            try:
+                if (
+                    param_data.get("activity_id") is not None
+                    and param_data.get("value") is not None
+                ):
+                    raise ValueError(
+                        f"Both activity_id and value are set for '{telescope} - {param}'. "
+                        "Provide only one source for model parameter content."
+                    )
 
-            if param_data.get("activity_id") is not None:
-                _download_model_parameter_from_workflow(
-                    telescope,
-                    param,
-                    param_data,
-                    simulation_models_path,
-                    setting_workflows_git_tag,
-                    setting_workflows_git_repository,
-                )
-            elif param_data.get("value") is not None:
-                _create_new_model_parameter_entry(
-                    telescope, param, param_data, simulation_models_path
-                )
+                if param_data.get("activity_id") is not None:
+                    _download_model_parameter_from_workflow(
+                        telescope,
+                        param,
+                        param_data,
+                        simulation_models_path,
+                        setting_workflows_git_tag,
+                        setting_workflows_git_repository,
+                    )
+                elif param_data.get("value") is not None:
+                    _create_new_model_parameter_entry(
+                        telescope, param, param_data, simulation_models_path
+                    )
+            except (KeyError, TypeError, ValueError) as exc:
+                entry_details = ", ".join(f"{key}={value!r}" for key, value in param_data.items())
+                raise type(exc)(
+                    f"Failed to process info.yml entry '{telescope} -> {param}' "
+                    f"({entry_details}): {exc}"
+                ) from exc
 
 
 def _download_model_parameter_from_workflow(
