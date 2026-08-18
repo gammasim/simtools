@@ -1,0 +1,22 @@
+---
+applications:
+- application: simtools-submit-array-layouts
+  configuration:
+    array_element_list:
+    - MSTS-01
+    - MSTS-301
+    array_layout_name: South-dual-camera-example
+    model_version: 7.0.0
+    output_path: simtools-output
+    parameter_version: 3.0.0
+    reference_array_layout: hyper_array
+    site: South
+    updated_parameter_version: 3.0.99
+  integration_tests:
+  - output_file: array_layouts/array_layouts-3.0.99.json
+  - output_file: array_layouts/array_layouts-3.0.99.meta.yml
+  model_version_use_current: true
+  test_name: subset_of_hyper_array
+  xfail_network_error: true
+schema_name: application_workflow.metaschema
+schema_version: 0.4.0
