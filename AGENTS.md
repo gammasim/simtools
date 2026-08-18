@@ -32,8 +32,8 @@ If you are unsure, ask for clarification. Try to shut up.
 - Unit tests: `tests/unit_tests/`, mirroring `src/simtools/`.
 - Integration tests: `tests/integration_tests/config/*.yml`, executed through
   `tests/integration_tests/test_applications_from_config.py`.
-- Test resources: versioned integration resources in `simtools-tests`; unit-only
-  resources in `tests/unit_tests/resources`.
+- Test resources: versioned integration resources in `simtools-tests`; ordinary
+  unit tests must not depend on repository-local or external resource files.
 - Documentation: Sphinx in `docs/source/`, built from MyST Markdown plus some
   RST autodoc pages.
 - Changelog fragments: `docs/changes/<pr-number>.<type>.md`.
@@ -105,6 +105,10 @@ Unit-test rules:
   shared across unit-test modules.
 - Shared repo fixtures such as `test_resources_path` and `simtools_root_path`
   live in `tests/conftest.py`.
+- Do not make ordinary unit tests depend on checked-in, downloaded, or external
+  files. If file parsing or writing is the behavior under test, generate the
+  smallest valid input in `tmp_test_directory` within the test.
+- Keep file-format compatibility and resource-heavy checks in integration tests.
 - Use `tmp_test_directory` for file I/O. Do not introduce hardcoded `/tmp`,
   `tempfile`, or absolute temporary paths in tests.
 - Mock databases, network calls, file I/O, CORSIKA, and sim_telarray in unit
