@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import logging
+from pathlib import Path
 
 import pytest
 from astropy.table import Table
@@ -42,7 +43,7 @@ def mirror_template_simtel(tmp_test_directory):
     rows = [
         f"1022.49 -462.0 151.0 2920.0 3 0 0 mirror_panel_{mirror_id}\n" for mirror_id in range(198)
     ]
-    mirror_list_file.write_text("".join(rows), encoding="utf-8")
+    Path(mirror_list_file).write_text("".join(rows), encoding="utf-8")
     logger.info(f"Using mirror list with simtel format {mirror_list_file}")
     return Mirrors(mirror_list_file)
 

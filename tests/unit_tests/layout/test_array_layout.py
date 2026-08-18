@@ -2,6 +2,7 @@
 
 import json
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import numpy as np
@@ -43,7 +44,7 @@ def _write_utm_position_table(tmp_test_directory, file_name, telescope_names):
 
 def _write_position_json(tmp_test_directory, file_name, parameter, instrument):
     file_path = tmp_test_directory / file_name
-    file_path.write_text(
+    Path(file_path).write_text(
         json.dumps(
             {
                 "parameter": parameter,

@@ -414,8 +414,8 @@ def test_resolve_file_patterns(tmp_test_directory):
     camera_directory = tmp_test_directory / "camera_efficiency"
     schema_directory.mkdir()
     camera_directory.mkdir()
-    (schema_directory / "schema.yml").write_text("schema: test\n", encoding="utf-8")
-    (camera_directory / "efficiency.ecsv").write_text("value\n1\n", encoding="utf-8")
+    Path(schema_directory / "schema.yml").write_text("schema: test\n", encoding="utf-8")
+    Path(camera_directory / "efficiency.ecsv").write_text("value\n1\n", encoding="utf-8")
 
     yml_list = gen.resolve_file_patterns(f"{schema_directory}/*.yml")
     assert len(yml_list) > 0
