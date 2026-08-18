@@ -13,16 +13,6 @@ SIMTOOLS_TEST_PATH = (
 )
 
 EXTERNAL_RESOURCE_TESTS = {
-    "tests/unit_tests/data_model/test_data_reader.py::test_read_table_from_file_and_validate",
-    "tests/unit_tests/data_model/test_metadata_collector.py::test_get_site",
-    "tests/unit_tests/data_model/test_metadata_collector.py::test_read_input_metadata_from_file",
-    "tests/unit_tests/data_model/test_model_data_writer.py::test_validate_and_transform",
-    "tests/unit_tests/data_model/test_validate_data.py::test_validate_and_transform",
-    "tests/unit_tests/data_model/test_validate_data.py::test_validate_data_file",
-    "tests/unit_tests/data_model/test_validate_data.py::test_validate_parameter_and_file_name",
-    "tests/unit_tests/data_model/test_validate_data.py::test_validate_data_columns",
-    "tests/unit_tests/data_model/test_validate_data.py::test_validate_data_files_single_file",
-    "tests/unit_tests/data_model/test_validate_data.py::test_validate_data_files_with_schema_file",
     "tests/unit_tests/io/test_ascii_handler.py::test_collect_dict_data",
     "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_load_matching_lookup_arrays_filters_by_array_layout_name",
     "tests/unit_tests/production_configuration/test_corsika_limits_lookup.py::test_load_matching_lookup_arrays_raises_for_unknown_array_layout",
