@@ -132,7 +132,7 @@ Important mechanics:
 - Generated paths such as `output_path`, `grid_output_path`, and
   `pack_for_grid_register` should be relative; the harness rewrites them into
   `tmp_test_directory`.
-- Set `SIMTOOLS_TEST_PATH` and `SIMTOOLS_TESTS_VERSION`, or use
+- Set `SIMTOOLS_TESTS_PATH` and `SIMTOOLS_TESTS_VERSION`, or use
   `--simtools_tests_version`, to select a versioned `simtools-tests` resource
   bundle when `SIMTOOLS_TEST_RESOURCES` or `--test_resources_path` is not
   provided.

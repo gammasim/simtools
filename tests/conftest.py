@@ -31,7 +31,7 @@ def _load_integration_environment(config):
 
 def _versioned_test_resources_path(version):
     """Return the selected local version of the integration test resources."""
-    test_path = os.environ.get("SIMTOOLS_TEST_PATH")
+    test_path = os.environ.get("SIMTOOLS_TESTS_PATH")
     if not test_path or not version:
         return None
     return Path(test_path).expanduser() / version / "integration_tests"

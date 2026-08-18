@@ -349,7 +349,7 @@ jobs:
           SIMTOOLS_TESTS_VERSION=$(grep '^SIMTOOLS_TESTS_VERSION=' .env_template | cut -d '=' -f2-)
           echo "version=$SIMTOOLS_TESTS_VERSION" >> "$GITHUB_OUTPUT"
           {
-            echo "SIMTOOLS_TEST_PATH=$GITHUB_WORKSPACE/simtools-tests/simtools-tests"
+            echo "SIMTOOLS_TESTS_PATH=$GITHUB_WORKSPACE/simtools-tests/simtools-tests"
             echo "SIMTOOLS_TESTS_VERSION=$SIMTOOLS_TESTS_VERSION"
             echo "SIMTOOLS_TEST_RESOURCES=$GITHUB_WORKSPACE/simtools-tests/simtools-tests/$SIMTOOLS_TESTS_VERSION/integration_tests"
           } >> "$GITHUB_ENV"

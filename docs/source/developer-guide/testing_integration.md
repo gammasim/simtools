@@ -90,7 +90,7 @@ The filesystem source takes precedence over MongoDB settings. Integration workfl
 ## Resources
 
 Tests resolve resources from the path in `SIMTOOLS_TEST_RESOURCES`. If no full
-resource path is configured, `SIMTOOLS_TEST_PATH` identifies the
+resource path is configured, `SIMTOOLS_TESTS_PATH` identifies the
 `simtools-tests` checkout and `SIMTOOLS_TESTS_VERSION` selects its version. The
 command-line options are
 `--test_resources_path` and `--simtools_tests_version`, respectively.
