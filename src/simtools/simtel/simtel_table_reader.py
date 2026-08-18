@@ -395,21 +395,21 @@ def _resolve_input_file_path(file_name, data_path=None):
 
 
 def _parse_inline_json_dict(value, parameter_name):
-    """Parse inline JSON string value and return dict when valid."""
+    """Parse inline JSON string value and return dict or list when valid."""
     stripped_value = value.strip()
-    if not stripped_value.startswith("{"):
+    if not (stripped_value.startswith("{") or stripped_value.startswith("[")):
         return None
 
     try:
         parsed_value = json.loads(stripped_value)
     except json.JSONDecodeError:
         logger.debug(
-            f"Value for '{parameter_name}' starts with '{{' but is not valid JSON; "
+            f"Value for '{parameter_name}' starts with '{{' or '[' but is not valid JSON; "
             "falling back to file-path reading."
         )
         return None
 
-    return parsed_value if isinstance(parsed_value, dict) else None
+    return parsed_value if isinstance(parsed_value, (dict, list)) else None
 
 
 def _resolve_dict_parameter_from_string(value, parameter_name, data_path=None):
@@ -431,6 +431,9 @@ def _resolve_dict_parameter_from_string(value, parameter_name, data_path=None):
 
 def resolve_dict_parameter_value(value, parameter_name, data_path=None):
     """Resolve dict-typed value from inline JSON or from a table file path."""
+    if isinstance(value, list):
+        return value
+
     if isinstance(value, dict):
         # Validate that row-table-like dicts (with columns and rows) also have column_units
         if "columns" in value and "rows" in value:

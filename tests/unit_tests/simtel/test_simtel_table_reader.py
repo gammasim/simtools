@@ -246,6 +246,53 @@ def test_resolve_dict_parameter_value_non_string_non_dict_uses_file_reader(tmp_t
     assert result["rows"] == [[0.0]]
 
 
+def test_resolve_dict_parameter_value_returns_list_unchanged():
+    trigger_list = [
+        {"name": "LSTN_array", "multiplicity": {"unit": None, "value": 2}},
+        {"name": "LSTN_single_telescope", "multiplicity": {"unit": None, "value": 1}},
+    ]
+    result = simtel_table_reader.resolve_dict_parameter_value(trigger_list, "array_triggers")
+    assert result == trigger_list
+
+
+def test_resolve_dict_parameter_value_from_inline_json_array(tmp_test_directory):
+    trigger_list = [
+        {"name": "LSTN_array", "multiplicity": {"unit": None, "value": 2}},
+        {"name": "MSTN_array", "multiplicity": {"unit": None, "value": 2}},
+    ]
+    import json as _json
+
+    json_str = _json.dumps(trigger_list)
+
+    with mock.patch(
+        "simtools.simtel.simtel_table_reader.read_simtel_table_as_row_data"
+    ) as read_mock:
+        result = simtel_table_reader.resolve_dict_parameter_value(
+            json_str,
+            "array_triggers",
+            str(tmp_test_directory),
+        )
+
+    read_mock.assert_not_called()
+    assert isinstance(result, list)
+    assert result[0]["name"] == "LSTN_array"
+
+
+def test_parse_inline_json_dict_invalid_array_falls_back(tmp_test_directory):
+    with mock.patch(
+        "simtools.simtel.simtel_table_reader.read_simtel_table_as_row_data",
+        return_value={"columns": ["time"], "column_units": ["ns"], "rows": [[0.0]]},
+    ) as read_mock:
+        result = simtel_table_reader.resolve_dict_parameter_value(
+            "[not valid json]",
+            "fadc_pulse_shape",
+            data_path=tmp_test_directory,
+        )
+
+    read_mock.assert_called_once()
+    assert result["rows"] == [[0.0]]
+
+
 def test_data_simple_columns():
     columns = [
         "pm_photoelectron_spectrum",

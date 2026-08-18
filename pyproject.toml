@@ -59,6 +59,7 @@ optional-dependencies.doc = [
   "towncrier",
 ]
 optional-dependencies.tests = [
+  "psutil",
   "pytest",
   "pytest-cov",
   "pytest-mock",
