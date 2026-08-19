@@ -67,7 +67,7 @@ Applications supporting the common output argument can export the complete recor
 simtools-simulate-prod --export_build_info build-info.yml [OTHER OPTIONS]
 ```
 
-For Apptainer, the same information is available without extracting the SIF file:
+For an Apptainer container pulled from the OCI image, the same information is available with:
 
 ```console
 apptainer exec simtools-prod.sif \
@@ -75,9 +75,7 @@ apptainer exec simtools-prod.sif \
 apptainer inspect --json --labels simtools-prod.sif
 ```
 
-The production workflow verifies the manifest after OCI-to-SIF conversion and publishes a
-provenance artifact mapping the release, Git revision, OCI digest, SIF digest, and
-dependency-manifest digest. Published OCI indexes also carry the manifest digest as the
+Published OCI indexes carry the dependency manifest digest as the
 `org.gammasim.simtools.dependency-manifest-sha256` annotation.
 
 ## Runtime configuration
