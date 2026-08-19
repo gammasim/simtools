@@ -50,7 +50,6 @@ jobs:
     outputs:
       base_image: ${{ steps.config.outputs.base_image }}
       python_version: ${{ steps.config.outputs.python_version }}
-      apptainer_version: ${{ steps.config.outputs.apptainer_version }}
       production_matrix: ${{ steps.config.outputs.production_matrix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
@@ -157,76 +156,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=simtools-prod-${{ matrix.corsika }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
           cache-to: type=gha,mode=min,scope=simtools-prod-${{ matrix.corsika }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
-
-      - name: Install Apptainer
-        if: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
-        env:
-          APPTAINER_VERSION: v${{ needs.dependency-config.outputs.apptainer_version }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          rm -f /tmp/apptainer.deb
-          gh release download "${APPTAINER_VERSION}" --repo apptainer/apptainer --pattern "apptainer_${APPTAINER_VERSION#v}_amd64.deb" -O /tmp/apptainer.deb
-          sudo apt-get update -yq
-          sudo apt-get install --yes --quiet /tmp/apptainer.deb
-          apptainer --version
-
-      - name: Generate and push Apptainer images
-        if: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
-        env:
-          APPTAINER_DOCKER_USERNAME: ${{ github.actor }}
-          APPTAINER_DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          trap 'apptainer registry logout oras://ghcr.io' EXIT
-          printf '%s' "${APPTAINER_DOCKER_PASSWORD}" | apptainer registry login -u "${APPTAINER_DOCKER_USERNAME}" --password-stdin oras://ghcr.io
-          while IFS= read -r image_tag; do
-            if [[ -z "${image_tag}" ]]; then
-              continue
-            fi
-
-            tag_name="${image_tag##*:}"
-            if [[ "${tag_name}" == *-generic ]]; then
-              tag_name="${tag_name%-generic}-generic-amd64"
-            fi
-            apptainer_tag="${tag_name}-apptainer"
-            sif_file="${tag_name}.sif"
-            oci_manifest_digest=$(docker run --rm "${image_tag}" python -c \
-              'from simtools.dependencies import get_dependency_manifest_digest; print(get_dependency_manifest_digest())')
-            oci_manifest_checksum=$(docker run --rm "${image_tag}" \
-              cat /opt/simtools/provenance/dependency-manifest.json.sha256)
-            image_repository="${image_tag%:*}"
-            docker buildx imagetools create \
-              --annotation "index:org.gammasim.simtools.dependency-manifest-sha256=sha256:${oci_manifest_digest}" \
-              --tag "${image_tag}" \
-              "${image_repository}@${{ steps.build.outputs.digest }}"
-            oci_digest=$(docker buildx imagetools inspect "${image_tag}" | \
-              awk '$1 == "Digest:" {print $2; exit}')
-            apptainer build "${sif_file}" "docker://${image_tag}" || { echo "Failed to build Apptainer image for ${image_tag}" >&2; exit 1; }
-            manifest_digest=$(apptainer exec "${sif_file}" python -c \
-              'from simtools.dependencies import get_dependency_manifest_digest; print(get_dependency_manifest_digest())')
-            manifest_checksum=$(apptainer exec "${sif_file}" \
-              cat /opt/simtools/provenance/dependency-manifest.json.sha256)
-            test "${manifest_digest}" = "${oci_manifest_digest}"
-            test "${manifest_checksum}" = "${oci_manifest_checksum}"
-            sif_digest=$(sha256sum "${sif_file}" | cut -d ' ' -f1)
-            jq -cn \
-              --arg release_version "${SIMTOOLS_VERSION}" \
-              --arg git_revision "${SIMTOOLS_GIT_REVISION}" \
-              --arg image "${image_tag}" \
-              --arg oci_digest "${oci_digest}" \
-              --arg sif_digest "sha256:${sif_digest}" \
-              --arg manifest_digest "sha256:${manifest_digest}" \
-              '{release_version: $release_version, git_revision: $git_revision, image: $image, oci_digest: $oci_digest, sif_digest: $sif_digest, dependency_manifest_digest: $manifest_digest}' \
-              >> container-provenance.ndjson
-            apptainer push -U "${sif_file}" "oras://${image_tag%:*}:${apptainer_tag}" || { echo "Failed to push Apptainer image for ${image_tag}" >&2; exit 1; }
-            rm -f "${sif_file}"
-          done <<< "${{ steps.meta.outputs.tags }}"
-
-      - name: Upload container provenance
-        if: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')) }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
-        with:
-          name: container-provenance-${{ matrix.corsika }}-${{ matrix.avx_flag }}
-          path: container-provenance.ndjson
 
   test-simtools-prod:
     permissions:

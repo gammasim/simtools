@@ -1,6 +1,6 @@
 # Container Images
 
-OCI-compatible container images are available for simtools users and support both application and development use cases. Runtimes such as [Docker](https://www.docker.com/products/docker-desktop), [Podman](https://podman.io/), or [Apptainer](https://apptainer.org/) can be used.
+OCI-compatible container images are available for simtools users and support both application and development use cases. Runtimes such as [Docker](https://www.docker.com/products/docker-desktop), [Podman](https://podman.io/), or [Apptainer](https://apptainer.org/) can be used. Apptainer users should pull the OCI image with a `docker://` reference.
 
 ## Pre-built Images
 
@@ -20,7 +20,9 @@ development images use Python 3.14.
 
 The generic image is compatible with ARM and x86_64 CPUs, all other images are for x86_64 CPUs only.
 
-Apptainer images are published as ORAS artifacts in the same GitHub Container Registry repositories and use image tags with an additional `-apptainer` suffix. For the generic x86_64 image, the tag segment `generic` is first rewritten to `generic-amd64`, then suffixed as `generic-amd64-apptainer`. See [Getting Started](getting_started.md) for `apptainer pull` and `apptainer exec` examples.
+No separate Apptainer images are published. To use an image with Apptainer, pull the matching
+OCI image from the GitHub Container Registry with `apptainer pull docker://...` and run the
+resulting local SIF file.
 
 ### Simtools for Developers
 

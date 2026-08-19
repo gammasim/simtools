@@ -28,7 +28,7 @@ The production context includes:
 - whether direction-dependent CORSIKA limits or zenith-dependent scaling should be applied.
 
 The CORSIKA and sim_telarray executable versions are not selected directly in the grid. They are
-determined by the production environment, usually the Apptainer image used for execution. The
+determined by the production environment, usually the container image used for execution. The
 exact software versions used by a production are identified from the image tag, image release
 notes, and generated run logs.
 
