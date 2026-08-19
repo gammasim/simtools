@@ -97,7 +97,6 @@ class _ResourceSampler:
     """Sample the current pytest process and all descendants in a thread."""
 
     def __init__(self, sample_interval):
-
         self.psutil = psutil
         self.process = psutil.Process()
         self.sample_interval = sample_interval
