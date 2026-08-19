@@ -4,6 +4,7 @@ import pytest
 
 import simtools.sim_events.production_comparison as production_comparison
 from simtools.applications import compare_productions
+from simtools.constants import SCHEMA_PATH
 
 
 def test_parse_production_arguments_accepts_single_production(mocker):
@@ -112,3 +113,6 @@ def test_main_writes_comparison_statistics_metadata(mocker, tmp_test_directory):
     assert metadata_args["output_file"] == str(statistics_file)
     assert metadata_args["output_file_format"] == "JSON"
     assert metadata_args["metadata_product_data_name"] == "production_comparison_statistics"
+    assert metadata_args["schema_file"] == str(
+        SCHEMA_PATH / "production_comparison_statistics.schema.yml"
+    )

@@ -316,3 +316,22 @@ def test_global_quantity_bin_edges_union_histogram_supports():
     )
 
     np.testing.assert_array_equal(edges, np.array([0.0, 1.0, 2.0, 3.0]))
+
+
+def test_quantity_count_rebinning_preserves_distribution_when_edges_split():
+    metric = _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)
+    metric.quantity_histograms = {
+        "energy": {
+            "simulated": (np.array([100.0]), np.array([0.0, 2.0])),
+        }
+    }
+
+    counts, samples = plot_event_level_production_comparison._get_quantity_counts(
+        metric,
+        "energy",
+        np.array([0.0, 1.0, 2.0]),
+        "simulated",
+    )
+
+    assert samples is None
+    np.testing.assert_allclose(counts, np.array([50.0, 50.0]))

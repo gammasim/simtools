@@ -650,9 +650,28 @@ def _get_quantity_counts(metrics, quantity_name, bin_edges, event_kind):
     source_edges = np.asarray(source_edges, dtype=float)
     if np.array_equal(source_edges, bin_edges):
         return counts, None
-    centers = 0.5 * (source_edges[:-1] + source_edges[1:])
-    rebinned, _ = np.histogram(centers, bins=bin_edges, weights=counts)
-    return rebinned, None
+    return _rebin_histogram_counts(counts, source_edges, bin_edges), None
+
+
+def _rebin_histogram_counts(counts, source_edges, target_edges):
+    """Rebin counts by distributing each source bin over its overlapping target bins.
+
+    Counts are assumed to be uniformly distributed within each source bin. This
+    preserves the total count and avoids assigning a complete source bin to one
+    target bin when the target edges split it.
+    """
+    rebinned = np.zeros(len(target_edges) - 1, dtype=float)
+    for count, source_low, source_high in zip(counts, source_edges[:-1], source_edges[1:]):
+        source_width = source_high - source_low
+        target_start = np.searchsorted(target_edges, source_low, side="right") - 1
+        target_stop = np.searchsorted(target_edges, source_high, side="left")
+        for target_index in range(max(0, target_start), min(len(rebinned), target_stop + 1)):
+            overlap = min(source_high, target_edges[target_index + 1]) - max(
+                source_low, target_edges[target_index]
+            )
+            if overlap > 0:
+                rebinned[target_index] += count * overlap / source_width
+    return rebinned
 
 
 def _plot_telescope_participation(metrics_per_production, output_path):
@@ -722,8 +741,8 @@ def _build_aligned_count_statistics(
         result = {
             **result,
             "candidate_label": metrics.label,
-            "baseline_counts": np.asarray(baseline_counts, dtype=int).tolist(),
-            "candidate_counts": np.asarray(candidate_counts, dtype=int).tolist(),
+            "baseline_counts": np.asarray(baseline_counts, dtype=float).tolist(),
+            "candidate_counts": np.asarray(candidate_counts, dtype=float).tolist(),
         }
         stats_summary["comparisons"].append(result)
     return stats_summary
@@ -793,8 +812,8 @@ def _compare_distribution_data(baseline_data, candidate_data, event_kind, baseli
         candidate_data[event_kind],
         metric="ks",
     )
-    result["baseline_counts"] = np.asarray(baseline_data[event_kind], dtype=int).tolist()
-    result["candidate_counts"] = np.asarray(candidate_data[event_kind], dtype=int).tolist()
+    result["baseline_counts"] = np.asarray(baseline_data[event_kind], dtype=float).tolist()
+    result["candidate_counts"] = np.asarray(candidate_data[event_kind], dtype=float).tolist()
     result["bin_edges"] = np.asarray(baseline_bin_edges, dtype=float).tolist()
     return result
 

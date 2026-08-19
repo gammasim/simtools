@@ -4,6 +4,7 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.constants import SCHEMA_PATH
 from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.sim_events.production_comparison import (
     collect_production_metrics,
@@ -70,6 +71,7 @@ def main():
                 "output_file": str(comparison_statistics_file),
                 "output_file_format": "JSON",
                 "metadata_product_data_name": "production_comparison_statistics",
+                "schema_file": str(SCHEMA_PATH / "production_comparison_statistics.schema.yml"),
             }
         )
         MetadataCollector.dump(metadata_args, comparison_statistics_file)
