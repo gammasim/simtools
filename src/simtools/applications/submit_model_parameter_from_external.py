@@ -53,7 +53,7 @@ _ARGUMENTS = (
         "meta_parameter",
         help=(
             "If set, treat the submitted parameter as a sim_telarray metaparameter "
-            " (written into sim_telarray metadata)."
+            "(written into sim_telarray metadata)."
         ),
         action="store_true",
     ),
