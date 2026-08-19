@@ -75,8 +75,7 @@ apptainer exec simtools-prod.sif \
 apptainer inspect --json --labels simtools-prod.sif
 ```
 
-Published OCI indexes carry the dependency manifest digest as the
-`org.gammasim.simtools.dependency-manifest-sha256` annotation.
+Published production images include `/opt/simtools/provenance/dependency-manifest.json.sha256`, containing the dependency manifest digest.
 
 ## Runtime configuration
 
