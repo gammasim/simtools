@@ -33,31 +33,36 @@ def tar_with_log(tmp_test_directory, safe_tar_open):
     return _create_tar
 
 
-def test_assert_file_type_json(model_parameter_json, test_yaml_file):
-    assert assertions.assert_file_type("json", Path(model_parameter_json))
-    assert not assertions.assert_file_type("json", "tests/resources/does_not_exist.json")
+def test_assert_file_type_json(tmp_test_directory, test_yaml_file):
+    json_file = tmp_test_directory / "model_parameter.json"
+    json_file.write_text('{"value": 1}\n', encoding="utf-8")
+
+    assert assertions.assert_file_type("json", json_file)
+    assert not assertions.assert_file_type("json", "tests/unit_tests/resources/does_not_exist.json")
     assert not assertions.assert_file_type("json", test_yaml_file)
 
-    assert assertions.assert_file_type("json", Path(model_parameter_json))
+    assert assertions.assert_file_type("json", json_file)
 
 
 def test_assert_file_type_yaml(test_yaml_file):
     assert assertions.assert_file_type("yaml", test_yaml_file)
     assert assertions.assert_file_type("yml", test_yaml_file)
-    assert not assertions.assert_file_type("yml", "tests/resources/does_not_exit.schema.yml")
+    assert not assertions.assert_file_type(
+        "yml", "tests/unit_tests/resources/does_not_exit.schema.yml"
+    )
 
     assert not assertions.assert_file_type(
-        "yaml", "tests/resources/telescope_positions-South-ground.ecsv"
+        "yaml", "tests/unit_tests/resources/telescope_positions-South-ground.ecsv"
     )
 
 
 def test_assert_file_type_others(caplog):
     with caplog.at_level(logging.INFO):
         assert assertions.assert_file_type(
-            "ecsv", "tests/resources/telescope_positions-South-ground.ecsv"
+            "ecsv", "tests/unit_tests/resources/telescope_positions-South-ground.ecsv"
         )
     assert (
-        "File type test is checking suffix only for tests/resources/"
+        "File type test is checking suffix only for tests/unit_tests/resources/"
         "telescope_positions-South-ground.ecsv (suffix: ecsv)" in caplog.text
     )
 

@@ -1,10 +1,20 @@
 #!/usr/bin/python3
 
+from types import SimpleNamespace
 from unittest import mock
 
 import pytest
 
 import simtools.simtel.simtel_io_metadata as simtel_io_metadata
+
+
+class _FakeHistoryMeta:
+    def __init__(self, metadata, telescope_id):
+        self.header = SimpleNamespace(id=telescope_id)
+        self._metadata = metadata
+
+    def parse(self):
+        return self._metadata
 
 
 def test_decode_success():
@@ -28,9 +38,27 @@ def test_decode_with_unicode_error(caplog):
     assert "Unable to decode metadata with encoding utf-8" in caplog.text
 
 
-def test_read_sim_telarray_metadata(get_test_data_file):
+def test_read_sim_telarray_metadata(mocker):
+    simtel_io_metadata.read_sim_telarray_metadata.cache_clear()
+    mocker.patch.object(simtel_io_metadata, "HistoryMeta", _FakeHistoryMeta)
+    eventio_file = mocker.patch.object(simtel_io_metadata, "EventIOFile")
+    eventio_file.return_value.__enter__.return_value = [
+        _FakeHistoryMeta(
+            {b"*Latitude": b" 28.0 ", b"Array_Config_Name": b" CTAO-North-Alpha "},
+            -1,
+        ),
+        _FakeHistoryMeta(
+            {
+                b"Optics_Config_Variant": b"LSTN-01 ",
+                b"Camera_Config_Variant": b"LSTN-01 ",
+            },
+            1,
+        ),
+        object(),
+    ]
+
     global_meta, telescope_meta = simtel_io_metadata.read_sim_telarray_metadata(
-        get_test_data_file("sim_telarray", "gamma")
+        "synthetic.simtel.zst"
     )
     assert global_meta is not None
     assert len(telescope_meta) > 0
@@ -48,36 +76,54 @@ def test_read_sim_telarray_metadata(get_test_data_file):
 
 
 @mock.patch.object(simtel_io_metadata, "_decode_dictionary", return_value=None, autospec=True)
-def test_read_sim_telarray_metadata_attribute_error(mock_decode, get_test_data_file):
+def test_read_sim_telarray_metadata_attribute_error(mock_decode, mocker):
     simtel_io_metadata.read_sim_telarray_metadata.cache_clear()
+    mocker.patch.object(simtel_io_metadata, "HistoryMeta", _FakeHistoryMeta)
+    eventio_file = mocker.patch.object(simtel_io_metadata, "EventIOFile")
+    eventio_file.return_value.__enter__.return_value = [_FakeHistoryMeta({}, -1)]
     with pytest.raises(AttributeError, match=r"^Error reading metadata from file"):
-        simtel_io_metadata.read_sim_telarray_metadata(get_test_data_file("sim_telarray", "gamma"))
+        simtel_io_metadata.read_sim_telarray_metadata("synthetic.simtel.zst")
 
 
-def test_get_sim_telarray_telescope_id(get_test_data_file):
-    assert (
-        simtel_io_metadata.get_sim_telarray_telescope_id(
-            "LSTN-01", get_test_data_file("sim_telarray", "gamma")
-        )
-        == 1
+def test_get_sim_telarray_telescope_id(mocker):
+    mocker.patch.object(
+        simtel_io_metadata,
+        "read_sim_telarray_metadata",
+        return_value=(
+            {},
+            {
+                1: {
+                    "optics_config_variant": "LSTN-01",
+                    "camera_config_variant": "LSTN-01",
+                },
+                5: {
+                    "optics_config_variant": "MSTN-01",
+                    "camera_config_variant": "MSTN-01",
+                },
+            },
+        ),
     )
+    assert simtel_io_metadata.get_sim_telarray_telescope_id("LSTN-01", "synthetic.simtel.zst") == 1
+    assert simtel_io_metadata.get_sim_telarray_telescope_id("MSTN-01", "synthetic.simtel.zst") == 5
     assert (
-        simtel_io_metadata.get_sim_telarray_telescope_id(
-            "MSTN-01", get_test_data_file("sim_telarray", "gamma")
-        )
-        == 5
-    )
-    assert (
-        simtel_io_metadata.get_sim_telarray_telescope_id(
-            "MSTS-01", get_test_data_file("sim_telarray", "gamma")
-        )
-        is None
+        simtel_io_metadata.get_sim_telarray_telescope_id("MSTS-01", "synthetic.simtel.zst") is None
     )
 
 
-def test_get_sim_telarray_telescope_id_to_telescope_name_mapping(get_test_data_file):
+def test_get_sim_telarray_telescope_id_to_telescope_name_mapping(mocker):
+    mocker.patch.object(
+        simtel_io_metadata,
+        "read_sim_telarray_metadata",
+        return_value=(
+            {},
+            {
+                1: {"optics_config_variant": "LSTN-01"},
+                5: {"optics_config_variant": "MSTN-01"},
+            },
+        ),
+    )
     tel_mapping = simtel_io_metadata.get_sim_telarray_telescope_id_to_telescope_name_mapping(
-        get_test_data_file("sim_telarray", "gamma")
+        "synthetic.simtel.zst"
     )
     assert isinstance(tel_mapping, dict)
     assert len(tel_mapping) > 0

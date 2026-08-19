@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import importlib.util
 import json
 import os
 import subprocess
@@ -147,6 +148,11 @@ def test_pytest_configure_rejects_invalid_options(mocker, option, value, message
         resource_benchmark.pytest_configure(config)
 
 
+@pytest.mark.xfail(
+    importlib.util.find_spec("psutil") is None,
+    reason="psutil is required by the resource benchmark sampler",
+    strict=True,
+)
 def test_resource_benchmark_plugin_end_to_end(tmp_test_directory, simtools_root_path):
     temporary_path = Path(tmp_test_directory)
     test_file = temporary_path / "test_benchmark_sample.py"

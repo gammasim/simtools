@@ -532,9 +532,9 @@ def test_updating_export_model_files(model_version):
     assert False is tel._is_exported_model_files_up_to_date
 
 
-def test_overwrite_model_file(telescope_model_lst, mocker, get_test_data_file):
+def test_overwrite_model_file(telescope_model_lst, mocker, tmp_test_directory):
     parameter = "array_coordinates_UTM"
-    file_path = get_test_data_file("telescope_positions", "North")
+    file_path = tmp_test_directory / "telescope_positions.ecsv"
     telescope_copy = copy.deepcopy(telescope_model_lst)
     mock_copy = mocker.patch("shutil.copy")
     telescope_copy.overwrite_model_file(par_name=parameter, file_path=file_path)

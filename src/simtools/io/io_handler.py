@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 
 import simtools.utils.general as gen
+from simtools import constants
 
 _TEST_RESOURCE_PATTERN = re.compile(r"\$\{(static|generated|downloaded):([^}]+)\}")
 _TEST_RESOURCE_PATH_PATTERN = re.compile(r"(?<![\w/])(?:\./)?tests/resources(?=/|$)")
@@ -19,14 +20,15 @@ def resolve_test_resource_paths(value, test_resources_path=None):
         Configuration value, mapping, or sequence to resolve.
     test_resources_path : str or pathlib.Path, optional
         Base directory containing the ``static``, ``generated``, and ``downloaded``
-        resource directories. Defaults to ``tests/resources``.
+        resource directories. Defaults to ``SIMTOOLS_TEST_RESOURCES`` or the unit-test
+        resource directory.
 
     Returns
     -------
     object
         Configuration with absolute test-resource paths.
     """
-    base_path = Path(test_resources_path or "tests/resources").expanduser().resolve()
+    base_path = Path(test_resources_path or constants.TEST_RESOURCES_ROOT).expanduser().resolve()
     if isinstance(value, dict):
         return {
             key: resolve_test_resource_paths(item, test_resources_path=base_path)
@@ -62,7 +64,7 @@ class IOHandler(metaclass=IOHandlerSingleton):
         self.logger = logging.getLogger(__name__)
         self.output_path = {}
         self.model_path = None
-        self.test_resources_path = Path("tests/resources").resolve()
+        self.test_resources_path = constants.TEST_RESOURCES_ROOT.resolve()
 
     def set_paths(self, output_path=None, model_path=None, output_path_label="default"):
         """
@@ -150,7 +152,8 @@ class IOHandler(metaclass=IOHandlerSingleton):
         file_name: str
             File name.
         sub_dir: str or list or tuple of str
-            Fallback resource subdirectory name(s) to search under tests/resources.
+        Fallback resource subdirectory name(s) to search under the configured
+        test-resource root.
 
         Returns
         -------

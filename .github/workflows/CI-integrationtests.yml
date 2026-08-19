@@ -271,8 +271,42 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  prepare_test_resources:
+    name: download test resources
+    runs-on: ubuntu-latest
+    outputs:
+      test_resources_version: ${{ steps.test_resources.outputs.version }}
+
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+
+      - name: Set test resource version
+        id: test_resources
+        run: |
+          SIMTOOLS_TESTS_VERSION=$(grep '^SIMTOOLS_TESTS_VERSION=' .env_template | cut -d '=' -f2-)
+          echo "version=$SIMTOOLS_TESTS_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout test resources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          repository: gammasim/simtools-tests
+          path: simtools-tests
+          sparse-checkout: simtools-tests/${{ steps.test_resources.outputs.version }}
+
+      - name: Upload test resources
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        with:
+          name: simtools-test-resources
+          path: simtools-tests
+          if-no-files-found: error
+          retention-days: 30
+
   integration_tests:
-    needs: [prepare_interaction_tables, prepare_simulation_models]
+    needs: [prepare_interaction_tables, prepare_simulation_models, prepare_test_resources]
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -310,6 +344,21 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
           fetch-depth: 0
+
+      - name: Configure test resources
+        run: |
+          SIMTOOLS_TESTS_VERSION="${{ needs.prepare_test_resources.outputs.test_resources_version }}"
+          {
+            echo "SIMTOOLS_TESTS_PATH=$GITHUB_WORKSPACE/simtools-tests/simtools-tests"
+            echo "SIMTOOLS_TESTS_VERSION=$SIMTOOLS_TESTS_VERSION"
+            echo "SIMTOOLS_TEST_RESOURCES=$GITHUB_WORKSPACE/simtools-tests/simtools-tests/$SIMTOOLS_TESTS_VERSION/integration_tests"
+          } >> "$GITHUB_ENV"
+
+      - name: Download test resources
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
+        with:
+          name: simtools-test-resources
+          path: simtools-tests
 
       - name: Create runtime environment (.env)
         run: |
@@ -394,7 +443,7 @@ jobs:
             for variable in ${!SIMTOOLS_DB_@}; do
               unset "$variable"
             done
-            MODEL_SOURCE_ARGS+=(--simulation-models-path="$SIMULATION_MODELS_PATH")
+            MODEL_SOURCE_ARGS+=(--simulation_models_path="$SIMULATION_MODELS_PATH")
           fi
           if [[ "${{ inputs.benchmark }}" == "true" ]]; then
             pytest --model_version=${{ matrix.model_version }} --color=yes \

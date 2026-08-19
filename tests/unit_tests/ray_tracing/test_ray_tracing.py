@@ -2,7 +2,6 @@
 
 import copy
 import logging
-import shutil
 from math import pi, tan
 from pathlib import Path
 from unittest.mock import call
@@ -12,7 +11,6 @@ import numpy as np
 import pytest
 from astropy.table import QTable
 
-from simtools.constants import TEST_RESOURCES_STATIC
 from simtools.ray_tracing.ray_tracing import INVALID_KEY_TO_PLOT, RayTracing
 
 
@@ -82,7 +80,7 @@ def telescope_model_lst_mock(mocker, tmp_test_directory, io_handler):
 
 @pytest.fixture
 def ray_tracing_lst(telescope_model_lst_mock, site_model_north):
-    """A RayTracing instance with results read in that were simulated before"""
+    """A RayTracing instance with a local output directory."""
 
     ray_tracing_lst = RayTracing(
         telescope_model=telescope_model_lst_mock,
@@ -94,17 +92,7 @@ def ray_tracing_lst(telescope_model_lst_mock, site_model_north):
         offset_directions=["N"],
     )
 
-    output_directory = ray_tracing_lst.output_directory
-    output_directory.mkdir(parents=True, exist_ok=True)
-    shutil.copy(
-        f"{TEST_RESOURCES_STATIC}/ray_tracing_North_LSTN-01_d10.0km_za20.0deg_validate_optics.ecsv",
-        output_directory.joinpath("results"),
-    )
-    shutil.copy(
-        f"{TEST_RESOURCES_STATIC}/ray_tracing_photons_North_LSTN-01_d10.0km_za20.0deg_off0.000"
-        "deg_validate_optics.lis.gz",
-        output_directory,
-    )
+    ray_tracing_lst.output_directory.mkdir(parents=True, exist_ok=True)
     return ray_tracing_lst
 
 

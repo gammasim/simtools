@@ -5,7 +5,6 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 
-from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.reporting.docs_read_parameters import ParameterDelta, ReadParameters
 from simtools.utils import names
 
@@ -219,9 +218,9 @@ def test__convert_to_md(telescope_model_lst, tmp_test_directory, mocker):
         read_parameters._convert_to_md(parameter_name, "1.0.0", "invalid-file.dat")
 
     # testing with valid file
-    valid_file = Path(
-        f"{TEST_RESOURCES_GENERATED}/model_parameters/spe_LST_2022-04-27_AP2.0e-4.dat"
-    )
+    valid_file = Path(tmp_test_directory) / "valid_parameter.dat"
+    valid_lines = [f"# line {index}\n" for index in range(30)]
+    valid_file.write_text("".join(valid_lines), encoding="utf-8")
     new_file = read_parameters._convert_to_md(parameter_name, "1.0.0", str(valid_file))
     assert isinstance(new_file, str)
     assert Path(output_path / new_file).exists()
@@ -236,10 +235,8 @@ def test__convert_to_md(telescope_model_lst, tmp_test_directory, mocker):
     line_count = len(code_block.strip().splitlines())
     assert line_count == 30
 
-    # Compare to actual first 30 lines of input file
-    with valid_file.open("r", encoding="utf-8") as original_file:
-        expected_lines = original_file.read().splitlines()[:30]
-        expected_block = "\n".join(expected_lines)
+    # Compare to the first 30 lines of the local input file
+    expected_block = "".join(valid_lines).rstrip()
 
     assert code_block.strip() == expected_block.strip()
 

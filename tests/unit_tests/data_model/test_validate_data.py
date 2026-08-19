@@ -11,15 +11,43 @@ from astropy import units as u
 from astropy.table import Column, Table
 from astropy.utils.diff import report_diff_values
 
-from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH, TEST_RESOURCES_STATIC
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, SCHEMA_PATH
 from simtools.data_model import schema, validate_data
 from simtools.io import ascii_handler
 
 logger = logging.getLogger()
 
-mirror_file = f"{TEST_RESOURCES_STATIC}/MLTdata-preproduction.ecsv"
 mirror_2f_schema_file = SCHEMA_PATH / "input/MST_mirror_2f_measurements.schema.yml"
-num_gains_test_file = f"{TEST_RESOURCES_STATIC}/model_parameters/schema-0.2.0/num_gains-1.0.0.json"
+
+
+def _write_mirror_file(tmp_test_directory):
+    mirror_table = Table(
+        {
+            "mirror_panel_id": ["1"],
+            "mirror_curvature_radius": [100.0] * u.cm,
+            "psf": [1.0] * u.cm,
+            "psf_opt": [0.8] * u.cm,
+        }
+    )
+    mirror_file_path = Path(tmp_test_directory) / "mirror_measurement.ecsv"
+    mirror_table.write(mirror_file_path, format="ascii.ecsv", overwrite=True)
+    return mirror_file_path
+
+
+def _write_num_gains_file(tmp_test_directory, file_name="num_gains-1.0.0.json"):
+    parameter_file = Path(tmp_test_directory) / file_name
+    ascii_handler.write_data_to_file(
+        {
+            "parameter": "num_gains",
+            "parameter_version": "1.0.0",
+            "instrument": "LSTN-01",
+            "site": "North",
+            "value": 2,
+            "unit": None,
+        },
+        parameter_file,
+    )
+    return parameter_file
 
 
 @pytest.fixture
@@ -94,7 +122,7 @@ def reference_columns_name():
     ]
 
 
-def test_validate_and_transform(caplog, mocker):
+def test_validate_and_transform(caplog, mocker, tmp_test_directory):
     data_validator = validate_data.DataValidator()
     # no input file defined
     with caplog.at_level(logging.ERROR):
@@ -102,14 +130,14 @@ def test_validate_and_transform(caplog, mocker):
             data_validator.validate_and_transform()
     assert "No data or data table to validate" in caplog.text
 
-    data_validator.data_file_name = mirror_file
+    data_validator.data_file_name = _write_mirror_file(tmp_test_directory)
     data_validator.schema_file_name = mirror_2f_schema_file
     with caplog.at_level(logging.INFO):
         _table = data_validator.validate_and_transform()
         assert isinstance(_table, Table)
     assert "Validating tabled data from:" in caplog.text
 
-    data_validator.data_file_name = num_gains_test_file
+    data_validator.data_file_name = _write_num_gains_file(tmp_test_directory)
     data_validator.schema_file_name = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
     mock_prepare_model_parameter = mocker.patch(
         "simtools.data_model.validate_data.DataValidator._prepare_model_parameter"
@@ -121,24 +149,24 @@ def test_validate_and_transform(caplog, mocker):
     mock_prepare_model_parameter.assert_called_once()
 
 
-def test_validate_data_file(caplog, model_parameter_json):
+def test_validate_data_file(caplog, tmp_test_directory):
     data_validator = validate_data.DataValidator()
     # no input file defined, should pass
     data_validator.validate_data_file()
 
-    data_validator.data_file_name = mirror_file
+    data_validator.data_file_name = _write_mirror_file(tmp_test_directory)
     with caplog.at_level(logging.INFO):
         data_validator.validate_data_file()
     assert "Validating tabled data from:" in caplog.text
 
-    data_validator.data_file_name = model_parameter_json
+    data_validator.data_file_name = _write_num_gains_file(tmp_test_directory)
     with caplog.at_level(logging.INFO):
         data_validator.validate_data_file()
     assert "Validating data from:" in caplog.text
 
 
-def test_validate_parameter_and_file_name(caplog):
-    num_gain_file = num_gains_test_file
+def test_validate_parameter_and_file_name(caplog, tmp_test_directory):
+    num_gain_file = _write_num_gains_file(tmp_test_directory)
     parameter = "num_gains"
     parameter_version = "1.0.0"
 
@@ -161,9 +189,7 @@ def test_validate_parameter_and_file_name(caplog):
     }
     data_validator.validate_parameter_and_file_name()
 
-    data_validator.data_file_name = (
-        "tests/resources/model_parameters/schema-0.2.0/incorrect_name-1.0.0.json"
-    )
+    data_validator.data_file_name = Path(tmp_test_directory) / "incorrect_name-1.0.0.json"
     data_validator.data_dict = {
         "parameter": parameter,
         "parameter_version": parameter_version,
@@ -173,9 +199,7 @@ def test_validate_parameter_and_file_name(caplog):
     ):
         data_validator.validate_parameter_and_file_name()
 
-    data_validator.data_file_name = (
-        "tests/resources/model_parameters/schema-0.2.0/num_gains-2.0.0.json"
-    )
+    data_validator.data_file_name = Path(tmp_test_directory) / "num_gains-2.0.0.json"
     data_validator.data_dict = {
         "parameter": parameter,
         "parameter_version": parameter_version,
@@ -183,7 +207,7 @@ def test_validate_parameter_and_file_name(caplog):
     with pytest.raises(ValueError, match=r"Mismatch: version '1.0.0' vs. file 'num_gains-2.0.0'"):
         data_validator.validate_parameter_and_file_name()
 
-    data_validator.data_file_name = "tests/resources/model_parameters/schema-0.2.0/num_gains.json"
+    data_validator.data_file_name = Path(tmp_test_directory) / "num_gains.json"
     data_validator.data_dict = {"parameter": parameter, "parameter_version": None}
     with caplog.at_level(logging.WARNING):
         data_validator.validate_parameter_and_file_name()
@@ -211,7 +235,7 @@ def test_validate_data_columns(tmp_test_directory, caplog):
 
     data_validator_1 = validate_data.DataValidator(
         schema_file=None,
-        data_file=mirror_file,
+        data_file=_write_mirror_file(tmp_test_directory),
     )
     data_validator_1.validate_data_file()
     with pytest.raises(TypeError):
@@ -219,7 +243,7 @@ def test_validate_data_columns(tmp_test_directory, caplog):
 
     data_validator_3 = validate_data.DataValidator(
         schema_file=mirror_2f_schema_file,
-        data_file=mirror_file,
+        data_file=_write_mirror_file(tmp_test_directory),
     )
     data_validator_3.validate_data_file()
     data_validator_3._validate_data_table()
@@ -1028,8 +1052,8 @@ def test_validate_data_files_directory(tmp_test_directory, caplog):
     assert "reference_point_altitude-1.0.0.json" in caplog.text
 
 
-def test_validate_data_files_single_file(caplog):
-    test_file = num_gains_test_file
+def test_validate_data_files_single_file(caplog, tmp_test_directory):
+    test_file = _write_num_gains_file(tmp_test_directory)
 
     with caplog.at_level(logging.INFO):
         validate_data.DataValidator.validate_data_files(file_name=test_file)
@@ -1038,8 +1062,8 @@ def test_validate_data_files_single_file(caplog):
     assert "num_gains-1.0.0.json" in caplog.text
 
 
-def test_validate_data_files_with_schema_file(caplog):
-    test_file = num_gains_test_file
+def test_validate_data_files_with_schema_file(caplog, tmp_test_directory):
+    test_file = _write_num_gains_file(tmp_test_directory)
     schema_file = MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
 
     with caplog.at_level(logging.INFO):
@@ -1075,7 +1099,7 @@ def test_validate_data_files_reads_schema_from_ecsv_metadata(tmp_test_directory,
 
 
 def test_validate_data_files_falls_back_to_model_parameter_schema_when_metadata_missing(
-    monkeypatch,
+    monkeypatch, tmp_test_directory
 ):
     captured = {}
 
@@ -1087,13 +1111,11 @@ def test_validate_data_files_falls_back_to_model_parameter_schema_when_metadata_
         validate_data.DataValidator, "validate_and_transform", _validate_and_transform
     )
 
-    validate_data.DataValidator.validate_data_files(
-        file_name=num_gains_test_file,
-        is_model_parameter=False,
-    )
+    test_file = tmp_test_directory / "num_gains-1.0.0.json"
+    validate_data.DataValidator.validate_data_files(file_name=test_file, is_model_parameter=False)
 
     assert captured["schema_file"] == MODEL_PARAMETER_SCHEMA_PATH / "num_gains.schema.yml"
-    assert captured["data_file"] == Path(num_gains_test_file)
+    assert captured["data_file"] == test_file
 
 
 def test_validate_data_files_no_input():
