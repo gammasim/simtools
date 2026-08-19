@@ -653,6 +653,30 @@ def test_apply_changes_to_model_parameters_with_both_value_and_activity_id_raise
     mock_create_entry.assert_not_called()
 
 
+@patch("simtools.model.model_repository._create_new_model_parameter_entry")
+def test_apply_changes_to_model_parameters_adds_info_entry_to_error(
+    mock_create_entry, tmp_test_directory
+):
+    mock_create_entry.side_effect = TypeError("Error validating dictionary")
+    changes = {
+        "OBS-South": {
+            "array_layouts": {
+                "version": "4.0.0",
+                "value": "019fd316-c3f8-7796-81dc-eab12f221a1c",
+            }
+        }
+    }
+
+    with pytest.raises(TypeError) as exc_info:
+        model_repository._apply_changes_to_model_parameters(changes, tmp_test_directory)
+
+    assert str(exc_info.value) == (
+        "Failed to process info.yml entry 'OBS-South -> array_layouts' "
+        "(version='4.0.0', value='019fd316-c3f8-7796-81dc-eab12f221a1c'): "
+        "Error validating dictionary"
+    )
+
+
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_git")
 @patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter_json")
 def test_download_model_parameter_from_workflow(
