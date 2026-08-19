@@ -27,7 +27,7 @@ def pytest_addoption(parser):
     group.addoption(
         "--resource-benchmark-mode",
         choices=("unit", "integration"),
-        help="Record the suite only, or the suite and integration tests.",
+        help="Record the session only, or the session and integration tests.",
     )
     group.addoption(
         "--resource-benchmark-min-wall-time",
@@ -161,7 +161,7 @@ class _ResourceSampler:
         return result
 
     def finish(self):
-        """Stop sampling and return the suite measurement."""
+        """Stop sampling and return the session measurement."""
         self.stop_event.set()
         self.thread.join()
         snapshot = self._snapshot()
@@ -172,7 +172,7 @@ class _ResourceSampler:
 
 
 class ResourceBenchmarkPlugin:
-    """Collect suite and optional per-integration-test resource measurements."""
+    """Collect session and optional per-integration-test resource measurements."""
 
     def __init__(self, config, output, mode, sample_interval, minimum_wall_time):
         self.config = config
@@ -186,7 +186,7 @@ class ResourceBenchmarkPlugin:
         self.excluded = []
 
     def pytest_sessionstart(self):
-        """Start suite resource sampling."""
+        """Start session resource sampling."""
         self.sampler = _ResourceSampler(self.sample_interval)
         self.sampler.start()
 
@@ -239,12 +239,12 @@ class ResourceBenchmarkPlugin:
 
     def pytest_sessionfinish(self, exitstatus):
         """Finish sampling and write raw and chart-ready JSON files."""
-        suite = self.sampler.finish()
+        session = self.sampler.finish()
         self.sampler = None
         metadata = _metadata(self.config, self.mode, self.sample_interval, self.minimum_wall_time)
         records = _records(
             self.mode,
-            suite,
+            session,
             self.tests,
             metadata,
             exitstatus,
@@ -253,7 +253,7 @@ class ResourceBenchmarkPlugin:
         raw = {
             "schema_version": 1,
             "metadata": metadata,
-            "suite": {**suite, "exit_status": int(exitstatus)},
+            "session": {**session, "exit_status": int(exitstatus)},
             "tests": self.tests,
             "excluded": self.excluded,
             "published_test_count": sum(
@@ -324,12 +324,12 @@ def _short_test_name(nodeid):
     return test_name[len(prefix) : -1] if test_name.startswith(prefix) else test_name
 
 
-def _records(mode, suite, tests, metadata, exitstatus, minimum_wall_time):
-    """Build suite records and slow integration-test records."""
+def _records(mode, session, tests, metadata, exitstatus, minimum_wall_time):
+    """Build session records and slow integration-test records."""
     model_version = metadata["model_version"]
-    suite_name = "unit-suite" if mode == "unit" else f"integration-suite / {model_version}"
+    session_name = "unit-session" if mode == "unit" else f"integration-session / {model_version}"
     records = _measurement_records(
-        suite_name, suite, _metadata_text(metadata, f"exit_status={int(exitstatus)}")
+        session_name, session, _metadata_text(metadata, f"exit_status={int(exitstatus)}")
     )
     if mode == "unit":
         return records
