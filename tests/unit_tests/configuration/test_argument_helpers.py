@@ -74,8 +74,8 @@ def test_telescope():
 
 
 def test_instrument():
-    assert helpers.instrument("OBS-North") == "North"
-    assert helpers.instrument("OBS-South") == "South"
+    assert helpers.instrument("OBS-North") == "OBS-North"
+    assert helpers.instrument("OBS-South") == "OBS-South"
     assert helpers.instrument("LSTN-01") == "LSTN-01"
     assert helpers.instrument("LSTN-design") == "LSTN-design"
     assert helpers.instrument("MSTS-FlashCam") == "MSTS-FlashCam"

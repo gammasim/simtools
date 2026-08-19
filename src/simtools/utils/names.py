@@ -389,7 +389,7 @@ def validate_array_element_name(array_element_name):
         msg = f"Invalid name {array_element_name}"
         raise ValueError(msg) from exc
     if _array_element_type == "OBS":
-        return validate_site_name(_array_element_id)
+        return f"OBS-{validate_site_name(_array_element_id)}"
     return (
         _validate_name(_array_element_type, array_elements())
         + "-"
