@@ -1,0 +1,7 @@
+{
+  "correct_nsb_spectrum_to_telescope_altitude": {
+    "value": "nsb_spectrum_dummy.dat",
+    "file": true,
+    "type": "str"
+  }
+}

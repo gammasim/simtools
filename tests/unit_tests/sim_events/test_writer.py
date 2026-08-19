@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import h5py
@@ -19,9 +20,9 @@ one_two_three = "LSTN-01,LSTN-02,MSTN-01"
 
 
 @pytest.fixture
-def mock_eventio_file(tmp_path):
+def mock_eventio_file(tmp_test_directory):
     """Create a mock EventIO file path."""
-    file_path = tmp_path / "mock_eventio_file.simtel.zst"
+    file_path = Path(tmp_test_directory) / "mock_eventio_file.simtel.zst"
     file_path.touch()  # Create an empty file
     return str(file_path)
 
@@ -180,10 +181,24 @@ def test_max_files_rejects_negative_values():
         EventDataWriter(["input"], max_files=-1)
 
 
-def test_chunked_output_matches_non_chunked_output(get_test_data_file, tmp_path):
-    input_file = get_test_data_file("sim_telarray", "gamma")
-    reference_file = tmp_path / "reference.hdf5"
-    chunked_file = tmp_path / "chunked.hdf5"
+def test_chunked_output_matches_non_chunked_output(
+    lookup_table_generator,
+    mock_get_sim_telarray_telescope_id_to_telescope_name_mapping,
+    mock_read_sim_telarray_metadata,
+    mocker,
+    tmp_test_directory,
+):
+    input_file = lookup_table_generator.input_files[0]
+    reference_file = Path(tmp_test_directory) / "reference.hdf5"
+    chunked_file = Path(tmp_test_directory) / "chunked.hdf5"
+    eventio_file = mocker.patch("simtools.sim_events.writer.EventIOFile")
+    eventio_file.return_value.__enter__.return_value = [
+        create_mc_run_header(),
+        create_mc_shower(shower_id=1),
+        create_mc_event(shower_num=1, event_id=0),
+        create_mc_event(shower_num=1, event_id=1),
+        create_array_event(),
+    ]
 
     reference_tables = EventDataWriter([input_file]).process_files()
     table_handler.write_tables(reference_tables, reference_file)

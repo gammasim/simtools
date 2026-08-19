@@ -2,6 +2,7 @@
 
 import copy
 import logging
+from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 import numpy as np
@@ -25,12 +26,23 @@ def array_model_north_from_list(model_version):
     )
 
 
-def test_array_model_north_from_file(model_version, get_test_data_file):
+def test_array_model_north_from_file(model_version, tmp_test_directory):
+    position_table = QTable()
+    position_table["telescope_name"] = [
+        "LSTN-01",
+        *[f"MSTN-{index:02d}" for index in range(1, 13)],
+    ]
+    position_table["position_x"] = np.arange(13) * u.m
+    position_table["position_y"] = np.arange(13) * u.m
+    position_table["position_z"] = np.zeros(13) * u.m
+    position_file = tmp_test_directory / "north-positions.ecsv"
+    position_table.write(position_file, format="ascii.ecsv", overwrite=True)
+
     am = ArrayModel(
         label="test",
         site="North",
         model_version=model_version,
-        array_elements=get_test_data_file("telescope_positions", "North"),
+        array_elements=Path(position_file),
     )
     assert am.number_of_telescopes == 13
 

@@ -2,6 +2,7 @@
 
 import copy
 import logging
+from pathlib import Path
 from unittest import mock
 
 import astropy.units as u
@@ -9,7 +10,7 @@ import numpy as np
 import pytest
 from astropy.tests.helper import assert_quantity_allclose
 
-from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, TEST_RESOURCES_STATIC
+from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH
 from simtools.simtel.simtel_config_reader import SimtelConfigReader, get_list_of_simtel_parameters
 from simtools.utils import names
 
@@ -17,8 +18,25 @@ logger = logging.getLogger()
 
 
 @pytest.fixture
-def simtel_config_file():
-    return f"{TEST_RESOURCES_STATIC}/simtel_config_test_la_palma.cfg"
+def simtel_config_file(tmp_test_directory):
+    config_file = Path(tmp_test_directory) / "simtel_config.cfg"
+    config_file.write_text(
+        "\n".join(
+            [
+                "type NUM_GAINS Int 1",
+                "default NUM_GAINS 2",
+                "limits NUM_GAINS 1 2",
+                "CT1 NUM_GAINS 2",
+                "CT2 NUM_GAINS 2",
+                "type TELESCOPE_TRANSMISSION Double 6",
+                "default TELESCOPE_TRANSMISSION 0.89,0,0,0,0,0",
+                "CT1 TELESCOPE_TRANSMISSION 0.969,0,0,0,0,0",
+                "CT2 TELESCOPE_TRANSMISSION 0.969,0,0,0,0,0",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    return config_file
 
 
 @pytest.fixture

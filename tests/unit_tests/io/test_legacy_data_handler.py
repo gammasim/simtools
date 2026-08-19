@@ -2,13 +2,14 @@
 
 import pytest
 
-from simtools.constants import TEST_RESOURCES_DOWNLOADED
 from simtools.io import legacy_data_handler
 
 
 @pytest.fixture
-def test_spe_file():
-    return f"{TEST_RESOURCES_DOWNLOADED}/SinglePhe_spectrum_totalfit_19pixel-average_20200601.csv"
+def test_spe_file(tmp_test_directory):
+    test_file = tmp_test_directory / "single_pe.csv"
+    test_file.write_text("0.1,1.0\n0.2,2.0\n", encoding="utf-8")
+    return test_file
 
 
 def test_read_legacy_data_file(test_spe_file):

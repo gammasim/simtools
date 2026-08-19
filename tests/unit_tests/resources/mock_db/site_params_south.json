@@ -1,0 +1,99 @@
+{
+  "reference_point_utm_east": {
+    "value": 366822.0,
+    "type": "float64",
+    "unit": "m",
+    "file": false
+  },
+  "reference_point_utm_north": {
+    "value": 7269466.0,
+    "type": "float64",
+    "unit": "m",
+    "file": false
+  },
+  "reference_point_altitude": {
+    "value": 2162.0,
+    "type": "float64",
+    "unit": "m",
+    "file": false
+  },
+  "epsg_code": {
+    "value": 32719,
+    "type": "int32",
+    "file": false
+  },
+  "corsika_observation_level": {
+    "value": 2147.0,
+    "type": "float64",
+    "unit": "m",
+    "file": false
+  },
+  "atmospheric_profile": {
+    "value": "atmospheric_profile_south_dummy.dat",
+    "type": "str",
+    "file": true
+  },
+  "atmospheric_transmission": {
+    "value": "atmospheric_transmission_south_dummy.dat",
+    "type": "str",
+    "file": true
+  },
+  "array_layouts": {
+    "value": [
+      {
+        "name": "test_layout",
+        "elements": [
+          "LSTN-01",
+          "LSTN-02",
+          "LSTN-03",
+          "LSTN-04",
+          "MSTS-01",
+          "MSTS-02",
+          "MSTS-03",
+          "MSTS-04",
+          "SSTS-01",
+          "SSTS-02",
+          "SSTS-03",
+          "SSTS-04",
+          "SSTS-05"
+        ]
+      }
+    ],
+    "type": "list",
+    "file": false
+  },
+  "nsb_spectrum": {
+    "value": "nsb_spectrum_south_dummy.dat",
+    "type": "str",
+    "file": true
+  },
+  "nsb_reference_spectrum": {
+    "value": "nsb_reference_spectrum_south_dummy.dat",
+    "type": "str",
+    "file": true
+  },
+  "nsb_reference_value": {
+    "value": 0.24,
+    "type": "float64",
+    "unit": "1/(sr*ns*cm**2)",
+    "file": false
+  },
+  "geomag_horizontal": {
+    "value": 20.0,
+    "type": "float64",
+    "unit": "uT",
+    "file": false
+  },
+  "geomag_vertical": {
+    "value": -23.0,
+    "type": "float64",
+    "unit": "uT",
+    "file": false
+  },
+  "geomag_rotation": {
+    "value": -5.5,
+    "type": "float64",
+    "unit": "deg",
+    "file": false
+  }
+}

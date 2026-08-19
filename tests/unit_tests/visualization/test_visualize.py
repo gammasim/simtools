@@ -5,13 +5,12 @@
 import logging
 from pathlib import Path
 
-import astropy.io.ascii
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from astropy.table import Table
 
-from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.visualization import visualize
 
 logger = logging.getLogger(__name__)
@@ -70,8 +69,11 @@ def test_plot_table(io_handler):
     logger.debug("Testing plot_table")
 
     title = "Test plot table"
-    table = astropy.io.ascii.read(
-        f"{TEST_RESOURCES_GENERATED}/model_parameters/sst_photon_incidence_angle_camera_window.ecsv"
+    table = Table(
+        {
+            "Wavelength": [300, 400, 500],
+            "Transmission": [0.8, 0.9, 0.85],
+        }
     )
 
     fig = visualize.plot_table(table, y_title="Transmission", title=title, no_markers=True)

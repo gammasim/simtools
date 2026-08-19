@@ -141,7 +141,7 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
   ```console
    pytest -n auto --no-cov --model_version=7.0.0 \\
-       --test-resources-path=../simtools-tests/simtools-tests/v0.33.0/integration_tests \\
+       --test_resources_path=../simtools-tests/simtools-tests/v0.33.0/integration_tests \\
        tests/integration_tests
    ``` ([#2283](https://github.com/gammasim/simtools/pull/2283))
 - Add generic runtime environment file option to `simtools-run-application` and `simtools-resources-test-generate`.

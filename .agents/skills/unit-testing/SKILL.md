@@ -67,11 +67,14 @@ covered and should drive the next tests you add.
    or `tests/conftest.py` before adding new helpers.
 5. Use `tmp_test_directory` for file I/O. Do not use `tmp_path`, `/tmp`, or
    hardcoded absolute temp paths.
-6. Mock external dependencies such as databases, network calls, file I/O,
+6. Do not make ordinary unit tests depend on checked-in, downloaded, or
+   external files. Generate the smallest valid input in `tmp_test_directory`
+   when file parsing or writing is the behavior under test.
+7. Mock external dependencies such as databases, network calls, file I/O,
    and installed simulation software.
-7. Use `pytest.approx()` for floats and
+8. Use `pytest.approx()` for floats and
    `astropy.tests.helper.assert_quantity_allclose` for quantities.
-8. Keep tests fast and readable.
+9. Keep tests fast and readable.
 
 ## Useful Repository Notes
 

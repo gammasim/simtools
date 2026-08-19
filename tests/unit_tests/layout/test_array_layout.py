@@ -1,17 +1,62 @@
 #!/usr/bin/python3
 
+import json
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import numpy as np
 import pytest
 from astropy.table import QTable
 
-from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.data_model import data_reader
 from simtools.layout.array_layout import ArrayLayout, InvalidTelescopeListFileError
 
 logger = logging.getLogger()
+
+
+def _write_ground_position_table(
+    tmp_test_directory, file_name, telescope_names, position_x, position_y
+):
+    table = QTable()
+    table["telescope_name"] = telescope_names
+    table["position_x"] = position_x * u.m
+    table["position_y"] = position_y * u.m
+    table["position_z"] = np.zeros(len(telescope_names)) * u.m
+    table["geo_code"] = [f"geo-{index}" for index in range(len(telescope_names))]
+    file_path = tmp_test_directory / file_name
+    table.write(file_path, format="ascii.ecsv", overwrite=True)
+    return file_path
+
+
+def _write_utm_position_table(tmp_test_directory, file_name, telescope_names):
+    table = QTable()
+    table["asset_code"] = [name.split("-")[0] for name in telescope_names]
+    table["sequence_number"] = [name.split("-")[1] for name in telescope_names]
+    table["utm_east"] = np.arange(len(telescope_names)) * u.m
+    table["utm_north"] = np.arange(len(telescope_names)) * u.m
+    table["altitude"] = np.full(len(telescope_names), 2200.0) * u.m
+    table["geo_code"] = [f"geo-{index}" for index in range(len(telescope_names))]
+    file_path = tmp_test_directory / file_name
+    table.write(file_path, format="ascii.ecsv", overwrite=True)
+    return file_path
+
+
+def _write_position_json(tmp_test_directory, file_name, parameter, instrument):
+    file_path = tmp_test_directory / file_name
+    Path(file_path).write_text(
+        json.dumps(
+            {
+                "parameter": parameter,
+                "instrument": instrument,
+                "site": "North",
+                "value": [1.0, 2.0, 3.0],
+                "unit": "m",
+            }
+        ),
+        encoding="utf-8",
+    )
+    return file_path
 
 
 @pytest.fixture
@@ -111,11 +156,23 @@ def test_initialize_coordinate_systems(
     )
 
 
-def test_select_assets(model_version, get_test_data_file):
+def test_select_assets(model_version, tmp_test_directory):
+    telescope_names = (
+        [f"LSTN-{index:02d}" for index in range(1, 17)]
+        + [f"MSTN-{index:02d}" for index in range(1, 6)]
+        + [f"SSTS-{index:02d}" for index in range(1, 5)]
+    )
+    telescope_list_file = _write_ground_position_table(
+        tmp_test_directory,
+        "north-calibration.ecsv",
+        telescope_names,
+        np.arange(25),
+        np.arange(25),
+    )
     layout = ArrayLayout(
         site="North",
         name="test_layout",
-        telescope_list_file=get_test_data_file("telescope_positions", "North-calibration"),
+        telescope_list_file=telescope_list_file,
         model_version=model_version,
     )
 
@@ -125,7 +182,7 @@ def test_select_assets(model_version, get_test_data_file):
     layout.select_assets([])
     assert len(layout._telescope_list) == 25
 
-    layout.select_assets(["MSTN", "SSTN"])
+    layout.select_assets(["MSTN", "SSTS"])
     assert len(layout._telescope_list) == 9
 
     layout.select_assets(["NOT_AN_ASSET", "ALSO_NOT_AN_ASSET"])
@@ -266,7 +323,7 @@ def test_altitude_from_corsika_z(
 def test_try_set_coordinate(
     array_layout_north_instance,
     array_layout_south_instance,
-    get_test_data_file,
+    tmp_test_directory,
 ):
     manual_xx_north = [-70.99, -35.38, 75.22, 30.78, -211.61, -153.34]
     manual_yy_north = [-52.08, 66.14, 50.45, -64.51, 5.67, 169.04]
@@ -290,23 +347,35 @@ def test_try_set_coordinate(
             ):
                 instance._load_telescope_names(row)
 
-    test_one_site(
-        array_layout_north_instance,
-        get_test_data_file("telescope_positions", "North"),
-        manual_xx_north,
-        manual_yy_north,
+    north_file = _write_ground_position_table(
+        tmp_test_directory,
+        "north.ecsv",
+        [f"LSTN-{index:02d}" for index in range(1, 7)],
+        np.array(manual_xx_north),
+        np.array(manual_yy_north),
     )
-    test_one_site(
-        array_layout_south_instance,
-        get_test_data_file("telescope_positions", "South"),
-        manual_xx_south,
-        manual_yy_south,
+    south_file = _write_ground_position_table(
+        tmp_test_directory,
+        "south.ecsv",
+        [f"LSTS-{index:02d}" for index in range(1, 7)],
+        np.array(manual_xx_south),
+        np.array(manual_yy_south),
     )
+    test_one_site(array_layout_north_instance, north_file, manual_xx_north, manual_yy_north)
+    test_one_site(array_layout_south_instance, south_file, manual_xx_south, manual_yy_south)
 
 
-def test_len(model_version, get_test_data_file):
+def test_len(model_version, tmp_test_directory):
+    telescope_names = [f"LSTN-{index:02d}" for index in range(1, 14)]
+    telescope_list_file = _write_ground_position_table(
+        tmp_test_directory,
+        "north.ecsv",
+        telescope_names,
+        np.arange(13),
+        np.arange(13),
+    )
     layout = ArrayLayout(
-        telescope_list_file=get_test_data_file("telescope_positions", "North"),
+        telescope_list_file=telescope_list_file,
         model_version=model_version,
         site="North",
     )
@@ -314,9 +383,16 @@ def test_len(model_version, get_test_data_file):
     assert layout.get_number_of_telescopes() == 13
 
 
-def test_getitem(model_version, get_test_data_file):
+def test_getitem(model_version, tmp_test_directory):
+    telescope_list_file = _write_ground_position_table(
+        tmp_test_directory,
+        "north.ecsv",
+        ["LSTN-01"],
+        np.array([0.0]),
+        np.array([0.0]),
+    )
     layout = ArrayLayout(
-        telescope_list_file=get_test_data_file("telescope_positions", "North"),
+        telescope_list_file=telescope_list_file,
         model_version=model_version,
         site="North",
     )
@@ -326,12 +402,24 @@ def test_getitem(model_version, get_test_data_file):
 
 def test_export_telescope_list_table(
     model_version,
-    get_test_data_file,
+    tmp_test_directory,
 ):
+    ground_file = _write_ground_position_table(
+        tmp_test_directory,
+        "north-ground.ecsv",
+        [f"LSTN-{index:02d}" for index in range(1, 3)],
+        np.array([0.0, 1.0]),
+        np.array([0.0, 1.0]),
+    )
+    utm_file = _write_utm_position_table(
+        tmp_test_directory,
+        "north-utm.ecsv",
+        ["LSTN-01"],
+    )
     layout = ArrayLayout(
         site="North",
         model_version=model_version,
-        telescope_list_file=get_test_data_file("telescope_positions", "North"),
+        telescope_list_file=ground_file,
     )
     table = layout.export_telescope_list_table(crs_name="ground")
     assert isinstance(table, QTable)
@@ -344,7 +432,7 @@ def test_export_telescope_list_table(
     layout_utm = ArrayLayout(
         site="North",
         model_version=model_version,
-        telescope_list_file=get_test_data_file("telescope_positions", "North-utm"),
+        telescope_list_file=utm_file,
     )
     table_utm = layout_utm.export_telescope_list_table(crs_name="utm")
     assert "asset_code" in table_utm.colnames
@@ -359,13 +447,22 @@ def test_export_telescope_list_table(
         pytest.fail("IndexError raised")
 
 
-def test_export_one_telescope_as_json(model_version, get_test_data_file):
+def test_export_one_telescope_as_json(model_version, tmp_test_directory):
+    ground_file = _write_position_json(
+        tmp_test_directory,
+        "ground.json",
+        "array_element_position_ground",
+        "MSTN-09",
+    )
+    utm_file = _write_utm_position_table(
+        tmp_test_directory,
+        "north-utm.ecsv",
+        ["LSTN-01", "LSTN-02"],
+    )
     layout = ArrayLayout(
         site="North",
         model_version=model_version,
-        telescope_list_file=(
-            f"{TEST_RESOURCES_GENERATED}/model_parameters/array_element_position_ground-2.0.0.json"
-        ),
+        telescope_list_file=ground_file,
     )
 
     ground_dict = layout.export_one_telescope_as_json(crs_name="ground")
@@ -382,15 +479,18 @@ def test_export_one_telescope_as_json(model_version, get_test_data_file):
     layout_utm = ArrayLayout(
         site="North",
         model_version=model_version,
-        telescope_list_file=get_test_data_file("telescope_positions", "North-utm"),
+        telescope_list_file=utm_file,
     )
     with pytest.raises(ValueError, match=r"Only one telescope can be exported to json"):
         layout_utm.export_one_telescope_as_json(crs_name="ground")
 
 
-def test_read_table_from_json_file(model_version, get_test_data_file):
-    ground_table_file = (
-        f"{TEST_RESOURCES_GENERATED}/model_parameters/array_element_position_ground-2.0.0.json"
+def test_read_table_from_json_file(model_version, tmp_test_directory):
+    ground_table_file = _write_position_json(
+        tmp_test_directory,
+        "ground.json",
+        "array_element_position_ground",
+        "MSTN-09",
     )
     layout = ArrayLayout(
         site="North",
@@ -401,8 +501,12 @@ def test_read_table_from_json_file(model_version, get_test_data_file):
     assert isinstance(ground_table, QTable)
     assert "position_x" in ground_table.colnames
 
-    utm_table = layout._read_table_from_json_file(
-        f"{TEST_RESOURCES_GENERATED}/model_parameters/array_element_position_utm-2.0.0.json"
+    utm_table_file = _write_position_json(
+        tmp_test_directory,
+        "utm.json",
+        "array_element_position_utm",
+        "MSTN-09",
     )
+    utm_table = layout._read_table_from_json_file(utm_table_file)
     assert isinstance(utm_table, QTable)
     assert "utm_north" in utm_table.colnames

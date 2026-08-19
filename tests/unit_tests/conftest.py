@@ -88,8 +88,8 @@ def _is_db_unit_test(request):
 
 
 @functools.lru_cache
-def _load_mock_db_json(test_resources_path, file_name):
-    mock_db_dir = Path(test_resources_path) / "static" / "mock_db"
+def _load_mock_db_json(file_name):
+    mock_db_dir = Path(__file__).parent / "resources" / "mock_db"
     file_path = mock_db_dir / file_name
     with file_path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -252,12 +252,6 @@ def tmp_test_directory(tmpdir_factory):
 @pytest.fixture
 def data_path():
     return "./data/"
-
-
-@pytest.fixture
-def corsika_limits_for_test_file(get_test_data_file):
-    """Path to the unit-test CORSIKA limits lookup ECSV file."""
-    return get_test_data_file("corsika_limits", "North")
 
 
 @pytest.fixture(autouse=True)
@@ -483,7 +477,7 @@ def db_config():
 
 
 @pytest.fixture
-def mock_db_handler(request, test_resources_path):
+def mock_db_handler(request):
     """
     Mock DatabaseHandler for unit tests.
 
@@ -495,17 +489,15 @@ def mock_db_handler(request, test_resources_path):
         return request.getfixturevalue("db")
 
     # Load mock data from JSON files
-    mock_parameters = _apply_mock_param_defaults(
-        _load_mock_db_json(test_resources_path, "mock_parameters.json")
-    )
+    mock_parameters = _apply_mock_param_defaults(_load_mock_db_json("mock_parameters.json"))
     mock_sim_config_params = _apply_mock_param_defaults(
-        _load_mock_db_json(test_resources_path, "mock_sim_config_params.json")
+        _load_mock_db_json("mock_sim_config_params.json")
     )
     site_specific_params_north = _apply_mock_param_defaults(
-        _load_mock_db_json(test_resources_path, "site_params_north.json")
+        _load_mock_db_json("site_params_north.json")
     )
     site_specific_params_south = _apply_mock_param_defaults(
-        _load_mock_db_json(test_resources_path, "site_params_south.json")
+        _load_mock_db_json("site_params_south.json")
     )
 
     # Create closures for mock functions with captured data
@@ -874,94 +866,6 @@ def safe_tar_open():
     return _open
 
 
-# Test data file utilities
-_TEST_DATA_FILES = {
-    (
-        "corsika",
-        "gamma",
-    ): "generated/gamma_run000007_za40deg_azm180deg_South_subsystem_lsts_7.0.0_test.corsika.zst",
-    (
-        "sim_telarray",
-        "gamma",
-    ): "generated/gamma_diffuse_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test.simtel.zst",
-    (
-        "telescope_positions",
-        "North",
-    ): "static/telescope_positions-North-ground.ecsv",
-    (
-        "telescope_positions",
-        "North-calibration",
-    ): "static/telescope_positions-North-with-calibration-devices-ground.ecsv",
-    (
-        "telescope_positions",
-        "North-utm",
-    ): "static/telescope_positions-North-utm.ecsv",
-    (
-        "telescope_positions",
-        "South",
-    ): "static/telescope_positions-South-ground.ecsv",
-    (
-        "corsika_limits",
-        "North",
-    ): "downloaded/corsika_limits.ecsv",
-}
-
-
-@pytest.fixture
-def get_test_data_file(test_resources_path):
-    """Fixture providing test data file path retrieval.
-
-    Returns
-    -------
-    callable
-        Function to get test data file path by file type and variant.
-        Call as: get_test_data_file(file_type, variant="gamma")
-
-    Examples
-    --------
-    >>> corsika_path = get_test_data_file("corsika", "gamma")
-    >>> pos_path = get_test_data_file("telescope_positions", "North")
-    """
-
-    def _get_test_data_file(file_type, variant="gamma"):
-        """Get test data file path by file type and variant.
-
-        Parameters
-        ----------
-        file_type : str
-            Type of file: "corsika", "sim_telarray", "sim_telarray_hdata", "telescope_positions"
-        variant : str, optional
-            Variant of file: "gamma" (default for simulation files), "proton", "North", "South", "utm", etc.
-
-        Returns
-        -------
-        str
-            Path to test data file
-
-        Raises
-        ------
-        KeyError
-            If the requested file type and variant combination is not available
-        """
-        key = (file_type, variant)
-        if key not in _TEST_DATA_FILES:
-            available = ", ".join(f"{ft}[{v}]" for ft, v in _TEST_DATA_FILES.keys())
-            raise KeyError(
-                f"Test data file not found for {file_type}[{variant}]. Available: {available}"
-            )
-        relative_path = Path(_TEST_DATA_FILES[key])
-        direct_path = test_resources_path / relative_path
-        if direct_path.exists():
-            return str(direct_path)
-        for resource_type in ("static", "generated"):
-            candidate = test_resources_path / resource_type / relative_path
-            if candidate.exists():
-                return str(candidate)
-        return str(direct_path)
-
-    return _get_test_data_file
-
-
 @pytest.fixture
 def simple_test_file(tmp_test_directory):
     """Create a simple test file with known content."""
@@ -971,11 +875,22 @@ def simple_test_file(tmp_test_directory):
 
 
 @pytest.fixture
-def model_parameter_json(test_resources_path):
-    """Fixture that returns the path to an example model parameter JSON file."""
-    return str(
-        test_resources_path
-        / "generated"
-        / "model_parameters"
-        / "array_element_position_ground-2.0.0.json"
+def simtel_spe_test_file(tmp_test_directory):
+    """Create a minimal sim_telarray single-photoelectron table."""
+    test_file_path = Path(tmp_test_directory) / "spe.dat"
+    test_file_path.write_text(
+        "# Norm_spe processing of single-p.e. response.\n0.0 0.1 0.2\n1.0 0.2 0.3\n2.0 0.3 0.4\n",
+        encoding="utf-8",
     )
+    return test_file_path
+
+
+@pytest.fixture
+def simtel_mirror_list_test_file(tmp_test_directory):
+    """Create a minimal sim_telarray mirror-list table."""
+    test_file_path = Path(tmp_test_directory) / "mirror_list.dat"
+    test_file_path.write_text(
+        "1022.49 -462.00 100.0 2800.0 1 0.0 #% id=198\n",
+        encoding="utf-8",
+    )
+    return test_file_path

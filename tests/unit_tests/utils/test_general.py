@@ -11,7 +11,6 @@ import pytest
 from astropy.table import Table
 
 import simtools.utils.general as gen
-from simtools.constants import MODEL_PARAMETER_SCHEMA_PATH, TEST_RESOURCES_GENERATED
 
 FAILED_TO_READ_FILE_ERROR = r"^Failed to read file"
 KEY2_ADDED = "['key2']: added in second object"
@@ -406,23 +405,30 @@ def test_get_list_of_files_from_command_line(tmp_test_directory) -> None:
         gen.get_list_of_files_from_command_line(file_names, suffix_list)
 
 
-def test_resolve_file_patterns():
+def test_resolve_file_patterns(tmp_test_directory):
     with pytest.raises(ValueError, match=r"^No file list provided"):
         gen.resolve_file_patterns(None)
 
     assert gen.resolve_file_patterns("LICENSE") == [Path("LICENSE")]
-    yml_list = gen.resolve_file_patterns(f"{MODEL_PARAMETER_SCHEMA_PATH}/*.yml")
+    schema_directory = tmp_test_directory / "schemas"
+    camera_directory = tmp_test_directory / "camera_efficiency"
+    schema_directory.mkdir()
+    camera_directory.mkdir()
+    Path(schema_directory / "schema.yml").write_text("schema: test\n", encoding="utf-8")
+    Path(camera_directory / "efficiency.ecsv").write_text("value\n1\n", encoding="utf-8")
+
+    yml_list = gen.resolve_file_patterns(f"{schema_directory}/*.yml")
     assert len(yml_list) > 0
     yml_and_ecvs_list = gen.resolve_file_patterns(
         [
-            f"{MODEL_PARAMETER_SCHEMA_PATH}/*.yml",
-            f"{TEST_RESOURCES_GENERATED}/camera_efficiency/*.ecsv",
+            f"{schema_directory}/*.yml",
+            f"{camera_directory}/*.ecsv",
         ]
     )
     assert len(yml_and_ecvs_list) > len(yml_list)
 
     with pytest.raises(FileNotFoundError, match=r"^No files found"):
-        gen.resolve_file_patterns(f"{TEST_RESOURCES_GENERATED}/*.non_existent")
+        gen.resolve_file_patterns(f"{tmp_test_directory}/*.non_existent")
 
 
 def test_remove_key_from_dict():

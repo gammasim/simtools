@@ -13,7 +13,7 @@ def pytest_addoption(parser):
     """Model version command line parameter."""
     parser.addoption("--model_version", action="store", default=None)
     parser.addoption(
-        "--simulation-models-path",
+        "--simulation_models_path",
         action="store",
         default=None,
         help="Read simulation models from files at this path.",

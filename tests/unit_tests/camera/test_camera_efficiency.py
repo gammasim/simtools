@@ -1,17 +1,16 @@
 #!/usr/bin/python3
 
 import logging
-import shutil
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import astropy.io.ascii
 import astropy.units as u
 import numpy as np
 import pytest
 from astropy.table import Table
 
 from simtools.camera.camera_efficiency import CameraEfficiency
-from simtools.constants import TEST_RESOURCES_GENERATED
 from simtools.simtel.simulator_camera_efficiency import SimulatorCameraEfficiency
 
 logger = logging.getLogger()
@@ -52,17 +51,34 @@ def camera_efficiency_lst(config_data_lst, mocker):
 
 @pytest.fixture
 def prepare_results_file(camera_efficiency_lst, mocker, tmp_test_directory):
-    # The actual test resource file has "table_" and "validate_camera_efficiency" in the name
-    test_resource_file = Path(
-        f"{TEST_RESOURCES_GENERATED}/camera_efficiency/"
-        "camera_efficiency_North_LSTN-02_za0.0deg_azm000deg_shower.ecsv"
-    )
+    """Create a minimal camera-efficiency result table for analysis tests."""
     test_results_file = (
         Path(tmp_test_directory) / "camera_efficiency_North_LSTN-02_za0.0deg_azm000deg_shower.ecsv"
     )
-    shutil.copyfile(test_resource_file, test_results_file)
 
-    # Mock _file["results"] to point to a temporary copy
+    wavelength = np.arange(200.0, 1001.0)
+    efficiencies = {
+        "C1": 2.0,
+        "C2": 2.0 * 0.75 * 1.25,
+        "C3": 2.0 * 0.5,
+        "C4": 2.0 * 0.3,
+        "C4x": 2.0 * 0.4,
+        "N1": 3.0,
+        "N2": 3.0 * 0.9,
+        "N3": 3.0 * 0.4,
+        "N4": 3.0 * 0.2,
+        "N4x": 3.0 * 0.25,
+    }
+    result_table = Table(
+        {
+            "wl": wavelength,
+            **{name: np.full(wavelength.size, value) for name, value in efficiencies.items()},
+            "masts": np.full(wavelength.size, 1.25),
+        }
+    )
+    astropy.io.ascii.write(result_table, test_results_file, format="basic", overwrite=True)
+
+    # Mock _file["results"] to point to the generated local table.
     mocker.patch.object(
         camera_efficiency_lst,
         "_file",
@@ -96,17 +112,13 @@ def test_read_results(camera_efficiency_lst, prepare_results_file):
 def test_calc_camera_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.export_model_files()
-    assert camera_efficiency_lst.calc_camera_efficiency() == pytest.approx(
-        0.20803889241433882
-    )  # Value for v6.3.0 LSTN-02
+    assert camera_efficiency_lst.calc_camera_efficiency() == pytest.approx(0.32)
 
 
 def test_calc_tel_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.export_model_files()
-    assert camera_efficiency_lst.calc_tel_efficiency() == pytest.approx(
-        0.20078071687452664
-    )  # Value for v6.3.0 LSTN-02
+    assert camera_efficiency_lst.calc_tel_efficiency() == pytest.approx(0.6127171314741036)
 
 
 def test_calc_tot_efficiency(camera_efficiency_lst, prepare_results_file):
@@ -114,23 +126,23 @@ def test_calc_tot_efficiency(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst.export_model_files()
     assert camera_efficiency_lst.calc_tot_efficiency(
         camera_efficiency_lst.calc_tel_efficiency()
-    ) == pytest.approx(0.4377186798763286)  # Value for v6.3.0 LSTN-02
+    ) == pytest.approx(0.958684357445742)
 
 
 def test_calc_reflectivity(camera_efficiency_lst, prepare_results_file):
     camera_efficiency_lst._read_results()
-    assert camera_efficiency_lst.calc_reflectivity() == pytest.approx(
-        0.9029806823032989
-    )  # Value for v6.3.0 LSTN-02
+    assert camera_efficiency_lst.calc_reflectivity() == pytest.approx(0.75)
 
 
-def test_calc_nsb_rate(camera_efficiency_lst, prepare_results_file):
+def test_calc_nsb_rate(camera_efficiency_lst, prepare_results_file, mocker):
     camera_efficiency_lst._read_results()
     camera_efficiency_lst.export_model_files()
+    mocker.patch.object(
+        camera_efficiency_lst.telescope_model, "get_parameter_value", return_value=[1.0]
+    )
     _, nsb_rate_ref_conditions = camera_efficiency_lst.calc_nsb_rate()
-    assert nsb_rate_ref_conditions.value == pytest.approx(
-        0.027066099285931774
-    )  # Value for v6.3.0 LSTN-02
+    assert camera_efficiency_lst.nsb_pixel_pe_per_ns == pytest.approx(0.04806)
+    assert nsb_rate_ref_conditions.value > 0
 
 
 def test_export_results(mocker, camera_efficiency_lst, caplog, prepare_results_file):
@@ -153,11 +165,13 @@ def test_analyze_has_results(camera_efficiency_lst, prepare_results_file):
     assert camera_efficiency_lst._has_results is True
 
 
-def test_analyze_from_file(camera_efficiency_lst, mocker):
-    camera_efficiency_lst._file["sim_telarray"] = Path(
-        f"{TEST_RESOURCES_GENERATED}/camera_efficiency/"
-        "camera_efficiency_North_MSTx-NectarCam_za0.0deg_azm000deg_nsb.dat"
+def test_analyze_from_file(camera_efficiency_lst, mocker, tmp_test_directory):
+    simtel_file = Path(tmp_test_directory) / "camera_efficiency.dat"
+    simtel_file.write_text(
+        "\n".join(" ".join(["400.0"] + ["1.0"] * 25) for _ in range(2)) + "\n",
+        encoding="utf-8",
     )
+    camera_efficiency_lst._file["sim_telarray"] = simtel_file
     mocker.patch.object(CameraEfficiency, "results_summary", return_value="summary")
     camera_efficiency_lst.analyze(export=False, force=True)
     assert camera_efficiency_lst._has_results is True

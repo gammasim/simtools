@@ -575,8 +575,8 @@ def test_get_energy_range_for_zenith_angle_keeps_range_below_threshold(
     mock_interpolate_point.assert_called_once()
 
 
-def test_get_energy_range_for_zenith_angle_clips_threshold(corsika_limits_for_test_file):
-    corsika_limits = CorsikaLimitsLookup(corsika_limits_for_test_file)
+def test_get_energy_range_for_zenith_angle_clips_threshold():
+    corsika_limits = CorsikaLimitsLookup("limits.ecsv")
     corsika_limits.interpolate_point = Mock(
         return_value={
             "lower_energy_limit": 0.05,
@@ -595,8 +595,8 @@ def test_get_energy_range_for_zenith_angle_clips_threshold(corsika_limits_for_te
     assert_quantity_allclose(energy_range[1], 100 * u.GeV)
 
 
-def test_get_core_scatter_max_for_zenith_angle_clips_value(corsika_limits_for_test_file):
-    corsika_limits = CorsikaLimitsLookup(corsika_limits_for_test_file)
+def test_get_core_scatter_max_for_zenith_angle_clips_value():
+    corsika_limits = CorsikaLimitsLookup("limits.ecsv")
     corsika_limits.interpolate_point = Mock(
         return_value={
             "lower_energy_limit": 0.01,

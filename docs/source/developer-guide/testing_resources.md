@@ -1,10 +1,13 @@
 # Test Resources
 
-Test resources are the maintained input and reference files used by unit and
-integration tests.
-The default development resource set stays in `tests/resources`.
+Test resources are maintained input and reference files for integration and
+resource-management tests. Integration-test resources are maintained in the
+versioned `simtools-tests` repository. Ordinary unit tests must not depend on
+repository-local, downloaded, or external resource files; generate minimal
+inputs in `tmp_test_directory` instead.
 
-Resource files require updates, e.g., when file formats change or new features are added to the software.
+Resource files require updates, e.g., when file formats change or new features
+are added to the software.
 
 ## Types of resource files
 
@@ -16,13 +19,13 @@ how to test and generate the different types of resource files.
 
 Static test files are manually maintained by the developers. The number of static files should be kept to a minimum.
 
-Static tests files are located in `tests/resources/static`.
+Static test files are located in the `static` directory of the versioned bundle.
 All static files are listed in `static/static_manifest.yml` in the `simtools-tests` repository.
 
 ### Downloaded test files
 
-Downloaded test files are downloaded from external sources (e.g., from the simulation models repository).
-Downloaded test files are located in `tests/resources/downloaded`.
+Downloaded test files are downloaded from external sources (e.g., from the simulation models repository)
+into the `downloaded` directory of the versioned bundle.
 The list of files to download is defined in the file `config_files/download_files.yml` in the `simtools-tests` repository.
 
 ### Generated test files
@@ -37,10 +40,9 @@ For a new simtools release, the workflow is:
 
 1. Define a release candidate in `simtools` (e.g., `v0.34.0-rc`). The simtools CI workflow builds and publishes release-candidate containers for this release candidate.
 2. Define a new test resource version in `simtools-tests` (e.g., `v0.34.0`), update the workflow definitions with the above container version, and generate the new resource set with the release-candidate container.
-3. Run the relevant integration tests locally against the new resources.
+3. Run the relevant integration and unit tests locally against the new resources.
 4. On failure, fix the resource generation workflow or the simtools code and repeat steps 1-3.
-5. On success, sync the new resource set into `tests/resources`, and run integration and unit tests again.
-6. Release both `simtools` and `simtools-tests`.
+5. Release both `simtools` and `simtools-tests`.
 
 This keeps the archived resource set aligned with the released software and
 avoids generating release resources from an unpinned development environment.
@@ -49,6 +51,3 @@ avoids generating release resources from an unpinned development environment.
 
 - [`simtools-resources-test-generate`](../user-guide/applications/simtools-resources-test-generate.md)
   generates a versioned resource set from workflow definitions.
-- [`simtools-resources-test-sync`](../user-guide/applications/simtools-resources-test-sync.md)
-  compares a versioned resource set with `tests/resources` and optionally syncs
-  it into the repository.

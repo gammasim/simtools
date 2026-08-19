@@ -14,7 +14,7 @@ import pytest
 from astropy.table import Table
 
 import simtools.data_model.metadata_collector as metadata_collector
-from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH, TEST_RESOURCES_STATIC
+from simtools.constants import METADATA_JSON_SCHEMA, SCHEMA_PATH
 from simtools.data_model import schema
 
 logger = logging.getLogger()
@@ -163,23 +163,32 @@ def test_application_configuration_is_embedded_sanitized_and_valid(args_dict_sit
     jsonschema.Draft6Validator(context_schema).validate(metadata["cta"]["context"])
 
 
-def test_get_site(args_dict_site):
+def test_get_site(args_dict_site, tmp_test_directory):
     _collector_1 = metadata_collector.MetadataCollector(
         args_dict=args_dict_site,
     )
     assert _collector_1.get_site() == "South"
     assert _collector_1.get_site(from_input_meta=True) is None
 
+    input_metadata = copy.deepcopy(
+        metadata_collector.MetadataCollector(
+            args_dict=args_dict_site, clean_meta=False
+        ).top_level_meta
+    )
+    input_metadata["cta"]["instrument"]["site"] = "North"
+    input_metadata["cta"]["instrument"].pop("ID", None)
+    input_metadata["cta"]["instrument"]["id"] = "MSTS-07"
+    metadata_file = Path(tmp_test_directory) / "north_metadata.json"
+    metadata_file.write_text(json.dumps(input_metadata), encoding="utf-8")
     _collector_2 = metadata_collector.MetadataCollector(
-        args_dict=args_dict_site,
-        metadata_file_name=f"{TEST_RESOURCES_STATIC}/telescope_positions-North-utm.meta.yml",
+        args_dict=args_dict_site, metadata_file_name=metadata_file
     )
     assert _collector_2.get_site(from_input_meta=True) == "North"
     assert _collector_2.get_site(from_input_meta=False) == "South"  # from args_dict
 
 
 def test_read_input_metadata_from_file(
-    args_dict_site, tmp_test_directory, caplog, get_test_data_file, simple_test_file
+    args_dict_site, tmp_test_directory, caplog, simple_test_file, mocker
 ):
     metadata_1 = metadata_collector.MetadataCollector(args_dict=args_dict_site)
     metadata_1.args_dict["input_meta"] = None
@@ -192,7 +201,15 @@ def test_read_input_metadata_from_file(
     ):
         metadata_1._read_input_metadata_from_file()
 
-    metadata_1.args_dict["input_meta"] = f"{TEST_RESOURCES_STATIC}/MLTdata-preproduction.meta.yml"
+    metadata_1.args_dict["input_meta"] = None
+    local_metadata_file = Path(tmp_test_directory) / "input_metadata.json"
+    source_metadata = metadata_collector.MetadataCollector(
+        args_dict=args_dict_site, clean_meta=False
+    ).top_level_meta
+    source_metadata["cta"]["instrument"].pop("ID", None)
+    source_metadata["cta"]["instrument"]["id"] = "MSTS-07"
+    local_metadata_file.write_text(json.dumps(source_metadata), encoding="utf-8")
+    metadata_1.args_dict["input_meta"] = local_metadata_file
     assert len(metadata_1._read_input_metadata_from_file()) > 0
 
     test_dict = {
@@ -205,7 +222,14 @@ def test_read_input_metadata_from_file(
     with pytest.raises(ValueError, match=r"^More than one metadata entry found in"):
         metadata_1._read_input_metadata_from_file()
 
-    metadata_1.args_dict["input_meta"] = get_test_data_file("telescope_positions", "North-utm")
+    table = Table(
+        {"value": [1]},
+        meta={"CTA": source_metadata["cta"]},
+    )
+    local_ecsv_file = Path(tmp_test_directory) / "input_metadata.ecsv"
+    table.write(local_ecsv_file, format="ascii.ecsv", overwrite=True)
+    metadata_1.args_dict["input_meta"] = local_ecsv_file
+    mocker.patch.object(metadata_collector.schema, "validate_dict_using_schema")
     assert len(metadata_1._read_input_metadata_from_file()) > 0
 
     metadata_1.args_dict["input_meta"] = "tests/resources/file_not_there.ecsv"
@@ -213,12 +237,16 @@ def test_read_input_metadata_from_file(
         metadata_1._read_input_metadata_from_file()
 
     with caplog.at_level(logging.WARNING):
-        metadata_1.args_dict["input_meta"] = get_test_data_file("sim_telarray", "gamma")
+        simtel_file = Path(tmp_test_directory) / "gamma.simtel.zst"
+        simtel_file.write_bytes(b"")
+        metadata_1.args_dict["input_meta"] = simtel_file
         metadata_1._read_input_metadata_from_file()
     assert "Metadata extraction from sim_telarray files is not supported yet." in caplog.text
 
     with caplog.at_level(logging.WARNING):
-        metadata_1.args_dict["input_meta"] = get_test_data_file("corsika", "gamma")
+        corsika_file = Path(tmp_test_directory) / "gamma.corsika.zst"
+        corsika_file.write_bytes(b"")
+        metadata_1.args_dict["input_meta"] = corsika_file
         metadata_1._read_input_metadata_from_file()
     assert "Metadata extraction from CORSIKA files is not supported yet." in caplog.text
 

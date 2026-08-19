@@ -87,8 +87,8 @@ array_layout_name:
 
 Use `${static:path/to/file}` for maintained resources and
 `${generated:path/to/file}` for generated resources. Pytest resolves these
-against `--test_resources_path` / `--test-resources-path`, defaulting to
-`tests/resources`.
+against `--test_resources_path` or the versioned `simtools-tests` resource
+bundle selected by `SIMTOOLS_TESTS_PATH` and `SIMTOOLS_TESTS_VERSION`.
 
 ## `integration_tests` Blocks
 
@@ -109,7 +109,7 @@ integration_tests:
       photons: [90, 1000]
       trigger_time: [0, 50]
       event_type: shower
-- reference_output_file: tests/resources/reference.ecsv
+- reference_output_file: ${generated:reference.ecsv}
   test_output_file: results/output.ecsv
   tolerance: 1.e-2
 - model_parameter_validation:
@@ -118,7 +118,7 @@ integration_tests:
     tolerance: 1.e-1
     scaling: 10.0
 - test_simtel_cfg_files:
-    "6.0.2": tests/resources/sim_telarray_configurations/6.0.2/CTA-South-LSTS-01_test.cfg
+    "6.0.2": ${generated:sim_telarray_configurations/6.0.2/CTA-South-LSTS-01_test.cfg}
 ```
 
 Validation keys:

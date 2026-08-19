@@ -51,7 +51,10 @@ pytest -n 4 --dist loadscope tests/unit_tests/
   `assert_*` helper, a `pytest.raises`/`pytest.warns` context, or a mock
   assertion. Assertions such as `is not None`, `.called`, or file existence
   alone are not sufficient when the returned value or file content is known.
-- Use `tmp_test_directory` for file I/O tests.
+- Do not make unit tests depend on checked-in, downloaded, or external files.
+  When file parsing or writing is the behavior under test, generate the
+  smallest valid input in `tmp_test_directory` within the test.
+- Keep file-format compatibility and resource-heavy checks in integration tests.
 - Mock external dependencies such as databases, network access, file downloads,
   and installed simulation software.
 - Use `pytest.approx()` for floating-point values.
