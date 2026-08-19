@@ -10,6 +10,7 @@ The simtools continuous integration tests, lints, and builds code, documentation
 | `CI-linter` | x | - | opened, synchronize | - | nightly |
 | `CI-unittests` | x | `docs/**`, `tests/integration_tests/**` |  opened, synchronize | x | nightly |
 | `CI-integrationtests` | x |  `docs/**`, `tests/unit_tests/**` | opened, synchronize | x | nightly |
+| `CI-test-benchmarks` | - | - | - | - | nightly, main |
 | `CI-schema-validation` | x | `src/simtools/schemas/model_parameters`, `src/simtools/schemas/test_config` | - | - | - |
 | `CI-software-update` | - | - | - | - | monthly |
 | `build-corsika-simtel` | x | `docker/Dockerfile-corsika-simtel` | - | x | weekly (no deploy) |
@@ -42,6 +43,15 @@ important use cases. See the [integration tests](testing_integration.md)
 documentation for more details.
 
 The CI Integration tests is defined in the [CI-integrationtests.yml](.github/workflows/CI-integrationtests.yml) workflow.  Integration tests are running for two different model versions.
+
+## Test resource benchmarks
+
+The `CI-test-benchmarks` workflow runs serial unit and integration test
+invocations on `ubuntu-latest` and publishes wall-time, CPU-time, and peak-RSS
+histories to the
+[test resource benchmark dashboard](https://gammasim.github.io/simtools/dev/test-resources/).
+It runs after merges and nightly; it does not affect pull-request correctness
+status.
 
 ## Linting
 

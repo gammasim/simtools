@@ -62,6 +62,7 @@ optional-dependencies.htcondor = [
   "htcondor>=25.0.7; platform_system=='Linux'",
 ]
 optional-dependencies.tests = [
+  "psutil",
   "pytest",
   "pytest-cov",
   "pytest-mock",

@@ -1,0 +1,148 @@
+---
+name: CI-test-benchmarks
+
+on:
+  workflow_dispatch:
+    inputs:
+      model_versions:
+        description: 'JSON list of model versions for integration benchmarks'
+        required: false
+        type: string
+        default: '["7.0.0"]'
+      publish_results:
+        description: 'Publish results to the GitHub Pages benchmark dashboard'
+        required: false
+        type: boolean
+        default: true
+      integration_min_wall_time:
+        description: 'Minimum test wall time in seconds for an individual chart'
+        required: false
+        type: number
+        default: 5.0
+  push:
+    branches: [main]
+  schedule:
+    - cron: "30 0 * * *"
+
+jobs:
+  benchmark_unit:
+    name: Benchmark unit-test suite
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+
+      - name: Set up simtools tests
+        uses: ./.github/actions/setup-simtools-tests
+
+      - name: Run unit resource benchmark
+        env:
+          SIMTOOLS_DB_SIMULATION_MODEL: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL }}
+          SIMTOOLS_DB_SIMULATION_MODEL_VERSION: ${{ env.SIMTOOLS_DB_SIMULATION_MODEL_VERSION }}
+        run: |
+          pytest --no-cov --color=yes -n 0 \
+            --resource-benchmark-output=resource-benchmark-unit \
+            --resource-benchmark-mode=unit \
+            tests/unit_tests/
+
+      - name: Upload unit resource benchmark
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        with:
+          name: resource-benchmark-unit
+          path: resource-benchmark-unit
+          if-no-files-found: error
+          retention-days: 30
+
+  benchmark_integration:
+    name: Benchmark integration-test suites
+    uses: ./.github/workflows/CI-integrationtests.yml
+    permissions:
+      contents: read
+    with:
+      benchmark: true
+      benchmark_min_wall_time: ${{ inputs.integration_min_wall_time || 5.0 }}
+      model_versions: ${{ inputs.model_versions || '["7.0.0"]' }}
+      runner_labels: '["ubuntu-latest"]'
+
+  publish:
+    name: Publish test resource history
+    needs: [benchmark_unit, benchmark_integration]
+    if: >-
+      ${{
+        (github.event_name != 'workflow_dispatch' || inputs.publish_results) &&
+        (github.ref == 'refs/heads/main')
+      }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: gh-pages-publisher
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+
+      - name: Download unit benchmark
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
+        with:
+          name: resource-benchmark-unit
+          path: benchmark-input/unit
+
+      - name: Download integration benchmarks
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
+        with:
+          pattern: resource-benchmark-[0-9]*
+          path: benchmark-input/integration
+
+      - name: Combine benchmark records
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          records = []
+          for path in Path("benchmark-input").rglob("benchmark-results.json"):
+              records.extend(json.loads(path.read_text(encoding="utf-8")))
+          if not records:
+              raise SystemExit("No benchmark records were produced")
+          Path("benchmark-results.json").write_text(
+              json.dumps(records, indent=2) + "\n", encoding="utf-8"
+          )
+          summary = [
+              "## Test resource benchmark",
+              "",
+              "[Open the benchmark dashboard](https://gammasim.github.io/simtools/dev/test-resources/).",
+              "",
+          ]
+          for unit in ("wall_time_s", "cpu_time_s", "peak_rss_mib"):
+              summary.extend([f"### Largest {unit}", ""])
+              matching = sorted(
+                  (record for record in records if record["unit"] == unit),
+                  key=lambda record: record["value"],
+                  reverse=True,
+              )[:5]
+              summary.extend(
+                  f"- `{record['name']}`: {record['value']:.3f} {unit}"
+                  for record in matching
+              )
+              summary.append("")
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text(
+              "\n".join(summary), encoding="utf-8"
+          )
+          PY
+
+      - name: Store benchmark history
+        uses: benchmark-action/github-action-benchmark@52576c92bccf6ac60c8223ec7eb2565637cae9ba  # v1
+        with:
+          name: simtools CI test benchmarks
+          tool: customSmallerIsBetter
+          output-file-path: benchmark-results.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: dev/test-resources
+          auto-push: true
+          max-items-in-chart: 365
