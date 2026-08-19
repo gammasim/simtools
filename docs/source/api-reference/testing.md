@@ -45,16 +45,6 @@ The Testing module provides tools for testing the code. This might be part of th
 
 ```
 
-(resourcebenchmarkmodule)=
-
-## resource_benchmark
-
-```{eval-rst}
-.. automodule:: testing.resource_benchmark
-   :members:
-
-```
-
 (resourcesyncmodule)=
 
 ## resource_sync

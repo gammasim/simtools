@@ -27,7 +27,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install '.[doc,tests]'
+          pip install '.[doc]'
 
       - name: Check for non-ASCII characters
         run: |

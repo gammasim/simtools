@@ -7,8 +7,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-
-import simtools.testing.resource_benchmark as resource_benchmark
+import resource_benchmark
 
 
 def _measurement(wall_time, cpu_time=1.0, peak_rss=10.0):
@@ -183,7 +182,7 @@ def test_excluded(config):
             "-m",
             "pytest",
             "-p",
-            "simtools.testing.resource_benchmark",
+            "resource_benchmark",
             "--override-ini=addopts=",
             "--resource-benchmark-output",
             str(output),
