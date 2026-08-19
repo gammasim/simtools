@@ -71,10 +71,13 @@ Example integration configurations are available in `tests/integration_tests/con
 `simtools-simulate-prod` can submit the rows of an ECSV job grid to HTCondor. See
 [Execution backends](../execution_backends.md) for installation and configuration.
 
-Apptainer images can be pulled directly from the GitHub package registry. Use the image tag
+Pull the OCI image directly from the GitHub package registry with Apptainer. Use the image tag
 specified by the production configuration or production release notes:
 
 ```bash
 apptainer pull --force \
-  oras://ghcr.io/gammasim/simtools-prod:v0.27.1-v78010-v2025-11-30-rc-avx2-apptainer
+  docker://ghcr.io/gammasim/simtools-prod:v0.27.1-v78010-v2025-11-30-rc-avx2
 ```
+
+Use the resulting SIF path as `container_image` in the HTCondor backend configuration described
+in [Execution backends](../execution_backends.md).
