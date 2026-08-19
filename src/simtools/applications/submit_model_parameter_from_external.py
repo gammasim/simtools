@@ -49,6 +49,12 @@ _ARGUMENTS = (
         help="Check if the parameter version exists in the database",
         action="store_true",
     ),
+    cli.ArgumentDefinition(
+        "meta_parameter",
+        help="Set if this is should be saved in the sim_telarray meta parameters.",
+        action="store_true",
+        default=False,
+    ),
 )
 
 
@@ -101,6 +107,7 @@ def main():
         metadata_input_dict=app_context.args,
         check_db_for_existing_parameter=app_context.args.get("check_parameter_version", False),
         model_parameter_schema_version=model_parameter_schema_version,
+        meta_parameter=app_context.args.get("meta_parameter", False),
     )
 
 
