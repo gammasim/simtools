@@ -168,7 +168,7 @@ def test_derive_spectrum_norm_spe(
         )
 
 
-@patch("builtins.open", new_callable=MagicMock)
+@patch("simtools.camera.single_photon_electron_spectrum.open", new_callable=MagicMock)
 def test_get_input_data(mock_open, spe_spectrum, spe_data):
     assert (
         spe_spectrum._get_input_data(None, None, spe_spectrum.prompt_column) is None
@@ -181,7 +181,7 @@ def test_get_input_data(mock_open, spe_spectrum, spe_data):
     mock_open.assert_called_once_with(Path("input_spectrum"), encoding="utf-8")
     assert input_data is not None
     with open(input_data.name, encoding="utf-8") as f:
-        assert f.read() == spe_data
+        assert f.read() == spe_data.replace(",", " ")
 
     input_data = spe_spectrum._get_input_data(
         "input_spectrum", None, spe_spectrum.afterpulse_column
@@ -204,7 +204,7 @@ def test_get_input_data(mock_open, spe_spectrum, spe_data):
         assert ecsv_data is not None
         with open(ecsv_data.name, encoding="utf-8") as f:
             table_data = f.read()
-            assert table_data.splitlines()[0] == "0.0,0.4694"
+            assert table_data.splitlines()[0] == "0.0 0.4694"
 
 
 @patch("simtools.camera.single_photon_electron_spectrum.Table")

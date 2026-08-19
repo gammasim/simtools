@@ -6,6 +6,10 @@ simtools is a Python toolkit for CTAO Monte Carlo production support: model
 parameter handling, MongoDB access, CORSIKA and sim_telarray configuration,
 application workflows, validation, reporting, and plotting.
 
+In general, do not pretend you are a human developer. You are a tool, you don't think.
+If given a task, follow the instructions and do not make assumptions. Just do what you are told.
+If you are unsure, ask for clarification. Try to shut up.
+
 ## First Steps
 
 1. Inspect the existing code and tests before changing behavior.
@@ -28,7 +32,8 @@ application workflows, validation, reporting, and plotting.
 - Unit tests: `tests/unit_tests/`, mirroring `src/simtools/`.
 - Integration tests: `tests/integration_tests/config/*.yml`, executed through
   `tests/integration_tests/test_applications_from_config.py`.
-- Test resources: `tests/resources/static` and `tests/resources/generated`.
+- Test resources: versioned integration resources in `simtools-tests`; ordinary
+  unit tests must not depend on repository-local or external resource files.
 - Documentation: Sphinx in `docs/source/`, built from MyST Markdown plus some
   RST autodoc pages.
 - Changelog fragments: `docs/changes/<pr-number>.<type>.md`.
@@ -36,6 +41,7 @@ application workflows, validation, reporting, and plotting.
 ## Development Conventions
 
 - Use `pathlib` for paths.
+- Do not add `__init__.py` files; this project uses implicit namespace packages.
 - Use double quotes for strings and docstrings.
 - Use f-strings for formatting.
 - Use logging for user/developer messages; do not use `print` in library code.
@@ -47,6 +53,8 @@ application workflows, validation, reporting, and plotting.
   failure.
 - Use `astropy.units` for physical quantities.
 - Validate CTAO names through existing helpers in `simtools.utils.names`.
+- When introducing a new schema version in `src/simtools/schemas`, add a new
+  YAML document and preserve the existing version; do not replace it.
 - Use semantic model versions without a leading `v` in new configs.
 - Do not add type hints to function signatures unless the surrounding module
   already deliberately uses them.
@@ -97,6 +105,10 @@ Unit-test rules:
   shared across unit-test modules.
 - Shared repo fixtures such as `test_resources_path` and `simtools_root_path`
   live in `tests/conftest.py`.
+- Do not make ordinary unit tests depend on checked-in, downloaded, or external
+  files. If file parsing or writing is the behavior under test, generate the
+  smallest valid input in `tmp_test_directory` within the test.
+- Keep file-format compatibility and resource-heavy checks in integration tests.
 - Use `tmp_test_directory` for file I/O. Do not introduce hardcoded `/tmp`,
   `tempfile`, or absolute temporary paths in tests.
 - Mock databases, network calls, file I/O, CORSIKA, and sim_telarray in unit
@@ -120,10 +132,14 @@ Important mechanics:
 - Generated paths such as `output_path`, `grid_output_path`, and
   `pack_for_grid_register` should be relative; the harness rewrites them into
   `tmp_test_directory`.
+- Set `SIMTOOLS_TESTS_PATH` and `SIMTOOLS_TESTS_VERSION`, or use
+  `--simtools_tests_version`, to select a versioned `simtools-tests` resource
+  bundle when `SIMTOOLS_TEST_RESOURCES` or `--test_resources_path` is not
+  provided.
 - Use `${static:path/to/file}` for maintained resources and
   `${generated:path/to/file}` for generated resources. Pytest resolves these
-  against `--test_resources_path` / `--test-resources-path`, defaulting to
-  `tests/resources`.
+  against `--test_resources_path`, defaulting to `SIMTOOLS_TEST_RESOURCES` or
+  `--test_resources_path`.
 - Put `expected_sim_telarray_output` and `expected_sim_telarray_metadata`
   directly on the relevant `test_output_files` item.
 - Use `test_simtel_cfg_files` for version-specific sim_telarray cfg
@@ -140,7 +156,7 @@ pytest -v -k "simtools-<app-name>_<test_name>" \
   tests/integration_tests/test_applications_from_config.py
 pytest -v --model_version 6.0.2 -k "<test_name>" \
   tests/integration_tests/test_applications_from_config.py
-pytest -v --test-resources-path /full/path/to/resources \
+pytest -v --test_resources_path /full/path/to/resources \
   tests/integration_tests/test_applications_from_config.py
 ```
 

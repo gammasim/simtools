@@ -1,32 +1,6 @@
 #!/usr/bin/python3
 
-r"""
-Estimate required Monte Carlo statistics (thrown events) from histograms of triggered events.
-
-This application loads a trigger-histogram file, evaluates a toy MC-event
-distribution for a configurable power-law spectrum, and computes the total Monte Carlo event
-statistics required to meet either a target relative statistical uncertainty or a target number
-of triggered events.
-
-Statistical uncertainties are estimated from the expected number of triggered events per bin
-in the histogram, using the axes: energy vs. angular distance.
-The derived Monte Carlo statistics is reported when all bins in the energy range
-``--optimization_energy_min`` to ``--optimization_energy_max`` have a relative uncertainty
-below the target value.
-
-Example
--------
-Estimate Monte Carlo statistics from a trigger-histogram file:
-
-.. code-block:: console
-
-    simtools-production-derive-monte-carlo-statistics \
-        --trigger_histogram_file trigger_histograms.hdf5 \
-        --spectral_index -2.0 \
-        --target_relative_uncertainty 0.1 \
-        --plot_diagnostics
-
-"""
+"""Estimate required Monte Carlo statistics from trigger histograms."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
@@ -34,6 +8,7 @@ from simtools.configuration.argument_helpers import (
     positive_quantity,
     scientific_int,
 )
+from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.production_configuration.monte_carlo_statistics_estimator import (
     estimate_monte_carlo_statistics,
 )
@@ -137,8 +112,10 @@ APPLICATION = ApplicationDefinition.for_module(
 
 def main():
     """Run the Monte Carlo statistics estimator CLI application."""
-    APPLICATION.start()
-    estimate_monte_carlo_statistics()
+    app_context = APPLICATION.start()
+    estimate_monte_carlo_statistics(
+        metadata=MetadataCollector(app_context.args).get_top_level_metadata()
+    )
 
 
 if __name__ == "__main__":

@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-plot-tabular-data-for-model-parameter
+  docs:
+    title: Plot all atmospheric-profile quantities
+    summary: >-
+      Plot density, thickness, refractive index, and related quantities from the North atmospheric
+      model.
   configuration:
     figure_format:
     - pdf
@@ -11,8 +16,11 @@ applications:
     plot_type: all
     site: North
   integration_tests:
-  - output_file: atmospheric_profile_1.0.0_North_refractive_index_vs_altitude.png
-  - output_file: atmospheric_profile_1.0.0_North_refractive_index_vs_altitude.pdf
+  - test_outputs:
+    - path_descriptor: output_path
+      file: atmospheric_profile_1.0.0_North_refractive_index_vs_altitude.png
+    - path_descriptor: output_path
+      file: atmospheric_profile_1.0.0_North_refractive_index_vs_altitude.pdf
   test_name: atmospheric_profile_all
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

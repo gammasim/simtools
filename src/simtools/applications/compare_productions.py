@@ -1,27 +1,6 @@
 #!/usr/bin/python3
 
-r"""Compare simulation productions at different comparison levels.
-
-The application accepts repeated production descriptors and dispatches to
-comparison-level specific implementations.
-
-Command line arguments
-----------------------
-production (repeated, required)
-    Production descriptor in two fields:
-    1) label
-    2) comma-separated trigger histogram HDF5 file patterns
-comparison_level (str, optional)
-    Comparison level selector. Supported values are:
-    - events
-    - signals
-    - compute
-output_path (str, required)
-    Output directory for generated comparison plots.
-array_layout_name (str, optional)
-    Restrict comparison inputs to one or more array layout names stored in the
-    trigger histogram HDF5 metadata.
-"""
+"""Compare trigger-histogram products from simulation productions."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

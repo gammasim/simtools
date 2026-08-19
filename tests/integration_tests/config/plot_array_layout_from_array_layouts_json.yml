@@ -1,6 +1,10 @@
 ---
 applications:
 - application: simtools-plot-array-layout
+  docs:
+    title: Plot layouts from a model-parameter file
+    summary: >-
+      Read array-layout definitions from JSON and plot the contained telescope configurations.
   configuration:
     array_layout_parameter_file: tests/resources/generated/model_parameters/array_layouts-2.0.2.json
     figure_format:
@@ -9,9 +13,12 @@ applications:
     model_version: 6.0.2
     output_path: simtools-output
   integration_tests:
-  - output_file: array_layout_subsystem_msts_North_ground_6-0-2.png
-  - output_file: array_layout_4mst_North_ground_6-0-2.pdf
+  - test_outputs:
+    - path_descriptor: output_path
+      file: array_layout_subsystem_msts_North_ground_6-0-2.png
+    - path_descriptor: output_path
+      file: array_layout_4mst_North_ground_6-0-2.pdf
   model_version_use_current: true
   test_name: from_array_layouts_json
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

@@ -58,7 +58,11 @@ optional-dependencies.doc = [
   "sphinx-design",
   "towncrier",
 ]
+optional-dependencies.htcondor = [
+  "htcondor>=25.0.7; platform_system=='Linux'",
+]
 optional-dependencies.tests = [
+  "psutil",
   "pytest",
   "pytest-cov",
   "pytest-mock",
@@ -122,13 +126,11 @@ scripts.simtools-production-derive-corsika-limits = "simtools.applications.produ
 scripts.simtools-production-derive-monte-carlo-statistics = "simtools.applications.production_derive_monte_carlo_statistics:main"
 scripts.simtools-production-generate-grid = "simtools.applications.production_generate_grid:main"
 scripts.simtools-resources-test-generate = "simtools.applications.resources_test_generate:main"
-scripts.simtools-resources-test-sync = "simtools.applications.resources_test_sync:main"
 scripts.simtools-run-application = "simtools.applications.run_application:main"
 scripts.simtools-simulate-flasher = "simtools.applications.simulate_flasher:main"
 scripts.simtools-simulate-illuminator = "simtools.applications.simulate_illuminator:main"
 scripts.simtools-simulate-pedestals = "simtools.applications.simulate_pedestals:main"
 scripts.simtools-simulate-prod = "simtools.applications.simulate_prod:main"
-scripts.simtools-simulate-prod-htcondor-generator = "simtools.applications.simulate_prod_htcondor_generator:main"
 scripts.simtools-submit-array-layouts = "simtools.applications.submit_array_layouts:main"
 scripts.simtools-submit-data-from-external = "simtools.applications.submit_data_from_external:main"
 scripts.simtools-submit-model-parameter-from-external = "simtools.applications.submit_model_parameter_from_external:main"
@@ -296,6 +298,7 @@ ignore-words-list = "chec,arrang,livetime,astroid"
 [tool.pytest]
 ini_options.minversion = "6.0"
 ini_options.testpaths = "tests/unit_tests/"
+ini_options.pythonpath = [ "tests" ]
 ini_options.norecursedirs = [
   "build",
   "docs/_build",
@@ -308,6 +311,7 @@ ini_options.addopts = [
   "--cov-report=xml",
   "--cov-report=json",
   "--cov-report=term",
+  "--import-mode=importlib",
   "-p",
   "pytest_requirements",
 ]

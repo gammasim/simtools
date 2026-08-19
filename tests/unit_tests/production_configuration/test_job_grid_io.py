@@ -4,6 +4,7 @@ import astropy.units as u
 import pytest
 from astropy.table import Table
 
+import simtools.applications.simulate_prod as app
 from simtools.constants import SCHEMA_PATH
 from simtools.io.ascii_handler import collect_data_from_file
 from simtools.production_configuration import job_grid_io
@@ -173,3 +174,120 @@ def test_job_grid_row_to_simulate_prod_args_includes_explicit_transition_energy(
     args = job_grid_io.job_grid_row_to_simulate_prod_args(row)
 
     assert args["corsika_hadronic_transition_energy"] == 120 * u.GeV
+
+
+def test_job_grid_row_to_simulate_prod_args_includes_metadata_site_and_software():
+    row = _job_rows()[0]
+    metadata = _metadata()
+
+    args = job_grid_io.job_grid_row_to_simulate_prod_args(row, metadata)
+
+    assert args["site"] == "North"
+    assert args["simulation_software"] == "corsika_sim_telarray"
+
+
+def test_job_grid_row_to_simulate_prod_args_skips_empty_metadata():
+    row = _job_rows()[0]
+
+    args_no_meta = job_grid_io.job_grid_row_to_simulate_prod_args(row, metadata=None)
+    args_empty_meta = job_grid_io.job_grid_row_to_simulate_prod_args(row, metadata={})
+
+    for args in (args_no_meta, args_empty_meta):
+        assert "site" not in args
+        assert "simulation_software" not in args
+
+
+def test_build_simulate_prod_job_specs_creates_local_commands(tmp_test_directory):
+    """Build unique backend-neutral commands while forcing nested execution local."""
+    corsika_path = Path(tmp_test_directory) / "corsika" / "corsika.input"
+    model_path = Path(tmp_test_directory) / "models"
+    overwrite_path = Path(tmp_test_directory) / "overrides" / "overwrite.yml"
+    row = {
+        **_job_rows()[0],
+        "scan_label": "high_nsb",
+        "overwrite_model_parameters": str(overwrite_path),
+    }
+    args = {
+        "output_path": tmp_test_directory / "output",
+        "grid_output_path": tmp_test_directory / "grid",
+        "label": "prod",
+        "simulation_models_path": model_path,
+        "reduced_event_lists": False,
+        "correct_for_b_field_alignment": False,
+        "corsika_file": corsika_path,
+    }
+
+    jobs = job_grid_io.build_simulate_prod_job_specs(
+        args,
+        [row],
+        app.APPLICATION.build_parser(),
+        _metadata(),
+    )
+
+    assert len(jobs) == 1
+    command = jobs[0].command
+    assert command[1:5] == (
+        "-m",
+        "simtools.applications.simulate_prod",
+        "--backend",
+        "local",
+    )
+    assert "prod_high_nsb" in command
+    assert str(overwrite_path) in command
+    assert str(model_path) in command
+    assert str(tmp_test_directory / "output" / "job-000000") in command
+    assert str(tmp_test_directory / "grid" / "job-000000") in command
+    assert "--no-reduced_event_lists" in command
+    assert "--no-correct_for_b_field_alignment" in command
+    assert str(corsika_path) in command
+    assert jobs[0].mount_paths == (
+        tmp_test_directory / "output" / "job-000000",
+        tmp_test_directory / "grid" / "job-000000",
+        corsika_path.parent,
+        model_path,
+        overwrite_path.parent,
+    )
+    assert jobs[0].output_paths == (
+        tmp_test_directory / "output" / "job-000000",
+        tmp_test_directory / "grid" / "job-000000",
+    )
+    nested_args = app.APPLICATION.build_parser().parse_args(command[5:])
+    assert nested_args.reduced_event_lists is False
+    assert nested_args.correct_for_b_field_alignment is False
+    assert nested_args.corsika_file == str(corsika_path)
+    energy_range_index = command.index("--energy_range")
+    assert command[energy_range_index + 1] == "30.0 GeV 10.0 TeV"
+    core_scatter_index = command.index("--core_scatter")
+    assert command[core_scatter_index + 1] == "10 200.0 m"
+    view_cone_index = command.index("--view_cone")
+    assert command[view_cone_index + 1] == "0.0 deg 5.0 deg"
+
+
+def test_build_simulate_prod_job_specs_uses_remote_environment_paths(tmp_test_directory):
+    """Remote jobs do not override backend-provided simulation software paths."""
+    args = {
+        "backend": "htcondor",
+        "output_path": tmp_test_directory / "output",
+        "sim_telarray_path": Path("/controller/sim_telarray"),
+        "corsika_path": Path("/controller/corsika7"),
+        "corsika_interaction_table_path": Path("/controller/tables"),
+        "_metadata_configuration_sources": {
+            "environment": {
+                "sim_telarray_path",
+                "corsika_path",
+                "corsika_interaction_table_path",
+            }
+        },
+    }
+
+    jobs = job_grid_io.build_simulate_prod_job_specs(
+        args,
+        _job_rows(),
+        app.APPLICATION.build_parser(),
+        _metadata(),
+    )
+
+    command = jobs[0].command
+    assert "--sim_telarray_path" not in command
+    assert "--corsika_path" not in command
+    assert "--corsika_interaction_table_path" not in command

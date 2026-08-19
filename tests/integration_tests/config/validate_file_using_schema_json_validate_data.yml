@@ -1,10 +1,13 @@
 ---
 applications:
 - application: simtools-validate-file-using-schema
+  docs:
+    title: Validate JSON data with an explicit schema
+    summary: Check a JSON model-parameter document against its explicit parameter schema.
   configuration:
     data_type: data
     file_name: tests/resources/static/model_parameters/schema-0.2.0/num_gains-1.0.0.json
     schema_file: src/simtools/schemas/model_parameters/num_gains.schema.yml
   test_name: json_validate_data
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

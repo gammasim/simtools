@@ -1,11 +1,6 @@
 #!/usr/bin/python3
 
-r"""
-Produces a markdown file for a given array element, site, and model version.
-
-The report includes detailed information on each parameter,
-such as the parameter name, value, unit, description, and short description.
-"""
+"""Produces a markdown file for a given array element, site, and model version."""
 
 from pathlib import Path
 

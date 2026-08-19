@@ -15,6 +15,26 @@ PATCH_ASCII_COLLECT_FILE = "simtools.layout.array_layout_utils.ascii_handler.col
 PATCH_SITEMODEL = "simtools.layout.array_layout_utils.SiteModel"
 
 
+def _write_position_file(tmp_test_directory, coordinate_system):
+    table = QTable()
+    if coordinate_system == "utm":
+        table["asset_code"] = ["MSTN"]
+        table["sequence_number"] = ["03"]
+        table["utm_east"] = [217401.1] * u.m
+        table["utm_north"] = [3185000.0] * u.m
+        table["altitude"] = [2200.0] * u.m
+        file_name = "north-utm.ecsv"
+    else:
+        table["telescope_name"] = ["MSTN-03"]
+        table["position_x"] = [26.86] * u.m
+        table["position_y"] = [-12.5] * u.m
+        table["position_z"] = [2200.0] * u.m
+        file_name = "north-ground.ecsv"
+    file_path = tmp_test_directory / file_name
+    table.write(file_path, format="ascii.ecsv", overwrite=True)
+    return file_path
+
+
 @pytest.fixture
 def mock_read_table_from_file():
     return "simtools.layout.array_layout_utils.data_reader.read_table_from_file"
@@ -313,6 +333,197 @@ def test_validate_array_layouts_with_db_invalid():
 
     with pytest.raises(ValueError, match=r"Invalid array elements found: \['tel3', 'tel4'\]"):
         array_layout_utils.validate_array_layouts_with_db(production_table, array_layouts)
+
+
+def test_get_array_layout_elements():
+    layouts = {
+        "value": [
+            {"name": "hyper_array", "elements": ["MSTS-01", "MSTS-301"]},
+        ]
+    }
+
+    assert array_layout_utils.get_array_layout_elements(layouts, "hyper_array") == [
+        "MSTS-01",
+        "MSTS-301",
+    ]
+
+    with pytest.raises(ValueError, match="Reference array layout 'missing' not found"):
+        array_layout_utils.get_array_layout_elements(layouts, "missing")
+
+    with pytest.raises(ValueError, match="Reference array layout 'empty' has no elements"):
+        array_layout_utils.get_array_layout_elements(
+            {"value": [{"name": "empty", "elements": []}]}, "empty"
+        )
+
+
+def test_validate_array_layout_subset_of_reference_valid():
+    result = array_layout_utils.validate_array_layout_subset_of_reference(
+        layout_name="dual-camera",
+        elements=["MSTS-301", "MSTS-01"],
+        reference_elements=["MSTS-01", "MSTS-301", "SSTS-01"],
+        reference_layout_name="hyper_array",
+    )
+
+    assert result == {
+        "name": "dual-camera",
+        "elements": ["MSTS-301", "MSTS-01"],
+    }
+
+
+def test_validate_array_layout_subset_of_reference_invalid_element():
+    with pytest.raises(ValueError, match="outside reference layout 'hyper_array'"):
+        array_layout_utils.validate_array_layout_subset_of_reference(
+            layout_name="invalid",
+            elements=["MSTS-01", "MSTS-999"],
+            reference_elements=["MSTS-01", "MSTS-301"],
+            reference_layout_name="hyper_array",
+        )
+
+    with pytest.raises(ValueError, match="must be a non-empty string"):
+        array_layout_utils.validate_array_layout_subset_of_reference(
+            layout_name=" ",
+            elements=["MSTS-01"],
+            reference_elements=["MSTS-01"],
+            reference_layout_name="hyper_array",
+        )
+
+
+def test_validate_array_layout_subset_of_reference_duplicate_or_empty():
+    with pytest.raises(ValueError, match="duplicate telescopes"):
+        array_layout_utils.validate_array_layout_subset_of_reference(
+            layout_name="duplicate",
+            elements=["MSTS-01", "MSTS-01"],
+            reference_elements=["MSTS-01"],
+            reference_layout_name="hyper_array",
+        )
+
+
+def test_prepare_array_layouts_for_submission_direct(mocker):
+    db = mocker.Mock()
+    db.get_model_parameter.return_value = {
+        "array_layouts": {
+            "site": "South",
+            "value": [
+                {"name": "hyper_array", "elements": ["MSTS-01", "MSTS-301"]},
+            ],
+        }
+    }
+    args = {
+        "array_layouts": None,
+        "array_layout_name": "dual-camera",
+        "array_element_list": ["MSTS-01", "MSTS-301"],
+        "reference_array_layout": "hyper_array",
+        "site": "South",
+        "model_version": ["7.0.0"],
+        "parameter_version": "3.0.0",
+        "updated_parameter_version": "3.0.99",
+    }
+
+    result, model_version = array_layout_utils.prepare_array_layouts_for_submission(db, args)
+
+    assert model_version == "7.0.0"
+    assert result["value"][-1] == {
+        "name": "dual-camera",
+        "elements": ["MSTS-01", "MSTS-301"],
+    }
+    assert result["value"][0] == {
+        "name": "hyper_array",
+        "elements": ["MSTS-01", "MSTS-301"],
+    }
+    db.get_model_parameter.assert_called_once_with(
+        parameter="array_layouts",
+        site="South",
+        array_element_name=None,
+        parameter_version="3.0.0",
+    )
+
+    with pytest.raises(ValueError, match="requires a non-empty telescope list"):
+        array_layout_utils.validate_array_layout_subset_of_reference(
+            layout_name="empty",
+            elements=[],
+            reference_elements=["MSTS-01"],
+            reference_layout_name="hyper_array",
+        )
+
+
+def test_prepare_array_layouts_for_submission_rejects_existing_name(mocker):
+    db = mocker.Mock()
+    db.get_model_parameter.return_value = {
+        "array_layouts": {
+            "site": "South",
+            "value": [
+                {"name": "hyper_array", "elements": ["MSTS-01", "MSTS-301"]},
+                {"name": "existing-layout", "elements": ["MSTS-01"]},
+            ],
+        }
+    }
+    args = {
+        "array_layouts": None,
+        "array_layout_name": "existing layout",
+        "array_element_list": ["MSTS-01"],
+        "reference_array_layout": "hyper_array",
+        "site": "South",
+        "model_version": ["7.0.0"],
+        "parameter_version": "3.0.0",
+        "updated_parameter_version": "3.0.99",
+    }
+
+    with pytest.raises(ValueError, match="already exists"):
+        array_layout_utils.prepare_array_layouts_for_submission(db, args)
+
+
+def test_prepare_array_layouts_for_submission_file_input(mocker):
+    db = mocker.Mock()
+    layouts = {"value": [{"name": "existing", "elements": ["MSTS-01"]}]}
+    mocker.patch.object(
+        array_layout_utils.ascii_handler, "collect_data_from_file", return_value=layouts
+    )
+    args = {
+        "array_layouts": "array_layouts.json",
+        "array_layout_name": None,
+        "array_element_list": None,
+        "model_version": "7.0.0",
+    }
+
+    result, model_version = array_layout_utils.prepare_array_layouts_for_submission(db, args)
+
+    assert result is layouts
+    assert model_version == "7.0.0"
+    db.get_model_parameter.assert_not_called()
+
+
+def test_prepare_array_layouts_for_submission_rejects_mixed_input(mocker):
+    args = {
+        "array_layouts": "array_layouts.json",
+        "array_layout_name": "new-layout",
+        "array_element_list": None,
+        "model_version": "7.0.0",
+    }
+
+    with pytest.raises(ValueError, match="Use either array_layouts"):
+        array_layout_utils.prepare_array_layouts_for_submission(mocker.Mock(), args)
+
+
+def test_prepare_array_layouts_for_submission_rejects_missing_direct_arguments(mocker):
+    with pytest.raises(ValueError, match="Direct layout input requires"):
+        array_layout_utils.prepare_array_layouts_for_submission(
+            mocker.Mock(), {"array_layouts": None}
+        )
+
+
+def test_prepare_array_layouts_for_submission_rejects_multiple_model_versions(mocker):
+    args = {
+        "array_layouts": "array_layouts.json",
+        "array_layout_name": None,
+        "array_element_list": None,
+        "model_version": ["7.0.0", "7.0.1"],
+    }
+    mocker.patch.object(
+        array_layout_utils.ascii_handler, "collect_data_from_file", return_value={"value": []}
+    )
+
+    with pytest.raises(ValueError, match="exactly one model version"):
+        array_layout_utils.prepare_array_layouts_for_submission(mocker.Mock(), args)
 
 
 def test_get_array_layouts_from_parameter_file_valid(mocker, mock_array_model):
@@ -644,6 +855,7 @@ def minimal_args_dict():
         "array_layout_name": None,
         "plot_all_layouts": False,
         "array_layout_parameter_file": None,
+        "array_layout_name_from_parameter_file": None,
         "array_layout_file": None,
         "array_element_list": None,
         "site": "North",
@@ -656,6 +868,18 @@ def test_read_layouts_returns_empty_lists_when_no_inputs(minimal_args_dict):
     layouts, background = array_layout_utils.read_layouts(minimal_args_dict)
     assert layouts == []
     assert background is None
+
+
+def test_read_layouts_rejects_parameter_file_selector_without_parameter_file(minimal_args_dict):
+    args = minimal_args_dict.copy()
+    args["array_layout_name"] = ["alpha"]
+    args["array_layout_name_from_parameter_file"] = ["beta"]
+
+    with pytest.raises(
+        ValueError,
+        match="array_layout_name_from_parameter_file requires array_layout_parameter_file",
+    ):
+        array_layout_utils.read_layouts(args)
 
 
 def test_read_layouts_with_array_layout_name_background(minimal_args_dict):
@@ -720,6 +944,26 @@ def test_read_layouts_with_array_layout_parameter_file(minimal_args_dict):
         assert isinstance(layouts, list)
         assert layouts[0]["name"] == "layout_param"
         assert background is None
+
+
+def test_read_layouts_selects_array_layout_from_parameter_file(minimal_args_dict):
+    args = minimal_args_dict.copy()
+    args["array_layout_parameter_file"] = "param_file.json"
+    args["array_layout_name_from_parameter_file"] = ["layout_param"]
+    with patch(
+        "simtools.layout.array_layout_utils.get_array_layouts_from_parameter_file"
+    ) as mock_get:
+        mock_get.return_value = [{"name": "layout_param", "array_elements": ["telA"]}]
+        layouts, background = array_layout_utils.read_layouts(args)
+
+    assert layouts == [{"name": "layout_param", "array_elements": ["telA"]}]
+    assert background is None
+    mock_get.assert_called_once_with(
+        "param_file.json",
+        "1.0.0",
+        "ground",
+        ["layout_param"],
+    )
 
 
 def test_read_layouts_with_array_layout_file(minimal_args_dict):
@@ -814,10 +1058,10 @@ def test_create_regular_array_errors():
         )
 
 
-def test_write_array_elements_from_file_to_repository_utm(tmp_test_directory, get_test_data_file):
+def test_write_array_elements_from_file_to_repository_utm(tmp_test_directory):
     array_layout_utils.write_array_elements_from_file_to_repository(
         coordinate_system="utm",
-        input_file=get_test_data_file("telescope_positions", "North-utm"),
+        input_file=_write_position_file(tmp_test_directory, "utm"),
         repository_path=tmp_test_directory,
         parameter_version="5.7.0",
     )
@@ -833,12 +1077,10 @@ def test_write_array_elements_from_file_to_repository_utm(tmp_test_directory, ge
     assert para["value"][0] == pytest.approx(217401.1)
 
 
-def test_write_array_elements_from_file_to_repository_ground(
-    tmp_test_directory, get_test_data_file
-):
+def test_write_array_elements_from_file_to_repository_ground(tmp_test_directory):
     array_layout_utils.write_array_elements_from_file_to_repository(
         coordinate_system="ground",
-        input_file=get_test_data_file("telescope_positions", "North"),
+        input_file=_write_position_file(tmp_test_directory, "ground"),
         repository_path=tmp_test_directory,
         parameter_version="5.7.0",
     )
@@ -853,13 +1095,13 @@ def test_write_array_elements_from_file_to_repository_ground(
     assert para["value"][0] == pytest.approx(26.86)
 
 
-def test_write_array_elements_from_file_to_repository_error(tmp_test_directory, get_test_data_file):
+def test_write_array_elements_from_file_to_repository_error(tmp_test_directory):
     with pytest.raises(
         ValueError, match=r"Unsupported coordinate system: invalid. Allowed are 'utm' and 'ground'."
     ):
         array_layout_utils.write_array_elements_from_file_to_repository(
             coordinate_system="invalid",
-            input_file=get_test_data_file("telescope_positions", "North"),
+            input_file=_write_position_file(tmp_test_directory, "ground"),
             repository_path=tmp_test_directory,
             parameter_version="5.7.0",
         )

@@ -1,29 +1,6 @@
 #!/usr/bin/python3
 
-r"""
-    Add a new parameter / value to a collection in the DB using a json file as input.
-
-    Command line arguments
-    ----------------------
-    file_name (str, required)
-        Name of the file to upload including the full path.
-    db_collection (str, required)
-        The DB collection to which to add the file.
-    db (str)
-        The DB to insert the files to.
-
-    Example
-    -------
-
-    Upload a file to sites collection:
-
-    .. code-block:: console
-
-        simtools-add-value-from-json-to-db \\
-            --file_name new_value.json --db_collection sites
-
-
-"""
+"""Add a new parameter / value to a collection in the DB using a json file as input."""
 
 from pathlib import Path
 
