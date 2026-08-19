@@ -48,12 +48,6 @@ _ARGUMENTS = (
         default=10,
     ),
     cli.ArgumentDefinition(
-        "profile_serial",
-        action="store_true",
-        default=False,
-        help="Run optimization in a single process (no process pool).",
-    ),
-    cli.ArgumentDefinition(
         "psf_hist",
         nargs="?",
         const="psf_distributions.png",
@@ -78,6 +72,7 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
+        *cli.BACKEND_ARGUMENTS,
         cli.MODEL_VERSION,
         cli.PARAMETER_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
