@@ -763,19 +763,29 @@ def test_create_new_model_parameter_entry_telescope_dir_not_exists(tmp_test_dire
         )
 
 
+@patch("simtools.model.model_repository.get_model_parameter_file_path")
 @patch("simtools.model.model_repository._check_for_major_version_jump")
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
 @patch("simtools.model.model_repository._get_latest_model_parameter_file")
 @patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter")
 def test_create_new_model_parameter_entry_with_existing_file(
-    mock_dump, mock_get_latest, mock_collect_data, mock_check_version, tmp_test_directory
+    mock_dump,
+    mock_get_latest,
+    mock_collect_data,
+    mock_check_version,
+    mock_get_parameter_file_path,
+    tmp_test_directory,
 ):
     telescope = "MSTx-FlashCam"
     param = "dsum_threshold"
     param_data = {"version": "1.0.0", "value": 42.5, "unit": "count"}
-    model_parameters_dir = Path(tmp_test_directory / "model_parameters")
+    simulation_models_path = Path(tmp_test_directory)
+    model_parameters_dir = simulation_models_path / "simulation-models/model_parameters"
     telescope_dir = model_parameters_dir / telescope
     telescope_dir.mkdir(parents=True)
+    mock_get_parameter_file_path.return_value = (
+        model_parameters_dir / telescope / param / f"{param}-{param_data['version']}.json"
+    )
 
     mock_get_latest.return_value = "/path/to/existing/file.json"
     mock_collect_data.return_value = {
@@ -784,16 +794,9 @@ def test_create_new_model_parameter_entry_with_existing_file(
     }
     mock_check_version.return_value = "2.0.0"
 
-    # Avoid loading the complete parameter schema through the patched file reader. The
-    # behavior under test only needs the collection path for this parameter.
-    with patch.object(
-        model_repository.names,
-        "get_collection_name_from_parameter_name",
-        return_value="telescopes",
-    ):
-        model_repository._create_new_model_parameter_entry(
-            telescope, param, param_data, model_parameters_dir
-        )
+    model_repository._create_new_model_parameter_entry(
+        telescope, param, param_data, simulation_models_path
+    )
 
     # Verify that existing file data was processed
     mock_collect_data.assert_called_once_with("/path/to/existing/file.json")
