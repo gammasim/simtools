@@ -88,6 +88,7 @@ APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
         *_ARGUMENTS,
+        *cli.BACKEND_ARGUMENTS,
         cli.MODEL_VERSION,
         cli.OVERWRITE_MODEL_PARAMETERS,
         cli.SITE,
@@ -128,6 +129,8 @@ def main():
         config=app_context.args,
         label=app_context.args.get("label"),
         max_workers=app_context.args.get("max_workers"),
+        backend=app_context.args.get("backend", "local"),
+        backend_config=app_context.args.get("backend_config"),
     )
 
     results = simulator.simulate(

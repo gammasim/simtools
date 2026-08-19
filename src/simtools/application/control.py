@@ -205,7 +205,9 @@ def _initialize_runtime(
         db_config,
         resolve_sim_software_executables=resolve_sim_software_executables,
     )
-    if validate_simulation_dependencies:
+    if validate_simulation_dependencies and not args_dict.get(
+        "_defer_simulation_dependency_validation", False
+    ):
         simulation_software = args_dict.get("simulation_software", "sim_telarray")
         dependencies.validate_simulation_dependencies(simulation_software)
 
