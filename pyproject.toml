@@ -314,6 +314,7 @@ ini_options.addopts = [
   "--import-mode=importlib",
   "-p",
   "pytest_requirements",
+  "-rsxX",
 ]
 ini_options.markers = [
   "db_unit_test: test belongs to unit_tests/db and must not use global DatabaseHandler patching.",
