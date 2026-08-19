@@ -77,13 +77,13 @@ def test_records_publish_only_slow_integration_tests():
     assert all("test_fast" not in record["name"] for record in records)
 
 
-def test_records_publish_only_unit_suite():
+def test_records_publish_only_unit_session():
     records = resource_benchmark._records(
         "unit", _measurement(10.0), [], _metadata(), 0, minimum_wall_time=0.0
     )
 
     assert len(records) == 3
-    assert all(record["name"].startswith("unit-suite / ") for record in records)
+    assert all(record["name"].startswith("unit-session / ") for record in records)
 
 
 def test_collection_excludes_reasoned_integration_configuration(mocker, tmp_test_directory):
