@@ -779,15 +779,12 @@ def test_create_new_model_parameter_entry_with_existing_file(
     telescope = "MSTx-FlashCam"
     param = "dsum_threshold"
     param_data = {"version": "1.0.0", "value": 42.5, "unit": "count"}
-    model_parameters_dir = Path(tmp_test_directory / "model_parameters")
+    simulation_models_path = Path(tmp_test_directory)
+    model_parameters_dir = simulation_models_path / "simulation-models/model_parameters"
     telescope_dir = model_parameters_dir / telescope
     telescope_dir.mkdir(parents=True)
     mock_get_parameter_file_path.return_value = (
-        model_parameters_dir
-        / "simulation-models/model_parameters"
-        / telescope
-        / param
-        / f"{param}-{param_data['version']}.json"
+        model_parameters_dir / telescope / param / f"{param}-{param_data['version']}.json"
     )
 
     mock_get_latest.return_value = "/path/to/existing/file.json"
@@ -798,7 +795,7 @@ def test_create_new_model_parameter_entry_with_existing_file(
     mock_check_version.return_value = "2.0.0"
 
     model_repository._create_new_model_parameter_entry(
-        telescope, param, param_data, model_parameters_dir
+        telescope, param, param_data, simulation_models_path
     )
 
     # Verify that existing file data was processed
