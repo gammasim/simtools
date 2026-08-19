@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -196,6 +197,7 @@ def test_excluded(config):
         ],
         capture_output=True,
         cwd=simtools_root_path,
+        env={**os.environ, "PYTHONPATH": str(simtools_root_path / "tests")},
         text=True,
     )
 
