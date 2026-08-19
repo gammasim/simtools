@@ -3,6 +3,7 @@ from unittest import mock
 
 import pytest
 import yaml
+from jsonschema.exceptions import ValidationError
 
 from simtools.job_execution import parameter_scan_generator
 
@@ -241,3 +242,69 @@ def test_expand_job_grid_with_scan_uses_sanitized_default_label_and_description(
 
     overwrite = yaml.safe_load(overwrite_file.read_text(encoding="utf-8"))
     assert overwrite["description"] == "Parameter scan - threshold value=20 MeV/25 MeV"
+
+
+@mock.patch("simtools.job_execution.parameter_scan_generator.serialize_job_grid")
+@mock.patch("simtools.job_execution.parameter_scan_generator.read_job_grid")
+def test_expand_job_grid_with_scan_uses_explicit_compact_label(
+    mock_read_grid,
+    mock_serialize_grid,
+    tmp_test_directory,
+):
+    mock_read_grid.return_value = ([{"primary": "gamma"}], {"site": "North"})
+
+    scan_config = {
+        "label": "nsb",
+        "parameter_scan": {
+            "overwrite": {**_overwrite_base(), "changes": {"LSTN-01": {}}},
+            "job_grid_updates": {"array_layout_name": "LSTN-01"},
+            "parameters": [
+                {
+                    "name": "asum_threshold",
+                    "path": "changes.LSTN-01.asum_threshold",
+                    "version": "2.0.0",
+                    "values": [220],
+                    "label": "asum",
+                    "label_separator": "",
+                }
+            ],
+        },
+    }
+    scan_config_path = Path(tmp_test_directory) / "scan_config.yml"
+    scan_config_path.write_text(yaml.safe_dump(scan_config), encoding="utf-8")
+
+    output_file = Path(tmp_test_directory) / "scan_grid.ecsv"
+
+    parameter_scan_generator.expand_job_grid_with_scan(
+        Path(tmp_test_directory) / "base_grid.ecsv",
+        scan_config_path,
+        output_file,
+    )
+
+    expanded_rows = mock_serialize_grid.call_args.args[0]
+    overwrite_file = Path(expanded_rows[0]["overwrite_model_parameters"])
+
+    assert overwrite_file.name == "overwrite_nsb_asum220.yaml"
+    assert expanded_rows[0]["scan_label"] == "asum220"
+    assert expanded_rows[0]["array_layout_name"] == "LSTN-01"
+
+    overwrite = yaml.safe_load(overwrite_file.read_text(encoding="utf-8"))
+    assert overwrite["changes"]["LSTN-01"]["asum_threshold"] == {
+        "version": "2.0.0",
+        "value": 220,
+    }
+
+
+def test_expand_job_grid_with_scan_validates_configuration(tmp_test_directory):
+    scan_config_path = Path(tmp_test_directory) / "scan_config.yml"
+    scan_config_path.write_text(
+        yaml.safe_dump({"parameter_scan": {"overwrite": {}, "parameters": []}}),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValidationError):
+        parameter_scan_generator.expand_job_grid_with_scan(
+            Path(tmp_test_directory) / "base_grid.ecsv",
+            scan_config_path,
+            Path(tmp_test_directory) / "scan_grid.ecsv",
+        )

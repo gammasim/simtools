@@ -1,5 +1,8 @@
 # simtools-write-reduced-event-lists
 
+This application supports the `local` (default) and `htcondor` execution backends. See
+[Execution backends](../execution_backends.md) for HTCondor setup and configuration.
+
 ```{eval-rst}
 .. automodule:: simtools.applications.write_reduced_event_lists
    :members:

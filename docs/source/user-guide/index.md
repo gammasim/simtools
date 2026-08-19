@@ -11,6 +11,8 @@ A full list of simtools applications is provided in the [Applications](applicati
 - [Generate simulated events](productions.md): Configure and run large-scale productions of simulated event data.
 - [Manage simulation models and parameters](manage_simulation_models.md): Derive, validate, and maintain simulation models and associated parameters.
 - [Simulate calibration data](simulate_calibration_data): Produce calibration datasets, including artificial light sources and pedestal events.
+- [Select execution backends](execution_backends.md): Run independent jobs locally or submit
+  them to HTCondor.
 
 ```{toctree}
 :hidden:
@@ -21,4 +23,5 @@ manage_simulation_models.md
 simulate_calibration_data
 applications.md
 container_images.md
+execution_backends.md
 ```

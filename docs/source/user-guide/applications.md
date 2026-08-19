@@ -112,7 +112,6 @@ simtools-simulate-flasher <applications/simtools-simulate-flasher>
 simtools-simulate-illuminator <applications/simtools-simulate-illuminator>
 simtools-simulate-pedestals <applications/simtools-simulate-pedestals>
 simtools-simulate-prod <applications/simtools-simulate-prod>
-simtools-simulate-prod-htcondor-generator <applications/simtools-simulate-prod-htcondor-generator>
 simtools-submit-array-layouts <applications/simtools-submit-array-layouts>
 simtools-submit-data-from-external <applications/simtools-submit-data-from-external>
 simtools-submit-model-parameter-from-external <applications/simtools-submit-model-parameter-from-external>
