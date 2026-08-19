@@ -763,12 +763,18 @@ def test_create_new_model_parameter_entry_telescope_dir_not_exists(tmp_test_dire
         )
 
 
+@patch("simtools.model.model_repository.get_model_parameter_file_path")
 @patch("simtools.model.model_repository._check_for_major_version_jump")
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
 @patch("simtools.model.model_repository._get_latest_model_parameter_file")
 @patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter")
 def test_create_new_model_parameter_entry_with_existing_file(
-    mock_dump, mock_get_latest, mock_collect_data, mock_check_version, tmp_test_directory
+    mock_dump,
+    mock_get_latest,
+    mock_collect_data,
+    mock_check_version,
+    mock_get_parameter_file_path,
+    tmp_test_directory,
 ):
     telescope = "MSTx-FlashCam"
     param = "dsum_threshold"
@@ -776,6 +782,13 @@ def test_create_new_model_parameter_entry_with_existing_file(
     model_parameters_dir = Path(tmp_test_directory / "model_parameters")
     telescope_dir = model_parameters_dir / telescope
     telescope_dir.mkdir(parents=True)
+    mock_get_parameter_file_path.return_value = (
+        model_parameters_dir
+        / "simulation-models/model_parameters"
+        / telescope
+        / param
+        / f"{param}-{param_data['version']}.json"
+    )
 
     mock_get_latest.return_value = "/path/to/existing/file.json"
     mock_collect_data.return_value = {
