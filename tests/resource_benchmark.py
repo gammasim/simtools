@@ -9,6 +9,7 @@ import time
 from collections.abc import Mapping
 from pathlib import Path
 
+import psutil
 import pytest
 
 _BYTES_PER_MIB = 1024 * 1024
@@ -27,7 +28,7 @@ def pytest_addoption(parser):
     group.addoption(
         "--resource-benchmark-mode",
         choices=("unit", "integration"),
-        help="Record the suite only, or the suite and integration tests.",
+        help="Record the session only, or the session and integration tests.",
     )
     group.addoption(
         "--resource-benchmark-min-wall-time",
@@ -96,8 +97,6 @@ class _ResourceSampler:
     """Sample the current pytest process and all descendants in a thread."""
 
     def __init__(self, sample_interval):
-        import psutil
-
         self.psutil = psutil
         self.process = psutil.Process()
         self.sample_interval = sample_interval
@@ -112,7 +111,7 @@ class _ResourceSampler:
         processes = [self.process]
         try:
             processes.extend(self.process.children(recursive=True))
-        except self.psutil.NoSuchProcess, self.psutil.AccessDenied, OSError:
+        except self.psutil.NoSuchProcess, self.psutil.AccessDenied, OSError, TypeError:
             pass
 
         cpu_by_process = {}
@@ -122,7 +121,7 @@ class _ResourceSampler:
                 identity = (process.pid, process.create_time())
                 cpu_times = process.cpu_times()
                 memory = process.memory_info()
-            except self.psutil.NoSuchProcess, self.psutil.AccessDenied, OSError:
+            except self.psutil.NoSuchProcess, self.psutil.AccessDenied, OSError, TypeError:
                 continue
             cpu_by_process[identity] = cpu_times.user + cpu_times.system
             rss_bytes += memory.rss
@@ -161,7 +160,7 @@ class _ResourceSampler:
         return result
 
     def finish(self):
-        """Stop sampling and return the suite measurement."""
+        """Stop sampling and return the session measurement."""
         self.stop_event.set()
         self.thread.join()
         snapshot = self._snapshot()
@@ -172,7 +171,7 @@ class _ResourceSampler:
 
 
 class ResourceBenchmarkPlugin:
-    """Collect suite and optional per-integration-test resource measurements."""
+    """Collect session and optional per-integration-test resource measurements."""
 
     def __init__(self, config, output, mode, sample_interval, minimum_wall_time):
         self.config = config
@@ -186,7 +185,7 @@ class ResourceBenchmarkPlugin:
         self.excluded = []
 
     def pytest_sessionstart(self):
-        """Start suite resource sampling."""
+        """Start session resource sampling."""
         self.sampler = _ResourceSampler(self.sample_interval)
         self.sampler.start()
 
@@ -239,12 +238,12 @@ class ResourceBenchmarkPlugin:
 
     def pytest_sessionfinish(self, exitstatus):
         """Finish sampling and write raw and chart-ready JSON files."""
-        suite = self.sampler.finish()
+        session = self.sampler.finish()
         self.sampler = None
         metadata = _metadata(self.config, self.mode, self.sample_interval, self.minimum_wall_time)
         records = _records(
             self.mode,
-            suite,
+            session,
             self.tests,
             metadata,
             exitstatus,
@@ -253,7 +252,7 @@ class ResourceBenchmarkPlugin:
         raw = {
             "schema_version": 1,
             "metadata": metadata,
-            "suite": {**suite, "exit_status": int(exitstatus)},
+            "session": {**session, "exit_status": int(exitstatus)},
             "tests": self.tests,
             "excluded": self.excluded,
             "published_test_count": sum(
@@ -324,12 +323,12 @@ def _short_test_name(nodeid):
     return test_name[len(prefix) : -1] if test_name.startswith(prefix) else test_name
 
 
-def _records(mode, suite, tests, metadata, exitstatus, minimum_wall_time):
-    """Build suite records and slow integration-test records."""
+def _records(mode, session, tests, metadata, exitstatus, minimum_wall_time):
+    """Build session records and slow integration-test records."""
     model_version = metadata["model_version"]
-    suite_name = "unit-suite" if mode == "unit" else f"integration-suite / {model_version}"
+    session_name = "unit-session" if mode == "unit" else f"integration-session / {model_version}"
     records = _measurement_records(
-        suite_name, suite, _metadata_text(metadata, f"exit_status={int(exitstatus)}")
+        session_name, session, _metadata_text(metadata, f"exit_status={int(exitstatus)}")
     )
     if mode == "unit":
         return records
