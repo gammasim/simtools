@@ -9,6 +9,7 @@ import time
 from collections.abc import Mapping
 from pathlib import Path
 
+import psutil
 import pytest
 
 _BYTES_PER_MIB = 1024 * 1024
@@ -96,8 +97,6 @@ class _ResourceSampler:
     """Sample the current pytest process and all descendants in a thread."""
 
     def __init__(self, sample_interval):
-        import psutil
-
         self.psutil = psutil
         self.process = psutil.Process()
         self.sample_interval = sample_interval

@@ -42,8 +42,9 @@ For developers:
 ```console
 git clone https://github.com/gammasim/simtools.git
 cd simtools
-python3 -m venv .venv
+python -m venv .venv
 source .venv/bin/activate
+# rehash (to avoid shell mixup in certain envs)
 pip install -e '.[tests,dev,doc]'
 ```
 
