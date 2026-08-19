@@ -1,0 +1,26 @@
+---
+applications:
+- application: simtools-validate-optics
+  configuration:
+    offset_file: ${static:validate_optics_offsets_xy.ecsv}
+    model_version: 7.0.0
+    output_path: simtools-output
+    site: North
+    source_distance: 11.0
+    telescope: LSTN-01
+    test: true
+    zenith_angle: 20
+    plot_images: false
+    parameter_version: 2.0.0
+    label: validate_optics_offset_file
+  integration_tests:
+  - test_outputs:
+    - path_descriptor: output_path
+      output_sub_path: results
+      file: ray_tracing_North_LSTN-01_d11.0km_za20.0deg_validate_optics_offset_file.ecsv
+    - file: effective_focal_length-2.0.0.json
+      path_descriptor: output_path
+      output_sub_path: LSTN-01
+  test_name: run-offset-file
+schema_name: application_workflow.metaschema
+schema_version: 0.5.0

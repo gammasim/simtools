@@ -1,12 +1,17 @@
 ---
 applications:
 - application: simtools-simulate-pedestals
+  docs:
+    title: Simulate North-array pedestal events
+    summary: >-
+      Generate pedestal events for the North Alpha layout with electronics noise and twice the
+      nominal NSB level.
   configuration:
     run_mode: pedestals
     array_layout_name:
       by_version:
-        "<7.0.0": alpha
-        ">=7.0.0": CTAO-North-Alpha
+        <7.0.0: alpha
+        '>=7.0.0': CTAO-North-Alpha
     label: test-pedestal-production-North
     log_level: DEBUG
     model_version: 7.0.0
@@ -15,18 +20,18 @@ applications:
     run_number: 10
     sim_telarray_random_instrument_instances: 100
     site: North
-    azimuth_angle: 0.
+    azimuth_angle: 0.0
     zenith_angle: 20
     stars: null
-    nsb_scaling_factor: 2.
+    nsb_scaling_factor: 2.0
   integration_tests:
-  - output_file: sim_telarray/run000010/pedestals_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test-pedestal-production-North.simtel.zst
-  - test_output_files:
-    - expected_sim_telarray_output:
-        event_type: pedestal
+  - test_outputs:
+    - path_descriptor: output_path
       file: pedestals_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test-pedestal-production-North.simtel.zst
-      path_descriptor: output_path
       output_sub_path: sim_telarray/run000010
+      validations:
+      - type: simtel
+        event_type: pedestal
   test_name: pedestals_20_deg_north
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

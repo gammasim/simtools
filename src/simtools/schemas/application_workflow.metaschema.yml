@@ -3,6 +3,455 @@ $schema: http://json-schema.org/draft-06/schema#
 $ref: '#/definitions/SimtoolsApplicationWorkflowConfiguration'
 title: SimPipe application workflow configuration metaschema
 description: YAML representation of application workflow configuration metaschema
+schema_version: 0.5.0
+schema_name: application_workflow.metaschema
+type: object
+additionalProperties: false
+
+definitions:
+  SimtoolsApplicationWorkflowConfiguration:
+    type: object
+    additionalProperties: false
+    properties:
+      applications:
+        "$ref": "#/definitions/applications"
+      collection:
+        "$ref": "#/definitions/collection"
+      schema_version:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_version_field'
+      schema_url:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_url_field'
+      schema_name:
+        $ref: 'common_definitions.schema.yml#/$defs/schema_name_field'
+      activity_id:
+        type: string
+        description: "Workflow activity UUID. If omitted, generated automatically."
+      runtime_environment:
+        $ref: 'common_definitions.schema.yml#/$defs/run_time_environment'
+    required:
+      - applications
+      - schema_version
+      - schema_name
+    title: ""
+  collection:
+    oneOf:
+      - "$ref": "#/definitions/collection_entry"
+      - type: array
+        items:
+          "$ref": "#/definitions/collection_entry"
+  collection_entry:
+    type: object
+    additionalProperties: false
+    properties:
+      output_path:
+        type: string
+        description: "Path to the collection output directory."
+      files:
+        type: array
+        items:
+          type: string
+        description: "List of files to copy from source directories to collection output_path."
+      source_directory:
+        oneOf:
+          - type: string
+          - type: array
+            items:
+              type: string
+        description: |
+          Application configuration key or list of keys containing source directories searched for collection files.
+          Defaults to output_path.
+    required:
+      - output_path
+      - files
+  applications:
+    additionalProperties: false
+    type: array
+    items:
+      type: object
+      properties:
+        application:
+          type: string
+          description: "Name of simtools application"
+        test_name:
+          type: string
+          description: "Test name. Should be unique for this application."
+        skip_for_production_db:
+          type: boolean
+          description: "Skip test if production DB is used."
+        requires_mongodb:
+          type: boolean
+          description: "Application test requires MongoDB access."
+        skip_integration_test:
+          type: string
+          description: "Skip test with the given skip message."
+        exclude_from_resource_benchmark:
+          type: string
+          minLength: 1
+          description: "Exclude this test from CI resource benchmarking with the given reason."
+        model_version_use_current:
+          type: boolean
+          description: |
+            "Skip test if model version is changed via command line.
+            Important e.g., for cases where DB model is incomplete for some
+            model versions."
+        docs:
+          type: object
+          additionalProperties: false
+          description: "Optional documentation metadata for rendering tested examples."
+          properties:
+            title:
+              type: string
+              description: "Short title shown in generated documentation examples."
+            summary:
+              type: string
+              description: "Short summary shown in generated documentation examples."
+        configuration:
+          "$ref": "#/definitions/configuration"
+        integration_tests:
+          type: array
+          items:
+            "$ref": "#/definitions/integration_test"
+        test_requirement:
+          type: string
+          description: "Requirement ID of the test."
+        test_use_case:
+          type: string
+          description: "Use case ID of the test."
+        xfail_network_error:
+          type: boolean
+          description: "Mark test as xfail if application exits with a network error."
+        xfail:
+          type: string
+          description: "Expected failure reason for this workflow."
+      required:
+        - application
+        - configuration
+    title: Applications
+  configuration:
+    description: "Command line configuration of simtools application."
+    type: object
+    additionalProperties: true
+    title: Configuration
+  integration_test:
+    description: "List of integration tests."
+    type: object
+    additionalProperties: false
+    properties:
+      test_outputs:
+        description: "Generated output artifacts and their ordered validations."
+        type: array
+        minItems: 1
+        items:
+          "$ref": "#/definitions/output_artifact"
+    required: [test_outputs]
+    title: ApplicationWorkflow
+  output_artifact:
+    description: "One generated artifact and its optional content validations."
+    type: object
+    additionalProperties: false
+    properties:
+      path_descriptor:
+        type: string
+        minLength: 1
+      output_sub_path:
+        type: string
+      file:
+        type: string
+        minLength: 1
+      model_versions:
+        type: array
+        minItems: 1
+        uniqueItems: true
+        items:
+          type: string
+          pattern: "^[0-9]+\\.[0-9]+(?:\\.[0-9]+)?$"
+      validations:
+        type: array
+        minItems: 1
+        items:
+          "$ref": "#/definitions/output_validator"
+    required: [path_descriptor, file]
+  output_validator:
+    oneOf:
+      - "$ref": "#/definitions/format_validator"
+      - "$ref": "#/definitions/reference_validator"
+      - "$ref": "#/definitions/data_schema_validator"
+      - "$ref": "#/definitions/table_validator"
+      - "$ref": "#/definitions/metadata_validator"
+      - "$ref": "#/definitions/hdf5_datasets_validator"
+      - "$ref": "#/definitions/hdf5_product_validator"
+      - "$ref": "#/definitions/log_validator"
+      - "$ref": "#/definitions/simtel_validator"
+      - "$ref": "#/definitions/simtel_config_validator"
+      - "$ref": "#/definitions/model_parameter_validator"
+  validation_range:
+    type: object
+    additionalProperties: false
+    properties:
+      minimum:
+        type: number
+      maximum:
+        type: number
+      unit:
+        type: string
+        minLength: 1
+      inclusive:
+        type: boolean
+    minProperties: 1
+    anyOf:
+      - required: [minimum]
+      - required: [maximum]
+  validation_column_rule:
+    type: object
+    additionalProperties: false
+    properties:
+      allowed_values:
+        type: array
+        minItems: 1
+        items: {}
+      range:
+        "$ref": "#/definitions/validation_range"
+    minProperties: 1
+  format_validator:
+    type: object
+    additionalProperties: false
+    properties:
+      type:
+        const: format
+      format:
+        type: string
+        minLength: 1
+    required: [type, format]
+  reference_validator:
+    type: object
+    additionalProperties: false
+    properties:
+      type:
+        const: reference
+      file:
+        type: string
+        minLength: 1
+      tolerance:
+        type: number
+        minimum: 0
+      columns:
+        type: array
+        minItems: 1
+        uniqueItems: true
+        items:
+          type: string
+          minLength: 1
+      key_columns:
+        type: array
+        minItems: 1
+        uniqueItems: true
+        items:
+          type: string
+          minLength: 1
+      filters:
+        type: array
+        minItems: 1
+        items:
+          "$ref": "#/definitions/reference_filter"
+      metadata:
+        type: boolean
+    required: [type, file]
+  reference_filter:
+    type: object
+    additionalProperties: false
+    properties:
+      column:
+        type: string
+        minLength: 1
+      operator:
+        enum: [equal, not_equal, less, less_equal, greater, greater_equal, in, not_in]
+      value: {}
+    required: [column, operator, value]
+  data_schema_validator:
+    type: object
+    additionalProperties: false
+    properties:
+      type:
+        const: data_schema
+      schema:
+        type: string
+        minLength: 1
+    required: [type, schema]
+  table_validator:
+    type: object
+    additionalProperties: false
+    properties:
+      type:
+        const: table
+      minimum_rows:
+        type: integer
+        minimum: 0
+      unique_columns:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+          minLength: 1
+      columns:
+        type: object
+        minProperties: 1
+        additionalProperties:
+          "$ref": "#/definitions/validation_column_rule"
+    required: [type]
+    minProperties: 2
+  metadata_validator:
+    type: object
+    additionalProperties: false
+    properties:
+      type:
+        const: metadata
+      required_keys:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+          minLength: 1
+      relations:
+        type: array
+        minItems: 1
+        items:
+          "$ref": "#/definitions/metadata_relation"
+    required: [type]
+    minProperties: 2
+  metadata_relation:
+    oneOf:
+      - type: object
+        additionalProperties: false
+        properties:
+          left:
+            type: string
+            minLength: 1
+          equals:
+            const: table.row_count
+        required: [left, equals]
+      - type: object
+        additionalProperties: false
+        properties:
+          left:
+            type: string
+            minLength: 1
+          equals:
+            const: table.column_sum
+          column:
+            type: string
+            minLength: 1
+        required: [left, equals, column]
+  hdf5_datasets_validator:
+    type: object
+    additionalProperties: false
+    properties:
+      type:
+        const: hdf5_datasets
+      required:
+        type: array
+        minItems: 1
+        uniqueItems: true
+        items:
+          type: string
+          minLength: 1
+      minimum_rows:
+        type: object
+        minProperties: 1
+        additionalProperties:
+          type: integer
+          minimum: 1
+    required: [type]
+    minProperties: 2
+  hdf5_product_validator:
+    type: object
+    additionalProperties: false
+    properties:
+      type:
+        const: hdf5_product
+      product:
+        type: string
+        enum: [reduced_event_data, trigger_histograms]
+    required: [type, product]
+  log_validator:
+    type: object
+    additionalProperties: false
+    properties:
+      type:
+        const: log
+      expected:
+        type: object
+        additionalProperties: false
+        properties:
+          pattern:
+            type: array
+            items: {type: string}
+          forbidden_pattern:
+            type: array
+            items: {type: string}
+    required: [type, expected]
+  simtel_validator:
+    type: object
+    additionalProperties: false
+    properties:
+      type:
+        const: simtel
+      event_type:
+        type: string
+        minLength: 1
+      event:
+        type: object
+        additionalProperties: false
+        properties:
+          pe_sum:
+            "$ref": "#/definitions/simtel_event_expectation"
+          photons:
+            "$ref": "#/definitions/simtel_event_expectation"
+          trigger_time:
+            "$ref": "#/definitions/simtel_event_expectation"
+      metadata:
+        type: object
+    required: [type]
+  simtel_event_expectation:
+    type: object
+    additionalProperties: false
+    properties:
+      range:
+        type: array
+        minItems: 2
+        maxItems: 2
+        items:
+          type: number
+    required: [range]
+  simtel_config_validator:
+    type: object
+    additionalProperties: false
+    properties:
+      type:
+        const: simtel_config
+      reference:
+        type: string
+        minLength: 1
+    required: [type, reference]
+  model_parameter_validator:
+    type: object
+    additionalProperties: false
+    properties:
+      type:
+        const: model_parameter
+      reference_parameter_name:
+        type: string
+        minLength: 1
+      tolerance:
+        type: number
+        minimum: 0
+      scaling:
+        type: number
+    required: [type, reference_parameter_name, tolerance]
+---
+$schema: http://json-schema.org/draft-06/schema#
+$ref: '#/definitions/SimtoolsApplicationWorkflowConfiguration'
+title: SimPipe application workflow configuration metaschema
+description: YAML representation of application workflow configuration metaschema
 schema_version: 0.4.0
 schema_name: application_workflow.metaschema
 type: object
@@ -84,6 +533,10 @@ definitions:
         skip_integration_test:
           type: string
           description: "Skip test with the given skip message."
+        exclude_from_resource_benchmark:
+          type: string
+          minLength: 1
+          description: "Exclude this test from CI resource benchmarking with the given reason."
         model_version_use_current:
           type: boolean
           description: |
@@ -158,6 +611,17 @@ definitions:
               items:
                 type: string
                 minLength: 1
+            expected_hdf5_min_rows:
+              description: "Minimum row count required for named root-level HDF5 datasets."
+              type: object
+              minProperties: 1
+              additionalProperties:
+                type: integer
+                minimum: 1
+            hdf5_schema:
+              description: "Named schema validator for a structured HDF5 output file."
+              type: string
+              enum: [reduced_event_data, trigger_histograms]
           required: ["path_descriptor", "file"]
       file_type:
         description: |

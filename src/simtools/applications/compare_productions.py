@@ -1,34 +1,6 @@
 #!/usr/bin/python3
 
-r"""Compare simulation productions at different comparison levels.
-
-The application accepts repeated production descriptors and dispatches to
-comparison-level specific implementations.
-
-Command line arguments
-----------------------
-production (repeated, required)
-    Production descriptor in two fields:
-    1) label
-    2) comma-separated input file patterns. Event comparisons use trigger histogram
-       HDF5 files; signal comparisons use sim_telarray files.
-comparison_level (str, optional)
-    Comparison level selector. Supported values are:
-    - events
-    - signal
-    - compute
-output_path (str, required)
-    Output directory for generated comparison plots.
-array_layout_name (str, optional)
-    Event-level array layout filter, or the single layout to process for signal-level
-    comparisons.
-
-Signal-level outputs
---------------------
-For each telescope discovered in the sim_telarray inputs, writes pedestal, integrated
-signal, peak-sample, and triggered-pixel PNG plots plus comparison statistics JSON and
-metadata under ``<output_path>/<telescope_name>/``.
-"""
+"""Compare trigger-histogram products from simulation productions."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

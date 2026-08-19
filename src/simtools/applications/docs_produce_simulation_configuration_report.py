@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-r"""Produces a markdown file for a given simulation configuration."""
+"""Produces a markdown file for a given simulation configuration."""
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli

@@ -1,10 +1,13 @@
 ---
 applications:
 - application: simtools-validate-file-using-schema
+  docs:
+    title: Validate a model-parameter schema
+    summary: Check a versioned model-parameter schema against the model-parameter metaschema.
   configuration:
     data_type: schema
     file_name: tests/resources/static/model_parameters/schema-0.2.0/num_gains-1.0.0.json
     schema_file: src/simtools/schemas/model_parameter.metaschema.yml
   test_name: json_validate_schema-0.2.0
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

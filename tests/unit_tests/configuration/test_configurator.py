@@ -3,13 +3,13 @@
 import logging
 import sys
 from copy import copy
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import astropy.units as u
 import pytest
 import yaml
 
+from simtools import constants
 from simtools.configuration.arguments import (
     ARRAY_LAYOUT_NAME,
     OUTPUT_ARGUMENTS,
@@ -68,7 +68,7 @@ def test_config_from_file_preserves_selected_by_version_keys(tmp_test_directory)
     config_dict = {
         "applications": [
             {
-                "application": "simtools-simulate-prod-htcondor-generator",
+                "application": "simtools-simulate-prod",
                 "configuration": {
                     "model_version": ["6.3.0", "7.0.0"],
                     "array_layout_name": {
@@ -146,7 +146,7 @@ def test_config_from_file_resolves_test_resource_paths(tmp_test_directory):
     config_builder = Configurator()
     loaded_config = config_builder._config_from_file(config_file)
 
-    resources_path = (Path.cwd() / "tests/resources").resolve()
+    resources_path = constants.TEST_RESOURCES_ROOT.resolve()
     assert loaded_config["trigger_histogram_file"] == str(
         resources_path / "generated/gamma_diffuse_run000010.trigger_histograms.hdf5"
     )

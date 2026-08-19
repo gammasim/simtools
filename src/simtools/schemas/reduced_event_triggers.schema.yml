@@ -1,0 +1,19 @@
+%YAML 1.2
+---
+title: Schema for reduced-event trigger records
+schema_version: 0.4.0
+meta_schema: simpipe-schema
+meta_schema_url: https://raw.githubusercontent.com/gammasim/simtools/main/src/simtools/schemas/model_parameter_and_data_schema.metaschema.yml
+meta_schema_version: 0.1.0
+name: reduced_event_triggers
+description: Triggered-event records in a reduced-event HDF5 product.
+data:
+  - type: data_table
+    table_columns:
+      - {name: shower_id, description: Shower identifier., required: true, type: uint32}
+      - {name: event_id, description: Event identifier., required: true, type: uint32}
+      - {name: file_id, description: Input file identifier., required: true, type: uint32}
+      - {name: array_altitude, description: Array pointing altitude., required: true, type: float64, unit: deg}
+      - {name: array_azimuth, description: Array pointing azimuth., required: true, type: float64, unit: deg}
+      - {name: telescope_list, description: Triggered telescope identifiers., required: true, type: string}
+      - {name: telescope_list_common_id, description: Common telescope identifiers., required: true, type: string}

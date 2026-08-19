@@ -1,6 +1,6 @@
 # Build Images
 
-Pre-built OCI and Apptainer images are available from the
+Pre-built OCI images are available from the
 [simtools package registry](https://github.com/orgs/gammasim/packages?repo_name=simtools).
 The GitHub Actions workflows in `.github/workflows/build-*.yml` are the reference image builds.
 
@@ -46,6 +46,5 @@ podman run --rm -it \
   bash -lc "cd /workdir/external/simtools && pip install -e . && exec bash"
 ```
 
-Published production images include `/opt/simtools/provenance/dependency-manifest.json`. The
-production workflow converts each pushed OCI image to SIF from its digest, verifies the manifest,
-and publishes the SIF through GHCR using the `-apptainer` tag suffix.
+Published production images include `/opt/simtools/provenance/dependency-manifest.json`. Apptainer
+users should pull a production image directly from the OCI registry with a `docker://` reference.

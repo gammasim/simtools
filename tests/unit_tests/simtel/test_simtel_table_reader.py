@@ -10,30 +10,16 @@ from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 
 import simtools.simtel.simtel_table_reader as simtel_table_reader
-from simtools.constants import TEST_RESOURCES_GENERATED
+
+SPE_META_TEST_COMMENT = "Norm_spe processing of single-p.e. response."
 
 
-@pytest.fixture
-def spe_test_file():
-    return f"{TEST_RESOURCES_GENERATED}/model_parameters/spe_LST_2022-04-27_AP2.0e-4.dat"
+def test_read_simtel_data(simtel_spe_test_file):
 
-
-@pytest.fixture
-def spe_meta_test_comment():
-    return "Norm_spe processing of single-p.e. response."
-
-
-@pytest.fixture
-def mirror_list_test_file():
-    return f"{TEST_RESOURCES_GENERATED}/model_parameters/mirror_CTA-N-LST1_v2019-03-31_rotated.dat"
-
-
-def test_read_simtel_data(spe_test_file, spe_meta_test_comment):
-
-    data, meta, n_columns, n_dim = simtel_table_reader._read_simtel_data(spe_test_file)
+    data, meta, n_columns, n_dim = simtel_table_reader._read_simtel_data(simtel_spe_test_file)
 
     assert isinstance(meta, str)
-    assert spe_meta_test_comment in meta
+    assert SPE_META_TEST_COMMENT in meta
 
     assert isinstance(data, list)
     assert len(data) > 0
@@ -76,13 +62,13 @@ def test_read_simtel_data_rpol(mock_read_file_encoded_in_utf_or_latin):
     assert len(rows) == 1
 
 
-def test_read_simtel_table_to_table(spe_test_file, spe_meta_test_comment):
+def test_read_simtel_table_to_table(simtel_spe_test_file):
 
     parameter_name = "pm_photoelectron_spectrum"
 
-    table = simtel_table_reader.read_simtel_table(parameter_name, spe_test_file)
+    table = simtel_table_reader.read_simtel_table(parameter_name, simtel_spe_test_file)
 
-    assert len(table) == 2101
+    assert len(table) == 3
     assert "amplitude" in table.columns
     assert "response" in table.columns
     assert "response_with_ap" in table.columns
@@ -90,13 +76,13 @@ def test_read_simtel_table_to_table(spe_test_file, spe_meta_test_comment):
     assert table["response"].unit is None
     assert table["response_with_ap"].unit is None
     assert table.meta["Name"] == parameter_name
-    assert table.meta["File"] == spe_test_file
-    assert spe_meta_test_comment in table.meta["context_from_sim_telarray"]
+    assert table.meta["File"] == str(simtel_spe_test_file)
+    assert SPE_META_TEST_COMMENT in table.meta["context_from_sim_telarray"]
 
     with pytest.raises(
         ValueError, match="Unsupported parameter for sim_telarray table reading: not_a_parameter"
     ):
-        simtel_table_reader.read_simtel_table("not_a_parameter", spe_test_file)
+        simtel_table_reader.read_simtel_table("not_a_parameter", simtel_spe_test_file)
 
     with mock.patch(
         "simtools.simtel.simtel_table_reader._read_simtel_data_for_atmospheric_transmission"
@@ -105,8 +91,8 @@ def test_read_simtel_table_to_table(spe_test_file, spe_meta_test_comment):
         mock_read.assert_called_once()
 
 
-def test_read_simtel_table_for_mirror_list(mirror_list_test_file):
-    table = simtel_table_reader.read_simtel_table("mirror_list", mirror_list_test_file)
+def test_read_simtel_table_for_mirror_list(simtel_mirror_list_test_file):
+    table = simtel_table_reader.read_simtel_table("mirror_list", simtel_mirror_list_test_file)
 
     assert len(table) > 0
     assert table.colnames == [
@@ -129,9 +115,9 @@ def test_read_simtel_table_for_mirror_list(mirror_list_test_file):
     assert table["mirror_panel_id"][0] == 198
 
 
-def test_read_simtel_table_as_row_data_for_mirror_list(mirror_list_test_file):
+def test_read_simtel_table_as_row_data_for_mirror_list(simtel_mirror_list_test_file):
     row_data = simtel_table_reader.read_simtel_table_as_row_data(
-        "mirror_list", mirror_list_test_file
+        "mirror_list", simtel_mirror_list_test_file
     )
 
     assert row_data["columns"] == [
@@ -257,6 +243,53 @@ def test_resolve_dict_parameter_value_non_string_non_dict_uses_file_reader(tmp_t
         )
 
     read_mock.assert_called_once_with("fadc_pulse_shape", Path(tmp_test_directory) / "pulse.dat")
+    assert result["rows"] == [[0.0]]
+
+
+def test_resolve_dict_parameter_value_returns_list_unchanged():
+    trigger_list = [
+        {"name": "LSTN_array", "multiplicity": {"unit": None, "value": 2}},
+        {"name": "LSTN_single_telescope", "multiplicity": {"unit": None, "value": 1}},
+    ]
+    result = simtel_table_reader.resolve_dict_parameter_value(trigger_list, "array_triggers")
+    assert result == trigger_list
+
+
+def test_resolve_dict_parameter_value_from_inline_json_array(tmp_test_directory):
+    trigger_list = [
+        {"name": "LSTN_array", "multiplicity": {"unit": None, "value": 2}},
+        {"name": "MSTN_array", "multiplicity": {"unit": None, "value": 2}},
+    ]
+    import json as _json
+
+    json_str = _json.dumps(trigger_list)
+
+    with mock.patch(
+        "simtools.simtel.simtel_table_reader.read_simtel_table_as_row_data"
+    ) as read_mock:
+        result = simtel_table_reader.resolve_dict_parameter_value(
+            json_str,
+            "array_triggers",
+            str(tmp_test_directory),
+        )
+
+    read_mock.assert_not_called()
+    assert isinstance(result, list)
+    assert result[0]["name"] == "LSTN_array"
+
+
+def test_parse_inline_json_dict_invalid_array_falls_back(tmp_test_directory):
+    with mock.patch(
+        "simtools.simtel.simtel_table_reader.read_simtel_table_as_row_data",
+        return_value={"columns": ["time"], "column_units": ["ns"], "rows": [[0.0]]},
+    ) as read_mock:
+        result = simtel_table_reader.resolve_dict_parameter_value(
+            "[not valid json]",
+            "fadc_pulse_shape",
+            data_path=tmp_test_directory,
+        )
+
+    read_mock.assert_called_once()
     assert result["rows"] == [[0.0]]
 
 

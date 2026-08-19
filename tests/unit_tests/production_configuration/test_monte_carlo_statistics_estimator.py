@@ -276,13 +276,17 @@ def test_estimator_radius_override_changes_required_events(mocker, tmp_path):
         "output_file": str(tmp_path / "b.ecsv"),
     }
 
+    product_metadata = {"cta": {"activity": {"name": "estimate_statistics"}}}
     original = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args_original)
-    reduced = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(args_reduced)
+    reduced = monte_carlo_statistics_estimator.estimate_monte_carlo_statistics(
+        args_reduced, metadata=product_metadata
+    )
 
     assert original["estimated_total_events"][0] != pytest.approx(
         reduced["estimated_total_events"][0]
     )
     assert reduced.meta["reduced_core_radius"].to_value(u.m) == pytest.approx(50.0)
+    assert reduced.meta["cta"] == product_metadata["cta"]
     assert "effective_core_scatter_radius" not in reduced.colnames
 
 

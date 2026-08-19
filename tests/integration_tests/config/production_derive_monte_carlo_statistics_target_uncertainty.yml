@@ -1,6 +1,9 @@
 ---
 applications:
 - application: simtools-production-derive-monte-carlo-statistics
+  docs:
+    title: Estimate Monte Carlo statistics from uncertainty
+    summary: Determine event statistics for a target relative uncertainty over an energy range.
   configuration:
     trigger_histogram_file: ${generated:gamma_diffuse_run000010_za20deg_azm000deg_North_CTAO-North-Alpha_7.0.0_test.trigger_histograms.hdf5}
     optimization_energy_max: 100 TeV
@@ -13,7 +16,55 @@ applications:
     target_relative_uncertainty: 0.1
     plot_diagnostics: true
   integration_tests:
-  - output_file: mc_statistics_uncertainty.ecsv
+  - test_outputs:
+    - path_descriptor: output_path
+      file: mc_statistics_uncertainty.ecsv
+      validations:
+      - type: data_schema
+        schema: src/simtools/schemas/monte_carlo_statistics.schema.yml
+      - type: table
+        minimum_rows: 1
+        columns:
+          estimated_total_events:
+            range:
+              minimum: 182
+              maximum: 182
+          br_energy_min:
+            range:
+              minimum: 0.0
+              unit: TeV
+          br_energy_max:
+            range:
+              minimum: 0.0
+              unit: TeV
+          br_core_scatter_max:
+            range:
+              minimum: 0.0
+              unit: m
+          br_viewcone_max:
+            range:
+              minimum: 0.0
+              unit: deg
+          primary_particle:
+            allowed_values:
+            - gamma
+          zenith:
+            range:
+              minimum: 20.0
+              maximum: 20.0
+              unit: deg
+          azimuth:
+            range:
+              minimum: 0.0
+              maximum: 0.0
+              unit: deg
+      - type: metadata
+        required_keys:
+        - cta.activity
+        - cta.context
+        - cta.product
+        - spectral_index
+        - target_relative_uncertainty
   test_name: production_derive_monte_carlo_statistics_uncertainty
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

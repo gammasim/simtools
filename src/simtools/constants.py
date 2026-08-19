@@ -1,6 +1,8 @@
 """Project wide constants."""
 
+import os
 from importlib.resources import files
+from pathlib import Path
 
 # Schema path
 SCHEMA_PATH = files("simtools") / "schemas"
@@ -31,9 +33,12 @@ MODEL_PARAMETER_SCHEMA_URL = SCHEMA_URL + "/model_parameters"
 # Path to resource files
 RESOURCE_PATH = files("simtools") / "resources"
 # Paths to test resources
-TEST_RESOURCES_STATIC = "tests/resources/static"
-TEST_RESOURCES_GENERATED = "tests/resources/generated"
-TEST_RESOURCES_DOWNLOADED = "tests/resources/downloaded"
+TEST_RESOURCES_ROOT = Path(
+    os.environ.get("SIMTOOLS_TEST_RESOURCES", "tests/unit_tests/resources")
+).expanduser()
+TEST_RESOURCES_STATIC = str(TEST_RESOURCES_ROOT / "static")
+TEST_RESOURCES_GENERATED = str(TEST_RESOURCES_ROOT / "generated")
+TEST_RESOURCES_DOWNLOADED = str(TEST_RESOURCES_ROOT / "downloaded")
 
 # Maximum value allowed for random seeds in sim_telarray
 SIMTEL_MAX_SEED = 2147483647

@@ -1,9 +1,31 @@
 """Tests for the production_derive_monte_carlo_statistics application."""
 
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
+
 import pytest
 
 from simtools.applications import production_derive_monte_carlo_statistics
 from simtools.configuration.commandline_parser import CommandLineParser
+
+
+@patch(
+    "simtools.applications.production_derive_monte_carlo_statistics.estimate_monte_carlo_statistics"
+)
+@patch("simtools.applications.production_derive_monte_carlo_statistics.MetadataCollector")
+@patch("simtools.application.definition.ApplicationDefinition.start")
+def test_main_passes_top_level_metadata_to_estimator(
+    mock_start, mock_metadata_collector, mock_estimate
+):
+    args = {"output_file": "mc_statistics.ecsv"}
+    mock_start.return_value = SimpleNamespace(args=args, io_handler=Mock())
+    metadata = {"cta": {"activity": {"name": "production_derive_monte_carlo_statistics"}}}
+    mock_metadata_collector.return_value.get_top_level_metadata.return_value = metadata
+
+    production_derive_monte_carlo_statistics.main()
+
+    mock_metadata_collector.assert_called_once_with(args)
+    mock_estimate.assert_called_once_with(metadata=metadata)
 
 
 def test_add_arguments_accepts_radius_override_and_energy_ranges():

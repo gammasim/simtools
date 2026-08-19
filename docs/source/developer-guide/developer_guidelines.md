@@ -117,7 +117,8 @@ which connects to the tools used to manage and run simulations.
 ## Data files
 
 Data files should be kept outside of the simtools repository with the exception of files required for units tests.
-These files should be kept at minimum and are stored in the [tests/resources](https://github.com/gammasim/simtools/tree/main/tests/resources) directory.
+These files should be kept at minimum and are stored in the versioned
+[simtools-tests](https://github.com/gammasim/simtools-tests) repository.
 
 Data files required by integration tests are downloaded during testing from the simulation model database.
 

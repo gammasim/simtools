@@ -1,6 +1,11 @@
 ---
 applications:
 - application: simtools-derive-trigger-rates
+  docs:
+    title: Derive proton trigger rates for a user spectrum
+    summary: >-
+      Weight reduced proton events with a user-defined cosmic-ray spectrum and derive array trigger
+      rates.
   configuration:
     array_layout_name:
       by_version:
@@ -18,4 +23,4 @@ applications:
     site: North
   test_name: user_defined_spectrum
 schema_name: application_workflow.metaschema
-schema_version: 0.4.0
+schema_version: 0.5.0

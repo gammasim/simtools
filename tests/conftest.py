@@ -1,28 +1,68 @@
 """Shared pytest configuration."""
 
+import os
 from pathlib import Path
 
 import pytest
+from dotenv import load_dotenv
+
+pytest_plugins = ("resource_benchmark",)
 
 SIMTOOLS_ROOT_PATH = Path(__file__).resolve().parent.parent
+
+
+def _is_integration_test_argument(argument):
+    """Return whether a pytest argument points into the integration tests."""
+    argument_path = Path(str(argument).split("::", maxsplit=1)[0])
+    if not argument_path.is_absolute():
+        argument_path = Path.cwd() / argument_path
+    try:
+        argument_path.resolve().relative_to(SIMTOOLS_ROOT_PATH / "tests" / "integration_tests")
+    except ValueError:
+        return False
+    return True
+
+
+def _load_integration_environment(config):
+    """Load the repository .env before integration test collection."""
+    if any(_is_integration_test_argument(argument) for argument in config.args):
+        load_dotenv(SIMTOOLS_ROOT_PATH / ".env")
+
+
+def _versioned_test_resources_path(version):
+    """Return the selected local version of the integration test resources."""
+    test_path = os.environ.get("SIMTOOLS_TESTS_PATH")
+    if not test_path or not version:
+        return None
+    return Path(test_path).expanduser() / version / "integration_tests"
 
 
 def _configured_test_resources_path(config):
     """Return the absolute path to the configured test resources directory."""
     configured_path = config.getoption("test_resources_path", default=None)
-    path = configured_path or SIMTOOLS_ROOT_PATH / "tests" / "resources"
+    path = configured_path or os.environ.get("SIMTOOLS_TEST_RESOURCES")
+    version = config.getoption("simtools_tests_version", default=None) or os.environ.get(
+        "SIMTOOLS_TESTS_VERSION"
+    )
+    path = path or _versioned_test_resources_path(version)
+    path = path or SIMTOOLS_ROOT_PATH / "tests" / "unit_tests" / "resources"
     return Path(path).expanduser().resolve()
 
 
 def pytest_addoption(parser):
-    """Register the test-resources directory command-line option."""
+    """Register test-resource configuration options."""
     parser.addoption(
         "--test_resources_path",
-        "--test-resources-path",
         dest="test_resources_path",
         type=Path,
-        default=None,
-        help="Full path to the test resources directory (default: tests/resources).",
+        default=os.environ.get("SIMTOOLS_TEST_RESOURCES"),
+        help="Full path to test resources (default: SIMTOOLS_TEST_RESOURCES).",
+    )
+    parser.addoption(
+        "--simtools_tests_version",
+        dest="simtools_tests_version",
+        default=os.environ.get("SIMTOOLS_TESTS_VERSION"),
+        help="Version of simtools-tests to use when no path is configured.",
     )
 
 
@@ -30,7 +70,10 @@ def pytest_configure(config):
     """Configure test resource constants before test modules are imported."""
     import simtools.constants
 
+    _load_integration_environment(config)
     test_resources_path = _configured_test_resources_path(config)
+    config.option.test_resources_path = test_resources_path
+    simtools.constants.TEST_RESOURCES_ROOT = test_resources_path
     simtools.constants.TEST_RESOURCES_STATIC = str(test_resources_path / "static")
     simtools.constants.TEST_RESOURCES_GENERATED = str(test_resources_path / "generated")
     simtools.constants.TEST_RESOURCES_DOWNLOADED = str(test_resources_path / "downloaded")

@@ -310,7 +310,7 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
         "simtools.production_configuration.trigger_histograms.io_handler.IOHandler"
     ).return_value.get_output_file.return_value = tmp_path / "trigger_histograms.hdf5"
     mock_process_pool = mocker.patch(
-        "simtools.production_configuration.trigger_histograms.process_pool_map_ordered",
+        "simtools.production_configuration.trigger_histograms.map_ordered",
         return_value=[
             [
                 {
@@ -336,6 +336,11 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
             ],
         ],
     )
+    metadata_document = {"cta": {"product": {"id": "metadata-id"}}}
+    mock_metadata = mocker.patch(
+        "simtools.production_configuration.trigger_histograms.build_standard_metadata",
+        return_value=metadata_document,
+    )
 
     metadata_table, _ = write_trigger_histograms(
         {
@@ -358,8 +363,27 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
         "prod_a/*.hdf5",
         "prod_b/*.hdf5",
     ]
+    assert list(metadata_table["reference_id"]) == ["reference_0", "reference_1"]
     assert list(metadata_table["production_index"]) == [0, 1]
     assert list(metadata_table["event_data_file"]) == ["prod_a/*.hdf5", "prod_b/*.hdf5"]
+    mock_metadata.assert_called_once_with(
+        {
+            "event_data_files": ["prod_a/*.hdf5", "prod_b/*.hdf5"],
+            "array_element_list": ["LSTN-01"],
+            "energy_bins_per_decade": 4,
+            "angular_distance_bin_width": 1.0 * u.deg,
+            "skip_invalid_event_data_files": False,
+            "max_workers": 24,
+            "site": "North",
+            "output_file": "trigger_histograms.hdf5",
+        },
+        tmp_path / "trigger_histograms.hdf5",
+        product_data_name="trigger_histograms",
+    )
+    assert (
+        table_handler.read_metadata_document(tmp_path / "trigger_histograms.hdf5", "METADATA")
+        == metadata_document
+    )
 
 
 def test_inspect_trigger_histogram_file_reports_reference_mismatches(tmp_path):
