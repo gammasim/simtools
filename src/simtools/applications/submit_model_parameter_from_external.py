@@ -51,9 +51,10 @@ _ARGUMENTS = (
     ),
     cli.ArgumentDefinition(
         "meta_parameter",
-        help="Set if this is should be saved in the sim_telarray meta parameters.",
+        help=(
+            "If set, treat the submitted parameter as a sim_telarray metaparameter (written into sim_telarray metadata)."
+        ),
         action="store_true",
-        default=False,
     ),
 )
 
