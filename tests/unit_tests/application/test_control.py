@@ -206,6 +206,30 @@ def test_initialize_runtime_validates_simulation_dependencies_after_loading():
     setup_logging.assert_called_once()
 
 
+def test_initialize_runtime_defers_dependency_validation_for_remote_jobs():
+    """Remote grid controllers leave simulation checks to their backend workers."""
+    mock_args_dict = {
+        "log_level": "info",
+        "simulation_software": "corsika",
+        "_defer_simulation_dependency_validation": True,
+    }
+    mock_db_config = {}
+    with (
+        patch("simtools.application.control.config.load"),
+        patch(
+            "simtools.application.control.dependencies.validate_simulation_dependencies"
+        ) as validate,
+    ):
+        _initialize_runtime(
+            mock_args_dict,
+            mock_db_config,
+            setup_io_handler=False,
+            validate_simulation_dependencies=True,
+        )
+
+    validate.assert_not_called()
+
+
 def test_initialize_runtime_stops_when_dependencies_are_unavailable():
     """Dependency failures prevent the rest of application startup."""
     mock_args_dict = {"log_level": "info", "simulation_software": "corsika"}

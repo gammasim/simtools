@@ -11,6 +11,7 @@ import astropy.units as u
 import pytest
 
 import simtools.applications.simulate_prod as app
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.production_configuration import job_grid_io
 
 pytestmark = pytest.mark.usefixtures("_mock_settings_env_vars")
@@ -41,7 +42,15 @@ def job_grid_file(tmp_test_directory):
         "corsika_he_interaction": "epos",
     }
     job_grid_io.serialize_job_grid(
-        [row, {**row, "run_number": 11, "zenith_angle": 40 * u.deg}],
+        [
+            row,
+            {
+                **row,
+                "run_number": 11,
+                "zenith_angle": 40 * u.deg,
+                "array_layout_name": "CTAO-North-Beta",
+            },
+        ],
         grid_file,
         metadata={"site": "North", "simulation_software": "corsika_sim_telarray"},
     )
@@ -82,6 +91,42 @@ def _mock_application_context(mock_application_start, label="test"):
             "grid_output_path": None,
         }
     )
+
+
+def test_add_arguments_registers_job_grid_file_and_row():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(app._ARGUMENTS)
+    args = parser.parse_args(["--job_grid_file", "my_grid.ecsv", "--job_grid_row", "3"])
+
+    assert args.job_grid_file == "my_grid.ecsv"
+    assert args.job_grid_row == 3
+
+
+def test_add_arguments_job_grid_row_defaults_to_one():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(app._ARGUMENTS)
+    args = parser.parse_args([])
+
+    assert args.job_grid_file is None
+    assert args.job_grid_row == 1
+    assert args.save_corsika_output is False
+    assert args.wait is False
+
+
+def test_application_parser_includes_show_options():
+    parser = app.APPLICATION.build_parser()
+    actions = {action.dest: action for action in parser._actions}
+
+    assert "show_options" in actions
+
+
+def test_add_arguments_save_corsika_output():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(app._ARGUMENTS)
+
+    args = parser.parse_args(["--save_corsika_output"])
+
+    assert args.save_corsika_output is True
 
 
 def test_list_available_corsika_models_exits_with_table(tmp_test_directory, capsys):
@@ -137,6 +182,87 @@ def test_parse_job_grid_file_selects_row(
     assert args["simulation_software"] == "corsika_sim_telarray"
 
 
+@pytest.mark.parametrize("backend", ["local", "htcondor"])
+def test_parse_job_grid_reads_array_layout_from_selected_row(
+    monkeypatch, job_grid_file, tmp_test_directory, backend
+):
+    """Grid execution uses the selected row's layout without a global fallback."""
+    args = _parse_with_args(
+        monkeypatch,
+        _job_grid_args(
+            job_grid_file,
+            "--backend",
+            backend,
+            "--job_grid_row",
+            2,
+            "--output_path",
+            tmp_test_directory,
+        ),
+    )
+
+    if backend == "local":
+        assert args["array_layout_name"] == "CTAO-North-Beta"
+    else:
+        assert args.get("array_layout_name") is None
+        assert len(args["_job_grid_rows"]) == 1
+        assert args["_job_grid_rows"][0]["array_layout_name"] == "CTAO-North-Beta"
+
+
+def test_parse_job_grid_preserves_layout_per_row(monkeypatch, job_grid_file, tmp_test_directory):
+    args = _parse_with_args(
+        monkeypatch,
+        _job_grid_args(
+            job_grid_file,
+            "--backend",
+            "htcondor",
+            "--output_path",
+            tmp_test_directory,
+        ),
+    )
+
+    assert args.get("array_layout_name") is None
+    assert [row["array_layout_name"] for row in args["_job_grid_rows"]] == [
+        "CTAO-North-Alpha",
+        "CTAO-North-Beta",
+    ]
+    assert args["_defer_simulation_dependency_validation"] is True
+
+
+def test_parse_local_job_grid_keeps_dependency_validation_local(
+    monkeypatch, job_grid_file, tmp_test_directory
+):
+    args = _parse_with_args(
+        monkeypatch,
+        _job_grid_args(job_grid_file, "--output_path", tmp_test_directory),
+    )
+
+    assert args["_defer_simulation_dependency_validation"] is False
+
+
+def test_parse_accepts_simulation_models_path(monkeypatch, job_grid_file, tmp_test_directory):
+    args = _parse_with_args(
+        monkeypatch,
+        _job_grid_args(
+            job_grid_file,
+            "--output_path",
+            tmp_test_directory,
+            "--simulation_models_path",
+            tmp_test_directory,
+        ),
+    )
+
+    assert args["simulation_models_path"] == Path(tmp_test_directory)
+
+
+def test_parse_job_grid_row_without_file_fails(monkeypatch, capsys):
+    with pytest.raises(SystemExit):
+        _parse_with_args(monkeypatch, ["--job_grid_row", 2])
+
+    stderr = capsys.readouterr().err
+    assert "job_grid_row" in stderr
+    assert "job_grid_file" in stderr
+
+
 def test_sim_telarray_only_does_not_require_primary(monkeypatch):
     args = _parse_with_args(
         monkeypatch,
@@ -144,6 +270,38 @@ def test_sim_telarray_only_does_not_require_primary(monkeypatch):
     )
 
     assert args["primary"] is None
+
+
+def test_parse_without_job_grid_requires_array_layout(monkeypatch, capsys):
+    with pytest.raises(SystemExit):
+        _parse_with_args(monkeypatch, ["--simulation_software", "sim_telarray"])
+
+    assert "--array_layout_name" in capsys.readouterr().err
+
+
+def test_parse_rejects_array_element_list(monkeypatch, capsys):
+    with pytest.raises(SystemExit):
+        _parse_with_args(
+            monkeypatch,
+            [
+                "--simulation_software",
+                "sim_telarray",
+                "--array_element_list",
+                "MSTN-01",
+            ],
+        )
+
+    assert "unrecognized arguments: --array_element_list" in capsys.readouterr().err
+
+
+def test_parse_rejects_telescope(monkeypatch, capsys):
+    with pytest.raises(SystemExit):
+        _parse_with_args(
+            monkeypatch,
+            ["--simulation_software", "sim_telarray", "--telescope", "LSTN-01"],
+        )
+
+    assert "unrecognized arguments: --telescope" in capsys.readouterr().err
 
 
 def test_parser_excludes_redundant_telescope_argument():
@@ -182,6 +340,31 @@ def test_job_grid_file_allows_operational_parameters(job_grid_file):
 
     assert args["run_number"] == 7
     assert args["primary"] == "gamma"
+
+
+@pytest.mark.parametrize("wait", [False, True])
+def test_execute_job_grid_submits_or_waits(mocker, tmp_test_directory, wait):
+    """HTCondor grid jobs detach unless explicitly asked to wait."""
+    job_specs = [MagicMock()]
+    mocker.patch(
+        "simtools.applications.simulate_prod.build_simulate_prod_job_specs", return_value=job_specs
+    )
+    mocker.patch("simtools.applications.simulate_prod.options_from_args")
+    execute = mocker.patch("simtools.applications.simulate_prod.execute_jobs")
+    submit = mocker.patch("simtools.applications.simulate_prod.submit_jobs")
+
+    app._execute_job_grid(
+        {
+            "_job_grid_rows": [{}],
+            "_job_grid_metadata": {},
+            "output_path": tmp_test_directory,
+            "wait": wait,
+        }
+    )
+
+    expected = execute if wait else submit
+    expected.assert_called_once()
+    (submit if wait else execute).assert_not_called()
 
 
 @patch("simtools.applications.simulate_prod.Simulator")

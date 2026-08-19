@@ -13,7 +13,8 @@ from simtools.corsika import corsika_output_validator
 from simtools.corsika.corsika_config import CorsikaConfig
 from simtools.io import io_handler, table_handler
 from simtools.job_execution import job_manager
-from simtools.job_execution.process_pool import process_pool_map_ordered
+from simtools.job_execution.execution import execute_jobs, options_from_args, submit_jobs
+from simtools.job_execution.job import JobSpec
 from simtools.model.array_model import ArrayModel
 from simtools.runners import corsika_runner, corsika_simtel_runner, runner_services, simtel_runner
 from simtools.sim_events import file_info, output_validator, writer
@@ -413,6 +414,9 @@ class Simulator:
         input_file_list=None,
         files_per_reduced_event_file=1,
         max_workers=1,
+        backend="local",
+        backend_config=None,
+        wait_for_completion=True,
         metadata_args=None,
         array_models=None,
     ):
@@ -444,6 +448,18 @@ class Simulator:
             Arguments used to build the embedded standard metadata document.
         array_models : list, optional
             Resolved ``ArrayModel`` instances to export into simulation metadata.
+        backend : str, optional
+            Execution backend. Defaults to ``"local"``.
+        backend_config : dict, optional
+            Backend-specific execution settings.
+        wait_for_completion : bool, optional
+            Wait for all backend jobs before returning. Submit-only mode is
+            available for asynchronous backends such as HTCondor.
+
+        Returns
+        -------
+        SubmissionHandle or None
+            A handle for submit-only execution; blocking execution returns ``None``.
 
         Raises
         ------
@@ -476,10 +492,13 @@ class Simulator:
             output_files=resolved_output_files,
         )
 
-        Simulator._run_reduced_event_list_jobs(
+        return Simulator._run_reduced_event_list_jobs(
             input_file_batches=input_file_batches,
             output_files=resolved_output_files,
             max_workers=max_workers,
+            backend=backend,
+            backend_config=backend_config,
+            wait_for_completion=wait_for_completion,
             metadata_args=metadata_args,
             array_models=array_models,
         )
@@ -583,10 +602,19 @@ class Simulator:
                 "Length mismatch between input_files and output_files: "
                 f"{len(input_file_batches)} batch(es), {len(output_files)} output file(s)."
             )
+        if len(set(map(Path, output_files))) != len(output_files):
+            raise ValueError("Reduced-event output files must be unique.")
 
     @staticmethod
     def _run_reduced_event_list_jobs(
-        input_file_batches, output_files, max_workers, metadata_args=None, array_models=None
+        input_file_batches,
+        output_files,
+        max_workers,
+        backend="local",
+        backend_config=None,
+        wait_for_completion=True,
+        metadata_args=None,
+        array_models=None,
     ):
         """Run reduced event list jobs serially or in parallel."""
         model_exports = [model.to_simulation_metadata_dict() for model in (array_models or [])]
@@ -594,16 +622,25 @@ class Simulator:
             (input_files, output_file, metadata_args or {}, model_exports)
             for input_files, output_file in zip(input_file_batches, output_files)
         ]
-        if max_workers == 1 or len(job_specs) < 2:
-            for job_spec in job_specs:
-                _write_reduced_event_list_batch(job_spec)
-            return
-
-        process_pool_map_ordered(
-            _write_reduced_event_list_batch,
-            job_specs,
+        execution_jobs = [
+            JobSpec(
+                job_id=f"job-{index:06d}",
+                index=index,
+                function=_write_reduced_event_list_batch,
+                item=job_spec,
+                output_paths=(Path(output_files[index]),),
+            )
+            for index, job_spec in enumerate(job_specs)
+        ]
+        options = options_from_args(
+            {"backend": backend, "backend_config": backend_config},
             max_workers=max_workers,
+            work_dir=Path(output_files[0]).parent if output_files else None,
         )
+        if not wait_for_completion:
+            return submit_jobs(execution_jobs, options)
+        execute_jobs(execution_jobs, options)
+        return None
 
     def pack_for_register(self, directory_for_grid_upload=None):
         """

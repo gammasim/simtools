@@ -1,6 +1,7 @@
 """Read and write executable job grids for production preparation."""
 
 import logging
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -8,9 +9,11 @@ import numpy as np
 from astropy import units as u
 from astropy.table import Table
 
+from simtools.configuration.configurator import Configurator
 from simtools.constants import SCHEMA_PATH, SCHEMA_URL
 from simtools.data_model import validate_data
 from simtools.io.ascii_handler import collect_data_from_file
+from simtools.job_execution.job import JobSpec
 from simtools.production_configuration.job_grid_summary import build_job_grid_summary
 from simtools.utils.value_conversion import get_value_as_quantity, get_value_in_unit
 
@@ -40,6 +43,31 @@ SIMULATE_PROD_JOB_GRID_EXCLUSIVE_FIELDS = frozenset(
         "run_number_offset",
         "site",
         "simulation_software",
+    }
+)
+_SIMULATE_PROD_PATH_FIELDS = (
+    "corsika_file",
+    "grid_output_path",
+    "sim_telarray_path",
+    "corsika_path",
+    "corsika_interaction_table_path",
+    "simulation_models_path",
+    "model_path",
+    "overwrite_model_parameters",
+)
+_SIMULATE_PROD_FILE_PATH_FIELDS = frozenset(("corsika_file", "overwrite_model_parameters"))
+_SIMULATE_PROD_CONTROLLER_FIELDS = frozenset(
+    {
+        "activity_id",
+        "application_label",
+        "backend",
+        "backend_config",
+        "config",
+        "data_search_path",
+        "env_file",
+        "job_grid_file",
+        "job_grid_row",
+        "list_available_corsika_models",
     }
 )
 
@@ -359,4 +387,126 @@ def job_grid_row_to_simulate_prod_args(job_row, metadata=None):
         for key in ("site", "simulation_software"):
             if metadata.get(key):
                 args[key] = metadata[key]
+    if job_row.get("overwrite_model_parameters"):
+        args["overwrite_model_parameters"] = job_row["overwrite_model_parameters"]
     return args
+
+
+def build_simulate_prod_job_specs(args_dict, rows, parser, metadata=None):
+    """Build backend-neutral command jobs for production-grid rows.
+
+    Parameters
+    ----------
+    args_dict : dict
+        Controller application arguments.
+    rows : list[dict]
+        Deserialized production-grid rows.
+    parser : argparse.ArgumentParser
+        Parser defining the nested ``simulate_prod`` command.
+    metadata : dict, optional
+        Production-grid metadata.
+
+    Returns
+    -------
+    list[JobSpec]
+        Ordered command jobs that force local execution inside each worker.
+    """
+    metadata = metadata or {}
+    output_root = Path(args_dict["output_path"]).expanduser().resolve()
+    return [
+        _build_simulate_prod_job_spec(args_dict, row, index, output_root, parser, metadata)
+        for index, row in enumerate(rows)
+    ]
+
+
+def _build_simulate_prod_job_spec(args_dict, row, index, output_root, parser, metadata):
+    """Build one local command job for a production-grid row."""
+    job_args = _job_args_for_simulate_prod(args_dict, row, parser, metadata)
+    output_path = output_root / f"job-{index:06d}"
+    job_args["output_path"] = str(output_path)
+    mount_paths = [output_path]
+    output_paths = [output_path]
+    _add_grid_output_path(job_args, index, mount_paths, output_paths)
+    _add_scan_label(job_args, row)
+    _normalize_simulate_prod_paths(job_args, args_dict)
+    _add_simulate_prod_input_mount_paths(job_args, mount_paths)
+    job_args = {
+        key: " ".join(map(str, value)) if isinstance(value, tuple) else value
+        for key, value in job_args.items()
+    }
+    command = [
+        sys.executable,
+        "-m",
+        "simtools.applications.simulate_prod",
+        "--backend",
+        "local",
+    ]
+    command.extend(Configurator.arglist_from_dict(job_args, parser=parser))
+    return JobSpec(
+        f"job-{index:06d}",
+        index,
+        command=tuple(command),
+        mount_paths=tuple(mount_paths),
+        output_paths=tuple(output_paths),
+    )
+
+
+def _job_args_for_simulate_prod(args_dict, row, parser, metadata):
+    """Return parser-supported controller and row arguments for one job."""
+    job_args = {
+        key: value
+        for key, value in args_dict.items()
+        if key not in _SIMULATE_PROD_CONTROLLER_FIELDS
+        and f"--{key}" in parser._option_string_actions  # pylint: disable=protected-access
+    }
+    job_args.update(job_grid_row_to_simulate_prod_args(row, metadata))
+    return {
+        key: value
+        for key, value in job_args.items()
+        if f"--{key}" in parser._option_string_actions  # pylint: disable=protected-access
+    }
+
+
+def _add_grid_output_path(job_args, index, mount_paths, output_paths):
+    """Add a per-job grid output path and its expected output mount."""
+    if not job_args.get("grid_output_path"):
+        return
+    grid_output_path = Path(job_args["grid_output_path"]) / f"job-{index:06d}"
+    job_args["grid_output_path"] = str(grid_output_path)
+    mount_paths.append(grid_output_path)
+    output_paths.append(grid_output_path)
+
+
+def _add_scan_label(job_args, row):
+    """Append an optional scan label to the job label."""
+    if row.get("scan_label"):
+        label = job_args.get("label") or "simulate-prod"
+        job_args["label"] = f"{label}_{row['scan_label']}"
+
+
+def _normalize_simulate_prod_paths(job_args, args_dict):
+    """Normalize paths while allowing remote environments to provide them."""
+    for key in _SIMULATE_PROD_PATH_FIELDS:
+        if not _should_forward_path(args_dict, key):
+            job_args.pop(key, None)
+        elif job_args.get(key):
+            job_args[key] = str(Path(job_args[key]).expanduser().resolve())
+
+
+def _add_simulate_prod_input_mount_paths(job_args, mount_paths):
+    """Add forwarded input paths needed by containerized production jobs."""
+    for key in _SIMULATE_PROD_PATH_FIELDS:
+        if key == "grid_output_path" or not job_args.get(key):
+            continue
+        path = Path(job_args[key])
+        mount_paths.append(path.parent if key in _SIMULATE_PROD_FILE_PATH_FIELDS else path)
+
+
+def _should_forward_path(args_dict, key):
+    """Return whether a simulation path should be passed to a remote job."""
+    if args_dict.get("backend", "local") == "local":
+        return True
+
+    sources = args_dict.get("_metadata_configuration_sources", {})
+    explicit_sources = ("cli", "yaml", "constructor")
+    return any(key in sources.get(source, ()) for source in explicit_sources)

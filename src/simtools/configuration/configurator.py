@@ -297,7 +297,7 @@ class Configurator:
 
         """
         if isinstance(input_var, dict):
-            return Configurator._arglist_from_dict(input_var, parser=parser)
+            return Configurator.arglist_from_dict(input_var, parser=parser)
 
         try:
             return [str(value) for value in input_var if value != "None"]
@@ -305,7 +305,7 @@ class Configurator:
             return []
 
     @staticmethod
-    def _arglist_from_dict(input_dict, parser=None):
+    def arglist_from_dict(input_dict, parser=None):
         """Convert a configuration dictionary into CLI-style argument tokens."""
         list_args = []
         for key, value in input_dict.items():

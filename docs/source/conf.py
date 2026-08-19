@@ -84,6 +84,11 @@ extensions = [
 ]
 
 nitpicky = True
+# The project uses modern generic annotations such as ``dict[str, Any]``.
+# Sphinx 9/numpydoc currently splits these annotations into invalid nitpick
+# targets, so keep type information in the source API while omitting it from
+# generated signatures.
+autodoc_typehints = "none"
 nitpick_ignore = [
     ("py:class", "astropy.table.table.Table"),
     ("py:class", "astropy.units.core.Unit"),

@@ -12,10 +12,44 @@ This is mostly used for small productions during the validation or verification 
    :members:
 ```
 
-(htcondor-submission)=
+(execution)=
 
 ```{eval-rst}
-.. automodule:: job_execution.htcondor_script_generator
+.. automodule:: job_execution.execution
+   :members:
+```
+
+(job-model)=
+
+```{eval-rst}
+.. automodule:: job_execution.job
+   :members:
+```
+
+(execution-backends)=
+
+```{eval-rst}
+.. automodule:: job_execution.backends.base
+   :members:
+```
+
+```{eval-rst}
+.. automodule:: job_execution.backends.local
+   :members:
+```
+
+```{eval-rst}
+.. automodule:: job_execution.backends.htcondor
+   :members:
+```
+
+```{eval-rst}
+.. automodule:: job_execution.backends.registry
+   :members:
+```
+
+```{eval-rst}
+.. automodule:: job_execution.worker
    :members:
 ```
 
@@ -23,13 +57,6 @@ This is mostly used for small productions during the validation or verification 
 
 ```{eval-rst}
 .. automodule:: job_execution.parameter_scan_generator
-   :members:
-```
-
-(process-pool)=
-
-```{eval-rst}
-.. automodule:: job_execution.process_pool
    :members:
 ```
 
