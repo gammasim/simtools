@@ -297,6 +297,7 @@ ignore-words-list = "chec,arrang,livetime,astroid"
 [tool.pytest]
 ini_options.minversion = "6.0"
 ini_options.testpaths = "tests/unit_tests/"
+ini_options.pythonpath = [ "tests" ]
 ini_options.norecursedirs = [
   "build",
   "docs/_build",
