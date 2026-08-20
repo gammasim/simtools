@@ -52,7 +52,7 @@ applications:
           upper_radius_limit:
             range:
               minimum: 45.0
-              maximum: 3000.
+              maximum: 3000.0
               unit: m
           viewcone_radius:
             range:

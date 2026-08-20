@@ -26,7 +26,7 @@ applications:
         columns:
           estimated_total_events:
             range:
-              minimum: 10
+              minimum: 100
           br_energy_min:
             range:
               minimum: 0.0
