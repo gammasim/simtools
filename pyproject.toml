@@ -153,6 +153,7 @@ package-data.simtools = [
   "schemas/input/*.yml",
   "schemas/model_parameters/*.yml",
 ]
+data-files.simtools = [ "dependency_versions.yml" ]
 
 [tool.setuptools_scm]
 write_to = "src/simtools/_version.py"
