@@ -59,7 +59,7 @@ def create_cumulative_psf_figure(
 
 def create_psf_image_figure(
     data,
-    containment_radius_cm,
+    containment_radius,
     center,
     ax=None,
     psf_kwargs=None,
@@ -74,10 +74,10 @@ def create_psf_image_figure(
     ----------
     data : numpy.ndarray
         Structured array with ``X`` and ``Y`` columns.
-    containment_radius_cm : float
-        Radius of the containment circle in cm.
+    containment_radius : float
+        Radius of the containment circle, assumed to be in the same unit as the data.
     center : tuple
-        Center of the PSF circle in cm.
+        Center of the PSF circle in the same unit as the data.
     ax : matplotlib.axes.Axes, optional
         Existing axes to draw on.
     psf_kwargs : dict, optional
@@ -102,9 +102,7 @@ def create_psf_image_figure(
 
     fig = visualize.plot_hist_2d(data, ax=ax, **hist_kwargs)
     ax = fig.gca() if ax is None else ax
-    ax.set_xlabel("X Position (cm)")
-    ax.set_ylabel("Y Position (cm)")
-    circle = plt.Circle(center, containment_radius_cm, **(psf_kwargs or {}))
+    circle = plt.Circle(center, containment_radius, **(psf_kwargs or {}))
     ax.add_artist(circle)
 
     if show_reference_axes:
@@ -166,7 +164,7 @@ def create_annotated_psf_image_figure(
     fig, ax = plt.subplots(figsize=(8, 6), tight_layout=True)
     create_psf_image_figure(
         data,
-        containment_radius_cm=containment_radius.value,
+        containment_radius=containment_radius.to(psf.unit).value,
         center=(0, 0),
         ax=ax,
         image_range=image_range,

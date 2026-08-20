@@ -129,7 +129,7 @@ def validate_cumulative_psf(app_context):
     data_to_plot = image.get_image_data()
     fig, _ = plot_ray_tracing_psf.create_psf_image_figure(
         data_to_plot,
-        containment_radius_cm=image.get_psf(0.8) / 2,
+        containment_radius=image.get_psf(0.8) / 2,
         center=(0, 0),
         bins=80,
         cmap="gist_heat_r",
@@ -265,7 +265,6 @@ def _plot_psf_images(ray, telescope_name, plot_file, plot_in_degrees=False):
     eff_flen_cm = _eff_flen_cm_for_degree_conversion(ray) if plot_in_degrees else None
 
     max_extent_rounded = _max_image_extent(images_dict)
-    logger.info(f"Setting consistent image axes: x,y range = +-{max_extent_rounded} cm")
 
     figures = []
     for (off_x, off_y), image in images_dict.items():

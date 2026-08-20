@@ -46,7 +46,7 @@ def test_create_psf_image_figure_draws_histogram_circle_and_axes():
     ) as mock_plot_hist:
         fig, ax = plot_ray_tracing_psf.create_psf_image_figure(
             data,
-            containment_radius_cm=2.0,
+            containment_radius=2.0,
             center=(0.0, 0.0),
             bins=80,
             image_range=[[-1.0, 1.0], [-1.0, 1.0]],
@@ -89,3 +89,31 @@ def test_create_annotated_psf_image_figure_adds_text():
 
     assert fig == mock_fig
     mock_ax.text.assert_called_once()
+    annotation_text = mock_ax.text.call_args.args[2]
+    assert "Offset" in annotation_text
+    assert "PSF" in annotation_text
+
+
+def test_create_annotated_psf_image_figure_includes_telescope_name():
+    data = np.array([(0.0, 0.0)], dtype=[("X", "f8"), ("Y", "f8")])
+    mock_fig = MagicMock()
+    mock_ax = MagicMock()
+
+    with patch("simtools.visualization.plot_ray_tracing_psf.plt.subplots") as mock_subplots:
+        mock_subplots.return_value = (mock_fig, mock_ax)
+        with patch(
+            "simtools.visualization.plot_ray_tracing_psf.visualize.plot_hist_2d",
+            return_value=mock_fig,
+        ):
+            plot_ray_tracing_psf.create_annotated_psf_image_figure(
+                data,
+                off_x=0.0,
+                off_y=0.0,
+                psf=2.0 * u.cm,
+                containment_radius=1.0 * u.cm,
+                image_range=[[-1.0, 1.0], [-1.0, 1.0]],
+                telescope_name="LSTN-01",
+            )
+
+    annotation_text = mock_ax.text.call_args.args[2]
+    assert "LSTN-01" in annotation_text
