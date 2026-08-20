@@ -1,0 +1,1258 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>job_execution.backends.htcondor &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../../_static/documentation_options.js?v=5864e6e0"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/job_execution/backends/htcondor';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.20.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.36.0" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">job_execution.backends.htcondor</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for job_execution.backends.htcondor</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""HTCondor execution backend using the Python bindings."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">UTC</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.job_execution.backends.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BackendConfigurationError</span><span class="p">,</span>
+    <span class="n">BackendExecutionError</span><span class="p">,</span>
+    <span class="n">BackendSubmissionError</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.job_execution.job</span><span class="w"> </span><span class="kn">import</span> <span class="n">JobResult</span><span class="p">,</span> <span class="n">SubmissionHandle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.job_execution.worker</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_job_id</span><span class="p">,</span> <span class="n">write_job_payload</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">_RESERVED_SUBMIT_ATTRIBUTES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"queue"</span><span class="p">}</span>
+<span class="n">_CONFIG_KEYS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"request_cpus"</span><span class="p">,</span>
+    <span class="s2">"request_memory"</span><span class="p">,</span>
+    <span class="s2">"request_disk"</span><span class="p">,</span>
+    <span class="s2">"priority"</span><span class="p">,</span>
+    <span class="s2">"container_image"</span><span class="p">,</span>
+    <span class="s2">"container_target_dir"</span><span class="p">,</span>
+    <span class="s2">"python_executable"</span><span class="p">,</span>
+    <span class="s2">"environment_file"</span><span class="p">,</span>
+    <span class="s2">"poll_interval"</span><span class="p">,</span>
+    <span class="s2">"timeout"</span><span class="p">,</span>
+    <span class="s2">"cancel_on_interrupt"</span><span class="p">,</span>
+    <span class="s2">"keep_successful_artifacts"</span><span class="p">,</span>
+    <span class="s2">"extra_submit_attributes"</span><span class="p">,</span>
+    <span class="s2">"log_path"</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_REQUEST_CPUS_ERROR</span> <span class="o">=</span> <span class="s2">"request_cpus must be a positive integer."</span>
+<span class="n">_PRIORITY_ERROR</span> <span class="o">=</span> <span class="s2">"priority must be an integer."</span>
+<span class="n">_DEFAULT_CONTAINER_PYTHON</span> <span class="o">=</span> <span class="s2">"python"</span>
+<span class="n">_DEFAULT_CONTAINER_TARGET_DIR</span> <span class="o">=</span> <span class="s2">"/simtools-run"</span>
+<span class="n">_CONTAINER_LAUNCHER</span> <span class="o">=</span> <span class="s2">"/usr/bin/env"</span>
+
+
+<div class="viewcode-block" id="HTCondorBackend">
+<a class="viewcode-back" href="../../../api-reference/job_execution.html#job_execution.backends.htcondor.HTCondorBackend">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HTCondorBackend</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Submit one HTCondor process for every job specification."""</span>
+
+    <span class="n">supports_submit_only</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_htcondor</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_schedd</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_htcondor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_htcondor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_htcondor</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">htcondor2</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">htcondor</span>  <span class="c1"># pylint: disable=import-outside-toplevel</span>
+        <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span>
+                <span class="s2">"The HTCondor backend requires gammasimtools[htcondor]."</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_htcondor</span> <span class="o">=</span> <span class="n">htcondor</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_schedd</span> <span class="o">=</span> <span class="n">htcondor</span><span class="o">.</span><span class="n">Schedd</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-exception-caught</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Cannot connect to the HTCondor schedd: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">return</span> <span class="n">htcondor</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_config</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+        <span class="n">unknown</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="o">-</span> <span class="n">_CONFIG_KEYS</span>
+        <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">unknown</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown HTCondor configuration key(s): </span><span class="si">{</span><span class="n">names</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_validate_request_cpus</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_validate_priority</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_validate_resource_sizes</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_validate_python_executable</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_validate_container_target_dir</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_validate_extra_attributes</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_validate_timing</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_validate_paths</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_request_cpus</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Validate the default CPU request."""</span>
+        <span class="n">raw_request_cpus</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"request_cpus"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">request_cpus</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">raw_request_cpus</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="n">_REQUEST_CPUS_ERROR</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_request_cpus</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">raw_request_cpus</span><span class="o">.</span><span class="n">is_integer</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="n">_REQUEST_CPUS_ERROR</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_request_cpus</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="n">_REQUEST_CPUS_ERROR</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">request_cpus</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="n">_REQUEST_CPUS_ERROR</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_priority</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Validate the scheduler job priority."""</span>
+        <span class="n">raw_priority</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"priority"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">priority</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">raw_priority</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="n">_PRIORITY_ERROR</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_priority</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_priority</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">raw_priority</span><span class="o">.</span><span class="n">is_integer</span><span class="p">()</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="n">_PRIORITY_ERROR</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">raw_priority</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">(</span><span class="n">priority</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="n">_PRIORITY_ERROR</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_resource_sizes</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Validate optional HTCondor memory and disk expressions."""</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"request_memory"</span><span class="p">,</span> <span class="s2">"request_disk"</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()):</span>
+                <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be a non-empty string."</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_python_executable</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Validate the optional Python command used inside container images."""</span>
+        <span class="n">python_executable</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"python_executable"</span><span class="p">,</span> <span class="n">_DEFAULT_CONTAINER_PYTHON</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">python_executable</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">python_executable</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="s2">"python_executable must be a non-empty string."</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_container_target_dir</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Validate the directory used for the container scratch mount."""</span>
+        <span class="n">target_dir</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"container_target_dir"</span><span class="p">,</span> <span class="n">_DEFAULT_CONTAINER_TARGET_DIR</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_dir</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">target_dir</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="s2">"container_target_dir must be a non-empty path."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">target_dir</span><span class="p">)</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="s2">"container_target_dir must be an absolute path."</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_extra_attributes</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Validate custom scheduler attributes."""</span>
+        <span class="n">extra_attributes</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"extra_submit_attributes"</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extra_attributes</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="s2">"extra_submit_attributes must be a mapping."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">extra_attributes</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_extra_submit_attributes</span><span class="p">(</span><span class="n">submit_values</span><span class="p">,</span> <span class="n">extra_attributes</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Add custom attributes without allowing fixed values to be replaced."""</span>
+        <span class="n">protected</span> <span class="o">=</span> <span class="n">_RESERVED_SUBMIT_ATTRIBUTES</span> <span class="o">|</span> <span class="p">{</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">submit_values</span><span class="p">}</span>
+        <span class="n">protected</span> <span class="o">&amp;=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">extra_attributes</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">protected</span><span class="p">:</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">protected</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Protected submit attribute(s): </span><span class="si">{</span><span class="n">names</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="n">submit_values</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">extra_attributes</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_timing</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Validate polling, timeout, and boolean execution settings."""</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">poll_interval</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"poll_interval"</span><span class="p">,</span> <span class="mi">60</span><span class="p">))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="s2">"poll_interval must be a positive number."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">if</span> <span class="n">poll_interval</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="s2">"poll_interval must be a positive number."</span><span class="p">)</span>
+        <span class="n">timeout</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"timeout"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">timeout</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span>
+                    <span class="s2">"timeout must be a positive number or null."</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+            <span class="k">if</span> <span class="n">timeout</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="s2">"timeout must be a positive number or null."</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"cancel_on_interrupt"</span><span class="p">,</span> <span class="s2">"keep_successful_artifacts"</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">bool</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> must be boolean."</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_paths</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Validate configured shared files."""</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"container_image"</span><span class="p">,</span> <span class="s2">"environment_file"</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Configured </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> does not exist: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_environment_file</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">bind_paths</span><span class="o">=</span><span class="p">(),</span> <span class="n">python_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Convert a simple dotenv file into an HTCondor environment value."""</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">bind_paths</span> <span class="ow">and</span> <span class="n">python_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">entries</span> <span class="o">=</span> <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_read_environment_entries</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_add_corsika_interaction_table_bind</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">python_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_add_python_path</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="n">python_path</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">bind_path</span> <span class="ow">in</span> <span class="n">bind_paths</span><span class="p">:</span>
+            <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_add_apptainer_bind_path</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="n">bind_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">";"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">entries</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_source_checkout_path</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">"""Return the current source checkout path when simtools runs from one."""</span>
+        <span class="n">source_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">project_file</span> <span class="o">=</span> <span class="n">source_path</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"pyproject.toml"</span>
+        <span class="k">if</span> <span class="n">project_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">source_path</span> <span class="o">/</span> <span class="s2">"simtools"</span><span class="p">)</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">source_path</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_python_path</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="n">source_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Prepend the source checkout to the container Python module path."""</span>
+        <span class="n">paths</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">source_path</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">entries</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PYTHONPATH"</span><span class="p">):</span>
+            <span class="n">paths</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">[</span><span class="s2">"PYTHONPATH"</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span><span class="p">)</span>
+        <span class="n">entries</span><span class="p">[</span><span class="s2">"PYTHONPATH"</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">pathsep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">paths</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_environment_entries</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Read and normalize entries from a dotenv file."""</span>
+        <span class="n">entries</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+            <span class="n">entry</span> <span class="o">=</span> <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_parse_environment_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">entry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">entries</span><span class="p">[</span><span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">entries</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_environment_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Parse one dotenv line, returning ``None`` for comments and blanks."""</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"#"</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"export "</span><span class="p">):</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">7</span><span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">"="</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Invalid environment entry in </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: expected KEY=VALUE."</span>
+            <span class="p">)</span>
+        <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"="</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_strip_environment_comment</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"</span><span class="se">\"</span><span class="s2">'"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid empty environment key in </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_corsika_interaction_table_bind</span><span class="p">(</span><span class="n">entries</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Make CORSIKA interaction tables visible inside Apptainer jobs."""</span>
+        <span class="n">table_path</span> <span class="o">=</span> <span class="n">entries</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">table_path</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_add_apptainer_bind_path</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="n">table_path</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_apptainer_bind_path</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="n">bind_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Add a same-path Apptainer bind without duplicating existing paths."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bind_path</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">bind_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">entries</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"APPTAINER_BINDPATH"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">bind_path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">bind_paths</span><span class="p">:</span>
+            <span class="n">bind_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">bind_path</span><span class="p">))</span>
+        <span class="n">entries</span><span class="p">[</span><span class="s2">"APPTAINER_BINDPATH"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bind_paths</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_strip_environment_comment</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Remove an unquoted inline comment from an environment value."""</span>
+        <span class="n">quote</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">escaped</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">character</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">escaped</span><span class="p">:</span>
+                <span class="n">escaped</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">elif</span> <span class="n">character</span> <span class="o">==</span> <span class="s2">"</span><span class="se">\\</span><span class="s2">"</span> <span class="ow">and</span> <span class="n">quote</span> <span class="o">==</span> <span class="s1">'"'</span><span class="p">:</span>
+                <span class="n">escaped</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">quote</span> <span class="o">=</span> <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_update_environment_quote</span><span class="p">(</span><span class="n">quote</span><span class="p">,</span> <span class="n">character</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_is_environment_comment</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">character</span><span class="p">,</span> <span class="n">quote</span><span class="p">,</span> <span class="n">escaped</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">value</span><span class="p">[:</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_environment_quote</span><span class="p">(</span><span class="n">quote</span><span class="p">,</span> <span class="n">character</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Update the active quote character for an environment value."""</span>
+        <span class="k">if</span> <span class="n">character</span> <span class="ow">not</span> <span class="ow">in</span> <span class="s2">"</span><span class="se">\"</span><span class="s2">'"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">quote</span>
+        <span class="k">if</span> <span class="n">quote</span> <span class="o">==</span> <span class="n">character</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">character</span> <span class="k">if</span> <span class="n">quote</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">quote</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_environment_comment</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">character</span><span class="p">,</span> <span class="n">quote</span><span class="p">,</span> <span class="n">escaped</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return whether a character starts an unquoted environment comment."""</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">character</span> <span class="o">==</span> <span class="s2">"#"</span>
+            <span class="ow">and</span> <span class="n">quote</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="n">escaped</span>
+            <span class="ow">and</span> <span class="p">(</span><span class="n">index</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">value</span><span class="p">[</span><span class="n">index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isspace</span><span class="p">())</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="HTCondorBackend.submit">
+<a class="viewcode-back" href="../../../api-reference/job_execution.html#job_execution.backends.htcondor.HTCondorBackend.submit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_specs</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Create and submit a shared-filesystem HTCondor cluster."""</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_config</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_jobs</span><span class="p">(</span><span class="n">job_specs</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="n">working_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">jobs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">SubmissionHandle</span><span class="p">(</span>
+                <span class="n">backend</span><span class="o">=</span><span class="s2">"htcondor"</span><span class="p">,</span>
+                <span class="n">work_dir</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">work_dir</span> <span class="ow">or</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()),</span>
+                <span class="n">job_ids</span><span class="o">=</span><span class="p">(),</span>
+            <span class="p">)</span>
+        <span class="n">htcondor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_htcondor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_job_resources</span><span class="p">(</span><span class="n">jobs</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="n">work_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_work_dir</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_serialize_jobs</span><span class="p">(</span><span class="n">jobs</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">)</span>
+        <span class="n">event_log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_event_log</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">)</span>
+        <span class="n">submit_values</span><span class="p">,</span> <span class="n">resource_defaults</span><span class="p">,</span> <span class="n">resource_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_submit_values</span><span class="p">(</span>
+            <span class="n">config</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">,</span> <span class="n">event_log</span><span class="p">,</span> <span class="n">working_directory</span>
+        <span class="p">)</span>
+        <span class="n">itemdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_itemdata</span><span class="p">(</span><span class="n">jobs</span><span class="p">,</span> <span class="n">resource_defaults</span><span class="p">,</span> <span class="n">resource_keys</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">htcondor</span><span class="o">.</span><span class="n">Submit</span><span class="p">(</span><span class="n">submit_values</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schedd</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">itemdata</span><span class="o">=</span><span class="nb">iter</span><span class="p">(</span><span class="n">itemdata</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-exception-caught</span>
+            <span class="k">raise</span> <span class="n">BackendSubmissionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"HTCondor submission failed: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="n">handle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_handle</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">,</span> <span class="n">event_log</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">working_directory</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Submitted </span><span class="si">%d</span><span class="s2"> HTCondor jobs as cluster </span><span class="si">%d</span><span class="s2">"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">jobs</span><span class="p">),</span> <span class="n">handle</span><span class="o">.</span><span class="n">scheduler_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">handle</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_jobs</span><span class="p">(</span><span class="n">job_specs</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Materialize jobs and normalize worker-specific settings."""</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">job_specs</span><span class="p">)</span>
+        <span class="n">prepared</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">:</span>
+            <span class="n">resources</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">resources</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">resources</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"container_image"</span><span class="p">):</span>
+                <span class="n">resources</span><span class="p">[</span><span class="s2">"container_image"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
+                    <span class="n">Path</span><span class="p">(</span><span class="n">resources</span><span class="p">[</span><span class="s2">"container_image"</span><span class="p">])</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+                <span class="p">)</span>
+            <span class="n">initializer</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">initializer</span> <span class="k">if</span> <span class="n">job</span><span class="o">.</span><span class="n">initializer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">options</span><span class="o">.</span><span class="n">initializer</span>
+            <span class="n">initargs</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">initargs</span> <span class="k">if</span> <span class="n">job</span><span class="o">.</span><span class="n">initializer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">initargs</span><span class="p">)</span>
+            <span class="n">command</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">command</span>
+            <span class="n">uses_container</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"container_image"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">resources</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"container_image"</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">uses_container</span> <span class="ow">and</span> <span class="n">command</span> <span class="ow">and</span> <span class="n">command</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">:</span>
+                <span class="n">command</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"python_executable"</span><span class="p">,</span> <span class="n">_DEFAULT_CONTAINER_PYTHON</span><span class="p">),</span>
+                    <span class="o">*</span><span class="n">command</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                <span class="p">)</span>
+            <span class="n">prepared</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">replace</span><span class="p">(</span>
+                    <span class="n">job</span><span class="p">,</span>
+                    <span class="n">command</span><span class="o">=</span><span class="n">command</span><span class="p">,</span>
+                    <span class="n">resources</span><span class="o">=</span><span class="n">resources</span><span class="p">,</span>
+                    <span class="n">initializer</span><span class="o">=</span><span class="n">initializer</span><span class="p">,</span>
+                    <span class="n">initargs</span><span class="o">=</span><span class="n">initargs</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">prepared</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_config</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Normalize filesystem paths in HTCondor backend configuration."""</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">backend_config</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"container_image"</span><span class="p">,</span> <span class="s2">"environment_file"</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+                <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">])</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">config</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_job_resources</span><span class="p">(</span><span class="n">jobs</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Validate supported per-job resource overrides."""</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">:</span>
+            <span class="n">unknown</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">resources</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span>
+                <span class="s2">"request_cpus"</span><span class="p">,</span>
+                <span class="s2">"request_memory"</span><span class="p">,</span>
+                <span class="s2">"request_disk"</span><span class="p">,</span>
+                <span class="s2">"priority"</span><span class="p">,</span>
+                <span class="s2">"container_image"</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Unknown resource key(s) for job </span><span class="si">{</span><span class="n">job</span><span class="o">.</span><span class="n">job_id</span><span class="si">}</span><span class="s2">: "</span> <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">unknown</span><span class="p">))</span>
+                <span class="p">)</span>
+            <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_validate_request_cpus</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">resources</span><span class="p">)</span>
+            <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_validate_priority</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">resources</span><span class="p">)</span>
+            <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_validate_resource_sizes</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">resources</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"container_image"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Configured container_image does not exist: </span><span class="si">{</span><span class="n">image</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+        <span class="n">has_image_override</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="s2">"container_image"</span> <span class="ow">in</span> <span class="n">job</span><span class="o">.</span><span class="n">resources</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">has_image_override</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"container_image"</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="n">job</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"container_image"</span><span class="p">)</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">BackendConfigurationError</span><span class="p">(</span>
+                <span class="s2">"Every job must define container_image when per-job container overrides are used."</span>
+            <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_work_dir</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Create the shared, private run directory."""</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">work_dir</span> <span class="ow">or</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"simtools-jobs"</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="n">root</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">work_dir</span> <span class="o">=</span> <span class="n">root</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"htcondor-</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">work_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="mo">0o700</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">directory</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"inputs"</span><span class="p">,</span>
+            <span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"results"</span><span class="p">,</span>
+            <span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"stdout"</span><span class="p">,</span>
+            <span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"stderr"</span><span class="p">,</span>
+            <span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"logs"</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">work_dir</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_serialize_jobs</span><span class="p">(</span><span class="n">jobs</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Serialize one payload per job."""</span>
+        <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">validate_job_id</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">job_id</span><span class="p">)</span>
+                <span class="n">write_job_payload</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"inputs"</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">job</span><span class="o">.</span><span class="n">job_id</span><span class="si">}</span><span class="s2">.pkl"</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">pickle</span><span class="o">.</span><span class="n">PickleError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">BackendSubmissionError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Cannot serialize HTCondor job </span><span class="si">{</span><span class="n">job</span><span class="o">.</span><span class="n">job_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_event_log</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Resolve and create the scheduler event-log path."""</span>
+        <span class="n">event_log</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"log_path"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"scheduler.log"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">event_log</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
+            <span class="n">event_log</span> <span class="o">=</span> <span class="n">work_dir</span> <span class="o">/</span> <span class="n">event_log</span>
+        <span class="n">event_log</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">event_log</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_submit_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">,</span> <span class="n">event_log</span><span class="p">,</span> <span class="n">working_directory</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Build the submit description and per-job resource metadata."""</span>
+        <span class="n">working_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">working_directory</span> <span class="ow">or</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">())</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="n">resource_defaults</span><span class="p">,</span> <span class="n">resource_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_resource_data</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">jobs</span><span class="p">)</span>
+        <span class="n">uses_container</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"container_image"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"container_image"</span> <span class="ow">in</span> <span class="n">resource_keys</span><span class="p">)</span>
+        <span class="n">submit_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_worker_submit_values</span><span class="p">(</span>
+            <span class="n">config</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">,</span> <span class="n">event_log</span><span class="p">,</span> <span class="n">working_directory</span><span class="p">,</span> <span class="n">uses_container</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_resource_submit_values</span><span class="p">(</span><span class="n">submit_values</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">resource_keys</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_container_submit_values</span><span class="p">(</span><span class="n">submit_values</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">uses_container</span><span class="p">)</span>
+        <span class="n">source_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source_checkout_path</span><span class="p">()</span> <span class="k">if</span> <span class="n">uses_container</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">bind_paths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_container_bind_paths</span><span class="p">(</span>
+            <span class="n">uses_container</span><span class="p">,</span> <span class="n">source_path</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">,</span> <span class="n">working_directory</span><span class="p">,</span> <span class="n">jobs</span>
+        <span class="p">)</span>
+        <span class="n">environment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_environment_file</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"environment_file"</span><span class="p">),</span>
+            <span class="n">bind_paths</span><span class="o">=</span><span class="n">bind_paths</span><span class="p">,</span>
+            <span class="n">python_path</span><span class="o">=</span><span class="n">source_path</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">environment</span><span class="p">:</span>
+            <span class="n">submit_values</span><span class="p">[</span><span class="s2">"environment"</span><span class="p">]</span> <span class="o">=</span> <span class="n">environment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_extra_submit_attributes</span><span class="p">(</span><span class="n">submit_values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_extra_attributes</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">submit_values</span><span class="p">,</span> <span class="n">resource_defaults</span><span class="p">,</span> <span class="n">resource_keys</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_resource_data</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">jobs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return default and per-job resource settings."""</span>
+        <span class="n">resource_defaults</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"request_cpus"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"request_cpus"</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="s2">"request_memory"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"request_memory"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"request_disk"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"request_disk"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"priority"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"priority"</span><span class="p">)</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"priority"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"container_image"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"container_image"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">resource_keys</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">resource_defaults</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">key</span> <span class="ow">in</span> <span class="n">job</span><span class="o">.</span><span class="n">resources</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">resource_defaults</span><span class="p">,</span> <span class="n">resource_keys</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_worker_submit_values</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">,</span> <span class="n">event_log</span><span class="p">,</span> <span class="n">working_directory</span><span class="p">,</span> <span class="n">uses_container</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Build the fixed HTCondor submit attributes for the worker process."""</span>
+        <span class="n">python_executable</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"python_executable"</span><span class="p">,</span> <span class="n">_DEFAULT_CONTAINER_PYTHON</span><span class="p">)</span>
+        <span class="n">worker_arguments</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="o">*</span><span class="p">([</span><span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">python_executable</span><span class="p">)]</span> <span class="k">if</span> <span class="n">uses_container</span> <span class="k">else</span> <span class="p">[]),</span>
+            <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="s2">"-m"</span><span class="p">),</span>
+            <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="s2">"simtools.job_execution.worker"</span><span class="p">),</span>
+            <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="s2">"--run-directory"</span><span class="p">),</span>
+            <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">work_dir</span><span class="p">)),</span>
+            <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="s2">"--job-id"</span><span class="p">),</span>
+            <span class="s2">"$(job_id)"</span><span class="p">,</span>
+            <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="s2">"--log-file"</span><span class="p">),</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"logs"</span> <span class="o">/</span> <span class="s2">"$(job_id).log"</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"executable"</span><span class="p">:</span> <span class="n">_CONTAINER_LAUNCHER</span> <span class="k">if</span> <span class="n">uses_container</span> <span class="k">else</span> <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
+            <span class="s2">"arguments"</span><span class="p">:</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">worker_arguments</span><span class="p">),</span>
+            <span class="s2">"initialdir"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">working_directory</span><span class="p">),</span>
+            <span class="s2">"output"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"stdout"</span> <span class="o">/</span> <span class="s2">"$(job_id).out"</span><span class="p">),</span>
+            <span class="s2">"error"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"stderr"</span> <span class="o">/</span> <span class="s2">"$(job_id).err"</span><span class="p">),</span>
+            <span class="s2">"log"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">event_log</span><span class="p">),</span>
+            <span class="s2">"should_transfer_files"</span><span class="p">:</span> <span class="s2">"NO"</span><span class="p">,</span>
+            <span class="s2">"request_cpus"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"request_cpus"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="p">}</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_resource_submit_values</span><span class="p">(</span><span class="n">submit_values</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">resource_keys</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Add resource defaults and explicit values to a submit description."""</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">resource_keys</span><span class="p">:</span>
+            <span class="n">submit_values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"$(</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"request_memory"</span><span class="p">,</span> <span class="s2">"request_disk"</span><span class="p">,</span> <span class="s2">"priority"</span><span class="p">,</span> <span class="s2">"container_image"</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">submit_values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_container_submit_values</span><span class="p">(</span><span class="n">submit_values</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">uses_container</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Add container-specific submit attributes when a container is used."""</span>
+        <span class="k">if</span> <span class="n">uses_container</span><span class="p">:</span>
+            <span class="n">submit_values</span><span class="p">[</span><span class="s2">"universe"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"container"</span>
+            <span class="n">submit_values</span><span class="p">[</span><span class="s2">"container_target_dir"</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">"container_target_dir"</span><span class="p">,</span> <span class="n">_DEFAULT_CONTAINER_TARGET_DIR</span>
+            <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_container_bind_paths</span><span class="p">(</span><span class="n">uses_container</span><span class="p">,</span> <span class="n">source_path</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">,</span> <span class="n">working_directory</span><span class="p">,</span> <span class="n">jobs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return minimized bind paths needed by container jobs."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">uses_container</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">()</span>
+        <span class="n">bind_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">work_dir</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">working_directory</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">source_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bind_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source_path</span><span class="p">)</span>
+        <span class="n">bind_paths</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="n">Path</span><span class="p">(</span><span class="n">mount_path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span>
+            <span class="k">for</span> <span class="n">mount_path</span> <span class="ow">in</span> <span class="n">job</span><span class="o">.</span><span class="n">mount_paths</span>
+        <span class="p">)</span>
+        <span class="n">bind_paths</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="n">Path</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
+            <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span>
+            <span class="k">for</span> <span class="n">output_path</span> <span class="ow">in</span> <span class="n">job</span><span class="o">.</span><span class="n">output_paths</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">HTCondorBackend</span><span class="o">.</span><span class="n">_minimize_bind_paths</span><span class="p">(</span><span class="n">bind_paths</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_minimize_bind_paths</span><span class="p">(</span><span class="n">bind_paths</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Remove duplicate and nested paths from container bind paths."""</span>
+        <span class="n">minimized</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">bind_path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="p">{</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">bind_paths</span><span class="p">},</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">path</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">bind_path</span><span class="o">.</span><span class="n">is_relative_to</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span> <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">minimized</span><span class="p">):</span>
+                <span class="n">minimized</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bind_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">minimized</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_itemdata</span><span class="p">(</span><span class="n">jobs</span><span class="p">,</span> <span class="n">resource_defaults</span><span class="p">,</span> <span class="n">resource_keys</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Build item data rows consumed by the HTCondor bindings."""</span>
+        <span class="n">itemdata</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"job_id"</span><span class="p">:</span> <span class="n">job</span><span class="o">.</span><span class="n">job_id</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">resource_keys</span><span class="p">:</span>
+                <span class="n">row</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">resource_defaults</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+            <span class="n">itemdata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">itemdata</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_handle</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">,</span> <span class="n">event_log</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">working_directory</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Create a submission handle from a scheduler result."""</span>
+        <span class="n">cluster_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">cluster</span><span class="p">())</span>
+        <span class="n">first_proc</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">"first_proc"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">first_proc</span> <span class="o">=</span> <span class="n">first_proc</span><span class="p">()</span> <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">first_proc</span><span class="p">)</span> <span class="k">else</span> <span class="n">first_proc</span>
+        <span class="n">first_proc</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">first_proc</span><span class="p">)</span>
+        <span class="n">process_ids</span> <span class="o">=</span> <span class="p">{</span><span class="n">job</span><span class="o">.</span><span class="n">job_id</span><span class="p">:</span> <span class="n">first_proc</span> <span class="o">+</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">job</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">jobs</span><span class="p">)}</span>
+        <span class="k">return</span> <span class="n">SubmissionHandle</span><span class="p">(</span>
+            <span class="n">backend</span><span class="o">=</span><span class="s2">"htcondor"</span><span class="p">,</span>
+            <span class="n">work_dir</span><span class="o">=</span><span class="n">work_dir</span><span class="p">,</span>
+            <span class="n">job_ids</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">job</span><span class="o">.</span><span class="n">job_id</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">),</span>
+            <span class="n">scheduler_id</span><span class="o">=</span><span class="n">cluster_id</span><span class="p">,</span>
+            <span class="n">process_ids</span><span class="o">=</span><span class="n">process_ids</span><span class="p">,</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"poll_interval"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"poll_interval"</span><span class="p">,</span> <span class="mi">60</span><span class="p">)),</span>
+                <span class="s2">"timeout"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"timeout"</span><span class="p">),</span>
+                <span class="s2">"cancel_on_interrupt"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cancel_on_interrupt"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
+                <span class="s2">"keep_successful_artifacts"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"keep_successful_artifacts"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
+                <span class="s2">"request_cpus"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"request_cpus"</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="s2">"request_memory"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"request_memory"</span><span class="p">),</span>
+                <span class="s2">"request_disk"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"request_disk"</span><span class="p">),</span>
+                <span class="s2">"priority"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"priority"</span><span class="p">),</span>
+                <span class="s2">"container_image"</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"container_image"</span><span class="p">),</span>
+                <span class="s2">"environment_file"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">"environment_file"</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"environment_file"</span><span class="p">)</span>
+                <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">"job_log_dir"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"logs"</span><span class="p">),</span>
+                <span class="s2">"event_log"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">event_log</span><span class="p">),</span>
+                <span class="s2">"working_directory"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">working_directory</span><span class="p">),</span>
+                <span class="s2">"submitted_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                <span class="s2">"indices"</span><span class="p">:</span> <span class="p">{</span><span class="n">job</span><span class="o">.</span><span class="n">job_id</span><span class="p">:</span> <span class="n">job</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">},</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="HTCondorBackend.wait">
+<a class="viewcode-back" href="../../../api-reference/job_execution.html#job_execution.backends.htcondor.HTCondorBackend.wait">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wait</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Wait for all HTCondor processes and load their result files."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">job_ids</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_htcondor</span><span class="p">()</span>
+        <span class="n">failures</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wait_for_processes</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+        <span class="n">results</span><span class="p">,</span> <span class="n">result_failures</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_results</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+        <span class="n">failures</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">result_failures</span><span class="p">)</span>
+        <span class="n">failures</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_missing_output_failures</span><span class="p">(</span><span class="n">submission</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">failures</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BackendExecutionError</span><span class="p">(</span><span class="s2">"HTCondor job failure(s): "</span> <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">failures</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cleanup_successful_artifacts</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">result</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">index</span><span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_missing_output_failures</span><span class="p">(</span><span class="n">submission</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Report missing declared outputs before transient artifacts are removed."""</span>
+        <span class="n">expected</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"expected_outputs"</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">expected</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"unknown"</span><span class="p">:</span> <span class="n">expected</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">"job </span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">: missing expected output </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span>
+            <span class="k">for</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">paths</span> <span class="ow">in</span> <span class="n">expected</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+        <span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_cleanup_successful_artifacts</span><span class="p">(</span><span class="n">submission</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Remove transient payload and stream files after successful execution."""</span>
+        <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"keep_successful_artifacts"</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="k">for</span> <span class="n">directory</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"inputs"</span><span class="p">,</span> <span class="s2">"results"</span><span class="p">,</span> <span class="s2">"stdout"</span><span class="p">,</span> <span class="s2">"stderr"</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">work_dir</span> <span class="o">/</span> <span class="n">directory</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_wait_for_processes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Wait for scheduler terminal events and return process failures."""</span>
+        <span class="n">event_log_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
+            <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"event_log"</span><span class="p">,</span> <span class="n">submission</span><span class="o">.</span><span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"scheduler.log"</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">event_log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_htcondor</span><span class="o">.</span><span class="n">JobEventLog</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">event_log_path</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-exception-caught</span>
+            <span class="k">raise</span> <span class="n">BackendExecutionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cannot open HTCondor event log: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+        <span class="n">remaining</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">process_ids</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">failures</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
+        <span class="n">timeout</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"timeout"</span><span class="p">)</span>
+        <span class="n">timeout</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span> <span class="k">if</span> <span class="n">timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">terminal_types</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"JOB_TERMINATED"</span><span class="p">,</span> <span class="s2">"JOB_ABORTED"</span><span class="p">,</span> <span class="s2">"JOB_HELD"</span><span class="p">,</span> <span class="s2">"CLUSTER_REMOVE"</span><span class="p">}</span>
+        <span class="k">while</span> <span class="n">remaining</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">timeout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span> <span class="o">&gt;=</span> <span class="n">timeout</span><span class="p">:</span>
+                <span class="n">failures</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="sa">f</span><span class="s2">"process </span><span class="si">{</span><span class="n">proc</span><span class="si">}</span><span class="s2">: timeout"</span> <span class="k">for</span> <span class="n">proc</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">remaining</span><span class="p">))</span>
+                <span class="k">break</span>
+            <span class="n">event</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next_event</span><span class="p">(</span><span class="n">event_log</span><span class="p">,</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"poll_interval"</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">event</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">event_failures</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_event</span><span class="p">(</span>
+                <span class="n">event</span><span class="p">,</span> <span class="n">submission</span><span class="o">.</span><span class="n">scheduler_id</span><span class="p">,</span> <span class="n">remaining</span><span class="p">,</span> <span class="n">terminal_types</span>
+            <span class="p">)</span>
+            <span class="n">failures</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">event_failures</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">failures</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_next_event</span><span class="p">(</span><span class="n">event_log</span><span class="p">,</span> <span class="n">poll_interval</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Read one event using the integer deadline required by htcondor2."""</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">deadline</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">poll_interval</span><span class="p">))</span>
+            <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">event_log</span><span class="o">.</span><span class="n">events</span><span class="p">(</span><span class="n">stop_after</span><span class="o">=</span><span class="n">deadline</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_process_event</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">scheduler_id</span><span class="p">,</span> <span class="n">remaining</span><span class="p">,</span> <span class="n">terminal_types</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Update remaining processes from one scheduler event."""</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">"cluster"</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">!=</span> <span class="n">scheduler_id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="n">event_type</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="n">event_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event_type</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">event_type</span><span class="p">))</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">event_name</span> <span class="o">==</span> <span class="s2">"CLUSTER_REMOVE"</span><span class="p">:</span>
+            <span class="n">failures</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"process </span><span class="si">{</span><span class="n">proc</span><span class="si">}</span><span class="s2">: CLUSTER_REMOVE"</span> <span class="k">for</span> <span class="n">proc</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">remaining</span><span class="p">)]</span>
+            <span class="n">remaining</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">failures</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">"proc"</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">proc</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">remaining</span> <span class="ow">or</span> <span class="n">event_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">terminal_types</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="n">remaining</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">event_name</span> <span class="o">==</span> <span class="s2">"JOB_TERMINATED"</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ReturnValue"</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"process </span><span class="si">{</span><span class="n">proc</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">event_name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">dict</span><span class="p">(</span><span class="n">event</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span><span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_results</span><span class="p">(</span><span class="n">submission</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Load worker result payloads and return values and failures."""</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">failures</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">process_id</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">process_ids</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">result_path</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"results"</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">.pkl"</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">result_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="n">stderr_path</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"stderr"</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">.err"</span>
+                <span class="n">failures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"process </span><span class="si">{</span><span class="n">process_id</span><span class="si">}</span><span class="s2">: missing result </span><span class="si">{</span><span class="n">result_path</span><span class="si">}</span><span class="s2">; stderr </span><span class="si">{</span><span class="n">stderr_path</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">result_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+                    <span class="n">payload</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">pickle</span><span class="o">.</span><span class="n">PickleError</span><span class="p">,</span> <span class="ne">EOFError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="n">failures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"process </span><span class="si">{</span><span class="n">process_id</span><span class="si">}</span><span class="s2">: unreadable result </span><span class="si">{</span><span class="n">result_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">failures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"process </span><span class="si">{</span><span class="n">process_id</span><span class="si">}</span><span class="s2">: invalid result payload </span><span class="si">{</span><span class="n">result_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ok"</span><span class="p">):</span>
+                <span class="n">failures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"process </span><span class="si">{</span><span class="n">process_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'message'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"indices"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">failures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"process </span><span class="si">{</span><span class="n">process_id</span><span class="si">}</span><span class="s2">: missing job index for </span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">JobResult</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"value"</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="n">failures</span>
+
+<div class="viewcode-block" id="HTCondorBackend.cancel">
+<a class="viewcode-back" href="../../../api-reference/job_execution.html#job_execution.backends.htcondor.HTCondorBackend.cancel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Remove all processes in an active cluster."""</span>
+        <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">scheduler_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_htcondor</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_schedd</span><span class="o">.</span><span class="n">act</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_htcondor</span><span class="o">.</span><span class="n">JobAction</span><span class="o">.</span><span class="n">Remove</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"ClusterId == </span><span class="si">{</span><span class="n">submission</span><span class="o">.</span><span class="n">scheduler_id</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-exception-caught</span>
+            <span class="k">raise</span> <span class="n">BackendExecutionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cannot cancel HTCondor cluster: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
