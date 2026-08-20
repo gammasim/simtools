@@ -333,12 +333,40 @@ def write_tables(
         fits.HDUList(hdus).writeto(output_file, checksum=False)
 
 
-def write_table_chunks(table_chunks, output_file, overwrite_existing=True, metadata_documents=None):
-    """Write table chunks and optional JSON documents to atomic HDF5 output."""
+def write_table_chunks(
+    table_chunks,
+    output_file,
+    overwrite_existing=True,
+    metadata_documents=None,
+    activity_id=None,
+):
+    """Write table chunks and optional JSON documents to atomic HDF5 output.
+
+    Parameters
+    ----------
+    table_chunks : iterable
+        Tables to write, grouped into chunks.
+    output_file : str or Path
+        Path of the published HDF5 output file.
+    overwrite_existing : bool, optional
+        Whether an existing output file may be replaced.
+    metadata_documents : dict or callable, optional
+        Named JSON documents to embed in the HDF5 output.
+    activity_id : str, optional
+        Application activity identifier. If supplied, it is included in the
+        incomplete-file name to correlate failed writes with the application log.
+    """
     output_file = Path(output_file)
     if output_file.exists() and not overwrite_existing:
         raise FileExistsError(f"Output file {output_file} already exists.")
-    incomplete_file = output_file.with_name(f"{output_file.name}.incomplete-{general.get_uuid()}")
+    write_id = general.get_uuid()
+    activity_suffix = ""
+    if activity_id is not None:
+        safe_activity_id = str(activity_id).replace("/", "_").replace("\\", "_")
+        activity_suffix = f"{safe_activity_id}-"
+    incomplete_file = output_file.with_name(
+        f"{output_file.name}.incomplete-{activity_suffix}{write_id}"
+    )
     expected_tables = {}
     metadata_names = set()
 
