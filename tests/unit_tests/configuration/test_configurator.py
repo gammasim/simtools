@@ -288,6 +288,12 @@ def test_dependency_database_defaults_are_read_from_catalog():
         )
         == {}
     )
+    assert Configurator._dependency_defaults(  # pylint: disable=protected-access
+        {"db_simulation_model": None}
+    ) == {"db_simulation_model": "CTAO-Simulation-Model"}
+    assert Configurator._dependency_defaults(  # pylint: disable=protected-access
+        {"db_simulation_model_version": None}
+    ) == {"db_simulation_model_version": "v0.17.0"}
 
 
 def test_environment_database_version_overrides_catalog(tmp_test_directory, monkeypatch):

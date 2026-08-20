@@ -81,6 +81,19 @@ def test_env_template_rejects_catalog_managed_versions(tmp_test_directory, simto
         dependency_versions.validate_env_template(catalog, template)
 
 
+def test_env_template_rejects_mismatched_model_name(tmp_test_directory, simtools_root_path):
+    """Test the non-version catalog default is still validated."""
+    catalog = _load_catalog(simtools_root_path)
+    template = tmp_test_directory / ".env_template"
+    template.write_text(
+        "SIMTOOLS_DB_SIMULATION_MODEL=wrong-model\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="defaults disagree"):
+        dependency_versions.validate_env_template(catalog, template)
+
+
 @pytest.mark.parametrize(
     ("mutator", "error"),
     [
@@ -108,6 +121,18 @@ def test_env_template_rejects_catalog_managed_versions(tmp_test_directory, simto
         (
             lambda data: data["production-combinations"][0].update({"cpu-variants": ["unknown"]}),
             "Unknown CPU variant",
+        ),
+        (
+            lambda data: data["simtools-tests"].pop("repository"),
+            "repository must be configured",
+        ),
+        (
+            lambda data: data["simtools-tests"].pop("source-url"),
+            "source URL must be configured",
+        ),
+        (
+            lambda data: data["simtools-tests"].pop("version"),
+            "version must be configured",
         ),
     ],
 )
@@ -240,6 +265,18 @@ def test_export_dependency_configuration_returns_python_requirements(simtools_ro
 
     assert "astropy" in requirements.splitlines()
     assert "pytest" in requirements.splitlines()
+
+
+def test_project_requirements_rejects_unknown_extra(tmp_test_directory):
+    """Test unknown optional dependency groups produce an actionable error."""
+    project_file = tmp_test_directory / "pyproject.toml"
+    project_file.write_text(
+        '[project]\ndependencies = []\n[project.optional-dependencies]\ntests = ["pytest"]\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="Available groups: tests"):
+        dependency_versions.project_requirements(project_file, ["missing"])
 
 
 @pytest.mark.parametrize("output_format", ["catalog", "summary"])
