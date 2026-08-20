@@ -44,14 +44,12 @@ def generate_bias_curves(args):
 
     plot_output_path = plot_tables.resolve_plot_output_path(args["figure_file"])
     bias_curve_table_output = plot_output_path.with_suffix(".ecsv")
+    trigger_threshold = _calculate_trigger_threshold(nsb_stats, proton_stats)
 
     _logger.info("Plotting bias curves...")
-    plot_tables.plot_bias_curves(nsb_stats, proton_stats, args, plot_output_path)
-
+    plot_tables.plot_bias_curves(nsb_stats, proton_stats, args, plot_output_path, trigger_threshold)
     _write_bias_curve_ecsv(nsb_stats, proton_stats, bias_curve_table_output)
-
-    # Calculate and export trigger threshold as model parameter
-    _calculate_and_export_trigger_threshold(args, nsb_stats, proton_stats)
+    _export_trigger_threshold_as_model_parameter(args, trigger_threshold)
 
     _logger.info(f"Bias curve plot written to {plot_output_path}")
     _logger.info(f"Bias curve table written to {bias_curve_table_output}")
@@ -342,12 +340,11 @@ def _write_bias_curve_ecsv(nsb_stats, proton_stats, output_file):
     table.write(output_file, format="ascii.ecsv", overwrite=True)
 
 
-def _calculate_and_export_trigger_threshold(args, nsb_stats, proton_stats):
+def _calculate_trigger_threshold(nsb_stats, proton_stats):
     """
-    Calculate and export trigger threshold from bias curve intersection.
+    Calculate trigger threshold from bias curve intersection.
 
-    Calculate trigger threshold as the intersection between NSB curve and 1.35*proton curve,
-    and export it as a model parameter.
+    Trigger threshold is calculated as the intersection between NSB curve and 1.35*proton curve.
 
     Parameters
     ----------
@@ -357,6 +354,16 @@ def _calculate_and_export_trigger_threshold(args, nsb_stats, proton_stats):
         NSB statistics by threshold.
     proton_stats : dict
         Proton statistics by threshold.
+
+    Returns
+    -------
+    float
+        The calculated trigger threshold.
+
+    Raises
+    ------
+    ValueError
+        If no valid threshold points exist or intersection cannot be found.
     """
     # Get all unique thresholds from both NSB and proton stats
     thresholds = sorted(set(nsb_stats.keys()) | set(proton_stats.keys()))
@@ -379,19 +386,17 @@ def _calculate_and_export_trigger_threshold(args, nsb_stats, proton_stats):
     thresholds = thresholds[valid_mask]
 
     if len(thresholds) == 0:
-        _logger.warning(
+        raise ValueError(
             "No valid threshold points with both NSB and proton data. "
-            "Skipping trigger threshold calculation."
+            "Cannot calculate trigger threshold."
         )
-        return
     # Scale proton rates by 1.35 to account for ions we didn't simulate
     scaled_proton_rates = 1.35 * proton_rates
     trigger_threshold = _find_intersection_point(thresholds, nsb_rates, scaled_proton_rates)
     if trigger_threshold is not None:
         _logger.info(f"Calculated trigger threshold: {trigger_threshold}")
-        _export_trigger_threshold_as_model_parameter(args, trigger_threshold)
-    else:
-        _logger.error("Could not find intersection point.")
+        return trigger_threshold
+    raise ValueError("Could not find intersection point between NSB and 1.35*proton curves.")
 
 
 def _find_intersection_point(thresholds, nsb_rates, scaled_proton_rates):
