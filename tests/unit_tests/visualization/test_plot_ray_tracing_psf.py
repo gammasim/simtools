@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import astropy.units as u
 import numpy as np
 
 from simtools.visualization import plot_ray_tracing_psf
@@ -80,7 +81,8 @@ def test_create_annotated_psf_image_figure_adds_text():
                 data,
                 off_x=0.5,
                 off_y=-0.5,
-                psf_cm=4.2,
+                psf=4.2 * u.cm,
+                containment_radius=2.1 * u.cm,
                 image_range=[[-1.0, 1.0], [-1.0, 1.0]],
                 cmap="gist_heat_r",
             )
