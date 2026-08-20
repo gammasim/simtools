@@ -72,6 +72,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip build
           python -m build
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          wheel = next(Path("dist").glob("*.whl"))
+          expected = next(
+              name
+              for name in ZipFile(wheel).namelist()
+              if name.endswith(".data/data/simtools/dependency_versions.yml")
+          )
+          print(f"Verified packaged dependency catalog: {expected}")
+          PY
 
   prepare_interaction_tables:
     name: download CORSIKA interaction tables

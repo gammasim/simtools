@@ -14,6 +14,10 @@ PYPROJECT_FILENAME = "pyproject.toml"
 SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 ARCHIVE_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+LEGACY_MODEL_VERSION_PATTERN = re.compile(r"^\d+\.\d+(?:\.\d+)?$")
+MODEL_VERSION_PATTERN = re.compile(r"^v\d+\.\d+\.\d+(?:[-+][\dA-Za-z.-]+)?$")
+SIMTOOLS_TESTS_REPOSITORY_PATTERN = re.compile(r"^[^/]+/[^/]+$")
+SIMTOOLS_TESTS_VERSION_PATTERN = MODEL_VERSION_PATTERN
 
 
 def find_dependency_versions(start_path=None):
@@ -108,7 +112,6 @@ def validate_dependency_catalog(catalog):
         "corsika-interaction-tables",
         "archives",
         "model-database",
-        "simtools-tests",
         "production-combinations",
         "corsika",
         "sim-telarray",
@@ -116,15 +119,20 @@ def validate_dependency_catalog(catalog):
     missing = sorted(required - catalog.keys())
     if missing:
         raise ValueError(f"Missing dependency catalog keys: {', '.join(missing)}")
+    schema_version = catalog["schema_version"]
+    if schema_version not in {"0.1.0", "0.2.0"}:
+        raise ValueError(f"Unsupported dependency catalog schema version: {schema_version}")
+    if schema_version == "0.2.0" and "simtools-tests" not in catalog:
+        raise ValueError("Missing dependency catalog keys: simtools-tests")
     _validate_optional_digest(catalog["base-image"].get("runtime-digest"), "runtime base image")
     _validate_optional_digest(catalog["base-image"].get("build-digest"), "build base image")
     _validate_archive_checksums(catalog["archives"])
-    _validate_components(catalog)
+    _validate_components(catalog, schema_version)
     _validate_production_combinations(catalog)
     return catalog
 
 
-def _validate_components(catalog):
+def _validate_components(catalog, schema_version):
     """Validate CORSIKA and sim_telarray component records."""
     for component in catalog["corsika"]:
         if component.get("source-ref") in {"latest", "master", "main"}:
@@ -140,15 +148,33 @@ def _validate_components(catalog):
             _validate_optional_revision(component.get(key), key)
         _validate_optional_digest(component.get("image-digest"), "sim_telarray image")
     model_version = catalog.get("model-database", {}).get("default-version", "")
-    if not re.fullmatch(r"v\d+\.\d+\.\d+(?:[-+][\dA-Za-z.-]+)?", model_version):
-        raise ValueError("Model database versions must be release tags starting with 'v'.")
-    test_resources = catalog["simtools-tests"]
-    if not test_resources.get("repository"):
-        raise ValueError("simtools-tests repository must be configured.")
-    if not test_resources.get("source-url"):
-        raise ValueError("simtools-tests source URL must be configured.")
-    if not test_resources.get("version"):
-        raise ValueError("simtools-tests version must be configured.")
+    version_pattern = (
+        MODEL_VERSION_PATTERN if schema_version == "0.2.0" else LEGACY_MODEL_VERSION_PATTERN
+    )
+    if not version_pattern.fullmatch(model_version):
+        message = (
+            "Model database versions must be release tags starting with 'v'."
+            if schema_version == "0.2.0"
+            else "Invalid model database version."
+        )
+        raise ValueError(message)
+    if schema_version == "0.2.0":
+        _validate_simtools_tests(catalog["simtools-tests"])
+
+
+def _validate_simtools_tests(test_resources):
+    """Validate the simtools-tests repository configuration."""
+    repository = test_resources.get("repository")
+    if not isinstance(repository, str) or not SIMTOOLS_TESTS_REPOSITORY_PATTERN.fullmatch(
+        repository
+    ):
+        raise ValueError("simtools-tests repository must use the owner/name format.")
+    source_url = test_resources.get("source-url")
+    if not isinstance(source_url, str) or not source_url.startswith("https://"):
+        raise ValueError("simtools-tests source URL must use HTTPS.")
+    version = test_resources.get("version")
+    if not isinstance(version, str) or not SIMTOOLS_TESTS_VERSION_PATTERN.fullmatch(version):
+        raise ValueError("simtools-tests version must be a release tag starting with 'v'.")
 
 
 def _validate_production_combinations(catalog):
@@ -213,8 +239,8 @@ def validate_env_template(catalog, template_path):
     Raises
     ------
     ValueError
-        If the template contains a version that belongs in the catalog or if
-        the model database name disagrees with the catalog.
+        If catalog-managed versions are duplicated in a schema 0.2.0 template
+        or if the model database defaults disagree with the catalog.
     """
     values = {}
     for line in Path(template_path).read_text(encoding="utf-8").splitlines():
@@ -223,7 +249,9 @@ def validate_env_template(catalog, template_path):
             continue
         key, value = stripped.split("=", maxsplit=1)
         values[key] = value
-    version_keys = {"SIMTOOLS_DB_SIMULATION_MODEL_VERSION", "SIMTOOLS_TESTS_VERSION"}
+    version_keys = {"SIMTOOLS_TESTS_VERSION"}
+    if catalog["schema_version"] == "0.2.0":
+        version_keys.add("SIMTOOLS_DB_SIMULATION_MODEL_VERSION")
     configured_versions = sorted(version_keys & values.keys())
     if configured_versions:
         raise ValueError(
@@ -232,6 +260,8 @@ def validate_env_template(catalog, template_path):
         )
     model = catalog["model-database"]
     expected = {"SIMTOOLS_DB_SIMULATION_MODEL": model["name"]}
+    if catalog["schema_version"] == "0.1.0":
+        expected["SIMTOOLS_DB_SIMULATION_MODEL_VERSION"] = model["default-version"]
     mismatches = {
         key: (values.get(key), value) for key, value in expected.items() if values.get(key) != value
     }
@@ -338,6 +368,7 @@ def dependency_catalog_summary(catalog):
     base = catalog["base-image"]
     default_corsika = catalog["corsika"][0]
     default_simtel = catalog["sim-telarray"][0]
+    test_resources = catalog.get("simtools-tests", {})
     return {
         "python_version": catalog["python"],
         "apptainer_version": catalog["apptainer"],
@@ -355,9 +386,9 @@ def dependency_catalog_summary(catalog):
         "corsika_tables_version": catalog["corsika-interaction-tables"]["version"],
         "model_database": catalog["model-database"]["name"],
         "model_version": catalog["model-database"]["default-version"],
-        "simtools_tests_repository": catalog["simtools-tests"]["repository"],
-        "simtools_tests_url": catalog["simtools-tests"]["source-url"],
-        "simtools_tests_version": catalog["simtools-tests"]["version"],
+        "simtools_tests_repository": test_resources.get("repository", ""),
+        "simtools_tests_url": test_resources.get("source-url", ""),
+        "simtools_tests_version": test_resources.get("version", ""),
         "dev_corsika_image": _image_reference(
             "ghcr.io/gammasim/corsika7",
             f"v{default_corsika['version']}-generic",
@@ -385,13 +416,19 @@ def dependency_catalog_environment(catalog):
         Environment variable names and values for database and test-resource
         configuration. Local paths and credentials are intentionally omitted.
     """
-    return {
+    environment = {
         "SIMTOOLS_DB_SIMULATION_MODEL": catalog["model-database"]["name"],
         "SIMTOOLS_DB_SIMULATION_MODEL_VERSION": catalog["model-database"]["default-version"],
-        "SIMTOOLS_TESTS_VERSION": catalog["simtools-tests"]["version"],
-        "SIMTOOLS_TESTS_REPOSITORY": catalog["simtools-tests"]["repository"],
-        "SIMTOOLS_TESTS_URL": catalog["simtools-tests"]["source-url"],
     }
+    if "simtools-tests" in catalog:
+        environment.update(
+            {
+                "SIMTOOLS_TESTS_VERSION": catalog["simtools-tests"]["version"],
+                "SIMTOOLS_TESTS_REPOSITORY": catalog["simtools-tests"]["repository"],
+                "SIMTOOLS_TESTS_URL": catalog["simtools-tests"]["source-url"],
+            }
+        )
+    return environment
 
 
 def project_requirements(pyproject_path, extras):

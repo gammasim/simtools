@@ -81,9 +81,9 @@ Published production images include `/opt/simtools/provenance/dependency-manifes
 ## Runtime configuration
 
 `.env_template` supplies runtime defaults and example paths; `.env` remains local and ignored.
-The dependency catalog supplies the simulation-model version and the default `simtools-tests`
-version. `.env` supplies local paths, credentials, user settings, and the model database name.
-Users may add either version variable to `.env` for a local override; the catalog remains the
-fallback when no override is present.
+The dependency catalog supplies the default model database name and version, as well as the
+default `simtools-tests` version. `.env` may override the model database name or version and
+supplies local paths, credentials, and user settings. The catalog remains the fallback when no
+override is present.
 Database credentials, server addresses, and user information are never copied into an image or
 dependency manifest.

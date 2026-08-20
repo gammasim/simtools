@@ -97,7 +97,7 @@ select a different version for an individual run. `SIMTOOLS_TESTS_VERSION` in
 `.env` is also supported as a local override.
 
 ```text
-<simtools-tests>/simtools-tests/<catalogued-version>/integration_tests/
+<simtools-tests>/simtools-tests/<selected-version>/integration_tests/
   static/
   generated/
   downloaded/
