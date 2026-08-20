@@ -140,7 +140,7 @@ def _validate_components(catalog):
             _validate_optional_revision(component.get(key), key)
         _validate_optional_digest(component.get("image-digest"), "sim_telarray image")
     model_version = catalog.get("model-database", {}).get("default-version", "")
-    if not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?", model_version):
+    if not re.fullmatch(r"v\d+\.\d+\.\d+(?:[-+][\dA-Za-z.-]+)?", model_version):
         raise ValueError("Model database versions must be release tags starting with 'v'.")
     test_resources = catalog["simtools-tests"]
     if not test_resources.get("repository"):

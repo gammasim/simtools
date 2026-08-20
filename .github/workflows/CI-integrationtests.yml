@@ -324,6 +324,7 @@ jobs:
     env:
       CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
       IT_NAME: "corsika7-interaction-tables"
+      SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH: ${{ github.workspace }}/corsika7-interaction-tables/interaction-tables
       SIMULATION_MODELS_PATH: ${{ matrix.model_version == '7.0.0' && '../simulation-models' || '' }}
 
     services:
