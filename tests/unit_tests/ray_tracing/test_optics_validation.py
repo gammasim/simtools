@@ -343,3 +343,121 @@ def test_export_effective_focal_length_model_parameter_without_results(caplog):
     )
 
     assert "No ray-tracing results available to export effective_focal_length" in caplog.text
+
+
+# ---------------------------------------------------------------------------
+# _median_effective_focal_length
+# ---------------------------------------------------------------------------
+
+
+def _make_results(off_x, off_y, eff_flen):
+    """Build a minimal QTable matching the ray-tracing results schema."""
+    return QTable(
+        {
+            "off_x": off_x * u.deg,
+            "off_y": off_y * u.deg,
+            "eff_flen": np.asarray(eff_flen, dtype=float),
+        }
+    )
+
+
+def test_median_effective_focal_length_returns_median_of_nonzero_rows():
+    results = _make_results(
+        off_x=[0.0, 1.0, -1.0, 0.0, 0.0],
+        off_y=[0.0, 0.0, 0.0, 1.0, -1.0],
+        eff_flen=[np.nan, 2900.0, 2950.0, 2920.0, 2940.0],
+    )
+
+    value = optics_validation._median_effective_focal_length(results)
+
+    assert value == pytest.approx(2930.0)
+
+
+def test_median_effective_focal_length_excludes_zero_offset_nan():
+    # Only the zero-offset row; eff_flen is NaN there -> no valid values
+    results = _make_results(off_x=[0.0], off_y=[0.0], eff_flen=[np.nan])
+
+    value = optics_validation._median_effective_focal_length(results)
+
+    assert value is None
+
+
+def test_median_effective_focal_length_all_nonzero_nan_returns_none():
+    results = _make_results(
+        off_x=[1.0, -1.0],
+        off_y=[0.0, 0.0],
+        eff_flen=[np.nan, np.nan],
+    )
+
+    value = optics_validation._median_effective_focal_length(results)
+
+    assert value is None
+
+
+def test_median_effective_focal_length_single_valid_value():
+    results = _make_results(off_x=[0.0, 1.0], off_y=[0.0, 0.0], eff_flen=[np.nan, 2800.0])
+
+    value = optics_validation._median_effective_focal_length(results)
+
+    assert value == pytest.approx(2800.0)
+
+
+# ---------------------------------------------------------------------------
+# _prepare_image_for_plotting
+# ---------------------------------------------------------------------------
+
+_IMAGE_DTYPE = [("X", "f8"), ("Y", "f8")]
+
+
+def _make_image_data(x_vals, y_vals):
+    data = np.zeros(len(x_vals), dtype=_IMAGE_DTYPE)
+    data["X"] = x_vals
+    data["Y"] = y_vals
+    return data
+
+
+def test_prepare_image_for_plotting_returns_cm_when_no_eff_flen():
+    image_data = _make_image_data([1.0, -2.0], [3.0, -4.0])
+    psf_cm = 2.0
+    max_extent_cm = 5.0
+
+    converted, psf_q, cont_r, plot_extent = optics_validation._prepare_image_for_plotting(
+        image_data, psf_cm, max_extent_cm
+    )
+
+    assert converted is image_data
+    assert psf_q.unit == u.cm
+    assert psf_q.value == pytest.approx(2.0)
+    assert cont_r.unit == u.cm
+    assert cont_r.value == pytest.approx(1.0)
+    assert plot_extent == pytest.approx(5.0)
+
+
+def test_prepare_image_for_plotting_converts_to_degrees():
+    image_data = _make_image_data([100.0, -200.0], [50.0, -50.0])
+    psf_cm = 4.0
+    max_extent_cm = 200.0
+    eff_flen_cm = 2000.0
+
+    converted, psf_q, cont_r, plot_extent = optics_validation._prepare_image_for_plotting(
+        image_data, psf_cm, max_extent_cm, eff_flen_cm
+    )
+
+    expected_x = np.rad2deg(np.array([100.0, -200.0]) / eff_flen_cm)
+    expected_y = np.rad2deg(np.array([50.0, -50.0]) / eff_flen_cm)
+    np.testing.assert_allclose(converted["X"], expected_x)
+    np.testing.assert_allclose(converted["Y"], expected_y)
+    assert psf_q.unit == u.deg
+    assert psf_q.value == pytest.approx(np.rad2deg(psf_cm / eff_flen_cm))
+    assert cont_r.unit == u.deg
+    assert cont_r.value == pytest.approx(np.rad2deg(psf_cm / 2 / eff_flen_cm))
+    assert plot_extent == pytest.approx(np.rad2deg(max_extent_cm / eff_flen_cm))
+
+
+def test_prepare_image_for_plotting_does_not_mutate_original():
+    image_data = _make_image_data([10.0], [20.0])
+    original_x = image_data["X"].copy()
+
+    optics_validation._prepare_image_for_plotting(image_data, 1.0, 5.0, eff_flen_cm=1000.0)
+
+    np.testing.assert_array_equal(image_data["X"], original_x)
