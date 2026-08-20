@@ -493,6 +493,49 @@ def test_generate_new_production_empty_version_history(
 
 
 @patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
+@patch("simtools.model.model_repository._get_changes_to_production")
+@patch("simtools.model.model_repository._apply_changes_to_production_tables")
+@patch("simtools.model.model_repository._apply_changes_to_model_parameters")
+def test_generate_new_production_separates_recursive_table_changes_from_parameters(
+    mock_apply_model_changes,
+    mock_apply_table_changes,
+    mock_get_changes_to_production,
+    mock_collect_data,
+    tmp_test_directory,
+):
+    direct_changes = {
+        "MSTx-FlashCam": {
+            "new_parameter": {"version": "2.0.0", "value": 42.0},
+        }
+    }
+    recursive_changes = {
+        **direct_changes,
+        "LSTN-design": {
+            "inherited_parameter": {"version": "1.0.0", "value": 10.0},
+        },
+    }
+    mock_collect_data.return_value = {
+        "model_version": "7.0.0",
+        "model_version_history": ["6.3.0"],
+        "changes": direct_changes,
+    }
+    mock_get_changes_to_production.return_value = recursive_changes, "6.0.0"
+
+    model_repository.generate_new_production("7.0.0", str(tmp_test_directory))
+
+    mock_apply_table_changes.assert_called_once_with(
+        recursive_changes, "6.0.0", "7.0.0", "full_update", str(tmp_test_directory)
+    )
+    mock_apply_model_changes.assert_called_once_with(
+        direct_changes,
+        str(tmp_test_directory),
+        "main",
+        "https://gitlab.cta-observatory.org/cta-science/simulations/"
+        "simulation-model/simulation-model-parameter-setting.git",
+    )
+
+
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
 @patch("simtools.model.model_repository._apply_changes_to_production_tables")
 @patch("simtools.model.model_repository._apply_changes_to_model_parameters")
 def test_generate_new_production_setting_workflows_git_tag_override(
@@ -830,6 +873,95 @@ def test_create_new_model_parameter_entry_with_existing_file(
     assert param_data["version"] == "2.0.0"
     assert param_data["meta_parameter"] is True
     assert param_data["value"] == [42.5, 42.5, 42.5]  # Single value converted to list
+
+
+@patch("simtools.model.model_repository.get_model_parameter_file_path")
+@patch("simtools.model.model_repository._get_latest_model_parameter_file")
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
+@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter")
+def test_create_new_model_parameter_entry_reuses_matching_existing_file(
+    mock_dump,
+    mock_collect_data,
+    mock_get_latest,
+    mock_get_parameter_file_path,
+    tmp_test_directory,
+):
+    telescope = "MSTx-FlashCam"
+    param = "dsum_threshold"
+    param_data = {"version": "1.0.0", "value": [42.5, 43.5], "unit": ["count", "count"]}
+    target_file = (
+        Path(tmp_test_directory)
+        / "simulation-models/model_parameters"
+        / telescope
+        / param
+        / f"{param}-{param_data['version']}.json"
+    )
+    target_file.parent.mkdir(parents=True)
+    target_file.touch()
+    mock_get_parameter_file_path.return_value = target_file
+    mock_get_latest.return_value = target_file
+    mock_collect_data.return_value = {
+        "parameter": param,
+        "instrument": telescope,
+        "parameter_version": param_data["version"],
+        "value": param_data["value"],
+        "unit": "count",
+    }
+
+    model_repository._create_new_model_parameter_entry(
+        telescope, param, param_data, Path(tmp_test_directory)
+    )
+
+    mock_dump.assert_not_called()
+
+
+@patch("simtools.model.model_repository.get_model_parameter_file_path")
+@patch("simtools.model.model_repository._get_latest_model_parameter_file")
+@patch("simtools.model.model_repository.ascii_handler.collect_data_from_file")
+@patch("simtools.model.model_repository.writer.ModelDataWriter.write_model_parameter")
+def test_create_new_model_parameter_entry_rejects_mismatching_existing_file(
+    mock_dump,
+    mock_collect_data,
+    mock_get_latest,
+    mock_get_parameter_file_path,
+    tmp_test_directory,
+):
+    telescope = "MSTx-FlashCam"
+    param = "dsum_threshold"
+    param_data = {"version": "1.0.0", "value": 42.5, "unit": "count"}
+    target_file = (
+        Path(tmp_test_directory)
+        / "simulation-models/model_parameters"
+        / telescope
+        / param
+        / f"{param}-{param_data['version']}.json"
+    )
+    target_file.parent.mkdir(parents=True)
+    target_file.touch()
+    mock_get_parameter_file_path.return_value = target_file
+    mock_get_latest.return_value = target_file
+    mock_collect_data.return_value = {
+        "parameter": param,
+        "instrument": telescope,
+        "parameter_version": param_data["version"],
+        "value": 41.5,
+        "unit": param_data["unit"],
+    }
+
+    with pytest.raises(ValueError, match="does not match the requested value"):
+        model_repository._create_new_model_parameter_entry(
+            telescope, param, param_data, Path(tmp_test_directory)
+        )
+
+    mock_dump.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("unit", "expected"),
+    [(["cm", "cm"], "cm"), (["null", "null"], None), (["null", "cm"], [None, "cm"])],
+)
+def test_normalize_units_for_comparison(unit, expected):
+    assert model_repository._normalize_units_for_comparison(unit) == expected
 
 
 def test_get_changes_to_production_path_update(tmp_test_directory):
