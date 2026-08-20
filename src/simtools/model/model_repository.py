@@ -806,9 +806,12 @@ def _validate_existing_model_parameter_file(target_file, telescope, param, param
 def _normalize_units_for_comparison(unit):
     """Normalize equivalent scalar and per-value unit representations."""
     unit = value_conversion.normalize_dimensionless_unit(unit)
-    if isinstance(unit, list) and unit and all(entry == unit[0] for entry in unit):
-        return unit[0]
-    return unit
+    if isinstance(unit, list):
+        unit = [_normalize_units_for_comparison(entry) for entry in unit]
+        if unit and all(entry == unit[0] for entry in unit):
+            return unit[0]
+        return unit
+    return value_conversion.normalize_model_parameter_unit(0, unit)
 
 
 def _get_latest_model_parameter_file(directory, parameter, max_version):
