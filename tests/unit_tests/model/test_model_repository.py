@@ -888,7 +888,7 @@ def test_create_new_model_parameter_entry_reuses_matching_existing_file(
 ):
     telescope = "MSTx-FlashCam"
     param = "dsum_threshold"
-    param_data = {"version": "1.0.0", "value": 42.5, "unit": "count"}
+    param_data = {"version": "1.0.0", "value": [42.5, 43.5], "unit": ["count", "count"]}
     target_file = (
         Path(tmp_test_directory)
         / "simulation-models/model_parameters"
@@ -905,7 +905,7 @@ def test_create_new_model_parameter_entry_reuses_matching_existing_file(
         "instrument": telescope,
         "parameter_version": param_data["version"],
         "value": param_data["value"],
-        "unit": param_data["unit"],
+        "unit": "count",
     }
 
     model_repository._create_new_model_parameter_entry(
@@ -954,6 +954,14 @@ def test_create_new_model_parameter_entry_rejects_mismatching_existing_file(
         )
 
     mock_dump.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("unit", "expected"),
+    [(["cm", "cm"], "cm"), (["null", "null"], None), (["null", "cm"], [None, "cm"])],
+)
+def test_normalize_units_for_comparison(unit, expected):
+    assert model_repository._normalize_units_for_comparison(unit) == expected
 
 
 def test_get_changes_to_production_path_update(tmp_test_directory):

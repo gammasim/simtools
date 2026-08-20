@@ -21,7 +21,7 @@ from packaging.version import parse as parse_version
 import simtools.data_model.model_data_writer as writer
 from simtools.constants import DEFAULT_SIMULATION_WORKFLOWS
 from simtools.io import ascii_handler
-from simtools.utils import names
+from simtools.utils import names, value_conversion
 
 _logger = logging.getLogger(__name__)
 
@@ -788,8 +788,9 @@ def _validate_existing_model_parameter_file(target_file, telescope, param, param
         "instrument": telescope,
         "parameter_version": param_data["version"],
         "value": param_data["value"],
-        "unit": param_data.get("unit"),
+        "unit": _normalize_units_for_comparison(param_data.get("unit")),
     }
+    existing_data["unit"] = _normalize_units_for_comparison(existing_data.get("unit"))
     mismatches = {
         key: (existing_data.get(key), value)
         for key, value in expected_data.items()
@@ -800,6 +801,14 @@ def _validate_existing_model_parameter_file(target_file, telescope, param, param
             f"Existing model parameter file '{target_file}' does not match the requested "
             f"value for '{telescope} - {param}': {mismatches}"
         )
+
+
+def _normalize_units_for_comparison(unit):
+    """Normalize equivalent scalar and per-value unit representations."""
+    unit = value_conversion.normalize_dimensionless_unit(unit)
+    if isinstance(unit, list) and unit and all(entry == unit[0] for entry in unit):
+        return unit[0]
+    return unit
 
 
 def _get_latest_model_parameter_file(directory, parameter, max_version):
