@@ -9,6 +9,10 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 ## [v0.36.0](https://github.com/gammasim/simtools/releases/tag/v0.36.0) - 2026-08-20
 
+### Simulation model
+
+- Switch to simulation models version v0.17.0
+
 ### Bugfixes
 
 - Fix recursively merging of simulation models with `maintain_simulation_model_add_production.py`. ([#2450](https://github.com/gammasim/simtools/pull/2450))
