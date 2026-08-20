@@ -163,7 +163,7 @@ def test_env_template_matches_legacy_catalog(tmp_test_directory, simtools_root_p
             "owner/name",
         ),
         (
-            lambda data: data["simtools-tests"].update({"source-url": "http://example.com"}),
+            lambda data: data["simtools-tests"].update({"source-url": "ftp://example.com"}),
             "HTTPS",
         ),
         (
