@@ -1,5 +1,6 @@
 """Tests for explicit application definitions."""
 
+import importlib
 import sys
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -52,6 +53,20 @@ def test_build_parser_registers_groups_and_exclusive_arguments():
     assert parser.parse_args(["--file", "events.simtel.zst", "--value", "2"]).value == 2
     with pytest.raises(SystemExit):
         parser.parse_args([])
+
+
+@pytest.mark.parametrize(
+    "module_name",
+    [
+        "simtools.applications.db_upload_model_repository",
+        "simtools.applications.db_add_simulation_model_from_repository_to_db",
+    ],
+)
+def test_database_maintenance_applications_require_explicit_targets(module_name):
+    """Test database-maintenance applications do not receive catalog targets."""
+    application = importlib.import_module(module_name).APPLICATION
+
+    assert application.use_dependency_defaults is False
 
 
 def test_start_delegates_to_common_startup(mocker):

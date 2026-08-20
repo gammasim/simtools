@@ -72,6 +72,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip build
           python -m build
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          wheel = next(Path("dist").glob("*.whl"))
+          expected = next(
+              name
+              for name in ZipFile(wheel).namelist()
+              if name.endswith(".data/data/simtools/dependency_versions.yml")
+          )
+          print(f"Verified packaged dependency catalog: {expected}")
+          PY
 
   prepare_interaction_tables:
     name: download CORSIKA interaction tables
@@ -179,6 +191,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
+      - name: Export dependency environment
+        run: |
+          python -m pip install pyyaml
+          python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
+
       - name: Determine simulation model branch
         id: simulation_model_branch
         env:
@@ -187,10 +204,6 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           INPUT_BRANCH: ${{ github.event.inputs.simulation_model_branch }}
         run: |
-          set -a
-          source .env_template
-          set +a
-
           BRANCH="main"
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$INPUT_BRANCH" ]; then
             BRANCH="$INPUT_BRANCH"
@@ -284,16 +297,23 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
+      - name: Export dependency environment
+        run: |
+          python -m pip install pyyaml
+          python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
+
       - name: Set test resource version
         id: test_resources
         run: |
-          SIMTOOLS_TESTS_VERSION=$(grep '^SIMTOOLS_TESTS_VERSION=' .env_template | cut -d '=' -f2-)
+          test -n "$SIMTOOLS_TESTS_VERSION"
+          test -n "$SIMTOOLS_TESTS_REPOSITORY"
           echo "version=$SIMTOOLS_TESTS_VERSION" >> "$GITHUB_OUTPUT"
+          echo "repository=$SIMTOOLS_TESTS_REPOSITORY" >> "$GITHUB_OUTPUT"
 
       - name: Checkout test resources
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
         with:
-          repository: gammasim/simtools-tests
+          repository: ${{ steps.test_resources.outputs.repository }}
           path: simtools-tests
           sparse-checkout: simtools-tests/${{ steps.test_resources.outputs.version }}
 
@@ -316,6 +336,7 @@ jobs:
     env:
       CONTAINER_IMAGE: ${{ inputs.container_image || 'ghcr.io/gammasim/simtools-dev:latest' }}
       IT_NAME: "corsika7-interaction-tables"
+      SIMTOOLS_CORSIKA_INTERACTION_TABLE_PATH: ${{ github.workspace }}/corsika7-interaction-tables/interaction-tables
       SIMULATION_MODELS_PATH: ${{ matrix.model_version == '7.0.0' && '../simulation-models' || '' }}
 
     services:
@@ -345,13 +366,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Export dependency environment
+        run: python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
+
       - name: Configure test resources
         run: |
-          SIMTOOLS_TESTS_VERSION="${{ needs.prepare_test_resources.outputs.test_resources_version }}"
           {
             echo "SIMTOOLS_TESTS_PATH=$GITHUB_WORKSPACE/simtools-tests/simtools-tests"
-            echo "SIMTOOLS_TESTS_VERSION=$SIMTOOLS_TESTS_VERSION"
-            echo "SIMTOOLS_TEST_RESOURCES=$GITHUB_WORKSPACE/simtools-tests/simtools-tests/$SIMTOOLS_TESTS_VERSION/integration_tests"
+            echo "SIMTOOLS_TEST_RESOURCES=$GITHUB_WORKSPACE/simtools-tests/simtools-tests/${{ needs.prepare_test_resources.outputs.test_resources_version }}/integration_tests"
           } >> "$GITHUB_ENV"
 
       - name: Download test resources
@@ -362,10 +384,6 @@ jobs:
 
       - name: Create runtime environment (.env)
         run: |
-          set -a
-          source .env_template
-          set +a
-
           {
             if [ -z "$SIMULATION_MODELS_PATH" ]; then
               DB_SERVER="mongodb"

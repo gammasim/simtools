@@ -33,6 +33,7 @@ class ApplicationDefinition:
     defer_required_validation: bool = False
     usage: str | None = None
     validate_simulation_dependencies: bool = False
+    use_dependency_defaults: bool = True
 
     @classmethod
     def for_module(cls, module_name, **kwargs):
@@ -77,6 +78,7 @@ class ApplicationDefinition:
             label=self.label,
             description=self._description_line(),
             usage=self.usage,
+            use_dependency_defaults=self.use_dependency_defaults,
         )
         config_builder.parser.add_argument_definitions(arguments)
         return config_builder
