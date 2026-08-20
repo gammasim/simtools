@@ -80,7 +80,7 @@ jobs:
         with:
           tags: |
             type=ref,event=pr
-            type=semver,pattern=v{{version}}
+            type=semver,pattern={{version}},prefix=v
             type=schedule,pattern={{date 'YYYYMMDD'}}
             type=raw,value={{date 'YYYYMMDD'}}
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
