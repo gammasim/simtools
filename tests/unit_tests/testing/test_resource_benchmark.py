@@ -143,9 +143,75 @@ def test_pytest_configure_rejects_invalid_options(mocker, option, value, message
     options[option] = value
     config = mocker.MagicMock()
     config.getoption.side_effect = options.get
+    mocker.patch.object(resource_benchmark, "psutil", object())
 
     with pytest.raises(pytest.UsageError, match=message):
         resource_benchmark.pytest_configure(config)
+
+
+def test_pytest_configure_allows_regular_tests_without_psutil(mocker):
+    config = mocker.MagicMock()
+    config.getoption.return_value = None
+    mocker.patch.object(resource_benchmark, "psutil", None)
+
+    resource_benchmark.pytest_configure(config)
+
+    config.pluginmanager.register.assert_not_called()
+
+
+def test_pytest_configure_requires_psutil_for_resource_benchmark(mocker):
+    config = mocker.MagicMock()
+    config.getoption.return_value = Path("benchmark")
+    mocker.patch.object(resource_benchmark, "psutil", None)
+
+    with pytest.raises(
+        pytest.UsageError,
+        match="--resource-benchmark-output requires the optional psutil dependency",
+    ):
+        resource_benchmark.pytest_configure(config)
+
+
+def test_pytest_starts_without_psutil(tmp_test_directory, simtools_root_path):
+    temporary_path = Path(tmp_test_directory)
+    (temporary_path / "sitecustomize.py").write_text(
+        """
+import importlib.abc
+import sys
+
+
+class _BlockPsutil(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname == "psutil":
+            raise ModuleNotFoundError("No module named 'psutil'")
+        return None
+
+
+sys.meta_path.insert(0, _BlockPsutil())
+""",
+        encoding="utf-8",
+    )
+    test_file = temporary_path / "test_sample.py"
+    test_file.write_text("def test_sample(): pass\n", encoding="utf-8")
+    python_path = os.pathsep.join(
+        (str(temporary_path), str(simtools_root_path / "tests"), os.environ.get("PYTHONPATH", ""))
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "--collect-only",
+            "--override-ini=addopts=",
+            str(test_file),
+        ],
+        capture_output=True,
+        cwd=simtools_root_path,
+        env={**os.environ, "PYTHONPATH": python_path},
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 @pytest.mark.xfail(
