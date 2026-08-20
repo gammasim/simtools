@@ -260,24 +260,19 @@ class HTCondorBackend:
 
     @staticmethod
     def _add_apptainer_bind_path(entries, bind_path):
-        """Add an Apptainer bind without nesting it under (or duplicating) an existing bind.
-
-        Apptainer/Singularity rejects a bind whose destination is already covered by another
-        bind (for example a site-wide bind of an AFS or CVMFS root), so binds that are already
-        reachable through an existing entry are skipped, and existing binds that would become
-        redundant once the new, broader bind is added are dropped.
-        """
+        """Add an Apptainer bind without nesting it under (or duplicating) an existing bind."""
         if not bind_path:
             return
+
         bind_paths = [path for path in entries.get("APPTAINER_BINDPATH", "").split(",") if path]
-        candidate = Path(str(bind_path))
-        if HTCondorBackend._is_apptainer_bind_covered(candidate, bind_paths):
-            return
-        bind_paths = [
-            existing
-            for existing in bind_paths
-            if not Path(existing.split(":", 1)[0]).is_relative_to(candidate)
-        ]
+        candidate = Path(str(bind_path).split(":", 1)[0]).resolve()
+
+        # Do not add the same source path twice.
+        for existing in bind_paths:
+            existing_source = Path(existing.split(":", 1)[0]).resolve()
+            if candidate == existing_source:
+                return
+
         bind_paths.append(str(bind_path))
         entries["APPTAINER_BINDPATH"] = ",".join(bind_paths)
 
