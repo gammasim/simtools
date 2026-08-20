@@ -1,30 +1,33 @@
 # Release Candidate
 
-## Test-file generation
+This pull request should be opened from the branch `<version>-rc`, for example
+`v0.36.0-rc`. It should be the final pull request before the release.
 
-This release might require updates to test files in the `simtools-tests` repository.
-This is the case when output format or content of the output files generated
-by simtools changed.
+## Test-resource generation
 
-For updates of test files, the following steps should be performed:
+This release might require updates to test resources in the `simtools-tests` repository when
+simtools changes the output format or content of generated files.
 
-- [ ] define a new version of tests in the [simtools-tests repository](https://github.com/gammasim/simtools-tests).
-- [ ] generate new resource files using `simtools-resources-test-generate` and commit them to the simtools-tests repository.
-- [ ] run unit and integration tests on the new resources (use `--test_resources_path` to point pytest at the new bundle)
-- [ ] ensure again that all unit and integration tests pass with the new resources.
+If test resources must be updated:
+
+- [ ] Define a new test-resource version in the [simtools-tests repository](https://github.com/gammasim/simtools-tests).
+- [ ] Update its workflow configuration to use the release-candidate `simtools-prod` image, including the required
+      image variant and tag.
+- [ ] Generate the new resources with `simtools-resources-test-generate` and commit them to `simtools-tests`.
+- [ ] Run unit and integration tests with the new resources using `--test_resources_path`.
 
 ## Release Preparation Checklist
 
-- [ ] New test files generated and committed to the simtools-tests repository or confirmed that no new test files are required.
-- [ ] All unit and integration tests passed.
-- [ ] Release preparation pull request opened from branch `<version string>-rc` (e.g., `v2.1.3-rc`).
-- [ ] Pull request confirmed as the final pull request before the release.
+- [ ] New test resources are committed to `simtools-tests`, or no resource update is required.
+- [ ] All unit and integration tests pass.
+- [ ] The release-candidate pull request is confirmed as the final pull request before the release.
 - [ ] All notable changes documented in [CHANGELOG.md](https://github.com/gammasim/simtools/blob/main/CHANGELOG.md) using [towncrier](https://towncrier.readthedocs.io/en/stable/):
 
   ```bash
-  towncrier build --yes --version <version string>
+  towncrier build --yes --version v0.36.0
   ```
 
+  Replace `v0.36.0` with the final release version, not the release-candidate version.
   This updates the changelog using the fragments in the `docs/changes` directory.
 
 - [ ] `CHANGELOG.md` reviewed and confirmed complete.
@@ -33,3 +36,10 @@ For updates of test files, the following steps should be performed:
 
 - [ ] Review requested from the simtools team.
 - [ ] Pull request approved and ready to merge to `main`.
+
+## After merging the release-candidate pull request
+
+- [ ] Create and push a release-candidate tag, for example `v0.36.0-rc1`.
+- [ ] Create the corresponding GitHub release and mark it as a pre-release. The `build-simtools-prod` workflow is
+      configured for both candidate-tag pushes and published releases; verify the expected image before generating
+      test resources.
