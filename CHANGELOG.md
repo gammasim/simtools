@@ -35,11 +35,8 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 - Round pointing angles to two decimal places in the metadata file written for the DIRAC interface. ([#2427](https://github.com/gammasim/simtools/pull/2427))
 - Refactor integration test output validation modules. ([#2433](https://github.com/gammasim/simtools/pull/2433))
 - Extend support for handling list-type parameters in the `submit_model_parameter_from_external` application. This allows for more complex parameter structures to be passed and processed correctly. ([#2437](https://github.com/gammasim/simtools/pull/2437))
-- - Remove unit tests’ dependency on repository-local test resources by relocating required fixtures to tests/unit_tests/resources.
-  - Support versioned external integration-test resources via environment configuration and CI artifacts.
-  - Remove obsolete resource-sync tooling and update affected tests and documentation
-
-  ([#2440](https://github.com/gammasim/simtools/pull/2440))
+- Remove unit tests' dependency on repository-local test resources by relocating required fixtures to `tests/unit_tests/resources`; support versioned external integration-test resources via environment configuration and CI artifacts;
+  remove obsolete resource-sync tooling and update affected tests and documentation. ([#2440](https://github.com/gammasim/simtools/pull/2440))
 - Add the meta_parameter input argument to submit_model_parameter_from_external.py to allow setting the meta parameter flag when submitting a model parameter from an external source. ([#2442](https://github.com/gammasim/simtools/pull/2442))
 - Fix instrument name stripping of OBS- prefix when writing the model parameter JSON. ([#2444](https://github.com/gammasim/simtools/pull/2444))
 - Remove Apptainer build steps from container building due to instabilities in the build process. ([#2446](https://github.com/gammasim/simtools/pull/2446))
