@@ -9,8 +9,12 @@ import time
 from collections.abc import Mapping
 from pathlib import Path
 
-import psutil
 import pytest
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 _BYTES_PER_MIB = 1024 * 1024
 _METRICS = ("wall_time_s", "cpu_time_s", "peak_rss_mib")
@@ -49,6 +53,10 @@ def pytest_configure(config):
     output = config.getoption("resource_benchmark_output")
     if output is None:
         return
+    if psutil is None:
+        raise pytest.UsageError(
+            "--resource-benchmark-output requires the optional psutil dependency"
+        )
     mode = config.getoption("resource_benchmark_mode")
     if mode is None:
         raise pytest.UsageError("--resource-benchmark-mode is required")
