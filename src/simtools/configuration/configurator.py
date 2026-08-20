@@ -9,6 +9,7 @@ import astropy.units as u
 
 import simtools.configuration.commandline_parser as argparser
 import simtools.version as simtools_version
+from simtools import dependency_versions
 from simtools.db.mongo_db import jsonschema_db_dict
 from simtools.io import ascii_handler, io_handler
 from simtools.utils import general as gen
@@ -91,6 +92,7 @@ class Configurator:
         file_config = self._config_from_file(config_file)
         constructor_config = gen.change_dict_keys_case(self.config_class_init or {})
         default_config = self._parser_defaults()
+        default_config.update(self._dependency_defaults(default_config))
         cli_keys = self._explicit_cli_keys(cli_arglist)
         self.config_sources = {
             "defaults": set(default_config),
@@ -132,6 +134,23 @@ class Configurator:
             action.dest: action.default
             for action in self.parser._actions  # pylint: disable=protected-access
             if action.default is not argparse.SUPPRESS
+        }
+
+    @staticmethod
+    def _dependency_defaults(parser_defaults):
+        """Return catalog-managed database defaults supported by this parser."""
+        database_keys = {"db_simulation_model", "db_simulation_model_version"}
+        if not database_keys & parser_defaults.keys():
+            return {}
+        catalog = dependency_versions.load_dependency_catalog()
+        model = catalog["model-database"]
+        return {
+            key: value
+            for key, value in {
+                "db_simulation_model": model["name"],
+                "db_simulation_model_version": model["default-version"],
+            }.items()
+            if key in parser_defaults
         }
 
     @staticmethod
@@ -233,7 +252,10 @@ class Configurator:
         dict
             Configuration parameters from environment variables.
         """
-        _env_list = [action.dest for action in self.parser._actions]  # pylint: disable=protected-access
+        _env_list = [
+            action.dest
+            for action in self.parser._actions  # pylint: disable=protected-access
+        ]
         return gen.load_environment_variables(env_file=env_file, env_list=_env_list)
 
     def _initialize_model_versions(self):

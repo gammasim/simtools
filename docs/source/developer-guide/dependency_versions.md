@@ -11,7 +11,8 @@ The dependency information is maintained in two places with distinct responsibil
 - `[project.dependencies]` and `[project.optional-dependencies]` in `pyproject.toml` declare the
   supported direct Python requirements.
 - `dependency_versions.yml` declares the supported Python version, container base images, scientific
-  software releases, archive checksums, and the default simulation-model version.
+  software releases, archive checksums, the default simulation-model version, and the
+  `simtools-tests` repository URL and version.
 
 Dockerfiles do not provide independent version defaults. GitHub Actions reads the catalog with
 
@@ -80,6 +81,9 @@ Published production images include `/opt/simtools/provenance/dependency-manifes
 ## Runtime configuration
 
 `.env_template` supplies runtime defaults and example paths; `.env` remains local and ignored.
-Only the selected simulation-model database name and resolved model version enter runtime
-provenance. Database credentials, server addresses, and user information are never copied into an
-image or dependency manifest.
+The dependency catalog supplies the simulation-model version and the default `simtools-tests`
+version. `.env` supplies local paths, credentials, user settings, and the model database name.
+Users may add either version variable to `.env` for a local override; the catalog remains the
+fallback when no override is present.
+Database credentials, server addresses, and user information are never copied into an image or
+dependency manifest.

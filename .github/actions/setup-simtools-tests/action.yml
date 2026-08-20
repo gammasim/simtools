@@ -32,9 +32,8 @@ runs:
       if: ${{ inputs.extract-simulation-model == 'true' }}
       shell: bash -leo pipefail {0}
       run: |
-        SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL_VERSION=' .env_template | cut -d '=' -f2- | tr -d '"')
-        SIMTOOLS_DB_SIMULATION_MODEL=$(grep 'SIMTOOLS_DB_SIMULATION_MODEL=' .env_template | cut -d '=' -f2- | tr -d '"')
-        SIMTOOLS_DB_SIMULATION_MODEL="${SIMTOOLS_DB_SIMULATION_MODEL//\'/}"
-        echo "SIMTOOLS_DB_SIMULATION_MODEL=$SIMTOOLS_DB_SIMULATION_MODEL" >> "$GITHUB_ENV"
-        echo "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=$SIMTOOLS_DB_SIMULATION_MODEL_VERSION" >> "$GITHUB_ENV"
-        echo "Simulation model set to: $SIMTOOLS_DB_SIMULATION_MODEL version $SIMTOOLS_DB_SIMULATION_MODEL_VERSION"
+        if [[ "${{ inputs.install-dependencies }}" != "true" ]]; then
+          python -m pip install pyyaml
+        fi
+        python src/simtools/applications/dependency_versions.py --format env >> "$GITHUB_ENV"
+        echo "Catalog-managed runtime values exported."

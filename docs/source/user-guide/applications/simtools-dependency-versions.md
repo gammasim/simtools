@@ -12,17 +12,19 @@ The application reads the dependency catalog from the root-level `dependency_ver
 It validates the catalog and exports the declared Python version, component
 releases, optional revisions or digests, archive checksums, and image-build matrices.
 
-Use `--format github-output` in GitHub Actions or local image-build scripts. Use `--format summary`
-for a compact view of the values that will be passed to Docker. The catalog represents intended
-build inputs; use `simtools-dependency-manifest` to inspect the versions actually present in an
-image.
+Use `--format github-output` in GitHub Actions or local image-build scripts. Use `--format env`
+to emit catalog-managed runtime values as dotenv/GitHub Environment assignments; local paths and
+credentials are not emitted. Use `--format summary` for a compact view of the values that will be
+passed to Docker. The catalog represents intended build inputs; use
+`simtools-dependency-manifest` to inspect the versions actually present in an image.
 
 ## Output formats and schemas
 
 | Format | Schema | Purpose |
-| --- | --- |
+| --- | --- | --- |
 | `catalog` | `dependency_versions.schema` 0.1.0 | Validated catalog as formatted JSON. |
 | `summary` | None; derived JSON object | Stable scalar values for image builds. |
+| `env` | None; dotenv/GitHub Environment assignments | Catalog-managed runtime values. |
 | `github-output` | None; GitHub Actions key-value assignments | Build scalars and JSON-encoded matrices. |
 | `python-requirements` | None; pip requirement lines | Direct Python requirements, optionally including named extras. |
 

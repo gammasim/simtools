@@ -106,6 +106,7 @@ def validate_dependency_catalog(catalog):
         "corsika-interaction-tables",
         "archives",
         "model-database",
+        "simtools-tests",
         "production-combinations",
         "corsika",
         "sim-telarray",
@@ -139,6 +140,13 @@ def _validate_components(catalog):
     model_version = catalog.get("model-database", {}).get("default-version", "")
     if model_version.startswith("v"):
         raise ValueError("Model database versions must not start with 'v'.")
+    test_resources = catalog["simtools-tests"]
+    if not test_resources.get("repository"):
+        raise ValueError("simtools-tests repository must be configured.")
+    if not test_resources.get("source-url"):
+        raise ValueError("simtools-tests source URL must be configured.")
+    if not test_resources.get("version"):
+        raise ValueError("simtools-tests version must be configured.")
 
 
 def _validate_production_combinations(catalog):
@@ -203,7 +211,8 @@ def validate_env_template(catalog, template_path):
     Raises
     ------
     ValueError
-        If the model database defaults disagree with the catalog.
+        If the template contains a version that belongs in the catalog or if
+        the model database name disagrees with the catalog.
     """
     values = {}
     for line in Path(template_path).read_text(encoding="utf-8").splitlines():
@@ -212,11 +221,15 @@ def validate_env_template(catalog, template_path):
             continue
         key, value = stripped.split("=", maxsplit=1)
         values[key] = value
+    version_keys = {"SIMTOOLS_DB_SIMULATION_MODEL_VERSION", "SIMTOOLS_TESTS_VERSION"}
+    configured_versions = sorted(version_keys & values.keys())
+    if configured_versions:
+        raise ValueError(
+            ".env_template must not define catalog-managed versions: "
+            + ", ".join(configured_versions)
+        )
     model = catalog["model-database"]
-    expected = {
-        "SIMTOOLS_DB_SIMULATION_MODEL": model["name"],
-        "SIMTOOLS_DB_SIMULATION_MODEL_VERSION": model["default-version"],
-    }
+    expected = {"SIMTOOLS_DB_SIMULATION_MODEL": model["name"]}
     mismatches = {
         key: (values.get(key), value) for key, value in expected.items() if values.get(key) != value
     }
@@ -340,6 +353,9 @@ def dependency_catalog_summary(catalog):
         "corsika_tables_version": catalog["corsika-interaction-tables"]["version"],
         "model_database": catalog["model-database"]["name"],
         "model_version": catalog["model-database"]["default-version"],
+        "simtools_tests_repository": catalog["simtools-tests"]["repository"],
+        "simtools_tests_url": catalog["simtools-tests"]["source-url"],
+        "simtools_tests_version": catalog["simtools-tests"]["version"],
         "dev_corsika_image": _image_reference(
             "ghcr.io/gammasim/corsika7",
             f"v{default_corsika['version']}-generic",
@@ -350,6 +366,29 @@ def dependency_catalog_summary(catalog):
             default_simtel["version"],
             default_simtel.get("image-digest"),
         ),
+    }
+
+
+def dependency_catalog_environment(catalog):
+    """Return catalog-managed runtime values as environment assignments.
+
+    Parameters
+    ----------
+    catalog : dict
+        Validated dependency version catalog.
+
+    Returns
+    -------
+    dict
+        Environment variable names and values for database and test-resource
+        configuration. Local paths and credentials are intentionally omitted.
+    """
+    return {
+        "SIMTOOLS_DB_SIMULATION_MODEL": catalog["model-database"]["name"],
+        "SIMTOOLS_DB_SIMULATION_MODEL_VERSION": catalog["model-database"]["default-version"],
+        "SIMTOOLS_TESTS_VERSION": catalog["simtools-tests"]["version"],
+        "SIMTOOLS_TESTS_REPOSITORY": catalog["simtools-tests"]["repository"],
+        "SIMTOOLS_TESTS_URL": catalog["simtools-tests"]["source-url"],
     }
 
 
@@ -379,7 +418,7 @@ def export_dependency_configuration(pyproject_path=None, output_format="catalog"
         Explicit project file, required for ``python-requirements`` output.
         The repository is searched when omitted for that output format.
     output_format : str, optional
-        One of ``catalog``, ``github-output``, ``python-requirements``, or ``summary``.
+        One of ``catalog``, ``env``, ``github-output``, ``python-requirements``, or ``summary``.
     extras : list of str, optional
         Optional dependency groups included in ``python-requirements`` output.
 
@@ -406,6 +445,10 @@ def export_dependency_configuration(pyproject_path=None, output_format="catalog"
         return json.dumps(catalog, indent=2, sort_keys=True) + "\n"
     if output_format == "summary":
         return json.dumps(dependency_catalog_summary(catalog), sort_keys=True) + "\n"
+    if output_format == "env":
+        return "".join(
+            f"{key}={value}\n" for key, value in dependency_catalog_environment(catalog).items()
+        )
     if output_format == "github-output":
         output = {**dependency_catalog_summary(catalog), **build_workflow_matrices(catalog)}
         return "".join(f"{key}={_github_output_value(value)}\n" for key, value in output.items())

@@ -23,6 +23,10 @@ corsika-interaction-tables:
 model-database:
   name: CTAO-Simulation-Model
   default-version: "0.16.0"
+simtools-tests:
+  repository: gammasim/simtools-tests
+  source-url: https://github.com/gammasim/simtools-tests.git
+  version: v0.36.0
 production-combinations:
   - corsika: "78010"
     sim-telarray: v2025-11-30-rc

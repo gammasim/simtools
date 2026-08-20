@@ -51,6 +51,9 @@ def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
     assert summary["corsika_tables_version"] == "v1.0.0"
     assert summary["dev_corsika_image"] == "ghcr.io/gammasim/corsika7:v78010-generic"
     assert summary["model_version"] == "0.16.0"
+    assert summary["simtools_tests_repository"] == "gammasim/simtools-tests"
+    assert summary["simtools_tests_url"].endswith("/simtools-tests.git")
+    assert summary["simtools_tests_version"] == "v0.36.0"
 
 
 def test_env_template_matches_catalog(simtools_root_path):
@@ -63,8 +66,8 @@ def test_env_template_matches_catalog(simtools_root_path):
     )
 
 
-def test_env_template_rejects_mismatched_model_version(tmp_test_directory, simtools_root_path):
-    """Test invalid model-version defaults are rejected."""
+def test_env_template_rejects_catalog_managed_versions(tmp_test_directory, simtools_root_path):
+    """Test catalog-managed versions are not duplicated in the environment template."""
     catalog = _load_catalog(simtools_root_path)
     template = tmp_test_directory / ".env_template"
     template.write_text(
@@ -73,7 +76,7 @@ def test_env_template_rejects_mismatched_model_version(tmp_test_directory, simto
         encoding="utf-8",
     )
 
-    with pytest.raises(ValueError, match="disagree"):
+    with pytest.raises(ValueError, match="catalog-managed"):
         dependency_versions.validate_env_template(catalog, template)
 
 
@@ -200,6 +203,19 @@ def test_export_dependency_configuration_returns_github_outputs(simtools_root_pa
 
     assert "production_matrix=" in output
     assert "python_version=3.14" in output
+
+
+def test_export_dependency_configuration_returns_environment_values(simtools_root_path):
+    """Test env output contains catalog-managed runtime values only."""
+    output = dependency_versions.export_dependency_configuration(output_format="env")
+
+    assert output.splitlines() == [
+        "SIMTOOLS_DB_SIMULATION_MODEL=CTAO-Simulation-Model",
+        "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=0.16.0",
+        "SIMTOOLS_TESTS_VERSION=v0.36.0",
+        "SIMTOOLS_TESTS_REPOSITORY=gammasim/simtools-tests",
+        "SIMTOOLS_TESTS_URL=https://github.com/gammasim/simtools-tests.git",
+    ]
 
 
 def test_export_dependency_configuration_returns_python_requirements(simtools_root_path):

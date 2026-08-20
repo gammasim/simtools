@@ -91,13 +91,13 @@ The filesystem source takes precedence over MongoDB settings. Integration workfl
 
 Tests resolve resources from the path in `SIMTOOLS_TEST_RESOURCES`. If no full
 resource path is configured, `SIMTOOLS_TESTS_PATH` identifies the
-`simtools-tests` checkout and `SIMTOOLS_TESTS_VERSION` selects its version. The
-command-line options are
-`--test_resources_path` and `--simtools_tests_version`, respectively.
-The default version is maintained in `.env_template`.
+`simtools-tests` checkout. The default version is maintained in
+`dependency_versions.yml`; the command-line option `--simtools_tests_version` can
+select a different version for an individual run. `SIMTOOLS_TESTS_VERSION` in
+`.env` is also supported as a local override.
 
 ```text
-<simtools-tests>/simtools-tests/<SIMTOOLS_TESTS_VERSION>/integration_tests/
+<simtools-tests>/simtools-tests/<catalogued-version>/integration_tests/
   static/
   generated/
   downloaded/
@@ -116,9 +116,11 @@ pytest --test_resources_path /full/path/to/resources \
 To select a version instead of a path:
 
 ```bash
-pytest --simtools_tests_version "$SIMTOOLS_TESTS_VERSION" \
+pytest --simtools_tests_version v0.36.0 \
   tests/integration_tests/test_applications_from_config.py
 ```
+
+When no version is specified, simtools uses the version in `dependency_versions.yml`.
 
 Versioned resource bundles are archived in
 [`gammasim/simtools-tests`](https://github.com/gammasim/simtools-tests). Use
