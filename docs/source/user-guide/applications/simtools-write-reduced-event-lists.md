@@ -44,6 +44,10 @@ columns carrying their Astropy units.
 Provide either `input_files` or `input_file_list`, but not both. Use `max_workers` to control
 parallel output-file processing.
 
+If an HDF5 write fails, the retained incomplete file includes the application activity ID and
+the per-write staging ID in its name. The activity ID matches the UUID in the generated
+`write_reduced_event_lists_<activity_id>.log` file.
+
 ## Command line arguments
 
 ```{eval-rst}

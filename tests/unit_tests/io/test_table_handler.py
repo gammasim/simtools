@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import astropy.units as u
 import h5py
 import numpy as np
@@ -348,6 +350,29 @@ def test_write_tables_hdf5_failure_preserves_existing_output(tmp_path, mock_tabl
         assert hdf5_file.attrs["simtools_write_status"] == "incomplete"
         assert TEST_TABLE_NAME in hdf5_file
         assert "second_table" not in hdf5_file
+
+
+def test_write_table_chunks_includes_activity_id_in_incomplete_filename(
+    tmp_test_directory, mock_table, mocker
+):
+    """Retained incomplete files can be matched to the application log."""
+    output_file = Path(tmp_test_directory) / TEST_H5
+    activity_id = "019d85b6-1f98-715b-b92b-bfbcd06d7cd8"
+    write_id = "019d85b6-1f98-715b-b92b-bfbcd06d7cd9"
+
+    mocker.patch(f"{TABLE_HANDLER_PATH}.general.get_uuid", return_value=write_id)
+
+    def failing_chunks():
+        yield [mock_table]
+        raise RuntimeError("injected chunk failure")
+
+    with pytest.raises(RuntimeError, match="injected chunk failure"):
+        write_table_chunks(failing_chunks(), output_file, activity_id=activity_id)
+
+    incomplete_file = output_file.with_name(
+        f"{output_file.name}.incomplete-{activity_id}-{write_id}"
+    )
+    assert incomplete_file.is_file()
 
 
 def test_write_tables_existing_file(tmp_path, mocker):

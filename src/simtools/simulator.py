@@ -44,6 +44,7 @@ def _write_reduced_event_list_batch(job_spec):
         output_file=Path(output_file),
         overwrite_existing=True,
         metadata_documents=build_metadata_documents,
+        activity_id=metadata_args.get("activity_id") if metadata_args else None,
     )
 
 
