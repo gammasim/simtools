@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import sys
 import tomllib
 from pathlib import Path
 
@@ -38,6 +39,7 @@ def find_dependency_versions(start_path=None):
     start = Path(start_path or Path.cwd()).resolve()
     candidates.extend(parent / DEPENDENCY_VERSIONS_FILENAME for parent in (start, *start.parents))
     candidates.append(Path(__file__).resolve().parents[2] / DEPENDENCY_VERSIONS_FILENAME)
+    candidates.append(Path(sys.prefix) / "simtools" / DEPENDENCY_VERSIONS_FILENAME)
     for candidate in candidates:
         if candidate.is_file():
             return candidate
@@ -138,8 +140,8 @@ def _validate_components(catalog):
             _validate_optional_revision(component.get(key), key)
         _validate_optional_digest(component.get("image-digest"), "sim_telarray image")
     model_version = catalog.get("model-database", {}).get("default-version", "")
-    if model_version.startswith("v"):
-        raise ValueError("Model database versions must not start with 'v'.")
+    if not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?", model_version):
+        raise ValueError("Model database versions must be release tags starting with 'v'.")
     test_resources = catalog["simtools-tests"]
     if not test_resources.get("repository"):
         raise ValueError("simtools-tests repository must be configured.")

@@ -2,6 +2,7 @@
 
 import copy
 import json
+from pathlib import Path
 
 import pytest
 import yaml
@@ -50,7 +51,7 @@ def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
     assert summary["base_image"] == "docker.io/library/almalinux:9.8-minimal"
     assert summary["corsika_tables_version"] == "v1.0.0"
     assert summary["dev_corsika_image"] == "ghcr.io/gammasim/corsika7:v78010-generic"
-    assert summary["model_version"] == "0.16.0"
+    assert summary["model_version"] == catalog["model-database"]["default-version"]
     assert summary["simtools_tests_repository"] == "gammasim/simtools-tests"
     assert summary["simtools_tests_url"].endswith("/simtools-tests.git")
     assert summary["simtools_tests_version"] == "v0.36.0"
@@ -101,8 +102,8 @@ def test_env_template_rejects_catalog_managed_versions(tmp_test_directory, simto
             "Invalid Git revision",
         ),
         (
-            lambda data: data["model-database"].update({"default-version": "v0.16.0"}),
-            "must not start",
+            lambda data: data["model-database"].update({"default-version": "0.16.0"}),
+            "release tags",
         ),
         (
             lambda data: data["production-combinations"][0].update({"cpu-variants": ["unknown"]}),
@@ -151,6 +152,19 @@ def test_find_dependency_versions_raises_when_missing(mocker, tmp_test_directory
 
     with pytest.raises(FileNotFoundError, match="Could not find"):
         dependency_versions.find_dependency_versions(tmp_test_directory)
+
+
+def test_find_dependency_versions_falls_back_to_installed_catalog(
+    monkeypatch, mocker, tmp_test_directory
+):
+    """Test installed applications can use the root catalog installed as data."""
+    installed_catalog = Path(str(tmp_test_directory)) / "simtools" / "dependency_versions.yml"
+    installed_catalog.parent.mkdir()
+    monkeypatch.delenv("SIMTOOLS_DEPENDENCY_VERSIONS", raising=False)
+    monkeypatch.setattr(dependency_versions.sys, "prefix", str(tmp_test_directory))
+    mocker.patch.object(Path, "is_file", lambda path: path == installed_catalog)
+
+    assert dependency_versions.find_dependency_versions(tmp_test_directory) == installed_catalog
 
 
 def test_build_workflow_matrices_uses_optional_image_digests(simtools_root_path):
@@ -208,10 +222,11 @@ def test_export_dependency_configuration_returns_github_outputs(simtools_root_pa
 def test_export_dependency_configuration_returns_environment_values(simtools_root_path):
     """Test env output contains catalog-managed runtime values only."""
     output = dependency_versions.export_dependency_configuration(output_format="env")
+    model_version = _load_catalog(simtools_root_path)["model-database"]["default-version"]
 
     assert output.splitlines() == [
         "SIMTOOLS_DB_SIMULATION_MODEL=CTAO-Simulation-Model",
-        "SIMTOOLS_DB_SIMULATION_MODEL_VERSION=0.16.0",
+        f"SIMTOOLS_DB_SIMULATION_MODEL_VERSION={model_version}",
         "SIMTOOLS_TESTS_VERSION=v0.36.0",
         "SIMTOOLS_TESTS_REPOSITORY=gammasim/simtools-tests",
         "SIMTOOLS_TESTS_URL=https://github.com/gammasim/simtools-tests.git",

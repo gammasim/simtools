@@ -280,7 +280,7 @@ def test_dependency_database_defaults_are_read_from_catalog():
 
     assert defaults == {
         "db_simulation_model": "CTAO-Simulation-Model",
-        "db_simulation_model_version": "0.16.0",
+        "db_simulation_model_version": "v0.17.0",
     }
     assert (
         Configurator._dependency_defaults(  # pylint: disable=protected-access
@@ -293,13 +293,13 @@ def test_dependency_database_defaults_are_read_from_catalog():
 def test_environment_database_version_overrides_catalog(tmp_test_directory, monkeypatch):
     """Test an explicit .env database version overrides the catalog default."""
     env_file = tmp_test_directory / ".env"
-    env_file.write_text("SIMTOOLS_DB_SIMULATION_MODEL_VERSION=0.17.0\n", encoding="utf-8")
+    env_file.write_text("SIMTOOLS_DB_SIMULATION_MODEL_VERSION=v0.17.0\n", encoding="utf-8")
     monkeypatch.delenv("SIMTOOLS_DB_SIMULATION_MODEL_VERSION", raising=False)
 
     configurator = Configurator()
     configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_VERSION,))
 
-    assert configurator._config_from_env(env_file)["db_simulation_model_version"] == "0.17.0"
+    assert configurator._config_from_env(env_file)["db_simulation_model_version"] == "v0.17.0"
 
 
 def test_initialize(configurator):
