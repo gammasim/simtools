@@ -7,6 +7,48 @@ This changelog is generated using [Towncrier](https://towncrier.readthedocs.io/)
 
 <!-- towncrier release notes start -->
 
+## [v0.36.0](https://github.com/gammasim/simtools/releases/tag/v0.36.0) - 2026-08-20
+
+### Bugfixes
+
+- Fix recursively merging of simulation models with `maintain_simulation_model_add_production.py`. ([#2450](https://github.com/gammasim/simtools/pull/2450))
+- Correct treatment of `ct` vs `count` for simulation models. ([#2451](https://github.com/gammasim/simtools/pull/2451))
+- Fix import of psutil for production images. ([#2455](https://github.com/gammasim/simtools/pull/2455))
+
+### Documentation
+
+- Improve application documentation of `simtools-production-generate-grid`. ([#2399](https://github.com/gammasim/simtools/pull/2399))
+
+### New Features
+
+- Introduce a backend-neutral job execution API with local multiprocessing and optional HTCondor support. ([#2406](https://github.com/gammasim/simtools/pull/2406))
+- Add possibility to plot a single layout in `simtools-plot-array-layout` using `--array_layout_name_from_parameter_file`. ([#2434](https://github.com/gammasim/simtools/pull/2434))
+- Add integration and unit test benchmarking with dedicated GH page. ([#2435](https://github.com/gammasim/simtools/pull/2435))
+- Add flexible array layout definition for `array_layouts` model parameter. ([#2436](https://github.com/gammasim/simtools/pull/2436))
+- Add statistical reports with provenance metadata to `simtools-compare-productions`. ([#2449](https://github.com/gammasim/simtools/pull/2449))
+- Keep consistent UUIDs when writing reduced event lists between temporary files and log files. ([#2452](https://github.com/gammasim/simtools/pull/2452))
+
+### Maintenance
+
+- Calculating effective focal length as an average over all simulated stars at different offsets
+  and then exporting it as a model parameter. Added errors to image centroids and focal length. ([#2425](https://github.com/gammasim/simtools/pull/2425))
+- Round pointing angles to two decimal places in the metadata file written for the DIRAC interface. ([#2427](https://github.com/gammasim/simtools/pull/2427))
+- Refactor integration test output validation modules. ([#2433](https://github.com/gammasim/simtools/pull/2433))
+- Extend support for handling list-type parameters in the `submit_model_parameter_from_external` application. This allows for more complex parameter structures to be passed and processed correctly. ([#2437](https://github.com/gammasim/simtools/pull/2437))
+- - Remove unit tests’ dependency on repository-local test resources by relocating required fixtures to tests/unit_tests/resources.
+  - Support versioned external integration-test resources via environment configuration and CI artifacts.
+  - Remove obsolete resource-sync tooling and update affected tests and documentation
+
+  ([#2440](https://github.com/gammasim/simtools/pull/2440))
+- Add the meta_parameter input argument to submit_model_parameter_from_external.py to allow setting the meta parameter flag when submitting a model parameter from an external source. ([#2442](https://github.com/gammasim/simtools/pull/2442))
+- Fix instrument name stripping of OBS- prefix when writing the model parameter JSON. ([#2444](https://github.com/gammasim/simtools/pull/2444))
+- Remove Apptainer build steps from container building due to instabilities in the build process. ([#2446](https://github.com/gammasim/simtools/pull/2446))
+- Add flags to pytest to print out reasons for skipped and xfailed tests. ([#2448](https://github.com/gammasim/simtools/pull/2448))
+- Don't deploy to PyPI for release candidates. ([#2453](https://github.com/gammasim/simtools/pull/2453))
+- Centralize dependency and runtime version management in `dependency_versions.yml`, including simulation-model and simtools-tests versions.
+  Add environment export support for CI while preserving .env overrides ([#2454](https://github.com/gammasim/simtools/pull/2454))
+
+
 ## [v0.35.0](https://github.com/gammasim/simtools/releases/tag/v0.35.0) - 2026-08-07
 
 ### API Changes
