@@ -296,6 +296,22 @@ def test_dependency_database_defaults_are_read_from_catalog():
     ) == {"db_simulation_model_version": "v0.17.0"}
 
 
+def test_configure_can_disable_dependency_defaults(configurator):
+    """Test applications can preserve explicit database-target validation."""
+    configurator.use_dependency_defaults = False
+    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_VERSION,))
+    configurator._get_cli_arglist = MagicMock(return_value=[])
+    configurator._config_from_env = MagicMock(return_value={})
+    configurator._config_from_file = MagicMock(return_value={})
+    configurator._initialize_model_versions = MagicMock()
+    configurator._initialize_io_handler = MagicMock()
+    configurator._get_db_parameters = MagicMock(return_value={})
+
+    config, _ = configurator.configure()
+
+    assert config["db_simulation_model_version"] is None
+
+
 def test_environment_database_version_overrides_catalog(
     configurator, tmp_test_directory, monkeypatch
 ):

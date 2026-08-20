@@ -42,7 +42,9 @@ class Configurator:
         Application usage description.
     """
 
-    def __init__(self, config=None, label=None, description=None, usage=None):
+    def __init__(
+        self, config=None, label=None, description=None, usage=None, use_dependency_defaults=True
+    ):
         """Initialize Configurator."""
         self._logger = logging.getLogger(__name__)
         self._logger.debug("Init Configuration")
@@ -50,6 +52,7 @@ class Configurator:
         self.config_class_init = config
         self.label = label
         self.config = {}
+        self.use_dependency_defaults = use_dependency_defaults
         self.config_sources = {
             "defaults": set(),
             "environment": set(),
@@ -92,7 +95,8 @@ class Configurator:
         file_config = self._config_from_file(config_file)
         constructor_config = gen.change_dict_keys_case(self.config_class_init or {})
         default_config = self._parser_defaults()
-        default_config.update(self._dependency_defaults(default_config))
+        if self.use_dependency_defaults:
+            default_config.update(self._dependency_defaults(default_config))
         cli_keys = self._explicit_cli_keys(cli_arglist)
         self.config_sources = {
             "defaults": set(default_config),
