@@ -13,7 +13,7 @@ import pytest
 
 try:
     import psutil
-except ImportError:
+except ModuleNotFoundError:
     psutil = None
 
 _BYTES_PER_MIB = 1024 * 1024
