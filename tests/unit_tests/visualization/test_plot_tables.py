@@ -753,3 +753,96 @@ def test_configure_bias_curve_axis_without_legend_logs_warning(mock_logger):
     mock_logger.warning.assert_called_once_with(
         "No NSB or proton rates found; writing empty bias-curve plot"
     )
+
+
+@mock.patch("simtools.visualization.plot_tables._add_trigger_threshold_to_legend")
+@mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
+@mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
+@mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
+@mock.patch("simtools.visualization.plot_tables.plt")
+def test_plot_bias_curves_with_trigger_threshold(
+    mock_plt,
+    mock_plot_nsb_curve,
+    mock_plot_proton_curve,
+    mock_configure_axis,
+    mock_add_threshold,
+    tmp_path,
+):
+    """Test that trigger threshold is passed to annotation function."""
+    mock_fig = mock.MagicMock()
+    mock_axis = mock.MagicMock()
+    mock_plt.subplots.return_value = (mock_fig, mock_axis)
+
+    output_path = tmp_path / "bias.png"
+    config = {"title": "Bias", "ymin": 1, "ymax": 1e6}
+    trigger_threshold = 250.0
+
+    plot_tables.plot_bias_curves(
+        {220: {"rate_hz": 10, "error_hz": 1}},
+        {220: {"rate_hz": 5}},
+        config,
+        output_path,
+        trigger_threshold,
+    )
+
+    mock_add_threshold.assert_called_once_with(mock_axis, trigger_threshold)
+
+
+@mock.patch("simtools.visualization.plot_tables._add_trigger_threshold_to_legend")
+@mock.patch("simtools.visualization.plot_tables._configure_bias_curve_axis")
+@mock.patch("simtools.visualization.plot_tables._plot_proton_curve")
+@mock.patch("simtools.visualization.plot_tables._plot_nsb_curve")
+@mock.patch("simtools.visualization.plot_tables.plt")
+def test_plot_bias_curves_without_trigger_threshold(
+    mock_plt,
+    mock_plot_nsb_curve,
+    mock_plot_proton_curve,
+    mock_configure_axis,
+    mock_add_threshold,
+    tmp_path,
+):
+    """Test that annotation is skipped when no trigger threshold is provided."""
+    mock_fig = mock.MagicMock()
+    mock_axis = mock.MagicMock()
+    mock_plt.subplots.return_value = (mock_fig, mock_axis)
+
+    output_path = tmp_path / "bias.png"
+    config = {"title": "Bias", "ymin": 1, "ymax": 1e6}
+
+    plot_tables.plot_bias_curves(
+        {220: {"rate_hz": 10, "error_hz": 1}},
+        {220: {"rate_hz": 5}},
+        config,
+        output_path,
+        trigger_threshold=None,  # No threshold provided
+    )
+
+    mock_add_threshold.assert_not_called()
+
+
+def test_add_trigger_threshold_to_legend():
+    """Test that trigger threshold is added to legend correctly."""
+    axis = mock.MagicMock()
+
+    # Mock existing handles and labels
+    existing_handle = mock.MagicMock()
+    axis.get_legend_handles_labels.return_value = ([existing_handle], ["Existing Label"])
+
+    trigger_threshold = 250.0
+
+    plot_tables._add_trigger_threshold_to_legend(axis, trigger_threshold)
+    axis.legend.assert_called_once()
+    call_args = axis.legend.call_args
+    assert len(call_args.args[0]) == 2  # handles
+    assert len(call_args.args[1]) == 2  # labels
+    assert "Trigger Threshold: 250.0" in call_args.args[1]
+
+
+def test_add_trigger_threshold_to_legend_formats_float():
+    """Test that trigger threshold is formatted with 1 decimal place."""
+    axis = mock.MagicMock()
+    axis.get_legend_handles_labels.return_value = ([], [])
+    trigger_threshold = 250.123456
+    plot_tables._add_trigger_threshold_to_legend(axis, trigger_threshold)
+    call_args = axis.legend.call_args
+    assert "Trigger Threshold: 250.1" in call_args.args[1]
