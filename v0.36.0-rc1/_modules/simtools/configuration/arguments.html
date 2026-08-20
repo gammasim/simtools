@@ -1,0 +1,1464 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simtools.configuration.arguments &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../../_static/documentation_options.js?v=a4af04ef"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simtools/configuration/arguments';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.20.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.36.0rc1" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user-guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools.configuration.arguments</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for simtools.configuration.arguments</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Authoritative command-line argument definitions for simtools applications."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MappingProxyType</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">astropy.units</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">u</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.configuration.argument_helpers</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">helpers</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">simtools.version</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools</span><span class="w"> </span><span class="kn">import</span> <span class="n">constants</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.configuration</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaults</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simtools.corsika.primary_particle</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrimaryParticle</span>
+
+
+<div class="viewcode-block" id="ArgumentDefinition">
+<a class="viewcode-back" href="../../../api-reference/configuration_module.html#simtools.configuration.arguments.ArgumentDefinition">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ArgumentDefinition</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Definition of one command-line argument."""</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">group</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">exclusive_group</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">exclusive_group_required</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">preserve_by_version</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">kwargs</span><span class="p">:</span> <span class="n">Mapping</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">group</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">exclusive_group</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">exclusive_group_required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">preserve_by_version</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"-"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid argument name: </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"group"</span><span class="p">,</span> <span class="n">group</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"exclusive_group"</span><span class="p">,</span> <span class="n">exclusive_group</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"exclusive_group_required"</span><span class="p">,</span> <span class="n">exclusive_group_required</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"preserve_by_version"</span><span class="p">,</span> <span class="n">preserve_by_version</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"kwargs"</span><span class="p">,</span> <span class="n">MappingProxyType</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">overrides</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return a copy with application-local argparse overrides."""</span>
+        <span class="k">return</span> <span class="n">ArgumentDefinition</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">,</span>
+            <span class="n">exclusive_group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">exclusive_group</span><span class="p">,</span>
+            <span class="n">exclusive_group_required</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">exclusive_group_required</span><span class="p">,</span>
+            <span class="n">preserve_by_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">preserve_by_version</span><span class="p">,</span>
+            <span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">overrides</span><span class="p">},</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="ArgumentDefinition.without_requiredness">
+<a class="viewcode-back" href="../../../api-reference/configuration_module.html#simtools.configuration.arguments.ArgumentDefinition.without_requiredness">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">without_requiredness</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return a copy whose required constraints can be validated after parsing."""</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"required"</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"required"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">ArgumentDefinition</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">,</span>
+            <span class="n">exclusive_group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">exclusive_group</span><span class="p">,</span>
+            <span class="n">exclusive_group_required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">preserve_by_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">preserve_by_version</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_argument</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Create a shared argument definition."""</span>
+    <span class="k">return</span> <span class="n">ArgumentDefinition</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="n">_RUN_TIME_GROUP</span> <span class="o">=</span> <span class="s2">"run time"</span>
+<span class="n">_DATABASE_CONFIGURATION_GROUP</span> <span class="o">=</span> <span class="s2">"database configuration"</span>
+<span class="n">_SIMULATION_MODEL_GROUP</span> <span class="o">=</span> <span class="s2">"simulation model"</span>
+<span class="n">_SIMULATION_CONFIGURATION_GROUP</span> <span class="o">=</span> <span class="s2">"simulation configuration"</span>
+<span class="n">_SHOWER_PARAMETERS_GROUP</span> <span class="o">=</span> <span class="s2">"shower parameters"</span>
+<span class="n">_SIM_TELARRAY_CONFIGURATION_GROUP</span> <span class="o">=</span> <span class="s2">"sim_telarray configuration"</span>
+<span class="n">_CORSIKA_CONFIGURATION_GROUP</span> <span class="o">=</span> <span class="s2">"corsika configuration"</span>
+
+
+<span class="n">CONFIG</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"config"</span><span class="p">,</span>
+    <span class="s2">"configuration"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Application configuration file."</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ENV_FILE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"env_file"</span><span class="p">,</span>
+    <span class="s2">"configuration"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"File containing environment variables."</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">".env"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">CONFIGURATION_ARGUMENTS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">CONFIG</span><span class="p">,</span>
+    <span class="n">ENV_FILE</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">OUTPUT_PATH</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"output_path"</span><span class="p">,</span>
+    <span class="s2">"paths"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Directory for files produced by this application."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">"./simtools-output/"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">SIM_TELARRAY_PATH</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"sim_telarray_path"</span><span class="p">,</span>
+    <span class="s2">"paths"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"sim_telarray installation directory."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">CORSIKA_PATH</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"corsika_path"</span><span class="p">,</span>
+    <span class="s2">"paths"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="sa">f</span><span class="s2">"CORSIKA installation directory (default: </span><span class="si">{</span><span class="n">defaults</span><span class="o">.</span><span class="n">CORSIKA_PATH</span><span class="si">}</span><span class="s2">)."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">CORSIKA_INTERACTION_TABLE_PATH</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"corsika_interaction_table_path"</span><span class="p">,</span>
+    <span class="s2">"paths"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"CORSIKA interaction-table directory (default: </span><span class="si">{</span><span class="n">defaults</span><span class="o">.</span><span class="n">CORSIKA_INTERACTION_TABLE_PATH</span><span class="si">}</span><span class="s2">)."</span>
+    <span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">DATA_SEARCH_PATH</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"data_search_path"</span><span class="p">,</span>
+    <span class="s2">"paths"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Directory used to resolve relative input data files."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="n">Path</span><span class="p">(),</span>
+<span class="p">)</span>
+
+<span class="n">OUTPUT_PATH_ARGUMENTS</span> <span class="o">=</span> <span class="p">(</span><span class="n">OUTPUT_PATH</span><span class="p">,)</span>
+
+<span class="n">BACKEND</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"backend"</span><span class="p">,</span>
+    <span class="s2">"execution"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Execution backend for independent jobs (default: local)."</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">"local"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">BACKEND_CONFIG</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"backend_config"</span><span class="p">,</span>
+    <span class="s2">"execution"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Backend configuration file or inline dictionary."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">string_or_dict</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">BACKEND_ARGUMENTS</span> <span class="o">=</span> <span class="p">(</span><span class="n">BACKEND</span><span class="p">,</span> <span class="n">BACKEND_CONFIG</span><span class="p">)</span>
+
+<span class="n">SIM_TELARRAY_PATH_ARGUMENTS</span> <span class="o">=</span> <span class="p">(</span><span class="n">SIM_TELARRAY_PATH</span><span class="p">,)</span>
+
+<span class="n">CORSIKA_PATH_ARGUMENTS</span> <span class="o">=</span> <span class="p">(</span><span class="n">CORSIKA_PATH</span><span class="p">,</span> <span class="n">CORSIKA_INTERACTION_TABLE_PATH</span><span class="p">)</span>
+
+<span class="n">OUTPUT_FILE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"output_file"</span><span class="p">,</span>
+    <span class="s2">"output"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Output data file."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">OUTPUT_FILE_FORMAT</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"output_file_format"</span><span class="p">,</span>
+    <span class="s2">"output"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"file format of output data"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">"ecsv"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">SKIP_OUTPUT_VALIDATION</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"skip_output_validation"</span><span class="p">,</span>
+    <span class="s2">"output"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"skip output data validation against schema"</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">OUTPUT_ARGUMENTS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">OUTPUT_FILE</span><span class="p">,</span>
+    <span class="n">OUTPUT_FILE_FORMAT</span><span class="p">,</span>
+    <span class="n">SKIP_OUTPUT_VALIDATION</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">RUNTIME_ENVIRONMENT_FILE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"runtime_environment_file"</span><span class="p">,</span>
+    <span class="n">_RUN_TIME_GROUP</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Path to a standalone runtime-environment YAML file (top-level 'runtime_environment')."</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">APPTAINER_IMAGE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"apptainer_image"</span><span class="p">,</span>
+    <span class="n">_RUN_TIME_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Apptainer image path or a dictionary mapping labels to image paths."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">string_or_dict</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">IGNORE_RUNTIME_ENVIRONMENT</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"ignore_runtime_environment"</span><span class="p">,</span>
+    <span class="n">_RUN_TIME_GROUP</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Ignore the runtime environment and run the application in the current environment."</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">OVERWRITE_COLLECTION_FILES</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"overwrite_collection_files"</span><span class="p">,</span>
+    <span class="n">_RUN_TIME_GROUP</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Allow files copied by the workflow collection block to overwrite existing "</span>
+        <span class="s2">"files with identical names."</span>
+    <span class="p">),</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">RUN_TIME_ARGUMENTS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">RUNTIME_ENVIRONMENT_FILE</span><span class="p">,</span>
+    <span class="n">APPTAINER_IMAGE</span><span class="p">,</span>
+    <span class="n">IGNORE_RUNTIME_ENVIRONMENT</span><span class="p">,</span>
+    <span class="n">OVERWRITE_COLLECTION_FILES</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ACTIVITY_ID</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"activity_id"</span><span class="p">,</span>
+    <span class="s2">"execution"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Activity identifier."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">TEST</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"test"</span><span class="p">,</span>
+    <span class="s2">"execution"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"test option for faster execution during development"</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">LABEL</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"label"</span><span class="p">,</span>
+    <span class="s2">"execution"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Application run label."</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">LOG_LEVEL</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"log_level"</span><span class="p">,</span>
+    <span class="s2">"execution"</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="s2">"store"</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">"info"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Logging level."</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">LOG_FILE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"log_file"</span><span class="p">,</span>
+    <span class="s2">"execution"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Log file."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">LOG_FILE_PATH</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"log_file_path"</span><span class="p">,</span>
+    <span class="s2">"execution"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Directory for the generated log file."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">DISABLE_LOG_FILE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"disable_log_file"</span><span class="p">,</span>
+    <span class="s2">"execution"</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">FIGURE_FORMAT</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"figure_format"</span><span class="p">,</span>
+    <span class="s2">"execution"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"output figure format(s)"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">"png"</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">EXPORT_BUILD_INFO</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"export_build_info"</span><span class="p">,</span>
+    <span class="s2">"execution"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Write build information to this file."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">IGNORE_EXISTING_PARAMETER_VERSION</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"ignore_existing_parameter_version"</span><span class="p">,</span>
+    <span class="s2">"execution"</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"skip checking for an existing model parameter version in the database"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">VERSION</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"version"</span><span class="p">,</span>
+    <span class="s2">"execution"</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="s2">"version"</span><span class="p">,</span>
+    <span class="n">version</span><span class="o">=</span><span class="sa">f</span><span class="s2">"%(prog)s </span><span class="si">{</span><span class="n">simtools</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">BUILD_INFO</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"build_info"</span><span class="p">,</span>
+    <span class="s2">"execution"</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">BuildInfoAction</span><span class="p">,</span>
+    <span class="n">build_info</span><span class="o">=</span><span class="sa">f</span><span class="s2">"%(prog)s </span><span class="si">{</span><span class="n">simtools</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Show build information and exit."</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">EXECUTION_ARGUMENTS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">ACTIVITY_ID</span><span class="p">,</span>
+    <span class="n">TEST</span><span class="p">,</span>
+    <span class="n">LABEL</span><span class="p">,</span>
+    <span class="n">LOG_LEVEL</span><span class="p">,</span>
+    <span class="n">LOG_FILE</span><span class="p">,</span>
+    <span class="n">LOG_FILE_PATH</span><span class="p">,</span>
+    <span class="n">DISABLE_LOG_FILE</span><span class="p">,</span>
+    <span class="n">FIGURE_FORMAT</span><span class="p">,</span>
+    <span class="n">EXPORT_BUILD_INFO</span><span class="p">,</span>
+    <span class="n">IGNORE_EXISTING_PARAMETER_VERSION</span><span class="p">,</span>
+    <span class="n">VERSION</span><span class="p">,</span>
+    <span class="n">BUILD_INFO</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">USER_NAME</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"user_name"</span><span class="p">,</span>
+    <span class="s2">"user"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"user name"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">USER_ORGANIZATION</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"user_organization"</span><span class="p">,</span>
+    <span class="s2">"user"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"user organization"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">USER_EMAIL</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"user_email"</span><span class="p">,</span>
+    <span class="s2">"user"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"user email"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">USER_ORCID</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"user_orcid"</span><span class="p">,</span>
+    <span class="s2">"user"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"user ORCID"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">USER_ARGUMENTS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">USER_NAME</span><span class="p">,</span>
+    <span class="n">USER_ORGANIZATION</span><span class="p">,</span>
+    <span class="n">USER_EMAIL</span><span class="p">,</span>
+    <span class="n">USER_ORCID</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">DB_API_USER</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"db_api_user"</span><span class="p">,</span>
+    <span class="n">_DATABASE_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Database username."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">SIMULATION_MODELS_PATH</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"simulation_models_path"</span><span class="p">,</span>
+    <span class="n">_DATABASE_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Path containing simulation model files; when set, model parameters are read "</span>
+        <span class="s2">"from files instead of MongoDB."</span>
+    <span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">DATABASE_NAME</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"database_name"</span><span class="p">,</span>
+    <span class="s2">"application"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Database name."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">DB_API_PW</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"db_api_pw"</span><span class="p">,</span>
+    <span class="n">_DATABASE_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Database password."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">DB_API_PORT</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"db_api_port"</span><span class="p">,</span>
+    <span class="n">_DATABASE_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Database server port."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">DB_SERVER</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"db_server"</span><span class="p">,</span>
+    <span class="n">_DATABASE_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Database server address."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">DB_API_AUTHENTICATION_DATABASE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"db_api_authentication_database"</span><span class="p">,</span>
+    <span class="n">_DATABASE_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Authentication database name."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">DB_SIMULATION_MODEL</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"db_simulation_model"</span><span class="p">,</span>
+    <span class="n">_DATABASE_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Simulation-model database name."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">strip</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">DB_SIMULATION_MODEL_VERSION</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"db_simulation_model_version"</span><span class="p">,</span>
+    <span class="n">_DATABASE_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Simulation-model database version."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">strip</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">DATABASE_ARGUMENTS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">SIMULATION_MODELS_PATH</span><span class="p">,</span>
+    <span class="n">DB_API_USER</span><span class="p">,</span>
+    <span class="n">DB_API_PW</span><span class="p">,</span>
+    <span class="n">DB_API_PORT</span><span class="p">,</span>
+    <span class="n">DB_SERVER</span><span class="p">,</span>
+    <span class="n">DB_API_AUTHENTICATION_DATABASE</span><span class="p">,</span>
+    <span class="n">DB_SIMULATION_MODEL</span><span class="p">,</span>
+    <span class="n">DB_SIMULATION_MODEL_VERSION</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">MODEL_VERSION</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"model_version"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_MODEL_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Simulation production model version(s). Use --show_options model_version."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">PARAMETER_VERSION</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"parameter_version"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_MODEL_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"model parameter version"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">UPDATED_PARAMETER_VERSION</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"updated_parameter_version"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_MODEL_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"updated parameter version"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">OVERWRITE_MODEL_PARAMETERS</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"overwrite_model_parameters"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_MODEL_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"File name to overwrite model parameters from DB with provided values"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">SITE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"site"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_MODEL_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Observatory site (e.g., North, South). Use --show_options site."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">site</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">TELESCOPE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"telescope"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_MODEL_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"telescope model name (e.g., LSTN-01, SSTS-design, ...)"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">telescope</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">TELESCOPES</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"telescopes"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_MODEL_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"list of telescopes (e.g., LSTN-01, SSTS-design, ...)"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">telescope</span><span class="p">,</span>
+    <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ARRAY_LAYOUT_NAME</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"array_layout_name"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_MODEL_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Array layout name(s) (e.g., CTAO-North-Alpha, LSTN-01). "</span>
+        <span class="s2">"Telescope names are assumed as single-telescope layouts. "</span>
+        <span class="s2">"Use --show_options array_layout_name."</span>
+    <span class="p">),</span>
+    <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">preserve_by_version</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ARRAY_ELEMENT_LIST</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"array_element_list"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_MODEL_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"list of array elements (e.g., LSTN-01, LSTN-02, MSTN)."</span><span class="p">,</span>
+    <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ARRAY_LAYOUT_FILE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"array_layout_file"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_MODEL_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"file(s) with the list of array elements (astropy table format)."</span><span class="p">,</span>
+    <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ARRAY_LAYOUT_PARAMETER_FILE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"array_layout_parameter_file"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_MODEL_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Array layout model parameter file (typically in JSON format)."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ARRAY_LAYOUT_NAME_FROM_PARAMETER_FILE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"array_layout_name_from_parameter_file"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_MODEL_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Array layout name(s) to plot from an array layout parameter file."</span><span class="p">,</span>
+    <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">PLOT_ALL_LAYOUTS</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"plot_all_layouts"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_MODEL_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"plot all available layouts"</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">IGNORE_MISSING_DESIGN_MODEL</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"ignore_missing_design_model"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_MODEL_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Ignore missing design model definition of DB"</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">SIMULATION_SOFTWARE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"simulation_software"</span><span class="p">,</span>
+    <span class="s2">"simulation software"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Simulation software workflow."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">choices</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">defaults</span><span class="o">.</span><span class="n">SIMULATION_SOFTWARE_CHOICES</span><span class="p">),</span>
+    <span class="n">default</span><span class="o">=</span><span class="n">defaults</span><span class="o">.</span><span class="n">SIMULATION_SOFTWARE_DEFAULT</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">PRIMARY</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"primary"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Primary particle(s) to simulate. Common names: "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PrimaryParticle</span><span class="o">.</span><span class="n">particle_names</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">. Use --show_options primary."</span>
+    <span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">OneOrManyAction</span><span class="p">,</span>
+    <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">PRIMARY_ID_TYPE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"primary_id_type"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Primary particle ID type"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">"common_name"</span><span class="p">,</span> <span class="s2">"corsika7_id"</span><span class="p">,</span> <span class="s2">"pdg_id"</span><span class="p">],</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">"common_name"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">AZIMUTH_ANGLE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"azimuth_angle"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Telescope pointing direction in azimuth. It can be in degrees between 0 and 360 "</span>
+        <span class="s2">"or one of north, south, east or west. North is 0 degrees and the azimuth grows "</span>
+        <span class="s2">"clockwise (East is 90 degrees)."</span>
+    <span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">azimuth_angle</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">OneOrManyAction</span><span class="p">,</span>
+    <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ZENITH_ANGLE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"zenith_angle"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Zenith angle in degrees (between 0 and 180)."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">OneOrManyAction</span><span class="p">,</span>
+    <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">20</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">SHOWERS_PER_RUN</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"showers_per_run"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Baseline number of CORSIKA showers per run."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">RUN_NUMBER_OFFSET</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"run_number_offset"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Offset added to each run number."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">RUN_NUMBER</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"run_number"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Run number to be simulated."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">NUMBER_OF_RUNS</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"number_of_runs"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Number of runs."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">scientific_int</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">EVENT_NUMBER_FIRST_SHOWER</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"event_number_first_shower"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Event number of first shower"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">CORRECT_FOR_B_FIELD_ALIGNMENT</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"correct_for_b_field_alignment"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Align North with geographic North (and not magnetic North)."</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">BooleanOptionalAction</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"curved_atmosphere_min_zenith_angle"</span><span class="p">,</span>
+    <span class="n">_SIMULATION_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Minimum zenith angle (deg) for using curved-atmosphere CORSIKA binaries. "</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="n">defaults</span><span class="o">.</span><span class="n">CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE_DEG</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">CORSIKA_CONFIGURATION_ARGUMENTS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">PRIMARY</span><span class="p">,</span>
+    <span class="n">PRIMARY_ID_TYPE</span><span class="p">,</span>
+    <span class="n">AZIMUTH_ANGLE</span><span class="p">,</span>
+    <span class="n">ZENITH_ANGLE</span><span class="p">,</span>
+    <span class="n">SHOWERS_PER_RUN</span><span class="p">,</span>
+    <span class="n">RUN_NUMBER_OFFSET</span><span class="p">,</span>
+    <span class="n">RUN_NUMBER</span><span class="p">,</span>
+    <span class="n">EVENT_NUMBER_FIRST_SHOWER</span><span class="p">,</span>
+    <span class="n">CORRECT_FOR_B_FIELD_ALIGNMENT</span><span class="p">,</span>
+    <span class="n">CURVED_ATMOSPHERE_MIN_ZENITH_ANGLE</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ESLOPE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"eslope"</span><span class="p">,</span>
+    <span class="n">_SHOWER_PARAMETERS_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Slope of the energy spectrum."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=-</span><span class="mf">2.0</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ENERGY_RANGE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"energy_range"</span><span class="p">,</span>
+    <span class="n">_SHOWER_PARAMETERS_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Minimum and maximum primary energy, e.g. '10 GeV 5 TeV'."</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">QuantityPairAction</span><span class="p">,</span>
+    <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">GeV</span><span class="p">,</span> <span class="mi">330</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">TeV</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">VIEW_CONE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"view_cone"</span><span class="p">,</span>
+    <span class="n">_SHOWER_PARAMETERS_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Minimum and maximum view-cone radius, e.g. '0 deg 10 deg'."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">parse_quantity_pair</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">"0 deg 0 deg"</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">CORE_SCATTER</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"core_scatter"</span><span class="p">,</span>
+    <span class="n">_SHOWER_PARAMETERS_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Core positions per shower and maximum scatter radius, e.g. '10 500 m'."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">parse_integer_and_quantity</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">"10 10000 m"</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">SHOWER_ARGUMENTS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">ESLOPE</span><span class="p">,</span>
+    <span class="n">ENERGY_RANGE</span><span class="p">,</span>
+    <span class="n">VIEW_CONE</span><span class="p">,</span>
+    <span class="n">CORE_SCATTER</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">CORSIKA_HE_INTERACTION</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"corsika_he_interaction"</span><span class="p">,</span>
+    <span class="n">_CORSIKA_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"High-energy interaction model for CORSIKA "</span>
+        <span class="sa">f</span><span class="s2">"(default fallback: </span><span class="si">{</span><span class="n">defaults</span><span class="o">.</span><span class="n">CORSIKA_HE_INTERACTION</span><span class="si">}</span><span class="s2">). "</span>
+        <span class="s2">"Use --show_options corsika_he_interaction."</span>
+    <span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">OneOrManyAction</span><span class="p">,</span>
+    <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">CORSIKA_LE_INTERACTION</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"corsika_le_interaction"</span><span class="p">,</span>
+    <span class="n">_CORSIKA_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Low-energy interaction model for CORSIKA "</span>
+        <span class="sa">f</span><span class="s2">"(default fallback: </span><span class="si">{</span><span class="n">defaults</span><span class="o">.</span><span class="n">CORSIKA_LE_INTERACTION</span><span class="si">}</span><span class="s2">). "</span>
+        <span class="s2">"Use --show_options corsika_le_interaction."</span>
+    <span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">OneOrManyAction</span><span class="p">,</span>
+    <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">CORSIKA_HADRONIC_TRANSITION_ENERGY</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"corsika_hadronic_transition_energy"</span><span class="p">,</span>
+    <span class="n">_CORSIKA_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Transition energy between the low- and high-energy CORSIKA hadronic "</span>
+        <span class="s2">"interaction models. Unitless values are interpreted as GeV. If omitted, "</span>
+        <span class="s2">"the CORSIKA build default is used."</span>
+    <span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">positive_quantity</span><span class="p">(</span><span class="s2">"GeV"</span><span class="p">),</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">CORSIKA_INTERACTION_ARGUMENTS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">CORSIKA_HE_INTERACTION</span><span class="p">,</span>
+    <span class="n">CORSIKA_LE_INTERACTION</span><span class="p">,</span>
+    <span class="n">CORSIKA_HADRONIC_TRANSITION_ENERGY</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">SIM_TELARRAY_INSTRUMENT_SEED</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"sim_telarray_instrument_seed"</span><span class="p">,</span>
+    <span class="n">_SIM_TELARRAY_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Random seed used for sim_telarray instrument setup."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">bounded_int</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">constants</span><span class="o">.</span><span class="n">SIMTEL_MAX_SEED</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">SIM_TELARRAY_RANDOM_INSTRUMENT_INSTANCES</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"sim_telarray_random_instrument_instances"</span><span class="p">,</span>
+    <span class="n">_SIM_TELARRAY_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Number of random instrument instances initialized in sim_telarray."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">bounded_int</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1024</span><span class="p">),</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">SIM_TELARRAY_SEED</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"sim_telarray_seed"</span><span class="p">,</span>
+    <span class="n">_SIM_TELARRAY_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Random seed used for sim_telarray simulation. Single value: seed for event "</span>
+        <span class="s2">"simulation. Two values: [instrument_seed, simulation_seed] (use for testing only)."</span>
+    <span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">bounded_int</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">constants</span><span class="o">.</span><span class="n">SIMTEL_MAX_SEED</span><span class="p">),</span>
+    <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">SIM_TELARRAY_SEED_FILE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"sim_telarray_seed_file"</span><span class="p">,</span>
+    <span class="n">_SIM_TELARRAY_CONFIGURATION_GROUP</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="s2">"sim_telarray_instrument_seeds.txt"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">SIM_TELARRAY_ARGUMENTS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">SIM_TELARRAY_INSTRUMENT_SEED</span><span class="p">,</span>
+    <span class="n">SIM_TELARRAY_RANDOM_INSTRUMENT_INSTANCES</span><span class="p">,</span>
+    <span class="n">SIM_TELARRAY_SEED</span><span class="p">,</span>
+    <span class="n">SIM_TELARRAY_SEED_FILE</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">SOURCE_DISTANCE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"source_distance"</span><span class="p">,</span>
+    <span class="s2">"application"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Source distance in km (unitless values are interpreted as km)."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">quantity</span><span class="p">(</span><span class="s2">"km"</span><span class="p">),</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">10</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">km</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">RAY_TRACING_ZENITH_ANGLE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"zenith_angle"</span><span class="p">,</span>
+    <span class="s2">"application"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Zenith angle in degrees (between 0 and 180)."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">20</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">OFF_AXIS_ANGLES</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"off_axis_angles"</span><span class="p">,</span>
+    <span class="s2">"application"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"One or more off-axis angles in degrees (unitless values are interpreted as degrees)."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">quantity</span><span class="p">(</span><span class="s2">"deg"</span><span class="p">),</span>
+    <span class="n">nargs</span><span class="o">=</span><span class="s2">"+"</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">NUMBER_OF_PHOTONS</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"number_of_photons"</span><span class="p">,</span>
+    <span class="s2">"application"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Number of star photons to trace (per run)."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">scientific_int</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">MAX_OFFSET</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"max_offset"</span><span class="p">,</span>
+    <span class="s2">"application"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Maximum offset angle in degrees (unitless values are interpreted as deg)."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">nonnegative_quantity</span><span class="p">(</span><span class="s2">"deg"</span><span class="p">),</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">4</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">OFFSET_STEP</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"offset_step"</span><span class="p">,</span>
+    <span class="s2">"application"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Offset angle step size in degrees (unitless values are interpreted as deg)."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">positive_quantity</span><span class="p">(</span><span class="s2">"deg"</span><span class="p">),</span>
+    <span class="n">default</span><span class="o">=</span><span class="mf">0.25</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">deg</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ALL_MODEL_VERSIONS</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"all_model_versions"</span><span class="p">,</span>
+    <span class="s2">"application"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Produce reports for all model versions."</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">DATA</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"data"</span><span class="p">,</span>
+    <span class="s2">"application"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Data file name."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">EVENT_DATA_FILE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"event_data_file"</span><span class="p">,</span>
+    <span class="s2">"application"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Event data file or glob pattern containing reduced event data."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">TELESCOPE_CONFIG_FILE</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"telescope_config_file"</span><span class="p">,</span>
+    <span class="s2">"application"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Path to a file containing telescope configurations."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">SHOW_OPTIONS</span> <span class="o">=</span> <span class="n">_argument</span><span class="p">(</span>
+    <span class="s2">"show_options"</span><span class="p">,</span>
+    <span class="s2">"application"</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Print available values for a supported option and exit."</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">STANDARD_ARGUMENTS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="o">*</span><span class="n">CONFIGURATION_ARGUMENTS</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">EXECUTION_ARGUMENTS</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">RUN_TIME_ARGUMENTS</span><span class="p">,</span>
+    <span class="n">SHOW_OPTIONS</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">USER_ARGUMENTS</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="corsika_configuration_arguments">
+<a class="viewcode-back" href="../../../api-reference/configuration_module.html#simtools.configuration.arguments.corsika_configuration_arguments">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">corsika_configuration_arguments</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">primary_required</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return CORSIKA arguments with application-specific primary requiredness."""</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">PRIMARY</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="n">primary_required</span><span class="p">),</span> <span class="o">*</span><span class="n">CORSIKA_CONFIGURATION_ARGUMENTS</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_layout_argument</span><span class="p">(</span><span class="n">argument</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">required</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Put an argument in the shared array-layout selection group."""</span>
+    <span class="k">return</span> <span class="n">ArgumentDefinition</span><span class="p">(</span>
+        <span class="n">argument</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">group</span><span class="o">=</span><span class="n">argument</span><span class="o">.</span><span class="n">group</span><span class="p">,</span>
+        <span class="n">exclusive_group</span><span class="o">=</span><span class="s2">"array layout"</span><span class="p">,</span>
+        <span class="n">exclusive_group_required</span><span class="o">=</span><span class="n">required</span><span class="p">,</span>
+        <span class="n">preserve_by_version</span><span class="o">=</span><span class="n">argument</span><span class="o">.</span><span class="n">preserve_by_version</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">argument</span><span class="o">.</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="layout_selection_arguments">
+<a class="viewcode-back" href="../../../api-reference/configuration_module.html#simtools.configuration.arguments.layout_selection_arguments">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">layout_selection_arguments</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_file</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_parameter_file</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_plot_all</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the standard mutually exclusive array-layout selections."""</span>
+    <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span><span class="n">ARRAY_LAYOUT_NAME</span><span class="p">,</span> <span class="n">ARRAY_ELEMENT_LIST</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">include_file</span><span class="p">:</span>
+        <span class="n">arguments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ARRAY_LAYOUT_FILE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">include_parameter_file</span><span class="p">:</span>
+        <span class="n">arguments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ARRAY_LAYOUT_PARAMETER_FILE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">include_plot_all</span><span class="p">:</span>
+        <span class="n">arguments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PLOT_ALL_LAYOUTS</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_layout_argument</span><span class="p">(</span><span class="n">argument</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="n">required</span><span class="p">)</span> <span class="k">for</span> <span class="n">argument</span> <span class="ow">in</span> <span class="n">arguments</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,1133 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>simtools-production-generate-grid &#8212; simtools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../_static/documentation_options.js?v=a4af04ef"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/applications/simtools-production-generate-grid';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.20.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://raw.githubusercontent.com/gammasim/simtools/refs/heads/main/docs/_static/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'latest';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="simtools-resources-test-generate" href="simtools-resources-test-generate.html" />
+    <link rel="prev" title="simtools-production-derive-monte-carlo-statistics" href="simtools-production-derive-monte-carlo-statistics.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.36.0rc1" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/simtools_logo.png" class="logo__image only-light" alt="simtools"/>
+    <img src="../../_static/simtools_logo.png" class="logo__image only-dark pst-js-only" alt="simtools"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../components/index.html">
+    Components
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../data-model/index.html">
+    Data Model
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../developer-guide/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api-reference/index.html">
+    API Docs
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/gammasim/simtools" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../productions.html">Simulation Productions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../productions/pre-requisites.html">Production Pre-Requisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../productions/configure-productions.html">Configure Productions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../productions/run-productions.html">Run Productions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../productions/verify-productions.html">Verify Productions</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../manage_simulation_models.html">Manage simulation models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../manage_simulation_models/simulation_models_database.html">Simulation Models Database and Repository</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../manage_simulation_models/model_import.html">Import of simulation model parameters</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../simulate_calibration_data.html">Simulate Calibration Data</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../applications.html">Applications</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="simtools-compare-productions.html">simtools-compare-productions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-convert-all-model-parameters-from-simtel.html">simtools-convert-all-model-parameters-from-simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-convert-geo-coordinates-of-array-elements.html">simtools-convert-geo-coordinates-of-array-elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-convert-model-parameter-from-simtel.html">simtools-convert-model-parameter-from-simtel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-add-file-to-db.html">simtools-db-add-file-to-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-add-simulation-model-from-repository-to-db.html">simtools-db-add-simulation-model-from-repository-to-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-add-value-from-json-to-db.html">simtools-db-add-value-from-json-to-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-get-array-layouts-from-db.html">simtools-db-get-array-layouts-from-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-get-file-from-db.html">simtools-db-get-file-from-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-get-parameter-from-db.html">simtools-db-get-parameter-from-db</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-generate-compound-indexes.html">simtools-db-generate-compound-indexes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-db-upload-model-repository.html">simtools-db-upload-model-repository</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-dependency-manifest.html">simtools-dependency-manifest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-dependency-versions.html">simtools-dependency-versions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-bias-curves.html">simtools-derive-bias-curves</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-ctao-array-layouts.html">simtools-derive-ctao-array-layouts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-incident-angle.html">simtools-derive-incident-angle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-mirror-rnda.html">simtools-derive-mirror-rnda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-photon-electron-spectrum.html">simtools-derive-photon-electron-spectrum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-pulse-shape-parameters.html">simtools-derive-pulse-shape-parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-psf-parameters.html">simtools-derive-psf-parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-derive-trigger-rates.html">simtools-derive-trigger-rates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-array-element-report.html">simtools-docs-produce-array-element-report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-calibration-reports.html">simtools-docs-produce-calibration-reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-model-parameter-reports.html">simtools-docs-produce-model-parameter-reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-production-summary.html">simtools-docs-produce-production-summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-docs-produce-simulation-configuration-report.html">simtools-docs-produce-simulation-configuration-report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-export-sim-telarray-metadata-schema.html">simtools-export-sim-telarray-metadata-schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-array-config.html">simtools-generate-array-config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-bias-curve-submissions.html">simtools-generate-bias-curve-submissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-corsika-histograms.html">simtools-generate-corsika-histograms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-default-metadata.html">simtools-generate-default-metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-regular-arrays.html">simtools-generate-regular-arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-generate-simtel-event-data.html">simtools-generate-simtel-event-data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-inspect-file.html">simtools-inspect-file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-add-production.html">simtools-maintain-simulation-model-add-production</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-compare-productions.html">simtools-maintain-simulation-model-compare-productions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-verify-production-tables.html">simtools-maintain-simulation-model-verify-production-tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-maintain-simulation-model-write-array-element-positions.html">simtools-maintain-simulation-model-write-array-element-positions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-plot-array-layout.html">simtools-plot-array-layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-plot-corsika-limits.html">simtools-plot-corsika-limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-plot-production-grid.html">simtools-plot-production-grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-plot-tabular-data.html">simtools-plot-tabular-data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-plot-tabular-data-for-model-parameter.html">simtools-plot-tabular-data-for-model-parameter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-plot-simtel-events.html">simtools-plot-simtel-events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-plot-simulated-event-distributions.html">simtools-plot-simulated-event-distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-production-derive-corsika-limits.html">simtools-production-derive-corsika-limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-production-derive-monte-carlo-statistics.html">simtools-production-derive-monte-carlo-statistics</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">simtools-production-generate-grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-resources-test-generate.html">simtools-resources-test-generate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-run-application.html">simtools-run-application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-flasher.html">simtools-simulate-flasher</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-illuminator.html">simtools-simulate-illuminator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-pedestals.html">simtools-simulate-pedestals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-simulate-prod.html">simtools-simulate-prod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-submit-array-layouts.html">simtools-submit-array-layouts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-submit-data-from-external.html">simtools-submit-data-from-external</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-submit-model-parameter-from-external.html">simtools-submit-model-parameter-from-external</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-camera-efficiency.html">simtools-validate-camera-efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-camera-fov.html">simtools-validate-camera-fov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-cumulative-psf.html">simtools-validate-cumulative-psf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-file-using-schema.html">simtools-validate-file-using-schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-validate-optics.html">simtools-validate-optics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-write-reduced-event-lists.html">simtools-write-reduced-event-lists</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simtools-write-trigger-histograms.html">simtools-write-trigger-histograms</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../container_images.html">Container Images</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../execution_backends.html">Execution backends</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../applications.html" class="nav-link">Applications</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simtools-production-generate-grid</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="module-simtools.applications.production_generate_grid">
+<span id="simtools-production-generate-grid"></span><h1>simtools-production-generate-grid<a class="headerlink" href="#module-simtools.applications.production_generate_grid" title="Link to this heading">#</a></h1>
+<p>Generate a simulation production grid for a wide range of simulation parameters.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>The application expands a grid of simulation configuration parameters to be used
+for a simulation production.
+Possible axes include particle type,
+simulation model version, interaction models, and pointing directions such as azimuth, zenith,
+hour angle, and declination.</p>
+<p>The generated grid can be used as input for local production execution or workload-management
+submission tools. Different levels of night-sky background (NSB) can be configured through the
+production model version.</p>
+</section>
+<section id="input-output">
+<h2>Input/Output<a class="headerlink" href="#input-output" title="Link to this heading">#</a></h2>
+<p>The application reads and writes the following user-visible files:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Role</p></th>
+<th class="head"><p>Argument</p></th>
+<th class="head"><p>Format</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Schema</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Input</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">corsika_limits</span></code></p></td>
+<td><p>ECSV</p></td>
+<td><p>Lookup table for CORSIKA simulation limits (optional).</p></td>
+<td><p><a class="reference external" href="https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/corsika_limits_table.schema.yml"><code class="docutils literal notranslate"><span class="pre">corsika_limits_table.schema.yml</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Output</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">output_file</span></code></p></td>
+<td><p>ECSV</p></td>
+<td><p>Executable production job grid.</p></td>
+<td><p><a class="reference external" href="https://github.com/gammasim/simtools/blob/main/src/simtools/schemas/job_grid_density.schema.yml"><code class="docutils literal notranslate"><span class="pre">job_grid_density.schema.yml</span></code></a>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="defining-the-number-of-showers">
+<h2>Defining the number of showers<a class="headerlink" href="#defining-the-number-of-showers" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">showers_per_run</span></code> is required and defines the baseline number of CORSIKA showers in one job.
+For every combination of primary, model version, interaction model, pointing, and energy interval,
+the application first determines the showers in each generated job and then determines how many jobs
+to create. The resulting value is written to the <code class="docutils literal notranslate"><span class="pre">showers_per_run</span></code> column; the unscaled configured
+value is retained in <code class="docutils literal notranslate"><span class="pre">configured_showers_per_run</span></code>.</p>
+<p>Choose one of the following allocation modes:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Mode</p></th>
+<th class="head"><p>Configuration</p></th>
+<th class="head"><p>Result</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Fixed number of jobs</p></td>
+<td><p>Set <code class="docutils literal notranslate"><span class="pre">number_of_runs</span></code>.</p></td>
+<td><p>Creates that many jobs for every grid point and energy interval. The total is <code class="docutils literal notranslate"><span class="pre">number_of_runs</span> <span class="pre">*</span> <span class="pre">showers_per_run</span></code> after any per-run scaling. If omitted, one job is created.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Target number of showers</p></td>
+<td><p>Set <code class="docutils literal notranslate"><span class="pre">total_showers</span></code>.</p></td>
+<td><p>Creates enough equal-sized jobs to meet the target at every grid point and energy interval. This cannot be used with <code class="docutils literal notranslate"><span class="pre">number_of_runs</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">total_showers</span></code>, the target is rounded up to a whole number of jobs. For example,
+<code class="docutils literal notranslate"><span class="pre">total_showers:</span> <span class="pre">2500</span></code> and <code class="docutils literal notranslate"><span class="pre">showers_per_run:</span> <span class="pre">1000</span></code> create three jobs of 1000 showers, for an actual
+total of 3000. A warning reports each such adjustment; <code class="docutils literal notranslate"><span class="pre">max_total_showers_rounding_warnings</span></code> limits
+how many of these warnings are emitted (20 by default).</p>
+<p>The following options alter the shower allocation. Per-run scaling is applied before the number of
+jobs is determined, so it affects the total when <code class="docutils literal notranslate"><span class="pre">number_of_runs</span></code> is used and the required number of
+jobs when <code class="docutils literal notranslate"><span class="pre">total_showers</span></code> is used.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Choices or value</p></th>
+<th class="head"><p>Effect</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">showers_per_run_power_law</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">INDEX</span> <span class="pre">REFERENCE_ENERGY</span></code></p></td>
+<td><p>Scales the baseline per-run value by <code class="docutils literal notranslate"><span class="pre">(E_mid</span> <span class="pre">/</span> <span class="pre">E_ref)^INDEX</span></code>, where <code class="docutils literal notranslate"><span class="pre">E_mid</span></code> is the logarithmic midpoint of the selected energy interval. The result is rounded up to an integer. Omit it, or use index <code class="docutils literal notranslate"><span class="pre">0</span></code>, to keep the per-run count independent of energy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">showers_per_run_scaling</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code> (default), <code class="docutils literal notranslate"><span class="pre">cosine_zenith</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cosine_zenith</span></code> sets the per-run value to <code class="docutils literal notranslate"><span class="pre">ceil(N</span> <span class="pre">*</span> <span class="pre">cos(zenith))</span></code>; <code class="docutils literal notranslate"><span class="pre">fixed</span></code> leaves it unchanged.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">total_showers_scaling</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code> (default), <code class="docutils literal notranslate"><span class="pre">zenith_scaled</span></code></p></td>
+<td><p>Applies only with <code class="docutils literal notranslate"><span class="pre">total_showers</span></code>. <code class="docutils literal notranslate"><span class="pre">zenith_scaled</span></code> changes the target to <code class="docutils literal notranslate"><span class="pre">ceil(N</span> <span class="pre">*</span> <span class="pre">exp(F</span> <span class="pre">*</span> <span class="pre">(cos(zenith)</span> <span class="pre">-</span> <span class="pre">1)))</span></code>, where <code class="docutils literal notranslate"><span class="pre">F</span></code> is <code class="docutils literal notranslate"><span class="pre">zenith_angle_scaling_factor</span></code> (3.9781 by default).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">total_showers_scaling</span></code> changes the requested total, whereas <code class="docutils literal notranslate"><span class="pre">showers_per_run_scaling</span></code> changes the
+size of each job. They can be combined: the first sets a zenith-dependent target and the second sets
+a zenith-dependent job size, after which the application rounds the number of jobs up as needed.</p>
+</section>
+<section id="command-line-arguments">
+<h2>Command line arguments<a class="headerlink" href="#command-line-arguments" title="Link to this heading">#</a></h2>
+<section id="options">
+<h3>options<a class="headerlink" href="#options" title="Link to this heading">#</a></h3>
+<dl>
+<dt>–help</dt><dd><p>show this help message and exit</p>
+</dd>
+<dt>–axis</dt><dd><p>Grid axis as NAME MIN UNIT MAX UNIT POINTS [SCALING]. Repeat for each axis. Use azimuth/zenith or ha/dec, plus offset. SCALING is linear, log, or 1/cos.</p>
+</dd>
+<dt>–direction_grid_density</dt><dd><p>Direction-point density in deg^-2. Overrides POINTS for both direction axes.</p>
+</dd>
+<dt>–local_zenith_range</dt><dd><p>Accepted local zenith range for an HA/Dec density grid, e.g. 0 deg 70 deg.</p>
+</dd>
+<dt>–local_azimuth_range</dt><dd><p>Accepted local azimuth range for an HA/Dec density grid. Ranges may wrap through 0 deg.</p>
+</dd>
+<dt>–output_file</dt><dd><p>Output ECSV production job grid.</p>
+<p>Default: job_grid.ecsv.</p>
+</dd>
+<dt>–corsika_limits</dt><dd><p>ECSV lookup table of direction-dependent CORSIKA simulation limits.</p>
+</dd>
+<dt>–total_showers</dt><dd><p>Target showers per grid point and energy interval; incompatible with –number_of_runs.</p>
+</dd>
+<dt>–total_showers_scaling</dt><dd><p>Total-shower zenith scaling. zenith_scaled applies N * exp(factor * (cos(zenith) - 1)).</p>
+<p>Default: fixed. Choices: fixed, zenith_scaled.</p>
+</dd>
+<dt>–zenith_angle_scaling_factor</dt><dd><p>Factor in the zenith_scaled total-showers expression.</p>
+<p>Default: 3.9781.</p>
+</dd>
+<dt>–max_total_showers_rounding_warnings</dt><dd><p>Maximum warnings emitted when total_showers is rounded up to complete runs.</p>
+<p>Default: 20.</p>
+</dd>
+<dt>–showers_per_run_power_law</dt><dd><p>Scale showers per run by (E_mid / E_ref)^INDEX (mostly used for fixed energy grid). Provide INDEX VALUE UNIT; E_mid is the logarithmic energy-interval midpoint.</p>
+</dd>
+<dt>–showers_per_run_scaling</dt><dd><p>Showers-per-run zenith scaling. cosine_zenith applies ceil(N * cos(zenith)).</p>
+<p>Default: fixed. Choices: fixed, cosine_zenith.</p>
+</dd>
+<dt>–energy_max_scaling</dt><dd><p>Set the zenith-dependent maximum energy to VALUE * cos(zenith)^INDEX. Provide INDEX VALUE UNIT; the configured energy-range maximum remains an upper bound.</p>
+</dd>
+</dl>
+</section>
+<section id="simulation-configuration">
+<h3>simulation configuration<a class="headerlink" href="#simulation-configuration" title="Link to this heading">#</a></h3>
+<dl>
+<dt>–number_of_runs</dt><dd><p>Runs generated per grid point.</p>
+</dd>
+<dt>–primary</dt><dd><p>Primary particle(s) to simulate. Common names: gamma, electron, positron, muon+, muon-, proton, neutron, helium, carbon, nitrogen, silicon, iron. Use –show_options primary.</p>
+<p>Required.</p>
+</dd>
+<dt>–primary_id_type</dt><dd><p>Primary particle ID type</p>
+<p>Default: common_name. Choices: common_name, corsika7_id, pdg_id.</p>
+</dd>
+<dt>–azimuth_angle</dt><dd><p>Telescope pointing direction in azimuth. It can be in degrees between 0 and 360 or one of north, south, east or west. North is 0 degrees and the azimuth grows clockwise (East is 90 degrees).</p>
+</dd>
+<dt>–zenith_angle</dt><dd><p>Zenith angle in degrees (between 0 and 180).</p>
+<p>Default: 20.0 deg.</p>
+</dd>
+<dt>–showers_per_run</dt><dd><p>Baseline number of CORSIKA showers per run.</p>
+<p>Required.</p>
+</dd>
+<dt>–run_number_offset</dt><dd><p>Offset added to each run number.</p>
+</dd>
+<dt>–run_number</dt><dd><p>Run number to be simulated.</p>
+<p>Default: 1.</p>
+</dd>
+<dt>–event_number_first_shower</dt><dd><p>Event number of first shower</p>
+<p>Default: 1.</p>
+</dd>
+<dt>–correct_for_b_field_alignment</dt><dd><p>Align North with geographic North (and not magnetic North).</p>
+<p>Default: True.</p>
+</dd>
+<dt>–curved_atmosphere_min_zenith_angle</dt><dd><p>Minimum zenith angle (deg) for using curved-atmosphere CORSIKA binaries. </p>
+<p>Default: 65.0 deg.</p>
+</dd>
+</dl>
+</section>
+<section id="simulation-model">
+<h3>simulation model<a class="headerlink" href="#simulation-model" title="Link to this heading">#</a></h3>
+<dl>
+<dt>–model_version</dt><dd><p>Simulation production model version(s). Use –show_options model_version.</p>
+<p>Required.</p>
+</dd>
+<dt>–overwrite_model_parameters</dt><dd><p>File name to overwrite model parameters from DB with provided values</p>
+</dd>
+<dt>–site</dt><dd><p>Observatory site (e.g., North, South). Use –show_options site.</p>
+<p>Required.</p>
+</dd>
+<dt>–array_layout_name</dt><dd><p>Array layout name(s) (e.g., CTAO-North-Alpha, LSTN-01). Telescope names are assumed as single-telescope layouts. Use –show_options array_layout_name.</p>
+<p>Required.</p>
+</dd>
+</dl>
+</section>
+<section id="simulation-software">
+<h3>simulation software<a class="headerlink" href="#simulation-software" title="Link to this heading">#</a></h3>
+<dl>
+<dt>–simulation_software</dt><dd><p>Simulation software workflow.</p>
+<p>Default: corsika_sim_telarray. Choices: corsika, sim_telarray, corsika_sim_telarray.</p>
+</dd>
+</dl>
+</section>
+<section id="shower-parameters">
+<h3>shower parameters<a class="headerlink" href="#shower-parameters" title="Link to this heading">#</a></h3>
+<dl>
+<dt>–eslope</dt><dd><p>Slope of the energy spectrum.</p>
+<p>Default: -2.0.</p>
+</dd>
+<dt>–energy_range</dt><dd><p>Minimum and maximum primary energy, e.g. ‘10 GeV 5 TeV’.</p>
+<p>Default: (&lt;Quantity 3. GeV&gt;, &lt;Quantity 330. TeV&gt;).</p>
+</dd>
+<dt>–view_cone</dt><dd><p>Minimum and maximum view-cone radius, e.g. ‘0 deg 10 deg’.</p>
+<p>Default: [‘0 deg 0 deg’].</p>
+</dd>
+<dt>–core_scatter</dt><dd><p>Core positions per shower and maximum scatter radius, e.g. ‘10 500 m’.</p>
+<p>Default: [‘10 10000 m’].</p>
+</dd>
+</dl>
+</section>
+<section id="corsika-configuration">
+<h3>corsika configuration<a class="headerlink" href="#corsika-configuration" title="Link to this heading">#</a></h3>
+<dl class="simple">
+<dt>–corsika_he_interaction</dt><dd><p>High-energy interaction model for CORSIKA (default fallback: epos). Use –show_options corsika_he_interaction.</p>
+</dd>
+<dt>–corsika_le_interaction</dt><dd><p>Low-energy interaction model for CORSIKA (default fallback: urqmd). Use –show_options corsika_le_interaction.</p>
+</dd>
+<dt>–corsika_hadronic_transition_energy</dt><dd><p>Transition energy between the low- and high-energy CORSIKA hadronic interaction models. Unitless values are interpreted as GeV. If omitted, the CORSIKA build default is used.</p>
+</dd>
+</dl>
+</section>
+<section id="database-configuration">
+<h3>database configuration<a class="headerlink" href="#database-configuration" title="Link to this heading">#</a></h3>
+<dl class="simple">
+<dt>–simulation_models_path</dt><dd><p>Path containing simulation model files; when set, model parameters are read from files instead of MongoDB.</p>
+</dd>
+<dt>–db_api_user</dt><dd><p>Database username.</p>
+</dd>
+<dt>–db_api_pw</dt><dd><p>Database password.</p>
+</dd>
+<dt>–db_api_port</dt><dd><p>Database server port.</p>
+</dd>
+<dt>–db_server</dt><dd><p>Database server address.</p>
+</dd>
+<dt>–db_api_authentication_database</dt><dd><p>Authentication database name.</p>
+</dd>
+<dt>–db_simulation_model</dt><dd><p>Simulation-model database name.</p>
+</dd>
+<dt>–db_simulation_model_version</dt><dd><p>Simulation-model database version.</p>
+</dd>
+</dl>
+</section>
+<section id="application">
+<h3>application<a class="headerlink" href="#application" title="Link to this heading">#</a></h3>
+<dl class="simple">
+<dt>–show_options</dt><dd><p>Print available values for a supported option and exit.</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
+<section id="generate-an-ha-dec-production-grid">
+<h3>Generate an HA/Dec production grid<a class="headerlink" href="#generate-an-ha-dec-production-grid" title="Link to this heading">#</a></h3>
+<p>Generate point-source simulation jobs at fixed hour-angle and declination offsets, applying tabulated CORSIKA limits.</p>
+<p><strong>Application: </strong><code class="docutils literal notranslate"><span class="pre">simtools-production-generate-grid</span></code></p>
+<p><strong>Integration test: </strong><a class="reference external" href="https://github.com/gammasim/simtools/blob/main/tests/integration_tests/config/production_generate_grid_ha_dec.yml">production_generate_grid_ha_dec.yml</a></p>
+<p class="rubric">Command</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-generate-grid --config tests/integration_tests/config/production_generate_grid_ha_dec.yml</span>
+</pre></div>
+</div>
+<p class="rubric">Configuration</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">array_layout_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LSTN-01</span>
+<span class="nt">axis</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ha 0 deg 360 deg 36 linear</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dec -90 deg 90 deg 18 linear</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">offset 0 deg 10 deg 2 linear</span>
+<span class="nt">core_scatter</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10 500 m</span>
+<span class="nt">corsika_he_interaction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">epos</span>
+<span class="nt">corsika_le_interaction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">urqmd</span>
+<span class="nt">energy_range</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30 GeV 300 GeV</span>
+<span class="nt">corsika_limits</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${downloaded:corsika_limits.ecsv}</span>
+<span class="nt">model_version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7.0.0</span>
+<span class="nt">showers_per_run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="nt">showers_per_run_power_law</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0 1 TeV</span>
+<span class="nt">number_of_runs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="nt">output_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">job_grid_ha_dec.ecsv</span>
+<span class="nt">output_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">simtools-output</span>
+<span class="nt">primary</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gamma</span>
+<span class="nt">simulation_software</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">corsika_sim_telarray</span>
+<span class="nt">site</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">North</span>
+<span class="nt">view_cone</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0 deg 10 deg</span>
+</pre></div>
+</div>
+</section>
+<section id="generate-a-density-based-ha-dec-production-grid">
+<h3>Generate a density-based HA/Dec production grid<a class="headerlink" href="#generate-a-density-based-ha-dec-production-grid" title="Link to this heading">#</a></h3>
+<p>Sample hour angle and declination across 0 to 70 deg zenith distance while applying tabulated CORSIKA limits.</p>
+<p><strong>Application: </strong><code class="docutils literal notranslate"><span class="pre">simtools-production-generate-grid</span></code></p>
+<p><strong>Integration test: </strong><a class="reference external" href="https://github.com/gammasim/simtools/blob/main/tests/integration_tests/config/production_generate_grid_ha_dec_density.yml">production_generate_grid_ha_dec_density.yml</a></p>
+<p class="rubric">Command</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-generate-grid --config tests/integration_tests/config/production_generate_grid_ha_dec_density.yml</span>
+</pre></div>
+</div>
+<p class="rubric">Configuration</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">array_layout_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LSTN-01</span>
+<span class="nt">axis</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ha 0 deg 360 deg 1 linear</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dec -40 deg 80 deg 1 linear</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">offset 0 deg 10 deg 2 linear</span>
+<span class="nt">local_zenith_range</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0 deg 70 deg</span>
+<span class="nt">local_azimuth_range</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">300 deg 60 deg</span>
+<span class="nt">direction_grid_density</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.25 1/deg^2</span>
+<span class="nt">core_scatter</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10 500 m</span>
+<span class="nt">corsika_he_interaction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">epos</span>
+<span class="nt">corsika_le_interaction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">urqmd</span>
+<span class="nt">energy_range</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30 GeV 300 GeV</span>
+<span class="nt">corsika_limits</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${downloaded:corsika_limits.ecsv}</span>
+<span class="nt">model_version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7.0.0</span>
+<span class="nt">showers_per_run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="nt">showers_per_run_power_law</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0 1 TeV</span>
+<span class="nt">number_of_runs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="nt">output_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">job_grid_ha_dec_density.ecsv</span>
+<span class="nt">output_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">simtools-output</span>
+<span class="nt">primary</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gamma</span>
+<span class="nt">simulation_software</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">corsika_sim_telarray</span>
+<span class="nt">site</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">North</span>
+<span class="nt">view_cone</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0 deg 10 deg</span>
+</pre></div>
+</div>
+</section>
+<section id="generate-a-zenith-azimuth-production-grid">
+<h3>Generate a zenith-azimuth production grid<a class="headerlink" href="#generate-a-zenith-azimuth-production-grid" title="Link to this heading">#</a></h3>
+<p>Generate horizontal-coordinate simulation jobs with event counts scaled by energy and zenith angle and with tabulated CORSIKA limits.</p>
+<p><strong>Application: </strong><code class="docutils literal notranslate"><span class="pre">simtools-production-generate-grid</span></code></p>
+<p><strong>Integration test: </strong><a class="reference external" href="https://github.com/gammasim/simtools/blob/main/tests/integration_tests/config/production_generate_grid_horizontal.yml">production_generate_grid_horizontal.yml</a></p>
+<p class="rubric">Command</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-generate-grid --config tests/integration_tests/config/production_generate_grid_horizontal.yml</span>
+</pre></div>
+</div>
+<p class="rubric">Configuration</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">array_layout_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LSTN-01</span>
+<span class="nt">axis</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">azimuth 310 deg 20 deg 3 linear</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">zenith 30 deg 40 deg 2 linear</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">offset 0 deg 10 deg 2 linear</span>
+<span class="nt">core_scatter</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10 500 m</span>
+<span class="nt">corsika_he_interaction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">epos</span>
+<span class="nt">corsika_le_interaction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">urqmd</span>
+<span class="nt">energy_range</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30 GeV 300 GeV</span>
+<span class="nt">corsika_limits</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${downloaded:corsika_limits.ecsv}</span>
+<span class="nt">model_version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7.0.0</span>
+<span class="nt">showers_per_run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="nt">showers_per_run_power_law</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0 1 TeV</span>
+<span class="nt">showers_per_run_scaling</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cosine_zenith</span>
+<span class="nt">number_of_runs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="nt">output_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">job_grid_horizontal.ecsv</span>
+<span class="nt">output_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">simtools-output</span>
+<span class="nt">primary</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gamma</span>
+<span class="nt">simulation_software</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">corsika_sim_telarray</span>
+<span class="nt">site</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">North</span>
+<span class="nt">view_cone</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0 deg 10 deg</span>
+</pre></div>
+</div>
+</section>
+<section id="generate-a-density-based-horizontal-production-grid">
+<h3>Generate a density-based horizontal production grid<a class="headerlink" href="#generate-a-density-based-horizontal-production-grid" title="Link to this heading">#</a></h3>
+<p>Sample zenith and azimuth according to a configured sky density to create executable simulation jobs.</p>
+<p><strong>Application: </strong><code class="docutils literal notranslate"><span class="pre">simtools-production-generate-grid</span></code></p>
+<p><strong>Integration test: </strong><a class="reference external" href="https://github.com/gammasim/simtools/blob/main/tests/integration_tests/config/production_generate_grid_horizontal_density.yml">production_generate_grid_horizontal_density.yml</a></p>
+<p class="rubric">Command</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-generate-grid --config tests/integration_tests/config/production_generate_grid_horizontal_density.yml</span>
+</pre></div>
+</div>
+<p class="rubric">Configuration</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">array_layout_name</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">by_version</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">&lt;7.0.0</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1lst</span>
+<span class="w">    </span><span class="s">'&gt;=7.0.0'</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">LSTN-01</span>
+<span class="nt">axis</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">azimuth 0 deg 360 deg 0 linear</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">zenith 0 deg 70 deg 0 linear</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">offset 0 deg 10 deg 2 linear</span>
+<span class="nt">direction_grid_density</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.25 1/deg^2</span>
+<span class="nt">corsika_he_interaction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">epos</span>
+<span class="nt">corsika_le_interaction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">urqmd</span>
+<span class="nt">energy_range</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3 GeV 500 TeV</span>
+<span class="nt">energy_max_scaling</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-2.5 200 TeV</span>
+<span class="nt">core_scatter</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10 2500 m</span>
+<span class="nt">corsika_limits</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${downloaded:corsika_limits.ecsv}</span>
+<span class="nt">model_version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7.0.0</span>
+<span class="nt">showers_per_run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="nt">showers_per_run_power_law</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0 1 TeV</span>
+<span class="nt">number_of_runs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="nt">output_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">job_grid_horizontal_grid_density.ecsv</span>
+<span class="nt">output_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">simtools-output</span>
+<span class="nt">primary</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gamma</span>
+<span class="nt">simulation_software</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">corsika_sim_telarray</span>
+<span class="nt">site</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">North</span>
+<span class="nt">view_cone</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0 deg 10 deg</span>
+</pre></div>
+</div>
+</section>
+<section id="generate-an-explicit-horizontal-production-grid">
+<h3>Generate an explicit horizontal production grid<a class="headerlink" href="#generate-an-explicit-horizontal-production-grid" title="Link to this heading">#</a></h3>
+<p>Expand explicitly configured horizontal, energy, particle, and model axes into simulation jobs with energy-and zenith-scaled event counts.</p>
+<p><strong>Application: </strong><code class="docutils literal notranslate"><span class="pre">simtools-production-generate-grid</span></code></p>
+<p><strong>Integration test: </strong><a class="reference external" href="https://github.com/gammasim/simtools/blob/main/tests/integration_tests/config/production_generate_grid_horizontal_explicit.yml">production_generate_grid_horizontal_explicit.yml</a></p>
+<p class="rubric">Command</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">simtools-production-generate-grid --config tests/integration_tests/config/production_generate_grid_horizontal_explicit.yml</span>
+</pre></div>
+</div>
+<p class="rubric">Configuration</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">array_layout_name</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">by_version</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">&lt;7.0.0</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">alpha</span>
+<span class="w">    </span><span class="s">'&gt;=7.0.0'</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CTAO-North-Alpha</span>
+<span class="nt">azimuth_angle</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">North</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">South</span>
+<span class="nt">core_scatter</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10 500 m</span>
+<span class="nt">corsika_he_interaction</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">epos</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">qgs3</span>
+<span class="nt">corsika_le_interaction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">urqmd</span>
+<span class="nt">energy_range</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30 GeV 30 GeV</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">300 GeV 300 GeV</span>
+<span class="nt">label</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test-production-grid</span>
+<span class="nt">log_level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DEBUG</span>
+<span class="nt">model_version</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6.3.0</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7.0.0</span>
+<span class="nt">showers_per_run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="nt">showers_per_run_power_law</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0 1 TeV</span>
+<span class="nt">total_showers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
+<span class="nt">total_showers_scaling</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">zenith_scaled</span>
+<span class="nt">output_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">job_grid_horizontal_explicit.ecsv</span>
+<span class="nt">output_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">simtools-output</span>
+<span class="nt">primary</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gamma</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">proton</span>
+<span class="nt">simulation_software</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">corsika_sim_telarray</span>
+<span class="nt">site</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">North</span>
+<span class="nt">view_cone</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0 deg 10 deg</span>
+<span class="nt">zenith_angle</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">40</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="simtools-production-derive-monte-carlo-statistics.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">simtools-production-derive-monte-carlo-statistics</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="simtools-resources-test-generate.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">simtools-resources-test-generate</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-output">Input/Output</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-number-of-showers">Defining the number of showers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#command-line-arguments">Command line arguments</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options">options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulation-configuration">simulation configuration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulation-model">simulation model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulation-software">simulation software</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#shower-parameters">shower parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#corsika-configuration">corsika configuration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#database-configuration">database configuration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#application">application</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generate-an-ha-dec-production-grid">Generate an HA/Dec production grid</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generate-a-density-based-ha-dec-production-grid">Generate a density-based HA/Dec production grid</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generate-a-zenith-azimuth-production-grid">Generate a zenith-azimuth production grid</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generate-a-density-based-horizontal-production-grid">Generate a density-based horizontal production grid</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generate-an-explicit-horizontal-production-grid">Generate an explicit horizontal production grid</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/user-guide/applications/simtools-production-generate-grid.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024-2026, gammasim-tools, simtools developers.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
