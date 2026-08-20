@@ -958,7 +958,12 @@ def test_create_new_model_parameter_entry_rejects_mismatching_existing_file(
 
 @pytest.mark.parametrize(
     ("unit", "expected"),
-    [(["cm", "cm"], "cm"), (["null", "null"], None), (["null", "cm"], [None, "cm"])],
+    [
+        (["cm", "cm"], "cm"),
+        (["null", "null"], None),
+        (["null", "cm"], [None, "cm"]),
+        ("count", "ct"),
+    ],
 )
 def test_normalize_units_for_comparison(unit, expected):
     assert model_repository._normalize_units_for_comparison(unit) == expected
