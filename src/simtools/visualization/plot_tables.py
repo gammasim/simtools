@@ -7,6 +7,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import packaging.version
+from matplotlib.lines import Line2D
 
 import simtools.utils.general as gen
 from simtools.constants import SCHEMA_PATH
@@ -329,7 +330,7 @@ def resolve_plot_output_path(output, file_name="bias_curve.png"):
     return output_path / file_name
 
 
-def plot_bias_curves(nsb_stats, proton_stats, config, output_path):
+def plot_bias_curves(nsb_stats, proton_stats, config, output_path, trigger_threshold=None):
     """
     Plot NSB and proton bias curves.
 
@@ -343,12 +344,18 @@ def plot_bias_curves(nsb_stats, proton_stats, config, output_path):
         Plot configuration with title, ymin, and ymax.
     output_path : Path or str
         Output path for plot image.
+    trigger_threshold : float, optional
+        Trigger threshold value to annotate on the plot.
     """
     fig, axis = plt.subplots(figsize=(10, 7))
 
     _plot_nsb_curve(axis, nsb_stats)
     _plot_proton_curve(axis, proton_stats)
     _configure_bias_curve_axis(axis, config)
+
+    # Add trigger threshold annotation to legend if provided
+    if trigger_threshold is not None:
+        _add_trigger_threshold_to_legend(axis, trigger_threshold)
 
     fig.tight_layout()
     output_path = Path(output_path)
@@ -434,3 +441,28 @@ def _configure_bias_curve_axis(axis, config):
         axis.legend(fontsize=11, loc="best")
     else:
         _logger.warning("No NSB or proton rates found; writing empty bias-curve plot")
+
+
+def _add_trigger_threshold_to_legend(axis, trigger_threshold):
+    """Add trigger threshold annotation to the plot legend.
+
+    Parameters
+    ----------
+    axis : matplotlib.axis
+        The plot axis to add the annotation to.
+    trigger_threshold : float
+        The trigger threshold value to display.
+    """
+    # Add the trigger threshold as a legend entry
+    threshold_handle = Line2D([0], [0], color="gray", linestyle="-", linewidth=1)
+    threshold_label = f"Trigger Threshold: {trigger_threshold:.1f}"
+
+    # Get existing handles and labels
+    handles, labels = axis.get_legend_handles_labels()
+
+    # Add our new handle and label
+    handles.append(threshold_handle)
+    labels.append(threshold_label)
+
+    # Update the legend
+    axis.legend(handles, labels, fontsize=11, loc="best")
