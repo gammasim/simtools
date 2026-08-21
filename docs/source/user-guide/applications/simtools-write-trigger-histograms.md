@@ -16,6 +16,12 @@ Use one or more input files or glob patterns. Files from each selected productio
 into the output HDF5 file. `model_version`, `site`, and the array-layout selection describe the
 simulation model associated with the input data.
 
+For a directory of reduced event-data products, use `event_data_directory`. The application scans
+direct-child `*.reduced_event_data.hdf5` files and groups files whose names differ only by a
+`.part<digits>` suffix. It writes one `<group>.trigger_histograms.hdf5` product per group below
+`output_path`. With the `htcondor` backend, one job is submitted per group and the command returns
+after writing the submission manifest.
+
 ## Input and output
 
 | Role | Argument | Format | Description |
@@ -41,4 +47,17 @@ invalid files, and use `max_workers` to control parallel processing.
 ```{eval-rst}
 .. simtools-integration-example::
     :file: write_trigger_histograms.yml
+```
+
+## Directory submission example
+
+```bash
+simtools-write-trigger-histograms \
+    --event_data_directory reduced_event_data \
+    --array_layout_name LSTN-01 \
+    --site North \
+    --model_version 7.0.0 \
+    --output_path trigger_histograms \
+    --backend htcondor \
+    --backend_config htcondor.yml
 ```

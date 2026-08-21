@@ -44,3 +44,13 @@ def test_add_arguments_accepts_max_workers():
     args = parser.parse_args(["--event_data_files", "a*.hdf5", "--max_workers", "24"])
 
     assert args.max_workers == 24
+
+
+def test_add_arguments_accepts_event_data_directory():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(write_trigger_histograms._ARGUMENTS)
+
+    args = parser.parse_args(["--event_data_directory", "reduced_event_data"])
+
+    assert args.event_data_directory == "reduced_event_data"
+    assert args.event_data_files is None
