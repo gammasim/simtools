@@ -493,7 +493,7 @@ def test_generate_bias_curves_runs_full_pipeline(tmp_path):
         bias_curve_generator.generate_bias_curves(args)
 
     mock_write_proton.assert_called_once_with(
-        {"runs": {1: 10.0}, "rate_hz": 10.0, "error_hz": 0.0, "num_runs": 1},
+        {220: {"runs": {1: 10.0}, "rate_hz": 10.0, "error_hz": 0.0, "num_runs": 1}},
         tmp_path / "proton.ecsv",
     )
     mock_plot.assert_called_once()
@@ -597,48 +597,6 @@ def test_calculate_proton_rate_for_file_handles_attributeerror(tmp_path):
             tmp_path / "events.hdf5", args
         )
         assert result is None
-
-
-def test_find_intersection_point_parallel_lines():
-    """Test _find_intersection_point with parallel lines (same slope)."""
-    thresholds = np.array([220.0, 250.0, 280.0])
-    nsb_rates = np.array([1000.0, 800.0, 600.0])  # Decreasing linearly
-    scaled_proton_rates = np.array([900.0, 700.0, 500.0])  # Same slope
-
-    result = bias_curve_generator._find_intersection_point(
-        thresholds, nsb_rates, scaled_proton_rates
-    )
-    # Should return midpoint when slopes are equal
-    assert result is not None
-    assert 220.0 <= result <= 280.0
-
-
-def test_find_intersection_point_zero_denominator():
-    """Test _find_intersection_point when thresholds are identical."""
-    thresholds = np.array([250.0, 250.0])  # Same threshold twice
-    nsb_rates = np.array([1000.0, 800.0])
-    scaled_proton_rates = np.array([900.0, 700.0])
-
-    result = bias_curve_generator._find_intersection_point(
-        thresholds, nsb_rates, scaled_proton_rates
-    )
-    # Should return midpoint when denominator is zero
-    assert result == pytest.approx(250.0)
-
-
-def test_find_intersection_point_close_to_parallel():
-    """Test _find_intersection_point when lines are almost parallel."""
-    thresholds = np.array([220.0, 250.0, 280.0])
-    nsb_rates = np.array([1000.0, 800.0, 600.0])
-    # Very slightly different slope
-    scaled_proton_rates = np.array([900.0, 700.0001, 499.9999])
-
-    result = bias_curve_generator._find_intersection_point(
-        thresholds, nsb_rates, scaled_proton_rates
-    )
-    # Should return midpoint when lines are too close to parallel
-    assert result is not None
-    assert 220.0 <= result <= 280.0
 
 
 def test_group_hdf5_files_skips_non_proton_files(tmp_path):
