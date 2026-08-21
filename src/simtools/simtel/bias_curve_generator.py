@@ -438,9 +438,6 @@ def _find_intersection_point(thresholds, nsb_rates, scaled_proton_rates):
         return float((x1 + x2) / 2.0)
     slope_nsb = (y2_nsb - y1_nsb) / denominator
     slope_proton = (y2_proton - y1_proton) / denominator
-    if abs(slope_nsb - slope_proton) < 1e-10:  # Parallel lines
-        # Use midpoint as approximation
-        return float((x1 + x2) / 2.0)
     delta_y = y1_proton - y1_nsb
     delta_slope = slope_nsb - slope_proton
     if abs(delta_slope) < 1e-10:
