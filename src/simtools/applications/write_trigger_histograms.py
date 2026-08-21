@@ -18,7 +18,18 @@ _ARGUMENTS = (
         ),
         nargs="+",
         action="extend",
-        required=True,
+        exclusive_group="event_data_input",
+        exclusive_group_required=True,
+    ),
+    cli.ArgumentDefinition(
+        "event_data_directory",
+        help=(
+            "Directory containing reduced event-data files. Files with matching names after "
+            "a '.part<digits>' suffix is removed are processed into one output product."
+        ),
+        type=str,
+        exclusive_group="event_data_input",
+        exclusive_group_required=True,
     ),
     cli.ArgumentDefinition(
         "energy_bins_per_decade",
@@ -53,6 +64,14 @@ _ARGUMENTS = (
 )
 
 
+def _post_parse(args_dict, _config_sources, parser):
+    """Validate output options selected for the event-data input mode."""
+    if args_dict.get("event_data_directory") and args_dict.get("output_file"):
+        parser.error("'--output_file' cannot be used with '--event_data_directory'.")
+    if args_dict.get("event_data_files") and not args_dict.get("output_file"):
+        parser.error("'--output_file' is required with '--event_data_files'.")
+
+
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
@@ -67,6 +86,7 @@ APPLICATION = ApplicationDefinition.for_module(
     ),
     database=True,
     initialize_output=True,
+    post_parse=_post_parse,
 )
 
 
