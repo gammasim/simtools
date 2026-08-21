@@ -54,3 +54,37 @@ def test_add_arguments_accepts_event_data_directory():
 
     assert args.event_data_directory == "reduced_event_data"
     assert args.event_data_files is None
+
+
+def test_post_parse_accepts_default_output_file_for_directory_mode(mocker):
+    parser = mocker.Mock()
+
+    write_trigger_histograms._post_parse(
+        {
+            "event_data_directory": "reduced_event_data",
+            "output_file": "write_trigger_histograms.hdf5",
+            "output_file_from_default": True,
+        },
+        {},
+        parser,
+    )
+
+    parser.error.assert_not_called()
+
+
+def test_post_parse_rejects_explicit_output_file_for_directory_mode(mocker):
+    parser = mocker.Mock()
+
+    write_trigger_histograms._post_parse(
+        {
+            "event_data_directory": "reduced_event_data",
+            "output_file": "trigger_histograms.hdf5",
+            "output_file_from_default": False,
+        },
+        {},
+        parser,
+    )
+
+    parser.error.assert_called_once_with(
+        "'--output_file' cannot be used with '--event_data_directory'."
+    )

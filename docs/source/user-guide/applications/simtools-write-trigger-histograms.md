@@ -42,22 +42,18 @@ invalid files, and use `max_workers` to control parallel processing.
    :no-heading:
 ```
 
-## Example
+## Examples
+
+### Explicit input file
 
 ```{eval-rst}
 .. simtools-integration-example::
-    :file: write_trigger_histograms.yml
+    :file: write_trigger_histograms_from_file.yml
 ```
 
-## Directory submission example
+### Input directory
 
-```bash
-simtools-write-trigger-histograms \
-    --event_data_directory reduced_event_data \
-    --array_layout_name LSTN-01 \
-    --site North \
-    --model_version 7.0.0 \
-    --output_path trigger_histograms \
-    --backend htcondor \
-    --backend_config htcondor.yml
+```{eval-rst}
+.. simtools-integration-example::
+    :file: write_trigger_histograms_from_directory.yml
 ```
