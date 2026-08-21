@@ -260,19 +260,24 @@ class HTCondorBackend:
 
     @staticmethod
     def _add_apptainer_bind_path(entries, bind_path):
-        """Add an Apptainer bind without nesting it under (or duplicating) an existing bind."""
+        """Add an Apptainer bind without nesting it under (or duplicating) an existing bind.
+
+        Apptainer/Singularity rejects a bind whose destination is already covered by another
+        bind (for example a site-wide bind of an AFS or CVMFS root), so binds that are already
+        reachable through an existing entry are skipped, and existing binds that would become
+        redundant once the new, broader bind is added are dropped.
+        """
         if not bind_path:
             return
-
         bind_paths = [path for path in entries.get("APPTAINER_BINDPATH", "").split(",") if path]
         candidate = Path(str(bind_path).split(":", 1)[0]).resolve()
-
-        # Do not add the same source path twice.
-        for existing in bind_paths:
-            existing_source = Path(existing.split(":", 1)[0]).resolve()
-            if candidate == existing_source:
-                return
-
+        if HTCondorBackend._is_apptainer_bind_covered(candidate, bind_paths):
+            return
+        bind_paths = [
+            existing
+            for existing in bind_paths
+            if not Path(existing.split(":", 1)[0]).resolve().is_relative_to(candidate)
+        ]
         bind_paths.append(str(bind_path))
         entries["APPTAINER_BINDPATH"] = ",".join(bind_paths)
 
@@ -280,7 +285,7 @@ class HTCondorBackend:
     def _is_apptainer_bind_covered(candidate, existing_bind_paths):
         """Return whether a candidate bind path is already reachable via an existing bind."""
         for existing in existing_bind_paths:
-            existing_source = Path(existing.split(":", 1)[0])
+            existing_source = Path(existing.split(":", 1)[0]).resolve()
             if candidate == existing_source or candidate.is_relative_to(existing_source):
                 return True
         return False
@@ -550,7 +555,9 @@ class HTCondorBackend:
         """Return minimized bind paths needed by container jobs."""
         if not uses_container:
             return ()
-        bind_paths = [work_dir.parent, working_directory]
+        bind_paths = []
+        if work_dir.parent != working_directory:
+            bind_paths.append(work_dir.parent)
         if source_path is not None:
             bind_paths.append(source_path)
         bind_paths.extend(
