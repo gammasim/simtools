@@ -35,6 +35,14 @@ _ARGUMENTS = (
         action="store_true",
     ),
     cli.ArgumentDefinition(
+        "plot_images_in_degrees",
+        help=(
+            "When plotting PSF images, convert X/Y positions from cm to degrees "
+            "using the effective focal length. Requires --plot_images."
+        ),
+        action="store_true",
+    ),
+    cli.ArgumentDefinition(
         "save_photons",
         help="Retain compressed photon list files after analysis.",
         action="store_true",

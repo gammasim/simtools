@@ -129,7 +129,7 @@ def validate_cumulative_psf(app_context):
     data_to_plot = image.get_image_data()
     fig, _ = plot_ray_tracing_psf.create_psf_image_figure(
         data_to_plot,
-        containment_radius_cm=image.get_psf(0.8) / 2,
+        containment_radius=image.get_psf(0.8) / 2,
         center=(0, 0),
         bins=80,
         cmap="gist_heat_r",
@@ -186,20 +186,7 @@ def validate_optics(app_context):
     ray.simulate(test=args_dict["test"], force=False)
     ray.analyze(force=True, save_photons=args_dict.get("save_photons", False))
 
-    for key in ["psf_deg", "psf_cm", "eff_area", "eff_flen"]:
-        plot_kwargs = {"marker": "o", "linestyle": "none", "color": "k"}
-        if key == "eff_flen":
-            plot_kwargs.update(
-                {
-                    "error_type": "errorbar",
-                    "error_label": "Uncertainty",
-                    "markersize": 4,
-                }
-            )
-        fig = ray.plot(key, **plot_kwargs)
-        plot_file_name = "_".join((label, tel_model.name, key))
-        plot_file = io_handler.get_output_file(plot_file_name)
-        visualize.save_figure(fig, plot_file, close=True)
+    _plot_psf_summary(ray, label, tel_model.name, io_handler)
 
     _export_effective_focal_length_model_parameter(
         ray=ray,
@@ -211,47 +198,174 @@ def validate_optics(app_context):
     )
 
     if args_dict["plot_images"]:
-        plot_file_name = "_".join((label, tel_model.name, "images.pdf"))
-        plot_file = io_handler.get_output_file(plot_file_name)
+        plot_file = io_handler.get_output_file("_".join((label, tel_model.name, "images.pdf")))
+        _plot_psf_images(
+            ray,
+            tel_model.name,
+            plot_file,
+            plot_in_degrees=args_dict.get("plot_images_in_degrees", False),
+        )
 
-        logger.info(f"Plotting images into {plot_file}")
 
-        images_dict = ray.psf_images
-        max_x_extent = 0.0
-        max_y_extent = 0.0
-
-        for image in images_dict.values():
-            data = image.get_image_data(centralized=True)
-            if len(data) > 0:
-                x_extent = np.max(np.abs(data["X"]))
-                y_extent = np.max(np.abs(data["Y"]))
-                max_x_extent = max(max_x_extent, x_extent)
-                max_y_extent = max(max_y_extent, y_extent)
-
-        max_extent = max(max_x_extent, max_y_extent)
-        max_extent_rounded = np.ceil(max_extent * 2) / 2
-
-        logger.info(f"Setting consistent image axes: x,y range = +-{max_extent_rounded} cm")
-
-        figures = []
-        for (off_x, off_y), image in images_dict.items():
-            psf_cm = image.get_psf(fraction=0.8, unit="cm")
-            figures.append(
-                plot_ray_tracing_psf.create_annotated_psf_image_figure(
-                    image.get_image_data(centralized=True),
-                    off_x=off_x,
-                    off_y=off_y,
-                    psf_cm=psf_cm,
-                    image_range=[
-                        [-max_extent_rounded, max_extent_rounded],
-                        [-max_extent_rounded, max_extent_rounded],
-                    ],
-                    bins=150,
-                    cmap="gist_heat_r",
-                    psf_kwargs={"color": "k", "fill": False, "lw": 2, "ls": "--"},
-                )
+def _plot_psf_summary(ray, label, telescope_name, io_handler):
+    """Plot PSF, effective area, and effective focal length vs off-axis angle."""
+    for key in ["psf_deg", "psf_cm", "eff_area", "eff_flen"]:
+        plot_kwargs = {"marker": "o", "linestyle": "none", "color": "k"}
+        if key == "eff_flen":
+            plot_kwargs.update(
+                {
+                    "error_type": "errorbar",
+                    "error_label": "Uncertainty",
+                    "markersize": 4,
+                }
             )
-        visualize.save_figures_to_single_document(figures, plot_file, close=True)
+        fig = ray.plot(key, **plot_kwargs)
+        plot_file = io_handler.get_output_file("_".join((label, telescope_name, key)))
+        visualize.save_figure(fig, plot_file, close=True)
+
+
+def _eff_flen_cm_for_degree_conversion(ray):
+    """
+    Return the median effective focal length in cm for image unit conversion.
+
+    Reads ``ray._results`` and delegates to ``_median_effective_focal_length``.
+    Returns None when results are unavailable or contain no valid values.
+    """
+    results = getattr(ray, "_results", None)
+    if results is None or "eff_flen" not in results.colnames:
+        return None
+    eff_flen_cm = _median_effective_focal_length(results)
+    if eff_flen_cm is not None:
+        logger.info(
+            f"Using median effective focal length for degree conversion: {eff_flen_cm:.2f} cm"
+        )
+    return eff_flen_cm
+
+
+def _max_image_extent(images_dict):
+    """Return the rounded half-range of all image X/Y positions in cm."""
+    max_x_extent = 0.0
+    max_y_extent = 0.0
+    for image in images_dict.values():
+        data = image.get_image_data(centralized=True)
+        if len(data) > 0:
+            max_x_extent = max(max_x_extent, np.max(np.abs(data["X"])))
+            max_y_extent = max(max_y_extent, np.max(np.abs(data["Y"])))
+    return np.ceil(max(max_x_extent, max_y_extent) * 2) / 2
+
+
+def _plot_psf_images(ray, telescope_name, plot_file, plot_in_degrees=False):
+    """Render one PSF image per off-axis angle and save them to a single PDF."""
+    logger.info(f"Plotting images into {plot_file}")
+
+    images_dict = ray.psf_images
+    # Compute a single representative effective focal length from all non-zero-offset
+    # rows (eff_flen is undefined / NaN at zero offset).  The value is stable across
+    # off-axis angles, so using the median is sufficient.
+    eff_flen_cm = _eff_flen_cm_for_degree_conversion(ray) if plot_in_degrees else None
+
+    max_extent_rounded = _max_image_extent(images_dict)
+
+    figures = []
+    for (off_x, off_y), image in images_dict.items():
+        psf_cm_val = image.get_psf(fraction=0.8, unit="cm")
+        converted_data, psf_quantity, containment_radius, plot_extent = _prepare_image_for_plotting(
+            image.get_image_data(centralized=True),
+            psf_cm_val,
+            max_extent_rounded,
+            eff_flen_cm,
+        )
+        figures.append(
+            plot_ray_tracing_psf.create_annotated_psf_image_figure(
+                converted_data,
+                off_x=off_x,
+                off_y=off_y,
+                psf=psf_quantity,
+                containment_radius=containment_radius,
+                image_range=[
+                    [-plot_extent, plot_extent],
+                    [-plot_extent, plot_extent],
+                ],
+                bins=150,
+                cmap="gist_heat_r",
+                psf_kwargs={"color": "k", "fill": False, "lw": 2, "ls": "--"},
+                telescope_name=telescope_name,
+            )
+        )
+    visualize.save_figures_to_single_document(figures, plot_file, close=True)
+
+
+def _median_effective_focal_length(results):
+    """
+    Return median effective focal length in cm from ray-tracing results.
+
+    The effective focal length is undefined (NaN) at zero off-axis angle and is
+    stable across non-zero off-axis angles, so the median over those rows is a
+    sufficient single representative value.
+
+    Parameters
+    ----------
+    results : astropy.table.QTable
+        Ray-tracing results table with columns ``off_x``, ``off_y``, and
+        ``eff_flen``.
+
+    Returns
+    -------
+    float or None
+        Median effective focal length in cm, or None if no valid values exist.
+    """
+    off_x_vals = np.asarray(results["off_x"].to_value(), dtype=float)
+    off_y_vals = np.asarray(results["off_y"].to_value(), dtype=float)
+    eff_flen_vals = np.asarray(results["eff_flen"], dtype=float)
+    non_zero = ~(np.isclose(off_x_vals, 0.0) & np.isclose(off_y_vals, 0.0))
+    valid = eff_flen_vals[non_zero]
+    valid = valid[~np.isnan(valid)]
+    if valid.size == 0:
+        return None
+    return float(np.median(valid))
+
+
+def _prepare_image_for_plotting(image_data, psf_cm, max_extent_cm, eff_flen_cm=None):
+    """
+    Prepare image data and quantities for ``create_annotated_psf_image_figure``.
+
+    If ``eff_flen_cm`` is given, converts X/Y positions, PSF, containment
+    radius, and image extent from cm to degrees using the small-angle
+    approximation ``deg = rad2deg(cm / eff_flen_cm)``.  Otherwise returns
+    unchanged data and cm quantities.
+
+    Parameters
+    ----------
+    image_data : numpy.ndarray
+        Structured array with ``X`` and ``Y`` columns in cm.
+    psf_cm : float
+        PSF diameter in cm.
+    max_extent_cm : float
+        Half-range of the image axes in cm.
+    eff_flen_cm : float, optional
+        Median effective focal length in cm.  When provided the returned
+        quantities use degrees.
+
+    Returns
+    -------
+    tuple
+        ``(converted_data, psf_quantity, containment_radius, plot_extent)``
+        where ``psf_quantity`` and ``containment_radius`` are astropy
+        ``Quantity`` objects.
+    """
+    if eff_flen_cm is not None:
+        converted_data = image_data.copy()
+        converted_data["X"] = np.rad2deg(image_data["X"] / eff_flen_cm)
+        converted_data["Y"] = np.rad2deg(image_data["Y"] / eff_flen_cm)
+        psf_quantity = np.rad2deg(psf_cm / eff_flen_cm) * u.deg
+        containment_radius = np.rad2deg(psf_cm / 2 / eff_flen_cm) * u.deg
+        plot_extent = np.rad2deg(max_extent_cm / eff_flen_cm)
+    else:
+        converted_data = image_data
+        psf_quantity = psf_cm * u.cm
+        containment_radius = (psf_cm / 2) * u.cm
+        plot_extent = max_extent_cm
+    return converted_data, psf_quantity, containment_radius, plot_extent
 
 
 def _effective_focal_length_value_from_results(results):
