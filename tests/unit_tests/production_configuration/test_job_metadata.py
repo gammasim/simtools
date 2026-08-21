@@ -5,7 +5,10 @@ from types import SimpleNamespace
 import astropy.units as u
 import pytest
 
-from simtools.production_configuration.job_metadata import build_simulation_job_metadata
+from simtools.production_configuration.job_metadata import (
+    _format_view_cone,
+    build_simulation_job_metadata,
+)
 
 
 def _args(**updates):
@@ -73,3 +76,8 @@ def test_build_simulation_job_metadata_omits_missing_coordinates_and_sets_sct_fa
     assert metadata["runNumber"] == 5
     assert "dec" not in metadata
     assert "ha" not in metadata
+
+
+def test_format_view_cone_rounds_to_two_decimal_places():
+    result = _format_view_cone(0.12345 * u.deg, 5.6789 * u.deg)
+    assert result == "0.12_deg_5.68_deg"
