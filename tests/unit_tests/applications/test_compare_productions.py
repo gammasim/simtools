@@ -1,6 +1,10 @@
+from pathlib import Path
+
 import pytest
 
 import simtools.sim_events.production_comparison as production_comparison
+from simtools.applications import compare_productions
+from simtools.constants import SCHEMA_PATH
 
 
 def test_parse_production_arguments_accepts_single_production(mocker):
@@ -79,3 +83,36 @@ def test_parse_production_arguments_accepts_nested_flattened_strings(mocker):
     )
 
     assert [descriptor.label for descriptor in descriptors] == ["baseline", "candidate"]
+
+
+def test_main_writes_comparison_statistics_metadata(mocker, tmp_test_directory):
+    output_directory = Path(tmp_test_directory) / "comparison"
+    statistics_file = output_directory / "comparison_statistics.json"
+    app_context = mocker.MagicMock()
+    app_context.args = {
+        "comparison_level": "events",
+        "production": ["baseline", "baseline.hdf5"],
+        "array_layout_name": ["CTAO-North-Alpha"],
+    }
+    app_context.io_handler.get_output_directory.return_value = output_directory
+    mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
+    mock_application.start.return_value = app_context
+    mocker.patch("simtools.applications.compare_productions.parse_production_arguments")
+    mocker.patch("simtools.applications.compare_productions.collect_production_metrics")
+    mock_plot = mocker.patch(
+        "simtools.applications.compare_productions.plot_event_level_production_comparison.plot",
+        return_value=statistics_file,
+    )
+    mock_dump = mocker.patch("simtools.applications.compare_productions.MetadataCollector.dump")
+
+    compare_productions.main()
+
+    mock_plot.assert_called_once()
+    metadata_args, metadata_file = mock_dump.call_args.args
+    assert metadata_file == statistics_file
+    assert metadata_args["output_file"] == str(statistics_file)
+    assert metadata_args["output_file_format"] == "JSON"
+    assert metadata_args["metadata_product_data_name"] == "production_comparison_statistics"
+    assert metadata_args["schema_file"] == str(
+        SCHEMA_PATH / "production_comparison_statistics.schema.yml"
+    )

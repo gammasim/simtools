@@ -4,6 +4,8 @@
 
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
+from simtools.constants import SCHEMA_PATH
+from simtools.data_model.metadata_collector import MetadataCollector
 from simtools.sim_events.production_comparison import (
     collect_production_metrics,
     parse_production_arguments,
@@ -58,11 +60,21 @@ def main():
             parse_production_arguments(app_context.args["production"]),
             array_names=app_context.args.get("array_layout_name"),
         )
-        plot_event_level_production_comparison.plot(
+        comparison_statistics_file = plot_event_level_production_comparison.plot(
             metrics_per_production,
             output_path=app_context.io_handler.get_output_directory(),
             array_layout_name=app_context.args.get("array_layout_name"),
         )
+        metadata_args = dict(app_context.args)
+        metadata_args.update(
+            {
+                "output_file": str(comparison_statistics_file),
+                "output_file_format": "JSON",
+                "metadata_product_data_name": "production_comparison_statistics",
+                "schema_file": str(SCHEMA_PATH / "production_comparison_statistics.schema.yml"),
+            }
+        )
+        MetadataCollector.dump(metadata_args, comparison_statistics_file)
     else:
         raise NotImplementedError(f"Comparison level '{comparison_level}' is not implemented yet.")
 

@@ -1,14 +1,14 @@
 """Plot event-level comparisons across multiple simulation productions."""
 
 import functools
-import json
 import logging
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from simtools.io import io_handler
+from simtools.io import ascii_handler, io_handler
 from simtools.statistics import (
+    compare_histogram_counts,
     compare_samples_with_statistics,
 )
 from simtools.utils import names
@@ -60,7 +60,7 @@ def plot(metrics_per_production, output_path=None, array_layout_name=None, bins=
     _plot_quantity_comparisons(metrics_per_production, output_path, bins, comparison_statistics)
     _plot_per_type_comparisons(metrics_per_production, output_path, bins, comparison_statistics)
 
-    _write_comparison_statistics_json(comparison_statistics, output_path)
+    return _write_comparison_statistics_json(comparison_statistics, output_path)
 
 
 def _plot_quantity_comparisons(metrics_per_production, output_path, bins, comparison_statistics):
@@ -173,8 +173,10 @@ def _plot_trigger_multiplicity(metrics_per_production, output_path, suffix="", b
         metrics_per_production,
         counts_per_label,
         metadata={"bin_edges": bin_edges.astype(float).tolist()},
+        metric="wasserstein",
+        bin_edges=bin_edges,
     )
-    _annotate_ks_statistics(ax, statistics)
+    _annotate_comparison_statistics(ax, statistics)
 
     _save_figure(fig, output_path, f"trigger_multiplicity{suffix}.png")
     statistics["plot_name"] = f"trigger_multiplicity{suffix}"
@@ -212,6 +214,7 @@ def _plot_trigger_combinations(metrics_per_production, output_path, top_n=12):
             metrics.trigger_combinations.get(combination, 0) for metrics in metrics_per_production
         )
 
+    all_categories = sorted(combinations)
     selected = [name for name, _ in sorted(totals.items(), key=lambda item: item[1], reverse=True)]
     selected = selected[:top_n]
 
@@ -229,6 +232,7 @@ def _plot_trigger_combinations(metrics_per_production, output_path, top_n=12):
         figure_width=max(10, len(selected) * 1.1),
         x_rotation=45,
         x_ha="right",
+        statistics_categories=all_categories,
     )
     if statistics is not None:
         statistics["plot_name"] = "trigger_combination"
@@ -329,16 +333,16 @@ def _plot_grouped_fraction_bars(
     figure_width,
     x_rotation,
     x_ha,
+    statistics_categories=None,
 ):
     """Plot grouped bars with fractions and Poisson error bars for each production."""
+    statistics_categories = statistics_categories or categories
     x_values = np.arange(len(categories))
     width = 0.8 / max(1, len(metrics_per_production))
     fig, ax = plt.subplots(figsize=(figure_width, 6))
-    counts_per_label = {}
 
     for index, metrics in enumerate(metrics_per_production):
         counts = np.asarray(counts_getter(metrics, categories), dtype=float)
-        counts_per_label[metrics.label] = counts
         fractions, errors = normalization_fn(counts, metrics)
         offset = (index - (len(metrics_per_production) - 1) / 2.0) * width
         ax.bar(
@@ -359,10 +363,17 @@ def _plot_grouped_fraction_bars(
 
     statistics = _build_aligned_count_statistics(
         metrics_per_production,
-        counts_per_label,
-        metadata={"categories": list(categories)},
+        {
+            metrics.label: np.asarray(counts_getter(metrics, statistics_categories), dtype=float)
+            for metrics in metrics_per_production
+        },
+        metadata={
+            "categories": list(statistics_categories),
+            "display_categories": list(categories),
+        },
+        metric="jensen_shannon",
     )
-    _annotate_ks_statistics(ax, statistics)
+    _annotate_comparison_statistics(ax, statistics)
 
     _save_figure(fig, output_path, filename)
     return statistics
@@ -595,7 +606,7 @@ def _plot_quantity_distribution(
         baseline_bin_edges=bin_edges,
         cumulative=cumulative,
     )
-    _annotate_ks_statistics(ax, statistics)
+    _annotate_comparison_statistics(ax, statistics)
 
     cum_str = "_cumulative" if cumulative else ""
     _save_figure(fig, output_path, f"distribution_{quantity_name}{cum_str}{suffix}.png")
@@ -606,15 +617,14 @@ def _plot_quantity_distribution(
 def _get_global_quantity_bin_edges(metrics_per_production, quantity_name, x_scale, bins):
     """Return one shared set of bin edges for a quantity across productions."""
     histogram_edges = [
-        metrics.quantity_histograms[quantity_name]["simulated"][1]
+        metrics.quantity_histograms[quantity_name][event_kind][1]
         for metrics in metrics_per_production
         if quantity_name in metrics.quantity_histograms
-        and "simulated" in metrics.quantity_histograms[quantity_name]
+        for event_kind in ("simulated", "triggered")
+        if event_kind in metrics.quantity_histograms[quantity_name]
     ]
-    if histogram_edges and all(
-        np.array_equal(histogram_edges[0], edges) for edges in histogram_edges
-    ):
-        return histogram_edges[0]
+    if histogram_edges:
+        return np.unique(np.concatenate(histogram_edges))
 
     all_simulated_values = []
     for metrics in metrics_per_production:
@@ -640,9 +650,28 @@ def _get_quantity_counts(metrics, quantity_name, bin_edges, event_kind):
     source_edges = np.asarray(source_edges, dtype=float)
     if np.array_equal(source_edges, bin_edges):
         return counts, None
-    centers = 0.5 * (source_edges[:-1] + source_edges[1:])
-    rebinned, _ = np.histogram(centers, bins=bin_edges, weights=counts)
-    return rebinned, None
+    return _rebin_histogram_counts(counts, source_edges, bin_edges), None
+
+
+def _rebin_histogram_counts(counts, source_edges, target_edges):
+    """Rebin counts by distributing each source bin over its overlapping target bins.
+
+    Counts are assumed to be uniformly distributed within each source bin. This
+    preserves the total count and avoids assigning a complete source bin to one
+    target bin when the target edges split it.
+    """
+    rebinned = np.zeros(len(target_edges) - 1, dtype=float)
+    for count, source_low, source_high in zip(counts, source_edges[:-1], source_edges[1:]):
+        source_width = source_high - source_low
+        target_start = np.searchsorted(target_edges, source_low, side="right") - 1
+        target_stop = np.searchsorted(target_edges, source_high, side="left")
+        for target_index in range(max(0, target_start), min(len(rebinned), target_stop + 1)):
+            overlap = min(source_high, target_edges[target_index + 1]) - max(
+                source_low, target_edges[target_index]
+            )
+            if overlap > 0:
+                rebinned[target_index] += count * overlap / source_width
+    return rebinned
 
 
 def _plot_telescope_participation(metrics_per_production, output_path):
@@ -678,13 +707,20 @@ def _plot_telescope_participation(metrics_per_production, output_path):
     return statistics
 
 
-def _build_aligned_count_statistics(metrics_per_production, counts_per_label, metadata):
+def _build_aligned_count_statistics(
+    metrics_per_production,
+    counts_per_label,
+    metadata,
+    metric="jensen_shannon",
+    bin_edges=None,
+):
     """Build comparison statistics for plots represented by aligned count arrays."""
     baseline_label = metrics_per_production[0].label if metrics_per_production else None
     baseline_counts = counts_per_label.get(baseline_label)
     stats_summary = {
         "baseline_label": baseline_label,
         "metric_type": "aligned_counts",
+        "metric": metric,
         "metadata": metadata,
         "comparisons": [],
     }
@@ -696,10 +732,17 @@ def _build_aligned_count_statistics(metrics_per_production, counts_per_label, me
         candidate_counts = counts_per_label.get(metrics.label)
         if candidate_counts is None:
             continue
+        result = compare_histogram_counts(
+            baseline_counts,
+            candidate_counts,
+            metric=metric,
+            bin_edges=bin_edges,
+        )
         result = {
+            **result,
             "candidate_label": metrics.label,
-            "baseline_counts": np.asarray(baseline_counts, dtype=int).tolist(),
-            "candidate_counts": np.asarray(candidate_counts, dtype=int).tolist(),
+            "baseline_counts": np.asarray(baseline_counts, dtype=float).tolist(),
+            "candidate_counts": np.asarray(candidate_counts, dtype=float).tolist(),
         }
         stats_summary["comparisons"].append(result)
     return stats_summary
@@ -717,6 +760,7 @@ def _build_quantity_distribution_statistics(
     stats_summary = {
         "baseline_label": baseline_label,
         "metric_type": "quantity_distribution",
+        "metric": "ks",
         "quantity_name": quantity_name,
         "cumulative": bool(cumulative),
         "comparisons": [],
@@ -763,14 +807,19 @@ def _compare_distribution_data(baseline_data, candidate_data, event_kind, baseli
             candidate_data[sample_key],
             baseline_bin_edges,
         )
-    return {
-        "baseline_counts": np.asarray(baseline_data[event_kind], dtype=int).tolist(),
-        "candidate_counts": np.asarray(candidate_data[event_kind], dtype=int).tolist(),
-    }
+    result = compare_histogram_counts(
+        baseline_data[event_kind],
+        candidate_data[event_kind],
+        metric="ks",
+    )
+    result["baseline_counts"] = np.asarray(baseline_data[event_kind], dtype=float).tolist()
+    result["candidate_counts"] = np.asarray(candidate_data[event_kind], dtype=float).tolist()
+    result["bin_edges"] = np.asarray(baseline_bin_edges, dtype=float).tolist()
+    return result
 
 
-def _annotate_ks_statistics(ax, statistics):
-    """Overlay KS values for baseline-vs-candidate comparisons on a plot."""
+def _annotate_comparison_statistics(ax, statistics):
+    """Overlay comparison metric values for baseline-vs-candidate comparisons on a plot."""
     if statistics is None or not statistics.get("comparisons"):
         return
 
@@ -779,14 +828,12 @@ def _annotate_ks_statistics(ax, statistics):
     for comparison in statistics["comparisons"]:
         label = comparison.get("candidate_label", "candidate")
         if metric_type == "quantity_distribution":
-            sim_ks = comparison.get("simulated", {}).get("ks_statistic")
-            trig_ks = comparison.get("triggered", {}).get("ks_statistic")
-            lines.append(
-                f"{label}: KS s/t={_format_statistic_value(sim_ks)}/"
-                f"{_format_statistic_value(trig_ks)}"
-            )
+            simulated = _format_metric_value(comparison.get("simulated", {}))
+            triggered = _format_metric_value(comparison.get("triggered", {}))
+            lines.append(f"{label}: {simulated[0]} s/t={simulated[1]}/{triggered[1]}")
             continue
-        lines.append(f"{label}: KS={_format_statistic_value(comparison.get('ks_statistic'))}")
+        metric_label, metric_value = _format_metric_value(comparison)
+        lines.append(f"{label}: {metric_label}={metric_value}")
 
     ax.text(
         0.02,
@@ -800,6 +847,11 @@ def _annotate_ks_statistics(ax, statistics):
     )
 
 
+def _annotate_ks_statistics(ax, statistics):
+    """Backward-compatible alias for metric-neutral comparison annotations."""
+    _annotate_comparison_statistics(ax, statistics)
+
+
 def _format_statistic_value(value):
     """Format statistic values for plot text annotations."""
     if value is None:
@@ -807,10 +859,27 @@ def _format_statistic_value(value):
     return f"{float(value):.4f}"
 
 
+def _format_metric_value(statistics):
+    """Return a display label and formatted value for one metric result."""
+    metric_labels = {
+        "ks": "KS",
+        "jensen_shannon": "JS",
+        "wasserstein": "W1",
+    }
+    metric = statistics.get("metric", "ks")
+    value_key = {
+        "ks": "ks_statistic",
+        "jensen_shannon": "jensen_shannon_distance",
+        "wasserstein": "wasserstein_distance",
+    }.get(metric, "ks_statistic")
+    return metric_labels.get(metric, metric), _format_statistic_value(statistics.get(value_key))
+
+
 def _initialize_comparison_statistics(metrics_per_production):
     """Initialize top-level comparison statistics structure."""
     baseline = metrics_per_production[0] if metrics_per_production else None
     return {
+        "format_version": 1,
         "baseline": {
             "label": baseline.label if baseline else None,
             "simulated_event_count": baseline.simulated_event_count if baseline else 0,
@@ -844,8 +913,8 @@ def _write_comparison_statistics_json(comparison_statistics, output_path):
     """Write comparison statistics JSON file in the output directory."""
     output_file = output_path / "comparison_statistics.json"
     _logger.info(f"Writing comparison statistics: {output_file}")
-    with output_file.open("w", encoding="utf-8") as file_handle:
-        json.dump(comparison_statistics, file_handle, indent=2, sort_keys=True)
+    ascii_handler.write_data_to_file(comparison_statistics, output_file, sort_keys=True)
+    return output_file
 
 
 def _distribution_cumulative_variants(quantity_name):
