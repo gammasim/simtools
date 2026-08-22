@@ -623,7 +623,8 @@ def _write_directory_group_job(job_spec):
 def _write_directory_products(args_dict):
     """Submit or execute one independent trigger-histogram product per directory group."""
     output_directory = io_handler.IOHandler().get_output_directory()
-    groups = discover_event_data_groups(args_dict["event_data_directory"])
+    event_data_directory = Path(args_dict["event_data_directory"]).resolve()
+    groups = discover_event_data_groups(event_data_directory)
     runtime_args = (
         dict(settings_config.args) if args_dict.get("backend", "local") != "local" else None
     )
@@ -646,6 +647,7 @@ def _write_directory_products(args_dict):
                 },
                 runtime_args=runtime_args,
                 runtime_db_config=runtime_db_config,
+                mount_paths=(event_data_directory,),
                 output_paths=(output_file,),
             )
         )

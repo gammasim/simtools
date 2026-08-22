@@ -373,6 +373,8 @@ def test_write_directory_products_submits_one_job_per_group(mocker, tmp_test_dir
         str(input_directory / "gamma.part0001.reduced_event_data.hdf5"),
         str(input_directory / "gamma.part0002.reduced_event_data.hdf5"),
     ]
+    assert jobs[0].mount_paths == (input_directory.resolve(),)
+    assert jobs[1].mount_paths == (input_directory.resolve(),)
     assert jobs[0].output_paths != jobs[1].output_paths
 
 
