@@ -83,7 +83,6 @@ def _create_histogram_tables(reference_specs):
         _create_metadata_table(
             reference_id=spec["reference_id"],
             production_index=spec["production_index"],
-            event_data_file=spec["event_data_file"],
             site=spec["site"],
             array_name=spec["array_name"],
             telescope_ids=spec["telescope_ids"],
@@ -196,7 +195,6 @@ def _create_trigger_subset_histogram_table(reference_specs):
 def _create_metadata_table(
     reference_id,
     production_index,
-    event_data_file,
     site,
     array_name,
     telescope_ids,
@@ -209,7 +207,6 @@ def _create_metadata_table(
             {
                 "reference_id": reference_id,
                 "production_index": production_index,
-                "event_data_file": event_data_file,
                 "site": site or "",
                 "array_name": array_name,
                 "telescope_ids": ",".join(telescope_ids) if telescope_ids else "",
@@ -486,7 +483,6 @@ def _execute_production_job(job_spec):
     return [
         {
             "production_index": job_spec["production_index"],
-            "event_data_file": _format_event_data_source(job_spec["production_pattern"]),
             "site": job_spec["site"],
             "array_name": config["array_name"],
             "telescope_ids": config["telescope_ids"],
@@ -497,13 +493,6 @@ def _execute_production_job(job_spec):
             job_spec["telescope_configs"], histogram_topology_pairs
         )
     ]
-
-
-def _format_event_data_source(event_data_source):
-    """Return a readable metadata value for one event-data source."""
-    if isinstance(event_data_source, str):
-        return event_data_source
-    return ", ".join(str(path) for path in event_data_source)
 
 
 def discover_event_data_groups(event_data_directory):

@@ -113,7 +113,6 @@ def test_create_histogram_tables_contains_expected_metadata_and_bins():
             {
                 "reference_id": "ref-1",
                 "production_index": 0,
-                "event_data_file": "pattern*.hdf5",
                 "site": "North",
                 "array_name": "alpha",
                 "telescope_ids": ["LSTN-01"],
@@ -146,7 +145,6 @@ def test_event_data_histograms_round_trip_via_hdf5(tmp_path):
         {
             "reference_id": "ref-1",
             "production_index": 0,
-            "event_data_file": "pattern*.hdf5",
             "site": "North",
             "array_name": "alpha",
             "telescope_ids": ["LSTN-01"],
@@ -196,7 +194,6 @@ def test_trigger_topology_tables_are_created_from_reference_specs():
         {
             "reference_id": "ref-1",
             "production_index": 0,
-            "event_data_file": "pattern*.hdf5",
             "site": "North",
             "array_name": "alpha",
             "telescope_ids": ["LSTN-01"],
@@ -231,7 +228,6 @@ def test_event_data_histograms_hdf5_filter_by_array_name(tmp_path):
         {
             "reference_id": "ref-1",
             "production_index": 0,
-            "event_data_file": "pattern*.hdf5",
             "site": "North",
             "array_name": "MSTS-01",
             "telescope_ids": ["MSTS-01"],
@@ -292,7 +288,6 @@ def test_execute_production_job_returns_one_result_per_telescope_config(mocker):
     assert result == [
         {
             "production_index": 3,
-            "event_data_file": "prod_a/*.hdf5",
             "site": "North",
             "array_name": "alpha",
             "telescope_ids": ["LSTN-01"],
@@ -415,7 +410,6 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
             [
                 {
                     "production_index": 0,
-                    "event_data_file": "prod_a/*.hdf5",
                     "site": "North",
                     "array_name": "alpha",
                     "telescope_ids": ["LSTN-01"],
@@ -426,7 +420,6 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
             [
                 {
                     "production_index": 1,
-                    "event_data_file": "prod_b/*.hdf5",
                     "site": "North",
                     "array_name": "alpha",
                     "telescope_ids": ["LSTN-01"],
@@ -465,7 +458,7 @@ def test_write_trigger_histograms_dispatches_one_job_per_pattern(mocker, tmp_pat
     ]
     assert list(metadata_table["reference_id"]) == ["reference_0", "reference_1"]
     assert list(metadata_table["production_index"]) == [0, 1]
-    assert list(metadata_table["event_data_file"]) == ["prod_a/*.hdf5", "prod_b/*.hdf5"]
+    assert "event_data_file" not in metadata_table.colnames
     mock_metadata.assert_called_once_with(
         {
             "event_data_files": ["prod_a/*.hdf5", "prod_b/*.hdf5"],
