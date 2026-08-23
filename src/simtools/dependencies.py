@@ -35,13 +35,20 @@ SIMTEL_METADATA_BUILD_OPTION_KEYS = {
     "avx_flag",
     "build_date",
     "corsika_config_version",
+    "corsika_config_tag",
     "corsika_opt_patch_version",
+    "corsika_opt_patch_tag",
     "corsika_version",
+    "corsika_build_id",
+    "corsika_source_tag",
     "extra_defines",
     "hessio_version",
+    "hessio_tag",
     "iact_atmo_version",
     "simtel_version",
+    "simtel_tag",
     "stdtools_version",
+    "stdtools_tag",
 }
 _CORSIKA_TABLE_MANIFEST_SCHEMA_MAJOR = 1
 _GIT_LFS_POINTER_PREFIX = b"version https://git-lfs.github.com/spec/v1\n"

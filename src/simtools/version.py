@@ -11,6 +11,7 @@ from packaging.version import InvalidVersion, Version
 
 MAJOR_MINOR_PATCH = "major.minor.patch"
 MAJOR_MINOR = "major.minor"
+RELEASE_TAG_PATTERN = re.compile(r"^v\d+\.\d+\.\d+(?:[-+][\dA-Za-z.-]+)?$")
 
 try:
     try:
@@ -209,6 +210,36 @@ def base_version_for_patch_delta(version_string):
         return f"{major}.{minor}.0"
 
     return None
+
+
+def is_valid_release_tag(version_string):
+    """Return whether a value is a ``v``-prefixed semantic release tag."""
+    return isinstance(version_string, str) and bool(RELEASE_TAG_PATTERN.fullmatch(version_string))
+
+
+def validate_release_tag(version_string):
+    """Validate and return a ``v``-prefixed semantic release tag.
+
+    Parameters
+    ----------
+    version_string : str
+        Release tag to validate.
+
+    Returns
+    -------
+    str
+        The unchanged release tag.
+
+    Raises
+    ------
+    ValueError
+        If ``version_string`` is not a ``v``-prefixed semantic release tag.
+    """
+    if not is_valid_release_tag(version_string):
+        raise ValueError(
+            f"Release tag must be a v-prefixed semantic version, got {version_string!r}."
+        )
+    return version_string
 
 
 def is_valid_semantic_version(version_string, strict=True):

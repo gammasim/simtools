@@ -217,6 +217,22 @@ def test_base_version_for_patch_delta(version_string, expected):
     assert version.base_version_for_patch_delta(version_string) == expected
 
 
+@pytest.mark.parametrize(
+    "version_string",
+    ["v0.17.0", "v1.2.3-rc1", "v1.2.3+build.4"],
+)
+def test_validate_release_tag(version_string):
+    assert version.is_valid_release_tag(version_string)
+    assert version.validate_release_tag(version_string) == version_string
+
+
+@pytest.mark.parametrize("version_string", ["0.17.0", "vv0.17.0", "v0-17-0", "latest"])
+def test_validate_release_tag_rejects_non_tags(version_string):
+    assert not version.is_valid_release_tag(version_string)
+    with pytest.raises(ValueError, match="v-prefixed semantic version"):
+        version.validate_release_tag(version_string)
+
+
 def test_check_version_constraint():
     assert version.check_version_constraint("6.0.2", ">=6.0.0")
     assert version.check_version_constraint("6.0.2", "<=6.0.2")

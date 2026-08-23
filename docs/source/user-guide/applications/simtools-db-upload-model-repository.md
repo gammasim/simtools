@@ -38,7 +38,7 @@ Upload a released repository version (includes cloning the simulations-models re
 ```console
 simtools-db-upload-model-repository \
     --db_simulation_model CTAO-Simulation-Model \
-    --db_simulation_model_version v0.16.0
+    --db_simulation_model_tag v0.16.0
 ```
 
 Upload an existing local checkout:
@@ -46,6 +46,6 @@ Upload an existing local checkout:
 ```console
 simtools-db-upload-model-repository \
     --db_simulation_model CTAO-Simulation-Model \
-    --db_simulation_model_version v0.16.0 \
+    --db_simulation_model_tag v0.16.0 \
     --repository_dir /path/to/simulation-models
 ```

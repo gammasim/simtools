@@ -216,6 +216,154 @@ definitions:
 ---
 "$schema": http://json-schema.org/draft-06/schema#
 title: simtools dependency version catalog
+description: Catalog with explicit external tags and CORSIKA legacy build identifiers.
+schema_version: 0.3.0
+schema_name: dependency_versions.schema
+type: object
+additionalProperties: false
+required:
+- schema_version
+- python
+- apptainer
+- cpu-variants
+- base-image
+- corsika-interaction-tables
+- archives
+- model-database
+- simtools-tests
+- production-combinations
+- corsika
+- sim-telarray
+properties:
+  schema_version:
+    const: 0.3.0
+  python:
+    type: string
+    pattern: "^[0-9]+\\.[0-9]+$"
+  apptainer:
+    type: string
+  cpu-variants:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items:
+      enum: [generic, avx2, avx512f, sse4]
+  base-image:
+    type: object
+    additionalProperties: false
+    required: [name, runtime-version, build-version]
+    properties:
+      name: {type: string}
+      runtime-version: {type: string}
+      runtime-digest: {"$ref": "#/definitions/sha256"}
+      build-version: {type: string}
+      build-digest: {"$ref": "#/definitions/sha256"}
+  corsika-interaction-tables:
+    type: object
+    additionalProperties: false
+    required: [tag]
+    properties:
+      tag: {type: string, minLength: 1}
+  archives:
+    type: object
+    additionalProperties:
+      "$ref": "#/definitions/archive"
+    required: [autoconf, gsl]
+  model-database:
+    type: object
+    additionalProperties: false
+    required: [name, default-tag]
+    properties:
+      name: {type: string, minLength: 1}
+      default-tag: {"$ref": "#/definitions/tag"}
+  simtools-tests:
+    type: object
+    additionalProperties: false
+    required: [repository, source-url, tag]
+    properties:
+      repository: {type: string, pattern: "^[^/]+/[^/]+$"}
+      source-url: {type: string, pattern: "^https://"}
+      tag: {"$ref": "#/definitions/tag"}
+  production-combinations:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      additionalProperties: false
+      required: [corsika, sim-telarray]
+      properties:
+        corsika: {type: string, minLength: 1}
+        sim-telarray: {type: string, minLength: 1}
+        cpu-variants:
+          type: array
+          minItems: 1
+          uniqueItems: true
+  corsika:
+    type: array
+    minItems: 1
+    items: {"$ref": "#/definitions/corsika"}
+  sim-telarray:
+    type: array
+    minItems: 1
+    items: {"$ref": "#/definitions/simtel"}
+definitions:
+  tag:
+    type: string
+    pattern: "^v[0-9A-Za-z][0-9A-Za-z._+-]*$"
+  revision:
+    type: string
+    pattern: "^[0-9a-f]{40}$"
+  sha256:
+    type: string
+    pattern: "^sha256:[0-9a-f]{64}$"
+  archive-sha256:
+    type: string
+    pattern: "^[0-9a-f]{64}$"
+  archive:
+    type: object
+    additionalProperties: false
+    required: [version]
+    properties:
+      version: {type: string}
+      sha256: {"$ref": "#/definitions/archive-sha256"}
+  corsika:
+    type: object
+    additionalProperties: false
+    required: [tag, source-url, config-tag, config-source-url, opt-patch-tag, opt-patch-source-url]
+    properties:
+      tag: {type: string, pattern: "^v[0-9]+\\.[0-9]+$"}
+      build-id:
+        type: string
+        pattern: "^[0-9]{5}$"
+        description: Optional override for a CORSIKA release whose legacy build ID does not follow the tag-derived convention.
+      source-url: {type: string, pattern: "^https://"}
+      config-tag: {"$ref": "#/definitions/tag"}
+      config-source-url: {type: string, pattern: "^https://"}
+      config-revision: {"$ref": "#/definitions/revision"}
+      opt-patch-tag: {"$ref": "#/definitions/tag"}
+      opt-patch-source-url: {type: string, pattern: "^https://"}
+      opt-patch-revision: {"$ref": "#/definitions/revision"}
+      image-digests:
+        type: object
+        additionalProperties: {"$ref": "#/definitions/sha256"}
+  simtel:
+    type: object
+    additionalProperties: false
+    required: [tag, source-url, hessio-tag, hessio-source-url, stdtools-tag, stdtools-source-url]
+    properties:
+      tag: {type: string, minLength: 1}
+      source-url: {type: string, pattern: "^https://"}
+      revision: {"$ref": "#/definitions/revision"}
+      hessio-tag: {type: string, minLength: 1}
+      hessio-source-url: {type: string, pattern: "^https://"}
+      hessio-revision: {"$ref": "#/definitions/revision"}
+      stdtools-tag: {type: string, minLength: 1}
+      stdtools-source-url: {type: string, pattern: "^https://"}
+      stdtools-revision: {"$ref": "#/definitions/revision"}
+      image-digest: {"$ref": "#/definitions/sha256"}
+---
+"$schema": http://json-schema.org/draft-06/schema#
+title: simtools dependency version catalog
 description: YAML representation of the simtools dependency version catalog schema.
 schema_version: 0.2.0
 schema_name: dependency_versions.schema

@@ -23,11 +23,12 @@ ARG BUILD_BASE_IMAGE
 # STAGE 1: source code preparation
 # -----------------------------------------------------------------------------
 FROM ${BASE_IMAGE} AS source_preparation
-ARG CORSIKA_VERSION
-ARG CORSIKA_OPT_PATCH_VERSION
+ARG CORSIKA_BUILD_ID
+ARG CORSIKA_SOURCE_TAG
+ARG CORSIKA_OPT_PATCH_TAG
 ARG CORSIKA_OPT_PATCH_REVISION
 ARG CORSIKA_OPT_PATCH_SOURCE_URL
-ARG CORSIKA_CONFIG_VERSION
+ARG CORSIKA_CONFIG_TAG
 ARG CORSIKA_CONFIG_REVISION
 ARG CORSIKA_CONFIG_SOURCE_URL
 ARG AUTOCONF_SHA256
@@ -37,12 +38,12 @@ WORKDIR /src
 
 # Clone CORSIKA configuration files from CTAO gitlab
 RUN git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${CORSIKA_CONFIG_VERSION}" "${CORSIKA_CONFIG_SOURCE_URL}" && \
+    git clone --depth 1 --branch "${CORSIKA_CONFIG_TAG}" "${CORSIKA_CONFIG_SOURCE_URL}" && \
     git -C corsika7-config rev-parse HEAD > /src/corsika_config_revision && \
     if [ -n "${CORSIKA_CONFIG_REVISION}" ]; then \
         test "$(cat /src/corsika_config_revision)" = "${CORSIKA_CONFIG_REVISION}"; \
     fi && \
-    cp -v corsika7-config/config/"${CORSIKA_VERSION}"/*.h . && \
+    cp -v corsika7-config/config/"${CORSIKA_BUILD_ID}"/*.h . && \
     rm -rf corsika7-config
 
 # CORSIKA source is downloaded once per release by the GitHub workflow.
@@ -51,12 +52,12 @@ COPY corsika-source/corsika_revision /src/corsika_revision
 
 # Clone CORSIKA optimization patches from CTAO gitlab
 RUN git config --global advice.detachedHead false && \
-    git clone --depth 1 --branch "${CORSIKA_OPT_PATCH_VERSION}" "${CORSIKA_OPT_PATCH_SOURCE_URL}" && \
+    git clone --depth 1 --branch "${CORSIKA_OPT_PATCH_TAG}" "${CORSIKA_OPT_PATCH_SOURCE_URL}" && \
     git -C corsika-opt-patches rev-parse HEAD > /src/corsika_opt_patch_revision && \
     if [ -n "${CORSIKA_OPT_PATCH_REVISION}" ]; then \
         test "$(cat /src/corsika_opt_patch_revision)" = "${CORSIKA_OPT_PATCH_REVISION}"; \
     fi && \
-    cp -rL corsika-opt-patches/build_opt/"corsikaOptPatch-${CORSIKA_VERSION}"/* corsika7/ && \
+    cp -rL corsika-opt-patches/build_opt/"corsikaOptPatch-${CORSIKA_BUILD_ID}"/* corsika7/ && \
     rm -rf corsika-opt-patches
 
 # autoconf archive (tar file needs to be present in the build context)
@@ -73,10 +74,11 @@ RUN sha256sum /tmp/autoconf.tar.gz | cut -d ' ' -f1 > /src/autoconf_sha256 && \
 # -----------------------------------------------------------------------------
 FROM ${BUILD_BASE_IMAGE} AS build_image
 ARG AVX_FLAG
-ARG CORSIKA_VERSION
-ARG CORSIKA_OPT_PATCH_VERSION
+ARG CORSIKA_BUILD_ID
+ARG CORSIKA_SOURCE_TAG
+ARG CORSIKA_OPT_PATCH_TAG
 ARG CORSIKA_OPT_PATCH_SOURCE_URL
-ARG CORSIKA_CONFIG_VERSION
+ARG CORSIKA_CONFIG_TAG
 ARG CORSIKA_CONFIG_SOURCE_URL
 ARG CORSIKA_SOURCE_URL
 ARG CORSIKA_CONFIG_REVISION
@@ -102,7 +104,7 @@ RUN ./configure --prefix=/usr && \
 WORKDIR /workdir/simulation_software/corsika7
 
 # Apply patches for non-optimized / optimized CORSIKA
-RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
+RUN if [ "$CORSIKA_BUILD_ID" = "77550" ]; then \
         patch -b -p0 src/corsika.F < "../corsika-77550.patch"; \
     fi && \
     if [ "$AVX_FLAG" != "generic" ]; then \
@@ -113,7 +115,7 @@ RUN if [ "$CORSIKA_VERSION" = "77550" ]; then \
 # Build all CORSIKA versions (each config*.h file results in one build)
 RUN set -e; ls ../config_*.h; for config_file in ../config_*.h; do \
         ./coconut -d && rm -f ./*/*.a lib/*/*.a include/*.h \
-            ./run/corsika"${CORSIKA_VERSION}"Linux_* && \
+            ./run/corsika"${CORSIKA_BUILD_ID}"Linux_* && \
         # Extract variant and model names from config file name
         variant=$(basename "$config_file" .h | sed 's/.*_\(curved\|flat\)$/\1/'); \
         he_model=$(basename "$config_file" .h | sed 's/^config_\([^_]*\)_.*/\1/'); \
@@ -143,7 +145,7 @@ RUN set -e; ls ../config_*.h; for config_file in ../config_*.h; do \
             FFLAGS="${BASE_FLAGS} ${FORTRAN_SPECIFIC_FLAGS}" && \
         CORSIKA_USER_COMP=1 ./coconut --expert --without-root --without-COASTUSERLIB --without-conex < /dev/null; \
         # Require exactly one newly built executable before moving it
-        set -- ./run/corsika"${CORSIKA_VERSION}"Linux_*; \
+        set -- ./run/corsika"${CORSIKA_BUILD_ID}"Linux_*; \
         if [ "$#" -ne 1 ] || [ ! -x "$1" ]; then exit 1; fi; \
         rm -v -f ./run/qgsdat-II-04 && \
         CORSIKA_RUN_DIR="/workdir/corsika-run" && \
@@ -154,7 +156,7 @@ RUN set -e; ls ../config_*.h; for config_file in ../config_*.h; do \
         mv -v "$1" "${CORSIKA_RUN_DIR}/${corsika_name}" && \
         printf '%s\n' "$hilow_default" > "${CORSIKA_RUN_DIR}/.${corsika_name}.hilow_default" && \
         validate_corsika7_build include/config.h "${CORSIKA_RUN_DIR}/${corsika_name}" \
-            "$CORSIKA_VERSION" "$he_model" "$variant" "$optimization" "/tmp/${corsika_name}" && \
+            "$CORSIKA_BUILD_ID" "$he_model" "$variant" "$optimization" "/tmp/${corsika_name}" && \
         rm -rf -- "/tmp/${corsika_name}" && \
         # NUCNUCS table required to be in same directory as executables
         cp -v -f ./run/NUCNUCCS "$CORSIKA_RUN_DIR/"; \
@@ -174,13 +176,17 @@ RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
         IACT_ATMO_VERSION="unknown"; \
     fi && \
     { \
-        echo "corsika_version: \"${CORSIKA_VERSION}\""; \
+        echo "corsika_build_id: \"${CORSIKA_BUILD_ID}\""; \
+        echo "corsika_source_tag: \"${CORSIKA_SOURCE_TAG}\""; \
+        echo "corsika_version: \"${CORSIKA_BUILD_ID}\""; \
         echo "corsika_revision: \"$(cat /workdir/simulation_software/corsika_revision)\""; \
         echo "corsika_source_url: \"${CORSIKA_SOURCE_URL}\""; \
-        echo "corsika_opt_patch_version: \"${CORSIKA_OPT_PATCH_VERSION}\""; \
+        echo "corsika_opt_patch_tag: \"${CORSIKA_OPT_PATCH_TAG}\""; \
+        echo "corsika_opt_patch_version: \"${CORSIKA_OPT_PATCH_TAG}\""; \
         echo "corsika_opt_patch_revision: \"$(cat /workdir/simulation_software/corsika_opt_patch_revision)\""; \
         echo "corsika_opt_patch_source_url: \"${CORSIKA_OPT_PATCH_SOURCE_URL}\""; \
-        echo "corsika_config_version: \"${CORSIKA_CONFIG_VERSION}\""; \
+        echo "corsika_config_tag: \"${CORSIKA_CONFIG_TAG}\""; \
+        echo "corsika_config_version: \"${CORSIKA_CONFIG_TAG}\""; \
         echo "corsika_config_revision: \"$(cat /workdir/simulation_software/corsika_config_revision)\""; \
         echo "corsika_config_source_url: \"${CORSIKA_CONFIG_SOURCE_URL}\""; \
         echo "autoconf_version: \"${AUTOCONF_VERSION}\""; \

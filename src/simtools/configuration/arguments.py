@@ -438,10 +438,17 @@ DB_SIMULATION_MODEL = _argument(
     type=str.strip,
 )
 
+DB_SIMULATION_MODEL_TAG = _argument(
+    "db_simulation_model_tag",
+    _DATABASE_CONFIGURATION_GROUP,
+    help="Simulation-model repository/database release tag (for example, v0.17.0).",
+    type=str.strip,
+)
+
 DB_SIMULATION_MODEL_VERSION = _argument(
     "db_simulation_model_version",
     _DATABASE_CONFIGURATION_GROUP,
-    help="Simulation-model database version.",
+    help="Deprecated alias for --db_simulation_model_tag.",
     type=str.strip,
 )
 
@@ -453,6 +460,7 @@ DATABASE_ARGUMENTS = (
     DB_SERVER,
     DB_API_AUTHENTICATION_DATABASE,
     DB_SIMULATION_MODEL,
+    DB_SIMULATION_MODEL_TAG,
     DB_SIMULATION_MODEL_VERSION,
 )
 

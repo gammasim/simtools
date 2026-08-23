@@ -12,6 +12,7 @@ import yaml
 from simtools import constants
 from simtools.configuration.arguments import (
     ARRAY_LAYOUT_NAME,
+    DB_SIMULATION_MODEL_TAG,
     DB_SIMULATION_MODEL_VERSION,
     OUTPUT_ARGUMENTS,
     OUTPUT_PATH_ARGUMENTS,
@@ -329,6 +330,39 @@ def test_environment_database_version_overrides_catalog(
     config, _ = configurator.configure()
 
     assert config["db_simulation_model_version"] == "v0.99.0"
+
+
+def test_environment_database_version_rejects_bare_value(
+    configurator, tmp_test_directory, monkeypatch
+):
+    """Test current catalog contracts reject a bare repository version tag."""
+    env_file = tmp_test_directory / ".env"
+    env_file.write_text("SIMTOOLS_DB_SIMULATION_MODEL_VERSION=0.99.0\n", encoding="utf-8")
+    monkeypatch.delenv("SIMTOOLS_DB_SIMULATION_MODEL_VERSION", raising=False)
+
+    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_VERSION,))
+    configurator._get_cli_arglist = MagicMock(return_value=["--env_file", str(env_file)])
+    configurator._initialize_model_versions = MagicMock()
+    configurator._initialize_io_handler = MagicMock()
+    configurator._get_db_parameters = MagicMock(return_value={})
+
+    with pytest.raises(ValueError, match=r"v-prefixed.*release tag"):
+        configurator.configure()
+
+
+def test_database_tag_aliases_reject_conflicting_values(configurator):
+    """Canonical and deprecated database selectors cannot disagree."""
+    configurator.config = {
+        "db_simulation_model_tag": "v0.17.0",
+        "db_simulation_model_version": "v0.18.0",
+    }
+    with pytest.raises(ValueError, match="must match"):
+        configurator._normalize_release_tag_aliases()  # pylint: disable=protected-access
+
+
+def test_canonical_database_tag_argument_is_available():
+    """The canonical database tag argument is part of the shared definitions."""
+    assert DB_SIMULATION_MODEL_TAG.name == "db_simulation_model_tag"
 
 
 def test_initialize(configurator):

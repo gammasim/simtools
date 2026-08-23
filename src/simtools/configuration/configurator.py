@@ -111,6 +111,10 @@ class Configurator:
             **constructor_config,
             **file_config,
         }
+        merged_config = self._apply_legacy_tag_override(
+            merged_config,
+            explicit_keys=(set(env_config) | set(constructor_config) | set(file_config) | cli_keys),
+        )
         merged_config = self._without_cli_overrides(merged_config, cli_keys)
         self.config = self._convert_string_none_to_none(
             vars(
@@ -119,6 +123,8 @@ class Configurator:
                 )
             )
         )
+        self._normalize_release_tag_aliases()
+        self._validate_release_tag_inputs()
 
         if self.config.get("activity_id") is None:
             self.config["activity_id"] = gen.get_uuid()
@@ -143,19 +149,22 @@ class Configurator:
     @staticmethod
     def _dependency_defaults(parser_defaults):
         """Return catalog-managed database defaults supported by this parser."""
-        database_keys = {"db_simulation_model", "db_simulation_model_version"}
+        database_keys = {
+            "db_simulation_model",
+            "db_simulation_model_tag",
+            "db_simulation_model_version",
+        }
         if not database_keys & parser_defaults.keys():
             return {}
         catalog = dependency_versions.load_dependency_catalog()
         model = catalog["model-database"]
-        return {
-            key: value
-            for key, value in {
-                "db_simulation_model": model["name"],
-                "db_simulation_model_version": model["default-version"],
-            }.items()
-            if key in parser_defaults
-        }
+        defaults = {"db_simulation_model": model["name"]}
+        model_tag = model.get("default-tag", model.get("default-version"))
+        if "db_simulation_model_tag" in parser_defaults:
+            defaults["db_simulation_model_tag"] = model_tag
+        elif "db_simulation_model_version" in parser_defaults:
+            defaults["db_simulation_model_version"] = model_tag
+        return defaults
 
     @staticmethod
     def _option_value(arg_list, option_name):
@@ -187,6 +196,27 @@ class Configurator:
             if group_destinations & cli_keys:
                 superseded.update(group_destinations)
         return {key: value for key, value in config.items() if key not in superseded}
+
+    @staticmethod
+    def _apply_legacy_tag_override(config, explicit_keys=()):
+        """Let a legacy version option override the catalog default tag."""
+        tag = config.get("db_simulation_model_tag")
+        legacy = config.get("db_simulation_model_version")
+        if tag is None or legacy is None or tag == legacy:
+            return config
+        if "db_simulation_model_tag" in explicit_keys:
+            return config
+        try:
+            catalog = dependency_versions.load_dependency_catalog()
+            default_tag = catalog["model-database"].get(
+                "default-tag", catalog["model-database"].get("default-version")
+            )
+        except FileNotFoundError, KeyError, TypeError:
+            return config
+        if tag == default_tag:
+            config = dict(config)
+            config.pop("db_simulation_model_tag")
+        return config
 
     def _config_from_file(self, config_file):
         """
@@ -270,6 +300,35 @@ class Configurator:
             and len(self.config["model_version"]) == 1
         ):
             self.config["model_version"] = self.config["model_version"][0]
+
+    def _validate_release_tag_inputs(self):
+        """Validate repository release tags from the current catalog contract."""
+        database_tag = self.config.get("db_simulation_model_tag")
+        if database_tag is None:
+            return
+
+        catalog = dependency_versions.load_dependency_catalog()
+        if catalog["schema_version"] in {"0.2.0", "0.3.0"}:
+            try:
+                simtools_version.validate_release_tag(database_tag)
+            except ValueError as exc:
+                raise ValueError(
+                    "db_simulation_model_tag must be a v-prefixed simulation-model release tag."
+                ) from exc
+
+    def _normalize_release_tag_aliases(self):
+        """Normalize canonical and deprecated model-tag option names."""
+        tag = self.config.get("db_simulation_model_tag")
+        version = self.config.get("db_simulation_model_version")
+        if tag is not None and version is not None and tag != version:
+            raise ValueError(
+                "db_simulation_model_tag and db_simulation_model_version must "
+                "match when both are set."
+            )
+        selected = tag if tag is not None else version
+        if selected is not None:
+            self.config["db_simulation_model_tag"] = selected
+            self.config["db_simulation_model_version"] = selected
 
     def _initialize_io_handler(self):
         """Initialize IOHandler with input and output paths."""

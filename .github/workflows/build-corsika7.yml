@@ -95,16 +95,16 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: corsika7-source.tar.gz
-          key: corsika7-source-tarball-${{ matrix.corsika }}-${{ matrix.corsika_source_ref }}
+          key: corsika7-source-tarball-${{ matrix.corsika_build_id }}-${{ matrix.corsika_source_tag }}
 
       - name: Clone CORSIKA source from KIT
         if: steps.restore-corsika-source.outputs.cache-hit != 'true'
         env:
-          CORSIKA_SOURCE_REF: ${{ matrix.corsika_source_ref }}
+          CORSIKA_SOURCE_TAG: ${{ matrix.corsika_source_tag }}
           CORSIKA_SOURCE_URL: ${{ matrix.corsika_source_url }}
           CORSIKA7_TOKEN: ${{ secrets.CORSIKA7_KIT_GITLAB }}
         run: |
-          git clone --depth 1 --branch "$CORSIKA_SOURCE_REF" \
+          git clone --depth 1 --branch "$CORSIKA_SOURCE_TAG" \
             "https://oauth2:${CORSIKA7_TOKEN}@${CORSIKA_SOURCE_URL#https://}" corsika7
           git -C corsika7 rev-parse HEAD > corsika_revision
           rm -rf corsika7/.git
@@ -115,12 +115,12 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: corsika7-source.tar.gz
-          key: corsika7-source-tarball-${{ matrix.corsika }}-${{ matrix.corsika_source_ref }}
+          key: corsika7-source-tarball-${{ matrix.corsika_build_id }}-${{ matrix.corsika_source_tag }}
 
       - name: Upload CORSIKA source
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
-          name: corsika7-source-${{ matrix.corsika }}
+          name: corsika7-source-${{ matrix.corsika_build_id }}
           path: corsika7-source.tar.gz
           retention-days: 1
 
@@ -135,7 +135,7 @@ jobs:
         include: ${{ fromJSON(needs.dependency-config.outputs.corsika_build_matrix) }}
     env:
       BASE_LABEL: "corsika7"
-      BASE_TAG: "v${{ matrix.corsika }}-${{ matrix.avx_flag }}"
+      BASE_TAG: "v${{ matrix.corsika_build_id }}-${{ matrix.avx_flag }}"
       ARCH: "${{ matrix.arch }}"
       RUN_TAG: "${{ github.run_id }}-${{ github.run_attempt }}"
 
@@ -154,7 +154,7 @@ jobs:
       - name: Download CORSIKA source
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
         with:
-          name: corsika7-source-${{ matrix.corsika }}
+          name: corsika7-source-${{ matrix.corsika_build_id }}
           path: corsika-source
 
       - name: Extract CORSIKA source
@@ -192,12 +192,13 @@ jobs:
             BASE_IMAGE=${{ needs.dependency-config.outputs.base_image }}
             BUILD_BASE_IMAGE=${{ needs.dependency-config.outputs.build_base_image }}
             AVX_FLAG=${{ matrix.avx_flag }}
-            CORSIKA_VERSION=${{ matrix.corsika }}
+            CORSIKA_BUILD_ID=${{ matrix.corsika_build_id }}
+            CORSIKA_SOURCE_TAG=${{ matrix.corsika_source_tag }}
             CORSIKA_SOURCE_URL=${{ matrix.corsika_source_url }}
-            CORSIKA_CONFIG_VERSION=${{ matrix.corsika_config }}
+            CORSIKA_CONFIG_TAG=${{ matrix.corsika_config_tag }}
             CORSIKA_CONFIG_SOURCE_URL=${{ matrix.corsika_config_source_url }}
             CORSIKA_CONFIG_REVISION=${{ matrix.corsika_config_revision }}
-            CORSIKA_OPT_PATCH_VERSION=${{ matrix.corsika_opt_patch }}
+            CORSIKA_OPT_PATCH_TAG=${{ matrix.corsika_opt_patch_tag }}
             CORSIKA_OPT_PATCH_SOURCE_URL=${{ matrix.corsika_opt_patch_source_url }}
             CORSIKA_OPT_PATCH_REVISION=${{ matrix.corsika_opt_patch_revision }}
             AUTOCONF_VERSION=${{ needs.dependency-config.outputs.autoconf_version }}
@@ -219,7 +220,7 @@ jobs:
         include: ${{ fromJSON(needs.dependency-config.outputs.corsika_matrix) }}
     env:
       BASE_LABEL: "corsika7"
-      BASE_TAG: "v${{ matrix.corsika }}-${{ matrix.avx_flag }}"
+      BASE_TAG: "v${{ matrix.corsika_build_id }}-${{ matrix.avx_flag }}"
       IMAGE: "ghcr.io/gammasim/corsika7"
       RUN_TAG: "${{ github.run_id }}-${{ github.run_attempt }}"
 
