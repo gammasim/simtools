@@ -42,15 +42,15 @@ def main():
     app_context = APPLICATION.start()
 
     if app_context.args.get("db_simulation_model") and app_context.args.get(
-        "db_simulation_model_version"
+        "db_simulation_model_tag"
     ):
         app_context.db_config["db_simulation_model"] = app_context.args["db_simulation_model"]
         app_context.db_config["db_simulation_model_version"] = app_context.args[
-            "db_simulation_model_version"
+            "db_simulation_model_tag"
         ]
         config.load(app_context.args, app_context.db_config)
     else:
-        raise ValueError("Both db_simulation_model and db_simulation_model_version are required.")
+        raise ValueError("Both db_simulation_model and db_simulation_model_tag are required.")
 
     db = db_handler.DatabaseHandler()
     db.require_mongodb("Adding a simulation model to a database")
