@@ -34,21 +34,23 @@ DEPENDENCY_MANIFEST_SCHEMA_VERSION = "0.1.0"
 SIMTEL_METADATA_BUILD_OPTION_KEYS = {
     "avx_flag",
     "build_date",
-    "corsika_config_version",
     "corsika_config_tag",
-    "corsika_opt_patch_version",
     "corsika_opt_patch_tag",
-    "corsika_version",
     "corsika_build_id",
     "corsika_source_tag",
     "extra_defines",
-    "hessio_version",
     "hessio_tag",
     "iact_atmo_version",
-    "simtel_version",
     "simtel_tag",
-    "stdtools_version",
     "stdtools_tag",
+}
+LEGACY_BUILD_OPTION_KEYS = {
+    "corsika_config_version": "corsika_config_tag",
+    "corsika_opt_patch_version": "corsika_opt_patch_tag",
+    "corsika_version": "corsika_build_id",
+    "hessio_version": "hessio_tag",
+    "simtel_version": "simtel_tag",
+    "stdtools_version": "stdtools_tag",
 }
 _CORSIKA_TABLE_MANIFEST_SCHEMA_MAJOR = 1
 _GIT_LFS_POINTER_PREFIX = b"version https://git-lfs.github.com/spec/v1\n"
@@ -513,7 +515,7 @@ def _build_options_from_files(build_option_files):
             options.update(
                 _sanitize_build_options(yaml.safe_load(path.read_text(encoding="utf-8")) or {})
             )
-    return options
+    return _normalize_build_options(options)
 
 
 def _write_manifest(manifest, output_file):
@@ -538,8 +540,8 @@ def get_dependency_summary(run_time=None):
         f"simtools: {simtools_info.get('version', __version__)}\n"
         f"revision: {simtools_info.get('revision')}\n"
         f"Python: {runtime.get('python_version')}\n"
-        f"CORSIKA: {build_options.get('corsika_version')}\n"
-        f"sim_telarray: {build_options.get('simtel_version')}\n"
+        f"CORSIKA: {build_options.get('corsika_build_id')}\n"
+        f"sim_telarray: {build_options.get('simtel_tag')}\n"
         f"dependency manifest SHA-256: "
         f"{hashlib.sha256(canonical_manifest_bytes(manifest)).hexdigest()}"
     )
@@ -599,7 +601,7 @@ def get_database_version_or_name(version=True):
     """
     if version:
         return settings.config.db_config and settings.config.db_config.get(
-            "db_simulation_model_version"
+            "db_simulation_model_tag"
         )
     return settings.config.db_config and settings.config.db_config.get("db_simulation_model")
 
@@ -694,7 +696,7 @@ def get_corsika_version(run_time=None):
         _logger.warning("Could not get CORSIKA version.")
         return None
     _logger.debug("Getting the CORSIKA version from the build options.")
-    return build_opts.get("corsika_version")
+    return build_opts.get("corsika_build_id")
 
 
 def get_build_options(run_time=None):
@@ -736,7 +738,18 @@ def get_build_options(run_time=None):
     if not build_opts:
         raise FileNotFoundError("No build option file found.")
 
-    return build_opts
+    return _normalize_build_options(build_opts)
+
+
+def _normalize_build_options(build_options):
+    """Return canonical build-option names while accepting old image metadata."""
+    normalized = {
+        key: value for key, value in build_options.items() if key not in LEGACY_BUILD_OPTION_KEYS
+    }
+    for legacy_key, canonical_key in LEGACY_BUILD_OPTION_KEYS.items():
+        if canonical_key not in normalized and legacy_key in build_options:
+            normalized[canonical_key] = build_options[legacy_key]
+    return normalized
 
 
 def _get_package_path(package):

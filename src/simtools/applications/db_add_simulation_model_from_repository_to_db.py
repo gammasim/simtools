@@ -45,7 +45,7 @@ def main():
         "db_simulation_model_tag"
     ):
         app_context.db_config["db_simulation_model"] = app_context.args["db_simulation_model"]
-        app_context.db_config["db_simulation_model_version"] = app_context.args[
+        app_context.db_config["db_simulation_model_tag"] = app_context.args[
             "db_simulation_model_tag"
         ]
         config.load(app_context.args, app_context.db_config)

@@ -103,7 +103,7 @@ jobs:
         id: interaction_table_version
         run: |
           CORSIKA_TABLES=$(python src/simtools/applications/dependency_versions.py \
-            --format github-output | sed -n 's/^corsika_tables_version=//p')
+            --format github-output | sed -n 's/^corsika_tables_tag=//p')
           test -n "$CORSIKA_TABLES"
           echo "CORSIKA_TABLES=$CORSIKA_TABLES" >> "$GITHUB_ENV"
           echo "version=$CORSIKA_TABLES" >> "$GITHUB_OUTPUT"

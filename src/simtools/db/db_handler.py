@@ -25,7 +25,7 @@ class DatabaseHandler:
 
     Note the two types of version variables used in this class:
 
-    - db_simulation_model_version (from db_config): version of the simulation model database
+    - db_simulation_model_tag (from db_config): release tag of the simulation model database
     - model_version (from production_tables): version of the model contained in the database
     """
 
@@ -59,7 +59,7 @@ class DatabaseHandler:
 
         self.db_name = (
             MongoDBHandler.get_db_name(
-                db_simulation_model_version=self.db_config.get("db_simulation_model_version"),
+                db_simulation_model_tag=self.db_config.get("db_simulation_model_tag"),
                 model_name=self.db_config.get("db_simulation_model"),
             )
             if self.db_config and not self.file_system_handler
@@ -90,16 +90,16 @@ class DatabaseHandler:
             raise RuntimeError(f"{operation} requires a MongoDB model source.")
         return self.mongo_db_handler
 
-    def get_db_name(self, db_name=None, db_simulation_model_version=None, model_name=None):
+    def get_db_name(self, db_name=None, db_simulation_model_tag=None, model_name=None):
         """Build DB name from configuration."""
         if db_name:
             return db_name
-        if db_simulation_model_version and model_name:
+        if db_simulation_model_tag and model_name:
             return MongoDBHandler.get_db_name(
-                db_simulation_model_version=db_simulation_model_version,
+                db_simulation_model_tag=db_simulation_model_tag,
                 model_name=model_name,
             )
-        if not (db_simulation_model_version or model_name):
+        if not (db_simulation_model_tag or model_name):
             return self.db_name
         return None
 
@@ -128,7 +128,7 @@ class DatabaseHandler:
         return bool(self.mongo_db_handler and self.mongo_db_handler.is_remote_database())
 
     def generate_compound_indexes_for_databases(
-        self, db_name, db_simulation_model, db_simulation_model_version
+        self, db_name, db_simulation_model, db_simulation_model_tag
     ):
         """
         Generate compound indexes for several databases.
@@ -139,11 +139,11 @@ class DatabaseHandler:
             Name of the database.
         db_simulation_model: str
             Name of the simulation model.
-        db_simulation_model_version: str
-            Version of the simulation model.
+        db_simulation_model_tag: str
+            Release tag of the simulation model.
         """
         self.require_mongodb("Generating database indexes").generate_compound_indexes_for_databases(
-            db_name, db_simulation_model, db_simulation_model_version
+            db_name, db_simulation_model, db_simulation_model_tag
         )
 
     def get_model_parameter(

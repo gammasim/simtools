@@ -87,7 +87,7 @@ def add_complete_model(
         db.generate_compound_indexes_for_databases(
             db_name=None,
             db_simulation_model=db_simulation_model,
-            db_simulation_model_version=db_simulation_model_version,
+            db_simulation_model_tag=db_simulation_model_version,
         )
     except Exception as exc:
         raise RuntimeError(f"Upload of simulation model failed: {exc}") from exc

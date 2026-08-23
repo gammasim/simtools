@@ -142,15 +142,12 @@ RUN make clean && \
 # Generate build_opts.yml with build information before removing Git metadata.
 RUN { \
     echo "simtel_tag: \"${SIMTEL_TAG}\""; \
-    echo "simtel_version: \"${SIMTEL_TAG}\""; \
     echo "simtel_revision: \"$(git rev-parse HEAD)\""; \
     echo "simtel_source_url: \"${SIMTEL_SOURCE_URL}\""; \
     echo "hessio_tag: \"${HESSIO_TAG}\""; \
-    echo "hessio_version: \"${HESSIO_TAG}\""; \
     echo "hessio_revision: \"$(cat /workdir/simulation_software/hessio_revision)\""; \
     echo "hessio_source_url: \"${HESSIO_SOURCE_URL}\""; \
     echo "stdtools_tag: \"${STDTOOLS_TAG}\""; \
-    echo "stdtools_version: \"${STDTOOLS_TAG}\""; \
     echo "stdtools_revision: \"$(git -C /workdir/simulation_software/stdtools rev-parse HEAD)\""; \
     echo "stdtools_source_url: \"${STDTOOLS_SOURCE_URL}\""; \
     echo "gsl_version: \"${GSL_VERSION}\""; \

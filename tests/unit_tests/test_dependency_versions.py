@@ -23,14 +23,13 @@ def test_catalog_derives_corsika_build_id_from_tag(simtools_root_path):
     assert catalog["corsika"][0]["tag"] == "v7.8010"
     assert "build-id" not in catalog["corsika"][0]
     matrices = dependency_versions.build_workflow_matrices(catalog)
-    assert matrices["production_matrix"][0]["corsika"] == "v7.8010"
+    assert matrices["production_matrix"][0]["corsika_tag"] == "v7.8010"
     assert matrices["production_matrix"][0]["corsika_image"].endswith(":v78010-generic")
 
 
-def test_corsika_build_id_allows_nonconforming_override():
-    """Allow an explicit legacy build ID for exceptional upstream tags."""
-    component = {"tag": "v8.1", "build-id": "80100"}
-    assert dependency_versions._corsika_build_id(component) == "80100"  # pylint: disable=protected-access
+def test_corsika_build_id_is_derived_without_a_fixed_length():
+    """Derive the legacy build ID directly from the source tag."""
+    assert dependency_versions._corsika_build_id({"tag": "v8.10000"}) == "810000"  # pylint: disable=protected-access
 
 
 def test_catalog_reads_legacy_corsika_fields():
@@ -108,7 +107,7 @@ def test_catalog_summary_uses_version_tags_without_digests(simtools_root_path):
     summary = dependency_versions.dependency_catalog_summary(catalog)
 
     assert summary["base_image"] == "docker.io/library/almalinux:9.8-minimal"
-    assert summary["corsika_tables_version"] == "v1.0.0"
+    assert summary["corsika_tables_tag"] == "v1.0.0"
     assert summary["dev_corsika_image"] == "ghcr.io/gammasim/corsika7:v78010-generic"
     assert summary["model_database_tag"] == catalog["model-database"]["default-tag"]
     assert summary["simtools_tests_repository"] == "gammasim/simtools-tests"
@@ -373,9 +372,7 @@ def test_export_dependency_configuration_returns_environment_values(simtools_roo
     assert output.splitlines() == [
         "SIMTOOLS_DB_SIMULATION_MODEL=CTAO-Simulation-Model",
         f"SIMTOOLS_DB_SIMULATION_MODEL_TAG={model_version}",
-        f"SIMTOOLS_DB_SIMULATION_MODEL_VERSION={model_version}",
         "SIMTOOLS_TESTS_TAG=v0.36.0",
-        "SIMTOOLS_TESTS_VERSION=v0.36.0",
         "SIMTOOLS_TESTS_REPOSITORY=gammasim/simtools-tests",
         "SIMTOOLS_TESTS_URL=https://github.com/gammasim/simtools-tests.git",
     ]

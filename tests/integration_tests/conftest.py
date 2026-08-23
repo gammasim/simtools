@@ -53,7 +53,6 @@ def db_config(simtools_root_path):
     db_config["db_simulation_model_tag"] = db_config["db_simulation_model_tag"] or catalog[
         "model-database"
     ].get("default-tag", catalog["model-database"].get("default-version"))
-    db_config["db_simulation_model_version"] = db_config["db_simulation_model_tag"]
     if db_config["db_api_port"] is not None:
         db_config["db_api_port"] = int(db_config["db_api_port"])
     return db_config

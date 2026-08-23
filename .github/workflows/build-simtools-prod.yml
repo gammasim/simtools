@@ -120,7 +120,7 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: |
             latest=false
-            suffix=-${{ matrix.corsika_build_id }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
+            suffix=-${{ matrix.corsika_build_id }}-${{ matrix.simtel_tag }}-${{ matrix.avx_flag }}
           tags: |
             type=ref,event=pr
             type=semver,pattern={{version}},prefix=v
@@ -154,8 +154,8 @@ jobs:
           file: ./docker/Dockerfile-simtools-prod
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=simtools-prod-${{ matrix.corsika_build_id }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
-          cache-to: type=gha,mode=min,scope=simtools-prod-${{ matrix.corsika_build_id }}-${{ matrix.sim_telarray }}-${{ matrix.avx_flag }}
+          cache-from: type=gha,scope=simtools-prod-${{ matrix.corsika_build_id }}-${{ matrix.simtel_tag }}-${{ matrix.avx_flag }}
+          cache-to: type=gha,mode=min,scope=simtools-prod-${{ matrix.corsika_build_id }}-${{ matrix.simtel_tag }}-${{ matrix.avx_flag }}
 
   test-simtools-prod:
     permissions:

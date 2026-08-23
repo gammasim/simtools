@@ -417,7 +417,7 @@ def test_version_info_export_build_info_with_io_handler():
                 "simtools.application.control.dependencies.export_build_info"
             ) as mock_export:
                 with patch("simtools.application.control.version.__version__", "1.0.0"):
-                    mock_build.return_value = {"corsika_version": "7.7500"}
+                    mock_build.return_value = {"corsika_build_id": "7.7500"}
 
                     _version_info(args_dict, mock_io_handler, logger)
 
@@ -435,7 +435,7 @@ def test_version_info_export_build_info_without_io_handler():
                 "simtools.application.control.dependencies.export_build_info"
             ) as mock_export:
                 with patch("simtools.application.control.version.__version__", "1.0.0"):
-                    mock_build.return_value = {"corsika_version": "7.7500"}
+                    mock_build.return_value = {"corsika_build_id": "7.7500"}
 
                     _version_info(args_dict, None, logger)
 

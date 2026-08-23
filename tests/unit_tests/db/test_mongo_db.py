@@ -37,7 +37,7 @@ def valid_db_config():
         "db_api_pw": "test_password",
         "db_api_authentication_database": "admin",
         "db_simulation_model": "test_model",
-        "db_simulation_model_version": "1.0.0",
+        "db_simulation_model_tag": "1.0.0",
     }
 
 
@@ -65,7 +65,7 @@ def test_get_db_name_with_direct_name():
 
 
 def test_get_db_name_incomplete():
-    result = mongo_db.MongoDBHandler.get_db_name(db_simulation_model_version="1.0.0")
+    result = mongo_db.MongoDBHandler.get_db_name(db_simulation_model_tag="1.0.0")
     assert result is None
     result = mongo_db.MongoDBHandler.get_db_name(model_name="test_model")
     assert result is None

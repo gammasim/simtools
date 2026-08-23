@@ -13,7 +13,6 @@ from simtools import constants
 from simtools.configuration.arguments import (
     ARRAY_LAYOUT_NAME,
     DB_SIMULATION_MODEL_TAG,
-    DB_SIMULATION_MODEL_VERSION,
     OUTPUT_ARGUMENTS,
     OUTPUT_PATH_ARGUMENTS,
     STANDARD_ARGUMENTS,
@@ -276,12 +275,12 @@ def test_set_model_versions(configurator):
 def test_dependency_database_defaults_are_read_from_catalog():
     """Test database name and version defaults come from the dependency catalog."""
     defaults = Configurator._dependency_defaults(  # pylint: disable=protected-access
-        {"db_simulation_model": None, "db_simulation_model_version": None}
+        {"db_simulation_model": None, "db_simulation_model_tag": None}
     )
 
     assert defaults == {
         "db_simulation_model": "CTAO-Simulation-Model",
-        "db_simulation_model_version": "v0.17.0",
+        "db_simulation_model_tag": "v0.17.0",
     }
     assert (
         Configurator._dependency_defaults(  # pylint: disable=protected-access
@@ -293,14 +292,14 @@ def test_dependency_database_defaults_are_read_from_catalog():
         {"db_simulation_model": None}
     ) == {"db_simulation_model": "CTAO-Simulation-Model"}
     assert Configurator._dependency_defaults(  # pylint: disable=protected-access
-        {"db_simulation_model_version": None}
-    ) == {"db_simulation_model_version": "v0.17.0"}
+        {"db_simulation_model_tag": None}
+    ) == {"db_simulation_model_tag": "v0.17.0"}
 
 
 def test_configure_can_disable_dependency_defaults(configurator):
     """Test applications can preserve explicit database-target validation."""
     configurator.use_dependency_defaults = False
-    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_VERSION,))
+    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_TAG,))
     configurator._get_cli_arglist = MagicMock(return_value=[])
     configurator._config_from_env = MagicMock(return_value={})
     configurator._config_from_file = MagicMock(return_value={})
@@ -310,7 +309,7 @@ def test_configure_can_disable_dependency_defaults(configurator):
 
     config, _ = configurator.configure()
 
-    assert config["db_simulation_model_version"] is None
+    assert config["db_simulation_model_tag"] is None
 
 
 def test_environment_database_version_overrides_catalog(
@@ -321,7 +320,7 @@ def test_environment_database_version_overrides_catalog(
     env_file.write_text("SIMTOOLS_DB_SIMULATION_MODEL_VERSION=v0.99.0\n", encoding="utf-8")
     monkeypatch.delenv("SIMTOOLS_DB_SIMULATION_MODEL_VERSION", raising=False)
 
-    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_VERSION,))
+    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_TAG,))
     configurator._get_cli_arglist = MagicMock(return_value=["--env_file", str(env_file)])
     configurator._initialize_model_versions = MagicMock()
     configurator._initialize_io_handler = MagicMock()
@@ -329,7 +328,7 @@ def test_environment_database_version_overrides_catalog(
 
     config, _ = configurator.configure()
 
-    assert config["db_simulation_model_version"] == "v0.99.0"
+    assert config["db_simulation_model_tag"] == "v0.99.0"
 
 
 def test_environment_database_version_rejects_bare_value(
@@ -340,7 +339,7 @@ def test_environment_database_version_rejects_bare_value(
     env_file.write_text("SIMTOOLS_DB_SIMULATION_MODEL_VERSION=0.99.0\n", encoding="utf-8")
     monkeypatch.delenv("SIMTOOLS_DB_SIMULATION_MODEL_VERSION", raising=False)
 
-    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_VERSION,))
+    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_TAG,))
     configurator._get_cli_arglist = MagicMock(return_value=["--env_file", str(env_file)])
     configurator._initialize_model_versions = MagicMock()
     configurator._initialize_io_handler = MagicMock()
@@ -352,12 +351,28 @@ def test_environment_database_version_rejects_bare_value(
 
 def test_database_tag_aliases_reject_conflicting_values(configurator):
     """Canonical and deprecated database selectors cannot disagree."""
-    configurator.config = {
-        "db_simulation_model_tag": "v0.17.0",
-        "db_simulation_model_version": "v0.18.0",
-    }
+    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_TAG,))
     with pytest.raises(ValueError, match="must match"):
-        configurator._normalize_release_tag_aliases()  # pylint: disable=protected-access
+        configurator._normalize_argument_aliases(  # pylint: disable=protected-access
+            {
+                "db_simulation_model_tag": "v0.17.0",
+                "db_simulation_model_version": "v0.18.0",
+            }
+        )
+
+
+def test_database_tag_cli_aliases_reject_conflicting_values(configurator):
+    """Canonical and deprecated CLI selectors cannot disagree."""
+    configurator.parser.add_argument_definitions((DB_SIMULATION_MODEL_TAG,))
+
+    with pytest.raises(ValueError, match="Conflicting values"):
+        configurator._validate_cli_aliases(  # pylint: disable=protected-access
+            [
+                "--db_simulation_model_tag",
+                "v0.17.0",
+                "--db_simulation_model_version=v0.18.0",
+            ]
+        )
 
 
 def test_canonical_database_tag_argument_is_available():

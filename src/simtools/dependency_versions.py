@@ -18,7 +18,7 @@ ARCHIVE_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 LEGACY_MODEL_VERSION_PATTERN = re.compile(r"^\d+\.\d+(?:\.\d+)?$")
 SIMTOOLS_TESTS_REPOSITORY_PATTERN = re.compile(r"^[^/]+/[^/]+$")
-CORSIKA_TAG_PATTERN = re.compile(r"^v(?P<major>\d+)\.(?P<minor>\d+)$")
+CORSIKA_TAG_PATTERN = re.compile(r"^v\d+\.\d+$")
 
 
 def _corsika_tag(component):
@@ -29,27 +29,16 @@ def _corsika_tag(component):
 def _corsika_build_id(component):
     """Return the legacy CORSIKA build identifier.
 
-    New catalog records derive this legacy identifier from the source tag. The
-    optional explicit value remains available for an upstream release that does
-    not follow the established naming convention.
+    New catalog records derive this legacy identifier from the source tag.
     """
-    explicit = component.get("build-id", component.get("version"))
-    if explicit is not None:
-        return explicit
+    if "version" in component:
+        return component["version"]
     tag = _corsika_tag(component)
-    match = CORSIKA_TAG_PATTERN.fullmatch(tag or "")
-    if match is None:
+    if CORSIKA_TAG_PATTERN.fullmatch(tag or "") is None:
         raise ValueError(
-            "CORSIKA tag must have the form v<major>.<minor> to derive its legacy build ID; "
-            "set build-id explicitly for an exception."
+            "CORSIKA tag must have the form v<major>.<minor> to derive its legacy build ID."
         )
-    build_id = f"{match['major']}{match['minor']}"
-    if not re.fullmatch(r"\d{5}", build_id):
-        raise ValueError(
-            f"CORSIKA tag {tag!r} does not derive a five-digit legacy build ID; "
-            "set build-id explicitly for this release."
-        )
-    return build_id
+    return tag.removeprefix("v").replace(".", "")
 
 
 def _corsika_reference(component):
@@ -65,7 +54,7 @@ def _simtel_tag(component):
 def _model_tag(catalog):
     """Return the model-database tag from either catalog schema."""
     model = catalog["model-database"]
-    return model.get("default-version", model.get("default-tag"))
+    return model.get("default-tag", model.get("default-version"))
 
 
 def _tests_tag(test_resources):
@@ -365,7 +354,6 @@ def build_workflow_matrices(catalog):
         {
             "corsika_tag": _corsika_tag(corsika),
             "corsika_build_id": _corsika_build_id(corsika),
-            "corsika_source_tag": _corsika_tag(corsika),
             "corsika_source_url": corsika["source-url"],
             "corsika_config_tag": _dependency_tag(corsika, "config-tag", "config-version"),
             "corsika_config_source_url": corsika["config-source-url"],
@@ -397,23 +385,6 @@ def build_workflow_matrices(catalog):
         }
         for component in catalog["sim-telarray"]
     ]
-    for item in corsika_matrix:
-        item.update(
-            {
-                "corsika": item["corsika_build_id"],
-                "corsika_source_ref": item["corsika_source_tag"],
-                "corsika_config": item["corsika_config_tag"],
-                "corsika_opt_patch": item["corsika_opt_patch_tag"],
-            }
-        )
-    for item in simtel_matrix:
-        item.update(
-            {
-                "simtel_version": item["simtel_tag"],
-                "hessio_version": item["hessio_tag"],
-                "stdtools_version": item["stdtools_tag"],
-            }
-        )
     return {
         "corsika_matrix": corsika_matrix,
         "corsika_build_matrix": [
@@ -426,10 +397,7 @@ def build_workflow_matrices(catalog):
             {
                 "corsika_tag": _corsika_tag(component),
                 "corsika_build_id": _corsika_build_id(component),
-                "corsika_source_tag": _corsika_tag(component),
                 "corsika_source_url": component["source-url"],
-                "corsika": _corsika_build_id(component),
-                "corsika_source_ref": _corsika_tag(component),
             }
             for component in catalog["corsika"]
         ],
@@ -449,14 +417,14 @@ def _production_matrix_entry(corsika_components, simtel_components, combination,
         _corsika_tag(corsika) if "tag" in corsika else f"v{_corsika_build_id(corsika)}"
     )
     return {
-        "corsika": production_corsika,
+        "corsika_tag": production_corsika,
         "corsika_build_id": _corsika_build_id(corsika),
         "corsika_image": _image_reference(
             "ghcr.io/gammasim/corsika7",
             f"v{_corsika_build_id(corsika)}-{variant}",
             corsika.get("image-digests", {}).get(variant),
         ),
-        "sim_telarray": _simtel_tag(simtel),
+        "simtel_tag": _simtel_tag(simtel),
         "simtel_image": _image_reference(
             "ghcr.io/gammasim/sim_telarray",
             _simtel_tag(simtel),
@@ -477,7 +445,7 @@ def dependency_catalog_summary(catalog):
     default_corsika = catalog["corsika"][0]
     default_simtel = catalog["sim-telarray"][0]
     test_resources = catalog.get("simtools-tests", {})
-    summary = {
+    return {
         "python_version": catalog["python"],
         "apptainer_version": catalog["apptainer"],
         "base_image": _image_reference(
@@ -510,15 +478,6 @@ def dependency_catalog_summary(catalog):
             default_simtel.get("image-digest"),
         ),
     }
-    # Keep deprecated export names during the migration; values are unchanged.
-    summary.update(
-        {
-            "corsika_tables_version": summary["corsika_tables_tag"],
-            "model_version": summary["model_database_tag"],
-            "simtools_tests_version": summary["simtools_tests_tag"],
-        }
-    )
-    return summary
 
 
 def dependency_catalog_environment(catalog):
@@ -540,7 +499,6 @@ def dependency_catalog_environment(catalog):
         environment = {
             "SIMTOOLS_DB_SIMULATION_MODEL": catalog["model-database"]["name"],
             "SIMTOOLS_DB_SIMULATION_MODEL_TAG": model_tag,
-            "SIMTOOLS_DB_SIMULATION_MODEL_VERSION": model_tag,
         }
     else:
         environment = {
@@ -549,15 +507,18 @@ def dependency_catalog_environment(catalog):
         }
     if "simtools-tests" in catalog:
         test_tag = _tests_tag(catalog["simtools-tests"])
-        if catalog["schema_version"] == "0.3.0":
-            environment["SIMTOOLS_TESTS_TAG"] = test_tag
         environment.update(
             {
-                "SIMTOOLS_TESTS_VERSION": test_tag,
                 "SIMTOOLS_TESTS_REPOSITORY": catalog["simtools-tests"]["repository"],
                 "SIMTOOLS_TESTS_URL": catalog["simtools-tests"]["source-url"],
             }
         )
+        tag_key = (
+            "SIMTOOLS_TESTS_TAG"
+            if catalog["schema_version"] == "0.3.0"
+            else "SIMTOOLS_TESTS_VERSION"
+        )
+        environment[tag_key] = test_tag
     return environment
 
 

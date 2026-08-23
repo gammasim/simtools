@@ -41,9 +41,9 @@ jsonschema_db_dict = {
             "type": "string",
             "description": "Name of simulation model database",
         },
-        "db_simulation_model_version": {
+        "db_simulation_model_tag": {
             "type": "string",
-            "description": "Version of simulation model database",
+            "description": "Release tag of simulation model database",
         },
     },
     "required": [
@@ -52,7 +52,7 @@ jsonschema_db_dict = {
         "db_api_user",
         "db_api_pw",
         "db_simulation_model",
-        "db_simulation_model_version",
+        "db_simulation_model_tag",
     ],
 }
 
@@ -238,7 +238,7 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
             raise ValueError("Invalid MongoDB configuration") from err
 
     @staticmethod
-    def get_db_name(db_name=None, db_simulation_model_version=None, model_name=None):
+    def get_db_name(db_name=None, db_simulation_model_tag=None, model_name=None):
         """
         Build DB name from configuration.
 
@@ -246,8 +246,8 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         ----------
         db_name: str
             Direct database name (if provided, returns this).
-        db_simulation_model_version: str
-            Version of the simulation model.
+        db_simulation_model_tag: str
+            Release tag of the simulation model.
         model_name: str
             Name of the simulation model.
 
@@ -258,8 +258,8 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         """
         if db_name:
             return db_name
-        if db_simulation_model_version and model_name:
-            return f"{model_name}-{db_simulation_model_version.replace('.', '-')}"
+        if db_simulation_model_tag and model_name:
+            return f"{model_name}-{db_simulation_model_tag.replace('.', '-')}"
         return None
 
     def print_connection_info(self, db_name):
@@ -362,7 +362,7 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         return databases if requested == "all" else [requested]
 
     def generate_compound_indexes_for_databases(
-        self, db_name, db_simulation_model, db_simulation_model_version
+        self, db_name, db_simulation_model, db_simulation_model_tag
     ):
         """
         Generate compound indexes for several databases.
@@ -373,8 +373,8 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
             Name of the database.
         db_simulation_model: str
             Name of the simulation model.
-        db_simulation_model_version: str
-            Version of the simulation model.
+        db_simulation_model_tag: str
+            Release tag of the simulation model.
 
         Raises
         ------
@@ -384,7 +384,7 @@ class MongoDBHandler:  # pylint: disable=unsubscriptable-object
         databases = self.get_accessible_database_names()
         requested = self.get_db_name(
             db_name=db_name,
-            db_simulation_model_version=db_simulation_model_version,
+            db_simulation_model_tag=db_simulation_model_tag,
             model_name=db_simulation_model,
         )
         databases = self.resolve_requested_databases(requested, databases)

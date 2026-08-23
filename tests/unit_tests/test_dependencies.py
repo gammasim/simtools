@@ -259,19 +259,19 @@ def test_get_version_string(mocker):
     mocker.patch("simtools.dependencies.get_corsika_version", return_value="7.7550")
     mocker.patch(
         "simtools.dependencies.get_build_options",
-        return_value={"simtel_version": "master", "corsika_version": "78010"},
+        return_value={"simtel_tag": "master", "corsika_build_id": "78010"},
     )
     mock_config = mocker.patch("simtools.dependencies.settings.config")
     mock_config.db_config = {
         "db_simulation_model": "test_db",
-        "db_simulation_model_version": "1.2.3",
+        "db_simulation_model_tag": "1.2.3",
     }
     result = get_version_string(run_time=["docker"])
     assert "Database name: test_db" in result
     assert "Database version: 1.2.3" in result
     assert "sim_telarray version: 2024.271.0" in result
     assert "CORSIKA version: 7.7550" in result
-    assert "Build options: {'simtel_version': 'master', 'corsika_version': '78010'}" in result
+    assert "Build options: {'simtel_tag': 'master', 'corsika_build_id': '78010'}" in result
     assert "Runtime environment: ['docker']" in result
 
 
@@ -280,12 +280,12 @@ def test_get_version_string_without_software_versions(mocker):
     mock_corsika = mocker.patch("simtools.dependencies.get_corsika_version")
     mock_build_options = mocker.patch(
         "simtools.dependencies.get_build_options",
-        return_value={"simtel_version": "master", "corsika_version": "78010"},
+        return_value={"simtel_tag": "master", "corsika_build_id": "78010"},
     )
     mock_config = mocker.patch("simtools.dependencies.settings.config")
     mock_config.db_config = {
         "db_simulation_model": "test_db",
-        "db_simulation_model_version": "1.2.3",
+        "db_simulation_model_tag": "1.2.3",
     }
     mock_config.sim_telarray_exe = None
     mock_config.corsika_exe = None
@@ -373,7 +373,7 @@ def test_get_corsika_version_no_version_but_build_opts(mocker):
     mock_popen.return_value = process_mock
     process_mock.terminate = mocker.Mock()
     mocker.patch(
-        "simtools.dependencies.get_build_options", return_value={"corsika_version": "99999"}
+        "simtools.dependencies.get_build_options", return_value={"corsika_build_id": "99999"}
     )
     version = get_corsika_version()
     assert version == "99999"
@@ -463,7 +463,7 @@ def test_export_build_info(mocker, tmp_test_directory):
     mock_config.sim_telarray_path = None
     mock_write = mocker.patch("simtools.dependencies.ascii_handler.write_data_to_file")
     mocker.patch(
-        "simtools.dependencies.get_build_options", return_value={"corsika_version": "78010"}
+        "simtools.dependencies.get_build_options", return_value={"corsika_build_id": "78010"}
     )
     mocker.patch(
         "simtools.dependencies.get_database_version_or_name", side_effect=["test_db", "1.2.3"]
@@ -478,7 +478,7 @@ def test_export_build_info(mocker, tmp_test_directory):
 
     mock_write.assert_called_once()
     call_args = mock_write.call_args
-    assert call_args[1]["data"]["corsika_version"] == "78010"
+    assert call_args[1]["data"]["corsika_build_id"] == "78010"
     assert call_args[1]["data"]["simtools"] == __version__
     assert call_args[1]["data"]["database_name"] == "test_db"
     assert call_args[1]["data"]["database_version"] == "1.2.3"
@@ -544,7 +544,7 @@ def test_get_dependency_manifest_container_missing(mocker):
 
 def test_build_dependency_manifest(mocker, monkeypatch, simtools_root_path):
     mocker.patch(
-        "simtools.dependencies.get_build_options", return_value={"corsika_version": "78010"}
+        "simtools.dependencies.get_build_options", return_value={"corsika_build_id": "78010"}
     )
     mocker.patch(
         "simtools.dependencies.get_direct_python_dependency_versions",
@@ -615,8 +615,8 @@ def test_write_development_dependency_manifest(mocker, monkeypatch, tmp_test_dir
         "numpy": "2.5.0",
     }
     assert manifest["build_options"] == {
-        "corsika_version": "78010",
-        "simtel_version": "v2025-11-30-rc",
+        "corsika_build_id": "78010",
+        "simtel_tag": "v2025-11-30-rc",
     }
     assert manifest["container"] == {"base_image": "alma:9"}
     assert Path(str(output)).with_suffix(".json.sha256").is_file()

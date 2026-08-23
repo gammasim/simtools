@@ -178,15 +178,12 @@ RUN CORSIKA_RUN_DIR="/workdir/corsika-run" && \
     { \
         echo "corsika_build_id: \"${CORSIKA_BUILD_ID}\""; \
         echo "corsika_source_tag: \"${CORSIKA_SOURCE_TAG}\""; \
-        echo "corsika_version: \"${CORSIKA_BUILD_ID}\""; \
         echo "corsika_revision: \"$(cat /workdir/simulation_software/corsika_revision)\""; \
         echo "corsika_source_url: \"${CORSIKA_SOURCE_URL}\""; \
         echo "corsika_opt_patch_tag: \"${CORSIKA_OPT_PATCH_TAG}\""; \
-        echo "corsika_opt_patch_version: \"${CORSIKA_OPT_PATCH_TAG}\""; \
         echo "corsika_opt_patch_revision: \"$(cat /workdir/simulation_software/corsika_opt_patch_revision)\""; \
         echo "corsika_opt_patch_source_url: \"${CORSIKA_OPT_PATCH_SOURCE_URL}\""; \
         echo "corsika_config_tag: \"${CORSIKA_CONFIG_TAG}\""; \
-        echo "corsika_config_version: \"${CORSIKA_CONFIG_TAG}\""; \
         echo "corsika_config_revision: \"$(cat /workdir/simulation_software/corsika_config_revision)\""; \
         echo "corsika_config_source_url: \"${CORSIKA_CONFIG_SOURCE_URL}\""; \
         echo "autoconf_version: \"${AUTOCONF_VERSION}\""; \

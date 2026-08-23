@@ -84,6 +84,7 @@ class Configurator:
             Application configuration and database configuration dictionaries.
         """
         cli_arglist = self._get_cli_arglist()
+        self._validate_cli_aliases(cli_arglist)
         config_file = self._option_value(cli_arglist, "--config") or (
             self.config_class_init or {}
         ).get("config")
@@ -91,9 +92,11 @@ class Configurator:
             self.config_class_init or {}
         ).get("env_file", ".env")
 
-        env_config = self._config_from_env(env_file)
-        file_config = self._config_from_file(config_file)
-        constructor_config = gen.change_dict_keys_case(self.config_class_init or {})
+        env_config = self._normalize_argument_aliases(self._config_from_env(env_file))
+        file_config = self._normalize_argument_aliases(self._config_from_file(config_file))
+        constructor_config = self._normalize_argument_aliases(
+            gen.change_dict_keys_case(self.config_class_init or {})
+        )
         default_config = self._parser_defaults()
         if self.use_dependency_defaults:
             default_config.update(self._dependency_defaults(default_config))
@@ -111,10 +114,6 @@ class Configurator:
             **constructor_config,
             **file_config,
         }
-        merged_config = self._apply_legacy_tag_override(
-            merged_config,
-            explicit_keys=(set(env_config) | set(constructor_config) | set(file_config) | cli_keys),
-        )
         merged_config = self._without_cli_overrides(merged_config, cli_keys)
         self.config = self._convert_string_none_to_none(
             vars(
@@ -123,7 +122,6 @@ class Configurator:
                 )
             )
         )
-        self._normalize_release_tag_aliases()
         self._validate_release_tag_inputs()
 
         if self.config.get("activity_id") is None:
@@ -152,7 +150,6 @@ class Configurator:
         database_keys = {
             "db_simulation_model",
             "db_simulation_model_tag",
-            "db_simulation_model_version",
         }
         if not database_keys & parser_defaults.keys():
             return {}
@@ -162,8 +159,6 @@ class Configurator:
         model_tag = model.get("default-tag", model.get("default-version"))
         if "db_simulation_model_tag" in parser_defaults:
             defaults["db_simulation_model_tag"] = model_tag
-        elif "db_simulation_model_version" in parser_defaults:
-            defaults["db_simulation_model_version"] = model_tag
         return defaults
 
     @staticmethod
@@ -197,25 +192,26 @@ class Configurator:
                 superseded.update(group_destinations)
         return {key: value for key, value in config.items() if key not in superseded}
 
-    @staticmethod
-    def _apply_legacy_tag_override(config, explicit_keys=()):
-        """Let a legacy version option override the catalog default tag."""
-        tag = config.get("db_simulation_model_tag")
-        legacy = config.get("db_simulation_model_version")
-        if tag is None or legacy is None or tag == legacy:
-            return config
-        if "db_simulation_model_tag" in explicit_keys:
-            return config
-        try:
-            catalog = dependency_versions.load_dependency_catalog()
-            default_tag = catalog["model-database"].get(
-                "default-tag", catalog["model-database"].get("default-version")
-            )
-        except FileNotFoundError, KeyError, TypeError:
-            return config
-        if tag == default_tag:
-            config = dict(config)
-            config.pop("db_simulation_model_tag")
+    def _validate_cli_aliases(self, arg_list):
+        """Reject conflicting canonical and deprecated CLI values."""
+        for action in self.parser._actions:  # pylint: disable=protected-access
+            values = {
+                value
+                for option in action.option_strings
+                if (value := self._option_value(arg_list, option)) is not None
+            }
+            if len(values) > 1:
+                raise ValueError(f"Conflicting values for {action.dest} command-line aliases.")
+
+    def _normalize_argument_aliases(self, config):
+        """Replace deprecated configuration keys with their canonical parser destinations."""
+        config = dict(config)
+        for action in self.parser._actions:  # pylint: disable=protected-access
+            aliases = {option.removeprefix("--") for option in action.option_strings[1:]}
+            for alias in aliases & config.keys():
+                if action.dest in config and config[action.dest] != config[alias]:
+                    raise ValueError(f"{action.dest} and {alias} must match when both are set.")
+                config[action.dest] = config.pop(alias)
         return config
 
     def _config_from_file(self, config_file):
@@ -286,10 +282,12 @@ class Configurator:
         dict
             Configuration parameters from environment variables.
         """
-        _env_list = [
-            action.dest
+        _env_list = [action.dest for action in self.parser._actions]  # pylint: disable=protected-access
+        _env_list.extend(
+            option.removeprefix("--")
             for action in self.parser._actions  # pylint: disable=protected-access
-        ]
+            for option in action.option_strings[1:]
+        )
         return gen.load_environment_variables(env_file=env_file, env_list=_env_list)
 
     def _initialize_model_versions(self):
@@ -315,20 +313,6 @@ class Configurator:
                 raise ValueError(
                     "db_simulation_model_tag must be a v-prefixed simulation-model release tag."
                 ) from exc
-
-    def _normalize_release_tag_aliases(self):
-        """Normalize canonical and deprecated model-tag option names."""
-        tag = self.config.get("db_simulation_model_tag")
-        version = self.config.get("db_simulation_model_version")
-        if tag is not None and version is not None and tag != version:
-            raise ValueError(
-                "db_simulation_model_tag and db_simulation_model_version must "
-                "match when both are set."
-            )
-        selected = tag if tag is not None else version
-        if selected is not None:
-            self.config["db_simulation_model_tag"] = selected
-            self.config["db_simulation_model_version"] = selected
 
     def _initialize_io_handler(self):
         """Initialize IOHandler with input and output paths."""

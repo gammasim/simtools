@@ -332,10 +332,6 @@ definitions:
     required: [tag, source-url, config-tag, config-source-url, opt-patch-tag, opt-patch-source-url]
     properties:
       tag: {type: string, pattern: "^v[0-9]+\\.[0-9]+$"}
-      build-id:
-        type: string
-        pattern: "^[0-9]{5}$"
-        description: Optional override for a CORSIKA release whose legacy build ID does not follow the tag-derived convention.
       source-url: {type: string, pattern: "^https://"}
       config-tag: {"$ref": "#/definitions/tag"}
       config-source-url: {type: string, pattern: "^https://"}
