@@ -420,13 +420,14 @@ class Simulator:
         wait_for_completion=True,
         metadata_args=None,
         array_models=None,
+        input_file_lists=None,
     ):
         """
         Write reduced event lists for given sim_telarray output files.
 
-        Input files can be passed directly or read from a text file containing
-        one path per line. Files are processed in batches, with one output file
-        written per batch.
+        Input files can be passed directly or read from one or more text files
+        containing one path per line. Files are processed in batches, with one
+        output file written per batch.
 
         Parameters
         ----------
@@ -449,6 +450,10 @@ class Simulator:
             Arguments used to build the embedded standard metadata document.
         array_models : list, optional
             Resolved ``ArrayModel`` instances to export into simulation metadata.
+        input_file_lists : list, optional
+            Text files containing one sim_telarray output file per line. Each
+            list is processed independently, while all resulting jobs share the
+            same execution submission.
         backend : str, optional
             Execution backend. Defaults to ``"local"``.
         backend_config : dict, optional
@@ -470,24 +475,40 @@ class Simulator:
         Simulator._validate_reduced_event_list_args(
             input_files=input_files,
             input_file_list=input_file_list,
+            input_file_lists=input_file_lists,
             files_per_reduced_event_file=files_per_reduced_event_file,
         )
 
-        resolved_input_files, input_file_list_path = Simulator._resolve_reduced_event_input_files(
+        input_file_groups = Simulator._resolve_reduced_event_input_groups(
             input_files=input_files,
             input_file_list=input_file_list,
+            input_file_lists=input_file_lists,
         )
-        input_file_batches = Simulator._build_input_file_batches(
-            input_files=resolved_input_files,
-            files_per_reduced_event_file=files_per_reduced_event_file,
-        )
+        input_file_batches = []
+        derived_output_files = []
+        for resolved_input_files, input_file_list_path in input_file_groups:
+            batches = Simulator._build_input_file_batches(
+                input_files=resolved_input_files,
+                files_per_reduced_event_file=files_per_reduced_event_file,
+            )
+            input_file_batches.extend(batches)
+            if input_file_list_path is None:
+                derived_output_files.extend(
+                    Simulator._build_output_files_from_input_batches(
+                        output_path=output_path,
+                        input_file_batches=batches,
+                    )
+                )
+            else:
+                derived_output_files.extend(
+                    Simulator._build_output_files_from_input_file_list(
+                        output_path=output_path,
+                        input_file_list=input_file_list_path,
+                        input_file_batches=batches,
+                    )
+                )
 
-        resolved_output_files = Simulator._resolve_reduced_event_output_files(
-            output_files=output_files,
-            output_path=output_path,
-            input_file_list=input_file_list_path,
-            input_file_batches=input_file_batches,
-        )
+        resolved_output_files = output_files if output_files is not None else derived_output_files
         Simulator._validate_reduced_event_output_count(
             input_file_batches=input_file_batches,
             output_files=resolved_output_files,
@@ -508,24 +529,34 @@ class Simulator:
     def _validate_reduced_event_list_args(
         input_files,
         input_file_list,
+        input_file_lists,
         files_per_reduced_event_file,
     ):
         """Validate argument combinations for reduced event list writing."""
-        if (input_files is None) == (input_file_list is None):
-            raise ValueError("Provide exactly one of input_files or input_file_list.")
+        input_sources = (input_files, input_file_list, input_file_lists)
+        if sum(source is not None for source in input_sources) != 1:
+            raise ValueError(
+                "Provide exactly one of input_files, input_file_list, or input_file_lists."
+            )
+        if input_file_lists is not None and not input_file_lists:
+            raise ValueError("input_file_lists must not be empty.")
         if files_per_reduced_event_file < 1:
             raise ValueError("files_per_reduced_event_file must be greater than zero.")
 
     @staticmethod
-    def _resolve_reduced_event_input_files(input_files, input_file_list):
-        """Resolve input files from either direct list input or file-list input."""
-        if input_file_list is None:
-            return input_files, None
+    def _resolve_reduced_event_input_groups(input_files, input_file_list, input_file_lists):
+        """Resolve direct input files or one or more input-file lists."""
+        if input_files is not None:
+            return [(input_files, None)]
 
-        input_file_list = Path(input_file_list)
-        with open(input_file_list, encoding="utf-8") as file_list:
-            input_files = [line.strip() for line in file_list if line.strip()]
-        return input_files, input_file_list
+        list_paths = input_file_lists or [input_file_list]
+        groups = []
+        for list_path in list_paths:
+            list_path = Path(list_path)
+            with open(list_path, encoding="utf-8") as file_list:
+                resolved_input_files = [line.strip() for line in file_list if line.strip()]
+            groups.append((resolved_input_files, list_path))
+        return groups
 
     @staticmethod
     def _build_input_file_batches(input_files, files_per_reduced_event_file):
@@ -534,27 +565,6 @@ class Simulator:
             input_files[index : index + files_per_reduced_event_file]
             for index in range(0, len(input_files), files_per_reduced_event_file)
         ]
-
-    @staticmethod
-    def _resolve_reduced_event_output_files(
-        output_files,
-        output_path,
-        input_file_list,
-        input_file_batches,
-    ):
-        """Resolve output file paths for all input batches."""
-        if output_files is not None:
-            return output_files
-        if input_file_list is not None:
-            return Simulator._build_output_files_from_input_file_list(
-                output_path=output_path,
-                input_file_list=input_file_list,
-                input_file_batches=input_file_batches,
-            )
-        return Simulator._build_output_files_from_input_batches(
-            output_path=output_path,
-            input_file_batches=input_file_batches,
-        )
 
     @staticmethod
     def _build_output_files_from_input_file_list(output_path, input_file_list, input_file_batches):

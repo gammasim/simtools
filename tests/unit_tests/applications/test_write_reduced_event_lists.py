@@ -1,5 +1,6 @@
 """Tests for the write_reduced_event_lists application."""
 
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -26,6 +27,35 @@ def test_input_file_list_arguments():
     assert args.input_file_list == "simtel_files.txt"
     assert args.files_per_reduced_event_file == 10
     assert args.input_files is None
+
+
+def test_input_file_list_pattern_arguments():
+    """Accept a glob pattern for multiple input-file lists."""
+    parser = CommandLineParser()
+    parser.add_argument_definitions(write_reduced_event_lists._ARGUMENTS)
+
+    args = parser.parse_args(["--input_file_list_pattern", "/data/*.txt"])
+
+    assert args.input_file_list_pattern == "/data/*.txt"
+    assert args.input_files is None
+    assert args.input_file_list is None
+
+
+def test_resolve_input_file_list_pattern(tmp_test_directory):
+    """Resolve matching list files in deterministic order."""
+    first = Path(tmp_test_directory) / "first.txt"
+    second = Path(tmp_test_directory) / "second.txt"
+    first.write_text("first.simtel.zst\n", encoding="utf-8")
+    second.write_text("second.simtel.zst\n", encoding="utf-8")
+
+    assert write_reduced_event_lists._resolve_input_file_list_pattern(
+        str(Path(tmp_test_directory) / "*.txt")
+    ) == [first, second]
+
+    with pytest.raises(FileNotFoundError):
+        write_reduced_event_lists._resolve_input_file_list_pattern(
+            str(Path(tmp_test_directory) / "missing-*.txt")
+        )
 
 
 def test_max_workers_option():
@@ -64,6 +94,7 @@ def test_main_passes_application_arguments_to_metadata_builder():
     args = {
         "input_files": ["input.simtel.zst"],
         "input_file_list": None,
+        "input_file_list_pattern": None,
         "files_per_reduced_event_file": 1,
         "max_workers": 1,
     }
@@ -84,3 +115,4 @@ def test_main_passes_application_arguments_to_metadata_builder():
         write_reduced_event_lists.main()
 
     assert mock_write.call_args.kwargs["metadata_args"] is args
+    assert mock_write.call_args.kwargs["input_file_lists"] is None

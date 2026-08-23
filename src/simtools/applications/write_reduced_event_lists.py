@@ -5,9 +5,12 @@
 This application supports the ``local`` (default) and ``htcondor`` execution backends.
 """
 
+from pathlib import Path
+
 from simtools.application.definition import ApplicationDefinition
 from simtools.configuration import arguments as cli
 from simtools.simulator import Simulator
+from simtools.utils import general
 
 _ARGUMENTS = (
     cli.ArgumentDefinition(
@@ -22,6 +25,12 @@ _ARGUMENTS = (
         exclusive_group="input group",
         exclusive_group_required=True,
         help="Text file containing one sim_telarray output file per line.",
+    ),
+    cli.ArgumentDefinition(
+        "input_file_list_pattern",
+        exclusive_group="input group",
+        exclusive_group_required=True,
+        help="Glob pattern matching text files containing sim_telarray output file lists.",
     ),
     cli.ArgumentDefinition(
         "files_per_reduced_event_file",
@@ -47,6 +56,16 @@ _ARGUMENTS = (
 )
 
 
+def _resolve_input_file_list_pattern(pattern):
+    """Return sorted regular files matching an input-list glob pattern."""
+    matches = sorted(
+        path for path in general.resolve_file_patterns(pattern) if Path(path).is_file()
+    )
+    if not matches:
+        raise FileNotFoundError(f"No input file lists found for pattern: {pattern}")
+    return matches
+
+
 APPLICATION = ApplicationDefinition.for_module(
     __name__,
     arguments=(
@@ -61,10 +80,16 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
+    input_file_lists = None
+    if app_context.args.get("input_file_list_pattern"):
+        input_file_lists = _resolve_input_file_list_pattern(
+            app_context.args["input_file_list_pattern"]
+        )
 
     Simulator.write_reduced_event_lists(
         input_files=app_context.args["input_files"],
         input_file_list=app_context.args["input_file_list"],
+        input_file_lists=input_file_lists,
         files_per_reduced_event_file=app_context.args["files_per_reduced_event_file"],
         max_workers=app_context.args["max_workers"],
         backend=app_context.args.get("backend", "local"),
