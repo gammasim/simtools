@@ -523,6 +523,8 @@ def discover_event_data_groups(event_data_directory):
 
     groups = {}
     for file_path in sorted(directory.glob(f"*{_REDUCED_EVENT_DATA_SUFFIX}")):
+        if not file_path.is_file():
+            continue
         file_stem = file_path.name.removesuffix(_REDUCED_EVENT_DATA_SUFFIX)
         group_name = _PART_SUFFIX_PATTERN.sub("", file_stem)
         groups.setdefault(group_name, []).append(file_path)

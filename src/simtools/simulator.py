@@ -420,14 +420,14 @@ class Simulator:
         wait_for_completion=True,
         metadata_args=None,
         array_models=None,
-        input_file_lists=None,
+        input_file_list_pattern=None,
     ):
         """
         Write reduced event lists for given sim_telarray output files.
 
         Input files can be passed directly or read from one or more text files
-        containing one path per line. Files are processed in batches, with one
-        output file written per batch.
+        matching a glob pattern. Files are processed in batches, with one output
+        file written per batch.
 
         Parameters
         ----------
@@ -450,10 +450,10 @@ class Simulator:
             Arguments used to build the embedded standard metadata document.
         array_models : list, optional
             Resolved ``ArrayModel`` instances to export into simulation metadata.
-        input_file_lists : list, optional
-            Text files containing one sim_telarray output file per line. Each
-            list is processed independently, while all resulting jobs share the
-            same execution submission.
+        input_file_list_pattern : str, optional
+            Glob pattern matching text files containing one sim_telarray output
+            file per line. Each list is processed independently, while all
+            resulting jobs share the same execution submission.
         backend : str, optional
             Execution backend. Defaults to ``"local"``.
         backend_config : dict, optional
@@ -475,14 +475,14 @@ class Simulator:
         Simulator._validate_reduced_event_list_args(
             input_files=input_files,
             input_file_list=input_file_list,
-            input_file_lists=input_file_lists,
+            input_file_list_pattern=input_file_list_pattern,
             files_per_reduced_event_file=files_per_reduced_event_file,
         )
 
         input_file_groups = Simulator._resolve_reduced_event_input_groups(
             input_files=input_files,
             input_file_list=input_file_list,
-            input_file_lists=input_file_lists,
+            input_file_list_pattern=input_file_list_pattern,
         )
         input_file_batches = []
         derived_output_files = []
@@ -529,27 +529,36 @@ class Simulator:
     def _validate_reduced_event_list_args(
         input_files,
         input_file_list,
-        input_file_lists,
+        input_file_list_pattern,
         files_per_reduced_event_file,
     ):
         """Validate argument combinations for reduced event list writing."""
-        input_sources = (input_files, input_file_list, input_file_lists)
+        input_sources = (input_files, input_file_list, input_file_list_pattern)
         if sum(source is not None for source in input_sources) != 1:
             raise ValueError(
-                "Provide exactly one of input_files, input_file_list, or input_file_lists."
+                "Provide exactly one of input_files, input_file_list, or input_file_list_pattern."
             )
-        if input_file_lists is not None and not input_file_lists:
-            raise ValueError("input_file_lists must not be empty.")
         if files_per_reduced_event_file < 1:
             raise ValueError("files_per_reduced_event_file must be greater than zero.")
 
     @staticmethod
-    def _resolve_reduced_event_input_groups(input_files, input_file_list, input_file_lists):
+    def _resolve_reduced_event_input_groups(input_files, input_file_list, input_file_list_pattern):
         """Resolve direct input files or one or more input-file lists."""
         if input_files is not None:
             return [(input_files, None)]
 
-        list_paths = input_file_lists or [input_file_list]
+        if input_file_list_pattern is not None:
+            list_paths = sorted(
+                path
+                for path in general.resolve_file_patterns(input_file_list_pattern)
+                if Path(path).is_file()
+            )
+            if not list_paths:
+                raise FileNotFoundError(
+                    f"No input file lists found for pattern: {input_file_list_pattern}"
+                )
+        else:
+            list_paths = [input_file_list]
         groups = []
         for list_path in list_paths:
             list_path = Path(list_path)

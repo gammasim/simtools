@@ -307,6 +307,7 @@ def test_discover_event_data_groups_collects_parts(tmp_test_directory):
         "ignored.hdf5",
     ):
         (input_directory / file_name).touch()
+    (input_directory / "not-a-file.reduced_event_data.hdf5").mkdir()
 
     groups = discover_event_data_groups(input_directory)
 
