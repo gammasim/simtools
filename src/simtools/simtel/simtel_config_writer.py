@@ -278,14 +278,14 @@ class SimtelConfigWriter:
 
         for key, value in model_parameters.items():
             simtel_name = names.get_simulation_software_name_from_parameter_name(
-                key, software_name="sim_telarray", set_meta_parameter=False
+                key, software_name="sim_telarray"
             )
-            if simtel_name and value.get("meta_parameter"):
+            mode = names.get_simulation_software_meta_parameter_mode(
+                key, software_name="sim_telarray"
+            )
+            if simtel_name and mode == "add":
                 meta_parameters.append(f"{prefix} add {simtel_name}")
-            simtel_name = names.get_simulation_software_name_from_parameter_name(
-                key, software_name="sim_telarray", set_meta_parameter=True
-            )
-            if simtel_name and value.get("meta_parameter"):
+            elif simtel_name and mode == "set":
                 meta_parameters.append(f"{prefix} set {simtel_name}={value['value']}")
 
     def write_array_config_file(

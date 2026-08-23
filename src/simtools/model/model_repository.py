@@ -759,7 +759,6 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
         # important for e.g. nsb_pixel_rate
         if isinstance(json_data["value"], list) and not isinstance(param_data["value"], list):
             param_data["value"] = [param_data["value"]] * len(json_data["value"])
-        param_data["meta_parameter"] = json_data.get("meta_parameter", False)
 
     target_file = param_dir / f"{param}-{param_data['version']}.json"
     if target_file.exists():
@@ -775,7 +774,6 @@ def _create_new_model_parameter_entry(telescope, param, param_data, simulation_m
         output_file=f"{param}-{param_data['version']}.json",
         output_path=param_dir,
         unit=param_data.get("unit"),
-        meta_parameter=param_data.get("meta_parameter", False),
         model_parameter_schema_version=param_data.get("model_parameter_schema_version", None),
     )
 

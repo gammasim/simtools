@@ -195,9 +195,10 @@ def _build_model_parameter_definition(source_name, emitted_name=None):
 def _get_emitted_name_and_mode(model_schema):
     """Return emitted sim_telarray metadata name and metadata mode."""
     software = _get_software_definition(model_schema)
-    if software.get("set_meta_parameter", False):
-        return software.get("internal_parameter_name", model_schema["name"]), "set"
-    return software.get("internal_parameter_name", model_schema["name"]), "add"
+    mode = software.get("meta_parameter_mode")
+    if mode is None:
+        raise KeyError(f"Model parameter without meta parameter mode: {model_schema['name']}")
+    return software.get("internal_parameter_name", model_schema["name"]), mode
 
 
 def _get_software_definition(model_schema):
