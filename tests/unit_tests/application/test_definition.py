@@ -69,6 +69,24 @@ def test_database_maintenance_applications_require_explicit_targets(module_name)
     assert application.use_dependency_defaults is False
 
 
+def test_db_upload_model_repository_has_no_output_options():
+    """Test the database upload application does not configure unused output options."""
+    application = importlib.import_module(
+        "simtools.applications.db_upload_model_repository"
+    ).APPLICATION
+
+    argument_names = {argument.name for argument in application.all_arguments}
+
+    assert {
+        "output_path",
+        "output_file",
+        "output_file_format",
+        "skip_output_validation",
+    }.isdisjoint(argument_names)
+    assert application.initialize_output is False
+    assert application.setup_io_handler is False
+
+
 def test_start_delegates_to_common_startup(mocker):
     startup = mocker.patch(
         "simtools.application.definition._initialize_runtime", return_value="context"
