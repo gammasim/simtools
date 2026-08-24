@@ -42,22 +42,6 @@ of primary energy, core distance, and angular distance. Cumulative distributions
 per-telescope-type plots are also written when the corresponding input data are available.
 Individual figures may be skipped when their input data are absent.
 
-The possible top-level figure names are:
-
-- `trigger_multiplicity`
-- `trigger_combination`
-- `single_telescope_trigger_distribution`
-- `mixed_trigger_combinations`
-- `telescope_participation_fraction`
-- `distribution_energy`
-- `distribution_core_distance`
-- `distribution_core_distance_cumulative`
-- `distribution_angular_distance`
-- `distribution_angular_distance_cumulative`
-
-Per-telescope-type figures append the telescope type to the relevant name, for example
-`trigger_multiplicity_LST` or `distribution_energy_MST`.
-
 Figures are written as PNG files by default. Use `--figure_format pdf` to write PDF files, or
 `--figure_format png pdf` to write both formats. Other formats supported by Matplotlib can also
 be selected.
