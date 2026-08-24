@@ -58,6 +58,11 @@ def plot(
     figure_format : list[str] or str, optional
         Figure formats to write. Formats supported by Matplotlib can be used.
         Defaults to the configured formats or ``["png"]``.
+
+    Returns
+    -------
+    pathlib.Path
+        Path to the JSON file containing the comparison statistics.
     """
     comparison_statistics = _initialize_comparison_statistics(metrics_per_production)
     output_path = output_path or io_handler.IOHandler().get_output_directory()
