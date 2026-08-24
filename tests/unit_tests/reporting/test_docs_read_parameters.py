@@ -723,6 +723,7 @@ def test_get_simulation_configuration_data_passes_telescope_to_plotting(tmp_test
         "6.0.0", "LSTN-01", collection="telescopes"
     )
     assert generate_plot_configurations.call_args.kwargs["telescope"] == "LSTN-design"
+    assert generate_plot_configurations.call_args.kwargs["site"] == "North"
 
 
 def test__write_to_file(telescope_model_lst, tmp_path):
