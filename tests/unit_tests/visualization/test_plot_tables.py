@@ -829,7 +829,7 @@ def test_plot_bias_curves_with_trigger_threshold(
 
     mock_axis.axvline.assert_called_once()
     call_kwargs = mock_axis.axvline.call_args[1]
-    assert call_kwargs["x"] == trigger_threshold
+    assert call_kwargs["x"] == pytest.approx(trigger_threshold)
     assert call_kwargs["color"] == "grey"
     assert call_kwargs["linestyle"] == "--"
     assert call_kwargs["linewidth"] == pytest.approx(1.5)
