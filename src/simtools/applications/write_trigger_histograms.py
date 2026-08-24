@@ -64,14 +64,20 @@ _ARGUMENTS = (
 )
 
 
-def _post_parse(args_dict, _config_sources, parser):
+def _post_parse(args_dict, config_sources, parser):
     """Validate output options selected for the event-data input mode."""
-    if (
-        args_dict.get("event_data_directory")
-        and args_dict.get("output_file")
-        and not args_dict.get("output_file_from_default")
-    ):
-        parser.error("'--output_file' cannot be used with '--event_data_directory'.")
+    if args_dict.get("event_data_directory"):
+        explicit_output_path_sources = set().union(
+            *(
+                config_sources.get(source, set())
+                for source in ("environment", "constructor", "yaml", "cli")
+            )
+        )
+        if "output_path" not in explicit_output_path_sources:
+            parser.error("'--output_path' is required with '--event_data_directory'.")
+
+        if args_dict.get("output_file") and not args_dict.get("output_file_from_default"):
+            parser.error("'--output_file' cannot be used with '--event_data_directory'.")
 
 
 APPLICATION = ApplicationDefinition.for_module(

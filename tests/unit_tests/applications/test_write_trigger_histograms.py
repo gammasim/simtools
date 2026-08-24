@@ -56,7 +56,7 @@ def test_add_arguments_accepts_event_data_directory():
     assert args.event_data_files is None
 
 
-def test_post_parse_accepts_default_output_file_for_directory_mode(mocker):
+def test_post_parse_rejects_default_output_path_for_directory_mode(mocker):
     parser = mocker.Mock()
 
     write_trigger_histograms._post_parse(
@@ -65,7 +65,26 @@ def test_post_parse_accepts_default_output_file_for_directory_mode(mocker):
             "output_file": "write_trigger_histograms.hdf5",
             "output_file_from_default": True,
         },
-        {},
+        {"defaults": {"output_path"}},
+        parser,
+    )
+
+    parser.error.assert_called_once_with(
+        "'--output_path' is required with '--event_data_directory'."
+    )
+
+
+@pytest.mark.parametrize("source", ["environment", "constructor", "yaml", "cli"])
+def test_post_parse_accepts_explicit_output_path_for_directory_mode(mocker, source):
+    parser = mocker.Mock()
+
+    write_trigger_histograms._post_parse(
+        {
+            "event_data_directory": "reduced_event_data",
+            "output_file": "write_trigger_histograms.hdf5",
+            "output_file_from_default": True,
+        },
+        {source: {"output_path"}},
         parser,
     )
 
@@ -81,7 +100,7 @@ def test_post_parse_rejects_explicit_output_file_for_directory_mode(mocker):
             "output_file": "trigger_histograms.hdf5",
             "output_file_from_default": False,
         },
-        {},
+        {"cli": {"output_path"}},
         parser,
     )
 
