@@ -4,6 +4,7 @@ import pytest
 
 import simtools.sim_events.production_comparison as production_comparison
 from simtools.applications import compare_productions
+from simtools.configuration.commandline_parser import CommandLineParser
 from simtools.constants import SCHEMA_PATH
 
 
@@ -92,6 +93,7 @@ def test_main_writes_comparison_statistics_metadata(mocker, tmp_test_directory):
     statistics_file = output_directory / "comparison_statistics.json"
     app_context = mocker.MagicMock()
     app_context.args = {
+        "comparison_level": "events",
         "production": [
             "baseline",
             "baseline.hdf5",
@@ -130,7 +132,7 @@ def test_main_writes_comparison_statistics_metadata(mocker, tmp_test_directory):
     )
 
 
-def test_application_does_not_expose_unused_output_arguments():
+def test_application_exposes_events_comparison_level_without_unused_output_arguments():
     argument_names = {argument.name for argument in compare_productions.APPLICATION.all_arguments}
 
     assert {
@@ -138,7 +140,36 @@ def test_application_does_not_expose_unused_output_arguments():
         "output_file_format",
         "skip_output_validation",
     }.isdisjoint(argument_names)
-    assert {"comparison_level", "test", "ignore_existing_parameter_version"}.isdisjoint(
-        argument_names
-    )
+    assert "comparison_level" in argument_names
+    assert {"test", "ignore_existing_parameter_version"}.isdisjoint(argument_names)
     assert "figure_format" in argument_names
+
+
+def test_comparison_level_argument_accepts_events():
+    parser = CommandLineParser()
+    parser.add_argument_definitions(compare_productions.APPLICATION.all_arguments)
+
+    args = parser.parse_args(
+        [
+            "--production",
+            "baseline",
+            "baseline.hdf5",
+            "--production",
+            "candidate",
+            "candidate.hdf5",
+            "--comparison_level",
+            "events",
+        ]
+    )
+
+    assert args.comparison_level == "events"
+
+
+def test_main_rejects_unimplemented_comparison_level(mocker):
+    app_context = mocker.MagicMock()
+    app_context.args = {"comparison_level": "signals"}
+    mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
+    mock_application.start.return_value = app_context
+
+    with pytest.raises(NotImplementedError, match="Comparison level 'signals' is not implemented"):
+        compare_productions.main()

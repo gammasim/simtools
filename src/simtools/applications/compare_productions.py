@@ -25,6 +25,12 @@ _ARGUMENTS = (
         ),
     ),
     cli.ArgumentDefinition(
+        "comparison_level",
+        choices=["events", "signals", "compute"],
+        default="events",
+        help="Comparison level to execute.",
+    ),
+    cli.ArgumentDefinition(
         "array_layout_name",
         nargs="+",
         help="Restrict trigger histogram references to the selected array layout name(s).",
@@ -47,6 +53,9 @@ APPLICATION = ApplicationDefinition.for_module(
 def main():
     """See CLI description."""
     app_context = APPLICATION.start()
+    comparison_level = app_context.args["comparison_level"]
+    if comparison_level != "events":
+        raise NotImplementedError(f"Comparison level '{comparison_level}' is not implemented yet.")
 
     metrics_per_production = collect_production_metrics(
         parse_production_arguments(app_context.args["production"]),
