@@ -3,7 +3,6 @@
 import functools
 import logging
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from simtools.io import ascii_handler, io_handler
@@ -12,6 +11,7 @@ from simtools.statistics import (
     compare_samples_with_statistics,
 )
 from simtools.utils import names
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 _logger = logging.getLogger(__name__)
 
