@@ -122,8 +122,6 @@ class Configurator:
                 )
             )
         )
-        self._validate_release_tag_inputs()
-
         if self.config.get("activity_id") is None:
             self.config["activity_id"] = gen.get_uuid()
         if self.config["label"] is None:
@@ -300,21 +298,6 @@ class Configurator:
             and len(self.config["model_version"]) == 1
         ):
             self.config["model_version"] = self.config["model_version"][0]
-
-    def _validate_release_tag_inputs(self):
-        """Validate repository release tags from the current catalog contract."""
-        database_tag = self.config.get("db_simulation_model_tag")
-        if database_tag is None:
-            return
-
-        catalog = dependency_versions.load_dependency_catalog()
-        if catalog["schema_version"] in {"0.2.0", "0.3.0"}:
-            try:
-                simtools_version.validate_release_tag(database_tag)
-            except ValueError as exc:
-                raise ValueError(
-                    "db_simulation_model_tag must be a v-prefixed simulation-model release tag."
-                ) from exc
 
     def _initialize_io_handler(self):
         """Initialize IOHandler with input and output paths."""

@@ -509,7 +509,7 @@ def test_add_complete_model_success(
     mock_db.generate_compound_indexes_for_databases.assert_called_once_with(
         db_name=None,
         db_simulation_model=db_simulation_model,
-        db_simulation_model_version=db_simulation_model_version,
+        db_simulation_model_tag=db_simulation_model_version,
     )
     mock_rmtree.assert_called_once_with(repository_dir)
     assert "Upload of simulation model completed successfully" in caplog.text
