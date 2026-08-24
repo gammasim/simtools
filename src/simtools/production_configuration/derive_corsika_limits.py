@@ -16,9 +16,6 @@ from simtools.io import ascii_handler, io_handler
 from simtools.production_configuration.histogram_output_metadata import (
     extract_histogram_output_metadata,
 )
-from simtools.production_configuration.production_event_data_helpers import (
-    build_production_subdirectories,
-)
 from simtools.production_configuration.trigger_histograms import load_event_data_histograms
 from simtools.visualization import plot_simtel_event_histograms
 
@@ -164,13 +161,7 @@ def _generate_corsika_limits_from_histogram_file(
     production_indices = sorted({int(row["production_index"]) for row, _ in loaded_histograms})
     production_subdirs = {}
     if args_dict.get("plot_histograms") and len(production_indices) > 1:
-        production_patterns = {
-            int(row["production_index"]): row["event_data_file"] for row, _ in loaded_histograms
-        }
-        production_subdirs = build_production_subdirectories(
-            [production_patterns[index] for index in production_indices],
-            output_dir,
-        )
+        production_subdirs = _build_production_subdirectories(production_indices, output_dir)
 
     results = []
     for row, histograms in loaded_histograms:
@@ -179,7 +170,7 @@ def _generate_corsika_limits_from_histogram_file(
         )
         output_subdir = None
         if production_subdirs:
-            output_subdir = production_subdirs.get(row["event_data_file"])
+            output_subdir = production_subdirs.get(int(row["production_index"]))
         result = _derive_limits_from_histograms(
             histograms,
             row["array_name"],
@@ -192,13 +183,22 @@ def _generate_corsika_limits_from_histogram_file(
         result.update(
             {
                 "production_index": int(row["production_index"]),
-                "event_data_file": row["event_data_file"],
                 "array_name": row["array_name"],
                 "telescope_ids": list(filter(None, str(row["telescope_ids"]).split(","))),
             }
         )
         results.append(result)
     return results
+
+
+def _build_production_subdirectories(production_indices, output_dir):
+    """Create stable plot directories keyed by production index."""
+    production_subdirs = {}
+    for production_index in production_indices:
+        output_subdir = output_dir / f"production_{production_index}"
+        output_subdir.mkdir(parents=True, exist_ok=True)
+        production_subdirs[int(production_index)] = output_subdir
+    return production_subdirs
 
 
 def _selected_array_names(args_dict):

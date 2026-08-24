@@ -26,7 +26,6 @@ DEFAULT_ALLOWED_LOSSES = {
 
 def _pool_result(
     production_index=0,
-    event_data_file="pattern_*.hdf5",
     array_name="LST",
     telescope_ids=None,
     lower_energy_limit=0.5 * u.TeV,
@@ -36,7 +35,6 @@ def _pool_result(
     """Build a standard mocked pool result row for grid execution tests."""
     return {
         "production_index": production_index,
-        "event_data_file": event_data_file,
         "array_name": array_name,
         "telescope_ids": telescope_ids or ["LSTN-01"],
         "lower_energy_limit": lower_energy_limit,
@@ -137,7 +135,6 @@ def test_generate_corsika_limits_grid_from_trigger_histogram_file(
         rows=[
             {
                 "production_index": 0,
-                "event_data_file": "prod/*.hdf5",
                 "array_name": "alpha",
                 "telescope_ids": "LSTN-01",
             }
@@ -164,7 +161,6 @@ def test_generate_corsika_limits_grid_from_trigger_histogram_file(
     mock_load.assert_called_once_with("trigger_histograms.hdf5", array_names=["alpha"])
     mock_derive.assert_called_once()
     result = mock_write.call_args[0][0][0]
-    assert result["event_data_file"] == "prod/*.hdf5"
     assert result["array_name"] == "alpha"
     assert result["telescope_ids"] == ["LSTN-01"]
 
@@ -180,13 +176,11 @@ def test_generate_corsika_limits_grid_uses_all_arrays_when_array_names_not_given
         rows=[
             {
                 "production_index": 0,
-                "event_data_file": "prod/*.hdf5",
                 "array_name": "alpha",
                 "telescope_ids": "LSTN-01",
             },
             {
                 "production_index": 0,
-                "event_data_file": "prod/*.hdf5",
                 "array_name": "beta",
                 "telescope_ids": "MSTS-01",
             },
@@ -217,6 +211,17 @@ def test_generate_corsika_limits_grid_uses_all_arrays_when_array_names_not_given
     assert [result["array_name"] for result in results] == ["alpha", "beta"]
     assert results[0]["telescope_ids"] == ["LSTN-01"]
     assert results[1]["telescope_ids"] == ["MSTS-01"]
+
+
+def test_build_production_subdirectories_uses_production_indices(tmp_test_directory):
+    result = derive_corsika_limits._build_production_subdirectories(
+        [0, 3], Path(tmp_test_directory)
+    )
+
+    assert result[0] == Path(tmp_test_directory) / "production_0"
+    assert result[3] == Path(tmp_test_directory) / "production_3"
+    assert result[0].is_dir()
+    assert result[3].is_dir()
 
 
 def test_resolve_telescope_configs_wraps_single_layout_result(mocker):

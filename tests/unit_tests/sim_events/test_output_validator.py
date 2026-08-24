@@ -119,7 +119,6 @@ def _write_trigger_histogram_file(output_file, topology_reference_id="reference_
         {
             "reference_id": ["reference_0"],
             "production_index": np.array([0], dtype=np.int64),
-            "event_data_file": ["events.hdf5"],
             "site": ["North"],
             "array_name": ["alpha"],
             "telescope_ids": ["LSTN-01"],

@@ -209,6 +209,7 @@ def test_htcondor_uses_configured_container_target_directory(tmp_test_directory)
 
 
 def test_htcondor_uses_submission_python_without_container(tmp_test_directory):
+    """Non-container workers can import the source checkout used for submission."""
     job = JobSpec("job-000000", 0, command=("echo", "ok"))
     submit_values, _, _ = HTCondorBackend()._build_submit_values(
         {},
@@ -221,6 +222,9 @@ def test_htcondor_uses_submission_python_without_container(tmp_test_directory):
     assert submit_values["arguments"].startswith("-m simtools.job_execution.worker")
     assert sys.executable not in submit_values["arguments"]
     assert "universe" not in submit_values
+    entries = _environment_entries(submit_values["environment"])
+    source_path = Path(__file__).resolve().parents[4] / "src"
+    assert entries["PYTHONPATH"].split(":")[0] == source_path.as_posix()
 
 
 def test_htcondor_rejects_job_ids_that_escape_the_run_directory(tmp_test_directory):

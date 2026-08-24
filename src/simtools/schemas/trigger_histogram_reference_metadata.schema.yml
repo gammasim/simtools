@@ -12,7 +12,6 @@ data:
     table_columns:
       - {name: reference_id, description: Stable histogram reference identifier., required: true, type: string}
       - {name: production_index, description: Production pattern index., required: true, type: int64}
-      - {name: event_data_file, description: Event-data input pattern., required: true, type: string}
       - {name: site, description: Simulation site., required: true, type: string}
       - {name: array_name, description: Array layout name., required: true, type: string}
       - {name: telescope_ids, description: Comma-separated telescope identifiers., required: true, type: string}

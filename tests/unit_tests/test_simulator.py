@@ -586,6 +586,49 @@ def test_write_reduced_event_lists_from_file_list_in_batches(mocker, tmp_test_di
     )
 
 
+def test_write_reduced_event_lists_from_file_list_pattern(mocker, tmp_test_directory):
+    """Process multiple matching input lists in one execution submission."""
+    tmp_base = Path(str(tmp_test_directory))
+    first_list = tmp_base / "first.txt"
+    second_list = tmp_base / "second.txt"
+    first_inputs = ["first_file1.simtel.zst", "first_file2.simtel.zst"]
+    second_inputs = ["second_file1.simtel.zst"]
+    first_list.write_text("\n".join(first_inputs) + "\n", encoding="utf-8")
+    second_list.write_text("\n".join(second_inputs) + "\n", encoding="utf-8")
+    output_dir = tmp_base / "reduced"
+
+    mock_generator = mocker.MagicMock()
+    mock_simtel_io_writer = mocker.patch(
+        "simtools.sim_events.writer.EventDataWriter", return_value=mock_generator
+    )
+    mock_table_handler = _mock_reduced_event_table_writer(mocker)
+
+    Simulator.write_reduced_event_lists(
+        input_file_list_pattern=str(tmp_base / "*.txt"),
+        files_per_reduced_event_file=2,
+        output_path=output_dir,
+    )
+
+    assert mock_simtel_io_writer.call_args_list == [
+        mocker.call(first_inputs),
+        mocker.call(second_inputs),
+    ]
+    assert [
+        call.kwargs["output_file"] for call in mock_table_handler.write_table_chunks.call_args_list
+    ] == [
+        output_dir / "first.part0001.reduced_event_data.hdf5",
+        output_dir / "second.part0001.reduced_event_data.hdf5",
+    ]
+
+
+def test_write_reduced_event_lists_rejects_missing_file_list_pattern(tmp_test_directory):
+    """Fail clearly when a file-list pattern matches no files."""
+    with pytest.raises(FileNotFoundError, match="No files found"):
+        Simulator.write_reduced_event_lists(
+            input_file_list_pattern=str(Path(tmp_test_directory) / "missing-*.txt")
+        )
+
+
 def test_write_reduced_event_lists_parallelizes_output_batches(mocker):
     """Execute independent output batches through the shared execution facade."""
     mock_execute = mocker.patch("simtools.simulator.execute_jobs")
