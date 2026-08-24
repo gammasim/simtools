@@ -107,31 +107,6 @@ def parse_production_arguments(production_arguments):
     return descriptors
 
 
-def _ensure_single_array_layout_name(array_layout_name):
-    """Return one array layout name for telescope-level comparisons.
-
-    Parameters
-    ----------
-    array_layout_name : str or list[str]
-        Array layout selection.
-
-    Returns
-    -------
-    str
-        The selected array layout name.
-
-    Raises
-    ------
-    ValueError
-        If zero or multiple layouts are provided.
-    """
-    if isinstance(array_layout_name, str):
-        return array_layout_name
-    if not array_layout_name or len(array_layout_name) != 1:
-        raise ValueError("Signal comparison requires exactly one array_layout_name.")
-    return array_layout_name[0]
-
-
 def _normalize_production_arguments(production_arguments):
     """Normalize raw production arguments into ``[(label, files), ...]``."""
     if not production_arguments:
@@ -440,15 +415,13 @@ def _build_per_type_histogram_metrics(label, simulated_histograms, accumulators)
     return per_type
 
 
-def collect_signal_metrics(production_descriptors, array_layout_name):
+def collect_signal_metrics(production_descriptors):
     """Collect telescope-level signal metrics for each production.
 
     Parameters
     ----------
     production_descriptors : list[ProductionDescriptor]
         Production descriptors containing sim_telarray input files.
-    array_layout_name : str or list[str]
-        Single array layout to compare.
 
     Returns
     -------
@@ -458,13 +431,12 @@ def collect_signal_metrics(production_descriptors, array_layout_name):
     Raises
     ------
     ValueError
-        If the layout selection is invalid, a required telescope is absent, or
-        no event data is available for a telescope.
+        If a required telescope is absent or no event data is available for a
+        telescope.
     """
-    layout_name = _ensure_single_array_layout_name(array_layout_name)
-    telescope_names = _discover_telescope_names(production_descriptors, layout_name)
+    telescope_names = _discover_telescope_names(production_descriptors)
     if not telescope_names:
-        raise ValueError(f"Array layout '{layout_name}' contains no telescopes.")
+        raise ValueError("The sim_telarray inputs contain no telescopes.")
 
     metrics_by_telescope = {name: [] for name in telescope_names}
     for production in production_descriptors:
@@ -474,13 +446,13 @@ def collect_signal_metrics(production_descriptors, array_layout_name):
     return metrics_by_telescope
 
 
-def _discover_telescope_names(production_descriptors, layout_name):
+def _discover_telescope_names(production_descriptors):
     """Discover and validate the telescope set represented by all input files."""
     input_files = [
         input_file for production in production_descriptors for input_file in production.input_files
     ]
     if not input_files:
-        raise ValueError(f"Array layout '{layout_name}' has no sim_telarray input files.")
+        raise ValueError("Signal comparison has no sim_telarray input files.")
 
     expected = None
     for input_file in input_files:
@@ -491,7 +463,7 @@ def _discover_telescope_names(production_descriptors, layout_name):
         elif available != expected:
             raise ValueError(
                 f"Input '{input_file}' has telescope set {sorted(available)}; expected "
-                f"the layout telescope set {sorted(expected)}."
+                f"the shared telescope set {sorted(expected)}."
             )
     return sorted(expected)
 
@@ -563,4 +535,4 @@ def _get_triggered_pixel_count(event):
         pixel_list = pixel_lists.get(1)
     if pixel_list is None:
         raise ValueError("Event contains no triggered or selected pixel list.")
-    return pixel_list["pixels"]
+    return len(pixel_list["pixels"])

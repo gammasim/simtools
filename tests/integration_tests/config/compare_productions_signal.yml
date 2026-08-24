@@ -3,8 +3,6 @@ applications:
 - application: simtools-compare-productions
   configuration:
     comparison_level: signal
-    array_layout_name:
-    - LSTN-04
     production:
     - baseline
     - ${generated:full_simulation_run000010_North_7.0.0_simtools-simulate-flasher_LSTN-04.simtel.zst}

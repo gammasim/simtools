@@ -37,7 +37,7 @@ _ARGUMENTS = (
     cli.ArgumentDefinition(
         "array_layout_name",
         nargs="+",
-        help="Array layout filter, or the single layout for signal comparison.",
+        help="Restrict event-level comparison to the selected array layout name(s).",
         required=False,
     ),
 )
@@ -100,11 +100,10 @@ def _compare_array_layout(production_descriptors, app_context, array_layout_name
 
 def _run_signal_comparison(app_context):
     """Run signal-level comparison and return generated statistics files."""
+    if app_context.args.get("array_layout_name"):
+        raise ValueError("array_layout_name is only supported for event-level comparison.")
     production_descriptors = parse_production_arguments(app_context.args["production"])
-    metrics_by_telescope = collect_signal_metrics(
-        production_descriptors,
-        array_layout_name=app_context.args.get("array_layout_name"),
-    )
+    metrics_by_telescope = collect_signal_metrics(production_descriptors)
     return [
         (statistics_file, None)
         for statistics_file in plot_signal_level_production_comparison.plot(

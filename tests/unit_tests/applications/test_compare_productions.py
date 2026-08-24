@@ -194,7 +194,6 @@ def test_main_runs_signal_comparison_for_layout(mocker, tmp_test_directory):
     app_context.args = {
         "comparison_level": "signal",
         "production": ["baseline", "baseline.simtel", "candidate", "candidate.simtel"],
-        "array_layout_name": ["CTAO-North-Alpha"],
     }
     app_context.io_handler.get_output_directory.return_value = output_directory
     mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
@@ -211,6 +210,19 @@ def test_main_runs_signal_comparison_for_layout(mocker, tmp_test_directory):
 
     mock_dump.assert_called_once()
     assert mock_dump.call_args.args[1] == statistics_file
+
+
+def test_signal_comparison_rejects_array_layout_name(mocker):
+    app_context = mocker.MagicMock()
+    app_context.args = {
+        "comparison_level": "signal",
+        "array_layout_name": ["CTAO-North-Alpha"],
+    }
+    mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
+    mock_application.start.return_value = app_context
+
+    with pytest.raises(ValueError, match="only supported for event-level"):
+        compare_productions.main()
 
 
 def test_application_exposes_events_comparison_level_without_unused_output_arguments():

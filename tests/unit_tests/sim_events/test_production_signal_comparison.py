@@ -10,11 +10,11 @@ def _event(triggered_pixels=3):
     adc_samples[0, 0, 4] = 30.0
     return {
         "adc_samples": adc_samples,
-        "pixel_lists": {1: {"pixels": triggered_pixels}},
+        "pixel_lists": {1: {"pixels": np.arange(triggered_pixels)}},
     }
 
 
-def test_collect_signal_metrics_for_all_layout_telescopes(mocker):
+def test_collect_signal_metrics_for_all_input_telescopes(mocker):
     mock_mapping = mocker.patch(
         "simtools.sim_events.production_comparison"
         ".get_sim_telarray_telescope_id_to_telescope_name_mapping",
@@ -26,8 +26,7 @@ def test_collect_signal_metrics_for_all_layout_telescopes(mocker):
     )
 
     metrics = production_comparison.collect_signal_metrics(
-        [ProductionDescriptor("baseline", ["baseline-1.simtel", "baseline-2.simtel"])],
-        ["CTAO-North-Alpha"],
+        [ProductionDescriptor("baseline", ["baseline-1.simtel", "baseline-2.simtel"])]
     )
 
     assert set(metrics) == {"LSTN-01", "MSTN-01"}
@@ -50,8 +49,7 @@ def test_collect_signal_metrics_rejects_missing_layout_telescope(mocker):
             [
                 ProductionDescriptor("baseline", ["baseline.simtel"]),
                 ProductionDescriptor("candidate", ["candidate.simtel"]),
-            ],
-            "CTAO-North-Alpha",
+            ]
         )
 
 
@@ -68,14 +66,13 @@ def test_collect_signal_metrics_rejects_incomplete_event(mocker):
 
     with pytest.raises(ValueError, match="incomplete signal data"):
         production_comparison.collect_signal_metrics(
-            [ProductionDescriptor("baseline", ["baseline.simtel"])],
-            "CTAO-North-Alpha",
+            [ProductionDescriptor("baseline", ["baseline.simtel"])]
         )
 
 
 def test_collect_signal_metrics_requires_input_files():
     with pytest.raises(ValueError, match="has no sim_telarray input files"):
-        production_comparison.collect_signal_metrics([], "CTAO-North-Alpha")
+        production_comparison.collect_signal_metrics([])
 
 
 def test_collect_signal_metrics_rejects_empty_telescope_mapping(mocker):
@@ -85,10 +82,9 @@ def test_collect_signal_metrics_rejects_empty_telescope_mapping(mocker):
         return_value={},
     )
 
-    with pytest.raises(ValueError, match="contains no telescopes"):
+    with pytest.raises(ValueError, match="contain no telescopes"):
         production_comparison.collect_signal_metrics(
-            [ProductionDescriptor("baseline", ["baseline.simtel"])],
-            "CTAO-North-Alpha",
+            [ProductionDescriptor("baseline", ["baseline.simtel"])]
         )
 
 
@@ -112,11 +108,5 @@ def test_collect_signal_metrics_rejects_missing_telescope_data(mocker, events, e
 
     with pytest.raises(ValueError, match=error_match):
         production_comparison.collect_signal_metrics(
-            [ProductionDescriptor("baseline", ["baseline.simtel"])],
-            "CTAO-North-Alpha",
+            [ProductionDescriptor("baseline", ["baseline.simtel"])]
         )
-
-
-def test_collect_signal_metrics_requires_one_layout():
-    with pytest.raises(ValueError, match="exactly one array_layout_name"):
-        production_comparison.collect_signal_metrics([], [])
