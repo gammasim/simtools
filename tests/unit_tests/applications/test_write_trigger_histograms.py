@@ -19,12 +19,15 @@ def test_add_arguments_accepts_multi_pattern_and_binning_options():
             "8",
             "--angular_distance_bin_width",
             "0.25 deg",
+            "--core_distance_bin_width",
+            "25 m",
         ]
     )
 
     assert args.event_data_files == ["a*.hdf5", "b*.hdf5"]
     assert args.energy_bins_per_decade == 8
     assert args.angular_distance_bin_width.value == pytest.approx(0.25)
+    assert args.core_distance_bin_width.value == pytest.approx(25.0)
     assert args.max_workers == 1
 
 
@@ -35,6 +38,7 @@ def test_add_arguments_uses_default_angular_distance_bin_width():
     args = parser.parse_args(["--event_data_files", "a*.hdf5"])
 
     assert args.angular_distance_bin_width.value == pytest.approx(0.5)
+    assert args.core_distance_bin_width.value == pytest.approx(20.0)
 
 
 def test_add_arguments_accepts_max_workers():

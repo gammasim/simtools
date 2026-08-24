@@ -1,9 +1,9 @@
 """Shared PSF plotting helpers for ray-tracing workflows."""
 
 import astropy.units as u
-import matplotlib.pyplot as plt
 
 from simtools.visualization import visualize
+from simtools.visualization.matplotlib_backend import pyplot as plt
 
 RADIUS_LABEL = "Radius (cm)"
 CONTAINED_LIGHT_LABEL = "Contained light %"
