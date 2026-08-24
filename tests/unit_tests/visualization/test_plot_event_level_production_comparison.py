@@ -84,6 +84,35 @@ def test_plot_writes_event_level_comparison_figures(tmp_test_directory):
     )
 
 
+def test_plot_writes_requested_pdf_figures_without_png(tmp_test_directory):
+    output_path = Path(tmp_test_directory)
+    metrics = [
+        _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0),
+        _build_metrics("candidate", simulated_scale=1.2, triggered_scale=1.1),
+    ]
+
+    plot_event_level_production_comparison.plot(
+        metrics, output_path=output_path, bins=8, figure_format=["pdf"]
+    )
+
+    assert (output_path / "trigger_multiplicity.pdf").exists()
+    assert (output_path / "distribution_energy.pdf").exists()
+    assert not (output_path / "trigger_multiplicity.png").exists()
+
+
+def test_plot_writes_matplotlib_supported_figure_format(tmp_test_directory):
+    metrics = [
+        _build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0),
+        _build_metrics("candidate", simulated_scale=1.2, triggered_scale=1.1),
+    ]
+
+    plot_event_level_production_comparison.plot(
+        metrics, output_path=Path(tmp_test_directory), figure_format=["svg"]
+    )
+
+    assert (Path(tmp_test_directory) / "trigger_multiplicity.svg").exists()
+
+
 def test_comparison_statistics_schema_rejects_unknown_format_version(tmp_test_directory):
     output_path = Path(tmp_test_directory)
     metrics = [_build_metrics("baseline", simulated_scale=1.0, triggered_scale=1.0)]

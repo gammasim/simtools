@@ -7,17 +7,14 @@ from simtools.applications import compare_productions
 from simtools.constants import SCHEMA_PATH
 
 
-def test_parse_production_arguments_accepts_single_production(mocker):
+def test_parse_production_arguments_requires_baseline_and_candidate(mocker):
     mocker.patch(
         "simtools.sim_events.production_comparison.resolve_file_patterns",
         side_effect=lambda patterns: patterns,
     )
 
-    descriptors = production_comparison.parse_production_arguments([["baseline", "base.h5"]])
-
-    assert len(descriptors) == 1
-    assert descriptors[0].label == "baseline"
-    assert descriptors[0].trigger_histogram_files == ["base.h5"]
+    with pytest.raises(ValueError, match="At least two productions"):
+        production_comparison.parse_production_arguments([["baseline", "base.h5"]])
 
 
 def test_parse_production_arguments_resolves_flattened_pairs(mocker):
@@ -49,9 +46,12 @@ def test_parse_production_arguments_rejects_duplicate_labels(mocker):
 @pytest.mark.parametrize(
     ("arguments", "error_match"),
     [
-        ([], "At least one production is required"),
+        ([], "At least two productions are required"),
         (["baseline", "base.h5", "dangling"], "label/file pairs"),
-        ([["baseline", "  ,   "]], "has no trigger_histogram_file pattern"),
+        (
+            [["baseline", "  ,   "], ["candidate", "candidate.h5"]],
+            "has no trigger_histogram_file pattern",
+        ),
         ([["baseline", "a.h5"], ["candidate", 1]], "label/file pairs"),
     ],
 )
@@ -69,7 +69,9 @@ def test_parse_production_arguments_rejects_unresolved_patterns(mocker):
     mocker.patch("simtools.sim_events.production_comparison.resolve_file_patterns", return_value=[])
 
     with pytest.raises(ValueError, match="does not resolve to any files"):
-        production_comparison.parse_production_arguments([["baseline", "missing_*.h5"]])
+        production_comparison.parse_production_arguments(
+            [["baseline", "missing_*.h5"], ["candidate", "candidate.h5"]]
+        )
 
 
 def test_parse_production_arguments_accepts_nested_flattened_strings(mocker):
@@ -90,9 +92,14 @@ def test_main_writes_comparison_statistics_metadata(mocker, tmp_test_directory):
     statistics_file = output_directory / "comparison_statistics.json"
     app_context = mocker.MagicMock()
     app_context.args = {
-        "comparison_level": "events",
-        "production": ["baseline", "baseline.hdf5"],
+        "production": [
+            "baseline",
+            "baseline.hdf5",
+            "candidate",
+            "candidate.hdf5",
+        ],
         "array_layout_name": ["CTAO-North-Alpha"],
+        "figure_format": ["pdf"],
     }
     app_context.io_handler.get_output_directory.return_value = output_directory
     mock_application = mocker.patch("simtools.applications.compare_productions.APPLICATION")
@@ -107,7 +114,12 @@ def test_main_writes_comparison_statistics_metadata(mocker, tmp_test_directory):
 
     compare_productions.main()
 
-    mock_plot.assert_called_once()
+    mock_plot.assert_called_once_with(
+        mocker.ANY,
+        output_path=output_directory,
+        array_layout_name=["CTAO-North-Alpha"],
+        figure_format=["pdf"],
+    )
     metadata_args, metadata_file = mock_dump.call_args.args
     assert metadata_file == statistics_file
     assert metadata_args["output_file"] == str(statistics_file)
@@ -116,3 +128,17 @@ def test_main_writes_comparison_statistics_metadata(mocker, tmp_test_directory):
     assert metadata_args["schema_file"] == str(
         SCHEMA_PATH / "production_comparison_statistics.schema.yml"
     )
+
+
+def test_application_does_not_expose_unused_output_arguments():
+    argument_names = {argument.name for argument in compare_productions.APPLICATION.all_arguments}
+
+    assert {
+        "output_file",
+        "output_file_format",
+        "skip_output_validation",
+    }.isdisjoint(argument_names)
+    assert {"comparison_level", "test", "ignore_existing_parameter_version"}.isdisjoint(
+        argument_names
+    )
+    assert "figure_format" in argument_names
