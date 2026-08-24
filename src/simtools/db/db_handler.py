@@ -9,7 +9,7 @@ from simtools import settings
 from simtools.data_model import validate_data
 from simtools.db import parameter_exporter
 from simtools.db.file_system_model import FileSystemModelHandler
-from simtools.db.mongo_db import MongoDBHandler
+from simtools.db.mongo_db import MongoDBHandler, _resolve_model_tag
 from simtools.io import io_handler
 from simtools.utils import names, value_conversion
 from simtools.version import resolve_version_to_latest_patch
@@ -90,8 +90,17 @@ class DatabaseHandler:
             raise RuntimeError(f"{operation} requires a MongoDB model source.")
         return self.mongo_db_handler
 
-    def get_db_name(self, db_name=None, db_simulation_model_tag=None, model_name=None):
+    def get_db_name(
+        self,
+        db_name=None,
+        db_simulation_model_tag=None,
+        model_name=None,
+        db_simulation_model_version=None,
+    ):
         """Build DB name from configuration."""
+        db_simulation_model_tag = _resolve_model_tag(
+            db_simulation_model_tag, db_simulation_model_version
+        )
         if db_name:
             return db_name
         if db_simulation_model_tag and model_name:
@@ -128,7 +137,11 @@ class DatabaseHandler:
         return bool(self.mongo_db_handler and self.mongo_db_handler.is_remote_database())
 
     def generate_compound_indexes_for_databases(
-        self, db_name, db_simulation_model, db_simulation_model_tag
+        self,
+        db_name,
+        db_simulation_model,
+        db_simulation_model_tag=None,
+        db_simulation_model_version=None,
     ):
         """
         Generate compound indexes for several databases.
@@ -142,6 +155,9 @@ class DatabaseHandler:
         db_simulation_model_tag: str
             Release tag of the simulation model.
         """
+        db_simulation_model_tag = _resolve_model_tag(
+            db_simulation_model_tag, db_simulation_model_version
+        )
         self.require_mongodb("Generating database indexes").generate_compound_indexes_for_databases(
             db_name, db_simulation_model, db_simulation_model_tag
         )

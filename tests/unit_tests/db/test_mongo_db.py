@@ -59,6 +59,24 @@ def test_validate_db_config_invalid():
         mongo_db.MongoDBHandler.validate_db_config(invalid_config)
 
 
+def test_validate_db_config_accepts_legacy_model_version(valid_db_config):
+    legacy_config = dict(valid_db_config)
+    legacy_config["db_simulation_model_version"] = legacy_config.pop("db_simulation_model_tag")
+
+    validated = mongo_db.MongoDBHandler.validate_db_config(legacy_config)
+
+    assert validated["db_simulation_model_tag"] == "1.0.0"
+    assert "db_simulation_model_version" not in validated
+
+
+def test_validate_db_config_rejects_conflicting_model_selectors(valid_db_config):
+    legacy_config = dict(valid_db_config)
+    legacy_config["db_simulation_model_version"] = "0.9.0"
+
+    with pytest.raises(ValueError, match="must match"):
+        mongo_db.MongoDBHandler.validate_db_config(legacy_config)
+
+
 def test_get_db_name_with_direct_name():
     result = mongo_db.MongoDBHandler.get_db_name(db_name="direct_db")
     assert result == "direct_db"
@@ -69,6 +87,22 @@ def test_get_db_name_incomplete():
     assert result is None
     result = mongo_db.MongoDBHandler.get_db_name(model_name="test_model")
     assert result is None
+
+
+def test_get_db_name_accepts_legacy_keyword():
+    result = mongo_db.MongoDBHandler.get_db_name(
+        db_simulation_model_version="1.0.0", model_name="test_model"
+    )
+    assert result == "test_model-1-0-0"
+
+
+def test_get_db_name_rejects_conflicting_keywords():
+    with pytest.raises(ValueError, match="must match"):
+        mongo_db.MongoDBHandler.get_db_name(
+            db_simulation_model_tag="1.0.0",
+            db_simulation_model_version="0.9.0",
+            model_name="test_model",
+        )
 
 
 def test_init_with_none_config():
@@ -417,7 +451,11 @@ def test_generate_compound_indexes_for_databases(mocker, mongo_handler):
 
     mocker.patch.object(mongo_handler, "generate_compound_indexes")
 
-    mongo_handler.generate_compound_indexes_for_databases("test_db", "test_model", "1.0.0")
+    mongo_handler.generate_compound_indexes_for_databases(
+        db_name="test_db",
+        db_simulation_model="test_model",
+        db_simulation_model_version="1.0.0",
+    )
 
     mongo_handler.generate_compound_indexes.assert_called_once_with(db_name="test_db")
 

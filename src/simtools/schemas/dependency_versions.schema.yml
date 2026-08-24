@@ -216,7 +216,7 @@ definitions:
 ---
 "$schema": http://json-schema.org/draft-06/schema#
 title: simtools dependency version catalog
-description: Catalog with explicit external tags and CORSIKA legacy build identifiers.
+description: Catalog with explicit external dependency tags.
 schema_version: 0.3.0
 schema_name: dependency_versions.schema
 type: object
@@ -263,7 +263,7 @@ properties:
     additionalProperties: false
     required: [tag]
     properties:
-      tag: {type: string, minLength: 1}
+      tag: {"$ref": "#/definitions/tag"}
   archives:
     type: object
     additionalProperties:
@@ -309,7 +309,7 @@ properties:
 definitions:
   tag:
     type: string
-    pattern: "^v[0-9A-Za-z][0-9A-Za-z._+-]*$"
+    pattern: "^v[0-9][0-9A-Za-z._+-]*$"
   revision:
     type: string
     pattern: "^[0-9a-f]{40}$"
@@ -347,13 +347,13 @@ definitions:
     additionalProperties: false
     required: [tag, source-url, hessio-tag, hessio-source-url, stdtools-tag, stdtools-source-url]
     properties:
-      tag: {type: string, minLength: 1}
+      tag: {"$ref": "#/definitions/tag"}
       source-url: {type: string, pattern: "^https://"}
       revision: {"$ref": "#/definitions/revision"}
-      hessio-tag: {type: string, minLength: 1}
+      hessio-tag: {"$ref": "#/definitions/tag"}
       hessio-source-url: {type: string, pattern: "^https://"}
       hessio-revision: {"$ref": "#/definitions/revision"}
-      stdtools-tag: {type: string, minLength: 1}
+      stdtools-tag: {"$ref": "#/definitions/tag"}
       stdtools-source-url: {type: string, pattern: "^https://"}
       stdtools-revision: {"$ref": "#/definitions/revision"}
       image-digest: {"$ref": "#/definitions/sha256"}

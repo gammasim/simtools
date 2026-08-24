@@ -1166,6 +1166,10 @@ def test_get_db_name(db):
         )
         == "test_db"
     )
+    assert (
+        db.get_db_name(db_simulation_model_version="v1.0.0", model_name="SimulationModel")
+        == "SimulationModel-v1-0-0"
+    )
 
 
 def test_print_connection_info_with_handler(db, mocker, caplog):
@@ -1189,6 +1193,16 @@ def test_generate_compound_indexes_for_databases_delegation(db, mocker):
     )
     db.generate_compound_indexes_for_databases(
         db_name="test_db", db_simulation_model="model", db_simulation_model_tag="1.0.0"
+    )
+    mock_generate.assert_called_once_with("test_db", "model", "1.0.0")
+
+
+def test_generate_compound_indexes_accepts_legacy_keyword(db, mocker):
+    mock_generate = mocker.patch.object(
+        db.mongo_db_handler, "generate_compound_indexes_for_databases"
+    )
+    db.generate_compound_indexes_for_databases(
+        db_name="test_db", db_simulation_model="model", db_simulation_model_version="1.0.0"
     )
     mock_generate.assert_called_once_with("test_db", "model", "1.0.0")
 

@@ -15,8 +15,6 @@ DEPENDENCY_VERSIONS_FILENAME = "dependency_versions.yml"
 PYPROJECT_FILENAME = "pyproject.toml"
 SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 ARCHIVE_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
-REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
-LEGACY_MODEL_VERSION_PATTERN = re.compile(r"^\d+\.\d+(?:\.\d+)?$")
 SIMTOOLS_TESTS_REPOSITORY_PATTERN = re.compile(r"^[^/]+/[^/]+$")
 CORSIKA_TAG_PATTERN = re.compile(r"^v\d+\.\d+$")
 
@@ -27,10 +25,7 @@ def _corsika_tag(component):
 
 
 def _corsika_build_id(component):
-    """Return the legacy CORSIKA build identifier.
-
-    New catalog records derive this legacy identifier from the source tag.
-    """
+    """Return the CORSIKA build identifier from either catalog schema."""
     if "version" in component:
         return component["version"]
     tag = _corsika_tag(component)
@@ -213,17 +208,29 @@ def validate_dependency_catalog(catalog):
 
 def _validate_components(catalog, schema_version):
     """Validate CORSIKA and sim_telarray component records."""
+    _validate_release_tag(
+        _dependency_tag(catalog["corsika-interaction-tables"], "tag", "version"),
+        "CORSIKA interaction tables",
+    )
     _validate_corsika_components(catalog["corsika"])
     _validate_simtel_components(catalog["sim-telarray"])
     _validate_model_and_test_components(catalog, schema_version)
+    _validate_archive_versions(catalog["archives"])
 
 
 def _validate_corsika_components(components):
     """Validate CORSIKA tags, legacy IDs, revisions, and image digests."""
     for component in components:
         source_tag = _corsika_tag(component)
-        if source_tag in {"latest", "master", "main"}:
-            raise ValueError("CORSIKA tag must identify a release.")
+        _validate_release_tag(source_tag, "CORSIKA source")
+        _validate_release_tag(
+            _dependency_tag(component, "config-tag", "config-version"),
+            "CORSIKA configuration",
+        )
+        _validate_release_tag(
+            _dependency_tag(component, "opt-patch-tag", "opt-patch-version"),
+            "CORSIKA optimization patch",
+        )
         try:
             _corsika_build_id(component)
         except ValueError as exc:
@@ -239,6 +246,11 @@ def _validate_corsika_components(components):
 def _validate_simtel_components(components):
     """Validate sim_telarray component revisions and image digests."""
     for component in components:
+        _validate_release_tag(_simtel_tag(component), "sim_telarray")
+        _validate_release_tag(_dependency_tag(component, "hessio-tag", "hessio-version"), "hessio")
+        _validate_release_tag(
+            _dependency_tag(component, "stdtools-tag", "stdtools-version"), "stdtools"
+        )
         for key in ("revision", "hessio-revision", "stdtools-revision"):
             _validate_optional_revision(component.get(key), key)
         _validate_optional_digest(component.get("image-digest"), "sim_telarray image")
@@ -250,8 +262,7 @@ def _validate_model_and_test_components(catalog, schema_version):
     valid_model_version = (
         versioning.is_valid_release_tag(model_version)
         if schema_version in {"0.2.0", "0.3.0"}
-        else isinstance(model_version, str)
-        and bool(LEGACY_MODEL_VERSION_PATTERN.fullmatch(model_version))
+        else isinstance(model_version, str) and versioning.is_valid_model_version(model_version)
     )
     if not valid_model_version:
         message = (
@@ -302,7 +313,7 @@ def _validate_digest(value, label):
 
 def _validate_revision(value, label):
     """Validate a Git commit revision."""
-    if not isinstance(value, str) or not REVISION_PATTERN.fullmatch(value):
+    if not versioning.is_valid_revision(value):
         raise ValueError(f"Invalid Git revision for {label}: {value}")
 
 
@@ -326,6 +337,21 @@ def _validate_optional_revision(value, label):
     """Validate a Git commit revision when one is declared."""
     if value is not None:
         _validate_revision(value, label)
+
+
+def _validate_release_tag(value, label):
+    """Validate a catalog-managed release tag."""
+    if not versioning.is_valid_release_tag(value):
+        raise ValueError(f"Invalid release tag for {label}: {value!r}")
+
+
+def _validate_archive_versions(archives):
+    """Validate package versions recorded for archived dependencies."""
+    for archive_name, archive in archives.items():
+        if not versioning.is_valid_package_version(archive.get("version")):
+            raise ValueError(
+                f"Invalid package version for {archive_name}: {archive.get('version')!r}"
+            )
 
 
 def validate_env_template(catalog, template_path):

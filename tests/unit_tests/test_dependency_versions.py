@@ -84,7 +84,13 @@ def test_corsika_source_tag_for_build_id_handles_missing_and_ambiguous_values():
 
     with pytest.raises(ValueError, match="Multiple CORSIKA source tags"):
         dependency_versions.corsika_source_tag_for_build_id(
-            "78010", {"corsika": [{"tag": "v7.8010"}, {"tag": "v7.8010"}]}
+            "78010",
+            {
+                "corsika": [
+                    {"tag": "v7.8010"},
+                    {"tag": "v7.8010"},
+                ]
+            },
         )
 
 
@@ -207,7 +213,15 @@ def test_env_template_matches_legacy_catalog(tmp_test_directory, simtools_root_p
         ),
         (
             lambda data: data["corsika"][0].update({"tag": "master"}),
-            "must identify a release",
+            "Invalid release tag",
+        ),
+        (
+            lambda data: data["sim-telarray"][0].update({"tag": "master"}),
+            "Invalid release tag",
+        ),
+        (
+            lambda data: data["corsika-interaction-tables"].update({"tag": "latest"}),
+            "Invalid release tag",
         ),
         (
             lambda data: data["sim-telarray"][0].update({"revision": "short"}),

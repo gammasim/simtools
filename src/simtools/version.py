@@ -11,7 +11,9 @@ from packaging.version import InvalidVersion, Version
 
 MAJOR_MINOR_PATCH = "major.minor.patch"
 MAJOR_MINOR = "major.minor"
-RELEASE_TAG_PATTERN = re.compile(r"^v\d+\.\d+\.\d+(?:[-+][\dA-Za-z.-]+)?$")
+RELEASE_TAG_PATTERN = re.compile(r"^v[0-9][0-9A-Za-z._+-]*$")
+MODEL_VERSION_PATTERN = re.compile(r"^\d+\.\d+(?:\.\d+)?$")
+REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 
 try:
     try:
@@ -240,6 +242,27 @@ def validate_release_tag(version_string):
             f"Release tag must be a v-prefixed semantic version, got {version_string!r}."
         )
     return version_string
+
+
+def is_valid_model_version(version_string):
+    """Return whether a value is a bare simulation-model version."""
+    return isinstance(version_string, str) and bool(MODEL_VERSION_PATTERN.fullmatch(version_string))
+
+
+def is_valid_package_version(version_string):
+    """Return whether a value is a bare PEP 440 package version."""
+    if not isinstance(version_string, str) or version_string.startswith("v"):
+        return False
+    try:
+        Version(version_string)
+    except InvalidVersion:
+        return False
+    return True
+
+
+def is_valid_revision(version_string):
+    """Return whether a value is an exact lower-case Git revision."""
+    return isinstance(version_string, str) and bool(REVISION_PATTERN.fullmatch(version_string))
 
 
 def is_valid_semantic_version(version_string, strict=True):

@@ -120,7 +120,7 @@ jobs:
           images: ${{ env.REGISTRY }}/gammasim/${{ env.BASE_LABEL }}
           flavor: |
             latest=false
-            suffix=-${{ matrix.corsika_build_id }}-${{ matrix.simtel_tag }}-${{ matrix.avx_flag }}
+            suffix=-v${{ matrix.corsika_build_id }}-${{ matrix.simtel_tag }}-${{ matrix.avx_flag }}
           tags: |
             type=ref,event=pr
             type=semver,pattern={{version}},prefix=v
