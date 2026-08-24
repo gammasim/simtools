@@ -82,10 +82,8 @@ class FileSystemModelHandler:
         try:
             return deepcopy(self.production_tables_cached[cache_key][collection_name])
         except KeyError as exc:
-            raise ValueError(
-                f"No production table for collection {collection_name} and model version "
-                f"{model_version} in {self.source_name}"
-            ) from exc
+            query = {"model_version": str(model_version), "collection": collection_name}
+            raise ValueError(f"The following query returned zero results: {query}") from exc
 
     def query_model_parameters(self, query, collection_name):
         """Read parameter JSON files matching a DatabaseHandler query."""
